@@ -1,5 +1,12 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <poll.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 /*
  * FEATURE #1 Host URL & Port Number
@@ -21,6 +28,8 @@
  *
  * */
 
+
 int main(){
+	
 	return 0;
 }
