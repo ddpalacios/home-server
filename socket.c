@@ -5,6 +5,7 @@
 #include <netinet/in.h>
 
 #define PORT 9034
+
 int create_socket(){
 	struct sockaddr_in server_address;
 	server_address.sin_family = AF_INET;
@@ -21,15 +22,14 @@ int create_socket(){
 
 }
 
-
-void add_fd(int new_fd, struct pollfd *pfds, int fd_count, int max_fd_size){
-	if (fd_count == max_fd_size){
-		max_fd_size *=2;
-		pfds = realloc(pfds, sizeof(pfds) * max_fd_size);
+void add_fd(int new_fd, struct pollfd *pfds[], int *fd_count, int *max_fd_size){
+	if (*fd_count == *max_fd_size){
+		*max_fd_size *=2;
+		*pfds = realloc(*pfds, sizeof(**pfds) * (*max_fd_size));
 	}
-	pfds[fd_count].fd = new_fd;
-	pfds[fd_count].events = POLLIN;
-	fd_count++;
+	(*pfds)[*fd_count].fd = new_fd;
+	(*pfds)[*fd_count].events = POLLIN;
+	(*fd_count)++;
 	printf("New File Descriptor Added: %d\n", new_fd);
 	
 }
@@ -41,16 +41,25 @@ int get_ready_file_descriptor(int fd_count, struct pollfd *pfds){
 	}
 }
 
-void listen_for_pfds(struct pollfd *pfds, int fd_count, int max_fd_size){
+void listen_for_pfds(int listener_socket, struct pollfd *pfds, int fd_count, int max_fd_size){
 	printf("https://127.0.0.1:%d\n",PORT );
 	while(1){
-		printf("Listening...\n");
+		printf("Listening to %d FDs..\n", fd_count);
 		if (poll(pfds, fd_count, -1) < 0){
 			perror("poll");
 		}
+		int ready_fd = get_ready_file_descriptor(fd_count, pfds);
+		if (ready_fd == listener_socket){
+			struct sockaddr_storage remoteaddr;
+			socklen_t addrlen;
+			addrlen = sizeof(remoteaddr);
+			int newfd = accept(listener_socket,(struct sockaddr *)&remoteaddr, &addrlen);
+			if (newfd == -1){
+				perror("accept");
+			}
+			add_fd( newfd, &pfds,  &fd_count,  &max_fd_size);
+		}
 	}
-
-
 }
 
 

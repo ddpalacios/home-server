@@ -4,7 +4,6 @@
 #include <poll.h>
 #include "socket.h"
 
-
 /*
  * FEATURE #1 Host URL & Port Number
  *
@@ -26,12 +25,11 @@
 
 
 int main(){
-	struct pollfd *pfds;
 	int max_fd_size = 10;
 	int fd_count = 0;
-	pfds = malloc(sizeof(struct pollfd) * max_fd_size);
+	struct pollfd *pfds = malloc(sizeof(*pfds) * max_fd_size);
 	int listener_socket = create_socket();
-	add_fd(listener_socket, pfds, fd_count, max_fd_size);
-	listen_for_pfds(pfds, fd_count, max_fd_size);
+	add_fd(listener_socket, &pfds, &fd_count, &max_fd_size);
+	listen_for_pfds(listener_socket,pfds, fd_count, max_fd_size);
 	return 0;
 }
