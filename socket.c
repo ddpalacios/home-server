@@ -40,6 +40,13 @@ int get_ready_file_descriptor(int fd_count, struct pollfd *pfds){
 		}
 	}
 }
+void del_from_pfds(struct pollfd pfds[], int i, int *fd_count){
+	pfds[i] = pfds[*fd_count-1];
+	(*fd_count)++;
+	printf("FD removed.\n");
+
+
+}
 
 void listen_for_pfds(int listener_socket, struct pollfd *pfds, int fd_count, int max_fd_size){
 	printf("https://127.0.0.1:%d\n",PORT );
@@ -58,6 +65,43 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds, int fd_count, int
 				perror("accept");
 			}
 			add_fd( newfd, &pfds,  &fd_count,  &max_fd_size);
+		}else{
+		
+			unsigned char *buf = malloc(2056);
+			int nbytes = recv(ready_fd,buf, sizeof(buf), 0);
+			printf("nbytes recieved from %d: %d\n", ready_fd, nbytes);
+			if (nbytes <= 0){
+				if (nbytes == 0){
+					printf("FD %d hung up\n", ready_fd);
+				}else{
+					perror("recv");
+				}
+				close(ready_fd);
+				del_from_pfds(pfds, i, &fd_count);
+
+			
+			}
+			for (int i=0; i<fd_count; i++){
+				int dest_fd = pfds[i].fd;
+				if (dest_fd != ready_fd && dest_fd != listener_socket){
+					if (send(dest_fd, buf, nbytes,0)==-1){
+						perror("send");
+					}
+				}
+			
+			
+			}
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
 		}
 	}
 }
