@@ -23,7 +23,6 @@
  *
  * */
 
-
 int main(){
 	int max_fd_size = 10;
 	int fd_count = 0;

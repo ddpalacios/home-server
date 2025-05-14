@@ -90,10 +90,8 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds, int fd_count, int
 							perror("send");
 						}
 					}
-				
 				}
 			}
-		
 		}
 	}
 }
