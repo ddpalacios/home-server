@@ -8,3 +8,5 @@ There is lots of truth to that statement. What is passion? Lots of muscians have
 What could we understand more deeply on how musicians play? 
 
 Could we engage more people to create more music? 
+
+Could we understand the phrase 'play with passion' more deeply? 
