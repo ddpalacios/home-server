@@ -1,12 +1,5 @@
 # life-of-sounds
 
-Question / Theory 
+**Observation:** 
 
-musicians and non-musicians often overlook the beauty and complexity that a single note can bring.  like Beethoven has stated, we can make mistakes, but what's worse is a mistake made without passion is unacceptable. 
-There is lots of truth to that statement. What is passion? Lots of muscians have passion but often feel lost by what and how they are playing. 
-
-What could we understand more deeply on how musicians play? 
-
-Could we engage more people to create more music? 
-
-Could we understand the phrase 'play with passion' more deeply? 
+In a music career, one of the biggest challenges is the ability to obtain a stable career with a livable and reliable income. To achieve such a goal requires a level of **discipline, consistency, and opportunity.**  For a practicing musician, it is more than just being able to play the notes. **The true value of a musician is the ability to connect with an audience, emotionally.** Achieving a level where musicians can play with passion varies by the individual, but the requirement would always be practice and consistency over the course of months to years.  Consistency is the most difficult part when learning a new skill set. Practice is not always the most entertaining and it includes repetitive actions on fundamentals. The value of mastering the fundamentals is the ability to be given any difficult piece and drastically **reducing the technical challenges and increasing the focus on playing with passion and emotion.** That is, where musicians can connect with an audience emotionally, but that requires consistency, and it is where most quit regardless of if their skills are truly exceptional than the average person. 
