@@ -24,6 +24,8 @@
  * */
 
 int main(){
+
+	initialize_ssl();
 	int max_fd_size = 10;
 	int fd_count = 0;
 	struct pollfd *pfds = malloc(sizeof(*pfds) * max_fd_size);

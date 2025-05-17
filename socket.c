@@ -4,10 +4,47 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+
 
 #define PORT 9034
+#define CLIENT_CERT "self_signed_cert.crt"
+#define CLIENT_KEY "privateKey.key"
+
+
+
+SSL *encrypt_socket(int fd){
+	SSL_CTX *ssl_ctx;
+	SSL *cSSL;
+	ssl_ctx = SSL_CTX_new(SSLv23_server_method());
+	SSL_CTX_set_options(ssl_ctx, SSL_OP_SINGLE_DH_USE);
+	int use_cert = SSL_CTX_use_certificate_file(ssl_ctx, CLIENT_CERT, SSL_FILETYPE_PEM);
+	printf("CERT Loaded: %d\n", use_cert);
+	int use_key = SSL_CTX_use_PrivateKey_file(ssl_ctx, CLIENT_KEY, SSL_FILETYPE_PEM);
+	printf("KEY Loaded: %d", use_key);
+	if (use_cert <=0 || use_key <=0){
+		printf("ERROR LOADING SSL CERT OR KEY\n");
+		exit(1);
+	}
+	cSSL = SSL_new(ssl_ctx);
+	SSL_set_fd(cSSL, fd);
+	
+	int ssl_err = SSL_accept(cSSL);
+	if (ssl_err <0) {
+		exit(0);
+	}
+	return cSSL;
+}
+
+void initialize_ssl(){
+	SSL_library_init(); /* load encryption & hash algorithims for SSL*/
+	SSL_load_error_strings(); /* load the error strings for good error reporting */
+	printf("SSL Initialized!\n");
+}
 
 int create_socket(){
+
 	struct sockaddr_in server_address;
 	server_address.sin_family = AF_INET;
 	server_address.sin_port = htons(PORT);
@@ -65,6 +102,7 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds, int fd_count, int
 			socklen_t addrlen;
 			addrlen = sizeof(remoteaddr);
 			int newfd = accept(listener_socket,(struct sockaddr *)&remoteaddr, &addrlen);
+			SSL *cSSL = encrypt_socket(newfd);
 			if (newfd == -1){
 				perror("accept");
 			}
