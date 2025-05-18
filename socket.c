@@ -8,11 +8,11 @@
 #include <openssl/err.h>
 #include <openssl/bio.h>
 #include "client.h"
+#include "HTTP.h"
 #define PORT 9034
 #define CLIENT_CERT "self_signed_cert.crt"
 #define CLIENT_KEY "privateKey.key"
 #define BUFFER_SIZE 2056
-
 
 SSL* encrypt_socket(int fd){
 	SSL_CTX *ssl_ctx;
@@ -32,7 +32,9 @@ SSL* encrypt_socket(int fd){
 	
 	int ssl_err = SSL_accept(cSSL);
 	if (ssl_err <0) {
-		exit(0);
+		printf("SSL ERROR %d ERROR ON ACCEPTING CSSL!!!\n", ssl_err);
+		SSL_shutdown(cSSL);
+		SSL_free(cSSL);
 	}
 	return cSSL;
 }
@@ -80,8 +82,8 @@ int create_socket(){
 	bind(listener_socket, (struct sockaddr*)&server_address, sizeof(server_address));
 	listen(listener_socket, 5);
 	return listener_socket;
-
 }
+
 
 int get_ready_file_descriptor(int fd_count, struct pollfd *pfds){
 	for (int i=0; i<fd_count; i++){
@@ -90,6 +92,7 @@ int get_ready_file_descriptor(int fd_count, struct pollfd *pfds){
 		}
 	}
 }
+
 void del_from_pfds(struct pollfd pfds[],struct Client clients[], int fd, int *fd_count){
 	remove_client(fd_count, clients, fd);
 	for (int i=0; i<*fd_count; i++){
@@ -134,16 +137,14 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 				del_from_pfds(pfds,clients, ready_fd, &fd_count);
 			}else{
 				printf("Recieved %d bytes from client %d\n", nbytes, ready_fd);
-				for (int i=0; i<fd_count; i++){
-					int dest_fd = clients[i].Id;
-					if (dest_fd != ready_fd && dest_fd != listener_socket){
-						SSL* dest_cSSL = clients[i].cSSL;
-						if (SSL_write(dest_cSSL, buf, nbytes)==-1){
-							perror("send");
-						}
+
+				if (strncmp(buf, "GET ", 4) == 0){
+					char *route = get_route(buf);
+					printf("Route: '%s'\n", route);
+					if (strcmp(route, "/") ==0){
+						render_template("index.html", cSSL);
 					}
 				}
-
 			}
 			 buf[0] = '\0';
 		}
