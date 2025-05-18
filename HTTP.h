@@ -1,0 +1,5 @@
+#include <openssl/ssl.h>
+
+char *get_file_buffer(char* filename);
+char *get_route(unsigned char* buf);
+void render_template(unsigned char* buf, SSL *cSSL);
