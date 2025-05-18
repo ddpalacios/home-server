@@ -82,8 +82,8 @@ int create_socket(){
 	bind(listener_socket, (struct sockaddr*)&server_address, sizeof(server_address));
 	listen(listener_socket, 5);
 	return listener_socket;
-
 }
+
 
 int get_ready_file_descriptor(int fd_count, struct pollfd *pfds){
 	for (int i=0; i<fd_count; i++){
@@ -92,6 +92,7 @@ int get_ready_file_descriptor(int fd_count, struct pollfd *pfds){
 		}
 	}
 }
+
 void del_from_pfds(struct pollfd pfds[],struct Client clients[], int fd, int *fd_count){
 	remove_client(fd_count, clients, fd);
 	for (int i=0; i<*fd_count; i++){
