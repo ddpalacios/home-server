@@ -11,6 +11,7 @@
 #define PORT 9034
 #define CLIENT_CERT "self_signed_cert.crt"
 #define CLIENT_KEY "privateKey.key"
+#define BUFFER_SIZE 2056
 
 
 SSL* encrypt_socket(int fd){
@@ -89,7 +90,8 @@ int get_ready_file_descriptor(int fd_count, struct pollfd *pfds){
 		}
 	}
 }
-void del_from_pfds(struct pollfd pfds[], int fd, int *fd_count){
+void del_from_pfds(struct pollfd pfds[],struct Client clients[], int fd, int *fd_count){
+	remove_client(fd_count, clients, fd);
 	for (int i=0; i<*fd_count; i++){
 		if (pfds[i].fd  == fd ) {
 			pfds[i] = pfds[*fd_count-1];
@@ -99,7 +101,6 @@ void del_from_pfds(struct pollfd pfds[], int fd, int *fd_count){
 		}
 	}
 }
-
 
 void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *clients, int fd_count, int max_fd_size){
 	printf("https://127.0.0.1:%d\n",PORT );
@@ -118,9 +119,35 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 				perror("accept");
 			}
 			add_fd( newfd, &pfds,  &clients,&fd_count,  &max_fd_size);
+		}else{
+			SSL* cSSL = get_client_socket(clients, fd_count,ready_fd);
+			unsigned char *buf = malloc(BUFFER_SIZE);
+			int nbytes = SSL_read(cSSL, buf, BUFFER_SIZE);
+
+			if (nbytes == 0){
+				if (nbytes == 0){
+					printf("FD %d hung up\n", ready_fd);
+				}else{
+					perror("recv");
+				}
+				close(ready_fd);
+				del_from_pfds(pfds,clients, ready_fd, &fd_count);
+			}else{
+				printf("Recieved %d bytes from client %d\n", nbytes, ready_fd);
+				for (int i=0; i<fd_count; i++){
+					int dest_fd = clients[i].Id;
+					if (dest_fd != ready_fd && dest_fd != listener_socket){
+						SSL* dest_cSSL = clients[i].cSSL;
+						if (SSL_write(dest_cSSL, buf, nbytes)==-1){
+							perror("send");
+						}
+					}
+				}
+
+			}
+			 buf[0] = '\0';
 		}
 	}
-		   
 }
 
 
