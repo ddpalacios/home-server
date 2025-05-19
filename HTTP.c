@@ -51,6 +51,7 @@ void render_template(unsigned char *buf, SSL *cSSL){
 			"Connection: close\r\n"
 			"Content-Length: %d\r\n"
 			"\r\n", html_length);
+	printf("Sending %s to client\n", buf);
 	SSL_write(cSSL, http_header, strlen(http_header));
 	SSL_write(cSSL, html_buffer, html_length);
 	free(html_buffer);
