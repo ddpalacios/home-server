@@ -33,7 +33,6 @@ int main(){
 	clients = malloc(sizeof(*clients) * max_fd_size);
 	struct pollfd *pfds = malloc(sizeof(*pfds) * max_fd_size);
 	int listener_socket = create_socket();
-	printf("Listnener: %d\n",listener_socket);
 	add_fd(listener_socket, &pfds,&clients, &fd_count, &max_fd_size);
 	listen_for_pfds(listener_socket,pfds,clients, fd_count, max_fd_size);
 
