@@ -35,31 +35,39 @@ SSL* encrypt_socket(int fd){
 		printf("SSL ERROR %d ERROR ON ACCEPTING CSSL!!!\n", ssl_err);
 		SSL_shutdown(cSSL);
 		SSL_free(cSSL);
+		return NULL;
 	}
 	return cSSL;
 }
 
 void add_fd(int new_fd, struct pollfd *pfds[], struct Client *clients[],int *fd_count, int *max_fd_size){
-
 	if (*fd_count == *max_fd_size){
 		*max_fd_size *=2;
 		*pfds = realloc(*pfds, sizeof(**pfds) * (*max_fd_size));
 		*clients = realloc(*clients, sizeof(**clients) * (*max_fd_size));
 	}
-
-	(*pfds)[*fd_count].fd = new_fd;
-	(*pfds)[*fd_count].events = POLLIN;
-
-	if (*fd_count >  0){
-		SSL *cSSL = encrypt_socket(new_fd);
+	SSL *cSSL = NULL;
+	if (*fd_count >=  1){
+		cSSL = encrypt_socket(new_fd);
+	}
+	if (cSSL != NULL){
 		(*clients)[*fd_count].Id = new_fd;
 		(*clients)[*fd_count].cSSL = cSSL;
 		printf("New Client Added: %d\n", new_fd);
-		
+		(*pfds)[*fd_count].fd = new_fd;
+		(*pfds)[*fd_count].events = POLLIN;
+		(*fd_count)++;
+		printf("Total FDs created: %d\n", *fd_count);
+	}else{
+		if (*fd_count == 0){
+			(*pfds)[*fd_count].fd = new_fd;
+			(*pfds)[*fd_count].events = POLLIN;
+			(*fd_count)++;
+			printf("Listener Socket Added!! - Total FDs created: %d\n", *fd_count);
+		}else{
+			printf("No FD was ADDED\n");
+		}
 	}
-	(*fd_count)++;
-	printf("Total FDs created: %d\n", *fd_count);
-	
 }
 
 void initialize_ssl(){
@@ -126,7 +134,6 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 			SSL* cSSL = get_client_socket(clients, fd_count,ready_fd);
 			unsigned char *buf = malloc(BUFFER_SIZE);
 			int nbytes = SSL_read(cSSL, buf, BUFFER_SIZE);
-
 			if (nbytes == 0){
 				if (nbytes == 0){
 					printf("FD %d hung up\n", ready_fd);
@@ -137,7 +144,6 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 				del_from_pfds(pfds,clients, ready_fd, &fd_count);
 			}else{
 				printf("Recieved %d bytes from client %d\n", nbytes, ready_fd);
-
 				if (strncmp(buf, "GET ", 4) == 0){
 					char *route = get_route(buf);
 					printf("Route: '%s'\n", route);
