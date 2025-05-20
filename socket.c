@@ -9,6 +9,7 @@
 #include <openssl/bio.h>
 #include "client.h"
 #include "HTTP.h"
+#include "User.h"
 #define PORT 9034
 #define CLIENT_CERT "self_signed_cert.crt"
 #define CLIENT_KEY "privateKey.key"
@@ -116,6 +117,13 @@ void del_from_pfds(struct pollfd pfds[],struct Client clients[], int fd, int *fd
 
 void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *clients, int fd_count, int max_fd_size){
 	printf("https://127.0.0.1:%d\n",PORT );
+
+	struct User user =  create_user("Daniel Palacios", "TestPwd", "dman7077@gmail.com");
+	printf("User Created! %s %s %s\n", user.fullname, user.email, user.password);
+	insert_user(user);
+
+
+
 	while(1){
 		printf("Listening to %d FDs..\n", fd_count);
 		if (poll(pfds, fd_count, -1) < 0){

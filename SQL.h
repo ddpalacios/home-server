@@ -1,7 +1,7 @@
 #include <mysql/mysql.h>
 
-MYSQL* connect(char* username,char* server, char* password, char* database);
-void query(MYSQL* conn,char* query);
-void close(MYSQL *conn);
+MYSQL* connect_to_sql(char* username, char* password, char* server,char* database);
+MYSQL_RES* query(MYSQL* conn,char* query);
+void close_sql_connection(MYSQL *conn);
 
 
