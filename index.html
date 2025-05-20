@@ -74,11 +74,23 @@
 
     <div class="input-container">
 	    <h1>Welcome, log in!</h1>
-         <input id="txt" type="text" placeholder="username...">
-         <input id="txt" type="text" placeholder="password...">
-	 <button>Login</button>
+	
+         <input id="login_username" type="text" placeholder="username...">
+         <input id="login_password" type="text" placeholder="password...">
+	 <button onclick="login()" type="button">Login</button>
     </div>
 </div>
 </body>
+<script>
+	function login(){
+		var login_username = document.getElementById('login_username').value;
+		var login_password = document.getElementById('login_password').value;
+		if (login_username == 'admin' && login_password == 'admin'){
+			location.href='https://127.0.0.1:9034/home'
+		}else{
+			alert("Invalid username or password");
+		}
+	}
+</script>
 
 </html>

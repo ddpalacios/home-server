@@ -113,6 +113,7 @@ void del_from_pfds(struct pollfd pfds[],struct Client clients[], int fd, int *fd
 	}
 }
 
+
 void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *clients, int fd_count, int max_fd_size){
 	printf("https://127.0.0.1:%d\n",PORT );
 	while(1){
@@ -149,6 +150,8 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 					printf("Route: '%s'\n", route);
 					if (strcmp(route, "/") ==0){
 						render_template("index.html", cSSL);
+					}else if (strcmp(route, "/home")==0){
+						render_template("home.html", cSSL);
 					}
 				}
 			}
