@@ -1,5 +1,24 @@
 #include <openssl/ssl.h>
 
+char* retrieve_request_body(unsigned char* buf){
+            char* requestBody = strstr(buf, "\r\n\r\n");
+	    
+            if (requestBody != NULL) {
+                requestBody += 4;	
+		const char *end = strchr(requestBody, '}');
+	        size_t jsonLength = end - requestBody + 1; 
+	        char jsonPart[jsonLength + 1];             
+	        strncpy(jsonPart, requestBody, jsonLength);
+	        jsonPart[jsonLength] = '\0';
+		printf("JSON: %s\n", jsonPart);
+		static char buffer[100];
+		strcpy(buffer, jsonPart);
+		return buffer;
+
+	    }
+
+}
+
 char *get_file_buffer(char* filename){
 	FILE *html_pcontent;
 	long content_size;
@@ -55,6 +74,25 @@ void render_template(unsigned char *buf, SSL *cSSL){
 	SSL_write(cSSL, http_header, strlen(http_header));
 	SSL_write(cSSL, html_buffer, html_length);
 	free(html_buffer);
+}
+
+
+void send_response_code(int code, SSL *cSSL){
+	char http_header[2048];
+	if (code == 200){
+		snprintf(http_header, sizeof(http_header),
+				"HTTP/1.1 200 OK\r\n"
+				"\r\n");
+		SSL_write(cSSL, http_header, strlen(http_header));
+	}else if (code == 401){
+		snprintf(http_header, sizeof(http_header),
+				"HTTP/1.1 401 Unauthorized\r\n"
+				"\r\n");
+		SSL_write(cSSL, http_header, strlen(http_header));
+	
+	
+	
+	}
 }
 
 
