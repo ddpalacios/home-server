@@ -14,9 +14,7 @@ char* retrieve_request_body(unsigned char* buf){
 		static char buffer[100];
 		strcpy(buffer, jsonPart);
 		return buffer;
-
 	    }
-
 }
 
 char *get_file_buffer(char* filename){
@@ -68,6 +66,7 @@ void render_template(unsigned char *buf, SSL *cSSL){
 			"HTTP/1.1 200 OK\r\n"
 			"Content-Type: text/html\r\n"
 			"Connection: close\r\n"
+			"Set-Cookies: testing = I HAVE MY COOKIES AND MILK  \r\n"
 			"Content-Length: %d\r\n"
 			"\r\n", html_length);
 	printf("Sending %s to client\n", buf);
