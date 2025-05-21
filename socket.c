@@ -117,12 +117,22 @@ void del_from_pfds(struct pollfd pfds[],struct Client clients[], int fd, int *fd
 
 void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *clients, int fd_count, int max_fd_size){
 	printf("https://127.0.0.1:%d\n",PORT );
-
-	struct User user =  create_user("Daniel Palacios", "TestPwd", "dman7077@gmail.com");
-	printf("User Created! %s %s %s\n", user.fullname, user.email, user.password);
+	
+	/*
+	struct User adminuser =  create_user("admin", "admin", "palaciosdanieldario@gmail.com");
+	struct User user =  create_user("user1", "test", "testuser@gmail.com");
 	insert_user(user);
+	insert_user(adminuser);
+	struct User retrieved_user = get_user("Daniel Palacios");
 
-
+	if (retrieved_user.exists == 0){
+		printf("User not found!\n");
+	
+	
+	}else{
+		printf("Retrieved User %s\n", retrieved_user.fullname);
+	}
+	*/
 
 	while(1){
 		printf("Listening to %d FDs..\n", fd_count);
@@ -152,7 +162,17 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 				close(ready_fd);
 				del_from_pfds(pfds,clients, ready_fd, &fd_count);
 			}else{
-				printf("Recieved %d bytes from client %d\n", nbytes, ready_fd);
+				if (strncmp(buf, "POST ",4) == 0){
+					if (strncmp(buf+4, " /home ",7) == 0){
+						char* res = retrieve_request_body(buf);
+						if (validate_login(res)){
+							printf("LOGIN SUCCESSFUL!\n");
+							render_template("home.html", cSSL);
+
+						}
+					}
+					
+				}
 				if (strncmp(buf, "GET ", 4) == 0){
 					char *route = get_route(buf);
 					printf("Route: '%s'\n", route);

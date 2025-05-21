@@ -1,5 +1,24 @@
 #include <openssl/ssl.h>
 
+char* retrieve_request_body(unsigned char* buf){
+            char* requestBody = strstr(buf, "\r\n\r\n");
+	    
+            if (requestBody != NULL) {
+                requestBody += 4;	
+		const char *end = strchr(requestBody, '}');
+	        size_t jsonLength = end - requestBody + 1; 
+	        char jsonPart[jsonLength + 1];             
+	        strncpy(jsonPart, requestBody, jsonLength);
+	        jsonPart[jsonLength] = '\0';
+		printf("JSON: %s\n", jsonPart);
+		static char buffer[100];
+		strcpy(buffer, jsonPart);
+		return buffer;
+
+	    }
+
+}
+
 char *get_file_buffer(char* filename){
 	FILE *html_pcontent;
 	long content_size;
