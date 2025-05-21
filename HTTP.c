@@ -91,9 +91,5 @@ void send_response_code(int code, SSL *cSSL){
 		SSL_write(cSSL, http_header, strlen(http_header));
 	
 	
-	
 	}
 }
-
-
-

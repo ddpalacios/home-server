@@ -153,7 +153,9 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 			SSL* cSSL = get_client_socket(clients, fd_count,ready_fd);
 			unsigned char *buf = malloc(BUFFER_SIZE);
 			int nbytes = SSL_read(cSSL, buf, BUFFER_SIZE);
-			if (nbytes == 0){
+			printf("Recieveu %d bytes from %d\n", nbytes, ready_fd);
+			printf("%s\n", buf);
+			if (nbytes <= 0){
 				if (nbytes == 0){
 					printf("FD %d hung up\n", ready_fd);
 				}else{
@@ -168,10 +170,13 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 						if (validate_login(res)){
 							printf("LOGIN SUCCESSFUL!\n");
 							send_response_code(200, cSSL);
-
+							close(ready_fd);
+							del_from_pfds(pfds,clients, ready_fd, &fd_count);
 						}else{
 							printf("LOGIN FAILED!\n");
 							send_response_code(401, cSSL);
+							close(ready_fd);
+							del_from_pfds(pfds,clients, ready_fd, &fd_count);
 						
 						}
 					}
@@ -182,8 +187,16 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 					printf("Route: '%s'\n", route);
 					if (strcmp(route, "/") ==0){
 						render_template("index.html", cSSL);
+						close(ready_fd);
+						del_from_pfds(pfds,clients, ready_fd, &fd_count);
 					}else if (strcmp(route, "/home")==0){
 						render_template("home.html", cSSL);
+						close(ready_fd);
+						del_from_pfds(pfds,clients, ready_fd, &fd_count);
+					}else if (strcmp(route, "/favicon.ico")==0){
+						close(ready_fd);
+						del_from_pfds(pfds,clients, ready_fd, &fd_count);
+					
 					}
 				}
 			}
