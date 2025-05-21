@@ -170,17 +170,13 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 						if (validate_login(res)){
 							printf("LOGIN SUCCESSFUL!\n");
 							send_response_code(200, cSSL);
-							close(ready_fd);
-							del_from_pfds(pfds,clients, ready_fd, &fd_count);
 						}else{
 							printf("LOGIN FAILED!\n");
 							send_response_code(401, cSSL);
-							close(ready_fd);
-							del_from_pfds(pfds,clients, ready_fd, &fd_count);
-						
 						}
+						close(ready_fd);
+						del_from_pfds(pfds,clients, ready_fd, &fd_count);
 					}
-					
 				}
 				if (strncmp(buf, "GET ", 4) == 0){
 					char *route = get_route(buf);
