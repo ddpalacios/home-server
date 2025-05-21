@@ -187,17 +187,13 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 					printf("Route: '%s'\n", route);
 					if (strcmp(route, "/") ==0){
 						render_template("index.html", cSSL);
-						close(ready_fd);
-						del_from_pfds(pfds,clients, ready_fd, &fd_count);
 					}else if (strcmp(route, "/home")==0){
 						render_template("home.html", cSSL);
-						close(ready_fd);
-						del_from_pfds(pfds,clients, ready_fd, &fd_count);
 					}else if (strcmp(route, "/favicon.ico")==0){
-						close(ready_fd);
-						del_from_pfds(pfds,clients, ready_fd, &fd_count);
 					
 					}
+					close(ready_fd);
+					del_from_pfds(pfds,clients, ready_fd, &fd_count);
 				}
 			}
 			 buf[0] = '\0';
