@@ -82,11 +82,10 @@
 </div>
 </body>
 <script>
-	function login(){
+  async	function login(){
 		var login_username = document.getElementById('login_username').value;
 		var login_password = document.getElementById('login_password').value;
-
-		var request = new Request('https://127.0.0.1:9034/home', {
+		var request = new Request('https://127.0.0.1:9034/validate_login', {
 				method: 'POST'
 				,headers: new Headers({
 					'Accept': 'application/json',
@@ -97,9 +96,13 @@
 							password: login_password 
 						    })
 			});
-			fetch(request)
-
-
+			const response1 = await fetch(request);
+			if (response1.status == 200){
+					location.href = 'https://127.0.0.1:9034/home'
+				}
+		        else if (response1.status == 401){
+						alert("Invalid Credentials! Try again.");
+					} 
 	}
 
 			

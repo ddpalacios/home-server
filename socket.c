@@ -163,12 +163,16 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 				del_from_pfds(pfds,clients, ready_fd, &fd_count);
 			}else{
 				if (strncmp(buf, "POST ",4) == 0){
-					if (strncmp(buf+4, " /home ",7) == 0){
+					if (strncmp(buf+4, " /validate_login ",17) == 0){
 						char* res = retrieve_request_body(buf);
 						if (validate_login(res)){
 							printf("LOGIN SUCCESSFUL!\n");
-							render_template("home.html", cSSL);
+							send_response_code(200, cSSL);
 
+						}else{
+							printf("LOGIN FAILED!\n");
+							send_response_code(401, cSSL);
+						
 						}
 					}
 					

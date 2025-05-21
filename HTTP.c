@@ -77,4 +77,23 @@ void render_template(unsigned char *buf, SSL *cSSL){
 }
 
 
+void send_response_code(int code, SSL *cSSL){
+	char http_header[2048];
+	if (code == 200){
+		snprintf(http_header, sizeof(http_header),
+				"HTTP/1.1 200 OK\r\n"
+				"\r\n");
+		SSL_write(cSSL, http_header, strlen(http_header));
+	}else if (code == 401){
+		snprintf(http_header, sizeof(http_header),
+				"HTTP/1.1 401 Unauthorized\r\n"
+				"\r\n");
+		SSL_write(cSSL, http_header, strlen(http_header));
+	
+	
+	
+	}
+}
+
+
 
