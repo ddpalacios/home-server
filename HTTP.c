@@ -1,8 +1,23 @@
 #include <openssl/ssl.h>
+#include <time.h>
+#include <uuid/uuid.h>
+#include "SQL.h"
+
+ char* get_cookie(unsigned char* buf){
+	char *cookie_header = strstr(buf, "Cookie: ");
+	if (cookie_header != NULL){
+		const char *end = strchr(cookie_header, '=');
+		const char* cookie = end+1;
+		const char *start = cookie;
+		static char guid[37];  
+		strncpy(guid, start, 36);
+		guid[36] = '\0';
+		return guid; 
+	}
+}
 
 char* retrieve_request_body(unsigned char* buf){
             char* requestBody = strstr(buf, "\r\n\r\n");
-	    
             if (requestBody != NULL) {
                 requestBody += 4;	
 		const char *end = strchr(requestBody, '}');
@@ -10,7 +25,6 @@ char* retrieve_request_body(unsigned char* buf){
 	        char jsonPart[jsonLength + 1];             
 	        strncpy(jsonPart, requestBody, jsonLength);
 	        jsonPart[jsonLength] = '\0';
-		printf("JSON: %s\n", jsonPart);
 		static char buffer[100];
 		strcpy(buffer, jsonPart);
 		return buffer;
@@ -66,10 +80,9 @@ void render_template(unsigned char *buf, SSL *cSSL){
 			"HTTP/1.1 200 OK\r\n"
 			"Content-Type: text/html\r\n"
 			"Connection: close\r\n"
-			"Set-Cookies: testing = I HAVE MY COOKIES AND MILK  \r\n"
 			"Content-Length: %d\r\n"
 			"\r\n", html_length);
-	printf("Sending %s to client\n", buf);
+	//printf("Sending %s to client\n", buf);
 	SSL_write(cSSL, http_header, strlen(http_header));
 	SSL_write(cSSL, html_buffer, html_length);
 	free(html_buffer);
@@ -79,16 +92,44 @@ void render_template(unsigned char *buf, SSL *cSSL){
 void send_response_code(int code, SSL *cSSL){
 	char http_header[2048];
 	if (code == 200){
+		uuid_t guid;
+		char guid_str[37];
+		uuid_generate(guid);
+		uuid_unparse(guid, guid_str);
+		char buf[128];
+		char buf_datetime[256];
+		time_t raw_time = time(NULL);
+		int ttl_seconds = 86400;
+		size_t buf_size = sizeof(buf);
+		raw_time += ttl_seconds;
+		struct tm *gmt = gmtime(&raw_time);
+		strftime(buf, buf_size, "%a, %d %b %Y %H:%M:%S GMT", gmt);
+		strftime(buf_datetime, sizeof(buf_datetime), "%Y-%m-%d", gmt);
+
+
 		snprintf(http_header, sizeof(http_header),
 				"HTTP/1.1 200 OK\r\n"
-				"\r\n");
+				"Set-Cookie: sessionid=%s;Path=/home;Secure;HttpOnly\r\n"
+				"\r\n", guid_str);
 		SSL_write(cSSL, http_header, strlen(http_header));
+		MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+		char sql[512];
+		snprintf(sql, sizeof(sql),
+				"INSERT INTO session VALUES ('%s', '%s', '%s');",
+				guid_str, buf, buf_datetime);
+		query(conn, sql);
+		close_sql_connection(conn);
+
+
+
+
+		
+
+
 	}else if (code == 401){
 		snprintf(http_header, sizeof(http_header),
 				"HTTP/1.1 401 Unauthorized\r\n"
 				"\r\n");
 		SSL_write(cSSL, http_header, strlen(http_header));
-	
-	
 	}
 }

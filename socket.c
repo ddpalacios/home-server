@@ -10,6 +10,7 @@
 #include "client.h"
 #include "HTTP.h"
 #include "User.h"
+#include "SQL.h"
 #define PORT 9034
 #define CLIENT_CERT "self_signed_cert.crt"
 #define CLIENT_KEY "privateKey.key"
@@ -21,9 +22,9 @@ SSL* encrypt_socket(int fd){
 	ssl_ctx = SSL_CTX_new(SSLv23_server_method());
 	SSL_CTX_set_options(ssl_ctx, SSL_OP_SINGLE_DH_USE);
 	int use_cert = SSL_CTX_use_certificate_file(ssl_ctx, CLIENT_CERT, SSL_FILETYPE_PEM);
-	printf("CERT Loaded: %d\n", use_cert);
+	//printf("CERT Loaded: %d\n", use_cert);
 	int use_key = SSL_CTX_use_PrivateKey_file(ssl_ctx, CLIENT_KEY, SSL_FILETYPE_PEM);
-	printf("KEY Loaded: %d\n", use_key);
+	//printf("KEY Loaded: %d\n", use_key);
 	if (use_cert <=0 || use_key <=0){
 		printf("ERROR LOADING SSL CERT OR KEY\n");
 		exit(1);
@@ -54,7 +55,7 @@ void add_fd(int new_fd, struct pollfd *pfds[], struct Client *clients[],int *fd_
 	if (cSSL != NULL){
 		(*clients)[*fd_count].Id = new_fd;
 		(*clients)[*fd_count].cSSL = cSSL;
-		printf("New Client Added: %d\n", new_fd);
+		//printf("New Client Added: %d\n", new_fd);
 		(*pfds)[*fd_count].fd = new_fd;
 		(*pfds)[*fd_count].events = POLLIN;
 		(*fd_count)++;
@@ -64,9 +65,7 @@ void add_fd(int new_fd, struct pollfd *pfds[], struct Client *clients[],int *fd_
 			(*pfds)[*fd_count].fd = new_fd;
 			(*pfds)[*fd_count].events = POLLIN;
 			(*fd_count)++;
-			printf("Listener Socket Added!! - Total FDs created: %d\n", *fd_count);
-		}else{
-			printf("No FD was ADDED\n");
+			//printf("Listener Socket Added!! - Total FDs created: %d\n", *fd_count);
 		}
 	}
 }
@@ -74,7 +73,7 @@ void add_fd(int new_fd, struct pollfd *pfds[], struct Client *clients[],int *fd_
 void initialize_ssl(){
 	SSL_library_init(); /* load encryption & hash algorithims for SSL*/
 	SSL_load_error_strings(); /* load the error strings for good error reporting */
-	printf("SSL Initialized!\n");
+	//printf("SSL Initialized!\n");
 }
 
 int create_socket(){
@@ -153,8 +152,8 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 			SSL* cSSL = get_client_socket(clients, fd_count,ready_fd);
 			unsigned char *buf = malloc(BUFFER_SIZE);
 			int nbytes = SSL_read(cSSL, buf, BUFFER_SIZE);
-			printf("Recieveu %d bytes from %d\n", nbytes, ready_fd);
-			printf("%s\n", buf);
+			//printf("Recieveu %d bytes from %d\n", nbytes, ready_fd);
+			//printf("%s\n", buf);
 			if (nbytes <= 0){
 				if (nbytes == 0){
 					printf("FD %d hung up\n", ready_fd);
@@ -179,17 +178,38 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 					}
 				}
 				if (strncmp(buf, "GET ", 4) == 0){
+					MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+					 char* cookie = get_cookie(buf);
 					char *route = get_route(buf);
 					printf("Route: '%s'\n", route);
 					if (strcmp(route, "/") ==0){
 						render_template("index.html", cSSL);
 					}else if (strcmp(route, "/home")==0){
-						render_template("home.html", cSSL);
+						if (cookie != NULL){
+							char sql[255];
+							snprintf(sql, sizeof(sql),"SELECT * FROM session WHERE sessionid = '%s';", cookie);
+							MYSQL_RES* res = query(conn, sql);
+							MYSQL_ROW row;
+							int sessionExists = 0;
+							while((row = mysql_fetch_row(res))!= NULL){
+								sessionExists = 1;
+								break;
+							}
+							if (sessionExists){
+								printf("Cookie Found. '%s'\n", cookie);
+								render_template("home.html", cSSL);
+							}else{
+								render_template("index.html", cSSL);
+							}
+						}else{
+							render_template("index.html", cSSL);
+						}
 					}else if (strcmp(route, "/favicon.ico")==0){
 					
 					}
 					close(ready_fd);
 					del_from_pfds(pfds,clients, ready_fd, &fd_count);
+					close_sql_connection(conn);
 				}
 			}
 			 buf[0] = '\0';

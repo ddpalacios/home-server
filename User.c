@@ -15,7 +15,7 @@ struct User create_user(char* fullname, char* password, char* email){
 }
 
 void insert_user(struct User user){
-	printf("Inserting user %s\n", user.fullname);
+	//printf("Inserting user %s\n", user.fullname);
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[255];
 	char *password;
@@ -46,7 +46,7 @@ void insert_user(struct User user){
 		    enc,
 		    user.email);
 
-	printf("SQL: %s\n", sql);
+	//printf("SQL: %s\n", sql);
 	 query(conn, sql);
 	close_sql_connection(conn);
 
@@ -69,7 +69,7 @@ struct User get_user(char* fullname){
 	MYSQL_RES* res = query(conn, sql);
 	MYSQL_ROW row;
 	while((row = mysql_fetch_row(res))!= NULL){
-		printf("%s\n", row[0]);
+		//printf("%s\n", row[0]);
 		user.Id = strdup( row[0]);
 		user.fullname = strdup(row[1]);
 		user.password = strdup(row[2]);
@@ -87,16 +87,16 @@ struct User get_user(char* fullname){
 
 
 int validate_login(char *res){
-	printf("Validating Login...%s\n", res);
+	printf("Validating Login...\n");
 	 cJSON *json = cJSON_Parse(res);
 	 cJSON *username = cJSON_GetObjectItem(json, "username");
 	 cJSON *password = cJSON_GetObjectItem(json, "password");
 	 if (cJSON_IsString(username) && cJSON_IsString(password) ) {
-		 printf("Username: %s\n", username->valuestring);
-		  printf("password: %s\n", password->valuestring);
+		 //printf("Username: %s\n", username->valuestring);
+		  //printf("password: %s\n", password->valuestring);
 		 struct User user = get_user(username->valuestring);
 		 if (user.exists){
-			 printf("User found! %s\n", user.fullname);
+			 //printf("User found! %s\n", user.fullname);
 
 			size_t out_len = b64_decoded_size(user.password)+1;
 			char* out = malloc(out_len);
@@ -104,10 +104,10 @@ int validate_login(char *res){
 				printf("Decode Failure\n");
 			}
 			out[out_len] = '\0';
-			printf("Decoded b64: %s\n", out);
+			//printf("Decoded b64: %s\n", out);
 			decrypt(out, 0xFACA);
 			out[strlen(out)-1] = '\0';
-			printf("decrypted b64: '%s'\n", out);
+			//printf("decrypted b64: '%s'\n", out);
 			if (strcmp(out,password->valuestring)==0){
 				return 1;
 			}else{
@@ -115,7 +115,7 @@ int validate_login(char *res){
 			}
 		 
 		 }else{
-			 printf("User NOT found! %s\n", username->valuestring);
+			 //printf("User NOT found! %s\n", username->valuestring);
 			 return 0;
 		 
 		 
