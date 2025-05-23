@@ -13,6 +13,14 @@
 	<script>
 		function logout(){
 				
+			var request = new Request('https://127.0.0.1:9034/home/logout', {
+						method: 'GET',
+						headers: new Headers({
+									'Accept': 'application/json'
+								})
+			});
+			fetch(request);
+			location.href = '/';
 				
 		}
 
