@@ -163,6 +163,10 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 						render_template("index.html", cSSL, request_cookie);
 					}else if (strcmp(route, "/home")==0){
 						render_template("home.html", cSSL,request_cookie);
+					}else if (strcmp(route, "/home/logout")==0){
+						printf("Logging out...\n");
+						delete_session(request_cookie);
+						
 					}else if (strcmp(route, "/favicon.ico")==0){
 
 					}else if (strcmp(route, "/home/userinfo")==0){
