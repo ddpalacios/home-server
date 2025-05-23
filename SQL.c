@@ -8,7 +8,7 @@ MYSQL* connect_to_sql(char* username, char* password,char* server,char* database
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		exit(1);
 	}else{
-		printf("Connected to SQL!\n");
+		//printf("Connected to SQL!\n");
 	}
 	return conn;
 }
@@ -34,7 +34,7 @@ MYSQL_RES* query(MYSQL* conn,char* query){
 
 void close_sql_connection(MYSQL *conn){
 	mysql_close(conn);
-	printf("SQL Connection closed!\n");
+	//printf("SQL Connection closed!\n");
 }
 
 void encrypt(char password[], int key){
