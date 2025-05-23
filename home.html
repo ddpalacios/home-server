@@ -13,6 +13,14 @@
 	<script>
 		function logout(){
 				
+			var request = new Request('https://127.0.0.1:9034/home/logout', {
+						method: 'GET',
+						headers: new Headers({
+									'Accept': 'application/json'
+								})
+			});
+			fetch(request);
+			location.href = '/';
 				
 		}
 
@@ -32,7 +40,6 @@
 						const text = document.createTextNode("Welcome, "+data['username']);
 						h1.appendChild(text);
 						element.appendChild(h1);
-
 
 						if (data['username'] == 'admin'){
 							const nav_div = document.getElementById("navigation");
