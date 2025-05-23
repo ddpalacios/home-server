@@ -10,6 +10,8 @@
 #include "client.h"
 #include "HTTP.h"
 #include "User.h"
+#include "SQL.h"
+#include "session.h"
 #define PORT 9034
 #define CLIENT_CERT "self_signed_cert.crt"
 #define CLIENT_KEY "privateKey.key"
@@ -21,9 +23,9 @@ SSL* encrypt_socket(int fd){
 	ssl_ctx = SSL_CTX_new(SSLv23_server_method());
 	SSL_CTX_set_options(ssl_ctx, SSL_OP_SINGLE_DH_USE);
 	int use_cert = SSL_CTX_use_certificate_file(ssl_ctx, CLIENT_CERT, SSL_FILETYPE_PEM);
-	printf("CERT Loaded: %d\n", use_cert);
+	//printf("CERT Loaded: %d\n", use_cert);
 	int use_key = SSL_CTX_use_PrivateKey_file(ssl_ctx, CLIENT_KEY, SSL_FILETYPE_PEM);
-	printf("KEY Loaded: %d\n", use_key);
+	//printf("KEY Loaded: %d\n", use_key);
 	if (use_cert <=0 || use_key <=0){
 		printf("ERROR LOADING SSL CERT OR KEY\n");
 		exit(1);
@@ -54,7 +56,7 @@ void add_fd(int new_fd, struct pollfd *pfds[], struct Client *clients[],int *fd_
 	if (cSSL != NULL){
 		(*clients)[*fd_count].Id = new_fd;
 		(*clients)[*fd_count].cSSL = cSSL;
-		printf("New Client Added: %d\n", new_fd);
+		//printf("New Client Added: %d\n", new_fd);
 		(*pfds)[*fd_count].fd = new_fd;
 		(*pfds)[*fd_count].events = POLLIN;
 		(*fd_count)++;
@@ -64,9 +66,7 @@ void add_fd(int new_fd, struct pollfd *pfds[], struct Client *clients[],int *fd_
 			(*pfds)[*fd_count].fd = new_fd;
 			(*pfds)[*fd_count].events = POLLIN;
 			(*fd_count)++;
-			printf("Listener Socket Added!! - Total FDs created: %d\n", *fd_count);
-		}else{
-			printf("No FD was ADDED\n");
+			//printf("Listener Socket Added!! - Total FDs created: %d\n", *fd_count);
 		}
 	}
 }
@@ -74,7 +74,7 @@ void add_fd(int new_fd, struct pollfd *pfds[], struct Client *clients[],int *fd_
 void initialize_ssl(){
 	SSL_library_init(); /* load encryption & hash algorithims for SSL*/
 	SSL_load_error_strings(); /* load the error strings for good error reporting */
-	printf("SSL Initialized!\n");
+	//printf("SSL Initialized!\n");
 }
 
 int create_socket(){
@@ -117,21 +117,14 @@ void del_from_pfds(struct pollfd pfds[],struct Client clients[], int fd, int *fd
 
 void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *clients, int fd_count, int max_fd_size){
 	printf("https://127.0.0.1:%d\n",PORT );
-	
 	/*
-	struct User adminuser =  create_user("admin", "admin", "palaciosdanieldario@gmail.com");
-	struct User user =  create_user("user1", "test", "testuser@gmail.com");
-	insert_user(user);
-	insert_user(adminuser);
-	struct User retrieved_user = get_user("Daniel Palacios");
-
-	if (retrieved_user.exists == 0){
-		printf("User not found!\n");
-	
-	
-	}else{
-		printf("Retrieved User %s\n", retrieved_user.fullname);
-	}
+	struct Session session = create_session("testsessionid", "userid123");
+	insert_session(session);
+	printf("Session %s created and inserted!\n", session.Id);
+	struct Session retrieved_session = get_session(session.Id);
+	printf("Retrieved session: %s Exists: %d\n", retrieved_session.Id, retrieved_session.exists);
+	delete_session(session.Id);
+	printf("Retrieved session: %s is DELETED \n", retrieved_session.Id);
 	*/
 
 	while(1){
@@ -153,7 +146,7 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 			SSL* cSSL = get_client_socket(clients, fd_count,ready_fd);
 			unsigned char *buf = malloc(BUFFER_SIZE);
 			int nbytes = SSL_read(cSSL, buf, BUFFER_SIZE);
-			if (nbytes == 0){
+			if (nbytes <= 0){
 				if (nbytes == 0){
 					printf("FD %d hung up\n", ready_fd);
 				}else{
@@ -162,30 +155,47 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 				close(ready_fd);
 				del_from_pfds(pfds,clients, ready_fd, &fd_count);
 			}else{
-				if (strncmp(buf, "POST ",4) == 0){
+				if (strncmp(buf, "GET ", 4) == 0){
+					// TODO create a copy of buf instead of manipulating the original
+					char* request_cookie = get_cookie(buf);
+					char *route = get_route(buf); 
+					if (strcmp(route, "/") ==0){
+						render_template("index.html", cSSL, request_cookie);
+					}else if (strcmp(route, "/home")==0){
+						render_template("home.html", cSSL,request_cookie);
+					}else if (strcmp(route, "/favicon.ico")==0){
+
+					}else if (strcmp(route, "/home/userinfo")==0){
+						printf("Getting User info Session ID: %s...\n", request_cookie);
+						struct Session session = get_session(request_cookie);
+						struct User user = get_user_by_id(session.userId);
+						printf("USER %s LOGGED ON\n", user.Id);
+						static char user_json[255];
+						snprintf(user_json, sizeof(user_json), "{\"username\":\"%s\",\"userid\":\"%s\",\"email\":\"%s\"}",user.fullname,user.Id, user.email);
+						printf("JSON: %s\n", user_json);
+						send_json_to_client(cSSL, user_json);
+
+					}
+				}else if (strncmp(buf, "POST ",4) == 0){ 
+					// TODO Use get_route to extract the route and remove currenct condition
 					if (strncmp(buf+4, " /validate_login ",17) == 0){
 						char* res = retrieve_request_body(buf);
-						if (validate_login(res)){
+						struct User user = validate_login(res);
+						if (user.exists){
 							printf("LOGIN SUCCESSFUL!\n");
-							send_response_code(200, cSSL);
-
+							struct Session session = create_session(user.Id);
+							char* cookie = create_cookie("sessionid",session.Id); 
+							printf("Session ID: %s\n", cookie);
+							send_response_code(200, cSSL, cookie);
+							insert_session(session);
 						}else{
 							printf("LOGIN FAILED!\n");
-							send_response_code(401, cSSL);
-						
+							send_response_code(401, cSSL, NULL);
 						}
 					}
-					
 				}
-				if (strncmp(buf, "GET ", 4) == 0){
-					char *route = get_route(buf);
-					printf("Route: '%s'\n", route);
-					if (strcmp(route, "/") ==0){
-						render_template("index.html", cSSL);
-					}else if (strcmp(route, "/home")==0){
-						render_template("home.html", cSSL);
-					}
-				}
+				close(ready_fd);
+				del_from_pfds(pfds,clients, ready_fd, &fd_count);
 			}
 			 buf[0] = '\0';
 		}
