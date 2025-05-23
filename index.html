@@ -97,11 +97,9 @@
 			const reponse = await fetch(request);
 			if (reponse.status == 200){
 					location.href = 'https://127.0.0.1:9034/home'
-
-				}
-		        else if (reponse.status == 401){
+				}else if (reponse.status == 401){
 						alert("Invalid Credentials! Try again.");
-					} 
+				} 
 	}
 </script>
 </html>

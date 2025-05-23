@@ -1,12 +1,52 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<h1>Welcome, Home!</h1>
 	</head>
 	<body>
-		<button>Studio</button>
-		<button>Users</button>
+		<div id=welcome_title></div>
+		<div id=navigation>
+			<button>Studio</button>
+			<button onclick="logout()">Logout</button>
+		</div>
 
 	</body>
+	<script>
+		function logout(){
+				
+				
+		}
+
+		function main() {
+			var request = new Request('https://127.0.0.1:9034/home/userinfo', {
+						method: 'GET',
+						headers: new Headers({
+									'Accept': 'application/json'
+								})
+			});
+			fetch(request)
+				.then((response)=> response.json())
+				.then((data)=> {
+						console.log(data);
+						const element = document.getElementById("welcome_title");
+						const h1 = document.createElement("h1");
+						const text = document.createTextNode("Welcome, "+data['username']);
+						h1.appendChild(text);
+						element.appendChild(h1);
+
+
+						if (data['username'] == 'admin'){
+							const nav_div = document.getElementById("navigation");
+							const btn = document.createElement("button");
+							btn.textContent = 'admin settings';
+							nav_div.appendChild(btn);
+						}
+
+						})
+		}
+		main();
+		
+		
+		
+	</script>
 
 </html>

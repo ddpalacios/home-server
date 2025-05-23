@@ -2,6 +2,8 @@
 #include <time.h>
 #include <uuid/uuid.h>
 #include "SQL.h"
+#include "session.h"
+#include "User.h"
 
  char* get_cookie(unsigned char* buf){
 	char *cookie_header = strstr(buf, "Cookie: ");
@@ -72,7 +74,49 @@ char *get_route(unsigned char* buf){
 	}
 }
 
-void render_template(unsigned char *buf, SSL *cSSL){
+
+void send_json_to_client(SSL *cSSL, char*json){
+	int html_length = strlen(json);
+	char http_header[2048];
+	snprintf(http_header, sizeof(http_header),
+			"HTTP/1.1 200 OK\r\n"
+			"Content-Type: application/json\r\n"
+			"Content-Length: %d\r\n"
+			"\r\n", html_length);
+	printf("%s\n", http_header);
+	if (SSL_write(cSSL, http_header, strlen(http_header)) <=0){
+		printf("ERROR HTTP HEADER SENDING DATA TO CLIENT\n");
+	}
+	if(SSL_write(cSSL, json, html_length)<=0){
+		printf("ERROR SENDING JSON DATA TO CLIENT\n");
+	}
+}
+
+
+
+void render_template(unsigned char *buf, SSL *cSSL, char* request_cookie){
+	static char user_json[255];
+	int user_found = 0;
+	if (request_cookie == NULL){	
+		printf("No Request cookie found.\n");
+		buf = "index.html";
+	}else{
+		struct Session session = get_session(request_cookie);
+		if (!session.exists){
+			printf("SESSION DOES NOT EXIST.\n");
+			buf = "index.html";
+		}else{
+			struct User user = get_user_by_id(session.userId);
+			if (!user.exists){
+				buf = "index.html";
+			}else{
+				snprintf(user_json, sizeof(user_json), "{\"username\":\"%s\",\"userid\":\"%s\"email\":\"%s\"}",user.fullname,user.Id, user.email);
+				user_found = 1;
+			
+			}
+		}
+	}
+	printf("Request cookie %s to render %s\n",  request_cookie, buf);
 	char *html_buffer = get_file_buffer(buf);
 	int html_length = strlen(html_buffer);
 	char http_header[2048];
@@ -82,54 +126,33 @@ void render_template(unsigned char *buf, SSL *cSSL){
 			"Connection: close\r\n"
 			"Content-Length: %d\r\n"
 			"\r\n", html_length);
-	//printf("Sending %s to client\n", buf);
+
 	SSL_write(cSSL, http_header, strlen(http_header));
 	SSL_write(cSSL, html_buffer, html_length);
 	free(html_buffer);
 }
 
 
-void send_response_code(int code, SSL *cSSL){
+char* create_cookie(char* key, char* value){
+	static char cookie[255];
+	snprintf(cookie, sizeof(cookie), "%s=%s;Path=/home;Secure;HttpOnly",key,value);
+	return cookie;
+}
+
+
+void send_response_code(int code, SSL *cSSL, char* cookie){
 	char http_header[2048];
 	if (code == 200){
-		uuid_t guid;
-		char guid_str[37];
-		uuid_generate(guid);
-		uuid_unparse(guid, guid_str);
-		char buf[128];
-		char buf_datetime[256];
-		time_t raw_time = time(NULL);
-		int ttl_seconds = 86400;
-		size_t buf_size = sizeof(buf);
-		raw_time += ttl_seconds;
-		struct tm *gmt = gmtime(&raw_time);
-		strftime(buf, buf_size, "%a, %d %b %Y %H:%M:%S GMT", gmt);
-		strftime(buf_datetime, sizeof(buf_datetime), "%Y-%m-%d", gmt);
-
-
 		snprintf(http_header, sizeof(http_header),
 				"HTTP/1.1 200 OK\r\n"
-				"Set-Cookie: sessionid=%s;Path=/home;Secure;HttpOnly\r\n"
-				"\r\n", guid_str);
+				"Set-Cookie: %s\r\n"
+				"\r\n", cookie);
 		SSL_write(cSSL, http_header, strlen(http_header));
-		MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
-		char sql[512];
-		snprintf(sql, sizeof(sql),
-				"INSERT INTO session VALUES ('%s', '%s', '%s');",
-				guid_str, buf, buf_datetime);
-		query(conn, sql);
-		close_sql_connection(conn);
-
-
-
-
-		
-
-
-	}else if (code == 401){
+	}else if (code == 401) {
 		snprintf(http_header, sizeof(http_header),
 				"HTTP/1.1 401 Unauthorized\r\n"
 				"\r\n");
 		SSL_write(cSSL, http_header, strlen(http_header));
+	
 	}
 }
