@@ -12,6 +12,7 @@
 #include "User.h"
 #include "SQL.h"
 #include "session.h"
+#include "websocket.h"
 #define PORT 9034
 #define CLIENT_CERT "self_signed_cert.crt"
 #define CLIENT_KEY "privateKey.key"
@@ -117,15 +118,6 @@ void del_from_pfds(struct pollfd pfds[],struct Client clients[], int fd, int *fd
 
 void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *clients, int fd_count, int max_fd_size){
 	printf("https://127.0.0.1:%d\n",PORT );
-	/*
-	struct Session session = create_session("testsessionid", "userid123");
-	insert_session(session);
-	printf("Session %s created and inserted!\n", session.Id);
-	struct Session retrieved_session = get_session(session.Id);
-	printf("Retrieved session: %s Exists: %d\n", retrieved_session.Id, retrieved_session.exists);
-	delete_session(session.Id);
-	printf("Retrieved session: %s is DELETED \n", retrieved_session.Id);
-	*/
 
 	while(1){
 		printf("Listening to %d FDs..\n", fd_count);
@@ -146,6 +138,7 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 			SSL* cSSL = get_client_socket(clients, fd_count,ready_fd);
 			unsigned char *buf = malloc(BUFFER_SIZE);
 			int nbytes = SSL_read(cSSL, buf, BUFFER_SIZE);
+			printf("Recieved %d from client %d\n", nbytes, ready_fd);
 			if (nbytes <= 0){
 				if (nbytes == 0){
 					printf("FD %d hung up\n", ready_fd);
@@ -155,19 +148,43 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 				close(ready_fd);
 				del_from_pfds(pfds,clients, ready_fd, &fd_count);
 			}else{
+
+				if (is_websocket_buffer(buf)){
+					char message[nbytes];
+					decode_websocket_buffer(buf, message);
+					printf("Decoded Message: %s\n", message);
+				}
+
 				if (strncmp(buf, "GET ", 4) == 0){
 					// TODO create a copy of buf instead of manipulating the original
 					char* request_cookie = get_cookie(buf);
+					char* websocket_key = get_header_value(buf,"Sec-WebSocket-Key");
 					char *route = get_route(buf); 
 					if (strcmp(route, "/") ==0){
 						render_template("index.html", cSSL, request_cookie);
+						close(ready_fd);
+						del_from_pfds(pfds,clients, ready_fd, &fd_count);
+
 					}else if (strcmp(route, "/home")==0){
 						render_template("home.html", cSSL,request_cookie);
+						close(ready_fd);
+						del_from_pfds(pfds,clients, ready_fd, &fd_count);
+
+					// TODO DELETE ALL SESSIONS Associated with user
 					}else if (strcmp(route, "/home/logout")==0){
 						printf("Logging out...\n");
-						// TODO DELETE ALL SESSIONS Associated with user
 						delete_session(request_cookie);
+						close(ready_fd);
+						del_from_pfds(pfds,clients, ready_fd, &fd_count);
+
+					}else if (strcmp(route, "/home/studio")==0){
+						render_template("studio.html", cSSL, request_cookie);
+						close(ready_fd);
+						del_from_pfds(pfds,clients, ready_fd, &fd_count);
+
 					}else if (strcmp(route, "/favicon.ico")==0){
+						close(ready_fd);
+						del_from_pfds(pfds,clients, ready_fd, &fd_count);
 
 					}else if (strcmp(route, "/home/userinfo")==0){
 						printf("Getting User info Session ID: %s...\n", request_cookie);
@@ -178,7 +195,24 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 						snprintf(user_json, sizeof(user_json), "{\"username\":\"%s\",\"userid\":\"%s\",\"email\":\"%s\"}",user.fullname,user.Id, user.email);
 						printf("JSON: %s\n", user_json);
 						send_json_to_client(cSSL, user_json);
+						close(ready_fd);
+						del_from_pfds(pfds,clients, ready_fd, &fd_count);
 
+					}else if (strcmp(route, "/home/studio/start_websocket") ==0){
+						printf("Starting Websocket...\n");
+						printf("WEBSOCKET KEY %s\n", websocket_key);
+						char* wss_accp_key = generate_websocket_accptKey(websocket_key);
+						printf("WEBSOCKET  ACCPT KEY %s\n", wss_accp_key);
+						initialize_websocket_protocol(cSSL,  wss_accp_key);
+					
+					}else if (strcmp(route, "/home/studio/stop_websocket")==0){ 
+						printf("Stopping Websocket...\n");
+						close(ready_fd);
+						del_from_pfds(pfds,clients, ready_fd, &fd_count);
+				       
+					}else{
+						close(ready_fd);
+						del_from_pfds(pfds,clients, ready_fd, &fd_count);
 					}
 				}else if (strncmp(buf, "POST ",4) == 0){ 
 					// TODO Use get_route to extract the route and remove currenct condition
@@ -192,14 +226,16 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 							printf("Session ID: %s\n", cookie);
 							send_response_code(200, cSSL, cookie);
 							insert_session(session);
+							close(ready_fd);
+							del_from_pfds(pfds,clients, ready_fd, &fd_count);
 						}else{
 							printf("LOGIN FAILED!\n");
 							send_response_code(401, cSSL, NULL);
+							close(ready_fd);
+							del_from_pfds(pfds,clients, ready_fd, &fd_count);
 						}
 					}
 				}
-				close(ready_fd);
-				del_from_pfds(pfds,clients, ready_fd, &fd_count);
 			}
 			 buf[0] = '\0';
 		}

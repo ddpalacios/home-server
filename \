@@ -5,28 +5,6 @@
 #include "session.h"
 #include "User.h"
 
-char*  get_header_value(const char* buf, const char* key){
-	static char value[64];
-	size_t value_size = sizeof(value);
-        char *key_start = strstr(buf, key);
-        if (key_start){
-                key_start += strlen(key);
-                while(*key_start == ' ' || *key_start == ':')key_start++;
-                char *line_end = strstr(key_start, "\r\n");
-
-                if (line_end){
-                        size_t len= line_end - key_start;
-                        if (len >= value_size) len = value_size -1;
-                        strncpy(value, key_start, len);
-                        value[len] = '\0';
-                }
-        }else{
-                value[0] = '\0';
-        }
-	return value;
-}
-
-
  char* get_cookie(unsigned char* buf){
 	char *cookie_header = strstr(buf, "Cookie: ");
 	if (cookie_header != NULL){
@@ -171,15 +149,4 @@ void send_response_code(int code, SSL *cSSL, char* cookie){
 		SSL_write(cSSL, http_header, strlen(http_header));
 	
 	}
-}
-void initialize_websocket_protocol(SSL *cSSL, char* websocket_sec_acceptKey){
-	char http_header[2048];
-	snprintf(http_header, sizeof(http_header),
-			"HTTP/1.1 101 Switching Protocols\r\n"
-			"Upgrade: websocket\r\n"
-			"Connection: Upgrade\r\n"
-			"Sec-WebSocket-Accept: %s\r\n"
-			"Access-Control-Allow-Origin: *\r\n"
-			"\r\n", websocket_sec_acceptKey);
-	SSL_write(cSSL, http_header, strlen(http_header));
 }

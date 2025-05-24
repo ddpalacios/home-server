@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+	<head></head>
+	<body>
+		<h1>Studio</h1>
+		<button onclick="start_websocket();" style="background-color: #3BEB28;">start</button>
+		<button onclick="stop_websocket();" style="background-color: #EB521F;">stop</button>
+		<button onclick="location.href = '/home';" >home</button>
+		<br>
+		<br>
+		<label for="name">Enter Test Message:</label>
+		<input id=myText type='text'></input>
+		<button onclick="send_message();">send</button>
+		
+	
+	
+	</body>
+	<script>
+
+		var  ws = null;
+
+		function send_message(){
+				if (ws == null){
+					alert("Websocket has not been initialized");
+					return; 
+				}
+		var x = document.getElementById("myText").value;
+		ws.send(x);
+
+
+
+		}
+		function start_websocket(){
+			alert("Websocket started!");
+			 ws = new WebSocket('wss://127.0.0.1:9034/home/studio/start_websocket');
+			console.log(ws);
+			ws.onopen = () => {
+				console.log("Websocket connection established");
+				ws.send("Hello from the client!!");
+			}
+			ws.onmessage = (event) => {
+					console.log("Message from server:", event.data);
+			}
+			ws.onerror = (error) => {
+				console.error("Websocket error:", error);
+
+			}
+			ws.onclose = () => {
+				console.log("Websocket connection closed");
+
+			}
+				
+		}
+		function stop_websocket(){
+				alert("Websocket stopped!");
+				
+				
+		}
+	
+	</script>
+
+</html>
