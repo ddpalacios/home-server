@@ -7,6 +7,7 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/bio.h>
+#include <cjson/cJSON.h>
 #include "client.h"
 #include "HTTP.h"
 #include "User.h"
@@ -151,8 +152,24 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 
 				if (is_websocket_buffer(buf)){
 					char message[nbytes];
-					decode_websocket_buffer(buf, message);
-					printf("Decoded Message: %s\n", message);
+					int true_nbytes = decode_websocket_buffer(buf, message);
+					cJSON *json = cJSON_Parse(message);
+					cJSON *type = cJSON_GetObjectItem(json, "type");
+					if (cJSON_IsString(type)){
+						 if (strcmp(type->valuestring, "text")==0){
+							printf("TEXT Recieved!\n");
+							printf("Decoded Message: %s\n", message);
+							cJSON *value = cJSON_GetObjectItem(json, "value");
+							printf("VALUE: %s\n",value->valuestring);
+						
+						}
+					}else{
+						uint8_t* bmessage = malloc(true_nbytes);
+						FILE* fptr = fopen("testAudio.webm", "ab");
+						fwrite(message, 1, true_nbytes, fptr);
+						fclose(fptr);
+					}
+
 				}
 
 				if (strncmp(buf, "GET ", 4) == 0){
@@ -160,6 +177,7 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 					char* request_cookie = get_cookie(buf);
 					char* websocket_key = get_header_value(buf,"Sec-WebSocket-Key");
 					char *route = get_route(buf); 
+					
 					if (strcmp(route, "/") ==0){
 						render_template("index.html", cSSL, request_cookie);
 						close(ready_fd);
@@ -200,15 +218,20 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 
 					}else if (strcmp(route, "/home/studio/start_websocket") ==0){
 						printf("Starting Websocket...\n");
-						printf("WEBSOCKET KEY %s\n", websocket_key);
 						char* wss_accp_key = generate_websocket_accptKey(websocket_key);
-						printf("WEBSOCKET  ACCPT KEY %s\n", wss_accp_key);
 						initialize_websocket_protocol(cSSL,  wss_accp_key);
+						struct Session session = get_session(request_cookie);
+						struct User user = get_user_by_id(session.userId);
+						insert_websocket_session(user.Id, request_cookie);
+
 					
 					}else if (strcmp(route, "/home/studio/stop_websocket")==0){ 
 						printf("Stopping Websocket...\n");
 						close(ready_fd);
 						del_from_pfds(pfds,clients, ready_fd, &fd_count);
+						struct Session session = get_session(request_cookie);
+						struct User user = get_user_by_id(session.userId);
+						delete_websocket_session(user.Id, request_cookie);
 				       
 					}else{
 						close(ready_fd);

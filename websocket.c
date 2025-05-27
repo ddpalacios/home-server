@@ -1,9 +1,44 @@
 #include <stdio.h>
+#include <uuid/uuid.h>
 #include <ctype.h>
 #include <string.h>
 #include <openssl/sha.h>
+#include <openssl/ssl.h>
 #include <openssl/evp.h>
+#include <time.h>
+#include "SQL.h"
 
+
+void delete_websocket_session(char* userid, char* sessionid){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql, sizeof(sql),"DELETE FROM websocket_connection WHERE userid = '%s' AND sessionid = '%s'",
+			userid,
+			sessionid);
+	printf("query: %s\n", sql);
+	query(conn, sql);
+	close_sql_connection(conn);
+
+}
+
+void insert_websocket_session(char* userid, char* sessionid){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	time_t current_time = time(NULL);
+	static char guid_str[37];
+	uuid_t guid;
+	uuid_unparse(guid, guid_str);
+	static char date_string[20];
+	strftime(date_string, 20, "%Y-%m-%d", localtime(&current_time));
+	snprintf(sql, sizeof(sql),
+			"INSERT INTO websocket_connection VALUES ('%s', '%s', '%s', '%s')",
+			userid,
+			sessionid,
+			date_string,
+			guid_str);
+	query(conn, sql);
+	close_sql_connection(conn);
+}
 
 char* generate_websocket_accptKey(char* websocket_sec_key ){
 	char websocket_key[32];
@@ -37,7 +72,22 @@ int is_websocket_buffer(unsigned char* buf){
 	  }
 }
 
-void  decode_websocket_buffer(char* buf, char message[] ){
+
+void send_websocket_buffer(SSL* cSSL, char* buf){
+	unsigned char frame[2 + strlen(buf)];
+	frame[0] = 0x81; 
+	frame[1] = strlen(buf);
+	for (int i =0; i<strlen(buf); i++){
+		frame[2+i] = buf[i];
+	
+	}
+	SSL_write(cSSL, buf, 2+strlen(buf));
+
+
+
+}
+
+int  decode_websocket_buffer(char* buf, char message[] ){
 
     // Byte 1
     int finVal = buf[0] & 0x80; // Bit 0
@@ -48,7 +98,6 @@ void  decode_websocket_buffer(char* buf, char message[] ){
 
     printf("finVal %d, opcode: %d, mask: %d\n",finVal,opcode,mask);
     if (mask){
-
 	    int payloadlength = buf[1] & 0x7F;
 	    printf("Initial Payload Length int: %d\n",buf[1]);
 	    printf("Initial Payload Length : %d\n",254 & 0x7F);
@@ -93,5 +142,7 @@ void  decode_websocket_buffer(char* buf, char message[] ){
 		    message[payloadlength] = '\0';
 	    }
 	    printf("True payload Length : %d\n",payloadlength);
+	    return payloadlength;
     }
 }
+

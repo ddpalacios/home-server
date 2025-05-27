@@ -4,20 +4,64 @@
 	<body>
 		<h1>Studio</h1>
 		<button onclick="start_websocket();" style="background-color: #3BEB28;">start</button>
-		<button onclick="stop_websocket();" style="background-color: #EB521F;">stop</button>
+		<button onclick="stop_websocket()" style="background-color: #EB521F;">stop</button>
 		<button onclick="location.href = '/home';" >home</button>
 		<br>
 		<br>
 		<label for="name">Enter Test Message:</label>
-		<input id=myText type='text'></input>
+		<input id=myText type='text' onKeyPress="send_message();" ></input>
 		<button onclick="send_message();">send</button>
-		
-	
-	
+		<button onclick="open_microphone();" >Start Microphone</button>
+		<button onclick="close_microphone();" >Close Microphone</button>
+		<audio id="audio_stream_id" style="margin-top: 2%; width: 70%; " controls=""></audio>
 	</body>
 	<script>
-
 		var  ws = null;
+		var stream = null;
+
+		function close_microphone(){
+			if (stream == null){
+				alert("No Microphone detected");
+				return;
+			}
+			stream.getTracks().forEach(track => track.stop());
+			stream = null;
+		}
+		async function open_microphone(){
+			if (ws == null){
+				alert("Websocket has not been initialized");
+				return; 
+			}
+			try {
+				 stream = await navigator.mediaDevices.getUserMedia({audio: true});
+				let chunks = [];
+				let mediaRecorder = new MediaRecorder(stream);
+				let sequence = 0;
+				mediaRecorder.ondataavailable = function (e) {
+					chunks.push(e.data);	
+					ws.send(e.data)
+					console.log(e.data)
+				};
+				mediaRecorder.start(10);
+
+
+			    mediaRecorder.onstop = function(e){
+				    const blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
+				    const audioUrl = URL.createObjectURL(blob);
+				    var audio = document.getElementById("audio_stream_id");
+				    console.log(audio);
+				    audio.src =  audioUrl;
+
+			    }
+			}catch(error){
+				alert("Error Accessing media devices");
+				console.log(error);
+
+
+			}
+
+		}
+
 
 		function send_message(){
 				if (ws == null){
@@ -25,18 +69,32 @@
 					return; 
 				}
 		var x = document.getElementById("myText").value;
-		ws.send(x);
+		ws.send(JSON.stringify({'type': 'text', 'value': x }));
 
 
 
 		}
+
+
+		function stop_websocket(){
+					var request = new Request('https://127.0.0.1:9034/home/studio/stop_websocket', {
+								method: 'GET',
+								headers: new Headers({
+										'Accept': 'application/json'
+										})
+
+							});
+					fetch(request);
+					location.href = '/home/studio'
+					alert("Websocket stopped");
+
+		}
+
 		function start_websocket(){
-			alert("Websocket started!");
 			 ws = new WebSocket('wss://127.0.0.1:9034/home/studio/start_websocket');
 			console.log(ws);
 			ws.onopen = () => {
-				console.log("Websocket connection established");
-				ws.send("Hello from the client!!");
+				alert("Websocket connection established");
 			}
 			ws.onmessage = (event) => {
 					console.log("Message from server:", event.data);
@@ -49,11 +107,6 @@
 				console.log("Websocket connection closed");
 
 			}
-				
-		}
-		function stop_websocket(){
-				alert("Websocket stopped!");
-				
 				
 		}
 	
