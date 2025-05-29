@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New User</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #4a4a8d;
+            margin-bottom: 1rem;
+        }
+
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            font-size: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus {
+            border-color: #4a4a8d;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            font-size: 1rem;
+            background-color: #4a4a8d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #3a3a7c;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+    </style>
+</head>
+<body>
+<div id="main-container">
+    <div class="input-container">
+	  <h1>New Account</h1>
+         <input id="login_username" type="text" placeholder="Enter a username...">
+         <input id="login_email" type="text" placeholder="Enter your email...">
+         <input id="login_password" type="password" placeholder="Create a strong password...">
+	 <button onclick="create_account()" type="button">Create Account</button>
+	  <p><a href="/">Back to Home</a></p>
+    </div>
+</div>
+</body>
+<script>
+  async	function create_account(){
+		var login_username = document.getElementById('login_username').value;
+		var login_email = document.getElementById('login_email').value;
+		var login_password = document.getElementById('login_password').value;
+
+		var request = new Request('https://127.0.0.1:9034/create_login', {
+				method: 'POST'
+				,headers: new Headers({
+					'Accept': 'application/json',
+					'Content-Type': 'text/json'
+					}),
+				 body: JSON.stringify({
+							username: login_username,
+							password: login_password,
+						 	email: login_email
+						    })
+			});
+			const reponse = await fetch(request);
+			if (reponse.status == 200){
+					alert("Accont has been created.  Please log in.");
+					location.href = '/';
+		
+		
+				}else if (reponse.status == 401){
+						alert("An error has occured. Check back later.");
+				} 
+	}
+</script>
+</html>
