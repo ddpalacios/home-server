@@ -33,9 +33,9 @@ char*  get_header_value(const char* buf, const char* key){
 		const char *end = strchr(cookie_header, '=');
 		const char* cookie = end+1;
 		const char *start = cookie;
-		static char guid[37];  
-		strncpy(guid, start, 36);
-		guid[36] = '\0';
+		static char guid[32];  
+		strncpy(guid, start, 32);
+		guid[32] = '\0';
 		return guid; 
 	}
 }
@@ -117,22 +117,20 @@ void send_json_to_client(SSL *cSSL, char*json){
 
 
 void render_template(unsigned char *buf, SSL *cSSL, char* request_cookie){
-	if (request_cookie == NULL){	
-		printf("No Request cookie found.\n");
-		buf = "index.html";
-	}else{
-		struct Session session = get_session(request_cookie);
-		if (!session.exists){
-			printf("SESSION DOES NOT EXIST.\n");
+	if (!strcmp(buf, "index.html")==0 && !strcmp(buf, "new_user.html")==0){
+		printf("RENDERDING\n");
+		if (request_cookie == NULL){	
+			printf("No Request cookie found.\n");
 			buf = "index.html";
 		}else{
-			struct User user = get_user_by_id(session.userId);
-			if (!user.exists){
+			struct Session session = get_session(request_cookie);
+			if (!session.exists){
+				printf("SESSION DOES NOT EXIST.\n");
 				buf = "index.html";
-			}		
+			}
 		}
 	}
-	printf("Request cookie %s to render %s\n",  request_cookie, buf);
+	printf("Request cookie '%s' to render %s\n",  request_cookie, buf);
 	char *html_buffer = get_file_buffer(buf);
 	int html_length = strlen(html_buffer);
 	char http_header[2048];
@@ -159,10 +157,19 @@ char* create_cookie(char* key, char* value){
 void send_response_code(int code, SSL *cSSL, char* cookie){
 	char http_header[2048];
 	if (code == 200){
-		snprintf(http_header, sizeof(http_header),
-				"HTTP/1.1 200 OK\r\n"
-				"Set-Cookie: %s\r\n"
-				"\r\n", cookie);
+		if (cookie == NULL) {
+			printf("NO COOKIE BEING SENT!!!\n");
+			snprintf(http_header, sizeof(http_header),
+					"HTTP/1.1 200 OK\r\n"
+					"\r\n");
+		
+		}else{
+			snprintf(http_header, sizeof(http_header),
+					"HTTP/1.1 200 OK\r\n"
+					"Set-Cookie: %s\r\n"
+					"\r\n", cookie);
+			printf("Sending %s\n", http_header);
+		}
 		SSL_write(cSSL, http_header, strlen(http_header));
 	}else if (code == 401) {
 		snprintf(http_header, sizeof(http_header),

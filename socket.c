@@ -177,12 +177,18 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 					char* request_cookie = get_cookie(buf);
 					char* websocket_key = get_header_value(buf,"Sec-WebSocket-Key");
 					char *route = get_route(buf); 
+
 					
 					if (strcmp(route, "/") ==0){
 						render_template("index.html", cSSL, request_cookie);
 						close(ready_fd);
 						del_from_pfds(pfds,clients, ready_fd, &fd_count);
 
+					}else if (strcmp(route, "/new_user") ==0){
+						render_template("new_user.html", cSSL, request_cookie);
+						close(ready_fd);
+						del_from_pfds(pfds,clients, ready_fd, &fd_count);
+					
 					}else if (strcmp(route, "/home")==0){
 						render_template("home.html", cSSL,request_cookie);
 						close(ready_fd);
@@ -207,6 +213,7 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 					}else if (strcmp(route, "/home/userinfo")==0){
 						printf("Getting User info Session ID: %s...\n", request_cookie);
 						struct Session session = get_session(request_cookie);
+						printf("SESSION LOGGED %s\n", session.Id);
 						struct User user = get_user_by_id(session.userId);
 						printf("USER %s LOGGED ON\n", user.Id);
 						static char user_json[255];
@@ -232,25 +239,34 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 						struct Session session = get_session(request_cookie);
 						struct User user = get_user_by_id(session.userId);
 						delete_websocket_session(user.Id, request_cookie);
-				       
 					}else{
 						close(ready_fd);
 						del_from_pfds(pfds,clients, ready_fd, &fd_count);
 					}
 				}else if (strncmp(buf, "POST ",4) == 0){ 
 					// TODO Use get_route to extract the route and remove currenct condition
-					if (strncmp(buf+4, " /validate_login ",17) == 0){
+					if (strncmp(buf+4, " /create_login ",15) == 0){
+						char* res = retrieve_request_body(buf);
+						create_login(res);
+						send_response_code(200, cSSL, NULL);
+						close(ready_fd);
+						del_from_pfds(pfds,clients, ready_fd, &fd_count);
+
+
+					}else if (strncmp(buf+4, " /validate_login ",17) == 0){
 						char* res = retrieve_request_body(buf);
 						struct User user = validate_login(res);
 						if (user.exists){
 							printf("LOGIN SUCCESSFUL!\n");
 							struct Session session = create_session(user.Id);
-							char* cookie = create_cookie("sessionid",session.Id); 
-							printf("Session ID: %s\n", cookie);
-							send_response_code(200, cSSL, cookie);
 							insert_session(session);
+							printf("Session ID: %s | %s | %s\n", session.Id, session.userId, session.login_time);
+							char* cookie = create_cookie("sessionid",session.Id); 
+							send_response_code(200, cSSL, cookie);
 							close(ready_fd);
 							del_from_pfds(pfds,clients, ready_fd, &fd_count);
+							/*
+							*/
 						}else{
 							printf("LOGIN FAILED!\n");
 							send_response_code(401, cSSL, NULL);

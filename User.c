@@ -3,35 +3,58 @@
 #include <string.h>
 #include "SQL.h"
 #include "User.h"
+#include "password_hashing.h"
+#include <openssl/sha.h>
+
 
 struct User create_user(char* fullname, char* password, char* email){
+	    struct User user;
+	    unsigned char* user_id = malloc(16);
+	    create_unique_identifier(user_id);
 
-	struct User user;
-	user.fullname = fullname;
-	user.email = email;
-	user.password = password;
-	return user;
+	    unsigned char* salt = malloc(16);
+	    create_unique_identifier(salt);
 
+	    size_t password_len = strlen(password);
+	    unsigned char* combined = malloc(password_len + 16);
+	    memcpy(combined, password, password_len);
+	    memcpy(combined + password_len, salt, 16);
+
+	    unsigned char* hash = malloc(SHA256_DIGEST_LENGTH);
+	    hash_user_password(combined, password_len + 16, hash);
+
+	    free(combined);
+
+	    user.Id = user_id;
+	    user.fullname = strdup(fullname);
+	    user.email = strdup(email);
+	    user.password = hash;
+	    user.salt = salt;
+
+	    return user;
 }
 
 void insert_user(struct User user){
 	//printf("Inserting user %s\n", user.fullname);
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[255];
-	char *password;
-	password = (char*) malloc(20);
-	strcpy(password,user.password);
-	encrypt(password, 0xFACA);
-	char* enc = b64_encode((const unsigned char *)password, strlen(password));
+	char id_hex[33];
+	char salt_hex[33];
+	char password_hex[SHA256_DIGEST_LENGTH * 2 + 1];
+	hash_to_hex(user.Id, 16, id_hex);
+	hash_to_hex(user.salt, 16, salt_hex);
+	hash_to_hex(user.password, SHA256_DIGEST_LENGTH, password_hex);
 
 	snprintf(sql, sizeof(sql),
-		    "INSERT INTO user VALUES (NULL, '%s', '%s', '%s');",
+		    "INSERT INTO user VALUES ('%s', '%s', '%s', '%s', '%s');",
+		    id_hex,
 		    user.fullname,
-		    enc,
-		    user.email);
+		    password_hex,
+		    user.email,
+		    salt_hex);
 
-	//printf("SQL: %s\n", sql);
-	 query(conn, sql);
+	printf("SQL: %s\n", sql);
+	query(conn, sql);
 	close_sql_connection(conn);
 
 }
@@ -46,9 +69,9 @@ struct User* get_users(){
 struct User get_user_by_id(char* userid){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[255];
-	snprintf(sql, sizeof(sql),"SELECT * FROM user WHERE Id = '%s'", userid);
+	snprintf(sql, sizeof(sql),"SELECT * FROM user WHERE user_id = '%s'", userid);
 
-	struct User user = create_user(NULL, NULL, NULL);
+        struct User user;
 	MYSQL_RES* res = query(conn, sql);
 	MYSQL_ROW row;
 	while((row = mysql_fetch_row(res))!= NULL){
@@ -74,7 +97,7 @@ struct User get_user_by_name(char* fullname){
 	char sql[255];
 	snprintf(sql, sizeof(sql),"SELECT * FROM user WHERE username = '%s'", fullname);
 
-	struct User user = create_user(NULL, NULL, NULL);
+        struct User user;
 	MYSQL_RES* res = query(conn, sql);
 	MYSQL_ROW row;
 	while((row = mysql_fetch_row(res))!= NULL){
@@ -83,6 +106,7 @@ struct User get_user_by_name(char* fullname){
 		user.fullname = strdup(row[1]);
 		user.password = strdup(row[2]);
 		user.email = strdup(row[3]);
+		user.salt = strdup(row[4]);
 		user.exists = 1;
 		close_sql_connection(conn);
 		return user;
@@ -95,14 +119,93 @@ struct User get_user_by_name(char* fullname){
 }
 
 
+void create_login(char *res){
+	printf("Creating Login...\n");
+	 cJSON *json = cJSON_Parse(res);
+	 cJSON *username = cJSON_GetObjectItem(json, "username");
+	 cJSON *password = cJSON_GetObjectItem(json, "password");
+	 cJSON *email = cJSON_GetObjectItem(json, "email");
+
+	 if (cJSON_IsString(username) && cJSON_IsString(password) && cJSON_IsString(email) ) {
+			struct User user = create_user(username->valuestring,  password->valuestring, email->valuestring);
+			insert_user(user);
+
+	 }
+
+
+}
+
+
 struct User validate_login(char *res){
 	printf("Validating Login...\n");
 	 cJSON *json = cJSON_Parse(res);
 	 cJSON *username = cJSON_GetObjectItem(json, "username");
 	 cJSON *password = cJSON_GetObjectItem(json, "password");
+	 struct User user = get_user_by_name(username->valuestring);
+	     if (user.exists) {
+
+		size_t password_len = strlen(password->valuestring);
+		unsigned char salt[16];
+		hex_to_bytes(user.salt, salt, 16);
+
+		unsigned char* combined = malloc(password_len + 16);
+		memcpy(combined, password->valuestring, password_len);
+		memcpy(combined + password_len, salt, 16);
+
+		unsigned char* hash = malloc(SHA256_DIGEST_LENGTH);
+		hash_user_password(combined, password_len + 16, hash);
+
+		char password_hex[SHA256_DIGEST_LENGTH * 2 + 1];
+		hash_to_hex(hash, SHA256_DIGEST_LENGTH, password_hex);
+
+		unsigned char stored_hash[SHA256_DIGEST_LENGTH];
+		hex_to_bytes(user.password, stored_hash, SHA256_DIGEST_LENGTH);
+
+		if (memcmp(hash, stored_hash, SHA256_DIGEST_LENGTH) == 0) {
+		    printf("Password Match!\n");
+			user.exists = 1;
+			return user;
+		} else {
+		    printf("Password Mismatch!\n");
+			user.exists = 0;
+			return user;
+		}
+
+		free(combined);
+		free(hash);
+	     }
+	 /*
+	 if (user.exists){
+		 printf("User Exists! %s\n", user.fullname); 
+		 printf("User pass! %s\n", user.password); 
+		 printf("User salt! %s\n", user.salt); 
+	         size_t password_len = strlen(password->valuestring);
+		 unsigned char* combined = malloc(password_len + 16);
+		 memcpy(combined, password->valuestring, password_len);
+	         memcpy(combined + password_len, user.salt, 16);
+	         unsigned char* hash = malloc(SHA256_DIGEST_LENGTH);
+	         hash_user_password(combined, password_len + 16, hash);
+
+		char password_hex[SHA256_DIGEST_LENGTH * 2 + 1];
+		 hash_to_hex(hash, SHA256_DIGEST_LENGTH, password_hex);
+		 printf("Inputed Password: %s\n", password_hex);
+		 if (strcmp(password_hex, user.password) ==0){
+			user.exists = 1;
+			return user;
+		 
+		 }else{
+		 
+			user.exists = 0;
+			return user;
+		 
+		 }
+	 }
+	 */
+	/*
 	 if (cJSON_IsString(username) && cJSON_IsString(password) ) {
 		 struct User user = get_user_by_name(username->valuestring);
 		 if (user.exists){
+			 printf("User Exists! %s\n", user.fullname); 
 			size_t out_len = b64_decoded_size(user.password)+1;
 			char* out = malloc(out_len);
 			if (!b64_decode(user.password, (unsigned char *)out, out_len)) {
@@ -127,6 +230,7 @@ struct User validate_login(char *res){
 		 
 		 }
 	 }
+			*/
 
 
 
