@@ -174,64 +174,6 @@ struct User validate_login(char *res){
 		free(combined);
 		free(hash);
 	     }
-	 /*
-	 if (user.exists){
-		 printf("User Exists! %s\n", user.fullname); 
-		 printf("User pass! %s\n", user.password); 
-		 printf("User salt! %s\n", user.salt); 
-	         size_t password_len = strlen(password->valuestring);
-		 unsigned char* combined = malloc(password_len + 16);
-		 memcpy(combined, password->valuestring, password_len);
-	         memcpy(combined + password_len, user.salt, 16);
-	         unsigned char* hash = malloc(SHA256_DIGEST_LENGTH);
-	         hash_user_password(combined, password_len + 16, hash);
-
-		char password_hex[SHA256_DIGEST_LENGTH * 2 + 1];
-		 hash_to_hex(hash, SHA256_DIGEST_LENGTH, password_hex);
-		 printf("Inputed Password: %s\n", password_hex);
-		 if (strcmp(password_hex, user.password) ==0){
-			user.exists = 1;
-			return user;
-		 
-		 }else{
-		 
-			user.exists = 0;
-			return user;
-		 
-		 }
-	 }
-	 */
-	/*
-	 if (cJSON_IsString(username) && cJSON_IsString(password) ) {
-		 struct User user = get_user_by_name(username->valuestring);
-		 if (user.exists){
-			 printf("User Exists! %s\n", user.fullname); 
-			size_t out_len = b64_decoded_size(user.password)+1;
-			char* out = malloc(out_len);
-			if (!b64_decode(user.password, (unsigned char *)out, out_len)) {
-				printf("Decode Failure\n");
-			}
-			out[out_len] = '\0';
-			decrypt(out, 0xFACA);
-			out[strlen(out)-1] = '\0';
-			if (strcmp(out,password->valuestring)==0){
-				user.exists = 1;
-				return user;
-			}else{
-
-				user.exists = 0;
-				return user;
-			}
-		 
-		 }else{
-			user.exists = 0;
-			 return user;
-		 
-		 
-		 }
-	 }
-			*/
-
 
 
 }

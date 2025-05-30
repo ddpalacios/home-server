@@ -140,6 +140,7 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 			unsigned char *buf = malloc(BUFFER_SIZE);
 			int nbytes = SSL_read(cSSL, buf, BUFFER_SIZE);
 			printf("Recieved %d from client %d\n", nbytes, ready_fd);
+			printf("BUF %s\n", buf);
 			if (nbytes <= 0){
 				if (nbytes == 0){
 					printf("FD %d hung up\n", ready_fd);
@@ -153,24 +154,36 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 				if (is_websocket_buffer(buf)){
 					char message[nbytes];
 					int true_nbytes = decode_websocket_buffer(buf, message);
-					cJSON *json = cJSON_Parse(message);
-					cJSON *type = cJSON_GetObjectItem(json, "type");
-					if (cJSON_IsString(type)){
+					if (true_nbytes > 2){
+						printf("WEB message: %s\n", message);
+						char *res = strstr(message, " ");
+						res = res +1;
+						char *end = strchr(message, '}');
+						size_t jsonlength = end - message +1;
+						char jsonpart[jsonlength +1];
+						strncpy(jsonpart, message, jsonlength);
+						jsonpart[jsonlength] = '\0';
+						cJSON *json = cJSON_Parse(jsonpart);
+						cJSON *type = cJSON_GetObjectItem(json, "type");
+						cJSON *userid = cJSON_GetObjectItem(json, "userid");
 						 if (strcmp(type->valuestring, "text")==0){
-							printf("TEXT Recieved!\n");
-							printf("Decoded Message: %s\n", message);
-							cJSON *value = cJSON_GetObjectItem(json, "value");
-							printf("VALUE: %s\n",value->valuestring);
+							printf("TEXT Recieved! FROM UserID %s\n", userid->valuestring);
+							printf("VALUE: %s\n",res);
 						
+						}else if (strcmp(type->valuestring, "audio")==0){
+							printf("BINARY Recieved! FROM UserID %s\n", userid->valuestring);
+
+							FILE* fptr = fopen("Audio/testAudio.webm", "ab");
+							fwrite(res, 1, true_nbytes, fptr);
+							fclose(fptr);
+
+						}else{
+							printf("TYPE NOT VALID TO READ!!\n");
+							printf("VALUE: %s\n",res);
 						}
-					}else{
-						uint8_t* bmessage = malloc(true_nbytes);
-						FILE* fptr = fopen("Audio/testAudio.webm", "ab");
-						fwrite(message, 1, true_nbytes, fptr);
-						fclose(fptr);
 					}
 
-				}
+			}
 
 				if (strncmp(buf, "GET ", 4) == 0){
 					// TODO create a copy of buf instead of manipulating the original
@@ -265,8 +278,6 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 							send_response_code(200, cSSL, cookie);
 							close(ready_fd);
 							del_from_pfds(pfds,clients, ready_fd, &fd_count);
-							/*
-							*/
 						}else{
 							printf("LOGIN FAILED!\n");
 							send_response_code(401, cSSL, NULL);

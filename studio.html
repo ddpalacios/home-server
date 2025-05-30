@@ -9,15 +9,31 @@
 		<br>
 		<br>
 		<label for="name">Enter Test Message:</label>
-		<input id=myText type='text' onKeyPress="send_message();" ></input>
+		<input id=myText type='text' ></input>
 		<button onclick="send_message();">send</button>
 		<button onclick="open_microphone();" >Start Microphone</button>
 		<button onclick="close_microphone();" >Close Microphone</button>
-		<audio id="audio_stream_id" style="margin-top: 2%; width: 70%; " controls=""></audio>
+		<br>
+		<div>
+			<audio id="audio_stream_id" style="margin-top: 2%; width: 30%; " controls=""></audio>
+		</div>
 	</body>
 	<script>
 		var  ws = null;
 		var stream = null;
+	        var userid = null;			
+		var request = new Request('https://127.0.0.1:9034/home/userinfo', {
+					method: 'GET'
+					,headers: new Headers({
+								'Accept': 'application/json'
+							})
+				});
+		fetch(request)
+			.then((response)=> response.json())
+			.then((data)=> {
+					 console.log(data);
+					 userid = data['userid'];
+				});
 
 		function close_microphone(){
 			if (stream == null){
@@ -26,6 +42,7 @@
 			}
 			stream.getTracks().forEach(track => track.stop());
 			stream = null;
+			
 		}
 		async function open_microphone(){
 			if (ws == null){
@@ -38,9 +55,15 @@
 				let mediaRecorder = new MediaRecorder(stream);
 				let sequence = 0;
 				mediaRecorder.ondataavailable = function (e) {
-					chunks.push(e.data);	
-					ws.send(e.data)
-					console.log(e.data)
+				chunks.push(e.data);	
+				var metadata = JSON.stringify({
+							'type': 'audio'
+							,'userid': userid
+						});
+						
+				var combined_blob = new Blob([metadata,' ' ,e.data], {type: "audio/webm;codecs=opus'"});
+				ws.send(combined_blob);
+				console.log(e.data)
 				};
 				mediaRecorder.start(10);
 
@@ -68,8 +91,16 @@
 					alert("Websocket has not been initialized");
 					return; 
 				}
-		var x = document.getElementById("myText").value;
-		ws.send(JSON.stringify({'type': 'text', 'value': x }));
+			var x = document.getElementById("myText").value;
+			var blob = new Blob([x], { type: "text/plain" });
+			var metadata = JSON.stringify({
+						'type': 'binary'
+						,'userid': userid
+					});
+					
+			var combined_blob = new Blob([metadata,' ' ,blob], {type: "application/octet-stream"});
+
+			ws.send(combined_blob);
 
 
 
