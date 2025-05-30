@@ -35,6 +35,11 @@
 					 userid = data['userid'];
 				});
 
+		function generateUniqueId() {
+			return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+			}
+
+
 		function close_microphone(){
 			if (stream == null){
 				alert("No Microphone detected");
@@ -54,11 +59,14 @@
 				let chunks = [];
 				let mediaRecorder = new MediaRecorder(stream);
 				let sequence = 0;
+				console.log(generateUniqueId());
+				let uniqueId = generateUniqueId();
 				mediaRecorder.ondataavailable = function (e) {
 				var metadata = JSON.stringify({
 							'type': 'audio'
 							,'userid': userid
 							,'size': e.data.size
+							,'Id': uniqueId
 						});
 						
 				var combined_blob = new Blob([metadata,' ' ,e.data], {type: "audio/webm;codecs=opus'"});

@@ -14,6 +14,8 @@
 #include "SQL.h"
 #include "session.h"
 #include "websocket.h"
+#include "FileStorage.h"
+#include "password_hashing.h"
 #define PORT 9034
 #define CLIENT_CERT "self_signed_cert.crt"
 #define CLIENT_KEY "privateKey.key"
@@ -152,7 +154,6 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 				if (is_websocket_buffer(buf)){
 					char*message = malloc(nbytes);
 					int true_nbytes = decode_websocket_buffer(buf, message);
-
 					char *res = strstr(message, " ");
 					res = res +1;
 					char *end = strchr(message, '}');
@@ -164,6 +165,7 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 					cJSON *type = cJSON_GetObjectItem(json, "type");
 					cJSON *userid = cJSON_GetObjectItem(json, "userid");
 					cJSON *blob_size = cJSON_GetObjectItem(json, "size");
+					cJSON *blob_id = cJSON_GetObjectItem(json, "Id");
 
 					 if (strcmp(type->valuestring, "text")==0){
 						printf("TEXT Recieved! FROM UserID %s\n", userid->valuestring);
@@ -172,12 +174,24 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 					}else if (strcmp(type->valuestring, "audio")==0){
 						printf("BINARY Recieved! FROM UserID %s\n", userid->valuestring);
 						printf("BUF SIZE'%d'\n", blob_size->valueint);
-						FILE* fptr = fopen("Audio/testAudio.webm", "ab");
-						fwrite(res, 1, blob_size->valueint, fptr);
-						fclose(fptr);
-						/*
-
-						*/
+						char path[255];
+						snprintf(path, sizeof(path), "users/%s/",userid->valuestring);
+						create_directory(path);
+						char recordingsPath[255];
+						snprintf(recordingsPath, sizeof(recordingsPath), "users/%s/recordings",userid->valuestring);
+						create_directory(recordingsPath);
+						if (directory_exists(recordingsPath)){
+							char audioPath[255];
+							char* audioName = malloc(16);
+							create_unique_identifier(audioName);
+							char audioName_hex[33];
+							hash_to_hex(audioName, 16, audioName_hex);
+							snprintf(audioPath, sizeof(audioPath), "users/%s/recordings/Audio_%s.webm",userid->valuestring, blob_id->valuestring);
+							printf("Path: %s\n",audioPath);
+							FILE* fptr = fopen(audioPath, "ab");
+							fwrite(res, 1, blob_size->valueint, fptr);
+							fclose(fptr);
+						}
 
 					}else{
 						printf("TYPE NOT VALID TO READ!!\n");
@@ -188,41 +202,6 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 
 				}
 
-				/*
-				if (is_websocket_buffer(buf)){
-					char message[nbytes];
-					int true_nbytes = decode_websocket_buffer(buf, message);
-					if (true_nbytes > 2){
-						printf("WEB message: %s\n", message);
-						char *res = strstr(message, " ");
-						res = res +1;
-						char *end = strchr(message, '}');
-						size_t jsonlength = end - message +1;
-						char jsonpart[jsonlength +1];
-						strncpy(jsonpart, message, jsonlength);
-						jsonpart[jsonlength] = '\0';
-						cJSON *json = cJSON_Parse(jsonpart);
-						cJSON *type = cJSON_GetObjectItem(json, "type");
-						cJSON *userid = cJSON_GetObjectItem(json, "userid");
-						 if (strcmp(type->valuestring, "text")==0){
-							printf("TEXT Recieved! FROM UserID %s\n", userid->valuestring);
-							printf("VALUE: %s\n",res);
-						
-						}else if (strcmp(type->valuestring, "audio")==0){
-							printf("BINARY Recieved! FROM UserID %s\n", userid->valuestring);
-
-							FILE* fptr = fopen("Audio/testAudio.webm", "ab");
-							fwrite(res, 1, true_nbytes, fptr);
-							fclose(fptr);
-
-						}else{
-							printf("TYPE NOT VALID TO READ!!\n");
-							printf("VALUE: %s\n",res);
-						}
-					}
-
-			}
-			*/
 
 				if (strncmp(buf, "GET ", 4) == 0){
 					// TODO create a copy of buf instead of manipulating the original
