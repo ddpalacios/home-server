@@ -140,7 +140,6 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 			unsigned char *buf = malloc(BUFFER_SIZE);
 			int nbytes = SSL_read(cSSL, buf, BUFFER_SIZE);
 			printf("Recieved %d from client %d\n", nbytes, ready_fd);
-			printf("BUF %s\n", buf);
 			if (nbytes <= 0){
 				if (nbytes == 0){
 					printf("FD %d hung up\n", ready_fd);
@@ -150,7 +149,46 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 				close(ready_fd);
 				del_from_pfds(pfds,clients, ready_fd, &fd_count);
 			}else{
+				if (is_websocket_buffer(buf)){
+					char*message = malloc(nbytes);
+					int true_nbytes = decode_websocket_buffer(buf, message);
 
+					char *res = strstr(message, " ");
+					res = res +1;
+					char *end = strchr(message, '}');
+					size_t jsonlength = end - message +1;
+					char jsonpart[jsonlength +1];
+					strncpy(jsonpart, message, jsonlength);
+					jsonpart[jsonlength] = '\0';
+					cJSON *json = cJSON_Parse(jsonpart);
+					cJSON *type = cJSON_GetObjectItem(json, "type");
+					cJSON *userid = cJSON_GetObjectItem(json, "userid");
+					cJSON *blob_size = cJSON_GetObjectItem(json, "size");
+
+					 if (strcmp(type->valuestring, "text")==0){
+						printf("TEXT Recieved! FROM UserID %s\n", userid->valuestring);
+						printf("VALUE: %s\n",res);
+					
+					}else if (strcmp(type->valuestring, "audio")==0){
+						printf("BINARY Recieved! FROM UserID %s\n", userid->valuestring);
+						printf("BUF SIZE'%d'\n", blob_size->valueint);
+						FILE* fptr = fopen("Audio/testAudio.webm", "ab");
+						fwrite(res, 1, blob_size->valueint, fptr);
+						fclose(fptr);
+						/*
+
+						*/
+
+					}else{
+						printf("TYPE NOT VALID TO READ!!\n");
+						printf("VALUE: %s\n",res);
+					}
+
+
+
+				}
+
+				/*
 				if (is_websocket_buffer(buf)){
 					char message[nbytes];
 					int true_nbytes = decode_websocket_buffer(buf, message);
@@ -184,6 +222,7 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 					}
 
 			}
+			*/
 
 				if (strncmp(buf, "GET ", 4) == 0){
 					// TODO create a copy of buf instead of manipulating the original

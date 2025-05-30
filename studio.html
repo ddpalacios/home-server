@@ -55,15 +55,16 @@
 				let mediaRecorder = new MediaRecorder(stream);
 				let sequence = 0;
 				mediaRecorder.ondataavailable = function (e) {
-				chunks.push(e.data);	
 				var metadata = JSON.stringify({
 							'type': 'audio'
 							,'userid': userid
+							,'size': e.data.size
 						});
 						
 				var combined_blob = new Blob([metadata,' ' ,e.data], {type: "audio/webm;codecs=opus'"});
 				ws.send(combined_blob);
-				console.log(e.data)
+				chunks.push(e.data);	
+				console.log(metadata)
 				};
 				mediaRecorder.start(10);
 
