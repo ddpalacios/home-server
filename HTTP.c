@@ -1,4 +1,5 @@
 #include <openssl/ssl.h>
+#include <cjson/cJSON.h>
 #include <time.h>
 #include <uuid/uuid.h>
 #include "SQL.h"
@@ -54,6 +55,30 @@ char* retrieve_request_body(unsigned char* buf){
 		return buffer;
 	    }
 }
+
+int  get_int_value_from_json(char* key, char* target_json){
+	cJSON *json = cJSON_Parse(target_json);
+	cJSON *value = cJSON_GetObjectItem(json, key);
+
+    if (cJSON_IsNumber(value)) {
+	 int res = value->valueint;
+	return res;
+    }
+
+
+}
+char* get_string_value_from_json(char* key, char* target_json){
+	cJSON *json = cJSON_Parse(target_json);
+	cJSON *value = cJSON_GetObjectItem(json, key);
+
+    if (cJSON_IsString(value) && (value->valuestring != NULL)) {
+	    char* res = value->valuestring;
+	    return res; 
+    }
+    printf("COULD NOT FIND %s\n", key); 
+
+}
+
 
 char *get_file_buffer(char* filename){
 	FILE *html_pcontent;

@@ -54,19 +54,49 @@
 				alert("Websocket has not been initialized");
 				return; 
 			}
+				let uniqueId = generateUniqueId();
+				var  audioName = 'Audio_'+uniqueId;
+				let source = 'recordings'
+				let database = 'users'
+				let path = database+'/'+userid+'/'+ source+ '/'+audioName + '.webm';
+				var starttime = new Date().toLocaleString();
+				var request = new Request('https://127.0.0.1:9034/start_audio', {
+							method: 'POST'
+							,headers: new Headers({
+								'Accept': 'application/json',
+								'Content-Type': 'text/json'	
+							}),
+							body: JSON.stringify({
+										userid : userid
+										,starttime:starttime 
+										,audioName: audioName
+										,audioId : uniqueId
+										,path: path 
+										,source: source
+										,database: database
+									})
+						
+						
+						});
+				const response = await fetch(request);
+				console.log(response);
+				
 			try {
-				 stream = await navigator.mediaDevices.getUserMedia({audio: true});
+				stream = await navigator.mediaDevices.getUserMedia({audio: true});
 				let chunks = [];
 				let mediaRecorder = new MediaRecorder(stream);
 				let sequence = 0;
-				console.log(generateUniqueId());
-				let uniqueId = generateUniqueId();
 				mediaRecorder.ondataavailable = function (e) {
 				var metadata = JSON.stringify({
 							'type': 'audio'
 							,'userid': userid
 							,'size': e.data.size
 							,'Id': uniqueId
+							,'audioName': audioName
+							,'path': path
+							,'database': database
+							,'source': source
+							
 						});
 						
 				var combined_blob = new Blob([metadata,' ' ,e.data], {type: "audio/webm;codecs=opus'"});
@@ -75,6 +105,7 @@
 				console.log(metadata)
 				};
 				mediaRecorder.start(10);
+
 
 
 			    mediaRecorder.onstop = function(e){
@@ -94,7 +125,6 @@
 
 		}
 
-
 		function send_message(){
 				if (ws == null){
 					alert("Websocket has not been initialized");
@@ -108,14 +138,8 @@
 					});
 					
 			var combined_blob = new Blob([metadata,' ' ,blob], {type: "application/octet-stream"});
-
 			ws.send(combined_blob);
-
-
-
 		}
-
-
 		function stop_websocket(){
 					var request = new Request('https://127.0.0.1:9034/home/studio/stop_websocket', {
 								method: 'GET',
@@ -127,7 +151,6 @@
 					fetch(request);
 					location.href = '/home/studio'
 					alert("Websocket stopped");
-
 		}
 
 		function start_websocket(){

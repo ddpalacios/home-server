@@ -15,7 +15,7 @@
 #include "session.h"
 #include "websocket.h"
 #include "FileStorage.h"
-#include "password_hashing.h"
+#include "Audio.h"
 #define PORT 9034
 #define CLIENT_CERT "self_signed_cert.crt"
 #define CLIENT_KEY "privateKey.key"
@@ -141,7 +141,7 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 			SSL* cSSL = get_client_socket(clients, fd_count,ready_fd);
 			unsigned char *buf = malloc(BUFFER_SIZE);
 			int nbytes = SSL_read(cSSL, buf, BUFFER_SIZE);
-			printf("Recieved %d from client %d\n", nbytes, ready_fd);
+			//printf("Recieved %d from client %d\n", nbytes, ready_fd);
 			if (nbytes <= 0){
 				if (nbytes == 0){
 					printf("FD %d hung up\n", ready_fd);
@@ -150,55 +150,54 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 				}
 				close(ready_fd);
 				del_from_pfds(pfds,clients, ready_fd, &fd_count);
+			
 			}else{
 				if (is_websocket_buffer(buf)){
 					char*message = malloc(nbytes);
 					int true_nbytes = decode_websocket_buffer(buf, message);
 					char *res = strstr(message, " ");
-					res = res +1;
-					char *end = strchr(message, '}');
-					size_t jsonlength = end - message +1;
-					char jsonpart[jsonlength +1];
-					strncpy(jsonpart, message, jsonlength);
-					jsonpart[jsonlength] = '\0';
-					cJSON *json = cJSON_Parse(jsonpart);
-					cJSON *type = cJSON_GetObjectItem(json, "type");
-					cJSON *userid = cJSON_GetObjectItem(json, "userid");
-					cJSON *blob_size = cJSON_GetObjectItem(json, "size");
-					cJSON *blob_id = cJSON_GetObjectItem(json, "Id");
+					if (res != NULL){
 
-					 if (strcmp(type->valuestring, "text")==0){
-						printf("TEXT Recieved! FROM UserID %s\n", userid->valuestring);
-						printf("VALUE: %s\n",res);
-					
-					}else if (strcmp(type->valuestring, "audio")==0){
-						printf("BINARY Recieved! FROM UserID %s\n", userid->valuestring);
-						printf("BUF SIZE'%d'\n", blob_size->valueint);
-						char path[255];
-						snprintf(path, sizeof(path), "users/%s/",userid->valuestring);
-						create_directory(path);
-						char recordingsPath[255];
-						snprintf(recordingsPath, sizeof(recordingsPath), "users/%s/recordings",userid->valuestring);
-						create_directory(recordingsPath);
-						if (directory_exists(recordingsPath)){
-							char audioPath[255];
-							char* audioName = malloc(16);
-							create_unique_identifier(audioName);
-							char audioName_hex[33];
-							hash_to_hex(audioName, 16, audioName_hex);
-							snprintf(audioPath, sizeof(audioPath), "users/%s/recordings/Audio_%s.webm",userid->valuestring, blob_id->valuestring);
-							printf("Path: %s\n",audioPath);
-							FILE* fptr = fopen(audioPath, "ab");
-							fwrite(res, 1, blob_size->valueint, fptr);
+						res = res +1;
+						char *end = strchr(message, '}');
+						size_t jsonlength = end - message +1;
+						char jsonpart[jsonlength +1];
+						strncpy(jsonpart, message, jsonlength);
+						jsonpart[jsonlength] = '\0';
+
+						char* type = get_string_value_from_json("type", jsonpart);
+						char* userid = get_string_value_from_json("userid", jsonpart);
+						int blob_size = get_int_value_from_json("size", jsonpart);
+						char* blob_id = get_string_value_from_json("Id", jsonpart);
+						char* source = get_string_value_from_json("source", jsonpart);
+						char* database = get_string_value_from_json("database", jsonpart);
+						char* audioName = get_string_value_from_json("audioName", jsonpart);
+						char* path = get_string_value_from_json("path", jsonpart);
+
+						 if (strcmp(type, "text")==0){
+							printf("TEXT Recieved! FROM UserID %s\n", userid);
+							printf("VALUE: %s\n",res);
+						
+						}else if (strcmp(type, "audio")==0){
+							create_directory(database);
+							char database_userid_path[50];
+							snprintf(database_userid_path, sizeof(database_userid_path), "%s/%s",database,userid);
+							create_directory(database_userid_path);
+
+							char database_userid_source_path[100];
+							snprintf(database_userid_source_path, sizeof(database_userid_source_path), "%s/%s",database_userid_path,source);
+							create_directory(database_userid_source_path);
+
+							printf("Path: %s\n",path);
+							FILE* fptr = fopen(path, "ab");
+							fwrite(res, 1, blob_size, fptr);
 							fclose(fptr);
+
+						}else{
+							printf("TYPE NOT VALID TO READ!!\n");
+							printf("VALUE: %s\n",res);
 						}
-
-					}else{
-						printf("TYPE NOT VALID TO READ!!\n");
-						printf("VALUE: %s\n",res);
 					}
-
-
 
 				}
 
@@ -208,7 +207,6 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 					char* request_cookie = get_cookie(buf);
 					char* websocket_key = get_header_value(buf,"Sec-WebSocket-Key");
 					char *route = get_route(buf); 
-
 					
 					if (strcmp(route, "/") ==0){
 						render_template("index.html", cSSL, request_cookie);
@@ -283,6 +281,19 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 						close(ready_fd);
 						del_from_pfds(pfds,clients, ready_fd, &fd_count);
 
+
+					}else if (strncmp(buf+4, " /start_audio ",14) == 0){
+						char* res = retrieve_request_body(buf);
+						char* path = get_string_value_from_json("path", res);
+						char* userid = get_string_value_from_json("userid", res);
+						char* starttime = get_string_value_from_json("starttime", res);
+						char* audioName = get_string_value_from_json("audioName", res);
+						char* audioId = get_string_value_from_json("audioId", res);
+						struct Audio audio = create_audio(audioId,audioName, path, starttime, userid, NULL, 0.0);
+						insert_audio(audio);
+						send_response_code(200, cSSL, NULL);
+						close(ready_fd);
+						del_from_pfds(pfds,clients, ready_fd, &fd_count);
 
 					}else if (strncmp(buf+4, " /validate_login ",17) == 0){
 						char* res = retrieve_request_body(buf);

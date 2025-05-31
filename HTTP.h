@@ -4,6 +4,8 @@ char *get_file_buffer(char* filename);
 char *get_route(unsigned char* buf);
 void render_template(unsigned char* buf, SSL *cSSL, char* request_cookie);
 char * retrieve_request_body(unsigned char* buf);
+char* get_string_value_from_json(char* key, char* json);
+int  get_int_value_from_json(char* key, char* json);
  char*  get_cookie(unsigned char* buf);
  char* get_header_value(const char* buf, const char* key);
  char*  create_cookie(char* key, char* value);

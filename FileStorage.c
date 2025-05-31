@@ -20,12 +20,9 @@ int create_directory(char* path){
     int check = mkdir(path,0777);
 
     if (!check){
-        printf("Directory created\n");
     	return check;
     	
     }else {
-        printf("Unable to create directory %d\n", check);
-
 	return check;
     }
 

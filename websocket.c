@@ -15,7 +15,7 @@ void delete_websocket_session(char* userid, char* sessionid){
 	snprintf(sql, sizeof(sql),"DELETE FROM websocket_connection WHERE userid = '%s' AND sessionid = '%s'",
 			userid,
 			sessionid);
-	printf("query: %s\n", sql);
+	//printf("query: %s\n", sql);
 	query(conn, sql);
 	close_sql_connection(conn);
 
@@ -96,11 +96,11 @@ int  decode_websocket_buffer(char* buf, char message[] ){
     // Bytes 2 - 10 Payload length
     int mask = buf[1] & 0x80; // Bit 8 Must expect this to be 1
 
-    printf("finVal %d, opcode: %d, mask: %d\n",finVal,opcode,mask);
+    //printf("finVal %d, opcode: %d, mask: %d\n",finVal,opcode,mask);
     if (mask){
 	    int payloadlength = buf[1] & 0x7F;
-	    printf("Initial Payload Length int: %d\n",buf[1]);
-	    printf("Initial Payload Length : %d\n",254 & 0x7F);
+	    //printf("Initial Payload Length int: %d\n",buf[1]);
+	    //printf("Initial Payload Length : %d\n",254 & 0x7F);
 	    unsigned char maskingKey[4];
 	    if (payloadlength < 126){
 		    int offset = 2;
@@ -124,7 +124,7 @@ int  decode_websocket_buffer(char* buf, char message[] ){
 		    unsigned int p1 = buf[2] & 0xFF;
 		    unsigned int p2 = buf[3] & 0xFF;
 		    payloadlength = (p1 << 8) | p2;
-		    printf("Payload Length Extracted: %d\n",payloadlength);
+		    //printf("Payload Length Extracted: %d\n",payloadlength);
 		    int offset = 4;
 		    for (int i =0; i<4; i++){
 			maskingKey[i] = buf[4+i];
@@ -141,7 +141,7 @@ int  decode_websocket_buffer(char* buf, char message[] ){
 		    }
 		    message[payloadlength] = '\0';
 	    }
-	    printf("True payload Length : %d\n",payloadlength);
+	    //printf("True payload Length : %d\n",payloadlength);
 	    return payloadlength;
     }
 }
