@@ -1,23 +1,25 @@
 #include <stdio.h>
-#include <uuid/uuid.h>
 #include <string.h>
 #include "session.h"
 #include "SQL.h"
+#include "password_hashing.h"
 #include <time.h>
+
 
 struct Session create_session( char* userId){
 	struct Session session;
-	static char guid_str[37];
-	uuid_t guid;
-	uuid_generate(guid);
-	uuid_unparse(guid, guid_str);
-	session.Id = guid_str;
+	unsigned char* session_id = malloc(16);
+	create_unique_identifier(session_id);
+	char sessionId_hex[33];
+	hash_to_hex(session_id, 16, sessionId_hex);
+	session.Id  =strdup(sessionId_hex);
 	session.userId = userId;
 	time_t current_time = time(NULL);
 	static char date_string[20];
 	strftime(date_string, 20, "%Y-%m-%d", localtime(&current_time));
 	session.login_time = date_string;
 	return session;
+	
 }
 void insert_session(struct Session session){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
