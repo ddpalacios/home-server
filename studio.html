@@ -94,7 +94,7 @@ th, td {
 
 
 
-		var request = new Request('https://127.0.0.1:9034/home/userinfo', {
+		var request = new Request('/home/userinfo', {
 					method: 'GET'
 					,headers: new Headers({
 								'Accept': 'application/json'
@@ -156,7 +156,7 @@ th, td {
 				let database = 'users'
 				let path = database+'/'+userid+'/'+ source+ '/'+audioName + '.webm';
 				var starttime = new Date().toISOString();
-				var request = new Request('https://127.0.0.1:9034/start_audio', {
+				var request = new Request('/start_audio', {
 							method: 'POST'
 							,headers: new Headers({
 								'Accept': 'application/json',
@@ -237,7 +237,7 @@ th, td {
 			ws.send(combined_blob);
 		}
 		function stop_websocket(){
-					var request = new Request('https://127.0.0.1:9034/home/studio/stop_websocket', {
+					var request = new Request('/home/studio/stop_websocket', {
 								method: 'GET',
 								headers: new Headers({
 										'Accept': 'application/json'
