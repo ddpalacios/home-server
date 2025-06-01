@@ -84,7 +84,7 @@
   async	function login(){
 		var login_username = document.getElementById('login_username').value;
 		var login_password = document.getElementById('login_password').value;
-		var request = new Request('https://127.0.0.1:9034/validate_login', {
+		var request = new Request('/validate_login', {
 				method: 'POST'
 				,headers: new Headers({
 					'Accept': 'application/json',
