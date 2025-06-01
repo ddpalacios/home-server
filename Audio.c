@@ -208,6 +208,9 @@ void insert_audio(struct Audio audio){
 }
 
 char* get_audio_by_userid(char* userid){
+	if (userid == NULL){
+		return NULL;
+	}
 	int total_audios = get_total_audio_by_userid(userid);
 	if (total_audios == 0){
 		return NULL;
@@ -219,7 +222,7 @@ char* get_audio_by_userid(char* userid){
 	MYSQL_ROW row;
 	printf("Query: %s\n", sql);
 	struct Audio *audio;
-	audio = malloc(sizeof(*audio) * (total_audios+1));
+	audio = malloc(sizeof(*audio) * (total_audios*10));
 	int count = 0;
 	while((row = mysql_fetch_row(res))!= NULL){
 		audio[count].Id = strdup(row[0]);

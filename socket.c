@@ -243,8 +243,12 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 					}else if (strncmp(route, "/home/studio/audio",18)==0){
 						char* userid = get_request_parameter(route, "userid");
 						char* json_audio = get_audio_by_userid(userid);
-						send_JSON_response_code(200, cSSL, json_audio);
-						free(json_audio);
+						if (json_audio == NULL) {
+							send_JSON_response_code(401, cSSL, NULL);
+						}else{
+							send_JSON_response_code(200, cSSL, json_audio);
+							free(json_audio);
+						}
 						close(ready_fd);
 						del_from_pfds(pfds,clients, ready_fd, &fd_count);
 					

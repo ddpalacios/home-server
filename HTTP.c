@@ -280,6 +280,7 @@ char* get_request_parameter(char*route, char*param){
 		  val[length] = '\0';
 		  Id++;
 		  replace(Id, "%27", "");
+		  replace(Id, "%20", "");
 		  cJSON_AddStringToObject(root, val, Id);
 		  token = strtok(NULL, "&");
 		  count++;
