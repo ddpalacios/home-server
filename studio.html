@@ -40,13 +40,30 @@
 			}
 
 
-		function close_microphone(){
+		async function close_microphone(){
 			if (stream == null){
 				alert("No Microphone detected");
 				return;
 			}
 			stream.getTracks().forEach(track => track.stop());
 			stream = null;
+
+			var endtime = new Date().toISOString();
+			var request = new Request('/stop_audio', {
+						method: 'POST'
+						,headers: new Headers({
+							'Accept': 'application/json',
+							'Content-Type': 'text/json'	
+						}),
+						body: JSON.stringify({
+									userid : userid
+									,endtime: endtime 
+								})
+					
+					
+					});
+			const response = await fetch(request);
+			console.log(response);
 			
 		}
 		async function open_microphone(){
@@ -59,7 +76,7 @@
 				let source = 'recordings'
 				let database = 'users'
 				let path = database+'/'+userid+'/'+ source+ '/'+audioName + '.webm';
-				var starttime = new Date().toLocaleString();
+				var starttime = new Date().toISOString();
 				var request = new Request('https://127.0.0.1:9034/start_audio', {
 							method: 'POST'
 							,headers: new Headers({

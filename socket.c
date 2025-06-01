@@ -295,6 +295,22 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 						close(ready_fd);
 						del_from_pfds(pfds,clients, ready_fd, &fd_count);
 
+					}else if (strncmp(buf+4, " /stop_audio ",13) == 0){
+						char* res = retrieve_request_body(buf);
+						char* userid = get_string_value_from_json("userid", res);
+						char* endtime = get_string_value_from_json("endtime", res);
+						printf("Audio STOPPED %s\n", endtime);
+						struct Audio audio = get_active_audio_by_userid(userid);
+						update_audio_value(audio.Id, "endtime", endtime);
+						int duration = get_audio_duration_by_id(audio.Id);
+						printf("Audio Duration %d\n", duration);
+						float duration_in_minutes = duration/60.0;
+						printf("Audio Duration  minutes %f\n",duration_in_minutes);
+						update_audio_duration(audio.Id, "duration", duration_in_minutes);
+						send_response_code(200, cSSL, NULL);
+						close(ready_fd);
+						del_from_pfds(pfds,clients, ready_fd, &fd_count);
+
 					}else if (strncmp(buf+4, " /validate_login ",17) == 0){
 						char* res = retrieve_request_body(buf);
 						struct User user = validate_login(res);

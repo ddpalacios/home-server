@@ -142,6 +142,7 @@ struct User validate_login(char *res){
 	 cJSON *username = cJSON_GetObjectItem(json, "username");
 	 cJSON *password = cJSON_GetObjectItem(json, "password");
 	 struct User user = get_user_by_name(username->valuestring);
+
 	     if (user.exists) {
 
 		size_t password_len = strlen(password->valuestring);
@@ -175,6 +176,7 @@ struct User validate_login(char *res){
 		free(hash);
 	     }
 
+	     return user;
 
 }
 
