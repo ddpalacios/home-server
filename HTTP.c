@@ -6,6 +6,9 @@
 #include "session.h"
 #include "User.h"
 
+
+
+
 char*  get_header_value(const char* buf, const char* key){
 	static char value[64];
 	size_t value_size = sizeof(value);
@@ -85,6 +88,7 @@ char* get_string_value_from_json(char* key, char* target_json){
 	    return res; 
     }
     printf("COULD NOT FIND %s\n", key); 
+    return NULL;
 
 }
 
@@ -187,6 +191,25 @@ char* create_cookie(char* key, char* value){
 	return cookie;
 }
 
+void send_JSON_response_code(int code, SSL *cSSL, char* json){
+	char http_header[2048];
+	if (code == 200){
+		int json_length = strlen(json);
+		 snprintf(http_header,sizeof(http_header),
+				  "HTTP/1.1 200 OK\r\n"
+				  "Content-Type: text/json\r\n"
+				  "Content-Length: %d\r\n"
+				  "\r\n", json_length);
+		  SSL_write(cSSL,http_header,strlen(http_header));
+		  SSL_write(cSSL,json,json_length);
+
+	}else if (code == 401) {
+		snprintf(http_header, sizeof(http_header),
+				"HTTP/1.1 401 Unauthorized\r\n"
+				"\r\n");
+		SSL_write(cSSL, http_header, strlen(http_header));
+	}
+}
 
 void send_response_code(int code, SSL *cSSL, char* cookie){
 	char http_header[2048];
@@ -223,4 +246,51 @@ void initialize_websocket_protocol(SSL *cSSL, char* websocket_sec_acceptKey){
 			"Access-Control-Allow-Origin: *\r\n"
 			"\r\n", websocket_sec_acceptKey);
 	SSL_write(cSSL, http_header, strlen(http_header));
+}
+
+void replace(const char* str, const char* substring, const char* replacement) {
+	char* _substr = strstr(str, substring);
+	 while (_substr != NULL && strcmp(substring, replacement) != 0) {
+		 sprintf(_substr, "%s%s", replacement, _substr + strlen(substring));
+		 _substr = strstr(str, substring);
+	 }
+}
+
+char* get_request_parameter(char*route, char*param){
+	 char* route_copy = malloc(255); 
+	 strcpy(route_copy, route);
+
+	 char* parameters = strchr(route_copy, '?');
+	 char* token = strtok(parameters, "?");
+	 if (token == NULL){
+	 	return NULL;
+	 }
+	 token = strtok(parameters, "&");
+	 int count = 0;
+	 cJSON *root = cJSON_CreateObject();
+	 while (token != NULL) {
+		 if (count == 0) {
+			 token++;
+		 }
+		  char* Id = strchr(token, '=');
+		  char* val = malloc(50);
+		  char* pos = strchr(token, '=');
+		  size_t length = pos - token;
+		  strncpy(val, token, length);
+		  val[length] = '\0';
+		  Id++;
+		  replace(Id, "%27", "");
+		  cJSON_AddStringToObject(root, val, Id);
+		  token = strtok(NULL, "&");
+		  count++;
+	 }
+	char *json_string = cJSON_Print(root);
+	if (json_string) {
+		char* result = get_string_value_from_json(param, json_string);	
+		free(json_string);
+		cJSON_Delete(root);
+		return result;
+	}
+	cJSON_Delete(root);
+	return NULL;
 }

@@ -118,7 +118,6 @@ void del_from_pfds(struct pollfd pfds[],struct Client clients[], int fd, int *fd
 	}
 }
 
-
 void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *clients, int fd_count, int max_fd_size){
 	printf("https://127.0.0.1:%d\n",PORT );
 
@@ -207,6 +206,8 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 					char* request_cookie = get_cookie(buf);
 					char* websocket_key = get_header_value(buf,"Sec-WebSocket-Key");
 					char *route = get_route(buf); 
+					printf("route: %s\n", route);
+
 					
 					if (strcmp(route, "/") ==0){
 						render_template("index.html", cSSL, request_cookie);
@@ -217,7 +218,7 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 						render_template("new_user.html", cSSL, request_cookie);
 						close(ready_fd);
 						del_from_pfds(pfds,clients, ready_fd, &fd_count);
-					
+			
 					}else if (strcmp(route, "/home")==0){
 						render_template("home.html", cSSL,request_cookie);
 						close(ready_fd);
@@ -239,6 +240,14 @@ void listen_for_pfds(int listener_socket, struct pollfd *pfds,struct Client *cli
 						close(ready_fd);
 						del_from_pfds(pfds,clients, ready_fd, &fd_count);
 
+					}else if (strncmp(route, "/home/studio/audio",18)==0){
+						char* userid = get_request_parameter(route, "userid");
+						char* json_audio = get_audio_by_userid(userid);
+						send_JSON_response_code(200, cSSL, json_audio);
+						free(json_audio);
+						close(ready_fd);
+						del_from_pfds(pfds,clients, ready_fd, &fd_count);
+					
 					}else if (strcmp(route, "/home/userinfo")==0){
 						printf("Getting User info Session ID: %s...\n", request_cookie);
 						struct Session session = get_session(request_cookie);

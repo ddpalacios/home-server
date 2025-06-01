@@ -18,6 +18,10 @@
 			<audio id="audio_stream_id" style="margin-top: 2%; width: 30%; " controls=""></audio>
 		</div>
 	</body>
+
+
+
+
 	<script>
 		var  ws = null;
 		var stream = null;
@@ -191,5 +195,25 @@
 		}
 	
 	</script>
+
+	<script>
+		var request = new Request('https://127.0.0.1:9034/home/userinfo', {
+					method: 'GET'
+					,headers: new Headers({
+								'Accept': 'application/json'
+							})
+				});
+		fetch(request)
+			.then((response)=> response.json())
+			.then((data)=> {
+					 console.log(data);
+					 userid = data['userid'];
+				});
+	
+	
+	
+	
+	</script>
+
 
 </html>
