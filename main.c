@@ -4,28 +4,11 @@
 #include <poll.h>
 #include "client.h"
 #include "socket.h"
-
-/*
- * FEATURE #1 Host URL & Port Number
- *
- * - Users should have the ability to visit application on any device with internet.
- * - User Log in is required
- * 
- * TODO 
- *  
- * - Host HTML file on reliable socket
- * - Obtain Certification to host locally & production
- * - Create Admin Page & keep track of users
- * - Store User information in SQL database (stretch goal)
- *
- * - Start Date: 2025-05-13
- *
- * - Due Date: 2025-05-24
- *
- * */
-
+#include "FileStorage.h"
 
 int main(){
+	//create_directory("users/f434b7e2454ce858e60f587b8d1d27b0/");
+	//create_directory("users/f434b7e2454ce858e60f587b8d1d27b0/recordings");
 	initialize_ssl();
 	int max_fd_size = 10;
 	int fd_count = 0;

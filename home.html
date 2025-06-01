@@ -5,7 +5,7 @@
 	<body>
 		<div id=welcome_title></div>
 		<div id=navigation>
-			<button>Studio</button>
+			<button onclick="location.href='/home/studio'">Studio</button>
 			<button onclick="logout()">Logout</button>
 		</div>
 
@@ -40,7 +40,6 @@
 						const text = document.createTextNode("Welcome, "+data['username']);
 						h1.appendChild(text);
 						element.appendChild(h1);
-
 						if (data['username'] == 'admin'){
 							const nav_div = document.getElementById("navigation");
 							const btn = document.createElement("button");
