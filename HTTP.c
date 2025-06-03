@@ -32,7 +32,9 @@ char*  get_header_value(const char* buf, const char* key){
 
 
  char* get_cookie(unsigned char* buf){
-	char *cookie_header = strstr(buf, "Cookie: ");
+	char* cookie_buf = malloc(5076);
+	strcpy(cookie_buf,buf);
+	char *cookie_header = strstr(cookie_buf, "Cookie: ");
 	if (cookie_header != NULL){
 		const char *end = strchr(cookie_header, '=');
 		const char* cookie = end+1;
@@ -45,9 +47,11 @@ char*  get_header_value(const char* buf, const char* key){
 }
 
 char* retrieve_request_body(unsigned char* buf){
-            char* requestBody = strstr(buf, "\r\n\r\n");
-            if (requestBody != NULL) {
-                requestBody += 4;	
+	    char* buf_cpy = malloc(5076);
+	    strcpy(buf_cpy, buf);
+            char* requestBody = strstr(buf_cpy, "\r\n\r\n");
+	    requestBody +=4;
+	    if (strlen(requestBody) >0){
 		const char *end = strchr(requestBody, '}');
 	        size_t jsonLength = end - requestBody + 1; 
 	        char jsonPart[jsonLength + 1];             
@@ -57,6 +61,7 @@ char* retrieve_request_body(unsigned char* buf){
 		strcpy(buffer, jsonPart);
 		return buffer;
 	    }
+
 }
 float  get_float_value_from_json(char* key, char* target_json){
 	cJSON *json = cJSON_Parse(target_json);
@@ -127,9 +132,12 @@ char *get_file_buffer(char* filename){
 
 char *get_route(unsigned char* buf){
 	char *route = buf + 4;
+	//printf("ROUTE %s\n", route);
 	char *end =  strchr(route, ' ');
+	//printf("ROUTE END %s\n", end);
 	if (end) {
 		*end = '\0';
+	//	printf("ROUTE END %s\n", route);
 		return route;
 	}
 }
@@ -143,32 +151,29 @@ void send_json_to_client(SSL *cSSL, char*json){
 			"Content-Type: application/json\r\n"
 			"Content-Length: %d\r\n"
 			"\r\n", html_length);
-	printf("%s\n", http_header);
 	if (SSL_write(cSSL, http_header, strlen(http_header)) <=0){
 		printf("ERROR HTTP HEADER SENDING DATA TO CLIENT\n");
 	}
 	if(SSL_write(cSSL, json, html_length)<=0){
 		printf("ERROR SENDING JSON DATA TO CLIENT\n");
 	}
+	printf("%s\n", http_header);
+	printf("%s\n", json);
 }
 
 
 
 void render_template(unsigned char *buf, SSL *cSSL, char* request_cookie){
 	if (!strcmp(buf, "index.html")==0 && !strcmp(buf, "new_user.html")==0){
-		printf("RENDERDING\n");
 		if (request_cookie == NULL){	
-			printf("No Request cookie found.\n");
 			buf = "index.html";
 		}else{
 			struct Session session = get_session(request_cookie);
 			if (!session.exists){
-				printf("SESSION DOES NOT EXIST.\n");
 				buf = "index.html";
 			}
 		}
 	}
-	printf("Request cookie '%s' to render %s\n",  request_cookie, buf);
 	char *html_buffer = get_file_buffer(buf);
 	int html_length = strlen(html_buffer);
 	char http_header[2048];
@@ -182,12 +187,13 @@ void render_template(unsigned char *buf, SSL *cSSL, char* request_cookie){
 	SSL_write(cSSL, http_header, strlen(http_header));
 	SSL_write(cSSL, html_buffer, html_length);
 	free(html_buffer);
+	printf("Sent %s\n", http_header);
 }
 
 
 char* create_cookie(char* key, char* value){
 	static char cookie[255];
-	snprintf(cookie, sizeof(cookie), "%s=%s;Path=/home;Secure;HttpOnly",key,value);
+	snprintf(cookie, sizeof(cookie), "%s=%s;Path=/life-of-sounds/;Secure;HttpOnly",key,value);
 	return cookie;
 }
 

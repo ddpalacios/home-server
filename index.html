@@ -84,7 +84,7 @@
   async	function login(){
 		var login_username = document.getElementById('login_username').value;
 		var login_password = document.getElementById('login_password').value;
-		var request = new Request('/validate_login', {
+		var request = new Request('/life-of-sounds/login', {
 				method: 'POST'
 				,headers: new Headers({
 					'Accept': 'application/json',
@@ -95,10 +95,10 @@
 							password: login_password 
 						    })
 			});
-			const reponse = await fetch(request);
-			if (reponse.status == 200){
-					location.href = '/home'
-				}else if (reponse.status == 401){
+			var response = await fetch(request);
+			if (response.status == 200){
+					location.href = '/life-of-sounds/home'
+				}else if (response.status == 401){
 						alert("Invalid Credentials! Try again.");
 				} 
 	}

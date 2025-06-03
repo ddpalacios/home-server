@@ -7,7 +7,7 @@ typedef struct User{
 	char* fullname;
 	int  exists;
 }users;
-
+char* convert_user_to_json(struct User user);
 struct User create_user(char* fullname, char* password, char* email);
 void insert_user(struct User user);
 struct User* get_users();

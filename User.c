@@ -7,6 +7,20 @@
 #include <openssl/sha.h>
 
 
+char* convert_user_to_json(struct User user){
+	 cJSON *root = cJSON_CreateObject();
+	 cJSON_AddStringToObject(root, "Id", user.Id);
+	 cJSON_AddStringToObject(root, "fullname", user.fullname);
+	 cJSON_AddStringToObject(root, "email", user.email);
+	 char* json_string = cJSON_Print(root);
+	 cJSON_Delete(root);
+	 return json_string;
+
+
+
+
+}
+
 struct User create_user(char* fullname, char* password, char* email){
 	    struct User user;
 	    unsigned char* user_id = malloc(16);
@@ -163,11 +177,9 @@ struct User validate_login(char *res){
 		hex_to_bytes(user.password, stored_hash, SHA256_DIGEST_LENGTH);
 
 		if (memcmp(hash, stored_hash, SHA256_DIGEST_LENGTH) == 0) {
-		    printf("Password Match!\n");
 			user.exists = 1;
 			return user;
 		} else {
-		    printf("Password Mismatch!\n");
 			user.exists = 0;
 			return user;
 		}
