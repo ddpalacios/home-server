@@ -5,37 +5,83 @@
 #include <openssl/sha.h>
 #include <openssl/ssl.h>
 #include <openssl/evp.h>
+#include <cjson/cJSON.h>
 #include <time.h>
 #include "SQL.h"
+#include "websocket.h"
 
-
-void delete_websocket_session(char* userid, char* sessionid){
-	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
-	char sql[255];
-	snprintf(sql, sizeof(sql),"DELETE FROM websocket_connection WHERE userid = '%s' AND sessionid = '%s'",
-			userid,
-			sessionid);
-	//printf("query: %s\n", sql);
-	query(conn, sql);
-	close_sql_connection(conn);
-
+char* convert_websocket_to_json(struct Websocket websocket){
+	cJSON *root = cJSON_CreateObject();
+	cJSON_AddStringToObject(root, "Id", websocket.Id);
+	cJSON_AddStringToObject(root, "userid", websocket.userid);
+	cJSON_AddStringToObject(root, "sessionid", websocket.sessionid);
+	cJSON_AddStringToObject(root, "connected_on", websocket.connected_on);
+	cJSON_AddNumberToObject(root, "socketId", websocket.socketId);
+	char* json_string = cJSON_Print(root);
+	cJSON_Delete(root);
+	return json_string;
 }
 
-void insert_websocket_session(char* userid, char* sessionid){
-	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
-	char sql[255];
+struct Websocket create_websocket(char* userid, char* sessionid, int socketid){
 	time_t current_time = time(NULL);
 	static char guid_str[37];
 	uuid_t guid;
 	uuid_unparse(guid, guid_str);
 	static char date_string[20];
 	strftime(date_string, 20, "%Y-%m-%d", localtime(&current_time));
+	struct Websocket websocket;
+	websocket.Id = guid_str;
+	websocket.userid = userid;
+	websocket.sessionid = sessionid;
+	websocket.socketId = socketid;
+	websocket.connected_on = date_string;
+	return websocket;
+}
+
+struct Websocket get_websocket_by_Id(char* Id){
+	 MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	 char sql[255];
+	 snprintf(sql, sizeof(sql),"SELECT * FROM websocket WHERE Id = '%s'", Id);
+	 struct Websocket websocket;
+	 websocket.exists = 0;
+	 MYSQL_RES* res = query(conn, sql);
+	 MYSQL_ROW row;
+
+
+	 while((row = mysql_fetch_row(res))!= NULL){
+		 websocket.userid = strdup(row[0]);
+		 websocket.sessionid = strdup(row[1]);
+		 websocket.connected_on = strdup(row[2]);
+		 websocket.Id = strdup(row[3]);
+		 websocket.socketId = atoi(row[4]);
+		 websocket.exists=1;
+	 }
+	 close_sql_connection(conn);
+	 return websocket;
+
+}
+
+void delete_websocket(struct Websocket websocket){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql, sizeof(sql),"DELETE FROM websocket WHERE Id = '%s' ",
+			websocket.Id);
+	printf("query: %s\n", sql);
+	query(conn, sql);
+	close_sql_connection(conn);
+
+}
+
+ void insert_websocket_session(struct Websocket websocket){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
 	snprintf(sql, sizeof(sql),
-			"INSERT INTO websocket_connection VALUES ('%s', '%s', '%s', '%s')",
-			userid,
-			sessionid,
-			date_string,
-			guid_str);
+			"INSERT INTO websocket VALUES ('%s', '%s', '%s', '%s', '%d')",
+			websocket.userid,
+			websocket.sessionid,
+			websocket.connected_on,
+			websocket.Id,
+			websocket.socketId);
 	query(conn, sql);
 	close_sql_connection(conn);
 }
@@ -73,20 +119,44 @@ int is_websocket_buffer(unsigned char* buf){
 }
 
 
-void send_websocket_buffer(SSL* cSSL, char* buf){
-	unsigned char frame[2 + strlen(buf)];
-	frame[0] = 0x81; 
-	frame[1] = strlen(buf);
-	for (int i =0; i<strlen(buf); i++){
-		frame[2+i] = buf[i];
-	
-	}
-	SSL_write(cSSL, buf, 2+strlen(buf));
+void send_websocket_buffer(SSL* cSSL, char* text) {
+    size_t len = strlen(text);
+    size_t header_len;
+    size_t total_len;
 
+    if (len < 126) {
+        header_len = 2;
+    } else if (len <= 0xFFFF) {
+        header_len = 4;
+    } else {
+        header_len = 10;
+    }
 
+    total_len = header_len + len;
+    unsigned char* frame = malloc(total_len);
+    if (!frame) {
+        perror("malloc failed");
+        return;
+    }
 
+    frame[0] = 0x81; // FIN=1, opcode=0x1 (text)
+
+    if (len < 126) {
+        frame[1] = len;
+    } else if (len <= 0xFFFF) {
+        frame[1] = 126;
+        frame[2] = (len >> 8) & 0xFF;
+        frame[3] = len & 0xFF;
+    } else {
+        frame[1] = 127;
+        for (int i = 0; i < 8; ++i)
+            frame[2 + i] = (len >> (8 * (7 - i))) & 0xFF;
+    }
+
+    memcpy(frame + header_len, text, len);
+    SSL_write(cSSL, frame, total_len);
+    free(frame);
 }
-
 int  decode_websocket_buffer(char* buf, char message[] ){
 
     // Byte 1

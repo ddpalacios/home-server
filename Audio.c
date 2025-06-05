@@ -4,14 +4,27 @@
 #include <stdio.h>
 #include <string.h>
 #include "SQL.h"
+char* convert_audio_to_json(struct Audio audio){
+	cJSON *root = cJSON_CreateObject();
+	cJSON_AddStringToObject(root, "Id", audio.Id);
+	cJSON_AddStringToObject(root,"userid",audio.userid);
+	cJSON_AddStringToObject(root, "name", audio.name);
+	cJSON_AddStringToObject(root, "starttime", audio.starttime);
+	cJSON_AddStringToObject(root, "endtime", audio.endtime);
+	cJSON_AddNumberToObject(root, "duration", audio.duration);
+	cJSON_AddStringToObject(root, "path", audio.path);
+	char* json_string = cJSON_Print(root);
+	cJSON_Delete(root);
+	return json_string;
+}
 
-
-char* convert_to_json(struct Audio* audio){
+char* convert_audios_to_json(struct Audio* audio){
 	cJSON *root = cJSON_CreateObject();
 	int count = 0;
 	while (audio[count].Id != NULL) {
 		count++;
 	}
+	printf("count %d\n",count);
 	cJSON_AddNumberToObject(root,"total_count",count);
 	cJSON* audios = cJSON_AddArrayToObject(root, "values");
 	count = 0;
@@ -32,9 +45,10 @@ char* convert_to_json(struct Audio* audio){
 	printf("JSON %s\n", json_string);
 	cJSON_Delete(root);
 
+	
 	return json_string;
-} 
 
+} 
 
 
 struct Audio get_audio(char* audioId){
@@ -78,6 +92,24 @@ struct Audio create_audio(char* uniqueId, char* name, char*path, char* starttime
 	return audio;
 }
 
+int  get_total_audio(){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	struct Audio audio;
+	snprintf(sql,sizeof(sql), "SELECT COUNT(*)  AS total_count FROM Audio");
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+
+	int count = 0;
+	printf("Query: %s\n", sql);
+	while((row = mysql_fetch_row(res))!= NULL){
+		count = atoi(row[0]); 
+		return count;
+	}
+
+	close_sql_connection(conn);
+	return count;
+}
 int  get_total_audio_by_userid(char* userid){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[255];
@@ -206,6 +238,37 @@ void insert_audio(struct Audio audio){
 
 
 }
+char* get_audios(){
+	int total_audios = get_total_audio();
+	if (total_audios == 0){
+		return NULL;
+	}
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql,sizeof(sql), "SELECT * FROM Audio");
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+	printf("Query: %s\n", sql);
+	struct Audio *audio;
+	audio = malloc(sizeof(*audio) * (total_audios*10));
+	int count = 0;
+	while((row = mysql_fetch_row(res))!= NULL){
+		audio[count].Id = strdup(row[0]);
+	       	audio[count].name = strdup(row[1]);
+		audio[count].starttime = strdup(row[2]);
+		audio[count].duration = atof(row[4]);
+		if (row[3] != NULL){
+			audio[count].endtime = strdup(row[3]);
+		}
+		audio[count].userid = strdup(row[5]);
+		audio[count].path = strdup(row[6]);
+		count++;
+	}
+
+	close_sql_connection(conn);
+	char* json = convert_audios_to_json(audio);
+	return json;
+}
 
 char* get_audio_by_userid(char* userid){
 	if (userid == NULL){
@@ -238,6 +301,9 @@ char* get_audio_by_userid(char* userid){
 	}
 
 	close_sql_connection(conn);
-	char* json = convert_to_json(audio);
+	if (count == 0){
+		return NULL;
+	}
+	char* json = convert_audios_to_json(audio);
 	return json;
 }

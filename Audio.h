@@ -18,6 +18,9 @@ struct Audio create_audio( char* uniqueId, char* name, char*path, char* starttim
 struct Audio get_audio(char* Id);
 void insert_audio(struct Audio audio);
 void delete_audio(struct Audio audio);
+char* get_audios();
 char* get_audio_by_userid(char* userid);
+char* convert_audios_to_json(struct Audio* audio);
+char* convert_audio_to_json(struct Audio audio);
 
 

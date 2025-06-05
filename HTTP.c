@@ -6,9 +6,6 @@
 #include "session.h"
 #include "User.h"
 
-
-
-
 char*  get_header_value(const char* buf, const char* key){
 	static char value[64];
 	size_t value_size = sizeof(value);
@@ -240,6 +237,12 @@ void send_response_code(int code, SSL *cSSL, char* cookie){
 				"\r\n");
 		SSL_write(cSSL, http_header, strlen(http_header));
 	
+	}else if (code == 404) {
+		snprintf(http_header, sizeof(http_header),
+				"HTTP/1.1 404 Not Found\r\n"
+				"\r\n");
+		SSL_write(cSSL, http_header, strlen(http_header));
+
 	}
 }
 void initialize_websocket_protocol(SSL *cSSL, char* websocket_sec_acceptKey){
@@ -265,8 +268,12 @@ void replace(const char* str, const char* substring, const char* replacement) {
 char* get_request_parameter(char*route, char*param){
 	 char* route_copy = malloc(255); 
 	 strcpy(route_copy, route);
-
 	 char* parameters = strchr(route_copy, '?');
+	 if (parameters == NULL){
+		 return NULL;
+	 
+	 }
+
 	 char* token = strtok(parameters, "?");
 	 if (token == NULL){
 	 	return NULL;
@@ -278,10 +285,14 @@ char* get_request_parameter(char*route, char*param){
 		 if (count == 0) {
 			 token++;
 		 }
+
 		  char* Id = strchr(token, '=');
 		  char* val = malloc(50);
 		  char* pos = strchr(token, '=');
 		  size_t length = pos - token;
+		  if (Id == NULL){
+		  	return NULL;
+		  }
 		  strncpy(val, token, length);
 		  val[length] = '\0';
 		  Id++;

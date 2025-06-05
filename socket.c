@@ -94,12 +94,13 @@ void add_fd(int new_fd, struct pollfd *pfds[], struct Client *clients[],int *fd_
 }
 
 void del_from_pfds(struct pollfd pfds[],struct Client clients[], int fd, int *fd_count){
+	printf("Total FDS: %d\n", (*fd_count));
 	remove_client(fd_count, clients, fd);
 	for (int i=0; i<*fd_count; i++){
 		if (pfds[i].fd  == fd ) {
 			pfds[i] = pfds[*fd_count-1];
 			(*fd_count)--;
-	//		printf("FD removed.\n");
+			printf("FD removed. %d\n", (*fd_count));
 		//printf("Found ready fd %d\n", ready_fd);
 			break;
 		}
@@ -142,37 +143,62 @@ int listen_for_pfds(int fd_count, int max_fd_size){
 				close(ready_fd);
 				del_from_pfds(pfds,clients, ready_fd, &fd_count);
 			}else{
-				if (is_websocket_buffer(buf)){
 					if (is_websocket_buffer(buf)){
 						char*message = malloc(nbytes);
 						int true_nbytes = decode_websocket_buffer(buf, message);
 						char *res = strstr(message, " ");
-					}
-				}else{
+						if (res != NULL){
+							res = res +1;
+							char *end = strchr(message, '}');
+							size_t jsonlength = end - message +1;
+							char jsonpart[jsonlength +1];
+							strncpy(jsonpart, message, jsonlength);
+							jsonpart[jsonlength] = '\0';
+							process_websocket_route(jsonpart, res);	
 
-					printf("Getting buf info...%s\n", buf);
-					printf("Getting Request info...\n");
-					 char  *request_type = malloc(5076);
-					 char  *route = malloc(5076);
-					 strcpy(request_type, buf);
-					 strcpy(route, buf);
-					 printf("Getting Type...%s\n", request_type);
-					 char* type_end = strchr(request_type, ' ');
-					 *type_end = '\0';
-					 route += strlen(request_type)+1;
-					 printf("Getting Route...\n");
-					 char* route_end = strchr(route, ' ');
-					 *route_end = '\0';
-					 printf("Getting Cookie...\n");
-					 char  *cookie = get_cookie(buf);
-					 printf("Getting Body...\n");
-					 char* res = retrieve_request_body(buf);
-					 process_route(buf, request_type, route,cookie ,res,cSSL);
-					 if( !strcmp(route, "/life-of-sounds/home/studio/websocket")==0){
-						 close(ready_fd);
-						 del_from_pfds(pfds,clients, ready_fd, &fd_count);
-					 }
-					 
+						}
+					}else{
+
+						 char  *request_type = malloc(5076);
+						 char  *route = malloc(5076);
+						 strcpy(request_type, buf);
+						 strcpy(route, buf);
+						 char* type_end = strchr(request_type, ' ');
+						 *type_end = '\0';
+						 route += strlen(request_type)+1;
+						 char* route_end = strchr(route, ' ');
+						 *route_end = '\0';
+						 char  *cookie = get_cookie(buf);
+						 char* res = retrieve_request_body(buf);
+						 process_route(buf, request_type, route,cookie ,res,cSSL,ready_fd );
+
+						 if (strcmp(request_type, "DELETE")==0 && strstr(route, "websocket") != NULL){
+							  char* Id = strchr(strstr(route, "websocket"), '/');
+							  Id++;
+							  struct Websocket websocket = get_websocket_by_Id(Id);
+							 if (websocket.exists){
+								 for (int i=0; i< fd_count; i++){
+									 if (pfds[i].fd == listener_socket){continue;}
+									 else if (pfds[i].fd == websocket.socketId){
+										 close(pfds[i].fd);
+										 del_from_pfds(pfds,clients, pfds[i].fd, &fd_count);
+										 break;
+									 }
+									 
+								 }
+								 delete_websocket(websocket);
+								 send_response_code(200, cSSL, cookie); 
+							 }else{
+								 send_response_code(404, cSSL, cookie); 
+							 
+							 }
+							 close(ready_fd);
+							 del_from_pfds(pfds,clients, ready_fd, &fd_count);
+
+						 }else if(strstr(route, "websocket") == NULL){
+							 close(ready_fd);
+							 del_from_pfds(pfds,clients, ready_fd, &fd_count);
+						 }
 				}
 
 					 buf[0] = '\0';
