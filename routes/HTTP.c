@@ -2,9 +2,9 @@
 #include <cjson/cJSON.h>
 #include <time.h>
 #include <uuid/uuid.h>
-#include "SQL.h"
-#include "session.h"
-#include "User.h"
+#include "../database/SQL.h"
+#include "../models/session.h"
+#include "../models/User.h"
 
 char*  get_header_value(const char* buf, const char* key){
 	static char value[64];
@@ -161,16 +161,17 @@ void send_json_to_client(SSL *cSSL, char*json){
 
 
 void render_template(unsigned char *buf, SSL *cSSL, char* request_cookie){
-	if (!strcmp(buf, "index.html")==0 && !strcmp(buf, "new_user.html")==0){
+	if (!strcmp(buf, "templates/index.html")==0 && !strcmp(buf, "templates/new_user.html")==0){
 		if (request_cookie == NULL){	
-			buf = "index.html";
+			buf = "templates/index.html";
 		}else{
 			struct Session session = get_session(request_cookie);
 			if (!session.exists){
-				buf = "index.html";
+				buf = "templates/index.html";
 			}
 		}
 	}
+	printf("Opening %s\n", buf);
 	char *html_buffer = get_file_buffer(buf);
 	int html_length = strlen(html_buffer);
 	char http_header[2048];

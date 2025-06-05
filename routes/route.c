@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <string.h>
 #include "route.h"
-#include "User.h"
+#include "../models/User.h"
 #include "HTTP.h"
-#include "session.h"
-#include "websocket.h"
-#include "Audio.h"
-#include "FileStorage.h"
+#include "../models/session.h"
+#include "../models/websocket.h"
+#include "../models/Audio.h"
+#include "../database/FileStorage.h"
 
 
 void process_websocket_route(char* metadata, char* data){
@@ -48,7 +48,7 @@ void process_route( char* buf, char* request_type, char* route,char* cookie ,cha
 	printf("Route: %s %s \n", request_type, route);
 
 	if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/login")==0){
-		render_template("index.html", cSSL, NULL);
+		render_template("templates/index.html", cSSL, NULL);
 
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/logout")==0){
 			delete_session(cookie);
@@ -56,7 +56,7 @@ void process_route( char* buf, char* request_type, char* route,char* cookie ,cha
 
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home/studio")==0){
 			printf("Rendering...\n");
-			render_template("studio.html", cSSL, cookie);
+			render_template("templates/studio.html", cSSL, cookie);
 		
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home/studio/websocket")==0){
 			printf("Starting Websocket... FD# %d\n", ready_fd);
@@ -73,7 +73,7 @@ void process_route( char* buf, char* request_type, char* route,char* cookie ,cha
 			send_websocket_buffer(cSSL, json); 
 
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home")==0){
-			render_template("home.html", cSSL, cookie);
+			render_template("templates/home.html", cSSL, cookie);
 	
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/session/user")==0){
 			struct Session session = get_session(cookie);
