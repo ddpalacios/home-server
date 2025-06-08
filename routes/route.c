@@ -1,14 +1,26 @@
 #include <stdio.h>
+#include <openssl/ssl.h>
 #include <string.h>
 #include "route.h"
-#include "../models/User.h"
-#include "HTTP.h"
-#include "../models/session.h"
-#include "../models/websocket.h"
-#include "../models/Audio.h"
-#include "../database/FileStorage.h"
+
+#include "life-of-sounds/POST/new_user.h"
+#include "life-of-sounds/POST/login.h"
+#include "life-of-sounds/GET/new_login.h"
+#include "life-of-sounds/GET/studio.h"
+#include "life-of-sounds/GET/sessioninfo.h"
+#include "life-of-sounds/DELETE/sessioninfo.h"
+#include "life-of-sounds/GET/home.h"
+#include "life-of-sounds/GET/websocket_protocol.h"
+#include "life-of-sounds/GET/users.h"
+#include "life-of-sounds/GET/login.h"
+// #include "../models/User.h"
+// #include "../models/session.h"
+// #include "../models/websocket.h"
+// #include "../models/Audio.h"
+// #include "../database/FileStorage.h"
 
 
+/*
 void process_websocket_route(char* metadata, char* data){
 	char* type = get_string_value_from_json("type", metadata);
 	char* userid = get_string_value_from_json("userid", metadata);
@@ -43,12 +55,59 @@ void process_websocket_route(char* metadata, char* data){
 	}
 
 }
+*/
 
-void process_route( char* buf, char* request_type, char* route,char* cookie ,char* request_body,SSL* cSSL, int ready_fd){
+void process_route(SSL* cSSL, char* request, char* request_type, char* route, int fd){
 	printf("Route: %s %s \n", request_type, route);
-
 	if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/login")==0){
-		render_template("templates/index.html", cSSL, NULL);
+		get_login_page(cSSL,request,"index.html");  
+	}else if (strcmp(request_type, "DELETE")==0 && strstr(route, "/life-of-sounds/home/sessioninfo/") != NULL){
+		delete_sessioninfo(cSSL, route, request);
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/life-of-sounds/home/sessioninfo/") != NULL){
+		get_sessioninfo(cSSL, route, request);
+	}else if (strcmp(request_type, "PATCH")==0 && strcmp(route, "/life-of-sounds/home/studio/websocket")==0){
+		update_websocket_info(cSSL, route, request);
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home/studio/websocket")==0){
+		get_websocket_protocol(cSSL,route, request, fd);
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home/studio")==0){
+		get_studio_page( cSSL, request,  "studio.html");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home")==0){
+		get_home_page(cSSL, request, "home.html");
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/life-of-sounds/login")==0){
+		login(cSSL, request);
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/new_login")==0){
+		get_new_login_page(cSSL, request, "new_login.html");
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/life-of-sounds/user")==0){
+		create_new_user(cSSL,request);
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/life-of-sounds/user") != NULL){
+		get_user(cSSL, route, request);
+	}
+	/*
+	if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/login")==0){
+		get_template(cSSL,request,"templates/index.html");
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/life-of-sounds/login")==0){
+		printf("POST %s\n", route);
+		struct User user = validate_login(request_body);
+		if (!user.exists){
+			printf("Incorrect Password!\n");
+			send_response_code(401, cSSL, NULL);
+		}else{
+			printf("Login Successful!\n");
+			struct Session session = create_session(user.Id);
+			insert_session(session);
+			printf("Session ID: %s | %s | %s\n", session.Id, session.userId, session.login_time);
+			char* cookie = create_cookie("sessionid",session.Id);
+			send_response_code(200, cSSL, cookie);
+		}
+
+	}
+	*/
+	/*
+	printf("Route: %s %s \n", request_type, route);
+	if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/login")==0){
+		get_template("templates/index.html", cSSL, NULL);
+
+		//render_template("templates/index.html", cSSL, NULL);
 
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/logout")==0){
 			delete_session(cookie);
@@ -169,4 +228,5 @@ void process_route( char* buf, char* request_type, char* route,char* cookie ,cha
 		}
 
 	}
+*/
 }
