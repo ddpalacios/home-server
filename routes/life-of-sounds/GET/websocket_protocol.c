@@ -9,18 +9,26 @@
 
 void get_websocket_protocol(SSL* cSSL,char*route, char* request, int fd){
             char* websocket_key = get_header_value(request,"Sec-WebSocket-Key");
-			char* wss_accp_key = generate_websocket_accptKey(websocket_key);
-			if (wss_accp_key != NULL){
+            printf("WEBSOCKET KEY: %ld\n", strlen(websocket_key));
+            if ( strlen(websocket_key) > 0){
+                char* wss_accp_key = generate_websocket_accptKey(websocket_key);
+                if (wss_accp_key != NULL){
                 int res = switch_to_websocket_protocol(cSSL,  wss_accp_key);
                 if (res <=0){
                     send_response_code(cSSL, 400);
                 }else{
                     char* cookie = get_cookie(request);
                     struct Session session = get_session(cookie);
+                    printf("Cookie WEBSOCKET %s\n", session.Id);
                     struct User user = get_user_by_id(session.userId);
+                    printf("userid WEBSOCKET %s\n", user.Id);
                     struct Websocket websocket  = create_websocket(user.Id, cookie, fd);
+                    printf("FD WEBSOCKET %d\n", websocket.socketId);
                     insert_websocket_session(websocket);
-                    printf("Websocket Id %s\n", websocket.Id);
                 }
+            }
+            }else{
+            char* websockets_json = get_websockets();
+            send_JSON_response_code(cSSL, 200, websockets_json);
             }
 }

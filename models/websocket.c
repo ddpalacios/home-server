@@ -25,7 +25,10 @@ struct Websocket create_websocket(char* userid, char* sessionid, int socketid){
 			websocket.userid,
 			websocket.sessionid,
 			websocket.socketId);
+
 	query(conn, sql);
+	printf("Query %s\n", sql);
+
 	close_sql_connection(conn);
 }
 
@@ -35,20 +38,224 @@ int update_websocket(char* Id,char* userid,char* sessionid,char* connected_on){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[576];
 	snprintf(sql,sizeof(sql),"UPDATE websocket SET Id = '%s' WHERE userid = '%s' AND sessionid = '%s' ", Id , userid, sessionid);
-	snprintf(sql,sizeof(sql),"UPDATE websocket SET connected_on = '%s' WHERE userid = '%s' AND sessionid = '%s' ", connected_on , userid, sessionid);
+	query(conn, sql);
+	char sql2[576];
 
-	MYSQL_RES* res = query(conn, sql);
+	snprintf(sql2,sizeof(sql2),"UPDATE websocket SET connected_on = '%s' WHERE userid = '%s' AND sessionid = '%s' ", connected_on , userid, sessionid);
+	query(conn, sql2);
 	close_sql_connection(conn);
-	if (res != NULL){
+	return 1;
+}
+
+int  is_active_websocket_client(int fd){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql,sizeof(sql), "SELECT socketId  FROM websocket WHERE socketId = '%d'", fd);
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+
+	printf("Query: %s\n", sql);
+	while((row = mysql_fetch_row(res))!= NULL){
+		int active_fd = atoi(row[0]); 
+		close_sql_connection(conn);
 		return 1;
 	}
+	close_sql_connection(conn);
+
 	return 0;
+}
 
+int  get_total_websockets(){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql,sizeof(sql), "SELECT COUNT(*)  AS total_count FROM websocket");
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
 
+	int count = 0;
+	printf("Query: %s\n", sql);
+	while((row = mysql_fetch_row(res))!= NULL){
+		count = atoi(row[0]); 
+		return count;
+	}
 
+	close_sql_connection(conn);
+	return count;
+}
+char* convert_websockets_to_json(struct Websocket* websocket, int count){
+	cJSON *root = cJSON_CreateObject();
+	printf("count %d\n",count);
+	cJSON_AddNumberToObject(root,"total_count",count);
+	cJSON* websockets = cJSON_AddArrayToObject(root, "values");
+	if (count == 0){
+		char *json_string = cJSON_Print(root);
+		printf("JSON %s\n", json_string);
+		cJSON_Delete(root);
+		return json_string;
+	}
+	count = 0;
+	while (websocket[count].Id != NULL) {
+		cJSON* root_websocket = cJSON_CreateObject();
+		cJSON_AddStringToObject(root_websocket, "Id", websocket[count].Id);
+		cJSON_AddStringToObject(root_websocket,"userid",websocket[count].userid);
+		cJSON_AddStringToObject(root_websocket, "sessionid", websocket[count].sessionid);
+		cJSON_AddStringToObject(root_websocket, "connected_on", websocket[count].connected_on);
+		cJSON_AddNumberToObject(root_websocket, "socketId", websocket[count].socketId);
+		cJSON_AddItemToArray(websockets, root_websocket);
+		count++;
 
+	}
+	char *json_string = cJSON_Print(root);
+	printf("JSON %s\n", json_string);
+	cJSON_Delete(root);
 
+	
+	return json_string;
 
+} 
+
+char* convert_websocket_to_json(struct Websocket websocket){
+	cJSON *root = cJSON_CreateObject();
+	cJSON_AddStringToObject(root, "Id", websocket.Id);
+	cJSON_AddStringToObject(root,"userid",websocket.userid);
+	cJSON_AddStringToObject(root, "sessionid", websocket.sessionid);
+	cJSON_AddStringToObject(root, "connected_on", websocket.connected_on);
+	cJSON_AddNumberToObject(root, "socketId", websocket.socketId);
+	char* json_string = cJSON_Print(root);
+	cJSON_Delete(root);
+	return json_string;
+}
+
+char* get_websockets(){
+	struct Websocket *websocket;
+	websocket = malloc(sizeof(*websocket) * 1000);
+	int total_websockets = get_total_websockets();
+	printf("Total Websockets: %d\n", total_websockets);
+	if (total_websockets == 0){
+		char* json = convert_websockets_to_json(websocket,total_websockets);
+		return json;
+	}
+
+	
+
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql,sizeof(sql), "SELECT * FROM websocket");
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+	printf("Query: %s\n", sql);
+
+	int count = 0;
+	while((row = mysql_fetch_row(res))!= NULL){
+		websocket[count].userid = strdup(row[0]);
+		websocket[count].sessionid = strdup(row[1]);
+		websocket[count].connected_on = strdup(row[2]);
+		websocket[count].Id = strdup(row[3]);
+		websocket[count].socketId =  atoi(row[4]); 
+		count++;
+	}
+
+	close_sql_connection(conn);
+	char* json = convert_websockets_to_json(websocket,total_websockets);
+	return json;
+}
+
+int is_websocket_buffer(unsigned char* buf){
+	int finVal = buf[0] & 0x80;
+	int opcode = buf[0] & 0x0F;
+	int mask = buf[1] & 0x80;
+	int payloadlength = buf[1] & 0x7F;
+	if (opcode == 0 && finVal == 0 && mask==0){
+		  return 0;
+	  }
+	if (opcode == 0 && finVal == 0 && mask == 128){
+		  return 1;
+	  }
+	if (opcode >=1 && mask == 128){
+		return 1;
+	  
+	}else{
+		return 0;
+	  }
+}
+
+int  decode_websocket_buffer(char* buf, char message[] ){
+
+    // Byte 1
+    int finVal = buf[0] & 0x80; // Bit 0
+    int opcode = buf[0] & 0x0F; // Bits 4-7
+
+    // Bytes 2 - 10 Payload length
+    int mask = buf[1] & 0x80; // Bit 8 Must expect this to be 1
+
+    //printf("finVal %d, opcode: %d, mask: %d\n",finVal,opcode,mask);
+    if (mask){
+	    int payloadlength = buf[1] & 0x7F;
+	    //printf("Initial Payload Length int: %d\n",buf[1]);
+	    //printf("Initial Payload Length : %d\n",254 & 0x7F);
+	    unsigned char maskingKey[4];
+	    if (payloadlength < 126){
+		    int offset = 2;
+		    for (int i =0; i<4; i++){
+			maskingKey[i] = buf[2+i];
+			offset = 2 +i;
+		    }
+		    ++offset;
+		    unsigned char payload[payloadlength+1];
+		    for (int i =0; i<payloadlength; i++){
+			    payload[i] = buf[offset+i];
+		    }
+		    for (int i=0; i<payloadlength; i++){
+			int message_val = payload[i] ^ maskingKey[i%4];
+			message[i] = message_val;
+		    }
+		    message[payloadlength] = '\0';
+	    }
+
+	    if (payloadlength == 126){
+		    unsigned int p1 = buf[2] & 0xFF;
+		    unsigned int p2 = buf[3] & 0xFF;
+		    payloadlength = (p1 << 8) | p2;
+		    //printf("Payload Length Extracted: %d\n",payloadlength);
+		    int offset = 4;
+		    for (int i =0; i<4; i++){
+			maskingKey[i] = buf[4+i];
+			offset = 4 +i;
+		    }
+		    ++offset;
+		    unsigned char payload[payloadlength+1];
+		    for (int i =0; i<payloadlength; i++){
+			    payload[i] = buf[offset+i];
+		    }
+		    for (int i=0; i<payloadlength; i++){
+			int message_val = payload[i] ^ maskingKey[i%4];
+			message[i] = message_val;
+		    }
+		    message[payloadlength] = '\0';
+	    }
+	    //printf("True payload Length : %d\n",payloadlength);
+	    return payloadlength;
+    }
+}
+
+void delete_websocket_by_fd(int fd){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql, sizeof(sql),"DELETE FROM websocket WHERE socketId = %d ",
+			fd);
+	printf("query: %s\n", sql);
+	query(conn, sql);
+	close_sql_connection(conn);
+}
+
+void delete_websocket_by_sessionid(char* sessionid, char*userid){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql, sizeof(sql),"DELETE FROM websocket WHERE sessionid = '%s' AND userid = '%s' ",
+			sessionid, userid);
+	printf("query: %s\n", sql);
+	query(conn, sql);
+	close_sql_connection(conn);
 }
 
 /*
@@ -114,24 +321,7 @@ char* generate_websocket_accptKey(char* websocket_sec_key ){
 
 
 }
-int is_websocket_buffer(unsigned char* buf){
-	int finVal = buf[0] & 0x80;
-	int opcode = buf[0] & 0x0F;
-	int mask = buf[1] & 0x80;
-	int payloadlength = buf[1] & 0x7F;
-	if (opcode == 0 && finVal == 0 && mask==0){
-		  return 0;
-	  }
-	if (opcode == 0 && finVal == 0 && mask == 128){
-		  return 1;
-	  }
-	if (opcode >=1 && mask == 128){
-		return 1;
-	  
-	}else{
-		return 0;
-	  }
-}
+
 
 
 void send_websocket_buffer(SSL* cSSL, char* text) {

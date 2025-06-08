@@ -109,12 +109,20 @@ CMakeFiles/home-server.dir/routes/route.c.o: \
  /usr/include/openssl/ssl3.h /usr/include/openssl/tls1.h \
  /usr/include/openssl/dtls1.h /usr/include/openssl/srtp.h \
  /home/dpalacios/home-server/routes/route.h \
+ /home/dpalacios/home-server/utilities/json_utilities.h \
+ /home/dpalacios/home-server/utilities/os_utilities.h \
+ /home/dpalacios/home-server/models/session.h \
  /home/dpalacios/home-server/routes/life-of-sounds/POST/new_user.h \
  /home/dpalacios/home-server/routes/life-of-sounds/POST/login.h \
+ /home/dpalacios/home-server/routes/life-of-sounds/POST/post_audio.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/new_login.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/studio.h \
+ /home/dpalacios/home-server/routes/life-of-sounds/PATCH/patch_websocket.h \
+ /home/dpalacios/home-server/routes/life-of-sounds/PATCH/patch_audio.h \
+ /home/dpalacios/home-server/routes/life-of-sounds/GET/get_audio.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/sessioninfo.h \
  /home/dpalacios/home-server/routes/life-of-sounds/DELETE/sessioninfo.h \
+ /home/dpalacios/home-server/routes/life-of-sounds/DELETE/delete_websocket.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/home.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/websocket_protocol.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/users.h \

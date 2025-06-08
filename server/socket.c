@@ -9,6 +9,8 @@
 #include <openssl/bio.h>
 #include "client.h" 
 #include "route.h" 
+#include "websocket.h" 
+#include "http_utilities.h" 
 #define PORT 9034
 #define CLIENT_CERT "../server/self_signed_cert.crt"
 #define CLIENT_KEY "../server/privateKey.key"
@@ -132,33 +134,56 @@ int listen_for_pfds(int fd_count, int max_fd_size){
 			SSL* cSSL = get_client_socket(clients, fd_count,ready_fd);
 			 char *buf = malloc(BUFFER_SIZE);
 			int nbytes = SSL_read(cSSL, buf, BUFFER_SIZE);
+			
 			if (nbytes <= 0){
 				if (nbytes == 0){
 					printf("FD %d hung up\n", ready_fd);
 				}else{
 					perror("recv");
 				}
+				int is_active = is_active_websocket_client(ready_fd);
+				if (is_active){
+					delete_websocket_by_fd(ready_fd);
+				}
+
 				close(ready_fd);
 				del_from_pfds(pfds,clients, ready_fd, &fd_count);
 			}else{
-				char  *request_type = malloc(5076);
-				char  *route = malloc(5076);
-				strcpy(request_type, buf);
-				strcpy(route, buf);
-				char* type_end = strchr(request_type, ' ');
-				*type_end = '\0';
-				route += strlen(request_type)+1;
-				char* route_end = strchr(route, ' ');
-				*route_end = '\0';
-				process_route(cSSL, buf, request_type, route, ready_fd);
-				buf[0] = '\0';
+				if (is_websocket_buffer(buf)) {
+						char*message = malloc(nbytes);
+						int true_nbytes = decode_websocket_buffer(buf, message);
+						printf("Message From Websocket: %d bytes\n", true_nbytes);
+						char *res = strstr(message, " ");
+						if (res != NULL){
+							res = res +1;
+							char *end = strchr(message, '}');
+							size_t jsonlength = end - message +1;
+							char jsonpart[jsonlength +1];
+							strncpy(jsonpart, message, jsonlength);
+							jsonpart[jsonlength] = '\0';
+							process_websocket_route(jsonpart, res);	
+						}
 
-				if (!strcmp(route, "/life-of-sounds/home/studio/websocket")==0){
-						close(ready_fd);
-						del_from_pfds(pfds,clients, ready_fd, &fd_count);
-				}
-
+				}else{
+					char  *request_type = malloc(5076);
+					char  *route = malloc(5076);
+					strcpy(request_type, buf);
+					strcpy(route, buf);
+					char* type_end = strchr(request_type, ' ');
+					*type_end = '\0';
+					route += strlen(request_type)+1;
+					char* route_end = strchr(route, ' ');
+					*route_end = '\0';
+					process_route(cSSL, buf, request_type, route, ready_fd);
+					buf[0] = '\0';
+					int is_active = is_active_websocket_client(ready_fd);
+					if (!is_active){
+								close(ready_fd);
+								del_from_pfds(pfds,clients, ready_fd, &fd_count);
+					}
 			}
+			
+		}
 		}
 	}
 }

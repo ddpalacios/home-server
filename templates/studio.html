@@ -17,17 +17,14 @@ th, td {
 	</style>
 	<body>
 		<h1>Studio</h1>
-		<button onclick="start_websocket();" style="background-color: #3BEB28;">start</button>
-		<button onclick="stop_websocket()" style="background-color: #EB521F;">stop</button>
 		<button onclick="location.href = '/life-of-sounds/home';" >home</button>
 		<br>
 		<br>
 		<label for="name">Enter Test Message:</label>
 		<input id=myText type='text' ></input>
-		<button onclick="send_message();">send</button>
+		<button onclick="process_message();">send</button>
 		<button onclick="open_microphone();" >Start Microphone</button>
 		<button onclick="close_microphone();" >Close Microphone</button>
-		<button onclick="get_audio();" >Get Audio</button>
 		<br>
 		<div>
 			<audio id="audio_stream_id" style="margin-top: 2%; width: 30%; " controls=""></audio>
@@ -43,10 +40,6 @@ th, td {
 	var audioId = null;
 	var userInfo = null;
 
-	function generateUniqueId() {
-		return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
-		}
-	
 	function getCookie(c_name) {
 		    if (document.cookie.length > 0) {
 			c_start = document.cookie.indexOf(c_name + "=");
@@ -62,25 +55,81 @@ th, td {
 		    return "";
 		}
 	
-	function main() {
-		console.log(getCookie("session"));
-		var sessionid = getCookie("session");	
-		var request = new Request('/life-of-sounds/home/sessioninfo/'+sessionid, {
-					method: 'GET',
-					headers: new Headers({
-								'Accept': 'application/json'
-							})
-		});
-		fetch(request)
-			.then((response)=> response.json())
-			.then((data)=> {
-				start_websocket(data,sessionid);
-			})
+	
+		function send_message(sessionid, message){
+			var request = new Request('/life-of-sounds/home/sessioninfo/'+sessionid, {
+							method: 'GET',
+							headers: new Headers({
+										'Accept': 'application/json'
+									})
+				});
+				fetch(request)
+					.then((response)=> response.json())
+					.then((data)=> {
+					console.log(data['Id'])
+					var blob = new Blob([message], { type: "text/plain" });
+					var metadata = JSON.stringify({
+								'type': 'text'
+								,'userid': data['Id']
+							});
+					var combined_blob = new Blob([metadata,' ' ,blob], {type: "application/octet-stream"});
+					websocket_session.send(combined_blob);
+					})
+
+		}
+
+		function process_message(){
+				if (websocket_session == null){
+					alert("Websocket has not been initialized");
+					return; 
+				}
+				var x = document.getElementById("myText").value;
+				var sessionid = getCookie("session");
+				 send_message(sessionid, x)
+
+
+		}
+
+	function generateUniqueId() {
+		return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+		}
+	
+
+	async function  delete_existing_websocket(userid, sessionid){
+		var request = new Request("/life-of-sounds/websocket?userid='"+userid+"'&sessionid='"+sessionid+"'" ,{
+							method: 'DELETE',
+							headers: new Headers({
+										'Accept': 'application/json'
+									})
+				});
+		var response = await fetch(request);
+		if (response.status== 200){
+
 		}
 
 
 
 
+	}
+	
+	function main() {
+			console.log(getCookie("session"));
+			if (websocket_session == null){
+				var sessionid = getCookie("session");
+				var request = new Request('/life-of-sounds/home/sessioninfo/'+sessionid, {
+							method: 'GET',
+							headers: new Headers({
+										'Accept': 'application/json'
+									})
+				});
+				fetch(request)
+					.then((response)=> response.json())
+					.then((data)=> {
+						delete_existing_websocket(data["Id"], sessionid);
+						start_websocket(data,sessionid);
+					})
+	}
+		}
 
 	async function get_audio(){
 
@@ -118,12 +167,9 @@ th, td {
 		}
 	}
 
-	function start_websocket(user,sessionid){
-		websocket_session = new WebSocket('wss://' + window.location.host  +'/life-of-sounds/home/studio/websocket');
-		websocket_session.onopen = () => {
-			console.log("Websocket connection established");
-			var connected_on = new Date().toISOString();
-			var request = new Request('/life-of-sounds/home/studio/websocket', {
+	async function update_websocket(user,sessionid){
+		var connected_on = new Date().toISOString();
+		var request = new Request('/life-of-sounds/home/studio/websocket', {
 					method: 'PATCH',
 					headers: new Headers({
 								'Accept': 'application/json'
@@ -135,6 +181,21 @@ th, td {
 							,Id: generateUniqueId()
 						    })
 			});
+		var response =  await fetch(request);
+		if (response.status == 400){
+			alert("Error creating session.")
+			return;
+		}
+	}
+
+	async function start_websocket(user,sessionid){
+		websocket_session = new WebSocket('wss://' + window.location.host  +'/life-of-sounds/home/studio/websocket');
+		is_connected = false
+		websocket_session.onopen = () => {
+			console.log("Websocket connection established");	
+			alert("Connected.")
+			is_connected = true;
+			update_websocket(user,sessionid)		
 		}
 		websocket_session.onmessage = (event) => {
 				console.log("Message from server:", event.data);
@@ -150,11 +211,32 @@ th, td {
 			console.log("Websocket connection closed");
 
 		}			
+		if (is_connected){
+			alert("Connected!")
+		}
 			
+
+	}
+
+	async function update_audio(userid){
+		var endtime = new Date().toISOString();
+		var request = new Request('/life-of-sounds/audio/', {
+					method: 'PATCH'
+					,headers: new Headers({
+						'Accept': 'application/json',
+						'Content-Type': 'text/json'	
+					}),
+					body: JSON.stringify({
+								endtime: endtime 
+								,userid: userid
+							})
+				
+				
+				});
+		const response = await fetch(request);
+
 	}
 	
-
-
 	async function close_microphone(){
 		if (stream == null){
 			alert("No Microphone detected");
@@ -162,25 +244,26 @@ th, td {
 		}
 		stream.getTracks().forEach(track => track.stop());
 		stream = null;
-		var endtime = new Date().toISOString();
-		var request = new Request('/life-of-sounds/studio/audio/'+audioId, {
-					method: 'PATCH'
-					,headers: new Headers({
-						'Accept': 'application/json',
-						'Content-Type': 'text/json'	
-					}),
-					body: JSON.stringify({
-								userid : userid
-								,endtime: endtime 
-							})
-				
-				
-				});
-		const response = await fetch(request);
+		var sessionid = getCookie("session");
+		
+		var request = new Request('/life-of-sounds/home/sessioninfo/'+sessionid, {
+								method: 'GET',
+								headers: new Headers({
+											'Accept': 'application/json'
+										})
+					});
+					fetch(request)
+						.then((response)=> response.json())
+						.then((data)=> {
+							update_audio(data['Id']);
+						})
+
+
+
 		
 	}
 	
-	async function start_recording(uniqueId,audioName, path, database, source){
+	async function start_recording(uniqueId,audioName,  database, source,sessionid){
 		stream = await navigator.mediaDevices.getUserMedia({audio: true});
 		let chunks = [];
 		let mediaRecorder = new MediaRecorder(stream);
@@ -188,20 +271,19 @@ th, td {
 		mediaRecorder.ondataavailable = function (e) {
 		var metadata = JSON.stringify({
 					'type': 'audio'
-					,'userid': userid
+					,'sessionid': sessionid
 					,'size': e.data.size
 					,'Id': uniqueId
 					,'audioName': audioName
-					,'path': path
 					,'database': database
 					,'source': source
 
 				});
 
-		var combined_blob = new Blob([metadata,' ' ,e.data], {type: "audio/webm;codecs=opus'"});
+		var combined_blob = new Blob([metadata,' ' ,e.data], {type: "audio/webm;codecs=opus"});
 		websocket_session.send(combined_blob);
+		console.log(e.data.size)
 		chunks.push(e.data);
-		console.log(metadata)
 		};
 
 	    mediaRecorder.onstop = function(e){
@@ -212,25 +294,15 @@ th, td {
 		    audio.src =  audioUrl;
 
 	    }
-	    mediaRecorder.start(10);
+	    mediaRecorder.start(100);
 
 
 	}
+	
 
-	async function open_microphone(){
-		if (websocket_session == null){
-			alert("Websocket has not been initialized");
-			return;
-		}
-		let uniqueId = generateUniqueId();
-		audioId = uniqueId;
-		console.log("AUDIO ID "+ audioId);
-		var  audioName = 'Audio_'+uniqueId;
-		let source = 'recordings'
-		let database = 'users'
-		let path = database+'/'+userid+'/'+ source+ '/'+audioName + '.webm';
-		var starttime = new Date().toISOString();
-		var data =JSON.stringify({
+	
+	async function create_audio(uniqueId, audioName,path, source, database,userid,starttime){
+			var data =JSON.stringify({
 			"starttime":starttime
 			,"audioName": audioName
 			,"userid":userid 
@@ -239,8 +311,8 @@ th, td {
 			,"source": source
 			,"database": database
 			});
-		console.log(data);
-		var request = new Request('/life-of-sounds/studio/audio', {
+
+	var request = new Request('/life-of-sounds/audio', {
 			method: 'POST'
 			,headers: new Headers({
 				'Accept': 'application/json',
@@ -250,14 +322,49 @@ th, td {
 
 
 		});
-	var response = await fetch(request);
-	if (response.status == 200) {
-			start_recording(uniqueId, audioName,path, source, database);
-		}
+		var response = await fetch(request);
+		if (response.status == 200) {
+			}
+
 
 	}
+	async function open_microphone(){
+		if (websocket_session == null){
+			alert("Websocket has not been initialized");
+			return;
+		}
+		var sessionid = getCookie("session");
+		let uniqueId = generateUniqueId();
+		var  audioName = 'Audio_'+uniqueId+ '.webm';
+		let source = 'recordings'
+		let database = 'users'
+		
+		let path = database+"/"+ source+ '/'+audioName + '.webm';
+		var starttime = new Date().toISOString();
+		
+		var request = new Request('/life-of-sounds/home/sessioninfo/'+sessionid, {
+							method: 'GET',
+							headers: new Headers({
+										'Accept': 'application/json'
+									})
+				});
+		
+		fetch(request)
+			.then((response)=> response.json())
+			.then((data)=> {
+			create_audio(uniqueId, audioName,path, source, database,data['Id'],starttime)
+			
+			})
+		start_recording(uniqueId,audioName, database, source,sessionid)
+	
+	}
 
-main();
+
+
+window.onload = function() {
+	main();
+};
+
 
 	</script>
 

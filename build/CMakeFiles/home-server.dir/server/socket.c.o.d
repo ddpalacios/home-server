@@ -139,4 +139,6 @@ CMakeFiles/home-server.dir/server/socket.c.o: \
  /usr/include/x86_64-linux-gnu/asm/errno.h \
  /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h \
  /home/dpalacios/home-server/server/client.h \
- /home/dpalacios/home-server/routes/route.h
+ /home/dpalacios/home-server/routes/route.h \
+ /home/dpalacios/home-server/models/websocket.h \
+ /home/dpalacios/home-server/utilities/http_utilities.h

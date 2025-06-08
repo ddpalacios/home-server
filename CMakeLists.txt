@@ -16,8 +16,10 @@ file(GLOB MAIN
     "models/User.c"
     "models/websocket.c"
     "models/session.c"
+    "models/Audio.c"
     
 )
+
 
 add_executable(home-server ${MAIN})
 
