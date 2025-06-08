@@ -4,7 +4,7 @@
 	<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Page</title>
+    <title>New User</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -72,19 +72,22 @@
 <body>
 <div id="main-container">
     <div class="input-container">
-	  <h1>Welcome, log in!</h1>
-         <input id="login_username" type="text" placeholder="username...">
-         <input id="login_password" type="password" placeholder="password...">
-	 <button onclick="login()" type="button">Login</button>
-	 <p><a href="/life-of-sounds/new_login">New User?</a></p>
+	  <h1>New Account</h1>
+         <input id="login_username" type="text" placeholder="Enter a username...">
+         <input id="login_email" type="text" placeholder="Enter your email...">
+         <input id="login_password" type="password" placeholder="Create a strong password...">
+	 <button onclick="create_account()" type="button">Create Account</button>
+	  <p><a href="/life-of-sounds/login">Back to Home</a></p>
     </div>
-    
+</div>
+</body>
 <script>
-  async	function login(){
+  async	function create_account(){
 		var login_username = document.getElementById('login_username').value;
+		var login_email = document.getElementById('login_email').value;
 		var login_password = document.getElementById('login_password').value;
-        var logintime = new Date().toISOString();
-		var request = new Request('/life-of-sounds/login', {
+
+		var request = new Request('https://127.0.0.1:9034/life-of-sounds/user', {
 				method: 'POST'
 				,headers: new Headers({
 					'Accept': 'application/json',
@@ -92,17 +95,19 @@
 					}),
 				 body: JSON.stringify({
 							username: login_username,
-							password: login_password 
-                            ,login_time: logintime
+							password: login_password,
+						 	email: login_email
 						    })
 			});
-			var response = await fetch(request);
-			if (response.status == 200){
-					location.href = '/life-of-sounds/home'
-				}else if (response.status == 401){
-						alert("Invalid Credentials! Try again.");
-				} else if (response.status == 404){
-						alert("Account not found!");
+			const reponse = await fetch(request);
+			if (reponse.status == 201){
+					alert("Account has been created.  Please log in.");
+					location.href = '/life-of-sounds/login';
+		
+		
+
+				}else if (reponse.status == 405){
+						alert("Username Already Exists. Please choose another");
 				} 
 	}
 </script>

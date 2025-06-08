@@ -1,11 +1,34 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <cjson/cJSON.h>
 #include <string.h>
-#include "../database/SQL.h"
 #include "User.h"
-#include "../database/password_hashing.h"
+#include "SQL.h"
+#include "string_utilities.h"
 #include <openssl/sha.h>
 
+char* convert_users_to_json(struct User* user){
+	 cJSON *root = cJSON_CreateObject();
+	 int count =0;
+	 while(user[count].Id != NULL){
+	 	count++;
+	 }
+	 cJSON_AddNumberToObject(root,"total_count",count);
+	 cJSON* users = cJSON_AddArrayToObject(root, "values");
+	 count = 0;
+	 while (user[count].Id != NULL) {
+		 cJSON* root_users = cJSON_CreateObject();
+		 cJSON_AddStringToObject(root_users, "Id", user[count].Id);
+		 cJSON_AddStringToObject(root_users, "fullname", user[count].fullname);
+		 cJSON_AddStringToObject(root_users, "email", user[count].email);
+		 cJSON_AddItemToArray(users, root_users);
+		 count++;
+	 }
+
+	 char* json_string = cJSON_Print(root);
+	 cJSON_Delete(root);
+	 return json_string;
+}
 
 char* convert_user_to_json(struct User user){
 	 cJSON *root = cJSON_CreateObject();
@@ -15,10 +38,6 @@ char* convert_user_to_json(struct User user){
 	 char* json_string = cJSON_Print(root);
 	 cJSON_Delete(root);
 	 return json_string;
-
-
-
-
 }
 
 struct User create_user(char* fullname, char* password, char* email){
@@ -35,7 +54,7 @@ struct User create_user(char* fullname, char* password, char* email){
 	    memcpy(combined + password_len, salt, 16);
 
 	    unsigned char* hash = malloc(SHA256_DIGEST_LENGTH);
-	    hash_user_password(combined, password_len + 16, hash);
+	    hash_string(combined, password_len + 16, hash);
 
 	    free(combined);
 
@@ -47,7 +66,31 @@ struct User create_user(char* fullname, char* password, char* email){
 
 	    return user;
 }
+struct User get_user_by_name(char* fullname){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql, sizeof(sql),"SELECT * FROM user WHERE username = '%s'", fullname);
 
+        struct User user;
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+	while((row = mysql_fetch_row(res))!= NULL){
+		//printf("%s\n", row[0]);
+		user.Id = strdup( row[0]);
+		user.fullname = strdup(row[1]);
+		user.password = strdup(row[2]);
+		user.email = strdup(row[3]);
+		user.salt = strdup(row[4]);
+		user.exists = 1;
+		close_sql_connection(conn);
+		return user;
+	}
+	close_sql_connection(conn);
+	struct User null_user = {0};	
+	null_user.exists = 0;
+	return null_user;
+	
+}
 void insert_user(struct User user){
 	//printf("Inserting user %s\n", user.fullname);
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
@@ -73,10 +116,35 @@ void insert_user(struct User user){
 
 }
 
+int validate_login(char* username, char* password){
+	printf("Validating Login...\n");
+	 struct User user = get_user_by_name(username);
+	     if (user.exists) {
+		size_t password_len = strlen(password);
+		unsigned char salt[16];
+		hex_to_bytes(user.salt, salt, 16);
+		unsigned char* combined = malloc(password_len + 16);
+		memcpy(combined, password, password_len);
+		memcpy(combined + password_len, salt, 16);
+		unsigned char* hash = malloc(SHA256_DIGEST_LENGTH);
+		hash_string(combined, password_len + 16, hash);
+		char password_hex[SHA256_DIGEST_LENGTH * 2 + 1];
+		hash_to_hex(hash, SHA256_DIGEST_LENGTH, password_hex);
+		unsigned char stored_hash[SHA256_DIGEST_LENGTH];
+		hex_to_bytes(user.password, stored_hash, SHA256_DIGEST_LENGTH);
+		if (memcmp(hash, stored_hash, SHA256_DIGEST_LENGTH) == 0) {
+			free(combined);
+			free(hash);
+			return 1;
+		} else {
+			free(combined);
+			free(hash);
+			return 0;
+		}
 
-struct User* get_users(){
+	     }
 
-
+	     return -1;
 
 }
 
@@ -105,32 +173,58 @@ struct User get_user_by_id(char* userid){
 
 }
 
-
-struct User get_user_by_name(char* fullname){
+int get_total_users(){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
-	char sql[255];
-	snprintf(sql, sizeof(sql),"SELECT * FROM user WHERE username = '%s'", fullname);
+	 char sql[255];
+	 struct User users;
+	 snprintf(sql,sizeof(sql), "SELECT COUNT(*)  AS total_count FROM user ");
+	 MYSQL_RES* res = query(conn, sql);
+	  MYSQL_ROW row;
+	  int count = 0;
+	   while((row = mysql_fetch_row(res))!= NULL){
+		   count = atoi(row[0]);
+		   return count;
+	   }
 
-        struct User user;
-	MYSQL_RES* res = query(conn, sql);
-	MYSQL_ROW row;
-	while((row = mysql_fetch_row(res))!= NULL){
-		//printf("%s\n", row[0]);
-		user.Id = strdup( row[0]);
-		user.fullname = strdup(row[1]);
-		user.password = strdup(row[2]);
-		user.email = strdup(row[3]);
-		user.salt = strdup(row[4]);
-		user.exists = 1;
-		close_sql_connection(conn);
-		return user;
-	}
 	close_sql_connection(conn);
-	struct User null_user = {0};	
-	null_user.exists = 0;
-	return null_user;
-	
+	return count;
+
 }
+
+
+char*  get_users(){
+	int total_users = get_total_users();
+	if (total_users ==0){
+		return NULL;
+	}
+	 MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	 char sql[255];
+	 snprintf(sql,sizeof(sql), "SELECT * FROM user");
+	 MYSQL_RES* res = query(conn, sql);
+	 MYSQL_ROW row;
+	 struct User *user;
+	 user = malloc(sizeof(*user) * (total_users*10));
+	 int count = 0;
+	 while((row = mysql_fetch_row(res))!= NULL){
+		 user[count].Id = strdup(row[0]);
+		 user[count].fullname = strdup(row[1]);
+		 user[count].email = strdup(row[3]);
+		 count++;
+	 
+	 }
+	  
+	close_sql_connection(conn);
+	char* json = convert_users_to_json(user);
+	return json;
+
+}
+/*
+
+
+
+
+
+
 
 
 void create_login(char *res){
@@ -150,45 +244,5 @@ void create_login(char *res){
 }
 
 
-struct User validate_login(char *res){
-	printf("Validating Login...\n");
-	 cJSON *json = cJSON_Parse(res);
-	 cJSON *username = cJSON_GetObjectItem(json, "username");
-	 cJSON *password = cJSON_GetObjectItem(json, "password");
-	 struct User user = get_user_by_name(username->valuestring);
 
-	     if (user.exists) {
-
-		size_t password_len = strlen(password->valuestring);
-		unsigned char salt[16];
-		hex_to_bytes(user.salt, salt, 16);
-
-		unsigned char* combined = malloc(password_len + 16);
-		memcpy(combined, password->valuestring, password_len);
-		memcpy(combined + password_len, salt, 16);
-
-		unsigned char* hash = malloc(SHA256_DIGEST_LENGTH);
-		hash_user_password(combined, password_len + 16, hash);
-
-		char password_hex[SHA256_DIGEST_LENGTH * 2 + 1];
-		hash_to_hex(hash, SHA256_DIGEST_LENGTH, password_hex);
-
-		unsigned char stored_hash[SHA256_DIGEST_LENGTH];
-		hex_to_bytes(user.password, stored_hash, SHA256_DIGEST_LENGTH);
-
-		if (memcmp(hash, stored_hash, SHA256_DIGEST_LENGTH) == 0) {
-			user.exists = 1;
-			return user;
-		} else {
-			user.exists = 0;
-			return user;
-		}
-
-		free(combined);
-		free(hash);
-	     }
-
-	     return user;
-
-}
-
+*/

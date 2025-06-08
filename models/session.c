@@ -1,12 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 #include "session.h"
-#include "../database/SQL.h"
-#include "../database/password_hashing.h"
-#include <time.h>
+#include "string_utilities.h"
+#include "SQL.h"
 
-
-struct Session create_session( char* userId){
+struct Session create_session(char* userId, char* login_time){
 	struct Session session;
 	unsigned char* session_id = malloc(16);
 	create_unique_identifier(session_id);
@@ -14,13 +12,11 @@ struct Session create_session( char* userId){
 	hash_to_hex(session_id, 16, sessionId_hex);
 	session.Id  =strdup(sessionId_hex);
 	session.userId = userId;
-	time_t current_time = time(NULL);
-	static char date_string[20];
-	strftime(date_string, 20, "%Y-%m-%d", localtime(&current_time));
-	session.login_time = date_string;
+	session.login_time = login_time;
 	return session;
 	
 }
+
 void insert_session(struct Session session){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[255];
@@ -36,17 +32,6 @@ void insert_session(struct Session session){
 	query(conn, sql);
 	close_sql_connection(conn);
 }
-
-void delete_session(char* sessionId){
-	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
-	char sql[255];
-	snprintf(sql,sizeof(sql), "DELETE FROM session WHERE sessionid = '%s'",
-			sessionId
-			);
-	query(conn, sql);
-	close_sql_connection(conn);
-}
-
 struct Session get_session(char* sessionId){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[255];
@@ -56,7 +41,7 @@ struct Session get_session(char* sessionId){
 	MYSQL_RES* res = query(conn, sql);
 	MYSQL_ROW row;
 
-	struct Session newsession = create_session(NULL);
+	struct Session newsession;
 	newsession.exists = 0;
 	while((row = mysql_fetch_row(res))!=NULL){
 		newsession.Id = strdup(row[0]);
@@ -67,4 +52,14 @@ struct Session get_session(char* sessionId){
 
 	close_sql_connection(conn);
 	return newsession;
+}
+
+void delete_session(char* sessionId){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql,sizeof(sql), "DELETE FROM session WHERE sessionid = '%s'",
+			sessionId
+			);
+	query(conn, sql);
+	close_sql_connection(conn);
 }

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "server/socket.h"
+#include "socket.h"
 
 int main(){
 	int max_fd_size = 10;

@@ -16,7 +16,6 @@ void remove_client(int *fd_count, struct Client clients[], int fd){
 	for (int i=0; i<*fd_count; i++){
 		if (clients[i].Id == fd){
 			clients[i] = clients[*fd_count-1];
-//			printf("Client Removed.\n");
 			break;
 		}
 	

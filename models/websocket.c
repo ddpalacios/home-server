@@ -7,9 +7,51 @@
 #include <openssl/evp.h>
 #include <cjson/cJSON.h>
 #include <time.h>
-#include "../database/SQL.h"
+#include "SQL.h"
 #include "websocket.h"
 
+struct Websocket create_websocket(char* userid, char* sessionid, int socketid){
+	struct Websocket websocket;
+	websocket.userid = userid;
+	websocket.sessionid = sessionid;
+	websocket.socketId = socketid;
+	return websocket;
+}
+ void insert_websocket_session(struct Websocket websocket){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql, sizeof(sql),
+			"INSERT INTO websocket VALUES ('%s', '%s', NULL, NULL, '%d')",
+			websocket.userid,
+			websocket.sessionid,
+			websocket.socketId);
+	query(conn, sql);
+	close_sql_connection(conn);
+}
+
+
+int update_websocket(char* Id,char* userid,char* sessionid,char* connected_on){
+	
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[576];
+	snprintf(sql,sizeof(sql),"UPDATE websocket SET Id = '%s' WHERE userid = '%s' AND sessionid = '%s' ", Id , userid, sessionid);
+	snprintf(sql,sizeof(sql),"UPDATE websocket SET connected_on = '%s' WHERE userid = '%s' AND sessionid = '%s' ", connected_on , userid, sessionid);
+
+	MYSQL_RES* res = query(conn, sql);
+	close_sql_connection(conn);
+	if (res != NULL){
+		return 1;
+	}
+	return 0;
+
+
+
+
+
+
+}
+
+/*
 char* convert_websocket_to_json(struct Websocket websocket){
 	cJSON *root = cJSON_CreateObject();
 	cJSON_AddStringToObject(root, "Id", websocket.Id);
@@ -22,21 +64,6 @@ char* convert_websocket_to_json(struct Websocket websocket){
 	return json_string;
 }
 
-struct Websocket create_websocket(char* userid, char* sessionid, int socketid){
-	time_t current_time = time(NULL);
-	static char guid_str[37];
-	uuid_t guid;
-	uuid_unparse(guid, guid_str);
-	static char date_string[20];
-	strftime(date_string, 20, "%Y-%m-%d", localtime(&current_time));
-	struct Websocket websocket;
-	websocket.Id = guid_str;
-	websocket.userid = userid;
-	websocket.sessionid = sessionid;
-	websocket.socketId = socketid;
-	websocket.connected_on = date_string;
-	return websocket;
-}
 
 struct Websocket get_websocket_by_Id(char* Id){
 	 MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
@@ -72,19 +99,7 @@ void delete_websocket(struct Websocket websocket){
 
 }
 
- void insert_websocket_session(struct Websocket websocket){
-	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
-	char sql[255];
-	snprintf(sql, sizeof(sql),
-			"INSERT INTO websocket VALUES ('%s', '%s', '%s', '%s', '%d')",
-			websocket.userid,
-			websocket.sessionid,
-			websocket.connected_on,
-			websocket.Id,
-			websocket.socketId);
-	query(conn, sql);
-	close_sql_connection(conn);
-}
+
 
 char* generate_websocket_accptKey(char* websocket_sec_key ){
 	char websocket_key[32];
@@ -215,4 +230,4 @@ int  decode_websocket_buffer(char* buf, char message[] ){
 	    return payloadlength;
     }
 }
-
+*/
