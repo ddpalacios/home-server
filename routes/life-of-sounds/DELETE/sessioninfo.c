@@ -4,7 +4,7 @@
 #include "session.h"
 #include "User.h"
 void delete_sessioninfo(SSL* cSSL, char*route, char* request){
-	char*sessionid = strstr(route, "sessioninfo/");
+	char*sessionid = strstr(route, "session/");
 	sessionid = strchr(sessionid, '/');
 
     if (strlen(sessionid) == 1){

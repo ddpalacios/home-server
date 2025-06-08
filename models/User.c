@@ -7,14 +7,25 @@
 #include "string_utilities.h"
 #include <openssl/sha.h>
 
-char* convert_users_to_json(struct User* user){
-	 cJSON *root = cJSON_CreateObject();
-	 int count =0;
-	 while(user[count].Id != NULL){
-	 	count++;
-	 }
-	 cJSON_AddNumberToObject(root,"total_count",count);
-	 cJSON* users = cJSON_AddArrayToObject(root, "values");
+char* convert_users_to_json(struct User* user, int count){
+	//  cJSON *root = cJSON_CreateObject();
+	//  int count =0;
+	//  while(user[count].Id != NULL){
+	//  	count++;
+	//  }
+	//  cJSON_AddNumberToObject(root,"total_count",count);
+	//  cJSON* users = cJSON_AddArrayToObject(root, "values");
+
+	cJSON *root = cJSON_CreateObject();
+	printf("count %d\n",count);
+	cJSON_AddNumberToObject(root,"total_count",count);
+	cJSON* users = cJSON_AddArrayToObject(root, "values");
+	if (count == 0){
+		char *json_string = cJSON_Print(root);
+		printf("JSON %s\n", json_string);
+		cJSON_Delete(root);
+		return json_string;
+	}
 	 count = 0;
 	 while (user[count].Id != NULL) {
 		 cJSON* root_users = cJSON_CreateObject();
@@ -193,17 +204,23 @@ int get_total_users(){
 
 
 char*  get_users(){
+	// int total_users = get_total_users();
+	// if (total_users ==0){
+	// 	return NULL;
+	// }
+	struct User *user;
+	user = malloc(sizeof(*user) *1000 );
 	int total_users = get_total_users();
-	if (total_users ==0){
-		return NULL;
+	if (total_users == 0){
+		char* json = convert_users_to_json(user,total_users);
+		return json;
 	}
+
 	 MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	 char sql[255];
 	 snprintf(sql,sizeof(sql), "SELECT * FROM user");
 	 MYSQL_RES* res = query(conn, sql);
 	 MYSQL_ROW row;
-	 struct User *user;
-	 user = malloc(sizeof(*user) * (total_users*10));
 	 int count = 0;
 	 while((row = mysql_fetch_row(res))!= NULL){
 		 user[count].Id = strdup(row[0]);
@@ -214,7 +231,7 @@ char*  get_users(){
 	 }
 	  
 	close_sql_connection(conn);
-	char* json = convert_users_to_json(user);
+	char* json = convert_users_to_json(user,total_users);
 	return json;
 
 }

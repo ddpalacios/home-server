@@ -436,6 +436,7 @@ CMakeFiles/home-server.dir/models/session.c.o
  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h
  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h
  /usr/include/strings.h
+ /usr/include/cjson/cJSON.h
  /home/dpalacios/home-server/models/session.h
  /home/dpalacios/home-server/utilities/string_utilities.h
  /home/dpalacios/home-server/database/SQL.h

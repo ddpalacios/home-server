@@ -28,7 +28,7 @@
 
 		async function logout(){
 			var sessionid = getCookie("session");
-			var request = new Request('/life-of-sounds/home/sessioninfo/'+sessionid, {
+			var request = new Request('/life-of-sounds/session/'+sessionid, {
 						method: 'DELETE',
 						headers: new Headers({
 									'Accept': 'application/json'
@@ -46,7 +46,7 @@
 		function main() {
 			console.log(getCookie("session"));
 			var sessionid = getCookie("session");	
-			var request = new Request('/life-of-sounds/home/sessioninfo/'+sessionid, {
+			var request = new Request('/life-of-sounds/session/'+sessionid, {
 						method: 'GET',
 						headers: new Headers({
 									'Accept': 'application/json'

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <cjson/cJSON.h>
 #include "session.h"
 #include "string_utilities.h"
 #include "SQL.h"
@@ -62,4 +63,81 @@ void delete_session(char* sessionId){
 			);
 	query(conn, sql);
 	close_sql_connection(conn);
+}
+
+char* convert_sessions_to_json(struct Session* session, int count){
+	cJSON *root = cJSON_CreateObject();
+	printf("count %d\n",count);
+	cJSON_AddNumberToObject(root,"total_count",count);
+	cJSON* sessions = cJSON_AddArrayToObject(root, "values");
+	if (count == 0){
+		char *json_string = cJSON_Print(root);
+		printf("JSON %s\n", json_string);
+		cJSON_Delete(root);
+		return json_string;
+	}
+	count = 0;
+	while (session[count].Id != NULL) {
+		cJSON* root_session = cJSON_CreateObject();
+		cJSON_AddStringToObject(root_session, "sessionid", session[count].Id);
+		cJSON_AddStringToObject(root_session,"userid",session[count].userId);
+		cJSON_AddStringToObject(root_session, "login_time", session[count].login_time);
+		cJSON_AddItemToArray(sessions, root_session);
+		count++;
+
+	}
+	char *json_string = cJSON_Print(root);
+	printf("JSON %s\n", json_string);
+	cJSON_Delete(root);
+
+	
+	return json_string;
+
+} 
+
+
+int  get_total_sessions(){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql,sizeof(sql), "SELECT COUNT(*)  AS total_count FROM session");
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+
+	int count = 0;
+	printf("Query: %s\n", sql);
+	while((row = mysql_fetch_row(res))!= NULL){
+		count = atoi(row[0]); 
+		return count;
+	}
+
+	close_sql_connection(conn);
+	return count;
+}
+
+char* get_sessions(){
+	struct Session *session;
+	session = malloc(sizeof(*session) *1000 );
+	int total_sessions = get_total_sessions();
+	if (total_sessions == 0){
+		char* json = convert_sessions_to_json(session,total_sessions);
+		return json;
+	}
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql,sizeof(sql), "SELECT * FROM session");
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+	printf("Query: %s\n", sql);
+
+	int count = 0;
+	while((row = mysql_fetch_row(res))!= NULL){
+		session[count].Id = strdup(row[0]);
+		session[count].userId = strdup(row[1]);
+		session[count].login_time = strdup(row[2]);
+		count++;
+	}
+
+	close_sql_connection(conn);
+	char* json = convert_sessions_to_json(session, total_sessions);
+	return json;
 }

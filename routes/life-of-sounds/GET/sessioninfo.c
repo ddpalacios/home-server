@@ -6,24 +6,31 @@
 #include "session.h"
 #include "User.h"
 void get_sessioninfo(SSL* cSSL, char*route, char* request, int fd){
-	char*sessionid = strstr(route, "sessioninfo/");
-	sessionid = strchr(sessionid, '/');
-	if (strlen(sessionid) == 1){
-		printf("NO SESSION ID\n");
-		send_response_code(cSSL, 400);
+	char*sessionid = strstr(route, "session/");
+	printf("SESSION ID: %s\n", sessionid);
+	if (sessionid == NULL){
+		char* sessions_json =  get_sessions();
+		send_JSON_response_code(cSSL, 200, sessions_json);
 	}else{
-	sessionid++;
-	struct Session session = get_session(sessionid);
-	if (session.exists){
-		struct User user = get_user_by_id(session.userId);
-		char* user_json = convert_user_to_json(user);
-		send_JSON_response_code(cSSL, 200, user_json);
-	
-	}else{
-		send_response_code(cSSL, 400);
-	}
+		sessionid = strchr(sessionid, '/');
+		if (strlen(sessionid) == 1){
+			printf("NO SESSION ID\n");
+			char* sessions_json =  get_sessions();
+			send_JSON_response_code(cSSL, 200, sessions_json);
+		}else{
+		sessionid++;
+		struct Session session = get_session(sessionid);
+		if (session.exists){
+			struct User user = get_user_by_id(session.userId);
+			char* user_json = convert_user_to_json(user);
+			send_JSON_response_code(cSSL, 200, user_json);
+		
+		}else{
+			send_response_code(cSSL, 404);
+		}
 
-	}
+		}
+}
 
 
 

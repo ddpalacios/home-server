@@ -431,6 +431,7 @@ CMakeFiles/home-server.dir/models/session.c.o: ../models/session.c \
   /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
   /usr/include/strings.h \
+  /usr/include/cjson/cJSON.h \
   ../models/session.h \
   ../utilities/string_utilities.h \
   ../database/SQL.h \

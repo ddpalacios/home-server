@@ -11,7 +11,7 @@ void delete_websocket(SSL* cSSL, char*route, char* request){
 	 printf("UserID: %s | sessionid: %s\n", userid, sessionid);
      if (userid != NULL && sessionid != NULL){
      delete_websocket_by_sessionid(sessionid, userid);
-    send_response_code(cSSL, 200);
+     send_response_code(cSSL, 200);
 
      }else{
     send_response_code(cSSL, 400);

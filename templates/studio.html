@@ -57,7 +57,7 @@ th, td {
 	
 	
 		function send_message(sessionid, message){
-			var request = new Request('/life-of-sounds/home/sessioninfo/'+sessionid, {
+			var request = new Request('/life-of-sounds/session/'+sessionid, {
 							method: 'GET',
 							headers: new Headers({
 										'Accept': 'application/json'
@@ -116,7 +116,7 @@ th, td {
 			console.log(getCookie("session"));
 			if (websocket_session == null){
 				var sessionid = getCookie("session");
-				var request = new Request('/life-of-sounds/home/sessioninfo/'+sessionid, {
+				var request = new Request('/life-of-sounds/session/'+sessionid, {
 							method: 'GET',
 							headers: new Headers({
 										'Accept': 'application/json'
@@ -155,7 +155,7 @@ th, td {
 	}
 
 	async function stop_websocket(){
-		var request = new Request('/life-of-sounds/home/studio/websocket/'+websocket_id, {
+		var request = new Request('/life-of-sounds/websocket/'+websocket_id, {
 					method: 'DELETE',
 					headers: new Headers({
 							'Accept': 'application/json'
@@ -169,7 +169,7 @@ th, td {
 
 	async function update_websocket(user,sessionid){
 		var connected_on = new Date().toISOString();
-		var request = new Request('/life-of-sounds/home/studio/websocket', {
+		var request = new Request('/life-of-sounds/websocket', {
 					method: 'PATCH',
 					headers: new Headers({
 								'Accept': 'application/json'
@@ -189,7 +189,7 @@ th, td {
 	}
 
 	async function start_websocket(user,sessionid){
-		websocket_session = new WebSocket('wss://' + window.location.host  +'/life-of-sounds/home/studio/websocket');
+		websocket_session = new WebSocket('wss://' + window.location.host  +'/life-of-sounds/websocket');
 		is_connected = false
 		websocket_session.onopen = () => {
 			console.log("Websocket connection established");	
@@ -246,7 +246,7 @@ th, td {
 		stream = null;
 		var sessionid = getCookie("session");
 		
-		var request = new Request('/life-of-sounds/home/sessioninfo/'+sessionid, {
+		var request = new Request('/life-of-sounds/session/'+sessionid, {
 								method: 'GET',
 								headers: new Headers({
 											'Accept': 'application/json'
@@ -342,7 +342,7 @@ th, td {
 		let path = database+"/"+ source+ '/'+audioName + '.webm';
 		var starttime = new Date().toISOString();
 		
-		var request = new Request('/life-of-sounds/home/sessioninfo/'+sessionid, {
+		var request = new Request('/life-of-sounds/session/'+sessionid, {
 							method: 'GET',
 							headers: new Headers({
 										'Accept': 'application/json'
