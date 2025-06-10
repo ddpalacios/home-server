@@ -321,6 +321,30 @@ routes/life-of-sounds/DELETE/sessioninfo.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/DELETE/sessioninfo.c.s
 .PHONY : routes/life-of-sounds/DELETE/sessioninfo.c.s
 
+routes/life-of-sounds/GET/data_page.o: routes/life-of-sounds/GET/data_page.c.o
+.PHONY : routes/life-of-sounds/GET/data_page.o
+
+# target to build an object file
+routes/life-of-sounds/GET/data_page.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/data_page.c.o
+.PHONY : routes/life-of-sounds/GET/data_page.c.o
+
+routes/life-of-sounds/GET/data_page.i: routes/life-of-sounds/GET/data_page.c.i
+.PHONY : routes/life-of-sounds/GET/data_page.i
+
+# target to preprocess a source file
+routes/life-of-sounds/GET/data_page.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/data_page.c.i
+.PHONY : routes/life-of-sounds/GET/data_page.c.i
+
+routes/life-of-sounds/GET/data_page.s: routes/life-of-sounds/GET/data_page.c.s
+.PHONY : routes/life-of-sounds/GET/data_page.s
+
+# target to generate assembly for a file
+routes/life-of-sounds/GET/data_page.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/data_page.c.s
+.PHONY : routes/life-of-sounds/GET/data_page.c.s
+
 routes/life-of-sounds/GET/get_audio.o: routes/life-of-sounds/GET/get_audio.c.o
 .PHONY : routes/life-of-sounds/GET/get_audio.o
 
@@ -344,6 +368,30 @@ routes/life-of-sounds/GET/get_audio.s: routes/life-of-sounds/GET/get_audio.c.s
 routes/life-of-sounds/GET/get_audio.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_audio.c.s
 .PHONY : routes/life-of-sounds/GET/get_audio.c.s
+
+routes/life-of-sounds/GET/get_audio_blob.o: routes/life-of-sounds/GET/get_audio_blob.c.o
+.PHONY : routes/life-of-sounds/GET/get_audio_blob.o
+
+# target to build an object file
+routes/life-of-sounds/GET/get_audio_blob.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_audio_blob.c.o
+.PHONY : routes/life-of-sounds/GET/get_audio_blob.c.o
+
+routes/life-of-sounds/GET/get_audio_blob.i: routes/life-of-sounds/GET/get_audio_blob.c.i
+.PHONY : routes/life-of-sounds/GET/get_audio_blob.i
+
+# target to preprocess a source file
+routes/life-of-sounds/GET/get_audio_blob.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_audio_blob.c.i
+.PHONY : routes/life-of-sounds/GET/get_audio_blob.c.i
+
+routes/life-of-sounds/GET/get_audio_blob.s: routes/life-of-sounds/GET/get_audio_blob.c.s
+.PHONY : routes/life-of-sounds/GET/get_audio_blob.s
+
+# target to generate assembly for a file
+routes/life-of-sounds/GET/get_audio_blob.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_audio_blob.c.s
+.PHONY : routes/life-of-sounds/GET/get_audio_blob.c.s
 
 routes/life-of-sounds/GET/home.o: routes/life-of-sounds/GET/home.c.o
 .PHONY : routes/life-of-sounds/GET/home.o
@@ -834,9 +882,15 @@ help:
 	@echo "... routes/life-of-sounds/DELETE/sessioninfo.o"
 	@echo "... routes/life-of-sounds/DELETE/sessioninfo.i"
 	@echo "... routes/life-of-sounds/DELETE/sessioninfo.s"
+	@echo "... routes/life-of-sounds/GET/data_page.o"
+	@echo "... routes/life-of-sounds/GET/data_page.i"
+	@echo "... routes/life-of-sounds/GET/data_page.s"
 	@echo "... routes/life-of-sounds/GET/get_audio.o"
 	@echo "... routes/life-of-sounds/GET/get_audio.i"
 	@echo "... routes/life-of-sounds/GET/get_audio.s"
+	@echo "... routes/life-of-sounds/GET/get_audio_blob.o"
+	@echo "... routes/life-of-sounds/GET/get_audio_blob.i"
+	@echo "... routes/life-of-sounds/GET/get_audio_blob.s"
 	@echo "... routes/life-of-sounds/GET/home.o"
 	@echo "... routes/life-of-sounds/GET/home.i"
 	@echo "... routes/life-of-sounds/GET/home.s"

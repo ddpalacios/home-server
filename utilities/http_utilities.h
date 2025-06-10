@@ -8,6 +8,7 @@ char* open_html_template_page(char*template_name, char* request);
 char* retrieve_request_body(char* buf);
 char* create_cookie(char*path,char* key, char* value);
 char* get_query_parameter(char*route, char*param);
+void send_buffer_response_code(SSL* cSSL, int code, char* buffer, size_t buffer_length );
 void send_JSON_response_code( SSL *cSSL,int code, char* json);
 void send_websocket_buffer(SSL* cSSL, char* buf);
 int switch_to_websocket_protocol(SSL *cSSL, char* websocket_sec_acceptKey);

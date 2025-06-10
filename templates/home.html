@@ -6,6 +6,7 @@
 		<div id=welcome_title></div>
 		<div id=navigation>
 			<button onclick="location.href='/life-of-sounds/home/studio'">Studio</button>
+			<!-- <button onclick="location.href='/life-of-sounds/home/data'">User Data</button> -->
 			<button onclick="logout()">Logout</button>
 		</div>
 
@@ -43,7 +44,7 @@
 				
 		}
 
-		function main() {
+		function table_main() {
 			console.log(getCookie("session"));
 			var sessionid = getCookie("session");	
 			var request = new Request('/life-of-sounds/session/'+sessionid, {
@@ -65,12 +66,16 @@
 							const nav_div = document.getElementById("navigation");
 							const btn = document.createElement("button");
 							btn.textContent = 'admin settings';
+							btn.onclick = function(){
+								location.href='/life-of-sounds/home/data'
+							}
 							nav_div.appendChild(btn);
 						}
 
 						})
 		}
-		main();
+		table_main();
 	</script>
 
 </html>
+

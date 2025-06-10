@@ -110,4 +110,6 @@ CMakeFiles/home-server.dir/routes/life-of-sounds/PATCH/patch_audio.c.o: \
  /usr/include/openssl/dtls1.h /usr/include/openssl/srtp.h \
  /home/dpalacios/home-server/utilities/http_utilities.h \
  /home/dpalacios/home-server/utilities/json_utilities.h \
+ /home/dpalacios/home-server/utilities/os_utilities.h \
+ /home/dpalacios/home-server/utilities/string_utilities.h \
  /home/dpalacios/home-server/models/Audio.h

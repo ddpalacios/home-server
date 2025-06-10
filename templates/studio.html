@@ -1,35 +1,75 @@
 <!DOCTYPE html>
 <html>
 	<head></head>
-	<style>
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
+	  <style>
+    
 
-th, td {
-  padding: 8px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-}	
-	
-	
-	</style>
+    .fade-text {
+      font-size: 2rem;
+      color: #333;
+      animation: fadeInOut 3s infinite;
+    }
+
+    @keyframes fadeInOut {
+      0%, 100% {
+        opacity: 0;
+      }
+      50% {
+        opacity: 1;
+      }
+    }
+  </style>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    td[contenteditable="true"] {
+      background-color: #f9f9f9;
+      outline: none;
+    }
+    td[contenteditable="true"]:focus {
+      background-color: #e8f0fe;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 12px;
+      background-color: #3D6ECC;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #EFA9E3
+    }
+  </style>
 	<body>
 		<h1>Studio</h1>
+		<div id="fade-text" class="fade-text"></div>
+
+		
 		<button onclick="location.href = '/life-of-sounds/home';" >home</button>
 		<br>
 		<br>
-		<label for="name">Enter Test Message:</label>
-		<input id=myText type='text' ></input>
-		<button onclick="process_message();">send</button>
 		<button onclick="open_microphone();" >Start Microphone</button>
 		<button onclick="close_microphone();" >Close Microphone</button>
 		<br>
 		<div>
 			<audio id="audio_stream_id" style="margin-top: 2%; width: 30%; " controls=""></audio>
 		</div>
-		<div id="audio_table_container"></div>
+
+  <br>
+<div id="audio_table_container">
+</div>
+		
 	</body>
 
 	<script>
@@ -54,7 +94,6 @@ th, td {
 		    }
 		    return "";
 		}
-	
 	
 		function send_message(sessionid, message){
 			var request = new Request('/life-of-sounds/session/'+sessionid, {
@@ -94,7 +133,6 @@ th, td {
 		return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
 		}
 	
-
 	async function  delete_existing_websocket(userid, sessionid){
 		var request = new Request("/life-of-sounds/websocket?userid='"+userid+"'&sessionid='"+sessionid+"'" ,{
 							method: 'DELETE',
@@ -127,6 +165,8 @@ th, td {
 					.then((data)=> {
 						delete_existing_websocket(data["Id"], sessionid);
 						start_websocket(data,sessionid);
+    					create_table_data('audio', data["Id"])
+
 					})
 	}
 		}
@@ -220,20 +260,26 @@ th, td {
 
 	async function update_audio(userid){
 		var endtime = new Date().toISOString();
-		var request = new Request('/life-of-sounds/audio/', {
+		var data = {}
+		data['endtime'] = endtime
+		data['userid'] = userid
+		var request = new Request('/life-of-sounds/audio', {
 					method: 'PATCH'
 					,headers: new Headers({
 						'Accept': 'application/json',
 						'Content-Type': 'text/json'	
 					}),
-					body: JSON.stringify({
-								endtime: endtime 
-								,userid: userid
-							})
+					body: JSON.stringify(data)
 				
 				
 				});
 		const response = await fetch(request);
+		if (response.status == 200){
+	  			create_table_data('audio', userid)
+				var elem = document.getElementById("fade-text")
+				elem.innerHTML = "";
+
+		}
 
 	}
 	
@@ -252,11 +298,13 @@ th, td {
 											'Accept': 'application/json'
 										})
 					});
-					fetch(request)
+	fetch(request)
 						.then((response)=> response.json())
 						.then((data)=> {
 							update_audio(data['Id']);
 						})
+
+      document.getElementById("audio_table_container").innerHTML = "";
 
 
 
@@ -274,7 +322,7 @@ th, td {
 					,'sessionid': sessionid
 					,'size': e.data.size
 					,'Id': uniqueId
-					,'audioName': audioName
+					,'audioName': audioName +".webm"
 					,'database': database
 					,'source': source
 
@@ -295,11 +343,14 @@ th, td {
 
 	    }
 	    mediaRecorder.start(100);
+		var elem = document.getElementById("fade-text")
+		var text = document.createElement("p")
+		text.textContent = "Recording..."
+		elem.appendChild(text)
+
 
 
 	}
-	
-
 	
 	async function create_audio(uniqueId, audioName,path, source, database,userid,starttime){
 			var data =JSON.stringify({
@@ -328,6 +379,7 @@ th, td {
 
 
 	}
+	
 	async function open_microphone(){
 		if (websocket_session == null){
 			alert("Websocket has not been initialized");
@@ -335,11 +387,10 @@ th, td {
 		}
 		var sessionid = getCookie("session");
 		let uniqueId = generateUniqueId();
-		var  audioName = 'Audio_'+uniqueId+ '.webm';
+		var  audioName = 'Audio_'+uniqueId;
 		let source = 'recordings'
 		let database = 'users'
 		
-		let path = database+"/"+ source+ '/'+audioName + '.webm';
 		var starttime = new Date().toISOString();
 		
 		var request = new Request('/life-of-sounds/session/'+sessionid, {
@@ -352,6 +403,9 @@ th, td {
 		fetch(request)
 			.then((response)=> response.json())
 			.then((data)=> {
+			console.log(data)
+			let path = database+"/"+ data["Id"]+ "/" +source+ '/'+audioName + '.webm';
+
 			create_audio(uniqueId, audioName,path, source, database,data['Id'],starttime)
 			
 			})
@@ -360,12 +414,205 @@ th, td {
 	}
 
 
-
 window.onload = function() {
 	main();
+
 };
 
+    async function update_audio_t(data){
+        console.log("Sending "+ data)
+        var request = new Request('/life-of-sounds/audio', {
+					method: 'PATCH',
+					headers: new Headers({
+								'Accept': 'application/json'
+							})
+					 ,body: JSON.stringify(data)
+			});
+		var response =  await fetch(request);
 
-	</script>
+    }
+
+    function save_record(Id,editable_columns) {
+      const table = document.getElementById('editableTable');
+      const data = [];
+      const th_rows = table.querySelectorAll('thead th');
+      var count = 0;
+      th_rows.forEach(row => {
+        if (editable_columns.includes(row.textContent.toLowerCase())){
+            console.log(row.textContent.toLowerCase())
+            var col_name = row.textContent.toLowerCase()
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const rowData = Array.from(cells).map(cell =>
+                cell.textContent.trim()
+                );
+                if (rowData.includes(Id)){
+                    var json_data = {}
+                    json_data["Id"] = Id
+                    json_data[col_name] =  rowData[count]
+                    update_audio_t(json_data)
+                    data.push(json_data);
+                  count +=1;
+
+                }
+            });
+            
+        }else{
+          count +=1;
+        }
+      });
+      console.log('Saved Data:', data);
+    }
+
+	async function load_audio(audioId){
+				var request = new Request("/life-of-sounds/audio_blob?Id='"+audioId+"'", {
+					method: 'GET',
+					headers: new Headers({
+								'Accept': 'application/octet-stream'
+							})
+			});
+					fetch(request)
+					.then(response => response.arrayBuffer())
+					.then(arrayBuffer => {
+						const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
+						const url = URL.createObjectURL(blob);
+
+						const audioElem = document.getElementById("audio_" + audioId);
+						audioElem.src = url;
+						// audioElem.play();
+						console.log(audioElem)
+					})
+					.catch(err => console.error("Fetch or playback error:", err));
+	
+
+	}
+
+    function create_table(data,  editable_columns){
+        const table = document.createElement('table');
+        table.id = "editableTable"
+			  const tableHead = document.createElement('thead');
+			  const tableBody = document.createElement('tbody');
+			  // Append the table head and body to table
+			  table.appendChild(tableHead);
+			  table.appendChild(tableBody);
+
+			  // Creating table head
+			  let row = tableHead.insertRow();
+        if (editable_columns.length > 0 ){
+              let th = document.createElement('th');
+            //   th.textContent = "Action".toUpperCase();
+              row.appendChild(th);
+        }
+			  Object.keys(data[0]).forEach(key => {
+			    let th = document.createElement('th');
+            th.textContent = key.toUpperCase();
+            row.appendChild(th);
+			  });
+			  // Creating table body
+			  data.forEach(item => {
+			    let row = tableBody.insertRow();
+          if (editable_columns.length > 0 ){
+              let cell = row.insertCell();
+              const button = document.createElement("button");
+              button.textContent = "No Changes Made"; // Set button text
+			  button.style.backgroundColor = 'gray'
+			  button.disabled =  true
+              button.id = item['Id']
+			  cell.id = 'button_cell_'+item['Id']
+			//   button.hidden = true
+
+              
+              button.onclick = function () {
+                    save_record(button.id,editable_columns)
+					button.textContent = "Saved!"
+			  		button.style.backgroundColor = 'green'
+					button.disabled =  true
+				}; 
+              cell.appendChild(button);
+                }
+            Object.keys(item).forEach(key => {
+                var value = item[key];
+                let cell = row.insertCell();
+                if (editable_columns.length > 0 && editable_columns.includes(key)){
+                  cell.setAttribute('contentEditable', 'true');
+				  cell.addEventListener("input", (event) => {
+					   var button = document.getElementById(item["Id"])
+					   button.textContent = "Save Changes"
+					   button.style.backgroundColor = 'red'
+						button.disabled =  false
+						var button_cell = document.getElementById("button_cell_"+item["Id"])
+					   console.log(item)
+						console.log("Cell value changed to:", event.target.innerText);
+						});
+					const t = document.createElement("p");
+					t.textContent = value
+					cell.appendChild(t);
+
+                }
+				else{
+					if (key == "path"){
+						const audioElement = document.createElement("audio");
+						audioElement.id = "audio_"+ item['Id'];
+						audioElement.controls = true; // Adds play/pause controls
+						audioElement.loop = false; // Audio won't loop
+						cell.style.display = 'flex';
+						cell.style.justifyContent = 'center';
+						cell.style.alignItems = 'center';
+						cell.style.gap = '15px'; 
+						cell.appendChild(audioElement);
+						load_audio(item['Id'])
+					}else{
+					const t = document.createElement("p");
+					t.textContent = value
+					cell.appendChild(t);
+					}
+				}
+            });
+			  });
+			  // Append the table to the HTML document
+			  document.getElementById('audio_table_container').appendChild(table);
+
+    }
+
+    function create_table_data(entity, userid){
+      document.getElementById("audio_table_container").innerHTML = "";
+      editable_columns = []
+	  ignore_columns = []
+      if (entity == 'audio'){
+          editable_columns = ['name']
+		  ignore_columns = [ 'userid']
+      }
+    
+    data_request = new Request("/life-of-sounds/"+entity+"?userid='"+userid+"'", {
+                method: 'GET'
+                ,headers: new Headers({
+                      'Accept': 'application/json'
+                    })
+              });
+          fetch(data_request)
+            .then((response)=> response.json())
+            .then((data)=> {
+				var obj = data.values
+				values = []
+				Object.keys(obj).forEach(key => {
+						audio_json = {}
+						Object.keys(obj[key]).forEach(t => {
+							audio_key = t 
+							audio_value = obj[key][t]
+							if (!ignore_columns.includes(audio_key)){
+								audio_json[audio_key] = audio_value;
+							}
+					});
+						values.push(audio_json)
+
+				});
+				console.log(values)
+                create_table(values, editable_columns)
+
+              });
+    }
+
+  </script>
 
 </html>

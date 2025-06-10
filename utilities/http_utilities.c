@@ -12,7 +12,12 @@
 char* retrieve_request_body(char* buf){
 	    char* buf_cpy = malloc(5076);
 	    strcpy(buf_cpy, buf);
-            char* requestBody = strstr(buf_cpy, "\r\n\r\n");
+
+		char* requestBody = strstr(buf_cpy, "\r\n\r\n");
+		if (strchr(requestBody, '}') == NULL){
+			return NULL;
+		}
+
 	    requestBody +=4;
 	    if (strlen(requestBody) >0){
 		const char *end = strchr(requestBody, '}');
@@ -235,6 +240,26 @@ int switch_to_websocket_protocol(SSL *cSSL, char* websocket_sec_acceptKey){
 	int res = SSL_write(cSSL, http_header, strlen(http_header));
 	return res;
 }
+
+void send_buffer_response_code(SSL* cSSL, int code, char* buffer, size_t buffer_length){
+	char http_header[2048];
+	char* code_text = malloc(50);
+		if (code == 200) {
+		code_text = "200 OK";
+				snprintf(http_header, sizeof(http_header),
+						"HTTP/1.1 %s\r\n"
+						"Content-Type:  application/octet-stream\r\n"
+						"Connection: close\r\n"
+						"Content-Length: %zu\r\n"
+						"\r\n", code_text,buffer_length);
+			SSL_write(cSSL, http_header, strlen(http_header));
+			SSL_write(cSSL,buffer,buffer_length);
+		}
+
+
+
+}
+
 
 void send_html_response_code(SSL* cSSL,int code, int content_length){
 	char http_header[2048];

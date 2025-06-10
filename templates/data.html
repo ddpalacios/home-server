@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editable Data Table</title>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    td[contenteditable="true"] {
+      background-color: #f9f9f9;
+      outline: none;
+    }
+    td[contenteditable="true"]:focus {
+      background-color: #e8f0fe;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 12px;
+      background-color: #3D6ECC;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #EFA9E3
+    }
+  </style>
+</head>
+<body>
+  <button onclick="location.href = '/life-of-sounds/home';" >home</button>
+
+  <h2>Data Table</h2>
+  <button  onclick="create_table_data('user')" >Users</button>
+    <button onclick="create_table_data('audio')" >Audio</button>
+  <button onclick="create_table_data('session')" >Session</button>
+  <button  onclick="create_table_data('websocket')">Websocket Sessions</button>
+  <br>
+
+  <br>
+<div id="audio_table_container">
+
+</div>
+  <script>
+    async function update_audio(data){
+        console.log("Sending "+ data)
+        var request = new Request('/life-of-sounds/audio', {
+					method: 'PATCH',
+					headers: new Headers({
+								'Accept': 'application/json'
+							})
+					 ,body: JSON.stringify(data)
+			});
+		var response =  await fetch(request);
+
+    }
+
+    function save_record(Id,editable_columns) {
+      const table = document.getElementById('editableTable');
+      const data = [];
+      const th_rows = table.querySelectorAll('thead th');
+      var count = 0;
+      th_rows.forEach(row => {
+        if (editable_columns.includes(row.textContent.toLowerCase())){
+            console.log(row.textContent.toLowerCase())
+            var col_name = row.textContent.toLowerCase()
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const rowData = Array.from(cells).map(cell =>
+                cell.textContent.trim()
+                );
+                if (rowData.includes(Id)){
+                    var json_data = {}
+                    json_data["Id"] = Id
+                    json_data[col_name] =  rowData[count]
+                    update_audio(json_data)
+                    data.push(json_data);
+                  count +=1;
+
+                }
+            });
+            
+        }else{
+          count +=1;
+        }
+      });
+      console.log('Saved Data:', data);
+
+
+
+    }
+
+    function create_table(data,  editable_columns){
+        const table = document.createElement('table');
+        table.id = "editableTable"
+			  const tableHead = document.createElement('thead');
+			  const tableBody = document.createElement('tbody');
+			  // Append the table head and body to table
+			  table.appendChild(tableHead);
+			  table.appendChild(tableBody);
+
+			  // Creating table head
+			  let row = tableHead.insertRow();
+        if (editable_columns.length > 0 ){
+              let th = document.createElement('th');
+              th.textContent = "Action".toUpperCase();
+              row.appendChild(th);
+        }
+			  Object.keys(data[0]).forEach(key => {
+			    let th = document.createElement('th');
+            th.textContent = key.toUpperCase();
+            row.appendChild(th);
+			  });
+			  // Creating table body
+			  data.forEach(item => {
+			    let row = tableBody.insertRow();
+          if (editable_columns.length > 0 ){
+              let cell = row.insertCell();
+              const button = document.createElement("button");
+              button.textContent = "Save Change"; // Set button text
+
+              button.id = item['Id']
+              
+              button.onclick = function () {
+                      save_record(button.id,editable_columns)
+                      }; 
+              cell.appendChild(button);
+
+                }
+            Object.keys(item).forEach(key => {
+                var value = item[key];
+                let cell = row.insertCell();
+                if (editable_columns.length > 0 && editable_columns.includes(key)){
+                  cell.setAttribute('contentEditable', 'true');
+                }
+                const t = document.createElement("p");
+                t.textContent = value
+                cell.appendChild(t);
+            });
+			  });
+			  // Append the table to the HTML document
+			  document.getElementById('audio_table_container').appendChild(table);
+
+    }
+
+    function create_table_data(entity){
+      document.getElementById("audio_table_container").innerHTML = "";
+      editable_columns = []
+      if (entity == 'audio'){
+          editable_columns = ['name']
+      }
+    
+    data_request = new Request("/life-of-sounds/"+entity, {
+                method: 'GET'
+                ,headers: new Headers({
+                      'Accept': 'application/json'
+                    })
+              });
+          fetch(data_request)
+            .then((response)=> response.json())
+            .then((data)=> {
+                create_table(data.values, editable_columns)
+
+              });
+
+
+    }
+
+    create_table_data('user')
+
+  </script>
+</body>
+</html>

@@ -11,9 +11,11 @@
 #include "life-of-sounds/POST/post_audio.h"
 #include "life-of-sounds/GET/new_login.h"
 #include "life-of-sounds/GET/studio.h"
+#include "life-of-sounds/GET/data_page.h"
 #include "life-of-sounds/PATCH/patch_websocket.h"
 #include "life-of-sounds/PATCH/patch_audio.h"
 #include "life-of-sounds/GET/get_audio.h"
+#include "life-of-sounds/GET/get_audio_blob.h"
 #include "life-of-sounds/GET/sessioninfo.h"
 #include "life-of-sounds/DELETE/sessioninfo.h"
 #include "life-of-sounds/DELETE/delete_websocket.h"
@@ -75,12 +77,14 @@ void process_route(SSL* cSSL, char* request, char* request_type, char* route, in
 		delete_sessioninfo(cSSL, route, request);
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/life-of-sounds/session") != NULL){
 		get_sessioninfo(cSSL, route, request);
-	}else if (strcmp(request_type, "PATCH")==0 && strcmp(route, "/life-of-sounds/audio/")==0){
+	}else if (strcmp(request_type, "PATCH")==0 && strcmp(route, "/life-of-sounds/audio")==0){
 		 update_audio_info(cSSL, route, request);
 	}else if (strcmp(request_type, "PATCH")==0 && strcmp(route, "/life-of-sounds/websocket")==0){
 		update_websocket_info(cSSL, route, request);
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/websocket")==0){
 		get_websocket_protocol(cSSL,route, request, fd);
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home/data")==0){
+		get_data_page(cSSL, request, "data.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home/studio")==0){
 		get_studio_page( cSSL, request,  "studio.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home")==0){
@@ -93,6 +97,8 @@ void process_route(SSL* cSSL, char* request, char* request_type, char* route, in
 		create_new_audio(cSSL, request);
 	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/life-of-sounds/user")==0){
 		create_new_user(cSSL,request);
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/life-of-sounds/audio_blob") != NULL){
+		get_audio_blob(cSSL,route, request);
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/life-of-sounds/audio") != NULL){
 		retrieve_audio(cSSL, route, request);
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/life-of-sounds/user") != NULL){

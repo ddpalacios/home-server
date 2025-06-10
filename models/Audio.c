@@ -201,8 +201,9 @@ int  get_total_audio_by_userid(char* userid){
 
 char* get_audios_by_userid(char* userid){
 	struct Audio *audio;
-	audio = malloc(sizeof(*audio) *1000 );
 	int total_audios = get_total_audio_by_userid(userid);
+
+	audio = malloc(sizeof(*audio) * (total_audios*1000));
 	if (total_audios == 0){
 		char* json = convert_audios_to_json(audio,total_audios);
 		return json;
@@ -213,7 +214,6 @@ char* get_audios_by_userid(char* userid){
 	MYSQL_RES* res = query(conn, sql);
 	MYSQL_ROW row;
 	printf("Query: %s\n", sql);
-	audio = malloc(sizeof(*audio) * (total_audios*10));
 	int count = 0;
 	while((row = mysql_fetch_row(res))!= NULL){
 		audio[count].Id = strdup(row[0]);
@@ -236,8 +236,10 @@ char* get_audios_by_userid(char* userid){
 
 char* get_audios(){
 	struct Audio *audio;
-	audio = malloc(sizeof(*audio) *1000 );
 	int total_audios = get_total_audio();
+
+	audio = malloc(sizeof(*audio) * (total_audios*1000));
+
 	if (total_audios == 0){
 		char* json = convert_audios_to_json(audio,total_audios);
 		return json;
@@ -266,6 +268,33 @@ char* get_audios(){
 	close_sql_connection(conn);
 	char* json = convert_audios_to_json(audio, total_audios);
 	return json;
+}
+
+struct Audio get_audio(char* audioId){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	struct Audio audio;
+	snprintf(sql,sizeof(sql), "SELECT * FROM Audio WHERE Id = '%s'", audioId);
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+	printf("Query: %s\n", sql);
+
+	audio.exists = 0;
+	while((row = mysql_fetch_row(res))!= NULL){
+		audio.Id = strdup(row[0]);
+		audio.name = strdup(row[1]);
+		audio.starttime = strdup(row[2]);
+		memcpy(&audio.duration, row[4], sizeof(float));
+		if (row[3] != NULL){
+			audio.endtime = strdup(row[3]);
+		}
+		audio.userid = strdup(row[5]);
+		audio.path = strdup(row[6]);
+		audio.exists = 1;
+	   }
+
+	close_sql_connection(conn);
+	return audio;
 }
 
 /*

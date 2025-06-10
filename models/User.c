@@ -204,10 +204,6 @@ int get_total_users(){
 
 
 char*  get_users(){
-	// int total_users = get_total_users();
-	// if (total_users ==0){
-	// 	return NULL;
-	// }
 	struct User *user;
 	user = malloc(sizeof(*user) *1000 );
 	int total_users = get_total_users();

@@ -117,9 +117,11 @@ CMakeFiles/home-server.dir/routes/route.c.o: \
  /home/dpalacios/home-server/routes/life-of-sounds/POST/post_audio.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/new_login.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/studio.h \
+ /home/dpalacios/home-server/routes/life-of-sounds/GET/data_page.h \
  /home/dpalacios/home-server/routes/life-of-sounds/PATCH/patch_websocket.h \
  /home/dpalacios/home-server/routes/life-of-sounds/PATCH/patch_audio.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/get_audio.h \
+ /home/dpalacios/home-server/routes/life-of-sounds/GET/get_audio_blob.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/sessioninfo.h \
  /home/dpalacios/home-server/routes/life-of-sounds/DELETE/sessioninfo.h \
  /home/dpalacios/home-server/routes/life-of-sounds/DELETE/delete_websocket.h \
