@@ -189,7 +189,6 @@ int  get_total_audio_by_userid(char* userid){
 	MYSQL_ROW row;
 
 	int count = 0;
-	printf("Query: %s\n", sql);
 	while((row = mysql_fetch_row(res))!= NULL){
 		count = atoi(row[0]); 
 		return count;

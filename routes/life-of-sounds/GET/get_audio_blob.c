@@ -20,12 +20,10 @@ void get_audio_blob(SSL* cSSL,char*route, char* request){
         }else{
             static  char p[255];
             snprintf(p, sizeof(p), "../%s", audio.path);
-            printf("PATH: %s\n", p);
             long filesize;
             unsigned char* buffer= get_file_contents(p,&filesize);
             if (buffer != NULL){
                 send_buffer_response_code(cSSL, 200,  buffer, filesize);
-                printf("BUFFER: %s\n", buffer);
 
             }else{
                 send_response_code(cSSL, 400);

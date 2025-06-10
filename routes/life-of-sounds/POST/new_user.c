@@ -17,7 +17,6 @@ int create_new_user(SSL* cSSL, char* request){
 		send_response_code(cSSL, 201);
 		return 1;
 	}
-	printf("Sending 405...\n");
 	send_response_code(cSSL, 405);
 	return 0;
 

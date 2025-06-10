@@ -11,7 +11,6 @@ void get_user(SSL* cSSL,char*route, char* request){
 	 printf("'%s'\n", route);
 	 char* userid = get_query_parameter(route, "userid");
 	 char* username  = get_query_parameter(route, "username");
-	 printf("UserID: %s | username: %s\n", userid, username);
 	 if (userid != NULL){
 	    struct User user = get_user_by_id(userid);
 	    if (user.exists){

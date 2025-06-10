@@ -1,0 +1,347 @@
+	var stream = null;
+	var websocket_id = null;
+	var websocket_session = null;
+	var userid = null;
+	var audioId = null;
+	var userInfo = null;
+
+	function getCookie(c_name) {
+		    if (document.cookie.length > 0) {
+			c_start = document.cookie.indexOf(c_name + "=");
+			if (c_start != -1) {
+			    c_start = c_start + c_name.length + 1;
+			    c_end = document.cookie.indexOf(";", c_start);
+			    if (c_end == -1) {
+				c_end = document.cookie.length;
+			    }
+			    return unescape(document.cookie.substring(c_start, c_end));
+			}
+		    }
+		    return "";
+		}
+	
+		function send_message(sessionid, message){
+			var request = new Request('/life-of-sounds/session/'+sessionid, {
+							method: 'GET',
+							headers: new Headers({
+										'Accept': 'application/json'
+									})
+				});
+				fetch(request)
+					.then((response)=> response.json())
+					.then((data)=> {
+					console.log(data['Id'])
+					var blob = new Blob([message], { type: "text/plain" });
+					var metadata = JSON.stringify({
+								'type': 'text'
+								,'userid': data['Id']
+							});
+					var combined_blob = new Blob([metadata,' ' ,blob], {type: "application/octet-stream"});
+					websocket_session.send(combined_blob);
+					})
+
+		}
+
+		function process_message(){
+				if (websocket_session == null){
+					alert("Websocket has not been initialized");
+					return; 
+				}
+				var x = document.getElementById("myText").value;
+				var sessionid = getCookie("session");
+				 send_message(sessionid, x)
+
+
+		}
+
+	function generateUniqueId() {
+		return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+		}
+	
+	async function  delete_existing_websocket(userid, sessionid){
+		var request = new Request("/life-of-sounds/websocket?userid='"+userid+"'&sessionid='"+sessionid+"'" ,{
+							method: 'DELETE',
+							headers: new Headers({
+										'Accept': 'application/json'
+									})
+				});
+		var response = await fetch(request);
+		if (response.status== 200){
+
+		}
+
+
+
+
+	}
+	
+	function main() {
+			console.log(getCookie("session"));
+			if (websocket_session == null){
+				var sessionid = getCookie("session");
+				var request = new Request('/life-of-sounds/session/'+sessionid, {
+							method: 'GET',
+							headers: new Headers({
+										'Accept': 'application/json'
+									})
+				});
+				fetch(request)
+					.then((response)=> response.json())
+					.then((data)=> {
+						delete_existing_websocket(data["Id"], sessionid);
+						start_websocket(data,sessionid);
+    					create_table_data('audio', data["Id"])
+
+					})
+	}
+		}
+
+	async function get_audio(){
+
+		var request = new Request('/life-of-sounds/session/user',{
+					method: 'GET',
+					headers: new Headers({
+							'Accept': 'application/json'
+							})
+				});
+		fetch(request)
+			.then((response)=> response.json())
+			.then((data)=> {
+					console.log(data.Id);
+
+					var audiorequest = new Request('/life-of-sounds/studio/audio?userid='+data.Id, {
+								method: 'GET',
+								headers: new Headers({
+										'Accept': 'application/json'
+										})
+							});
+					fetch(audiorequest);
+				});
+	}
+
+	async function stop_websocket(){
+		var request = new Request('/life-of-sounds/websocket/'+websocket_id, {
+					method: 'DELETE',
+					headers: new Headers({
+							'Accept': 'application/json'
+							})
+				});
+	 var response = await fetch(request);
+	 if (response.status == 404){
+		 alert("Websocket session not found");
+		}
+	}
+
+	async function update_websocket(user,sessionid){
+		var connected_on = new Date().toISOString();
+		var request = new Request('/life-of-sounds/websocket', {
+					method: 'PATCH',
+					headers: new Headers({
+								'Accept': 'application/json'
+							})
+					 ,body: JSON.stringify({
+							userid: user["Id"]
+							,sessionid: sessionid
+                            ,connected_on: connected_on
+							,Id: generateUniqueId()
+						    })
+			});
+		var response =  await fetch(request);
+		if (response.status == 400){
+			alert("Error creating session.")
+			return;
+		}
+	}
+
+	async function start_websocket(user,sessionid){
+		websocket_session = new WebSocket('wss://' + window.location.host  +'/life-of-sounds/websocket');
+		is_connected = false
+		websocket_session.onopen = () => {
+			console.log("Websocket connection established");	
+			alert("Connected.")
+			is_connected = true;
+			update_websocket(user,sessionid)		
+		}
+		websocket_session.onmessage = (event) => {
+				console.log("Message from server:", event.data);
+				data = JSON.parse(event.data)
+				websocket_id = data.Id;
+				userid = data.userid;
+		}
+		websocket_session.onerror = (error) => {
+			console.error("Websocket error:", error);
+
+		}
+		websocket_session.onclose = () => {
+			console.log("Websocket connection closed");
+
+		}			
+		if (is_connected){
+			alert("Connected!")
+		}
+			
+
+	}
+
+	async function update_audio(userid){
+		var endtime = new Date().toISOString();
+		var data = {}
+		data['endtime'] = endtime
+		data['userid'] = userid
+		var request = new Request('/life-of-sounds/audio', {
+					method: 'PATCH'
+					,headers: new Headers({
+						'Accept': 'application/json',
+						'Content-Type': 'text/json'	
+					}),
+					body: JSON.stringify(data)
+				
+				
+				});
+		const response = await fetch(request);
+		if (response.status == 200){
+	  			create_table_data('audio', userid)
+				var elem = document.getElementById("fade-text")
+				elem.innerHTML = "";
+
+		}
+
+	}
+	
+	async function close_microphone(){
+		if (stream == null){
+			alert("No Microphone detected");
+			return;
+		}
+		stream.getTracks().forEach(track => track.stop());
+		stream = null;
+		var sessionid = getCookie("session");
+		
+		var request = new Request('/life-of-sounds/session/'+sessionid, {
+								method: 'GET',
+								headers: new Headers({
+											'Accept': 'application/json'
+										})
+					});
+	fetch(request)
+						.then((response)=> response.json())
+						.then((data)=> {
+							update_audio(data['Id']);
+						})
+
+      document.getElementById("audio_table_container").innerHTML = "";
+
+
+
+		
+	}
+	
+	async function start_recording(uniqueId,audioName,  database, source,sessionid){
+		stream = await navigator.mediaDevices.getUserMedia({audio: true});
+		let chunks = [];
+		let mediaRecorder = new MediaRecorder(stream);
+		let sequence = 0;
+		mediaRecorder.ondataavailable = function (e) {
+		var metadata = JSON.stringify({
+					'type': 'audio'
+					,'sessionid': sessionid
+					,'size': e.data.size
+					,'Id': uniqueId
+					,'audioName': audioName +".webm"
+					,'database': database
+					,'source': source
+
+				});
+
+		var combined_blob = new Blob([metadata,' ' ,e.data], {type: "audio/webm;codecs=opus"});
+		websocket_session.send(combined_blob);
+		console.log(e.data.size)
+		chunks.push(e.data);
+		};
+
+	    mediaRecorder.onstop = function(e){
+		    const blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
+		    const audioUrl = URL.createObjectURL(blob);
+		    var audio = document.getElementById("audio_stream_id");
+		    console.log(audio);
+		    audio.src =  audioUrl;
+
+	    }
+	    mediaRecorder.start(100);
+		var elem = document.getElementById("fade-text")
+		var text = document.createElement("p")
+		text.textContent = "Recording..."
+		elem.appendChild(text)
+
+
+
+	}
+	
+	async function create_audio(uniqueId, audioName,path, source, database,userid,starttime){
+			var data =JSON.stringify({
+			"starttime":starttime
+			,"audioName": audioName
+			,"userid":userid 
+			,"audioId" : uniqueId
+			,"path": path
+			,"source": source
+			,"database": database
+			});
+
+	var request = new Request('/life-of-sounds/audio', {
+			method: 'POST'
+			,headers: new Headers({
+				'Accept': 'application/json',
+				'Content-Type': 'text/json'
+			}),
+			body: data
+
+
+		});
+		var response = await fetch(request);
+		if (response.status == 200) {
+			}
+
+
+	}
+	
+	async function open_microphone(){
+		if (websocket_session == null){
+			alert("Websocket has not been initialized");
+			return;
+		}
+		var sessionid = getCookie("session");
+		let uniqueId = generateUniqueId();
+		var  audioName = 'Audio_'+uniqueId;
+		let source = 'recordings'
+		let database = 'users'
+		
+		var starttime = new Date().toISOString();
+		
+		var request = new Request('/life-of-sounds/session/'+sessionid, {
+							method: 'GET',
+							headers: new Headers({
+										'Accept': 'application/json'
+									})
+				});
+		
+		fetch(request)
+			.then((response)=> response.json())
+			.then((data)=> {
+			console.log(data)
+			let path = database+"/"+ data["Id"]+ "/" +source+ '/'+audioName + '.webm';
+
+			create_audio(uniqueId, audioName,path, source, database,data['Id'],starttime)
+			
+			})
+		start_recording(uniqueId,audioName, database, source,sessionid)
+	
+	}
+
+
+	window.onload = function() {
+	main();
+
+};
+  
+ 

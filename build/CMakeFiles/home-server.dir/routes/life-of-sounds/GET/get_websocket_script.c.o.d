@@ -1,40 +1,32 @@
-CMakeFiles/home-server.dir/routes/route.c.o: \
- /home/dpalacios/home-server/routes/route.c /usr/include/stdc-predef.h \
- /usr/include/stdio.h \
- /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
- /usr/include/features.h /usr/include/features-time64.h \
+CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_websocket_script.c.o: \
+ /home/dpalacios/home-server/routes/life-of-sounds/GET/get_websocket_script.c \
+ /usr/include/stdc-predef.h /usr/include/openssl/ssl.h \
+ /usr/include/openssl/macros.h \
+ /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
+ /usr/include/x86_64-linux-gnu/openssl/configuration.h \
+ /usr/include/openssl/opensslv.h /usr/include/openssl/e_os2.h \
+ /usr/include/inttypes.h /usr/include/features.h \
+ /usr/include/features-time64.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
  /usr/include/x86_64-linux-gnu/bits/timesize.h \
  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
  /usr/include/x86_64-linux-gnu/bits/long-double.h \
  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
- /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
- /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h /usr/include/stdint.h \
+ /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/x86_64-linux-gnu/bits/types.h \
  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
  /usr/include/x86_64-linux-gnu/bits/time64.h \
- /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
- /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
- /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
- /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
- /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
- /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
- /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
- /usr/include/x86_64-linux-gnu/bits/floatn.h \
- /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
- /usr/include/openssl/ssl.h /usr/include/openssl/macros.h \
- /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
- /usr/include/x86_64-linux-gnu/openssl/configuration.h \
- /usr/include/openssl/opensslv.h /usr/include/openssl/e_os2.h \
- /usr/include/inttypes.h \
- /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h /usr/include/stdint.h \
  /usr/include/x86_64-linux-gnu/bits/wchar.h \
  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
  /usr/include/openssl/comp.h /usr/include/openssl/crypto.h \
- /usr/include/stdlib.h /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+ /usr/include/stdlib.h /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
+ /usr/include/x86_64-linux-gnu/bits/waitflags.h \
  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+ /usr/include/x86_64-linux-gnu/bits/floatn.h \
+ /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
  /usr/include/x86_64-linux-gnu/sys/types.h \
  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
@@ -62,6 +54,14 @@ CMakeFiles/home-server.dir/routes/route.c.o: \
  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+ /usr/include/stdio.h /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
+ /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+ /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+ /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+ /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
  /usr/include/openssl/safestack.h /usr/include/openssl/stack.h \
  /usr/include/openssl/types.h \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
@@ -108,27 +108,4 @@ CMakeFiles/home-server.dir/routes/route.c.o: \
  /usr/include/openssl/prov_ssl.h /usr/include/openssl/ssl2.h \
  /usr/include/openssl/ssl3.h /usr/include/openssl/tls1.h \
  /usr/include/openssl/dtls1.h /usr/include/openssl/srtp.h \
- /home/dpalacios/home-server/routes/route.h \
- /home/dpalacios/home-server/utilities/json_utilities.h \
- /home/dpalacios/home-server/utilities/os_utilities.h \
- /home/dpalacios/home-server/models/session.h \
- /home/dpalacios/home-server/routes/life-of-sounds/POST/new_user.h \
- /home/dpalacios/home-server/routes/life-of-sounds/POST/login.h \
- /home/dpalacios/home-server/routes/life-of-sounds/POST/post_audio.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/new_login.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/studio.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/data_page.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_data_table.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_websocket_script.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_html_utilities_script.h \
- /home/dpalacios/home-server/routes/life-of-sounds/PATCH/patch_websocket.h \
- /home/dpalacios/home-server/routes/life-of-sounds/PATCH/patch_audio.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_audio.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_audio_blob.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/sessioninfo.h \
- /home/dpalacios/home-server/routes/life-of-sounds/DELETE/sessioninfo.h \
- /home/dpalacios/home-server/routes/life-of-sounds/DELETE/delete_websocket.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/home.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/websocket_protocol.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/users.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/login.h
+ /home/dpalacios/home-server/utilities/http_utilities.h

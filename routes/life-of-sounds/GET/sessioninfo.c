@@ -7,14 +7,12 @@
 #include "User.h"
 void get_sessioninfo(SSL* cSSL, char*route, char* request, int fd){
 	char*sessionid = strstr(route, "session/");
-	printf("SESSION ID: %s\n", sessionid);
 	if (sessionid == NULL){
 		char* sessions_json =  get_sessions();
 		send_JSON_response_code(cSSL, 200, sessions_json);
 	}else{
 		sessionid = strchr(sessionid, '/');
 		if (strlen(sessionid) == 1){
-			printf("NO SESSION ID\n");
 			char* sessions_json =  get_sessions();
 			send_JSON_response_code(cSSL, 200, sessions_json);
 		}else{

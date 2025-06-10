@@ -37,7 +37,6 @@ int update_audio_info(SSL* cSSL, char* route, char* request){
                 snprintf(path, sizeof(path), "../users/%s/recordings/%s.webm",audio.userid, audio.name);
                 char newpath[255];
                 snprintf(newpath, sizeof(newpath), "../users/%s/recordings/%s.webm",audio.userid, name);
-                printf("\nRenaming %s to %s\n", path, newpath);
                 if (rename(path, newpath) ==0){
                     printf("File Renamed Successfully\n");
                     replace(newpath, "../","");

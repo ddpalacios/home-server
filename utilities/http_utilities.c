@@ -86,9 +86,6 @@ char *get_file_buffer(char* filename){
 char* open_html_template_page(char*template_name, char* request){
 	char* request_cookie = get_cookie(request);
 	char template_dir[50] = "../templates/";
-	printf("REQUEST: %s\n", request);
-	printf("REQUEST COOKIE: %s\n", request_cookie);
-
 	if (request_cookie == NULL && strstr(template_name, "index.html") == NULL && strstr(template_name, "new_login.html") == NULL){
 		template_name = "index.html";
 		strcat(template_dir, template_name);
@@ -125,7 +122,6 @@ void set_and_send_cookie(SSL* cSSL, char*cookie){
 			"HTTP/1.1 200 OK\r\n"
 			"Set-Cookie: %s\r\n"
 			"\r\n", cookie);
-	printf("Sending %s\n", http_header);
 	SSL_write(cSSL, http_header, strlen(http_header));
 }
 

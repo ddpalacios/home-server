@@ -12,6 +12,9 @@
 #include "life-of-sounds/GET/new_login.h"
 #include "life-of-sounds/GET/studio.h"
 #include "life-of-sounds/GET/data_page.h"
+#include "life-of-sounds/GET/get_data_table.h"
+#include "life-of-sounds/GET/get_websocket_script.h"
+#include "life-of-sounds/GET/get_html_utilities_script.h"
 #include "life-of-sounds/PATCH/patch_websocket.h"
 #include "life-of-sounds/PATCH/patch_audio.h"
 #include "life-of-sounds/GET/get_audio.h"
@@ -85,6 +88,12 @@ void process_route(SSL* cSSL, char* request, char* request_type, char* route, in
 		get_websocket_protocol(cSSL,route, request, fd);
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home/data")==0){
 		get_data_page(cSSL, request, "data.html");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home/studio/html_utilities.js")==0){
+		get_utilities_script(cSSL,  request, "html_utilities.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home/studio/websocket.js")==0){
+		get_websocket_script(cSSL,  request, "websocket.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home/studio/data_table.js")==0){
+		get_data_table_script(cSSL,  request, "data_table.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home/studio")==0){
 		get_studio_page( cSSL, request,  "studio.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home")==0){
