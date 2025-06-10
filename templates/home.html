@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	</head>
+	<body>
+		<div id=welcome_title></div>
+		<div id=navigation>
+			<button onclick="location.href='/life-of-sounds/home/studio'">Studio</button>
+			<!-- <button onclick="location.href='/life-of-sounds/home/data'">User Data</button> -->
+			<button onclick="logout()">Logout</button>
+		</div>
+
+	</body>
+	<script>
+		function getCookie(c_name) {
+		    if (document.cookie.length > 0) {
+			c_start = document.cookie.indexOf(c_name + "=");
+			if (c_start != -1) {
+			    c_start = c_start + c_name.length + 1;
+			    c_end = document.cookie.indexOf(";", c_start);
+			    if (c_end == -1) {
+				c_end = document.cookie.length;
+			    }
+			    return unescape(document.cookie.substring(c_start, c_end));
+			}
+		    }
+		    return "";
+		}
+
+		async function logout(){
+			var sessionid = getCookie("session");
+			var request = new Request('/life-of-sounds/session/'+sessionid, {
+						method: 'DELETE',
+						headers: new Headers({
+									'Accept': 'application/json'
+								})
+			});
+			var response = await fetch(request);
+			if (response.status == 200){
+				location.href = '/life-of-sounds/login';
+			}else{
+				alert("Error has occured. Response: "+ response.status);
+				}
+				
+		}
+
+		function table_main() {
+			console.log(getCookie("session"));
+			var sessionid = getCookie("session");	
+			var request = new Request('/life-of-sounds/session/'+sessionid, {
+						method: 'GET',
+						headers: new Headers({
+									'Accept': 'application/json'
+								})
+			});
+			fetch(request)
+				.then((response)=> response.json())
+				.then((data)=> {
+						console.log(data);
+						const element = document.getElementById("welcome_title");
+						const h1 = document.createElement("h1");
+						const text = document.createTextNode("Welcome, "+data['fullname']);
+						h1.appendChild(text);
+						element.appendChild(h1);
+						if (data['fullname'] == 'admin'){
+							const nav_div = document.getElementById("navigation");
+							const btn = document.createElement("button");
+							btn.textContent = 'admin settings';
+							btn.onclick = function(){
+								location.href='/life-of-sounds/home/data'
+							}
+							nav_div.appendChild(btn);
+						}
+
+						})
+		}
+		table_main();
+	</script>
+
+</html>
+

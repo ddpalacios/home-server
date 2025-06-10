@@ -1,29 +1,23 @@
 #include <stdio.h>
-
-void getSub(char *s, char *ss, int pos, int l) {
-    int i = 0;
-
-    // Copy substring into ss
-    while (i < l) {
-        ss[i] = s[pos + i];
-        i++;
-    }
-    
-    // Null terminate the substring
-    ss[i] = '\0';  
-}
-
+#include <stdlib.h>
 
 int main() {
-    char s[] = "Hello, Geeks!";
-  
-    // Char array to store the substring
-    char ss[20];  
+    const char *filename = "users/57f11b2cb0758af0dd4f6f0aa827a2d9/recordings/Name.webm";  
+    FILE *file = fopen(filename, "rb"); // Open file in binary read mode
+    if (file == NULL) {
+        perror("Error opening file");
+        return 1;
+    }
+    
+    // Seek to the end of the file to determine its size
+    fseek(file, 0, SEEK_END);
+    long fileSize = ftell(file);
+    // // Allocate memory to hold the file data
+     char *buffer = malloc(fileSize);
+    // // Read the file into the buffer
+    size_t bytesRead = fread(buffer, 1, fileSize, file);
+    fwrite(buffer, 1, fileSize, stdout);
 
-    // Extract substring starting from 
-    // index 7 with length 5 ("Geeks")
-    getSub(s, ss, 7, 5);
-
-    printf("%s\n", ss);
     return 0;
 }
+

@@ -1,0 +1,1 @@
+/usr/bin/cc -rdynamic CMakeFiles/executable.dir/main.c.o CMakeFiles/executable.dir/routes/route.c.o CMakeFiles/executable.dir/server/client.c.o CMakeFiles/executable.dir/server/socket.c.o -o executable  /usr/lib/x86_64-linux-gnu/libssl.so /usr/lib/x86_64-linux-gnu/libcrypto.so -lmysqlclient -luuid -lcjson 
