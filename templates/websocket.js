@@ -235,6 +235,13 @@
 
 		
 	}
+
+    function process_chunk(data_chunk){
+    //    const audioCtx = new AudioContext();
+    //   const source = audioCtx.createMediaStreamSource(stream);
+
+
+    }
 	
 	async function start_recording(uniqueId,audioName,  database, source,sessionid){
 		stream = await navigator.mediaDevices.getUserMedia({audio: true});
@@ -255,8 +262,8 @@
 
 		var combined_blob = new Blob([metadata,' ' ,e.data], {type: "audio/webm;codecs=opus"});
 		websocket_session.send(combined_blob);
-		console.log(e.data.size)
 		chunks.push(e.data);
+        process_chunk(e.data)
 		};
 
 	    mediaRecorder.onstop = function(e){
@@ -272,9 +279,6 @@
 		var text = document.createElement("p")
 		text.textContent = "Recording..."
 		elem.appendChild(text)
-
-
-
 	}
 	
 	async function create_audio(uniqueId, audioName,path, source, database,userid,starttime){
@@ -337,8 +341,6 @@
 		start_recording(uniqueId,audioName, database, source,sessionid)
 	
 	}
-
-
 	window.onload = function() {
 	main();
 

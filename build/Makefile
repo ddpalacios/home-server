@@ -417,6 +417,30 @@ routes/life-of-sounds/GET/get_data_table.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_data_table.c.s
 .PHONY : routes/life-of-sounds/GET/get_data_table.c.s
 
+routes/life-of-sounds/GET/get_game_of_life_script.o: routes/life-of-sounds/GET/get_game_of_life_script.c.o
+.PHONY : routes/life-of-sounds/GET/get_game_of_life_script.o
+
+# target to build an object file
+routes/life-of-sounds/GET/get_game_of_life_script.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_game_of_life_script.c.o
+.PHONY : routes/life-of-sounds/GET/get_game_of_life_script.c.o
+
+routes/life-of-sounds/GET/get_game_of_life_script.i: routes/life-of-sounds/GET/get_game_of_life_script.c.i
+.PHONY : routes/life-of-sounds/GET/get_game_of_life_script.i
+
+# target to preprocess a source file
+routes/life-of-sounds/GET/get_game_of_life_script.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_game_of_life_script.c.i
+.PHONY : routes/life-of-sounds/GET/get_game_of_life_script.c.i
+
+routes/life-of-sounds/GET/get_game_of_life_script.s: routes/life-of-sounds/GET/get_game_of_life_script.c.s
+.PHONY : routes/life-of-sounds/GET/get_game_of_life_script.s
+
+# target to generate assembly for a file
+routes/life-of-sounds/GET/get_game_of_life_script.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_game_of_life_script.c.s
+.PHONY : routes/life-of-sounds/GET/get_game_of_life_script.c.s
+
 routes/life-of-sounds/GET/get_html_utilities_script.o: routes/life-of-sounds/GET/get_html_utilities_script.c.o
 .PHONY : routes/life-of-sounds/GET/get_html_utilities_script.o
 
@@ -440,6 +464,78 @@ routes/life-of-sounds/GET/get_html_utilities_script.s: routes/life-of-sounds/GET
 routes/life-of-sounds/GET/get_html_utilities_script.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_html_utilities_script.c.s
 .PHONY : routes/life-of-sounds/GET/get_html_utilities_script.c.s
+
+routes/life-of-sounds/GET/get_live_page.o: routes/life-of-sounds/GET/get_live_page.c.o
+.PHONY : routes/life-of-sounds/GET/get_live_page.o
+
+# target to build an object file
+routes/life-of-sounds/GET/get_live_page.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_live_page.c.o
+.PHONY : routes/life-of-sounds/GET/get_live_page.c.o
+
+routes/life-of-sounds/GET/get_live_page.i: routes/life-of-sounds/GET/get_live_page.c.i
+.PHONY : routes/life-of-sounds/GET/get_live_page.i
+
+# target to preprocess a source file
+routes/life-of-sounds/GET/get_live_page.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_live_page.c.i
+.PHONY : routes/life-of-sounds/GET/get_live_page.c.i
+
+routes/life-of-sounds/GET/get_live_page.s: routes/life-of-sounds/GET/get_live_page.c.s
+.PHONY : routes/life-of-sounds/GET/get_live_page.s
+
+# target to generate assembly for a file
+routes/life-of-sounds/GET/get_live_page.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_live_page.c.s
+.PHONY : routes/life-of-sounds/GET/get_live_page.c.s
+
+routes/life-of-sounds/GET/get_recordings_page.o: routes/life-of-sounds/GET/get_recordings_page.c.o
+.PHONY : routes/life-of-sounds/GET/get_recordings_page.o
+
+# target to build an object file
+routes/life-of-sounds/GET/get_recordings_page.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_recordings_page.c.o
+.PHONY : routes/life-of-sounds/GET/get_recordings_page.c.o
+
+routes/life-of-sounds/GET/get_recordings_page.i: routes/life-of-sounds/GET/get_recordings_page.c.i
+.PHONY : routes/life-of-sounds/GET/get_recordings_page.i
+
+# target to preprocess a source file
+routes/life-of-sounds/GET/get_recordings_page.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_recordings_page.c.i
+.PHONY : routes/life-of-sounds/GET/get_recordings_page.c.i
+
+routes/life-of-sounds/GET/get_recordings_page.s: routes/life-of-sounds/GET/get_recordings_page.c.s
+.PHONY : routes/life-of-sounds/GET/get_recordings_page.s
+
+# target to generate assembly for a file
+routes/life-of-sounds/GET/get_recordings_page.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_recordings_page.c.s
+.PHONY : routes/life-of-sounds/GET/get_recordings_page.c.s
+
+routes/life-of-sounds/GET/get_web_audio_api_script.o: routes/life-of-sounds/GET/get_web_audio_api_script.c.o
+.PHONY : routes/life-of-sounds/GET/get_web_audio_api_script.o
+
+# target to build an object file
+routes/life-of-sounds/GET/get_web_audio_api_script.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_web_audio_api_script.c.o
+.PHONY : routes/life-of-sounds/GET/get_web_audio_api_script.c.o
+
+routes/life-of-sounds/GET/get_web_audio_api_script.i: routes/life-of-sounds/GET/get_web_audio_api_script.c.i
+.PHONY : routes/life-of-sounds/GET/get_web_audio_api_script.i
+
+# target to preprocess a source file
+routes/life-of-sounds/GET/get_web_audio_api_script.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_web_audio_api_script.c.i
+.PHONY : routes/life-of-sounds/GET/get_web_audio_api_script.c.i
+
+routes/life-of-sounds/GET/get_web_audio_api_script.s: routes/life-of-sounds/GET/get_web_audio_api_script.c.s
+.PHONY : routes/life-of-sounds/GET/get_web_audio_api_script.s
+
+# target to generate assembly for a file
+routes/life-of-sounds/GET/get_web_audio_api_script.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_web_audio_api_script.c.s
+.PHONY : routes/life-of-sounds/GET/get_web_audio_api_script.c.s
 
 routes/life-of-sounds/GET/get_websocket_script.o: routes/life-of-sounds/GET/get_websocket_script.c.o
 .PHONY : routes/life-of-sounds/GET/get_websocket_script.o
@@ -966,9 +1062,21 @@ help:
 	@echo "... routes/life-of-sounds/GET/get_data_table.o"
 	@echo "... routes/life-of-sounds/GET/get_data_table.i"
 	@echo "... routes/life-of-sounds/GET/get_data_table.s"
+	@echo "... routes/life-of-sounds/GET/get_game_of_life_script.o"
+	@echo "... routes/life-of-sounds/GET/get_game_of_life_script.i"
+	@echo "... routes/life-of-sounds/GET/get_game_of_life_script.s"
 	@echo "... routes/life-of-sounds/GET/get_html_utilities_script.o"
 	@echo "... routes/life-of-sounds/GET/get_html_utilities_script.i"
 	@echo "... routes/life-of-sounds/GET/get_html_utilities_script.s"
+	@echo "... routes/life-of-sounds/GET/get_live_page.o"
+	@echo "... routes/life-of-sounds/GET/get_live_page.i"
+	@echo "... routes/life-of-sounds/GET/get_live_page.s"
+	@echo "... routes/life-of-sounds/GET/get_recordings_page.o"
+	@echo "... routes/life-of-sounds/GET/get_recordings_page.i"
+	@echo "... routes/life-of-sounds/GET/get_recordings_page.s"
+	@echo "... routes/life-of-sounds/GET/get_web_audio_api_script.o"
+	@echo "... routes/life-of-sounds/GET/get_web_audio_api_script.i"
+	@echo "... routes/life-of-sounds/GET/get_web_audio_api_script.s"
 	@echo "... routes/life-of-sounds/GET/get_websocket_script.o"
 	@echo "... routes/life-of-sounds/GET/get_websocket_script.i"
 	@echo "... routes/life-of-sounds/GET/get_websocket_script.s"

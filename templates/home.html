@@ -3,11 +3,60 @@
 	<head>
 	</head>
 	<body>
+		  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    td[contenteditable="true"] {
+      background-color: #f9f9f9;
+      outline: none;
+    }
+    td[contenteditable="true"]:focus {
+      background-color: #e8f0fe;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 12px;
+      background-color: #3D6ECC;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #EFA9E3
+    }
+
+
+
+
+  </style>
 		<div id=welcome_title></div>
 		<div id=navigation>
+			<button onclick="location.href='/life-of-sounds/home/live_studio'">Live Studio</button>
 			<button onclick="location.href='/life-of-sounds/home/studio'">Studio</button>
-			<!-- <button onclick="location.href='/life-of-sounds/home/data'">User Data</button> -->
-			<button onclick="logout()">Logout</button>
+			<button  onclick="location.href='/life-of-sounds/home/recordings'">Recordings</button>
+		</div>
+		<div>
+			<button style="background-color: red;" onclick="logout()">Logout</button>
+			<br>
+			<br>
+			
+			<div class="container">
+			<canvas id="myCanvas"></canvas>
+
+			</div>
+
+	
+
 		</div>
 
 	</body>
@@ -65,6 +114,7 @@
 						if (data['fullname'] == 'admin'){
 							const nav_div = document.getElementById("navigation");
 							const btn = document.createElement("button");
+							btn.style.backgroundColor = "orange"
 							btn.textContent = 'admin settings';
 							btn.onclick = function(){
 								location.href='/life-of-sounds/home/data'
@@ -76,6 +126,66 @@
 		}
 		table_main();
 	</script>
+	<script src="/life-of-sounds/game_of_life.js"></script>
 
 </html>
 
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Waveform Graph</title>
+  <style>
+    canvas {
+      border: 1px solid black;
+      display: block;
+      margin: 20px auto;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="waveCanvas" width="800" height="400"></canvas>
+  <script>
+    // Get the canvas and context
+    const canvas = document.getElementById('waveCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Canvas dimensions
+    const width = canvas.width;
+    const height = canvas.height;
+
+    // Waveform parameters
+    const amplitude = 100; // Height of the wave
+    const frequency = 0.02; // Frequency of the wave
+    const phase = 0; // Phase shift
+
+    // Draw the sine wave
+    function drawWave() {
+      ctx.clearRect(0, 0, width, height); // Clear canvas
+      ctx.beginPath();
+      ctx.moveTo(0, height / 2); // Start at the middle left
+
+      for (let x = 0; x < width; x++) {
+        const y = height / 2 + amplitude * Math.sin(frequency * x + phase);
+        ctx.lineTo(x, y);
+      }
+
+      ctx.strokeStyle = 'blue';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // Animate the wave (optional)
+    let phaseShift = 0;
+    function animateWave() {
+      phaseShift += 0.1; // Increment phase for animation
+      drawWave();
+      requestAnimationFrame(animateWave);
+    }
+
+    // Start animation
+    animateWave();
+  </script>
+</body>
+</html> -->

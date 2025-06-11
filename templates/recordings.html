@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+	<head></head>
+	  <style>
+    .fade-text {
+      font-size: 2rem;
+      color: #333;
+      animation: fadeInOut 3s infinite;
+    }
+
+    @keyframes fadeInOut {
+      0%, 100% {
+        opacity: 0;
+      }
+      50% {
+        opacity: 1;
+      }
+    }
+  </style>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    td[contenteditable="true"] {
+      background-color: #f9f9f9;
+      outline: none;
+    }
+    td[contenteditable="true"]:focus {
+      background-color: #e8f0fe;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 12px;
+      background-color: #3D6ECC;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #EFA9E3
+    }
+  </style>
+	<body>
+		<h1>Recordings</h1>
+		<button onclick="location.href = '/life-of-sounds/home';" >home</button>
+        <br>
+        <br>
+	<div id="audio_table_container"></div>
+</body>
+<script src="/life-of-sounds/home/studio/html_utilities.js" ></script>
+<script src="/life-of-sounds/home/studio/data_table.js"></script>
+<script>
+    	function getCookie(c_name) {
+		    if (document.cookie.length > 0) {
+			c_start = document.cookie.indexOf(c_name + "=");
+			if (c_start != -1) {
+			    c_start = c_start + c_name.length + 1;
+			    c_end = document.cookie.indexOf(";", c_start);
+			    if (c_end == -1) {
+				c_end = document.cookie.length;
+			    }
+			    return unescape(document.cookie.substring(c_start, c_end));
+			}
+		    }
+		    return "";
+		}
+	
+	function main() {
+			console.log(getCookie("session"));
+				var sessionid = getCookie("session");
+				var request = new Request('/life-of-sounds/session/'+sessionid, {
+							method: 'GET',
+							headers: new Headers({
+										'Accept': 'application/json'
+									})
+				});
+				fetch(request)
+					.then((response)=> response.json())
+					.then((data)=> {
+    					create_table_data('audio', data["Id"])
+
+					})
+		}
+
+main()
+    
+</script>
+
+</html>

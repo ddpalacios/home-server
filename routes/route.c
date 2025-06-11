@@ -11,7 +11,11 @@
 #include "life-of-sounds/POST/post_audio.h"
 #include "life-of-sounds/GET/new_login.h"
 #include "life-of-sounds/GET/studio.h"
+#include "life-of-sounds/GET/get_live_page.h"
+#include "life-of-sounds/GET/get_web_audio_api_script.h"
+#include "life-of-sounds/GET/get_game_of_life_script.h"
 #include "life-of-sounds/GET/data_page.h"
+#include "life-of-sounds/GET/get_recordings_page.h"
 #include "life-of-sounds/GET/get_data_table.h"
 #include "life-of-sounds/GET/get_websocket_script.h"
 #include "life-of-sounds/GET/get_html_utilities_script.h"
@@ -86,14 +90,22 @@ void process_route(SSL* cSSL, char* request, char* request_type, char* route, in
 		update_websocket_info(cSSL, route, request);
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/websocket")==0){
 		get_websocket_protocol(cSSL,route, request, fd);
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home/recordings")==0){
+		get_data_page(cSSL, request, "recordings.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home/data")==0){
 		get_data_page(cSSL, request, "data.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home/studio/html_utilities.js")==0){
 		get_utilities_script(cSSL,  request, "html_utilities.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/game_of_life.js")==0){
+		get_gol_script(cSSL,  request, "game_of_life.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home/studio/websocket.js")==0){
 		get_websocket_script(cSSL,  request, "websocket.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home/live_studio/web_audio_api.js")==0){
+		get_web_audio_script(cSSL, request,"web_audio_api.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home/studio/data_table.js")==0){
 		get_data_table_script(cSSL,  request, "data_table.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home/live_studio")==0){
+		get_live_html(cSSL, request, "live.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home/studio")==0){
 		get_studio_page( cSSL, request,  "studio.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home")==0){

@@ -48,7 +48,27 @@
     button:hover {
       background-color: #EFA9E3
     }
-  </style>
+
+
+.container {
+  display: flex;
+  height: 100vh; 
+}
+
+.left, .right {
+  width: 50%;
+  position: relative; 
+}
+
+#visualizer {
+  width: 100%;
+  height: 65%;
+  display: block; 
+}
+ </style>
+
+
+
 	<body>
 		<h1>Studio</h1>
 		<div id="fade-text" class="fade-text"></div>
@@ -60,12 +80,28 @@
 		<button onclick="open_microphone();" >Start Microphone</button>
 		<button onclick="close_microphone();" >Close Microphone</button>
 		<br>
-		<div>
-			<audio id="audio_stream_id" style="margin-top: 2%; width: 30%; " controls=""></audio>
+		<audio id="audio_stream_id" style="margin-top: 2%; width: 30%; " controls=""></audio>
+		<br>
+
+		<div class="container">
+		<div class="left">
+	        <canvas id="visualizer" ></canvas>
 		</div>
+		<div class="right">
+	<div id="audio_table_container"></div>
+			
+		</div>
+		</div>
+
+		<!-- <div style="display: flex; justify-content: center;">
+			<br>
+			<br>
+			
+		</div> -->
   <br>
 	<div id="audio_table_container"></div>
 </body>
+<script src="/life-of-sounds/home/live_studio/web_audio_api.js" ></script>
 <script src="/life-of-sounds/home/studio/html_utilities.js" ></script>
 <script src="/life-of-sounds/home/studio/websocket.js" ></script>
 <script src="/life-of-sounds/home/studio/data_table.js"></script>

@@ -41,17 +41,22 @@
   <button onclick="location.href = '/life-of-sounds/home';" >home</button>
 
   <h2>Data Table</h2>
-  <button  onclick="create_table_data('user')" >Users</button>
-    <button onclick="create_table_data('audio')" >Audio</button>
-  <button onclick="create_table_data('session')" >Session</button>
-  <button  onclick="create_table_data('websocket')">Websocket Sessions</button>
+  <button  onclick="create_table_data('user', null)" >Users</button>
+    <button onclick="create_table_data('audio', null)" >Audio</button>
+  <button onclick="create_table_data('session',null)" >Session</button>
+  <button  onclick="create_table_data('websocket',null)">Websocket Sessions</button>
   <br>
 
   <br>
 <div id="audio_table_container">
 
 </div>
-  <script>
+<script src="/life-of-sounds/home/studio/html_utilities.js" ></script>
+<script src="/life-of-sounds/home/studio/data_table.js"></script>
+<script>
+   create_table_data('user', null) 
+</script>
+  <!-- <script>
     async function update_audio(data){
         console.log("Sending "+ data)
         var request = new Request('/life-of-sounds/audio', {
@@ -177,8 +182,8 @@
 
     }
 
-    create_table_data('user')
+    create_table_data('user') -->
 
-  </script>
+  <!-- </script> -->
 </body>
 </html>
