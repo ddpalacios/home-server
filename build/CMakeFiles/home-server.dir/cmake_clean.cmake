@@ -5,6 +5,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/home-server.dir/main.c.o.d"
   "CMakeFiles/home-server.dir/models/Audio.c.o"
   "CMakeFiles/home-server.dir/models/Audio.c.o.d"
+  "CMakeFiles/home-server.dir/models/Client_Connection.c.o"
+  "CMakeFiles/home-server.dir/models/Client_Connection.c.o.d"
   "CMakeFiles/home-server.dir/models/User.c.o"
   "CMakeFiles/home-server.dir/models/User.c.o.d"
   "CMakeFiles/home-server.dir/models/session.c.o"

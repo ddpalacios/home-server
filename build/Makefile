@@ -201,6 +201,30 @@ models/Audio.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/models/Audio.c.s
 .PHONY : models/Audio.c.s
 
+models/Client_Connection.o: models/Client_Connection.c.o
+.PHONY : models/Client_Connection.o
+
+# target to build an object file
+models/Client_Connection.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/models/Client_Connection.c.o
+.PHONY : models/Client_Connection.c.o
+
+models/Client_Connection.i: models/Client_Connection.c.i
+.PHONY : models/Client_Connection.i
+
+# target to preprocess a source file
+models/Client_Connection.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/models/Client_Connection.c.i
+.PHONY : models/Client_Connection.c.i
+
+models/Client_Connection.s: models/Client_Connection.c.s
+.PHONY : models/Client_Connection.s
+
+# target to generate assembly for a file
+models/Client_Connection.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/models/Client_Connection.c.s
+.PHONY : models/Client_Connection.c.s
+
 models/User.o: models/User.c.o
 .PHONY : models/User.o
 
@@ -1035,6 +1059,9 @@ help:
 	@echo "... models/Audio.o"
 	@echo "... models/Audio.i"
 	@echo "... models/Audio.s"
+	@echo "... models/Client_Connection.o"
+	@echo "... models/Client_Connection.i"
+	@echo "... models/Client_Connection.s"
 	@echo "... models/User.o"
 	@echo "... models/User.i"
 	@echo "... models/User.s"

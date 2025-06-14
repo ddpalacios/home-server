@@ -11,6 +11,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/dpalacios/home-server/database/SQL.c" "CMakeFiles/home-server.dir/database/SQL.c.o" "gcc" "CMakeFiles/home-server.dir/database/SQL.c.o.d"
   "/home/dpalacios/home-server/main.c" "CMakeFiles/home-server.dir/main.c.o" "gcc" "CMakeFiles/home-server.dir/main.c.o.d"
   "/home/dpalacios/home-server/models/Audio.c" "CMakeFiles/home-server.dir/models/Audio.c.o" "gcc" "CMakeFiles/home-server.dir/models/Audio.c.o.d"
+  "/home/dpalacios/home-server/models/Client_Connection.c" "CMakeFiles/home-server.dir/models/Client_Connection.c.o" "gcc" "CMakeFiles/home-server.dir/models/Client_Connection.c.o.d"
   "/home/dpalacios/home-server/models/User.c" "CMakeFiles/home-server.dir/models/User.c.o" "gcc" "CMakeFiles/home-server.dir/models/User.c.o.d"
   "/home/dpalacios/home-server/models/session.c" "CMakeFiles/home-server.dir/models/session.c.o" "gcc" "CMakeFiles/home-server.dir/models/session.c.o.d"
   "/home/dpalacios/home-server/models/websocket.c" "CMakeFiles/home-server.dir/models/websocket.c.o" "gcc" "CMakeFiles/home-server.dir/models/websocket.c.o.d"
