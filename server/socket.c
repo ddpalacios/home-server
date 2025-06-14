@@ -1,3 +1,4 @@
+#include <arpa/inet.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <poll.h>
@@ -8,13 +9,39 @@
 #include <openssl/err.h>
 #include <openssl/bio.h>
 #include "client.h" 
+#include "../models/Client_Connection.h" 
 #include "route.h" 
 #include "websocket.h" 
 #include "http_utilities.h" 
+#include "os_utilities.h" 
 #define PORT 9034
 #define CLIENT_CERT "../server/self_signed_cert.crt"
 #define CLIENT_KEY "../server/privateKey.key"
 #define BUFFER_SIZE 5056
+
+
+char*  get_peer_name(int fd){
+	socklen_t len;
+	struct sockaddr_storage addr;
+	static char ipstr[INET6_ADDRSTRLEN];
+	int port;
+	len = sizeof(addr);
+	getpeername(fd, (struct sockaddr*)&addr, &len);
+	if (addr.ss_family == AF_INET){
+		struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+		port = ntohs(s->sin_port);
+		inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof(ipstr));
+	}else{
+		struct sockaddr_in6 *s = (struct sockaddr_in6 *)&addr;
+		port = ntohs(s->sin6_port);
+		inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof(ipstr));
+
+	}
+	// printf("Peer IP Address: %s\n", ipstr);
+	// printf("Peer Port      : %d\n", port);
+	return ipstr;
+
+}
 
 void initialize_ssl(){
 	SSL_library_init(); 
@@ -44,7 +71,9 @@ SSL* encrypt_socket(int fd){
 	
 	int ssl_err = SSL_accept(cSSL);
 	if (ssl_err <0) {
-		printf("SSL ERROR %d ERROR ON ACCEPTING CSSL!!!\n", ssl_err);
+		int err = SSL_get_error(cSSL, ssl_err);
+		printf("SSL ERROR %d | %d ERROR ON ACCEPTING CSSL!!!\n", ssl_err, err);
+
 		SSL_shutdown(cSSL);
 		SSL_free(cSSL);
 		return NULL;
@@ -82,15 +111,28 @@ void add_fd(int new_fd, struct pollfd *pfds[], struct Client *clients[],int *fd_
 		(*pfds)[*fd_count].fd = new_fd;
 		(*pfds)[*fd_count].events = POLLIN;
 		(*fd_count)++;
-	//	printf("Total FDs created: %d\n", *fd_count);
+		char* ip_addr = get_peer_name(new_fd);
+		struct ClientConnection cc = create_client_connection(ip_addr, new_fd);
+		insert_client_connection(cc);
+		printf("Total FDs: %d | ID: %d\n", *fd_count, new_fd);
+
+
 	}else{
 		if (*fd_count == 0){
+			(*clients)[*fd_count].Id = new_fd;
+			(*clients)[*fd_count].cSSL = cSSL;
 			(*pfds)[*fd_count].fd = new_fd;
 			(*pfds)[*fd_count].events = POLLIN;
 			(*fd_count)++;
-			//printf("Listener Socket Added!! - Total FDs created: %d\n", *fd_count);
+			char* ip_addr = get_peer_name(new_fd);
+			struct ClientConnection cc = create_client_connection(ip_addr, new_fd);
+			insert_client_connection(cc);
+		}else{
+			close(new_fd);
 		}
 	}
+
+
 }
 
 void del_from_pfds(struct pollfd pfds[],struct Client clients[], int fd, int *fd_count){
@@ -100,12 +142,15 @@ void del_from_pfds(struct pollfd pfds[],struct Client clients[], int fd, int *fd
 		if (pfds[i].fd  == fd ) {
 			pfds[i] = pfds[*fd_count-1];
 			(*fd_count)--;
-			printf("FD removed. %d\n", (*fd_count));
+			delete_connection_by_fd(fd);
+			printf("FD removed. Total:  %d\n", (*fd_count));
 		//printf("Found ready fd %d\n", ready_fd);
 			break;
 		}
 	}
 }
+
+
 
 int listen_for_pfds(int fd_count, int max_fd_size){
 	initialize_ssl();
@@ -116,7 +161,7 @@ int listen_for_pfds(int fd_count, int max_fd_size){
 	add_fd(listener_socket,&pfds,&clients, &fd_count, &max_fd_size);
 	printf("https://127.0.0.1:%d/life-of-sounds/login\n",PORT);
 	while(1){
-		printf("Listening to %d FDs..\n", fd_count);
+		// printf("Listening to %d FDs..\n", fd_count);
 		if (poll(pfds, fd_count, -1) < 0){
 			perror("poll");
 		}
@@ -129,8 +174,10 @@ int listen_for_pfds(int fd_count, int max_fd_size){
 			if (newfd == -1){
 				perror("accept");
 			}
+			// printf("Incoming New FD! %d\n", newfd);
 			add_fd( newfd, &pfds,  &clients,&fd_count,  &max_fd_size);
 		}else{
+
 			SSL* cSSL = get_client_socket(clients, fd_count,ready_fd);
 			 char *buf = malloc(BUFFER_SIZE);
 			int nbytes = SSL_read(cSSL, buf, BUFFER_SIZE);
@@ -141,30 +188,10 @@ int listen_for_pfds(int fd_count, int max_fd_size){
 				}else{
 					perror("recv");
 				}
-				int is_active = is_active_websocket_client(ready_fd);
-				if (is_active){
-					delete_websocket_by_fd(ready_fd);
-				}
-
 				close(ready_fd);
 				del_from_pfds(pfds,clients, ready_fd, &fd_count);
 			}else{
-				if (is_websocket_buffer(buf)) {
-						char*message = malloc(nbytes);
-						int true_nbytes = decode_websocket_buffer(buf, message);
-						printf("Message From Websocket: %d bytes\n", true_nbytes);
-						char *res = strstr(message, " ");
-						if (res != NULL){
-							res = res +1;
-							char *end = strchr(message, '}');
-							size_t jsonlength = end - message +1;
-							char jsonpart[jsonlength +1];
-							strncpy(jsonpart, message, jsonlength);
-							jsonpart[jsonlength] = '\0';
-							process_websocket_route(jsonpart, res);	
-						}
-
-				}else{
+				if (strstr(buf, "HTTP/1.1")!= NULL){
 					char  *request_type = malloc(5076);
 					char  *route = malloc(5076);
 					strcpy(request_type, buf);
@@ -175,15 +202,42 @@ int listen_for_pfds(int fd_count, int max_fd_size){
 					char* route_end = strchr(route, ' ');
 					*route_end = '\0';
 					process_route(cSSL, buf, request_type, route, ready_fd);
-					buf[0] = '\0';
-					int is_active = is_active_websocket_client(ready_fd);
-					if (!is_active){
-								close(ready_fd);
-								del_from_pfds(pfds,clients, ready_fd, &fd_count);
+					char* websocket_key = get_header_value(buf,"Sec-WebSocket-Key");
+					if (strlen(websocket_key) == 0){
+						close(ready_fd);
+						del_from_pfds(pfds,clients, ready_fd, &fd_count);
 					}
+					buf[0] = '\0';
+				}
+
+				if (is_websocket_buffer(buf)){
+					char message[BUFFER_SIZE];
+					 int payload_length = decode_websocket_buffer(buf, message);
+					 printf("Websocket Message len: %d\n", payload_length);
+					 printf("Websocket Message: %s\n", message);
+					int opcode = buf[0] & 0x0F;
+					char frame[5+payload_length];
+					frame[0] = opcode;
+					frame[1] = (payload_length >> 24) & 0xFF;
+					frame[2] = (payload_length >> 16) & 0xFF;
+					frame[3] = (payload_length >> 8) & 0xFF;
+					frame[4] = payload_length & 0xFF; 
+					memcpy(&frame[5], message, payload_length);
+
+					for (int i=0; i < fd_count; i++){
+						 int Id = clients[i].Id;
+						 if (Id != listener_socket && Id != ready_fd){
+							 SSL* target_cSSL = clients[i].cSSL;
+							 SSL_write(target_cSSL, frame, 5+payload_length);
+						 }
+					}
+					create_directory("test/");
+					FILE* fptr = fopen("test/test.webm", "ab");
+					fwrite(message, 1, payload_length, fptr);
+					fclose(fptr);
+				}
 			}
-			
-		}
 		}
 	}
 }
+

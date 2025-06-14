@@ -151,16 +151,32 @@ function add_rows(data){
 
 
 }
+function page_data(data){
+    pages = {}
+    records = []
+    page = 1
+    var v = 5
+    console.log(data)
+    for (var i=0; i< data.length; i++){
+        if ((i % v)==0){
+            pages[page] = [data[i]]
+            page++;
+        }else{
+            subset = pages[page-1]
+            subset.push(data[i])
+            pages[page-1] = subset
+        }
+    }
+    sessionStorage.setItem("max_page", page-1)
+    return { 'pages' : pages, 'max_page': page-1}
+}
 
-function create_table_body(tableBody_element,data, editable_columns,ignore_columns){
+function create_table_body(tableBody_element,data, editable_columns,ignore_columns, page_number){
     var idx = 0
      data.forEach(item =>  {
         let row = tableBody_element.insertRow();
         var Id = item['Id']
-        
-        idx ++;
-        if (idx < 9){
-        
+      
         Object.keys(item).forEach(key => {
             if (!ignore_columns.includes(key)){
                 let cell = row.insertCell();
@@ -197,7 +213,6 @@ function create_table_body(tableBody_element,data, editable_columns,ignore_colum
         }
 
         });
-    }
      });
 }
 function create_table_headers(tableHead_element,data, editable_columns,ignore_columns){
@@ -241,7 +256,7 @@ function create_table_headers(tableHead_element,data, editable_columns,ignore_co
                 
 }
 
-function create_table(data,  editable_columns, ignore_columns){
+function create_table(data,  editable_columns, ignore_columns, page_number){
         const table = create_element('table', 'editableTable')
         const tableHead = create_element('thead', 'theadid')
         const tableBody = create_element('thead', 'tableBodyid')
@@ -249,12 +264,12 @@ function create_table(data,  editable_columns, ignore_columns){
         table.appendChild(tableBody);
 
         data = create_table_headers(tableHead,data, editable_columns,ignore_columns)
-        create_table_body(tableHead,data, editable_columns,ignore_columns)
+        create_table_body(tableHead,data, editable_columns,ignore_columns, page_number)
 
         document.getElementById('audio_table_container').appendChild(table);
     }
 
-function create_table_data(entity, userid){
+function create_table_data(entity, userid, page_number){
       document.getElementById("audio_table_container").innerHTML = "";
       editable_columns = []
 	  ignore_columns = []
@@ -279,6 +294,36 @@ function create_table_data(entity, userid){
                 .then((response)=> response.json())
                 .then((data)=> {
                     var obj = data.values
-                    create_table(obj, editable_columns,ignore_columns)
+                    create_table(obj, editable_columns,ignore_columns, page_number)
                 });
     }
+
+next_btn = document.getElementById("next_button")
+prev_btn = document.getElementById("previous_button")
+  next_btn.onclick = function () {
+    var userid = sessionStorage.getItem('userid')
+    var max_page = sessionStorage.getItem('max_page')
+    if (parseInt(next_btn.value, 10) >= max_page) {
+      return
+    }
+    next_btn.value = parseInt(next_btn.value, 10) + 1
+    prev_btn.value = parseInt(prev_btn.value, 10) + 1
+    console.log("Current Value "+ next_btn.value + " Prev Value: "+ prev_btn.value + " "+ userid)
+    create_table_data('audio',userid, next_btn.value)
+}
+
+prev_btn.onclick = function(){
+  if (parseInt(prev_btn.value, 10) == 0){
+    return
+  }
+  var userid = sessionStorage.getItem('userid')
+
+  next_btn.value = parseInt(next_btn.value, 10) - 1
+    prev_btn.value = parseInt(prev_btn.value, 10) - 1
+  console.log("Current Value "+ next_btn.value + " Prev Value: "+ prev_btn.value)
+  create_table_data('audio',userid, next_btn.value)
+
+
+
+}
+

@@ -49,6 +49,29 @@
       background-color: #EFA9E3
     }
 
+    #table-wrapper {
+  position:relative;
+}
+#audio_table_container {
+  height:750px;
+  overflow:auto;  
+}
+#table-wrapper table {
+  width:100%;
+
+}
+#table-wrapper table * {
+  color:black;
+}
+#table-wrapper table thead th .text {
+  position:absolute;   
+  top:-20px;
+  z-index:2;
+  height:20px;
+  width:35%;
+  border:1px solid red;
+}
+
 
 .container {
   display: flex;
@@ -77,6 +100,7 @@
 		<button onclick="location.href = '/life-of-sounds/home';" >home</button>
 		<br>
 		<br>
+    <button onclick="send_test_message()"></button>
 		<button onclick="open_microphone();" >Start Microphone</button>
 		<button onclick="close_microphone();" >Close Microphone</button>
 		<br>
@@ -88,22 +112,30 @@
 	        <canvas id="visualizer" ></canvas>
 		</div>
 		<div class="right">
-	<div id="audio_table_container"></div>
+<div id="table-wrapper">
+    <!-- <div id="audio_table_container"> -->
+
+    </div>
+</div>
 			
 		</div>
 		</div>
 
-		<!-- <div style="display: flex; justify-content: center;">
-			<br>
-			<br>
-			
-		</div> -->
   <br>
-	<div id="audio_table_container"></div>
+
 </body>
-<script src="/life-of-sounds/home/live_studio/web_audio_api.js" ></script>
+
+<!-- <script src="/life-of-sounds/home/live_studio/web_audio_api.js" ></script> -->
 <script src="/life-of-sounds/home/studio/html_utilities.js" ></script>
 <script src="/life-of-sounds/home/studio/websocket.js" ></script>
-<script src="/life-of-sounds/home/studio/data_table.js"></script>
+<!-- <script src="/life-of-sounds/home/studio/data_table.js"></script> -->
+<script>
+function send_test_message(){
+  var message = "Hello, Daniel";
+  websocket_session.send(message)
+  
+}
+
+</script>
 
 </html>

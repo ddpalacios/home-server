@@ -2,7 +2,6 @@
 #include <string.h>
 #include "socket.h"
 
-
 #include <fcntl.h>
 #include <inttypes.h>
 #include <stdlib.h>

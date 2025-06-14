@@ -33,12 +33,11 @@
 
 
 void process_websocket_route(char* metadata, char* data){
-	printf("%s\n",metadata);
+	// printf("%s\n",metadata);
 	char* type = get_string_value_from_json("type", metadata);
 
 	 if (strcmp(type, "text")==0){
 		char* userid = get_string_value_from_json("userid", metadata);
-		printf("TEXT Recieved! FROM UserID %s %s\n", userid, data);
 
 	}else if (strcmp(type, "audio")==0){
 		int blob_size = get_int_value_from_json("size", metadata);
@@ -48,10 +47,10 @@ void process_websocket_route(char* metadata, char* data){
 		char* audioName = get_string_value_from_json("audioName", metadata);
 		char* sessionid = get_string_value_from_json("sessionid", metadata);
 		struct Session session = get_session(sessionid);
-		printf("Session ID %s\n", session.Id);
+		// printf("Session ID %s\n", session.Id);
 		if (session.exists){
 			char* userid = session.userId;
-			printf("User ID %s\n", userid);
+			// printf("User ID %s\n", userid);
 			char database_path[500] = "../";
 			strcat(database_path, database);
 			create_directory(database_path);
@@ -62,7 +61,7 @@ void process_websocket_route(char* metadata, char* data){
 			snprintf(database_userid_source_path, sizeof(database_userid_source_path), "%s/%s/",database_userid_path,source);
 			create_directory(database_userid_source_path);
 			strcat(database_userid_source_path,audioName);
-			printf("Path: %s\n",database_userid_source_path);
+			// printf("Path: %s\n",database_userid_source_path);
 			FILE* fptr = fopen(database_userid_source_path, "ab");
 			fwrite(data, 1, blob_size, fptr);
 			fclose(fptr);
@@ -87,7 +86,7 @@ void process_route(SSL* cSSL, char* request, char* request_type, char* route, in
 	}else if (strcmp(request_type, "PATCH")==0 && strcmp(route, "/life-of-sounds/audio")==0){
 		 update_audio_info(cSSL, route, request);
 	}else if (strcmp(request_type, "PATCH")==0 && strcmp(route, "/life-of-sounds/websocket")==0){
-		update_websocket_info(cSSL, route, request);
+		// update_websocket_info(cSSL, route, request);
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/websocket")==0){
 		get_websocket_protocol(cSSL,route, request, fd);
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home/recordings")==0){

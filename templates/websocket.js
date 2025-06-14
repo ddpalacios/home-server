@@ -90,7 +90,9 @@
 					.then((data)=> {
 						delete_existing_websocket(data["Id"], sessionid);
 						start_websocket(data,sessionid);
-    					create_table_data('audio', data["Id"])
+						sessionStorage.setItem('userid', data["Id"]);
+    					// create_table_data('audio', data["Id"], 1)
+
 
 					})
 	}
@@ -160,7 +162,7 @@
 			console.log("Websocket connection established");	
 			alert("Connected.")
 			is_connected = true;
-			update_websocket(user,sessionid)		
+			// update_websocket(user,sessionid)		
 		}
 		websocket_session.onmessage = (event) => {
 				console.log("Message from server:", event.data);
@@ -200,7 +202,7 @@
 				});
 		const response = await fetch(request);
 		if (response.status == 200){
-	  			create_table_data('audio', userid)
+	  			// create_table_data('audio', userid, 1)
 				var elem = document.getElementById("fade-text")
 				elem.innerHTML = "";
 
@@ -229,7 +231,7 @@
 							update_audio(data['Id']);
 						})
 
-      document.getElementById("audio_table_container").innerHTML = "";
+    //   document.getElementById("audio_table_container").innerHTML = "";
 
 
 
@@ -249,21 +251,9 @@
 		let mediaRecorder = new MediaRecorder(stream);
 		let sequence = 0;
 		mediaRecorder.ondataavailable = function (e) {
-		var metadata = JSON.stringify({
-					'type': 'audio'
-					,'sessionid': sessionid
-					,'size': e.data.size
-					,'Id': uniqueId
-					,'audioName': audioName +".webm"
-					,'database': database
-					,'source': source
-
-				});
-
-		var combined_blob = new Blob([metadata,' ' ,e.data], {type: "audio/webm;codecs=opus"});
-		websocket_session.send(combined_blob);
+		websocket_session.send(e.data);
 		chunks.push(e.data);
-        process_chunk(e.data)
+		console.log(e.data)
 		};
 
 	    mediaRecorder.onstop = function(e){
@@ -274,7 +264,7 @@
 		    audio.src =  audioUrl;
 
 	    }
-	    mediaRecorder.start(100);
+	    mediaRecorder.start(10);
 		var elem = document.getElementById("fade-text")
 		var text = document.createElement("p")
 		text.textContent = "Recording..."

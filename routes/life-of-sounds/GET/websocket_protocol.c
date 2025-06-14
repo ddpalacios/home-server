@@ -15,16 +15,7 @@ void get_websocket_protocol(SSL* cSSL,char*route, char* request, int fd){
                 int res = switch_to_websocket_protocol(cSSL,  wss_accp_key);
                 if (res <=0){
                     send_response_code(cSSL, 400);
-                }else{
-                    char* cookie = get_cookie(request);
-                    struct Session session = get_session(cookie);
-                    struct User user = get_user_by_id(session.userId);
-                    struct Websocket websocket  = create_websocket(user.Id, cookie, fd);
-                    insert_websocket_session(websocket);
                 }
             }
-            }else{
-            char* websockets_json = get_websockets();
-            send_JSON_response_code(cSSL, 200, websockets_json);
             }
 }
