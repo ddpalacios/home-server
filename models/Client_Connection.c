@@ -15,6 +15,16 @@ struct ClientConnection create_client_connection(char*ip_address, int fd){
 	    return clientConnection;
 }
 
+void update_client_connecion_value(char* Id, char* columnName, char* newValue){
+
+        MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+        char sql[576];
+                snprintf(sql,sizeof(sql),"UPDATE ClientConnection SET %s = '%s' WHERE Id = '%s'", columnName, newValue, Id);
+        query(conn, sql);
+        close_sql_connection(conn);
+
+}
+
  void insert_client_connection(struct ClientConnection clientConnection){
 	    MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users"); 
 	    char sql[255];
@@ -22,11 +32,12 @@ struct ClientConnection create_client_connection(char*ip_address, int fd){
 	    hash_to_hex(clientConnection.Id, 16, id_hex);
 
 	    snprintf(sql, sizeof(sql), 
-			    "INSERT INTO ClientConnection VALUES ('%s', '%s', '%d');"
+			    "INSERT INTO ClientConnection VALUES ('%s', '%s', '%d', '%s');"
 			    ,
 			    id_hex 
 			   ,clientConnection.ip_address
-			   ,clientConnection.fileDescriptorId);
+			   ,clientConnection.fileDescriptorId
+			   ,clientConnection.client_type);
  
 	    printf("SQL %s\n", sql);
 	    query(conn, sql);
@@ -59,6 +70,28 @@ int get_total_connections(){
 
 	close_sql_connection(conn);
 	return count;
+}
+
+
+
+struct ClientConnection get_client_connection_by_fd(int fd){
+	struct ClientConnection connection;
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql,sizeof(sql), "SELECT * FROM ClientConnection WHERE fileDescriptorId = %d", fd);
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+	connection.exists = 0;
+	while((row = mysql_fetch_row(res))!= NULL){
+		connection.Id = strdup(row[0]);
+		connection.ip_address = strdup(row[1]);
+		connection.fileDescriptorId = atoi(row[2]); 
+		connection.client_type = strdup(row[3]); 
+		// printf("SQL CLIENT ID %s | %s\n",connection.Id , strdup(row[3]));
+		connection.exists = 1;
+	}
+	close_sql_connection(conn);
+    return connection;
 }
 
 

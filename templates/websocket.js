@@ -166,9 +166,22 @@
 		}
 		websocket_session.onmessage = (event) => {
 				console.log("Message from server:", event.data);
-				data = JSON.parse(event.data)
-				websocket_id = data.Id;
-				userid = data.userid;
+				h3 = document.createElement('h3')
+				elem = document.getElementById("messagebox")
+				if (event.data == "clear"){
+					elem.innerHTML = ''
+				}else  if (event.data == "live_studio"){
+					location.href = '/life-of-sounds/home/live_studio'
+
+				
+				}else  if (event.data == "live"){
+					location.href = '/life-of-sounds/live'
+
+				
+				}else	{
+					h3.textContent = event.data
+				elem.appendChild(h3)
+				}
 		}
 		websocket_session.onerror = (error) => {
 			console.error("Websocket error:", error);
@@ -218,6 +231,7 @@
 		stream.getTracks().forEach(track => track.stop());
 		stream = null;
 		var sessionid = getCookie("session");
+
 		
 		var request = new Request('/life-of-sounds/session/'+sessionid, {
 								method: 'GET',
@@ -262,6 +276,9 @@
 		    var audio = document.getElementById("audio_stream_id");
 		    console.log(audio);
 		    audio.src =  audioUrl;
+			websocket_session.send("Audio Stopped");
+
+
 
 	    }
 	    mediaRecorder.start(10);

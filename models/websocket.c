@@ -106,7 +106,7 @@ char* convert_websockets_to_json(struct Websocket* websocket, int count){
 
 	}
 	char *json_string = cJSON_Print(root);
-	printf("JSON %s\n", json_string);
+	// printf("JSON %s\n", json_string);
 	cJSON_Delete(root);
 
 	
@@ -130,7 +130,7 @@ char* get_websockets(){
 	struct Websocket *websocket;
 	websocket = malloc(sizeof(*websocket) * 1000);
 	int total_websockets = get_total_websockets();
-	printf("Total Websockets: %d\n", total_websockets);
+	// printf("Total Websockets: %d\n", total_websockets);
 	if (total_websockets == 0){
 		char* json = convert_websockets_to_json(websocket,total_websockets);
 		return json;
@@ -143,7 +143,7 @@ char* get_websockets(){
 	snprintf(sql,sizeof(sql), "SELECT * FROM websocket");
 	MYSQL_RES* res = query(conn, sql);
 	MYSQL_ROW row;
-	printf("Query: %s\n", sql);
+	// printf("Query: %s\n", sql);
 
 	int count = 0;
 	while((row = mysql_fetch_row(res))!= NULL){
@@ -179,8 +179,8 @@ int  decode_websocket_buffer(unsigned char* buf, char message[]){
 	int opcode = buf[0] & 0x0F;
 	int mask = buf[1] & 0x80;
 	int payload_length = buf[1] & 0x7F;
-	printf("Fin Val: %d Opcode: %d masked: %d\n", finVal, opcode, mask);
-	printf("Payload Length: %d\n", payload_length);
+	// printf("Fin Val: %d Opcode: %d masked: %d\n", finVal, opcode, mask);
+	// printf("Payload Length: %d\n", payload_length);
 	if (payload_length < 126){
 		if (mask){
 			int offset = 2;
@@ -207,7 +207,7 @@ int  decode_websocket_buffer(unsigned char* buf, char message[]){
 			unsigned int p1 = buf[2];
 			unsigned int p2 = buf[3];
 			unsigned int extended_payload_length = (p1 <<8) | p2;
-			printf("Length: %d\n" , extended_payload_length);
+			// printf("Length: %d\n" , extended_payload_length);
 			unsigned char* masking_key;
 
 			masking_key = malloc(4);

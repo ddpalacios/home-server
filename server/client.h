@@ -2,6 +2,7 @@
 typedef struct Client{
 	int Id;
 	SSL* cSSL;
+	int isNew;
 
 }clients;
 
