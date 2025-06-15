@@ -90,7 +90,9 @@
 					.then((data)=> {
 						delete_existing_websocket(data["Id"], sessionid);
 						start_websocket(data,sessionid);
-    					create_table_data('audio', data["Id"])
+						sessionStorage.setItem('userid', data["Id"]);
+    					// create_table_data('audio', data["Id"], 1)
+
 
 					})
 	}
@@ -160,13 +162,26 @@
 			console.log("Websocket connection established");	
 			alert("Connected.")
 			is_connected = true;
-			update_websocket(user,sessionid)		
+			// update_websocket(user,sessionid)		
 		}
 		websocket_session.onmessage = (event) => {
 				console.log("Message from server:", event.data);
-				data = JSON.parse(event.data)
-				websocket_id = data.Id;
-				userid = data.userid;
+				h3 = document.createElement('h3')
+				elem = document.getElementById("messagebox")
+				if (event.data == "clear"){
+					elem.innerHTML = ''
+				}else  if (event.data == "live_studio"){
+					location.href = '/life-of-sounds/home/live_studio'
+
+				
+				}else  if (event.data == "live"){
+					location.href = '/life-of-sounds/live'
+
+				
+				}else	{
+					h3.textContent = event.data
+				elem.appendChild(h3)
+				}
 		}
 		websocket_session.onerror = (error) => {
 			console.error("Websocket error:", error);
@@ -200,7 +215,7 @@
 				});
 		const response = await fetch(request);
 		if (response.status == 200){
-	  			create_table_data('audio', userid)
+	  			// create_table_data('audio', userid, 1)
 				var elem = document.getElementById("fade-text")
 				elem.innerHTML = "";
 
@@ -216,6 +231,7 @@
 		stream.getTracks().forEach(track => track.stop());
 		stream = null;
 		var sessionid = getCookie("session");
+
 		
 		var request = new Request('/life-of-sounds/session/'+sessionid, {
 								method: 'GET',
@@ -229,7 +245,7 @@
 							update_audio(data['Id']);
 						})
 
-      document.getElementById("audio_table_container").innerHTML = "";
+    //   document.getElementById("audio_table_container").innerHTML = "";
 
 
 
@@ -249,21 +265,9 @@
 		let mediaRecorder = new MediaRecorder(stream);
 		let sequence = 0;
 		mediaRecorder.ondataavailable = function (e) {
-		var metadata = JSON.stringify({
-					'type': 'audio'
-					,'sessionid': sessionid
-					,'size': e.data.size
-					,'Id': uniqueId
-					,'audioName': audioName +".webm"
-					,'database': database
-					,'source': source
-
-				});
-
-		var combined_blob = new Blob([metadata,' ' ,e.data], {type: "audio/webm;codecs=opus"});
-		websocket_session.send(combined_blob);
+		websocket_session.send(e.data);
 		chunks.push(e.data);
-        process_chunk(e.data)
+		console.log(e.data)
 		};
 
 	    mediaRecorder.onstop = function(e){
@@ -272,9 +276,12 @@
 		    var audio = document.getElementById("audio_stream_id");
 		    console.log(audio);
 		    audio.src =  audioUrl;
+			websocket_session.send("Audio Stopped");
+
+
 
 	    }
-	    mediaRecorder.start(100);
+	    mediaRecorder.start(10);
 		var elem = document.getElementById("fade-text")
 		var text = document.createElement("p")
 		text.textContent = "Recording..."

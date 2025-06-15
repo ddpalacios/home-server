@@ -15,6 +15,7 @@ file(GLOB MAIN
     "routes/life-of-sounds/POST/*.c"
     "models/User.c"
     "models/websocket.c"
+    "models/Client_Connection.c"
     "models/session.c"
     "models/Audio.c"
     

@@ -106,7 +106,7 @@ char* convert_websockets_to_json(struct Websocket* websocket, int count){
 
 	}
 	char *json_string = cJSON_Print(root);
-	printf("JSON %s\n", json_string);
+	// printf("JSON %s\n", json_string);
 	cJSON_Delete(root);
 
 	
@@ -130,7 +130,7 @@ char* get_websockets(){
 	struct Websocket *websocket;
 	websocket = malloc(sizeof(*websocket) * 1000);
 	int total_websockets = get_total_websockets();
-	printf("Total Websockets: %d\n", total_websockets);
+	// printf("Total Websockets: %d\n", total_websockets);
 	if (total_websockets == 0){
 		char* json = convert_websockets_to_json(websocket,total_websockets);
 		return json;
@@ -143,7 +143,7 @@ char* get_websockets(){
 	snprintf(sql,sizeof(sql), "SELECT * FROM websocket");
 	MYSQL_RES* res = query(conn, sql);
 	MYSQL_ROW row;
-	printf("Query: %s\n", sql);
+	// printf("Query: %s\n", sql);
 
 	int count = 0;
 	while((row = mysql_fetch_row(res))!= NULL){
@@ -164,79 +164,99 @@ int is_websocket_buffer(unsigned char* buf){
 	int finVal = buf[0] & 0x80;
 	int opcode = buf[0] & 0x0F;
 	int mask = buf[1] & 0x80;
-	int payloadlength = buf[1] & 0x7F;
 	if (opcode == 0 && finVal == 0 && mask==0){
 		  return 0;
-	  }
-	if (opcode == 0 && finVal == 0 && mask == 128){
+	  }else{
 		  return 1;
 	  }
-	if (opcode >=1 && mask == 128){
-		return 1;
-	  
-	}else{
-		return 0;
-	  }
+	
+	}
+	
+	
+
+int  decode_websocket_buffer(unsigned char* buf, char message[]){
+	int finVal = buf[0] & 0x80;
+	int opcode = buf[0] & 0x0F;
+	int mask = buf[1] & 0x80;
+	int payload_length = buf[1] & 0x7F;
+	// printf("Fin Val: %d Opcode: %d masked: %d\n", finVal, opcode, mask);
+	// printf("Payload Length: %d\n", payload_length);
+	if (payload_length < 126){
+		if (mask){
+			int offset = 2;
+			unsigned char* masking_key;
+			masking_key = malloc(4);
+			for (int i=0; i<4; i++){
+				masking_key[i] = buf[2+i];
+				offset = 2 + i;
+			}
+			offset++;
+			 unsigned char payload[payload_length+1];
+			for (int i=0; i<payload_length; i++){
+				payload[i] = buf[offset+i];
+			}
+			for (int i=0; i<payload_length; i++){
+				int val = payload[i] ^ masking_key[i%4];
+				message[i] = val; 
+			}
+			message[payload_length] = '\0';
+			return payload_length;
+		}
+	}else if (payload_length == 126){
+		if (mask){
+			unsigned int p1 = buf[2];
+			unsigned int p2 = buf[3];
+			unsigned int extended_payload_length = (p1 <<8) | p2;
+			// printf("Length: %d\n" , extended_payload_length);
+			unsigned char* masking_key;
+
+			masking_key = malloc(4);
+			int offset = 4;
+			for (int i=0; i<4; i++){
+				masking_key[i] = buf[4+i];
+				offset = 4 + i;
+			}
+			offset++;
+			unsigned char payload[extended_payload_length+1];
+			for (int i=0; i<extended_payload_length; i++){
+				payload[i] = buf[offset+i];
+			}
+			for (int i=0; i<extended_payload_length; i++){
+				int val = payload[i] ^ masking_key[i%4];
+				message[i] = val; 
+			}
+			message[extended_payload_length] = '\0';
+			return extended_payload_length;
+
+		}
+	}
 }
+			/*
+			unsigned int p1 = buf[2];
+			unsigned int p2 = buf[3];
+			unsigned int extended_length = (p1 << 8) | p2;
+			unsigned char* masking_key;
+			masking_key = malloc(4);
+			int offset = 4;
+			for (int i=0; i<4; i++){
+				masking_key[i] = buf[4+i];
+				offset = 4 + i;
+			}
+			offset++;
+			printf("Extended length: %d\n", extended_length);
+			// unsigned char payload[extended_length+1];
+			
+			for (int i=0; i<extended_length; i++){
+				payload[i] = buf[offset+i];
+			}
+			for (int i=0; i<extended_length; i++){
+				int val = payload[i] ^ masking_key[i%4];
+				message[i] = val; 
+			}
+			message[extended_length] = '\0';
+			return extended_length;
+			*/
 
-int  decode_websocket_buffer(char* buf, char message[] ){
-
-    // Byte 1
-    int finVal = buf[0] & 0x80; // Bit 0
-    int opcode = buf[0] & 0x0F; // Bits 4-7
-
-    // Bytes 2 - 10 Payload length
-    int mask = buf[1] & 0x80; // Bit 8 Must expect this to be 1
-
-    //printf("finVal %d, opcode: %d, mask: %d\n",finVal,opcode,mask);
-    if (mask){
-	    int payloadlength = buf[1] & 0x7F;
-	    //printf("Initial Payload Length int: %d\n",buf[1]);
-	    //printf("Initial Payload Length : %d\n",254 & 0x7F);
-	    unsigned char maskingKey[4];
-	    if (payloadlength < 126){
-		    int offset = 2;
-		    for (int i =0; i<4; i++){
-			maskingKey[i] = buf[2+i];
-			offset = 2 +i;
-		    }
-		    ++offset;
-		    unsigned char payload[payloadlength+1];
-		    for (int i =0; i<payloadlength; i++){
-			    payload[i] = buf[offset+i];
-		    }
-		    for (int i=0; i<payloadlength; i++){
-			int message_val = payload[i] ^ maskingKey[i%4];
-			message[i] = message_val;
-		    }
-		    message[payloadlength] = '\0';
-	    }
-
-	    if (payloadlength == 126){
-		    unsigned int p1 = buf[2] & 0xFF;
-		    unsigned int p2 = buf[3] & 0xFF;
-		    payloadlength = (p1 << 8) | p2;
-		    //printf("Payload Length Extracted: %d\n",payloadlength);
-		    int offset = 4;
-		    for (int i =0; i<4; i++){
-			maskingKey[i] = buf[4+i];
-			offset = 4 +i;
-		    }
-		    ++offset;
-		    unsigned char payload[payloadlength+1];
-		    for (int i =0; i<payloadlength; i++){
-			    payload[i] = buf[offset+i];
-		    }
-		    for (int i=0; i<payloadlength; i++){
-			int message_val = payload[i] ^ maskingKey[i%4];
-			message[i] = message_val;
-		    }
-		    message[payloadlength] = '\0';
-	    }
-	    //printf("True payload Length : %d\n",payloadlength);
-	    return payloadlength;
-    }
-}
 
 void delete_websocket_by_fd(int fd){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
