@@ -1,8 +1,13 @@
+
+#include <sys/socket.h>
+#include "socket.h"
+#include <sys/types.h>
+
+/*
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <poll.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
 #include <openssl/ssl.h>
@@ -19,6 +24,79 @@
 #define CLIENT_KEY "../server/privateKey.key"
 #define BUFFER_SIZE 5056
 
+*/
+
+void add_fd(int new_fd,char*type, struct pollfd *pfds[], struct Client *clients[],int *fd_count, int *max_fd_size){
+	if (*fd_count == *max_fd_size){
+		*max_fd_size *=2;
+		*pfds = realloc(*pfds, sizeof(**pfds) * (*max_fd_size));
+		*clients = realloc(*clients, sizeof(**clients) * (*max_fd_size));
+	}
+	SSL *cSSL = NULL;
+	if (*fd_count >=  1){
+		cSSL = encrypt_socket(new_fd);
+	}
+	if (cSSL != NULL){
+		(*clients)[*fd_count].Id = new_fd;
+		(*clients)[*fd_count].cSSL = cSSL;
+		(*clients)[*fd_count].isNew = 1;
+		(*pfds)[*fd_count].fd = new_fd;
+		(*pfds)[*fd_count].events = POLLIN;
+		(*fd_count)++;
+
+
+	}else{
+		if (*fd_count == 0){
+			(*clients)[*fd_count].Id = new_fd;
+			(*clients)[*fd_count].cSSL = cSSL;
+			(*clients)[*fd_count].isNew = 0;
+			(*pfds)[*fd_count].fd = new_fd;
+			(*pfds)[*fd_count].events = POLLIN;
+			(*fd_count)++;
+		}else{
+			close(new_fd);
+		}
+	}
+
+}
+struct Socket create_socket(struct addrinfo hints, char* PORT){
+	struct Socket new_socket;
+	struct addrinfo *res;
+	getaddrinfo(NULL, PORT, &hints, &res);
+	printf("Name: %s\n", res->ai_canonname);
+	int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+	int yes =1;
+	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+	bind(sockfd, res->ai_addr, res->ai_addrlen);
+	listen(sockfd, 5);
+	new_socket.Id = sockfd;
+	new_socket.PORT = PORT;
+	new_socket.isEncrypted = 0;
+	new_socket.isClient = 0;
+	return new_socket;
+
+
+}
+
+	/*
+int create_socket(struct  addrinfo hints){
+	struct sockaddr_in server_address;
+	server_address.sin_family = AF_INET;
+	server_address.sin_port = htons(PORT);
+	server_address.sin_addr.s_addr = INADDR_ANY;
+	
+	int listener_socket = socket(AF_INET, SOCK_STREAM, 0);
+	int yes = 1;
+
+	setsockopt(listener_socket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+
+	bind(listener_socket, (struct sockaddr*)&server_address, sizeof(server_address));
+	listen(listener_socket, 5);
+	return listener_socket;
+	*/
+
+/*
+}
 
 char*  get_peer_name(int fd){
 	socklen_t len;
@@ -173,22 +251,34 @@ void create_websocket_frame(char* message, int len, int opcode,struct Client cli
 	}
 }
 
+*/
 
+	/*
 int listen_for_pfds(int fd_count, int max_fd_size){
+
+}
+
+
+
 	initialize_ssl();
 	struct Client *clients;
 	clients = malloc(sizeof(*clients) * max_fd_size);
 	struct pollfd *pfds = malloc(sizeof(*pfds) * max_fd_size);
 	int listener_socket = create_socket();
 	add_fd(listener_socket,"listener",&pfds,&clients, &fd_count, &max_fd_size);
-	printf("https://127.0.0.1:%d/life-of-sounds/login\n",PORT);
+	printf("https://10.0.0.213:%d/life-of-sounds/login\n",PORT);
 	while(1){
-		// printf("Listening to %d FDs..\n", fd_count);
+		printf("Listening to %d FDs..\n", fd_count);
+		if (poll(pfds, fd_count, -1) < 0){
+			perror("poll");
+		}
+	}
+}
+		printf("Listening to %d FDs..\n", fd_count);
 		if (poll(pfds, fd_count, -1) < 0){
 			perror("poll");
 		}
 		int ready_fd = get_ready_file_descriptor(fd_count, pfds);
-		// printf("READT FD %d\n", ready_fd);
 		if (ready_fd == listener_socket){
 			struct sockaddr_storage remoteaddr;
 			socklen_t addrlen;
@@ -240,6 +330,7 @@ int listen_for_pfds(int fd_count, int max_fd_size){
 					buf[0] = '\0';
 				}
 				struct ClientConnection client_connection = get_client_connection_by_fd(ready_fd);
+
 				if (client_connection.exists){
 					char* client_type = client_connection.client_type;
 					if (strcmp(client_type, "websocket")==0){
@@ -256,6 +347,11 @@ int listen_for_pfds(int fd_count, int max_fd_size){
 						 for (int i=0; i < fd_count; i++){
 						 	int Id = clients[i].Id;
 						 	if (Id != listener_socket && Id != ready_fd){
+									printf("Sending to CLIENT %d %d Bytes\n", Id, payload_length);
+									if (opcode ==1){
+										printf("Sending Message: %s\n", message);
+									
+									}
 									SSL* target_cSSL = clients[i].cSSL;
 									SSL_write(target_cSSL, frame, 5+payload_length);
 						 	}
@@ -275,37 +371,10 @@ int listen_for_pfds(int fd_count, int max_fd_size){
 						printf("MESSAGE: %s\n", message);
 						create_websocket_frame(message, len, opcode, clients, ready_fd,fd_count, listener_socket);
 					}
-			}
-				// if (is_websocket_buffer(buf)){
-						// char message[BUFFER_SIZE];
-						// int payload_length = decode_websocket_buffer(buf, message);
-						// printf("Websocket Message len: %d\n", payload_length);
-						// int opcode = buf[0] & 0x0F;
-						// char frame[5+payload_length];
-						// printf("Length: %d\n", payload_length);
-						// frame[0] = opcode;
-						// frame[1] = (payload_length >> 24) & 0xFF;
-						// frame[2] = (payload_length >> 16) & 0xFF;
-						// frame[3] = (payload_length >> 8) & 0xFF;
-						// frame[4] = payload_length & 0xFF; 
-						// memcpy(&frame[5], message, payload_length);
-
-						// for (int i=0; i < fd_count; i++){
-						// 	int Id = clients[i].Id;
-						// 	if (Id != listener_socket && Id != ready_fd){
-						// 		SSL* target_cSSL = clients[i].cSSL;
-						// 		SSL_write(target_cSSL, frame, 5+payload_length);
-						// 	}
-						// }
-						// create_directory("test/");
-						// FILE* fptr = fopen("test/test.webm", "ab");
-						// fwrite(message, 1, payload_length, fptr);
-						// fclose(fptr);
-				
-				
-					// }
+				}
 			}
 		}
 	}
 }
+*/
 

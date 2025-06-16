@@ -1,16 +1,25 @@
 #include <stdio.h>
 #include <string.h>
+#include <netdb.h>
+#include <sys/types.h>
 #include "socket.h"
 
-#include <fcntl.h>
-#include <inttypes.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <unistd.h>
+
+
+
+
+
+
 
 int main(){
 	int max_fd_size = 10;
 	int fd_count = 0;
-	listen_for_pfds(fd_count, max_fd_size);
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags= AI_PASSIVE;
+	create_socket(hints, "9035");
+
 	return 0;
 }

@@ -14,6 +14,7 @@ file(GLOB MAIN
     "routes/life-of-sounds/DELETE/*.c"
     "routes/life-of-sounds/POST/*.c"
     "models/User.c"
+    "models/client.c"
     "models/websocket.c"
     "models/Client_Connection.c"
     "models/session.c"

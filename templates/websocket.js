@@ -173,11 +173,26 @@
 				}else  if (event.data == "live_studio"){
 					location.href = '/life-of-sounds/home/live_studio'
 
-				
-				}else  if (event.data == "live"){
-					location.href = '/life-of-sounds/live'
-
-				
+				}else  if (event.data == "purple"){
+					document.body.style.backgroundColor = 'purple'
+				}else  if (event.data == "grey"){
+					document.body.style.backgroundColor = 'grey'
+				}else  if (event.data == "red"){
+					document.body.style.backgroundColor = 'red'
+				}else  if (event.data == "orange"){
+					document.body.style.backgroundColor = 'orange'
+				}else  if (event.data == "black"){
+					document.body.style.backgroundColor = 'black'
+				}else  if (event.data == "white"){
+					document.body.style.backgroundColor = 'white'
+				}else  if (event.data == "green"){
+					document.body.style.backgroundColor = 'green'
+				}else  if (event.data == "yellow"){
+					document.body.style.backgroundColor = 'yellow'
+				}else  if (event.data == "blue"){
+					document.body.style.backgroundColor = 'blue'
+				}else  if (event.data == "pink"){
+					document.body.style.backgroundColor = 'pink'
 				}else	{
 					h3.textContent = event.data
 				elem.appendChild(h3)
