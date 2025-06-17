@@ -5,18 +5,20 @@
 #include <netdb.h>
 #include <sys/types.h>
 typedef struct Socket{
-	char* Id;
+	int Id;
 	char* ip_addr;
-	char* PORT;
+	int PORT;
+	char* type;
 	char* hostname;
-	int isEncrpyted;
+	char* service;
+	int isEncrypted;
 	int isClient;
-	struct Client client;
+	SSL* cSSL;
 
 
 }sockets;
-
-
-struct Socket create_socket(struct addrinfo hints, char* PORT);
+void delete_socket(struct pollfd pfds[],struct Socket *sockets, struct Socket *socket, int *fd_count);
+void listen_for_clients(struct Socket *sockets,struct Socket *server_socket,int *fd_count, int *max_fd_size);
+void insert_socket(struct Socket *new_socket);
+void bind_and_listen_socket(struct addrinfo hints, char* PORT, struct Socket *new_socket);
 int listen_for_pfds(int fd_count, int max_fd_size);
-void del_from_pfds(struct pollfd pfds[],struct Client clients[], int fd, int *fd_count);

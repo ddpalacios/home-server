@@ -1,7 +1,17 @@
 
 #include <sys/socket.h>
 #include "socket.h"
+#include "SQL.h"
 #include <sys/types.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <unistd.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#include <openssl/bio.h>
+#define CLIENT_CERT "../server/self_signed_cert.crt"
+#define CLIENT_KEY "../server/privateKey.key"
+#define BUFFER_SIZE 5056
 
 /*
 #include <arpa/inet.h>
@@ -10,23 +20,324 @@
 #include <poll.h>
 #include <netinet/in.h>
 #include <unistd.h>
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-#include <openssl/bio.h>
 #include "client.h" 
 #include "../models/Client_Connection.h" 
 #include "route.h" 
 #include "websocket.h" 
 #include "http_utilities.h" 
 #include "os_utilities.h" 
-#define PORT 9035
-#define CLIENT_CERT "../server/self_signed_cert.crt"
-#define CLIENT_KEY "../server/privateKey.key"
-#define BUFFER_SIZE 5056
 
 */
 
-void add_fd(int new_fd,char*type, struct pollfd *pfds[], struct Client *clients[],int *fd_count, int *max_fd_size){
+void get_socket_info(struct Socket *socket){
+	int sockfd = socket->Id;
+	socklen_t len;
+	struct sockaddr_storage addr;
+	static char ipstr[INET6_ADDRSTRLEN];
+	int port;
+	len = sizeof(addr);
+	getpeername(sockfd, (struct sockaddr*)&addr, &len);
+	struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+	port = ntohs(s->sin_port);
+	inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof(ipstr));
+	printf("Socket         : %d\n", sockfd);
+	printf("Peer IP Address: %s\n", ipstr);
+	printf("Peer Port      : %d\n", port);
+
+	socket->ip_addr=strdup(ipstr);
+	socket->PORT = port; 
+	socket->isEncrypted = 0;
+	socket->isClient = 0;
+	socket->type = strdup("listener");
+
+}
+void bind_and_listen_socket(struct addrinfo hints, char* PORT, struct Socket *new_socket){
+	struct addrinfo *res;
+	getaddrinfo(NULL, PORT, &hints, &res);
+	int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+	int yes =1;
+	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+	bind(sockfd, res->ai_addr, res->ai_addrlen);
+	listen(sockfd, 5);
+	new_socket->Id = sockfd;
+	char host[NI_MAXHOST];	
+	char service[NI_MAXSERV];
+	getnameinfo((struct sockaddr*)&hints, sizeof(hints),host,sizeof(host), service, sizeof(service),0 );
+	new_socket->hostname = strdup(host);
+	new_socket->service = strdup(service);
+	get_socket_info(new_socket);
+}
+
+
+SSL* encrypt_socket(int fd){
+	SSL_CTX *ssl_ctx;
+	ssl_ctx = SSL_CTX_new(SSLv23_server_method());
+	SSL_CTX_set_options(ssl_ctx, SSL_OP_SINGLE_DH_USE);
+	int use_cert = SSL_CTX_use_certificate_file(ssl_ctx, CLIENT_CERT, SSL_FILETYPE_PEM);
+	int use_key = SSL_CTX_use_PrivateKey_file(ssl_ctx, CLIENT_KEY, SSL_FILETYPE_PEM);
+	if (use_cert <=0 || use_key <=0){
+		printf("ERROR LOADING SSL CERT OR KEY\n");
+		exit(1);
+	}
+	SSL *cSSL = SSL_new(ssl_ctx);
+	SSL_set_fd(cSSL, fd);
+	
+	int ssl_err = SSL_accept(cSSL);
+	if (ssl_err <0) {
+		int err = SSL_get_error(cSSL, ssl_err);
+		printf("SSL ERROR %d | %d ERROR ON ACCEPTING CSSL!!!\n", ssl_err, err);
+
+		SSL_shutdown(cSSL);
+		SSL_free(cSSL);
+		return NULL;
+	}
+	return cSSL;
+}
+
+int get_ready_file_descriptor(int fd_count, struct pollfd *pfds){
+	for (int i=0; i<fd_count; i++){
+		if (pfds[i].revents & POLLIN){
+			return pfds[i].fd;
+		}
+	}
+}
+void insert_socket(struct Socket *new_socket){
+	int new_fd = new_socket->Id;
+	char sql[576];
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	snprintf(sql, sizeof(sql),
+			"INSERT INTO socket VALUES('%d', '%s', '%d', '%s' , '%s', '%d', '%d')",
+			new_fd
+			,new_socket->ip_addr
+	       		,new_socket->PORT
+			,new_socket->type
+			,new_socket->hostname
+			,new_socket->isEncrypted
+			,new_socket->isClient);
+
+	query(conn, sql);
+	close_sql_connection(conn);
+}
+
+void insert_fd(struct pollfd *pfds[],struct Socket *sockets, struct Socket *socket, int *fd_count, int *max_fd_size){
+	int new_fd = socket->Id;
+	if (*fd_count == *max_fd_size){
+		*max_fd_size *=2;
+		*pfds = realloc(*pfds, sizeof(**pfds) * (*max_fd_size));
+		struct Socket *tmp = realloc(sockets, (*max_fd_size) * sizeof(struct Socket));
+		sockets = tmp;
+	}
+
+	if (*fd_count == 0){
+		(*pfds)[*fd_count].fd = new_fd;
+		(*pfds)[*fd_count].events = POLLIN;
+
+		sockets[*fd_count] = (*socket);
+		(*fd_count)++;
+		insert_socket(socket);
+		printf("New fd count: %d\n", *fd_count);
+
+	}else if (*fd_count > 0){
+		SSL* cSSL = encrypt_socket(new_fd);
+		if (cSSL !=NULL){
+			(*socket).cSSL = cSSL;
+			(*socket).type = "client";
+			(*socket).isClient = 1; 
+			(*socket).isEncrypted = 1; 
+			(*pfds)[*fd_count].fd = new_fd;
+			(*pfds)[*fd_count].events = POLLIN;
+			sockets[*fd_count] = (*socket);
+			(*fd_count)++;
+			insert_socket(socket);
+			printf("New fd count: %d\n", *fd_count);
+		
+		}else{
+			close(new_fd);
+		}
+	
+	}
+}
+
+
+void delete_socket(struct pollfd pfds[],struct Socket *sockets, struct Socket *socket, int *fd_count){
+	char sql[576];
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	printf("Total FDS: %d\n", (*fd_count));
+	for (int i=0; i<*fd_count; i++){
+		if (pfds[i].fd  == socket->Id) {
+			sockets[i] = sockets[*fd_count-1];
+			pfds[i] = pfds[*fd_count-1];
+			(*fd_count)--;
+			printf("FD removed. Total:  %d\n", (*fd_count));
+			snprintf(sql, sizeof(sql), "DELETE FROM socket WHERE Id = %d", socket->Id);
+			query(conn, sql);
+			close_sql_connection(conn);
+			break;
+		}
+	}
+
+}
+struct Socket  get_socket(struct Socket *sockets, int fd, int *fd_count){
+	for (int i=0; i<*fd_count; i++){
+		if (sockets[i].Id == fd){
+			return sockets[i];
+		}
+	}
+
+
+}
+
+ int read_socket_buffer(struct Socket *socket){
+	char *buf = malloc(BUFFER_SIZE);
+	int nbytes = SSL_read(socket->cSSL, buf, BUFFER_SIZE);
+	if (nbytes <= 0){
+		if (nbytes == 0){
+			printf("FD %d hung up\n", socket->Id);
+			return 0 ;
+		}else{
+			return 0; 
+		}
+	}
+	return nbytes;
+}
+
+void listen_for_clients(struct Socket *sockets,struct Socket *server_socket,int *fd_count, int *max_fd_size){
+	SSL_library_init(); 
+	SSL_load_error_strings(); 
+	int port = 9035;
+	struct pollfd *pfds = malloc(sizeof(struct pollfd) * (*max_fd_size));
+	insert_fd(&pfds,sockets,server_socket, fd_count,max_fd_size);
+	while(1){
+		if (poll(pfds, *(fd_count), -1) < 0){
+			perror("poll");
+		}
+		int ready_fd = get_ready_file_descriptor(*fd_count, pfds);
+		if (ready_fd == server_socket->Id){
+			struct sockaddr_storage remoteaddr;
+			socklen_t addrlen;
+			addrlen = sizeof(remoteaddr);
+			int newfd = accept(server_socket->Id,(struct sockaddr *)&remoteaddr, &addrlen);
+			struct Socket *new_socket = malloc(sizeof(struct Socket));
+			char host[NI_MAXHOST];	
+			char service[NI_MAXSERV];
+			getnameinfo((struct sockaddr*)&remoteaddr, sizeof(remoteaddr),host,sizeof(host), service, sizeof(service),0 );
+			new_socket->hostname = strdup(host);
+			new_socket->service = strdup(service);
+			new_socket->Id = newfd;
+			get_socket_info(new_socket);
+			insert_fd(&pfds,sockets, new_socket, fd_count,max_fd_size);
+		}else{
+			struct Socket ready_socket;
+			ready_socket = get_socket(sockets, ready_fd, fd_count);
+			printf("Found SOCKET: %d\n", ready_socket.Id); 
+			int nbytes =  read_socket_buffer(&ready_socket);
+			if (nbytes == 0){
+				close(ready_fd);
+				delete_socket(pfds, sockets, &ready_socket, fd_count);
+			}else{
+				printf("Recieved: %d Bytes from %s\n", nbytes, ready_socket.hostname);
+			}
+		}
+	}
+}
+	/*
+	printf("Listening on 10.0.0.213:%d ...\n",port);
+	while(1){
+		for (int i=0; i<*fd_count; i++){
+			printf("FD %d\n", pfds[i].fd);
+		
+		}
+		printf("Listening to %d FDs..\n", *(fd_count));
+		if (poll(pfds, *(fd_count), -1) < 0){
+			perror("poll");
+		}
+		int ready_fd = get_ready_file_descriptor(*fd_count, pfds);
+		if (ready_fd == server_socket->Id){
+			printf("ID %d Received data\n", ready_fd);
+			struct sockaddr_storage remoteaddr;
+			socklen_t addrlen;
+			addrlen = sizeof(remoteaddr);
+			int newfd = accept(server_socket->Id,(struct sockaddr *)&remoteaddr, &addrlen);
+			struct Socket *new_socket = malloc(sizeof(struct Socket));
+			new_socket->Id = newfd;
+			get_socket_info(new_socket);
+			insert_socket(new_socket);
+			insert_fd(&pfds,sockets, newfd, fd_count,max_fd_size);
+		}else{
+		
+		}
+	}
+	*/
+	/*
+	pfds[0] = *(sockets[0].pollfd);
+	*(fd_count)++;
+	int listener =server_socket->pollfd->fd; 
+	pfds[0] = *(sockets[0].pollfd);
+
+	while(1){
+		printf("Listening to %d FDs..\n", *(fd_count));
+		if (poll(pfds, *(fd_count), -1) < 0){
+			perror("poll");
+		}
+		int ready_fd = get_ready_file_descriptor(sockets, fd_count);
+		if (ready_fd == listener){
+			printf("Detected new FD\n");
+			struct sockaddr_storage remoteaddr;
+			socklen_t addrlen;
+			addrlen = sizeof(remoteaddr);
+			int newfd = accept(listener,(struct sockaddr *)&remoteaddr, &addrlen);
+			if (newfd == -1){
+				perror("accept");
+			}
+			struct Socket *new_socket = malloc(sizeof(struct Socket));
+			new_socket->Id = newfd;
+			get_socket_info(new_socket);
+			insert_socket(sockets,new_socket,fd_count, max_fd_size);
+
+		}
+	}
+	*/
+	/*
+	while(1){
+		printf("Listening to %d FDs..\n", *(fd_count));
+		if (poll(pfds, *(fd_count), -1) < 0){
+			perror("poll");
+		}
+		int ready_fd = get_ready_file_descriptor(sockets, fd_count);
+		if (ready_fd == listener){
+			struct sockaddr_storage remoteaddr;
+			socklen_t addrlen;
+			addrlen = sizeof(remoteaddr);
+			int newfd = accept(listener,(struct sockaddr *)&remoteaddr, &addrlen);
+			if (newfd == -1){
+				perror("accept");
+			}
+			 printf("Incoming New FD! %d\n", newfd);
+			 struct Socket *new_socket = malloc(sizeof(struct Socket));
+			 new_socket->Id = newfd;
+			 get_socket_info(new_socket);
+			 insert_socket(sockets, new_socket, fd_count, max_fd_size);
+		
+		}
+	}
+	*/
+
+	/*
+		(*pfds)[*fd_count].fd = new_fd;
+		(*pfds)[*fd_count].events = POLLIN;
+		(*fd_count)++;
+	char sql[576];
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	snprintf(sql, sizeof(sql),
+			"INSERT INTO socket VALUES('%d', '%s', '%d', '%s' , '%s', '%d', '%d')",
+			new_fd
+			,socket.ip_addr
+	       		,socket.PORT
+			,socket.type
+			,socket.hostname
+			,socket.isEncrypted
+			,socket.isClient);
+	
 	if (*fd_count == *max_fd_size){
 		*max_fd_size *=2;
 		*pfds = realloc(*pfds, sizeof(**pfds) * (*max_fd_size));
@@ -34,7 +345,7 @@ void add_fd(int new_fd,char*type, struct pollfd *pfds[], struct Client *clients[
 	}
 	SSL *cSSL = NULL;
 	if (*fd_count >=  1){
-		cSSL = encrypt_socket(new_fd);
+		//cSSL = encrypt_socket(new_fd);
 	}
 	if (cSSL != NULL){
 		(*clients)[*fd_count].Id = new_fd;
@@ -47,36 +358,20 @@ void add_fd(int new_fd,char*type, struct pollfd *pfds[], struct Client *clients[
 
 	}else{
 		if (*fd_count == 0){
-			(*clients)[*fd_count].Id = new_fd;
-			(*clients)[*fd_count].cSSL = cSSL;
-			(*clients)[*fd_count].isNew = 0;
 			(*pfds)[*fd_count].fd = new_fd;
 			(*pfds)[*fd_count].events = POLLIN;
 			(*fd_count)++;
+			printf("SQL %s\n", sql);
+			query(conn, sql);
+
 		}else{
 			close(new_fd);
 		}
 	}
+	close_sql_connection(conn);
 
-}
-struct Socket create_socket(struct addrinfo hints, char* PORT){
-	struct Socket new_socket;
-	struct addrinfo *res;
-	getaddrinfo(NULL, PORT, &hints, &res);
-	printf("Name: %s\n", res->ai_canonname);
-	int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-	int yes =1;
-	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
-	bind(sockfd, res->ai_addr, res->ai_addrlen);
-	listen(sockfd, 5);
-	new_socket.Id = sockfd;
-	new_socket.PORT = PORT;
-	new_socket.isEncrypted = 0;
-	new_socket.isClient = 0;
-	return new_socket;
+	*/
 
-
-}
 
 	/*
 int create_socket(struct  addrinfo hints){

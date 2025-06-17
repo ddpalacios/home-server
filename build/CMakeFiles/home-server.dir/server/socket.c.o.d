@@ -126,4 +126,24 @@ CMakeFiles/home-server.dir/server/socket.c.o: \
  /usr/include/aarch64-linux-gnu/bits/poll.h \
  /home/dpalacios/home-server/models/client.h /usr/include/netdb.h \
  /usr/include/netinet/in.h /usr/include/aarch64-linux-gnu/bits/in.h \
- /usr/include/rpc/netdb.h /usr/include/aarch64-linux-gnu/bits/netdb.h
+ /usr/include/rpc/netdb.h /usr/include/aarch64-linux-gnu/bits/netdb.h \
+ /home/dpalacios/home-server/database/SQL.h /usr/include/mysql/mysql.h \
+ /usr/lib/gcc/aarch64-linux-gnu/13/include/stdbool.h \
+ /usr/include/mysql/field_types.h /usr/include/mysql/my_list.h \
+ /usr/include/mysql/mysql_com.h /usr/include/mysql/my_command.h \
+ /usr/include/mysql/my_compress.h \
+ /usr/include/mysql/udf_registration_types.h \
+ /usr/include/mysql/client_plugin.h \
+ /usr/include/mysql/plugin_auth_common.h \
+ /usr/include/mysql/mysql_version.h /usr/include/mysql/mysql_time.h \
+ /usr/include/mysql/errmsg.h /usr/include/arpa/inet.h \
+ /usr/include/unistd.h /usr/include/aarch64-linux-gnu/bits/posix_opt.h \
+ /usr/include/aarch64-linux-gnu/bits/environments.h \
+ /usr/include/aarch64-linux-gnu/bits/confname.h \
+ /usr/include/aarch64-linux-gnu/bits/getopt_posix.h \
+ /usr/include/aarch64-linux-gnu/bits/getopt_core.h \
+ /usr/include/aarch64-linux-gnu/bits/unistd_ext.h \
+ /usr/include/openssl/err.h /usr/include/errno.h \
+ /usr/include/aarch64-linux-gnu/bits/errno.h /usr/include/linux/errno.h \
+ /usr/include/aarch64-linux-gnu/asm/errno.h \
+ /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h
