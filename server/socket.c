@@ -187,18 +187,53 @@ struct Socket  get_socket(struct Socket *sockets, int fd, int *fd_count){
 
 }
 
- int read_socket_buffer(struct Socket *socket){
-	char *buf = malloc(BUFFER_SIZE);
-	int nbytes = SSL_read(socket->cSSL, buf, BUFFER_SIZE);
-	if (nbytes <= 0){
-		if (nbytes == 0){
-			printf("FD %d hung up\n", socket->Id);
-			return 0 ;
-		}else{
-			return 0; 
-		}
-	}
-	return nbytes;
+int read_exact_bytes(SSL *cSSL, int nbytes, char* buf) {
+    int total_bytes_retrieved = 0;
+    while (total_bytes_retrieved < nbytes) {
+        int to_read = nbytes - total_bytes_retrieved;
+
+        int bytes_read = SSL_read(cSSL, buf, to_read);
+        if (bytes_read <= 0) {
+            if (bytes_read == 0) {
+                printf("SSL connection closed\n");
+                return 0;
+            } else {
+                printf("SSL read error\n");
+                return 0;
+            }
+        }
+
+        total_bytes_retrieved += bytes_read;
+    }
+
+    return total_bytes_retrieved;
+}
+
+
+
+int read_socket_buffer(struct Socket *socket, char* message){
+	 char *buf = malloc(5);
+	 int bytes_read = read_exact_bytes(socket->cSSL, 5, buf);
+	 if (bytes_read == 0){return -1;}
+	 int opcode = buf[0];
+	 int payload_length = (buf[1] << 24) + (buf[2] << 16)+ (buf[3] << 8) + buf[4];
+	 bytes_read= read_exact_bytes(socket->cSSL, payload_length, message);
+	 if (bytes_read == 0){return -1;}
+	 message[payload_length] = '\0';
+	return opcode;
+}
+
+void send_buffer_to_socket(struct Socket *socket,int opcode, char*buf){
+	int payload_length = strlen(buf);
+	printf("SENDING PAYLOAD OF %d BYTES OF TYPE %d\n", payload_length, opcode);
+	 char frame[5+payload_length];
+	 frame[0] = opcode;
+	 frame[1] = (payload_length >> 24) & 0xFF;
+	 frame[2] = (payload_length >> 16) & 0xFF;
+	 frame[3] = (payload_length >> 8) & 0xFF;
+	 frame[4] = payload_length & 0xFF; 
+	 memcpy(&frame[5], buf, payload_length);
+	SSL_write(socket->cSSL, frame, 5+payload_length);
 }
 
 void listen_for_clients(struct Socket *sockets,struct Socket *server_socket,int *fd_count, int *max_fd_size){
@@ -229,13 +264,20 @@ void listen_for_clients(struct Socket *sockets,struct Socket *server_socket,int 
 		}else{
 			struct Socket ready_socket;
 			ready_socket = get_socket(sockets, ready_fd, fd_count);
-			printf("Found SOCKET: %d\n", ready_socket.Id); 
-			int nbytes =  read_socket_buffer(&ready_socket);
-			if (nbytes == 0){
+			char* message = malloc(BUFFER_SIZE);
+			int opcode =  read_socket_buffer(&ready_socket, message);
+			if (opcode == -1){
 				close(ready_fd);
 				delete_socket(pfds, sockets, &ready_socket, fd_count);
 			}else{
-				printf("Recieved: %d Bytes from %s\n", nbytes, ready_socket.hostname);
+				printf("\nRecieved: %ld Bytes\n\n%s says: '%s'\n", strlen(message), ready_socket.hostname, message);
+				for (int i=0; i<*fd_count; i++){
+					struct Socket target_socket = sockets[i];
+					if (target_socket.Id != server_socket->Id){
+						send_buffer_to_socket(&target_socket,opcode, message); 
+					}
+
+				}
 			}
 		}
 	}
