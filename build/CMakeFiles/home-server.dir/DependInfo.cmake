@@ -13,9 +13,10 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/dpalacios/home-server/models/Audio.c" "CMakeFiles/home-server.dir/models/Audio.c.o" "gcc" "CMakeFiles/home-server.dir/models/Audio.c.o.d"
   "/home/dpalacios/home-server/models/Client_Connection.c" "CMakeFiles/home-server.dir/models/Client_Connection.c.o" "gcc" "CMakeFiles/home-server.dir/models/Client_Connection.c.o.d"
   "/home/dpalacios/home-server/models/User.c" "CMakeFiles/home-server.dir/models/User.c.o" "gcc" "CMakeFiles/home-server.dir/models/User.c.o.d"
-  "/home/dpalacios/home-server/models/client.c" "CMakeFiles/home-server.dir/models/client.c.o" "gcc" "CMakeFiles/home-server.dir/models/client.c.o.d"
+  "/home/dpalacios/home-server/models/server.c" "CMakeFiles/home-server.dir/models/server.c.o" "gcc" "CMakeFiles/home-server.dir/models/server.c.o.d"
   "/home/dpalacios/home-server/models/session.c" "CMakeFiles/home-server.dir/models/session.c.o" "gcc" "CMakeFiles/home-server.dir/models/session.c.o.d"
   "/home/dpalacios/home-server/models/websocket.c" "CMakeFiles/home-server.dir/models/websocket.c.o" "gcc" "CMakeFiles/home-server.dir/models/websocket.c.o.d"
+  "/home/dpalacios/home-server/routes/home-server/GET/get_frame.c" "CMakeFiles/home-server.dir/routes/home-server/GET/get_frame.c.o" "gcc" "CMakeFiles/home-server.dir/routes/home-server/GET/get_frame.c.o.d"
   "/home/dpalacios/home-server/routes/life-of-sounds/DELETE/delete_websocket.c" "CMakeFiles/home-server.dir/routes/life-of-sounds/DELETE/delete_websocket.c.o" "gcc" "CMakeFiles/home-server.dir/routes/life-of-sounds/DELETE/delete_websocket.c.o.d"
   "/home/dpalacios/home-server/routes/life-of-sounds/DELETE/sessioninfo.c" "CMakeFiles/home-server.dir/routes/life-of-sounds/DELETE/sessioninfo.c.o" "gcc" "CMakeFiles/home-server.dir/routes/life-of-sounds/DELETE/sessioninfo.c.o.d"
   "/home/dpalacios/home-server/routes/life-of-sounds/GET/data_page.c" "CMakeFiles/home-server.dir/routes/life-of-sounds/GET/data_page.c.o" "gcc" "CMakeFiles/home-server.dir/routes/life-of-sounds/GET/data_page.c.o.d"
@@ -48,8 +49,8 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/dpalacios/home-server/utilities/string_utilities.c" "CMakeFiles/home-server.dir/utilities/string_utilities.c.o" "gcc" "CMakeFiles/home-server.dir/utilities/string_utilities.c.o.d"
   )
 
-# Targets to which this target links which contain Fortran sources.
-set(CMAKE_Fortran_TARGET_LINKED_INFO_FILES
+# Targets to which this target links.
+set(CMAKE_TARGET_LINKED_INFO_FILES
   )
 
 # Fortran module output directory.

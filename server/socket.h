@@ -18,7 +18,7 @@ typedef struct Socket{
 
 }sockets;
 void delete_socket(struct pollfd pfds[],struct Socket *sockets, struct Socket *socket, int *fd_count);
-void listen_for_clients(struct Socket *sockets,struct Socket *server_socket,int *fd_count, int *max_fd_size);
+void listen_for_clients(struct Socket *sockets,struct Socket *server_socket,char* PORT,int *fd_count, int *max_fd_size);
 void insert_socket(struct Socket *new_socket);
 void bind_and_listen_socket(struct addrinfo hints, char* PORT, struct Socket *new_socket);
 int listen_for_pfds(int fd_count, int max_fd_size);

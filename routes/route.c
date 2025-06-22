@@ -6,6 +6,7 @@
 #include "os_utilities.h"
 #include "session.h"
 
+#include "home-server/GET/get_frame.h"
 #include "life-of-sounds/POST/new_user.h"
 #include "life-of-sounds/POST/login.h"
 #include "life-of-sounds/POST/post_audio.h"
@@ -75,7 +76,10 @@ void process_websocket_route(char* metadata, char* data){
 
 void process_route(SSL* cSSL, char* request, char* request_type, char* route, int fd){
 	printf("Route: %s %s \n", request_type, route);
-	if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/login")==0){
+
+	if (strcmp(request_type, "GET")==0 && strstr(route, "/home-server/frame")!= NULL){
+		get_frame_by_request(cSSL,route,request);
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/login")==0){
 		get_login_page(cSSL,request,"index.html");  
 	}else if (strcmp(request_type, "DELETE")==0 && strstr(route, "/life-of-sounds/websocket") != NULL){
 		delete_websocket(cSSL, route, request);

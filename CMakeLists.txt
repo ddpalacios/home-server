@@ -9,12 +9,13 @@ file(GLOB MAIN
     "routes/route.c"
     "database/SQL.c"
     "utilities/*.c"
+    "routes/home-server/GET/*.c"
     "routes/life-of-sounds/GET/*.c"
     "routes/life-of-sounds/PATCH/*.c"
     "routes/life-of-sounds/DELETE/*.c"
     "routes/life-of-sounds/POST/*.c"
     "models/User.c"
-    "models/client.c"
+    "models/server.c"
     "models/websocket.c"
     "models/Client_Connection.c"
     "models/session.c"
@@ -33,6 +34,7 @@ target_include_directories(home-server PRIVATE
     ${PROJECT_SOURCE_DIR}/models
     ${PROJECT_SOURCE_DIR}/database
     ${PROJECT_SOURCE_DIR}/utilities
+    ${PROJECT_SOURCE_DIR}/routes/home-server/GET
     ${PROJECT_SOURCE_DIR}/routes/life-of-sounds/PATCH
     ${PROJECT_SOURCE_DIR}/routes/life-of-sounds/GET
     ${PROJECT_SOURCE_DIR}/routes/life-of-sounds/DELETE
