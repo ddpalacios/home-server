@@ -248,68 +248,68 @@ int read_socket_buffer(struct Socket *socket, char* message){
 }
 
 
-void realloc_frame(char** frame,int*frame_size, int bytes_added, int byte_length, int*frame_size_remaining){
-	 char* tmp = realloc(*frame, bytes_added+byte_length);
-	 if (tmp == NULL){
-		 printf("Failed to realloc memory\n");
-	 }else{
-		 *frame = tmp;
-		 *frame_size = bytes_added +byte_length;
-		 *frame_size_remaining += byte_length;
-		 printf("Reallocated to %d\n", bytes_added+byte_length);
-	 }
-}
+// void realloc_frame(char** frame,int*frame_size, int bytes_added, int byte_length, int*frame_size_remaining){
+// 	 char* tmp = realloc(*frame, bytes_added+byte_length);
+// 	 if (tmp == NULL){
+// 		 printf("Failed to realloc memory\n");
+// 	 }else{
+// 		 *frame = tmp;
+// 		 *frame_size = bytes_added +byte_length;
+// 		 *frame_size_remaining += byte_length;
+// 		 printf("Reallocated to %d\n", bytes_added+byte_length);
+// 	 }
+// }
 
-void add_str_to_byte(char**frame, char* data,int byte_length, int*bytes_added, int* frame_size){
-	printf("Adding %d byte(s)...\n", byte_length);
+// void add_str_to_byte(char**frame, char* data,int byte_length, int*bytes_added, int* frame_size){
+// 	printf("Adding %d byte(s)...\n", byte_length);
 
-	int frame_size_remaining = (*frame_size) - (*bytes_added);	
-	if (byte_length >  frame_size_remaining){
-		realloc_frame(frame,frame_size, *bytes_added, byte_length, &frame_size_remaining);
-	}
-	 memcpy(&(*frame)[*bytes_added], data,byte_length);
-	frame_size_remaining -= byte_length;
-	*bytes_added +=byte_length;
-	printf("Frame Size Remaining: %d\n\n", frame_size_remaining);
-}
+// 	int frame_size_remaining = (*frame_size) - (*bytes_added);	
+// 	if (byte_length >  frame_size_remaining){
+// 		realloc_frame(frame,frame_size, *bytes_added, byte_length, &frame_size_remaining);
+// 	}
+// 	 memcpy(&(*frame)[*bytes_added], data,byte_length);
+// 	frame_size_remaining -= byte_length;
+// 	*bytes_added +=byte_length;
+// 	printf("Frame Size Remaining: %d\n\n", frame_size_remaining);
+// }
 
-void add_int_to_byte(char**frame, int data,int byte_length, int*bytes_added, int* frame_size){
-	printf("Adding %d byte(s)...\n", byte_length);
+// void add_int_to_byte(char**frame, int data,int byte_length, int*bytes_added, int* frame_size){
+// 	printf("Adding %d byte(s)...\n", byte_length);
 	
-	int frame_size_remaining = (*frame_size) - (*bytes_added);	
+// 	int frame_size_remaining = (*frame_size) - (*bytes_added);	
 
-	if (byte_length >  frame_size_remaining){
-		realloc_frame(frame,frame_size, *bytes_added, byte_length, &frame_size_remaining);
-	}
-	if (byte_length > 1){
-		int total_bits = (8 * byte_length) - 8;
-		for (int i=0; i<byte_length; i++){
-			if (total_bits == 0){
-				(*frame)[*bytes_added + i] = data &0xFF;
-			}else{
-				(*frame)[*bytes_added + i] = (data >> total_bits) &0xFF;
-			}
-			frame_size_remaining -=1;
-			total_bits -=8;
-		}
-		*bytes_added+=4;
-	}else{
-		(*frame)[*bytes_added] = data;
-		*bytes_added+=1;
-		frame_size_remaining -=1;
+// 	if (byte_length >  frame_size_remaining){
+// 		realloc_frame(frame,frame_size, *bytes_added, byte_length, &frame_size_remaining);
+// 	}
+// 	if (byte_length > 1){
+// 		int total_bits = (8 * byte_length) - 8;
+// 		for (int i=0; i<byte_length; i++){
+// 			if (total_bits == 0){
+// 				(*frame)[*bytes_added + i] = data &0xFF;
+// 			}else{
+// 				(*frame)[*bytes_added + i] = (data >> total_bits) &0xFF;
+// 			}
+// 			frame_size_remaining -=1;
+// 			total_bits -=8;
+// 		}
+// 		*bytes_added+=4;
+// 	}else{
+// 		(*frame)[*bytes_added] = data;
+// 		*bytes_added+=1;
+// 		frame_size_remaining -=1;
 		
-	}
+// 	}
 
-	printf("\n\nTotal Bytes added: %d\n", *bytes_added);
-	printf("Frame Size Remaining: %d\n\n", frame_size_remaining);
+// 	printf("\n\nTotal Bytes added: %d\n", *bytes_added);
+// 	printf("Frame Size Remaining: %d\n\n", frame_size_remaining);
 
-} 
+// } 
 
-void send_buffer_to_socket(struct Socket *socket,int opcode, char*buf){
-	int payload_length = strlen(buf);
+// void send_buffer_to_socket(struct Socket *socket,int opcode, char*buf){
+// 	int payload_length = strlen(buf);
 
-	int frame_size = 1;
-	char* frame = malloc(frame_size);
+// 	int frame_size = 1;
+// 	char* frame = malloc(frame_size);
 
 	/*
 	  for (int i=0; i< defined_frame_len; i=0){{
@@ -361,34 +361,34 @@ void send_buffer_to_socket(struct Socket *socket,int opcode, char*buf){
 	}
 	  
 	 * */
-	int bytes_added = 0;
+	// int bytes_added = 0;
 
-	add_int_to_byte(&frame, 0x0, 1, &bytes_added, &frame_size);
-	add_int_to_byte(&frame, 0x1, 1, &bytes_added, &frame_size);
+	// add_int_to_byte(&frame, 0x0, 1, &bytes_added, &frame_size);
+	// add_int_to_byte(&frame, 0x1, 1, &bytes_added, &frame_size);
 
-	char* h = "10.0.0.213";
-	int source_length = strlen(h);
-	add_int_to_byte(&frame,source_length, 4, &bytes_added, &frame_size);
-	add_str_to_byte(&frame,h, source_length, &bytes_added, &frame_size);
-
-
-	char* d = "127.0.0.1";
-	int dest_len = strlen(d);
-	add_int_to_byte(&frame,dest_len, 4, &bytes_added, &frame_size);
-	add_str_to_byte(&frame,d, dest_len, &bytes_added, &frame_size);
+	// char* h = "10.0.0.213";
+	// int source_length = strlen(h);
+	// add_int_to_byte(&frame,source_length, 4, &bytes_added, &frame_size);
+	// add_str_to_byte(&frame,h, source_length, &bytes_added, &frame_size);
 
 
-	add_int_to_byte(&frame, 0x1, 1, &bytes_added, &frame_size);
+	// char* d = "127.0.0.1";
+	// int dest_len = strlen(d);
+	// add_int_to_byte(&frame,dest_len, 4, &bytes_added, &frame_size);
+	// add_str_to_byte(&frame,d, dest_len, &bytes_added, &frame_size);
+
+
+	// add_int_to_byte(&frame, 0x1, 1, &bytes_added, &frame_size);
 	
-	add_int_to_byte(&frame,payload_length, 4, &bytes_added, &frame_size);
-	add_str_to_byte(&frame,buf, payload_length, &bytes_added, &frame_size);
+	// add_int_to_byte(&frame,payload_length, 4, &bytes_added, &frame_size);
+	// add_str_to_byte(&frame,buf, payload_length, &bytes_added, &frame_size);
 
-	printf("\nBYTES ADDED: %d\n", bytes_added);
+	// // printf("\nBYTES ADDED: %d\n", bytes_added);
 
-	SSL_write(socket->cSSL, frame, bytes_added);
-	free(frame);
+	// SSL_write(socket->cSSL, frame, bytes_added);
+	// free(frame);
 
-}
+// }
 
 void listen_for_clients(struct Socket *sockets,struct Socket *server_socket,char* PORT, int *fd_count, int *max_fd_size){
 	SSL_library_init(); 
