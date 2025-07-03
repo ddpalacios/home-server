@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+	<head></head>
+	  <style>
+    .fade-text {
+      font-size: 2rem;
+      color: #333;
+      animation: fadeInOut 3s infinite;
+    }
+
+    @keyframes fadeInOut {
+      0%, 100% {
+        opacity: 0;
+      }
+      50% {
+        opacity: 1;
+      }
+    }
+  </style>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    td[contenteditable="true"] {
+      background-color: #f9f9f9;
+      outline: none;
+    }
+    td[contenteditable="true"]:focus {
+      background-color: #e8f0fe;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 12px;
+      background-color: #3D6ECC;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #EFA9E3
+    }
+
+    #table-wrapper {
+  position:relative;
+}
+#audio_table_container {
+  height:750px;
+  overflow:auto;  
+}
+#table-wrapper table {
+  width:100%;
+
+}
+#table-wrapper table * {
+  color:black;
+}
+#table-wrapper table thead th .text {
+  position:absolute;   
+  top:-20px;
+  z-index:2;
+  height:20px;
+  width:35%;
+  border:1px solid red;
+}
+
+
+.container {
+  display: flex;
+  height: 100vh; 
+}
+
+.left, .right {
+  width: 50%;
+  position: relative; 
+}
+
+#visualizer {
+  width: 100%;
+  height: 65%;
+  display: block; 
+}
+ </style>
+
+
+
+	<body>
+		<h1>Studio</h1>
+		<div id="fade-text" class="fade-text"></div>
+
+		
+		<button onclick="location.href = '/life-of-sounds/home';" >home</button>
+		<br>
+		<br>
+    <button onclick="send_test_message()"></button>
+		<button onclick="open_microphone();" >Start Microphone</button>
+		<button onclick="close_microphone();" >Close Microphone</button>
+		<br>
+		<audio id="audio_stream_id" style="margin-top: 2%; width: 30%; " controls=""></audio>
+		<br>
+<div id="messagebox"></div>
+		<div class="container">
+		<div class="left">
+	        <canvas id="visualizer" ></canvas>
+		</div>
+		<div class="right">
+<div id="table-wrapper">
+    <!-- <div id="audio_table_container"> -->
+
+    </div>
+</div>
+			
+		</div>
+		</div>
+
+  <br>
+
+</body>
+
+<!-- <script src="/life-of-sounds/home/live_studio/web_audio_api.js" ></script> -->
+<script src="/life-of-sounds/home/studio/html_utilities.js" ></script>
+<script src="/life-of-sounds/home/studio/websocket.js" ></script>
+<!-- <script src="/life-of-sounds/home/studio/data_table.js"></script> -->
+<script>
+function send_test_message(){
+  var message = "Hello, Daniel THISDIOFVDOVDOVBOFDBVDOBVOSBVOSDBVJKBSJVBDSKSJBVKSDJBVKJSDBKVJBJSDKBVKJSDBJVKBDSBVJKSDBVKJSDBKVNDVBKSJDBVKSDBVSBDJVJSDBVJKSDJK";
+  websocket_session.send(message)
+  
+}
+
+</script>
+
+</html>

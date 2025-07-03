@@ -1,0 +1,29 @@
+{
+        "values":       [ 
+                {
+                        "name": "OPCODE",
+                        "datatype":     "INT",
+                        "byte_offset":  -1,
+                        "byte_length":  1,
+                        "description":  "Data type of the actual payload. i.e. 1=text & 2=binary",
+                        "position":     5,
+                        "is_length_prefix":     0
+                }, {
+                        "name": "PAYLOAD_LENGTH",
+                        "datatype":     "INT",
+                        "byte_offset":  -1,
+                        "byte_length":  4,
+                        "description":  "The length in bytes of the next proceeding bytes for the payload",
+                        "position":     6,
+                        "is_length_prefix":     1
+                }, {
+                        "name": "PAYLOAD",
+                        "datatype":     "TEXT",
+                        "byte_offset":  -1,
+                        "byte_length":  -1,
+                        "description":  "The actual payload that the machine has sent",
+                        "position":     7,
+                        "is_length_prefix":     0
+                }
+        ]
+}

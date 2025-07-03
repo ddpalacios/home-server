@@ -1,0 +1,21 @@
+#pragma once
+#include <openssl/ssl.h>
+#include <sys/socket.h>
+
+typedef struct Socket{
+	int Id;
+	int fd;
+	char* ip_addr;
+	char* hostname;
+	SSL* cSSL;
+	int keep_alive;
+    int exists;
+
+}sockets;
+void sink_socket_info(struct Socket *socket,struct sockaddr_storage remoteaddr );
+void create_socket(int fd, SSL* cSSL, struct Socket *socket);
+void insert_socket(struct Socket **sockets, struct Socket socket,int *fd_count, int *max_fd_size);
+void delete_socket(struct Socket *sockets, int fd, int *fd_count);
+SSL* encrypt_socket(int fd);
+
+struct Socket get_socket_by_Id(struct Socket *sockets, int fd);

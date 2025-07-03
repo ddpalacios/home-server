@@ -1,0 +1,3 @@
+/home/dpalacios/home-server - Copy/build/CMakeFiles/home-server.dir
+/home/dpalacios/home-server - Copy/build/CMakeFiles/edit_cache.dir
+/home/dpalacios/home-server - Copy/build/CMakeFiles/rebuild_cache.dir
