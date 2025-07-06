@@ -1,6 +1,7 @@
 #include  <cjson/cJSON.h>
 #include <sys/socket.h>
 #include "Socket.h"
+#include "send_message.h"
 #include "route.h"
 #include "FrameField.h"
 #include "http_utilities.h"
@@ -157,7 +158,11 @@ int read_websocket_message(unsigned char* buf, char* message){
 		}
 	}
 }
-void process_bytes(struct Socket *socket, char* buf){
+
+
+
+
+void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int fd_count){
 	if (buf != NULL && strstr(buf, "HTTP/1.1")!=NULL){
 		char* peeked_http_header = malloc(1024);
 		int header_length = get_http_header(buf, peeked_http_header);
@@ -200,7 +205,7 @@ void process_bytes(struct Socket *socket, char* buf){
 			char* message = malloc(bytes_read);
 			int message_length = read_websocket_message(websocket_buf, message);
 			message[message_length] = '\0';
-			printf("%s\n", message);
+			send_to_all_clients(sockets,*socket, message,message_length ,fd_count);
 			if (message != NULL){
 				free(message);
 				message = NULL;

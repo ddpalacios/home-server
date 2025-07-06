@@ -81,6 +81,7 @@ CMakeFiles/home-server.dir/database/SQL.c.o
 
 CMakeFiles/home-server.dir/main.c.o
  /home/dpalacios/home-server/main.c
+ /home/dpalacios/home-server/models/Socket.h
  /home/dpalacios/home-server/server/send_message.h
  /home/dpalacios/home-server/server/server.h
  /home/dpalacios/home-server/utilities/http_utilities.h
@@ -2537,6 +2538,7 @@ CMakeFiles/home-server.dir/server/read_message.c.o
  /home/dpalacios/home-server/models/FrameField.h
  /home/dpalacios/home-server/models/Socket.h
  /home/dpalacios/home-server/routes/route.h
+ /home/dpalacios/home-server/server/send_message.h
  /home/dpalacios/home-server/utilities/http_utilities.h
  /usr/include/aarch64-linux-gnu/asm/bitsperlong.h
  /usr/include/aarch64-linux-gnu/asm/errno.h

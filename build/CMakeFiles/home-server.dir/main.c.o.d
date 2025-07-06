@@ -128,4 +128,5 @@ CMakeFiles/home-server.dir/main.c.o: /home/dpalacios/home-server/main.c \
  /usr/include/poll.h /usr/include/aarch64-linux-gnu/sys/poll.h \
  /usr/include/aarch64-linux-gnu/bits/poll.h \
  /home/dpalacios/home-server/utilities/http_utilities.h \
- /home/dpalacios/home-server/server/send_message.h
+ /home/dpalacios/home-server/server/send_message.h \
+ /home/dpalacios/home-server/models/Socket.h

@@ -39,9 +39,7 @@ char* create_cookie(char*path,char* key, char* value){
 }
 
  char* get_cookie(unsigned char* buf){
-	char* cookie_buf = malloc(5076);
-	strcpy(cookie_buf,buf);
-	char *cookie_header = strstr(cookie_buf, "Cookie: ");
+	char *cookie_header = strstr(buf, "Cookie: ");
 	if (cookie_header != NULL){
 		const char *end = strchr(cookie_header, '=');
 		const char* cookie = end+1;
@@ -51,20 +49,29 @@ char* create_cookie(char*path,char* key, char* value){
 		guid[32] = '\0';
 		return guid; 
 	}
+	return NULL;
 }
 
+/*
 char *get_file_buffer(char* filename){
 	FILE *html_pcontent;
 	long content_size;
 	char *buffer; 
-	html_pcontent = fopen(filename, "r");
+	html_pcontent = fopen(filename, "rb");
 	if (!html_pcontent){
 		perror(filename);
 		return NULL;
 	}
+	printf("Fseeking..\n");
 	fseek(html_pcontent, 0L, SEEK_END);
+
+	printf("File Opened\n");
 	content_size = ftell(html_pcontent);
+	
+	printf("Content Size \n");
 	rewind(html_pcontent);
+	printf("Rewinded \n");
+	printf("Content Size %ld\n", content_size);
 	buffer = malloc(content_size+1);
 	if (!buffer){
 		fclose(html_pcontent);
@@ -82,13 +89,58 @@ char *get_file_buffer(char* filename){
 	fclose(html_pcontent);
 	return buffer;
 }
+*/
+char *get_file_buffer(char* filename) {
+    FILE *html_pcontent = fopen(filename, "rb");
+    if (!html_pcontent) {
+        perror(filename);
+        return NULL;
+    }
+
+    if (fseek(html_pcontent, 0L, SEEK_END) != 0) {
+	printf("ERROR..\n");
+        perror("fseek");
+        fclose(html_pcontent);
+        return NULL;
+    }
+
+    long content_size = ftell(html_pcontent);
+    if (content_size == -1L) {
+        perror("ftell");
+        fclose(html_pcontent);
+        return NULL;
+    }
+
+    rewind(html_pcontent);
+    char *buffer = malloc(content_size + 1);
+    if (!buffer) {
+        perror("malloc");
+        fclose(html_pcontent);
+        return NULL;
+    }
+
+    size_t bytes_read = fread(buffer, 1, content_size, html_pcontent);
+    if (bytes_read != content_size) {
+        perror("fread");
+        free(buffer);
+        fclose(html_pcontent);
+        return NULL;
+    }
+
+    buffer[content_size] = '\0';
+    fclose(html_pcontent);
+    return buffer;
+}
+
 
 char* open_html_template_page(char*template_name, char* request){
 	char* request_cookie = get_cookie(request);
 	char template_dir[50] = "../templates/";
+
 	if (request_cookie == NULL && strstr(template_name, "index.html") == NULL && strstr(template_name, "new_login.html") == NULL){
 		template_name = "index.html";
 		strcat(template_dir, template_name);
+
 		char *html_buffer = get_file_buffer(template_dir);
 		return html_buffer;
 	}else if ( strstr(template_name, "new_login.html") != NULL){

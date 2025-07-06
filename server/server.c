@@ -127,7 +127,7 @@ int bind_address_to_port(char* port,struct addrinfo hints){
     return sockfd;
 }
 
-void insert_file_descriptor(struct Socket *sockets[],struct pollfd *pfds[],int fd, SSL *cSSL,char* hostname,int *fd_count, int *max_fd_size){
+void insert_file_descriptor(struct Socket *sockets[],struct pollfd *pfds[],int fd, SSL *cSSL,char* hostname,int *fd_count, int *max_fd_size, int is_listener){
 	 if (*fd_count == *max_fd_size){
 	 	*max_fd_size *=2;
 	 	*pfds = realloc(*pfds, sizeof(**pfds) * (*max_fd_size));
@@ -141,6 +141,7 @@ void insert_file_descriptor(struct Socket *sockets[],struct pollfd *pfds[],int f
     (*pfds)[*fd_count].events = POLLIN;
     (*sockets)[*fd_count].fd = fd;
     (*sockets)[*fd_count].keep_alive = 0x0;
+    (*sockets)[*fd_count].is_listener = is_listener;
     (*sockets)[*fd_count].ip_addr = strdup(ipstr);
     (*sockets)[*fd_count].cSSL = cSSL;
     (*fd_count)++;
@@ -156,7 +157,7 @@ void insert_file_descriptor(struct Socket *sockets[],struct pollfd *pfds[],int f
      for (int i=0; i<fd_count; i++){
  		if ((*pfds)[i].revents & POLLIN){
 			int fd =  (*pfds)[i].fd;
-		     printf("Socket %d has triggered\n", fd);
+	//	     printf("Socket %d has triggered\n", fd);
  			return fd;
  		}
      }
@@ -199,7 +200,7 @@ void insert_file_descriptor(struct Socket *sockets[],struct pollfd *pfds[],int f
        char service[NI_MAXSERV];	
        getnameinfo((struct sockaddr*)&remoteaddr, sizeof(remoteaddr),host,sizeof(host), service, sizeof(service),0 );
        if (cSSL != NULL){
-         insert_file_descriptor(sockets, pfds, newfd,cSSL, host,  fd_count, max_fd_size);
+         insert_file_descriptor(sockets, pfds, newfd,cSSL, host,  fd_count, max_fd_size, 0x0);
          return newfd;
        }else{
 	 close(newfd);
@@ -228,16 +229,16 @@ void start_listening_for_clients(char* port){
         int listener_fd = bind_address_to_port(port,hints);
         for (int i=0; i<fd_count; i++){
 	 struct Socket *socket = &sockets[i];
-	 if (socket->fd == listener_fd){socket->keep_alive=0x1; continue;}
 	 socket->keep_alive = 0x0;
         }
-        insert_file_descriptor(&sockets,&pfds, listener_fd,NULL,"localhost", &fd_count, &max_socket_size);
+        insert_file_descriptor(&sockets,&pfds, listener_fd,NULL,"localhost", &fd_count, &max_socket_size, 0x1);
+
+
         while(1){
 	     for (int i=0; i<fd_count; i++){
 		 struct Socket *socket = &sockets[i];
-		 printf("Socket %d availiable\n", socket->fd);
 	     }
-             printf("\nwaiting for clients to connect...\n");
+             //printf("\nwaiting for clients to connect...\n");
              int triggered_fd = wait_for_event(&pfds, fd_count);
              if (triggered_fd == listener_fd){
                  int newfd = accept_new_client(listener_fd, &sockets, &pfds, &fd_count, &max_socket_size);
@@ -260,7 +261,7 @@ void start_listening_for_clients(char* port){
 				 remove_file_descriptor(sockets,pfds, socket->fd, &fd_count);
 			 }else{
 				 peek_buf[bytes_peeked] = '\0';
-				 process_bytes(socket, peek_buf);
+				 process_bytes(sockets, socket, peek_buf, fd_count);
 				 if (peek_buf != NULL){
 					 free(peek_buf);
 					 peek_buf = NULL;

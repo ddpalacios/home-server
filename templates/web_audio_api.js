@@ -74,7 +74,8 @@ async function main(){
   draw();
   const mediaRecorder = new MediaRecorder(stream);
   mediaRecorder.ondataavailable = function (e) {
-    if (websocket_session.readyState === WebSocket.OPEN) {
+    if (websocket_session.readyState === WebSocket.OPEN) {  
+	    console.log(e.data);
       websocket_session.send(e.data); 
     }
   };
