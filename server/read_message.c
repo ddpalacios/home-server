@@ -103,8 +103,10 @@ int read_websocket_message(unsigned char* buf, char* message){
 	int opcode = buf[0] & 0x0F;
 	int mask = buf[1] & 0x80;
 	int payload_length = buf[1] & 0x7F;
+	printf("Payload length: %d\n", payload_length);
 	if (payload_length < 126){
 		if (mask){
+			printf("Is masked\n");
 			int offset = 2;
 			unsigned char* masking_key;
 			masking_key = malloc(4);
@@ -126,9 +128,14 @@ int read_websocket_message(unsigned char* buf, char* message){
 				masking_key = NULL;
 			}
 			return payload_length;
+		}else{
+			printf("Is not masked\n");
+		
+		
 		}
 	}else if (payload_length == 126){
 		if (mask){
+			printf("Is masked\n");
 			unsigned int p1 = buf[2];
 			unsigned int p2 = buf[3];
 			unsigned int extended_payload_length = (p1 <<8) | p2;
@@ -155,7 +162,10 @@ int read_websocket_message(unsigned char* buf, char* message){
 			}
 			return extended_payload_length;
 
+		}else{
+			printf("Is not masked\n");
 		}
+
 	}
 }
 
@@ -194,13 +204,58 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 			free(http_header);
 			http_header = NULL;
 		}
-	}else{
-	
-		char* websocket_buf = malloc(2056);
-		int bytes_read = SSL_read(socket->cSSL, websocket_buf, 2056);
+	}
+}
+		/*
+		int bytes_read = SSL_read(socket->cSSL, websocket_buf, to_read);
 		if (bytes_read <= 0){
 			socket->keep_alive = 0x0;
-		}else{
+		}
+		int to_read = 1024;	
+		char* websocket_buf = malloc(to_read);
+		int bytes_read = 0;
+
+		    while (SSL_pending(socket->cSSL) > 0) {
+			bytes_read = SSL_read(socket->cSSL, websocket_buf, to_read);
+			if (bytes_read > 0) {
+			    printf("Pending Bytes:: %d\n", SSL_pending(socket->cSSL));
+			} else {
+			    printf("Error or connection closed.\n");
+			    break;
+			}
+		    }
+		}
+		char* message = malloc(bytes_read);
+		if (websocket_buf != NULL){
+			int message_length = read_websocket_message(websocket_buf, message);
+			printf("%s\n", message);
+			free(websocket_buf);
+			websocket_buf = NULL;
+		}
+
+		if (message != NULL){
+			free(message);
+			message = NULL;
+		
+		}
+		*/
+		/*
+		else{
+			printf("Bytes Read: %d\n", bytes_read);
+			websocket_buf[bytes_read] = '\0';
+			char* message = malloc(bytes_read);
+			int message_length = read_websocket_message(websocket_buf, message);
+			printf("Message Length: %d\n", message_length);
+			if (message != NULL && message_length > 0){
+				message[message_length] = '\0';
+				send_to_all_clients(sockets,*socket, message,message_length ,fd_count);
+				free(message);
+				message = NULL;
+				printf("------\n");
+			}
+			*/
+		
+		/*
 			websocket_buf[bytes_read] = '\0';
 			char* message = malloc(bytes_read);
 			int message_length = read_websocket_message(websocket_buf, message);
@@ -211,10 +266,5 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 				message = NULL;
 			}
 		}
-		if (websocket_buf != NULL){
-			free(websocket_buf);
-			websocket_buf = NULL;
-		}
-	}
-}
+	*/
 

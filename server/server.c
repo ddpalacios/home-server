@@ -254,6 +254,7 @@ void start_listening_for_clients(char* port){
 			 if (socket->fd != triggered_fd){
 				 continue;
 			 }
+			 /*
                          char *peek_buf = malloc(BUFFER_SIZE);
 			 int bytes_peeked = peek_exact_bytes(cSSL, BUFFER_SIZE, peek_buf);
 			 if (bytes_peeked <=0){
@@ -270,6 +271,7 @@ void start_listening_for_clients(char* port){
 				 remove_file_descriptor(sockets,pfds, socket->fd, &fd_count);
 				 }
 			 }
+			 */
 		 }
 	     }
         }

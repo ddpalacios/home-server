@@ -345,6 +345,30 @@ routes/database-server/POST/post_frame.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/database-server/POST/post_frame.c.s
 .PHONY : routes/database-server/POST/post_frame.c.s
 
+routes/life-of-sounds/GET/get_game_of_life_script.o: routes/life-of-sounds/GET/get_game_of_life_script.c.o
+.PHONY : routes/life-of-sounds/GET/get_game_of_life_script.o
+
+# target to build an object file
+routes/life-of-sounds/GET/get_game_of_life_script.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_game_of_life_script.c.o
+.PHONY : routes/life-of-sounds/GET/get_game_of_life_script.c.o
+
+routes/life-of-sounds/GET/get_game_of_life_script.i: routes/life-of-sounds/GET/get_game_of_life_script.c.i
+.PHONY : routes/life-of-sounds/GET/get_game_of_life_script.i
+
+# target to preprocess a source file
+routes/life-of-sounds/GET/get_game_of_life_script.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_game_of_life_script.c.i
+.PHONY : routes/life-of-sounds/GET/get_game_of_life_script.c.i
+
+routes/life-of-sounds/GET/get_game_of_life_script.s: routes/life-of-sounds/GET/get_game_of_life_script.c.s
+.PHONY : routes/life-of-sounds/GET/get_game_of_life_script.s
+
+# target to generate assembly for a file
+routes/life-of-sounds/GET/get_game_of_life_script.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_game_of_life_script.c.s
+.PHONY : routes/life-of-sounds/GET/get_game_of_life_script.c.s
+
 routes/life-of-sounds/GET/get_html_utilities_script.o: routes/life-of-sounds/GET/get_html_utilities_script.c.o
 .PHONY : routes/life-of-sounds/GET/get_html_utilities_script.o
 
@@ -765,6 +789,9 @@ help:
 	@echo "... routes/database-server/POST/post_frame.o"
 	@echo "... routes/database-server/POST/post_frame.i"
 	@echo "... routes/database-server/POST/post_frame.s"
+	@echo "... routes/life-of-sounds/GET/get_game_of_life_script.o"
+	@echo "... routes/life-of-sounds/GET/get_game_of_life_script.i"
+	@echo "... routes/life-of-sounds/GET/get_game_of_life_script.s"
 	@echo "... routes/life-of-sounds/GET/get_html_utilities_script.o"
 	@echo "... routes/life-of-sounds/GET/get_html_utilities_script.i"
 	@echo "... routes/life-of-sounds/GET/get_html_utilities_script.s"

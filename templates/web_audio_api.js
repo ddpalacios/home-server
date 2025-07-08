@@ -53,6 +53,12 @@ function visualize(timestamp, dataArray, bufferLength) {
   canvasCtx.stroke();
 }
 
+
+
+function sigmoid(z){
+	return 1 / (1+Math.exp(-z));
+}
+
 async function main(){
   start_websocket()
   const constraints = { audio: true };
@@ -72,17 +78,43 @@ async function main(){
     requestAnimationFrame(draw);
   }
   draw();
+
+  const processor = audioCtx.createScriptProcessor(256, 1, 1);
+
+	source.connect(processor);
+	processor.connect(audioCtx.destination);
+	processor.onaudioprocess = function(e) {
+	  const channelData = e.inputBuffer.getChannelData(0); 
+	    if (websocket_session.readyState === WebSocket.OPEN) {  
+		var  sum = channelData.reduce((acc, curr) => acc + curr, 0);
+		var res = sigmoid(Math.max(...channelData)*100)
+		var res2 = sigmoid(Math.min(...channelData)*100)
+		var m = channelData.map(num => num * 100);
+		console.log(m);
+		//websocket_session.send(channelData[0]); 
+	    }
+	};
+
+/*
   const mediaRecorder = new MediaRecorder(stream);
   mediaRecorder.ondataavailable = function (e) {
     if (websocket_session.readyState === WebSocket.OPEN) {  
-	    console.log(e.data);
-      websocket_session.send(e.data); 
+        websocket_session.send(e.data); 
     }
   };
   mediaRecorder.start(10); 
+  */
 }
 window.addEventListener("load", () => {
   main().catch(err => {
     console.error("Audio setup failed:", err);
   });
 });
+
+function test(){
+	var message = "Testing test test!! Hello, Daniel"
+	console.log("Sending message..");
+	websocket_session.send(message);
+}
+
+

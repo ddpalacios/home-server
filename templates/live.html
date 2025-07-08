@@ -60,13 +60,11 @@ html{
   display: flex;
   justify-content: center;  /* center horizontally */
   align-items: center;      /* center vertically */
-  height: 100vh;
+  outline: white 3px solid;
 }
 
 #visualizer {
-  width: 70%;
-  height: 30%;
-  display: block;
+  outline: red 3px solid;
 }
   </style>
 	<body>
@@ -75,7 +73,8 @@ html{
 		
   <br>
 <div class="container">
-  <canvas id="visualizer"></canvas>
+
+  <canvas id="visualizer" width="600" height="400"></canvas>
 </div>
 
 	
@@ -85,7 +84,7 @@ html{
 
 
 <script src="/life-of-sounds/html_utilities.js" ></script>
-<script src="/life-of-sounds/web_audio_api.js"></script>
+<script src="/life-of-sounds/game_of_life.js" ></script>
 
 <script>
 
