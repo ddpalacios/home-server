@@ -12,9 +12,12 @@ canvas.width = width * dpr;
 canvas.height = height * dpr;
 ctx.scale(dpr, dpr);
 
-const cellSize = 5;
+const cellSize = 2;
 const numRows =  Math.floor(canvas.height / cellSize);
 const numCols = Math.floor(canvas.width / cellSize);
+
+alert(numRows + " "+ numCols);
+
 
 function set_y(y){
 	if (y > numRows-1){
@@ -46,8 +49,8 @@ function dedupe_array(arr){
 	var prev_y = null;
 	var res = []
 	 for (let i=0; i < arr.length; i++){
-		  var x = arr[i]['x'];
-		  var y = arr[i]['y'];
+		  var x = Math.floor(arr[i]['x']);
+		  var y = Math.floor(arr[i]['y']);
 		 if (prev_x == null && prev_y == null){
 			 prev_x = x
 			 prev_y = y
@@ -56,23 +59,22 @@ function dedupe_array(arr){
 		 if (x == prev_x && y == prev_y){
 			 continue;
 		 }
-		 res.push({ 'y':Math.floor(y), "x": x});
+		 res.push({ 'y':y, "x": x});
 		 prev_x = x
 		 prev_y = y
 	 }
 	arr = res;
 }
 
-function createGrid(dataArray) {
+function createGrid() {
 
+  analyser.getByteTimeDomainData(dataArray);
   var bufferLength = dataArray.length
   const WIDTH = canvas.width;
   const HEIGHT = canvas.height;
   const sliceWidth = WIDTH / bufferLength;
   let x = 0;
   var arr = []
-  prev_x = null;
-  prev_y = null;
 
   for (let i = 0; i < bufferLength; i++) {
           const v = dataArray[i] / 128.0;
@@ -80,21 +82,20 @@ function createGrid(dataArray) {
 	  arr.push({ 'y':y, "x": x});
 	  x += sliceWidth;
   }
-  dedupe_array(arr);
-  //console.log(arr);
 
-prev_x = null;
-prev_y = null;
-var grid_cord = [];
- for (let i=0; i < arr.length; i++){
-	  x = arr[i]['x'];
-	  y = arr[i]['y'];
-	 if (prev_x == null && prev_y == null){
-		 grid_cord.push({"x":Math.floor(x), "y": y });
-		 prev_x = x
-		 prev_y = y
-		 continue;
-	 }
+  prev_x = null;
+  prev_y = null;
+  dedupe_array(arr);
+  grid_cord = []
+  for (let i=0; i<arr.length; i++){
+	  x = Math.floor(arr[i]['x']);
+	  y = Math.floor(arr[i]['y']);
+	if (prev_x == null && prev_y == null){
+			 grid_cord.push({"x":x, "y": y });
+			 prev_x = x
+			 prev_y = y
+			 continue;
+		 }
 	 cords = {}
 	 if (y < prev_y){
 		cords["y"] = set_y(y-1);
@@ -106,67 +107,34 @@ var grid_cord = [];
 	 }
 
 	 if (x > prev_x){
-		cords["x"] = set_x(Math.floor(x)+10);
+		cords["x"] = set_x(x+1);
 	 }else if (x < prev_x){
-		cords["x"] = set_x(Math.floor(x)-10);
+		cords["x"] = set_x(x-1);
 	 }else{
-		cords["x"] = set_x(Math.floor(x));
+		cords["x"] = set_x(x);
 	 }
 	 grid_cord.push(cords)
 	 prev_x = x
 	 prev_y = y
- }
-
-  dedupe_array(grid_cord);
-   //grid = []
-    if (grid.length == 0){
-	    for (let i = 0; i < numRows; i++) {
-		grid[i] = [];
-		for (let j = 0; j < numCols; j++) {
-		    grid[i][j] = 0; 
-		}
-	    }
-    }
-    for (var i =0; i<grid_cord.length; i++){
-	x = grid_cord[i]['x'];
-	y = grid_cord[i]['y'];
-	grid[y][x] = 1;
-    }
-
-    return grid;
-}
-
-
-
-
-function visualize(timestamp, dataArray, bufferLength) {
-  const WIDTH = canvas.width;
-  const HEIGHT = canvas.height;
-  ctx.clearRect(0, 0, WIDTH, HEIGHT);
-  ctx.fillStyle = "black";
-  ctx.fillRect(0, 0, WIDTH, HEIGHT);
-
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = "pink";
-  ctx.beginPath();
-
-  const sliceWidth = WIDTH / bufferLength;
-  let x = 0;
-
-  for (let i = 0; i < bufferLength; i++) {
-          const v = dataArray[i] / 128.0;
-          const y = (v * HEIGHT) / 2;
-
-    if (i === 0) {
-      ctx.moveTo(x, y);
-    } else {
-      ctx.lineTo(x, y);
-    }
-    x += sliceWidth;
   }
-
-  ctx.stroke();
+  dedupe_array(grid_cord);
+  
+  //grid = [];
+if (grid.length ==  0){
+  for (let i =0; i<numRows; i++){
+	  grid[i] = []
+	  for (let j =0; j<numCols; j++){
+		 grid[i][j] = 0;
+	  }
+  }
 }
+  for (let i=0; i<grid_cord.length; i++){
+	  var x_cord = grid_cord[i]['x']
+	  var y_cord = grid_cord[i]['y']
+	  grid[y_cord][x_cord] = 1;
+  }
+}
+
 
 function drawGrid() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -226,17 +194,17 @@ async function start_microphone(){
   source.connect(analyser);
   dataArray = new Uint8Array(analyser.frequencyBinCount);
   analyser.getByteTimeDomainData(dataArray);
-  grid = createGrid(dataArray);
 };
 start_microphone()
 
 
 function mainLoop() {
     if (analyser != undefined){
-	  analyser.getByteTimeDomainData(dataArray);
-	  grid = createGrid(dataArray);
-	  grid = updateGrid();
+	  createGrid();
+	  updateGrid();
 	  drawGrid();
+	  /*
+	  */
     }
     requestAnimationFrame(mainLoop);
 }
