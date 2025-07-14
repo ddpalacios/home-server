@@ -16,48 +16,6 @@ const cellSize = 5;
 const numRows =  Math.floor(canvas.height / cellSize);
 const numCols = Math.floor(canvas.width / cellSize);
 
-function sigmoid(z){
-	return 1 / (1+Math.exp(-z));
-}
-function createGrid(dataArray) {
-
-  var bufferLength = dataArray.length
-  const WIDTH = canvas.width;
-  const HEIGHT = canvas.height;
-  const sliceWidth = WIDTH / bufferLength;
-  let x = 0;
-  var arr = []
-   prev_x = null;
-   prev_y = null;
-
-  for (let i = 0; i < bufferLength; i++) {
-          const v = dataArray[i] / 128.0;
-          const y = (v * numRows) / 2;
-
-	  arr.push({ 'y':y, "x": x});
-	  x += sliceWidth;
-  }
-
-prev_x = null;
-prev_y = null;
-var res = []
- for (let i=0; i < arr.length; i++){
-	  x = arr[i]['x'];
-	  y = arr[i]['y'];
-	 if (prev_x == null && prev_y == null){
-		 prev_x = x
-		 prev_y = y
-		 continue
-	 }
-	 if (x == prev_x && y == prev_y){
-		 continue;
-	 }
-
-	 res.push({'x_sig': sigmoid(x), 'y':Math.floor(y), "x": x});
-	 prev_x = x
-	 prev_y = y
- }
-
 function set_y(y){
 	if (y > numRows-1){
 		y = numRows-1;
@@ -78,12 +36,59 @@ function set_x(x){
 	return x;
 
 }
+
+function sigmoid(z){
+	return 1 / (1+Math.exp(-z));
+}
+
+function dedupe_array(arr){
+	var prev_x = null;
+	var prev_y = null;
+	var res = []
+	 for (let i=0; i < arr.length; i++){
+		  var x = arr[i]['x'];
+		  var y = arr[i]['y'];
+		 if (prev_x == null && prev_y == null){
+			 prev_x = x
+			 prev_y = y
+			 continue
+		 }
+		 if (x == prev_x && y == prev_y){
+			 continue;
+		 }
+		 res.push({ 'y':Math.floor(y), "x": x});
+		 prev_x = x
+		 prev_y = y
+	 }
+	arr = res;
+}
+
+function createGrid(dataArray) {
+
+  var bufferLength = dataArray.length
+  const WIDTH = canvas.width;
+  const HEIGHT = canvas.height;
+  const sliceWidth = WIDTH / bufferLength;
+  let x = 0;
+  var arr = []
+  prev_x = null;
+  prev_y = null;
+
+  for (let i = 0; i < bufferLength; i++) {
+          const v = dataArray[i] / 128.0;
+          const y = (v * numRows) / 2;
+	  arr.push({ 'y':y, "x": x});
+	  x += sliceWidth;
+  }
+  dedupe_array(arr);
+  //console.log(arr);
+
 prev_x = null;
 prev_y = null;
 var grid_cord = [];
- for (let i=0; i < res.length; i++){
-	  x = res[i]['x'];
-	  y = res[i]['y'];
+ for (let i=0; i < arr.length; i++){
+	  x = arr[i]['x'];
+	  y = arr[i]['y'];
 	 if (prev_x == null && prev_y == null){
 		 grid_cord.push({"x":Math.floor(x), "y": y });
 		 prev_x = x
@@ -95,42 +100,25 @@ var grid_cord = [];
 		cords["y"] = set_y(y-1);
 	 }
 	 else if (y > prev_y){
-		cords["y"] = set_y(y+50);
+		cords["y"] = set_y(y+1);
 	 }else{
 		cords["y"] = set_y(y);
 	 }
 
 	 if (x > prev_x){
-		cords["x"] = set_x(Math.floor(x)+1);
+		cords["x"] = set_x(Math.floor(x)+10);
 	 }else if (x < prev_x){
-		cords["x"] = set_x(Math.floor(x)-1);
+		cords["x"] = set_x(Math.floor(x)-10);
 	 }else{
 		cords["x"] = set_x(Math.floor(x));
 	 }
 	 grid_cord.push(cords)
 	 prev_x = x
 	 prev_y = y
-
  }
-prev_x = null;
-prev_y = null;
- res = []
- for (let i=0; i < grid_cord.length; i++){
-	  x = grid_cord[i]['x'];
-	  y = grid_cord[i]['y'];
-	 if (prev_x == null && prev_y == null){
-		 prev_x = x
-		 prev_y = y
-		 continue
-	 }
-	 if (x == prev_x && y == prev_y){
-		 continue;
-	 }
 
-	 res.push({'x_sig': sigmoid(x), 'y':y, "x": x});
-	 prev_x = x
-	 prev_y = y
- }
+  dedupe_array(grid_cord);
+   //grid = []
     if (grid.length == 0){
 	    for (let i = 0; i < numRows; i++) {
 		grid[i] = [];
@@ -139,47 +127,14 @@ prev_y = null;
 		}
 	    }
     }
-    for (var i =0; i<res.length; i++){
-	x = res[i]['x'];
-	y = res[i]['y'];
+    for (var i =0; i<grid_cord.length; i++){
+	x = grid_cord[i]['x'];
+	y = grid_cord[i]['y'];
 	grid[y][x] = 1;
     }
 
-	/*
-    for (let i = 0; i < numRows; i++) {
-        grid[i] = [];
-	for (let j = 0; j < numCols; j++) {
-	    grid[i][j] = Math.
-	    random() > 0.7 ? 1 : 0; // Random initialization
-	}
-    }
-    */
-
     return grid;
 }
-/*
-  console.log(dataArray);
-  var bufferLength = dataArray.length
-  const WIDTH = canvas.width;
-  const HEIGHT = canvas.height;
-  const sliceWidth = WIDTH / bufferLength;
-  let x = 0;
-  const grid = [];
-    for (let i = 0; i < numRows; i++) {
-        grid[i] = [];
-	for (let j = 0; j < numCols; j++) {
-	    grid[i][j] = 0;
-	}
-    }
-  console.log(grid);
-  for (let i = 0; i < bufferLength; i++) {
-          const v = dataArray[i] / 128.0;
-          const y = (v * HEIGHT) / 2;
-         grid[v][Math.floor(y)] = 1;
-	 x += sliceWidth;
-	 console.log(v, y);
-  }
-    */
 
 
 
