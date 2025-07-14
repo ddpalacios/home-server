@@ -16,7 +16,7 @@ const cellSize = 2;
 const numRows =  Math.floor(canvas.height / cellSize);
 const numCols = Math.floor(canvas.width / cellSize);
 
-alert(numRows + " "+ numCols);
+//alert(numRows + " "+ numCols);
 
 
 function set_y(y){
@@ -72,7 +72,7 @@ function createGrid() {
   var bufferLength = dataArray.length
   const WIDTH = canvas.width;
   const HEIGHT = canvas.height;
-  const sliceWidth = WIDTH / bufferLength;
+  const sliceWidth = numCols / bufferLength;
   let x = 0;
   var arr = []
 
@@ -138,17 +138,20 @@ if (grid.length ==  0){
 
 function drawGrid() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    var canvas_cords = [];
     for (let i = 0; i < numRows; i++) {
 	for (let j = 0; j < numCols; j++) {
 	    if (grid[i][j] === 1) {
-		const items = ['pink', 'white'];
+		const items = ['pink', 'white', 'green', 'white'];
 		const randomItem = items[Math.floor(Math.random() * items.length)];
 		ctx.fillStyle = randomItem;
-		ctx.fillRect(j * cellSize, i *
+		ctx.fillRect((j * cellSize), i *
 			     cellSize, cellSize, cellSize);
+		canvas_cords.push({"x": j, "y": i*cellSize})
 	    }
 	}
     }
+	//console.log(canvas_cords);
 }
 function updateGrid() {
     const newGrid = [];
@@ -225,6 +228,7 @@ const dpr = window.devicePixelRatio || 1;
 canvas.width = width * dpr;
 canvas.height = height * dpr;
 ctx.scale(dpr, dpr)
+createGrid();
 };
 
 window.addEventListener('resize', windowResize);
@@ -253,102 +257,5 @@ var websocket_session = null;
 
 		}			
 	}
+	*/
 
-function visualize(timestamp, dataArray, bufferLength) {
-  const WIDTH = canvas.width;
-  const HEIGHT = canvas.height;
-  ctx.clearRect(0, 0, WIDTH, HEIGHT);
-  ctx.fillStyle = "black";
-  ctx.fillRect(0, 0, WIDTH, HEIGHT);
-
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = "pink";
-  ctx.beginPath();
-
-  const sliceWidth = WIDTH / bufferLength;
-  let x = 0;
-
-  for (let i = 0; i < bufferLength; i++) {
-          const v = dataArray[i] / 128.0;
-          const y = (v * HEIGHT) / 2;
-
-    if (i === 0) {
-      ctx.moveTo(x, y);
-    } else {
-      ctx.lineTo(x, y);
-    }
-    x += sliceWidth;
-  }
-
-  ctx.stroke();
-}
-
-
-
-function sigmoid(z){
-	return 1 / (1+Math.exp(-z));
-}
-
-function test(){
-
-	var r = []
-	for (var i=0; i< 300; i++){
-		r.push(i * 3.5);
-	}
-	websocket_session.send(r);
-}
-
-
-async function main(){
-  start_websocket()
-  const constraints = { audio: true };
-  const stream = await navigator.mediaDevices.getUserMedia(constraints);
-
-  const audioCtx = new AudioContext();
-  const source = audioCtx.createMediaStreamSource(stream);
-  const analyser = audioCtx.createAnalyser();
-  analyser.fftSize = 2048; 
-  source.connect(analyser);
-
-  const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-  function draw(timestamp) {
-    analyser.getByteTimeDomainData(dataArray);
-    visualize(timestamp, dataArray, dataArray.length);
-    requestAnimationFrame(draw);
-  }
-  draw();
-  const processor = audioCtx.createScriptProcessor(256, 1, 1);
-
-	source.connect(processor);
-	processor.connect(audioCtx.destination);
-	processor.onaudioprocess = function(e) {
-	  const channelData = e.inputBuffer.getChannelData(0);
-	    if (websocket_session.readyState === WebSocket.OPEN) {
-		var res = []
-		    for (var i=0; i<channelData.length; i++){
-			    res.push(channelData[i]);
-			    if (i == 10){break}
-		    }
-		websocket_session.send(channelData[0]);
-	    }
-	};
-/*
-		var  sum = channelData.reduce((acc, curr) => acc + curr, 0);
-		var res = sigmoid(Math.max(...channelData)*100)
-		var res2 = sigmoid(Math.min(...channelData)*100)
-		var m = channelData.map(num => num * 100);
-  const mediaRecorder = new MediaRecorder(stream);
-  mediaRecorder.ondataavailable = function (e) {
-    if (websocket_session.readyState === WebSocket.OPEN) {
-      websocket_session.send(e.data); 
-    }
-  };
-  mediaRecorder.start(10); 
-}
-window.addEventListener("load", () => {
-  main().catch(err => {
-    console.error("Audio setup failed:", err);
-  });
-});
-  */
