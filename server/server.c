@@ -134,15 +134,15 @@ void insert_file_descriptor(struct Socket *sockets[],struct pollfd *pfds[],int f
                 *sockets = realloc(*sockets, sizeof(**sockets) * (*max_fd_size));
 	 }
     static char ipstr[INET6_ADDRSTRLEN];
-    struct sockaddr_storage addr;
-    struct sockaddr_in *s = (struct sockaddr_in *)&addr;
-    inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof(ipstr));
+    //struct sockaddr_storage addr;
+    //struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+    //inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof(ipstr));
     (*pfds)[*fd_count].fd = fd;
     (*pfds)[*fd_count].events = POLLIN;
     (*sockets)[*fd_count].fd = fd;
     (*sockets)[*fd_count].keep_alive = 0x0;
     (*sockets)[*fd_count].is_listener = is_listener;
-    (*sockets)[*fd_count].ip_addr = strdup(ipstr);
+    //(*sockets)[*fd_count].ip_addr = strdup(ipstr);
     (*sockets)[*fd_count].cSSL = cSSL;
     (*fd_count)++;
 }
@@ -238,7 +238,7 @@ void start_listening_for_clients(char* port){
 	     for (int i=0; i<fd_count; i++){
 		 struct Socket *socket = &sockets[i];
 	     }
-             //printf("\nwaiting for clients to connect...\n");
+	     //printf("\nwaiting for clients to connect...\n");
              int triggered_fd = wait_for_event(&pfds, fd_count);
              if (triggered_fd == listener_fd){
                  int newfd = accept_new_client(listener_fd, &sockets, &pfds, &fd_count, &max_socket_size);
@@ -247,14 +247,42 @@ void start_listening_for_clients(char* port){
                  }else{
                          printf("New client accepted: %d\n", newfd);
                  }
+	     
 	     }else{
+
 		 for (int i=0; i<fd_count; i++){
 			 struct Socket *socket = &sockets[i];
 			 SSL* cSSL  = sockets[i].cSSL;
 			 if (socket->fd != triggered_fd){
 				 continue;
 			 }
-			 /*
+                         char *peek_buf = malloc(BUFFER_SIZE+1);
+			 int bytes_peeked = peek_exact_bytes(cSSL, BUFFER_SIZE, peek_buf);
+			 if (bytes_peeked <=0){
+				socket->keep_alive = 0x0;
+				 remove_file_descriptor(sockets,pfds, socket->fd, &fd_count);
+			 }else{
+				 peek_buf[bytes_peeked] = '\0';
+				 process_bytes(sockets, socket, peek_buf, fd_count);
+				 if (peek_buf != NULL){
+					 free(peek_buf);
+					 peek_buf = NULL;
+				 }
+			 if (!socket->keep_alive){
+				 remove_file_descriptor(sockets,pfds, socket->fd, &fd_count);
+				 }
+			 }
+		 }
+	     }
+
+	     /*
+	     else{
+		 for (int i=0; i<fd_count; i++){
+			 struct Socket *socket = &sockets[i];
+			 SSL* cSSL  = sockets[i].cSSL;
+			 if (socket->fd != triggered_fd){
+				 continue;
+			 }
                          char *peek_buf = malloc(BUFFER_SIZE);
 			 int bytes_peeked = peek_exact_bytes(cSSL, BUFFER_SIZE, peek_buf);
 			 if (bytes_peeked <=0){
@@ -271,8 +299,8 @@ void start_listening_for_clients(char* port){
 				 remove_file_descriptor(sockets,pfds, socket->fd, &fd_count);
 				 }
 			 }
-			 */
 		 }
 	     }
+	     */
         }
     }

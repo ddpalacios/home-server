@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <netdb.h>
+#define BUFFER_SIZE 4096
 
 int peek_exact_bytes(SSL *cSSL, int nbytes, char* buf){
     int total_bytes_retrieved = 0;
@@ -82,7 +83,7 @@ int read_tcp_message(SSL *cSSL, char** payload){
 					byte_length = byte_length_json->valueint;
 			}
 
-			unsigned char* buf = malloc(byte_length);
+			unsigned char* buf = malloc(byte_length+1);
 			int fbytes = read_exact_bytes(cSSL,byte_length, buf);
 			if (is_length_prefix->valueint){
 				prefix_length = (buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + (buf[3]);
@@ -103,25 +104,27 @@ int read_websocket_message(unsigned char* buf, char* message){
 	int opcode = buf[0] & 0x0F;
 	int mask = buf[1] & 0x80;
 	int payload_length = buf[1] & 0x7F;
-	printf("Payload length: %d\n", payload_length);
+	printf("%d\n", payload_length);
+
 	if (payload_length < 126){
 		if (mask){
-			printf("Is masked\n");
-			int offset = 2;
+			int offset = 6;
 			unsigned char* masking_key;
 			masking_key = malloc(4);
 			for (int i=0; i<4; i++){
 				masking_key[i] = buf[2+i];
-				offset = 2 + i;
 			}
-			offset++;
-			 unsigned char payload[payload_length+1];
+			 unsigned char* payload = malloc(payload_length+1);
 			for (int i=0; i<payload_length; i++){
 				payload[i] = buf[offset+i];
 			}
 			for (int i=0; i<payload_length; i++){
 				int val = payload[i] ^ masking_key[i%4];
 				message[i] = val; 
+			}
+			if (payload != NULL){
+				free(payload);
+				payload = NULL;
 			}
 			if (masking_key != NULL){
 				free(masking_key);
@@ -129,32 +132,32 @@ int read_websocket_message(unsigned char* buf, char* message){
 			}
 			return payload_length;
 		}else{
-			printf("Is not masked\n");
 		
 		
 		}
 	}else if (payload_length == 126){
 		if (mask){
-			printf("Is masked\n");
 			unsigned int p1 = buf[2];
 			unsigned int p2 = buf[3];
 			unsigned int extended_payload_length = (p1 <<8) | p2;
 			unsigned char* masking_key;
 
 			masking_key = malloc(4);
-			int offset = 4;
+			int offset = 8; // 2-byte header + 2-byte extended length + 4-byte mask
 			for (int i=0; i<4; i++){
-				masking_key[i] = buf[4+i];
-				offset = 4 + i;
+			    masking_key[i] = buf[4+i];
 			}
-			offset++;
-			unsigned char payload[extended_payload_length+1];
+			unsigned char* payload = malloc(extended_payload_length+1);
 			for (int i=0; i<extended_payload_length; i++){
 				payload[i] = buf[offset+i];
 			}
 			for (int i=0; i<extended_payload_length; i++){
 				int val = payload[i] ^ masking_key[i%4];
 				message[i] = val; 
+			}
+			if (payload != NULL){
+				free(payload);
+				payload = NULL;
 			}
 			if (masking_key != NULL){
 				free(masking_key);
@@ -175,26 +178,30 @@ int read_websocket_message(unsigned char* buf, char* message){
 void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int fd_count){
 	if (buf != NULL && strstr(buf, "HTTP/1.1")!=NULL){
 		char* peeked_http_header = malloc(1024);
+		if (!peeked_http_header) { /* handle error */ }
+		memset(peeked_http_header, 0, 1024);
 		int header_length = get_http_header(buf, peeked_http_header);
-		char* http_header = malloc(header_length+4);
-		char* body = NULL; 
-		read_exact_bytes(socket->cSSL, header_length+4, http_header);
-		http_header[header_length+4] = '\0';
+		char* http_header = malloc(header_length+4+1);
+		int nbytes = read_exact_bytes(socket->cSSL, header_length+4, http_header);
+		http_header[nbytes] = '\0';
 		int content_length = 0;
 		char* value_start = strstr(peeked_http_header,"Content-Length: ");
+
+		char* body = NULL; 
 		if (value_start != NULL){
 			char* content_length_val = strchr(value_start, ' ');
 			content_length_val++;
 			content_length = atoi(content_length_val);
 		}
 		if (content_length > 0){
-			body = malloc(content_length);
+			body = malloc(content_length+1);
 			read_exact_bytes(socket->cSSL, content_length, body);
 			body[content_length] = '\0';
 		}
 		process_route(socket, http_header, body);
-		if (body != NULL){
-			free(body);
+		if (peeked_http_header != NULL){
+			free(peeked_http_header);
+			peeked_http_header = NULL;
 		}
 		if (peeked_http_header != NULL){
 			free(peeked_http_header);
@@ -204,67 +211,77 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 			free(http_header);
 			http_header = NULL;
 		}
-	}
-}
-		/*
-		int bytes_read = SSL_read(socket->cSSL, websocket_buf, to_read);
+	}else{
+		char* websocket_buf = malloc(17384);
+		if (!websocket_buf) {  }
+		memset(websocket_buf, 0, 17384);
+		int bytes_read = SSL_read(socket->cSSL, websocket_buf, 17384);
 		if (bytes_read <= 0){
 			socket->keep_alive = 0x0;
-		}
-		int to_read = 1024;	
-		char* websocket_buf = malloc(to_read);
-		int bytes_read = 0;
-
-		    while (SSL_pending(socket->cSSL) > 0) {
-			bytes_read = SSL_read(socket->cSSL, websocket_buf, to_read);
-			if (bytes_read > 0) {
-			    printf("Pending Bytes:: %d\n", SSL_pending(socket->cSSL));
-			} else {
-			    printf("Error or connection closed.\n");
-			    break;
-			}
-		    }
-		}
-		char* message = malloc(bytes_read);
-		if (websocket_buf != NULL){
-			int message_length = read_websocket_message(websocket_buf, message);
-			printf("%s\n", message);
-			free(websocket_buf);
-			websocket_buf = NULL;
-		}
-
-		if (message != NULL){
-			free(message);
-			message = NULL;
-		
-		}
-		*/
-		/*
-		else{
-			printf("Bytes Read: %d\n", bytes_read);
-			websocket_buf[bytes_read] = '\0';
-			char* message = malloc(bytes_read);
-			int message_length = read_websocket_message(websocket_buf, message);
-			printf("Message Length: %d\n", message_length);
-			if (message != NULL && message_length > 0){
-				message[message_length] = '\0';
-				send_to_all_clients(sockets,*socket, message,message_length ,fd_count);
-				free(message);
-				message = NULL;
-				printf("------\n");
-			}
-			*/
-		
-		/*
-			websocket_buf[bytes_read] = '\0';
-			char* message = malloc(bytes_read);
+		}else{
+			char* message = malloc(bytes_read+1);
+			if (!message) {  }
+			memset(message, 0, bytes_read+1);
 			int message_length = read_websocket_message(websocket_buf, message);
 			message[message_length] = '\0';
-			send_to_all_clients(sockets,*socket, message,message_length ,fd_count);
+			send_to_all_clients(sockets, (*socket), message,message_length, fd_count);
 			if (message != NULL){
 				free(message);
 				message = NULL;
 			}
 		}
-	*/
+		
+		if (websocket_buf != NULL){
+			free(websocket_buf);
+			websocket_buf = NULL;
+		}
+		
+
+	}
+
+}
+
+		/*
+		char* websocket_buf = malloc(BUFFER_SIZE);
+		int bytes_read =  read_exact_bytes(socket->cSSL,BUFFER_SIZE,websocket_buf);
+		websocket_buf[bytes_read] = '\0';
+		if (bytes_read <= 0){
+			socket->keep_alive = 0x0;
+		}else{
+			char* message = malloc(bytes_read+1);
+			if (!message) {  }
+			memset(message, 0, bytes_read+1);
+			int message_length = read_websocket_message(websocket_buf, message);
+			message[message_length] = '\0';
+		//	send_to_all_clients(sockets, (*socket), message,message_length, fd_count);
+			if (message != NULL){
+				free(message);
+				message = NULL;
+			}
+		}
+		char* websocket_buf = malloc(17384);
+		if (!websocket_buf) {  }
+		memset(websocket_buf, 0, 17384);
+		int bytes_read = SSL_read(socket->cSSL, websocket_buf, 17384);
+		if (bytes_read <= 0){
+			socket->keep_alive = 0x0;
+		}else{
+			char* message = malloc(bytes_read+1);
+			if (!message) {  }
+			memset(message, 0, bytes_read+1);
+			int message_length = read_websocket_message(websocket_buf, message);
+			message[message_length] = '\0';
+		//	send_to_all_clients(sockets, (*socket), message,message_length, fd_count);
+			if (message != NULL){
+				free(message);
+				message = NULL;
+			}
+		}
+		
+		if (websocket_buf != NULL){
+			free(websocket_buf);
+			websocket_buf = NULL;
+		}
+		*/
+
 

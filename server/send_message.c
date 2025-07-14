@@ -57,7 +57,7 @@ void add_int_to_byte(unsigned char**frame, int data,int byte_length, int*bytes_a
 			frame_size_remaining -=1;
 			total_bits -=8;
 		}
-		*bytes_added+=4;
+		*bytes_added+=byte_length;
 	}else{
 		(*frame)[*bytes_added] = data;
 		*bytes_added+=1;
@@ -70,12 +70,14 @@ void add_int_to_byte(unsigned char**frame, int data,int byte_length, int*bytes_a
 int send_tcp_message(SSL *cSSL, int opcode, int payload_length, char* payload){
     char* frame_json = get_file_buffer("../frame.json");
     cJSON* root = cJSON_Parse(frame_json);
+    free(frame_json);
     if (!is_valid_frame(root)){
             return 0;
          }
     cJSON *item = cJSON_GetObjectItem(root,"values");
-    int frame_size = 1;
+    int frame_size = 17384;
     unsigned char* frame = malloc(frame_size);
+    memset(frame, 0, frame_size);
     int bytes_added = 0;
     for (int i = 0 ; i < cJSON_GetArraySize(item) ; i++){
         cJSON * subitem = cJSON_GetArrayItem(item, i);
@@ -91,6 +93,7 @@ int send_tcp_message(SSL *cSSL, int opcode, int payload_length, char* payload){
 	            add_str_to_byte(&frame,payload, payload_length, &bytes_added, &frame_size);
         }
     }
+    cJSON_Delete(root);
 
     if (!SSL_write(cSSL, frame, bytes_added)){
         printf("Error sending message.\n");
@@ -109,7 +112,6 @@ void send_to_all_clients(struct Socket *sockets, struct Socket socket, char* pay
 		if (client_socket.fd == socket.fd || client_socket.is_listener){
 			continue;
 		}
-		printf("Sending to Socket %d\n", client_socket.fd);
 		send_tcp_message(client_socket.cSSL, 1, payload_length, payload);
 	}
 }

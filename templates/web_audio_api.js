@@ -1,7 +1,314 @@
 let canvas = document.querySelector("#visualizer");
-canvas.width = canvas.clientWidth;
-canvas.height = canvas.clientHeight;
-let canvasCtx = canvas.getContext("2d");
+let ctx = canvas.getContext("2d");
+let dataArray;
+var grid = [];
+let analyser;
+canvas.style.background = "black"
+const width = canvas.clientWidth;
+const height = canvas.clientHeight;
+
+const dpr = window.devicePixelRatio || 1;
+canvas.width = width * dpr;
+canvas.height = height * dpr;
+ctx.scale(dpr, dpr);
+
+const cellSize = 5;
+const numRows =  Math.floor(canvas.height / cellSize);
+const numCols = Math.floor(canvas.width / cellSize);
+
+function sigmoid(z){
+	return 1 / (1+Math.exp(-z));
+}
+function createGrid(dataArray) {
+
+  var bufferLength = dataArray.length
+  const WIDTH = canvas.width;
+  const HEIGHT = canvas.height;
+  const sliceWidth = WIDTH / bufferLength;
+  let x = 0;
+  var arr = []
+   prev_x = null;
+   prev_y = null;
+
+  for (let i = 0; i < bufferLength; i++) {
+          const v = dataArray[i] / 128.0;
+          const y = (v * numRows) / 2;
+
+	  arr.push({ 'y':y, "x": x});
+	  x += sliceWidth;
+  }
+
+prev_x = null;
+prev_y = null;
+var res = []
+ for (let i=0; i < arr.length; i++){
+	  x = arr[i]['x'];
+	  y = arr[i]['y'];
+	 if (prev_x == null && prev_y == null){
+		 prev_x = x
+		 prev_y = y
+		 continue
+	 }
+	 if (x == prev_x && y == prev_y){
+		 continue;
+	 }
+
+	 res.push({'x_sig': sigmoid(x), 'y':Math.floor(y), "x": x});
+	 prev_x = x
+	 prev_y = y
+ }
+
+function set_y(y){
+	if (y > numRows-1){
+		y = numRows-1;
+	}else if (y <0){
+		y = 0;
+	}
+
+	return y;
+
+}
+function set_x(x){
+	if (x > numCols-1){
+		x = numCols-1;
+	}else if (x <0){
+		x = 0;
+	}
+
+	return x;
+
+}
+prev_x = null;
+prev_y = null;
+var grid_cord = [];
+ for (let i=0; i < res.length; i++){
+	  x = res[i]['x'];
+	  y = res[i]['y'];
+	 if (prev_x == null && prev_y == null){
+		 grid_cord.push({"x":Math.floor(x), "y": y });
+		 prev_x = x
+		 prev_y = y
+		 continue;
+	 }
+	 cords = {}
+	 if (y < prev_y){
+		cords["y"] = set_y(y-1);
+	 }
+	 else if (y > prev_y){
+		cords["y"] = set_y(y+50);
+	 }else{
+		cords["y"] = set_y(y);
+	 }
+
+	 if (x > prev_x){
+		cords["x"] = set_x(Math.floor(x)+1);
+	 }else if (x < prev_x){
+		cords["x"] = set_x(Math.floor(x)-1);
+	 }else{
+		cords["x"] = set_x(Math.floor(x));
+	 }
+	 grid_cord.push(cords)
+	 prev_x = x
+	 prev_y = y
+
+ }
+prev_x = null;
+prev_y = null;
+ res = []
+ for (let i=0; i < grid_cord.length; i++){
+	  x = grid_cord[i]['x'];
+	  y = grid_cord[i]['y'];
+	 if (prev_x == null && prev_y == null){
+		 prev_x = x
+		 prev_y = y
+		 continue
+	 }
+	 if (x == prev_x && y == prev_y){
+		 continue;
+	 }
+
+	 res.push({'x_sig': sigmoid(x), 'y':y, "x": x});
+	 prev_x = x
+	 prev_y = y
+ }
+    if (grid.length == 0){
+	    for (let i = 0; i < numRows; i++) {
+		grid[i] = [];
+		for (let j = 0; j < numCols; j++) {
+		    grid[i][j] = 0; 
+		}
+	    }
+    }
+    for (var i =0; i<res.length; i++){
+	x = res[i]['x'];
+	y = res[i]['y'];
+	grid[y][x] = 1;
+    }
+
+	/*
+    for (let i = 0; i < numRows; i++) {
+        grid[i] = [];
+	for (let j = 0; j < numCols; j++) {
+	    grid[i][j] = Math.
+	    random() > 0.7 ? 1 : 0; // Random initialization
+	}
+    }
+    */
+
+    return grid;
+}
+/*
+  console.log(dataArray);
+  var bufferLength = dataArray.length
+  const WIDTH = canvas.width;
+  const HEIGHT = canvas.height;
+  const sliceWidth = WIDTH / bufferLength;
+  let x = 0;
+  const grid = [];
+    for (let i = 0; i < numRows; i++) {
+        grid[i] = [];
+	for (let j = 0; j < numCols; j++) {
+	    grid[i][j] = 0;
+	}
+    }
+  console.log(grid);
+  for (let i = 0; i < bufferLength; i++) {
+          const v = dataArray[i] / 128.0;
+          const y = (v * HEIGHT) / 2;
+         grid[v][Math.floor(y)] = 1;
+	 x += sliceWidth;
+	 console.log(v, y);
+  }
+    */
+
+
+
+
+function visualize(timestamp, dataArray, bufferLength) {
+  const WIDTH = canvas.width;
+  const HEIGHT = canvas.height;
+  ctx.clearRect(0, 0, WIDTH, HEIGHT);
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "pink";
+  ctx.beginPath();
+
+  const sliceWidth = WIDTH / bufferLength;
+  let x = 0;
+
+  for (let i = 0; i < bufferLength; i++) {
+          const v = dataArray[i] / 128.0;
+          const y = (v * HEIGHT) / 2;
+
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+    x += sliceWidth;
+  }
+
+  ctx.stroke();
+}
+
+function drawGrid() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let i = 0; i < numRows; i++) {
+	for (let j = 0; j < numCols; j++) {
+	    if (grid[i][j] === 1) {
+		const items = ['pink', 'white'];
+		const randomItem = items[Math.floor(Math.random() * items.length)];
+		ctx.fillStyle = randomItem;
+		ctx.fillRect(j * cellSize, i *
+			     cellSize, cellSize, cellSize);
+	    }
+	}
+    }
+}
+function updateGrid() {
+    const newGrid = [];
+    for (let i = 0; i < numRows; i++) {
+	newGrid[i] = [];
+	for (let j = 0; j < numCols; j++) {
+	    const neighbors = countNeighbors(i, j);
+	    if (grid[i][j] === 1 && (neighbors < 2 || neighbors > 3)) {
+		newGrid[i][j] = 0;
+	    } else if (grid[i][j] === 0 && neighbors === 3) {
+		newGrid[i][j] = 1;
+	    } else {
+		newGrid[i][j] = grid[i][j];
+	    }
+	}
+    }
+    grid = newGrid;
+    return grid
+    
+}
+function countNeighbors(row, col) {
+    let count = 0;
+    for (let i = -1; i <= 1; i++) {
+	for (let j = -1; j <= 1; j++) {
+	    const r = row + i;
+	    const c = col + j;
+	    if (r >= 0 && r < numRows && c >= 0 &&
+		c < numCols && !(i === 0 && j === 0)) {
+		count += grid[r][c];
+	    }
+	}
+    }
+    return count;
+}
+
+async function start_microphone(){
+  const constraints = { audio: true };
+  const stream = await navigator.mediaDevices.getUserMedia(constraints);
+  const audioCtx = new AudioContext();
+  const source = audioCtx.createMediaStreamSource(stream);
+  analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 2048; 
+  source.connect(analyser);
+  dataArray = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteTimeDomainData(dataArray);
+  grid = createGrid(dataArray);
+};
+start_microphone()
+
+
+function mainLoop() {
+    if (analyser != undefined){
+	  analyser.getByteTimeDomainData(dataArray);
+	  grid = createGrid(dataArray);
+	  grid = updateGrid();
+	  drawGrid();
+    }
+    requestAnimationFrame(mainLoop);
+}
+function getCursorPosition(canvas, event) {
+const rect = canvas.getBoundingClientRect()
+const x = event.clientX - rect.left
+const y = event.clientY - rect.top
+console.log("x: " + x + " y: " + y + " width: "+ rect.width + " height: "+ rect.height)
+}
+
+canvas.addEventListener('mousedown', function(e) {
+getCursorPosition(canvas, e)
+})
+function windowResize() {
+const width = canvas.clientWidth;
+const height = canvas.clientHeight;
+const dpr = window.devicePixelRatio || 1;
+canvas.width = width * dpr;
+canvas.height = height * dpr;
+ctx.scale(dpr, dpr)
+};
+
+window.addEventListener('resize', windowResize);
+
+mainLoop();
+
+/*
 var websocket_session = null;
 
 	function start_websocket(){
@@ -27,13 +334,13 @@ var websocket_session = null;
 function visualize(timestamp, dataArray, bufferLength) {
   const WIDTH = canvas.width;
   const HEIGHT = canvas.height;
-  canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
-  canvasCtx.fillStyle = "black";
-  canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
+  ctx.clearRect(0, 0, WIDTH, HEIGHT);
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-  canvasCtx.lineWidth = 1;
-  canvasCtx.strokeStyle = "pink";
-  canvasCtx.beginPath();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "pink";
+  ctx.beginPath();
 
   const sliceWidth = WIDTH / bufferLength;
   let x = 0;
@@ -43,14 +350,14 @@ function visualize(timestamp, dataArray, bufferLength) {
           const y = (v * HEIGHT) / 2;
 
     if (i === 0) {
-      canvasCtx.moveTo(x, y);
+      ctx.moveTo(x, y);
     } else {
-      canvasCtx.lineTo(x, y);
+      ctx.lineTo(x, y);
     }
     x += sliceWidth;
   }
 
-  canvasCtx.stroke();
+  ctx.stroke();
 }
 
 
@@ -58,6 +365,16 @@ function visualize(timestamp, dataArray, bufferLength) {
 function sigmoid(z){
 	return 1 / (1+Math.exp(-z));
 }
+
+function test(){
+
+	var r = []
+	for (var i=0; i< 300; i++){
+		r.push(i * 3.5);
+	}
+	websocket_session.send(r);
+}
+
 
 async function main(){
   start_websocket()
@@ -78,43 +395,37 @@ async function main(){
     requestAnimationFrame(draw);
   }
   draw();
-
   const processor = audioCtx.createScriptProcessor(256, 1, 1);
 
 	source.connect(processor);
 	processor.connect(audioCtx.destination);
 	processor.onaudioprocess = function(e) {
-	  const channelData = e.inputBuffer.getChannelData(0); 
-	    if (websocket_session.readyState === WebSocket.OPEN) {  
+	  const channelData = e.inputBuffer.getChannelData(0);
+	    if (websocket_session.readyState === WebSocket.OPEN) {
+		var res = []
+		    for (var i=0; i<channelData.length; i++){
+			    res.push(channelData[i]);
+			    if (i == 10){break}
+		    }
+		websocket_session.send(channelData[0]);
+	    }
+	};
+/*
 		var  sum = channelData.reduce((acc, curr) => acc + curr, 0);
 		var res = sigmoid(Math.max(...channelData)*100)
 		var res2 = sigmoid(Math.min(...channelData)*100)
 		var m = channelData.map(num => num * 100);
-		console.log(m);
-		//websocket_session.send(channelData[0]); 
-	    }
-	};
-
-/*
   const mediaRecorder = new MediaRecorder(stream);
   mediaRecorder.ondataavailable = function (e) {
-    if (websocket_session.readyState === WebSocket.OPEN) {  
-        websocket_session.send(e.data); 
+    if (websocket_session.readyState === WebSocket.OPEN) {
+      websocket_session.send(e.data); 
     }
   };
   mediaRecorder.start(10); 
-  */
 }
 window.addEventListener("load", () => {
   main().catch(err => {
     console.error("Audio setup failed:", err);
   });
 });
-
-function test(){
-	var message = "Testing test test!! Hello, Daniel"
-	console.log("Sending message..");
-	websocket_session.send(message);
-}
-
-
+  */
