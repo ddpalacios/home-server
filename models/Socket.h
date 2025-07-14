@@ -9,7 +9,8 @@ typedef struct Socket{
 	char* hostname;
 	SSL* cSSL;
 	int keep_alive;
-    int exists;
+	int is_listener;
+	int exists;
 
 }sockets;
 void sink_socket_info(struct Socket *socket,struct sockaddr_storage remoteaddr );

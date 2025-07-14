@@ -17,6 +17,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/home-server.dir/models/websocket.c.o.d"
   "CMakeFiles/home-server.dir/routes/database-server/POST/post_frame.c.o"
   "CMakeFiles/home-server.dir/routes/database-server/POST/post_frame.c.o.d"
+  "CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_game_of_life_script.c.o"
+  "CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_game_of_life_script.c.o.d"
   "CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_html_utilities_script.c.o"
   "CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_html_utilities_script.c.o.d"
   "CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_live_page.c.o"

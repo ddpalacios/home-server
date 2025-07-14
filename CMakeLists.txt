@@ -25,6 +25,7 @@ file(GLOB MAIN
     "routes/life-of-sounds/GET/get_web_audio_api_script.c"
     "routes/life-of-sounds/GET/websocket_protocol.c"
     "routes/life-of-sounds/GET/get_html_utilities_script.c"
+    "routes/life-of-sounds/GET/get_game_of_life_script.c"
     "routes/life-of-sounds/GET/new_login.c"
     "routes/life-of-sounds/POST/login.c"
 
