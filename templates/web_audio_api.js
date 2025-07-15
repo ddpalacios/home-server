@@ -148,7 +148,7 @@ function drawGrid() {
     for (let i = 0; i < numRows; i++) {
 	for (let j = 0; j < numCols; j++) {
 	    if (grid[i][j] === 1) {
-		var items = ["black"]
+		var items = ["white"]
 
 		const randomItem = items[Math.floor(Math.random() * items.length)];
 		ctx.fillStyle = randomItem;
@@ -201,7 +201,7 @@ async function start_microphone(){
   analyser = audioCtx.createAnalyser();
   analyser.fftSize = 2048;
   const micGain = audioCtx.createGain();
-  micGain.gain.value = -10 // reduce input gain
+  micGain.gain.value = 10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 // reduce input gain
   const filter = audioCtx.createBiquadFilter();
   source.connect(micGain).connect(analyser);
   dataArray = new Uint8Array(analyser.frequencyBinCount);
