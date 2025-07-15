@@ -3,7 +3,8 @@ let ctx = canvas.getContext("2d");
 let dataArray;
 var grid = [];
 let analyser;
-canvas.style.background = "black"
+canvas.style.background = "purple"
+
 const width = canvas.clientWidth;
 const height = canvas.clientHeight;
 
@@ -12,12 +13,11 @@ canvas.width = width * dpr;
 canvas.height = height * dpr;
 ctx.scale(dpr, dpr);
 
-const cellSize = 2;
+var  cellSize = 5;
 const numRows =  Math.floor(canvas.height / cellSize);
 const numCols = Math.floor(canvas.width / cellSize);
 
 //alert(numRows + " "+ numCols);
-
 
 function set_y(y){
 	if (y > numRows-1){
@@ -69,6 +69,7 @@ function dedupe_array(arr){
 function createGrid() {
 
   analyser.getByteTimeDomainData(dataArray);
+  //console.log(dataArray);
   var bufferLength = dataArray.length
   const WIDTH = canvas.width;
   const HEIGHT = canvas.height;
@@ -77,8 +78,8 @@ function createGrid() {
   var arr = []
 
   for (let i = 0; i < bufferLength; i++) {
-          const v = dataArray[i] / 128.0;
-          const y = (v * numRows) / 2;
+          const v = dataArray[i] /128;
+          const y = (v * numRows) / 2 ;
 	  arr.push({ 'y':y, "x": x});
 	  x += sliceWidth;
   }
@@ -98,14 +99,13 @@ function createGrid() {
 		 }
 	 cords = {}
 	 if (y < prev_y){
-		cords["y"] = set_y(y-1);
+		cords["y"] = set_y(y);
 	 }
 	 else if (y > prev_y){
-		cords["y"] = set_y(y+1);
+		cords["y"] = set_y(y);
 	 }else{
 		cords["y"] = set_y(y);
 	 }
-
 	 if (x > prev_x){
 		cords["x"] = set_x(x+1);
 	 }else if (x < prev_x){
@@ -118,8 +118,7 @@ function createGrid() {
 	 prev_y = y
   }
   dedupe_array(grid_cord);
-  
-  //grid = [];
+ //grid = [] 
 if (grid.length ==  0){
   for (let i =0; i<numRows; i++){
 	  grid[i] = []
@@ -135,19 +134,26 @@ if (grid.length ==  0){
   }
 }
 
+function generateUniqueColors(n) {
+  const colors = [];
+  for (let i = 0; i < n; i++) {
+    const hue = Math.floor((360 / n) * i);
+    colors.push(`hsl(${hue}, 50%, 50%)`);
+  }
+  return colors;
+}
 
 function drawGrid() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    var canvas_cords = [];
     for (let i = 0; i < numRows; i++) {
 	for (let j = 0; j < numCols; j++) {
 	    if (grid[i][j] === 1) {
-		const items = ['pink', 'white', 'green', 'white'];
+		var items = ["black"]
+
 		const randomItem = items[Math.floor(Math.random() * items.length)];
 		ctx.fillStyle = randomItem;
 		ctx.fillRect((j * cellSize), i *
 			     cellSize, cellSize, cellSize);
-		canvas_cords.push({"x": j, "y": i*cellSize})
 	    }
 	}
     }
@@ -193,10 +199,38 @@ async function start_microphone(){
   const audioCtx = new AudioContext();
   const source = audioCtx.createMediaStreamSource(stream);
   analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 2048;
+  const micGain = audioCtx.createGain();
+  micGain.gain.value = -10 // reduce input gain
+  const filter = audioCtx.createBiquadFilter();
+  source.connect(micGain).connect(analyser);
+  dataArray = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteTimeDomainData(dataArray);
+  /*
+  const oscillator = audioCtx.createOscillator();
+  const dutyCycle = 0.25;
+  const gainNode = audioCtx.createGain();
+  gainNode.gain.value = 0.3
+  const real = new Float32Array([0, 1]);
+  const imag = new Float32Array([0, Math.sin(Math.PI * dutyCycle)]);
+  const pulseWave = audioCtx.createPeriodicWave(real, imag);
+  oscillator.frequency.value = 20;
+  //oscillator.type = 'sine';
+  oscillator.setPeriodicWave(pulseWave);
+  oscillator.connect(gainNode).connect(analyser).connect(audioCtx.destination)
+  //analyser.connect(audioCtx.destination);
+  analyser.fftSize = 2048;
+  const bufferLength = analyser.fftSize;
+  dataArray = new Uint8Array(bufferLength);
+ // oscillator.start();
+  analyser.getByteTimeDomainData(dataArray);
+  const source = audioCtx.createMediaStreamSource(stream);
+  analyser = audioCtx.createAnalyser();
   analyser.fftSize = 2048; 
   source.connect(analyser);
   dataArray = new Uint8Array(analyser.frequencyBinCount);
   analyser.getByteTimeDomainData(dataArray);
+  */
 };
 start_microphone()
 
@@ -228,7 +262,6 @@ const dpr = window.devicePixelRatio || 1;
 canvas.width = width * dpr;
 canvas.height = height * dpr;
 ctx.scale(dpr, dpr)
-createGrid();
 };
 
 window.addEventListener('resize', windowResize);
