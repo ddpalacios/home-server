@@ -3,7 +3,7 @@ let ctx = canvas.getContext("2d");
 let dataArray;
 var grid = [];
 let analyser;
-canvas.style.background = "purple"
+canvas.style.background = "black"
 
 const width = canvas.clientWidth;
 const height = canvas.clientHeight;
@@ -148,7 +148,12 @@ function drawGrid() {
     for (let i = 0; i < numRows; i++) {
 	for (let j = 0; j < numCols; j++) {
 	    if (grid[i][j] === 1) {
+<<<<<<< HEAD
 		var items = ["white"]
+=======
+		var items = ["red"]
+
+>>>>>>> ec19389dd8e277a664c204ec706131dee20e8416
 
 		const randomItem = items[Math.floor(Math.random() * items.length)];
 		ctx.fillStyle = randomItem;
@@ -201,7 +206,11 @@ async function start_microphone(){
   analyser = audioCtx.createAnalyser();
   analyser.fftSize = 2048;
   const micGain = audioCtx.createGain();
+<<<<<<< HEAD
   micGain.gain.value = 10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 // reduce input gain
+=======
+  micGain.gain.value = 3 // reduce input gain
+>>>>>>> ec19389dd8e277a664c204ec706131dee20e8416
   const filter = audioCtx.createBiquadFilter();
   source.connect(micGain).connect(analyser);
   dataArray = new Uint8Array(analyser.frequencyBinCount);
