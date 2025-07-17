@@ -237,9 +237,13 @@ void start_listening_for_clients(char* port){
         while(1){
 	     for (int i=0; i<fd_count; i++){
 		 struct Socket *socket = &sockets[i];
+		 if (socket->keep_alive){
+	//		 printf("Socket %d is kept alive\n", socket->fd);
+		 
+		 }
 	     }
-	     //printf("\nwaiting for clients to connect...\n");
              int triggered_fd = wait_for_event(&pfds, fd_count);
+	     //printf("Socket %d has pending bytes\n", triggered_fd);
              if (triggered_fd == listener_fd){
                  int newfd = accept_new_client(listener_fd, &sockets, &pfds, &fd_count, &max_socket_size);
                  if (!newfd){
@@ -247,7 +251,6 @@ void start_listening_for_clients(char* port){
                  }else{
                          printf("New client accepted: %d\n", newfd);
                  }
-	     
 	     }else{
 
 		 for (int i=0; i<fd_count; i++){
@@ -258,13 +261,13 @@ void start_listening_for_clients(char* port){
 			 }
                          char *peek_buf = malloc(BUFFER_SIZE+1);
 			 int bytes_peeked = peek_exact_bytes(cSSL, BUFFER_SIZE, peek_buf);
+	//		 printf("Socket %d has peeked %d bytes\n", triggered_fd, bytes_peeked);
 			 if (bytes_peeked <=0){
 				socket->keep_alive = 0x0;
 				 remove_file_descriptor(sockets,pfds, socket->fd, &fd_count);
 			 }else{
-				 peek_buf[bytes_peeked] = '\0';
-				 process_bytes(sockets, socket, peek_buf, fd_count);
 				 if (peek_buf != NULL){
+					 process_bytes(sockets, socket, peek_buf, fd_count);
 					 free(peek_buf);
 					 peek_buf = NULL;
 				 }
@@ -273,34 +276,8 @@ void start_listening_for_clients(char* port){
 				 }
 			 }
 		 }
+		 printf("---------------\n\n");
 	     }
 
-	     /*
-	     else{
-		 for (int i=0; i<fd_count; i++){
-			 struct Socket *socket = &sockets[i];
-			 SSL* cSSL  = sockets[i].cSSL;
-			 if (socket->fd != triggered_fd){
-				 continue;
-			 }
-                         char *peek_buf = malloc(BUFFER_SIZE);
-			 int bytes_peeked = peek_exact_bytes(cSSL, BUFFER_SIZE, peek_buf);
-			 if (bytes_peeked <=0){
-				socket->keep_alive = 0x0;
-				 remove_file_descriptor(sockets,pfds, socket->fd, &fd_count);
-			 }else{
-				 peek_buf[bytes_peeked] = '\0';
-				 process_bytes(sockets, socket, peek_buf, fd_count);
-				 if (peek_buf != NULL){
-					 free(peek_buf);
-					 peek_buf = NULL;
-				 }
-			 if (!socket->keep_alive){
-				 remove_file_descriptor(sockets,pfds, socket->fd, &fd_count);
-				 }
-			 }
-		 }
-	     }
-	     */
         }
     }
