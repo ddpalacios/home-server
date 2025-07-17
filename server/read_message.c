@@ -105,7 +105,7 @@ int read_websocket_message(SSL*cSSL,int payload_length, char** payload){
 		unsigned char*masking_key = malloc(4);
 		int nbytes = read_exact_bytes(cSSL, 4, masking_key);
 
-		char* coded_payload = malloc(payload_length+1);
+		char* coded_payload = malloc(payload_length);
 		if (!coded_payload){
 			perror("malloc");
 			return 0;
@@ -125,19 +125,16 @@ int read_websocket_message(SSL*cSSL,int payload_length, char** payload){
 			free(coded_payload);
 			coded_payload = NULL;
 		}
-		return nbytes;
+		return payload_length+1;
 	}else if (payload_length == 126){
 		 unsigned char*extended_length = malloc(2);
 		 int nbytes = read_exact_bytes(cSSL, 2, extended_length);
 		 unsigned int p1 = extended_length[0];
 		 unsigned int p2 = extended_length[1];
 		 unsigned int new_length = (p1 << 8) | p2;
-//		 printf("Extended length:%d %d %d\n",p1,p2, new_length);
-
 
 		unsigned char*masking_key = malloc(4);
 		nbytes = read_exact_bytes(cSSL, 4, masking_key);
-//		printf("Allocated Masking Key\n");
 
 
 		char* coded_payload = malloc(new_length);
@@ -148,7 +145,6 @@ int read_websocket_message(SSL*cSSL,int payload_length, char** payload){
 			int val = coded_payload[i] ^ masking_key[i%4];
 			(*payload)[i] = val; 
 		}
-//		printf("decoded payload!\n");
 
 		if (masking_key != NULL){
 			free(masking_key);
@@ -162,7 +158,7 @@ int read_websocket_message(SSL*cSSL,int payload_length, char** payload){
 			free(coded_payload);
 			coded_payload = NULL;
 		}
-		return nbytes;
+		return new_length+1;
 	}else if (payload_length == 127){
 
 		 uint64_t new_length = 0;
@@ -194,7 +190,7 @@ int read_websocket_message(SSL*cSSL,int payload_length, char** payload){
 			free(coded_payload);
 			coded_payload = NULL;
 		}
-		return nbytes;
+		return new_length+1;
 
 	}
 	return 0;
@@ -207,11 +203,11 @@ int is_websocket_buffer(unsigned char* buf){
 	if ((opcode == 0x0 || opcode == 0x1 || opcode == 0x2 || opcode == 0x8) && mask  == 128){
 		//printf("FIN %d OP %d MASK %d\n", finVal, opcode, mask);
 		if (finVal == 128 && (opcode != 0x0 & opcode != 0x8)){
-			printf("Read Entire Websocket Message\n");
-		}else if (finVal == 0 && (opcode != 0x0 & opcode != 0x8)){
-			printf("waiting to read next segment\n");
+			//printf("Read Entire Websocket Message\n");
+		}else if (finVal == 0 && (opcode != 0x0 && opcode != 0x8)){
+			//printf("waiting to read next segment\n");
 		}else if (finVal == 128 && (opcode == 0x0 )){
-			printf("Finished reading segmented message\n");
+			//printf("Finished reading segmented message\n");
 		}
 		return 1;
 	}else{
@@ -219,30 +215,74 @@ int is_websocket_buffer(unsigned char* buf){
 	}
 }
 
-
+void concatenate(char *dest, char *src) {
+   //printf("Concatenating message\n");
+    while (*dest) {
+        dest++; // Move to the end of the destination string
+    }
+    while (*src) {
+        *dest = *src; // Copy each character
+        dest++;
+        src++;
+    }
+    *dest = '\0'; // Null-terminate the result
+}
 
 void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int fd_count){
 	if (is_websocket_buffer(buf)){
-//		printf("Reading Websocket...\n");
 		unsigned char* websocket_buf = malloc(2);
 		if (!websocket_buf){perror("error"); exit(1);}
 		int nbytes = read_exact_bytes(socket->cSSL, 2, websocket_buf);
+		int finVal = websocket_buf[0] & 0x80;
 		int opcode = websocket_buf[0] & 0x0F;
 		if (nbytes <= 0 || opcode == 0x8){
 			printf("Killing off Socket %d\n", socket->fd);
 			socket->keep_alive = 0x0;
 		}else{
 			int payload_length = websocket_buf[1] & 0x7F;
-			//printf("FIN %d OP %d MASK %d\n", finVal, opcode, mask);
 			char* message = NULL;
 			nbytes = read_websocket_message(socket->cSSL, payload_length, &message);
+			message[nbytes] = '\0';
+			int message_length = nbytes;
+
+			// check if has continuation
+			if (finVal == 0 && (opcode != 0x0 && opcode != 0x8)){
+				while(1){
+					char* continuation_buf = malloc(2);
+					nbytes = read_exact_bytes(socket->cSSL, 2, continuation_buf);
+					finVal = continuation_buf[0] & 0x80;
+					opcode = continuation_buf[0] & 0x0F;
+					printf("FIN VAL %d OPCODE %d\n", finVal, opcode);
+					payload_length = continuation_buf[1] & 0x7F;
+					char* continuation_message = NULL;
+					nbytes = read_websocket_message(socket->cSSL, payload_length, &continuation_message);
+					continuation_message[nbytes] = '\0';
+					message_length += nbytes;
+					message = realloc(message, message_length);
+					if (continuation_buf != NULL){
+						free(continuation_buf);
+						continuation_buf = NULL;
+					}
+					if (continuation_message != NULL){
+						continuation_message[nbytes] = '\0';
+						concatenate(message, continuation_message);
+						free(continuation_message);
+						continuation_message = NULL;
+					}
+
+					if (finVal == 128 && opcode == 0x0){
+						break;
+					}
+				}
+			}
+
 			if (nbytes == 0){
 				printf("Could not determine bytes...\n");
 				exit(1);
 			}
 			if (message != NULL){
-				message[nbytes] = '\0';
-			//	printf("'%s'\n",message);
+				message[message_length] = '\0';
+				send_to_all_clients(sockets, *socket, message,message_length, fd_count);
 				free(message);
 				message = NULL;
 			}
@@ -291,7 +331,3 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 
 	}
 }
-
-
-
-
