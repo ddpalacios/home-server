@@ -2,6 +2,7 @@ let canvas = document.querySelector("#visualizer");
 let ctx = canvas.getContext("2d");
 let dataArray;
 var grid = [];
+var websocket_session = null;
 let analyser;
 canvas.style.background = "black"
 
@@ -148,12 +149,7 @@ function drawGrid() {
     for (let i = 0; i < numRows; i++) {
 	for (let j = 0; j < numCols; j++) {
 	    if (grid[i][j] === 1) {
-<<<<<<< HEAD
-		var items = ["white"]
-=======
-		var items = ["red"]
-
->>>>>>> ec19389dd8e277a664c204ec706131dee20e8416
+		var items = ["red", "orange"]
 
 		const randomItem = items[Math.floor(Math.random() * items.length)];
 		ctx.fillStyle = randomItem;
@@ -206,11 +202,7 @@ async function start_microphone(){
   analyser = audioCtx.createAnalyser();
   analyser.fftSize = 2048;
   const micGain = audioCtx.createGain();
-<<<<<<< HEAD
-  micGain.gain.value = 10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 // reduce input gain
-=======
-  micGain.gain.value = 3 // reduce input gain
->>>>>>> ec19389dd8e277a664c204ec706131dee20e8416
+  micGain.gain.value = 10// reduce input gain
   const filter = audioCtx.createBiquadFilter();
   source.connect(micGain).connect(analyser);
   dataArray = new Uint8Array(analyser.frequencyBinCount);
@@ -243,12 +235,67 @@ async function start_microphone(){
 };
 start_microphone()
 
+function test(){
+	  if (websocket_session.readyState === WebSocket.OPEN) {
+		 var t = [] 
+		  for (let i =0; i<2; i++){
+			  t[i] = []
+			  for (let j =0; j<2; j++){
+				 t[i][j] = 0;
+			  }
+		  }
+		var  matrixJSON = JSON.stringify(t);
+
+		  console.log("clicked");
+
+		websocket_session.onopen = () => {
+		    setInterval(() => {
+			let s = "";
+			for (let i = 0; i < 125; i++) {
+			    s += "a";
+			}
+			websocket_session.send(s);
+		    }, 100); 
+		};
+
+	  }
+}
+
+
+function start_websocket(){
+	if (websocket_session != null){return;}
+	websocket_session = new WebSocket('wss://' + window.location.host  +'/life-of-sounds/websocket');
+	websocket_session.onopen = () => {
+		console.log("Websocket connection established");	
+		    setInterval(() => {
+			let s = "";
+			for (let i = 0; i < 100000; i++) {
+			    s += "a";
+			}
+			websocket_session.send(s);
+		    }, 5000); // every second
+	}
+	websocket_session.onmessage = (event) => {
+			console.log("Message from server:", event.data);
+		
+	}
+	websocket_session.onerror = (error) => {
+		console.error("Websocket error:", error);
+
+	}
+	websocket_session.onclose = () => {
+		console.log("Websocket connection closed");
+
+	}			
+}
 
 function mainLoop() {
     if (analyser != undefined){
 	  createGrid();
 	  updateGrid();
 	  drawGrid();
+	  var matrixJSON = JSON.stringify(grid);
+	//   console.log(matrixJSON)
 	  /*
 	  */
     }
@@ -274,30 +321,10 @@ ctx.scale(dpr, dpr)
 };
 
 window.addEventListener('resize', windowResize);
-
+start_websocket();
 mainLoop();
 
 /*
-var websocket_session = null;
 
-	function start_websocket(){
-    if (websocket_session != null){return;}
-		websocket_session = new WebSocket('wss://' + window.location.host  +'/life-of-sounds/websocket');
-		websocket_session.onopen = () => {
-			console.log("Websocket connection established");	
-		}
-		websocket_session.onmessage = (event) => {
-				console.log("Message from server:", event.data);
-			
-		}
-		websocket_session.onerror = (error) => {
-			console.error("Websocket error:", error);
-
-		}
-		websocket_session.onclose = () => {
-			console.log("Websocket connection closed");
-
-		}			
-	}
 	*/
 

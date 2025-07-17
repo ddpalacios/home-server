@@ -160,17 +160,17 @@ char* get_websockets(){
 	return json;
 }
 
-int is_websocket_buffer(unsigned char* buf){
-	int finVal = buf[0] & 0x80;
-	int opcode = buf[0] & 0x0F;
-	int mask = buf[1] & 0x80;
-	if (opcode == 0 && finVal == 0 && mask==0){
-		  return 0;
-	  }else{
-		  return 1;
-	  }
+// int is_websocket_buffer(unsigned char* buf){
+// 	int finVal = buf[0] & 0x80;
+// 	int opcode = buf[0] & 0x0F;
+// 	int mask = buf[1] & 0x80;
+// 	if (opcode == 0 && finVal == 0 && mask==0){
+// 		  return 0;
+// 	  }else{
+// 		  return 1;
+// 	  }
 	
-	}
+// 	}
 	
 	
 
