@@ -216,7 +216,7 @@ int is_websocket_buffer(unsigned char* buf){
 }
 
 void concatenate(char *dest, char *src) {
-   //printf("Concatenating message\n");
+   printf("Concatenating message\n");
     while (*dest) {
         dest++; // Move to the end of the destination string
     }
@@ -225,7 +225,7 @@ void concatenate(char *dest, char *src) {
         dest++;
         src++;
     }
-    *dest = '\0'; // Null-terminate the result
+    //*dest = '\0'; // Null-terminate the result
 }
 
 void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int fd_count){
@@ -242,9 +242,9 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 			int payload_length = websocket_buf[1] & 0x7F;
 			char* message = NULL;
 			nbytes = read_websocket_message(socket->cSSL, payload_length, &message);
-			message[nbytes] = '\0';
-			int message_length = nbytes;
+			printf("Read %d\n", nbytes);
 
+			int message_length = nbytes;
 			// check if has continuation
 			if (finVal == 0 && (opcode != 0x0 && opcode != 0x8)){
 				while(1){
@@ -256,20 +256,20 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 					payload_length = continuation_buf[1] & 0x7F;
 					char* continuation_message = NULL;
 					nbytes = read_websocket_message(socket->cSSL, payload_length, &continuation_message);
-					continuation_message[nbytes] = '\0';
+					//continuation_message[nbytes] = '\0';
+					char* temp_message = realloc(message, message_length + nbytes);
+					if (temp_message == NULL) {
+					    free(continuation_message);
+					    free(continuation_buf);
+					    free(message);
+					    break;
+					}
+					message = temp_message;
+					memcpy(message + message_length, continuation_message, nbytes);
 					message_length += nbytes;
-					message = realloc(message, message_length);
-					if (continuation_buf != NULL){
-						free(continuation_buf);
-						continuation_buf = NULL;
-					}
-					if (continuation_message != NULL){
-						continuation_message[nbytes] = '\0';
-						concatenate(message, continuation_message);
-						free(continuation_message);
-						continuation_message = NULL;
-					}
 
+					free(continuation_message);
+					free(continuation_buf);
 					if (finVal == 128 && opcode == 0x0){
 						break;
 					}
@@ -281,7 +281,7 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 				exit(1);
 			}
 			if (message != NULL){
-				message[message_length] = '\0';
+				//message[message_length] = '\0';
 				send_to_all_clients(sockets, *socket, message,message_length, fd_count);
 				free(message);
 				message = NULL;
