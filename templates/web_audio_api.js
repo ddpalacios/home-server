@@ -298,6 +298,7 @@ function mainLoop() {
 	  updateGrid();
 	  drawGrid();
 	  var matrixJSON = JSON.stringify(grid);
+	  //console.log(matrixJSON.length);
 	  if (websocket_session.readyState === WebSocket.OPEN) {
 		  websocket_session.send(matrixJSON);
 	  }
