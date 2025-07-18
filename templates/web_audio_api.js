@@ -266,14 +266,17 @@ function start_websocket(){
 	if (websocket_session != null){return;}
 	websocket_session = new WebSocket('wss://' + window.location.host  +'/life-of-sounds/websocket');
 	websocket_session.onopen = () => {
+
 		console.log("Websocket connection established");	
+		/*
 		    setInterval(() => {
 			let s = "";
-			for (let i = 0; i < 100000; i++) {
+			for (let i = 0; i < 130560; i++) {
 			    s += "a";
 			}
 			websocket_session.send(s);
-		    }, 5000); // every second
+		    }, 10); // every second
+		*/
 	}
 	websocket_session.onmessage = (event) => {
 			console.log("Message from server:", event.data);
@@ -295,9 +298,9 @@ function mainLoop() {
 	  updateGrid();
 	  drawGrid();
 	  var matrixJSON = JSON.stringify(grid);
-	//   console.log(matrixJSON)
-	  /*
-	  */
+	  if (websocket_session.readyState === WebSocket.OPEN) {
+		  websocket_session.send(matrixJSON);
+	  }
     }
     requestAnimationFrame(mainLoop);
 }
