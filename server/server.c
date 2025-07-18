@@ -238,7 +238,7 @@ void start_listening_for_clients(char* port){
 	     for (int i=0; i<fd_count; i++){
 		 struct Socket *socket = &sockets[i];
 		 if (socket->keep_alive){
-	//		 printf("Socket %d is kept alive\n", socket->fd);
+//		 printf("Socket %d is kept alive\n", socket->fd);
 		 
 		 }
 	     }
@@ -276,7 +276,6 @@ void start_listening_for_clients(char* port){
 				 }
 			 }
 		 }
-		 printf("---------------\n\n");
 	     }
 
         }
