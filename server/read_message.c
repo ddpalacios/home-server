@@ -242,7 +242,7 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 			int payload_length = websocket_buf[1] & 0x7F;
 			char* message = NULL;
 			nbytes = read_websocket_message(socket->cSSL, payload_length, &message);
-			printf("Read %d\n", nbytes);
+			//printf("Read %d\n", nbytes);
 
 			int message_length = nbytes;
 			// check if has continuation
@@ -252,22 +252,21 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 					nbytes = read_exact_bytes(socket->cSSL, 2, continuation_buf);
 					finVal = continuation_buf[0] & 0x80;
 					opcode = continuation_buf[0] & 0x0F;
-					printf("FIN VAL %d OPCODE %d\n", finVal, opcode);
+			//		printf("FIN VAL %d OPCODE %d\n", finVal, opcode);
 					payload_length = continuation_buf[1] & 0x7F;
 					char* continuation_message = NULL;
 					nbytes = read_websocket_message(socket->cSSL, payload_length, &continuation_message);
-					//continuation_message[nbytes] = '\0';
 					char* temp_message = realloc(message, message_length + nbytes);
 					if (temp_message == NULL) {
 					    free(continuation_message);
 					    free(continuation_buf);
 					    free(message);
+					    printf("ERROR\n");
 					    break;
 					}
 					message = temp_message;
 					memcpy(message + message_length, continuation_message, nbytes);
 					message_length += nbytes;
-
 					free(continuation_message);
 					free(continuation_buf);
 					if (finVal == 128 && opcode == 0x0){

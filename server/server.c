@@ -238,7 +238,6 @@ void start_listening_for_clients(char* port){
 	     for (int i=0; i<fd_count; i++){
 		 struct Socket *socket = &sockets[i];
 		 if (socket->keep_alive){
-//		 printf("Socket %d is kept alive\n", socket->fd);
 		 
 		 }
 	     }
@@ -250,6 +249,7 @@ void start_listening_for_clients(char* port){
                          printf("ERROR ACCEPTING new socket\n");
                  }else{
                          printf("New client accepted: %d\n", newfd);
+			 printf("FD Count: %d\n", fd_count);
                  }
 	     }else{
 
