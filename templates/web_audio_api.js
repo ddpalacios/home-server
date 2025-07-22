@@ -20,6 +20,12 @@ const numCols = Math.floor(canvas.width / cellSize);
 
 //alert(numRows + " "+ numCols);
 
+function send_image(){
+	b64jpeg = canvas.toDataURL("image/jpeg");
+	console.log(b64jpeg);
+	websocket_session.send(b64jpeg);
+}
+
 function set_y(y){
 	if (y > numRows-1){
 		y = numRows-1;
@@ -149,7 +155,7 @@ function drawGrid() {
     for (let i = 0; i < numRows; i++) {
 	for (let j = 0; j < numCols; j++) {
 	    if (grid[i][j] === 1) {
-		var items = ["red", "orange"]
+		var items = ["red", "white", 'orange']
 
 		const randomItem = items[Math.floor(Math.random() * items.length)];
 		ctx.fillStyle = randomItem;
@@ -207,6 +213,89 @@ async function start_microphone(){
   source.connect(micGain).connect(analyser);
   dataArray = new Uint8Array(analyser.frequencyBinCount);
   analyser.getByteTimeDomainData(dataArray);
+};
+start_microphone()
+
+
+
+function start_websocket(){
+	if (websocket_session != null){return;}
+	websocket_session = new WebSocket('wss://' + window.location.host  +'/life-of-sounds/websocket');
+	websocket_session.onopen = () => {
+
+		console.log("Websocket connection established");	
+
+		    setInterval(() => {
+	b64jpeg = canvas.toDataURL("image/jpeg");
+	websocket_session.send(b64jpeg);
+		    }, 100); // every second
+		/*
+		// */
+	}
+	websocket_session.onmessage = (event) => {
+			console.log("Message from server:", event.data);
+		
+	}
+	websocket_session.onerror = (error) => {
+		console.error("Websocket error:", error);
+
+	}
+	websocket_session.onclose = () => {
+		console.log("Websocket connection closed");
+
+	}			
+}
+var t = 0
+var sent = false
+function mainLoop() {
+    if (analyser != undefined){
+	  createGrid();
+	  updateGrid();
+	  drawGrid();
+	  var matrixJSON = JSON.stringify(grid);
+
+	   /*
+	    if (!sent){
+		b64jpeg = canvas.toDataURL("image/jpeg");
+		websocket_session.send(b64jpeg);
+		    sent = true
+	    }
+	  if (websocket_session.readyState === WebSocket.OPEN) {
+		  var data = JSON.stringify({
+			  "row": 10
+			  ,"col": 10
+		  })
+		  websocket_session.send(data);
+	  }
+	  */
+    }
+    requestAnimationFrame(mainLoop);
+}
+function getCursorPosition(canvas, event) {
+	const rect = canvas.getBoundingClientRect()
+	const x = event.clientX - rect.left
+	const y = event.clientY - rect.top
+	console.log("x: " + x + " y: " + y + " width: "+ rect.width + " height: "+ rect.height)
+}
+
+canvas.addEventListener('mousedown', function(e) {
+	getCursorPosition(canvas, e)
+})
+
+function windowResize() {
+	const width = canvas.clientWidth;
+	const height = canvas.clientHeight;
+	const dpr = window.devicePixelRatio || 1;
+	canvas.width = width * dpr;
+	canvas.height = height * dpr;
+	ctx.scale(dpr, dpr)
+};
+
+window.addEventListener('resize', windowResize);
+start_websocket();
+mainLoop();
+
+
   /*
   const oscillator = audioCtx.createOscillator();
   const dutyCycle = 0.25;
@@ -232,103 +321,3 @@ async function start_microphone(){
   dataArray = new Uint8Array(analyser.frequencyBinCount);
   analyser.getByteTimeDomainData(dataArray);
   */
-};
-start_microphone()
-
-function test(){
-	  if (websocket_session.readyState === WebSocket.OPEN) {
-		 var t = [] 
-		  for (let i =0; i<2; i++){
-			  t[i] = []
-			  for (let j =0; j<2; j++){
-				 t[i][j] = 0;
-			  }
-		  }
-		var  matrixJSON = JSON.stringify(t);
-
-		  console.log("clicked");
-
-		websocket_session.onopen = () => {
-		    setInterval(() => {
-			let s = "";
-			for (let i = 0; i < 125; i++) {
-			    s += "a";
-			}
-			websocket_session.send(s);
-		    }, 100); 
-		};
-
-	  }
-}
-
-
-function start_websocket(){
-	if (websocket_session != null){return;}
-	websocket_session = new WebSocket('wss://' + window.location.host  +'/life-of-sounds/websocket');
-	websocket_session.onopen = () => {
-
-		console.log("Websocket connection established");	
-		/*
-		    setInterval(() => {
-			let s = "";
-			for (let i = 0; i < 130560; i++) {
-			    s += "a";
-			}
-			websocket_session.send(s);
-		    }, 10); // every second
-		*/
-	}
-	websocket_session.onmessage = (event) => {
-			console.log("Message from server:", event.data);
-		
-	}
-	websocket_session.onerror = (error) => {
-		console.error("Websocket error:", error);
-
-	}
-	websocket_session.onclose = () => {
-		console.log("Websocket connection closed");
-
-	}			
-}
-
-function mainLoop() {
-    if (analyser != undefined){
-	  createGrid();
-	  updateGrid();
-	  drawGrid();
-	  var matrixJSON = JSON.stringify(grid);
-	  //console.log(matrixJSON.length);
-	  if (websocket_session.readyState === WebSocket.OPEN) {
-		  websocket_session.send(matrixJSON);
-	  }
-    }
-    requestAnimationFrame(mainLoop);
-}
-function getCursorPosition(canvas, event) {
-const rect = canvas.getBoundingClientRect()
-const x = event.clientX - rect.left
-const y = event.clientY - rect.top
-console.log("x: " + x + " y: " + y + " width: "+ rect.width + " height: "+ rect.height)
-}
-
-canvas.addEventListener('mousedown', function(e) {
-getCursorPosition(canvas, e)
-})
-function windowResize() {
-const width = canvas.clientWidth;
-const height = canvas.clientHeight;
-const dpr = window.devicePixelRatio || 1;
-canvas.width = width * dpr;
-canvas.height = height * dpr;
-ctx.scale(dpr, dpr)
-};
-
-window.addEventListener('resize', windowResize);
-start_websocket();
-mainLoop();
-
-/*
-
-	*/
-
