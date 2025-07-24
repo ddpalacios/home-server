@@ -4,7 +4,7 @@ let dataArray;
 var grid = [];
 var websocket_session = null;
 let analyser;
-canvas.style.background = "black"
+canvas.style.background = "white"
 
 const width = canvas.clientWidth;
 const height = canvas.clientHeight;
@@ -14,7 +14,7 @@ canvas.width = width * dpr;
 canvas.height = height * dpr;
 ctx.scale(dpr, dpr);
 
-var  cellSize = 5;
+var  cellSize = 3;
 const numRows =  Math.floor(canvas.height / cellSize);
 const numCols = Math.floor(canvas.width / cellSize);
 
@@ -155,10 +155,10 @@ function drawGrid() {
     for (let i = 0; i < numRows; i++) {
 	for (let j = 0; j < numCols; j++) {
 	    if (grid[i][j] === 1) {
-		var items = ["red", "white", 'orange']
+		var items = ["black", "blue"]
 
-		const randomItem = items[Math.floor(Math.random() * items.length)];
-		ctx.fillStyle = randomItem;
+		//const randomItem = items[Math.floor(Math.random() * items.length)];
+		ctx.fillStyle ="red" //randomItem;
 		ctx.fillRect((j * cellSize), i *
 			     cellSize, cellSize, cellSize);
 	    }
@@ -216,19 +216,63 @@ async function start_microphone(){
 };
 start_microphone()
 
+function chunkString(str, size) {
+  let chunks = [];
+  for (let i = 0; i < str.length; i += size) {
+    chunks.push(str.slice(i, i + size));
+  }
+  return chunks;
+}
 
-
-function start_websocket(){
+async function start_websocket(){
 	if (websocket_session != null){return;}
 	websocket_session = new WebSocket('wss://' + window.location.host  +'/life-of-sounds/websocket');
 	websocket_session.onopen = () => {
 
 		console.log("Websocket connection established");	
 
-		    setInterval(() => {
-	b64jpeg = canvas.toDataURL("image/jpeg");
-	websocket_session.send(b64jpeg);
-		    }, 100); // every second
+		    setInterval(async () => {
+			 canvas.toBlob(async (blob) => {
+				const CHUNK_SIZE = 10000;
+				const buffer = await blob.arrayBuffer();
+				for (let i = 0; i < buffer.byteLength; i += CHUNK_SIZE) {
+				    const end = i + CHUNK_SIZE;
+				    const chunk = buffer.slice(i, end);
+				    const isFinal = end >= buffer.byteLength;
+				    const flag = new Uint8Array([isFinal ? 1 : 0]);
+				    const payload = new Uint8Array(flag.byteLength + chunk.byteLength);
+				    payload.set(flag, 0);
+				    payload.set(new Uint8Array(chunk), 1);
+			            websocket_session.send(payload);
+				}
+			}, "image/jpeg", 0.2);
+
+
+			    /*
+			var str = canvas.toDataURL("image/jpeg");
+			 var size = 5000
+			 canvas.toBlob(blob => {
+			    blob.arrayBuffer().then(buffer => {
+				console.log(buffer);
+			//	ws.send(buffer);
+			    });
+			}, "image/jpeg", 0.8);
+
+			  for (let i = 0; i < str.length; i += size) {
+			      var finVal = 0;
+			      var chunk =str.slice(i, i + size)
+			      if (i+size > str.length){
+				  finVal = 1;
+				}
+			      const blob = new Blob([finVal," ", chunk], { type: "text/plain" });
+			      console.log(blob);
+			      websocket_session.send(blob);
+
+			  }
+			  console.log(str.length);
+			  */
+			
+		    }, 10); // every second
 		/*
 		// */
 	}

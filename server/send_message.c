@@ -67,7 +67,7 @@ void add_int_to_byte(unsigned char**frame, int data,int byte_length, int*bytes_a
 } 
 
 
-int send_tcp_message(SSL *cSSL, int opcode, int payload_length, char* payload){
+int send_tcp_message(SSL *cSSL,int fin, int opcode, int payload_length, char* payload){
     char* frame_json = get_file_buffer("../frame.json");
     cJSON* root = cJSON_Parse(frame_json);
     free(frame_json);
@@ -84,7 +84,10 @@ int send_tcp_message(SSL *cSSL, int opcode, int payload_length, char* payload){
         cJSON* name = cJSON_GetObjectItem(subitem, "name");
         cJSON* byte_length = cJSON_GetObjectItem(subitem, "byte_length");
         cJSON* byte_offset = cJSON_GetObjectItem(subitem, "byte_offset");
-        if (strcmp(name->valuestring , "OPCODE")==0){
+
+        if (strcmp(name->valuestring , "FIN")==0){
+                add_int_to_byte(&frame,fin, byte_length->valueint, &bytes_added, &frame_size);
+	}else if (strcmp(name->valuestring , "OPCODE")==0){
                 add_int_to_byte(&frame,opcode, byte_length->valueint, &bytes_added, &frame_size);
         }else if (strcmp(name->valuestring , "PAYLOAD_LENGTH")==0){
                 add_int_to_byte(&frame,payload_length, byte_length->valueint, &bytes_added, &frame_size);
@@ -95,10 +98,12 @@ int send_tcp_message(SSL *cSSL, int opcode, int payload_length, char* payload){
     }
     cJSON_Delete(root);
 
+    printf("Sending %d\n",payload_length);
     if (!SSL_write(cSSL, frame, bytes_added)){
         printf("Error sending message.\n");
         return 0;
     }
+    printf("Done sending.\n");
     	if (frame != NULL){
 		free(frame);
 		frame = NULL;
@@ -106,12 +111,12 @@ int send_tcp_message(SSL *cSSL, int opcode, int payload_length, char* payload){
     return 1;
 }
 
-void send_to_all_clients(struct Socket *sockets, struct Socket socket, char* payload,int payload_length, int fd_count){
+void send_to_all_clients(struct Socket *sockets, struct Socket socket,int fin, int opcode, char* payload,int payload_length, int fd_count){
 	for (int i=0; i<fd_count; i++){
 		struct Socket client_socket = sockets[i];
 		if (client_socket.fd == socket.fd || client_socket.is_listener){
 			continue;
 		}
-		send_tcp_message(client_socket.cSSL, 1, payload_length, payload);
+		send_tcp_message(client_socket.cSSL,fin, opcode, payload_length, payload);
 	}
 }
