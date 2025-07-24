@@ -206,7 +206,8 @@ int is_websocket_buffer(unsigned char* buf){
 		return 0;
 	}
 }
-int read_websocket_continuation(SSL* cSSL, char** message, int *message_length){
+void read_websocket_continuation(struct Socket *sockets,struct Socket *socket, int fd_count,char** message, int *message_length){
+	SSL* cSSL = socket->cSSL;
 	while(1){
 		char* continuation_buf = malloc(2);
 		int nbytes = read_exact_bytes(cSSL, 2, continuation_buf);
@@ -215,8 +216,14 @@ int read_websocket_continuation(SSL* cSSL, char** message, int *message_length){
 		int payload_length = continuation_buf[1] & 0x7F;
 		char* continuation_message = NULL;
 		nbytes = read_websocket_message(cSSL, payload_length, &continuation_message);
+		printf("Nbytes: %d\n", nbytes);
+		send_to_all_clients(sockets, *socket,finVal, opcode, continuation_message,nbytes, fd_count);
+		free(continuation_message);
+		if (finVal == 128 && opcode == 0x0){
+			break;
+		}
+		/*
 		char* temp_message = realloc(*message, *message_length + nbytes);
-		printf("Reallocated to %d\n", *message_length + nbytes);
 		if (temp_message == NULL) {
 		    free(continuation_message);
 		    free(continuation_buf);
@@ -230,10 +237,10 @@ int read_websocket_continuation(SSL* cSSL, char** message, int *message_length){
 		free(continuation_message);
 		free(continuation_buf);
 		if (finVal == 128 && opcode == 0x0){
-		   printf("FIN VAL: %d\n", finVal);
-		   printf("nbytes %d\n",nbytes);
+		   printf("Final Message Length: %d\n",*message_length);
 		   return nbytes;
 		}
+		*/
 	}
 }
 
@@ -258,8 +265,10 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 			if (finVal == 0 && (opcode != 0x0 && opcode != 0x8)){
 			printf("Payload length %d\n", payload_length);
 				printf("Continuation message\n");
-				 read_websocket_continuation(socket->cSSL, &message, &message_length);
+				 read_websocket_continuation(sockets,socket, fd_count, &message, &message_length);
 				 printf("Done continuation\n");
+			}else{
+			    send_to_all_clients(sockets, *socket,finVal, opcode, message,nbytes, fd_count);
 			}
 			if (nbytes == 0){
 				printf("Could not determine bytes...\n");
@@ -267,7 +276,7 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 			}
 			if (message != NULL){
 				//printf("Recived Websocket Bytes: %s\n", message);
-				send_to_all_clients(sockets, *socket, message,message_length, fd_count);
+//				send_to_all_clients(sockets, *socket, message,message_length, fd_count);
 				free(message);
 				message = NULL;
 			}

@@ -1,38 +1,30 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include "cjson/cJSON.h"
+#include <string.h>
+
+void processInBatches(const char *input, size_t batchSize) {
+    size_t length = strlen(input);
+    size_t i = 0;
+
+    while (i < length) {
+        char buffer[batchSize + 1]; // +1 for null terminator
+        size_t j;
+
+        for (j = 0; j < batchSize && (i + j) < length; j++) {
+            buffer[j] = input[i + j];
+        }
+
+        buffer[j] = '\0'; // Null-terminate the batch
+        printf("Batch: %s\n", buffer);
+
+        i += batchSize;
+    }
+}
 
 int main() {
-    // JSON string
-    const char *json_string = "{\"name\":\"Alice\",\"age\":25,\"is_student\":true}";
+    const char *inputString = "This is a sample string to process in batches.";
+    size_t batchSize = 10;
 
-    // Parse JSON string
-    cJSON *json = cJSON_Parse(json_string);
-    if (json == NULL) {
-        printf("Error parsing JSON!\n");
-        return 1;
-    }
-
-    // Access "name" (string)
-    cJSON *name = cJSON_GetObjectItem(json, "name");
-    if (cJSON_IsString(name)) {
-        printf("Name: %s\n", name->valuestring);
-    }
-
-    // Access "age" (integer)
-    cJSON *age = cJSON_GetObjectItem(json, "age");
-    if (cJSON_IsNumber(age)) {
-        printf("Age: %d\n", age->valueint);
-    }
-
-    // Access "is_student" (boolean)
-    cJSON *is_student = cJSON_GetObjectItem(json, "is_student");
-    if (cJSON_IsBool(is_student)) {
-        printf("Is Student: %s\n", cJSON_IsTrue(is_student) ? "true" : "false");
-    }
-
-    // Clean up
-    cJSON_Delete(json);
+    processInBatches(inputString, batchSize);
 
     return 0;
 }
