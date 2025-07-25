@@ -198,7 +198,7 @@ void insert_file_descriptor(struct Socket *sockets[],struct pollfd *pfds[],int f
        SSL* cSSL = encrypt_socket(newfd);
        char host[NI_MAXHOST];	
        char service[NI_MAXSERV];	
-       getnameinfo((struct sockaddr*)&remoteaddr, sizeof(remoteaddr),host,sizeof(host), service, sizeof(service),0 );
+       //getnameinfo((struct sockaddr*)&remoteaddr, sizeof(remoteaddr),host,sizeof(host), service, sizeof(service),0 );
        if (cSSL != NULL){
          insert_file_descriptor(sockets, pfds, newfd,cSSL, host,  fd_count, max_fd_size, 0x0);
          return newfd;

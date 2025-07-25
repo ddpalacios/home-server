@@ -14,7 +14,7 @@ canvas.width = width * dpr;
 canvas.height = height * dpr;
 ctx.scale(dpr, dpr);
 
-var  cellSize = 3;
+var  cellSize = 5;
 const numRows =  Math.floor(canvas.height / cellSize);
 const numCols = Math.floor(canvas.width / cellSize);
 
@@ -233,7 +233,7 @@ async function start_websocket(){
 
 		    setInterval(async () => {
 			 canvas.toBlob(async (blob) => {
-				const CHUNK_SIZE = 10000;
+				const CHUNK_SIZE = 20000;
 				const buffer = await blob.arrayBuffer();
 				for (let i = 0; i < buffer.byteLength; i += CHUNK_SIZE) {
 				    const end = i + CHUNK_SIZE;
@@ -245,36 +245,8 @@ async function start_websocket(){
 				    payload.set(new Uint8Array(chunk), 1);
 			            websocket_session.send(payload);
 				}
-			}, "image/jpeg", 0.2);
-
-
-			    /*
-			var str = canvas.toDataURL("image/jpeg");
-			 var size = 5000
-			 canvas.toBlob(blob => {
-			    blob.arrayBuffer().then(buffer => {
-				console.log(buffer);
-			//	ws.send(buffer);
-			    });
 			}, "image/jpeg", 0.8);
-
-			  for (let i = 0; i < str.length; i += size) {
-			      var finVal = 0;
-			      var chunk =str.slice(i, i + size)
-			      if (i+size > str.length){
-				  finVal = 1;
-				}
-			      const blob = new Blob([finVal," ", chunk], { type: "text/plain" });
-			      console.log(blob);
-			      websocket_session.send(blob);
-
-			  }
-			  console.log(str.length);
-			  */
-			
-		    }, 10); // every second
-		/*
-		// */
+		    }, 100); 
 	}
 	websocket_session.onmessage = (event) => {
 			console.log("Message from server:", event.data);
