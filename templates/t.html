@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Basic getImageData</title>
+</head>
+<body>
+
+<canvas id="myCanvas" width="300" height="200"></canvas>
+
+<script>
+    const canvas = document.getElementById('myCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Draw a red rectangle
+    ctx.fillStyle = 'red';
+    ctx.fillRect(50, 50, 100, 100);
+    
+    // Get pixel data
+    const imageData = ctx.getImageData(50, 50, 100, 100);
+    console.log(imageData);
+</script>
+
+</body>
+</html>
