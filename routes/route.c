@@ -45,8 +45,8 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 	char* request_type = malloc(request_type_len+1);
 	strncpy(request_type, http_header, request_type_len);
 	request_type[request_type_len] = '\0';
-	printf("Route: '%s'\n", route);
-	printf("route type: '%s'\n", request_type);
+	printf("Route: '%s %s'\n",request_type,route);
+//	printf("route type: '%s'\n", request_type);
 	if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/login")==0){
 		get_login_page(cSSL, http_header, "index.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/live_studio")==0){

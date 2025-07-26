@@ -204,7 +204,7 @@ void insert_file_descriptor(struct Socket *sockets[],struct pollfd *pfds[],int f
          return newfd;
        }else{
 	 close(newfd);
-         printf("ERROR Creating SSL Encryption and was not added for fd %d\n", newfd);
+         //printf("ERROR Creating SSL Encryption and was not added for fd %d\n", newfd);
          return 0;
        }
       
@@ -232,12 +232,11 @@ void start_listening_for_clients(char* port){
 	 socket->keep_alive = 0x0;
         }
         insert_file_descriptor(&sockets,&pfds, listener_fd,NULL,"localhost", &fd_count, &max_socket_size, 0x1);
-
-
         while(1){
 	     for (int i=0; i<fd_count; i++){
 		 struct Socket *socket = &sockets[i];
 		 if (socket->keep_alive){
+			 printf("Socket %d is kept alive\n", socket->fd);
 		 
 		 }
 	     }
@@ -246,9 +245,9 @@ void start_listening_for_clients(char* port){
              if (triggered_fd == listener_fd){
                  int newfd = accept_new_client(listener_fd, &sockets, &pfds, &fd_count, &max_socket_size);
                  if (!newfd){
-                         printf("ERROR ACCEPTING new socket\n");
+          //               printf("ERROR ACCEPTING new socket\n");
                  }else{
-                         printf("New client accepted: %d\n", newfd);
+         //                printf("New client accepted: %d\n", newfd);
 			 printf("FD Count: %d\n", fd_count);
                  }
 	     }else{

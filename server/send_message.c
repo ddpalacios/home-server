@@ -66,6 +66,14 @@ void add_int_to_byte(unsigned char**frame, int data,int byte_length, int*bytes_a
 
 } 
 
+int send_websocket_message(SSL *cSSL, int payload_length, char* payload){
+	//char* frame = malloc(payload_length + 
+
+
+
+
+}
+
 
 int send_tcp_message(SSL *cSSL,int fin, int opcode, int payload_length, char* payload){
     char* frame_json = get_file_buffer("../frame.json");
