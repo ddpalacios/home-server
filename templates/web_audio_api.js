@@ -158,7 +158,7 @@ function drawGrid() {
 		var items = ["black", "blue"]
 
 		//const randomItem = items[Math.floor(Math.random() * items.length)];
-		ctx.fillStyle ="red" //randomItem;
+		ctx.fillStyle ="green" //randomItem;
 		ctx.fillRect((j * cellSize), i *
 			     cellSize, cellSize, cellSize);
 	    }
@@ -243,7 +243,7 @@ async function start_websocket(){
 				    const payload = new Uint8Array(flag.byteLength + chunk.byteLength);
 				    payload.set(flag, 0);
 				    payload.set(new Uint8Array(chunk), 1);
-			            websocket_session.send(payload);
+			            //websocket_session.send(payload);
 				}
 			}, "image/jpeg", 0.8);
 		    }, 100); 

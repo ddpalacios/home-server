@@ -89,18 +89,18 @@ SSL* encrypt_socket(int fd){
 	}
 	SSL *cSSL = SSL_new(ssl_ctx);
     if (cSSL == NULL){
-        printf("Error creating SSL ctx for fd\n %d", fd);
+       // printf("Error creating SSL ctx for fd\n %d", fd);
         return cSSL;
     }
 	if (!SSL_set_fd(cSSL, fd)){
-        printf("Error setting SSL for fd %d\n", fd);
+        //printf("Error setting SSL for fd %d\n", fd);
         return NULL;
     }
 	int ssl_err = SSL_accept(cSSL);
 
 	if (ssl_err <0) {
 		int err = SSL_get_error(cSSL, ssl_err);
-		printf("SSL ERROR %d | %d ERROR ON ACCEPTING CSSL!!!\n", ssl_err, err);
+	//	printf("SSL ERROR %d | %d ERROR ON ACCEPTING CSSL!!!\n", ssl_err, err);
 		SSL_shutdown(cSSL);
 		SSL_free(cSSL);
 		return NULL;
