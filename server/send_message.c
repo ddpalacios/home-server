@@ -66,6 +66,34 @@ void add_int_to_byte(unsigned char**frame, int data,int byte_length, int*bytes_a
 
 } 
 
+int send_websocket_message(struct Socket *sockets,struct Socket socket,int fd_count, int payload_length, char* payload){
+	size_t total_bytes = payload_length + 2;
+	printf("total bytes available %ld\n",total_bytes); 
+	char* frame = malloc(total_bytes); 
+	frame[0] = 0x81;
+	frame[1] = payload_length & 0x7f;
+	printf("Payload size: %d\n", payload_length);
+	memcpy(frame + 2, payload,payload_length);
+	for (int i=0; i<fd_count; i++){
+		struct Socket client_socket = sockets[i];
+		if (client_socket.fd == socket.fd || client_socket.is_listener){
+			continue;
+		}
+	    SSL* cSSL = client_socket.cSSL;
+	    printf("Sending %d\n",payload_length);
+	    if (!SSL_write(cSSL, frame, total_bytes)){
+		printf("Error sending message.\n");
+		return 0;
+	    }
+	    printf("Done sending.\n");
+	}
+	if (frame != NULL){
+		free(frame);
+		frame = NULL;
+	}
+	return total_bytes;
+}
+
 
 int send_tcp_message(SSL *cSSL,int fin, int opcode, int payload_length, char* payload){
     char* frame_json = get_file_buffer("../frame.json");

@@ -93,10 +93,11 @@ int read_tcp_message(SSL *cSSL, char** payload){
 					memcpy(*payload, buf, byte_length);
 					(*payload)[byte_length] = '\0';
 					free(buf);
-					break;
+					return byte_length;
 			}
 		free(buf);
 	}
+	return 0;
 }
 
 
@@ -195,6 +196,16 @@ int read_websocket_message(SSL*cSSL,int payload_length, char** payload){
 	}
 	return 0;
 }
+int is_tcp_buffer(unsigned char* buf){
+	int finVal = buf[0];
+	int opcode = buf[1];
+	if (opcode == 0x1 && finVal == 0x1){
+		return 1;
+	}else{
+		return 0;
+	}
+
+}
 
 int is_websocket_buffer(unsigned char* buf){
 	int finVal = buf[0] & 0x80;
@@ -275,8 +286,6 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 				exit(1);
 			}
 			if (message != NULL){
-				//printf("Recived Websocket Bytes: %s\n", message);
-//				send_to_all_clients(sockets, *socket, message,message_length, fd_count);
 				free(message);
 				message = NULL;
 			}
@@ -285,9 +294,19 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 			free(websocket_buf);
 			websocket_buf = NULL;
 		}
-	}
-	
-	if (buf != NULL && strstr(buf, "HTTP/1.1")!=NULL){
+	}else if (is_tcp_buffer(buf)){
+		printf("TCP Buffer Recived\n");
+		char* tcp_buf = malloc(BUFFER_SIZE);
+		int nbytes =  read_tcp_message(socket->cSSL, &tcp_buf);
+		printf("Bytes: %d | Message: '%s'\n",nbytes, tcp_buf);
+		send_websocket_message(sockets,*socket, fd_count, nbytes, tcp_buf);
+		if (tcp_buf != NULL){
+			free(tcp_buf);
+			tcp_buf = NULL;
+		}
+		socket->keep_alive = 0x1;
+
+	}else if (buf != NULL && strstr(buf, "HTTP/1.1")!=NULL){
 			char* peeked_http_header = malloc(1024);
 			if (!peeked_http_header) { /* handle error */ }
 			memset(peeked_http_header, 0, 1024);
