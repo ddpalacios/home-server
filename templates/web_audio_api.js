@@ -5,6 +5,8 @@ var grid = [];
 var websocket_session = null;
 let analyser;
 canvas.style.background = "white"
+var reset_grid = false;
+
 
 const width = canvas.clientWidth;
 const height = canvas.clientHeight;
@@ -13,10 +15,14 @@ const dpr = window.devicePixelRatio || 1;
 canvas.width = width * dpr;
 canvas.height = height * dpr;
 ctx.scale(dpr, dpr);
-
-var  cellSize = 5;
-const numRows =  Math.floor(canvas.height / cellSize);
-const numCols = Math.floor(canvas.width / cellSize);
+var cellSize = localStorage.getItem("cellSize");
+if (cellSize == null){
+ cellSize = 5;
+ localStorage.setItem("cellSize", cellSize);
+}
+var cellColor = "green";
+var numRows =  Math.floor(canvas.height / cellSize);
+var numCols = Math.floor(canvas.width / cellSize);
 
 //alert(numRows + " "+ numCols);
 
@@ -125,7 +131,9 @@ function createGrid() {
 	 prev_y = y
   }
   dedupe_array(grid_cord);
- //grid = [] 
+if (reset_grid){
+ grid = [] 
+}
 if (grid.length ==  0){
   for (let i =0; i<numRows; i++){
 	  grid[i] = []
@@ -158,7 +166,7 @@ function drawGrid() {
 		var items = ["black", "blue"]
 
 		//const randomItem = items[Math.floor(Math.random() * items.length)];
-		ctx.fillStyle ="red" //randomItem;
+		ctx.fillStyle =cellColor; //randomItem;
 		ctx.fillRect((j * cellSize), i *
 			     cellSize, cellSize, cellSize);
 	    }
@@ -250,6 +258,38 @@ async function start_websocket(){
 	}
 	websocket_session.onmessage = (event) => {
 			console.log("Message from server:", event.data);
+			if (event.data == "reset_grid"){
+				reset_grid = true;
+			}
+			else if (event.data == "activate_grid"){
+				reset_grid = false;
+			}else if (event.data == "increase_cellSize"){
+				var offset = 1
+			        var r = cellSize + offset	
+				if (r <= 50){
+					cellSize +=offset;
+					localStorage.setItem("cellSize", cellSize);
+					grid = [] 
+					numRows =  Math.floor(canvas.height / cellSize);
+					numCols = Math.floor(canvas.width / cellSize);
+
+				}
+
+			}else if (event.data == "decrease_cellSize"){
+				var offset = 1
+			        var r = cellSize - offset	
+				if (r >= 2){
+					cellSize -=offset;
+					localStorage.setItem("cellSize", cellSize);
+					grid = [] 
+					numRows =  Math.floor(canvas.height / cellSize);
+					numCols = Math.floor(canvas.width / cellSize);
+				}
+			}else if (event.data == "refresh"){
+				location.reload();
+			}else{
+				cellColor = event.data;
+			}
 		
 	}
 	websocket_session.onerror = (error) => {
