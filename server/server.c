@@ -233,13 +233,6 @@ void start_listening_for_clients(char* port){
         }
         insert_file_descriptor(&sockets,&pfds, listener_fd,NULL,"localhost", &fd_count, &max_socket_size, 0x1);
         while(1){
-	     for (int i=0; i<fd_count; i++){
-		 struct Socket *socket = &sockets[i];
-		 if (socket->keep_alive){
-			 printf("Socket %d is kept alive\n", socket->fd);
-		 
-		 }
-	     }
              int triggered_fd = wait_for_event(&pfds, fd_count);
 	     //printf("Socket %d has pending bytes\n", triggered_fd);
              if (triggered_fd == listener_fd){
