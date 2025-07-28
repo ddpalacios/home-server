@@ -1,12 +1,15 @@
 let canvas = document.querySelector("#visualizer");
 let ctx = canvas.getContext("2d");
+console.log(canvas, ctx);
 let dataArray;
 var grid = [];
+var c = []
+var gol_cords = []
 var websocket_session = null;
 let analyser;
 canvas.style.background = "white"
 var reset_grid = false;
-
+var mouse_cords = null; 
 
 const width = canvas.clientWidth;
 const height = canvas.clientHeight;
@@ -160,11 +163,19 @@ function generateUniqueColors(n) {
 
 function drawGrid() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (mouse_cords  != null){
+	    var s = 20
+	    var x = mouse_cords['x']
+	    var y = mouse_cords['y']
+	    ctx.fillStyle ="red"; 
+	    ctx.fillRect(x,y ,s, s)
+    }
+     c = [];
     for (let i = 0; i < numRows; i++) {
 	for (let j = 0; j < numCols; j++) {
 	    if (grid[i][j] === 1) {
+		c.push({"x": j*cellSize ,"y": i*cellSize});
 		var items = ["black", "blue"]
-
 		//const randomItem = items[Math.floor(Math.random() * items.length)];
 		ctx.fillStyle =cellColor; //randomItem;
 		ctx.fillRect((j * cellSize), i *
@@ -172,7 +183,6 @@ function drawGrid() {
 	    }
 	}
     }
-	//console.log(canvas_cords);
 }
 function updateGrid() {
     const newGrid = [];
@@ -231,7 +241,13 @@ function chunkString(str, size) {
   }
   return chunks;
 }
-
+function generateBigPayload() {
+    var payload = ""; 
+    for (let i = 0; i < 128; i++) {
+	    payload = payload+ "a"
+    }
+    return payload;
+}
 async function start_websocket(){
 	if (websocket_session != null){return;}
 	websocket_session = new WebSocket('wss://' + window.location.host  +'/life-of-sounds/websocket');
@@ -240,6 +256,16 @@ async function start_websocket(){
 		console.log("Websocket connection established");	
 
 		    setInterval(async () => {
+			    		var data = c.slice(0,3000);	
+			    		var message = JSON.stringify({
+						"type": "live"
+						,"cords": data
+					})
+					websocket_session.send(message)
+		    }, 50); 
+
+
+			    /*
 			 canvas.toBlob(async (blob) => {
 				const CHUNK_SIZE = 20000;
 				const buffer = await blob.arrayBuffer();
@@ -251,46 +277,14 @@ async function start_websocket(){
 				    const payload = new Uint8Array(flag.byteLength + chunk.byteLength);
 				    payload.set(flag, 0);
 				    payload.set(new Uint8Array(chunk), 1);
-			            websocket_session.send(payload);
-				}
+			//            websocket_session.send(payload);
 			}, "image/jpeg", 0.8);
-		    }, 100); 
+			*/
 	}
 	websocket_session.onmessage = (event) => {
 			console.log("Message from server:", event.data);
-			if (event.data == "reset_grid"){
-				reset_grid = true;
-			}
-			else if (event.data == "activate_grid"){
-				reset_grid = false;
-			}else if (event.data == "increase_cellSize"){
-				var offset = 1
-			        var r = cellSize + offset	
-				if (r <= 50){
-					cellSize +=offset;
-					localStorage.setItem("cellSize", cellSize);
-					grid = [] 
-					numRows =  Math.floor(canvas.height / cellSize);
-					numCols = Math.floor(canvas.width / cellSize);
+			 mouse_cords = JSON.parse(event.data);
 
-				}
-
-			}else if (event.data == "decrease_cellSize"){
-				var offset = 1
-			        var r = cellSize - offset	
-				if (r >= 2){
-					cellSize -=offset;
-					localStorage.setItem("cellSize", cellSize);
-					grid = [] 
-					numRows =  Math.floor(canvas.height / cellSize);
-					numCols = Math.floor(canvas.width / cellSize);
-				}
-			}else if (event.data == "refresh"){
-				location.reload();
-			}else{
-				cellColor = event.data;
-			}
-		
 	}
 	websocket_session.onerror = (error) => {
 		console.error("Websocket error:", error);
@@ -301,6 +295,8 @@ async function start_websocket(){
 
 	}			
 }
+
+
 var t = 0
 var sent = false
 function mainLoop() {
@@ -308,22 +304,6 @@ function mainLoop() {
 	  createGrid();
 	  updateGrid();
 	  drawGrid();
-	  var matrixJSON = JSON.stringify(grid);
-
-	   /*
-	    if (!sent){
-		b64jpeg = canvas.toDataURL("image/jpeg");
-		websocket_session.send(b64jpeg);
-		    sent = true
-	    }
-	  if (websocket_session.readyState === WebSocket.OPEN) {
-		  var data = JSON.stringify({
-			  "row": 10
-			  ,"col": 10
-		  })
-		  websocket_session.send(data);
-	  }
-	  */
     }
     requestAnimationFrame(mainLoop);
 }
@@ -331,6 +311,7 @@ function getCursorPosition(canvas, event) {
 	const rect = canvas.getBoundingClientRect()
 	const x = event.clientX - rect.left
 	const y = event.clientY - rect.top
+	websocket_session.send([x,y]);
 	console.log("x: " + x + " y: " + y + " width: "+ rect.width + " height: "+ rect.height)
 }
 
@@ -347,6 +328,14 @@ function windowResize() {
 	ctx.scale(dpr, dpr)
 };
 
+function mouseMove(e){
+	e.preventDefault();
+	cPostX = e.pageX - canvas.offsetLeft;
+	cPostY = e.pageY - canvas.offsetTop;
+	websocket_session.send(JSON.stringify({"type": 'mousemove', "x": cPostX, "y": cPostY }));
+}
+
+canvas.addEventListener("mousemove", mouseMove, false);
 window.addEventListener('resize', windowResize);
 start_websocket();
 mainLoop();

@@ -49,8 +49,12 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 //	printf("route type: '%s'\n", request_type);
 	if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/login")==0){
 		get_login_page(cSSL, http_header, "index.html");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/live_client")==0){
+		get_live_html(cSSL, http_header, "live_client.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/live_studio")==0){
 		get_live_html(cSSL, http_header, "live.html");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/live_client.js")==0){
+		get_gol_script(cSSL, http_header, "live_client.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/game_of_life.js")==0){
 		get_gol_script(cSSL, http_header, "game_of_life.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/web_audio_api.js")==0){
