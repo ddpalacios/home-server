@@ -248,23 +248,41 @@ function generateBigPayload() {
     }
     return payload;
 }
+var c_view_x = 500
+function check(e) {
+    var code = e.keyCode;
+    if (code == 37){
+	    console.log("Left");
+	    c_view_x -=100;
+    }
+    else if (code == 39){
+	    console.log("Right");
+	    c_view_x +=100;
+    } 
+}
+window.addEventListener('keyup',check,false);
+window.addEventListener('keydown',check,false);
+
 async function start_websocket(){
 	if (websocket_session != null){return;}
 	websocket_session = new WebSocket('wss://' + window.location.host  +'/life-of-sounds/websocket');
+
 	websocket_session.onopen = () => {
-
 		console.log("Websocket connection established");	
-
-		    setInterval(async () => {
-			    		var data = c.slice(0,3000);	
-			    		var message = JSON.stringify({
-						"type": "live"
-						,"cords": data
-					})
-					websocket_session.send(message)
+		setInterval(async () => {
+			var start_val = c.length-1 - c_view_x;
+			if (start_val <= 0 ){
+				start_val = 0;
+			} 
+			console.log("Viewing from ", start_val);
+			var data = c.slice(start_val,c.length-1);	
+			var message = JSON.stringify({
+				"type": "live"
+				,"cords": data
+			})
+			websocket_session.send(message)
 		    }, 50); 
-
-
+	}
 			    /*
 			 canvas.toBlob(async (blob) => {
 				const CHUNK_SIZE = 20000;
@@ -280,7 +298,6 @@ async function start_websocket(){
 			//            websocket_session.send(payload);
 			}, "image/jpeg", 0.8);
 			*/
-	}
 	websocket_session.onmessage = (event) => {
 			console.log("Message from server:", event.data);
 			 mouse_cords = JSON.parse(event.data);

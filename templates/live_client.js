@@ -9,7 +9,7 @@ const dpr = window.devicePixelRatio || 1;
 canvas.width = width * dpr;
 canvas.height = height * dpr;
 ctx.scale(dpr, dpr);
-cellSize = 5
+cellSize = 10
 let mouse_cords = []
 var prev_cords = []
 var numRows =  Math.floor(canvas.height / cellSize);
@@ -49,7 +49,7 @@ async function start_websocket(){
 						for (var i=0; i<prev_cords.length; i++){
 							var x = prev_cords[i]['x']
 							var y = prev_cords[i]['y']
-							ctx.clearRect(x, y, 5, 5);
+							ctx.clearRect(x, y, 10, 10);
 						}
 					}
 
@@ -57,7 +57,7 @@ async function start_websocket(){
 						var x = cords['cords'][i]['x']
 						var y = cords['cords'][i]['y']
 						ctx.fillStyle ="black"; 
-						ctx.fillRect(x,y,5, 5)
+						ctx.fillRect(x,y,10, 10)
 					}
 					prev_cords =cords['cords']
 				}
