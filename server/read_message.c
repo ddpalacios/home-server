@@ -255,6 +255,7 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 		char* tcp_buf = malloc(BUFFER_SIZE);
 		int nbytes =  read_tcp_message(socket->cSSL, &tcp_buf);
 		printf("Bytes: %d | Message: '%s'\n",nbytes, tcp_buf);
+		send_tcp_message(socket->cSSL, 0x1, 0x1, nbytes, tcp_buf);
 		//send_websocket_message(sockets,*socket, fd_count, nbytes, tcp_buf);
 		if (tcp_buf != NULL){
 			free(tcp_buf);
