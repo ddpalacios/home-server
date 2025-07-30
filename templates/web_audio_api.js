@@ -1,16 +1,20 @@
 let canvas = document.querySelector("#visualizer");
-let ctx = canvas.getContext("2d");
+let ctx = canvas.getContext("2d", { willReadFrequently: true });
 console.log(canvas, ctx);
 let dataArray;
 var grid = [];
 var c = []
 var gol_cords = []
+var nav_cords = []
 var websocket_session = null;
 let analyser;
 canvas.style.background = "white"
 var reset_grid = false;
 var mouse_cords = null; 
+var pixel_size = 10;
 
+var numRows = 0;
+var numCols = 0;
 const width = canvas.clientWidth;
 const height = canvas.clientHeight;
 
@@ -18,22 +22,10 @@ const dpr = window.devicePixelRatio || 1;
 canvas.width = width * dpr;
 canvas.height = height * dpr;
 ctx.scale(dpr, dpr);
-var cellSize = localStorage.getItem("cellSize");
-if (cellSize == null){
- cellSize = 5;
- localStorage.setItem("cellSize", cellSize);
-}
 var cellColor = "green";
-var numRows =  Math.floor(canvas.height / cellSize);
-var numCols = Math.floor(canvas.width / cellSize);
 
 //alert(numRows + " "+ numCols);
 
-function send_image(){
-	b64jpeg = canvas.toDataURL("image/jpeg");
-	console.log(b64jpeg);
-	websocket_session.send(b64jpeg);
-}
 
 function set_y(y){
 	if (y > numRows-1){
@@ -163,6 +155,11 @@ function generateUniqueColors(n) {
 
 function drawGrid() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.beginPath()
+    ctx.strokeStyle = 'red';
+    ctx.rect(c_view_x, c_view_y, 50, 50);
+    ctx.stroke();
+    ctx.closePath()
     if (mouse_cords  != null){
 	    var s = 20
 	    var x = mouse_cords['x']
@@ -170,16 +167,15 @@ function drawGrid() {
 	    ctx.fillStyle ="red"; 
 	    ctx.fillRect(x,y ,s, s)
     }
-     c = [];
+    c = [];
     for (let i = 0; i < numRows; i++) {
 	for (let j = 0; j < numCols; j++) {
 	    if (grid[i][j] === 1) {
-		c.push({"x": j*cellSize ,"y": i*cellSize});
-		var items = ["black", "blue"]
-		//const randomItem = items[Math.floor(Math.random() * items.length)];
-		ctx.fillStyle =cellColor; //randomItem;
-		ctx.fillRect((j * cellSize), i *
-			     cellSize, cellSize, cellSize);
+		c.push({"x": j*pixel_size ,"y": i*pixel_size});
+		var r_a = 1;
+		ctx.fillStyle =  `rgba(177, 101, 255, 1)`;
+		ctx.fillRect((j * pixel_size), i *
+			     pixel_size, pixel_size, pixel_size);
 	    }
 	}
     }
@@ -232,7 +228,6 @@ async function start_microphone(){
   dataArray = new Uint8Array(analyser.frequencyBinCount);
   analyser.getByteTimeDomainData(dataArray);
 };
-start_microphone()
 
 function chunkString(str, size) {
   let chunks = [];
@@ -248,19 +243,38 @@ function generateBigPayload() {
     }
     return payload;
 }
-var c_view_x = 500
+var step_size = pixel_size;
+var mag_view_w = 100 
+var mag_view_h =100 
+var c_view_x =mag_view_w 
+var c_view_y =mag_view_h
 function check(e) {
     var code = e.keyCode;
     if (code == 37){
 	    console.log("Left");
-	    c_view_x -=100;
-    }
-    else if (code == 39){
+	    mag_view_w -= 50;
+	 //   c_view_x -=step_size;
+    }else if (code == 38){
+	    console.log("Up");
+	    mag_view_h +=50 
+//	    c_view_y -=step_size; 
+
+    }else if (code == 39){
 	    console.log("Right");
-	    c_view_x +=100;
-    } 
+
+	    mag_view_w += 50;
+//	    c_view_x +=step_size;
+    } else if (code == 40){
+	    console.log("Down");
+	    mag_view_h -=50 
+//	    c_view_y +=step_size;
+    }else if (code == 65){
+	    pixel_size +=2
+    }else if (code == 88){
+	    pixel_size -=2
+    }
+    
 }
-window.addEventListener('keyup',check,false);
 window.addEventListener('keydown',check,false);
 
 async function start_websocket(){
@@ -269,35 +283,39 @@ async function start_websocket(){
 
 	websocket_session.onopen = () => {
 		console.log("Websocket connection established");	
+
+		/*
 		setInterval(async () => {
-			var start_val = c.length-1 - c_view_x;
-			if (start_val <= 0 ){
-				start_val = 0;
-			} 
-			console.log("Viewing from ", start_val);
-			var data = c.slice(start_val,c.length-1);	
-			var message = JSON.stringify({
-				"type": "live"
-				,"cords": data
-			})
-			websocket_session.send(message)
-		    }, 50); 
+		    imageData = ctx.getImageData(c_view_x, c_view_y, 50, 200);
+		    var data = imageData.data
+		    for (var i =0; i<data.length; i+=4) {
+			var r = data[i];
+			var g = data[i + 1];
+			var b = data[i+2];
+			var a = data[i+3];
+			if (r == 0  && g == 0 && b == 0){
+				continue;
+			}if (r == 177  && g == 101 && b == 255 ){
+			    var painted_vals = []
+				var x = (i / 4) % 50;
+				var y = Math.floor((i / 4) / 50);
+				painted_vals.push({"r":r, "g":g, "b": b,  'idx': i})
+				var message = JSON.stringify({
+					"type": "live"
+					,"cords": painted_vals
+				})
+				websocket_session.send(message)
+			}
+		}
+		console.log(painted_vals);
+		var message = JSON.stringify({
+			"type": "live"
+			,"cords": painted_vals
+		})
+		websocket_session.send(message)
+	    }, 100); 
+	    */
 	}
-			    /*
-			 canvas.toBlob(async (blob) => {
-				const CHUNK_SIZE = 20000;
-				const buffer = await blob.arrayBuffer();
-				for (let i = 0; i < buffer.byteLength; i += CHUNK_SIZE) {
-				    const end = i + CHUNK_SIZE;
-				    const chunk = buffer.slice(i, end);
-				    const isFinal = end >= buffer.byteLength;
-				    const flag = new Uint8Array([isFinal ? 1 : 0]);
-				    const payload = new Uint8Array(flag.byteLength + chunk.byteLength);
-				    payload.set(flag, 0);
-				    payload.set(new Uint8Array(chunk), 1);
-			//            websocket_session.send(payload);
-			}, "image/jpeg", 0.8);
-			*/
 	websocket_session.onmessage = (event) => {
 			console.log("Message from server:", event.data);
 			 mouse_cords = JSON.parse(event.data);
@@ -314,22 +332,69 @@ async function start_websocket(){
 }
 
 
-var t = 0
-var sent = false
 function mainLoop() {
-    if (analyser != undefined){
-	  createGrid();
-	  updateGrid();
-	  drawGrid();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    step_size = pixel_size;
+    numRows =  Math.floor(canvas.height / pixel_size);
+    numCols = Math.floor(canvas.width / pixel_size);
+
+    if (grid.length ==  0){
+	  // initial grid
+	  for (let i =0; i<numRows; i++){
+		  grid[i] = []
+		  for (let j =0; j<numCols; j++){
+			 grid[i][j] = 0;
+		  }
+	  }
+   }else{
+	  for (let i =0; i<numRows; i++){
+		  for (let j =0; j<numCols; j++){
+			var x = j * pixel_size
+			var y = i * pixel_size
+			 if (grid[i][j]  == 1){
+			    ctx.fillStyle = "rgba(255,0,0,255)";
+			    ctx.fillRect(x + 1, y + 1, pixel_size, pixel_size);
+			 }
+		  }
+	  }
+
+   }
+   grid = updateGrid() 
+    for (let i = 0; i < numRows; i++) {
+	for (let j = 0; j < numCols; j++) {
+		var x = j * pixel_size
+		var y = i * pixel_size
+		 if ( x >= c_view_x - mag_view_w && x <= c_view_x + mag_view_w &&y >= c_view_y - mag_view_h && y <= c_view_y + mag_view_h) {
+			    ctx.beginPath();
+			    ctx.lineWidth = ".5";
+			    ctx.strokeStyle = "red";
+			    ctx.rect(x, y, pixel_size, pixel_size);
+			    ctx.stroke();
+			    ctx.closePath();
+		} else {
+		    ctx.fillStyle = "rgba(0,0,0,0.9)";
+		    ctx.fillRect(x + 1, y + 1, pixel_size, pixel_size);
+		}
     }
+}
     requestAnimationFrame(mainLoop);
 }
+
 function getCursorPosition(canvas, event) {
 	const rect = canvas.getBoundingClientRect()
-	const x = event.clientX - rect.left
-	const y = event.clientY - rect.top
-	websocket_session.send([x,y]);
+	var x = event.clientX - rect.left
+	var y = event.clientY - rect.top
 	console.log("x: " + x + " y: " + y + " width: "+ rect.width + " height: "+ rect.height)
+
+	for (let i = 0; i < numRows; i++) {
+		for (let j = 0; j < numCols; j++) {
+			 x = j * pixel_size
+			 y = i * pixel_size
+			 if ( x >= c_view_x - mag_view_w && x <= c_view_x + mag_view_w &&y >= c_view_y - mag_view_h && y <= c_view_y + mag_view_h) {
+				 grid[i][j] = 1;
+			}
+	}
+}
 }
 
 canvas.addEventListener('mousedown', function(e) {
@@ -349,11 +414,15 @@ function mouseMove(e){
 	e.preventDefault();
 	cPostX = e.pageX - canvas.offsetLeft;
 	cPostY = e.pageY - canvas.offsetTop;
-	websocket_session.send(JSON.stringify({"type": 'mousemove', "x": cPostX, "y": cPostY }));
+	c_view_x = cPostX;
+	c_view_y = cPostY;
+
+	//websocket_session.send(JSON.stringify({"type": 'mousemove', "x": cPostX, "y": cPostY }));
 }
 
 canvas.addEventListener("mousemove", mouseMove, false);
 window.addEventListener('resize', windowResize);
+//start_microphone()
 start_websocket();
 mainLoop();
 

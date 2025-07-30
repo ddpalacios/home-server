@@ -9,7 +9,8 @@ const dpr = window.devicePixelRatio || 1;
 canvas.width = width * dpr;
 canvas.height = height * dpr;
 ctx.scale(dpr, dpr);
-cellSize = 10
+cellSize = 2
+let grid_cords = [];
 let mouse_cords = []
 var prev_cords = []
 var numRows =  Math.floor(canvas.height / cellSize);
@@ -29,37 +30,42 @@ setInterval(() => {
 		ctx.clearRect(x, y, 20, 20); 
 	}
 	mouse_cords = [];
-}, 10000);
+}, 2000);
 
+var image_w = 500;
+var image_h = 500;
 async function start_websocket(){
 	websocket_session = new WebSocket('wss://' + window.location.host  +'/life-of-sounds/websocket');
 	websocket_session.onopen = () => {
 		console.log("Websocket connection established");	
 		canvas.addEventListener("mousemove", mouseMove, false);
-
+		ctx.beginPath()
+		ctx.strokeStyle = "red"
+		ctx.rect(0,0, image_w,image_h);
+		ctx.stroke();
+		ctx.closePath();
 	}
 
 	websocket_session.onmessage = (event) => {
-
-
 				var cords = JSON.parse(event.data)
-
+		 		console.log(cords);
 				if (cords['type'] == 'live'){
-					if (prev_cords.length > 0){
-						for (var i=0; i<prev_cords.length; i++){
-							var x = prev_cords[i]['x']
-							var y = prev_cords[i]['y']
-							ctx.clearRect(x, y, 10, 10);
+					for (var i=0; i<grid_cords.length; i++){
+							var x = grid_cords[i]['x']
+							var y = grid_cords[i]['y']
+							ctx.clearRect(x, y, 50, 50);
 						}
-					}
 
-					for (var i=0; i<cords['cords'].length; i++){
-						var x = cords['cords'][i]['x']
-						var y = cords['cords'][i]['y']
-						ctx.fillStyle ="black"; 
-						ctx.fillRect(x,y,10, 10)
+					grid_cords = [];
+					console.log(cords['cords'])
+					for (var i =0; i<cords['cords'].length; i++){
+						if (i >= 1){break;}
+						var x = cords['cords'][i].x;
+						var y = cords['cords'][i].y;
+						ctx.fillStyle = "black"
+						ctx.fillRect(x,y,50,50);
+						grid_cords.push({'x': x, 'y': y})
 					}
-					prev_cords =cords['cords']
 				}
 
 				if (cords['type'] == 'mousemove'){
@@ -93,4 +99,4 @@ async function start_websocket(){
 }
 start_websocket()
 
-
+                  

@@ -5,19 +5,23 @@
 </head>
 <body>
 
-<canvas id="myCanvas" width="300" height="200"></canvas>
+<canvas id="canvas" width="700" height="400"></canvas>
 
 <script>
-    const canvas = document.getElementById('myCanvas');
-    const ctx = canvas.getContext('2d');
-    
-    // Draw a red rectangle
-    ctx.fillStyle = 'red';
-    ctx.fillRect(50, 50, 100, 100);
-    
-    // Get pixel data
-    const imageData = ctx.getImageData(50, 50, 100, 100);
-    console.log(imageData);
+  const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const image = new Image();
+image.src = "flower.jpeg";
+image.addEventListener("load", () => {
+  ctx.drawImage(image, 0, 0, 233, 320);
+
+  const imageData = ctx.getImageData(10, 20, 80, 230);
+  ctx.putImageData(imageData, 260, 0);
+  ctx.putImageData(imageData, 380, 50);
+  ctx.putImageData(imageData, 500, 100);
+});
+
 </script>
 
 </body>
