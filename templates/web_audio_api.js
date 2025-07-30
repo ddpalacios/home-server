@@ -284,37 +284,31 @@ async function start_websocket(){
 	websocket_session.onopen = () => {
 		console.log("Websocket connection established");	
 
-		/*
 		setInterval(async () => {
-		    imageData = ctx.getImageData(c_view_x, c_view_y, 50, 200);
-		    var data = imageData.data
-		    for (var i =0; i<data.length; i+=4) {
-			var r = data[i];
-			var g = data[i + 1];
-			var b = data[i+2];
-			var a = data[i+3];
-			if (r == 0  && g == 0 && b == 0){
-				continue;
-			}if (r == 177  && g == 101 && b == 255 ){
-			    var painted_vals = []
-				var x = (i / 4) % 50;
-				var y = Math.floor((i / 4) / 50);
-				painted_vals.push({"r":r, "g":g, "b": b,  'idx': i})
-				var message = JSON.stringify({
-					"type": "live"
-					,"cords": painted_vals
-				})
-				websocket_session.send(message)
+			var res = []
+			for (let i = 0; i < numRows; i++) {
+				for (let j = 0; j < numCols; j++) {
+					 x = j * pixel_size
+					 y = i * pixel_size
+					 if ( x >= c_view_x - mag_view_w 
+						 && x <= c_view_x + mag_view_w 
+						 &&y >= c_view_y - mag_view_h && y <= c_view_y + mag_view_h) {
+						 if (grid[i][j] == 1){
+							 res.push({'x': j, 'y': i})
+						 }
+					}
 			}
-		}
-		console.log(painted_vals);
-		var message = JSON.stringify({
-			"type": "live"
-			,"cords": painted_vals
-		})
-		websocket_session.send(message)
-	    }, 100); 
-	    */
+			}
+
+			if (res.length > 0){
+				var message = JSON.stringify({
+					"type": "live",
+					"cords": res
+				})	
+				console.log(message.length);
+				websocket_session.send(message);
+			     }
+	    }, 50); 
 	}
 	websocket_session.onmessage = (event) => {
 			console.log("Message from server:", event.data);
@@ -359,7 +353,11 @@ function mainLoop() {
 	  }
 
    }
+
    grid = updateGrid() 
+
+
+	
     for (let i = 0; i < numRows; i++) {
 	for (let j = 0; j < numCols; j++) {
 		var x = j * pixel_size
@@ -417,8 +415,7 @@ function mouseMove(e){
 	c_view_x = cPostX;
 	c_view_y = cPostY;
 
-	//websocket_session.send(JSON.stringify({"type": 'mousemove', "x": cPostX, "y": cPostY }));
-}
+     }
 
 canvas.addEventListener("mousemove", mouseMove, false);
 window.addEventListener('resize', windowResize);
