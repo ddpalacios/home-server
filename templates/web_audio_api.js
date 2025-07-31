@@ -294,7 +294,7 @@ async function start_websocket(){
 						 && x <= c_view_x + mag_view_w 
 						 &&y >= c_view_y - mag_view_h && y <= c_view_y + mag_view_h) {
 						 if (grid[i][j] == 1){
-							 res.push({'x': j, 'y': i})
+							 res.push({'x': j, 'y': i, 'win_x': x, 'win_y': y, 'w': mag_view_w, 'h': mag_view_h, 'c_view_x': c_view_x, "c_view_y": c_view_y})
 						 }
 					}
 			}
