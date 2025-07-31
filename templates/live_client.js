@@ -46,7 +46,6 @@ async function start_websocket(){
 	websocket_session.onmessage = (event) => {
 				var cords = JSON.parse(event.data)
 				if (cords['type'] == 'live'){
-
 					 for (let i =0; i<numRows; i++){
 						 grid[i] = [];
 						 for (let j=0; j<numCols; j++){
@@ -55,19 +54,24 @@ async function start_websocket(){
 							  grid[i][j] = 0;
 						 }
 					 }
-					console.log(cords['cords'].length);
 					if (grid.length > 0){
 						var r = cords['cords']
+						console.log(r);
+						console.log(numCols, numRows);
 						for (let i=0; i<r.length; i++){
 							var val = r[i];
 							var x = val['x']
+							var c_view_x = val['c_view_x']
+							var win_x = val['win_x']
+							var c_view_y = val['c_view_y']
+							var win_y = val['win_y']
+							console.log("client_x", win_x - c_view_x, c_view_x, win_x)
+							console.log("client_y", win_y - c_view_y, c_view_y, win_y)
 							var y = val['y']
 							grid[y][x] = 1;
 						}	
 					}
 				}
-
-
 				if (cords['type'] == 'mousemove'){
 					var pixel_size = 20
 					for (var i=0; i<mouse_cords.length; i++){
@@ -82,12 +86,9 @@ async function start_websocket(){
 					ctx.fillStyle ="red"; 
 					ctx.fillRect(m_x,m_y ,pixel_size, pixel_size)
 					mouse_cords.push({'x': m_x, 'y': m_y})
-					console.log(mouse_cords.length)
-						
-
+					//console.log(mouse_cords.length)
 				}
 		}
-
 	websocket_session.onerror = (error) => {
 		console.error("Websocket error:", error);
 
@@ -98,7 +99,17 @@ async function start_websocket(){
 	}			
 }
 
+function getCursorPosition(canvas, event) {
+	const rect = canvas.getBoundingClientRect()
+	var x = event.clientX - rect.left
+	var y = event.clientY - rect.top
+	console.log("x: " + x + " y: " + y + " width: "+ rect.width + " height: "+ rect.height)
 
+}
+
+canvas.addEventListener('mousedown', function(e) {
+	 getCursorPosition(canvas, e);
+});
 
 function mainLoop(){
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -120,15 +131,10 @@ function mainLoop(){
 				  var y = i * pixel_size;
 				  if (grid[i][j] == 1){
 					  ctx.fillStyle = "rgba(255,0,0,255)";
-
-
 				  }else{
 					  ctx.fillStyle = "rgba(0,0,0,0.9)";
 				  }
-
-
 				  ctx.fillRect(x + 1, y + 1, pixel_size, pixel_size);
-
 			 }
 		 }
 	 }
