@@ -1,6 +1,5 @@
 let canvas = document.querySelector("#visualizer");
 let ctx = canvas.getContext("2d", { willReadFrequently: true });
-console.log(canvas, ctx);
 let dataArray;
 var grid = [];
 var c = []
@@ -11,7 +10,7 @@ let analyser;
 canvas.style.background = "white"
 var reset_grid = false;
 var mouse_cords = null; 
-var pixel_size = 10;
+var pixel_size = 20;
 
 var numRows = 0;
 var numCols = 0;
@@ -77,7 +76,6 @@ function dedupe_array(arr){
 function createGrid() {
 
   analyser.getByteTimeDomainData(dataArray);
-  //console.log(dataArray);
   var bufferLength = dataArray.length
   const WIDTH = canvas.width;
   const HEIGHT = canvas.height;
@@ -244,8 +242,8 @@ function generateBigPayload() {
     return payload;
 }
 var step_size = pixel_size;
-var mag_view_w = 100 
-var mag_view_h =100 
+var mag_view_w = pixel_size * 5
+var mag_view_h = pixel_size * 5
 var c_view_x =mag_view_w 
 var c_view_y =mag_view_h
 function check(e) {
@@ -294,18 +292,22 @@ async function start_websocket(){
 						 && x <= c_view_x + mag_view_w 
 						 &&y >= c_view_y - mag_view_h && y <= c_view_y + mag_view_h) {
 						 if (grid[i][j] == 1){
-							 res.push({'x': j, 'y': i, 'win_x': x, 'win_y': y, 'w': mag_view_w, 'h': mag_view_h, 'c_view_x': c_view_x, "c_view_y": c_view_y})
+							 res.push({'x': x,'c_view_x':c_view_x, 'c_view_y':c_view_y, 'y': y, 'w': mag_view_w, 'h': mag_view_h, 'p':pixel_size})
+
 						 }
 					}
+				}
 			}
-			}
-
 			if (res.length > 0){
 				var message = JSON.stringify({
 					"type": "live",
+					'x_start': c_view_x,
+					"y_start": c_view_y,
+					"cols":Math.floor(mag_view_w*2 / pixel_size),
+					"rows": Math.floor(mag_view_h*2 / pixel_size),
 					"cords": res
 				})	
-				console.log(message.length);
+				console.log(message);
 				websocket_session.send(message);
 			     }
 	    }, 50); 
@@ -341,6 +343,8 @@ function mainLoop() {
 		  }
 	  }
    }else{
+	  ctx.fillStyle = "rgba(255,0,0,255)";
+	  //ctx.fillRect(c_view_x + mag_view_w, c_view_y + mag_view_h, pixel_size, pixel_size);
 	  for (let i =0; i<numRows; i++){
 		  for (let j =0; j<numCols; j++){
 			var x = j * pixel_size
@@ -365,7 +369,7 @@ function mainLoop() {
 		 if ( x >= c_view_x - mag_view_w && x <= c_view_x + mag_view_w &&y >= c_view_y - mag_view_h && y <= c_view_y + mag_view_h) {
 			    ctx.beginPath();
 			    ctx.lineWidth = ".5";
-			    ctx.strokeStyle = "red";
+			    ctx.strokeStyle = "green";
 			    ctx.rect(x, y, pixel_size, pixel_size);
 			    ctx.stroke();
 			    ctx.closePath();
@@ -382,12 +386,13 @@ function getCursorPosition(canvas, event) {
 	const rect = canvas.getBoundingClientRect()
 	var x = event.clientX - rect.left
 	var y = event.clientY - rect.top
-	console.log("x: " + x + " y: " + y + " width: "+ rect.width + " height: "+ rect.height)
+	//console.log("x: " + x + " y: " + y + " width: "+ rect.width + " height: "+ rect.height)
 
 	for (let i = 0; i < numRows; i++) {
 		for (let j = 0; j < numCols; j++) {
 			 x = j * pixel_size
 			 y = i * pixel_size
+			 
 			 if ( x >= c_view_x - mag_view_w && x <= c_view_x + mag_view_w &&y >= c_view_y - mag_view_h && y <= c_view_y + mag_view_h) {
 				 grid[i][j] = 1;
 			}
@@ -414,6 +419,11 @@ function mouseMove(e){
 	cPostY = e.pageY - canvas.offsetTop;
 	c_view_x = cPostX;
 	c_view_y = cPostY;
+		 console.log(mag_view_w, mag_view_h,c_view_x, c_view_y, "|",
+			 c_view_x - mag_view_w,
+			 c_view_x + mag_view_w,
+			 c_view_y - mag_view_h,
+			 c_view_y + mag_view_h);
 
      }
 

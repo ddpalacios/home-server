@@ -46,31 +46,23 @@ async function start_websocket(){
 	websocket_session.onmessage = (event) => {
 				var cords = JSON.parse(event.data)
 				if (cords['type'] == 'live'){
-					 for (let i =0; i<numRows; i++){
-						 grid[i] = [];
-						 for (let j=0; j<numCols; j++){
-							  var x = j * pixel_size;
-							  var y = i * pixel_size
-							  grid[i][j] = 0;
-						 }
-					 }
-					if (grid.length > 0){
-						var r = cords['cords']
-						console.log(r);
-						console.log(numCols, numRows);
-						for (let i=0; i<r.length; i++){
-							var val = r[i];
-							var x = val['x']
-							var c_view_x = val['c_view_x']
-							var win_x = val['win_x']
-							var c_view_y = val['c_view_y']
-							var win_y = val['win_y']
-							console.log("client_x", win_x - c_view_x, c_view_x, win_x)
-							console.log("client_y", win_y - c_view_y, c_view_y, win_y)
-							var y = val['y']
-							grid[y][x] = 1;
-						}	
-					}
+					ctx.clearRect(0, 0, canvas.width, canvas.height);
+					var r = cords['cords']
+					for (let i=0; i<r.length; i++){
+						var val = r[i];
+						var x = val['x']
+						var y = val['y']
+						var w = val['w']
+						var h = val['h']
+						var p = val['p']
+						/*
+						if ((new_x > 0 && new_x < canvas.width) && 
+							new_y > 0 && new_y < canvas.height) {
+							console.log(new_x, new_y, p*w,p*h)
+						}
+						*/
+					}	
+
 				}
 				if (cords['type'] == 'mousemove'){
 					var pixel_size = 20
@@ -112,7 +104,10 @@ canvas.addEventListener('mousedown', function(e) {
 });
 
 function mainLoop(){
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	ctx.fillStyle ="red"; 
+	console.log(canvas.width-600, canvas.height - 198, 20*5,20*5)
+	ctx.fillRect(500, 500, 20*5,20*5);
+	/*
 	 if (grid.length ==  0){
 		 for (let i =0; i<numRows; i++){
 			 grid[i] = [];
@@ -139,6 +134,7 @@ function mainLoop(){
 		 }
 	 }
 	 requestAnimationFrame(mainLoop);
+	 */
 }
 
 
