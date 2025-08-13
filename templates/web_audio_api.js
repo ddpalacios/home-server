@@ -12,13 +12,14 @@
     var numCols = Math.floor(canvas.width / pixel_size);
     var big_canvas_grid = []
     var small_canvas_grid = []
-    var mag_view_w =20
-    var mag_view_h = 10
+    var mag_view_w =100
+    var mag_view_h = 50
     var c_view_x = 0
     var c_view_y = 0;
     var big_grid_cords = []
     var map = new Map();
 	var res = []
+	var display_cords = []
 	var message = [{'type': null, 'cords':[]}]
 
 async function start_websocket(){
@@ -28,7 +29,7 @@ async function start_websocket(){
 	websocket_session.onopen = () => {
 		console.log("Websocket connection established");	
 		setInterval(async () => {
-						console.log(JSON.parse(message)['cords'].length);
+						// console.log(JSON.parse(message)['cords'].length);
 						if (JSON.parse(message)['cords'].length > 0){
 							websocket_session.send(message);
 						}
@@ -36,8 +37,22 @@ async function start_websocket(){
 
 	}
 	websocket_session.onmessage = (event) => {
-			console.log("Message from server:", event.data);
-			 mouse_cords = JSON.parse(event.data);
+			// console.log("Message from server:", event.data);
+			  var cords = JSON.parse(event.data)
+				if (cords['type'] == 'live'){
+					display_cords = cords['cords']
+					for (let i=0; i<display_cords.length; i++){
+						 var x = display_cords[i].x / pixel_size
+						 var y =  display_cords[i].y / pixel_size
+						 if (map.has(x+','+y)){
+							var big_x = map.get(x+','+y).split(",")[0]
+                        	var big_y = map.get(x+','+y).split(",")[1]
+							big_canvas_grid[big_y][big_x] = 1
+
+						 }
+					}
+					
+				}
 
 	}
 	websocket_session.onerror = (error) => {
@@ -83,6 +98,7 @@ function updateGrid() {
             }
         }
         big_canvas_grid = newGrid;
+
         return big_canvas_grid
 }
 function draw_big_grid_lines(){
@@ -114,7 +130,6 @@ function draw_small_grid_lines(){
         map = new Map();
         if (small_canvas_grid.length ==  0){
             // initial grid
-            
             for (let i =0; i<mag_view_h; i++){
                 small_canvas_grid[i] = []
                 for (let j =0; j<mag_view_w; j++){
@@ -150,6 +165,7 @@ function draw_small_grid_lines(){
     }
 function check(e) {
         var code = e.keyCode;
+		console.log(big_grid_cords)
             if (code == 37){
                 console.log("Left");
                 c_view_x -=1
@@ -182,6 +198,17 @@ function mainLoop(){
 		}
 	}
 
+	// for (let i=0; i<display_cords.length; i++){
+	// 	var rect_x = display_cords[i]['x']
+	// 	var rect_y = display_cords[i]['y']
+	// 	var rect_p = display_cords[i]['p']
+	// 	// try{
+	// 	// big_canvas_grid[Math.floor(rect_y/pixel_size)][Math.floor(rect_x/pixel_size)] = 2
+	// 	// }catch(error){}
+	// 	ctx.fillStyle ="blue"; 
+	// 	ctx.fillRect(rect_x,rect_y ,rect_p, rect_p)
+	// }
+
 	big_canvas_grid = updateGrid() 
 
 	for (let i =0; i<numRows; i++){
@@ -192,8 +219,21 @@ function mainLoop(){
 				ctx.fillStyle = "rgba(255,0,0,255)";
 				ctx.fillRect(x, y , pixel_size, pixel_size);
 			}
+			
 		}
 	}
+
+
+	// for (let h=0; h<mag_view_h; h++){
+    //         for (let w=0; w<mag_view_w; w++){
+	// 				var x = (w * pixel_size)
+	// 				var y = (h * pixel_size)
+	// 				if (small_canvas_grid[h][w] ==1){
+	// 					ctx.fillStyle = "rgba(0,0,255,255)";
+	// 					ctx.fillRect(x, y , pixel_size, pixel_size);
+	// 				}
+	// 			}
+	// 		}
 	var res = []
 	for (let h=0; h<mag_view_h; h++){
             for (let w=0; w<mag_view_w; w++){
@@ -204,9 +244,9 @@ function mainLoop(){
                             // console.log("Rect at ",w+","+h )
                             // console.log("Scaled cords",w*5+","+h*5 )
                             ctx.fillStyle = "rgba(255,0,0,255)";
-                            var scale = 5
-							var scaled_x = (w*pixel_size)*scale
-							var scaled_y = (h*pixel_size)*scale
+                            var scale = 1
+							var scaled_x = Math.floor((w*pixel_size)*scale)
+							var scaled_y = Math.floor((h*pixel_size)*scale)
 							var scaled_pixel_size = pixel_size * scale 
 							res.push({
 								"x": scaled_x,
