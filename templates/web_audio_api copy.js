@@ -10,7 +10,7 @@ let analyser;
 canvas.style.background = "white"
 var reset_grid = false;
 var mouse_cords = null; 
-var pixel_size = 20;
+var pixel_size = 5;
 
 var numRows = 0;
 var numCols = 0;
