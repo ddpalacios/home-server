@@ -79,7 +79,8 @@ function createGrid() {
 
   analyser.getByteTimeDomainData(dataArray);
   var bufferLength = dataArray.length
-  const WIDTH = numCols//canvas.width;
+  const WIDTH = numCols
+  //canvas.width;
   const HEIGHT = numRows//anvas.height;
   const sliceWidth = WIDTH/ bufferLength;
   let x = 0;
@@ -153,7 +154,6 @@ function createGrid() {
 	  big_canvas_grid[y_cord][x_cord] = 1;
   }
 }
-
 
 async function start_websocket(){
 	if (websocket_session != null){return;}

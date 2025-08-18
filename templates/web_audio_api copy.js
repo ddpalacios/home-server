@@ -24,7 +24,9 @@ ctx.scale(dpr, dpr);
 var cellColor = "green";
 
 //alert(numRows + " "+ numCols);
-
+function sigmoid(z){
+	return 1 / (1+Math.exp(-z));
+}
 
 function set_y(y){
 	if (y > numRows-1){
@@ -47,9 +49,7 @@ function set_x(x){
 
 }
 
-function sigmoid(z){
-	return 1 / (1+Math.exp(-z));
-}
+
 
 function dedupe_array(arr){
 	var prev_x = null;
