@@ -6,7 +6,7 @@
     canvas.width = width * dpr;
     canvas.height = height * dpr;
     ctx.scale(dpr, dpr);
-    var pixel_size = 10
+    var pixel_size = 5
 	var websocket_session = null;
     var numRows =  Math.floor(canvas.height / pixel_size);
     var numCols = Math.floor(canvas.width / pixel_size);
@@ -172,17 +172,17 @@ function mouseMove(e){
 				client_cords.push({'x': current_x + j, 'y': current_y+i})
 				}
 		}
-	if (switch_grid_off){
-		websocket_session.send(JSON.stringify({
-					'op': 'sub', 
-					 "cords": client_cords}));
-	}
-	else{
-		websocket_session.send(JSON.stringify({
-					'op': 'add', 
-					 "cords": client_cords}));
+	// if (switch_grid_off){
+	// 	websocket_session.send(JSON.stringify({
+	// 				'op': 'sub', 
+	// 				 "cords": client_cords}));
+	// }
+	// else{
+	// 	websocket_session.send(JSON.stringify({
+	// 				'op': 'add', 
+	// 				 "cords": client_cords}));
 
-     }
+    //  }
 	}
 
 function getCursorPosition(canvas, event) {
@@ -335,56 +335,16 @@ function check(e) {
 
 window.addEventListener('keydown',check,false);
 canvas.addEventListener("mousemove", mouseMove, false);
-canvas.addEventListener('mousedown', function(e) {
-	getCursorPosition(canvas, e)
-})
+// canvas.addEventListener('mousedown', function(e) {
+// 	getCursorPosition(canvas, e)
+// })
 function mainLoop(){
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
-// 	if (numCols == null || numRows == null){
-// 		requestAnimationFrame(mainLoop);
-// 	}
 
 	draw_big_grid_lines();
 	draw_small_grid_lines()
 
 	
-// for (let i=0; i<display_cords.length; i++){
-// 		var rect_x = display_cords[i]['x']
-// 		var rect_y = display_cords[i]['y']
-// 		var rect_p = display_cords[i]['p']
-// 		try{
-// 		big_canvas_grid[Math.floor(rect_y/pixel_size)][Math.floor(rect_x/pixel_size)] = 2
-// 		}catch(error){}
-		// ctx.fillStyle ="red"; 
-		// ctx.fillRect(rect_x,rect_y ,rect_p, rect_p)
-// 	}
-	
-
-// 	big_canvas_grid = updateGrid() 
-
-// 	var client_cords = []
-// 	for (let i =0; i<numRows; i++){
-// 		for (let j =0; j<numCols; j++){
-// 			var x = (j * (pixel_size)) 
-// 			var y = (i * (pixel_size)) 
-// 			if (big_canvas_grid[i][j] == 1  ){
-// 				ctx.fillStyle = "rgba(255,0,255,255)";
-// 				var scale = 2
-// 				var scaled_pixel_size = pixel_size * scale 
-// 				ctx.fillRect(x ,y , scaled_pixel_size, scaled_pixel_size);
-// 				client_cords.push({
-// 					"x": x
-// 					,"y": y
-// 					,"p": scaled_pixel_size
-// 				})
-// 			}
-// 		}
-// 	}
-
-// 	message = JSON.stringify({
-// 								"type": "live",
-// 								"cords": client_cords
-// 							})	
 
 
 	requestAnimationFrame(mainLoop);
