@@ -1,4 +1,7 @@
 #include <openssl/ssl.h>
+#include "Invitation.h"
+#include "WebsocketClient.h"
+#include "json_utilities.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -8,7 +11,7 @@
 #include "Socket.h"
 #include "websocket.h"
 
-void get_websocket_protocol(struct Socket* socket,char* http_header, char*body){
+void get_websocket_protocol(struct Socket* socket,char* http_header, char*body, char* route){
             SSL *cSSL = socket->cSSL;
              char* websocket_key = get_header_value(http_header,"Sec-WebSocket-Key");
                 if ( strlen(websocket_key) > 0){
@@ -19,12 +22,48 @@ void get_websocket_protocol(struct Socket* socket,char* http_header, char*body){
                     send_response_code(cSSL, 400);
 		            socket->keep_alive = 0x0;
                 }else{
-	    	        socket->keep_alive = 0x1;
-		        }
-            }
+	    	          socket->keep_alive = 0x1;
+			  if (strstr(http_header, "/live_studio/invite?Id=")){
+				  char* invitationid = get_query_parameter(route, "Id");
+				  struct Invitation invitation = get_invitation(invitationid);
+				  struct WebsocketClient websocketclient = create_websocketclient(invitation.sessionid,socket->Id);
+				  insert_websocketclient(websocketclient);
+			  }
+			  if (strstr(http_header, "/live_studio/create_session")){
+                                printf("Creating new session...\n");
+                                struct Websocket websocket_session = create_websocket_session(socket->Id);
+                                insert_websocket_session(websocket_session);
+
+				struct WebsocketClient ws_client =  create_websocketclient(websocket_session.Id, websocket_session.socketId);
+				insert_websocketclient(ws_client);
+
+				struct Invitation invitation = create_invitation(websocket_session.Id);
+				insert_invitation(invitation);
+
+				cJSON *root = create_json_object();
+				add_string_to_json_root(root,"invitationId",invitation.Id);
+				add_string_to_json_root(root,"sessionId",websocket_session.Id);
+				char* ws_info = get_json_as_string(root);
+				printf("%s\n", ws_info);
+				size_t total_bytes = strlen(ws_info) +2;
+				char* frame = malloc(total_bytes);
+				frame[0] = 0x81;
+				frame[1] = strlen(ws_info) & 0x7f;
+				memcpy(frame +2, ws_info, strlen(ws_info)); 
+				if (!SSL_write(cSSL, frame, total_bytes)){
+					printf("Error sending message.\n");
+				}else{
+					printf("Done sending.\n");
+				}
+				if (frame != NULL){
+					free(frame);
+					frame = NULL;
+				}
+			  }
+		}
+	}
         }else{
             send_response_code(cSSL, 400);
 	        socket->keep_alive = 0x0;
         }
     }
-            

@@ -4,7 +4,7 @@ typedef struct Websocket{
 	char* userid;
 	char* sessionid;
 	char* connected_on;
-	int socketId;
+	char*  socketId;
 	int exists;
 }websockets;
 int is_active_websocket_client(int fd);
@@ -12,7 +12,7 @@ int is_active_websocket_client(int fd);
 
 char* convert_websockets_to_json(struct Websocket* websocket, int count);
 char* convert_websocket_to_json(struct Websocket websocket);
-struct Websocket create_websocket(char* userid, char* sessionid, int socketid);
+struct Websocket create_websocket_session();
 char* generate_websocket_accptKey(char* websocket_sec_key);
 // int is_websocket_buffer(unsigned char* buf);
 int decode_websocket_buffer(unsigned char* buf, char message[] );

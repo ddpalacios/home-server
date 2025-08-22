@@ -127,6 +127,7 @@ CMakeFiles/home-server.dir/server/send_message.c.o: \
  /usr/include/openssl/dtls1.h /usr/include/openssl/srtp.h \
  /home/dpalacios/home-server/models/FrameField.h \
  /home/dpalacios/home-server/models/Frame.h \
+ /home/dpalacios/home-server/models/WebsocketClient.h \
  /home/dpalacios/home-server/utilities/http_utilities.h \
  /home/dpalacios/home-server/utilities/json_utilities.h \
  /usr/include/arpa/inet.h /usr/include/netinet/in.h \

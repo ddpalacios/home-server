@@ -108,6 +108,10 @@ CMakeFiles/home-server.dir/routes/life-of-sounds/GET/websocket_protocol.c.o: \
  /usr/include/openssl/prov_ssl.h /usr/include/openssl/ssl2.h \
  /usr/include/openssl/ssl3.h /usr/include/openssl/tls1.h \
  /usr/include/openssl/dtls1.h /usr/include/openssl/srtp.h \
+ /home/dpalacios/home-server/models/Invitation.h \
+ /home/dpalacios/home-server/models/WebsocketClient.h \
+ /home/dpalacios/home-server/utilities/json_utilities.h \
+ /usr/include/cjson/cJSON.h \
  /home/dpalacios/home-server/utilities/http_utilities.h \
  /home/dpalacios/home-server/models/session.h \
  /home/dpalacios/home-server/models/User.h \

@@ -1,4 +1,5 @@
 #include  <cjson/cJSON.h>
+#include <pthread.h>
 #include <sys/socket.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -8,6 +9,7 @@
 #include "FrameField.h"
 #include "http_utilities.h"
 #include "json_utilities.h"
+#include "string_utilities.h"
 #include "send_message.h"
 #include "read_message.h"
 
@@ -24,86 +26,9 @@
 #include <poll.h>
 #define BUFFER_SIZE 1024 
 #define IPSTRLEN INET6_ADDRSTRLEN
-
-// SSL_CTX *initialize_ssl(void){
-// 	SSL_library_init();
-// 	SSL_load_error_strings();
-// 	OpenSSL_add_all_algorithms();
-// 	const SSL_METHOD *method = TLS_client_method();
-// 	SSL_CTX *cSSL = SSL_CTX_new(method);
-// 	return cSSL;
-// }
-
-// SSL* SSL_connect_to_server( int sfd,const char*host){
-// 	SSL_CTX *ctx = initialize_ssl();
-// 	SSL *cSSL = SSL_new(ctx);
-// 	SSL_set_fd(cSSL, sfd);
-// 	SSL_set_tlsext_host_name(cSSL, host);
-// 	const int cSSL_status  = SSL_connect(cSSL);
-// 	if (cSSL_status < 0){
-// 		ERR_print_errors_fp(stderr);
-//         return NULL;
-// 	}
-//     return cSSL;
-// }
-
-// struct Server connect_to_server(const char* host, const char* port){
-//     struct Server server;
-// 	struct addrinfo hints;
-// 	struct addrinfo *addrs_res;
-// 	memset(&hints, 0, sizeof(hints));
-// 	char ipstr[IPSTRLEN];
-// 	hints.ai_family = AF_INET;
-// 	hints.ai_socktype = SOCK_STREAM;
-// 	hints.ai_protocol = IPPROTO_TCP;
-// 	const int status = getaddrinfo(host, port, &hints, &addrs_res);
-// 	int sfd, connected;
-// 	for (struct addrinfo *addr = addrs_res; addr != NULL; addr = addr->ai_next){
-// 		if (addr->ai_family == AF_INET) {
-// 			struct sockaddr_in *ipv4 = (struct sockaddr_in *)addr->ai_addr;
-// 			void *addr4 = &(ipv4->sin_addr);
-// 			inet_ntop(addr->ai_family, addr4, ipstr, IPSTRLEN);
-// 		}else{
-// 			struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)addr->ai_addr;
-// 			void* addr6 = &(ipv6->sin6_addr);
-// 			inet_ntop(addr->ai_family, addr6, ipstr, IPSTRLEN);
-// 		}
-// 		sfd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
-// 		if (sfd < 0){
-// 			printf("Error connecting to socket with host: '%s' at '%s'\n", host, ipstr);
-// 			break;
-// 		}
-// //		printf("Connecting to %s with socket %d...\n",  ipstr, sfd);
-// 		connected = connect(sfd, addr->ai_addr, addr->ai_addrlen);
-// //		printf("Is Connected: %d\n", connected);
-// 		if (connected == 0){
-// //			printf("Successfully connected to '%s'\n", host);
-// 			break;
-// 		}else{
-// 			printf("Error connecting to host: '%s' at '%s'\n",host, ipstr);
-// 			break;
-// 		}
-// 	 }
-//      freeaddrinfo(addrs_res); 
-// 	if (sfd>=0 && connected==0){
-// 	        SSL *cSSL = SSL_connect_to_server(sfd ,host);
-//             server.fd = sfd;
-//             server.cSSL = cSSL;
-//             server.ip_addr = ipstr;
-//             server.port = port;
-//             server.hostname = host;
-//             return server;
-// 	}
-// }
-
-// void send_to_server(char* ip_addr, char*port, char*payload, char**response){
-//     struct Server database_server =  connect_to_server(ip_addr, port);
-//     int message_sent = send_tcp_message(database_server.cSSL,0x1,strlen(payload), payload);
-//     read_tcp_message(database_server.cSSL, &(*response));
-//     SSL_shutdown(database_server.cSSL);
-//     SSL_free(database_server.cSSL);
-//     close(database_server.fd);
-// }
+struct Socket *sockets;
+struct pollfd *pfds;
+int fd_count;
 int bind_address_to_port(char* port,struct addrinfo hints){
     struct addrinfo *res;
 	getaddrinfo(NULL, port, &hints, &res);
@@ -127,24 +52,27 @@ int bind_address_to_port(char* port,struct addrinfo hints){
     return sockfd;
 }
 
-void insert_file_descriptor(struct Socket *sockets[],struct pollfd *pfds[],int fd, SSL *cSSL,char* hostname,int *fd_count, int *max_fd_size, int is_listener){
+struct Socket insert_file_descriptor(struct Socket *sockets[],struct pollfd *pfds[],int fd, SSL *cSSL,char* hostname,int *fd_count, int *max_fd_size, int is_listener){
 	 if (*fd_count == *max_fd_size){
 	 	*max_fd_size *=2;
 	 	*pfds = realloc(*pfds, sizeof(**pfds) * (*max_fd_size));
                 *sockets = realloc(*sockets, sizeof(**sockets) * (*max_fd_size));
 	 }
+    unsigned char* socket_id = malloc(16);	
+    create_unique_identifier(socket_id);
+    char socketId_hex[33];
+    hash_to_hex(socket_id, 16, socketId_hex);
     static char ipstr[INET6_ADDRSTRLEN];
-    //struct sockaddr_storage addr;
-    //struct sockaddr_in *s = (struct sockaddr_in *)&addr;
-    //inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof(ipstr));
     (*pfds)[*fd_count].fd = fd;
     (*pfds)[*fd_count].events = POLLIN;
     (*sockets)[*fd_count].fd = fd;
+    (*sockets)[*fd_count].Id = strdup(socketId_hex);
     (*sockets)[*fd_count].keep_alive = 0x0;
     (*sockets)[*fd_count].is_listener = is_listener;
-    //(*sockets)[*fd_count].ip_addr = strdup(ipstr);
     (*sockets)[*fd_count].cSSL = cSSL;
+    struct Socket socket = (*sockets)[*fd_count]; 
     (*fd_count)++;
+    return socket;
 }
 
  int wait_for_event(struct pollfd *pfds[], int fd_count){
@@ -157,11 +85,9 @@ void insert_file_descriptor(struct Socket *sockets[],struct pollfd *pfds[],int f
      for (int i=0; i<fd_count; i++){
  		if ((*pfds)[i].revents & POLLIN){
 			int fd =  (*pfds)[i].fd;
-	//	     printf("Socket %d has triggered\n", fd);
  			return fd;
  		}
      }
-     printf("NO EVENT IN POLLING\n");
      return 0;
 }
 
@@ -196,18 +122,16 @@ void insert_file_descriptor(struct Socket *sockets[],struct pollfd *pfds[],int f
        addrlen = sizeof(remoteaddr);
        int newfd = accept(listener_fd,(struct sockaddr *)&remoteaddr,  &addrlen);
        SSL* cSSL = encrypt_socket(newfd);
-       char host[NI_MAXHOST];	
-       char service[NI_MAXSERV];	
-       //getnameinfo((struct sockaddr*)&remoteaddr, sizeof(remoteaddr),host,sizeof(host), service, sizeof(service),0 );
+       char host[NI_MAXHOST];
+       char service[NI_MAXSERV];
        if (cSSL != NULL){
          insert_file_descriptor(sockets, pfds, newfd,cSSL, host,  fd_count, max_fd_size, 0x0);
          return newfd;
        }else{
 	 close(newfd);
-         //printf("ERROR Creating SSL Encryption and was not added for fd %d\n", newfd);
          return 0;
        }
-      
+
      }
 
 void fill_address_info(struct addrinfo *hints){
@@ -217,15 +141,62 @@ void fill_address_info(struct addrinfo *hints){
 	hints->ai_flags= AI_PASSIVE;
 }
 
+void* process_thread(void* arg){
+	int *triggered_fd = (int*) arg;
+	 printf("Triggered: %d\n", *triggered_fd);
+	 for (int i=0; i<fd_count; i++){
+		 struct Socket *socket = &sockets[i];
+		 SSL* cSSL  = sockets[i].cSSL;
+		 if (socket->fd != *triggered_fd){
+			 continue;
+		 }
+		 char *peek_buf = malloc(BUFFER_SIZE+1);
+		 int bytes_peeked = peek_exact_bytes(cSSL, BUFFER_SIZE, peek_buf);
+		 if (bytes_peeked <=0){
+			socket->keep_alive = 0x0;
+			 remove_file_descriptor(sockets,pfds, socket->fd, &fd_count);
+		 }else{
+			 if (peek_buf != NULL){
+				 process_bytes(sockets, socket, peek_buf, fd_count);
+				 free(peek_buf);
+				 peek_buf = NULL;
+			 }
+		 if (!socket->keep_alive){
+			 remove_file_descriptor(sockets,pfds, socket->fd, &fd_count);
+			 }
+		 }
+	 }
+	/*
+    struct Socket *socket = (struct Socket *)arg; 
+    SSL *cSSL = socket->cSSL;
+    char *peek_buf = malloc(BUFFER_SIZE+1);
+    int bytes_peeked = peek_exact_bytes(cSSL, BUFFER_SIZE, peek_buf);
+    if (bytes_peeked <=0){
+	 socket->keep_alive = 0x0;
+	 remove_file_descriptor(sockets,pfds, socket->fd, &fd_count);
+    }else{
+	 if (peek_buf != NULL){
+		 process_bytes(sockets, socket, peek_buf, fd_count);
+		 free(peek_buf);
+		 peek_buf = NULL;
+	 }
+     if (!socket->keep_alive){
+	 remove_file_descriptor(sockets,pfds, socket->fd, &fd_count);
+	 }
+      }
+      */
+    pthread_exit(NULL); 
+}
+
 void start_listening_for_clients(char* port){
         SSL_library_init(); 
         SSL_load_error_strings(); 
         struct addrinfo hints;
         fill_address_info(&hints);
         int max_socket_size = 10;
-        int fd_count = 0;
-        struct Socket *sockets = malloc(sizeof(struct Socket) * max_socket_size);
-        struct pollfd *pfds =  malloc(sizeof(struct pollfd) * max_socket_size);
+        fd_count = 0;
+        sockets = malloc(sizeof(struct Socket) * max_socket_size);
+        pfds =  malloc(sizeof(struct pollfd) * max_socket_size);
         int listener_fd = bind_address_to_port(port,hints);
         for (int i=0; i<fd_count; i++){
 	 struct Socket *socket = &sockets[i];
@@ -233,42 +204,36 @@ void start_listening_for_clients(char* port){
         }
         insert_file_descriptor(&sockets,&pfds, listener_fd,NULL,"localhost", &fd_count, &max_socket_size, 0x1);
         while(1){
-             int triggered_fd = wait_for_event(&pfds, fd_count);
-	     //printf("Socket %d has pending bytes\n", triggered_fd);
-             if (triggered_fd == listener_fd){
+                 int triggered_fd = wait_for_event(&pfds, fd_count);
+	         if (triggered_fd == listener_fd){
                  int newfd = accept_new_client(listener_fd, &sockets, &pfds, &fd_count, &max_socket_size);
                  if (!newfd){
-          //               printf("ERROR ACCEPTING new socket\n");
                  }else{
-         //                printf("New client accepted: %d\n", newfd);
 			 printf("FD Count: %d\n", fd_count);
                  }
 	     }else{
-
-		 for (int i=0; i<fd_count; i++){
-			 struct Socket *socket = &sockets[i];
-			 SSL* cSSL  = sockets[i].cSSL;
-			 if (socket->fd != triggered_fd){
-				 continue;
-			 }
-                         char *peek_buf = malloc(BUFFER_SIZE+1);
-			 int bytes_peeked = peek_exact_bytes(cSSL, BUFFER_SIZE, peek_buf);
-	//		 printf("Socket %d has peeked %d bytes\n", triggered_fd, bytes_peeked);
-			 if (bytes_peeked <=0){
-				socket->keep_alive = 0x0;
-				 remove_file_descriptor(sockets,pfds, socket->fd, &fd_count);
-			 }else{
-				 if (peek_buf != NULL){
-					 process_bytes(sockets, socket, peek_buf, fd_count);
-					 free(peek_buf);
-					 peek_buf = NULL;
+			 for (int i=0; i<fd_count; i++){
+				 struct Socket *socket = &sockets[i];
+				 SSL* cSSL  = sockets[i].cSSL;
+				 if (socket->fd != triggered_fd){
+					 continue;
 				 }
-			 if (!socket->keep_alive){
-				 remove_file_descriptor(sockets,pfds, socket->fd, &fd_count);
+				 char *peek_buf = malloc(BUFFER_SIZE+1);
+				 int bytes_peeked = peek_exact_bytes(cSSL, BUFFER_SIZE, peek_buf);
+				 if (bytes_peeked <=0){
+					socket->keep_alive = 0x0;
+					 remove_file_descriptor(sockets,pfds, socket->fd, &fd_count);
+				 }else{
+					 if (peek_buf != NULL){
+						 process_bytes(sockets, socket, peek_buf, fd_count);
+						 free(peek_buf);
+						 peek_buf = NULL;
+					 }
+				 if (!socket->keep_alive){
+					 remove_file_descriptor(sockets,pfds, socket->fd, &fd_count);
+					 }
 				 }
 			 }
-		 }
 	     }
-
-        }
-    }
+	}
+}
