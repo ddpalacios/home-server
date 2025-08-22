@@ -5,6 +5,7 @@
 MYSQL* connect_to_sql(char* username, char* password,char* server,char* database){
 	MYSQL* conn = mysql_init(NULL);
 	if (!mysql_real_connect(conn ,server ,username, password, database,0,NULL,0)){
+		printf("ERROR CONNECTING TO SQL\n");
 		fprintf(stderr, "%s\n", mysql_error(conn));
 		exit(1);
 	}else{

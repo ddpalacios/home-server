@@ -231,11 +231,11 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 			socket->keep_alive = 0x0;
 		}else{
 			int payload_length = websocket_buf[1] & 0x7F;
-			printf("payload length: %d FIN? %d\n", payload_length, finVal);
 			char* message = NULL;
 			nbytes = read_websocket_message(socket->cSSL, payload_length, &message);
 			int message_length = nbytes;
-			printf("Nbytes: %d\n", nbytes);
+			message[nbytes] = '\0';
+			printf("Nbytes: %d | Message: %s\n", nbytes, message);
 			send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
 			if (nbytes == 0){
 				printf("Could not determine bytes...\n");
@@ -298,6 +298,5 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 				free(body);
 				body = NULL;
 			}
-
 	}
 }

@@ -225,6 +225,30 @@ models/FrameField.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/models/FrameField.c.s
 .PHONY : models/FrameField.c.s
 
+models/Invitation.o: models/Invitation.c.o
+.PHONY : models/Invitation.o
+
+# target to build an object file
+models/Invitation.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/models/Invitation.c.o
+.PHONY : models/Invitation.c.o
+
+models/Invitation.i: models/Invitation.c.i
+.PHONY : models/Invitation.i
+
+# target to preprocess a source file
+models/Invitation.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/models/Invitation.c.i
+.PHONY : models/Invitation.c.i
+
+models/Invitation.s: models/Invitation.c.s
+.PHONY : models/Invitation.s
+
+# target to generate assembly for a file
+models/Invitation.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/models/Invitation.c.s
+.PHONY : models/Invitation.c.s
+
 models/Socket.o: models/Socket.c.o
 .PHONY : models/Socket.o
 
@@ -272,6 +296,30 @@ models/User.s: models/User.c.s
 models/User.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/models/User.c.s
 .PHONY : models/User.c.s
+
+models/WebsocketClient.o: models/WebsocketClient.c.o
+.PHONY : models/WebsocketClient.o
+
+# target to build an object file
+models/WebsocketClient.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/models/WebsocketClient.c.o
+.PHONY : models/WebsocketClient.c.o
+
+models/WebsocketClient.i: models/WebsocketClient.c.i
+.PHONY : models/WebsocketClient.i
+
+# target to preprocess a source file
+models/WebsocketClient.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/models/WebsocketClient.c.i
+.PHONY : models/WebsocketClient.c.i
+
+models/WebsocketClient.s: models/WebsocketClient.c.s
+.PHONY : models/WebsocketClient.s
+
+# target to generate assembly for a file
+models/WebsocketClient.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/models/WebsocketClient.c.s
+.PHONY : models/WebsocketClient.c.s
 
 models/session.o: models/session.c.o
 .PHONY : models/session.o
@@ -774,12 +822,18 @@ help:
 	@echo "... models/FrameField.o"
 	@echo "... models/FrameField.i"
 	@echo "... models/FrameField.s"
+	@echo "... models/Invitation.o"
+	@echo "... models/Invitation.i"
+	@echo "... models/Invitation.s"
 	@echo "... models/Socket.o"
 	@echo "... models/Socket.i"
 	@echo "... models/Socket.s"
 	@echo "... models/User.o"
 	@echo "... models/User.i"
 	@echo "... models/User.s"
+	@echo "... models/WebsocketClient.o"
+	@echo "... models/WebsocketClient.i"
+	@echo "... models/WebsocketClient.s"
 	@echo "... models/session.o"
 	@echo "... models/session.i"
 	@echo "... models/session.s"

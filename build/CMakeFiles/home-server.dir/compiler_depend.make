@@ -405,6 +405,90 @@ CMakeFiles/home-server.dir/models/FrameField.c.o: ../models/FrameField.c \
   /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
   /usr/include/strings.h
 
+CMakeFiles/home-server.dir/models/Invitation.c.o: ../models/Invitation.c \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdio.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/features.h \
+  /usr/include/features-time64.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/string.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/strings.h \
+  /usr/include/cjson/cJSON.h \
+  ../models/Invitation.h \
+  /usr/include/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  ../utilities/string_utilities.h \
+  ../database/SQL.h \
+  /usr/include/mysql/mysql.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
+  /usr/include/stdint.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/include/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/mysql/field_types.h \
+  /usr/include/mysql/my_list.h \
+  /usr/include/mysql/mysql_com.h \
+  /usr/include/mysql/my_command.h \
+  /usr/include/mysql/my_compress.h \
+  /usr/include/mysql/udf_registration_types.h \
+  /usr/include/mysql/client_plugin.h \
+  /usr/include/stdlib.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/alloca.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/mysql/plugin_auth_common.h \
+  /usr/include/mysql/mysql_version.h \
+  /usr/include/mysql/mysql_time.h \
+  /usr/include/mysql/errmsg.h
+
 CMakeFiles/home-server.dir/models/Socket.c.o: ../models/Socket.c \
   /usr/include/stdc-predef.h \
   /usr/include/openssl/ssl.h \
@@ -669,6 +753,90 @@ CMakeFiles/home-server.dir/models/User.c.o: ../models/User.c \
   /usr/include/openssl/e_os2.h \
   /usr/include/inttypes.h
 
+CMakeFiles/home-server.dir/models/WebsocketClient.c.o: ../models/WebsocketClient.c \
+  /usr/include/stdc-predef.h \
+  /usr/include/stdio.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/features.h \
+  /usr/include/features-time64.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/string.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/strings.h \
+  /usr/include/cjson/cJSON.h \
+  ../models/WebsocketClient.h \
+  /usr/include/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  ../utilities/string_utilities.h \
+  ../database/SQL.h \
+  /usr/include/mysql/mysql.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdbool.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
+  /usr/include/stdint.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/include/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/mysql/field_types.h \
+  /usr/include/mysql/my_list.h \
+  /usr/include/mysql/mysql_com.h \
+  /usr/include/mysql/my_command.h \
+  /usr/include/mysql/my_compress.h \
+  /usr/include/mysql/udf_registration_types.h \
+  /usr/include/mysql/client_plugin.h \
+  /usr/include/stdlib.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/alloca.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/mysql/plugin_auth_common.h \
+  /usr/include/mysql/mysql_version.h \
+  /usr/include/mysql/mysql_time.h \
+  /usr/include/mysql/errmsg.h
+
 CMakeFiles/home-server.dir/models/session.c.o: ../models/session.c \
   /usr/include/stdc-predef.h \
   /usr/include/stdio.h \
@@ -775,6 +943,7 @@ CMakeFiles/home-server.dir/models/websocket.c.o: ../models/websocket.c \
   /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
   /usr/include/x86_64-linux-gnu/bits/floatn.h \
   /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  ../utilities/string_utilities.h \
   /usr/include/uuid/uuid.h \
   /usr/include/x86_64-linux-gnu/sys/types.h \
   /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
@@ -2327,6 +2496,10 @@ CMakeFiles/home-server.dir/routes/life-of-sounds/GET/websocket_protocol.c.o: ../
   /usr/include/openssl/tls1.h \
   /usr/include/openssl/dtls1.h \
   /usr/include/openssl/srtp.h \
+  ../models/Invitation.h \
+  ../models/WebsocketClient.h \
+  ../utilities/json_utilities.h \
+  /usr/include/cjson/cJSON.h \
   ../utilities/http_utilities.h \
   ../models/session.h \
   ../models/User.h \
@@ -2679,6 +2852,7 @@ CMakeFiles/home-server.dir/routes/route.c.o: ../routes/route.c \
   /usr/include/asm-generic/sockios.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
   ../routes/route.h \
+  ../models/Invitation.h \
   ../utilities/http_utilities.h \
   ../routes/database-server/POST/post_frame.h \
   ../models/FrameField.h \
@@ -3077,6 +3251,7 @@ CMakeFiles/home-server.dir/server/send_message.c.o: ../server/send_message.c \
   /usr/include/openssl/srtp.h \
   ../models/FrameField.h \
   ../models/Frame.h \
+  ../models/WebsocketClient.h \
   ../utilities/http_utilities.h \
   ../utilities/json_utilities.h \
   /usr/include/arpa/inet.h \
@@ -3104,7 +3279,7 @@ CMakeFiles/home-server.dir/server/server.c.o: ../server/server.c \
   /usr/include/stdc-predef.h \
   /usr/include/cjson/cJSON.h \
   /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
-  /usr/include/x86_64-linux-gnu/sys/socket.h \
+  /usr/include/pthread.h \
   /usr/include/features.h \
   /usr/include/features-time64.h \
   /usr/include/x86_64-linux-gnu/bits/wordsize.h \
@@ -3113,34 +3288,49 @@ CMakeFiles/home-server.dir/server/server.c.o: ../server/server.c \
   /usr/include/x86_64-linux-gnu/bits/long-double.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
-  /usr/include/x86_64-linux-gnu/bits/socket.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/include/sched.h \
   /usr/include/x86_64-linux-gnu/bits/types.h \
   /usr/include/x86_64-linux-gnu/bits/typesizes.h \
   /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
   /usr/include/x86_64-linux-gnu/bits/endian.h \
   /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/sched.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
+  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
+  /usr/include/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
   /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
   /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
   /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
   /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/sys/socket.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
+  /usr/include/x86_64-linux-gnu/bits/socket.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
   /usr/include/x86_64-linux-gnu/bits/socket_type.h \
   /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
   /usr/include/x86_64-linux-gnu/asm/socket.h \
@@ -3186,12 +3376,6 @@ CMakeFiles/home-server.dir/server/server.c.o: ../server/server.c \
   /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
   /usr/include/openssl/comp.h \
   /usr/include/openssl/crypto.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
   /usr/include/openssl/safestack.h \
   /usr/include/openssl/stack.h \
   /usr/include/openssl/types.h \
@@ -3201,20 +3385,11 @@ CMakeFiles/home-server.dir/server/server.c.o: ../server/server.c \
   /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
   /usr/include/x86_64-linux-gnu/bits/local_lim.h \
   /usr/include/linux/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
   /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
   /usr/include/openssl/cryptoerr.h \
   /usr/include/openssl/symhacks.h \
   /usr/include/openssl/cryptoerr_legacy.h \
   /usr/include/openssl/core.h \
-  /usr/include/pthread.h \
-  /usr/include/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
-  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
-  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
   /usr/include/openssl/comperr.h \
   /usr/include/openssl/bio.h \
   /usr/include/openssl/bioerr.h \
@@ -3284,6 +3459,7 @@ CMakeFiles/home-server.dir/server/server.c.o: ../server/server.c \
   ../models/FrameField.h \
   ../utilities/http_utilities.h \
   ../utilities/json_utilities.h \
+  ../utilities/string_utilities.h \
   ../server/send_message.h \
   ../server/read_message.h \
   /usr/include/arpa/inet.h \
@@ -3742,6 +3918,10 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/x86_64-linux-gnu/bits/getopt_core.h:
 
+/usr/include/x86_64-linux-gnu/bits/environments.h:
+
+/usr/include/x86_64-linux-gnu/bits/posix_opt.h:
+
 /usr/include/openssl/symhacks.h:
 
 /usr/include/openssl/crypto.h:
@@ -3756,8 +3936,6 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/openssl/asn1.h:
 
-/usr/include/x86_64-linux-gnu/bits/netdb.h:
-
 /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h:
 
 ../routes/life-of-sounds/GET/login.h:
@@ -3769,6 +3947,10 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 ../server/server.h:
 
 /usr/include/openssl/pem.h:
+
+/usr/include/x86_64-linux-gnu/bits/confname.h:
+
+../models/websocket.c:
 
 /usr/include/linux/stddef.h:
 
@@ -3956,6 +4138,12 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h:
 
+/usr/include/x86_64-linux-gnu/bits/getopt_posix.h:
+
+/usr/include/time.h:
+
+/usr/include/x86_64-linux-gnu/bits/setjmp.h:
+
 /usr/include/x86_64-linux-gnu/bits/in.h:
 
 ../routes/life-of-sounds/GET/sessioninfo.h:
@@ -4040,10 +4228,6 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 ../routes/life-of-sounds/GET/get_web_audio_api_script.c:
 
-../models/websocket.c:
-
-/usr/include/x86_64-linux-gnu/bits/confname.h:
-
 /usr/include/mysql/my_list.h:
 
 /usr/include/x86_64-linux-gnu/bits/waitflags.h:
@@ -4104,6 +4288,8 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/openssl/pkcs7err.h:
 
+../models/WebsocketClient.c:
+
 /usr/include/openssl/bn.h:
 
 /usr/include/mysql/mysql_com.h:
@@ -4127,12 +4313,6 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 /usr/include/openssl/sha.h:
 
 /usr/include/openssl/x509err.h:
-
-/usr/include/time.h:
-
-/usr/include/x86_64-linux-gnu/bits/setjmp.h:
-
-/usr/include/x86_64-linux-gnu/bits/getopt_posix.h:
 
 /usr/include/openssl/pkcs7.h:
 
@@ -4214,7 +4394,17 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 ../models/FrameField.h:
 
+../models/Invitation.c:
+
+../routes/life-of-sounds/POST/login.c:
+
+/usr/include/x86_64-linux-gnu/bits/netdb.h:
+
+../models/Invitation.h:
+
 ../models/User.h:
+
+../models/WebsocketClient.h:
 
 ../models/session.c:
 
@@ -4242,8 +4432,6 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 ../routes/life-of-sounds/PATCH/patch_audio.h:
 
-../routes/life-of-sounds/POST/login.c:
-
 ../routes/route.c:
 
 ../routes/life-of-sounds/GET/get_live_page.h:
@@ -4256,8 +4444,6 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 ../routes/life-of-sounds/GET/get_audio.h:
 
-/usr/include/x86_64-linux-gnu/bits/environments.h:
-
 ../routes/life-of-sounds/DELETE/sessioninfo.h:
 
 /usr/include/x86_64-linux-gnu/bits/floatn.h:
@@ -4265,5 +4451,3 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 ../routes/life-of-sounds/GET/websocket_protocol.h:
 
 ../routes/life-of-sounds/GET/users.h:
-
-/usr/include/x86_64-linux-gnu/bits/posix_opt.h:

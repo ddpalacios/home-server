@@ -126,6 +126,7 @@ CMakeFiles/home-server.dir/routes/route.c.o: \
  /usr/include/asm-generic/sockios.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
  /home/dpalacios/home-server/routes/route.h \
+ /home/dpalacios/home-server/models/Invitation.h \
  /home/dpalacios/home-server/utilities/http_utilities.h \
  /home/dpalacios/home-server/routes/database-server/POST/post_frame.h \
  /home/dpalacios/home-server/models/FrameField.h \

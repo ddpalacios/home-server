@@ -1,16 +1,34 @@
-<!DOCTYPE html>
-<html>
-    <head></head>
-    <style>
+<!doctype html>
+<title>Example</title>
+<style>
+  * {
+    box-sizing: border-box; 
+  }
+body, html {  overflow: hidden; }
 
-        #visualizer {
-           position:absolute;
-             width: 100%; height: 100%;
-             z-index:1;
-        }
-.create-btn {
+  body {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: row;
+    margin: 0;
+  }
+  .outer-col-1 {
+    background: #e4effd;
+    flex: 1;
+  }
+
+  .inner-col {
+    flex: 4;
+    outline: 1px solid black;
+  }
+    #visualizer {
+        width: 100%; height: 100%;
+        z-index:1;
+
+}
+  .create-btn {
   position: absolute;
-  top: 10px;   
+  top: 20px;   
   right: 10px; 
   z-index: 2; 
   padding: 8px 12px;
@@ -18,32 +36,145 @@
   border-radius: 6px;
   cursor: pointer;
 }
-body, html { height:100%;  overflow: hidden; }
-    </style>
+
+  .hide-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 4px 6px;
+  cursor: pointer;
+}
+.chat-container {  
+    display: flex;  
+    flex-direction: column;  
+    flex-wrap: nowrap; 
+     height: 90vh;
+    overflow-y: auto;
+     scrollbar-width: thin; 
+}
+#send {
+            font-size: 1rem;
+            background-color: green;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+    button:hover {
+            background-color: #3a3a7c;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        input:focus {
+            border-color: #4a4a8d;
+        }
+
+ canvas, nav {
+    padding: 1em;
+  }
+</style>
 <body>
+  <nav class="outer-col-1" id="chatbox">
+<div class="chat-container">  
+    <h3 >Live Chat</h3>  
+        <p style="color: red;"> > 'Daniel' has connected!</p>
+        <p style="color: black;">> 'Natalie' has connected!</p>
+        <p style="color: green;">> 'Ruben' has connected!</p>
+        <p style="color: orange;">> 'Gerardo' has connected!</p>
+        <p style="color: blue;">> 'Dad' has connected!</p>
+</div>
+    <div style="display: flex; margin-top: 30px;">
+        <div >
+            <input placeholder="Type a message here..."  />
+        </div>
+        <div>
+            <button  id="send">Send</button>
+        </div>
+    </div>
 
-  <canvas id="visualizer" ></canvas>
-  <input  id="stop_session"  class="create-btn" type="button" style=" background-color: lightcoral; display: none;"  value="Stop Session"/>
-  <input  id="create_session" class="create-btn" type="button" style=" background-color: lightgreen;"  value="+ Create Session"/>
+  </nav>
+      <div class="inner-col">
+            <input  id="hide_chat" class="hide-btn" type="button" style=" background-color: lightcoral;"  value="Hide Chat"/>
+            <input  id="show_chat" class="hide-btn" type="button" style=" background-color: lightgreen; display: none;"  value="Show Chat"/>
 
+            <canvas id="visualizer" ></canvas>
+
+
+           <input  id="stop_session"  class="create-btn" type="button" style=" background-color: lightcoral; display: none;"  value="Stop Session"/>
+            <input  id="create_session" class="create-btn" type="button" style=" background-color: lightgreen;"  value="+ Create Session"/>
+      </div>
 </body>
+
 <script>
     let sessionActive = false;
+    let websocket_session = null;
+    let sessionid = null;
+
+        document.getElementById("show_chat").onclick = function () {
+        sessionActive = true;
+        document.getElementById("show_chat").style.display = "none";
+        document.getElementById("hide_chat").style.display = "inline-block";
+        document.getElementById("chatbox").hidden = false;
+        windowResize()
+        
+        
+    }
+
+    document.getElementById("hide_chat").onclick = function () {
+        sessionActive = false;
+        document.getElementById("hide_chat").style.display = "none";
+        document.getElementById("show_chat").style.display = "inline-block";
+        document.getElementById("chatbox").hidden = true;
+        windowResize()
+
+    }
+
+
 
     document.getElementById("create_session").onclick = function () {
         sessionActive = true;
         document.getElementById("create_session").style.display = "none";
         document.getElementById("stop_session").style.display = "inline-block";
-        
+        if (websocket_session != null){return;}
+        websocket_session = new WebSocket('wss://' + window.location.host  +'/life-of-sounds/live_studio/create_session');
+        websocket_session.onopen = () => {
+		    console.log("Websocket connection established");	
+        }
+        websocket_session.onmessage = (event) => {
+		console.log("Message from server", event.data);
+        if (JSON.parse(event.data).hasOwnProperty("invitationId")){
+            let invitation_url = 'https://' + window.location.host  +'/life-of-sounds/live_studio/invite?join='+JSON.parse(event.data)['invitationId']
+            console.log("JOIN SESSION VIA LINK:",invitation_url)
+            sessionid = JSON.parse(event.data)['sessionId'];
+        }
+        // websocket_session.send(JSON.stringify({
+        //     'Id': sessionid
+        //     ,"values": "Hello"
+        // }))
+	}
     }
 
     document.getElementById("stop_session").onclick = function () {
         sessionActive = false;
         document.getElementById("stop_session").style.display = "none";
         document.getElementById("create_session").style.display = "inline-block";
+        websocket_session.close()
     }
 
+function windowResize() {
+	const width = canvas.clientWidth;
+	const height = canvas.clientHeight;
+	const dpr = window.devicePixelRatio || 1;
+	canvas.width = width * dpr;
+	canvas.height = height * dpr;
+	ctx.scale(dpr, dpr)
+};
 
+window.addEventListener('resize', windowResize);
 </script>
 <script>
     let canvas = document.querySelector("#visualizer");
@@ -230,7 +361,6 @@ function mouseMove(e){
 	for (let i=0; i<mag_view_h; i++){
 			for (let j=0; j<mag_view_w; j++){
                 big_canvas_grid[current_y+i][ current_x + j] =1
-				// client_cords.push({'x': current_x + j, 'y': current_y+i})
 				}
 		}
 
@@ -246,9 +376,6 @@ function mouseMove(e){
                         big_canvas_grid[i] = []
                         for (let j =0; j<numCols; j++){
                             big_canvas_grid[i][j] = 0;
-                                // if (i ==100 || i == 200 || j == 200 || j == 100 || j == 300 || j == 400){
-                                //     big_canvas_grid[i][j] = 1
-                                // }
                         }
                     }
                 }
@@ -335,5 +462,3 @@ function mouseMove(e){
     main()
 
 </script>
-
-</html>

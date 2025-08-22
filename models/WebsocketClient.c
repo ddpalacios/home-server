@@ -1,0 +1,104 @@
+#include <stdio.h>
+#include <string.h>
+#include <cjson/cJSON.h>
+#include "WebsocketClient.h"
+#include <time.h>
+#include "string_utilities.h"
+#include "SQL.h"
+
+struct WebsocketClient create_websocketclient(char* sessionid, char*socketId){
+	struct WebsocketClient websocketclient;
+	unsigned char* websocketclientid  = malloc(16);
+	create_unique_identifier(websocketclientid);
+	char websocketclientid_hex[33];
+	hash_to_hex(websocketclientid, 16, websocketclientid_hex);
+	websocketclient.Id  =strdup(websocketclientid_hex);
+	websocketclient.sessionId = sessionid;
+    websocketclient.socketId = socketId;
+	return websocketclient;
+}
+
+
+struct WebsocketClient* get_websocketclientsBySessionId(char* sessionId){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql, sizeof(sql),"SELECT * FROM WebsocketClient WHERE sessionId = '%s'", sessionId);
+	printf("%s\n",sql);
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+	struct WebsocketClient *websocketclients;
+	websocketclients = malloc(sizeof(*websocketclients) * 1000);
+	int count = 0;
+	while((row = mysql_fetch_row(res))!= NULL){
+		  websocketclients[count].Id = strdup(row[0]);
+		  websocketclients[count].socketId = strdup(row[1]);
+		  websocketclients[count].sessionId = strdup(row[2]);
+		  websocketclients[count].exists = 1;
+		  count++;
+	  }
+      close_sql_connection(conn);
+	  return websocketclients;
+}
+struct WebsocketClient get_websocketclientBySocketId(char* socketId){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql, sizeof(sql),"SELECT * FROM WebsocketClient WHERE socketId = '%s'", socketId);
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+	struct WebsocketClient websocketclient;
+	websocketclient.exists = 0;
+	  while((row = mysql_fetch_row(res))!= NULL){
+		  websocketclient.Id = strdup(row[0]);
+		  websocketclient.socketId = strdup(row[1]);
+		  websocketclient.sessionId = strdup(row[2]);
+		  websocketclient.exists = 1;
+	  }
+      close_sql_connection(conn);
+	  return websocketclient;
+}
+struct WebsocketClient get_websocketclient(char* websocketclientid){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql, sizeof(sql),"SELECT * FROM WebsocketClient WHERE Id = '%s'", websocketclientid);
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+	struct WebsocketClient websocketclient;
+	websocketclient.exists = 0;
+	  while((row = mysql_fetch_row(res))!= NULL){
+		  websocketclient.Id = strdup(row[0]);
+		  websocketclient.sessionId = strdup(row[1]);
+		  websocketclient.socketId = strdup(row[2]);
+		  websocketclient.exists = 1;
+	  }
+      close_sql_connection(conn);
+	  return websocketclient;
+}
+
+int websocketclient_exists(char* websocketclientid){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql, sizeof(sql),"SELECT * FROM WebsocketClient WHERE Id = '%s'", websocketclientid);
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+	int exists = 0;
+	  while((row = mysql_fetch_row(res))!= NULL){
+		  exists=1;
+		  break;
+	  }
+      close_sql_connection(conn);
+	  return exists;
+}
+
+void insert_websocketclient(struct WebsocketClient websocketclient){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql,sizeof(sql), "INSERT INTO WebsocketClient VALUES ('%s', '%s', '%s');",
+			websocketclient.Id,
+			websocketclient.socketId,
+			websocketclient.sessionId);
+	query(conn, sql);
+	close_sql_connection(conn);
+}
+void delete_websocketclient(struct WebsocketClient websocketclient){
+
+}

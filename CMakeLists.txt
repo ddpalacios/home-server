@@ -11,6 +11,8 @@ file(GLOB MAIN
     "models/SQL.c"
     "models/session.c"
     "models/websocket.c"
+    "models/Invitation.c"
+    "models/WebsocketClient.c"
     "models/FrameField.c"
     "models/Frame.c"
     "models/User.c"

@@ -3,6 +3,7 @@
 #include "Socket.h"
 #include "FrameField.h"
 #include "Frame.h"
+#include "WebsocketClient.h"
 #include "http_utilities.h"
 #include "json_utilities.h"
 #include <sys/types.h>
@@ -73,19 +74,31 @@ int send_websocket_message(struct Socket *sockets,struct Socket socket,int fd_co
 		frame[0] = 0x81;
 		frame[1] = actual_payload_length & 0x7f;
 		memcpy(frame + 2, payload,actual_payload_length);
-		for (int i=0; i<fd_count; i++){
-			struct Socket client_socket = sockets[i];
-			if (client_socket.fd == socket.fd || client_socket.is_listener){
+		struct WebsocketClient wsc =  get_websocketclientBySocketId(socket.Id);
+		char* sessionId = wsc.sessionId;
+		struct WebsocketClient *ws_clients = get_websocketclientsBySessionId(sessionId);
+		int count = 0;
+		while (ws_clients[count].Id != NULL){
+			if (strcmp(ws_clients[count].socketId,socket.Id) == 0){
+				count++;
 				continue;
 			}
-		    SSL* cSSL = client_socket.cSSL;
-		    printf("Sending %d\n",actual_payload_length);
-		    if (!SSL_write(cSSL, frame, total_bytes)){
-			printf("Error sending message.\n");
-			return 0;
-		    }
-		    printf("Done sending.\n");
+			for (int i=0; i<fd_count; i++){
+				struct Socket client_socket = sockets[i];
+				if (strcmp(client_socket.Id,ws_clients[count].socketId)==0){
+				   SSL* cSSL = client_socket.cSSL;
+				   if (!SSL_write(cSSL, frame, total_bytes)){
+					printf("Error sending message.\n");
+					count++;
+					break;
+				    }
+				   break;
+				}
+			}
+			count++;
+
 		}
+		printf("Done Sending message to ALL Clients\n");
 		if (frame != NULL){
 			free(frame);
 			frame = NULL;
