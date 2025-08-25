@@ -58,6 +58,23 @@
 	function generate() {
 		return nameList[Math.floor( Math.random() * nameList.length )] + " " + nameList[Math.floor( Math.random() * nameList.length )];
 	};
+
+	  function send_message(){
+        if (websocket_session == null){return;}
+        let text = document.getElementById("messagebox").value
+        websocket_session.send(JSON.stringify({
+            "operation": "message"
+            ,"message": text
+        }))
+
+		let p = document.createElement('p');
+        p.textContent = text;
+        let chat = document.getElementById('messages')
+        chat.appendChild(p);
+         document.getElementById("messagebox").value = ''
+
+
+    }
 async function start_websocket(){
 	if (websocket_session != null){return;}
 	console.log(window.location.href.split("join=")[1])
@@ -76,6 +93,18 @@ async function start_websocket(){
 	}
 	websocket_session.onmessage = (event) => {
 			console.log("Message from server:", event.data);
+			 if (JSON.parse(event.data).hasOwnProperty("operation")){
+	            let data = JSON.parse(event.data);
+				 if (data['operation'] == "message"){
+					let message = data['message'];
+                    message = "> "+message
+                    let p = document.createElement('p');
+                    p.textContent = message;
+                    let chat = document.getElementById('messages')
+                    chat.appendChild(p);
+				 }
+
+			 }
 
 	}
 	websocket_session.onerror = (error) => {

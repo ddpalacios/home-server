@@ -1,5 +1,5 @@
 <!doctype html>
-<title>Example</title>
+<title>Live Studio</title>
 <style>
   * {
     box-sizing: border-box; 
@@ -18,19 +18,19 @@ body, html {  overflow: hidden; }
   }
 
   .inner-col {
-    flex: 4;
+    flex: 6;
     outline: 1px solid black;
   }
     #visualizer {
+        position: relative;
         width: 100%; height: 100%;
-        z-index:1;
 
 }
   .create-btn {
-  position: absolute;
+  /* position: absolute;
   top: 20px;   
   right: 10px; 
-  z-index: 2; 
+  z-index: 2;  */
   padding: 8px 12px;
   border: none;
   border-radius: 6px;
@@ -43,13 +43,41 @@ body, html {  overflow: hidden; }
   padding: 4px 6px;
   cursor: pointer;
 }
-.chat-container {  
-    display: flex;  
-    flex-direction: column;  
-    flex-wrap: nowrap; 
-     height: 90vh;
-    overflow-y: auto;
-     scrollbar-width: thin; 
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 90vh;
+}
+
+.messages {
+  flex: 1;       
+  scrollbar-width: thin;    
+  scroll-behavior: smooth;
+  overflow-y: auto;     
+  padding: 0.5em;
+}
+
+.chat-input {
+  display: flex;
+  gap: 0.5em;
+  padding: 0.5em;
+  border-top: 1px solid #ccc;
+}
+
+.chat-input input {
+  flex: 1;  
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #aaa;
+}
+
+.chat-input button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  background-color: green;
+  color: white;
+  cursor: pointer;
 }
 #send {
             font-size: 1rem;
@@ -62,7 +90,7 @@ body, html {  overflow: hidden; }
         }
 
     button:hover {
-            background-color: #3a3a7c;
+            background-color: #9de1eb;
         }
 
         button:active {
@@ -70,7 +98,7 @@ body, html {  overflow: hidden; }
         }
         
         input:focus {
-            border-color: #4a4a8d;
+            border-color: #9de1eb;
         }
 
  canvas, nav {
@@ -78,34 +106,28 @@ body, html {  overflow: hidden; }
   }
 </style>
 <body>
-  <nav class="outer-col-1" id="chatbox">
-<div id="chat" class="chat-container">  
-    <h3 >Live Chat</h3>  
-        <!-- <p style="color: red;"> > 'Daniel' has connected!</p> -->
-        <!-- <p style="color: black;">> 'Natalie' has connected!</p> -->
-        <!-- <p style="color: green;">> 'Ruben' has connected!</p> -->
-        <!-- <p style="color: orange;">> 'Gerardo' has connected!</p> -->
-        <!-- <p style="color: blue;">> 'Dad' has connected!</p> -->
-</div>
-    <div style="display: flex; margin-top: 30px;">
-        <div >
-            <input placeholder="Type a message here..."  />
-        </div>
-        <div>
-            <button  id="send">Send</button>
-        </div>
+
+<nav class="outer-col-1" id="chatbox">
+
+  <div id="chat" class="chat-container">  
+    <h1>Live Chat</h1>
+    <input hidden="true" id="username" placeholder="Your name..." onchange="change_username()" style="margin-bottom: 10px;"/>
+    <input id="stop_session" class="create-btn" type="button" style="background-color: lightcoral; display: none;" value="Stop Session"/>
+    <input id="create_session" class="create-btn" type="button" style="background-color: lightgreen;" value="+ Create Session"/>
+    <div id="messages" class="messages">
     </div>
-
-  </nav>
+    
+    <div class="chat-input">
+      <textarea id="messagebox" rows="5" cols="45" style="width: 100%;" wrap="soft" placeholder="Type a message here..." ></textarea>
+    </div>
+      <button style="margin-top: 10px; padding: 10px;" onclick="send_message()" id="send">Send</button>
+  </div>
+</nav>
       <div class="inner-col">
-            <input  id="hide_chat" class="hide-btn" type="button" style=" background-color: lightcoral;"  value="Hide Chat"/>
-            <input  id="show_chat" class="hide-btn" type="button" style=" background-color: lightgreen; display: none;"  value="Show Chat"/>
-
+            <button  id="hide_chat" class="hide-btn" type="button" style=" background-color: lightcoral;"   value="Hide Chat">Hide Chat</button>
+            <button  id="show_chat" class="hide-btn" type="button" style=" background-color: lightgreen;  display: none;"  value="Show Chat">Show Chat</button>
             <canvas id="visualizer" ></canvas>
 
-
-           <input  id="stop_session"  class="create-btn" type="button" style=" background-color: lightcoral; display: none;"  value="Stop Session"/>
-            <input  id="create_session" class="create-btn" type="button" style=" background-color: lightgreen;"  value="+ Create Session"/>
       </div>
 </body>
 
@@ -114,6 +136,83 @@ body, html {  overflow: hidden; }
     let websocket_session = null;
     let sessionid = null;
 
+
+	var nameList = [
+	'Time','Past','Future','Dev',
+	'Fly','Flying','Soar','Soaring','Power','Falling',
+	'Fall','Jump','Cliff','Mountain','Rend','Red','Blue',
+	'Green','Yellow','Gold','Demon','Demonic','Panda','Cat',
+	'Kitty','Kitten','Zero','Memory','Trooper','XX','Bandit',
+	'Fear','Light','Glow','Tread','Deep','Deeper','Deepest',
+	'Mine','Your','Worst','Enemy','Hostile','Force','Video',
+	'Game','Donkey','Mule','Colt','Cult','Cultist','Magnum',
+	'Gun','Assault','Recon','Trap','Trapper','Redeem','Code',
+	'Script','Writer','Near','Close','Open','Cube','Circle',
+	'Geo','Genome','Germ','Spaz','Shot','Echo','Beta','Alpha',
+	'Gamma','Omega','Seal','Squid','Money','Cash','Lord','King',
+	'Duke','Rest','Fire','Flame','Morrow','Break','Breaker','Numb',
+	'Ice','Cold','Rotten','Sick','Sickly','Janitor','Camel','Rooster',
+	'Sand','Desert','Dessert','Hurdle','Racer','Eraser','Erase','Big',
+	'Small','Short','Tall','Sith','Bounty','Hunter','Cracked','Broken',
+	'Sad','Happy','Joy','Joyful','Crimson','Destiny','Deceit','Lies',
+	'Lie','Honest','Destined','Bloxxer','Hawk','Eagle','Hawker','Walker',
+	'Zombie','Sarge','Capt','Captain','Punch','One','Two','Uno','Slice',
+	'Slash','Melt','Melted','Melting','Fell','Wolf','Hound',
+	'Legacy','Sharp','Dead','Mew','Chuckle','Bubba','Bubble','Sandwich',
+	'Smasher','Extreme','Multi','Universe','Ultimate','Death','Ready','Monkey',   'Elevator','Wrench','Grease','Head','Theme','Grand','Cool','Kid','Boy',
+	'Girl','Vortex','Paradox'
+	];
+        
+    function change_username(){
+        if (websocket_session == null){return}
+        let new_username = document.getElementById('username').value
+        let old_username = sessionStorage.getItem("username")
+        let message =  "**<b>"+old_username+"</b> has changed its name to: <b>"+ new_username+"</b>"
+        let p = document.createElement('p');
+        p.innerHTML = message;
+        let chat = document.getElementById('messages')
+        chat.appendChild(p);
+        sessionStorage.setItem("username", new_username)
+
+    }
+
+	function generate() {
+		return nameList[Math.floor( Math.random() * nameList.length )] + " " + nameList[Math.floor( Math.random() * nameList.length )];
+	};
+
+    function send_message(){
+        if (websocket_session == null){return;}
+        let text = document.getElementById("messagebox").value
+        websocket_session.send(JSON.stringify({
+            "operation": "message"
+            ,"message": text
+        }))
+
+        let p = document.createElement('p');
+        let username = sessionStorage.getItem("username");
+        p.innerHTML  = "<b>"+username+ ":</b> "+text;
+        let chat = document.getElementById('messages')
+        chat.appendChild(p);
+        document.getElementById("messagebox").value = ''
+
+    }
+
+
+
+function windowResize() {
+  const width = canvas.clientWidth;
+  const height = canvas.clientHeight;
+  const dpr = window.devicePixelRatio || 1;
+
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+
+  // reset transform so scale doesn’t accumulate
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(dpr, dpr);
+}
+    window.addEventListener('resize', windowResize);
+        // document.getElementById("chatbox").hidden = true;
         document.getElementById("show_chat").onclick = function () {
         sessionActive = true;
         document.getElementById("show_chat").style.display = "none";
@@ -123,7 +222,6 @@ body, html {  overflow: hidden; }
         
         
     }
-
     document.getElementById("hide_chat").onclick = function () {
         sessionActive = false;
         document.getElementById("hide_chat").style.display = "none";
@@ -136,6 +234,10 @@ body, html {  overflow: hidden; }
 
 
     document.getElementById("create_session").onclick = function () {
+        let username = prompt("Your Name:", generate())
+        document.getElementById("username").hidden = false
+        document.getElementById("username").value = username
+        sessionStorage.setItem("username",username)
         sessionActive = true;
         document.getElementById("create_session").style.display = "none";
         document.getElementById("stop_session").style.display = "inline-block";
@@ -144,7 +246,6 @@ body, html {  overflow: hidden; }
         websocket_session.onopen = () => {
 		    console.log("Websocket connection established");	
         }
-
         websocket_session.onmessage = (event) => {
 		console.log("Message from server", event.data);
         if (JSON.parse(event.data).hasOwnProperty("operation")){
@@ -155,30 +256,56 @@ body, html {  overflow: hidden; }
                     let message = "> "+client_name+" Has joined!"
                     let p = document.createElement('p');
                     p.textContent = message;
-                    let chat = document.getElementById('chat')
+                    let chat = document.getElementById('messages')
                     chat.appendChild(p);
 
                 }
             }
 
+             if (data['operation'] == "message"){
+					let message = data['message'];
+                    message = "> "+message
+                    let p = document.createElement('p');
+                    p.textContent = message;
+                    let chat = document.getElementById('messages')
+                    chat.appendChild(p);
+				 }
         }
 
         
         if (JSON.parse(event.data).hasOwnProperty("invitationId")){
             let invitation_url = 'https://' + window.location.host  +'/life-of-sounds/live_studio/invite?join='+JSON.parse(event.data)['invitationId']
+            // window.location.href  = invitation_url
             console.log("JOIN SESSION VIA LINK:",invitation_url)
             sessionid = JSON.parse(event.data)['sessionId'];
-            let message = "INVITE SESSION LINK:"
-            let p = document.createElement('p');
+            let message = "Invitation Link:"
+            let p = document.createElement('h1');
             p.textContent = message;
             let chat = document.getElementById('chat')
             chat.appendChild(p);
 
-            let a = document.createElement('a');
-            a.href = invitation_url;
-            a.textContent = invitation_url
+            let input = document.createElement('textarea');
+            input.id = "myInput"
+            input.rows = 5
+            input.cols = 10
+            input.wrap = "soft"
+            let cpy_btn = document.createElement('button');
+            cpy_btn.style.marginTop = "10px"
+            cpy_btn.textContent = "Copy URL"
+            cpy_btn.className = "create-btn"
+            cpy_btn.onclick = function () {
+                var copyText = document.getElementById("myInput");
+                    copyText.select();
+                    copyText.setSelectionRange(0, 99999); // For mobile devices
+                    navigator.clipboard.writeText(copyText.value);
+                    // alert("Copied the text: " + copyText.value);
+                    cpy_btn.textContent = "Copied!"
+            }
+            input.value = invitation_url;
+            input.disabled= true;
             chat = document.getElementById('chat')
-            chat.appendChild(a);
+            chat.appendChild(input);
+            chat.appendChild(cpy_btn);
         }
         // websocket_session.send(JSON.stringify({
         //     'Id': sessionid
@@ -194,18 +321,10 @@ body, html {  overflow: hidden; }
         websocket_session.close()
     }
 
-function windowResize() {
-	const width = canvas.clientWidth;
-	const height = canvas.clientHeight;
-	const dpr = window.devicePixelRatio || 1;
-	canvas.width = width * dpr;
-	canvas.height = height * dpr;
-	ctx.scale(dpr, dpr)
-};
 
-window.addEventListener('resize', windowResize);
 </script>
-<script>
+
+<!-- <script>
     let canvas = document.querySelector("#visualizer");
     let ctx = canvas.getContext("2d");
     const width = canvas.clientWidth;
@@ -214,7 +333,7 @@ window.addEventListener('resize', windowResize);
     canvas.width = width * dpr;
     canvas.height = height * dpr;
     ctx.scale(dpr, dpr);
-    var pixel_size = 3
+    var pixel_size = 10
     var numRows =  Math.floor(canvas.height / pixel_size);
     var numCols =Math.floor(canvas.width / pixel_size);
     var celluar_automota_grid = []
@@ -490,4 +609,4 @@ function mouseMove(e){
     canvas.addEventListener("mousemove", mouseMove, false);
     main()
 
-</script>
+</script> -->

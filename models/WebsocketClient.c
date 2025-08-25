@@ -19,25 +19,28 @@ struct WebsocketClient create_websocketclient(char* sessionid, char*socketId){
 }
 
 
-struct WebsocketClient* get_websocketclientsBySessionId(char* sessionId){
+struct WebsocketClient* get_websocketclientsBySessionId(char* sessionId, size_t *total_clients){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[255];
 	snprintf(sql, sizeof(sql),"SELECT * FROM WebsocketClient WHERE sessionId = '%s'", sessionId);
-	printf("%s\n",sql);
 	MYSQL_RES* res = query(conn, sql);
 	MYSQL_ROW row;
 	struct WebsocketClient *websocketclients;
 	websocketclients = malloc(sizeof(*websocketclients) * 1000);
-	int count = 0;
+	size_t count = 0;
 	while((row = mysql_fetch_row(res))!= NULL){
 		  websocketclients[count].Id = strdup(row[0]);
 		  websocketclients[count].socketId = strdup(row[1]);
 		  websocketclients[count].sessionId = strdup(row[2]);
 		  websocketclients[count].exists = 1;
 		  count++;
+
 	  }
       close_sql_connection(conn);
-	  return websocketclients;
+
+	*total_clients = count;
+	// printf("DONE RETRIEVING. Total Count: %d\n",count);
+	return websocketclients;
 }
 struct WebsocketClient get_websocketclientBySocketId(char* socketId){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");

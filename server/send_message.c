@@ -76,33 +76,31 @@ int send_websocket_message(struct Socket *sockets,struct Socket socket,int fd_co
 		memcpy(frame + 2, payload,actual_payload_length);
 		struct WebsocketClient wsc =  get_websocketclientBySocketId(socket.Id);
 		char* sessionId = wsc.sessionId;
-		struct WebsocketClient *ws_clients = get_websocketclientsBySessionId(sessionId);
+		size_t total_clients;
+		struct WebsocketClient *ws_clients = get_websocketclientsBySessionId(sessionId, &total_clients);
 		int count = 0;
-		while (ws_clients[count].Id != NULL){
-			if (strcmp(ws_clients[count].socketId,socket.Id) == 0){
-				count++;
+		for (int i=0; i<total_clients; i++){
+			if (strcmp(ws_clients[i].socketId,socket.Id) == 0){
 				continue;
 			}
-			for (int i=0; i<fd_count; i++){
-				struct Socket client_socket = sockets[i];
-				if (strcmp(client_socket.Id,ws_clients[count].socketId)==0){
+			printf("SENDING TO Socket ID %s\n", ws_clients[i].socketId);
+			for (int j=0; i<fd_count; j++){
+				struct Socket client_socket = sockets[j];
+				if (strcmp(client_socket.Id,ws_clients[i].socketId)==0){
 				   SSL* cSSL = client_socket.cSSL;
 				   if (!SSL_write(cSSL, frame, total_bytes)){
 					printf("Error sending message.\n");
-					count++;
 					break;
 				    }
 				   break;
 				}
 			}
-			count++;
-
 		}
-		printf("Done Sending message to ALL Clients\n");
 		if (frame != NULL){
 			free(frame);
 			frame = NULL;
 		}
+		
 		return total_bytes;
 	}else if (protocol_length == 126){
 		printf("PROTOCOL LENGTH %d\n", protocol_length);
