@@ -29,7 +29,7 @@ void get_websocket_protocol(struct Socket* socket,char* http_header, char*body, 
 				  struct WebsocketClient websocketclient = create_websocketclient(invitation.sessionid,socket->Id);
 				  insert_websocketclient(websocketclient);
 			  }
-			  if (strstr(http_header, "/live_studio/create_session")){
+			  else if (strstr(http_header, "/live_studio/create_session")){
                                 printf("Creating new session...\n");
                                 struct Websocket websocket_session = create_websocket_session(socket->Id);
                                 insert_websocket_session(websocket_session);
