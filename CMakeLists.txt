@@ -30,6 +30,7 @@ file(GLOB MAIN
     "routes/life-of-sounds/GET/get_game_of_life_script.c"
     "routes/life-of-sounds/GET/new_login.c"
     "routes/life-of-sounds/POST/login.c"
+    "routes/life-of-sounds/POST/post_websocket_session.c"
 
     
 )

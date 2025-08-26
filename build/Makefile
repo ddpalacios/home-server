@@ -609,6 +609,30 @@ routes/life-of-sounds/POST/login.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/POST/login.c.s
 .PHONY : routes/life-of-sounds/POST/login.c.s
 
+routes/life-of-sounds/POST/post_websocket_session.o: routes/life-of-sounds/POST/post_websocket_session.c.o
+.PHONY : routes/life-of-sounds/POST/post_websocket_session.o
+
+# target to build an object file
+routes/life-of-sounds/POST/post_websocket_session.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_session.c.o
+.PHONY : routes/life-of-sounds/POST/post_websocket_session.c.o
+
+routes/life-of-sounds/POST/post_websocket_session.i: routes/life-of-sounds/POST/post_websocket_session.c.i
+.PHONY : routes/life-of-sounds/POST/post_websocket_session.i
+
+# target to preprocess a source file
+routes/life-of-sounds/POST/post_websocket_session.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_session.c.i
+.PHONY : routes/life-of-sounds/POST/post_websocket_session.c.i
+
+routes/life-of-sounds/POST/post_websocket_session.s: routes/life-of-sounds/POST/post_websocket_session.c.s
+.PHONY : routes/life-of-sounds/POST/post_websocket_session.s
+
+# target to generate assembly for a file
+routes/life-of-sounds/POST/post_websocket_session.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_session.c.s
+.PHONY : routes/life-of-sounds/POST/post_websocket_session.c.s
+
 routes/route.o: routes/route.c.o
 .PHONY : routes/route.o
 
@@ -870,6 +894,9 @@ help:
 	@echo "... routes/life-of-sounds/POST/login.o"
 	@echo "... routes/life-of-sounds/POST/login.i"
 	@echo "... routes/life-of-sounds/POST/login.s"
+	@echo "... routes/life-of-sounds/POST/post_websocket_session.o"
+	@echo "... routes/life-of-sounds/POST/post_websocket_session.i"
+	@echo "... routes/life-of-sounds/POST/post_websocket_session.s"
 	@echo "... routes/route.o"
 	@echo "... routes/route.i"
 	@echo "... routes/route.s"

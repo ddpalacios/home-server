@@ -11,23 +11,30 @@
 #include "SQL.h"
 #include "websocket.h"
 
-struct Websocket create_websocket_session(char* socketId){
+struct Websocket create_websocket_session(){
 	struct Websocket websocket;
-	websocket.socketId = socketId;
-        unsigned char* websocket_sessionid = malloc(16);
-        create_unique_identifier(websocket_sessionid);
-        char sessionId_hex[33];
-        hash_to_hex(websocket_sessionid, 16, sessionId_hex);
-        websocket.Id  = strdup(sessionId_hex);
-        return websocket;
+	unsigned char* websocket_sessionid = malloc(16);
+	unsigned char* Id = malloc(16);
+
+	
+	create_unique_identifier(Id);
+	create_unique_identifier(websocket_sessionid);
+	char sessionId_hex[33];
+	char Id_hex[33];
+	hash_to_hex(websocket_sessionid, 16, sessionId_hex);
+	hash_to_hex(Id, 16, Id_hex);
+	websocket.Id  = strdup(Id_hex);
+	websocket.sessionid  = strdup(sessionId_hex);
+
+	return websocket;
 }
  void insert_websocket_session(struct Websocket websocket){
         MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
         char sql[255];
         snprintf(sql, sizeof(sql),
-                        "INSERT INTO websocket VALUES (NULL, NULL, NULL, '%s', '%s')",
+                        "INSERT INTO Websocket_Session VALUES ('%s', 'NULL', '%s')",
                         websocket.Id,
-			websocket.socketId);
+			websocket.sessionid);
         query(conn, sql);
         // printf("Query %s\n", sql);
         close_sql_connection(conn);
