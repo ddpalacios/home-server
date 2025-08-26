@@ -4,6 +4,7 @@ typedef struct Websocket{
 	char* userid;
 	char* sessionid;
 	char* connected_on;
+	char* name;
 	char*  socketId;
 	int exists;
 }websockets;
