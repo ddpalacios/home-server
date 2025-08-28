@@ -11,11 +11,50 @@
 #include "SQL.h"
 #include "websocket.h"
 
-struct Websocket create_websocket_session(){
+
+
+struct Websocket get_websocket_session(char* sessionId){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql,sizeof(sql), "SELECT * FROM Websocket_Session WHERE sessionId = '%s'",
+			sessionId
+			);
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+	int exists = 0;
+	struct Websocket websocket;
+	websocket.exists =0;
+	while((row = mysql_fetch_row(res))!=NULL){
+		websocket.Id = strdup(row[0]);
+		websocket.name = strdup(row[1]);
+		websocket.sessionid = strdup(row[2]);
+		websocket.exists = 1;
+	}
+	close_sql_connection(conn);
+	return websocket;
+}
+
+int websocket_session_exists(char* sessionId){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql,sizeof(sql), "SELECT * FROM Websocket_Session WHERE sessionId = '%s'",
+			sessionId
+			);
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+	int exists = 0;
+	while((row = mysql_fetch_row(res))!=NULL){
+		exists = 1;
+		break;
+	}
+	close_sql_connection(conn);
+	return exists;
+}
+
+struct Websocket create_websocket_session(char* name, char* userid){
 	struct Websocket websocket;
 	unsigned char* websocket_sessionid = malloc(16);
 	unsigned char* Id = malloc(16);
-
 	
 	create_unique_identifier(Id);
 	create_unique_identifier(websocket_sessionid);
@@ -25,6 +64,8 @@ struct Websocket create_websocket_session(){
 	hash_to_hex(Id, 16, Id_hex);
 	websocket.Id  = strdup(Id_hex);
 	websocket.sessionid  = strdup(sessionId_hex);
+	websocket.name  = name;
+	websocket.userid = userid;
 
 	return websocket;
 }
@@ -32,11 +73,13 @@ struct Websocket create_websocket_session(){
         MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
         char sql[255];
         snprintf(sql, sizeof(sql),
-                        "INSERT INTO Websocket_Session VALUES ('%s', 'NULL', '%s')",
+                        "INSERT INTO Websocket_Session VALUES ('%s', '%s', '%s', '%s')",
                         websocket.Id,
-			websocket.sessionid);
+						websocket.name,
+						websocket.sessionid,
+						websocket.userid);
         query(conn, sql);
-        // printf("Query %s\n", sql);
+        printf("Query %s\n", sql);
         close_sql_connection(conn);
 }
 

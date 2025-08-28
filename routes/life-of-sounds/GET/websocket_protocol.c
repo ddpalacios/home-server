@@ -1,6 +1,7 @@
 #include <openssl/ssl.h>
 #include "Invitation.h"
 #include "WebsocketClient.h"
+#include "Websocket_Message.h"
 #include "json_utilities.h"
 #include <string.h>
 #include <stdlib.h>
@@ -11,30 +12,52 @@
 #include "Socket.h"
 #include "websocket.h"
 
+void activate_websocket_session(char* sessionId, char* http_header, struct Socket *socket){
+	int exists = websocket_session_exists(sessionId);
+	SSL *cSSL = socket->cSSL;
+	if (exists){
+		char* websocket_key = get_header_value(http_header,"Sec-WebSocket-Key");
+		if ( strlen(websocket_key) > 0){
+			char* wss_accp_key = generate_websocket_accptKey(websocket_key);
+			if (wss_accp_key != NULL){
+				int res = switch_to_websocket_protocol(cSSL,  wss_accp_key);
+				if (res <=0){
+					send_response_code(cSSL, 400);
+					socket->keep_alive = 0x0;
+				}else{
+					socket->keep_alive = 0x1;
+				}
+			}else{
+				send_response_code(cSSL, 400);
+				socket->keep_alive = 0x0;
+			}
+		}else{
+			char* messages_json = get_messages_by_sessionid_json(sessionId);
+			printf("%s\n", messages_json);
+			send_JSON_response_code(cSSL, 200, messages_json);
+		}
+	}
+}
+
 
 void get_websocket_protocol(struct Socket* socket,char* http_header, char*body, char* route){
             SSL *cSSL = socket->cSSL;
 
-			if (strstr(http_header, "/live_studio/invite?Id=")){
-				//   char* invitationid = get_query_parameter(route, "Id");
-				//   struct Invitation invitation = get_invitation(invitationid);
-				//   struct WebsocketClient websocketclient = create_websocketclient(invitation.sessionid,socket->Id, 0x0);
+			if (strstr(http_header, "/live_studio/join?connect=true&Id=")){
+				  char* sessionId = get_query_parameter(route, "Id");
+				  char* username = get_query_parameter(route, "username");
+				//   struct WebsocketClient websocketclient = create_websocketclient(sessionId,socket->Id, username, 0x0);
 				//   insert_websocketclient(websocketclient);
+				//   activate_websocket_session(sessionId, http_header, socket);
 			  }
 			  else if (strstr(http_header, "/live_studio/session?Id=")){
 					char* sessionId = get_query_parameter(route, "Id"); // TODO Search for sessionID and validate that it exists to start the protocol
-					char* websocket_key = get_header_value(http_header,"Sec-WebSocket-Key");
-					if ( strlen(websocket_key) > 0){
-					char* wss_accp_key = generate_websocket_accptKey(websocket_key);
-					if (wss_accp_key != NULL){
-					int res = switch_to_websocket_protocol(cSSL,  wss_accp_key);
-					if (res <=0){
-						send_response_code(cSSL, 400);
-						socket->keep_alive = 0x0;
-					}else{
-						socket->keep_alive = 0x1;
-			  }
-				
+					activate_websocket_session(sessionId, http_header, socket);
+				}else{
+					send_response_code(cSSL, 400);
+					socket->keep_alive = 0x0;
+				}
+    }	
 
 
 			// 		printf("Creating new session...\n");
@@ -64,10 +87,4 @@ void get_websocket_protocol(struct Socket* socket,char* http_header, char*body, 
 			// 			frame = NULL;
 			// 		}
 
-		}
-	}
-        }else{
-            send_response_code(cSSL, 400);
-	        socket->keep_alive = 0x0;
-        }
-    }
+      

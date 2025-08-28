@@ -110,6 +110,7 @@ CMakeFiles/home-server.dir/routes/life-of-sounds/GET/websocket_protocol.c.o: \
  /usr/include/openssl/dtls1.h /usr/include/openssl/srtp.h \
  /home/dpalacios/home-server/models/Invitation.h \
  /home/dpalacios/home-server/models/WebsocketClient.h \
+ /home/dpalacios/home-server/models/Websocket_Message.h \
  /home/dpalacios/home-server/utilities/json_utilities.h \
  /usr/include/cjson/cJSON.h \
  /home/dpalacios/home-server/utilities/http_utilities.h \

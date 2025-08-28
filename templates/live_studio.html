@@ -134,6 +134,7 @@ body, html {  overflow: hidden; }
 <script>
     let sessionActive = false;
     let websocket_session = null;
+    let sessionid = null;
 
 
 	var nameList = [
@@ -181,19 +182,23 @@ body, html {  overflow: hidden; }
 
     function send_message(){
         if (websocket_session == null){return;}
+        let username = sessionStorage.getItem("username");
+        let userid = sessionStorage.getItem("userid");
         let text = document.getElementById("messagebox").value
         websocket_session.send(JSON.stringify({
             "operation": "message"
-            ,"message": text
+            ,'username': username
+            ,'userid':userid
+            ,'timestamp': new Date().toISOString()
+            ,'sessionId': sessionid
+            ,"content": text
         }))
-
         let p = document.createElement('p');
-        let username = sessionStorage.getItem("username");
         p.innerHTML  = "<b>"+username+ ":</b> "+text;
         let chat = document.getElementById('messages')
         chat.appendChild(p);
+        chat.scrollTop = chat.scrollHeight;
         document.getElementById("messagebox").value = ''
-
     }
 
     function windowResize() {
@@ -209,19 +214,67 @@ body, html {  overflow: hidden; }
         ctx.scale(dpr, dpr);
 }
     
-    function start_websocket(sessionid){
+    function start_websocket(sessionid, userid,username){
         if (websocket_session != null){return;}
-         websocket_session = new WebSocket('wss://' + window.location.host  +'/life-of-sounds/live_studio/session?Id='+sessionid);
-         websocket_session.onopen = () => {
-		    console.log("Websocket connection established");	
-        }
-        websocket_session.onmessage = (event) => {
+        websocket_session = new WebSocket('wss://' + window.location.host  +'/life-of-sounds/live_studio/session?Id='+sessionid);
+            websocket_session.onopen = () => {
+                console.log("Websocket connection established");
+                let data = {
+                            'sessionId': sessionid
+                            ,'userid': userid
+                            ,'isHost': 1
+                }
+                var request = new Request('/life-of-sounds/live_studio/client', {
+					method: 'POST',
+					headers: new Headers({
+								 'Accept': 'application/json',
+				                 'Content-Type': 'text/json'
+							})
+                    ,body: data
+                });
+                fetch(request);
+
+                document.getElementById("username").hidden = false
+                document.getElementById("username").value = username
+                document.getElementById("create_session").style.display = "none";
+                document.getElementById("stop_session").style.display = "inline-block";
+
+                let message = "Invitation Link:"
+                let p = document.createElement('h1');
+                p.textContent = message;
+                let chat = document.getElementById('chat')
+                chat.appendChild(p);
+
+                let input = document.createElement('textarea');
+                input.id = "myInput"
+                input.rows = 5
+                input.cols = 10
+                input.wrap = "soft"
+                let cpy_btn = document.createElement('button');
+                cpy_btn.style.marginTop = "10px"
+                cpy_btn.textContent = "Copy URL"
+                cpy_btn.className = "create-btn"
+                cpy_btn.onclick = function () {
+                    var copyText = document.getElementById("myInput");
+                        copyText.select();
+                        copyText.setSelectionRange(0, 99999); // For mobile devices
+                        navigator.clipboard.writeText(copyText.value);
+                        cpy_btn.textContent = "Copied!"
+                    }
+                input.value = 'https://' + window.location.host  +'/life-of-sounds/live_studio/join?Id='+sessionid 
+                input.disabled= true;
+                chat = document.getElementById('chat')
+                chat.appendChild(input);
+                chat.appendChild(cpy_btn);
+            }
+         websocket_session.onmessage = (event) => {
             console.log("Message from server", event.data);
         }
-
+        websocket_session.onclose = () => {
+		    alert("Websocket connection closed");
+        }
     }
 
-    window.addEventListener('resize', windowResize);
     document.getElementById("show_chat").onclick = function () {
     sessionActive = true;
     document.getElementById("show_chat").style.display = "none";
@@ -231,6 +284,7 @@ body, html {  overflow: hidden; }
     
         
     }
+    
     document.getElementById("hide_chat").onclick = function () {
         sessionActive = false;
         document.getElementById("hide_chat").style.display = "none";
@@ -241,11 +295,15 @@ body, html {  overflow: hidden; }
     }
 
     document.getElementById("create_session").onclick = function () {
-        let username = prompt("Your Name:", generate())
-        var data =JSON.stringify({
-                    "username": username
-                    });
-        var request = new Request('/life-of-sounds/live_studio/create_session', {
+        let username = prompt("Your Name:", generate());
+        let sessionName = prompt("Session Name:", "The "+generate()+ " Session");
+        let userid = sessionStorage.getItem("userid");
+        let body = {
+            'name': sessionName
+            ,'userid': userid
+        }
+        sessionStorage.setItem("username", username);
+        var request = new Request('/life-of-sounds/live_studio/session', {
 					method: 'POST',
 					headers: new Headers({
 								 'Accept': 'application/json',
@@ -258,88 +316,10 @@ body, html {  overflow: hidden; }
                 .then((data)=> {
                     if (data.hasOwnProperty("sessionId")){
                         location.hash = "session=" + data['sessionId'];
+                        sessionid =  data['sessionId'];
+                        start_websocket(data['sessionId'], userid,username);
                     }
                 });
-	
-
-
-
-
-
-    //     document.getElementById("username").hidden = false
-    //     document.getElementById("username").value = username
-    //     sessionStorage.setItem("username",username)
-    //     sessionActive = true;
-    //     document.getElementById("create_session").style.display = "none";
-    //     document.getElementById("stop_session").style.display = "inline-block";
-        // if (websocket_session != null){return;}
-        // websocket_session = new WebSocket('wss://' + window.location.host  +'/life-of-sounds/live_studio/create_session');
-        // websocket_session.onopen = () => {
-		//     console.log("Websocket connection established");	
-        // }
-    //     websocket_session.onmessage = (event) => {
-	// 	console.log("Message from server", event.data);
-    //     if (JSON.parse(event.data).hasOwnProperty("operation")){
-    //         let data = JSON.parse(event.data);
-    //         if (data['operation'] == "onopen"){
-    //             if (data["status"] == 1){
-    //                 let client_name = data['client_name'];
-    //                 let message = "> "+client_name+" Has joined!"
-    //                 let p = document.createElement('p');
-    //                 p.textContent = message;
-    //                 let chat = document.getElementById('messages')
-    //                 chat.appendChild(p);
-
-    //             }
-    //         }
-
-    //          if (data['operation'] == "message"){
-	// 				let message = data['message'];
-    //                 message = "> "+message
-    //                 let p = document.createElement('p');
-    //                 p.textContent = message;
-    //                 let chat = document.getElementById('messages')
-    //                 chat.appendChild(p);
-	// 			 }
-    //     }
-
-        
-    //         if (JSON.parse(event.data).hasOwnProperty("invitationId")){
-    //             let invitation_url = 'https://' + window.location.host  +'/life-of-sounds/live_studio/invite?join='+JSON.parse(event.data)['invitationId']
-    //             // window.location.href  = invitation_url
-    //             console.log("JOIN SESSION VIA LINK:",invitation_url)
-    //             sessionid = JSON.parse(event.data)['sessionId'];
-    //             let message = "Invitation Link:"
-    //             let p = document.createElement('h1');
-    //             p.textContent = message;
-    //             let chat = document.getElementById('chat')
-    //             chat.appendChild(p);
-
-    //             let input = document.createElement('textarea');
-    //             input.id = "myInput"
-    //             input.rows = 5
-    //             input.cols = 10
-    //             input.wrap = "soft"
-    //             let cpy_btn = document.createElement('button');
-    //             cpy_btn.style.marginTop = "10px"
-    //             cpy_btn.textContent = "Copy URL"
-    //             cpy_btn.className = "create-btn"
-    //             cpy_btn.onclick = function () {
-    //                 var copyText = document.getElementById("myInput");
-    //                     copyText.select();
-    //                     copyText.setSelectionRange(0, 99999); // For mobile devices
-    //                     navigator.clipboard.writeText(copyText.value);
-    //                     // alert("Copied the text: " + copyText.value);
-    //                     cpy_btn.textContent = "Copied!"
-    //             }
-    //             input.value = invitation_url;
-    //             input.disabled= true;
-    //             chat = document.getElementById('chat')
-    //             chat.appendChild(input);
-    //             chat.appendChild(cpy_btn);
-    //         }
-           
-	// }
     }
 
     document.getElementById("stop_session").onclick = function () {
@@ -349,6 +329,56 @@ body, html {  overflow: hidden; }
         websocket_session.close()
     }
 
+    window.addEventListener("load", function() {
+         data_request = new Request('/life-of-sounds/live_studio/user', {
+                    method: 'GET'
+                    ,headers: new Headers({
+                        'Accept': 'application/json'
+                        })
+                });
+            fetch(data_request)
+                .then((response)=> response.json())
+                .then((data)=> {
+                    console.log(data)
+                    sessionStorage.setItem('userid', data['userid'])
+                }
+            )
+        if(window.location.hash) {
+            if (sessionStorage.getItem("username") == null){
+                sessionStorage.setItem("username", generate());
+            }
+            sessionid = window.location.hash.split("session=")[1]
+            data_request = new Request('/life-of-sounds/live_studio/session?Id='+sessionid, {
+                    method: 'GET'
+                    ,headers: new Headers({
+                        'Accept': 'application/json'
+                        })
+                });
+            fetch(data_request)
+                .then((response)=> response.json())
+                .then((data)=> {
+                    console.log(data)
+                    let messages = data['values'];
+                    messages.forEach(element => {
+                        console.log(element['username'],element['content'])
+                        let username = element['username'];
+                        let text = element['content']
+                        let p = document.createElement('p');
+                        p.innerHTML  = "<b>"+username+ ":</b> "+text;
+                        let chat = document.getElementById('messages')
+                        chat.appendChild(p);
+                    });
+                    let chat = document.getElementById('messages')
+                    chat.scrollTop = chat.scrollHeight;
+
+                });
+            start_websocket(sessionid);
+        }else {
+        // Fragment doesn't exist
+        }
+    });
+    
+    window.addEventListener('resize', windowResize);
 
 </script>
 

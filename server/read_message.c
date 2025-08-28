@@ -1,6 +1,7 @@
 #include  <cjson/cJSON.h>
 #include <sys/socket.h>
 #include "Socket.h"
+#include "json_utilities.h"
 #include "send_message.h"
 #include "route.h"
 #include "FrameField.h"
@@ -8,6 +9,7 @@
 #include <sys/types.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include "Websocket_Message.h"
 #include <unistd.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -235,17 +237,36 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 			nbytes = read_websocket_message(socket->cSSL, payload_length, &message);
 			int message_length = nbytes;
 			message[nbytes] = '\0';
-			printf("Nbytes: %d | Message: %s\n", nbytes, message);
+			// printf("Nbytes: %d | Message: %s\n", nbytes, message);
 			send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
-			if (nbytes == 0){
-				printf("Could not determine bytes...\n");
-				exit(1);
+			char* operation = get_string_value_from_json("operation", message);
+			printf("Operation Sent: %s\n", operation);
+			if (strcmp(operation, "message")==0){
+				char* content = get_string_value_from_json("content", message);
+				char* userid = get_string_value_from_json("userid", message);
+				char* username = get_string_value_from_json("username", message);
+				char* sessionId = get_string_value_from_json("sessionId", message);
+				char* timestamp = get_string_value_from_json("timestamp", message);
+				struct Websocket_Message message = create_message(sessionId, content, timestamp, username,userid);
+				insert_message(message);
+				// free(content);
+				// free(username);
+				// free(sessionId);
+				// free(timestamp);
+			}else{
+				if (message != NULL){
+					free(message);
+					message = NULL;
+				}
 			}
-			if (message != NULL){
-				free(message);
-				message = NULL;
-			}
+		free(operation);
+		
+		if (nbytes == 0){
+			printf("Could not determine bytes...\n");
+			exit(1);
 		}
+			
+	}
 		if (websocket_buf != NULL) {
 			free(websocket_buf);
 			websocket_buf = NULL;

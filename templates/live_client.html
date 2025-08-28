@@ -22,6 +22,7 @@ body, html {  overflow: hidden; }
     outline: 1px solid black;
   }
     #visualizer {
+        position: relative;
         width: 100%; height: 100%;
 
 }
@@ -89,7 +90,7 @@ body, html {  overflow: hidden; }
         }
 
     button:hover {
-            background-color: #3a3a7c;
+            background-color: #9de1eb;
         }
 
         button:active {
@@ -97,7 +98,7 @@ body, html {  overflow: hidden; }
         }
         
         input:focus {
-            border-color: #4a4a8d;
+            border-color: #9de1eb;
         }
 
  canvas, nav {
@@ -105,27 +106,479 @@ body, html {  overflow: hidden; }
   }
 </style>
 <body>
+
 <nav class="outer-col-1" id="chatbox">
+
   <div id="chat" class="chat-container">  
     <h1>Live Chat</h1>
+    <input hidden="true" id="username" placeholder="Your name..." onchange="change_username()" style="margin-bottom: 10px;"/>
     <div id="messages" class="messages">
-      <p style="color: red;"> > 'Daniel' has connected!</p>
     </div>
     
     <div class="chat-input">
-      <input id="messagebox" placeholder="Type a message here..." />
-      <button onclick="send_message()" id="send">Send</button>
+      <textarea id="messagebox" rows="5" cols="45" style="width: 100%;" wrap="soft" placeholder="Type a message here..." ></textarea>
     </div>
+      <button style="margin-top: 10px; padding: 10px;" onclick="send_message()" id="send">Send</button>
   </div>
 </nav>
       <div class="inner-col">
+            <button  id="hide_chat" class="hide-btn" type="button" style=" background-color: lightcoral;"   value="Hide Chat">Hide Chat</button>
+            <button  id="show_chat" class="hide-btn" type="button" style=" background-color: lightgreen;  display: none;"  value="Show Chat">Show Chat</button>
             <canvas id="visualizer" ></canvas>
+
       </div>
 </body>
 
-<script src="/life-of-sounds/html_utilities.js" ></script>
-<script src="/life-of-sounds/live_client.js"></script>
+<script>
+    let sessionActive = false;
+    let websocket_session = null;
+    let sessionid = null;
 
 
+	var nameList = [
+	'Time','Past','Future','Dev',
+	'Fly','Flying','Soar','Soaring','Power','Falling',
+	'Fall','Jump','Cliff','Mountain','Rend','Red','Blue',
+	'Green','Yellow','Gold','Demon','Demonic','Panda','Cat',
+	'Kitty','Kitten','Zero','Memory','Trooper','XX','Bandit',
+	'Fear','Light','Glow','Tread','Deep','Deeper','Deepest',
+	'Mine','Your','Worst','Enemy','Hostile','Force','Video',
+	'Game','Donkey','Mule','Colt','Cult','Cultist','Magnum',
+	'Gun','Assault','Recon','Trap','Trapper','Redeem','Code',
+	'Script','Writer','Near','Close','Open','Cube','Circle',
+	'Geo','Genome','Germ','Spaz','Shot','Echo','Beta','Alpha',
+	'Gamma','Omega','Seal','Squid','Money','Cash','Lord','King',
+	'Duke','Rest','Fire','Flame','Morrow','Break','Breaker','Numb',
+	'Ice','Cold','Rotten','Sick','Sickly','Janitor','Camel','Rooster',
+	'Sand','Desert','Dessert','Hurdle','Racer','Eraser','Erase','Big',
+	'Small','Short','Tall','Sith','Bounty','Hunter','Cracked','Broken',
+	'Sad','Happy','Joy','Joyful','Crimson','Destiny','Deceit','Lies',
+	'Lie','Honest','Destined','Bloxxer','Hawk','Eagle','Hawker','Walker',
+	'Zombie','Sarge','Capt','Captain','Punch','One','Two','Uno','Slice',
+	'Slash','Melt','Melted','Melting','Fell','Wolf','Hound',
+	'Legacy','Sharp','Dead','Mew','Chuckle','Bubba','Bubble','Sandwich',
+	'Smasher','Extreme','Multi','Universe','Ultimate','Death','Ready','Monkey',   'Elevator','Wrench','Grease','Head','Theme','Grand','Cool','Kid','Boy',
+	'Girl','Vortex','Paradox'
+	];
+        
+    function change_username(){
+        if (websocket_session == null){return}
+        let new_username = document.getElementById('username').value
+        let old_username = sessionStorage.getItem("username")
+        let message =  "**<b>"+old_username+"</b> has changed its name to: <b>"+ new_username+"</b>"
+        let p = document.createElement('p');
+        p.innerHTML = message;
+        let chat = document.getElementById('messages')
+        chat.appendChild(p);
+        sessionStorage.setItem("username", new_username)
+
+    }
+
+	function generate() {
+		return nameList[Math.floor( Math.random() * nameList.length )] + " " + nameList[Math.floor( Math.random() * nameList.length )];
+	};
+
+    function send_message(){
+        if (websocket_session == null){return;}
+        let username = sessionStorage.getItem("username");
+        let userid = sessionStorage.getItem("userid");
+        let text = document.getElementById("messagebox").value
+        websocket_session.send(JSON.stringify({
+            "operation": "message"
+            ,'username': username
+            ,'userid':userid
+            ,'timestamp': new Date().toISOString()
+            ,'sessionId': sessionid
+            ,"content": text
+        }))
+        let p = document.createElement('p');
+        p.innerHTML  = "<b>"+username+ ":</b> "+text;
+        let chat = document.getElementById('messages')
+        chat.appendChild(p);
+        chat.scrollTop = chat.scrollHeight;
+        document.getElementById("messagebox").value = ''
+    }
+
+    function windowResize() {
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        const dpr = window.devicePixelRatio || 1;
+
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+
+        // reset transform so scale doesn’t accumulate
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.scale(dpr, dpr);
+}
+    
+    function start_websocket(sessionid){
+        if (websocket_session != null){return;}
+        let username = prompt("Your Name:", generate())
+        sessionStorage.setItem("username", username);
+        //  websocket_session = new WebSocket('wss://' + window.location.host  +'/life-of-sounds/live_studio/join?Id='+sessionid);
+        //  websocket_session.onopen = () => {
+		    //     console.log("Websocket connection established");
+        // }
+        //  websocket_session.onmessage = (event) => {
+        //     console.log("Message from server", event.data);
+        // }
+        // websocket_session.onclose = () => {
+		    //     alert("Websocket connection closed");
+        // }
+    }
+
+    document.getElementById("show_chat").onclick = function () {
+    sessionActive = true;
+    document.getElementById("show_chat").style.display = "none";
+    document.getElementById("hide_chat").style.display = "inline-block";
+    document.getElementById("chatbox").hidden = false;
+    windowResize()
+    
+        
+    }
+    
+    document.getElementById("hide_chat").onclick = function () {
+        sessionActive = false;
+        document.getElementById("hide_chat").style.display = "none";
+        document.getElementById("show_chat").style.display = "inline-block";
+        document.getElementById("chatbox").hidden = true;
+        windowResize()
+
+    }
+
+    window.addEventListener("load", function() {
+      let url = window.location.href;
+      if(url.includes('?')){
+        sessionid = url.split("?Id=")[1]
+        console.log(sessionid)
+        start_websocket(sessionid)
+      }else{
+        alert("Session not found.")
+
+      }
+        // if(window.location.hash) {
+        //     if (sessionStorage.getItem("username") == null){
+        //         sessionStorage.setItem("username", generate());
+        //     }
+        //     sessionid = window.location.hash.split("session=")[1]
+        //     data_request = new Request('/life-of-sounds/live_studio/session?Id='+sessionid, {
+        //             method: 'GET'
+        //             ,headers: new Headers({
+        //                 'Accept': 'application/json'
+        //                 })
+        //         });
+        //     fetch(data_request)
+        //         .then((response)=> response.json())
+        //         .then((data)=> {
+        //             console.log(data)
+        //             let messages = data['values'];
+        //             messages.forEach(element => {
+        //                 console.log(element['username'],element['content'])
+        //                 let username = element['username'];
+        //                 let text = element['content']
+        //                 let p = document.createElement('p');
+        //                 p.innerHTML  = "<b>"+username+ ":</b> "+text;
+        //                 let chat = document.getElementById('messages')
+        //                 chat.appendChild(p);
+        //             });
+        //             let chat = document.getElementById('messages')
+        //             chat.scrollTop = chat.scrollHeight;
+
+        //         });
+        //     start_websocket(sessionid);
+        // }else {
+        // // Fragment doesn't exist
+        // }
+    });
+    
+    window.addEventListener('resize', windowResize);
+
+</script>
+
+<!-- <script>
+    let canvas = document.querySelector("#visualizer");
+    let ctx = canvas.getContext("2d");
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.scale(dpr, dpr);
+    var pixel_size = 10
+    var numRows =  Math.floor(canvas.height / pixel_size);
+    var numCols =Math.floor(canvas.width / pixel_size);
+    var celluar_automota_grid = []
+    var big_canvas_grid = []
+    var mag_view_w =3
+    var mag_view_h = 3
+    var rule = 30
+    var t = 200
 
 
+//////////////////////////////////////////////////
+
+function binaryToInt(binaryStr) {
+    let result = 0;
+    let length = binaryStr.length;
+
+    for (let  i = 0; i < length; i++) {
+        if (binaryStr[i] == '1') {
+            result += Math.pow(2, length - 1 - i);
+        }
+    }
+    return result;
+}
+function reset(){
+            celluar_automota_grid = []
+            for (let i =0; i<numRows; i++){
+                celluar_automota_grid[i] = []
+                for (let j =0; j<numCols; j++){
+                    celluar_automota_grid[i][j] = 0;
+                     if (i == 0 && j == Math.floor(numCols*.5)){
+                        celluar_automota_grid[i][j] = 1
+                    }
+                      if (i == 0 && j == t){
+                        celluar_automota_grid[i][j] = 1
+                    }
+                }
+            }
+}
+function check(e) {
+        var code = e.keyCode;
+            if (code == 38){
+                console.log("Up");
+                if (pixel_size-1 <=0 ){
+                    return
+                }
+                pixel_size -=1
+                numRows =  Math.floor(canvas.height / pixel_size);
+                 numCols =Math.floor(canvas.width / pixel_size);
+                for (let i =0; i<numRows; i++){
+                celluar_automota_grid[i] = []
+                for (let j =0; j<numCols; j++){
+                    celluar_automota_grid[i][j] = 0;
+                     if (i == 0 && j == Math.floor(numCols*.5)){
+                        celluar_automota_grid[i][j] = 1
+                    }
+                      if (i == 0 && j == t){
+                        celluar_automota_grid[i][j] = 1
+                    }
+                }
+            }
+
+             }
+             if (code == 40){
+                console.log("Down");
+                pixel_size +=1
+                numRows =  Math.floor(canvas.height / pixel_size);
+                numCols =Math.floor(canvas.width / pixel_size);
+                for (let i =0; i<numRows; i++){
+                celluar_automota_grid[i] = []
+                for (let j =0; j<numCols; j++){
+                    celluar_automota_grid[i][j] = 0;
+                     if (i == 0 && j == Math.floor(numCols*.5)){
+                        celluar_automota_grid[i][j] = 1
+                    }
+                      if (i == 0 && j == t){
+                        celluar_automota_grid[i][j] = 1
+                    }
+                }
+            }
+
+
+            }
+            if (code == 39){
+                console.log("Right");
+                rule +=1
+                for (let i =0; i<numRows; i++){
+                celluar_automota_grid[i] = []
+                for (let j =0; j<numCols; j++){
+                    celluar_automota_grid[i][j] = 0;
+                    if (i == 0 && j == Math.floor(numCols*.5)){
+                        celluar_automota_grid[i][j] = 1
+                    }
+                      if (i == 0 && j == t){
+                        celluar_automota_grid[i][j] = 1
+                    }
+                }
+            }
+
+            }  if (code == 37){
+                console.log("Left");
+                if (rule-1 <=0){
+                    return
+                }
+                rule -=1
+                for (let i =0; i<numRows; i++){
+                celluar_automota_grid[i] = []
+                for (let j =0; j<numCols; j++){
+                    celluar_automota_grid[i][j] = 0;
+                     if (i == 0 && j == Math.floor(numCols*.5)){
+                        celluar_automota_grid[i][j] = 1
+                    }
+                      if (i == 0 && j == t){
+                        celluar_automota_grid[i][j] = 1
+                    }
+                }
+            }
+
+
+            }
+            console.log(rule)
+
+        }
+window.addEventListener('keydown',check,false);
+
+///////////////////////////////////////////////////
+
+function countNeighbors(row, col) {
+        let count = 0;
+        for (let i = -1; i <= 1; i++) {
+        for (let j = -1; j <= 1; j++) {
+            const r = row + i;
+            const c = col + j;
+            if (r >= 0 && r < numRows && c >= 0 &&
+            c < numCols && !(i === 0 && j === 0)) {
+            count += big_canvas_grid[r][c];
+            }
+        }
+        }
+        return count;
+}
+function updateGrid() {
+        var newGrid = [];
+        for (let i = 0; i < numRows; i++) {
+            newGrid[i] = [];
+            for (let j = 0; j < numCols; j++) {
+                const neighbors = countNeighbors(i, j);
+                if ((big_canvas_grid[i][j] === 1) && (neighbors < 2 || neighbors > 3)) {
+                newGrid[i][j] = 0;
+                } else if (big_canvas_grid[i][j] === 0 && neighbors === 3) {
+                newGrid[i][j] = 1;
+                } else {
+                newGrid[i][j] = big_canvas_grid[i][j];
+                }
+            }
+        }
+        big_canvas_grid = newGrid;
+
+        return big_canvas_grid
+}
+
+///////////////////////////////////////////////////
+
+function mouseMove(e){
+	e.preventDefault();
+	cPostX = e.pageX - canvas.offsetLeft;
+	cPostY = e.pageY - canvas.offsetTop;
+	mouse_x = cPostX;
+	mouse_y = cPostY;
+	var current_x = Math.floor(mouse_x/pixel_size)
+	var current_y = Math.floor(mouse_y/pixel_size)
+	 big_canvas_grid[current_y][current_x] = 1
+
+	for (let i=0; i<mag_view_h; i++){
+			for (let j=0; j<mag_view_w; j++){
+                big_canvas_grid[current_y+i][ current_x + j] =1
+				}
+		}
+
+	}
+
+//////////////////////////////////////////////////
+
+    function main(){
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (big_canvas_grid.length ==  0){
+                    // initial grid
+                    for (let i =0; i<numRows; i++){
+                        big_canvas_grid[i] = []
+                        for (let j =0; j<numCols; j++){
+                            big_canvas_grid[i][j] = 0;
+                        }
+                    }
+                }
+
+        if (celluar_automota_grid.length ==  0){
+            for (let i =0; i<numRows; i++){
+                celluar_automota_grid[i] = []
+                for (let j =0; j<numCols; j++){
+                    celluar_automota_grid[i][j] = 0;
+                    if (i == 0 && j == Math.floor(numCols*.5)){
+                        celluar_automota_grid[i][j] = 1
+                    }
+                      if (i == 0 && j == t){
+                        celluar_automota_grid[i][j] = 1
+                    }
+                }
+            }
+        }
+        for (let i=1; i < numRows; i++){
+            for (let j=0; j < numCols; j++){
+                    var x = j * pixel_size
+			        var y = i * pixel_size
+                    let currVal = celluar_automota_grid[i][j];
+                    let left_neighbor = null;
+                    let right_neighbor = null;
+                    let top_neighbor = null; 
+                    if (j-1 < 0){
+                        left_neighbor = 0
+                    }else{
+                        left_neighbor = celluar_automota_grid[i-1][j-1]
+                    }
+                    if (j+1 < canvas.width){
+                        right_neighbor = celluar_automota_grid[i-1][j+1]
+                    }else{
+                        right_neighbor = 0;
+                    }
+                    top_neighbor = celluar_automota_grid[i-1][j]
+                    let r = left_neighbor + ""+top_neighbor+""+right_neighbor
+                    let result = binaryToInt(r)
+                    let is_valid = 0;
+                    if (result == 7){
+                        is_valid = rule & 0x80
+                    }if (result == 6){
+                        is_valid = rule & 0x40
+                    }if (result == 5){
+                        is_valid = rule & 0x20
+                    }if (result == 4){
+                        is_valid = rule & 0x10
+                    }if (result == 3){
+                        is_valid = rule & 0x8
+                    }if (result == 2){
+                        is_valid = rule & 0x4
+                    }if (result == 1){
+                        is_valid = rule & 0x2
+                    }if (result == 0){
+                        is_valid = rule & 0x1
+                    }
+                    if (is_valid){
+                        celluar_automota_grid[i][j] = 1
+                        ctx.fillStyle = 'rgba(0,0,0,.06)'
+                        ctx.fillRect(x, y , pixel_size, pixel_size);
+                    }
+            }
+        }
+
+        big_canvas_grid = updateGrid() 
+
+        for (let i =0; i<numRows; i++){
+            for (let j =0; j<numCols; j++){
+                var x = j * pixel_size
+                var y = i * pixel_size
+                if (big_canvas_grid[i][j] ==1){
+                        ctx.fillStyle = 'rgba(0,0,0,.06)'
+                        ctx.fillRect(x, y , pixel_size, pixel_size);
+                }
+            }
+        }
+
+	requestAnimationFrame(main);
+
+
+    }
+    canvas.addEventListener("mousemove", mouseMove, false);
+    main()
+
+</script> -->
