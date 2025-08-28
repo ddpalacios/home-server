@@ -6,7 +6,7 @@
 #include "string_utilities.h"
 #include "SQL.h"
 
-struct WebsocketClient create_websocketclient(char* sessionid, char*socketId, char* username, int isHost){
+struct WebsocketClient create_websocketclient(char* sessionid, char*socketId, char* username, int isHost, char* userid){
 	struct WebsocketClient websocketclient;
 
 	unsigned char* Id  = malloc(16);
@@ -19,6 +19,7 @@ struct WebsocketClient create_websocketclient(char* sessionid, char*socketId, ch
     websocketclient.socketId = socketId;
 	websocketclient.isHost = isHost;
 	websocketclient.name =	username;
+	websocketclient.userid = userid;
 	
 	return websocketclient;
 }
@@ -51,6 +52,7 @@ struct WebsocketClient get_websocketclientBySocketId(char* socketId){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[255];
 	snprintf(sql, sizeof(sql),"SELECT * FROM WebsocketClient WHERE socketId = '%s'", socketId);
+	printf("%s\n", sql);
 	MYSQL_RES* res = query(conn, sql);
 	MYSQL_ROW row;
 	struct WebsocketClient websocketclient;
@@ -100,12 +102,13 @@ int websocketclient_exists(char* websocketclientid){
 void insert_websocketclient(struct WebsocketClient websocketclient){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[255];
-	snprintf(sql,sizeof(sql), "INSERT INTO Client_List VALUES ('%s', '%s', '%d', '%s', '%s');",
+	snprintf(sql,sizeof(sql), "INSERT INTO WebsocketClient VALUES ('%s', '%s', '%s', '%d', '%s', '%s');",
 			websocketclient.Id,
 			websocketclient.socketId,
-			websocketclient.isHost,
 			websocketclient.sessionId,
-			websocketclient.name);
+			websocketclient.isHost,
+			websocketclient.name,
+			websocketclient.userid);
 	query(conn, sql);
 	close_sql_connection(conn);
 }

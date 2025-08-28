@@ -34,7 +34,7 @@ char* retrieve_request_body(char* buf){
 
 char* create_cookie(char*path,char* key, char* value){
 	static char cookie[255];
-	snprintf(cookie, sizeof(cookie), "%s=%s;Path=%s;Secure;",key,value, path);
+	snprintf(cookie, sizeof(cookie), "%s=%s;Path=%s;Secure;HttpOnly",key,value, path);
 	return cookie;
 }
 
@@ -349,7 +349,7 @@ char* get_query_parameter(char*route, char*param){
 		  val[length] = '\0';
 		  Id++;
 		  replace(Id, "%27", "");
-		  replace(Id, "%20", "");
+		  replace(Id, "%20", " ");
 		  cJSON_AddStringToObject(root, val, Id);
 		  token = strtok(NULL, "&");
 		  count++;

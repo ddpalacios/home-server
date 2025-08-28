@@ -125,6 +125,7 @@ CMakeFiles/home-server.dir/routes/route.c.o: \
  /usr/include/x86_64-linux-gnu/asm/sockios.h \
  /usr/include/asm-generic/sockios.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
+ /home/dpalacios/home-server/models/websocket.h \
  /home/dpalacios/home-server/routes/route.h \
  /home/dpalacios/home-server/models/Invitation.h \
  /home/dpalacios/home-server/utilities/http_utilities.h \
@@ -133,6 +134,7 @@ CMakeFiles/home-server.dir/routes/route.c.o: \
  /home/dpalacios/home-server/routes/life-of-sounds/POST/new_user.h \
  /home/dpalacios/home-server/routes/life-of-sounds/POST/login.h \
  /home/dpalacios/home-server/routes/life-of-sounds/POST/post_websocket_session.h \
+ /home/dpalacios/home-server/routes/life-of-sounds/POST/post_websocket_client.h \
  /home/dpalacios/home-server/routes/life-of-sounds/POST/post_audio.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/new_login.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/studio.h \
@@ -154,4 +156,6 @@ CMakeFiles/home-server.dir/routes/route.c.o: \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/home.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/websocket_protocol.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/users.h \
+ /home/dpalacios/home-server/utilities/json_utilities.h \
+ /usr/include/cjson/cJSON.h /home/dpalacios/home-server/models/User.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/login.h

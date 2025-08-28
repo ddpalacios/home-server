@@ -9,11 +9,11 @@ typedef struct Websocket{
 	int exists;
 }websockets;
 int is_active_websocket_client(int fd);
-
-
+struct Websocket get_websocket_session(char* sessionId);
+int websocket_session_exists(char* sessionId);
 char* convert_websockets_to_json(struct Websocket* websocket, int count);
 char* convert_websocket_to_json(struct Websocket websocket);
-struct Websocket create_websocket_session();
+struct Websocket create_websocket_session(char* name, char* userid);
 char* generate_websocket_accptKey(char* websocket_sec_key);
 // int is_websocket_buffer(unsigned char* buf);
 int decode_websocket_buffer(unsigned char* buf, char message[] );

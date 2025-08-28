@@ -13,6 +13,7 @@ file(GLOB MAIN
     "models/websocket.c"
     "models/Invitation.c"
     "models/WebsocketClient.c"
+    "models/Websocket_Message.c"
     "models/FrameField.c"
     "models/Frame.c"
     "models/User.c"
@@ -29,8 +30,10 @@ file(GLOB MAIN
     "routes/life-of-sounds/GET/get_html_utilities_script.c"
     "routes/life-of-sounds/GET/get_game_of_life_script.c"
     "routes/life-of-sounds/GET/new_login.c"
+    "routes/life-of-sounds/GET/users.c"
     "routes/life-of-sounds/POST/login.c"
     "routes/life-of-sounds/POST/post_websocket_session.c"
+    "routes/life-of-sounds/POST/post_websocket_client.c"
 
     
 )

@@ -22,6 +22,7 @@ MYSQL_RES* query(MYSQL* conn,char* query){
 		exit(1);
 	}
 	res = mysql_use_result(conn);
+	
 	return res;
 
 	/*

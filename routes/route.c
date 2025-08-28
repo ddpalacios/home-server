@@ -2,6 +2,7 @@
 #include <openssl/ssl.h>
 #include <string.h>
 #include "Socket.h"
+#include "websocket.h"
 #include "route.h"
 #include "Invitation.h"
 #include "http_utilities.h"
@@ -9,6 +10,7 @@
 #include "life-of-sounds/POST/new_user.h"
 #include "life-of-sounds/POST/login.h"
 #include "life-of-sounds/POST/post_websocket_session.h"
+#include "life-of-sounds/POST/post_websocket_client.h"
 
 #include "life-of-sounds/POST/post_audio.h"
 #include "life-of-sounds/GET/new_login.h"
@@ -48,15 +50,12 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 	strncpy(request_type, http_header, request_type_len);
 	request_type[request_type_len] = '\0';
 	printf("Route: '%s %s'\n",request_type,route);
-//	printf("route type: '%s'\n", request_type);
 	if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/login")==0){
 		get_login_page(cSSL, http_header, "index.html");
-	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/live_client")==0){
-		get_live_html(cSSL, http_header, "live_client.html");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/live_studio/user")==0){
+		get_user(socket,http_header,body, route);
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/live_studio")==0){
 		get_live_html(cSSL, http_header, "live_studio.html");
-	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/live_client.js")==0){
-		get_gol_script(cSSL, http_header, "live_client.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/game_of_life.js")==0){
 		get_gol_script(cSSL, http_header, "game_of_life.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/web_audio_api.js")==0){
@@ -65,22 +64,20 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_utilities_script(cSSL, http_header, "html_utilities.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/live_studio/start")==0){
 		get_websocket_protocol(socket,http_header,body, route);
-	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/life-of-sounds/live_studio/create_session")==0){
-		post_websocket_session(socket,http_header,body, route);
 	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/life-of-sounds/login")==0){
 		login(cSSL, http_header, body);
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/life-of-sounds/live_studio/client")==0){
+		post_websocket_client(socket,http_header,body, route);
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/life-of-sounds/live_studio/session")==0){
+		post_websocket_session(socket,http_header,body, route);
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/life-of-sounds/live_studio/session?Id=") != NULL){
 		get_websocket_protocol(socket,http_header,body, route);
-	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/life-of-sounds/live_studio/invite?Id=") != NULL){
-		get_websocket_protocol(socket,http_header,body, route);
-	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/life-of-sounds/live_studio/invite?join=") != NULL){
-		char* invitationid = get_query_parameter(route, "join");
-		if (invitation_exists(invitationid)){
-			// insert new client in session group
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/life-of-sounds/live_studio/join?Id=") != NULL){
+		char* sessionId = get_query_parameter(route, "Id");
+		if (websocket_session_exists(sessionId)){
 			get_live_html(cSSL, http_header, "live_client.html");
 		}else{
-		    // Invitation expired!
-		    printf("Invitation Expired!\n");
+		    printf("Session Ended!\n");
 		}
 	}
 	if (route != NULL){
