@@ -15,6 +15,7 @@
 void post_websocket_session(struct Socket* socket,char* http_header, char*body, char* route){
     printf("Creating new session...\n");
     SSL *cSSL = socket->cSSL;
+    printf("BODY %s\n", body);
     char* session_name = get_string_value_from_json("name", body);
     char* userid = get_string_value_from_json("userid", body);
     struct Websocket websocket_session = create_websocket_session(session_name, userid);

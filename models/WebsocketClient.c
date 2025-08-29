@@ -66,31 +66,35 @@ struct WebsocketClient get_websocketclientBySocketId(char* socketId){
       close_sql_connection(conn);
 	  return websocketclient;
 }
-struct WebsocketClient get_websocketclient(char* websocketclientid){
+struct WebsocketClient get_websocketclient(char* userId, char* sessionId){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[255];
-	snprintf(sql, sizeof(sql),"SELECT * FROM WebsocketClient WHERE Id = '%s'", websocketclientid);
+	snprintf(sql, sizeof(sql),"SELECT * FROM WebsocketClient WHERE userId = '%s' AND sessionId = '%s'", userId, sessionId);
 	MYSQL_RES* res = query(conn, sql);
 	MYSQL_ROW row;
 	struct WebsocketClient websocketclient;
 	websocketclient.exists = 0;
 	  while((row = mysql_fetch_row(res))!= NULL){
 		  websocketclient.Id = strdup(row[0]);
-		  websocketclient.sessionId = strdup(row[1]);
-		  websocketclient.socketId = strdup(row[2]);
+		  websocketclient.socketId = strdup(row[1]);
+		  websocketclient.sessionId = strdup(row[2]);
+		  websocketclient.isHost = atoi(row[3]);
+		  websocketclient.name = strdup(row[4]);
+		  websocketclient.userid = strdup(row[5]);
 		  websocketclient.exists = 1;
 	  }
       close_sql_connection(conn);
 	  return websocketclient;
 }
 
-int websocketclient_exists(char* websocketclientid){
+int websocketclient_exists(char* userid, char* sessionid){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[255];
-	snprintf(sql, sizeof(sql),"SELECT * FROM WebsocketClient WHERE Id = '%s'", websocketclientid);
+	snprintf(sql, sizeof(sql),"SELECT * FROM WebsocketClient WHERE userId = '%s' AND sessionId = '%s'", userid, sessionid);
 	MYSQL_RES* res = query(conn, sql);
 	MYSQL_ROW row;
 	int exists = 0;
+	printf("%s\n", sql);
 	  while((row = mysql_fetch_row(res))!= NULL){
 		  exists=1;
 		  break;

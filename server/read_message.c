@@ -4,6 +4,8 @@
 #include "json_utilities.h"
 #include "send_message.h"
 #include "route.h"
+#include "WebsocketClient.h"
+#include "life-of-sounds/POST/post_websocket_client.h"
 #include "FrameField.h"
 #include "http_utilities.h"
 #include <sys/types.h>
@@ -237,28 +239,35 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 			nbytes = read_websocket_message(socket->cSSL, payload_length, &message);
 			int message_length = nbytes;
 			message[nbytes] = '\0';
-			// printf("Nbytes: %d | Message: %s\n", nbytes, message);
-			send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
 			char* operation = get_string_value_from_json("operation", message);
-			printf("Operation Sent: %s\n", operation);
-			if (strcmp(operation, "message")==0){
-				char* content = get_string_value_from_json("content", message);
-				char* userid = get_string_value_from_json("userid", message);
-				char* username = get_string_value_from_json("username", message);
-				char* sessionId = get_string_value_from_json("sessionId", message);
-				char* timestamp = get_string_value_from_json("timestamp", message);
-				struct Websocket_Message message = create_message(sessionId, content, timestamp, username,userid);
-				insert_message(message);
-				// free(content);
-				// free(username);
-				// free(sessionId);
-				// free(timestamp);
-			}else{
+			char* request = get_string_value_from_json("request", message);
+			if (strcmp(request, "POST")==0 &&strcmp(operation, "client")==0){
+				post_websocket_client(socket,NULL, message, NULL, 0);
 				if (message != NULL){
 					free(message);
 					message = NULL;
 				}
+			}else if (strcmp(request, "POST")==0 &&strcmp(operation, "message")==0){
+				send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
 			}
+
+
+			// send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
+			// printf("Operation Sent: %s\n", operation);
+			// if (strcmp(operation, "message")==0){
+				// char* content = get_string_value_from_json("content", message);
+				// char* userid = get_string_value_from_json("userid", message);
+				// char* username = get_string_value_from_json("username", message);
+				// char* sessionId = get_string_value_from_json("sessionId", message);
+				// char* timestamp = get_string_value_from_json("timestamp", message);
+				// struct Websocket_Message message = create_message(sessionId, content, timestamp, username,userid);
+				// insert_message(message);
+			// }else{
+			// if (message != NULL){
+			// 		free(message);
+			// 		message = NULL;
+			// 	}
+			// }
 		free(operation);
 		
 		if (nbytes == 0){

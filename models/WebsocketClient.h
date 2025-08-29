@@ -8,9 +8,9 @@ typedef struct WebsocketClient {
 	int isHost;
 }websocketclients;
 struct WebsocketClient create_websocketclient(char* sessionid, char*socketId, char* username, int isHost, char* userid);
-struct WebsocketClient get_websocketclient(char* websocketclientid);
+struct WebsocketClient get_websocketclient(char* userId, char* sessionId);
 struct WebsocketClient* get_websocketclientsBySessionId(char* sessionId, size_t *total_clients);
 struct WebsocketClient get_websocketclientBySocketId(char* socketId);
 void insert_websocketclient(struct WebsocketClient websocketclient);
 void delete_websocketclient(struct WebsocketClient websocketclient);
-int websocketclient_exists(char* websocketclientid);
+int websocketclient_exists(char* userid, char* sessionid);

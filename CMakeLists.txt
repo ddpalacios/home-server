@@ -32,8 +32,11 @@ file(GLOB MAIN
     "routes/life-of-sounds/GET/new_login.c"
     "routes/life-of-sounds/GET/users.c"
     "routes/life-of-sounds/POST/login.c"
+    "routes/life-of-sounds/POST/post_user.c"
     "routes/life-of-sounds/POST/post_websocket_session.c"
+    "routes/life-of-sounds/POST/post_browser_session.c"
     "routes/life-of-sounds/POST/post_websocket_client.c"
+    "routes/life-of-sounds/GET/get_websocket_client.c"
 
     
 )

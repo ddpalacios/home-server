@@ -293,10 +293,24 @@ CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_web_audio_api_script.c.
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_web_audio_api_script.c.s"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/dpalacios/home-server/routes/life-of-sounds/GET/get_web_audio_api_script.c -o CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_web_audio_api_script.c.s
 
+CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_websocket_client.c.o: CMakeFiles/home-server.dir/flags.make
+CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_websocket_client.c.o: ../routes/life-of-sounds/GET/get_websocket_client.c
+CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_websocket_client.c.o: CMakeFiles/home-server.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building C object CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_websocket_client.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_websocket_client.c.o -MF CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_websocket_client.c.o.d -o CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_websocket_client.c.o -c /home/dpalacios/home-server/routes/life-of-sounds/GET/get_websocket_client.c
+
+CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_websocket_client.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_websocket_client.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/dpalacios/home-server/routes/life-of-sounds/GET/get_websocket_client.c > CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_websocket_client.c.i
+
+CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_websocket_client.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_websocket_client.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/dpalacios/home-server/routes/life-of-sounds/GET/get_websocket_client.c -o CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_websocket_client.c.s
+
 CMakeFiles/home-server.dir/routes/life-of-sounds/GET/home.c.o: CMakeFiles/home-server.dir/flags.make
 CMakeFiles/home-server.dir/routes/life-of-sounds/GET/home.c.o: ../routes/life-of-sounds/GET/home.c
 CMakeFiles/home-server.dir/routes/life-of-sounds/GET/home.c.o: CMakeFiles/home-server.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building C object CMakeFiles/home-server.dir/routes/life-of-sounds/GET/home.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building C object CMakeFiles/home-server.dir/routes/life-of-sounds/GET/home.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/home-server.dir/routes/life-of-sounds/GET/home.c.o -MF CMakeFiles/home-server.dir/routes/life-of-sounds/GET/home.c.o.d -o CMakeFiles/home-server.dir/routes/life-of-sounds/GET/home.c.o -c /home/dpalacios/home-server/routes/life-of-sounds/GET/home.c
 
 CMakeFiles/home-server.dir/routes/life-of-sounds/GET/home.c.i: cmake_force
@@ -310,7 +324,7 @@ CMakeFiles/home-server.dir/routes/life-of-sounds/GET/home.c.s: cmake_force
 CMakeFiles/home-server.dir/routes/life-of-sounds/GET/login.c.o: CMakeFiles/home-server.dir/flags.make
 CMakeFiles/home-server.dir/routes/life-of-sounds/GET/login.c.o: ../routes/life-of-sounds/GET/login.c
 CMakeFiles/home-server.dir/routes/life-of-sounds/GET/login.c.o: CMakeFiles/home-server.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building C object CMakeFiles/home-server.dir/routes/life-of-sounds/GET/login.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building C object CMakeFiles/home-server.dir/routes/life-of-sounds/GET/login.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/home-server.dir/routes/life-of-sounds/GET/login.c.o -MF CMakeFiles/home-server.dir/routes/life-of-sounds/GET/login.c.o.d -o CMakeFiles/home-server.dir/routes/life-of-sounds/GET/login.c.o -c /home/dpalacios/home-server/routes/life-of-sounds/GET/login.c
 
 CMakeFiles/home-server.dir/routes/life-of-sounds/GET/login.c.i: cmake_force
@@ -324,7 +338,7 @@ CMakeFiles/home-server.dir/routes/life-of-sounds/GET/login.c.s: cmake_force
 CMakeFiles/home-server.dir/routes/life-of-sounds/GET/new_login.c.o: CMakeFiles/home-server.dir/flags.make
 CMakeFiles/home-server.dir/routes/life-of-sounds/GET/new_login.c.o: ../routes/life-of-sounds/GET/new_login.c
 CMakeFiles/home-server.dir/routes/life-of-sounds/GET/new_login.c.o: CMakeFiles/home-server.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building C object CMakeFiles/home-server.dir/routes/life-of-sounds/GET/new_login.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building C object CMakeFiles/home-server.dir/routes/life-of-sounds/GET/new_login.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/home-server.dir/routes/life-of-sounds/GET/new_login.c.o -MF CMakeFiles/home-server.dir/routes/life-of-sounds/GET/new_login.c.o.d -o CMakeFiles/home-server.dir/routes/life-of-sounds/GET/new_login.c.o -c /home/dpalacios/home-server/routes/life-of-sounds/GET/new_login.c
 
 CMakeFiles/home-server.dir/routes/life-of-sounds/GET/new_login.c.i: cmake_force
@@ -338,7 +352,7 @@ CMakeFiles/home-server.dir/routes/life-of-sounds/GET/new_login.c.s: cmake_force
 CMakeFiles/home-server.dir/routes/life-of-sounds/GET/users.c.o: CMakeFiles/home-server.dir/flags.make
 CMakeFiles/home-server.dir/routes/life-of-sounds/GET/users.c.o: ../routes/life-of-sounds/GET/users.c
 CMakeFiles/home-server.dir/routes/life-of-sounds/GET/users.c.o: CMakeFiles/home-server.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building C object CMakeFiles/home-server.dir/routes/life-of-sounds/GET/users.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building C object CMakeFiles/home-server.dir/routes/life-of-sounds/GET/users.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/home-server.dir/routes/life-of-sounds/GET/users.c.o -MF CMakeFiles/home-server.dir/routes/life-of-sounds/GET/users.c.o.d -o CMakeFiles/home-server.dir/routes/life-of-sounds/GET/users.c.o -c /home/dpalacios/home-server/routes/life-of-sounds/GET/users.c
 
 CMakeFiles/home-server.dir/routes/life-of-sounds/GET/users.c.i: cmake_force
@@ -352,7 +366,7 @@ CMakeFiles/home-server.dir/routes/life-of-sounds/GET/users.c.s: cmake_force
 CMakeFiles/home-server.dir/routes/life-of-sounds/GET/websocket_protocol.c.o: CMakeFiles/home-server.dir/flags.make
 CMakeFiles/home-server.dir/routes/life-of-sounds/GET/websocket_protocol.c.o: ../routes/life-of-sounds/GET/websocket_protocol.c
 CMakeFiles/home-server.dir/routes/life-of-sounds/GET/websocket_protocol.c.o: CMakeFiles/home-server.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building C object CMakeFiles/home-server.dir/routes/life-of-sounds/GET/websocket_protocol.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building C object CMakeFiles/home-server.dir/routes/life-of-sounds/GET/websocket_protocol.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/home-server.dir/routes/life-of-sounds/GET/websocket_protocol.c.o -MF CMakeFiles/home-server.dir/routes/life-of-sounds/GET/websocket_protocol.c.o.d -o CMakeFiles/home-server.dir/routes/life-of-sounds/GET/websocket_protocol.c.o -c /home/dpalacios/home-server/routes/life-of-sounds/GET/websocket_protocol.c
 
 CMakeFiles/home-server.dir/routes/life-of-sounds/GET/websocket_protocol.c.i: cmake_force
@@ -366,7 +380,7 @@ CMakeFiles/home-server.dir/routes/life-of-sounds/GET/websocket_protocol.c.s: cma
 CMakeFiles/home-server.dir/routes/life-of-sounds/POST/login.c.o: CMakeFiles/home-server.dir/flags.make
 CMakeFiles/home-server.dir/routes/life-of-sounds/POST/login.c.o: ../routes/life-of-sounds/POST/login.c
 CMakeFiles/home-server.dir/routes/life-of-sounds/POST/login.c.o: CMakeFiles/home-server.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building C object CMakeFiles/home-server.dir/routes/life-of-sounds/POST/login.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building C object CMakeFiles/home-server.dir/routes/life-of-sounds/POST/login.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/home-server.dir/routes/life-of-sounds/POST/login.c.o -MF CMakeFiles/home-server.dir/routes/life-of-sounds/POST/login.c.o.d -o CMakeFiles/home-server.dir/routes/life-of-sounds/POST/login.c.o -c /home/dpalacios/home-server/routes/life-of-sounds/POST/login.c
 
 CMakeFiles/home-server.dir/routes/life-of-sounds/POST/login.c.i: cmake_force
@@ -377,10 +391,38 @@ CMakeFiles/home-server.dir/routes/life-of-sounds/POST/login.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/home-server.dir/routes/life-of-sounds/POST/login.c.s"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/dpalacios/home-server/routes/life-of-sounds/POST/login.c -o CMakeFiles/home-server.dir/routes/life-of-sounds/POST/login.c.s
 
+CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_browser_session.c.o: CMakeFiles/home-server.dir/flags.make
+CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_browser_session.c.o: ../routes/life-of-sounds/POST/post_browser_session.c
+CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_browser_session.c.o: CMakeFiles/home-server.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Building C object CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_browser_session.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_browser_session.c.o -MF CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_browser_session.c.o.d -o CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_browser_session.c.o -c /home/dpalacios/home-server/routes/life-of-sounds/POST/post_browser_session.c
+
+CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_browser_session.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_browser_session.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/dpalacios/home-server/routes/life-of-sounds/POST/post_browser_session.c > CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_browser_session.c.i
+
+CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_browser_session.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_browser_session.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/dpalacios/home-server/routes/life-of-sounds/POST/post_browser_session.c -o CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_browser_session.c.s
+
+CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_user.c.o: CMakeFiles/home-server.dir/flags.make
+CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_user.c.o: ../routes/life-of-sounds/POST/post_user.c
+CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_user.c.o: CMakeFiles/home-server.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_25) "Building C object CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_user.c.o"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_user.c.o -MF CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_user.c.o.d -o CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_user.c.o -c /home/dpalacios/home-server/routes/life-of-sounds/POST/post_user.c
+
+CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_user.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_user.c.i"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/dpalacios/home-server/routes/life-of-sounds/POST/post_user.c > CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_user.c.i
+
+CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_user.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_user.c.s"
+	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/dpalacios/home-server/routes/life-of-sounds/POST/post_user.c -o CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_user.c.s
+
 CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_client.c.o: CMakeFiles/home-server.dir/flags.make
 CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_client.c.o: ../routes/life-of-sounds/POST/post_websocket_client.c
 CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_client.c.o: CMakeFiles/home-server.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building C object CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_client.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_26) "Building C object CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_client.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_client.c.o -MF CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_client.c.o.d -o CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_client.c.o -c /home/dpalacios/home-server/routes/life-of-sounds/POST/post_websocket_client.c
 
 CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_client.c.i: cmake_force
@@ -394,7 +436,7 @@ CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_client.c.s:
 CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_session.c.o: CMakeFiles/home-server.dir/flags.make
 CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_session.c.o: ../routes/life-of-sounds/POST/post_websocket_session.c
 CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_session.c.o: CMakeFiles/home-server.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Building C object CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_session.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_27) "Building C object CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_session.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_session.c.o -MF CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_session.c.o.d -o CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_session.c.o -c /home/dpalacios/home-server/routes/life-of-sounds/POST/post_websocket_session.c
 
 CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_session.c.i: cmake_force
@@ -408,7 +450,7 @@ CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_session.c.s
 CMakeFiles/home-server.dir/routes/route.c.o: CMakeFiles/home-server.dir/flags.make
 CMakeFiles/home-server.dir/routes/route.c.o: ../routes/route.c
 CMakeFiles/home-server.dir/routes/route.c.o: CMakeFiles/home-server.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_25) "Building C object CMakeFiles/home-server.dir/routes/route.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_28) "Building C object CMakeFiles/home-server.dir/routes/route.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/home-server.dir/routes/route.c.o -MF CMakeFiles/home-server.dir/routes/route.c.o.d -o CMakeFiles/home-server.dir/routes/route.c.o -c /home/dpalacios/home-server/routes/route.c
 
 CMakeFiles/home-server.dir/routes/route.c.i: cmake_force
@@ -422,7 +464,7 @@ CMakeFiles/home-server.dir/routes/route.c.s: cmake_force
 CMakeFiles/home-server.dir/server/read_message.c.o: CMakeFiles/home-server.dir/flags.make
 CMakeFiles/home-server.dir/server/read_message.c.o: ../server/read_message.c
 CMakeFiles/home-server.dir/server/read_message.c.o: CMakeFiles/home-server.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_26) "Building C object CMakeFiles/home-server.dir/server/read_message.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_29) "Building C object CMakeFiles/home-server.dir/server/read_message.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/home-server.dir/server/read_message.c.o -MF CMakeFiles/home-server.dir/server/read_message.c.o.d -o CMakeFiles/home-server.dir/server/read_message.c.o -c /home/dpalacios/home-server/server/read_message.c
 
 CMakeFiles/home-server.dir/server/read_message.c.i: cmake_force
@@ -436,7 +478,7 @@ CMakeFiles/home-server.dir/server/read_message.c.s: cmake_force
 CMakeFiles/home-server.dir/server/send_message.c.o: CMakeFiles/home-server.dir/flags.make
 CMakeFiles/home-server.dir/server/send_message.c.o: ../server/send_message.c
 CMakeFiles/home-server.dir/server/send_message.c.o: CMakeFiles/home-server.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_27) "Building C object CMakeFiles/home-server.dir/server/send_message.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_30) "Building C object CMakeFiles/home-server.dir/server/send_message.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/home-server.dir/server/send_message.c.o -MF CMakeFiles/home-server.dir/server/send_message.c.o.d -o CMakeFiles/home-server.dir/server/send_message.c.o -c /home/dpalacios/home-server/server/send_message.c
 
 CMakeFiles/home-server.dir/server/send_message.c.i: cmake_force
@@ -450,7 +492,7 @@ CMakeFiles/home-server.dir/server/send_message.c.s: cmake_force
 CMakeFiles/home-server.dir/server/server.c.o: CMakeFiles/home-server.dir/flags.make
 CMakeFiles/home-server.dir/server/server.c.o: ../server/server.c
 CMakeFiles/home-server.dir/server/server.c.o: CMakeFiles/home-server.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_28) "Building C object CMakeFiles/home-server.dir/server/server.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_31) "Building C object CMakeFiles/home-server.dir/server/server.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/home-server.dir/server/server.c.o -MF CMakeFiles/home-server.dir/server/server.c.o.d -o CMakeFiles/home-server.dir/server/server.c.o -c /home/dpalacios/home-server/server/server.c
 
 CMakeFiles/home-server.dir/server/server.c.i: cmake_force
@@ -464,7 +506,7 @@ CMakeFiles/home-server.dir/server/server.c.s: cmake_force
 CMakeFiles/home-server.dir/utilities/http_utilities.c.o: CMakeFiles/home-server.dir/flags.make
 CMakeFiles/home-server.dir/utilities/http_utilities.c.o: ../utilities/http_utilities.c
 CMakeFiles/home-server.dir/utilities/http_utilities.c.o: CMakeFiles/home-server.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_29) "Building C object CMakeFiles/home-server.dir/utilities/http_utilities.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_32) "Building C object CMakeFiles/home-server.dir/utilities/http_utilities.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/home-server.dir/utilities/http_utilities.c.o -MF CMakeFiles/home-server.dir/utilities/http_utilities.c.o.d -o CMakeFiles/home-server.dir/utilities/http_utilities.c.o -c /home/dpalacios/home-server/utilities/http_utilities.c
 
 CMakeFiles/home-server.dir/utilities/http_utilities.c.i: cmake_force
@@ -478,7 +520,7 @@ CMakeFiles/home-server.dir/utilities/http_utilities.c.s: cmake_force
 CMakeFiles/home-server.dir/utilities/json_utilities.c.o: CMakeFiles/home-server.dir/flags.make
 CMakeFiles/home-server.dir/utilities/json_utilities.c.o: ../utilities/json_utilities.c
 CMakeFiles/home-server.dir/utilities/json_utilities.c.o: CMakeFiles/home-server.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_30) "Building C object CMakeFiles/home-server.dir/utilities/json_utilities.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_33) "Building C object CMakeFiles/home-server.dir/utilities/json_utilities.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/home-server.dir/utilities/json_utilities.c.o -MF CMakeFiles/home-server.dir/utilities/json_utilities.c.o.d -o CMakeFiles/home-server.dir/utilities/json_utilities.c.o -c /home/dpalacios/home-server/utilities/json_utilities.c
 
 CMakeFiles/home-server.dir/utilities/json_utilities.c.i: cmake_force
@@ -492,7 +534,7 @@ CMakeFiles/home-server.dir/utilities/json_utilities.c.s: cmake_force
 CMakeFiles/home-server.dir/utilities/os_utilities.c.o: CMakeFiles/home-server.dir/flags.make
 CMakeFiles/home-server.dir/utilities/os_utilities.c.o: ../utilities/os_utilities.c
 CMakeFiles/home-server.dir/utilities/os_utilities.c.o: CMakeFiles/home-server.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_31) "Building C object CMakeFiles/home-server.dir/utilities/os_utilities.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_34) "Building C object CMakeFiles/home-server.dir/utilities/os_utilities.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/home-server.dir/utilities/os_utilities.c.o -MF CMakeFiles/home-server.dir/utilities/os_utilities.c.o.d -o CMakeFiles/home-server.dir/utilities/os_utilities.c.o -c /home/dpalacios/home-server/utilities/os_utilities.c
 
 CMakeFiles/home-server.dir/utilities/os_utilities.c.i: cmake_force
@@ -506,7 +548,7 @@ CMakeFiles/home-server.dir/utilities/os_utilities.c.s: cmake_force
 CMakeFiles/home-server.dir/utilities/string_utilities.c.o: CMakeFiles/home-server.dir/flags.make
 CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_utilities.c
 CMakeFiles/home-server.dir/utilities/string_utilities.c.o: CMakeFiles/home-server.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_32) "Building C object CMakeFiles/home-server.dir/utilities/string_utilities.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_35) "Building C object CMakeFiles/home-server.dir/utilities/string_utilities.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/home-server.dir/utilities/string_utilities.c.o -MF CMakeFiles/home-server.dir/utilities/string_utilities.c.o.d -o CMakeFiles/home-server.dir/utilities/string_utilities.c.o -c /home/dpalacios/home-server/utilities/string_utilities.c
 
 CMakeFiles/home-server.dir/utilities/string_utilities.c.i: cmake_force
@@ -535,12 +577,15 @@ home__server_OBJECTS = \
 "CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_html_utilities_script.c.o" \
 "CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_live_page.c.o" \
 "CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_web_audio_api_script.c.o" \
+"CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_websocket_client.c.o" \
 "CMakeFiles/home-server.dir/routes/life-of-sounds/GET/home.c.o" \
 "CMakeFiles/home-server.dir/routes/life-of-sounds/GET/login.c.o" \
 "CMakeFiles/home-server.dir/routes/life-of-sounds/GET/new_login.c.o" \
 "CMakeFiles/home-server.dir/routes/life-of-sounds/GET/users.c.o" \
 "CMakeFiles/home-server.dir/routes/life-of-sounds/GET/websocket_protocol.c.o" \
 "CMakeFiles/home-server.dir/routes/life-of-sounds/POST/login.c.o" \
+"CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_browser_session.c.o" \
+"CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_user.c.o" \
 "CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_client.c.o" \
 "CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_session.c.o" \
 "CMakeFiles/home-server.dir/routes/route.c.o" \
@@ -571,12 +616,15 @@ home-server: CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_game_of_li
 home-server: CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_html_utilities_script.c.o
 home-server: CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_live_page.c.o
 home-server: CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_web_audio_api_script.c.o
+home-server: CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_websocket_client.c.o
 home-server: CMakeFiles/home-server.dir/routes/life-of-sounds/GET/home.c.o
 home-server: CMakeFiles/home-server.dir/routes/life-of-sounds/GET/login.c.o
 home-server: CMakeFiles/home-server.dir/routes/life-of-sounds/GET/new_login.c.o
 home-server: CMakeFiles/home-server.dir/routes/life-of-sounds/GET/users.c.o
 home-server: CMakeFiles/home-server.dir/routes/life-of-sounds/GET/websocket_protocol.c.o
 home-server: CMakeFiles/home-server.dir/routes/life-of-sounds/POST/login.c.o
+home-server: CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_browser_session.c.o
+home-server: CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_user.c.o
 home-server: CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_client.c.o
 home-server: CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_session.c.o
 home-server: CMakeFiles/home-server.dir/routes/route.c.o
@@ -592,7 +640,7 @@ home-server: /usr/lib/x86_64-linux-gnu/libssl.so
 home-server: /usr/lib/x86_64-linux-gnu/libcrypto.so
 home-server: /usr/lib/x86_64-linux-gnu/libmysqlclient.so
 home-server: CMakeFiles/home-server.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_33) "Linking C executable home-server"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/dpalacios/home-server/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_36) "Linking C executable home-server"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/home-server.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

@@ -18,7 +18,7 @@ void get_user(struct Socket* socket,char* http_header, char*body, char* route){
 			printf("USER ID: %s\n", session.userId);
 			struct User user =  get_user_by_id(session.userId);
 			if (user.exists){
-				 cJSON *root = create_json_object();
+				cJSON *root = create_json_object();
 				add_string_to_json_root(root,"userid",user.Id);
 				add_string_to_json_root(root,"fullname",user.fullname);
 				add_string_to_json_root(root,"email",user.email);
