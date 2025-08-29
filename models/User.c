@@ -53,28 +53,31 @@ char* convert_user_to_json(struct User user){
 
 struct User create_user(char* fullname, char* password, char* email){
 	    struct User user;
-	    unsigned char* user_id = malloc(16);
-	    create_unique_identifier(user_id);
+		unsigned char* Id  = malloc(16);
+        create_unique_identifier(Id);
+        char Id_hex[33];
+        hash_to_hex(Id, 16, Id_hex);
+        user.Id  =strdup(Id_hex);
+		user.fullname = fullname;
 
-	    unsigned char* salt = malloc(16);
-	    create_unique_identifier(salt);
-
-	    size_t password_len = strlen(password);
-	    unsigned char* combined = malloc(password_len + 16);
-	    memcpy(combined, password, password_len);
-	    memcpy(combined + password_len, salt, 16);
-
-	    unsigned char* hash = malloc(SHA256_DIGEST_LENGTH);
-	    hash_string(combined, password_len + 16, hash);
-
-	    free(combined);
-
-	    user.Id = user_id;
-	    user.fullname = strdup(fullname);
-	    user.email = strdup(email);
-	    user.password = hash;
-	    user.salt = salt;
-
+		if (strlen(email) > 0 && strlen(password) > 0){
+			unsigned char* salt = malloc(16);
+			create_unique_identifier(salt);
+			size_t password_len = strlen(password);
+			unsigned char* combined = malloc(password_len + 16);
+			memcpy(combined, password, password_len);
+			memcpy(combined + password_len, salt, 16);
+			unsigned char* hash = malloc(SHA256_DIGEST_LENGTH);
+			hash_string(combined, password_len + 16, hash);
+			free(combined);
+			user.email = strdup(email);
+			user.password = hash;
+			user.salt = salt;
+		}else{
+				user.email = "";
+				user.password = "";
+				user.salt = "";
+		}
 	    return user;
 }
 struct User get_user_by_name(char* fullname){
@@ -106,20 +109,20 @@ void insert_user(struct User user){
 	//printf("Inserting user %s\n", user.fullname);
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[255];
-	char id_hex[33];
-	char salt_hex[33];
-	char password_hex[SHA256_DIGEST_LENGTH * 2 + 1];
-	hash_to_hex(user.Id, 16, id_hex);
-	hash_to_hex(user.salt, 16, salt_hex);
-	hash_to_hex(user.password, SHA256_DIGEST_LENGTH, password_hex);
+	// char id_hex[33];
+	// char salt_hex[33];
+	// char password_hex[SHA256_DIGEST_LENGTH * 2 + 1];
+	// hash_to_hex(user.Id, 16, id_hex);
+	// hash_to_hex(user.salt, 16, salt_hex);
+	// hash_to_hex(user.password, SHA256_DIGEST_LENGTH, password_hex);
 
 	snprintf(sql, sizeof(sql),
 		    "INSERT INTO user VALUES ('%s', '%s', '%s', '%s', '%s');",
-		    id_hex,
+		    user.Id,
 		    user.fullname,
-		    password_hex,
+		    user.password,
 		    user.email,
-		    salt_hex);
+		    user.salt);
 
 	printf("SQL: %s\n", sql);
 	query(conn, sql);

@@ -131,11 +131,13 @@ CMakeFiles/home-server.dir/routes/route.c.o: \
  /home/dpalacios/home-server/utilities/http_utilities.h \
  /home/dpalacios/home-server/routes/database-server/POST/post_frame.h \
  /home/dpalacios/home-server/models/FrameField.h \
- /home/dpalacios/home-server/routes/life-of-sounds/POST/new_user.h \
+ /home/dpalacios/home-server/routes/life-of-sounds/POST/post_user.h \
  /home/dpalacios/home-server/routes/life-of-sounds/POST/login.h \
  /home/dpalacios/home-server/routes/life-of-sounds/POST/post_websocket_session.h \
  /home/dpalacios/home-server/routes/life-of-sounds/POST/post_websocket_client.h \
+ /home/dpalacios/home-server/routes/life-of-sounds/GET/get_websocket_client.h \
  /home/dpalacios/home-server/routes/life-of-sounds/POST/post_audio.h \
+ /home/dpalacios/home-server/routes/life-of-sounds/POST/post_browser_session.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/new_login.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/studio.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/get_live_page.h \
