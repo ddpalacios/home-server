@@ -136,37 +136,36 @@ char *get_file_buffer(char* filename) {
 char* open_html_template_page(char*template_name, char* request){
 	char* request_cookie = get_cookie(request);
 	char template_dir[50] = "../templates/";
-	// if (request_cookie == NULL && strstr(template_name, "live_client.html")){
-		// strcat(template_dir, template_name);
-		// char *html_buffer = get_file_buffer(template_dir);
+	strcat(template_dir, template_name);
+	char *html_buffer = get_file_buffer(template_dir);
+	return html_buffer;
+
+	// if (request_cookie == NULL && strstr(template_name, "index.html") == NULL && strstr(template_name, "new_login.html") == NULL){
+	// 	template_name = "index.html";
+	// 	strcat(template_dir, template_name);
+	// 	char *html_buffer = get_file_buffer(template_dir);
 	// 	return html_buffer;
+	// }else if ( strstr(template_name, "new_login.html") != NULL){
+	// 			strcat(template_dir, template_name);
+	// 			char *html_buffer = get_file_buffer(template_dir);
+	// 			return html_buffer;
+	// }else if ( strstr(template_name, "index.html") != NULL){
+	// 			strcat(template_dir, template_name);
+	// 			char *html_buffer = get_file_buffer(template_dir);
+	// 			return html_buffer;
+	// }else{
+	// 	struct Session session = get_session(request_cookie);
+	// 	if (!session.exists){
+	// 			template_name = "index.html";
+	// 			strcat(template_dir, template_name);
+	// 			char *html_buffer = get_file_buffer(template_dir);
+	// 			return html_buffer;
+	// 	}else{
+	// 			strcat(template_dir, template_name);
+	// 			char *html_buffer = get_file_buffer(template_dir);
+	// 			return html_buffer;
+	// 		}
 	// }
-	if (request_cookie == NULL && strstr(template_name, "index.html") == NULL && strstr(template_name, "new_login.html") == NULL){
-		template_name = "index.html";
-		strcat(template_dir, template_name);
-		char *html_buffer = get_file_buffer(template_dir);
-		return html_buffer;
-	}else if ( strstr(template_name, "new_login.html") != NULL){
-				strcat(template_dir, template_name);
-				char *html_buffer = get_file_buffer(template_dir);
-				return html_buffer;
-	}else if ( strstr(template_name, "index.html") != NULL){
-				strcat(template_dir, template_name);
-				char *html_buffer = get_file_buffer(template_dir);
-				return html_buffer;
-	}else{
-		struct Session session = get_session(request_cookie);
-		if (!session.exists){
-				template_name = "index.html";
-				strcat(template_dir, template_name);
-				char *html_buffer = get_file_buffer(template_dir);
-				return html_buffer;
-		}else{
-				strcat(template_dir, template_name);
-				char *html_buffer = get_file_buffer(template_dir);
-				return html_buffer;
-			}
-	}
 }
 	
 
@@ -388,73 +387,73 @@ if (code == 401) {
 void send_JSON_response_code( SSL *cSSL,int code, char* json){
 		char http_header[2048];
 		int json_length = strlen(json);
-	if (code == 200){
-			snprintf(http_header, sizeof(http_header),
-					"HTTP/1.1 200 OK\r\n"
-				  "Content-Type: application/json\r\n"
-				  "Connection: close\r\n"
-				  "Content-Length: %d\r\n"
-				  "\r\n", json_length);
-	SSL_write(cSSL, http_header, strlen(http_header));
-	SSL_write(cSSL,json,json_length);
-	}else if (code == 201) {
-			snprintf(http_header, sizeof(http_header),
-					"HTTP/1.1 201 Created\r\n"
-				  "Content-Type: application/json\r\n"
-				  "Connection: close\r\n"
-				  "Content-Length: %d\r\n"
-				  "\r\n", json_length);
-	SSL_write(cSSL, http_header, strlen(http_header));
-	SSL_write(cSSL,json,json_length);
+		if (code == 200){
+				snprintf(http_header, sizeof(http_header),
+						"HTTP/1.1 200 OK\r\n"
+					"Content-Type: application/json\r\n"
+					"Connection: close\r\n"
+					"Content-Length: %d\r\n"
+					"\r\n", json_length);
+				SSL_write(cSSL, http_header, strlen(http_header));
+				SSL_write(cSSL,json,json_length);
+		}else if (code == 201) {
+				snprintf(http_header, sizeof(http_header),
+						"HTTP/1.1 201 Created\r\n"
+					"Content-Type: application/json\r\n"
+					"Connection: close\r\n"
+					"Content-Length: %d\r\n"
+					"\r\n", json_length);
+				SSL_write(cSSL, http_header, strlen(http_header));
+				SSL_write(cSSL,json,json_length);
 
-	}else if (code == 401) {
-		snprintf(http_header, sizeof(http_header),
-				"HTTP/1.1 401 Unauthorized\r\n"
-				  "Content-Type: application/json\r\n"
-				  "Connection: close\r\n"
-				"Content-Length: %d\r\n"
-				"\r\n", json_length);
-	SSL_write(cSSL, http_header, strlen(http_header));
-	SSL_write(cSSL,json,json_length);
-	}else if (code == 400) {
-		snprintf(http_header, sizeof(http_header),
-				"HTTP/1.1 400 Bad Request\r\n"
-				  "Content-Type: application/json\r\n"
-				  "Connection: close\r\n"
-				"Content-Length: %d\r\n"
-				"\r\n", json_length);
-	SSL_write(cSSL, http_header, strlen(http_header));
-	SSL_write(cSSL,json,json_length);
-	}else if (code == 409) {
-		snprintf(http_header, sizeof(http_header),
-				"HTTP/1.1 409 Conflict\r\n"
-				  "Content-Type: application/json\r\n"
-				  "Connection: close\r\n"
-				"Content-Length: %d\r\n"
-				"\r\n", json_length);
-	SSL_write(cSSL, http_header, strlen(http_header));
-	SSL_write(cSSL,json,json_length);
+		}else if (code == 401) {
+			snprintf(http_header, sizeof(http_header),
+					"HTTP/1.1 401 Unauthorized\r\n"
+					"Content-Type: application/json\r\n"
+					"Connection: close\r\n"
+					"Content-Length: %d\r\n"
+					"\r\n", json_length);
+			SSL_write(cSSL, http_header, strlen(http_header));
+			SSL_write(cSSL,json,json_length);
+		}else if (code == 400) {
+			snprintf(http_header, sizeof(http_header),
+					"HTTP/1.1 400 Bad Request\r\n"
+					"Content-Type: application/json\r\n"
+					"Connection: close\r\n"
+					"Content-Length: %d\r\n"
+					"\r\n", json_length);
+			SSL_write(cSSL, http_header, strlen(http_header));
+			SSL_write(cSSL,json,json_length);
+		}else if (code == 409) {
+			snprintf(http_header, sizeof(http_header),
+					"HTTP/1.1 409 Conflict\r\n"
+					"Content-Type: application/json\r\n"
+					"Connection: close\r\n"
+					"Content-Length: %d\r\n"
+					"\r\n", json_length);
+			SSL_write(cSSL, http_header, strlen(http_header));
+			SSL_write(cSSL,json,json_length);
 
-	}else if (code == 404) {
-		snprintf(http_header, sizeof(http_header),
-				"HTTP/1.1 404 Not Found\r\n"
-				  "Content-Type: application/json\r\n"
-				  "Connection: close\r\n"
-				"Content-Length: %d\r\n"
-				"\r\n", json_length);
-	SSL_write(cSSL, http_header, strlen(http_header));
-	SSL_write(cSSL,json,json_length);
-	
-	}else if (code == 405) {
-		snprintf(http_header, sizeof(http_header),
-				"HTTP/1.1 405 Not Allowed\r\n"
-				  "Content-Type: application/json\r\n"
-				  "Connection: close\r\n"
-				"Content-Length: %d\r\n"
-				"\r\n", json_length);
-	SSL_write(cSSL, http_header, strlen(http_header));
-	SSL_write(cSSL,json,json_length);
-	}
+		}else if (code == 404) {
+			snprintf(http_header, sizeof(http_header),
+					"HTTP/1.1 404 Not Found\r\n"
+					"Content-Type: application/json\r\n"
+					"Connection: close\r\n"
+					"Content-Length: %d\r\n"
+					"\r\n", json_length);
+			SSL_write(cSSL, http_header, strlen(http_header));
+			SSL_write(cSSL,json,json_length);
+		
+		}else if (code == 405) {
+			snprintf(http_header, sizeof(http_header),
+					"HTTP/1.1 405 Not Allowed\r\n"
+					"Content-Type: application/json\r\n"
+					"Connection: close\r\n"
+					"Content-Length: %d\r\n"
+					"\r\n", json_length);
+			SSL_write(cSSL, http_header, strlen(http_header));
+			SSL_write(cSSL,json,json_length);
+		}
 
 }
 

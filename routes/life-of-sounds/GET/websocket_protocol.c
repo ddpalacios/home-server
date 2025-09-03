@@ -32,9 +32,17 @@ void activate_websocket_session(char* sessionId, char* http_header, struct Socke
 				socket->keep_alive = 0x0;
 			}
 		}else{
-			char* messages_json = get_messages_by_sessionid_json(sessionId);
-			printf("%s\n", messages_json);
-			send_JSON_response_code(cSSL, 200, messages_json);
+			struct Websocket ws_session =  get_websocket_session(sessionId);
+			cJSON *root = create_json_object();
+			add_string_to_json_root(root,"Id",ws_session.Id);
+			add_string_to_json_root(root,"name",ws_session.name);
+			add_string_to_json_root(root,"sessionid",ws_session.sessionid);
+			add_string_to_json_root(root,"userid",ws_session.userid);
+			char* ws_info = get_json_as_string(root);
+            send_JSON_response_code(cSSL, 200, ws_info);
+			cJSON_Delete(root);
+
+
 		}
 	}
 }
@@ -42,16 +50,12 @@ void activate_websocket_session(char* sessionId, char* http_header, struct Socke
 
 void get_websocket_protocol(struct Socket* socket,char* http_header, char*body, char* route){
             SSL *cSSL = socket->cSSL;
-
 			if (strstr(http_header, "/live_studio/join?connect=true&Id=")){
 				  char* sessionId = get_query_parameter(route, "Id");
 				  char* username = get_query_parameter(route, "username");
-				//   struct WebsocketClient websocketclient = create_websocketclient(sessionId,socket->Id, username, 0x0);
-				//   insert_websocketclient(websocketclient);
-				//   activate_websocket_session(sessionId, http_header, socket);
 			  }
 			  else if (strstr(http_header, "/live_studio/session?Id=")){
-					char* sessionId = get_query_parameter(route, "Id"); // TODO Search for sessionID and validate that it exists to start the protocol
+					char* sessionId = get_query_parameter(route, "Id");
 					activate_websocket_session(sessionId, http_header, socket);
 				}else{
 					send_response_code(cSSL, 400);

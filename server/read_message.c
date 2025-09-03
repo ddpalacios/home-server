@@ -110,18 +110,21 @@ int read_websocket_message(SSL*cSSL,int payload_length, char** payload){
 		unsigned char*masking_key = malloc(4);
 		int nbytes = read_exact_bytes(cSSL, 4, masking_key);
 
-		char* coded_payload = malloc(payload_length);
+		char* coded_payload = malloc(payload_length+1);
 		if (!coded_payload){
 			perror("malloc");
 			return 0;
 		}
 		nbytes = read_exact_bytes(cSSL, payload_length, coded_payload);
-		*payload = malloc(payload_length);
+		coded_payload[payload_length] = '\0';
+		*payload = malloc(payload_length+1);
 
 		for (int i=0; i<payload_length; i++){
 			int val = coded_payload[i] ^ masking_key[i%4];
 			(*payload)[i] = val; 
 		}
+		payload[payload_length] = '\0';
+
 		if (masking_key != NULL){
 			free(masking_key);
 			masking_key = NULL;
@@ -143,15 +146,16 @@ int read_websocket_message(SSL*cSSL,int payload_length, char** payload){
 		nbytes = read_exact_bytes(cSSL, 4, masking_key);
 
 
-		char* coded_payload = malloc(new_length);
+		char* coded_payload = malloc(new_length+1);
 		nbytes = read_exact_bytes(cSSL, new_length, coded_payload);
-		*payload = malloc(new_length);
+		coded_payload[new_length] = '\0';
+		*payload = malloc(new_length+1);
 
 		for (int i=0; i<new_length; i++){
 			int val = coded_payload[i] ^ masking_key[i%4];
 			(*payload)[i] = val; 
 		}
-
+		payload[new_length] = '\0';
 		if (masking_key != NULL){
 			free(masking_key);
 			masking_key = NULL;
@@ -176,14 +180,16 @@ int read_websocket_message(SSL*cSSL,int payload_length, char** payload){
 		unsigned char*masking_key = malloc(4);
 		nbytes = read_exact_bytes(cSSL, 4, masking_key);
 
-		char* coded_payload = malloc(new_length);
+		char* coded_payload = malloc(new_length+1);
 		nbytes = read_exact_bytes(cSSL, new_length, coded_payload);
-		*payload = malloc(new_length);
+		coded_payload[new_length] = '\0';
+		*payload = malloc(new_length+1);
 
 		for (int i=0; i<new_length; i++){
 			int val = coded_payload[i] ^ masking_key[i%4];
 			(*payload)[i] = val; 
 		}
+		payload[new_length] = '\0';
 		if (masking_key != NULL){
 			free(masking_key);
 			masking_key = NULL;
@@ -222,6 +228,32 @@ int is_websocket_buffer(unsigned char* buf){
 		return 0;
 	}
 }
+char* get_value(cJSON *json, char* key){
+	cJSON *value = cJSON_GetObjectItem(json, key);
+    if (cJSON_IsString(value) && (value->valuestring != NULL)) {
+	    char* res = value->valuestring;
+	    return res; 
+    }
+    printf("COULD NOT FIND %s\n", key); 
+    return NULL;
+}
+
+int get_int_value(cJSON *json, char* key){
+	cJSON *value = cJSON_GetObjectItem(json, key);
+    if (cJSON_IsNumber(value)) {
+	    int res = value->valueint;
+	    return res; 
+    }
+    printf("COULD NOT FIND %s\n", key); 
+    return 0;
+}
+void free_message(struct Websocket_Message* msg) {
+    free(msg->sessionId);
+    free(msg->content);
+    free(msg->timestamp);
+    free(msg->username);
+    free(msg->userid);
+}
 
 void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int fd_count){
 	if (is_websocket_buffer(buf)){
@@ -239,54 +271,55 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 			nbytes = read_websocket_message(socket->cSSL, payload_length, &message);
 			int message_length = nbytes;
 			message[nbytes] = '\0';
-			char* operation = get_string_value_from_json("operation", message);
-			char* request = get_string_value_from_json("request", message);
+			cJSON *json = cJSON_Parse(message);
+			char* operation = get_value(json,"operation");
+			char* request = get_value(json,"request");
+
 			if (strcmp(request, "POST")==0 &&strcmp(operation, "client")==0){
 				post_websocket_client(socket,NULL, message, NULL, 0);
-				if (message != NULL){
+			}else if (strcmp(request, "POST")==0 &&strcmp(operation, "message")==0){
+				send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
+				char* content = get_value(json,"content");
+				char* userid = get_value(json,"userid");
+				char* username = get_value(json,"username");
+				char* sessionId = get_value(json,"sessionId");
+				char* timestamp = get_value(json,"timestamp");
+				int is_notification = get_int_value(json,"is_notification");
+				struct Websocket_Message message = create_message(sessionId,content, timestamp,username,userid, is_notification);
+				insert_message(message);
+				free_message(&message);
+			}else if (strcmp(request, "DELETE")==0 &&strcmp(operation, "session")==0){
+				send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
+				char* sessionId = get_value(json,"sessionId");
+				delete_messages_by_sessionid(sessionId);
+
+			}else if (strcmp(request, "PATCH")==0 &&strcmp(operation, "session")==0){
+				send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
+			}
+			
+			
+
+			cJSON_Delete(json);
+			if (message != NULL){
 					free(message);
 					message = NULL;
 				}
-			}else if (strcmp(request, "POST")==0 &&strcmp(operation, "message")==0){
-				send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
+				if (nbytes == 0){
+					printf("Could not determine bytes...\n");
+					exit(1);
+				}
+					
 			}
-
-
-			// send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
-			// printf("Operation Sent: %s\n", operation);
-			// if (strcmp(operation, "message")==0){
-				// char* content = get_string_value_from_json("content", message);
-				// char* userid = get_string_value_from_json("userid", message);
-				// char* username = get_string_value_from_json("username", message);
-				// char* sessionId = get_string_value_from_json("sessionId", message);
-				// char* timestamp = get_string_value_from_json("timestamp", message);
-				// struct Websocket_Message message = create_message(sessionId, content, timestamp, username,userid);
-				// insert_message(message);
-			// }else{
-			// if (message != NULL){
-			// 		free(message);
-			// 		message = NULL;
-			// 	}
-			// }
-		free(operation);
-		
-		if (nbytes == 0){
-			printf("Could not determine bytes...\n");
-			exit(1);
-		}
-			
-	}
-		if (websocket_buf != NULL) {
-			free(websocket_buf);
-			websocket_buf = NULL;
-		}
+			if (websocket_buf != NULL) {
+				free(websocket_buf);
+				websocket_buf = NULL;
+			}
 	}else if (is_tcp_buffer(buf)){
 		printf("TCP Buffer Recived\n");
 		char* tcp_buf = malloc(BUFFER_SIZE);
 		int nbytes =  read_tcp_message(socket->cSSL, &tcp_buf);
 		printf("Bytes: %d | Message: '%s'\n",nbytes, tcp_buf);
 		send_tcp_message(socket->cSSL, 0x1, 0x1, nbytes, tcp_buf);
-		//send_websocket_message(sockets,*socket, fd_count, nbytes, tcp_buf);
 		if (tcp_buf != NULL){
 			free(tcp_buf);
 			tcp_buf = NULL;

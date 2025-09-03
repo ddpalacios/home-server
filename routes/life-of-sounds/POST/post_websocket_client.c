@@ -17,6 +17,16 @@ void post_websocket_client(struct Socket* socket,char* http_header, char*body, c
     int isHost = get_int_value_from_json("isHost", body);
     if (sessionid){
         if (websocketclient_exists(userid, sessionid)){
+            printf("LOOKING FOR CLIENT WITH SOCKET ID %s\n", socket->Id);
+
+            struct WebsocketClient ws_client = get_websocketclientBySocketId(socket->Id);
+            printf("CLIENT WITH SOCKET ID %s EXISTS? %d ID %s\n", socket->Id, ws_client.exists, ws_client.Id);
+
+            if (!ws_client.exists){
+                delete_websocketclient_by_userid(userid);
+                struct WebsocketClient new_client =  create_websocketclient(sessionid, socket->Id, username, isHost,userid);
+                insert_websocketclient(new_client);
+            }
             if (send_response){
                 cJSON *root = create_json_object();
                 add_string_to_json_root(root,"error","Conflict");
@@ -27,11 +37,12 @@ void post_websocket_client(struct Socket* socket,char* http_header, char*body, c
         }else{
             struct WebsocketClient ws_client =  create_websocketclient(sessionid, socket->Id, username, isHost,userid);
             insert_websocketclient(ws_client);
+            printf("CREATED CLIENT WITH SOCKET ID %s\n", socket->Id);
             if (send_response){
                 cJSON *root = create_json_object();
                 add_string_to_json_root(root,"socketId",ws_client.socketId);
                 add_string_to_json_root(root,"userid",userid);
-                add_string_to_json_root(root,"clientName",username);
+                add_string_to_json_root(root,"name",username);
                 add_number_to_json_root(root,"isHost", isHost);
                 add_string_to_json_root(root,"sessionId",sessionid);
                 char* ws_info = get_json_as_string(root);

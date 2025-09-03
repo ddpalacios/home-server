@@ -11,8 +11,8 @@
 #include "json_utilities.h"
 #include "string_utilities.h"
 #include "send_message.h"
+#include "WebsocketClient.h"
 #include "read_message.h"
-
 #include <sys/types.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -230,6 +230,10 @@ void start_listening_for_clients(char* port){
 						 peek_buf = NULL;
 					 }
 				 if (!socket->keep_alive){
+					 if (websocketclient_exists_by_socketid(socket->Id)){
+						 struct WebsocketClient ws_client =  get_websocketclientBySocketId(socket->Id);
+						 delete_websocketclient_by_Id(ws_client.Id);
+					 }
 					 remove_file_descriptor(sockets,pfds, socket->fd, &fd_count);
 					 }
 				 }

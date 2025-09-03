@@ -8,19 +8,22 @@
 #include "SQL.h"
 
 
-struct Websocket_Message create_message(char* sessionId, char* content, char* timestamp, char* username, char* userid){
+struct Websocket_Message create_message(char* sessionId, char* content, char* timestamp, char* username, char* userid, int is_notification){
     	struct Websocket_Message message;
-        unsigned char* Id  = malloc(16);
-        create_unique_identifier(Id);
-        char Id_hex[33];
-        hash_to_hex(Id, 16, Id_hex);
+    	unsigned char* Id  = malloc(16);
+		create_unique_identifier(Id);
 
-        message.Id  =strdup(Id_hex);
-        message.sessionId  = sessionId;
-        message.content = content;
-        message.timestamp = timestamp;
-        message.username =	username;
-        message.userid =	userid;
+		char Id_hex[33];
+		hash_to_hex(Id, 16, Id_hex);
+
+        message.Id  = strdup(Id_hex);;
+        message.sessionId  = strdup(sessionId);
+        message.content = strdup(content);
+        message.timestamp = strdup(timestamp);
+        message.username =	strdup(username);
+        message.userid =	strdup(userid);
+        message.is_notification =	is_notification;
+		
 		if (Id != NULL){
 			free(Id);
 			Id = NULL;
@@ -71,6 +74,7 @@ char* get_messages_by_sessionid_json(char* sessionid){
 			cJSON_AddStringToObject(root_messages, "timestamp", strdup(row[3]));
 			cJSON_AddStringToObject(root_messages, "username", strdup(row[4]));
 			cJSON_AddStringToObject(root_messages, "userid", strdup(row[5]));
+			cJSON_AddNumberToObject(root_messages, "is_notification", atoi(row[6]));
 			cJSON_AddItemToArray(messages_json, root_messages);
 			count++;
 		}
@@ -82,18 +86,28 @@ char* get_messages_by_sessionid_json(char* sessionid){
 }
 
 
+void delete_messages_by_sessionid(char* sessionid){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql, sizeof(sql),"DELETE FROM Websocket_Message WHERE  sessionId = '%s' ", sessionid);
+	printf("query: %s\n", sql);
+	query(conn, sql);
+	close_sql_connection(conn);
+}
+
 
 
 void insert_message(struct Websocket_Message message){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[2045];
-	snprintf(sql,sizeof(sql), "INSERT INTO Websocket_Message VALUES ('%s', '%s', '%s', '%s', '%s', '%s');",
+	snprintf(sql,sizeof(sql), "INSERT INTO Websocket_Message VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%d');",
 			message.Id,
 			message.sessionId,
 			message.content,
 			message.timestamp,
 			message.username,
-			message.userid);
+			message.userid,
+			message.is_notification);
 	printf("%s\n", sql);
 	query(conn, sql);
 	close_sql_connection(conn);

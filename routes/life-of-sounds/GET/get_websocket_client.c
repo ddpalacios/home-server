@@ -12,6 +12,7 @@ void get_websocket_client(struct Socket* socket,char* http_header, char*body, ch
     SSL*cSSL = socket->cSSL;
     char* sessionId = get_query_parameter(route, "sessionId");
     char* userId = get_query_parameter(route, "userId");
+        printf("CHECKING IF CLIENT EXISTS\n");
         if (websocketclient_exists(userId, sessionId)){
              struct WebsocketClient ws_client = get_websocketclient(userId,sessionId);
               cJSON *root = create_json_object();
@@ -24,5 +25,6 @@ void get_websocket_client(struct Socket* socket,char* http_header, char*body, ch
             char* ws_info = get_json_as_string(root);
             printf("%s\n", ws_info);
             send_JSON_response_code(cSSL, 200, ws_info);
+            cJSON_Delete(root);
         }
 }
