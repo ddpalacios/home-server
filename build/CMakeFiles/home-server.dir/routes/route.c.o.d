@@ -146,15 +146,17 @@ CMakeFiles/home-server.dir/routes/route.c.o: \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/data_page.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/get_recordings_page.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/get_data_table.h \
+ /home/dpalacios/home-server/routes/life-of-sounds/GET/get_session_messages.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/get_websocket_script.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/get_html_utilities_script.h \
- /home/dpalacios/home-server/routes/life-of-sounds/PATCH/patch_websocket.h \
- /home/dpalacios/home-server/routes/life-of-sounds/PATCH/patch_audio.h \
+ /home/dpalacios/home-server/routes/life-of-sounds/PATCH/patch_websocket_client.h \
+ /home/dpalacios/home-server/routes/life-of-sounds/PATCH/patch_browser_session.h \
+ /home/dpalacios/home-server/routes/life-of-sounds/PATCH/patch_websocket_session.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/get_audio.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/get_audio_blob.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/sessioninfo.h \
  /home/dpalacios/home-server/routes/life-of-sounds/DELETE/sessioninfo.h \
- /home/dpalacios/home-server/routes/life-of-sounds/DELETE/delete_websocket.h \
+ /home/dpalacios/home-server/routes/life-of-sounds/DELETE/delete_websocket_session.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/home.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/websocket_protocol.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/users.h \

@@ -24,6 +24,7 @@ file(GLOB MAIN
     "routes/database-server/POST/*.c"
     "routes/life-of-sounds/GET/login.c"
     "routes/life-of-sounds/GET/home.c"
+    "routes/life-of-sounds/GET/get_session_messages.c"
     "routes/life-of-sounds/GET/get_live_page.c"
     "routes/life-of-sounds/GET/get_web_audio_api_script.c"
     "routes/life-of-sounds/GET/websocket_protocol.c"
@@ -37,8 +38,10 @@ file(GLOB MAIN
     "routes/life-of-sounds/POST/post_browser_session.c"
     "routes/life-of-sounds/POST/post_websocket_client.c"
     "routes/life-of-sounds/GET/get_websocket_client.c"
-
-    
+    "routes/life-of-sounds/DELETE/delete_websocket_session.c"
+    "routes/life-of-sounds/PATCH/patch_websocket_client.c"
+    "routes/life-of-sounds/PATCH/patch_browser_session.c"
+    "routes/life-of-sounds/PATCH/patch_websocket_session.c"
 )
 
 

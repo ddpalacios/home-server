@@ -417,6 +417,30 @@ routes/database-server/POST/post_frame.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/database-server/POST/post_frame.c.s
 .PHONY : routes/database-server/POST/post_frame.c.s
 
+routes/life-of-sounds/DELETE/delete_websocket_session.o: routes/life-of-sounds/DELETE/delete_websocket_session.c.o
+.PHONY : routes/life-of-sounds/DELETE/delete_websocket_session.o
+
+# target to build an object file
+routes/life-of-sounds/DELETE/delete_websocket_session.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/DELETE/delete_websocket_session.c.o
+.PHONY : routes/life-of-sounds/DELETE/delete_websocket_session.c.o
+
+routes/life-of-sounds/DELETE/delete_websocket_session.i: routes/life-of-sounds/DELETE/delete_websocket_session.c.i
+.PHONY : routes/life-of-sounds/DELETE/delete_websocket_session.i
+
+# target to preprocess a source file
+routes/life-of-sounds/DELETE/delete_websocket_session.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/DELETE/delete_websocket_session.c.i
+.PHONY : routes/life-of-sounds/DELETE/delete_websocket_session.c.i
+
+routes/life-of-sounds/DELETE/delete_websocket_session.s: routes/life-of-sounds/DELETE/delete_websocket_session.c.s
+.PHONY : routes/life-of-sounds/DELETE/delete_websocket_session.s
+
+# target to generate assembly for a file
+routes/life-of-sounds/DELETE/delete_websocket_session.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/DELETE/delete_websocket_session.c.s
+.PHONY : routes/life-of-sounds/DELETE/delete_websocket_session.c.s
+
 routes/life-of-sounds/GET/get_game_of_life_script.o: routes/life-of-sounds/GET/get_game_of_life_script.c.o
 .PHONY : routes/life-of-sounds/GET/get_game_of_life_script.o
 
@@ -488,6 +512,30 @@ routes/life-of-sounds/GET/get_live_page.s: routes/life-of-sounds/GET/get_live_pa
 routes/life-of-sounds/GET/get_live_page.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_live_page.c.s
 .PHONY : routes/life-of-sounds/GET/get_live_page.c.s
+
+routes/life-of-sounds/GET/get_session_messages.o: routes/life-of-sounds/GET/get_session_messages.c.o
+.PHONY : routes/life-of-sounds/GET/get_session_messages.o
+
+# target to build an object file
+routes/life-of-sounds/GET/get_session_messages.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_session_messages.c.o
+.PHONY : routes/life-of-sounds/GET/get_session_messages.c.o
+
+routes/life-of-sounds/GET/get_session_messages.i: routes/life-of-sounds/GET/get_session_messages.c.i
+.PHONY : routes/life-of-sounds/GET/get_session_messages.i
+
+# target to preprocess a source file
+routes/life-of-sounds/GET/get_session_messages.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_session_messages.c.i
+.PHONY : routes/life-of-sounds/GET/get_session_messages.c.i
+
+routes/life-of-sounds/GET/get_session_messages.s: routes/life-of-sounds/GET/get_session_messages.c.s
+.PHONY : routes/life-of-sounds/GET/get_session_messages.s
+
+# target to generate assembly for a file
+routes/life-of-sounds/GET/get_session_messages.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_session_messages.c.s
+.PHONY : routes/life-of-sounds/GET/get_session_messages.c.s
 
 routes/life-of-sounds/GET/get_web_audio_api_script.o: routes/life-of-sounds/GET/get_web_audio_api_script.c.o
 .PHONY : routes/life-of-sounds/GET/get_web_audio_api_script.o
@@ -656,6 +704,78 @@ routes/life-of-sounds/GET/websocket_protocol.s: routes/life-of-sounds/GET/websoc
 routes/life-of-sounds/GET/websocket_protocol.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/websocket_protocol.c.s
 .PHONY : routes/life-of-sounds/GET/websocket_protocol.c.s
+
+routes/life-of-sounds/PATCH/patch_browser_session.o: routes/life-of-sounds/PATCH/patch_browser_session.c.o
+.PHONY : routes/life-of-sounds/PATCH/patch_browser_session.o
+
+# target to build an object file
+routes/life-of-sounds/PATCH/patch_browser_session.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/PATCH/patch_browser_session.c.o
+.PHONY : routes/life-of-sounds/PATCH/patch_browser_session.c.o
+
+routes/life-of-sounds/PATCH/patch_browser_session.i: routes/life-of-sounds/PATCH/patch_browser_session.c.i
+.PHONY : routes/life-of-sounds/PATCH/patch_browser_session.i
+
+# target to preprocess a source file
+routes/life-of-sounds/PATCH/patch_browser_session.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/PATCH/patch_browser_session.c.i
+.PHONY : routes/life-of-sounds/PATCH/patch_browser_session.c.i
+
+routes/life-of-sounds/PATCH/patch_browser_session.s: routes/life-of-sounds/PATCH/patch_browser_session.c.s
+.PHONY : routes/life-of-sounds/PATCH/patch_browser_session.s
+
+# target to generate assembly for a file
+routes/life-of-sounds/PATCH/patch_browser_session.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/PATCH/patch_browser_session.c.s
+.PHONY : routes/life-of-sounds/PATCH/patch_browser_session.c.s
+
+routes/life-of-sounds/PATCH/patch_websocket_client.o: routes/life-of-sounds/PATCH/patch_websocket_client.c.o
+.PHONY : routes/life-of-sounds/PATCH/patch_websocket_client.o
+
+# target to build an object file
+routes/life-of-sounds/PATCH/patch_websocket_client.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/PATCH/patch_websocket_client.c.o
+.PHONY : routes/life-of-sounds/PATCH/patch_websocket_client.c.o
+
+routes/life-of-sounds/PATCH/patch_websocket_client.i: routes/life-of-sounds/PATCH/patch_websocket_client.c.i
+.PHONY : routes/life-of-sounds/PATCH/patch_websocket_client.i
+
+# target to preprocess a source file
+routes/life-of-sounds/PATCH/patch_websocket_client.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/PATCH/patch_websocket_client.c.i
+.PHONY : routes/life-of-sounds/PATCH/patch_websocket_client.c.i
+
+routes/life-of-sounds/PATCH/patch_websocket_client.s: routes/life-of-sounds/PATCH/patch_websocket_client.c.s
+.PHONY : routes/life-of-sounds/PATCH/patch_websocket_client.s
+
+# target to generate assembly for a file
+routes/life-of-sounds/PATCH/patch_websocket_client.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/PATCH/patch_websocket_client.c.s
+.PHONY : routes/life-of-sounds/PATCH/patch_websocket_client.c.s
+
+routes/life-of-sounds/PATCH/patch_websocket_session.o: routes/life-of-sounds/PATCH/patch_websocket_session.c.o
+.PHONY : routes/life-of-sounds/PATCH/patch_websocket_session.o
+
+# target to build an object file
+routes/life-of-sounds/PATCH/patch_websocket_session.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/PATCH/patch_websocket_session.c.o
+.PHONY : routes/life-of-sounds/PATCH/patch_websocket_session.c.o
+
+routes/life-of-sounds/PATCH/patch_websocket_session.i: routes/life-of-sounds/PATCH/patch_websocket_session.c.i
+.PHONY : routes/life-of-sounds/PATCH/patch_websocket_session.i
+
+# target to preprocess a source file
+routes/life-of-sounds/PATCH/patch_websocket_session.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/PATCH/patch_websocket_session.c.i
+.PHONY : routes/life-of-sounds/PATCH/patch_websocket_session.c.i
+
+routes/life-of-sounds/PATCH/patch_websocket_session.s: routes/life-of-sounds/PATCH/patch_websocket_session.c.s
+.PHONY : routes/life-of-sounds/PATCH/patch_websocket_session.s
+
+# target to generate assembly for a file
+routes/life-of-sounds/PATCH/patch_websocket_session.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/PATCH/patch_websocket_session.c.s
+.PHONY : routes/life-of-sounds/PATCH/patch_websocket_session.c.s
 
 routes/life-of-sounds/POST/login.o: routes/life-of-sounds/POST/login.c.o
 .PHONY : routes/life-of-sounds/POST/login.o
@@ -1014,6 +1134,9 @@ help:
 	@echo "... routes/database-server/POST/post_frame.o"
 	@echo "... routes/database-server/POST/post_frame.i"
 	@echo "... routes/database-server/POST/post_frame.s"
+	@echo "... routes/life-of-sounds/DELETE/delete_websocket_session.o"
+	@echo "... routes/life-of-sounds/DELETE/delete_websocket_session.i"
+	@echo "... routes/life-of-sounds/DELETE/delete_websocket_session.s"
 	@echo "... routes/life-of-sounds/GET/get_game_of_life_script.o"
 	@echo "... routes/life-of-sounds/GET/get_game_of_life_script.i"
 	@echo "... routes/life-of-sounds/GET/get_game_of_life_script.s"
@@ -1023,6 +1146,9 @@ help:
 	@echo "... routes/life-of-sounds/GET/get_live_page.o"
 	@echo "... routes/life-of-sounds/GET/get_live_page.i"
 	@echo "... routes/life-of-sounds/GET/get_live_page.s"
+	@echo "... routes/life-of-sounds/GET/get_session_messages.o"
+	@echo "... routes/life-of-sounds/GET/get_session_messages.i"
+	@echo "... routes/life-of-sounds/GET/get_session_messages.s"
 	@echo "... routes/life-of-sounds/GET/get_web_audio_api_script.o"
 	@echo "... routes/life-of-sounds/GET/get_web_audio_api_script.i"
 	@echo "... routes/life-of-sounds/GET/get_web_audio_api_script.s"
@@ -1044,6 +1170,15 @@ help:
 	@echo "... routes/life-of-sounds/GET/websocket_protocol.o"
 	@echo "... routes/life-of-sounds/GET/websocket_protocol.i"
 	@echo "... routes/life-of-sounds/GET/websocket_protocol.s"
+	@echo "... routes/life-of-sounds/PATCH/patch_browser_session.o"
+	@echo "... routes/life-of-sounds/PATCH/patch_browser_session.i"
+	@echo "... routes/life-of-sounds/PATCH/patch_browser_session.s"
+	@echo "... routes/life-of-sounds/PATCH/patch_websocket_client.o"
+	@echo "... routes/life-of-sounds/PATCH/patch_websocket_client.i"
+	@echo "... routes/life-of-sounds/PATCH/patch_websocket_client.s"
+	@echo "... routes/life-of-sounds/PATCH/patch_websocket_session.o"
+	@echo "... routes/life-of-sounds/PATCH/patch_websocket_session.i"
+	@echo "... routes/life-of-sounds/PATCH/patch_websocket_session.s"
 	@echo "... routes/life-of-sounds/POST/login.o"
 	@echo "... routes/life-of-sounds/POST/login.i"
 	@echo "... routes/life-of-sounds/POST/login.s"

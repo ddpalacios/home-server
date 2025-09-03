@@ -6,6 +6,15 @@
 #include "string_utilities.h"
 #include "SQL.h"
 
+
+void update_username_by_userid(char* userId, char* newValue){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[576];
+	snprintf(sql,sizeof(sql),"UPDATE WebsocketClient SET name = '%s' WHERE userId = '%s'", newValue, userId);
+	query(conn, sql);
+	close_sql_connection(conn);
+}
+
 struct WebsocketClient create_websocketclient(char* sessionid, char*socketId, char* username, int isHost, char* userid){
 	struct WebsocketClient websocketclient;
 
@@ -23,7 +32,6 @@ struct WebsocketClient create_websocketclient(char* sessionid, char*socketId, ch
 	
 	return websocketclient;
 }
-
 
 struct WebsocketClient* get_websocketclientsBySessionId(char* sessionId, size_t *total_clients){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
@@ -87,6 +95,21 @@ struct WebsocketClient get_websocketclient(char* userId, char* sessionId){
 	  return websocketclient;
 }
 
+int websocketclient_exists_by_socketid(char* socketId){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql, sizeof(sql),"SELECT * FROM WebsocketClient WHERE socketId = '%s'", socketId);
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+	int exists = 0;
+	printf("%s\n", sql);
+	  while((row = mysql_fetch_row(res))!= NULL){
+		  exists=1;
+		  break;
+	  }
+      close_sql_connection(conn);
+	  return exists;
+}
 int websocketclient_exists(char* userid, char* sessionid){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[255];
@@ -116,6 +139,34 @@ void insert_websocketclient(struct WebsocketClient websocketclient){
 	query(conn, sql);
 	close_sql_connection(conn);
 }
-void delete_websocketclient(struct WebsocketClient websocketclient){
+
+void delete_websocketclient_by_Id(char* Id){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql, sizeof(sql),"DELETE FROM WebsocketClient WHERE Id = '%s' ",
+			Id);
+	printf("query: %s\n", sql);
+	query(conn, sql);
+	close_sql_connection(conn);
+}
+
+void delete_websocketclients_by_sessionId(char* sessionId){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql, sizeof(sql),"DELETE FROM WebsocketClient WHERE  sessionId = '%s' ", sessionId);
+	printf("query: %s\n", sql);
+	query(conn, sql);
+	close_sql_connection(conn);
+
+}
+
+
+void delete_websocketclient_by_userid(char* userid){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql, sizeof(sql),"DELETE FROM WebsocketClient WHERE  userId = '%s' ", userid);
+	printf("query: %s\n", sql);
+	query(conn, sql);
+	close_sql_connection(conn);
 
 }

@@ -28,4 +28,5 @@ void post_websocket_session(struct Socket* socket,char* http_header, char*body, 
     char* ws_info = get_json_as_string(root);
     printf("%s\n", ws_info);
     send_JSON_response_code(cSSL, 200, ws_info);
+    cJSON_Delete(root);
 }

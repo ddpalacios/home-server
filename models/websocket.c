@@ -28,10 +28,28 @@ struct Websocket get_websocket_session(char* sessionId){
 		websocket.Id = strdup(row[0]);
 		websocket.name = strdup(row[1]);
 		websocket.sessionid = strdup(row[2]);
+		websocket.userid = strdup(row[3]);
 		websocket.exists = 1;
 	}
 	close_sql_connection(conn);
 	return websocket;
+}
+
+int websocket_session_exists_by_userid(char* userid){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql,sizeof(sql), "SELECT * FROM Websocket_Session WHERE creator_userid = '%s'",
+			userid
+			);
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+	int exists = 0;
+	while((row = mysql_fetch_row(res))!=NULL){
+		exists = 1;
+		break;
+	}
+	close_sql_connection(conn);
+	return exists;
 }
 
 int websocket_session_exists(char* sessionId){
@@ -83,18 +101,13 @@ struct Websocket create_websocket_session(char* name, char* userid){
         close_sql_connection(conn);
 }
 
-int update_websocket(char* Id,char* userid,char* sessionid,char* connected_on){
-	
+void update_sessionName_by_sessionId(char* sessionId, char* name){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[576];
-	snprintf(sql,sizeof(sql),"UPDATE websocket SET Id = '%s' WHERE userid = '%s' AND sessionid = '%s' ", Id , userid, sessionid);
+	snprintf(sql,sizeof(sql),"UPDATE Websocket_Session SET Name = '%s' WHERE sessionId = '%s'",   name,sessionId);
+	printf("%s\n", sql);
 	query(conn, sql);
-	char sql2[576];
-
-	snprintf(sql2,sizeof(sql2),"UPDATE websocket SET connected_on = '%s' WHERE userid = '%s' AND sessionid = '%s' ", connected_on , userid, sessionid);
-	query(conn, sql2);
 	close_sql_connection(conn);
-	return 1;
 }
 
 int  is_active_websocket_client(int fd){
@@ -317,11 +330,11 @@ void delete_websocket_by_fd(int fd){
 	close_sql_connection(conn);
 }
 
-void delete_websocket_by_sessionid(char* sessionid, char*userid){
+void delete_websocket_by_sessionid(char* sessionid){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[255];
-	snprintf(sql, sizeof(sql),"DELETE FROM websocket WHERE sessionid = '%s' AND userid = '%s' ",
-			sessionid, userid);
+	snprintf(sql, sizeof(sql),"DELETE FROM Websocket_Session WHERE sessionid = '%s' ",
+			sessionid);
 	printf("query: %s\n", sql);
 	query(conn, sql);
 	close_sql_connection(conn);

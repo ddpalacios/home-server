@@ -136,6 +136,7 @@ CMakeFiles/home-server.dir/server/server.c.o: \
  /home/dpalacios/home-server/utilities/json_utilities.h \
  /home/dpalacios/home-server/utilities/string_utilities.h \
  /home/dpalacios/home-server/server/send_message.h \
+ /home/dpalacios/home-server/models/WebsocketClient.h \
  /home/dpalacios/home-server/server/read_message.h \
  /usr/include/arpa/inet.h /usr/include/unistd.h \
  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
