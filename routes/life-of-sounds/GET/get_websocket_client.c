@@ -15,7 +15,7 @@ void get_websocket_client(struct Socket* socket,char* http_header, char*body, ch
         printf("CHECKING IF CLIENT EXISTS\n");
         if (websocketclient_exists(userId, sessionId)){
              struct WebsocketClient ws_client = get_websocketclient(userId,sessionId);
-              cJSON *root = create_json_object();
+             cJSON *root = create_json_object();
             add_string_to_json_root(root,"Id",ws_client.Id);
             add_string_to_json_root(root,"socketId",ws_client.socketId);
             add_string_to_json_root(root,"sessionId",ws_client.sessionId);
@@ -26,5 +26,9 @@ void get_websocket_client(struct Socket* socket,char* http_header, char*body, ch
             printf("%s\n", ws_info);
             send_JSON_response_code(cSSL, 200, ws_info);
             cJSON_Delete(root);
+        }else{
+            printf("Client Does NOT EXIST\n");
+            send_response_code(cSSL, 404);
+
         }
 }

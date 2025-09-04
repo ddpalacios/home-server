@@ -277,6 +277,7 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 
 			if (strcmp(request, "POST")==0 &&strcmp(operation, "client")==0){
 				post_websocket_client(socket,NULL, message, NULL, 0);
+				send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
 			}else if (strcmp(request, "POST")==0 &&strcmp(operation, "message")==0){
 				send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
 				char* content = get_value(json,"content");
@@ -297,8 +298,6 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 				send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
 			}
 			
-			
-
 			cJSON_Delete(json);
 			if (message != NULL){
 					free(message);
