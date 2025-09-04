@@ -66,9 +66,12 @@ struct WebsocketClient get_websocketclientBySocketId(char* socketId){
 	struct WebsocketClient websocketclient;
 	websocketclient.exists = 0;
 	  while((row = mysql_fetch_row(res))!= NULL){
-		  websocketclient.Id = strdup(row[0]);
+		   websocketclient.Id = strdup(row[0]);
 		  websocketclient.socketId = strdup(row[1]);
 		  websocketclient.sessionId = strdup(row[2]);
+		  websocketclient.isHost = atoi(row[3]);
+		  websocketclient.name = strdup(row[4]);
+		  websocketclient.userid = strdup(row[5]);
 		  websocketclient.exists = 1;
 	  }
       close_sql_connection(conn);

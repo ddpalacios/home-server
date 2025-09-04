@@ -445,22 +445,45 @@ body, html {  overflow: hidden; }
                 let is_notification= data['is_notification']
                 if (is_notification){
                     p.innerHTML  = text;
-
                 }else{
                     p.innerHTML  = "<b>"+username+ ":</b> "+text;
                 }
                 let chat = document.getElementById('messages')
                 chat.appendChild(p);
-            
             }else if (data['request'] == 'PATCH' && data['operation'] == 'session'){
                 let name = data['name'];
                 document.getElementById("sessionname").value = name
+            
+            }else if (data['request'] == 'DELETE' && data['operation'] == 'client'){
+                let username = data['name'];
+                let userid = data['userid'];
+                setTimeout(() => {
+                    var request = new Request('life-of-sounds/live_studio/client?userId='+userid+"&sessionId="+sessionid, {
+                    method: 'GET',
+                    headers: new Headers({
+                                'Accept': 'application/json'
+                            })
+                        });
+                    fetch(request).then(async(response) => {
+                        if (!response.ok) {
+                            let text = "<b>"+username+"</b> has left the chat.";
+                            send_message(text)
+                        }
+                    }).catch(e => console.error('EXCEPTION: ', e))
+                }, 2000);
+            }
+            else if (data['request'] == 'POST' && data['operation'] == 'client'){
+                let username = data['name'];
+                let new_login = data['new_login'];
+                if (new_login){
+                    let text = "<b>"+username+"</b> has joined the chat.";
+                    send_message(text)
+                }
             }
         }
         websocket_session.onclose = () => {
 		    alert("Websocket connection closed");
             location.href = 'https://' + window.location.host  +'/life-of-sounds/live_studio'
-
         }
     }
 
