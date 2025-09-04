@@ -59,6 +59,8 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		post_user(socket,http_header,body, route);
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/live_studio/user")==0){
 		get_user(socket,http_header,body, route);
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home")==0){
+		get_live_html(cSSL, http_header, "home.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/live_studio")==0){
 		get_live_html(cSSL, http_header, "live_studio.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/game_of_life.js")==0){
