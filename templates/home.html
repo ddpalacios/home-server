@@ -1,191 +1,240 @@
 <!DOCTYPE html>
-<html>
-	<head>
-	</head>
-	<body>
-		  <style>
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: left;
-    }
-    th {
-      background-color: #f4f4f4;
-    }
-    td[contenteditable="true"] {
-      background-color: #f9f9f9;
-      outline: none;
-    }
-    td[contenteditable="true"]:focus {
-      background-color: #e8f0fe;
-    }
-    button {
-      margin-top: 10px;
-      padding: 8px 12px;
-      background-color: #3D6ECC;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #EFA9E3
-    }
+<html lang="en">
+
+<head>
+    <style>
+        .flex-container {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            /* outline: 1px solid black; */
+            padding: 30px;
+			display: flex;
+  			flex-wrap: wrap;
+			margin-top: 20px;
+					justify-content: center;
+				align-items: center;
+        }
+
+        .flex-item {
+            outline: 1px solid black;
+            width: 500px;
+            height: 400px;
+            position: relative; 
+        }
 
 
-
-
-  </style>
-		<div id=welcome_title></div>
-		<div id=navigation>
-			<button onclick="location.href='/life-of-sounds/home/live_studio'">Live Studio</button>
-			<button onclick="location.href='/life-of-sounds/home/studio'">Studio</button>
-			<button  onclick="location.href='/life-of-sounds/home/recordings'">Recordings</button>
-		</div>
-		<div>
-			<button style="background-color: red;" onclick="logout()">Logout</button>
-			<br>
-			<br>
+        @media (max-width: 800px) {
+            .flex-container {
+                flex-direction: column;
 			
-			<div class="container">
-			<canvas id="myCanvas"></canvas>
-
-			</div>
-
-	
-
-		</div>
-
-	</body>
-	<script>
-		function getCookie(c_name) {
-		    if (document.cookie.length > 0) {
-			c_start = document.cookie.indexOf(c_name + "=");
-			if (c_start != -1) {
-			    c_start = c_start + c_name.length + 1;
-			    c_end = document.cookie.indexOf(";", c_start);
-			    if (c_end == -1) {
-				c_end = document.cookie.length;
-			    }
-			    return unescape(document.cookie.substring(c_start, c_end));
-			}
-		    }
-		    return "";
-		}
-
-		async function logout(){
-			var sessionid = getCookie("session");
-			var request = new Request('/life-of-sounds/session/'+sessionid, {
-						method: 'DELETE',
-						headers: new Headers({
-									'Accept': 'application/json'
-								})
-			});
-			var response = await fetch(request);
-			if (response.status == 200){
-				location.href = '/life-of-sounds/login';
-			}else{
-				alert("Error has occured. Response: "+ response.status);
-				}
 				
+            }
+        }
+
+        a.fill-div {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            text-decoration: none;
+            color: black;
+            font-size: 20px;
+            font-weight: bold;
+            transition: opacity 0.3s ease;
+
+        }
+
+        .flex-item:hover a.fill-div {
+
+            opacity: 0.2;
+			 transform: scale(0.98);
+
+        }
+
+        .flex-item::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size:85px;
+            font-weight: bold;
+            color: rgb(36, 1, 119);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none; 
+
+        }
+
+        .flex-item:hover::after {
+            content: "Join" ;
+            opacity: 1;
+
+        }
+    </style>
+
+	<style>
+		.session{
+			display: flex;
+		}
+		#create_session{
+			padding: 30px;
+			font-size: 30px;
+			width: 100%;
 		}
 
-		function table_main() {
-			console.log(getCookie("session"));
-			var sessionid = getCookie("session");	
-			var request = new Request('/life-of-sounds/session/'+sessionid, {
-						method: 'GET',
-						headers: new Headers({
-									'Accept': 'application/json'
-								})
+		 button {
+            width: 100%;
+            padding: 12px;
+            font-size: 1rem;
+            background-color: lightgreen;
+            color: black;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #35be26;
+        }
+
+        button:active {
+            transform: scale(0.90);
+        }
+
+
+
+	</style>
+
+</head>
+
+<body>
+	<div class="session">
+	<button  id="create_session">+ New Session</button>
+	</div>
+    <div id="sessions" class="flex-container">
+	</div>
+</body>
+
+
+<script>
+	var nameList = [
+	'Time','Past','Future','Dev',
+	'Fly','Flying','Soar','Soaring','Power','Falling',
+	'Fall','Jump','Cliff','Mountain','Rend','Red','Blue',
+	'Green','Yellow','Gold','Demon','Demonic','Panda','Cat',
+	'Kitty','Kitten','Zero','Memory','Trooper','XX','Bandit',
+	'Fear','Light','Glow','Tread','Deep','Deeper','Deepest',
+	'Mine','Your','Worst','Enemy','Hostile','Force','Video',
+	'Game','Donkey','Mule','Colt','Cult','Cultist','Magnum',
+	'Gun','Assault','Recon','Trap','Trapper','Redeem','Code',
+	'Script','Writer','Near','Close','Open','Cube','Circle',
+	'Geo','Genome','Germ','Spaz','Shot','Echo','Beta','Alpha',
+	'Gamma','Omega','Seal','Squid','Money','Cash','Lord','King',
+	'Duke','Rest','Fire','Flame','Morrow','Break','Breaker','Numb',
+	'Ice','Cold','Rotten','Sick','Sickly','Janitor','Camel','Rooster',
+	'Sand','Desert','Dessert','Hurdle','Racer','Eraser','Erase','Big',
+	'Small','Short','Tall','Sith','Bounty','Hunter','Cracked','Broken',
+	'Sad','Happy','Joy','Joyful','Crimson','Destiny','Deceit','Lies',
+	'Lie','Honest','Destined','Bloxxer','Hawk','Eagle','Hawker','Walker',
+	'Zombie','Sarge','Capt','Captain','Punch','One','Two','Uno','Slice',
+	'Slash','Melt','Melted','Melting','Fell','Wolf','Hound',
+	'Legacy','Sharp','Dead','Mew','Chuckle','Bubba','Bubble','Sandwich',
+	'Smasher','Extreme','Multi','Universe','Ultimate','Death','Ready','Monkey',   'Elevator','Wrench','Grease','Head','Theme','Grand','Cool','Kid','Boy',
+	'Girl','Vortex','Paradox'
+	];
+
+	function generate() {
+		return nameList[Math.floor( Math.random() * nameList.length )] + " " + nameList[Math.floor( Math.random() * nameList.length )];
+	};
+
+	function getRandomLightColor() {
+	const r = Math.floor(Math.random() * 56) + 200; // Red: 200-255
+	const g = Math.floor(Math.random() * 56) + 200; // Green: 200-255
+	const b = Math.floor(Math.random() * 56) + 200; // Blue: 200-255
+
+	return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+	}
+
+	function create_session_tile(sessionid, sessionName){
+		var container = document.getElementById("sessions")
+		var new_div = document.createElement("div")
+		var new_a = document.createElement("a")
+		var span = document.createElement("span")
+		span.style.fontSize = "30px"
+		span.textContent = sessionName
+		span.textContent = sessionName
+		new_div.style.backgroundColor =  "lightyellow"
+		new_a.href = "#"
+		new_a.className = "fill-div"
+		new_div.className= "flex-item"
+		new_a.addEventListener("click", function () {
+				this.classList.toggle("selected");
+				if (this.classList.contains("selected")) {
+					new_a.href = "live_studio#session="+sessionid
+				} 
 			});
+		new_a.appendChild(span)
+		new_div.appendChild(new_a)
+		container.appendChild(new_div);
+	}
+	function get_session_by_userId(userid){
+			var request = new Request('life-of-sounds/live_studio/session?userId='+userid, {
+								method: 'GET',
+								headers: new Headers({
+											'Accept': 'application/json'
+										})
+					});
+			
 			fetch(request)
 				.then((response)=> response.json())
 				.then((data)=> {
-						console.log(data);
-						const element = document.getElementById("welcome_title");
-						const h1 = document.createElement("h1");
-						const text = document.createTextNode("Welcome, "+data['fullname']);
-						h1.appendChild(text);
-						element.appendChild(h1);
-						if (data['fullname'] == 'admin'){
-							const nav_div = document.getElementById("navigation");
-							const btn = document.createElement("button");
-							btn.style.backgroundColor = "orange"
-							btn.textContent = 'admin settings';
-							btn.onclick = function(){
-								location.href='/life-of-sounds/home/data'
-							}
-							// nav_div.appendChild(btn);
-						}
-
-						})
+					console.log("SESSION",data)
+					let messages = data['values'];
+                	messages.forEach(element => {
+					let sessionid =  element['sessionid'];
+					let userid = element['userid']
+					let sessionName = element['name']
+					create_session_tile(sessionid, sessionName)
+                });
+					
+				})
 		}
-		table_main();
-	</script>
-	<script src="/life-of-sounds/game_of_life.js"></script>
+
+    document.getElementById("create_session").onclick = function () {
+            let sessionName = prompt("Session Name:", "The "+generate()+ " Session");
+			let data = {
+                        'name': sessionName
+                        ,'userid': "admin"
+                        ,'username':"admin"
+                    }
+			 var request = new Request('/life-of-sounds/live_studio/session', {
+                            method: 'POST',
+                            headers: new Headers({
+                                        'Accept': 'application/json',
+                                        'Content-Type': 'text/json'
+                                    })
+                            ,body: JSON.stringify(data)
+                    });
+			fetch(request).then(async(response) => {
+                        if (response.ok) {
+							 const data = await response.json();
+							location.href = "live_studio#session="+data['sessionId']
+                        }
+                    }).catch(e => console.error('EXCEPTION: ', e))
+    }
+
+	    window.addEventListener("load", function() {
+			userid = "admin"
+			get_session_by_userId(userid)
+    });
+
+
+
+
+</script>
 
 </html>
-
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Waveform Graph</title>
-  <style>
-    canvas {
-      border: 1px solid black;
-      display: block;
-      margin: 20px auto;
-    }
-  </style>
-</head>
-<body>
-  <canvas id="waveCanvas" width="800" height="400"></canvas>
-  <script>
-    // Get the canvas and context
-    const canvas = document.getElementById('waveCanvas');
-    const ctx = canvas.getContext('2d');
-
-    // Canvas dimensions
-    const width = canvas.width;
-    const height = canvas.height;
-
-    // Waveform parameters
-    const amplitude = 100; // Height of the wave
-    const frequency = 0.02; // Frequency of the wave
-    const phase = 0; // Phase shift
-
-    // Draw the sine wave
-    function drawWave() {
-      ctx.clearRect(0, 0, width, height); // Clear canvas
-      ctx.beginPath();
-      ctx.moveTo(0, height / 2); // Start at the middle left
-
-      for (let x = 0; x < width; x++) {
-        const y = height / 2 + amplitude * Math.sin(frequency * x + phase);
-        ctx.lineTo(x, y);
-      }
-
-      ctx.strokeStyle = 'blue';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-
-    // Animate the wave (optional)
-    let phaseShift = 0;
-    function animateWave() {
-      phaseShift += 0.1; // Increment phase for animation
-      drawWave();
-      requestAnimationFrame(animateWave);
-    }
-
-    // Start animation
-    animateWave();
-  </script>
-</body>
-</html> -->

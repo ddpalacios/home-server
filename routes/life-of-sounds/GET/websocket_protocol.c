@@ -12,6 +12,7 @@
 #include "Socket.h"
 #include "websocket.h"
 
+
 void activate_websocket_session(char* sessionId, char* http_header, struct Socket *socket){
 	int exists = websocket_session_exists(sessionId);
 	SSL *cSSL = socket->cSSL;
@@ -57,6 +58,10 @@ void get_websocket_protocol(struct Socket* socket,char* http_header, char*body, 
 			  else if (strstr(http_header, "/live_studio/session?Id=")){
 					char* sessionId = get_query_parameter(route, "Id");
 					activate_websocket_session(sessionId, http_header, socket);
+			  }else if (strstr(http_header, "/live_studio/session?userId=")){
+				  char* userId = get_query_parameter(route, "userId");
+				  char* ws_sessions = get_websocket_sessions_by_userId(userId);
+				  send_JSON_response_code(cSSL, 200, ws_sessions);
 				}else{
 					send_response_code(cSSL, 400);
 					socket->keep_alive = 0x0;

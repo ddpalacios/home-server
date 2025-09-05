@@ -114,6 +114,7 @@ body, html {  overflow: hidden; }
   <div id="chat" class="chat-container">  
     <h1>Live Chat</h1>
     <input id="stop_session" class="create-btn" type="button" style="background-color: lightcoral; display: none;" value="Stop Session"/>
+    <input id="home" class="create-btn" type="button" style="margin-top: 10px; background-color: rgb(250, 214, 96); display: none;" value="Back Home"/>
     <input id="create_session" class="create-btn" type="button" style="background-color: lightgreen;" value="+ Create Session"/>
     
     <div id="username-container">
@@ -356,13 +357,14 @@ body, html {  overflow: hidden; }
     }
 
     function display_activated_session(sessionid, username){
+        document.getElementById("create_session").style.display = "none";
          let sessionname = sessionStorage.getItem("sessionname");
          document.getElementById("username").hidden = false
          document.getElementById("sessionname").hidden = false
          document.getElementById("sessionname").value = sessionname
         document.getElementById("username").value = username
-        document.getElementById("create_session").style.display = "none";
         document.getElementById("stop_session").style.display = "inline-block";
+        document.getElementById("home").style.display = "inline-block";
 
         const container = document.getElementById('username-container');
         const label = document.createElement('span'); 
@@ -654,6 +656,12 @@ body, html {  overflow: hidden; }
         });
 		fetch(request)
         websocket_session.close()
+        location.href = "home"
+    }
+
+    document.getElementById("home").onclick = function(){
+        location.href = "home"
+        
     }
 
     window.addEventListener("load", function() {

@@ -91,7 +91,7 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		post_websocket_session(socket,http_header,body, route);
 	}else if (strcmp(request_type, "DELETE")==0 && strstr(route, "/life-of-sounds/live_studio/session?Id=") != NULL){
 		delete_websocket_session(socket,http_header,body, route);
-	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/life-of-sounds/live_studio/session?Id=") != NULL){
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/life-of-sounds/live_studio/session?") != NULL){
 		get_websocket_protocol(socket,http_header,body, route);
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/life-of-sounds/live_studio/session/join?Id=") != NULL){
 		char* sessionId = get_query_parameter(route, "Id");
