@@ -52,6 +52,34 @@ int websocket_session_exists_by_userid(char* userid){
 	return exists;
 }
 
+char* get_websocket_sessions_by_userId(char* userid){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql,sizeof(sql), "SELECT * FROM Websocket_Session WHERE creator_userid = '%s'",
+			userid
+			);
+	printf("%s\n", sql);
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+	size_t count = 0;
+	cJSON *root = cJSON_CreateObject();
+	cJSON* sessions_json = cJSON_AddArrayToObject(root, "values");
+	while((row = mysql_fetch_row(res))!= NULL){
+		cJSON* root_sessions = cJSON_CreateObject();
+		cJSON_AddStringToObject(root_sessions, "Id", strdup(row[0]));
+		cJSON_AddStringToObject(root_sessions, "name", strdup(row[1]));
+		cJSON_AddStringToObject(root_sessions, "sessionid", strdup(row[2]));
+		cJSON_AddStringToObject(root_sessions, "userid", strdup(row[3]));
+		cJSON_AddItemToArray(sessions_json, root_sessions);
+		count++;
+	}
+	cJSON_AddNumberToObject(root,"total_count",count);
+	close_sql_connection(conn);
+	char *json_string = cJSON_Print(root);
+	cJSON_Delete(root);
+	return json_string;
+}
+
 int websocket_session_exists(char* sessionId){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[255];
