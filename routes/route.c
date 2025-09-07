@@ -35,7 +35,7 @@
 #include "life-of-sounds/DELETE/delete_websocket_session.h"
 #include "life-of-sounds/GET/home.h"
 #include "life-of-sounds/GET/websocket_protocol.h"
-#include "life-of-sounds/GET/users.h"
+#include "life-of-sounds/GET/get_user.h"
 #include "life-of-sounds/GET/login.h"
 
 void process_route(struct Socket *socket,char* http_header, char* body){
@@ -57,8 +57,6 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_login_page(cSSL, http_header, "index.html");
 	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/life-of-sounds/live_studio/user")==0){
 		post_user(socket,http_header,body, route);
-	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/live_studio/user")==0){
-		get_user(socket,http_header,body, route);
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home")==0){
 		get_live_html(cSSL, http_header, "home.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/live_studio")==0){
@@ -69,8 +67,8 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_web_audio_script(cSSL, http_header, "web_audio_api.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/html_utilities.js")==0){
 		get_utilities_script(cSSL, http_header, "html_utilities.js");
-	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/live_studio/start")==0){
-		get_websocket_protocol(socket,http_header,body, route);
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/live_studio/user")==0){
+		get_user(socket,http_header,body, route);
 	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/life-of-sounds/login")==0){
 		login(cSSL, http_header, body);
 	}else if (strcmp(request_type, "PATCH")==0 && strstr(route, "/life-of-sounds/live_studio/session")!=NULL){

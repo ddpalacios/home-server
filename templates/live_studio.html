@@ -114,7 +114,7 @@ body, html {  overflow: hidden; }
   <div id="chat" class="chat-container">  
     <h1>Live Chat</h1>
     <input id="stop_session" class="create-btn" type="button" style="background-color: lightcoral; display: none;" value="Stop Session"/>
-    <input id="home" class="create-btn" type="button" style="margin-top: 10px; background-color: rgb(250, 214, 96); display: none;" value="Back Home"/>
+    <!-- <input id="home" class="create-btn" type="button" style="margin-top: 10px; background-color: rgb(250, 214, 96); display: none;" value="Back Home"/> -->
     <input id="create_session" class="create-btn" type="button" style="background-color: lightgreen;" value="+ Create Session"/>
     
     <div id="username-container">
@@ -364,7 +364,7 @@ body, html {  overflow: hidden; }
          document.getElementById("sessionname").value = sessionname
         document.getElementById("username").value = username
         document.getElementById("stop_session").style.display = "inline-block";
-        document.getElementById("home").style.display = "inline-block";
+        // document.getElementById("home").style.display = "inline-block";
 
         const container = document.getElementById('username-container');
         const label = document.createElement('span'); 
@@ -591,6 +591,50 @@ body, html {  overflow: hidden; }
 
     }
 
+    function post_user(){
+            let username = prompt("Your Name:", generate());
+            var request = new Request('live_studio/user', {
+                                method: 'POST',
+                                headers: new Headers({
+                                            'Accept': 'application/json'
+                                        })
+			       ,body: JSON.stringify({
+					       "username": username
+				       })
+                    });
+            fetch(request).then(async(response) => {
+                        if (response.ok) {
+				try{
+				const data = await response.json();
+				console.log(data);
+				}catch(error){
+				}
+			}
+                    }).catch(e => console.error('EXCEPTION: ', e))
+
+    }
+
+    function get_user(){
+         var request = new Request('live_studio/user', {
+                                method: 'GET',
+                                headers: new Headers({
+                                            'Accept': 'application/json'
+                                        })
+                    });
+            
+            fetch(request).then(async(response) => {
+                        if (response.ok) {
+				try{
+				const data = await response.json();
+				console.log(data);
+				}catch(error){
+				}
+                        }else{
+                            post_user()
+                        }
+                    }).catch(e => console.error('EXCEPTION: ', e))
+    }
+
     document.getElementById("show_chat").onclick = function () {
     sessionActive = true;
     document.getElementById("show_chat").style.display = "none";
@@ -656,46 +700,50 @@ body, html {  overflow: hidden; }
         });
 		fetch(request)
         websocket_session.close()
-        location.href = "home"
+        // location.href = "home"
     }
 
-    document.getElementById("home").onclick = function(){
-        location.href = "home"
+
+    // document.getElementById("home").onclick = function(){
+    //     location.href = "home"
         
-    }
+    // }
+    window.addEventListener("load", function(){
+        get_user()
+    })
 
-    window.addEventListener("load", function() {
-        if (window.location.hash){
-            let sessionid = window.location.hash.split("session=")[1]
-            if (document.cookie == ""){
-                var request = new Request('life-of-sounds/live_studio/session?Id='+sessionid, {
-                                            method: 'GET',
-                                            headers: new Headers({
-                                                        'Accept': 'application/json'
-                                                    })
-                                });
+    // window.addEventListener("load", function() {
+    //     if (window.location.hash){
+    //         let sessionid = window.location.hash.split("session=")[1]
+    //         if (document.cookie == ""){
+                // var request = new Request('life-of-sounds/live_studio/session?Id='+sessionid, {
+                //                             method: 'GET',
+                //                             headers: new Headers({
+                //                                         'Accept': 'application/json'
+                //                                     })
+                //                 });
                         
-                        fetch(request)
-                            .then((response)=> response.json())
-                            .then((data)=> {
-                                let sessionname = data['name']
-                                sessionStorage.setItem("sessionname",sessionname);
-                                sessionStorage.setItem("sessionid",sessionid);
-                                create_client_session(sessionid, sessionname)
-                            })
+                //         fetch(request)
+    //                         .then((response)=> response.json())
+    //                         .then((data)=> {
+    //                             let sessionname = data['name']
+    //                             sessionStorage.setItem("sessionname",sessionname);
+    //                             sessionStorage.setItem("sessionid",sessionid);
+    //                             create_client_session(sessionid, sessionname)
+    //                         })
 
-            }else{
-                var userid = document.cookie.split(';')[0].split("clientId=")[1]
-                var username = document.cookie.split(';')[2].split("username=")[1]
-                if (username == undefined || username == null){
-                    username = document.cookie.split(';')[1].split("username=")[1]
-                }
-                get_session(sessionid, username);
-            }
-        }
-    });
+    //         }else{
+    //             var userid = document.cookie.split(';')[0].split("clientId=")[1]
+    //             var username = document.cookie.split(';')[2].split("username=")[1]
+    //             if (username == undefined || username == null){
+    //                 username = document.cookie.split(';')[1].split("username=")[1]
+    //             }
+    //             get_session(sessionid, username);
+    //         }
+    //     }
+    // });
     
-    window.addEventListener('resize', windowResize);
+    // window.addEventListener('resize', windowResize);
 
 </script>
 
