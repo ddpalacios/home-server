@@ -10,6 +10,7 @@
 #include "http_utilities.h"
 #include "json_utilities.h"
 #include "string_utilities.h"
+#include "User_Token.h"
 #include "send_message.h"
 #include "WebsocketClient.h"
 #include "read_message.h"
@@ -204,6 +205,7 @@ void start_listening_for_clients(char* port){
         }
         insert_file_descriptor(&sockets,&pfds, listener_fd,NULL,"localhost", &fd_count, &max_socket_size, 0x1);
         while(1){
+			 	delete_expired_tokens();
                  int triggered_fd = wait_for_event(&pfds, fd_count);
 	         if (triggered_fd == listener_fd){
                  int newfd = accept_new_client(listener_fd, &sockets, &pfds, &fd_count, &max_socket_size);

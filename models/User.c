@@ -45,7 +45,6 @@ char* convert_user_to_json(struct User user){
 	 cJSON *root = cJSON_CreateObject();
 	 cJSON_AddStringToObject(root, "Id", user.Id);
 	 cJSON_AddStringToObject(root, "fullname", user.fullname);
-	 cJSON_AddStringToObject(root, "email", user.email);
 	 char* json_string = cJSON_Print(root);
 	 cJSON_Delete(root);
 	 return json_string;
@@ -60,7 +59,7 @@ struct User create_user(char* fullname, char* password, char* email){
         user.Id  =strdup(Id_hex);
 		user.fullname = fullname;
 
-		if (strlen(email) > 0 && strlen(password) > 0){
+		if (email != NULL  && password != NULL){
 			unsigned char* salt = malloc(16);
 			create_unique_identifier(salt);
 			size_t password_len = strlen(password);
@@ -79,6 +78,25 @@ struct User create_user(char* fullname, char* password, char* email){
 				user.salt = "";
 		}
 	    return user;
+}
+
+struct User get_user_by_session_token(char* session_token){
+    MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+    char sql[255];
+	snprintf(sql, sizeof(sql),"SELECT * FROM user WHERE session_token = '%s'", session_token);
+    struct User user;
+	user.exists = 0;
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+	while((row = mysql_fetch_row(res))!= NULL){
+		user.Id = strdup( row[0]);
+		user.fullname = strdup(row[1]);
+		user.exists = 1;
+        break;
+	}
+	close_sql_connection(conn);
+	return user;
+
 }
 struct User get_user_by_name(char* fullname){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
@@ -117,14 +135,14 @@ void insert_user(struct User user){
 	// hash_to_hex(user.password, SHA256_DIGEST_LENGTH, password_hex);
 
 	snprintf(sql, sizeof(sql),
-		    "INSERT INTO user VALUES ('%s', '%s', '%s', '%s', '%s');",
+		    "INSERT INTO user VALUES ('%s', '%s', '%s', '%s', '%s', '%s');",
 		    user.Id,
 		    user.fullname,
 		    user.password,
 		    user.email,
-		    user.salt);
+		    user.salt,
+			user.session_token);
 
-	printf("SQL: %s\n", sql);
 	query(conn, sql);
 	close_sql_connection(conn);
 
@@ -174,8 +192,6 @@ struct User get_user_by_id(char* userid){
 		//printf("%s\n", row[0]);
 		user.Id = strdup( row[0]);
 		user.fullname = strdup(row[1]);
-		user.password = strdup(row[2]);
-		user.email = strdup(row[3]);
 		user.exists = 1;
 		close_sql_connection(conn);
 		return user;
@@ -234,6 +250,17 @@ char*  get_users(){
 	return json;
 
 }
+
+void update_user_session_token_by_userId(char* userId, char* new_token){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[576];
+	snprintf(sql,sizeof(sql),"UPDATE user SET session_token = '%s' WHERE user_id = '%s'", new_token,userId);
+	query(conn, sql);
+	close_sql_connection(conn);
+
+}
+
+
 /*
 
 

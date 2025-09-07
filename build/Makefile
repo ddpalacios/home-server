@@ -297,6 +297,30 @@ models/User.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/models/User.c.s
 .PHONY : models/User.c.s
 
+models/User_Token.o: models/User_Token.c.o
+.PHONY : models/User_Token.o
+
+# target to build an object file
+models/User_Token.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/models/User_Token.c.o
+.PHONY : models/User_Token.c.o
+
+models/User_Token.i: models/User_Token.c.i
+.PHONY : models/User_Token.i
+
+# target to preprocess a source file
+models/User_Token.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/models/User_Token.c.i
+.PHONY : models/User_Token.c.i
+
+models/User_Token.s: models/User_Token.c.s
+.PHONY : models/User_Token.s
+
+# target to generate assembly for a file
+models/User_Token.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/models/User_Token.c.s
+.PHONY : models/User_Token.c.s
+
 models/WebsocketClient.o: models/WebsocketClient.c.o
 .PHONY : models/WebsocketClient.o
 
@@ -537,6 +561,30 @@ routes/life-of-sounds/GET/get_session_messages.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_session_messages.c.s
 .PHONY : routes/life-of-sounds/GET/get_session_messages.c.s
 
+routes/life-of-sounds/GET/get_user.o: routes/life-of-sounds/GET/get_user.c.o
+.PHONY : routes/life-of-sounds/GET/get_user.o
+
+# target to build an object file
+routes/life-of-sounds/GET/get_user.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_user.c.o
+.PHONY : routes/life-of-sounds/GET/get_user.c.o
+
+routes/life-of-sounds/GET/get_user.i: routes/life-of-sounds/GET/get_user.c.i
+.PHONY : routes/life-of-sounds/GET/get_user.i
+
+# target to preprocess a source file
+routes/life-of-sounds/GET/get_user.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_user.c.i
+.PHONY : routes/life-of-sounds/GET/get_user.c.i
+
+routes/life-of-sounds/GET/get_user.s: routes/life-of-sounds/GET/get_user.c.s
+.PHONY : routes/life-of-sounds/GET/get_user.s
+
+# target to generate assembly for a file
+routes/life-of-sounds/GET/get_user.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_user.c.s
+.PHONY : routes/life-of-sounds/GET/get_user.c.s
+
 routes/life-of-sounds/GET/get_web_audio_api_script.o: routes/life-of-sounds/GET/get_web_audio_api_script.c.o
 .PHONY : routes/life-of-sounds/GET/get_web_audio_api_script.o
 
@@ -656,30 +704,6 @@ routes/life-of-sounds/GET/new_login.s: routes/life-of-sounds/GET/new_login.c.s
 routes/life-of-sounds/GET/new_login.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/new_login.c.s
 .PHONY : routes/life-of-sounds/GET/new_login.c.s
-
-routes/life-of-sounds/GET/users.o: routes/life-of-sounds/GET/users.c.o
-.PHONY : routes/life-of-sounds/GET/users.o
-
-# target to build an object file
-routes/life-of-sounds/GET/users.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/users.c.o
-.PHONY : routes/life-of-sounds/GET/users.c.o
-
-routes/life-of-sounds/GET/users.i: routes/life-of-sounds/GET/users.c.i
-.PHONY : routes/life-of-sounds/GET/users.i
-
-# target to preprocess a source file
-routes/life-of-sounds/GET/users.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/users.c.i
-.PHONY : routes/life-of-sounds/GET/users.c.i
-
-routes/life-of-sounds/GET/users.s: routes/life-of-sounds/GET/users.c.s
-.PHONY : routes/life-of-sounds/GET/users.s
-
-# target to generate assembly for a file
-routes/life-of-sounds/GET/users.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/GET/users.c.s
-.PHONY : routes/life-of-sounds/GET/users.c.s
 
 routes/life-of-sounds/GET/websocket_protocol.o: routes/life-of-sounds/GET/websocket_protocol.c.o
 .PHONY : routes/life-of-sounds/GET/websocket_protocol.o
@@ -1119,6 +1143,9 @@ help:
 	@echo "... models/User.o"
 	@echo "... models/User.i"
 	@echo "... models/User.s"
+	@echo "... models/User_Token.o"
+	@echo "... models/User_Token.i"
+	@echo "... models/User_Token.s"
 	@echo "... models/WebsocketClient.o"
 	@echo "... models/WebsocketClient.i"
 	@echo "... models/WebsocketClient.s"
@@ -1149,6 +1176,9 @@ help:
 	@echo "... routes/life-of-sounds/GET/get_session_messages.o"
 	@echo "... routes/life-of-sounds/GET/get_session_messages.i"
 	@echo "... routes/life-of-sounds/GET/get_session_messages.s"
+	@echo "... routes/life-of-sounds/GET/get_user.o"
+	@echo "... routes/life-of-sounds/GET/get_user.i"
+	@echo "... routes/life-of-sounds/GET/get_user.s"
 	@echo "... routes/life-of-sounds/GET/get_web_audio_api_script.o"
 	@echo "... routes/life-of-sounds/GET/get_web_audio_api_script.i"
 	@echo "... routes/life-of-sounds/GET/get_web_audio_api_script.s"
@@ -1164,9 +1194,6 @@ help:
 	@echo "... routes/life-of-sounds/GET/new_login.o"
 	@echo "... routes/life-of-sounds/GET/new_login.i"
 	@echo "... routes/life-of-sounds/GET/new_login.s"
-	@echo "... routes/life-of-sounds/GET/users.o"
-	@echo "... routes/life-of-sounds/GET/users.i"
-	@echo "... routes/life-of-sounds/GET/users.s"
 	@echo "... routes/life-of-sounds/GET/websocket_protocol.o"
 	@echo "... routes/life-of-sounds/GET/websocket_protocol.i"
 	@echo "... routes/life-of-sounds/GET/websocket_protocol.s"

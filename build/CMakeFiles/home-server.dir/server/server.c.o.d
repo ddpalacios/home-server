@@ -135,6 +135,7 @@ CMakeFiles/home-server.dir/server/server.c.o: \
  /home/dpalacios/home-server/utilities/http_utilities.h \
  /home/dpalacios/home-server/utilities/json_utilities.h \
  /home/dpalacios/home-server/utilities/string_utilities.h \
+ /home/dpalacios/home-server/models/User_Token.h \
  /home/dpalacios/home-server/server/send_message.h \
  /home/dpalacios/home-server/models/WebsocketClient.h \
  /home/dpalacios/home-server/server/read_message.h \
