@@ -64,26 +64,31 @@ void get_user(struct Socket* socket,char* http_header, char*body, char* route){
 		struct User_Token user_token = get_token(trimmed_token);
 		if (user_token.exists){
 			char* path = "/life-of-sounds/";
-			struct User user = get_user_by_id(user_token.userId);
-			struct User_Token session_token = create_token(user.Id);
-			char* session_cookie = create_session_cookie(path, session_token.token);
-			char* user_json =  convert_user_to_json(user);
-			char http_header[2048];
-			int json_length = strlen(user_json);
-			snprintf(http_header, sizeof(http_header),
-				"HTTP/1.1 200 OK\r\n"
-				"Content-Type: application/json\r\n"
-				"Connection: close\r\n"
-				"Set-Cookie: %s\r\n" 
-				"Content-Length: %d\r\n"
-				"\r\n",session_cookie ,json_length);
-			SSL_write(cSSL, http_header, strlen(http_header));
-			SSL_write(cSSL,user_json,json_length);
-			update_user_session_token_by_userId(user.Id, session_token.token);
 
-			if (session_cookie != NULL){
-				free(session_cookie);
-				session_cookie = NULL;
+			struct User user = get_user_by_id(user_token.userId);
+			if (user.exists){
+				struct User_Token session_token = create_token(user.Id);
+				char* session_cookie = create_session_cookie(path, session_token.token);
+				char* user_json =  convert_user_to_json(user);
+				char http_header[2048];
+				int json_length = strlen(user_json);
+				snprintf(http_header, sizeof(http_header),
+					"HTTP/1.1 200 OK\r\n"
+					"Content-Type: application/json\r\n"
+					"Connection: close\r\n"
+					"Set-Cookie: %s\r\n" 
+					"Content-Length: %d\r\n"
+					"\r\n",session_cookie ,json_length);
+				SSL_write(cSSL, http_header, strlen(http_header));
+				SSL_write(cSSL,user_json,json_length);
+				update_user_session_token_by_userId(user.Id, session_token.token);
+
+				if (session_cookie != NULL){
+					free(session_cookie);
+					session_cookie = NULL;
+				}
+			}else{
+				send_response_code(cSSL,404);
 			}
 		}else{
 			send_response_code(cSSL,404);
