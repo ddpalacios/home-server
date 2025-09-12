@@ -38,7 +38,6 @@ void trim(char* value, char result[]){
 
 void get_user(struct Socket* socket,char* http_header, char*body, char* route){
 	SSL* cSSL = socket->cSSL;
-	printf("%s\n",http_header);
 	if (strstr(http_header, "session_token=") != NULL){
 		char* cookie_key = "session_token";
 		char session_token[255];
@@ -46,7 +45,6 @@ void get_user(struct Socket* socket,char* http_header, char*body, char* route){
 		if (session_token_length > 0){
 			char trimmed_token[64];
 			trim(session_token, trimmed_token);
-			printf("SESSION TOKEN: '%s'\n", trimmed_token);
 			struct User user =  get_user_by_session_token(trimmed_token);
 			if (user.exists){
 				char* user_json= convert_user_to_json(user);
@@ -63,7 +61,6 @@ void get_user(struct Socket* socket,char* http_header, char*body, char* route){
 		int refresh_token_length = get_cookie_value(http_header, refresh_key, refresh_token);
 		char trimmed_token[64];
 		trim(refresh_token, trimmed_token);
-		printf("REFRESH TOKEN '%s'\n",  trimmed_token);
 		struct User_Token user_token = get_token(trimmed_token);
 		if (user_token.exists){
 			char* path = "/life-of-sounds/";
