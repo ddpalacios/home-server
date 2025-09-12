@@ -20,7 +20,7 @@ void get_websocket_client(struct Socket* socket,char* http_header, char*body, ch
             add_string_to_json_root(root,"socketId",ws_client.socketId);
             add_string_to_json_root(root,"sessionId",ws_client.sessionId);
             add_string_to_json_root(root,"name",ws_client.name);
-            add_number_to_json_root(root,"isHost", ws_client.isHost);
+            // add_number_to_json_root(root,"isHost", ws_client.isHost);
             add_string_to_json_root(root,"userId",ws_client.userid);
             char* ws_info = get_json_as_string(root);
             printf("%s\n", ws_info);

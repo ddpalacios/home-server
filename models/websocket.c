@@ -58,7 +58,7 @@ char* get_websocket_sessions_by_userId(char* userid){
 	snprintf(sql,sizeof(sql), "SELECT * FROM Websocket_Session WHERE creator_userid = '%s'",
 			userid
 			);
-	printf("%s\n", sql);
+	// printf("%s\n", sql);
 	MYSQL_RES* res = query(conn, sql);
 	MYSQL_ROW row;
 	size_t count = 0;

@@ -11,11 +11,14 @@ void update_username_by_userid(char* userId, char* newValue){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[576];
 	snprintf(sql,sizeof(sql),"UPDATE WebsocketClient SET name = '%s' WHERE userId = '%s'", newValue, userId);
-	query(conn, sql);
+	char sql_2[576];
+
+	snprintf(sql_2,sizeof(sql_2),"UPDATE user SET username = '%s' WHERE user_id = '%s'", newValue, userId);
+	query(conn, sql_2);
 	close_sql_connection(conn);
 }
 
-struct WebsocketClient create_websocketclient(char* sessionid, char*socketId, char* username, int isHost, char* userid){
+struct WebsocketClient create_websocketclient(char* sessionid, char*socketId, char* username, char* userid){
 	struct WebsocketClient websocketclient;
 
 	unsigned char* Id  = malloc(16);
@@ -26,7 +29,7 @@ struct WebsocketClient create_websocketclient(char* sessionid, char*socketId, ch
 	websocketclient.Id  =strdup(Id_hex);
 	websocketclient.sessionId  = sessionid;
     websocketclient.socketId = socketId;
-	websocketclient.isHost = isHost;
+	// websocketclient.isHost = isHost;
 	websocketclient.name =	username;
 	websocketclient.userid = userid;
 	
@@ -68,9 +71,9 @@ struct WebsocketClient get_websocketclientBySocketId(char* socketId){
 		   websocketclient.Id = strdup(row[0]);
 		  websocketclient.socketId = strdup(row[1]);
 		  websocketclient.sessionId = strdup(row[2]);
-		  websocketclient.isHost = atoi(row[3]);
-		  websocketclient.name = strdup(row[4]);
-		  websocketclient.userid = strdup(row[5]);
+		//   websocketclient.isHost = atoi(row[3]);
+		  websocketclient.name = strdup(row[3]);
+		  websocketclient.userid = strdup(row[4]);
 		  websocketclient.exists = 1;
 	  }
       close_sql_connection(conn);
@@ -88,9 +91,9 @@ struct WebsocketClient get_websocketclient(char* userId, char* sessionId){
 		  websocketclient.Id = strdup(row[0]);
 		  websocketclient.socketId = strdup(row[1]);
 		  websocketclient.sessionId = strdup(row[2]);
-		  websocketclient.isHost = atoi(row[3]);
-		  websocketclient.name = strdup(row[4]);
-		  websocketclient.userid = strdup(row[5]);
+		//   websocketclient.isHost = atoi(row[3]);
+		  websocketclient.name = strdup(row[3]);
+		  websocketclient.userid = strdup(row[4]);
 		  websocketclient.exists = 1;
 	  }
       close_sql_connection(conn);
@@ -129,11 +132,11 @@ int websocketclient_exists(char* userid, char* sessionid){
 void insert_websocketclient(struct WebsocketClient websocketclient){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[255];
-	snprintf(sql,sizeof(sql), "INSERT INTO WebsocketClient VALUES ('%s', '%s', '%s', '%d', '%s', '%s');",
+	snprintf(sql,sizeof(sql), "INSERT INTO WebsocketClient VALUES ('%s', '%s', '%s',  '%s', '%s');",
 			websocketclient.Id,
 			websocketclient.socketId,
 			websocketclient.sessionId,
-			websocketclient.isHost,
+			// websocketclient.isHost,
 			websocketclient.name,
 			websocketclient.userid);
 	query(conn, sql);

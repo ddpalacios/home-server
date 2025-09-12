@@ -6,6 +6,8 @@ typedef struct User{
 	unsigned char* password;
 	unsigned char* salt;
 	char* fullname;
+	int isHost;
+	char* sessionId;
 	int  exists;
 }users;
 void update_user_session_token_by_userId(char* userId, char* new_token);
