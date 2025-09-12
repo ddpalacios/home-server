@@ -91,7 +91,6 @@ struct User get_user_by_session_token(char* session_token){
     MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
     char sql[1024];
 	snprintf(sql, sizeof(sql),"%s WHERE u.session_token = '%s'", user_sql,session_token);
-	// printf("SQL: %s\n", sql);
 
     struct User user;
 	user.exists = 0;
@@ -100,15 +99,6 @@ struct User get_user_by_session_token(char* session_token){
 	while((row = mysql_fetch_row(res))!= NULL){
 		user.Id = strdup( row[0]);
 		user.fullname = strdup(row[1]);
-		// if (row[7] != NULL){
-		// 	user.sessionId = strdup(row[7]);
-		// }
-		// if (row[8] != NULL){
-		// 	user.isHost = atoi(row[8]);
-		// }else{
-		// 	user.isHost = -1;
-
-		// }
 		user.exists = 1;
         break;
 	}

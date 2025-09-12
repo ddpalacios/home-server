@@ -112,7 +112,7 @@ body, html {  overflow: hidden; }
 <nav class="outer-col-1" id="chatbox">
 
   <div id="chat" class="chat-container">  
-    <h1>Live Chat</h1>
+    <!-- <h1>Live Chat</h1> -->
     <input id="stop_session" class="create-btn" type="button" style="background-color: lightcoral; display: none;" value="Stop Session"/>
     <!-- <input id="home" class="create-btn" type="button" style="margin-top: 10px; background-color: rgb(250, 214, 96); display: none;" value="Back Home"/> -->
     <input id="create_session" class="create-btn" type="button" style="background-color: lightgreen;" value="+ Create Session"/>
@@ -443,7 +443,7 @@ body, html {  overflow: hidden; }
     }
     
     function start_websocket(sessionid, userid,username, isHost){
-        if (websocket_session != null){return;}
+            if (websocket_session != null){return;}
             websocket_session = new WebSocket('wss://' + window.location.host  +'/life-of-sounds/live_studio/session?Id='+sessionid);
             websocket_session.onopen = () => {
                     console.log("Websocket connection established");                    
@@ -455,7 +455,7 @@ body, html {  overflow: hidden; }
                         ,'name': username
                     }))           
                     display_activated_session(sessionid, username, isHost);
-            }
+                }
             
             websocket_session.onmessage = (event) => {
                 console.log("Message from server", event.data);
@@ -478,7 +478,6 @@ body, html {  overflow: hidden; }
                     }
                 }
         }
-            
             websocket_session.onclose = () => {
                 alert("Websocket connection closed");
                 location.href = 'https://' + window.location.host  +'/life-of-sounds/live_studio'
@@ -709,7 +708,7 @@ body, html {  overflow: hidden; }
 
 </script>
 
-<!-- <script>
+<script>
     let canvas = document.querySelector("#visualizer");
     let ctx = canvas.getContext("2d");
     const width = canvas.clientWidth;
@@ -994,4 +993,4 @@ function mouseMove(e){
     canvas.addEventListener("mousemove", mouseMove, false);
     main()
 
-</script> -->
+</script>
