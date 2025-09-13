@@ -6,7 +6,7 @@
     canvas.width = width * dpr;
     canvas.height = height * dpr;
     ctx.scale(dpr, dpr);
-    var pixel_size = 10
+    var pixel_size = 5
     var numRows =  Math.floor(canvas.height / pixel_size);
     var numCols =Math.floor(canvas.width / pixel_size);
     var big_canvas_grid = []
