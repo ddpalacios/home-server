@@ -61,6 +61,17 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_live_html(cSSL, http_header, "home.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/live_studio")==0){
 		get_live_html(cSSL, http_header, "live_studio.html");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/canvas_style.css")==0){
+		printf("GETTING STYLE SHEET\n");
+		get_gol_script(cSSL, http_header, "canvas_style.css");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/chatbox_style.css")==0){
+		get_gol_script(cSSL, http_header, "chatbox_style.css");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/onload_session.js")==0){
+		get_gol_script(cSSL, http_header, "onload_session.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/chatbox.js")==0){
+		get_gol_script(cSSL, http_header, "chatbox.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/websocket.js")==0){
+		get_gol_script(cSSL, http_header, "websocket.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/game_of_life.js")==0){
 		get_gol_script(cSSL, http_header, "game_of_life.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/web_audio_api.js")==0){
