@@ -1,108 +1,96 @@
- const canvas = document.getElementById('visualizer');
-const ctx = canvas.getContext('2d');
+    let canvas = document.querySelector("#visualizer");
+    let ctx = canvas.getContext("2d");
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.scale(dpr, dpr);
+    var pixel_size = 10
+    var numRows =  Math.floor(canvas.height / pixel_size);
+    var numCols =Math.floor(canvas.width / pixel_size);
+    var big_canvas_grid = []
+    var mag_view_w =3
+    var mag_view_h = 3
 
 
-function create_grid(width, height, grid){
-	for (var i=0; i<height;i++){
-		var row = []
-		for (var j=0; j<width; j++){
-			row.push(0);
+function mouseMove(e){
+	e.preventDefault();
+	cPostX = e.pageX - canvas.offsetLeft;
+	cPostY = e.pageY - canvas.offsetTop;
+	mouse_x = cPostX;
+	mouse_y = cPostY;
+	var current_x = Math.floor(mouse_x/pixel_size)
+	var current_y = Math.floor(mouse_y/pixel_size)
+	 big_canvas_grid[current_y][current_x] = 1
+
+	for (let i=0; i<mag_view_h; i++){
+			for (let j=0; j<mag_view_w; j++){
+                big_canvas_grid[current_y+i][ current_x + j] =1
+				}
 		}
-			grid.push(row);
+
 	}
+function countNeighbors(row, col) {
+        let count = 0;
+        for (let i = -1; i <= 1; i++) {
+        for (let j = -1; j <= 1; j++) {
+            const r = row + i;
+            const c = col + j;
+            if (r >= 0 && r < numRows && c >= 0 &&
+            c < numCols && !(i === 0 && j === 0)) {
+            count += big_canvas_grid[r][c];
+            }
+        }
+        }
+        return count;
 }
-function fill_grid(grid){
-	for (var i=0; i<grid.length;i++){
-		for (var j=0; j<grid[0].length; j++){
-			var val = Math.round(Math.random());
-			grid[i][j] = val;
-		}
-	}
-}
-function drawGrid(grid, r, c) {
-    var cellSize = 2;
-	const numRows = Math.floor(canvas.height / cellSize);
-        const numCols = Math.floor(canvas.width / cellSize);
-	
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    for (let i = 0; i < numRows; i++) {
-	for (let j = 0; j < numCols; j++) {
-	    if (grid[i][j] === 1) {
-		ctx.fillStyle = 'white';
-		ctx.fillRect(j * cellSize, i *
-			     cellSize, cellSize, cellSize);
-	    }
-	}
-    }
+function updateGrid() {
+        var newGrid = [];
+        for (let i = 0; i < numRows; i++) {
+            newGrid[i] = [];
+            for (let j = 0; j < numCols; j++) {
+                const neighbors = countNeighbors(i, j);
+                if ((big_canvas_grid[i][j] === 1) && (neighbors < 2 || neighbors > 3)) {
+                newGrid[i][j] = 0;
+                } else if (big_canvas_grid[i][j] === 0 && neighbors === 3) {
+                newGrid[i][j] = 1;
+                } else {
+                newGrid[i][j] = big_canvas_grid[i][j];
+                }
+            }
+        }
+        big_canvas_grid = newGrid;
+
+        return big_canvas_grid
 }
 
 
-function main(){
-	var width = 30;
-	var height = 30;
-	var grid = [];
-	create_grid(width, height, grid);
-	fill_grid(grid);
-	console.log(grid);
-	new_grid = []
-	for (var i=0; i<grid.length;i++){
-		var row = []
-		for (var j=0; j<grid[0].length; j++){
-			var left_neighbor = 0; 
-			var right_neighbor = 0; 
-			var top_neighbor = 0; 
-			var bottom_neighbor = 0; 
-			var top_left_neighbor = 0; 
-			var top_right_neighbor = 0; 
-			var bottom_right_neighbor = 0; 
-			var bottom_left_neighbor = 0; 
-			var current_value = grid[i][j];
-			if ((j-1) >= 0){
-				left_neighbor = grid[i][j-1];
-			}if ((j+1) < grid[0].length -1) {
-				right_neighbor = grid[i][j+1];
-			}if ((i-1) >= 0){
-				top_neighbor = grid[i-1][j];
-				if (j-1 >=0){
-					top_left_neighbor = grid[i-1][j-1];
-				}
-				if (j+1 < grid[0].length -1){
-					top_right_neighbor = grid[i-1][j+1];
-				}
-			}if (i+1 < grid.length - 1){
-				bottom_neighbor = grid[i+1][j];
-				if (j-1 >=0){
-					bottom_left_neighbor = grid[i+1][j-1];
-				}
-				if (j+1 < grid[0].length -1){
-					bottom_right_neighbor = grid[i+1][j+1];
-				}
-			}
-			var total_neighbors = left_neighbor + right_neighbor + top_neighbor + bottom_neighbor + top_right_neighbor + top_left_neighbor + bottom_left_neighbor + bottom_right_neighbor;
+function start(){
+	 ctx.clearRect(0, 0, canvas.width, canvas.height);
+	if (big_canvas_grid.length ==  0){
+                    // initial grid
+                    for (let i =0; i<numRows; i++){
+                        big_canvas_grid[i] = []
+                        for (let j =0; j<numCols; j++){
+                            big_canvas_grid[i][j] = 0;
+                        }
+                    }
+                }
+        big_canvas_grid = updateGrid() 
 
-			if (current_value==1 && total_neighbors < 2){
-				// Under Population
-				row.push(0);
-				continue;
-			}if (current_value == 1 && total_neighbors > 3){
-				//Over Population
-				row.push(0);
-				continue;
-			}if (current_value == 1 && (total_neighbors == 2 || total_neighbors ==3)){
-				// Stays Alive
-				row.push(1);
-				continue;
-			}if (current_value == 0 && total_neighbors == 3){
-				// Regenerates
-				row.push(1);
-				continue;
-			}
-			row.push(current_value);
-			//console.log("Total Neighbors: "+total_neighbors);
-		}
-		new_grid.push(row);
-		}
-	console.log(new_grid);
-	drawGrid(new_grid, height, width);
+        for (let i =0; i<numRows; i++){
+            for (let j =0; j<numCols; j++){
+                var x = j * pixel_size
+                var y = i * pixel_size
+                if (big_canvas_grid[i][j] ==1){
+                        ctx.fillStyle = 'rgba(38, 130, 235, 1)'
+                        ctx.fillRect(x, y , pixel_size, pixel_size);
+                }
+            }
+        }
+
+	requestAnimationFrame(start);
 }
-main();
+canvas.addEventListener("mousemove", mouseMove, false);
+start()

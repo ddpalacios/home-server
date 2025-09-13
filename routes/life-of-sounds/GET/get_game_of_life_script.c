@@ -5,12 +5,17 @@
 #include "http_utilities.h"
 
 void get_gol_script(SSL* cSSL, char* request, char* template_name){
-	 char* request_cookie = get_cookie(request);
+	//  char* request_cookie = get_cookie(request);
 	 char *html_buffer = open_html_template_page(template_name, request);
 	 if (html_buffer != NULL){
 		 int code = 200;
 		 int html_length = strlen(html_buffer);
-		 send_html_response_code(cSSL,200, html_length);
+		if (strstr(template_name, ".css") != NULL){
+			send_css_response_code(cSSL,200, html_length);
+		}else{
+			send_html_response_code(cSSL,200, html_length);
+		}
+		printf("BUFFER %s\n", html_buffer);
 		SSL_write(cSSL, html_buffer, html_length);	 
 		free(html_buffer);
 	 }else{
