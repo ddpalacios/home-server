@@ -1,62 +1,11 @@
 <!doctype html>
 <title>Live Studio</title>
-<!-- <link rel="stylesheet" href="chatbox_style.css"> -->
+<link rel="stylesheet" href="chatbox_style.css">
 <link rel="stylesheet" href="canvas_style.css">
-<style>
-
-.buttons{
-    width: 100%;  
-    padding: 10px;
-    font-weight: bold;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-#content {
-    position: absolute;
-    top: 15px;
-    left: 20px;
-    bottom: 20px;
-    width: 500px;
-    max-width: 25%;
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-#chatbox_btn {
-    background-color: rgba(152, 0, 0, 0.551);
-}
-#chatbox_btn:hover {
-    background-color: rgba(152, 0, 0, 0.815);
-    transform: scale(1.05);
-}
-#session_btn {
-    margin-top: 10px;
-    background-color: rgba(4, 241, 83, 0.364);
-}
-#session_btn:hover {
-    background-color: rgba(4, 200, 4, 0.9);
-    transform: scale(1.05);
-}
-
-#chatbox {
-    flex: 1;
-    background: rgba(2, 33, 73, 0.444);
-    border-radius: 10px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    cursor: default;
-}
-</style>
-
 <body>
 <div id="canvas_container">
     <div id="content">
-        <button class="buttons" id="chatbox_btn">Close Chat</button>
+        <button class="buttons" id="chatbox_btn">Hide Chat</button>
         <div id="chatbox">
             <button class="buttons" onclick="alert('clicked')" id="session_btn">+ Create Session</button>
         </div>
@@ -66,11 +15,10 @@
 
 </body>
 <script src="game_of_life.js"></script>
-
 <script>
     function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
     }
     window.addEventListener("resize", resizeCanvas);
     resizeCanvas(); 
@@ -82,7 +30,7 @@
         if (chatbox.style.display != 'none'){
             chatbox.style.display = "none"
             content.style.height = "0px"
-            chatbox_btn.textContent = "Open Chat"
+            chatbox_btn.textContent = "View Chat"
             console.log("Closing")
             chatbox_btn.style.backgroundColor ='rgba(4, 200, 4, 0.9)';
             chatbox_btn.addEventListener('mouseover', function () {
@@ -95,9 +43,8 @@
         }else{
             console.log("Opening")
             chatbox.style.display = 'inline-block'
-            chatbox_btn.textContent = "Close Chat"
+            chatbox_btn.textContent = "Hide Chat"
             chatbox_btn.style.backgroundColor = 'rgba(152, 0, 0, 0.815)'
-
             chatbox_btn.addEventListener('mouseover', function () {
             chatbox_btn.style.backgroundColor = 'rgba(152, 0, 0, 0.815)'; 
             });
@@ -105,16 +52,18 @@
                 chatbox_btn.style.backgroundColor = 'rgba(152, 0, 0, 0.551)';
             });
             content.style.height = "";
-
-
-            // chatbox.hidden = false;
         }
     }
 
 
 
 </script>
+<script src="onload_session.js"></script>
 
+
+
+
+</script>
 
 <!-- <nav class="outer-col-1" id="chatbox" hidden="true">
   <div id="chat" class="chat-container">  
