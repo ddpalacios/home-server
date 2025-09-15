@@ -1,8 +1,9 @@
 class Websocket_Session{
 	#protocol
-	constructor(sessionId, userId){
+	constructor(sessionId, userId, username){
 		this.sessionId = sessionId;
 		this.userId = userId;
+		this.username = username;
 		this.session = null;
 		this.#protocol = {
 			"operation": null
@@ -10,9 +11,17 @@ class Websocket_Session{
             ,'timestamp': new Date().toISOString()
             ,'sessionId': this.sessionId
 			,'userId': this.userId
+			,'username': this.username
             ,"content": null
             ,"is_notification": null
 		}
+	}
+	close_all_connections(){
+		let operation = "session";
+		let request = "DELETE";
+		this.#protocol['operation'] = operation;
+		this.#protocol['request'] = request;
+		this.session.send(JSON.stringify(this.#protocol))
 	}
 	send_message(message, is_notification){
 		let operation = "message";
