@@ -26,15 +26,41 @@
     var websocket = null;
 
     function start_session(sessionId, current_user){
-        websocket = new Websocket_Session(sessionId,current_user['Id']);
+        websocket = new Websocket_Session(sessionId,current_user['Id'],current_user['fullname']);
         websocket.initialize()
        
         websocket.session.onmessage = (event) => {
             console.log("Message from server", event.data);
-        }
-      
-    }
+             let data = JSON.parse(event.data)
+                if (data['operation'] == 'message'){
+                    let content = data['content']
+                    let is_notification = data["is_notification"]
+                    let username = data['username']
+                    add_message_to_chat(username, content, is_notification)
+                }
+                else if (data['request'] == 'DELETE' && data['operation'] == 'session'){
+                    websocket.session.close()
+                    location.href = "/life-of-sounds/live_studio"
 
+                    
+
+                }
+        }
+    }
+    async function get_session_by_sessionId(sessionId){
+		var request = new Request('life-of-sounds/live_studio/session?Id='+sessionId, {
+							method: 'GET',
+							headers: new Headers({
+										'Accept': 'application/json'
+									})
+			});
+        var session = null;
+        var response = await fetch(request);
+        if (response.ok){ 
+            session = await response.json()
+        }
+        return session;
+    }
     async function get_session_by_userId(userId){
 		var request = new Request('life-of-sounds/live_studio/session?userId='+userId, {
 							method: 'GET',
@@ -86,7 +112,7 @@
 
     }
     async function create_user(){
-            var request = new Request('live_studio/user', {
+            var request = new Request('/life-of-sounds/live_studio/user', {
                                 method: 'POST',
                                 headers: new Headers({
                                             'Accept': 'application/json'
@@ -106,7 +132,7 @@
             return null;
     }
     async function get_user(){
-         var request = new Request('live_studio/user', {
+         var request = new Request('/life-of-sounds/live_studio/user', {
                                 method: 'GET',
                                 headers: new Headers({'Accept': 'application/json'})});
             var user = null;
@@ -138,105 +164,123 @@
     function generate() {
 		return nameList[Math.floor( Math.random() * nameList.length )] + " " + nameList[Math.floor( Math.random() * nameList.length )];
 	};
-    function get_session_by_sessionId(sessionId, userid,username,isHost){
-		var request = new Request('life-of-sounds/live_studio/session?Id='+sessionId, {
-							method: 'GET',
-							headers: new Headers({
-										'Accept': 'application/json'
-									})
-				});
-
-        fetch(request).then(async(response) => {
-                        if (response.ok) {
-                            try{
-                                const data = await response.json();
-                                let sessionname = data['name']
-                                sessionStorage.setItem("sessionname", sessionname);
-
-                                load_messages(sessionId);
-                                start_websocket(sessionId, userid, username,isHost);
-                            }catch(error){}
-                        }else{
-                            console.log("No Existing Session Found")
-                        }
-                    }).catch(e => console.error('EXCEPTION: ', e))
-    }
     function display_invitation_link(chatbox_contents_div){
-    let cpy_btn = document.createElement('button');
-    cpy_btn.className = 'buttons'
-    cpy_btn.textContent = "Copy Invitation URL"
-    cpy_btn.style.backgroundColor ='rgba(4, 241, 83, 0.364)';
-            cpy_btn.addEventListener('mouseover', function () {
-            cpy_btn.style.backgroundColor = 'rgba(4, 200, 4, 0.9)';
-            });
-            cpy_btn.addEventListener('mouseout', function () {
-                cpy_btn.style.backgroundColor = 'rgba(4, 241, 83, 0.364)';
-            });
+        let cpy_btn = document.createElement('button');
+        cpy_btn.className = 'buttons'
+        cpy_btn.textContent = "Copy Invitation URL"
+        cpy_btn.style.backgroundColor ='rgba(4, 241, 83, 0.364)';
+                cpy_btn.addEventListener('mouseover', function () {
+                cpy_btn.style.backgroundColor = 'rgba(4, 200, 4, 0.9)';
+                });
+                cpy_btn.addEventListener('mouseout', function () {
+                    cpy_btn.style.backgroundColor = 'rgba(4, 241, 83, 0.364)';
+                });
 
-    cpy_btn.onclick = function () {
-            cpy_btn.style.backgroundColor = 'rgba(4, 200, 4, 0.9)';
-            navigator.clipboard.writeText(window.location.href );
-            cpy_btn.textContent = "Copied!"
-            setTimeout(function(){ 
-                 cpy_btn.textContent = "Copy Invitation URL"
-                }, 2000);
-            }
-    chatbox_contents_div.appendChild(cpy_btn)
+        cpy_btn.onclick = function () {
+                let sessionId = sessionStorage.getItem("sessionId");
+                cpy_btn.style.backgroundColor = 'rgba(4, 200, 4, 0.9)';
+                navigator.clipboard.writeText(window.location.href + "/session/join?Id="+sessionId );
+                cpy_btn.textContent = "Copied!"
+                setTimeout(function(){ 
+                    cpy_btn.textContent = "Copy Invitation URL"
+                    }, 2000);
+                }
+        chatbox_contents_div.appendChild(cpy_btn)
 
     }   
     function display_session_button(){
+        let isHost = sessionStorage.getItem('isHost');
         var chatbox =  document.getElementById("chatbox");
         var session_btn =  document.getElementById("session_btn");
+
+        
         var stop_session_btn = document.createElement("button")
-        stop_session_btn.textContent = "Stop Session"
         stop_session_btn.style.marginTop = "10px"
-        stop_session_btn.style.backgroundColor = 'rgba(152, 0, 0, 0.551)';
+
+        
+        stop_session_btn.textContent = "Stop Session"
+        let default_color =  'rgba(152, 0, 0, 0.551)'
+        let onhover_color = 'rgba(152, 0, 0, 0.815)'; 
+        console.log("IS HOST? " ,isHost)
+        if (isHost == 'false'){
+            stop_session_btn.textContent = "Leave Session"
+            default_color =  'rgba(152, 147, 0, 0.55)'
+            onhover_color = 'rgba(147, 152, 0, 0.81)'; 
+            stop_session_btn.onclick = function(){
+               location.href = "/life-of-sounds/live_studio"
+            }
+        }else{
+            stop_session_btn.onclick = function(){
+                let sessionId = sessionStorage.getItem("sessionId")
+                var request = new Request('life-of-sounds/live_studio/session?Id='+sessionId, {
+                                    method: 'DELETE',
+                                    headers: new Headers({
+                                                'Accept': 'application/json'
+                                            })
+                        });
+                fetch(request)
+                websocket.close_all_connections();
+                session_btn.style.display = "inline-block"
+                stop_session_btn.style.display = "none"
+                var chatbox_contents =  document.getElementById("chatbox_contents");
+                var chatbox =  document.getElementById("chatbox");
+                chatbox.removeChild(chatbox_contents)
+            }
+        }
+
+        stop_session_btn.style.backgroundColor = default_color
         stop_session_btn.addEventListener('mouseover', function () {
-            stop_session_btn.style.backgroundColor = 'rgba(152, 0, 0, 0.815)'; 
+            stop_session_btn.style.backgroundColor = onhover_color
         });
         stop_session_btn.addEventListener('mouseout', function () {
-            stop_session_btn.style.backgroundColor = 'rgba(152, 0, 0, 0.551)';
+            stop_session_btn.style.backgroundColor = default_color
         });
         stop_session_btn.className = "buttons"
         session_btn.style.display = "none"
         
-        
-        stop_session_btn.onclick = function(){
-            let sessionId = sessionStorage.getItem("sessionId")
-            var request = new Request('life-of-sounds/live_studio/session?Id='+sessionId, {
-                                method: 'DELETE',
-                                headers: new Headers({
-                                            'Accept': 'application/json'
-                                        })
-                    });
-            fetch(request)
-            session_btn.style.display = "inline-block"
-            stop_session_btn.style.display = "none"
-            var chatbox_contents =  document.getElementById("chatbox_contents");
-            var chatbox =  document.getElementById("chatbox");
-            chatbox.removeChild(chatbox_contents)
-        }
-
-
         chatbox.append(stop_session_btn);
     }  
-
-    function add_message_to_chat(current_user, message){
-        let username = current_user['fullname']
+    function add_message_to_chat(username, message, is_notification){
         let p = document.createElement('p');
         p.style.cursor = 'default'
         p.style.color = 'white'
-        p.innerHTML  = "<b>"+username+ ":</b>   "+message;
+        if (is_notification){
+            p.innerHTML  = message;
+        }else{
+            p.innerHTML  = "<b>"+username+ ":</b> "+message;
+            }
         let chat = document.getElementById('messages')
         chat.appendChild(p);
+        chat.scrollTop = chat.scrollHeight;
     }
-
     function send_message(current_user){
         const messagebox = document.getElementById("messagebox");
-        text = document.getElementById("messagebox").value
-        add_message_to_chat(current_user, text)
+        let text = document.getElementById("messagebox").value
+        add_message_to_chat(current_user['fullname'], text, 0)
         websocket.send_message(text, 0)
         document.getElementById("messagebox").value = ''
+        let chat = document.getElementById('messages')
+        chat.scrollTop = chat.scrollHeight;
+    }
+    function load_messages(current_user, sessionId){
+        let data_request = new Request('/life-of-sounds/live_studio/session/messages?sessionId='+sessionId, {
+                    method: 'GET'
+                    ,headers: new Headers({
+                        'Accept': 'application/json'
+                        })
+                });
+        fetch(data_request)
+            .then((response)=> response.json())
+            .then((data)=> {
+                let messages = data['values'];
+                messages.forEach(element => {
+                    let text = element['content']
+                    let is_notification = element['is_notification']
+                    add_message_to_chat(current_user['fullname'], text, is_notification)
+                });
+                let chat = document.getElementById('messages')
+                chat.scrollTop = chat.scrollHeight;
+            });
     }
     function listenToSubmit(event, current_user){
         var key = event.keyCode;
@@ -250,12 +294,12 @@
         }
     }
     function display_session(sessionName,current_user){
+        let isHost = sessionStorage.getItem('isHost');
         var chatbox =  document.getElementById("chatbox");
         var chatbox_contents_div = document.createElement("div");
 
         chatbox_contents_div.id = "chatbox_contents"
         chatbox_contents_div.style.cursor = 'default'
-
 
         const sessionName_header = document.createElement("h1");
         sessionName_header.innerHTML = sessionName
@@ -268,7 +312,9 @@
         });
         chatbox_contents_div.appendChild(sessionName_header);
         
-        display_invitation_link(chatbox_contents_div);
+        if (isHost == 'true'){
+            display_invitation_link(chatbox_contents_div);
+        }
 
         const username_title = document.createElement("p");
         username_title.innerHTML = "Your Username:"
@@ -299,17 +345,6 @@
         chats_div.style.overflowX = "hidden"; 
 
         chatbox_contents_div.style.padding = "0.5em";
-
-        // for (let i=0; i< 10; i++){
-        // var t = document.createElement("p")
-        // t.innerHTML = "From User: HELLO!!!"
-        // t.style.color = "white"
-        // t.style.cursor = "default"
-        // chats_div.appendChild(t)
-        // chats_div.scrollTop = chats_div.scrollHeight;
-
-        // }
-      
         chatbox_contents_div.appendChild(chats_div)
 
 
@@ -365,23 +400,52 @@
         }
         console.log(newSession)
         sessionStorage.setItem("sessionId", newSession['sessionId'])
-        location.hash = "session=" + newSession['sessionId'];
+        sessionStorage.setItem("isHost", true)
         display_session_button();
         display_session(sessionName, current_user);
         start_session(newSession['sessionId'], current_user)
     }
     window.addEventListener("load", async function(){
-         let current_user = await get_user();
-         console.log(current_user)
-         let userId = current_user['Id']
-         let current_session = await get_session_by_userId(userId);
-         if (current_session['values'].length ==0){
-         }else{
-            console.log(current_session)
-            sessionStorage.setItem("sessionId", current_session['values'][0]['sessionid'])
-            display_session_button();
-            display_session(current_session['values'][0]['name'], current_user);
-            start_session(current_session['values'][0]['sessionid'], current_user)
-         }
+        let current_user = await get_user();
+        console.log(current_user)
+        let userId = current_user['Id']
+        let current_session = null;
+        let sessionId = null;
+        let sessionName = null;
+        if (this.window.location.href.includes("session/join?Id=")){
+            sessionId = this.window.location.href.split("session/join?Id=")[1];
+            if (sessionId != '' && sessionId.length > 0){
+                current_session = await get_session_by_sessionId(sessionId)
+                if (current_session == null){
+                    this.alert("Session Not Found"); 
+                    return;
+                }
+                sessionName = current_session['name']
+                this.sessionStorage.setItem("isHost", false)
+            }else{
+                this.alert("Invalid Join Session ID")
+            }
+        }else{
+            current_session = await get_session_by_userId(userId);
+            if (current_session == null){
+                    this.alert("Session Not Found"); 
+                    return;
+                }
+            if (current_session['values'].length > 0){
+                sessionId = current_session['values'][0]['sessionid']
+                sessionName = current_session['values'][0]['name']
+                this.sessionStorage.setItem("isHost", true)
+
+            }
+        }
+        
+        if (sessionId != null && sessionName != null){
+                console.log(current_session)
+                sessionStorage.setItem("sessionId", sessionId)
+                display_session_button();
+                display_session(sessionName, current_user);
+                load_messages(current_user, sessionId);
+                start_session(sessionId, current_user);
+            }
     })
     
