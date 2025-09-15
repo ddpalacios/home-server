@@ -282,7 +282,7 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 				send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
 				char* content = get_value(json,"content");
 				char* userid = get_value(json,"userid");
-				char* username = get_value(json,"username");
+				char* username =  "";//get_value(json,"username");
 				char* sessionId = get_value(json,"sessionId");
 				char* timestamp = get_value(json,"timestamp");
 				int is_notification = get_int_value(json,"is_notification");

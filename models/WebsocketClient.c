@@ -18,7 +18,7 @@ void update_username_by_userid(char* userId, char* newValue){
 	close_sql_connection(conn);
 }
 
-struct WebsocketClient create_websocketclient(char* sessionid, char*socketId, char* username, char* userid){
+struct WebsocketClient create_websocketclient(char* sessionid, char*socketId,char* userid){
 	struct WebsocketClient websocketclient;
 
 	unsigned char* Id  = malloc(16);
@@ -30,7 +30,7 @@ struct WebsocketClient create_websocketclient(char* sessionid, char*socketId, ch
 	websocketclient.sessionId  = sessionid;
     websocketclient.socketId = socketId;
 	// websocketclient.isHost = isHost;
-	websocketclient.name =	username;
+	// websocketclient.name =	username;
 	websocketclient.userid = userid;
 	
 	return websocketclient;
@@ -72,8 +72,8 @@ struct WebsocketClient get_websocketclientBySocketId(char* socketId){
 		  websocketclient.socketId = strdup(row[1]);
 		  websocketclient.sessionId = strdup(row[2]);
 		//   websocketclient.isHost = atoi(row[3]);
-		  websocketclient.name = strdup(row[3]);
-		  websocketclient.userid = strdup(row[4]);
+		//   websocketclient.name = strdup(row[3]);
+		  websocketclient.userid = strdup(row[3]);
 		  websocketclient.exists = 1;
 	  }
       close_sql_connection(conn);
@@ -92,8 +92,8 @@ struct WebsocketClient get_websocketclient(char* userId, char* sessionId){
 		  websocketclient.socketId = strdup(row[1]);
 		  websocketclient.sessionId = strdup(row[2]);
 		//   websocketclient.isHost = atoi(row[3]);
-		  websocketclient.name = strdup(row[3]);
-		  websocketclient.userid = strdup(row[4]);
+		//   websocketclient.name = strdup(row[3]);
+		  websocketclient.userid = strdup(row[3]);
 		  websocketclient.exists = 1;
 	  }
       close_sql_connection(conn);
@@ -132,12 +132,12 @@ int websocketclient_exists(char* userid, char* sessionid){
 void insert_websocketclient(struct WebsocketClient websocketclient){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[255];
-	snprintf(sql,sizeof(sql), "INSERT INTO WebsocketClient VALUES ('%s', '%s', '%s',  '%s', '%s');",
+	snprintf(sql,sizeof(sql), "INSERT INTO WebsocketClient VALUES ('%s', '%s', '%s', '%s');",
 			websocketclient.Id,
 			websocketclient.socketId,
 			websocketclient.sessionId,
 			// websocketclient.isHost,
-			websocketclient.name,
+			// websocketclient.name,
 			websocketclient.userid);
 	query(conn, sql);
 	close_sql_connection(conn);
