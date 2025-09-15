@@ -6,7 +6,7 @@ typedef struct WebsocketClient {
 	char* name;
 	int exists;
 }websocketclients;
-struct WebsocketClient create_websocketclient(char* sessionid, char*socketId, char* username,  char* userid);
+struct WebsocketClient create_websocketclient(char* sessionid, char*socketId,  char* userid);
 struct WebsocketClient get_websocketclient(char* userId, char* sessionId);
 struct WebsocketClient* get_websocketclientsBySessionId(char* sessionId, size_t *total_clients);
 struct WebsocketClient get_websocketclientBySocketId(char* socketId);
