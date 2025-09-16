@@ -91,12 +91,11 @@ void send_to_clients(char* frame, struct Socket *sockets, struct Socket socket, 
 					printf("Error sending message.\n");
 					break;
 				    }else{
-						printf("Message sent to %s\n", client_socket.Id);
 					}
 				   break;
 				}
 			}
-			printf("Done Sending\n");
+			// printf("Done Sending\n");
 		}
 	
 }
@@ -117,7 +116,7 @@ int send_websocket_message(struct Socket *sockets,struct Socket socket,int fd_co
 		
 		return total_bytes;
 	}else if (protocol_length == 126){
-		printf("PROTOCOL LENGTH %d\n", protocol_length);
+		// printf("PROTOCOL LENGTH %d\n", protocol_length);
 		size_t total_bytes = actual_payload_length + 4;
 		char* frame = malloc(total_bytes); 
 		frame[0] = 0x81;
@@ -148,7 +147,7 @@ int send_websocket_message(struct Socket *sockets,struct Socket socket,int fd_co
 		}
 		return total_bytes;
 	}else if (protocol_length == 127){
-		printf("PROTOCOL LENGTH %d\n", protocol_length);
+		// printf("PROTOCOL LENGTH %d\n", protocol_length);
 		size_t total_bytes = actual_payload_length + 10;
 		char* frame = malloc(total_bytes); 
 		frame[0] = 0x81;

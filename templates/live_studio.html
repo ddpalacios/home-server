@@ -15,53 +15,29 @@
 
 
 </body>
-<script src="/life-of-sounds/game_of_life.js"></script>
 <script>
-    function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-    
-    window.addEventListener("resize", resizeCanvas);
-    resizeCanvas(); 
-
-    document.getElementById("chatbox_btn").onclick = function(){
-        var chatbox =  document.getElementById("chatbox");
-        var content =  document.getElementById("content");
-        var chatbox_btn =  document.getElementById("chatbox_btn");
-        if (chatbox.style.display != 'none'){
-            chatbox.style.display = "none"
-            content.style.height = "0px"
-            chatbox_btn.textContent = "View Chat"
-            console.log("Closing")
-            chatbox_btn.style.backgroundColor ='rgba(4, 200, 4, 0.9)';
-            chatbox_btn.addEventListener('mouseover', function () {
-            chatbox_btn.style.backgroundColor = 'rgba(4, 200, 4, 0.9)';
-            });
-            chatbox_btn.addEventListener('mouseout', function () {
-                chatbox_btn.style.backgroundColor = 'rgba(4, 241, 83, 0.364)';
-            });
-           
-        }else{
-            console.log("Opening")
-            chatbox.style.display = 'inline-block'
-            chatbox_btn.textContent = "Hide Chat"
-            chatbox_btn.style.backgroundColor = 'rgba(152, 0, 0, 0.815)'
-            chatbox_btn.addEventListener('mouseover', function () {
-            chatbox_btn.style.backgroundColor = 'rgba(152, 0, 0, 0.815)'; 
-            });
-            chatbox_btn.addEventListener('mouseout', function () {
-                chatbox_btn.style.backgroundColor = 'rgba(152, 0, 0, 0.551)';
-            });
-            content.style.height = "";
-        }
-    }
-
-
-
+    let canvas = document.querySelector("#visualizer");
+    let ctx = canvas.getContext("2d");
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.scale(dpr, dpr);
+    var pixel_size = 5
+    var numRows =  Math.floor(canvas.height / pixel_size);
+    var numCols =Math.floor(canvas.width / pixel_size);
+    var big_canvas_grid = []
+    const connected_clients = new Map()
+    var mag_view_w =3
+    var mag_view_h = 3
+	var mouse_x = 0;
+	var mouse_y = 0;
 </script>
 <script src="/life-of-sounds/websocket.js"></script>
 <script src="/life-of-sounds/onload_session.js"></script>
+<script src="/life-of-sounds/game_of_life.js"></script>
+
 
 
 
