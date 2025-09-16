@@ -23,6 +23,28 @@ class Websocket_Session{
 		this.#protocol['request'] = request;
 		this.session.send(JSON.stringify(this.#protocol))
 	}
+	send_coordinates(x, y){
+		let operation = "coordinates";
+		let request = "MOUSE";
+		this.#protocol['operation'] = operation;
+		this.#protocol['request'] = request;
+		this.#protocol['content'] = {"x": x, 'y': y};
+		this.session.send(JSON.stringify(this.#protocol))
+	}
+	async get_clients(){
+		var request = new Request('life-of-sounds/live_studio/client?sessionId='+this.sessionId, {
+					method: 'GET',
+					headers: new Headers({
+								'Accept': 'application/json'
+							})
+		});
+        var clients = null;
+        var response = await fetch(request);
+        if (response.ok){ 
+            clients = await response.json()
+        }
+        return clients;
+	}
 	send_message(message, is_notification){
 		let operation = "message";
 		let request = "POST";
@@ -34,17 +56,23 @@ class Websocket_Session{
 	}
 	initialize(){
 		this.session = new WebSocket('wss://' + window.location.host  +'/life-of-sounds/live_studio/session?Id='+this.sessionId);
-		this.session.onopen = () => {
+		this.session.onopen = async () => {
             console.log("Websocket connection established");
 			let operation = "client";
 			let request = "POST";
 			this.#protocol['operation'] = operation;
 			this.#protocol['request'] = request;
 			this.session.send(JSON.stringify(this.#protocol))
+			let clients = await this.get_clients()
+			 clients['values'].forEach(client => {
+				connected_clients.set(client['userId'], {'x': 0, 'y':0})
+			});
+
+
+			// connected_clients = clients['values']
         }
 		this.session.onclose = () => {
             alert("Session Closed")
-
         }
 	}
 }

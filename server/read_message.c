@@ -296,6 +296,8 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 
 			}else if (strcmp(request, "PATCH")==0 &&strcmp(operation, "session")==0){
 				send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
+			}else if (strcmp(request, "MOUSE")==0 && strcmp(operation, "coordinates")==0){
+				send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
 			}
 			
 			cJSON_Delete(json);

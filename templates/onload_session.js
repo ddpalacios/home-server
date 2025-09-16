@@ -25,26 +25,96 @@
 	];
     var websocket = null;
 
+    function mouseMove(e){
+        e.preventDefault();
+        cPostX = e.pageX - canvas.offsetLeft;
+        cPostY = e.pageY - canvas.offsetTop;
+        mouse_x = cPostX;
+        mouse_y = cPostY;
+        if (websocket != null){
+            websocket.send_coordinates(mouse_x, mouse_y)
+        }
+	}
+    function draw_host_cursor(){
+        ctx.beginPath();
+        ctx.lineWidth = "1";
+        ctx.strokeStyle = "red";
+        var s = pixel_size*2 
+        for (let i=0; i<mag_view_h; i++){
+            for (let j=0; j<mag_view_w; j++){
+                ctx.rect(mouse_x+(s*j) ,  mouse_y+(s*i), s, s);
+            }
+        }
+            ctx.stroke();
+            ctx.closePath();
+        }
+    function randomLightColor() {
+        const r = Math.floor(150 + Math.random() * 105); 
+        const g = Math.floor(150 + Math.random() * 105);
+        const b = Math.floor(150 + Math.random() * 105);
+        return `rgb(${r}, ${g}, ${b})`;
+    }
+    
+    function draw_client_cursor(){
+        ctx.beginPath();
+        ctx.lineWidth = "1";
+        ctx.strokeStyle = "blue";
+        let current_userId = sessionStorage.getItem('userId');
+        var s = pixel_size*2 
+        for (const [key, value] of connected_clients) {
+            if (key != current_userId){
+                let client_x = value['x']
+                let client_y = value['y']
+                for (let i=0; i<mag_view_h; i++){
+                    for (let j=0; j<mag_view_w; j++){
+                        ctx.rect(client_x+(s*j) , client_y+(s*i), s, s);
+                    }
+                }
+            }
+        }
+        ctx.stroke();
+        ctx.closePath();
+	}
     function start_session(sessionId, current_user){
         websocket = new Websocket_Session(sessionId,current_user['Id'],current_user['fullname']);
         websocket.initialize()
-       
-        websocket.session.onmessage = (event) => {
-            console.log("Message from server", event.data);
+
+        websocket.session.onmessage = async (event) => {
              let data = JSON.parse(event.data)
                 if (data['operation'] == 'message'){
+                    console.log("Message from server", event.data);
+
                     let content = data['content']
                     let is_notification = data["is_notification"]
                     let username = data['username']
                     add_message_to_chat(username, content, is_notification)
                 }
                 else if (data['request'] == 'DELETE' && data['operation'] == 'session'){
+                    console.log("Message from server", event.data);
+                    
                     websocket.session.close()
                     location.href = "/life-of-sounds/live_studio"
-
-                    
-
                 }
+                else if (data['operation'] == 'coordinates' && data['request'] == 'MOUSE'){
+                    let client_x = data['content']['x']
+                    let client_y = data['content']['y']
+                    if (connected_clients.has(data['userId']) == true){
+                            connected_clients.set(data['userId'], {'x': client_x, 'y':client_y})
+                        }
+                }
+                else if (data['operation'] == 'client' && data['request'] == 'POST'){
+                    let clients = await websocket.get_clients()
+                    clients['values'].forEach(client => {
+                        if (connected_clients.has(client['userId']) == false){
+                            connected_clients.set(client['userId'], {'x': 0, 'y':0})
+                        }
+                        
+                    });
+                    // connected_clients = clients['values']
+                    // console.log("CONNECTED CLIENTS:" ,connected_clients)
+                   
+                }
+
         }
     }
     async function get_session_by_sessionId(sessionId){
@@ -161,6 +231,7 @@
         }
         return session;
     }
+
     function generate() {
 		return nameList[Math.floor( Math.random() * nameList.length )] + " " + nameList[Math.floor( Math.random() * nameList.length )];
 	};
@@ -225,6 +296,7 @@
                 var chatbox_contents =  document.getElementById("chatbox_contents");
                 var chatbox =  document.getElementById("chatbox");
                 chatbox.removeChild(chatbox_contents)
+                websocket = null;
             }
         }
 
@@ -386,6 +458,12 @@
         chatbox_contents_div.appendChild(message_box)
         chatbox.appendChild(chatbox_contents_div)
     }
+    function draw(){
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        draw_host_cursor()
+        draw_client_cursor()
+        requestAnimationFrame(draw)
+    }
     document.getElementById("session_btn").onclick =  async function () {
         let sessionName = prompt("Session Name:", "The "+generate()+ " Session");
         if (sessionName == null){
@@ -405,6 +483,37 @@
         display_session(sessionName, current_user);
         start_session(newSession['sessionId'], current_user)
     }
+    document.getElementById("chatbox_btn").onclick = function(){
+        var chatbox =  document.getElementById("chatbox");
+        var content =  document.getElementById("content");
+        var chatbox_btn =  document.getElementById("chatbox_btn");
+        if (chatbox.style.display != 'none'){
+            chatbox.style.display = "none"
+            content.style.height = "0px"
+            chatbox_btn.textContent = "View Chat"
+            console.log("Closing")
+            chatbox_btn.style.backgroundColor ='rgba(4, 200, 4, 0.9)';
+            chatbox_btn.addEventListener('mouseover', function () {
+            chatbox_btn.style.backgroundColor = 'rgba(4, 200, 4, 0.9)';
+            });
+            chatbox_btn.addEventListener('mouseout', function () {
+                chatbox_btn.style.backgroundColor = 'rgba(4, 241, 83, 0.364)';
+            });
+           
+        }else{
+            console.log("Opening")
+            chatbox.style.display = 'inline-block'
+            chatbox_btn.textContent = "Hide Chat"
+            chatbox_btn.style.backgroundColor = 'rgba(152, 0, 0, 0.815)'
+            chatbox_btn.addEventListener('mouseover', function () {
+            chatbox_btn.style.backgroundColor = 'rgba(152, 0, 0, 0.815)'; 
+            });
+            chatbox_btn.addEventListener('mouseout', function () {
+                chatbox_btn.style.backgroundColor = 'rgba(152, 0, 0, 0.551)';
+            });
+            content.style.height = "";
+        }
+    }
     window.addEventListener("load", async function(){
         let current_user = await get_user();
         console.log(current_user)
@@ -412,6 +521,7 @@
         let current_session = null;
         let sessionId = null;
         let sessionName = null;
+        this.sessionStorage.setItem("userId", userId)
         if (this.window.location.href.includes("session/join?Id=")){
             sessionId = this.window.location.href.split("session/join?Id=")[1];
             if (sessionId != '' && sessionId.length > 0){
@@ -428,7 +538,7 @@
         }else{
             current_session = await get_session_by_userId(userId);
             if (current_session == null){
-                    this.alert("Session Not Found"); 
+                    this.alert("Session Retrieval Server Error"); 
                     return;
                 }
             if (current_session['values'].length > 0){
@@ -449,3 +559,5 @@
             }
     })
     
+    canvas.addEventListener("mousemove", mouseMove, false);
+    draw()
