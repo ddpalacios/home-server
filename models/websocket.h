@@ -4,15 +4,17 @@ typedef struct Websocket{
 	char* userid;
 	char* sessionid;
 	char* connected_on;
-	int socketId;
+	char* name;
+	char*  socketId;
 	int exists;
 }websockets;
 int is_active_websocket_client(int fd);
-
-
+struct Websocket get_websocket_session(char* sessionId);
+char* get_websocket_sessions_by_userId(char* userid);
+int websocket_session_exists(char* sessionId);
 char* convert_websockets_to_json(struct Websocket* websocket, int count);
 char* convert_websocket_to_json(struct Websocket websocket);
-struct Websocket create_websocket(char* userid, char* sessionid, int socketid);
+struct Websocket create_websocket_session(char* name, char* userid);
 char* generate_websocket_accptKey(char* websocket_sec_key);
 // int is_websocket_buffer(unsigned char* buf);
 int decode_websocket_buffer(unsigned char* buf, char message[] );
@@ -22,7 +24,7 @@ char* create_websocket_buffer();
 void send_websocket_buffer(SSL* cSSL, char* buf);
 void close_websocket_connection();
 // int is_websocket_buffer(unsigned char* buf);
-int update_websocket(char* Id,char* userid,char* sessionid,char* connected_on);
+void update_sessionName_by_sessionId(char* sessionId, char* name);
 char*  get_websockets();
 void delete_websocket_by_fd(int fd);
-void delete_websocket_by_sessionid(char* sessionid, char*userid);
+void delete_websocket_by_sessionid(char* sessionid);

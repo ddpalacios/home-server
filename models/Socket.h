@@ -3,7 +3,7 @@
 #include <sys/socket.h>
 
 typedef struct Socket{
-	int Id;
+	char* Id;
 	int fd;
 	char* ip_addr;
 	char* hostname;
@@ -12,7 +12,7 @@ typedef struct Socket{
 	int is_listener;
 	int exists;
 
-}sockets;
+ } s;
 void sink_socket_info(struct Socket *socket,struct sockaddr_storage remoteaddr );
 void create_socket(int fd, SSL* cSSL, struct Socket *socket);
 void insert_socket(struct Socket **sockets, struct Socket socket,int *fd_count, int *max_fd_size);

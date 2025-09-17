@@ -1,9 +1,15 @@
 #include <openssl/ssl.h>
 char* get_cookie(unsigned char* buf);
 char *get_file_buffer(char* filename);
+char* create_session_cookie(char*path, char* value);
+char* create_refresh_cookie(char*path, char* value);
+int get_session_token_max_age_in_seconds();
+int get_refresh_token_max_age_in_seconds();
 void send_html_response_code(SSL* cSSL,int code, int content_length);
+void send_css_response_code(SSL* cSSL,int code, int content_length);
 void send_response_code(SSL *cSSL,int code);
-void set_and_send_cookie(SSL* cSSL, char*cookie);
+void set_and_send_session_cookie(SSL* cSSL, char*session_token, char* path);
+void set_and_send_session_and_refresh_cookies(SSL* cSSL, char*session_token,char*refresh_token, char* path);
 char* open_html_template_page(char*template_name, char* request);
 char* retrieve_request_body(char* buf);
 char* create_cookie(char*path,char* key, char* value);

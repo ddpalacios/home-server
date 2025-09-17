@@ -1,30 +1,35 @@
 #include <stdio.h>
-#include <string.h>
-
-void processInBatches(const char *input, size_t batchSize) {
-    size_t length = strlen(input);
-    size_t i = 0;
-
-    while (i < length) {
-        char buffer[batchSize + 1]; // +1 for null terminator
-        size_t j;
-
-        for (j = 0; j < batchSize && (i + j) < length; j++) {
-            buffer[j] = input[i + j];
-        }
-
-        buffer[j] = '\0'; // Null-terminate the batch
-        printf("Batch: %s\n", buffer);
-
-        i += batchSize;
-    }
-}
+#include <time.h>
 
 int main() {
-    const char *inputString = "This is a sample string to process in batches.";
-    size_t batchSize = 10;
+    // Get the current time
+    time_t now = time(NULL);
+    if (now == -1) {
+        perror("Failed to get the current time");
+        return 1;
+    }
 
-    processInBatches(inputString, batchSize);
+    // Convert to local time structure
+    struct tm *local_time = localtime(&now);
+    if (local_time == NULL) {
+        perror("Failed to convert to local time");
+        return 1;
+    }
+
+    // Print the current date and time
+    printf("Current date and time: %s", asctime(local_time));
+
+    // Add one day
+    local_time->tm_mday += 1;
+
+    // Normalize the time structure (handles overflow, e.g., month change)
+    if (mktime(local_time) == -1) {
+        perror("Failed to normalize the time structure");
+        return 1;
+    }
+
+    // Print the updated date and time
+    printf("Date and time after adding one day: %s", asctime(local_time));
 
     return 0;
 }

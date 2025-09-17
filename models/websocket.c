@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "string_utilities.h"
 #include <uuid/uuid.h>
 #include <ctype.h>
 #include <string.h>
@@ -10,41 +11,131 @@
 #include "SQL.h"
 #include "websocket.h"
 
-struct Websocket create_websocket(char* userid, char* sessionid, int socketid){
+
+
+struct Websocket get_websocket_session(char* sessionId){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql,sizeof(sql), "SELECT * FROM Websocket_Session WHERE sessionId = '%s'",
+			sessionId
+			);
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+	int exists = 0;
 	struct Websocket websocket;
+	websocket.exists =0;
+	while((row = mysql_fetch_row(res))!=NULL){
+		websocket.Id = strdup(row[0]);
+		websocket.name = strdup(row[1]);
+		websocket.sessionid = strdup(row[2]);
+		websocket.userid = strdup(row[3]);
+		websocket.exists = 1;
+	}
+	close_sql_connection(conn);
+	return websocket;
+}
+
+int websocket_session_exists_by_userid(char* userid){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql,sizeof(sql), "SELECT * FROM Websocket_Session WHERE creator_userid = '%s'",
+			userid
+			);
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+	int exists = 0;
+	while((row = mysql_fetch_row(res))!=NULL){
+		exists = 1;
+		break;
+	}
+	close_sql_connection(conn);
+	return exists;
+}
+
+char* get_websocket_sessions_by_userId(char* userid){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql,sizeof(sql), "SELECT * FROM Websocket_Session WHERE creator_userid = '%s'",
+			userid
+			);
+	// printf("%s\n", sql);
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+	size_t count = 0;
+	cJSON *root = cJSON_CreateObject();
+	cJSON* sessions_json = cJSON_AddArrayToObject(root, "values");
+	while((row = mysql_fetch_row(res))!= NULL){
+		cJSON* root_sessions = cJSON_CreateObject();
+		cJSON_AddStringToObject(root_sessions, "Id", strdup(row[0]));
+		cJSON_AddStringToObject(root_sessions, "name", strdup(row[1]));
+		cJSON_AddStringToObject(root_sessions, "sessionid", strdup(row[2]));
+		cJSON_AddStringToObject(root_sessions, "userid", strdup(row[3]));
+		cJSON_AddItemToArray(sessions_json, root_sessions);
+		count++;
+	}
+	cJSON_AddNumberToObject(root,"total_count",count);
+	close_sql_connection(conn);
+	char *json_string = cJSON_Print(root);
+	cJSON_Delete(root);
+	return json_string;
+}
+
+int websocket_session_exists(char* sessionId){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql,sizeof(sql), "SELECT * FROM Websocket_Session WHERE sessionId = '%s'",
+			sessionId
+			);
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+	int exists = 0;
+	while((row = mysql_fetch_row(res))!=NULL){
+		exists = 1;
+		break;
+	}
+	close_sql_connection(conn);
+	return exists;
+}
+
+struct Websocket create_websocket_session(char* name, char* userid){
+	struct Websocket websocket;
+	unsigned char* websocket_sessionid = malloc(16);
+	unsigned char* Id = malloc(16);
+	
+	create_unique_identifier(Id);
+	create_unique_identifier(websocket_sessionid);
+	char sessionId_hex[33];
+	char Id_hex[33];
+	hash_to_hex(websocket_sessionid, 16, sessionId_hex);
+	hash_to_hex(Id, 16, Id_hex);
+	websocket.Id  = strdup(Id_hex);
+	websocket.sessionid  = strdup(sessionId_hex);
+	websocket.name  = name;
 	websocket.userid = userid;
-	websocket.sessionid = sessionid;
-	websocket.socketId = socketid;
+
 	return websocket;
 }
  void insert_websocket_session(struct Websocket websocket){
-	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
-	char sql[255];
-	snprintf(sql, sizeof(sql),
-			"INSERT INTO websocket VALUES ('%s', '%s', NULL, NULL, '%d')",
-			websocket.userid,
-			websocket.sessionid,
-			websocket.socketId);
-
-	query(conn, sql);
-	printf("Query %s\n", sql);
-
-	close_sql_connection(conn);
+        MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+        char sql[255];
+        snprintf(sql, sizeof(sql),
+                        "INSERT INTO Websocket_Session VALUES ('%s', '%s', '%s', '%s')",
+                        websocket.Id,
+						websocket.name,
+						websocket.sessionid,
+						websocket.userid);
+        query(conn, sql);
+        printf("Query %s\n", sql);
+        close_sql_connection(conn);
 }
 
-
-int update_websocket(char* Id,char* userid,char* sessionid,char* connected_on){
-	
+void update_sessionName_by_sessionId(char* sessionId, char* name){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[576];
-	snprintf(sql,sizeof(sql),"UPDATE websocket SET Id = '%s' WHERE userid = '%s' AND sessionid = '%s' ", Id , userid, sessionid);
+	snprintf(sql,sizeof(sql),"UPDATE Websocket_Session SET Name = '%s' WHERE sessionId = '%s'",   name,sessionId);
+	printf("%s\n", sql);
 	query(conn, sql);
-	char sql2[576];
-
-	snprintf(sql2,sizeof(sql2),"UPDATE websocket SET connected_on = '%s' WHERE userid = '%s' AND sessionid = '%s' ", connected_on , userid, sessionid);
-	query(conn, sql2);
 	close_sql_connection(conn);
-	return 1;
 }
 
 int  is_active_websocket_client(int fd){
@@ -100,7 +191,7 @@ char* convert_websockets_to_json(struct Websocket* websocket, int count){
 		cJSON_AddStringToObject(root_websocket,"userid",websocket[count].userid);
 		cJSON_AddStringToObject(root_websocket, "sessionid", websocket[count].sessionid);
 		cJSON_AddStringToObject(root_websocket, "connected_on", websocket[count].connected_on);
-		cJSON_AddNumberToObject(root_websocket, "socketId", websocket[count].socketId);
+		//cJSON_AddNumberToObject(root_websocket, "socketId", websocket[count].socketId);
 		cJSON_AddItemToArray(websockets, root_websocket);
 		count++;
 
@@ -114,17 +205,18 @@ char* convert_websockets_to_json(struct Websocket* websocket, int count){
 
 } 
 
+/*
 char* convert_websocket_to_json(struct Websocket websocket){
-	cJSON *root = cJSON_CreateObject();
 	cJSON_AddStringToObject(root, "Id", websocket.Id);
 	cJSON_AddStringToObject(root,"userid",websocket.userid);
 	cJSON_AddStringToObject(root, "sessionid", websocket.sessionid);
 	cJSON_AddStringToObject(root, "connected_on", websocket.connected_on);
-	cJSON_AddNumberToObject(root, "socketId", websocket.socketId);
+	//cJSON_AddNumberToObject(root, "socketId", websocket.socketId);
 	char* json_string = cJSON_Print(root);
 	cJSON_Delete(root);
 	return json_string;
 }
+*/
 
 char* get_websockets(){
 	struct Websocket *websocket;
@@ -151,7 +243,7 @@ char* get_websockets(){
 		websocket[count].sessionid = strdup(row[1]);
 		websocket[count].connected_on = strdup(row[2]);
 		websocket[count].Id = strdup(row[3]);
-		websocket[count].socketId =  atoi(row[4]); 
+//		websocket[count].socketId =  atoi(row[4]); 
 		count++;
 	}
 
@@ -266,11 +358,11 @@ void delete_websocket_by_fd(int fd){
 	close_sql_connection(conn);
 }
 
-void delete_websocket_by_sessionid(char* sessionid, char*userid){
+void delete_websocket_by_sessionid(char* sessionid){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[255];
-	snprintf(sql, sizeof(sql),"DELETE FROM websocket WHERE sessionid = '%s' AND userid = '%s' ",
-			sessionid, userid);
+	snprintf(sql, sizeof(sql),"DELETE FROM Websocket_Session WHERE sessionid = '%s' ",
+			sessionid);
 	printf("query: %s\n", sql);
 	query(conn, sql);
 	close_sql_connection(conn);
@@ -289,29 +381,6 @@ char* convert_websocket_to_json(struct Websocket websocket){
 	return json_string;
 }
 
-
-struct Websocket get_websocket_by_Id(char* Id){
-	 MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
-	 char sql[255];
-	 snprintf(sql, sizeof(sql),"SELECT * FROM websocket WHERE Id = '%s'", Id);
-	 struct Websocket websocket;
-	 websocket.exists = 0;
-	 MYSQL_RES* res = query(conn, sql);
-	 MYSQL_ROW row;
-
-
-	 while((row = mysql_fetch_row(res))!= NULL){
-		 websocket.userid = strdup(row[0]);
-		 websocket.sessionid = strdup(row[1]);
-		 websocket.connected_on = strdup(row[2]);
-		 websocket.Id = strdup(row[3]);
-		 websocket.socketId = atoi(row[4]);
-		 websocket.exists=1;
-	 }
-	 close_sql_connection(conn);
-	 return websocket;
-
-}
 
 void delete_websocket(struct Websocket websocket){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
