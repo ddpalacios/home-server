@@ -45,6 +45,22 @@ class Websocket_Session{
         }
         return clients;
 	}
+	send_payload(payload){
+		let operation = "send";
+		let request = "PAYLOAD";
+		let prot = {
+			'operation': operation
+			,'request': request
+			,'content': payload
+			,'userId': this.userId
+		}
+		// this.#protocol['operation'] = operation;
+		// this.#protocol['request'] = request;
+		// this.#protocol['content'] = payload;
+		console.log("SENDING", prot);
+		this.session.send(JSON.stringify(prot))
+	}
+
 	send_message(message, is_notification){
 		let operation = "message";
 		let request = "POST";
