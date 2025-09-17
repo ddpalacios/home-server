@@ -73,8 +73,10 @@ void insert_token(struct User_Token token){
 void delete_expired_tokens(){
     MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[255];
-	snprintf(sql, sizeof(sql)," DELETE ut, u FROM User_Token ut JOIN user u ON ut.userId = u.user_Id WHERE ut.expiration_date < NOW();");
-	query(conn, sql);
+	snprintf(sql, sizeof(sql)," DELETE ut, u FROM User_Token ut JOIN user u ON ut.userId = u.user_Id WHERE NOW() > ut.expiration_date;");
+	char sql2[255];
+	snprintf(sql2, sizeof(sql2)," DELETE ut, u FROM User_Token ut LEFT JOIN user u ON ut.userId = u.user_Id WHERE NOW() > ut.expiration_date AND u.user_id IS NULL;");
+	query(conn, sql2);
 	close_sql_connection(conn);
 
 

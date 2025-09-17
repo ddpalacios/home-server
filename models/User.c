@@ -7,10 +7,7 @@
 #include "string_utilities.h"
 #include <openssl/sha.h>
 
-char* user_sql = "SELECT u.user_Id, u.username, u.session_token,ut.refresh_token,ut.expiration_date,wc.Id AS websocketclientId, wc.socketId, wc.sessionId "
-					   "FROM user u "
-					   "LEFT JOIN User_Token ut ON u.user_id = ut.userId "  
-					   "LEFT JOIN WebsocketClient wc ON u.user_id = wc.userId ";
+char* user_sql = "SELECT u.user_Id, u.username, u.session_token  FROM user u";
 
 char* convert_users_to_json(struct User* user, int count){
 	//  cJSON *root = cJSON_CreateObject();
@@ -91,10 +88,28 @@ struct User get_user_by_session_token(char* session_token){
     MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
     char sql[1024];
 	snprintf(sql, sizeof(sql),"%s WHERE u.session_token = '%s'", user_sql,session_token);
-	// printf("SQL: %s\n", sql);
 
     struct User user;
 	user.exists = 0;
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+	while((row = mysql_fetch_row(res))!= NULL){
+		user.Id = strdup( row[0]);
+		user.fullname = strdup(row[1]);
+		user.exists = 1;
+        break;
+	}
+	close_sql_connection(conn);
+	return user;
+
+}
+
+struct User get_user_by_id(char* userid){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[1024];
+	snprintf(sql, sizeof(sql),"%s WHERE u.user_id = '%s'", user_sql,userid);
+
+	struct User user;
 	MYSQL_RES* res = query(conn, sql);
 	MYSQL_ROW row;
 	while((row = mysql_fetch_row(res))!= NULL){
@@ -107,15 +122,18 @@ struct User get_user_by_session_token(char* session_token){
 		// 	user.isHost = atoi(row[8]);
 		// }else{
 		// 	user.isHost = -1;
-
 		// }
 		user.exists = 1;
-        break;
+		close_sql_connection(conn);
+		return user;
 	}
 	close_sql_connection(conn);
-	return user;
+	struct User null_user = {0};	
+	null_user.exists = 0;
+	return null_user;
 
 }
+
 struct User get_user_by_name(char* fullname){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[1024];
@@ -199,35 +217,7 @@ int validate_login(char* username, char* password){
 
 }
 
-struct User get_user_by_id(char* userid){
-	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
-	char sql[1024];
-	snprintf(sql, sizeof(sql),"%s WHERE u.user_id = '%s'", user_sql,userid);
 
-	struct User user;
-	MYSQL_RES* res = query(conn, sql);
-	MYSQL_ROW row;
-	while((row = mysql_fetch_row(res))!= NULL){
-		user.Id = strdup( row[0]);
-		user.fullname = strdup(row[1]);
-		// if (row[7] != NULL){
-		// 	user.sessionId = strdup(row[7]);
-		// }
-		// if (row[8] != NULL){
-		// 	user.isHost = atoi(row[8]);
-		// }else{
-		// 	user.isHost = -1;
-		// }
-		user.exists = 1;
-		close_sql_connection(conn);
-		return user;
-	}
-	close_sql_connection(conn);
-	struct User null_user = {0};	
-	null_user.exists = 0;
-	return null_user;
-
-}
 
 int get_total_users(){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");

@@ -90,7 +90,6 @@ void delete_messages_by_sessionid(char* sessionid){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[255];
 	snprintf(sql, sizeof(sql),"DELETE FROM Websocket_Message WHERE  sessionId = '%s' ", sessionid);
-	printf("query: %s\n", sql);
 	query(conn, sql);
 	close_sql_connection(conn);
 }
@@ -108,7 +107,6 @@ void insert_message(struct Websocket_Message message){
 			message.username,
 			message.userid,
 			message.is_notification);
-	printf("%s\n", sql);
 	query(conn, sql);
 	close_sql_connection(conn);
 }
