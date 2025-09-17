@@ -123,7 +123,8 @@ int read_websocket_message(SSL*cSSL,int payload_length, char** payload){
 			int val = coded_payload[i] ^ masking_key[i%4];
 			(*payload)[i] = val; 
 		}
-		payload[payload_length] = '\0';
+		(*payload)[payload_length] = '\0';
+
 
 		if (masking_key != NULL){
 			free(masking_key);
@@ -140,22 +141,24 @@ int read_websocket_message(SSL*cSSL,int payload_length, char** payload){
 		 unsigned int p1 = extended_length[0];
 		 unsigned int p2 = extended_length[1];
 		 unsigned int new_length = (p1 << 8) | p2;
-		 printf("NEW LENGTH: %d\n", new_length);
+		//  printf("NEW LENGTH: %d\n", new_length);
 
 		unsigned char*masking_key = malloc(4);
 		nbytes = read_exact_bytes(cSSL, 4, masking_key);
 
-
 		char* coded_payload = malloc(new_length+1);
 		nbytes = read_exact_bytes(cSSL, new_length, coded_payload);
+
 		coded_payload[new_length] = '\0';
+
 		*payload = malloc(new_length+1);
 
 		for (int i=0; i<new_length; i++){
 			int val = coded_payload[i] ^ masking_key[i%4];
 			(*payload)[i] = val; 
 		}
-		payload[new_length] = '\0';
+		(*payload)[new_length] = '\0';
+
 		if (masking_key != NULL){
 			free(masking_key);
 			masking_key = NULL;
@@ -189,7 +192,7 @@ int read_websocket_message(SSL*cSSL,int payload_length, char** payload){
 			int val = coded_payload[i] ^ masking_key[i%4];
 			(*payload)[i] = val; 
 		}
-		payload[new_length] = '\0';
+		(*payload)[payload_length] = '\0';
 		if (masking_key != NULL){
 			free(masking_key);
 			masking_key = NULL;
@@ -207,6 +210,7 @@ int read_websocket_message(SSL*cSSL,int payload_length, char** payload){
 	}
 	return 0;
 }
+
 int is_tcp_buffer(unsigned char* buf){
 	int finVal = buf[0];
 	int opcode = buf[1];
@@ -228,15 +232,20 @@ int is_websocket_buffer(unsigned char* buf){
 		return 0;
 	}
 }
-char* get_value(cJSON *json, char* key){
-	cJSON *value = cJSON_GetObjectItem(json, key);
-    if (cJSON_IsString(value) && (value->valuestring != NULL)) {
-	    char* res = value->valuestring;
-	    return res; 
+char* get_value(cJSON *json, const char* key) {
+    if (!json || !key) {
+        return NULL;
     }
-    printf("COULD NOT FIND %s\n", key); 
+
+    cJSON *value = cJSON_GetObjectItem(json, key);
+    if (value && cJSON_IsString(value) && value->valuestring) {
+        return value->valuestring;
+    }
+
+    printf("COULD NOT FIND %s\n", key);
     return NULL;
 }
+
 
 int get_int_value(cJSON *json, char* key){
 	cJSON *value = cJSON_GetObjectItem(json, key);
@@ -257,6 +266,7 @@ void free_message(struct Websocket_Message* msg) {
 
 void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int fd_count){
 	if (is_websocket_buffer(buf)){
+		// printf("Detected Websocket Buffer\n");
 		unsigned char* websocket_buf = malloc(2);
 		if (!websocket_buf){perror("error"); exit(1);}
 		int nbytes = read_exact_bytes(socket->cSSL, 2, websocket_buf);
@@ -271,41 +281,50 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 			nbytes = read_websocket_message(socket->cSSL, payload_length, &message);
 			int message_length = nbytes;
 			message[nbytes] = '\0';
+			// printf("MESSAGE: %s\n", message);
 			cJSON *json = cJSON_Parse(message);
-			char* operation = get_value(json,"operation");
-			char* request = get_value(json,"request");
+			if (json) {
+				char* operation = get_value(json,"operation");
+				char* request = get_value(json,"request");
 
-			if (strcmp(request, "POST")==0 &&strcmp(operation, "client")==0){
-				post_websocket_client(socket,NULL, message, NULL, 0);
-				send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
-			}else if (strcmp(request, "POST")==0 &&strcmp(operation, "message")==0){
-				send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
-				char* content = get_value(json,"content");
-				char* userid = get_value(json,"userid");
-				char* username =  "";//get_value(json,"username");
-				char* sessionId = get_value(json,"sessionId");
-				char* timestamp = get_value(json,"timestamp");
-				int is_notification = get_int_value(json,"is_notification");
-				struct Websocket_Message message = create_message(sessionId,content, timestamp,username,userid, is_notification);
-				insert_message(message);
-				free_message(&message);
-			}else if (strcmp(request, "DELETE")==0 &&strcmp(operation, "session")==0){
-				send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
-				char* sessionId = get_value(json,"sessionId");
-				delete_messages_by_sessionid(sessionId);
-
-			}else if (strcmp(request, "PATCH")==0 &&strcmp(operation, "session")==0){
-				send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
-			}else if (strcmp(request, "MOUSE")==0 && strcmp(operation, "coordinates")==0){
-				send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
+				if (request && operation) {
+					if (strcmp(request, "POST")==0 &&strcmp(operation, "client")==0){
+						post_websocket_client(socket,NULL, message, NULL, 0);
+						send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
+					}else if (strcmp(request, "POST")==0 &&strcmp(operation, "message")==0){
+						send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
+						char* content = get_value(json,"content");
+						char* userid = get_value(json,"userid");
+						char* username =  "";//get_value(json,"username");
+						char* sessionId = get_value(json,"sessionId");
+						char* timestamp = get_value(json,"timestamp");
+						int is_notification = get_int_value(json,"is_notification");
+						struct Websocket_Message ws_message = create_message(sessionId,content, timestamp,username,userid, is_notification);
+						insert_message(ws_message);
+						free_message(&ws_message);
+					}else if (strcmp(request, "DELETE")==0 &&strcmp(operation, "session")==0){
+						send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
+						char* sessionId = get_value(json,"sessionId");
+						delete_messages_by_sessionid(sessionId);
+					}else if (strcmp(request, "PATCH")==0 &&strcmp(operation, "session")==0){
+						send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
+					}else if (strcmp(request, "MOUSE")==0 && strcmp(operation, "coordinates")==0){
+						send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
+					}
+					else if (strcmp(request, "PAYLOAD")==0 && strcmp(operation, "send")==0){
+						send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
+					}
 			}
-			
 			cJSON_Delete(json);
+
+		}
+
+
 			if (message != NULL){
 					free(message);
 					message = NULL;
 				}
-				if (nbytes == 0){
+			if (nbytes == 0){
 					printf("Could not determine bytes...\n");
 					exit(1);
 				}

@@ -24,19 +24,23 @@
     canvas.width = width * dpr;
     canvas.height = height * dpr;
     ctx.scale(dpr, dpr);
-    var pixel_size = 5
+</script>
+<script src="/life-of-sounds/game_of_life.js"></script>
+<script>
+    var pixel_size = 2
     var numRows =  Math.floor(canvas.height / pixel_size);
     var numCols =Math.floor(canvas.width / pixel_size);
     var big_canvas_grid = []
+    var color = 'white'
     const connected_clients = new Map()
     var mag_view_w =3
     var mag_view_h = 3
 	var mouse_x = 0;
 	var mouse_y = 0;
+    var gol = new GameOfLife(big_canvas_grid, numRows,numCols, pixel_size);
 </script>
 <script src="/life-of-sounds/websocket.js"></script>
 <script src="/life-of-sounds/onload_session.js"></script>
-<script src="/life-of-sounds/game_of_life.js"></script>
 
 
 

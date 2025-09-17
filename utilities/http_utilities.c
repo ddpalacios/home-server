@@ -10,7 +10,7 @@
 #include "json_utilities.h"
 #define SESSION_COOKIE_NAME "session_token"
 #define SESSION_COOKIE_MAX_AGE 10
-#define REFRESH_COOKIE_MAX_AGE 7200
+#define REFRESH_COOKIE_MAX_AGE 2628000
 #define REFRESH_COOKIE_NAME "refresh_token"
 
 int get_refresh_token_max_age_in_seconds(){

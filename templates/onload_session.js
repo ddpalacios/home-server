@@ -24,6 +24,31 @@
 	'Girl','Vortex','Paradox'
 	];
     var websocket = null;
+    function randomLightColor() {
+        const r = Math.floor(150 + Math.random() * 105); 
+        const g = Math.floor(150 + Math.random() * 105);
+        const b = Math.floor(150 + Math.random() * 105);
+        return `rgb(${r}, ${g}, ${b})`;
+    } 
+ 
+    function getCursorPosition(canvas, event) {
+        const rect = canvas.getBoundingClientRect()
+        var x = event.clientX - rect.left
+        var y = event.clientY - rect.top
+        var current_x = Math.floor(x/pixel_size)
+        var current_y = Math.floor(y/pixel_size)
+        let active_cells = []
+        color = randomLightColor()
+        for (let i=0; i<mag_view_h*10; i++){
+                for (let j=0; j<mag_view_w*10; j++){
+                    gol.grid[current_y+i][current_x + j] =1
+                    active_cells.push({'x': current_x + j, 'y': current_y+i})
+                    }
+            }
+        if (websocket != null){
+            websocket.send_payload(active_cells)
+        }
+	}     
 
     function mouseMove(e){
         e.preventDefault();
@@ -34,6 +59,21 @@
         if (websocket != null){
             websocket.send_coordinates(mouse_x, mouse_y)
         }
+
+        var current_x = Math.floor(mouse_x/pixel_size)
+        var current_y = Math.floor(mouse_y/pixel_size)
+        // gol.grid[current_y][current_x] = 1
+        // let active_cells = []
+        // for (let i=0; i<mag_view_h; i++){
+        //         for (let j=0; j<mag_view_w; j++){
+        //             gol.grid[current_y+i][ current_x + j] =1
+        //             active_cells.push({'x': current_x + j, 'y': current_y+i})
+        //         }
+        //     }
+
+        //  if (websocket != null){
+        //     websocket.send_payload(active_cells)
+        // }
 	}
     function draw_host_cursor(){
         ctx.beginPath();
@@ -48,13 +88,7 @@
             ctx.stroke();
             ctx.closePath();
         }
-    function randomLightColor() {
-        const r = Math.floor(150 + Math.random() * 105); 
-        const g = Math.floor(150 + Math.random() * 105);
-        const b = Math.floor(150 + Math.random() * 105);
-        return `rgb(${r}, ${g}, ${b})`;
-    }
-    
+
     function draw_client_cursor(){
         ctx.beginPath();
         ctx.lineWidth = "1";
@@ -78,11 +112,10 @@
     function start_session(sessionId, current_user){
         websocket = new Websocket_Session(sessionId,current_user['Id'],current_user['fullname']);
         websocket.initialize()
-
         websocket.session.onmessage = async (event) => {
-             let data = JSON.parse(event.data)
+                let data = JSON.parse(event.data)
                 if (data['operation'] == 'message'){
-                    console.log("Message from server", event.data);
+                    // console.log("Message from server", event.data);
 
                     let content = data['content']
                     let is_notification = data["is_notification"]
@@ -90,7 +123,7 @@
                     add_message_to_chat(username, content, is_notification)
                 }
                 else if (data['request'] == 'DELETE' && data['operation'] == 'session'){
-                    console.log("Message from server", event.data);
+                    // console.log("Message from server", event.data);
                     
                     websocket.session.close()
                     location.href = "/life-of-sounds/live_studio"
@@ -108,11 +141,15 @@
                         if (connected_clients.has(client['userId']) == false){
                             connected_clients.set(client['userId'], {'x': 0, 'y':0})
                         }
-                        
                     });
-                    // connected_clients = clients['values']
-                    // console.log("CONNECTED CLIENTS:" ,connected_clients)
-                   
+                }
+                else if (data['operation'] == 'send' && data['request'] == 'PAYLOAD'){
+                    // console.log("Message from server", event.data);
+                    data['content'].forEach(cords => {
+                        let x = cords['x']
+                        let y = cords['y']
+                        gol.grid[y][x] = 1
+                    });
                 }
 
         }
@@ -162,7 +199,6 @@
                 if (data['values'].length > 0){
                     if (data['values'][0]['sessionid'] == sessionid){
                         let isHost = 1
-                        console.log(data)
                         let sessionname = data['values'][0]['name']
                         sessionStorage.setItem("sessionname", sessionname);
                         load_messages(sessionid);
@@ -231,7 +267,6 @@
         }
         return session;
     }
-
     function generate() {
 		return nameList[Math.floor( Math.random() * nameList.length )] + " " + nameList[Math.floor( Math.random() * nameList.length )];
 	};
@@ -272,7 +307,6 @@
         stop_session_btn.textContent = "Stop Session"
         let default_color =  'rgba(152, 0, 0, 0.551)'
         let onhover_color = 'rgba(152, 0, 0, 0.815)'; 
-        console.log("IS HOST? " ,isHost)
         if (isHost == 'false'){
             stop_session_btn.textContent = "Leave Session"
             default_color =  'rgba(152, 147, 0, 0.55)'
@@ -291,11 +325,12 @@
                         });
                 fetch(request)
                 websocket.close_all_connections();
-                session_btn.style.display = "inline-block"
-                stop_session_btn.style.display = "none"
-                var chatbox_contents =  document.getElementById("chatbox_contents");
-                var chatbox =  document.getElementById("chatbox");
-                chatbox.removeChild(chatbox_contents)
+                location.href = "/life-of-sounds/live_studio"
+                // session_btn.style.display = "inline-block"
+                // stop_session_btn.style.display = "none"
+                // var chatbox_contents =  document.getElementById("chatbox_contents");
+                // var chatbox =  document.getElementById("chatbox");
+                // chatbox.removeChild(chatbox_contents)
                 websocket = null;
             }
         }
@@ -328,6 +363,9 @@
     function send_message(current_user){
         const messagebox = document.getElementById("messagebox");
         let text = document.getElementById("messagebox").value
+        text = text.replace("`","")
+        text = text.replace("\\", "")
+        text = text.replace("'", "")
         add_message_to_chat(current_user['fullname'], text, 0)
         websocket.send_message(text, 0)
         document.getElementById("messagebox").value = ''
@@ -377,11 +415,11 @@
         sessionName_header.innerHTML = sessionName
         sessionName_header.style.color = 'white'
         sessionName_header.style.textAlign = 'center'
-        sessionName_header.style.cursor = 'pointer'
-        sessionName_header.contentEditable = true
-        sessionName_header.addEventListener("input", function() {
-            console.log(this.textContent)
-        });
+        sessionName_header.style.cursor = 'default'
+        // sessionName_header.contentEditable = true
+        // sessionName_header.addEventListener("input", function() {
+        //     console.log(this.textContent)
+        // });
         chatbox_contents_div.appendChild(sessionName_header);
         
         if (isHost == 'true'){
@@ -399,11 +437,11 @@
         username_header.innerHTML = current_user['fullname']
         username_header.style.color = 'white'
         username_header.style.textAlign = 'center'
-        username_header.style.cursor = 'pointer'
-        username_header.contentEditable = true
-        username_header.addEventListener("input", function() {
-            console.log(this.textContent)
-        });
+        username_header.style.cursor = 'default'
+        // username_header.contentEditable = true
+        // username_header.addEventListener("input", function() {
+        //     console.log(this.textContent)
+        // });
         chatbox_contents_div.appendChild(username_header)
 
 
@@ -455,14 +493,20 @@
         send_btn.addEventListener('mouseout', function () {
             send_btn.style.backgroundColor = 'rgba(4, 241, 83, 0.364)';
         });
+        send_btn.onclick = function(){
+            send_message(current_user)
+        }
         chatbox_contents_div.appendChild(message_box)
         chatbox.appendChild(chatbox_contents_div)
     }
     function draw(){
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        draw_host_cursor()
-        draw_client_cursor()
-        requestAnimationFrame(draw)
+        draw_host_cursor();
+        draw_client_cursor();
+        gol.initialize();
+        gol.updateGrid();
+        gol.draw_grid();
+        requestAnimationFrame(draw);
     }
     document.getElementById("session_btn").onclick =  async function () {
         let sessionName = prompt("Session Name:", "The "+generate()+ " Session");
@@ -471,12 +515,10 @@
             return
         }
         var current_user = await get_user();
-        console.log(current_user)
         var newSession = await create_session(sessionName, current_user);
         if (newSession == null){
             alert("Error Creating New Session")
         }
-        console.log(newSession)
         sessionStorage.setItem("sessionId", newSession['sessionId'])
         sessionStorage.setItem("isHost", true)
         display_session_button();
@@ -491,7 +533,6 @@
             chatbox.style.display = "none"
             content.style.height = "0px"
             chatbox_btn.textContent = "View Chat"
-            console.log("Closing")
             chatbox_btn.style.backgroundColor ='rgba(4, 200, 4, 0.9)';
             chatbox_btn.addEventListener('mouseover', function () {
             chatbox_btn.style.backgroundColor = 'rgba(4, 200, 4, 0.9)';
@@ -501,7 +542,6 @@
             });
            
         }else{
-            console.log("Opening")
             chatbox.style.display = 'inline-block'
             chatbox_btn.textContent = "Hide Chat"
             chatbox_btn.style.backgroundColor = 'rgba(152, 0, 0, 0.815)'
@@ -516,7 +556,6 @@
     }
     window.addEventListener("load", async function(){
         let current_user = await get_user();
-        console.log(current_user)
         let userId = current_user['Id']
         let current_session = null;
         let sessionId = null;
@@ -545,12 +584,9 @@
                 sessionId = current_session['values'][0]['sessionid']
                 sessionName = current_session['values'][0]['name']
                 this.sessionStorage.setItem("isHost", true)
-
             }
         }
-        
         if (sessionId != null && sessionName != null){
-                console.log(current_session)
                 sessionStorage.setItem("sessionId", sessionId)
                 display_session_button();
                 display_session(sessionName, current_user);
@@ -558,6 +594,9 @@
                 start_session(sessionId, current_user);
             }
     })
-    
+
+    canvas.addEventListener('mousedown', function(e) {
+	getCursorPosition(canvas, e)
+})
     canvas.addEventListener("mousemove", mouseMove, false);
     draw()
