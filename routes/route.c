@@ -61,6 +61,18 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_live_html(cSSL, http_header, "home.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/live_studio")==0){
 		get_live_html(cSSL, http_header, "live_studio.html");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/canvas_style.css")==0){
+		get_gol_script(cSSL, http_header, "canvas_style.css");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/chatbox_style.css")==0){
+		get_gol_script(cSSL, http_header, "chatbox_style.css");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/handle_messages.js")==0){
+		get_gol_script(cSSL, http_header, "handle_messages.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/onload_session.js")==0){
+		get_gol_script(cSSL, http_header, "onload_session.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/chatbox.js")==0){
+		get_gol_script(cSSL, http_header, "chatbox.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/websocket.js")==0){
+		get_gol_script(cSSL, http_header, "websocket.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/game_of_life.js")==0){
 		get_gol_script(cSSL, http_header, "game_of_life.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/web_audio_api.js")==0){
@@ -94,19 +106,7 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/life-of-sounds/live_studio/session/join?Id=") != NULL){
 		char* sessionId = get_query_parameter(route, "Id");
 		if (websocket_session_exists(sessionId)){
-			char* template_name = "live_client.html";
-			char template_dir[50] = "../templates/";
-			strcat(template_dir, template_name);
-			char *html_buffer = get_file_buffer(template_dir);
-			if (html_buffer != NULL){
-				int code = 200;
-				int html_length = strlen(html_buffer);
-				send_html_response_code(cSSL,200, html_length);
-				SSL_write(cSSL, html_buffer, html_length);	 
-				free(html_buffer);
-			}
-		}else{
-		    printf("Session Ended!\n");
+			get_live_html(cSSL, http_header, "live_studio.html");
 		}
 	}
 	if (route != NULL){
