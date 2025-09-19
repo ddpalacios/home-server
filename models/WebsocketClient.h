@@ -18,3 +18,4 @@ void  delete_websocketclients_by_sessionId(char* sessionId);
 void delete_websocketclient_by_userid(char* userid);
 void delete_websocketclient_by_Id(char* Id);
 void update_username_by_userid(char* userId, char* newValue);
+struct WebsocketClient* get_websocketclients( size_t *total_clients);

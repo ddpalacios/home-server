@@ -8,6 +8,7 @@ typedef struct Websocket{
 	char*  socketId;
 	int exists;
 }websockets;
+struct Websocket* get_websocket_session_by_name(char* sessionName,size_t *total_sessions);
 int is_active_websocket_client(int fd);
 struct Websocket get_websocket_session(char* sessionId);
 char* get_websocket_sessions_by_userId(char* userid);

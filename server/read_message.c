@@ -12,6 +12,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include "Websocket_Message.h"
+#include "websocket.h"
 #include <unistd.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -101,6 +102,7 @@ int read_tcp_message(SSL *cSSL, char** payload){
 			}
 		free(buf);
 	}
+	cJSON_Delete(root);
 	return 0;
 }
 
@@ -310,16 +312,34 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 						send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
 					}else if (strcmp(request, "MOUSE")==0 && strcmp(operation, "coordinates")==0){
 						send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
-					}
-					else if (strcmp(request, "PAYLOAD")==0 && strcmp(operation, "send")==0){
+					}else if (strcmp(request, "PAYLOAD")==0 && strcmp(operation, "send")==0){
 						send_websocket_message(sockets,*socket, fd_count,payload_length, nbytes, message);
+					}else if (strcmp(request, "CTA")==0 && strcmp(operation, "request")==0){
+						size_t total_clients=0;
+						struct WebsocketClient* clients =  get_websocketclients(&total_clients);
+						for (int i=0; i<fd_count; i++){
+							struct Socket* s = &sockets[i];
+							int isClient = 0;
+							for (int j=0; j<total_clients;j++){
+								struct WebsocketClient c = clients[j];
+								if (strcmp(c.socketId, s->Id) ==0){
+									isClient = 1;
+									break;
+								}
+							}
+							if (!isClient && !s->is_listener){
+								if (!SSL_write(s->cSSL, message, nbytes)){
+									printf("Error sending message.\n");
+								}
+
+								// send_tcp_message(s->cSSL, 0x1, 0x1, nbytes, message);
+							}else{
+							}
+						}
 					}
 			}
 			cJSON_Delete(json);
-
 		}
-
-
 			if (message != NULL){
 					free(message);
 					message = NULL;
@@ -334,12 +354,32 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 				free(websocket_buf);
 				websocket_buf = NULL;
 			}
+	
 	}else if (is_tcp_buffer(buf)){
-		printf("TCP Buffer Recived\n");
 		char* tcp_buf = malloc(BUFFER_SIZE);
 		int nbytes =  read_tcp_message(socket->cSSL, &tcp_buf);
-		printf("Bytes: %d | Message: '%s'\n",nbytes, tcp_buf);
-		send_tcp_message(socket->cSSL, 0x1, 0x1, nbytes, tcp_buf);
+		int payload_length = 0;
+		if (nbytes <= 125){
+			payload_length = 125;
+		}else{
+			payload_length = 126;
+		}
+		size_t total_sessions = 0;
+		struct Websocket* websockets =  get_websocket_session_by_name("chicago-transits", &total_sessions);
+		for (int i=0; i<total_sessions; i++){
+			struct Websocket ws = websockets[i];
+			for (int j=0; j<fd_count; j++){
+				struct Socket socket = sockets[j];
+				if (strcmp(socket.Id, ws.socketId) == 0){
+					send_message_to_socket(sockets,socket, fd_count,payload_length, nbytes, tcp_buf);
+					//send_tcp_message(socket->cSSL, 0x1, 0x1, nbytes, tcp_buf);
+				}
+			}
+		}
+		if (websockets != NULL){
+			free(websockets);
+			websockets = NULL;
+		}
 		if (tcp_buf != NULL){
 			free(tcp_buf);
 			tcp_buf = NULL;

@@ -22,6 +22,8 @@ file(GLOB MAIN
     "models/Socket.c"
     "utilities/*.c"
     "routes/route.c"
+    "routes/chicago-transits/GET/*.c"
+    "routes/blob-storage/GET/*.c"
     "routes/database-server/POST/*.c"
     "routes/life-of-sounds/GET/login.c"
     "routes/life-of-sounds/GET/home.c"
@@ -58,6 +60,8 @@ target_include_directories(home-server PRIVATE
     ${PROJECT_SOURCE_DIR}/models
     ${PROJECT_SOURCE_DIR}/routes/database-server/POST
     ${PROJECT_SOURCE_DIR}/routes/life-of-sounds/GET
+    ${PROJECT_SOURCE_DIR}/routes/chicago-transits/GET
+    ${PROJECT_SOURCE_DIR}/routes/blob-storage/GET
     ${PROJECT_SOURCE_DIR}/routes/life-of-sounds/POST
 
 )

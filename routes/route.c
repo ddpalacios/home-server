@@ -17,6 +17,8 @@
 #include "life-of-sounds/GET/new_login.h"
 #include "life-of-sounds/GET/studio.h"
 #include "life-of-sounds/GET/get_live_page.h"
+#include "chicago-transits/GET/get_template.h"
+#include "blob-storage/GET/get_blob_storage_files.h"
 #include "life-of-sounds/GET/get_web_audio_api_script.h"
 #include "life-of-sounds/GET/get_game_of_life_script.h"
 #include "life-of-sounds/GET/data_page.h"
@@ -108,7 +110,33 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		if (websocket_session_exists(sessionId)){
 			get_live_html(cSSL, http_header, "live_studio.html");
 		}
+
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/chicago-transits/home")==0){
+		get_live_html(cSSL, http_header, "/chicago-transits/home.html");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/chicago-transits/websocket.js")==0){
+		get_gol_script(cSSL, http_header, "/chicago-transits/websocket.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/chicago-transits/onload_session.js")==0){
+		get_gol_script(cSSL, http_header, "/chicago-transits/onload_session.js");
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/blob-storage/")!=NULL){
+		get_blob_storage_files(socket,http_header,body, route);
 	}
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	if (route != NULL){
 		free(route);
 		route = NULL;

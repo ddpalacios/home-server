@@ -73,6 +73,7 @@ struct Socket insert_file_descriptor(struct Socket *sockets[],struct pollfd *pfd
     (*sockets)[*fd_count].cSSL = cSSL;
     struct Socket socket = (*sockets)[*fd_count]; 
     (*fd_count)++;
+	printf("NEW SOCKET ID %s\n", socketId_hex);
     return socket;
 }
 
@@ -205,7 +206,7 @@ void start_listening_for_clients(char* port){
         }
         insert_file_descriptor(&sockets,&pfds, listener_fd,NULL,"localhost", &fd_count, &max_socket_size, 0x1);
         while(1){
-			 	delete_expired_tokens();
+		 delete_expired_tokens();
                  int triggered_fd = wait_for_event(&pfds, fd_count);
 	         if (triggered_fd == listener_fd){
                  int newfd = accept_new_client(listener_fd, &sockets, &pfds, &fd_count, &max_socket_size);
@@ -235,22 +236,6 @@ void start_listening_for_clients(char* port){
 					 if (websocketclient_exists_by_socketid(socket->Id)){
 						 struct WebsocketClient ws_client =  get_websocketclientBySocketId(socket->Id);
 						delete_websocketclient_by_Id(ws_client.Id);
-
-						// cJSON *root = create_json_object();
-						// add_string_to_json_root(root,"operation","client");
-						// add_string_to_json_root(root,"request","DELETE");
-						// add_string_to_json_root(root,"userid",ws_client.userid);
-						// add_string_to_json_root(root,"name",ws_client.name);
-						// char* ws_info = get_json_as_string(root);
-						// int payload_length = 0;
-						// if (strlen(ws_info) > 125){
-						// 	payload_length= 126;
-						// }else{
-						// 	payload_length= strlen(ws_info);
-						// }
-						// printf("Sending %s nbytes %d | actual %ld\n", ws_info, payload_length, strlen(ws_info));
-						// send_websocket_message(sockets,*socket, fd_count,payload_length, strlen(ws_info), ws_info);
-						// cJSON_Delete(root);
 					 }
 					 remove_file_descriptor(sockets,pfds, socket->fd, &fd_count);
 					 }

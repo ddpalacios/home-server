@@ -13,6 +13,30 @@
 
 
 
+struct Websocket* get_websocket_session_by_name(char* sessionName,size_t *total_sessions){
+	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
+	char sql[255];
+	snprintf(sql,sizeof(sql), " SELECT ws.Name, wc.socketId FROM Websocket_Session ws INNER JOIN WebsocketClient wc ON ws.creator_userid = wc.userId  WHERE ws.Name = '%s'",
+			sessionName
+			);
+	MYSQL_RES* res = query(conn, sql);
+	MYSQL_ROW row;
+	struct Websocket *websockets;
+	websockets = malloc(sizeof(*websockets) * 1000);
+	size_t count = 0;
+	while((row = mysql_fetch_row(res))!= NULL){
+		  websockets[count].name = strdup(row[0]);
+		  websockets[count].socketId = strdup(row[1]);
+		  websockets[count].exists = 1;
+		  count++;
+	  }
+      close_sql_connection(conn);
+
+	*total_sessions = count;
+	// printf("DONE RETRIEVING. Total Count: %d\n",count);
+	return websockets;
+}
+
 struct Websocket get_websocket_session(char* sessionId){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[255];

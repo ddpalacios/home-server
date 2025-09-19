@@ -417,6 +417,54 @@ models/websocket.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/models/websocket.c.s
 .PHONY : models/websocket.c.s
 
+routes/blob-storage/GET/get_blob_storage_files.o: routes/blob-storage/GET/get_blob_storage_files.c.o
+.PHONY : routes/blob-storage/GET/get_blob_storage_files.o
+
+# target to build an object file
+routes/blob-storage/GET/get_blob_storage_files.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/blob-storage/GET/get_blob_storage_files.c.o
+.PHONY : routes/blob-storage/GET/get_blob_storage_files.c.o
+
+routes/blob-storage/GET/get_blob_storage_files.i: routes/blob-storage/GET/get_blob_storage_files.c.i
+.PHONY : routes/blob-storage/GET/get_blob_storage_files.i
+
+# target to preprocess a source file
+routes/blob-storage/GET/get_blob_storage_files.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/blob-storage/GET/get_blob_storage_files.c.i
+.PHONY : routes/blob-storage/GET/get_blob_storage_files.c.i
+
+routes/blob-storage/GET/get_blob_storage_files.s: routes/blob-storage/GET/get_blob_storage_files.c.s
+.PHONY : routes/blob-storage/GET/get_blob_storage_files.s
+
+# target to generate assembly for a file
+routes/blob-storage/GET/get_blob_storage_files.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/blob-storage/GET/get_blob_storage_files.c.s
+.PHONY : routes/blob-storage/GET/get_blob_storage_files.c.s
+
+routes/chicago-transits/GET/get_template.o: routes/chicago-transits/GET/get_template.c.o
+.PHONY : routes/chicago-transits/GET/get_template.o
+
+# target to build an object file
+routes/chicago-transits/GET/get_template.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/chicago-transits/GET/get_template.c.o
+.PHONY : routes/chicago-transits/GET/get_template.c.o
+
+routes/chicago-transits/GET/get_template.i: routes/chicago-transits/GET/get_template.c.i
+.PHONY : routes/chicago-transits/GET/get_template.i
+
+# target to preprocess a source file
+routes/chicago-transits/GET/get_template.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/chicago-transits/GET/get_template.c.i
+.PHONY : routes/chicago-transits/GET/get_template.c.i
+
+routes/chicago-transits/GET/get_template.s: routes/chicago-transits/GET/get_template.c.s
+.PHONY : routes/chicago-transits/GET/get_template.s
+
+# target to generate assembly for a file
+routes/chicago-transits/GET/get_template.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/chicago-transits/GET/get_template.c.s
+.PHONY : routes/chicago-transits/GET/get_template.c.s
+
 routes/database-server/POST/post_frame.o: routes/database-server/POST/post_frame.c.o
 .PHONY : routes/database-server/POST/post_frame.o
 
@@ -1158,6 +1206,12 @@ help:
 	@echo "... models/websocket.o"
 	@echo "... models/websocket.i"
 	@echo "... models/websocket.s"
+	@echo "... routes/blob-storage/GET/get_blob_storage_files.o"
+	@echo "... routes/blob-storage/GET/get_blob_storage_files.i"
+	@echo "... routes/blob-storage/GET/get_blob_storage_files.s"
+	@echo "... routes/chicago-transits/GET/get_template.o"
+	@echo "... routes/chicago-transits/GET/get_template.i"
+	@echo "... routes/chicago-transits/GET/get_template.s"
 	@echo "... routes/database-server/POST/post_frame.o"
 	@echo "... routes/database-server/POST/post_frame.i"
 	@echo "... routes/database-server/POST/post_frame.s"

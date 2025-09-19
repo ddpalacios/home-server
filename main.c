@@ -9,7 +9,7 @@
 #include <poll.h>
 
 int main(){
-	char* port = "9048";
+	char* port = "9020";
 	start_listening_for_clients(port);
 	return 0;
 }

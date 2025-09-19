@@ -141,6 +141,8 @@ CMakeFiles/home-server.dir/routes/route.c.o: \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/new_login.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/studio.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/get_live_page.h \
+ /home/dpalacios/home-server/routes/chicago-transits/GET/get_template.h \
+ /home/dpalacios/home-server/routes/blob-storage/GET/get_blob_storage_files.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/get_web_audio_api_script.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/get_game_of_life_script.h \
  /home/dpalacios/home-server/routes/life-of-sounds/GET/data_page.h \

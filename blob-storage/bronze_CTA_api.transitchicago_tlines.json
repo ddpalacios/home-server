@@ -1,0 +1,56 @@
+{
+    "ctatt" : {
+        "total_lines": 8
+        ,"values": [
+        {
+            "rt": "Red"
+            ,"rtclr": "#DA291C"
+            ,"northbound": "Howard"
+            ,"southbound": "95th/Dan Ryan"
+        },
+        {
+            "rt": "Blue"
+            ,"rtclr": "#004B87"
+             ,"northbound": "O'Hare"
+            ,"southbound": "Forest Park"
+        },
+         {
+            "rt": "Brown"
+            ,"rtclr": "#62361B"
+            ,"northbound": "O'Hare"
+            ,"southbound": "Forest Park"
+        },
+         {
+            "rt": "Green"
+            ,"rtclr": "#00843D"
+            ,"northbound": "Harlem/Lake"
+            ,"southbound": "63rd/Cottage Grove"
+        },
+         {
+            "rt": "Orange"
+            ,"rtclr": "#F96D38"
+            ,"northbound": "Loop"
+            ,"southbound": "Midway"
+        },
+         {
+            "rt": "Purple"
+            ,"rtclr": "#6E2585"
+            ,"northbound": "Linden"
+            ,"southbound": "Howard or Loop"
+        },
+         {
+            "rt": "Pink"
+            ,"rtclr": "#E79CB05"
+            ,"northbound": "Loop"
+            ,"southbound": "54th/Cermak"
+        }
+        ,
+         {
+            "rt": "Yellow"
+            ,"rtclr": "#FFD100"
+            ,"northbound": "Dempster-Skokie"
+            ,"southbound": "Howard"
+        }
+    ]
+    }
+}
