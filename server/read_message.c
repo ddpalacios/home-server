@@ -268,7 +268,7 @@ void free_message(struct Websocket_Message* msg) {
 
 void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int fd_count){
 	if (is_websocket_buffer(buf)){
-		// printf("Detected Websocket Buffer\n");
+		printf("Detected Websocket Buffer\n");
 		unsigned char* websocket_buf = malloc(2);
 		if (!websocket_buf){perror("error"); exit(1);}
 		int nbytes = read_exact_bytes(socket->cSSL, 2, websocket_buf);
@@ -328,11 +328,7 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 								}
 							}
 							if (!isClient && !s->is_listener){
-								if (!SSL_write(s->cSSL, message, nbytes)){
-									printf("Error sending message.\n");
-								}
-
-								// send_tcp_message(s->cSSL, 0x1, 0x1, nbytes, message);
+								send_tcp_message(s->cSSL, 0x1, 0x1, nbytes, message);
 							}else{
 							}
 						}
@@ -356,6 +352,7 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 			}
 	
 	}else if (is_tcp_buffer(buf)){
+		printf("Detected TCP Buffer\n");
 		char* tcp_buf = malloc(BUFFER_SIZE);
 		int nbytes =  read_tcp_message(socket->cSSL, &tcp_buf);
 		int payload_length = 0;
@@ -364,6 +361,7 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 		}else{
 			payload_length = 126;
 		}
+		// send_tcp_message(socket->cSSL,0x1, 0x1,nbytes, tcp_buf);
 		size_t total_sessions = 0;
 		struct Websocket* websockets =  get_websocket_session_by_name("chicago-transits", &total_sessions);
 		for (int i=0; i<total_sessions; i++){
@@ -371,8 +369,7 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 			for (int j=0; j<fd_count; j++){
 				struct Socket socket = sockets[j];
 				if (strcmp(socket.Id, ws.socketId) == 0){
-					send_message_to_socket(sockets,socket, fd_count,payload_length, nbytes, tcp_buf);
-					//send_tcp_message(socket->cSSL, 0x1, 0x1, nbytes, tcp_buf);
+					send_websocket_message(sockets,socket, fd_count,payload_length, nbytes, tcp_buf);
 				}
 			}
 		}

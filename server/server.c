@@ -73,7 +73,7 @@ struct Socket insert_file_descriptor(struct Socket *sockets[],struct pollfd *pfd
     (*sockets)[*fd_count].cSSL = cSSL;
     struct Socket socket = (*sockets)[*fd_count]; 
     (*fd_count)++;
-	printf("NEW SOCKET ID %s\n", socketId_hex);
+	// printf("NEW SOCKET ID %s\n", socketId_hex);
     return socket;
 }
 
