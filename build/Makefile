@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/dpalacios/home-server
+CMAKE_SOURCE_DIR = /home/dario/home-server
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/dpalacios/home-server/build
+CMAKE_BINARY_DIR = /home/dario/home-server/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,9 +87,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/dpalacios/home-server/build/CMakeFiles /home/dpalacios/home-server/build//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/dario/home-server/build/CMakeFiles /home/dario/home-server/build//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/dpalacios/home-server/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/dario/home-server/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -440,6 +440,30 @@ routes/blob-storage/GET/get_blob_storage_files.s: routes/blob-storage/GET/get_bl
 routes/blob-storage/GET/get_blob_storage_files.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/blob-storage/GET/get_blob_storage_files.c.s
 .PHONY : routes/blob-storage/GET/get_blob_storage_files.c.s
+
+routes/blob-storage/POST/post_blob.o: routes/blob-storage/POST/post_blob.c.o
+.PHONY : routes/blob-storage/POST/post_blob.o
+
+# target to build an object file
+routes/blob-storage/POST/post_blob.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/blob-storage/POST/post_blob.c.o
+.PHONY : routes/blob-storage/POST/post_blob.c.o
+
+routes/blob-storage/POST/post_blob.i: routes/blob-storage/POST/post_blob.c.i
+.PHONY : routes/blob-storage/POST/post_blob.i
+
+# target to preprocess a source file
+routes/blob-storage/POST/post_blob.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/blob-storage/POST/post_blob.c.i
+.PHONY : routes/blob-storage/POST/post_blob.c.i
+
+routes/blob-storage/POST/post_blob.s: routes/blob-storage/POST/post_blob.c.s
+.PHONY : routes/blob-storage/POST/post_blob.s
+
+# target to generate assembly for a file
+routes/blob-storage/POST/post_blob.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/blob-storage/POST/post_blob.c.s
+.PHONY : routes/blob-storage/POST/post_blob.c.s
 
 routes/chicago-transits/GET/get_template.o: routes/chicago-transits/GET/get_template.c.o
 .PHONY : routes/chicago-transits/GET/get_template.o
@@ -1209,6 +1233,9 @@ help:
 	@echo "... routes/blob-storage/GET/get_blob_storage_files.o"
 	@echo "... routes/blob-storage/GET/get_blob_storage_files.i"
 	@echo "... routes/blob-storage/GET/get_blob_storage_files.s"
+	@echo "... routes/blob-storage/POST/post_blob.o"
+	@echo "... routes/blob-storage/POST/post_blob.i"
+	@echo "... routes/blob-storage/POST/post_blob.s"
 	@echo "... routes/chicago-transits/GET/get_template.o"
 	@echo "... routes/chicago-transits/GET/get_template.i"
 	@echo "... routes/chicago-transits/GET/get_template.s"

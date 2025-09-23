@@ -1,0 +1,63 @@
+{       
+	"total_values": 6,
+	"values": [
+		{
+		    "originalTableName": "tlines"
+		    ,"tableName": "CTA_TrainLine"
+		    ,"description": "Custom table of all CTA train lines with associated destinations and route color"
+		    ,"source": "CTA"
+		    ,"unrollBy": "values"
+		    ,"database" : "lapi.transitchicago"
+		    ,"api_version": null 
+		},
+		{
+		    "originalTableName": "ttpositions.aspx"
+		    ,"tableName": "CTA_TrainPosition"
+		    ,"description": "Actual CTA transit train line positions by LAT & LON overtime"
+		    ,"source": "CTA"
+		    ,"unrollBy": "route"
+		    ,"database" : "lapi.transitchicago"
+		    ,"api_version": "1.0"
+		}
+		,{
+			"originalTableName": "getroutes"
+			, "tableName": "CTA_BusRoute"
+			, "description": "All CTA Bus route #s with their associated name and directions"
+			, "source": "CTA"
+			,"unrollBy": "routes"
+			,"database" : "ctabustracker"
+			,"api_version":"v3"
+
+		    }
+		,{
+		    "originalTableName": "getpatterns"
+		    , "tableName": "CTA_BusPatterns"
+		    , "description": "Complete route pattern of a specified bus route with LAT & LON"
+		    , "source": "CTA"
+		    , "unrollBy": "ptr"
+		    , "database": "ctabustracker"
+		    , "api_version": "v3"
+
+		},
+	       	{
+		    "originalTableName": "getvehicles"
+		    , "tableName": "CTA_BusVehicle"
+		    , "description": "Actual CTA transit bus positions by LAT & LON overtime"
+		    , "source": "CTA"
+		    , "unrollBy": "vehicle"
+		    , "database": "ctabustracker"
+		    , "api_version": "v3"
+
+		}
+		,{
+		    "originalTableName": "getpredictions"
+		    , "tableName": "CTA_BusPrediction"
+		    , "description": "CTA Bus predictions made overtime"
+		    , "source": "CTA"
+		    , "unrollBy": "prd"
+		    , "database": "ctabustracker"
+		    , "api_version": "v3"
+
+		}
+	]
+}

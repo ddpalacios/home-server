@@ -26,6 +26,79 @@ void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, 
                 send_JSON_response_code(cSSL, 200, result);
                 free(result);
             }
+            else if (strstr(route, "/predictions")){
+		char* rt = get_query_parameter(route, "rt");
+		char* stpid = get_query_parameter(route, "stpid");
+		char* rtdir = get_query_parameter(route, "rtdir");
+		if (rt != NULL ){
+			char path[2048];
+			snprintf(path, sizeof(path),"../blob-storage/bronze_CTA_ctabustracker_%s_predictions.json", rt);
+			char* result = get_file_buffer(path);
+			if (result == NULL){
+				send_response_code(cSSL, 404);
+			}else{
+				cJSON* target_json = cJSON_Parse(result);
+				cJSON *target_values = cJSON_GetObjectItem(target_json, "values");
+				cJSON* new_result_root = create_json_object();
+				cJSON* values = cJSON_AddArrayToObject(new_result_root, "values");
+				int array_size = cJSON_GetArraySize(target_values);
+				for (int i = 0; i < array_size; i++) {
+					cJSON *subitem = cJSON_GetArrayItem(target_values, i);
+					cJSON* t_rt  = cJSON_GetObjectItem(subitem, "rt");
+					cJSON* t_stpid  = cJSON_GetObjectItem(subitem, "stpid");
+					cJSON* t_rtdir  = cJSON_GetObjectItem(subitem, "rtdir");
+					if (strcmp(t_rt->valuestring , rt)==0 ){
+
+						if (stpid != NULL){
+							if (rtdir != NULL){
+								if (strcmp(t_rtdir->valuestring , rtdir) ==0 && strcmp(t_stpid->valuestring , stpid) ==0){
+									 cJSON *copy = cJSON_Duplicate(subitem, 1); 
+									 cJSON_AddItemToArray(values, copy);
+
+								}
+							}else{
+								if (strcmp(t_stpid->valuestring , stpid) ==0){
+									 cJSON *copy = cJSON_Duplicate(subitem, 1); 
+									 cJSON_AddItemToArray(values, copy);
+									
+								}
+							}
+						}else{
+							 cJSON *copy = cJSON_Duplicate(subitem, 1); 
+							 cJSON_AddItemToArray(values, copy);
+						
+						
+						}
+						
+					}
+				}
+
+
+						/*
+						if (strcmp(t_stpid->valuestring , rt)==0 ){
+							if (rtdir != NULL ){
+								if (strcmp(t_rtdir->valuestring , rtdir) ==0){
+									 cJSON *copy = cJSON_Duplicate(subitem, 1); 
+									 cJSON_AddItemToArray(values, copy);
+								}
+							}else{
+								 cJSON *copy = cJSON_Duplicate(subitem, 1); 
+								 cJSON_AddItemToArray(values, copy);
+							
+							}
+					}
+					*/
+				char *json_string = cJSON_Print(new_result_root);
+				send_JSON_response_code(cSSL, 200, json_string);
+				cJSON_Delete(target_json);
+				cJSON_Delete(new_result_root);
+				free(result);
+			}
+		}else{
+			send_response_code(cSSL, 404);
+
+		}
+            }
             else if (strstr(route, "/getpatterns")){
                 char* result = get_file_buffer("../blob-storage/bronze_CTA_ctabustracker_getpatterns.json");
                 send_JSON_response_code(cSSL, 200, result);
@@ -33,6 +106,15 @@ void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, 
             }
           }
         }
+      else if (strstr(route, "DataLake/")){
+          if (strstr(route, "/Definitions/")){
+            if (strstr(route, "/tableDefinition")){
+                char* result = get_file_buffer("../blob-storage/bronze_DataLake_Definitions_tableDefinition.json");
+                send_JSON_response_code(cSSL, 200, result);
+                free(result);
+            }
+          }
+      }
   }
     else if (strstr(route, "blob-storage/silver/")){
       if (strstr(route, "CTA/")){

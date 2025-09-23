@@ -25,6 +25,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/home-server.dir/models/websocket.c.o.d"
   "CMakeFiles/home-server.dir/routes/blob-storage/GET/get_blob_storage_files.c.o"
   "CMakeFiles/home-server.dir/routes/blob-storage/GET/get_blob_storage_files.c.o.d"
+  "CMakeFiles/home-server.dir/routes/blob-storage/POST/post_blob.c.o"
+  "CMakeFiles/home-server.dir/routes/blob-storage/POST/post_blob.c.o.d"
   "CMakeFiles/home-server.dir/routes/chicago-transits/GET/get_template.c.o"
   "CMakeFiles/home-server.dir/routes/chicago-transits/GET/get_template.c.o.d"
   "CMakeFiles/home-server.dir/routes/database-server/POST/post_frame.c.o"
