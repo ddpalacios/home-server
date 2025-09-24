@@ -48,46 +48,25 @@ void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, 
 					cJSON* t_stpid  = cJSON_GetObjectItem(subitem, "stpid");
 					cJSON* t_rtdir  = cJSON_GetObjectItem(subitem, "rtdir");
 					if (strcmp(t_rt->valuestring , rt)==0 ){
-
 						if (stpid != NULL){
 							if (rtdir != NULL){
 								if (strcmp(t_rtdir->valuestring , rtdir) ==0 && strcmp(t_stpid->valuestring , stpid) ==0){
 									 cJSON *copy = cJSON_Duplicate(subitem, 1); 
 									 cJSON_AddItemToArray(values, copy);
-
 								}
 							}else{
 								if (strcmp(t_stpid->valuestring , stpid) ==0){
 									 cJSON *copy = cJSON_Duplicate(subitem, 1); 
 									 cJSON_AddItemToArray(values, copy);
-									
 								}
 							}
 						}else{
 							 cJSON *copy = cJSON_Duplicate(subitem, 1); 
 							 cJSON_AddItemToArray(values, copy);
-						
-						
 						}
 						
 					}
 				}
-
-
-						/*
-						if (strcmp(t_stpid->valuestring , rt)==0 ){
-							if (rtdir != NULL ){
-								if (strcmp(t_rtdir->valuestring , rtdir) ==0){
-									 cJSON *copy = cJSON_Duplicate(subitem, 1); 
-									 cJSON_AddItemToArray(values, copy);
-								}
-							}else{
-								 cJSON *copy = cJSON_Duplicate(subitem, 1); 
-								 cJSON_AddItemToArray(values, copy);
-							
-							}
-					}
-					*/
 				char *json_string = cJSON_Print(new_result_root);
 				send_JSON_response_code(cSSL, 200, json_string);
 				cJSON_Delete(target_json);
@@ -96,7 +75,6 @@ void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, 
 			}
 		}else{
 			send_response_code(cSSL, 404);
-
 		}
             }
             else if (strstr(route, "/getpatterns")){

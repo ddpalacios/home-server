@@ -272,6 +272,7 @@ void send_response_code(SSL *cSSL,int code ){
 				"\r\n");
 
 	SSL_write(cSSL, http_header, strlen(http_header));
+
 	
 	}else if (code == 405) {
 		snprintf(http_header, sizeof(http_header),
@@ -316,7 +317,6 @@ void send_websocket_buffer(SSL* cSSL, char* buf){
  
 
 int switch_to_websocket_protocol(SSL *cSSL, char* websocket_sec_acceptKey){
-	printf("Switching Protocols...\n");
 	char http_header[1024];
 	snprintf(http_header, sizeof(http_header),
 			"HTTP/1.1 101 Switching Protocols\r\n"

@@ -97,9 +97,6 @@ struct Socket insert_file_descriptor(struct Socket *sockets[],struct pollfd *pfd
  	for (int i=0; i<*fd_count; i++){
  		if (sockets[i].fd  == fd) {
 			int ret = SSL_shutdown(sockets[i].cSSL);
-			if (ret == 0) {
-			    ret = SSL_shutdown(sockets[i].cSSL);
-			}
 			SSL_free(sockets[i].cSSL);
 		        close(fd);
 			sockets[i].cSSL = NULL;
@@ -233,6 +230,7 @@ void start_listening_for_clients(char* port){
 						 peek_buf = NULL;
 					 }
 				 if (!socket->keep_alive){
+
 					 if (websocketclient_exists_by_socketid(socket->Id)){
 						 struct WebsocketClient ws_client =  get_websocketclientBySocketId(socket->Id);
 						delete_websocketclient_by_Id(ws_client.Id);

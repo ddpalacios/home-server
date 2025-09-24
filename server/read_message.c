@@ -268,7 +268,6 @@ void free_message(struct Websocket_Message* msg) {
 
 void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int fd_count){
 	if (is_websocket_buffer(buf)){
-		printf("Detected Websocket Buffer\n");
 		unsigned char* websocket_buf = malloc(2);
 		if (!websocket_buf){perror("error"); exit(1);}
 		int nbytes = read_exact_bytes(socket->cSSL, 2, websocket_buf);

@@ -199,12 +199,10 @@ int  get_total_websockets(){
 }
 char* convert_websockets_to_json(struct Websocket* websocket, int count){
 	cJSON *root = cJSON_CreateObject();
-	printf("count %d\n",count);
 	cJSON_AddNumberToObject(root,"total_count",count);
 	cJSON* websockets = cJSON_AddArrayToObject(root, "values");
 	if (count == 0){
 		char *json_string = cJSON_Print(root);
-		printf("JSON %s\n", json_string);
 		cJSON_Delete(root);
 		return json_string;
 	}
@@ -377,7 +375,6 @@ void delete_websocket_by_fd(int fd){
 	char sql[255];
 	snprintf(sql, sizeof(sql),"DELETE FROM websocket WHERE socketId = %d ",
 			fd);
-	printf("query: %s\n", sql);
 	query(conn, sql);
 	close_sql_connection(conn);
 }
@@ -387,7 +384,6 @@ void delete_websocket_by_sessionid(char* sessionid){
 	char sql[255];
 	snprintf(sql, sizeof(sql),"DELETE FROM Websocket_Session WHERE sessionid = '%s' ",
 			sessionid);
-	printf("query: %s\n", sql);
 	query(conn, sql);
 	close_sql_connection(conn);
 }

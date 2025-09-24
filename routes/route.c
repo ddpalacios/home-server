@@ -56,7 +56,19 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 	strncpy(request_type, http_header, request_type_len);
 	request_type[request_type_len] = '\0';
 	printf("Route: '%s %s'\n",request_type,route);
-	if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/login")==0){
+	if (strcmp(request_type, "GET")==0 && strcmp(route, "/css/searchicon.png")==0){
+		send_response_code(cSSL, 404);
+	}
+	else if (strcmp(request_type, "GET")==0 && strcmp(route, "robots.txt")==0){
+		send_response_code(cSSL, 404);
+	}
+	else if (strcmp(request_type, "PROPFIND")==0 && strcmp(route, "/")==0){
+		send_response_code(cSSL, 404);
+	}
+	else if (strcmp(request_type, "GET")==0 && strcmp(route, "/favicon.ico")==0){
+		send_response_code(cSSL, 404);
+	}
+	else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/login")==0){
 		get_login_page(cSSL, http_header, "index.html");
 	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/life-of-sounds/live_studio/user")==0){
 		post_user(socket,http_header,body, route);
@@ -124,6 +136,8 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_blob_storage_files(socket,http_header,body, route);
 	}else if (strcmp(request_type, "POST")==0 && strstr(route, "/blob-storage/")!=NULL){
 		post_blob(socket,http_header,body, route);
+	}else{
+		send_response_code(cSSL, 404);
 	}
 	
 
