@@ -130,8 +130,8 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_gol_script(cSSL, http_header, "/chicago-transits/websocket.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/chicago-transits/onload_session.js")==0){
 		get_gol_script(cSSL, http_header, "/chicago-transits/onload_session.js");
-
-
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/home")!=NULL){
+		get_live_html(cSSL, http_header, "/portfolio/home.html");
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/blob-storage/")!=NULL){
 		get_blob_storage_files(socket,http_header,body, route);
 	}else if (strcmp(request_type, "POST")==0 && strstr(route, "/blob-storage/")!=NULL){
