@@ -7,6 +7,8 @@ int get_session_token_max_age_in_seconds();
 int get_refresh_token_max_age_in_seconds();
 void send_html_response_code(SSL* cSSL,int code, int content_length);
 void send_css_response_code(SSL* cSSL,int code, int content_length);
+void send_video_response_code(SSL* cSSL,int code, int content_length);
+void send_image_response_code(SSL* cSSL,int code, int content_length);
 void send_response_code(SSL *cSSL,int code);
 void set_and_send_session_cookie(SSL* cSSL, char*session_token, char* path);
 void set_and_send_session_and_refresh_cookies(SSL* cSSL, char*session_token,char*refresh_token, char* path);

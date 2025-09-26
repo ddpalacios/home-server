@@ -80,6 +80,29 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_gol_script(cSSL, http_header, "canvas_style.css");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/chatbox_style.css")==0){
 		get_gol_script(cSSL, http_header, "chatbox_style.css");
+
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/portfolio/images/")!=NULL){
+		if (strcmp(route,"/portfolio/images/PowerBIlogo.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/PowerBIlogo.png");
+		}
+		if (strcmp(route,"/portfolio/images/excel.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/excel.png");
+		}
+		if (strcmp(route,"/portfolio/images/spark.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/spark.png");
+		}
+		if (strcmp(route,"/portfolio/images/BlackETL.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/BlackETL.png");
+		}
+		if (strcmp(route,"/portfolio/images/WhiteETL.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/WhiteETL.png");
+		}
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/portfolio/videos/")!=NULL){
+		if (strcmp(route,"/portfolio/videos/WSGOL.mp4") ==0){
+			get_video_file(cSSL, http_header, "/portfolio/videos/WSGOL.mp4");
+		}else if (strcmp(route,"/portfolio/videos/AudioGameOFLife.mp4") ==0){
+			get_video_file(cSSL, http_header, "portfolio/videos/AudioGameOFLife.mp4");
+		}
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/handle_messages.js")==0){
 		get_gol_script(cSSL, http_header, "handle_messages.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/onload_session.js")==0){
