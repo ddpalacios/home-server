@@ -103,6 +103,14 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		}else if (strcmp(route,"/portfolio/videos/AudioGameOFLife.mp4") ==0){
 			get_video_file(cSSL, http_header, "portfolio/videos/AudioGameOFLife.mp4");
 		}
+		else if (strcmp(route,"/portfolio/videos/App1.mp4") ==0){
+			get_video_file(cSSL, http_header, "portfolio/videos/App1.mp4");
+		}else if (strcmp(route,"/portfolio/videos/App2.mp4") ==0){
+			get_video_file(cSSL, http_header, "portfolio/videos/App2.mp4");
+		}
+		else if (strcmp(route,"/portfolio/videos/App3.mp4") ==0){
+			get_video_file(cSSL, http_header, "portfolio/videos/App3.mp4");
+		}
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/handle_messages.js")==0){
 		get_gol_script(cSSL, http_header, "handle_messages.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/onload_session.js")==0){
