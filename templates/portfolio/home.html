@@ -5,36 +5,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <style>
-/* 
-  h1:hover {
-    color: white;
-    transform: scale(1.03);
-    cursor: pointer;
-      opacity: 1;
 
-}
-  h2:hover {
-    color: white;
-    transform: scale(1.03);
-    cursor: pointer;
-      opacity: 1;
-
-}
-
-  h3:hover {
-    color: white;
-    transform: scale(1.03);
-    cursor: pointer;
-      opacity: 1;
-
-}
-  p:hover {
-    color: white;
-    transform: scale(1.03);
-    cursor: pointer;
-      opacity: 1;
-
-} */
   h1, h2,p,h3,li{
     font-family: 'Garamond';
 
@@ -51,7 +22,6 @@ box-sizing: border-box;
       background-position: center;
       background-repeat: no-repeat;
       background-attachment: fixed;
-      background-color: #1E1E2F; 
         }
     
 </style>
@@ -110,7 +80,7 @@ box-sizing: border-box;
   position: sticky;
   top: 0;
   z-index: 5;
-  background-color: #000130c1; 
+  background-color: #00000077; 
 }
 @media screen and (max-width: 1050px) {
   .topnav{
@@ -143,7 +113,6 @@ box-sizing: border-box;
   width: auto;
   height: auto;
   text-align: center;
-  outline: 1px solid black;
 }
 @keyframes fadeVideo {
   0%, 100% { opacity: 1; }
@@ -386,13 +355,6 @@ justify-content: center;
   text-align: center;
 }
 
-.silver_subitem {
-  color: #ccc;
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin: 0.25rem 0 0; /* small space under main item */
-  text-align: center;
-}
 
 
   ul.myUL {
@@ -468,7 +430,17 @@ justify-content: center;
 .case_study_cards{
   position: relative;
   cursor: pointer;
-  background-color: #1c1d70; 
+  background-color: #ededede7; 
+  padding: 2rem; 
+  margin-top: 2%;
+  border-radius: 10px; 
+  max-width: 500px;
+}
+
+ .case_study_cards2{
+  position: relative;
+  cursor: pointer;
+  background-color: #ededed9c; 
   padding: 2rem; 
   margin-top: 2%;
   border-radius: 10px; 
@@ -476,17 +448,38 @@ justify-content: center;
 }
 .case_study_card_title{
    font-size: 30px; 
-   color: #5091DD;
+   color: #000000;
 
 }
 .case_study_paragraph{
-  color: white;
+  color: black;
   font-size: 20px;
 }
 
-.case_study_cards:hover{
-    transform: scale(1.4);
+
+.case_study_cards2:hover{
+    transform: scale(1.1);
      z-index: 5;              /* put overlay above card background */
+     background-color: #ffffff;
+
+
+}
+
+.case_study_cards2::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+ background-color: #11111123;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: inherit;
+  z-index: 1;              /* put overlay above card background */
+}
+
+.case_study_cards:hover{
+    transform: scale(1.1);
+     z-index: 5;              /* put overlay above card background */
+     background-color: #ffffff;
 
 
 }
@@ -495,18 +488,18 @@ justify-content: center;
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background-color: rgb(255, 255, 255);
+ background-color: #11111123;
   opacity: 0;
-  
   transition: opacity 0.3s ease;
   border-radius: inherit;
   z-index: 1;              /* put overlay above card background */
 }
 
 .case_study_cards:hover::after {
-  opacity: .1;
+    opacity: 0.8; 
     pointer-events: none;
 }
+
 
 
 </style>
@@ -516,14 +509,14 @@ justify-content: center;
 .scroll-container {
   overflow: hidden;
   width: 100%;
-  background-color: #00000053;
+  background-color: #00000000;
   padding: 2rem 0;
 }
 
 .scroll-content {
   display: flex;
   width: max-content;
-  animation: scroll 45s linear infinite;
+  animation: scroll 30s linear infinite;
 }
 
 .logos {
@@ -559,19 +552,77 @@ justify-content: center;
       
 
 }
-
-  
-
-
 </style>
 
+<style>
+    /* NEW MAIN VERSION */
+    .main{
+      outline: 1px solid black;
+    }
+    .main_body{
+      display: grid; 
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5em; 
+      width: 85%;
+      margin: 0 auto;
+    }
+    .body_cards{
+      background-color: white;
+      cursor: pointer;
+      border: 1px solid #ddd;
+      padding: 2em;
+      box-shadow: 10px 10px 18px  rgba(0, 0, 0, 0.516);
+      text-align: center;
+    }
+
+  .body_cards:hover{
+    transform: scale(1.01);
+     z-index: 1;              /* put overlay above card background */
+}
+  .subitem {
+  color: #dd5050;
+  font-size: 1.1rem;
+  padding: 1%;
+  font-weight: 600;
+}
+@media (max-width: 1250px) {
+  #why_choose_us{
+    width: 100% !important;
+  }
+  .main_body {
+      grid-template-columns: 1fr;
+     width: 95%; 
+  }
+  .submit_form{
+     flex-direction: column;
+    align-items: center;
+
+  }
+  .form_1{
+    width: 100% !important;
+    padding: 10px;
+  }
+}
+
+.problem_text{
+  color: #c91616; 
+  font-weight: bold;
+}
+.solution_text{
+  color: #03c810; 
+  font-weight: bold;
+}
 
 
+
+    
+</style>
 </head>
 <body>
 
+
 <div class="topnav" >
-  <h1 id="company_name"><span style="color: rgb(255, 255, 255);">PALACIOS SOLUTIONS</span> - Your Personal Data Engineer.</h1>
+  <h1 id="company_name"><span style="color: rgb(255, 255, 255);">PALACIOS SOLUTIONS</span></h1>
   <button class="buttons" id="lets_talk" href="#home" class="active">Let's Talk</button>
 </div>
 
@@ -580,27 +631,338 @@ justify-content: center;
     <source src="/portfolio/videos/WSGOL.mp4" type="video/mp4">
   </video>
 </div>
-<!-- <div style="text-align: center;" class="Workload" id="work_intro">
-  <div id="workload_body" style="text-align: center; width: 100%; display: flex; justify-content: center;">
-    <div id="workload_info" style=" width: 90%">
-        <h1 class="workload_title" style="color: white;">Overwhelmed by data? Let us build you a <b>custom solution.</b></h1>
-         <div class="flex-container">
-          <div class="flex-item-left">
-            <h3 class="workload_title" style="color: white; ">Where we can take this:</h3>
-              <img id="raw_data" class="tools" style=" width: 85%; border-radius: 20px; cursor: pointer;" src="/portfolio/images/raw_data.png">
-          </div>
-          <div class="flex-item-right">
-            <h3 class="workload_title" style="color: white; ">Into this:</h3>
-              <img  id="clean_data" class="tools" style=" width: 65%; border-radius: 20px; cursor: pointer;" src="/portfolio/images/clean_data.png">
-          </div>
-        </div>
+
+
+<div style="padding: 2em; background: #fafafa;  text-align: center;">
+  <h1 style="text-align: center;">WHERE IS YOUR <span style="color: #5091DD;">DATA</span> TODAY?</h1>
+  <h3 style="font-size: 22px; font-weight: 400; margin-top: 10px;">
+      <span style="color: #dd5050;">Pinpoint</span> where your data is today and discover how to move it to the next stage.
+    </h3>
+  <div class="main_body">
+    <div class="body_cards" style="background-color: rgba(205, 128, 50, 0.342)" >
+      <img style=" width: 40%; border-radius: 20px; cursor: pointer;" src="/portfolio/images/bronze.png">
+      <h1 >BRONZE</h1>
+      <ul style="list-style: none; padding: 0; margin: 0; text-align: center; color: #444; line-height: 1.3; font-size: 25px;">
+        <li>Not organized</li>
+        <li>Unstructured & scattered</li>
+        <li>Hard to search or connect</li>
+        <br>
+        <li><span style="color: #dd5050;">First step:</span> locate & organize your data</li>
+      </ul>
+        <h3 class="subitem">Ex: Word, Excel, CSVs, PDFs</h3>
+        <h3 class="subitem">Question: How long would it take your team to find a critical file if you weren't here?</h3>
+    </div>
+    <div class="body_cards" style=" background-color: rgba(192, 192, 192, 0.407)">
+      <img style=" width: 40%; border-radius: 20px; cursor: pointer;" src="/portfolio/images/silver.png">
+      <h1 >SILVER</h1>
+      <ul style="list-style: none; padding: 0; margin: 0; text-align: center; color: #444; line-height: 1.3; font-size: 25px;">
+        <li>Data is standardized and reliable</li>
+        <li>Relationships are clear and usable</li>
+        <li>Teams can work from the same source</li>
+        <br>
+        <li><span style="color: #dd5050;">Second step:</span> Combine & Standardize</li>
+
+      </ul>
+        <h3 class="subitem">Ex: SQL databases, cleaned spreadsheets, defined tables</h3>
+        <h3 class="subitem">Question: Can anyone in your team confidently use this data to make decisions without asking you?</h3>
+    </div>
+    <div class="body_cards" style=" background-color: rgba(255, 217, 0, 0.228);">
+      <img style=" width: 40%; border-radius: 20px; cursor: pointer;" src="/portfolio/images/gold.png">
+      <h1 >GOLD</h1>
+      <ul style="list-style: none; padding: 0; margin: 0; text-align: center; color: #444; line-height: 1.3; font-size: 25px;">
+        <li>ETL, dashboards, and cloud workflows</li>
+        <li>Instant reporting & advanced analytics</li>
+        <li>Future-ready and built to grow</li>
+        <br>
+        <li><span style="color: #dd5050;">Final step:</span> Build, Share & Depliy</li>
+      </ul>
+        <h3 class="subitem">Ex: Predictive analytics, governed data, standardized data pipelines</h3>
+        <h3 class="subitem">Question: Can your team make data-driven decisions instantly without manual intervention?</h3>
     </div>
   </div>
-</div> -->
+  <section class="testimonial_section" style="margin-top: 2%;">
+  <div class="scroll-container">
+    <div class="scroll-content">
+      <div class="logos">
+        <img src="/portfolio/images/spark.png" />
+        <img src="/portfolio/images/PowerBIlogo.png" />
+        <img src="/portfolio/images/Tableau.png" />
+        <img src="/portfolio/images/azure.png" />
+        <img src="/portfolio/images/excel.png" />
+        <img src="/portfolio/images/sql.png" />
+      </div>
+      <div class="logos">
+        <img src="/portfolio/images/spark.png" />
+        <img src="/portfolio/images/PowerBIlogo.png" />
+        <img src="/portfolio/images/Tableau.png" />
+        <img src="/portfolio/images/azure.png" />
+        <img src="/portfolio/images/excel.png" />
+        <img src="/portfolio/images/sql.png" />
+      </div>
+    </div>
+  </div>
+  </section>
+    <p style="color: rgb(0, 0, 0); margin-top: 1.2rem; font-size: 25px;">
+      Tools vary depending on your current setup - from <span style="color: rgb(2, 222, 2);">Excel</span> 
+      for simple datasets to <span style="color: orange;">Spark</span> and 
+      <span style="color: #5091DD;">cloud pipelines</span> or larger workflows. 
+      <br>
+      We tailor to your needs with no extra cost or set up.
+    </p>
+  <div style="padding: 1em; text-align: center;">
+  <h1 style="color: black;">HOW WE WORK</h1>
+  <div class="case_study_container">
+    <div class="case_study_cards2" style="background-color: #edededd2; box-shadow: 0px 3px 9px  rgba(0, 0, 0, 0.429);">
+      <h3 style="color: rgb(0, 152, 0);" class="case_study_card_title">Free Discovery Call</h3>
+      <p  class="case_study_paragraph">
+        No cost, no commitment - just answers.
+      </p>
+      <p class="case_study_paragraph">
+        Pinpoint your biggest data pain points.
+      </p>
+      <p class="case_study_paragraph">
+        Get tailored advice you can act on today.
+      </p>
+      <p class="case_study_paragraph">
+        Walk away with a clear action plan.
+      </p>
+    </div>
+      <div class="case_study_cards2" style="background-color: #edededd2; box-shadow: 0px 3px 9px  rgba(0, 0, 0, 0.429);">
+      <h3 class="case_study_card_title" style="color: blue;">Blueprint Your Data</h3>
+
+      <p  class="case_study_paragraph">
+        Turn messy files into a clear structure.
+      </p>
+      <p  class="case_study_paragraph">
+    Standardize, clean, and connect everything.
+      </p>
+      <p  class="case_study_paragraph">
+      Make data easy to access and ready to use.
+      </p>
+      <p  class="case_study_paragraph">
+      Build a foundation your whole team can trust.
+      </p>
+              <p  class="case_study_paragraph">
+        Work in short, focused phases - so you see progress fast without waiting months.
+      </p>
+    </div>
+      <div class="case_study_cards2" style="background-color: #edededd2; box-shadow: 0px 3px 9px  rgba(0, 0, 0, 0.429);">
+      <h3 style="color: red;" class="case_study_card_title">Build & Launch</h3>
+      <p  class="case_study_paragraph">
+        Get reliable, decision-ready data.
+        </p>
+      <p  class="case_study_paragraph">
+        Share insights seamlessly with your team.
+        </p>
+      <p  class="case_study_paragraph">
+      Scale with confidence - no rebuilding required.
+        </p>
+        <p  class="case_study_paragraph">
+          Smooth handoff so your team can own it.
+        </p>
+        
+    </div>
+  </div>
+  </div>
+<div style="padding: 1em; text-align: center;">
+  <h1 style="color: black;">WHY CHOOSE US</h1>
+  <div style="display: flex; justify-content: center;">
+  <div id="why_choose_us" style="text-align: center; width: 50%; " >
+      <h2 style="color: rgba(0, 0, 0, 0.555); font-weight: 800;">
+          Data problems can't wait. Forget waiting days for a Microsoft engineer or wasting time on endless planning. 
+          We deliver hands-on mentoring and tailored data engineering solutions-fast, focused, and built around your needs.
+    </h2>
+
+    </div>
+  </div>
+  
+</div>
+
+
+</div>
+
+
+<div style="text-align: center; margin-top: 5%;">
+  <h1 style="color: white;">HOW WE'VE HELPED CLIENTS</h1>
+  <div class="case_study_container">
+    <div class="case_study_cards">
+      <h3 class="case_study_card_title">Small Retail Shop</h3>
+     <p class="case_study_paragraph">
+    The client was managing <span class="problem_text">scattered Excel files & Word-Docs</span> with <span class="problem_text">no real structure</span>.  
+    We organized their data into <span class="solution_text">clean, standardized tables</span>, making it easy to generate <span class="solution_text">reports and dashboards</span>.  
+    They can now track <span class="solution_text">sales, inventory, and customer behavior</span> efficiently.
+</p>
+
+    </div>
+     <div class="case_study_cards">
+      <h3 class="case_study_card_title">Marketing Team</h3>
+      <p class="case_study_paragraph">
+    The marketing team relied on <span class="problem_text">multiple social media data sources</span>,  
+    making it <span class="problem_text">difficult to see the full picture</span>.  
+    We pulled and combined all sources into a <span class="solution_text">single, unified location</span>,  
+    allowing the team to easily view <span class="solution_text">trends and correlations across platforms</span>.
+</p>
+
+    </div>
+     <div class="case_study_cards">
+      <h3 class="case_study_card_title">Finance Department</h3>
+    <p class="case_study_paragraph">
+    The finance department needed a better way to track <span class="problem_text">employee utilization and billable hours</span> across multiple departments.  
+    We created <span class="solution_text">consolidated Power BI datasets</span>, providing <span class="solution_text">clear, real-time insights</span> into <span class="solution_text">team performance and resource allocation</span>.
+</p>
+
+    </div>
+    <div class="case_study_cards">
+      <h3 class="case_study_card_title">Help-Desk</h3>
+     <p class="case_study_paragraph">
+    The department manages both <span class="problem_text">internal and external ticketing</span>, with a <span class="problem_text">data model spanning over 100 tables</span>.  
+    Users previously spent <span class="problem_text">hours just to gain insight from a single ticket</span>.  
+    We built <span class="solution_text">automated pipelines</span> that consolidated all transformations, reducing the model to <span class="solution_text">5 tables</span>.  
+    This created a <span class="solution_text">single source of truth</span>, enabling <span class="solution_text">multiple new reports and actionable insights</span> across ticketing.
+</p>
+
+
+    </div>
+    <div class="case_study_cards">
+      <h3 class="case_study_card_title">Sales Team</h3>
+     <p class="case_study_paragraph">
+      The sales team relied on <span class="problem_text">quotas from their reps</span>
+      , including metrics like <span class="problem_text">calls made</span>
+      , <span class="problem_text">videos created</span>
+      , <span class="problem_text">emails sent</span>
+      , and <span class="problem_text">first appointments booked</span>.
+       These metrics directly affected <span class="problem_text">bonuses</span> 
+       and tracked each rep's performance on the team. Existing <spa">Power BI aggregations</span> 
+       were often <span class="problem_text">inaccurate</span>,
+        leading to <span class="problem_text">discrepancies</span>.
+      We transitioned these calculations into
+       <span class="solution_text" >automated SQL scripts</span>, 
+       enabling <span class="solution_text" >precise, reliable tracking</span> 
+       and creating a <span class="solution_text" >staged system</span> 
+       for <span class="solution_text" >consistent, dependable reporting</span>.
+    </p>
+
+
+      <!-- <p  class="case_study_paragraph">
+       The sales team relied on quotas from their reps, 
+       including metrics like calls made, videos created, emails sent, and first appointments booked. 
+        These metrics directly affected bonuses and tracked each rep's performance on the team. 
+        Existing Power BI aggregations were often inaccurate, leading to discrepancies. 
+        We transitioned these calculations into automated SQL scripts, enabling precise, 
+        reliable tracking and creating a staged system for consistent, dependable reporting </p> -->
+
+    </div>
+
+
+    <div class="case_study_cards">
+      <h3 class="case_study_card_title">Internal Team</h3>
+     <p class="case_study_paragraph">
+    The internal team initially relied on <span class="problem_text">Power BI</span> to perform all <span class="problem_text">data transformations</span>, which made models <span class="problem_text">heavy and slow</span>.  
+    We transitioned their workflows to an <span class="solution_text">Azure cloud environment</span>, creating a <span class="solution_text">data lake</span> and the first version of a <span class="solution_text">data definitions table</span>.  
+    With transformations handled in the cloud, <span class="solution_text">Power BI models</span> became <span class="solution_text">lighter, faster, and easier to maintain</span>, giving the team a <span class="solution_text">scalable and reliable reporting solution</span>.
+</p>
+
+    </div>
+  </div>
+  <section class="testimonial_section" style="margin-top: 1%; text-align: center; padding: 3rem 1rem; background-color: #00000085; color: white;">
+  <blockquote style="font-size: 1.5rem; font-style: italic; max-width: 800px; margin: 0 auto; line-height: 1.6;">
+    "Daniel excels at <span style="color: #dd5050;">end-to-end data architecture</span> - handling everything from extraction and storage to transformation, loading, and visualization in Microsoft Fabric and Power BI."
+  </blockquote>
+  <p style="margin-top: 1rem; font-size: 1.3rem; color: #5aa1f2;">
+    - Alex Servlosky, Data Engineer
+  </p>
+</section>
+<div style="text-align: center; margin-bottom: 1%; ">
+<section class="testimonial_section" >
+  <div class="scroll-container">
+    <div class="scroll-content">
+      <div class="logos">
+        <img src="/portfolio/images/dynamics365.png" />
+        <img src="/portfolio/images/hubspot.png" />
+        <img src="/portfolio/images/salesloft.png" />
+        <img src="/portfolio/images/snowflake.png" />
+        <img src="/portfolio/images/sharepoint.png" />
+        <img src="/portfolio/images/graphapi.png" />
+        <img src="/portfolio/images/msft.png" />
+        <img src="/portfolio/images/dialpad.png" />
+        <img src="/portfolio/images/halopsa.png" />
+        <img src="/portfolio/images/airtable.png" />
+        <img src="/portfolio/images/surveymonkey.png" />
+        <img src="/portfolio/images/ceojuice.png" />
+      </div>
+      <div class="logos">
+        <img src="/portfolio/images/dynamics365.png" />
+        <img src="/portfolio/images/hubspot.png" />
+        <img src="/portfolio/images/salesloft.png" />
+        <img src="/portfolio/images/snowflake.png" />
+        <img src="/portfolio/images/sharepoint.png" />
+        <img src="/portfolio/images/graphapi.png" />
+        <img src="/portfolio/images/msft.png" />
+        <img src="/portfolio/images/dialpad.png" />
+        <img src="/portfolio/images/halopsa.png" />
+        <img src="/portfolio/images/airtable.png" />
+        <img src="/portfolio/images/surveymonkey.png" />
+        <img src="/portfolio/images/ceojuice.png" />
+      </div>
+    </div>
+  </div>
+  </section>
+</div>
+
+</div>
+
+
+<div class="submit_form" style="display: flex; justify-content: center;  text-align: center;">
+  <div class="form_1" style="background-color: rgba(255, 255, 255, 0.986); text-align: center; width: 50%; ">
+      <h1 style="font-size: 50px; text-align: center; margin-top: 10%;">Ready to clean your data?</h1>
+      <h2 style="color: rgb(0, 0, 0);"><span style="color: red;">Book a call</span> and start your data transformation journey today.</h2>
+      <hr style="width: 50%;">
+      <h2>You will get a response within 1 business day. </h2>
+  </div>
+  <div class="form_1"  style="background-color: rgba(255, 255, 255, 0.986); width: 50%; padding: 2%; display: flex; flex-direction: column; gap: 1rem;">
+    <form  method="post" action="#">
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+        <input name="company_name" type="text" placeholder="Company Name"  style="font-size: 1.2em; padding: 0.6em; width: 100%;">
+        <input name="company_email" type="email" placeholder="Company Email*" required  style="font-size: 1.2em; padding: 0.6em; width: 100%;">
+        <input name="first_name" type="text" placeholder="First Name*" required style="font-size: 1.2em; padding: 0.6em; width: 100%;">
+        <input name="last_name" type="text" placeholder="Last Name*" required style="font-size: 1.2em; padding: 0.6em; width: 100%;">
+        <input name="phone" type="text" placeholder="Phone Number*" required style="font-size: 1.2em; padding: 0.6em; width: 100%;">
+    </div>
+    <textarea name="project_details" rows="10" placeholder="Project details..." style="width: 100%; margin-top: 10px; padding: 0.6em; font-size: 1.2em;"></textarea>
+    <button type="submit" style="width: 100%;" id="send_button"  class="buttons">Send</button>
+    </form>
+  </div>
+</div>
+<footer class="footer" style="padding: 3em 1em; background-color: rgb(1, 1, 1); text-align: center; margin-top: 1px;">
+
+  <h2 style="margin: 0 0 0.5em 0; font-size: 1.8em; color: #ffffff; font-family: 'Alegreya SC', serif;">
+    Palacios Solutions
+  </h2>
+
+  <div style="margin: 1em 0;">
+    <img src="/portfolio/images/profile.png" alt="Profile" style="width: 120px; border-radius: 50%; border: 3px solid #fff; display: block; margin: 0 auto;">
+    <p style="margin: 0.5em 0 0; font-size: 1.2em; color: #ffffff;">
+      Daniel Palacios - Data Engineer
+    </p>
+    <p style="margin: 0.5em 0 0; font-size: 1.2em; color: #ffffff;">
+      Email - danieldario@palacios-solutions.com
+    </p>
+  </div>
+
+  <p style="margin: 1.2em 0 0.5em 0; font-size: 1.2em; color: #ffffff;">
+    Connect with me on LinkedIn:
+  </p>
+
+  <a href="https://www.linkedin.com/in/palacios-solutions" target="_blank" 
+     style="color: #0077B5; font-size: 2em; margin: 0 0.5em; text-decoration: none;">
+    <i class="fab fa-linkedin"></i>
+  </a>
+
+</footer>
 
 
 
-<div style="text-align: center;"  >
+<!-- <div style="text-align: center;"  >
     <div style=" width: 100%;">
       <h1 class="workload_title" style="color: white; font-size: 45px;">
         WHERE IS YOUR <span style="color: #5091DD;">DATA</span> TODAY?
@@ -761,7 +1123,6 @@ justify-content: center;
   </div>
 </div>
 
-
 <div style="text-align: center; margin-top: 5%;">
   <h1 style="color: white;">HOW WE'VE HELPED CLIENTS</h1>
   <div class="case_study_container">
@@ -820,7 +1181,7 @@ justify-content: center;
     </div>
   </div>
 </div>
-<section class="testimonial_section" style="margin-top: 8%; text-align: center; padding: 3rem 1rem; background-color: #1c1d7086; color: white;">
+<section class="testimonial_section" style="margin-top: 8%; text-align: center; padding: 3rem 1rem; background-color: #00000053; color: white;">
   <blockquote style="font-size: 1.5rem; font-style: italic; max-width: 800px; margin: 0 auto; line-height: 1.6;">
     "Daniel excels at <span style="color: #dd5050;">end-to-end data architecture</span> - handling everything from extraction and storage to transformation, loading, and visualization in Microsoft Fabric and Power BI."
   </blockquote>
@@ -896,101 +1257,10 @@ justify-content: center;
     </p>
 </div>
 
-<!-- <div style="text-align: center; margin-top: 2%;">
-  <h2 style="color: white;">READY TO CLEAN YOUR DATA?</h2>
-  <p style="color: white;">Book a call and start your data transformation journey today.</p>
-</div> -->
-<div style="display: flex; justify-content: center; margin-top: 5%; text-align: center;">
-  <div style="background-color: rgba(255, 255, 255, 0.886); text-align: center; width: 50%; ">
-      <h1 style="font-size: 50px; text-align: center; margin-top: 10%;">Ready to clean your data?</h1>
-      <h2 style="color: rgb(0, 0, 0);"><span style="color: red;">Book a call</span> and start your data transformation journey today.</h2>
-      <hr style="width: 50%;">
-      <h2>You will get a response within 1 business day. </h2>
-  </div>
-
-  <div style="background-color: rgba(255, 255, 255, 0.886); width: 50%; padding: 2%; display: flex; flex-direction: column; gap: 1rem;">
-    <form  method="post" action="#">
-    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
-        <input name="company_name" type="text" placeholder="Company Name"  style="font-size: 1.2em; padding: 0.6em; width: 100%;">
-        <input name="company_email" type="email" placeholder="Company Email*" required  style="font-size: 1.2em; padding: 0.6em; width: 100%;">
-        <input name="first_name" type="text" placeholder="First Name*" required style="font-size: 1.2em; padding: 0.6em; width: 100%;">
-        <input name="last_name" type="text" placeholder="Last Name*" required style="font-size: 1.2em; padding: 0.6em; width: 100%;">
-        <input name="phone" type="text" placeholder="Phone Number*" required style="font-size: 1.2em; padding: 0.6em; width: 100%;">
-    </div>
-    <textarea name="project_details" rows="10" placeholder="Project details..." style="width: 100%; margin-top: 10px; padding: 0.6em; font-size: 1.2em;"></textarea>
-    <button type="submit" style="width: 100%;" id="send_button"  class="buttons">Send</button>
-    </form>
-  </div>
-</div>
+ -->
 
 
 
-
-   <!-- <input name="name" type="text" placeholder="Your name" required style="font-size: 1.2em;"> -->
-   <!-- <label style="display: flex; flex-direction: column; font-size: 1.2em; color: #333;">
-            <span style="display: inline-flex; align-items: center;">Name <span style="color: red; margin-left: 2px;">*</span></span>
-            <input name="name" type="text" placeholder="Your name" required
-                  style="font-size: 1.2em; padding: 0.6em; width: 100%; max-width: 100%; border: 1px solid #ccc; border-radius: 6px;">
-          </label> -->
-
-<footer class="footer" style="padding: 3em 1em; background-color: rgb(1, 1, 1); text-align: center; margin-top: 1px;">
-
-  <h2 style="margin: 0 0 0.5em 0; font-size: 1.8em; color: #ffffff; font-family: 'Alegreya SC', serif;">
-    Palacios Solutions
-  </h2>
-
-  <div style="margin: 1em 0;">
-    <img src="/portfolio/images/profile.png" alt="Profile" style="width: 120px; border-radius: 50%; border: 3px solid #fff; display: block; margin: 0 auto;">
-    <p style="margin: 0.5em 0 0; font-size: 1.2em; color: #ffffff;">
-      Daniel Palacios - Data Engineer
-    </p>
-    <p style="margin: 0.5em 0 0; font-size: 1.2em; color: #ffffff;">
-      Email - danieldario@palacios-solutions.com
-    </p>
-  </div>
-
-  <p style="margin: 1.2em 0 0.5em 0; font-size: 1.2em; color: #ffffff;">
-    Connect with me on LinkedIn:
-  </p>
-
-  <a href="https://www.linkedin.com/in/palacios-solutions" target="_blank" 
-     style="color: #0077B5; font-size: 2em; margin: 0 0.5em; text-decoration: none;">
-    <i class="fab fa-linkedin"></i>
-  </a>
-
-</footer>
-
-     
-
-<!-- <div style="text-align: center;" class="Home" id="home_intro">
-  <div style="text-align: center; width: 100%;">
-    <h1 id="tool_list" style="color: white; ">SOME TOOLS WE USE TO CLEAN YOUR DATA</h1>
-      <div class="cards">
-        <div class="card" style="display: flex; justify-content: center;">
-          <img class="tools" style="width: 60%" src="/portfolio/images/spark.png">
-        </div>
-        <div class="card"  style="display: flex; justify-content: center;">
-          <img  class="tools"style="width: 60%" src="/portfolio/images/excel.png">
-
-        </div>
-        <div class="card"  style="display: flex; justify-content: center;">
-          <img  class="tools" style="width: 60%" src="/portfolio/images/PowerBIlogo.png">
-        </div>
-        <div class="card"  style="display: flex; justify-content: center;">
-          <img  class="tools" style="width: 60%" src="/portfolio/images/Tableau.png">
-
-        </div>
-        <div class="card"  style="display: flex; justify-content: center;">
-          <img   class="tools"style="width: 60%" src="/portfolio/images/azure.png">
-
-        </div>
-        <div class="card"  style="display: flex; justify-content: center;">
-          <img  class="tools" style="width: auto" src="/portfolio/images/sql.png">
-
-        </div>
-      </div>
-    </div>
-</div> -->
-
+    
 </body>
 </html>
