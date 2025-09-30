@@ -430,56 +430,27 @@ justify-content: center;
 .case_study_cards{
   position: relative;
   cursor: pointer;
-  background-color: #ededede7; 
+  background-color: #61616131;
   padding: 2rem; 
   margin-top: 2%;
   border-radius: 10px; 
   max-width: 500px;
 }
 
- .case_study_cards2{
-  position: relative;
-  cursor: pointer;
-  background-color: #ededed9c; 
-  padding: 2rem; 
-  margin-top: 2%;
-  border-radius: 10px; 
-  max-width: 500px;
-}
+
 .case_study_card_title{
    font-size: 30px; 
-   color: #000000;
+   color: white;
 
 }
 .case_study_paragraph{
-  color: black;
+  color: white;
   font-size: 20px;
-}
-
-
-.case_study_cards2:hover{
-    transform: scale(1.1);
-     z-index: 5;              /* put overlay above card background */
-     background-color: #ffffff;
-
-
-}
-
-.case_study_cards2::after {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
- background-color: #11111123;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  border-radius: inherit;
-  z-index: 1;              /* put overlay above card background */
 }
 
 .case_study_cards:hover{
     transform: scale(1.1);
      z-index: 5;              /* put overlay above card background */
-     background-color: #ffffff;
 
 
 }
@@ -499,6 +470,36 @@ justify-content: center;
     opacity: 0.8; 
     pointer-events: none;
 }
+
+ .case_study_cards2{
+  position: relative;
+  cursor: pointer;
+  background-color: #ededed9c; 
+  padding: 2rem; 
+  margin-top: 2%;
+  border-radius: 10px; 
+  max-width: 500px;
+}
+.case_study_cards2:hover{
+    transform: scale(1.1);
+     z-index: 5;              /* put overlay above card background */
+     background-color: #ffffff;
+
+
+}
+
+.case_study_cards2::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+ background-color: #11111123;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: inherit;
+  z-index: 1;              /* put overlay above card background */
+}
+
+
 
 
 
@@ -716,79 +717,85 @@ justify-content: center;
   <div class="case_study_container">
     <div class="case_study_cards2" style="background-color: #edededd2; box-shadow: 0px 3px 9px  rgba(0, 0, 0, 0.429);">
       <h3 style="color: rgb(0, 152, 0);" class="case_study_card_title">Free Discovery Call</h3>
-      <p  class="case_study_paragraph">
+      <p  style="color: black;" class="case_study_paragraph">
         No cost, no commitment - just answers.
       </p>
-      <p class="case_study_paragraph">
+      <p style="color: black;" class="case_study_paragraph">
         Pinpoint your biggest data pain points.
       </p>
-      <p class="case_study_paragraph">
+      <p style="color: black;" class="case_study_paragraph">
         Get tailored advice you can act on today.
       </p>
-      <p class="case_study_paragraph">
+      <p style="color: black;" class="case_study_paragraph">
         Walk away with a clear action plan.
       </p>
     </div>
       <div class="case_study_cards2" style="background-color: #edededd2; box-shadow: 0px 3px 9px  rgba(0, 0, 0, 0.429);">
       <h3 class="case_study_card_title" style="color: blue;">Blueprint Your Data</h3>
 
-      <p  class="case_study_paragraph">
+      <p style="color: black;"  class="case_study_paragraph">
         Turn messy files into a clear structure.
       </p>
-      <p  class="case_study_paragraph">
+      <p style="color: black;"  class="case_study_paragraph">
     Standardize, clean, and connect everything.
       </p>
-      <p  class="case_study_paragraph">
+      <p style="color: black;"  class="case_study_paragraph">
       Make data easy to access and ready to use.
       </p>
-      <p  class="case_study_paragraph">
+      <p style="color: black;"  class="case_study_paragraph">
       Build a foundation your whole team can trust.
       </p>
-              <p  class="case_study_paragraph">
+      <p style="color: black;" class="case_study_paragraph">
         Work in short, focused phases - so you see progress fast without waiting months.
       </p>
     </div>
       <div class="case_study_cards2" style="background-color: #edededd2; box-shadow: 0px 3px 9px  rgba(0, 0, 0, 0.429);">
       <h3 style="color: red;" class="case_study_card_title">Build & Launch</h3>
-      <p  class="case_study_paragraph">
+      <p style="color: black;"  class="case_study_paragraph">
         Get reliable, decision-ready data.
         </p>
-      <p  class="case_study_paragraph">
+      <p style="color: black;"  class="case_study_paragraph">
         Share insights seamlessly with your team.
         </p>
-      <p  class="case_study_paragraph">
+      <p style="color: black;"  class="case_study_paragraph">
       Scale with confidence - no rebuilding required.
         </p>
-        <p  class="case_study_paragraph">
+        <p style="color: black;"  class="case_study_paragraph">
           Smooth handoff so your team can own it.
         </p>
         
     </div>
   </div>
   </div>
-  <hr style="width: 50%; margin-top: 5%;">
+
+
+
+</div>
 
 <div style="padding: 1em; text-align: center; margin-top: 2%; ">
-  <h1 style="color: black;">WHY CHOOSE US</h1>
+  <h1 style="color: white;">WHY CHOOSE US</h1>
+
   <div style="display: flex; justify-content: center;">
-  <div id="why_choose_us" style="text-align: center; width: 50%; " >
-      <h2 style="color: rgba(0, 0, 0, 0.555); font-weight: 800;">
+  <div id="why_choose_us" style="text-align: center; width: 50%;  " >
+      <h2 style="color: rgba(255, 255, 255, 0.898); font-weight: 800;">
           Data problems can't wait. Forget waiting days for a Microsoft engineer or wasting time on endless planning & expensive hiring. 
           We deliver hands-on mentoring and tailored data engineering solutions-fast, focused, and built around your needs.
     </h2>
     </div>
-    
   </div>
+</div>
+
+
     <div class="case_study_container">
-    <div class="case_study_cards" >
-      <h3 class="case_study_card_title">Speed That Matches Your Deadlines</h3>
-     <p class="case_study_paragraph">
+    <div class="case_study_cards" style=" background-color: #61616145; " >
+      <h3 style="color: white;" class="case_study_card_title">Speed That Matches Your Deadlines</h3>
+     <p  style="color: white;" class="case_study_paragraph">
             We deliver work in structured sprints, focusing on incremental development that produces real business value quickly and reliably.
     </p>
     </div>
-     <div class="case_study_cards">
-      <h3 class="case_study_card_title">From Chaos to Clarity in Your Data</h3>
-      <p class="case_study_paragraph">
+     <div class="case_study_cards" style=" background-color: #61616145; "  >
+      <h3 style="color: white;" class="case_study_card_title">From Chaos to Clarity in Your Data</h3>
+      <p style="color: white;" class="case_study_paragraph">
         We design a blueprint of your data while also keeping track on what each table means,
          their dimensions, who owns it, how often it's updated, and the changes that occured to it. 
          That way, there is full transparency between you and your data
@@ -796,51 +803,56 @@ justify-content: center;
       </p>
 
     </div>
-     <div class="case_study_cards">
-      <h3 class="case_study_card_title">Support That Doesn't Vanish After Delivery</h3>
-    <p class="case_study_paragraph">
+     <div class="case_study_cards" style=" background-color: #61616145; " >
+      <h3 style="color: white;" class="case_study_card_title">Support That Doesn't Vanish After Delivery</h3>
+    <p style="color: white;" class="case_study_paragraph">
         Mon-Friday support for new data pipelines, engineering tasks, and ongoing maintenance - focused on keeping your data reliable.
     </p>
 
     </div>
-    <div class="case_study_cards">
-      <h3 class="case_study_card_title">Hands-On Mentoring for Actionable Power BI Dashboards</h3>
-    <p class="case_study_paragraph">
+    <div class="case_study_cards" style=" background-color: #61616145; " >
+      <h3 style="color: white;" class="case_study_card_title">Hands-On Mentoring for Actionable Power BI Dashboards</h3>
+    <p style="color: white;" class="case_study_paragraph">
       Learn to build real-time dashboards and reports for your department with 1-on-1 Power BI mentoring-speeding up your day-to-day work.
     </p>
 
 
     </div>
-    <div class="case_study_cards">
-      <h3 class="case_study_card_title">Proven Expertise, Backed by 5+ Years in the Field</h3>
-     <p class="case_study_paragraph">
+    <div class="case_study_cards" style=" background-color: #61616145; " >
+      <h3 style="color: white;" class="case_study_card_title">Proven Expertise, Backed by 5+ Years in the Field</h3>
+     <p style="color: white;" class="case_study_paragraph">
           With over five years of experience building pipelines, optimizing reports, and transforming scattered data into reliable systems, 
           we bring practical, battle-tested solutions-not theory.
     </p>
     </div>
 
 
-    <div class="case_study_cards">
-      <h3 class="case_study_card_title">No AI Without Solid Data Engineering</h3>
-     <p class="case_study_paragraph">
+    <div class="case_study_cards" style=" background-color: #61616145; " >
+      <h3 style="color: white;" class="case_study_card_title">No AI Without Solid Data Engineering</h3>
+     <p style="color: white;" class="case_study_paragraph">
          Everyone wants AI but want to skip the steps to get there. Without proper data engineering, AI can't succeed. 
          We set up the foundation so predictive modeling works as intended.
       </p>
     </div>
   </div>
-  
-</div>
-
-
-</div>
 
 
 <div style="text-align: center; margin-top: 5%;">
-  <h1 style="color: white;">HOW WE'VE HELPED CLIENTS</h1>
+  <h1  style=" padding: 20px; color: white;">DELIVERING IMPACT ACROSS TEAMS</h1>
+  <div style="display: flex; justify-content: center;">
+  <div id="why_choose_us" style="text-align: center; width: 50%;  " >
+      <h2  style="padding: 20px; color: rgba(255, 255, 255, 0.898); font-weight: 800;">
+         We've helped departments and clients turn scattered data into reliable insights, 
+         with automated pipelines and clear reporting. 
+         Our work spans internal teams and external collaborators alike.
+    </h2>
+    </div>
+  </div>
+</h2>
   <div class="case_study_container">
-    <div class="case_study_cards">
-      <h3 class="case_study_card_title">Small Retail Shop</h3>
-     <p class="case_study_paragraph">
+    <div class="case_study_cards" style="background-color: #61616145;" >
+      <h3 style="color: white;" class="case_study_card_title">Small Retail Shop</h3>
+     <p style="color: white;" class="case_study_paragraph">
     The client was managing <span class="problem_text">scattered Excel files & Word-Docs</span> with <span class="problem_text">no real structure</span>.  
     We organized their data into <span class="solution_text">clean, standardized tables</span>, making it easy to generate <span class="solution_text">reports and dashboards</span>.  
     They can now track <span class="solution_text">sales, inventory, and customer behavior</span> efficiently.
