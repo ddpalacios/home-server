@@ -82,8 +82,78 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_gol_script(cSSL, http_header, "chatbox_style.css");
 
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/portfolio/images/")!=NULL){
+
+		if (strcmp(route,"/portfolio/images/dynamics365.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/dynamics365.png");
+		}
+		if (strcmp(route,"/portfolio/images/hubspot.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/hubspot.png");
+		}
+		if (strcmp(route,"/portfolio/images/salesloft.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/salesloft.png");
+		}
+		if (strcmp(route,"/portfolio/images/snowflake.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/snowflake.png");
+		}
+		if (strcmp(route,"/portfolio/images/sharepoint.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/sharepoint.png");
+		}
+
+		if (strcmp(route,"/portfolio/images/graphapi.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/graphapi.png");
+		}
+		
+		if (strcmp(route,"/portfolio/images/msft.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/msft.png");
+		}
+		if (strcmp(route,"/portfolio/images/blue.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/blue.png");
+		}
+		if (strcmp(route,"/portfolio/images/profile.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/profile.png");
+		}
+		if (strcmp(route,"/portfolio/images/dialpad.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/dialpad.png");
+		}
+		if (strcmp(route,"/portfolio/images/halopsa.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/halopsa.png");
+		}
+		if (strcmp(route,"/portfolio/images/surveymonkey.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/surveymonkey.png");
+		}
+		if (strcmp(route,"/portfolio/images/airtable.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/airtable.png");
+		}
+		if (strcmp(route,"/portfolio/images/ceojuice.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/ceojuice.png");
+		}
 		if (strcmp(route,"/portfolio/images/PowerBIlogo.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/PowerBIlogo.png");
+		}
+		if (strcmp(route,"/portfolio/images/Tableau.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/Tableau.png");
+		}
+		if (strcmp(route,"/portfolio/images/sql.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/sql.png");
+		}
+		if (strcmp(route,"/portfolio/images/raw_data.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/raw_data.png");
+		}
+		if (strcmp(route,"/portfolio/images/clean_data.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/clean_data.png");
+		}
+
+		if (strcmp(route,"/portfolio/images/bronze.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/bronze.png");
+		}
+		if (strcmp(route,"/portfolio/images/silver.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/silver.png");
+		}
+		if (strcmp(route,"/portfolio/images/gold.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/gold.png");
+		}
+		if (strcmp(route,"/portfolio/images/azure.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/azure.png");
 		}
 		if (strcmp(route,"/portfolio/images/excel.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/excel.png");

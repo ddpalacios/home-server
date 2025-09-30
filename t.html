@@ -1,339 +1,41 @@
-<!DOCTYPE html>
-<html>
-    <head></head>
-    <style>
+<div class="scroll-container">
+  <div class="scroll-content">
+    <img src="https://via.placeholder.com/150x100?text=1" />
+    <img src="https://via.placeholder.com/150x100?text=2" />
+    <img src="https://via.placeholder.com/150x100?text=3" />
+    <img src="https://via.placeholder.com/150x100?text=4" />
+    <img src="https://via.placeholder.com/150x100?text=5" />
+    <!-- duplicate for smooth loop -->
+    <img src="https://via.placeholder.com/150x100?text=1" />
+    <img src="https://via.placeholder.com/150x100?text=2" />
+    <img src="https://via.placeholder.com/150x100?text=3" />
+    <img src="https://via.placeholder.com/150x100?text=4" />
+    <img src="https://via.placeholder.com/150x100?text=5" />
+  </div>
+</div>
 
-        #visualizer {
-           position:absolute;
-             width: 100%; height: 100%;
-             z-index:1;
-        }
-.create-btn {
-  position: absolute;
-  top: 10px;   
-  right: 10px; 
-  z-index: 2; 
-  padding: 8px 12px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-body, html { height:100%;  overflow: hidden; }
-    </style>
-<body>
-
-  <canvas id="visualizer" ></canvas>
-  <input  id="stop_session"  class="create-btn" type="button" style=" background-color: lightcoral; display: none;"  value="Stop Session"/>
-  <input  id="create_session" class="create-btn" type="button" style=" background-color: lightgreen;"  value="+ Create Session"/>
-
-</body>
-<script>
-    let sessionActive = false;
-
-    document.getElementById("create_session").onclick = function () {
-        sessionActive = true;
-        document.getElementById("create_session").style.display = "none";
-        document.getElementById("stop_session").style.display = "inline-block";
-        
-    }
-
-    document.getElementById("stop_session").onclick = function () {
-        sessionActive = false;
-        document.getElementById("stop_session").style.display = "none";
-        document.getElementById("create_session").style.display = "inline-block";
-    }
-
-
-</script>
-<script>
-    let canvas = document.querySelector("#visualizer");
-    let ctx = canvas.getContext("2d");
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
-    ctx.scale(dpr, dpr);
-    var pixel_size = 3
-    var numRows =  Math.floor(canvas.height / pixel_size);
-    var numCols =Math.floor(canvas.width / pixel_size);
-    var celluar_automota_grid = []
-    var big_canvas_grid = []
-    var mag_view_w =3
-    var mag_view_h = 3
-    var rule = 30
-    var t = 200
-
-
-//////////////////////////////////////////////////
-
-function binaryToInt(binaryStr) {
-    let result = 0;
-    let length = binaryStr.length;
-
-    for (let  i = 0; i < length; i++) {
-        if (binaryStr[i] == '1') {
-            result += Math.pow(2, length - 1 - i);
-        }
-    }
-    return result;
-}
-function reset(){
-            celluar_automota_grid = []
-            for (let i =0; i<numRows; i++){
-                celluar_automota_grid[i] = []
-                for (let j =0; j<numCols; j++){
-                    celluar_automota_grid[i][j] = 0;
-                     if (i == 0 && j == Math.floor(numCols*.5)){
-                        celluar_automota_grid[i][j] = 1
-                    }
-                      if (i == 0 && j == t){
-                        celluar_automota_grid[i][j] = 1
-                    }
-                }
-            }
-}
-function check(e) {
-        var code = e.keyCode;
-            if (code == 38){
-                console.log("Up");
-                if (pixel_size-1 <=0 ){
-                    return
-                }
-                pixel_size -=1
-                numRows =  Math.floor(canvas.height / pixel_size);
-                 numCols =Math.floor(canvas.width / pixel_size);
-                for (let i =0; i<numRows; i++){
-                celluar_automota_grid[i] = []
-                for (let j =0; j<numCols; j++){
-                    celluar_automota_grid[i][j] = 0;
-                     if (i == 0 && j == Math.floor(numCols*.5)){
-                        celluar_automota_grid[i][j] = 1
-                    }
-                      if (i == 0 && j == t){
-                        celluar_automota_grid[i][j] = 1
-                    }
-                }
-            }
-
-             }
-             if (code == 40){
-                console.log("Down");
-                pixel_size +=1
-                numRows =  Math.floor(canvas.height / pixel_size);
-                numCols =Math.floor(canvas.width / pixel_size);
-                for (let i =0; i<numRows; i++){
-                celluar_automota_grid[i] = []
-                for (let j =0; j<numCols; j++){
-                    celluar_automota_grid[i][j] = 0;
-                     if (i == 0 && j == Math.floor(numCols*.5)){
-                        celluar_automota_grid[i][j] = 1
-                    }
-                      if (i == 0 && j == t){
-                        celluar_automota_grid[i][j] = 1
-                    }
-                }
-            }
-
-
-            }
-            if (code == 39){
-                console.log("Right");
-                rule +=1
-                for (let i =0; i<numRows; i++){
-                celluar_automota_grid[i] = []
-                for (let j =0; j<numCols; j++){
-                    celluar_automota_grid[i][j] = 0;
-                    if (i == 0 && j == Math.floor(numCols*.5)){
-                        celluar_automota_grid[i][j] = 1
-                    }
-                      if (i == 0 && j == t){
-                        celluar_automota_grid[i][j] = 1
-                    }
-                }
-            }
-
-            }  if (code == 37){
-                console.log("Left");
-                if (rule-1 <=0){
-                    return
-                }
-                rule -=1
-                for (let i =0; i<numRows; i++){
-                celluar_automota_grid[i] = []
-                for (let j =0; j<numCols; j++){
-                    celluar_automota_grid[i][j] = 0;
-                     if (i == 0 && j == Math.floor(numCols*.5)){
-                        celluar_automota_grid[i][j] = 1
-                    }
-                      if (i == 0 && j == t){
-                        celluar_automota_grid[i][j] = 1
-                    }
-                }
-            }
-
-
-            }
-            console.log(rule)
-
-        }
-window.addEventListener('keydown',check,false);
-
-///////////////////////////////////////////////////
-
-function countNeighbors(row, col) {
-        let count = 0;
-        for (let i = -1; i <= 1; i++) {
-        for (let j = -1; j <= 1; j++) {
-            const r = row + i;
-            const c = col + j;
-            if (r >= 0 && r < numRows && c >= 0 &&
-            c < numCols && !(i === 0 && j === 0)) {
-            count += big_canvas_grid[r][c];
-            }
-        }
-        }
-        return count;
-}
-function updateGrid() {
-        var newGrid = [];
-        for (let i = 0; i < numRows; i++) {
-            newGrid[i] = [];
-            for (let j = 0; j < numCols; j++) {
-                const neighbors = countNeighbors(i, j);
-                if ((big_canvas_grid[i][j] === 1) && (neighbors < 2 || neighbors > 3)) {
-                newGrid[i][j] = 0;
-                } else if (big_canvas_grid[i][j] === 0 && neighbors === 3) {
-                newGrid[i][j] = 1;
-                } else {
-                newGrid[i][j] = big_canvas_grid[i][j];
-                }
-            }
-        }
-        big_canvas_grid = newGrid;
-
-        return big_canvas_grid
+<style>
+.scroll-container {
+  width: 100%;
+  overflow: hidden;
+  background: #111;
+  padding: 1rem 0;
 }
 
-///////////////////////////////////////////////////
+.scroll-content {
+  display: flex;
+  width: max-content;
+  animation: scroll 20s linear infinite;
+}
 
-function mouseMove(e){
-	e.preventDefault();
-	cPostX = e.pageX - canvas.offsetLeft;
-	cPostY = e.pageY - canvas.offsetTop;
-	mouse_x = cPostX;
-	mouse_y = cPostY;
-	var current_x = Math.floor(mouse_x/pixel_size)
-	var current_y = Math.floor(mouse_y/pixel_size)
-	 big_canvas_grid[current_y][current_x] = 1
+.scroll-content img {
+  margin: 0 1rem;
+  border-radius: 10px;
+}
 
-	for (let i=0; i<mag_view_h; i++){
-			for (let j=0; j<mag_view_w; j++){
-                big_canvas_grid[current_y+i][ current_x + j] =1
-				// client_cords.push({'x': current_x + j, 'y': current_y+i})
-				}
-		}
-
-	}
-
-//////////////////////////////////////////////////
-
-    function main(){
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        if (big_canvas_grid.length ==  0){
-                    // initial grid
-                    for (let i =0; i<numRows; i++){
-                        big_canvas_grid[i] = []
-                        for (let j =0; j<numCols; j++){
-                            big_canvas_grid[i][j] = 0;
-                                // if (i ==100 || i == 200 || j == 200 || j == 100 || j == 300 || j == 400){
-                                //     big_canvas_grid[i][j] = 1
-                                // }
-                        }
-                    }
-                }
-
-        if (celluar_automota_grid.length ==  0){
-            for (let i =0; i<numRows; i++){
-                celluar_automota_grid[i] = []
-                for (let j =0; j<numCols; j++){
-                    celluar_automota_grid[i][j] = 0;
-                    if (i == 0 && j == Math.floor(numCols*.5)){
-                        celluar_automota_grid[i][j] = 1
-                    }
-                      if (i == 0 && j == t){
-                        celluar_automota_grid[i][j] = 1
-                    }
-                }
-            }
-        }
-        for (let i=1; i < numRows; i++){
-            for (let j=0; j < numCols; j++){
-                    var x = j * pixel_size
-			        var y = i * pixel_size
-                    let currVal = celluar_automota_grid[i][j];
-                    let left_neighbor = null;
-                    let right_neighbor = null;
-                    let top_neighbor = null; 
-                    if (j-1 < 0){
-                        left_neighbor = 0
-                    }else{
-                        left_neighbor = celluar_automota_grid[i-1][j-1]
-                    }
-                    if (j+1 < canvas.width){
-                        right_neighbor = celluar_automota_grid[i-1][j+1]
-                    }else{
-                        right_neighbor = 0;
-                    }
-                    top_neighbor = celluar_automota_grid[i-1][j]
-                    let r = left_neighbor + ""+top_neighbor+""+right_neighbor
-                    let result = binaryToInt(r)
-                    let is_valid = 0;
-                    if (result == 7){
-                        is_valid = rule & 0x80
-                    }if (result == 6){
-                        is_valid = rule & 0x40
-                    }if (result == 5){
-                        is_valid = rule & 0x20
-                    }if (result == 4){
-                        is_valid = rule & 0x10
-                    }if (result == 3){
-                        is_valid = rule & 0x8
-                    }if (result == 2){
-                        is_valid = rule & 0x4
-                    }if (result == 1){
-                        is_valid = rule & 0x2
-                    }if (result == 0){
-                        is_valid = rule & 0x1
-                    }
-                    if (is_valid){
-                        celluar_automota_grid[i][j] = 1
-                        ctx.fillStyle = 'rgba(0,0,0,.06)'
-                        ctx.fillRect(x, y , pixel_size, pixel_size);
-                    }
-            }
-        }
-
-        big_canvas_grid = updateGrid() 
-
-        for (let i =0; i<numRows; i++){
-            for (let j =0; j<numCols; j++){
-                var x = j * pixel_size
-                var y = i * pixel_size
-                if (big_canvas_grid[i][j] ==1){
-                        ctx.fillStyle = 'rgba(0,0,0,.06)'
-                        ctx.fillRect(x, y , pixel_size, pixel_size);
-                }
-            }
-        }
-
-	requestAnimationFrame(main);
-
-
-    }
-    canvas.addEventListener("mousemove", mouseMove, false);
-    main()
-
-</script>
-
-</html>
+/* Keyframes for continuous horizontal scroll */
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+</style>

@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Daniel Palacios Portfolio</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@700&family=Balthazar&family=Share+Tech&family=Source+Serif+Pro:wght@600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@700&family=Share+Tech&family=Source+Serif+Pro:wght@600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cousine&family=Cutive+Mono&family=IBM+Plex+Mono:ital,wght@1,700&family=Share+Tech+Mono&display=swap" rel="stylesheet"> 
+  <link href="https://fonts.googleapis.com/css2?family=Acme&family=Asap:ital,wght@1,700&display=swap" rel="stylesheet">  
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+    integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  <title>Daniel Palacios Portfolio</title>
+  <meta charset="utf-8"  name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" >
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <style>
+    html {
+
+scroll-behavior: smooth;
+
+}
+body{
+  background-color: rgb(255, 255, 255);
+}
+
+.jumbotron{
+  background-color: rgba(197, 187, 187, 0.377);
+}
+
+  .affix {
+    top: 0;
+    width: 100%;
+  }
+  .affix + .container-fluid {
+    padding-top: 10px;
+  }
+
+  .container-fluid {
+    height: 94vh;
+}
+.containers {
+  position: relative;
+  width: 100%;
+  height: 100vh; 
+  overflow: hidden;
+}
+
+#bgVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+
+  .headers{
+    background-size: cover;
+    text-align: center;
+    background-color: black;
+
+  }
+  body{
+    overflow-x: hidden;
+  }
+  .card{
+    background-color: rgba(247, 247, 247, 0.192);
+  }
+  h5{
+    font-family: 'Balthazar', serif;
+    font-size: 2.3em;
+    color: black;
+  }
+  h6{
+    font-family: 'Balthazar', serif;
+    font-size: 1.3em;
+    color: black;
+  }
+  
+  h7{
+    font-family: 'Balthazar', serif;
+    font-size: 1.3em;
+    
+  }
+  h1{
+    font-family: 'Alegreya SC', serif;
+  }
+  
+  h3{
+    font-family: 'Alegreya SC', serif;
+  }
+  p{
+    font-family: 'Balthazar', serif;
+    
+  }
+
+
+.nav-wrapper{
+  min-height: 150px;
+}
+
+
+  li{
+    font-size: 1.5em;
+    font-family: 'Balthazar', serif;
+    
+  }
+.navbar-brand{
+  font-size: 1.7em;
+}
+.card{
+  width: 100%;
+}
+
+  .card_background{
+width: 100%;
+    background-color: rgba(36, 37, 43, 0.089);
+
+  }
+
+  </style>
+
+<style>
+ul.myUL {
+  display: inline-block;
+  text-align: left;
+}
+
+.wrapper {
+  display: flex;  
+  flex-flow: row wrap;
+  font-weight: bold;
+  text-align: center; 
+}
+
+.wrapper > * {
+  padding: 50px;
+  flex: 1 100%;
+}
+
+.header {
+  background: tomato;
+}
+
+.footer {
+  background: lightgreen;
+}
+
+.main {
+  text-align: left;
+  background: skyblue
+}
+
+.aside-1 {
+  background: gold;
+}
+
+.aside-2 {
+  background: hotpink;
+}
+
+@media all and (min-width: 600px) {
+  .aside { flex: 1 0 0; }
+}
+
+@media all and (min-width: 800px) {
+  .main    { flex: 3 0px; }
+  .aside-1 { order: 1; } 
+  .main    { order: 2; }
+  .aside-2 { order: 3; }
+  .footer  { order: 4; }
+}
+
+#real-time-apps-bullet{
+   list-style-type: "⚡ "; 
+}
+#dashboards-bullet{
+   list-style-type: "📊 "; 
+}
+
+#data-govern-bullet{
+  list-style-type: "🔎 ";
+}
+#ai-pps-bullet{
+  list-style-type: "🤖 ";
+
+}
+.main_list {
+   margin: 50px 0;
+   margin-left: 100px;
+   font-size: 70px;
+   cursor: pointer;
+}
+
+#info_list-bullet{
+   list-style-type: "❌ "; 
+}
+
+#clean_list-bullet{
+   list-style-type: "✅ "; 
+}
+.info_list {
+   margin: 10px 0;
+   font-size: 28px;
+}
+
+.booking_list {
+   margin: 10px 0;
+   font-size: 28px;
+}
+</style>
+<style>
+
+  #map {
+    height: 100%;   
+    width: 100%;    
+     z-index: 0; 
+}
+</style>
+
+<style>
+.flex-container {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            /* outline: 1px solid black; */
+            padding: 30px;
+          display: flex;
+            flex-wrap: wrap;
+          margin-top: 20px;
+              justify-content: center;
+            align-items: center;
+        }
+
+  .flex-item {
+      outline: 1px solid black;
+      width: 500px;
+      height: 400px;
+      position: relative; 
+  }
+     .flex-item:hover a.fill-div {
+
+            opacity: 0.2;
+			 transform: scale(0.98);
+
+        }
+
+        .flex-item::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size:85px;
+            font-weight: bold;
+            color: rgb(36, 1, 119);
+            opacity: 0;
+            transition: opacity 1s ease;
+            pointer-events: none; 
+
+        }
+
+        .flex-item:hover::after {
+            content: "Join" ;
+            opacity: 1;
+
+        }
+
+
+  @media (max-width: 800px) {
+      .flex-container {
+          flex-direction: column;
+
+  
+      }
+        }
+
+      a.fill-div {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+            text-decoration: none;
+            color: black;
+            font-size: 20px;
+            font-weight: bold;
+            transition: opacity 0.8s ease;
+
+        }
+
+      .flex-item:hover a.fill-div {
+
+          opacity: 0.2;
+      transform: scale(0.98);
+
+        }
+#line-chart {
+  display: block;
+  width: 80%;
+}
+
+</style>
+
+
+<style>
+form {
+  padding       : 1em 2em;
+  }
+label {
+  display       : inline-block;
+  line-height   : 1.3em;
+  margin        : 1em .6em;
+  font-size     : .8em;
+  }
+input {
+  display       : block;
+  margin-bottom : .6em;
+  }
+
+</style>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+
+
+</head>
+<body>
+<div class="headers" >
+<header class="container-fluid" style="color:#fff;">
+<div class="containers">
+ <video style="width: 100%; height: 100%; object-fit: cover;" id="bgVideo" preload="auto" autoplay loop muted playsinline>
+  <source src="/portfolio/videos/WSGOL.mp4" type="video/mp4">
+</video>
+
+</div>
+</header>
+</div>
+<div class="nav-wrapper">
+<nav  class="navbar navbar-inverse"  style="z-index: 1; background-color: rgb(3, 43, 61);"  >
+  <div class="container-fluid-nav text-center py-0">
+    <a  onclick="scrollToView(this.id)" style="font-family: 'Balthazar'; cursor: pointer;" id="nav_about_me" class="navbar-brand">HOME</a>
+    <a onclick="scrollToView(this.id)" style=" cursor: pointer; font-family: 'Balthazar';"  class="navbar-brand" id="nav_technical_skills">SERVICES</a>
+    <a onclick="scrollToView(this.id)" class="navbar-brand" id="nav_experience"
+      style=" font-family: 'Balthazar';  cursor: pointer;">SHOWCASE</a>
+    <a onclick="scrollToView(this.id)" class="navbar-brand" id="nav_education" style="font-family: 'Balthazar';  cursor: pointer;">CASE STUDIES</a>
+    <a onclick="scrollToView(this.id)" class="navbar-brand" id="nav_portfolio" style="font-family: 'Balthazar';  cursor: pointer;">ABOUT</a>
+    <a onclick="scrollToView(this.id)" class="navbar-brand" id="nav_contact" style=" font-family: 'Balthazar';  cursor: pointer;">CONTACT</a>
+
+
+  </div>
+</nav>
+</div>
+
+
+  
+  <!-- <div class="jumbotron"  id="about_me">
+    <div class="d-flex justify-content-center" style="text-align: center;">
+      <h2 style="font-size: 3em; font-family: 'Alegreya SC', serif;">YOUR MESSY DATA TRANSFORMED INTO...</h2>
+    </div>
+    <br>
+    <br>
+    <div style="text-align: center; ">
+        <ul class="myUL"> 
+          <li>Real-Time Apps</li>
+          <li>Dashboards</li>
+          <li>Governed Data</li>
+          <li>AI Applications</li>
+        </ul>
+    </div>
+
+  </div> -->
+    <div class="wrapper">
+        <header class="header">
+            <h2 style="font-size: 3em; font-family: 'Alegreya SC', serif;">YOUR MESSY DATA TRANSFORMED INTO...</h2>
+        </header>
+        <article class="main" style="background-color: white;">
+          <div style="text-align: center; ">
+          <ul class="myUL"> 
+            <li class="main_list" id="real-time-apps-bullet">Real-Time Apps</li>
+            <li class="main_list" id="dashboards-bullet">Dashboards</li>
+            <li class="main_list" id="data-govern-bullet">Governed Data</li>
+            <li class="main_list" id="ai-pps-bullet">A.I Applications</li> 
+            <!-- <li class="main_list" id="real-time-apps-bullet">Real-Time Apps → Processs 50k+ events/day with zero downtime.</li>
+            <li class="main_list" id="dashboards-bullet">Dashboards → Spot trends and act on insights before they cost you money.</li>
+            <li class="main_list" id="data-govern-bullet">Governed Data → Save time knowing what & where your data is</li>
+            <li class="main_list" id="ai-pps-bullet">A.I Applications → Machines do the heavy lifting, you focus on decisions</li> -->
+        </ul>
+
+          <!-- <h1>⚡Real-Time Apps </h1>
+          <h1>📊  Dashboards </h1>
+          <h1>🔎Governed Data</h1>
+          <h1>🤖A.I Application</h1> -->
+          </div>
+        
+        <!-- <p style="cursor: pointer; color: black;"><b>…Click here to see how clean data enables faster, smarter apps and reports</b></p> -->
+        </article>
+        <aside class="aside aside-1">
+          <!-- <h1 style="font-size: 30px; ">Common Tools for Clean Data:</h1> -->
+          <br>
+          <div style="position: relative; width: 100%;">
+            <img style="width: 100%;" src="/portfolio/images/PowerBIlogo.png">
+          </div>
+          <div style="position: relative; width: 100%;">
+            <img style="width: 100%;" src="/portfolio/images/excel.png">
+          </div>
+          <div style="position: relative; width: 100%;">
+            <img style="width: 100%;" src="/portfolio/images/spark.png">
+          </div>
+        </aside>
+        <aside class="aside aside-2">
+          <!-- <h1 style="font-size: 30px; ">Path to Clean Data:</h1>
+          <h3 style="cursor: pointer;">Step 1 - Ingest</h3>
+           <ul style="cursor: pointer;" class="myUL"> 
+            <li class="info_list">Collect data into a single, accessible storage location</li>
+            <li class="info_list">Keep it raw, for traceability </li>
+        </ul>
+        <h3 style="cursor: pointer;">Step 2 - Transform & Validate</h3>
+           <ul style="cursor: pointer;" class="myUL"> 
+            <li class="info_list">Define and standardize formats</li>
+            <li class="info_list">Combine relevant datasets</li>
+            <li class="info_list">Validate for accuracy, consistency, and completeness</li>
+        </ul>
+      <h3 style="cursor: pointer;">Step 3 - Aggregate & Share</h3>
+        <ul style="cursor: pointer;" class="myUL"> 
+          <li class="info_list">Define business metrics</li>
+          <li class="info_list">Create insightful reports, dashboards, or applications</li>
+          <li class="info_list">Share reliable data across teams</li>
+      </ul> -->
+        </aside>
+        <!-- <footer class="footer">
+          <div style="position: relative; width: 100%;">
+          </div>
+
+        </footer> -->
+  </div>
+  <br>
+  <br>
+  <br>
+  
+ 
+
+     <div class="wrapper">
+        <header class="header">
+            <h2 style="font-size: 3em; font-family: 'Alegreya SC', serif;">ROAD MAP TO CLEAN DATA...</h2>
+        </header>
+        <article class="main" style="background-color: white;">
+            <img style="width: 100%; height: 100%;" src="/portfolio/images/BlackETL.png">
+        </article>
+        <aside  class="aside aside-1">
+          <h1 style="font-size: 50px; color: red; "><b>RAW DATA</b></h1>
+           <ul class="myUL"> 
+            <li class="info_list" id="info_list-bullet">Overwhelming</li>
+            <li class="info_list" id="info_list-bullet">Unreliable & Unstructured</li>
+            <li class="info_list" id="info_list-bullet">Duplicates Everywhere</li>
+            <li class="info_list" id="info_list-bullet">Incomplete & Messy</li>
+            <li class="info_list" id="info_list-bullet">Inconsistent Naming</li> 
+            <li class="info_list" id="info_list-bullet">Difficult to onboard</li>
+            <li class="info_list" id="info_list-bullet">Data is hard to find</li>
+        </ul>
+        </aside>
+        <aside class="aside aside-2">
+            <h1 style="font-size: 50px; color: #2f9e44 "><b>CLEAN DATA</b></h1>
+           <ul class="myUL"> 
+            <li class="info_list" id="clean_list-bullet">Accurate & Reliable</li>
+            <li class="info_list" id="clean_list-bullet">Consistent & Standardized</li>
+            <li class="info_list" id="clean_list-bullet">Clear Relationships</li> 
+            <li class="info_list" id="clean_list-bullet">Easy to Analyze</li>
+            <li class="info_list" id="clean_list-bullet">Noise-Free</li>
+            <li class="info_list" id="clean_list-bullet">Simple to train</li>
+            <li class="info_list" id="clean_list-bullet">Data is easy to find</li>
+        </ul>
+        </aside>
+  </div>
+  <br>
+<br>
+<br>
+  <div class="wrapper">
+      <header class="header">
+            <h2 style="font-size: 3em; font-family: 'Alegreya SC', serif;">WHAT CAN WE DO FOR YOU...</h2>
+
+        </header>
+     <article class="main" style="background-color: white;">
+      <div style="text-align: center;">
+          <h1 style="font-size: 50px; "><b>STRATEGIZE DATA BLUEPRINT</b></h1>
+          <ul class="myUL"> 
+            <li class="booking_list" id="clean_list-bullet">Map your current data → see what you have, what’s missing, and what’s messy.</li>
+            <li class="booking_list" id="clean_list-bullet">Transform & clean → standardize formats, fix errors, remove duplicates.</li>
+            <li class="booking_list" id="clean_list-bullet">Enable collaboration → share models with your team for review and validation.</li>
+        </ul>
+        </div>
+        </article>
+        <aside  class="aside aside-1" >
+          <h1 style="font-size: 50px; "><b>BOOK A CALL</b></h1>
+          <ul class="myUL"> 
+            <li class="booking_list" id="clean_list-bullet">No cost, no commitment — just answers.</li>
+            <li class="booking_list" id="clean_list-bullet">Pinpoint your biggest data pain points.</li>
+            <li class="booking_list" id="clean_list-bullet">Get tailored advice you can act on today.</li>
+            <li class="booking_list" id="clean_list-bullet">Walk away with a clear action plan.</li>
+        </ul>
+        </aside>
+        <aside class="aside aside-2">
+            <h1 style="font-size: 50px; "><b>DEPLOY</b></h1>
+
+           <ul class="myUL"> 
+             <li class="booking_list" id="clean_list-bullet">Validated & trustworthy data </li>
+            <li class="booking_list" id="clean_list-bullet">Easily shareable</li>
+            <li class="booking_list" id="clean_list-bullet">Supports reporting & dashboards </li>
+            <li class="booking_list" id="clean_list-bullet">Ready for apps & automation</li>
+        </ul>
+        </aside>
+</div>
+<br>
+<br>
+<br>
+
+     <div class="wrapper">
+        <header class="header">
+            <h2 style="font-size: 3em; font-family: 'Alegreya SC', serif;">APPLICATIONS</h2>
+        </header>
+      <div id="sessions" class="flex-container">
+        
+        <div class="flex-item" style="background-color: lightyellow;">
+          <a href="#" class="fill-div">
+          <video style="width: 100%; height: 100%; object-fit: fill;" id="bgVideo" preload="auto" autoplay loop muted playsinline>
+            <source src="/portfolio/videos/App1.mp4" type="video/mp4">
+          </video>
+        </a>
+        </div>
+        <div class="flex-item" style="background-color: lightyellow;">
+           <a href="#" class="fill-div">
+          <video style="width: 100%; height: 100%; object-fit: fill;" id="bgVideo" preload="auto" autoplay loop muted playsinline>
+            <source src="/portfolio/videos/App2.mp4" type="video/mp4">
+          </video>
+        </a>
+        </div>
+          <div class="flex-item" style="background-color: lightyellow;">
+           <a href="#" class="fill-div">
+          <video style="width: 100%; height: 100%; object-fit: fill;" id="bgVideo" preload="auto" autoplay loop muted playsinline>
+            <source src="/portfolio/videos/App3.mp4" type="video/mp4">
+          </video>
+        </a>
+        </div>
+        
+    </div>
+  </div>
+  <div class="wrapper">
+     <div style="display: flex; justify-content: center;">
+      <canvas id="line-chart"></canvas>
+    </div> 
+</div>
+<br>
+<br>
+<br>
+  <div class="wrapper">
+      <header class="header">
+            <h2 style="font-size: 3em; font-family: 'Alegreya SC', serif;">LET'S GET IN TOUCH</h2>
+        </header>
+     <article class="main" style="background-color: white;">
+        <div style="display: flex; flex-direction: column; align-items: center; padding: 3em 1em; background-color: #f9f9f9; border-radius: 12px; max-width: 600px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+          <h1 style="font-size: 2.5em; margin-bottom: 0.5em; text-align: center; color: #222;">BOOK A FREE CALL</h1>
+          <p style="margin-bottom: 2em; font-size: 1.1em; color: #555;">
+            Or email me directly at 
+            <a href="mailto:danieldario@palacios-solutions.com" style="color: #007BFF; text-decoration: none;">danieldario@palacios-solutions.com</a>
+          </p>
+        <form id="my-form" method="post" action="#" 
+              style="display: flex; flex-direction: column; width: 100%; gap: 1.5em; text-align: center;">
+          <label style="display: flex; flex-direction: column; font-size: 1.2em; color: #333;">
+            <span style="display: inline-flex; align-items: center;">Name <span style="color: red; margin-left: 2px;">*</span></span>
+            <input name="name" type="text" placeholder="Your name" required
+                  style="font-size: 1.2em; padding: 0.6em; width: 100%; max-width: 100%; border: 1px solid #ccc; border-radius: 6px;">
+          </label>
+          <label style="display: flex; flex-direction: column; font-size: 1.2em; color: #333;">
+            <span style="display: inline-flex; align-items: center;">Email <span style="color: red; margin-left: 2px;">*</span></span>
+            <input name="email" type="email" placeholder="Your email" required
+                  style="font-size: 1.2em; padding: 0.6em; width: 100%; max-width: 100%; border: 1px solid #ccc; border-radius: 6px;">
+          </label>
+
+           <label style="display: flex; flex-direction: column; font-size: 1.2em; color: #333;">
+            <span style="display: inline-flex; align-items: center;">Phone Number (optional)  <span style="color: red; margin-left: 2px;"></span></span>
+            <input name="phone" type="text" placeholder="Your phone number" required
+                  style="font-size: 1.2em; padding: 0.6em; width: 100%; max-width: 100%; border: 1px solid #ccc; border-radius: 6px;">
+          </label>
+          <label style="display: flex; flex-direction: column; font-size: 1.2em; color: #333;">
+            <span style="display: inline-flex; align-items: center;">Organization (optional)</span>
+            <input name="organization" type="text" placeholder="Your organization"
+                  style="font-size: 1.2em; padding: 0.6em; width: 100%; max-width: 100%; border: 1px solid #ccc; border-radius: 6px;">
+          </label>
+          <label style="display: flex; flex-direction: column; font-size: 1.2em; color: #333;">
+            <span style="display: inline-flex; align-items: center;">Date <span style="color: red; margin-left: 2px;">*</span></span>
+            <input name="inDate" type="date" required
+                  style="font-size: 1.2em; padding: 0.6em; width: 100%; max-width: 100%; border: 1px solid #ccc; border-radius: 6px;">
+          </label>
+
+          <label style="display: flex; flex-direction: column; font-size: 1.2em; color: #333;">
+            <span style="display: inline-flex; align-items: center;">Time (CENTRAL TIME) <span style="color: red; margin-left: 2px;">*</span></span>
+            <input name="inTime" type="time" required
+                  style="font-size: 1.2em; padding: 0.6em; width: 100%; max-width: 100%; border: 1px solid #ccc; border-radius: 6px;">
+          </label>
+
+          <textarea name="message" rows="8" placeholder="Your message here"
+                    style="font-size: 1.1em; padding: 0.6em; width: 100%; max-width: 100%; border: 1px solid #ccc; border-radius: 6px; resize: vertical;"></textarea>
+
+          <button type="submit" 
+                  style="padding: 0.8em 2em; font-size: 1.2em; background-color: #007BFF; color: #fff; border: none; border-radius: 6px; cursor: pointer; transition: background-color 0.2s;">
+            SEND
+          </button>
+</form>
+
+
+
+
+</div>
+  </article>
+<footer class="footer" style="padding: 3em 1em; background-color: #f1f1f1; text-align: center; border-top: 1px solid #ccc;">
+  <h2 style="margin: 0 0 0.5em 0; font-size: 1.8em; color: #222; font-family: 'Alegreya SC', serif;">
+    Palacios Solutions
+  </h2>
+  <p style="margin: 0 0 1em 0; font-size: 1.2em; color: #555;">
+    Follow or connect:
+  </p>
+  <a href="https://www.linkedin.com/in/palacios-solutions" target="_blank" 
+     style="color: #0077B5; font-size: 3em; margin: 0 0.5em; text-decoration: none;">
+    <i class="fab fa-linkedin"></i>
+  </a>
+  <a href="https://github.com/ddpalacios" target="_blank" 
+   style="color: #333; font-size: 3em; margin: 0 0.5em; text-decoration: none;">
+  <i class="fab fa-github"></i>
+</a>
+</footer>
+
+
+</div>
+
+<script>
+document.getElementById("my-form").addEventListener("submit", async function(event) {
+    event.preventDefault(); // Prevent the default form submission (page reload)
+
+    const date = this.elements["inDate"].value;
+    const phone = this.elements["phone"].value;
+    const email = this.elements["email"].value;
+    const time = this.elements["inTime"].value;
+    const message = this.elements["message"].value;
+    const name = this.elements["name"].value;
+    const org = this.elements["organization"].value;
+
+    const combined = new Date(`${date}T${time}`);
+
+    const options = {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "America/Chicago", 
+    };
+
+  const formattedDateTime = combined.toLocaleString("en-US", options);
+
+    const payload = {"values":[{
+                          date: formattedDateTime,
+                          message: message
+                          ,phone:phone
+                          ,email:email
+                          ,name: name
+                          ,org: org
+                      }
+              ]
+    };
+
+     var request = new Request('/blob-storage/set_appointment', {
+                                method: 'POST',
+                                headers: new Headers({
+                                            'Accept': 'application/json'
+                                        })
+			       ,body: JSON.stringify(payload)
+                    });
+      var response = await fetch(request);
+      this.elements["message"].value = ""
+      this.elements["name"].value = ""
+      this.elements["email"].value = ""
+      this.elements["phone"].value = ""
+      this.elements["organization"].value = ""
+      alert("Appointment Sent! We will reach out to you soon")
+
+ 
+});
+
+</script>
+
+<script>
+  const button = document.querySelector("button[type='submit']");
+  button.addEventListener("mouseover", () => button.style.backgroundColor = "#0056b3");
+  button.addEventListener("mouseout", () => button.style.backgroundColor = "#007BFF");
+</script>
+
+<script>
+    const 
+      myForm = document.querySelector('#my-form')
+    , dtStr  = document.querySelector('#date-time-Str')  
+    , localDt_now =_=>
+        {
+        let now = new Date()
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
+        now.setSeconds(0)       // remove seconds
+        now.setMilliseconds(0) // remove milliseconds
+        return now
+        }
+
+
+    myForm.inDate.valueAsDate = localDt_now()   // current date
+    myForm.inTime.valueAsDate = localDt_now()   // current time
+
+
+    const
+      fxD = // dates Formats
+        { ymd : Intl.DateTimeFormat( 0, { year: 'numeric', month: '2-digit', day: '2-digit' })
+        , hm  : Intl.DateTimeFormat( 0, { hour12: false, hour: '2-digit', minute: '2-digit' })
+        }
+    , fxD_parts = (d,fx) => fx.formatToParts(d).reduce((o,{type,value})=>(o[type]=value,o),{})
+      ;
+
+
+    const getLocalDt = dt => dt.setMinutes(dt.getMinutes() + dt.getTimezoneOffset())
+</script>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+
+<script>
+  var intervalID = null;
+  var chart = null;
+
+  const csvToChartData = csv => {
+  const lines = csv.trim().split('\n');
+  lines.shift(); // remove titles (first line)
+  return lines.map(line => {
+    const [date, temperature] = line.split(',');
+    return {
+      x: date,
+      y: temperature
+    }
+  });
+};
+
+  function displayTime() {
+      const now = new Date();
+      const formatted = now.getFullYear() + '-' +
+                  String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                  String(now.getDate()).padStart(2, '0') + ' ' +
+                  String(now.getHours()).padStart(2, '0') + ':' +
+                  String(now.getMinutes()).padStart(2, '0') + ':' +
+                  String(now.getSeconds()).padStart(2, '0')
+      console.log(formatted)
+      let randomInt = Math.floor(Math.random() * 10);
+
+      // const csv = `Time,Value
+      //             `+formatted+`,`+randomInt+``
+
+      chart.data.datasets[0].data.push({ x: formatted, y: randomInt }); 
+      chart.update(); 
+      // const ctx = document.querySelector("#line-chart").getContext('2d');
+      // const config = {
+      //   type: 'line',
+      //   data: {
+      //     labels: [],
+      //     datasets: [{
+      //       data: csvToChartData(csv),
+      //       label: "Value",
+      //       borderColor: "#3e95cd",
+      //       fill: false
+      //     }]
+      //   },
+      //   options: {
+      //     scales: {
+      //       xAxes: [{
+      //         type: 'time',
+      //         distribution: 'linear',
+      //       }],
+      //       title: {
+      //         display: false,
+      //       }
+      //     }
+      //   }
+      // };
+
+}
+  function main(){
+    if (intervalID !=null){
+      clearInterval(intervalID)
+    }
+
+    const now = new Date();
+      const formatted = now.getFullYear() + '-' +
+                  String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                  String(now.getDate()).padStart(2, '0') + ' ' +
+                  String(now.getHours()).padStart(2, '0') + ':' +
+                  String(now.getMinutes()).padStart(2, '0') + ':' +
+                  String(now.getSeconds()).padStart(2, '0')
+      console.log(formatted)
+      let randomInt = Math.floor(Math.random() * 10);
+
+      const csv = `Time,Value
+                  `+formatted+`,`+randomInt+``
+
+      const ctx = document.querySelector("#line-chart").getContext('2d');
+      const config = {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            data: csvToChartData(csv),
+            label: "Total Users On-Site",
+            borderColor: "#3e95cd",
+            fill: false
+          }]
+        },
+        options: {
+          scales: {
+            xAxes: [{
+              type: 'time',
+              distribution: 'linear',
+            }],
+            title: {
+              display: false,
+            }
+          }
+        }
+      };
+
+    chart = new Chart(ctx, config);
+    intervalID = setInterval(displayTime, 10000);
+  }
+  main()
+
+/*
+const csv = `Time,Temperature
+2020-02-15 18:37:39,-8.25
+2020-02-15 19:07:39,-8.08
+2020-02-15 19:37:39,-8.41
+2020-02-15 20:07:39,-8.2`;
+
+const csvToChartData = csv => {
+  const lines = csv.trim().split('\n');
+  lines.shift(); // remove titles (first line)
+  return lines.map(line => {
+    const [date, temperature] = line.split(',');
+    return {
+      x: date,
+      y: temperature
+    }
+  });
+};
+
+const ctx = document.querySelector("#line-chart").getContext('2d');
+const config = {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{
+      data: csvToChartData(csv),
+      label: "Temperature",
+      borderColor: "#3e95cd",
+      fill: false
+    }]
+  },
+  options: {
+    scales: {
+      xAxes: [{
+        type: 'time',
+        distribution: 'linear',
+      }],
+      title: {
+        display: false,
+      }
+    }
+  }
+};
+new Chart(ctx, config);
+*/
+
+</script>
+
+<script>
+
+
+$(document).ready(function(){
+    $(".navbar").affix({offset: {top: $("header").outerHeight(false)} });
+  });
+
+function scrollToView(id) {
+        if (id == "nav_about_me")
+          document.getElementById("about_me").scrollIntoView();
+
+
+        if (id == "nav_technical_skills")
+          document.getElementById("technical_skills").scrollIntoView();
+
+
+
+        if (id == "nav_experience")
+          document.getElementById("experience").scrollIntoView();
+
+
+        if (id == "nav_education")
+          document.getElementById("education").scrollIntoView();
+
+
+
+        if (id == "nav_portfolio")
+          document.getElementById("portfolio").scrollIntoView();
+
+
+
+        if (id == "nav_contact")
+          document.getElementById("contact").scrollIntoView();
+      }
+
+</script>
+
+</body>
+</html>
