@@ -790,15 +790,23 @@ justify-content: center;
   }
 
   }
-  
+
+  input::placeholder {
+  color: #ffffff;   /* your color */
+  opacity: 1;    /* some browsers default it faded */
+}
+    textarea::placeholder {
+  color: #ffffff;   /* your color */
+  opacity: 1;    /* some browsers default it faded */
+}
 </style>
 </head>
 <body>
 
 
 <div class="topnav" >
-  <h1 id="company_name"><span style="color: rgb(255, 255, 255);  height: 100%;">PALACIOS SOLUTIONS</span></h1>
-  <button class="buttons" id="lets_talk" href="#home" class="active">Let's Talk</button>
+  <h1 onclick="scrollToView(this.id)" id="company_name"><span style="color: rgb(255, 255, 255);  height: 100%;">PALACIOS SOLUTIONS</span></h1>
+  <button class="buttons" id="lets_talk" onclick="scrollToView(this.id)" >Let's Talk</button>
 </div>
 
 <div class="Intro" id="main_video_container">
@@ -916,8 +924,8 @@ justify-content: center;
   </p>
   </div>
 </div>
-<div style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
+<div  style="display: flex; align-items: center; justify-content: center;">
+  <div id="why_choose_us" class="main_section" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
     <div style=" text-align: center;">
 <h1 class="section_title" id="section1_maintitle" > WHAT SETS US APART</h1>
 
@@ -1091,15 +1099,15 @@ justify-content: center;
 </section>
 <div style="display: flex; align-items: center; justify-content: center;">
   <div style=" width: 100%;  border-radius: 20px; margin-top: 4%;">
-    <div class="submit_form" style="display: flex; justify-content: center;  text-align: center;">
+    <div id="formview" class="submit_form" style="display: flex; justify-content: center;  text-align: center;">
       <div class="form_1" style="background-color: rgba(0, 0, 0, 0.105); text-align: center; width: 50%; ">
-          <h1 class="footer_title" style="font-size: 4em; text-align: center; margin-top: 10%; color: white;">Begin Your Data Transformation Today</h1>
-          <h2 class="footer_subtitle" style=" font-size: 2em; color: white"><span style="color: red;">Book a call</span> and start your data transformation journey today.</h2>
+          <h1 class="footer_title" style="font-size: 3em; text-align: center; margin-top: 10%; color: white;">Your Path To Clean Data Starts Here</h1>
+          <h2 class="footer_subtitle" style=" font-size: 2em; color: white"><span style="color: rgb(255, 255, 255);">Book a <strong style="font-weight: 800; color: rgb(2, 196, 2);">free</strong> consulting call</span> </h2>
           <hr style="width: 50%;">
-          <h2  class="footer_subtitle" style=" font-size: 2em; color: white;">You will get a response within 1 business day. </h2>
+          <h2  class="footer_subtitle" style=" font-size: 2em; color: white;">Get a response within <span style="color: rgba(255, 0, 0, 0.768);">1 business day.</span> </h2>
       </div>
       <div class="form_1"  style="background-color: rgba(0, 0, 0, 0.105);  width: 50%; padding: 2%; display: flex; flex-direction: column; gap: 1rem;">
-        <form  method="post" action="#">
+         <form id="my-form" method="post" action="#" >
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
             <input  name="company_name" type="text" placeholder="Company Name"  style="font-size: 1.2em; padding: 0.6em; width: 100%; background-color: #043435; color: white;">
             <input name="company_email" type="email" placeholder="Company Email*" required  style="font-size: 1.2em; padding: 0.6em; width: 100%;  background-color: #043435; color: white;">
@@ -1107,8 +1115,8 @@ justify-content: center;
             <input name="last_name" type="text" placeholder="Last Name*" required style="font-size: 1.2em; padding: 0.6em; width: 100%;  background-color: #043435; color: white;">
             <input name="phone" type="text" placeholder="Phone Number*" required style="font-size: 1.2em; padding: 0.6em; width: 100%;  background-color: #043435; color: white;">
         </div>
-        <textarea name="project_details" rows="10" placeholder="Project details..." style="width: 100%; margin-top: 10px; padding: 0.6em; font-size: 1.2em;  background-color: #043435; color: white;"></textarea>
-        <button  type="submit" style="width: 100%;" id="send_button"  class="buttons">Send</button>
+        <textarea name="project_details" rows="10" placeholder="Provide any details we should know about your project..." style="width: 100%; margin-top: 10px; padding: 0.6em; font-size: 1.2em;  background-color: #043435; color: white;"></textarea>
+        <button  type="submit"  style="width: 100%;" id="send_button"  class="buttons">Send</button>
         </form>
       </div>
     </div>
@@ -1141,4 +1149,61 @@ justify-content: center;
 
 </footer>
 </body>
+<script>
+
+document.getElementById("my-form").addEventListener("submit", async function(event) {
+    event.preventDefault();
+    const company_name = this.elements["company_name"].value;
+    const company_email = this.elements["company_email"].value;
+    const first_name = this.elements["first_name"].value;
+    const last_name = this.elements["last_name"].value;
+    const phone = this.elements["phone"].value;
+    const project_details = this.elements["project_details"].value;
+    const payload = {"values":[{
+                          project_details: project_details
+                          ,submit_date: Date().toLocaleString()
+                          ,phone:phone
+                          ,company_email:company_email
+                          ,first_name: first_name
+                          ,last_name: last_name
+                          ,company_name: company_name
+                      }
+              ]
+    };
+    console.log(payload)
+     var request = new Request('/blob-storage/set_appointment', {
+                                method: 'POST',
+                                headers: new Headers({
+                                            'Accept': 'application/json'
+                                        })
+			       ,body: JSON.stringify(payload)
+                    });
+      var response = await fetch(request);
+      this.elements["company_name"].value = ""
+      this.elements["company_email"].value = ""
+      this.elements["first_name"].value = ""
+      this.elements["last_name"].value = ""
+      this.elements["phone"].value = ""
+      this.elements["project_details"].value = ""
+      alert("Request sent! A confirmation email will be sent out to you soon.")
+});
+
+
+
+
+</script>
+<script>
+
+function scrollToView(id) {
+        if (id == "company_name"){
+          document.getElementById("why_choose_us").scrollIntoView({ behavior: "smooth" });
+          
+        }
+        if (id == "lets_talk"){
+          document.getElementById("formview").scrollIntoView({ behavior: "smooth" });
+        }
+}
+</script>
+
+
 </html>

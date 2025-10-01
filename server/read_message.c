@@ -360,27 +360,50 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 		}else{
 			payload_length = 126;
 		}
-		// send_tcp_message(socket->cSSL,0x1, 0x1,nbytes, tcp_buf);
-		size_t total_sessions = 0;
-		struct Websocket* websockets =  get_websocket_session_by_name("chicago-transits", &total_sessions);
-		for (int i=0; i<total_sessions; i++){
-			struct Websocket ws = websockets[i];
-			for (int j=0; j<fd_count; j++){
-				struct Socket socket = sockets[j];
-				if (strcmp(socket.Id, ws.socketId) == 0){
-					send_websocket_message(sockets,socket, fd_count,payload_length, nbytes, tcp_buf);
+		printf("MESSAGE: %s\n",tcp_buf);
+		cJSON* root = cJSON_Parse(tcp_buf);
+		if (root !=NULL){
+			cJSON *value = cJSON_GetObjectItem(root, "client_type");
+			if (cJSON_IsString(value) && (value->valuestring != NULL) ) {
+				char* res = value->valuestring;
+				printf("CLIENT TYPE: %s\n", res);
+				if (strcmp(res,"email")==0){
+					socket->isEmail = 0x1;
+					socket->keep_alive = 0x1;
+				}else{
+					socket->keep_alive = 0x0;
 				}
+			}else{
+				printf("NO CLIENT TYPE\n");
+				socket->keep_alive = 0x0;
 			}
-		}
-		if (websockets != NULL){
-			free(websockets);
-			websockets = NULL;
+		cJSON_Delete(root);
+		}else{
+			printf("INVALID JSON\n");
+			socket->keep_alive = 0x0;
+
 		}
 		if (tcp_buf != NULL){
 			free(tcp_buf);
 			tcp_buf = NULL;
 		}
-		socket->keep_alive = 0x1;
+		// // send_tcp_message(socket->cSSL,0x1, 0x1,nbytes, tcp_buf);
+		// size_t total_sessions = 0;
+		// struct Websocket* websockets =  get_websocket_session_by_name("chicago-transits", &total_sessions);
+		// for (int i=0; i<total_sessions; i++){
+		// 	struct Websocket ws = websockets[i];
+		// 	for (int j=0; j<fd_count; j++){
+		// 		struct Socket socket = sockets[j];
+		// 		if (strcmp(socket.Id, ws.socketId) == 0){
+		// 			send_websocket_message(sockets,socket, fd_count,payload_length, nbytes, tcp_buf);
+		// 		}
+		// 	}
+		// }
+		// if (websockets != NULL){
+		// 	free(websockets);
+		// 	websockets = NULL;
+		// }
+		
 
 	}else if (buf != NULL && strstr(buf, "HTTP/1.1")!=NULL){
 			char* peeked_http_header = malloc(1024);
@@ -404,7 +427,7 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 				read_exact_bytes(socket->cSSL, content_length, body);
 				body[content_length] = '\0';
 			}
-			process_route(socket, http_header, body);
+			process_route(sockets, socket, http_header, body,fd_count);
 			if (peeked_http_header != NULL){
 				free(peeked_http_header);
 				peeked_http_header = NULL;

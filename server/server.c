@@ -70,6 +70,7 @@ struct Socket insert_file_descriptor(struct Socket *sockets[],struct pollfd *pfd
     (*sockets)[*fd_count].Id = strdup(socketId_hex);
     (*sockets)[*fd_count].keep_alive = 0x0;
     (*sockets)[*fd_count].is_listener = is_listener;
+    (*sockets)[*fd_count].isEmail = 0x0;
     (*sockets)[*fd_count].cSSL = cSSL;
     struct Socket socket = (*sockets)[*fd_count]; 
     (*fd_count)++;

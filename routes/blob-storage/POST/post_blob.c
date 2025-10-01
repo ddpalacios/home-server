@@ -1,12 +1,13 @@
 #include <openssl/ssl.h>
 #include "json_utilities.h"
 #include <string.h>
+#include "send_message.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include "http_utilities.h"
 #include "session.h"
 #include "Socket.h"
-void post_blob(struct Socket* socket,char* http_header, char*body, char* route){
+void post_blob(struct Socket *sockets,struct Socket* socket,char* http_header, char*body, char* route, int fd_count){
 	SSL* cSSL = socket->cSSL;
 	char path[2048];
 	char write_path[2048];
@@ -14,7 +15,12 @@ void post_blob(struct Socket* socket,char* http_header, char*body, char* route){
 	if (strstr(route, "/set_appointment")){
 		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/bronze_portfolio_appointments.json");
 		snprintf(path, sizeof(path),"../blob-storage/bronze_portfolio_appointments.json");
-
+		for (int i=0; i<fd_count; i++){
+			struct Socket target_socket = sockets[i];
+			if (target_socket.isEmail){
+				send_tcp_message(target_socket.cSSL,0x1, 0x1, strlen(body), body);
+			}
+		}
 	}else{
 		char* rt = get_query_parameter(route, "rt");
 		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/bronze_CTA_ctabustracker_%s_predictions.json", rt);

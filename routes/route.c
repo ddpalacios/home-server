@@ -41,7 +41,7 @@
 #include "life-of-sounds/GET/get_user.h"
 #include "life-of-sounds/GET/login.h"
 
-void process_route(struct Socket *socket,char* http_header, char* body){
+void process_route(struct Socket *sockets,struct Socket *socket,char* http_header, char* body, int fd_count){
 	SSL *cSSL =  socket->cSSL;
 	char* route_start = strchr(http_header, ' ');	
 	route_start++;
@@ -239,7 +239,7 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/blob-storage/")!=NULL){
 		get_blob_storage_files(socket,http_header,body, route);
 	}else if (strcmp(request_type, "POST")==0 && strstr(route, "/blob-storage/")!=NULL){
-		post_blob(socket,http_header,body, route);
+		post_blob(sockets,socket,http_header,body, route,fd_count);
 	}else{
 		send_response_code(cSSL, 404);
 	}
