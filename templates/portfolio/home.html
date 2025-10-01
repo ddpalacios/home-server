@@ -13,16 +13,28 @@
   * {
 box-sizing: border-box;
 }
-      body {
-      margin: 0;
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+    margin: 0;
        overflow-x: hidden;
       font-family: Arial, Helvetica, sans-serif;
-      background-image: url('/portfolio/images/blue.png');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      background-attachment: fixed;
-        }
+  background: linear-gradient(
+    360deg,
+    rgba(0, 0, 0, 1) 43%,
+    rgba(2, 42, 44, 1) 76%,
+    rgba(17, 115, 107, 1) 100%
+  );
+  background-attachment: fixed; 
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+
+    
     
 </style>
 
@@ -76,15 +88,30 @@ box-sizing: border-box;
 }
 
 .topnav {
-  overflow: hidden;
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 5;
-  background-color: #00000077; 
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background: linear-gradient(
+    20deg,
+    rgba(0, 0, 0, 0.45),
+    rgba(26, 106, 120, 0.45),
+    rgba(0, 136, 136, 0.45),
+    rgba(0, 0, 0, 0.45)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5em 1em;
 }
+
+
+
 @media screen and (max-width: 1050px) {
   .topnav{
     text-align: center;
+    justify-content: center;
   /* background-color: #01000ede;  */
 
 
@@ -93,6 +120,8 @@ box-sizing: border-box;
     width: 85%;
     margin-top: 10px;
     margin-bottom: 20px;
+    margin-left: 50px;
+
   }
   #company_name{
     width: 100%; 
@@ -423,33 +452,42 @@ justify-content: center;
 .case_study_container{
   display: flex;
   justify-content: center;
+  padding: 2%;
   flex-wrap: wrap; 
   gap: 2rem; 
-  margin-top: 2%;
 }
 .case_study_cards{
   position: relative;
   cursor: pointer;
-  background-color: #61616131;
+  background-color: #ededed9c;
+  box-shadow: 10px 10px 18px  rgba(0, 0, 0, 0.516);
   padding: 2rem; 
-  margin-top: 2%;
   border-radius: 10px; 
-  max-width: 500px;
+  max-width: 450px;
 }
 
 
 .case_study_card_title{
-   font-size: 30px; 
-   color: white;
+   font-size: 35px; 
+   margin: 0;
+   color: black;
+   text-align: center;
+  font-weight: 800; 
+  background: linear-gradient(20deg, #000000, #1a6a78, #088, #000000);
+    -webkit-background-clip: text; 
+    -webkit-text-fill-color: transparent; 
+    margin-bottom: 2rem; 
+    letter-spacing: -0.5px;
 
 }
 .case_study_paragraph{
-  color: white;
+  color: black;
   font-size: 20px;
+  text-align: center;
 }
 
 .case_study_cards:hover{
-    transform: scale(1.1);
+    transform: scale(1.2);
      z-index: 5;              /* put overlay above card background */
 
 
@@ -467,7 +505,6 @@ justify-content: center;
 }
 
 .case_study_cards:hover::after {
-    opacity: 0.8; 
     pointer-events: none;
 }
 
@@ -543,6 +580,11 @@ justify-content: center;
 <style>
   #send_button{
     font-size: 20px;
+    margin-top: 10px;
+    background-color: #043435;
+    color: white;
+
+    
   }
 
   #send_button:hover {
@@ -560,13 +602,7 @@ justify-content: center;
     .main{
       outline: 1px solid black;
     }
-    .main_body{
-      display: grid; 
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.5em; 
-      width: 85%;
-      margin: 0 auto;
-    }
+
     .body_cards{
       background-color: white;
       cursor: pointer;
@@ -581,8 +617,9 @@ justify-content: center;
      z-index: 1;              /* put overlay above card background */
 }
   .subitem {
-  color: #dd5050;
-  font-size: 1.1rem;
+  color: #8e0000;
+  font-weight: 500;
+  font-size: 1.3rem;
   padding: 1%;
   font-weight: 600;
 }
@@ -614,16 +651,112 @@ justify-content: center;
   font-weight: bold;
 }
 
+</style>
 
 
-    
+<style>
+.section_title {
+  text-align: center;
+  font-size: 3rem;
+  font-weight: 800;
+  background: linear-gradient(
+    90deg,
+    #00555f,   /* darker teal on the left */
+    #0f7a91,   /* middle toned-down teal */
+    #02293d,   /* deep navy before black */
+    #000000    /* right edge black */
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 2rem;
+  letter-spacing: -0.5px;
+}
+
+    .section_subtitle{
+    text-align: center;
+    font-size: 3rem; 
+    font-weight: 800; 
+    margin-bottom: 1rem; 
+    letter-spacing: 0.5px;
+
+
+  }
+
+  #section1_maintitle {
+  margin: 0;
+  margin-top: 40px;       
+}
+
+#section1_subtitle {
+  margin: 0;
+  padding: 2%;
+
+}
+
+  .main_body{
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5em; 
+  }
+@media (max-width: 1250px) {
+  .quote{
+    text-align: justify; 
+    padding: 10% !important;
+  }
+  .quote_from{
+    font-size: 1.8em !important;
+    padding: 5% !important;
+
+  }
+  .testimonial_section{
+    margin-top: 15% !important;
+
+  }
+  .section_footer_paragraph{
+    text-align: justify !important;
+    padding: 7%;
+  }
+  .main_section{
+    width: 100% !important;
+  }
+  .subitem{
+    text-align: justify !important;
+
+
+  }
+  .body_cards{
+     margin-left: 10px;
+  }
+  .section1_list{
+    font-size: 20px !important;
+    padding: 5%;
+  }
+  #section1_maintitle {
+    font-size: 40px !important;
+    padding: 2rem 1rem; 
+  }
+  #section1_subtitle {
+    font-size: 30px !important;
+    text-align: justify !important; 
+    padding: 1rem; 
+    width: 90% !important;
+    margin: 0 auto; 
+  }
+  .main_body {
+    grid-template-columns: 1fr;
+    width: 95%;
+    padding: 5% !important;
+  }
+
+  }
+  
 </style>
 </head>
 <body>
 
 
 <div class="topnav" >
-  <h1 id="company_name"><span style="color: rgb(255, 255, 255);">PALACIOS SOLUTIONS</span></h1>
+  <h1 id="company_name"><span style="color: rgb(255, 255, 255);  height: 100%;">PALACIOS SOLUTIONS</span></h1>
   <button class="buttons" id="lets_talk" href="#home" class="active">Let's Talk</button>
 </div>
 
@@ -632,14 +765,56 @@ justify-content: center;
     <source src="/portfolio/videos/WSGOL.mp4" type="video/mp4">
   </video>
 </div>
+<div style="display: flex; align-items: center; justify-content: center;">
+  <div class="main_section" style="background-color: white; width: 80%;  border-radius: 20px;">
+    <div style=" text-align: center;">
+      <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">WHERE IS YOUR <span style="color: #dd5050;">DATA</span> TODAY?</h1>
+      <div style="display: flex; justify-content: center;">  
+        <h3 class="section_subtitle" id="section1_subtitle" style="width: 50%;  font-size: 32px; font-weight: 400;">
+              <span style="color: #dd5050;">Pinpoint</span> where your data is today and discover how to move it to the next stage.
+          </h3>
+      </div>
+    </div>
+    <div class="main_body" style="padding: 3%;">
+      <div class="body_cards" style="background-color: rgba(205, 128, 50, 0.342)" >
+        <img style=" width: 40%; border-radius: 20px; cursor: pointer;" src="/portfolio/images/bronze.png">
+        <h1>BRONZE</h1>
+        <ul class="section1_list" style="list-style: none; padding: 0; margin: 0; text-align: center; color: #000000; line-height: 1.3; font-size: 25px;">
+          <li>Not organized</li>
+          <li>Unstructured & scattered</li>
+          <li>Hard to search or connect</li>
+          <br>
+          <li style="font-weight: 800;">First step:<span style="color: #1e7c01; font-weight: 800;"> Locate & Organize</span> </li>
+        </ul>
+        <h3 class="subitem">Question: How long would it take your team to find a critical file if you weren't here?</h3>
+      </div>
+    <div class="body_cards" style=" background-color: rgba(192, 192, 192, 0.407)">
+      <img style=" width: 40%; border-radius: 20px; cursor: pointer;" src="/portfolio/images/silver.png">
+      <h1 >SILVER</h1>
+      <ul style="list-style: none; padding: 0; margin: 0; text-align: center; color: #000000; line-height: 1.3; font-size: 25px;">
+        <li>Data is standardized and reliable</li>
+        <li>Relationships are clear and usable</li>
+        <li>Teams can work from the same source</li>
+        <br>
+        <li style="font-weight: 800;">Second step: <span style="color: #1e7c01; font-weight: 800;">Combine & Standardize</span></li>
 
-
-<div style="padding: 2em; background: #fafafa;  text-align: center;">
-  <h1 style="text-align: center;">WHERE IS YOUR <span style="color: #5091DD;">DATA</span> TODAY?</h1>
-  <h3 style="font-size: 22px; font-weight: 400; margin-top: 10px;">
-      <span style="color: #dd5050;">Pinpoint</span> where your data is today and discover how to move it to the next stage.
-    </h3>
-  <div class="main_body">
+      </ul>
+        <h3 class="subitem">Question: Can anyone in your team confidently use this data to make decisions without asking you?</h3>
+    </div>
+    <div class="body_cards" style=" background-color: rgba(255, 217, 0, 0.228);">
+      <img style=" width: 40%; border-radius: 20px; cursor: pointer;" src="/portfolio/images/gold.png">
+      <h1 >GOLD</h1>
+      <ul style="list-style: none; padding: 0; margin: 0; text-align: center; color: #000000; line-height: 1.3; font-size: 25px;">
+        <li>ETL, dashboards, and cloud workflows</li>
+        <li>Instant reporting & advanced analytics</li>
+        <li>Future-ready and built to grow</li>
+        <br>
+        <li style="font-weight: 800;">Final step:<span style="color: #1e7c01; font-weight: 800;"> Build, Share & Deploy</span></li>
+      </ul>
+        <h3 class="subitem">Question: Can your team make data-driven decisions instantly without manual intervention?</h3>
+    </div>
+  </div>
+   <!-- <div class="main_body" style="padding: 3%;">
     <div class="body_cards" style="background-color: rgba(205, 128, 50, 0.342)" >
       <img style=" width: 40%; border-radius: 20px; cursor: pointer;" src="/portfolio/images/bronze.png">
       <h1 >BRONZE</h1>
@@ -680,324 +855,279 @@ justify-content: center;
         <h3 class="subitem">Ex: Predictive analytics, governed data, standardized data pipelines</h3>
         <h3 class="subitem">Question: Can your team make data-driven decisions instantly without manual intervention?</h3>
     </div>
+    </div> -->
+  </div>
+</div>
+<div style="display: flex; align-items: center; justify-content: center;">
+  <div class="main_section" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
+    <div style=" text-align: center;">
+      <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">HOW WE WORK</h1>
+    </div>
+  <div class="case_study_container">
+      <div class="case_study_cards" style="background-color: #edededd2; box-shadow: 0px 3px 9px  rgba(0, 0, 0, 0.429);">
+        <h3 style="color: rgb(0, 152, 0); text-align: center;" class="case_study_card_title">Free Discovery Call</h3>
+        <p style="color: black;" class="case_study_paragraph">No cost, no commitment - just answers.</p>
+        <p style="color: black;" class="case_study_paragraph">Pinpoint your biggest data pain points.</p>
+        <p style="color: black;" class="case_study_paragraph">Get tailored advice you can act on today.</p>
+        <p style="color: black;" class="case_study_paragraph">Walk away with a clear action plan.</p>
+      </div>
+    <div class="case_study_cards" style="background-color: #edededd2; box-shadow: 0px 3px 9px  rgba(0, 0, 0, 0.429);">
+          <h3 class="case_study_card_title" style="color: blue; text-align: center;">Blueprint Your Data</h3>
+          <p style="color: black;"  class="case_study_paragraph">Turn messy files into a clear structure.</p>
+          <p style="color: black;"  class="case_study_paragraph">Standardize, clean, and connect everything.</p>
+          <p style="color: black;"  class="case_study_paragraph">Make data easy to access and ready to use.</p>
+          <p style="color: black;"  class="case_study_paragraph">Build a foundation your whole team can trust.</p>
+          <p style="color: black;" class="case_study_paragraph">Work in short, focused phases - so you see progress fast without waiting months.</p>
+    </div>
+    <div class="case_study_cards" style="background-color: #edededd2; box-shadow: 0px 3px 9px  rgba(0, 0, 0, 0.429);">
+      <h3 style="color: red;  text-align: center;" class="case_study_card_title">Build & Launch</h3>
+      <p style="color: black;"  class="case_study_paragraph">Get reliable, decision-ready data.</p>
+      <p style="color: black;"  class="case_study_paragraph">Share insights seamlessly with your team.</p>
+      <p style="color: black;"  class="case_study_paragraph">Scale with confidence - no rebuilding required.</p>
+      <p style="color: black;"  class="case_study_paragraph">Smooth handoff so your team can own it.</p>
+    </div>
   </div>
   <section class="testimonial_section" style="margin-top: 2%;">
-  <div class="scroll-container">
-    <div class="scroll-content">
-      <div class="logos">
-        <img src="/portfolio/images/spark.png" />
-        <img src="/portfolio/images/PowerBIlogo.png" />
-        <img src="/portfolio/images/Tableau.png" />
-        <img src="/portfolio/images/azure.png" />
-        <img src="/portfolio/images/excel.png" />
-        <img src="/portfolio/images/sql.png" />
-      </div>
-      <div class="logos">
-        <img src="/portfolio/images/spark.png" />
-        <img src="/portfolio/images/PowerBIlogo.png" />
-        <img src="/portfolio/images/Tableau.png" />
-        <img src="/portfolio/images/azure.png" />
-        <img src="/portfolio/images/excel.png" />
-        <img src="/portfolio/images/sql.png" />
+    <div class="scroll-container">
+      <div class="scroll-content">
+        <div class="logos">
+          <img src="/portfolio/images/spark.png" />
+          <img src="/portfolio/images/PowerBIlogo.png" />
+          <img src="/portfolio/images/Tableau.png" />
+          <img src="/portfolio/images/azure.png" />
+          <img src="/portfolio/images/excel.png" />
+          <img src="/portfolio/images/sql.png" />
+        </div>
+        <div class="logos">
+          <img src="/portfolio/images/spark.png" />
+          <img src="/portfolio/images/PowerBIlogo.png" />
+          <img src="/portfolio/images/Tableau.png" />
+          <img src="/portfolio/images/azure.png" />
+          <img src="/portfolio/images/excel.png" />
+          <img src="/portfolio/images/sql.png" />
+        </div>
       </div>
     </div>
-  </div>
   </section>
-    <p style="color: rgb(0, 0, 0); margin-top: 1.2rem; font-size: 25px;">
-      Tools vary depending on your current setup - from <span style="color: rgb(2, 222, 2);">Excel</span> 
+  <p class="section_footer_paragraph" style=" text-align: center; color: rgb(0, 0, 0); margin-top: 1.2rem; font-size: 25px; font-weight: 550;">
+      Tools vary depending on your current setup - from <span style="color: rgba(0, 147, 27, 0.498);">Excel</span> 
       for simple datasets to <span style="color: orange;">Spark</span> and 
       <span style="color: #5091DD;">cloud pipelines</span> or larger workflows. 
-      <br>
-      We tailor to your needs with no extra cost or set up.
-    </p>
-  <div style="padding: 1em; text-align: center;">
-  <hr style="width: 50%; margin-bottom: 4%;">
-
-  <h1 style="color: black;">HOW WE WORK</h1>
-  <div class="case_study_container">
-    <div class="case_study_cards2" style="background-color: #edededd2; box-shadow: 0px 3px 9px  rgba(0, 0, 0, 0.429);">
-      <h3 style="color: rgb(0, 152, 0);" class="case_study_card_title">Free Discovery Call</h3>
-      <p  style="color: black;" class="case_study_paragraph">
-        No cost, no commitment - just answers.
-      </p>
-      <p style="color: black;" class="case_study_paragraph">
-        Pinpoint your biggest data pain points.
-      </p>
-      <p style="color: black;" class="case_study_paragraph">
-        Get tailored advice you can act on today.
-      </p>
-      <p style="color: black;" class="case_study_paragraph">
-        Walk away with a clear action plan.
-      </p>
-    </div>
-      <div class="case_study_cards2" style="background-color: #edededd2; box-shadow: 0px 3px 9px  rgba(0, 0, 0, 0.429);">
-      <h3 class="case_study_card_title" style="color: blue;">Blueprint Your Data</h3>
-
-      <p style="color: black;"  class="case_study_paragraph">
-        Turn messy files into a clear structure.
-      </p>
-      <p style="color: black;"  class="case_study_paragraph">
-    Standardize, clean, and connect everything.
-      </p>
-      <p style="color: black;"  class="case_study_paragraph">
-      Make data easy to access and ready to use.
-      </p>
-      <p style="color: black;"  class="case_study_paragraph">
-      Build a foundation your whole team can trust.
-      </p>
-      <p style="color: black;" class="case_study_paragraph">
-        Work in short, focused phases - so you see progress fast without waiting months.
-      </p>
-    </div>
-      <div class="case_study_cards2" style="background-color: #edededd2; box-shadow: 0px 3px 9px  rgba(0, 0, 0, 0.429);">
-      <h3 style="color: red;" class="case_study_card_title">Build & Launch</h3>
-      <p style="color: black;"  class="case_study_paragraph">
-        Get reliable, decision-ready data.
-        </p>
-      <p style="color: black;"  class="case_study_paragraph">
-        Share insights seamlessly with your team.
-        </p>
-      <p style="color: black;"  class="case_study_paragraph">
-      Scale with confidence - no rebuilding required.
-        </p>
-        <p style="color: black;"  class="case_study_paragraph">
-          Smooth handoff so your team can own it.
-        </p>
-        
-    </div>
+      <br>We tailor to your needs with no extra cost or set up.
+  </p>
   </div>
-  </div>
-
-
-
 </div>
 
-<div style="padding: 1em; text-align: center; margin-top: 2%; ">
-  <h1 style="color: white;">WHY CHOOSE US</h1>
+<div style="display: flex; align-items: center; justify-content: center;">
+  <div class="main_section" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
+    <div style=" text-align: center;">
+<h1 class="section_title" id="section1_maintitle" > WHAT SETS US APART</h1>
 
-  <div style="display: flex; justify-content: center;">
-  <div id="why_choose_us" style="text-align: center; width: 50%;  " >
-      <h2 style="color: rgba(255, 255, 255, 0.898); font-weight: 800;">
-          Data problems can't wait. Forget waiting days for a Microsoft engineer or wasting time on endless planning & expensive hiring. 
-          We deliver hands-on mentoring and tailored data engineering solutions-fast, focused, and built around your needs.
-    </h2>
+
+      <div style="display: flex; justify-content: center;">
+        <h3 class="section_subtitle" id="section1_subtitle" 
+            style="width: 50%; font-size: 25px; font-weight: 400;">
+         Data problems can't wait. 
+          Stopwaiting days for a Microsoft engineer or  
+         burning time on endless planning and costly hires.  
+          We providehands-on mentoring and  
+         tailored data engineering solutions -  
+         fast,focused and  
+         built around your needs.
+        </h3>
+      </div>
+    </div>
+      <div class="case_study_container">
+        <div class="case_study_cards" >
+          <h3 class="case_study_card_title">Speed That Matches Your Deadlines</h3>
+          <p class="case_study_paragraph">We deliver work in structured sprints, focusing on incremental development that produces real business value quickly and reliably.</p>
+        </div>
+      <div class="case_study_cards">
+        <h3 class="case_study_card_title">From Chaos to Clarity in Your Data</h3>
+        <p class="case_study_paragraph">
+          We design a blueprint of your data while also keeping track on what each table means,
+          their dimensions, who owns it, how often it's updated, and the changes that occured to it. 
+          That way, there is full transparency between you and your data
+        </p>
+      </div>
+      <div class="case_study_cards" >
+        <h3 class="case_study_card_title">Support That Doesn't Vanish After Delivery</h3>
+        <p class="case_study_paragraph">Mon-Friday support for new data pipelines, engineering tasks, and ongoing maintenance - focused on keeping your data reliable.</p>
+      </div>
+      <div class="case_study_cards" >
+        <h3 class="case_study_card_title">Hands-On Mentoring for Actionable Power BI Dashboards</h3>
+        <p class="case_study_paragraph">Learn to build real-time dashboards and reports for your department with 1-on-1 Power BI mentoring-speeding up your day-to-day work.</p>
+      </div>
+      <div class="case_study_cards" >
+        <h3 class="case_study_card_title">Proven Expertise, Backed by 5+ Years in the Field</h3>
+        <p class="case_study_paragraph">
+            With over five years of experience building pipelines, optimizing reports, and transforming scattered data into reliable systems, 
+            we bring practical, battle-tested solutions-not theory.
+        </p>
+      </div>
+      <div class="case_study_cards" >
+        <h3 class="case_study_card_title">Proven Expertise, Backed by 5+ Years in the Field</h3>
+        <p class="case_study_paragraph">
+            With over five years of experience building pipelines, optimizing reports, and transforming scattered data into reliable systems, 
+            we bring practical, battle-tested solutions-not theory.
+          </p>
+      </div>
+      <div class="case_study_cards" >
+        <h3 class="case_study_card_title">No AI Without Solid Data Engineering</h3>
+        <p class="case_study_paragraph">
+          Everyone wants AI but want to skip the steps to get there. Without proper data engineering, AI can't succeed. 
+          We set up the foundation so predictive modeling works as intended.
+        </p>
+      </div>
     </div>
   </div>
 </div>
 
-
+<div style="display: flex; align-items: center; justify-content: center;">
+  <div class="main_section" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
+    <div style=" text-align: center;">
+      <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">DELIVERING IMPACT ACROSS TEAMS</h1>
+      <div style="display: flex; justify-content: center;">
+        <h3 class="section_subtitle" id="section1_subtitle" style="width: 50%;  font-size: 25px; font-weight: 400;">
+          We've helped departments and clients turn scattered data into reliable insights, with automated pipelines and clear reporting.
+          Our work spans internal teams and external collaborators alike.
+        </h3>
+      </div>
+    </div>
     <div class="case_study_container">
-    <div class="case_study_cards" style=" background-color: #61616145; " >
-      <h3 style="color: white;" class="case_study_card_title">Speed That Matches Your Deadlines</h3>
-     <p  style="color: white;" class="case_study_paragraph">
-            We deliver work in structured sprints, focusing on incremental development that produces real business value quickly and reliably.
-    </p>
-    </div>
-     <div class="case_study_cards" style=" background-color: #61616145; "  >
-      <h3 style="color: white;" class="case_study_card_title">From Chaos to Clarity in Your Data</h3>
-      <p style="color: white;" class="case_study_paragraph">
-        We design a blueprint of your data while also keeping track on what each table means,
-         their dimensions, who owns it, how often it's updated, and the changes that occured to it. 
-         That way, there is full transparency between you and your data
-
-      </p>
-
-    </div>
-     <div class="case_study_cards" style=" background-color: #61616145; " >
-      <h3 style="color: white;" class="case_study_card_title">Support That Doesn't Vanish After Delivery</h3>
-    <p style="color: white;" class="case_study_paragraph">
-        Mon-Friday support for new data pipelines, engineering tasks, and ongoing maintenance - focused on keeping your data reliable.
-    </p>
-
-    </div>
-    <div class="case_study_cards" style=" background-color: #61616145; " >
-      <h3 style="color: white;" class="case_study_card_title">Hands-On Mentoring for Actionable Power BI Dashboards</h3>
-    <p style="color: white;" class="case_study_paragraph">
-      Learn to build real-time dashboards and reports for your department with 1-on-1 Power BI mentoring-speeding up your day-to-day work.
-    </p>
-
-
-    </div>
-    <div class="case_study_cards" style=" background-color: #61616145; " >
-      <h3 style="color: white;" class="case_study_card_title">Proven Expertise, Backed by 5+ Years in the Field</h3>
-     <p style="color: white;" class="case_study_paragraph">
-          With over five years of experience building pipelines, optimizing reports, and transforming scattered data into reliable systems, 
-          we bring practical, battle-tested solutions-not theory.
-    </p>
-    </div>
-
-
-    <div class="case_study_cards" style=" background-color: #61616145; " >
-      <h3 style="color: white;" class="case_study_card_title">No AI Without Solid Data Engineering</h3>
-     <p style="color: white;" class="case_study_paragraph">
-         Everyone wants AI but want to skip the steps to get there. Without proper data engineering, AI can't succeed. 
-         We set up the foundation so predictive modeling works as intended.
-      </p>
-    </div>
-  </div>
-
-
-<div style="text-align: center; margin-top: 5%;">
-  <h1  style=" padding: 20px; color: white;">DELIVERING IMPACT ACROSS TEAMS</h1>
-  <div style="display: flex; justify-content: center;">
-  <div id="why_choose_us" style="text-align: center; width: 50%;  " >
-      <h2  style="padding: 20px; color: rgba(255, 255, 255, 0.898); font-weight: 800;">
-         We've helped departments and clients turn scattered data into reliable insights, 
-         with automated pipelines and clear reporting. 
-         Our work spans internal teams and external collaborators alike.
-    </h2>
-    </div>
-  </div>
-</h2>
-  <div class="case_study_container">
-    <div class="case_study_cards" style="background-color: #61616145;" >
-      <h3 style="color: white;" class="case_study_card_title">Small Retail Shop</h3>
-     <p style="color: white;" class="case_study_paragraph">
-    The client was managing <span class="problem_text">scattered Excel files & Word-Docs</span> with <span class="problem_text">no real structure</span>.  
-    We organized their data into <span class="solution_text">clean, standardized tables</span>, making it easy to generate <span class="solution_text">reports and dashboards</span>.  
-    They can now track <span class="solution_text">sales, inventory, and customer behavior</span> efficiently.
-</p>
-
-    </div>
-     <div class="case_study_cards">
-      <h3 class="case_study_card_title">Marketing Team</h3>
-      <p class="case_study_paragraph">
-    The marketing team relied on <span class="problem_text">multiple social media data sources</span>,  
-    making it <span class="problem_text">difficult to see the full picture</span>.  
-    We pulled and combined all sources into a <span class="solution_text">single, unified location</span>,  
-    allowing the team to easily view <span class="solution_text">trends and correlations across platforms</span>.
-</p>
-
-    </div>
+      <div class="case_study_cards" >
+        <h3 class="case_study_card_title">Small Non-Profit Orginization</h3>
+        <p class="case_study_paragraph">
+            The client was managing <span class="problem_text">scattered Excel files & Word-Docs</span> with <span class="problem_text">no real structure</span>.  
+            We organized their data into <span class="solution_text">clean, standardized tables</span>, making it easy to generate <span class="solution_text">reports and dashboards</span>.  
+            They can now track <span class="solution_text">sales, inventory, and customer behavior</span> efficiently.
+        </p>
+      </div>
+      <div class="case_study_cards">
+        <h3 class="case_study_card_title">Marketing Team</h3>
+        <p class="case_study_paragraph">
+            The marketing team relied on <span class="problem_text">multiple social media data sources</span>,  
+            making it <span class="problem_text">difficult to see the full picture</span>.  
+            We pulled and combined all sources into a <span class="solution_text">single, unified location</span>,  
+            allowing the team to easily view <span class="solution_text">trends and correlations across platforms</span>.
+        </p>
+      </div>
      <div class="case_study_cards">
       <h3 class="case_study_card_title">Finance Department</h3>
-    <p class="case_study_paragraph">
-    The finance department needed a better way to track <span class="problem_text">employee utilization and billable hours</span> across multiple departments.  
-    We created <span class="solution_text">consolidated Power BI datasets</span>, providing <span class="solution_text">clear, real-time insights</span> into <span class="solution_text">team performance and resource allocation</span>.
-</p>
-
-    </div>
+      <p class="case_study_paragraph">
+        The finance department needed a better way to track <span class="problem_text">employee utilization and billable hours</span> across multiple departments.  
+        We created <span class="solution_text">consolidated Power BI datasets</span>, providing <span class="solution_text">clear, real-time insights</span> into <span class="solution_text">team performance and resource allocation</span>.
+      </p>
+     </div>
     <div class="case_study_cards">
       <h3 class="case_study_card_title">Help-Desk</h3>
-     <p class="case_study_paragraph">
-    The department manages both <span class="problem_text">internal and external ticketing</span>, with a <span class="problem_text">data model spanning over 100 tables</span>.  
-    Users previously spent <span class="problem_text">hours just to gain insight from a single ticket</span>.  
-    We built <span class="solution_text">automated pipelines</span> that consolidated all transformations, reducing the model to <span class="solution_text">5 tables</span>.  
-    This created a <span class="solution_text">single source of truth</span>, enabling <span class="solution_text">multiple new reports and actionable insights</span> across ticketing.
-</p>
-
-
+      <p class="case_study_paragraph">
+        The department manages both <span class="problem_text">internal and external ticketing</span>, with a <span class="problem_text">data model spanning over 100 tables</span>.  
+        Users previously spent <span class="problem_text">hours just to gain insight from a single ticket</span>.  
+        We built <span class="solution_text">automated pipelines</span> that consolidated all transformations, reducing the model to <span class="solution_text">5 tables</span>.  
+        This created a <span class="solution_text">single source of truth</span>, enabling <span class="solution_text">multiple new reports and actionable insights</span> across ticketing.
+      </p>
+      </div>
+      <div class="case_study_cards">
+        <h3 class="case_study_card_title">Sales Team</h3>
+          <p class="case_study_paragraph">
+            The sales team relied on <span class="problem_text">quotas from their reps</span>
+            , including metrics like <span class="problem_text">calls made</span>
+            , <span class="problem_text">videos created</span>
+            , <span class="problem_text">emails sent</span>
+            , and <span class="problem_text">first appointments booked</span>.
+            These metrics directly affected <span class="problem_text">bonuses</span> 
+            and tracked each rep's performance on the team. Existing <spa">Power BI aggregations</span> 
+            were often <span class="problem_text">inaccurate</span>,
+              leading to <span class="problem_text">discrepancies</span>.
+            We transitioned these calculations into
+            <span class="solution_text" >automated SQL scripts</span>, 
+            enabling <span class="solution_text" >precise, reliable tracking</span> 
+            and creating a <span class="solution_text" >staged system</span> 
+            for <span class="solution_text" >consistent, dependable reporting</span>.
+          </p>
+      </div>
+      <div class="case_study_cards">
+        <h3 class="case_study_card_title">Internal Team</h3>
+        <p class="case_study_paragraph">
+          The internal team initially relied on <span class="problem_text">Power BI</span> to perform all <span class="problem_text">data transformations</span>, which made models <span class="problem_text">heavy and slow</span>.  
+          We transitioned their workflows to an <span class="solution_text">Azure cloud environment</span>, creating a <span class="solution_text">data lake</span> and the first version of a <span class="solution_text">data definitions table</span>.  
+          With transformations handled in the cloud, <span class="solution_text">Power BI models</span> became <span class="solution_text">lighter, faster, and easier to maintain</span>, giving the team a <span class="solution_text">scalable and reliable reporting solution</span>.
+        </p>
+      </div>
     </div>
-    <div class="case_study_cards">
-      <h3 class="case_study_card_title">Sales Team</h3>
-     <p class="case_study_paragraph">
-      The sales team relied on <span class="problem_text">quotas from their reps</span>
-      , including metrics like <span class="problem_text">calls made</span>
-      , <span class="problem_text">videos created</span>
-      , <span class="problem_text">emails sent</span>
-      , and <span class="problem_text">first appointments booked</span>.
-       These metrics directly affected <span class="problem_text">bonuses</span> 
-       and tracked each rep's performance on the team. Existing <spa">Power BI aggregations</span> 
-       were often <span class="problem_text">inaccurate</span>,
-        leading to <span class="problem_text">discrepancies</span>.
-      We transitioned these calculations into
-       <span class="solution_text" >automated SQL scripts</span>, 
-       enabling <span class="solution_text" >precise, reliable tracking</span> 
-       and creating a <span class="solution_text" >staged system</span> 
-       for <span class="solution_text" >consistent, dependable reporting</span>.
-    </p>
-
-
-      <!-- <p  class="case_study_paragraph">
-       The sales team relied on quotas from their reps, 
-       including metrics like calls made, videos created, emails sent, and first appointments booked. 
-        These metrics directly affected bonuses and tracked each rep's performance on the team. 
-        Existing Power BI aggregations were often inaccurate, leading to discrepancies. 
-        We transitioned these calculations into automated SQL scripts, enabling precise, 
-        reliable tracking and creating a staged system for consistent, dependable reporting </p> -->
-
-    </div>
-
-
-    <div class="case_study_cards">
-      <h3 class="case_study_card_title">Internal Team</h3>
-     <p class="case_study_paragraph">
-    The internal team initially relied on <span class="problem_text">Power BI</span> to perform all <span class="problem_text">data transformations</span>, which made models <span class="problem_text">heavy and slow</span>.  
-    We transitioned their workflows to an <span class="solution_text">Azure cloud environment</span>, creating a <span class="solution_text">data lake</span> and the first version of a <span class="solution_text">data definitions table</span>.  
-    With transformations handled in the cloud, <span class="solution_text">Power BI models</span> became <span class="solution_text">lighter, faster, and easier to maintain</span>, giving the team a <span class="solution_text">scalable and reliable reporting solution</span>.
-</p>
-
-    </div>
+    <section class="testimonial_section" >
+      <div class="scroll-container">
+        <div class="scroll-content">
+          <div class="logos">
+            <img src="/portfolio/images/dynamics365.png" />
+            <img src="/portfolio/images/hubspot.png" />
+            <img src="/portfolio/images/salesloft.png" />
+            <img src="/portfolio/images/snowflake.png" />
+            <img src="/portfolio/images/sharepoint.png" />
+            <img src="/portfolio/images/graphapi.png" />
+            <img src="/portfolio/images/msft.png" />
+            <img src="/portfolio/images/dialpad.png" />
+            <img src="/portfolio/images/halopsa.png" />
+            <img src="/portfolio/images/airtable.png" />
+            <img src="/portfolio/images/surveymonkey.png" />
+            <img src="/portfolio/images/ceojuice.png" />
+          </div>
+          <div class="logos">
+            <img src="/portfolio/images/dynamics365.png" />
+            <img src="/portfolio/images/hubspot.png" />
+            <img src="/portfolio/images/salesloft.png" />
+            <img src="/portfolio/images/snowflake.png" />
+            <img src="/portfolio/images/sharepoint.png" />
+            <img src="/portfolio/images/graphapi.png" />
+            <img src="/portfolio/images/msft.png" />
+            <img src="/portfolio/images/dialpad.png" />
+            <img src="/portfolio/images/halopsa.png" />
+            <img src="/portfolio/images/airtable.png" />
+            <img src="/portfolio/images/surveymonkey.png" />
+            <img src="/portfolio/images/ceojuice.png" />
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
-  <section class="testimonial_section" style="margin-top: 1%; text-align: center; padding: 3rem 1rem; background-color: #00000085; color: white;">
-  <blockquote style="font-size: 1.5rem; font-style: italic; max-width: 800px; margin: 0 auto; line-height: 1.6;">
+</div>
+
+<section class="testimonial_section" style="margin-top: 2%; text-align: center; padding: 3rem 1rem; color: white; background-color: #04343522; border-radius: 5px; padding: 2%;"  >
+  <blockquote class="quote" style="padding: 2%; font-size: 2.1rem; font-style: italic; max-width: 800px; margin: 0 auto; line-height: 1.6; text-align: justify; ">
     "Daniel excels at <span style="color: #dd5050;">end-to-end data architecture</span> - handling everything from extraction and storage to transformation, loading, and visualization in Microsoft Fabric and Power BI."
   </blockquote>
-  <p style="margin-top: 1rem; font-size: 1.3rem; color: #5aa1f2;">
+  <p class="quote_from"  style="margin-top: 1rem; font-size: 1.8em; color: #5aa1f2;">
     - Alex Servlosky, Data Engineer
   </p>
 </section>
-<div style="text-align: center; margin-bottom: 1%; ">
-<section class="testimonial_section" >
-  <div class="scroll-container">
-    <div class="scroll-content">
-      <div class="logos">
-        <img src="/portfolio/images/dynamics365.png" />
-        <img src="/portfolio/images/hubspot.png" />
-        <img src="/portfolio/images/salesloft.png" />
-        <img src="/portfolio/images/snowflake.png" />
-        <img src="/portfolio/images/sharepoint.png" />
-        <img src="/portfolio/images/graphapi.png" />
-        <img src="/portfolio/images/msft.png" />
-        <img src="/portfolio/images/dialpad.png" />
-        <img src="/portfolio/images/halopsa.png" />
-        <img src="/portfolio/images/airtable.png" />
-        <img src="/portfolio/images/surveymonkey.png" />
-        <img src="/portfolio/images/ceojuice.png" />
+
+<div style="display: flex; align-items: center; justify-content: center;">
+  <div style=" width: 100%;  border-radius: 20px; margin-top: 4%;">
+    <div class="submit_form" style="display: flex; justify-content: center;  text-align: center;">
+      <div class="form_1" style="background-color: rgba(0, 0, 0, 0.105); text-align: center; width: 50%; ">
+          <h1 style="font-size: 50px; text-align: center; margin-top: 10%; color: white;">Ready to clean your data?</h1>
+          <h2 style="color: white"><span style="color: red;">Book a call</span> and start your data transformation journey today.</h2>
+          <hr style="width: 50%;">
+          <h2 style="color: white;">You will get a response within 1 business day. </h2>
       </div>
-      <div class="logos">
-        <img src="/portfolio/images/dynamics365.png" />
-        <img src="/portfolio/images/hubspot.png" />
-        <img src="/portfolio/images/salesloft.png" />
-        <img src="/portfolio/images/snowflake.png" />
-        <img src="/portfolio/images/sharepoint.png" />
-        <img src="/portfolio/images/graphapi.png" />
-        <img src="/portfolio/images/msft.png" />
-        <img src="/portfolio/images/dialpad.png" />
-        <img src="/portfolio/images/halopsa.png" />
-        <img src="/portfolio/images/airtable.png" />
-        <img src="/portfolio/images/surveymonkey.png" />
-        <img src="/portfolio/images/ceojuice.png" />
+      <div class="form_1"  style="background-color: rgba(0, 0, 0, 0.105);  width: 50%; padding: 2%; display: flex; flex-direction: column; gap: 1rem;">
+        <form  method="post" action="#">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+            <input  name="company_name" type="text" placeholder="Company Name"  style="font-size: 1.2em; padding: 0.6em; width: 100%; background-color: #043435; color: white;">
+            <input name="company_email" type="email" placeholder="Company Email*" required  style="font-size: 1.2em; padding: 0.6em; width: 100%;  background-color: #043435; color: white;">
+            <input name="first_name" type="text" placeholder="First Name*" required style="font-size: 1.2em; padding: 0.6em; width: 100%;   background-color: #043435; color: white;">
+            <input name="last_name" type="text" placeholder="Last Name*" required style="font-size: 1.2em; padding: 0.6em; width: 100%;  background-color: #043435; color: white;">
+            <input name="phone" type="text" placeholder="Phone Number*" required style="font-size: 1.2em; padding: 0.6em; width: 100%;  background-color: #043435; color: white;">
+        </div>
+        <textarea name="project_details" rows="10" placeholder="Project details..." style="width: 100%; margin-top: 10px; padding: 0.6em; font-size: 1.2em;  background-color: #043435; color: white;"></textarea>
+        <button  type="submit" style="width: 100%;" id="send_button"  class="buttons">Send</button>
+        </form>
       </div>
     </div>
   </div>
-  </section>
 </div>
 
-</div>
-
-
-<div class="submit_form" style="display: flex; justify-content: center;  text-align: center;">
-  <div class="form_1" style="background-color: rgba(255, 255, 255, 0.986); text-align: center; width: 50%; ">
-      <h1 style="font-size: 50px; text-align: center; margin-top: 10%;">Ready to clean your data?</h1>
-      <h2 style="color: rgb(0, 0, 0);"><span style="color: red;">Book a call</span> and start your data transformation journey today.</h2>
-      <hr style="width: 50%;">
-      <h2>You will get a response within 1 business day. </h2>
-  </div>
-  <div class="form_1"  style="background-color: rgba(255, 255, 255, 0.986); width: 50%; padding: 2%; display: flex; flex-direction: column; gap: 1rem;">
-    <form  method="post" action="#">
-    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
-        <input name="company_name" type="text" placeholder="Company Name"  style="font-size: 1.2em; padding: 0.6em; width: 100%;">
-        <input name="company_email" type="email" placeholder="Company Email*" required  style="font-size: 1.2em; padding: 0.6em; width: 100%;">
-        <input name="first_name" type="text" placeholder="First Name*" required style="font-size: 1.2em; padding: 0.6em; width: 100%;">
-        <input name="last_name" type="text" placeholder="Last Name*" required style="font-size: 1.2em; padding: 0.6em; width: 100%;">
-        <input name="phone" type="text" placeholder="Phone Number*" required style="font-size: 1.2em; padding: 0.6em; width: 100%;">
-    </div>
-    <textarea name="project_details" rows="10" placeholder="Project details..." style="width: 100%; margin-top: 10px; padding: 0.6em; font-size: 1.2em;"></textarea>
-    <button type="submit" style="width: 100%;" id="send_button"  class="buttons">Send</button>
-    </form>
-  </div>
-</div>
 <footer class="footer" style="padding: 3em 1em; background-color: rgb(1, 1, 1); text-align: center; margin-top: 1px;">
 
   <h2 style="margin: 0 0 0.5em 0; font-size: 1.8em; color: #ffffff; font-family: 'Alegreya SC', serif;">
@@ -1024,308 +1154,5 @@ justify-content: center;
   </a>
 
 </footer>
-
-
-
-<!-- <div style="text-align: center;"  >
-    <div style=" width: 100%;">
-      <h1 class="workload_title" style="color: white; font-size: 45px;">
-        WHERE IS YOUR <span style="color: #5091DD;">DATA</span> TODAY?
-      </h1>
-      <h3 style="color: white; font-size: 22px; font-weight: 400; margin-top: 10px;">
-          <span style="color: #dd5050;">Pinpoint</span> where your data is today and discover how to move it to the next stage.
-      </h3>
-    </div>
-    <div style="text-align: center;" class="Workload" >
-      <div class="work_info" style="text-align: center; width: 100%; display: flex; justify-content: center; align-items: center; background-color: #1c1d7083; ">
-        <div class="work_steps" style=" width: 100%; height: auto;  display: flex; justify-content: center;">
-          <div style=" justify-content: center;  text-align:   center; display: flex; align-items: center;  width: auto;">
-            <img style=" width: 40%; border-radius: 20px; cursor: pointer;" src="/portfolio/images/bronze.png">
-          </div>
-          <div id="work_step1" style="text-align: center;  display: flex; align-items: center; justify-content: center;   width: 50%;" >
-            <h1 class="workload_title" style="color: white; font-size: 45px; ">BRONZE</h1>
-          </div>
-        </div>
-        <div style=" padding: 1%; width: 100%;  display: flex; justify-content: center; align-items: center;  background-color: #00013059;">
-         <div class="features">
-            <div class="silver_items">
-              <h2>Unstructured & scattered</h2>
-              <h3 class="silver_subitem">Word, Excel, CSVs, PDFs</h3>
-            </div>
-            <div class="silver_items">
-              <h2>Not organized</h2>
-              <h3 class="silver_subitem">Hard to search or connect</h3>
-            </div>
-            <div class="silver_items">
-              <h2><span style="color: #dd5050;">First step:</span> locate your data</h2>
-              <h3 class="silver_subitem">See what exists today</h3>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div style="text-align: center;" class="Workload" >
-      <div class="work_info" style="text-align: center; width: 100%; display: flex; justify-content: center; align-items: center; background-color: #1c1d7083; ">
-        <div class="work_steps" style=" width: 100%; height: auto;  display: flex; justify-content: center;">
-          <div style=" justify-content: center;  text-align:   center; display: flex; align-items: center;  width: auto;">
-            <img style=" width: 40%; border-radius: 20px; cursor: pointer;" src="/portfolio/images/silver.png">
-          </div>
-          <div id="work_step1" style="text-align: center;  display: flex; align-items: center; justify-content: center;   width: 50%;" >
-            <h1 class="workload_title" style="color: white; font-size: 45px; ">SILVER</h1>
-          </div>
-        </div>
-        <div style="  padding: 1%; width: 100%;  display: flex; justify-content: center; align-items: center;  background-color: #00013059;">
-       <div class="features">
-        <div class="silver_items">
-          <h2>Clean & consistent</h2>
-          <h3 class="silver_subitem">Data is standardized and reliable</h3>
-        </div>
-
-        <div class="silver_items">
-          <h2>Connected tables</h2>
-          <h3 class="silver_subitem">Relationships are clear and usable</h3>
-        </div>
-
-        <div class="silver_items">
-          <h2>Collaboration ready</h2>
-          <h3 class="silver_subitem">Teams can work from the same source</h3>
-        </div>
-      </div>
-
-
-       
-        </div>
-      </div>
-    </div>
-
-    <div style="text-align: center;" class="Workload" >
-      <div class="work_info" style="text-align: center; width: 100%; display: flex; justify-content: center; align-items: center; background-color: #1c1d7083; ">
-        <div class="work_steps" style=" width: 100%; height: auto;  display: flex; justify-content: center;">
-          <div style=" justify-content: center;  text-align:   center; display: flex; align-items: center;  width: auto;">
-            <img style=" width: 40%; border-radius: 20px; cursor: pointer;" src="/portfolio/images/gold.png">
-          </div>
-          <div id="work_step1" style="text-align: center;  display: flex; align-items: center; justify-content: center;   width: 50%;" >
-            <h1 class="workload_title" style="color: white; font-size: 45px; ">GOLD</h1>
-          </div>
-        </div>
-        <div style=" padding: 1%; width: 100%;  display: flex; justify-content: center; align-items: center; background-color: #00013059;">
-         <div class="features">
-          <div class="silver_items">
-            <h2>Automated pipelines</h2>
-            <h3 class="silver_subitem">ETL, dashboards, and cloud workflows</h3>
-          </div>
-
-          <div class="silver_items">
-            <h2>Accessible data</h2>
-            <h3 class="silver_subitem">Instant reporting & advanced analytics</h3>
-          </div>
-
-          <div class="silver_items">
-            <h2>Scalable systems</h2>
-            <h3 class="silver_subitem">Future-ready and built to grow</h3>
-          </div>
-        </div>
-
-        </div>
-      </div>
-    </div>
-</div>
-
-<div style="text-align: center; margin-top: 5%;">
-  <h1 style="color: white;">HOW WE WORK</h1>
-  <div class="case_study_container">
-    <div class="case_study_cards">
-      <h3 class="case_study_card_title">Free Discovery Call</h3>
-      <p  class="case_study_paragraph">
-        No cost, no commitment - just answers.
-      </p>
-      <p class="case_study_paragraph">
-        Pinpoint your biggest data pain points.
-      </p>
-      <p class="case_study_paragraph">
-        Get tailored advice you can act on today.
-      </p>
-      <p class="case_study_paragraph">
-        Walk away with a clear action plan.
-      </p>
-    </div>
-     <div class="case_study_cards">
-      <h3 class="case_study_card_title">Blueprint Your Data</h3>
-
-      <p  class="case_study_paragraph">
-        Turn messy files into a clear structure.
-      </p>
-      <p  class="case_study_paragraph">
-    Standardize, clean, and connect everything.
-      </p>
-      <p  class="case_study_paragraph">
-      Make data easy to access and ready to use.
-      </p>
-      <p  class="case_study_paragraph">
-      Build a foundation your whole team can trust.
-      </p>
-             <p  class="case_study_paragraph">
-       Work in short, focused phases - so you see progress fast without waiting months.
-      </p>
-    </div>
-     <div class="case_study_cards">
-      <h3 class="case_study_card_title">Build & Launch</h3>
-      <p  class="case_study_paragraph">
-       Get reliable, decision-ready data.
-       </p>
-      <p  class="case_study_paragraph">
-       Share insights seamlessly with your team.
-       </p>
-      <p  class="case_study_paragraph">
-      Scale with confidence - no rebuilding required.
-       </p>
-        <p  class="case_study_paragraph">
-         Smooth handoff so your team can own it.
-       </p>
-       
-    </div>
-  </div>
-</div>
-
-<div style="text-align: center; margin-top: 5%;">
-  <h1 style="color: white;">HOW WE'VE HELPED CLIENTS</h1>
-  <div class="case_study_container">
-    <div class="case_study_cards">
-      <h3 class="case_study_card_title">Small Retail Shop</h3>
-      <p  class="case_study_paragraph">
-        The client was managing scattered Excel files & Word-Docs with no real structure. 
-        We organized their data into clean, standardized tables, making it easy to generate reports and dashboards. 
-        They can now track sales, inventory, and customer behavior efficiently.
-      </p>
-    </div>
-     <div class="case_study_cards">
-      <h3 class="case_study_card_title">Marketing Team</h3>
-      <p  class="case_study_paragraph">
-        The marketing team relied on multiple social media data sources, 
-        making it difficult to see the full picture. 
-        We pulled and combined all sources into a single, 
-        unified location, allowing the team to easily view trends and correlations across platforms </p>
-    </div>
-     <div class="case_study_cards">
-      <h3 class="case_study_card_title">Finance Department</h3>
-      <p  class="case_study_paragraph">
-        The finance department needed a better way to track employee utilization and billable hours across multiple departments. 
-        We created consolidated Power BI datasets, providing clear, real-time insights into team performance and resource allocation</p>
-    </div>
-    <div class="case_study_cards">
-      <h3 class="case_study_card_title">Help-Desk</h3>
-      <p  class="case_study_paragraph">
-          The department manages both internal and external ticketing, with a data model spanning over 100 tables.
-          Users previously spent hours just to gain insight from a single ticket. 
-          We built automated pipelines that consolidated all transformations, reducing the model to 5 tables. 
-          This created a <span style="color: #dd5050;">single source of truth</span>, enabling multiple new reports and actionable insights across ticketing</p>
-
-    </div>
-    <div class="case_study_cards">
-      <h3 class="case_study_card_title">Sales Team</h3>
-      <p  class="case_study_paragraph">
-       The sales team relied on quotas from their reps, 
-       including metrics like calls made, videos created, emails sent, and first appointments booked. 
-        These metrics directly affected bonuses and tracked each rep's performance on the team. 
-        Existing Power BI aggregations were often inaccurate, leading to discrepancies. 
-        We transitioned these calculations into automated SQL scripts, enabling precise, 
-        reliable tracking and creating a staged system for consistent, dependable reporting </p>
-
-    </div>
-
-
-    <div class="case_study_cards">
-      <h3 class="case_study_card_title">Internal Team</h3>
-      <p  class="case_study_paragraph">
-          The internal team initially relied on Power BI to perform all data transformations, 
-          which made models heavy and slow. We transitioned their workflows to an Azure cloud environment,
-          creating a data lake and the first version of a data definitions table.
-          With transformations handled in the cloud, Power BI models became much lighter,
-          faster, and easier to maintain, giving the team a more scalable and reliable reporting solution. </p>
-    </div>
-  </div>
-</div>
-<section class="testimonial_section" style="margin-top: 8%; text-align: center; padding: 3rem 1rem; background-color: #00000053; color: white;">
-  <blockquote style="font-size: 1.5rem; font-style: italic; max-width: 800px; margin: 0 auto; line-height: 1.6;">
-    "Daniel excels at <span style="color: #dd5050;">end-to-end data architecture</span> - handling everything from extraction and storage to transformation, loading, and visualization in Microsoft Fabric and Power BI."
-  </blockquote>
-  <p style="margin-top: 1rem; font-size: 1.3rem; color: #5aa1f2;">
-    - Alex Servlosky, Data Engineer
-  </p>
-</section>
-
-
-<div style="text-align: center; margin-top: 5%; ">
-  <h1 style="color: white;">Data Sources We've Extracted</h1>
-<section class="testimonial_section" style="margin-top: 1%;">
-  <div class="scroll-container">
-    <div class="scroll-content">
-      <div class="logos">
-        <img src="/portfolio/images/dynamics365.png" />
-        <img src="/portfolio/images/hubspot.png" />
-        <img src="/portfolio/images/salesloft.png" />
-        <img src="/portfolio/images/snowflake.png" />
-        <img src="/portfolio/images/sharepoint.png" />
-        <img src="/portfolio/images/graphapi.png" />
-        <img src="/portfolio/images/msft.png" />
-        <img src="/portfolio/images/dialpad.png" />
-        <img src="/portfolio/images/halopsa.png" />
-        <img src="/portfolio/images/airtable.png" />
-        <img src="/portfolio/images/surveymonkey.png" />
-        <img src="/portfolio/images/ceojuice.png" />
-      </div>
-      <div class="logos">
-        <img src="/portfolio/images/dynamics365.png" />
-        <img src="/portfolio/images/hubspot.png" />
-        <img src="/portfolio/images/salesloft.png" />
-        <img src="/portfolio/images/snowflake.png" />
-        <img src="/portfolio/images/sharepoint.png" />
-        <img src="/portfolio/images/graphapi.png" />
-        <img src="/portfolio/images/msft.png" />
-        <img src="/portfolio/images/dialpad.png" />
-        <img src="/portfolio/images/halopsa.png" />
-        <img src="/portfolio/images/airtable.png" />
-        <img src="/portfolio/images/surveymonkey.png" />
-        <img src="/portfolio/images/ceojuice.png" />
-      </div>
-    </div>
-  </div>
-  </section>
-</div>
-<div style="text-align: center; margin-top: 5%;">
-  <h1 style="color: white;">Tools we use to transform your data</h1>
-<section class="testimonial_section" style="margin-top: 1%;">
-  <div class="scroll-container">
-    <div class="scroll-content">
-      <div class="logos">
-        <img src="/portfolio/images/spark.png" />
-        <img src="/portfolio/images/PowerBIlogo.png" />
-        <img src="/portfolio/images/Tableau.png" />
-        <img src="/portfolio/images/azure.png" />
-        <img src="/portfolio/images/excel.png" />
-        <img src="/portfolio/images/sql.png" />
-      </div>
-      <div class="logos">
-        <img src="/portfolio/images/spark.png" />
-        <img src="/portfolio/images/PowerBIlogo.png" />
-        <img src="/portfolio/images/Tableau.png" />
-        <img src="/portfolio/images/azure.png" />
-        <img src="/portfolio/images/excel.png" />
-        <img src="/portfolio/images/sql.png" />
-      </div>
-    </div>
-  </div>
-  </section>
-    <p style="color: white; margin-top: 1.2rem; font-size: 25px;">
-      Tools vary depending on your current setup - from <span style="color: rgb(2, 222, 2);">Excel</span> for simple datasets to <span style="color: orange;">Spark</span> and <span style="color: #5091DD;">cloud pipelines</span> or larger workflows.
-    </p>
-</div>
-
- -->
-
-
-
-    
 </body>
 </html>

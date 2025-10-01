@@ -83,6 +83,9 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/portfolio/images/")!=NULL){
 
+		if (strcmp(route,"/portfolio/images/green.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/green.png");
+		}
 		if (strcmp(route,"/portfolio/images/dynamics365.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/dynamics365.png");
 		}
