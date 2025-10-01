@@ -699,9 +699,50 @@ justify-content: center;
     gap: 1.5em; 
   }
 @media (max-width: 1250px) {
+      .submit_form {
+    flex-direction: column; /* stack the two halves */
+    padding: 3% !important;
+  }
+
+  .form_1 {
+    width: 100% !important; /* full width instead of 50% */
+  }
+
+  .form_1 form div {
+    grid-template-columns: 1fr !important; /* stack inputs */
+  }
+
+  .footer_title{
+    font-size: 3em !important;
+    
+  }
+  
+  .footer_subtitle{
+    text-align: center !important;
+    font-size: 2em !important;
+    padding: 6%;
+    max-width: 95%;
+    text-justify: inter-word;
+
+  }
+  .medallian_image{
+    max-width: 200px !important;
+  }
+  .body_cards{
+    background-color: inherit; 
+    transform: none;           
+  }
+  .case_study_cards:hover {
+     background-color: inherit;
+    transform: none;       
+  }
   .quote{
     text-align: justify; 
     padding: 10% !important;
+    text-justify: inter-word;
+    font-size: 1.5em !important;
+    max-width: 90%;  
+    margin: 0 auto;  
   }
   .quote_from{
     font-size: 1.8em !important;
@@ -777,7 +818,7 @@ justify-content: center;
     </div>
     <div class="main_body" style="padding: 3%;">
       <div class="body_cards" style="background-color: rgba(205, 128, 50, 0.342)" >
-        <img style=" width: 40%; border-radius: 20px; cursor: pointer;" src="/portfolio/images/bronze.png">
+        <img class="medallian_image" style="max-width: 250px; border-radius: 20px; cursor: pointer;" src="/portfolio/images/bronze.png">
         <h1>BRONZE</h1>
         <ul class="section1_list" style="list-style: none; padding: 0; margin: 0; text-align: center; color: #000000; line-height: 1.3; font-size: 25px;">
           <li>Not organized</li>
@@ -789,7 +830,7 @@ justify-content: center;
         <h3 class="subitem">Question: How long would it take your team to find a critical file if you weren't here?</h3>
       </div>
     <div class="body_cards" style=" background-color: rgba(192, 192, 192, 0.407)">
-      <img style=" width: 40%; border-radius: 20px; cursor: pointer;" src="/portfolio/images/silver.png">
+      <img class="medallian_image" style="max-width: 250px; border-radius: 20px; cursor: pointer;" src="/portfolio/images/silver.png">
       <h1 >SILVER</h1>
       <ul style="list-style: none; padding: 0; margin: 0; text-align: center; color: #000000; line-height: 1.3; font-size: 25px;">
         <li>Data is standardized and reliable</li>
@@ -802,7 +843,7 @@ justify-content: center;
         <h3 class="subitem">Question: Can anyone in your team confidently use this data to make decisions without asking you?</h3>
     </div>
     <div class="body_cards" style=" background-color: rgba(255, 217, 0, 0.228);">
-      <img style=" width: 40%; border-radius: 20px; cursor: pointer;" src="/portfolio/images/gold.png">
+      <img class="medallian_image" style="max-width: 250px; border-radius: 20px; cursor: pointer;" src="/portfolio/images/gold.png">
       <h1 >GOLD</h1>
       <ul style="list-style: none; padding: 0; margin: 0; text-align: center; color: #000000; line-height: 1.3; font-size: 25px;">
         <li>ETL, dashboards, and cloud workflows</li>
@@ -814,48 +855,6 @@ justify-content: center;
         <h3 class="subitem">Question: Can your team make data-driven decisions instantly without manual intervention?</h3>
     </div>
   </div>
-   <!-- <div class="main_body" style="padding: 3%;">
-    <div class="body_cards" style="background-color: rgba(205, 128, 50, 0.342)" >
-      <img style=" width: 40%; border-radius: 20px; cursor: pointer;" src="/portfolio/images/bronze.png">
-      <h1 >BRONZE</h1>
-      <ul style="list-style: none; padding: 0; margin: 0; text-align: center; color: #444; line-height: 1.3; font-size: 25px;">
-        <li>Not organized</li>
-        <li>Unstructured & scattered</li>
-        <li>Hard to search or connect</li>
-        <br>
-        <li><span style="color: #dd5050;">First step:</span> locate & organize your data</li>
-      </ul>
-        <h3 class="subitem">Ex: Word, Excel, CSVs, PDFs</h3>
-        <h3 class="subitem">Question: How long would it take your team to find a critical file if you weren't here?</h3>
-    </div>
-    <div class="body_cards" style=" background-color: rgba(192, 192, 192, 0.407)">
-      <img style=" width: 40%; border-radius: 20px; cursor: pointer;" src="/portfolio/images/silver.png">
-      <h1 >SILVER</h1>
-      <ul style="list-style: none; padding: 0; margin: 0; text-align: center; color: #444; line-height: 1.3; font-size: 25px;">
-        <li>Data is standardized and reliable</li>
-        <li>Relationships are clear and usable</li>
-        <li>Teams can work from the same source</li>
-        <br>
-        <li><span style="color: #dd5050;">Second step:</span> Combine & Standardize</li>
-
-      </ul>
-        <h3 class="subitem">Ex: SQL databases, cleaned spreadsheets, defined tables</h3>
-        <h3 class="subitem">Question: Can anyone in your team confidently use this data to make decisions without asking you?</h3>
-    </div>
-    <div class="body_cards" style=" background-color: rgba(255, 217, 0, 0.228);">
-      <img style=" width: 40%; border-radius: 20px; cursor: pointer;" src="/portfolio/images/gold.png">
-      <h1 >GOLD</h1>
-      <ul style="list-style: none; padding: 0; margin: 0; text-align: center; color: #444; line-height: 1.3; font-size: 25px;">
-        <li>ETL, dashboards, and cloud workflows</li>
-        <li>Instant reporting & advanced analytics</li>
-        <li>Future-ready and built to grow</li>
-        <br>
-        <li><span style="color: #dd5050;">Final step:</span> Build, Share & Depliy</li>
-      </ul>
-        <h3 class="subitem">Ex: Predictive analytics, governed data, standardized data pipelines</h3>
-        <h3 class="subitem">Question: Can your team make data-driven decisions instantly without manual intervention?</h3>
-    </div>
-    </div> -->
   </div>
 </div>
 <div style="display: flex; align-items: center; justify-content: center;">
@@ -917,7 +916,6 @@ justify-content: center;
   </p>
   </div>
 </div>
-
 <div style="display: flex; align-items: center; justify-content: center;">
   <div class="main_section" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
     <div style=" text-align: center;">
@@ -974,7 +972,6 @@ justify-content: center;
     </div>
   </div>
 </div>
-
 <div style="display: flex; align-items: center; justify-content: center;">
   <div class="main_section" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
     <div style=" text-align: center;">
@@ -1084,24 +1081,22 @@ justify-content: center;
     </section>
   </div>
 </div>
-
 <section class="testimonial_section" style="margin-top: 2%; text-align: center; padding: 3rem 1rem; color: white; background-color: #04343522; border-radius: 5px; padding: 2%;"  >
-  <blockquote class="quote" style="padding: 2%; font-size: 2.1rem; font-style: italic; max-width: 800px; margin: 0 auto; line-height: 1.6; text-align: justify; ">
+  <blockquote class="quote" style=" font-size: 2.5rem; font-style: italic; max-width: 900px; margin: 0 auto; line-height: 1.6; text-align: justify; ">
     "Daniel excels at <span style="color: #dd5050;">end-to-end data architecture</span> - handling everything from extraction and storage to transformation, loading, and visualization in Microsoft Fabric and Power BI."
   </blockquote>
-  <p class="quote_from"  style="margin-top: 1rem; font-size: 1.8em; color: #5aa1f2;">
+  <p class="quote_from"  style="margin-top: 1.3rem; font-size: 1.8em; color: #5aa1f2;">
     - Alex Servlosky, Data Engineer
   </p>
 </section>
-
 <div style="display: flex; align-items: center; justify-content: center;">
   <div style=" width: 100%;  border-radius: 20px; margin-top: 4%;">
     <div class="submit_form" style="display: flex; justify-content: center;  text-align: center;">
       <div class="form_1" style="background-color: rgba(0, 0, 0, 0.105); text-align: center; width: 50%; ">
-          <h1 style="font-size: 50px; text-align: center; margin-top: 10%; color: white;">Ready to clean your data?</h1>
-          <h2 style="color: white"><span style="color: red;">Book a call</span> and start your data transformation journey today.</h2>
+          <h1 class="footer_title" style="font-size: 4em; text-align: center; margin-top: 10%; color: white;">Begin Your Data Transformation Today</h1>
+          <h2 class="footer_subtitle" style=" font-size: 2em; color: white"><span style="color: red;">Book a call</span> and start your data transformation journey today.</h2>
           <hr style="width: 50%;">
-          <h2 style="color: white;">You will get a response within 1 business day. </h2>
+          <h2  class="footer_subtitle" style=" font-size: 2em; color: white;">You will get a response within 1 business day. </h2>
       </div>
       <div class="form_1"  style="background-color: rgba(0, 0, 0, 0.105);  width: 50%; padding: 2%; display: flex; flex-direction: column; gap: 1rem;">
         <form  method="post" action="#">
@@ -1119,7 +1114,6 @@ justify-content: center;
     </div>
   </div>
 </div>
-
 <footer class="footer" style="padding: 3em 1em; background-color: rgb(1, 1, 1); text-align: center; margin-top: 1px;">
 
   <h2 style="margin: 0 0 0.5em 0; font-size: 1.8em; color: #ffffff; font-family: 'Alegreya SC', serif;">
