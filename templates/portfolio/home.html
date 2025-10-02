@@ -448,6 +448,7 @@ justify-content: center;
 </style>
 
 <style>
+  
 
 .case_study_container{
   display: flex;
@@ -484,6 +485,23 @@ justify-content: center;
   color: black;
   font-size: 20px;
   text-align: center;
+}
+.case_study_cards.bronze, .case_study_cards.silver, .case_study_cards.gold{
+  cursor: default;
+  padding: 1em;
+}
+
+.case_study_cards.bronze:hover {
+  background-color: inherit;
+  transform: none;
+}
+.case_study_cards.silver:hover {
+  background-color: inherit;
+  transform: none;
+}
+.case_study_cards.gold:hover {
+  background-color: inherit;
+  transform: none;
 }
 
 .case_study_cards:hover{
@@ -666,6 +684,9 @@ justify-content: center;
   padding: 2%;
 
 }
+  .medallian_image{
+    max-width: 100px !important;
+  }
 
   .main_body{
     display: grid; 
@@ -779,18 +800,18 @@ justify-content: center;
 
 .pain-point {
   background: rgba(255, 255, 255, 0.08);
-  border-left: 4px solid #19545b;
+  /* border-left: 4px solid #19545b; */
   margin: 1em auto;
-  padding: 1em;
   border-radius: 8px;
   width: 70%;
   text-align: left;
 }
 .painpoint_quotes {
-  font-size: 2em;
+  text-align: center;
+  font-size: 1.5em;
   color: #fff;
 }
-.pain-point:nth-child(even) {
+/* .pain-point:nth-child(even) {
   text-align: left;
   margin-left: 10%;
 }
@@ -798,6 +819,16 @@ justify-content: center;
   text-align: right;
   margin-right: 10%;
 }
+
+.pain-point:nth-child(even) .painpoint_quotes {
+  margin-left: 20%;
+  text-align: left;
+}
+
+.pain-point:nth-child(odd) .painpoint_quotes {
+  margin-right: 20%;
+  text-align: right;
+} */
 
 @media (max-width:750px) {
 .pain-point:nth-child(even),
@@ -815,7 +846,7 @@ justify-content: center;
   .all_painpoints{
     gap: 2em;
     margin-top: 5%;
-    margin-bottom: 5%;
+    margin-bottom: 2%;
 
   }
   .painpoint_quotes {
@@ -826,10 +857,131 @@ justify-content: center;
   font-size: 20px !important;
 }
 .subitem{
-  padding: 8%;
+  padding: 2%;
 }
 
 }
+
+.phone_intro{
+  display: none;
+}
+.all_painpoints{
+  display: none;
+}
+
+.phone_intro,
+.all_painpoints {
+  display: none !important;
+}
+
+@media (max-width: 1280px) {
+  .desktop_intro{
+    display: none !important;
+
+    
+  }
+  .phone_intro,
+  .all_painpoints {
+    display: flex !important;  
+    flex-direction: column;    
+    align-items: center;       
+    width: 100%;              
+  }
+  .painpoint_quotes{
+    padding: 3% !important;
+  }
+  .main_section1{
+    width: 100% !important;
+  }
+  #intro_section{
+    margin-top: 10% !important;
+  }
+
+  .section_subtitle1{
+    text-align: left !important;
+    margin-bottom: 2% !important;
+  }
+  #intro_comment{
+      text-align: center !important;
+      font-weight: 600;
+  }
+.painpoints_list li::before {
+  font-size: 1.5em;
+}
+  #intro_image{
+    display: none;
+  }
+  .main_section{
+    margin-top: 5% !important;
+  }
+  .painpoints_list{
+    text-align: center !important;
+    font-size: 1.4em !important;
+    font-weight: 900;
+    padding: 6% !important;
+  }
+
+  .main_section > div[style*="display: flex"] {
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+  .main_section > div[style*="display: flex"] > div {
+    width: 100% !important;
+    text-align: center !important;
+  }
+  .main_section > div[style*="display: flex"] img {
+    width: 80% !important;
+    margin-bottom: 1.5em !important;
+  }
+  .main_section > div:last-child,
+  .main_section > div:nth-last-child(2) {
+    flex-direction: column !important;
+    text-align: center !important;
+    width: 100% !important;
+  }
+  .main_section > div:last-child h3,
+  .main_section > div:nth-last-child(2) h3 {
+    width: 100% !important;
+    text-align: center !important;
+  }
+
+  .case_study_paragraph{
+    text-align: center !important;
+    margin-bottom: 10px !important;
+    word-spacing: 1px;
+
+}
+  .case_study_container {
+    align-items: center;      
+  }
+
+
+}
+
+.painpoints_list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 1.5em;
+  line-height: 1.3;
+  color: #000000;
+}
+
+.painpoints_list li {
+  margin-bottom: 0.6em;
+  padding-left: 1.5em;
+  position: relative;
+  color: black;
+}
+
+.painpoints_list li::before {
+  content: "*";
+  color: #19545b;
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+}
+
 
 
 
@@ -844,28 +996,59 @@ justify-content: center;
   <button class="buttons" id="lets_talk" onclick="scrollToView(this.id)" >Let's Talk</button>
 </div>
 
-<div style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section" style="background-color: rgba(255, 255, 255, 0); width: 80%;  border-radius: 20px; margin-top: 4%;">
-
-    <div style=" text-align: center;">
-      <h1 class="section_title1" id="section1_maintitle" style=" font-size: 42px; color: white;">Have Overwhelming Data?</h1>
-        <div style="display: flex; justify-content: center;">  
-          <h3 class="section_subtitle" id="section1_subtitle" style="margin-top: 1%; color: white; width: 60%;  font-size: 42px; font-weight: 400; text-align: right;">
-                Data Scattered In Different  Files?
-            </h3>
-        </div>
-          <div style="display: flex; justify-content: center;">  
-            <h3 class="section_subtitle" id="section1_subtitle" style=" color: white; width: 60%;  font-size: 42px; font-weight: 400; text-align: center;">
-                  Can't Provide Quick Insights For Your Team?
-              </h3>
-        </div>
-      <div style="display: flex; justify-content: center;">  
-        <h3 class="section_subtitle" id="section1_subtitle" style="color: white; width: 50%;  font-size: 32px; font-weight: 400; text-align: left;">
-              We've heard it all before...
-          </h3>
+<div class="desktop_intro" style="display: flex; align-items: center; justify-content: center;">
+  <div class="main_section" id="intro_section" style="background-color: #fff; width: 80%; border-radius: 20px; margin-top: 5%; padding: 2%;">
+    
+    <div style="display: flex; justify-content: center; width: 100%; gap: 2em;">
+      
+      <div style="flex: 1; text-align: center;">
+        <img id="intro_image" style="max-width: 700px; border-radius: 10px; margin: 0 auto; opacity: .5;" 
+             src="/portfolio/images/scatteredteam.png">
       </div>
+      <div style="flex: 1; text-align: left;">
+        <h3 class="section_title" style="font-size: 42px; font-weight: 800; margin: 0 0 0.3em 0; color: #000;">
+          Too much data, not enough insight?
+        </h3>
+
+        <h3 id="intro_comment" class="section_subtitle" style="color: #030303; font-size: 28px; font-weight: 900; margin: 1 0 1em 0; text-align: left;">
+          We've heard it all before...
+        </h3>
+
+        <ul class="painpoints_list">
+          <li>"Why do sales numbers never match?"</li>
+          <li>"Who owns these Excel sheets?"</li>
+          <li>"Where can I find this information?"</li>
+          <li>"Why does every department have a different version of the truth?"</li>
+          <li>"Can we trust this dashboard or is it outdated?"</li>
+          <li>"Who is responsible for fixing these broken reports?"</li>
+          <li>"We want AI, but our data foundation isn't ready - where do we begin?"</li>
+        </ul>
+      </div>
+
     </div>
 
+
+  </div>
+</div>
+<div class="desktop_intro">
+   <div style="display: flex; justify-content: center;">  
+        <h3 class="section_subtitle" id="section1_subtitle" style="  margin: 0 auto;  color: rgb(255, 255, 255); width: 40%;  font-size: 42px; font-weight: 500; text-align: left; margin-top: 4%;">
+              What is our first step?
+          </h3>
+      </div>
+      <div style="display: flex; justify-content: center;">  
+        <h3 class="section_subtitle" id="section1_subtitle2" style="  margin: 0 auto; color: rgb(255, 255, 255); width: 40%;  font-size: 42px; font-weight: 500; text-align: right; margin-bottom: 4%;">
+              Let's plan your data blueprint...
+          </h3>
+      </div> 
+</div>
+
+    <h1 class="phone_intro" id="section1_maintitle" style="text-align: center; font-size: 42px; color: white; margin-top: 2em; ">Too much data, not enough insight?</h1>
+    <div style="display: flex; justify-content: center; text-align: center;">  
+    <h3 class="phone_intro" id="section1_subtitle" style="text-align: center; color: white; width: 50%;  font-size: 32px; font-weight: 400; ">
+              We've heard it all before...
+    </h3>
+    </div>
     <div class="all_painpoints" style=" display: flex; flex-direction: column; text-align: center; ">
       <div class="pain-point">
         <div class="painpoint_container" >
@@ -903,111 +1086,115 @@ justify-content: center;
         </div>
       </div>
     </div>
-
-    <div style="display: flex; justify-content: center;">  
-        <h3 class="section_subtitle" id="section1_subtitle" style="color: white; width: 50%;  font-size: 42px; font-weight: 400; text-align: left;">
+<div class="phone_intro">
+        <div style="display: flex; justify-content: center;">  
+        <h3 class="section_subtitle" id="section1_subtitle2" style=" width: 100%; text-align: center;  margin: 0 auto; color: rgb(255, 255, 255); padding: 6%; font-size: 4em; font-weight: 500; margin-bottom: 15%; margin-top: 15%;">
               What is our first step?
           </h3>
       </div>
-          <div style="display: flex; justify-content: center;">  
-        <h3 class="section_subtitle" id="section1_subtitle" style="color: white; width: 50%;  font-size: 42px; font-weight: 400; text-align: right;">
-              Let's plan our data blueprint...
-          </h3>
-      </div>
-  </div>
 
+      <div style="display: flex; justify-content: center;">  
+        <h3 class="section_subtitle" id="section1_subtitle2" style=" width: 100%; text-align: center;  margin: 0 auto; color: rgb(255, 255, 255); padding: 6%; font-size: 4em; font-weight: 500; margin-bottom: 15%; margin-top: 15%;">
+              Let's plan your data blueprint...
+          </h3>
+      </div> 
 </div>
 <div style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
+  <div class="main_section" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 2%;">
     <div style=" text-align: center;">
       <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">WHERE IS YOUR <span style="color: #dd5050;">DATA</span> TODAY?</h1>
-      <div style="display: flex; justify-content: center;">  
-        <h3 class="section_subtitle" id="section1_subtitle" style="width: 50%;  font-size: 32px; font-weight: 400;">
-              <span style="color: #dd5050;">Pinpoint</span> where your data is today and discover how to move it to the next stage.
-          </h3>
+      <div style="display: flex; justify-content: center;">
+        <h3 class="section_subtitle" id="section1_subtitle" style="width: 50%;  font-size: 25px; font-weight: 550;">
+          <span style="color: #dd5050;">Pinpoint</span> where your data is today and discover how to move it to the next stage.
+        </h3>
       </div>
     </div>
-    <div class="main_body" style="padding: 3%;">
-<div class="body_cards" style="background-color: rgba(205, 128, 50, 0.342); padding: 2%; max-height: 600px; display: flex; flex-direction: column; justify-content: space-between;">
-  <img class="medallian_image" style="max-width: 200px; border-radius: 20px; cursor: pointer; margin: 0 auto;" src="/portfolio/images/bronze.png">
-  
-  <h1 style="font-size: 32px; text-align: center; margin: 0.3em 0;">BRONZE</h1>
 
-  <ul  class="medallian_list" style="list-style: none; padding: 0; margin: 0; text-align: center; color: #000000; line-height: 1.2; font-size: 22px;">
-    <li>Not organized</li>
-    <li>Unstructured & scattered</li>
-    <li>Hard to search or connect</li>
-  </ul>
+    <div class="case_study_container">
+<div class="case_study_cards bronze" style="background: linear-gradient(135deg, rgba(205,128,50,0.6) 0%, rgba(230,180,80,0.3) 50%, rgba(205,128,50,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
+        <div style="display: flex; justify-content: center;">
+          <img class="medallian_image" style="max-width: 50px; border-radius: 20px; margin: 0 auto;" src="/portfolio/images/bronze.png">
+        </div>
+        <h3 style=" font-size: 40px; text-align: center; letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85) 0%, rgba(0,90,110,0.9) 50%, rgba(0,0,0,0.95) 100%); -webkit-background-clip: text; color: transparent;" class="case_study_card_title">BRONZE</h3>
+        <p style="color: black; margin: 0.3em 0; padding-left: 1em;  position: relative; font-weight: 600; " class="case_study_paragraph">Data is unstructured and inconsistent.</p>
+        <p style="color: black; margin: 0.3em 0; padding-left: 1em;  position: relative; font-weight: 600;" class="case_study_paragraph" >Documents are scattered and hard to track.</p>
+        <p style="color: black; margin: 0.3em 0; padding-left: 1em;  position: relative; font-weight: 600;" class="case_study_paragraph">Information is difficult to search or connect.</p>
+        <div style="display: flex; flex-direction: column; gap: 0.1em; align-items: center ; margin-top: 0.5em; padding: 5%;">
+          <h3 style="margin: 0; font-size: 28px; letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85) 0%, rgba(0,90,110,0.9) 50%, rgba(0,0,0,0.95) 100%); -webkit-background-clip: text; color: transparent;">FOUNDATION</h3>
 
-  <div style="display: flex; flex-direction: column; gap: 0.1em; align-items: center; margin-top: 0.5em; padding: 5%;">
-    <h3 style="margin: 0; font-size: 28px;">First Step</h3>
-    <h2 style="margin-top: 1%; margin: 0; font-size: 25px; color: #28a745; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Locate & Organize</h2>
-  </div>
-
-  <h3 class="subitem" style="color: #ac0000; font-size: 1.4em; margin-top: 0.5em; text-align: center;">
-    Question: How long would it take your team to find a critical file if you weren't here?
-  </h3>
-</div>
-
-<div class="body_cards" style="background-color: rgba(192, 192, 192, 0.407); padding: 2%; max-height: 600px; display: flex; flex-direction: column; justify-content: space-between;">
-  <img class="medallian_image" style="max-width: 200px; border-radius: 20px; cursor: pointer; margin: 0 auto;" src="/portfolio/images/silver.png">
-  
-  <h1 style="font-size: 32px; text-align: center; margin: 0.3em 0;">SILVER</h1>
-
-  <ul class="medallian_list" style="list-style: none; padding: 0; margin: 0; text-align: center; color: #000000; line-height: 1.2; font-size: 22px;">
-    <li>Data is standardized and reliable</li>
-    <li>Relationships are clear and usable</li>
-    <li>Teams can work from the same source</li>
-  </ul>
-
-  <div style="padding: 5%; display: flex; flex-direction: column; gap: 0.1em; align-items: center; margin-top: 0.5em;">
-    <h3 style="margin: 0; font-size: 28px;">Second Step</h3>
-    <h2 style="margin: 0; font-size: 25px; color: #28a745; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Combine & Standardize</h2>
-  </div>
-
-  <h3 class="subitem" style="color: #ac0000; font-size: 1.4em; margin-top: 0.5em; text-align: center;">
-    Question: Can anyone in your team confidently use this data to make decisions without asking you?
-  </h3>
-</div>
-
-<div class="body_cards" style="background-color: rgba(255, 217, 0, 0.228); padding: 2%; max-height: 600px; display: flex; flex-direction: column; justify-content: space-between;">
-  <img class="medallian_image" style="max-width: 200px; border-radius: 20px; cursor: pointer; margin: 0 auto;" src="/portfolio/images/gold.png">
-  <h1 style="font-size: 32px; text-align: center; margin: 0.3em 0;">GOLD</h1>
-  <ul class="medallian_list" style="list-style: none; padding: 0; margin: 0; text-align: center; color: #000000; line-height: 1.2; font-size: 22px;">
-    <li>ETL, dashboards, and cloud workflows</li>
-    <li>Instant reporting & advanced analytics</li>
-    <li>Future-ready and built to grow</li>
-  </ul>
-  <div style="padding: 5%; display: flex; flex-direction: column; gap: 0.1em; align-items: center; margin-top: 0.5em;">
-    <h3 style="margin: 0; font-size: 28px;">Final Step</h3>
-    <h2 style="margin: 0; font-size: 25px; color: #28a745; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Build, Share & Deploy</h2>
-  </div>
-  <h3 class="subitem" style="color: #ac0000; font-size: 1.4em; margin-top: 0.5em; text-align: center;">
-    Question: Can your team make data-driven decisions instantly without manual intervention?
-  </h3>
-</div>
-
+          <h2 style="margin-top: 1%; margin: 0; font-size: 25px; color: #28a745; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Locate & Organize</h2>
+        </div>
+        <h3 class="subitem" style="color: red; font-size: 1.4em; margin-top: 0.5em; text-align: center;">
+          Question: How long would it take your team to find a critical file if you weren't here?
+      </h3>
+      </div>
+<div class="case_study_cards silver" style="background: linear-gradient(135deg, rgba(192,192,192,0.6) 0%, rgba(220,220,220,0.3) 50%, rgba(192,192,192,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
+      <div style="display: flex; justify-content: center;">
+        <img class="medallian_image" style="max-width: 50px; border-radius: 20px; margin: 0 auto;" src="/portfolio/images/silver.png">
+      </div>
+        <h3 style="font-size: 40px; text-align: center;letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85) 0%, rgba(0,90,110,0.9) 50%, rgba(0,0,0,0.95) 100%); -webkit-background-clip: text; color: transparent; " class="case_study_card_title">SILVER</h3>
+          <p style="color: black; margin: 0.3em 0; padding-left: 1em;  position: relative;  font-weight: 600;"  class="case_study_paragraph">Data is standardized and reliable.</p>
+          <p style="color: black; margin: 0.3em 0; padding-left: 1em;  position: relative; font-weight: 600;"  class="case_study_paragraph">Relationships are clear and usable.</p>
+          <p style="color: black; margin: 0.3em 0; padding-left: 1em;  position: relative; font-weight: 600;"  class="case_study_paragraph">Teams can work from the same source.</p>
+          <div style="padding: 5%; display: flex; flex-direction: column; gap: 0.1em; align-items: center; margin-top: 0.5em;">
+            <h3 style="margin: 0; font-size: 28px; letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85) 0%, rgba(0,90,110,0.9) 50%, rgba(0,0,0,0.95) 100%); -webkit-background-clip: text; color: transparent;">GROWTH</h3>
+            <h2 style="margin: 0; font-size: 25px; color: #28a745; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Combine & Standardize</h2>
+          </div>
+          <h3 class="subitem" style="color: red; font-size: 1.4em; margin-top: 0.5em; text-align: center;">
+            Question: Can anyone in your team confidently use this data to make decisions without asking you?
+        </h3>
+    </div>
+<div class="case_study_cards gold" style="background: linear-gradient(135deg, rgba(255,215,0,0.6) 0%, rgba(255,240,128,0.3) 50%, rgba(255,215,0,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
+      <div style="display: flex; justify-content: center;">
+        <img class="medallian_image" style="max-width: 50px; border-radius: 20px; margin: 0 auto;" src="/portfolio/images/gold.png">
+      </div>
+        <h3 style="font-size: 40px; text-align: center; letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85) 0%, rgba(0,90,110,0.9) 50%, rgba(0,0,0,0.95) 100%); -webkit-background-clip: text; color: transparent;" class="case_study_card_title">GOLD</h3>
+      <p style="color: black;margin: 0.3em 0; padding-left: 1em;  position: relative; font-weight: 600; "  class="case_study_paragraph">Future-ready and built to grow.</p>
+      <p style="color: black;margin: 0.3em 0; padding-left: 1em;  position: relative; font-weight: 600;"  class="case_study_paragraph">ETL, dashboards, and cloud workflows.</p>
+      <p style="color: black;margin: 0.3em 0; padding-left: 1em;  position: relative; font-weight: 600;"  class="case_study_paragraph">Instant reporting & advanced analytics.</p>
+      <div style="padding: 5%; display: flex; flex-direction: column; gap: 0.1em; align-items: center; margin-top: 0.5em;">
+        <h3 style="margin: 0; font-size: 28px;letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85) 0%, rgba(0,90,110,0.9) 50%, rgba(0,0,0,0.95) 100%); -webkit-background-clip: text; color: transparent;">MATURITY</h3>
+        <h2 style="margin: 0; font-size: 25px; color: #28a745; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Build, Share & Deploy</h2>
+      </div>
+      <h3 class="subitem" style="color: red; font-size: 1.4em; margin-top: 0.5em; text-align: center;">
+          Question: Can your team make data-driven decisions instantly without manual intervention?
+        </h3>
+    </div>
   </div>
   </div>
 </div>
-<div style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section" style="background-color: rgba(255, 255, 255, 0); width: 80%;  border-radius: 20px; margin-top: 4%;">
+<div class="desktop_intro" style="display: flex; align-items: center; justify-content: center;">
+  <div class="main_section1" style="background-color: rgba(255, 255, 255, 0); width: 80%;  border-radius: 20px; margin-top: 4%;">
     <div style="display: flex; justify-content: center;">  
-      <h3 class="section_subtitle" id="section1_subtitle" style="margin-top: 1%; color: white; width: 60%;  font-size: 42px; font-weight: 400; text-align: right;">
+      <h3 class="section_subtitle" id="section1_subtitle" style="margin-top: 1%; color: white; width: 60%;  font-size: 42px; font-weight: 400; text-align: left;">
             How do we advance to the next stage?
         </h3>
     </div>
     <div style="display: flex; justify-content: center;">  
-      <h3 class="section_subtitle" id="section1_subtitle" style="margin-top: 1%; color: white; width: 60%;  font-size: 42px; font-weight: 400; text-align: left;">
+      <h3 class="section_subtitle" id="section1_subtitle" style="margin-top: 1%; color: white; width: 60%;  font-size: 42px; font-weight: 400; text-align: right;">
            Which tools help us level up without the extra cost?
         </h3>
     </div>
   </div>
 </div>
+
+<div class="phone_intro">
+        <div style="display: flex; justify-content: center;">  
+        <h3 class="section_subtitle" id="section1_subtitle2" style=" width: 100%; text-align: center;  margin: 0 auto; color: rgb(255, 255, 255); padding: 5%; font-size: 4em; font-weight: 500; margin-bottom: 15%; margin-top: 15%;">
+              How do we advance to the next stage?
+          </h3>
+      </div>
+
+      <div style="display: flex; justify-content: center;">  
+        <h3 class="section_subtitle" id="section1_subtitle2" style=" width: 100%; text-align: center;  margin: 0 auto; color: rgb(255, 255, 255); padding: 5%; font-size: 4em; font-weight: 500; margin-bottom: 15%; margin-top: 15%;">
+              Which tools help us level up without the extra cost?
+          </h3>
+      </div> 
+</div>
 <div style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
+  <div class="main_section1" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
     <div style=" text-align: center;">
-      <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">LET'S HELP YOU </h1>
+      <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">LET US HELP YOU </h1>
     </div>
   <div class="case_study_container">
       <div class="case_study_cards" style="background-color: #edededd2; box-shadow: 0px 3px 9px  rgba(0, 0, 0, 0.429);">
@@ -1064,7 +1251,7 @@ justify-content: center;
   </div>
 </div>
 <div  style="display: flex; align-items: center; justify-content: center;">
-  <div id="why_choose_us" class="main_section" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
+  <div id="why_choose_us" class="main_section1" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
     <div style=" text-align: center;">
 <h1 class="section_title" id="section1_maintitle" > WHAT SETS US APART</h1>
       <div style="display: flex; justify-content: center;">
@@ -1118,7 +1305,7 @@ justify-content: center;
   </div>
 </div>
 <div style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
+  <div class="main_section1" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
     <div style=" text-align: center;">
       <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">DELIVERING IMPACT ACROSS TEAMS</h1>
       <div style="display: flex; justify-content: center;">

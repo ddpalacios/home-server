@@ -82,7 +82,9 @@ void process_route(struct Socket *sockets,struct Socket *socket,char* http_heade
 		get_gol_script(cSSL, http_header, "chatbox_style.css");
 
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/portfolio/images/")!=NULL){
-
+	if (strcmp(route,"/portfolio/images/scatteredteam.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/scatteredteam.png");
+		}
 		if (strcmp(route,"/portfolio/images/green.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/green.png");
 		}
