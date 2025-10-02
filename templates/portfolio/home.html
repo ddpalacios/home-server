@@ -95,9 +95,9 @@ body {
   z-index: 1000;
   background: linear-gradient(
     20deg,
-    rgba(0, 0, 0, 0.45),
-    rgba(26, 106, 120, 0.45),
-    rgba(0, 136, 136, 0.45),
+    rgba(0, 0, 0, 0.774) 15%,
+    rgba(26, 106, 120, 0.854) 85%,
+    rgba(0, 136, 136, 0.45) ,
     rgba(0, 0, 0, 0.45)
   );
   display: flex;
@@ -459,7 +459,7 @@ justify-content: center;
 .case_study_cards{
   position: relative;
   cursor: pointer;
-  background-color: #ededed9c;
+  background-color: #ededed;
   box-shadow: 10px 10px 18px  rgba(0, 0, 0, 0.516);
   padding: 2rem; 
   border-radius: 10px; 
@@ -488,7 +488,7 @@ justify-content: center;
 
 .case_study_cards:hover{
     transform: scale(1.2);
-     z-index: 5;              /* put overlay above card background */
+     z-index: 5;            
 
 
 }
@@ -499,42 +499,16 @@ justify-content: center;
   top: 0; left: 0; right: 0; bottom: 0;
  background-color: #11111123;
   opacity: 0;
-  transition: opacity 0.3s ease;
   border-radius: inherit;
-  z-index: 1;              /* put overlay above card background */
+  z-index: 1;              
 }
 
 .case_study_cards:hover::after {
     pointer-events: none;
 }
 
- .case_study_cards2{
-  position: relative;
-  cursor: pointer;
-  background-color: #ededed9c; 
-  padding: 2rem; 
-  margin-top: 2%;
-  border-radius: 10px; 
-  max-width: 500px;
-}
-.case_study_cards2:hover{
-    transform: scale(1.1);
-     z-index: 5;              /* put overlay above card background */
-     background-color: #ffffff;
 
 
-}
-
-.case_study_cards2::after {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
- background-color: #11111123;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  border-radius: inherit;
-  z-index: 1;              /* put overlay above card background */
-}
 
 
 
@@ -647,7 +621,7 @@ justify-content: center;
   font-weight: bold;
 }
 .solution_text{
-  color: #03c810; 
+  color: rgb(0, 184, 0);
   font-weight: bold;
 }
 
@@ -677,7 +651,7 @@ justify-content: center;
     font-size: 3rem; 
     font-weight: 800; 
     margin-bottom: 1rem; 
-    letter-spacing: 0.5px;
+    /* letter-spacing: 0.5px; */
 
 
   }
@@ -726,7 +700,7 @@ justify-content: center;
 
   }
   .medallian_image{
-    max-width: 200px !important;
+    max-width: 150px !important;
   }
   .body_cards{
     background-color: inherit; 
@@ -792,30 +766,159 @@ justify-content: center;
   }
 
   input::placeholder {
-  color: #ffffff;   /* your color */
+  color: #ffffff62;   /* your color */
   opacity: 1;    /* some browsers default it faded */
 }
     textarea::placeholder {
-  color: #ffffff;   /* your color */
+  color: #ffffff62;   /* your color */
   opacity: 1;    /* some browsers default it faded */
 }
 </style>
+
+<style>
+
+.pain-point {
+  background: rgba(255, 255, 255, 0.08);
+  border-left: 4px solid #19545b;
+  margin: 1em auto;
+  padding: 1em;
+  border-radius: 8px;
+  width: 70%;
+  text-align: left;
+}
+.painpoint_quotes {
+  font-size: 2em;
+  color: #fff;
+}
+.pain-point:nth-child(even) {
+  text-align: left;
+  margin-left: 10%;
+}
+.pain-point:nth-child(odd) {
+  text-align: right;
+  margin-right: 10%;
+}
+
+@media (max-width:750px) {
+.pain-point:nth-child(even),
+  .pain-point:nth-child(odd) {
+    text-align: center;
+    margin: 0 auto; /* removes the offset */
+  }
+  .pain-point{
+    width: 100%;
+  }
+  #section1_maintitle2{
+    text-align: center !important;
+    padding: 5%;
+  }
+  .all_painpoints{
+    gap: 2em;
+    margin-top: 5%;
+    margin-bottom: 5%;
+
+  }
+  .painpoint_quotes {
+    text-align: center !important;
+
+}
+.medallian_list{
+  font-size: 20px !important;
+}
+.subitem{
+  padding: 8%;
+}
+
+}
+
+
+
+</style>
+
 </head>
 <body>
 
 
 <div class="topnav" >
-  <h1 onclick="scrollToView(this.id)" id="company_name"><span style="color: rgb(255, 255, 255);  height: 100%;">PALACIOS SOLUTIONS</span></h1>
+  <h1 onclick="scrollToView(this.id)" id="company_name"><span style="color: rgb(255, 255, 255);  height: 100%;">PALACIOS SOLUTIONS | Your Personal Data Engineer</span></h1>
   <button class="buttons" id="lets_talk" onclick="scrollToView(this.id)" >Let's Talk</button>
 </div>
 
-<div class="Intro" id="main_video_container">
- <video  id="intro_video" preload="auto" autoplay loop muted playsinline>
-    <source src="/portfolio/videos/WSGOL.mp4" type="video/mp4">
-  </video>
+<div style="display: flex; align-items: center; justify-content: center;">
+  <div class="main_section" style="background-color: rgba(255, 255, 255, 0); width: 80%;  border-radius: 20px; margin-top: 4%;">
+
+    <div style=" text-align: center;">
+      <h1 class="section_title1" id="section1_maintitle" style=" font-size: 42px; color: white;">Have Overwhelming Data?</h1>
+        <div style="display: flex; justify-content: center;">  
+          <h3 class="section_subtitle" id="section1_subtitle" style="margin-top: 1%; color: white; width: 60%;  font-size: 42px; font-weight: 400; text-align: right;">
+                Data Scattered In Different  Files?
+            </h3>
+        </div>
+          <div style="display: flex; justify-content: center;">  
+            <h3 class="section_subtitle" id="section1_subtitle" style=" color: white; width: 60%;  font-size: 42px; font-weight: 400; text-align: center;">
+                  Can't Provide Quick Insights For Your Team?
+              </h3>
+        </div>
+      <div style="display: flex; justify-content: center;">  
+        <h3 class="section_subtitle" id="section1_subtitle" style="color: white; width: 50%;  font-size: 32px; font-weight: 400; text-align: left;">
+              We've heard it all before...
+          </h3>
+      </div>
+    </div>
+
+    <div class="all_painpoints" style=" display: flex; flex-direction: column; text-align: center; ">
+      <div class="pain-point">
+        <div class="painpoint_container" >
+        <h2 class="painpoint_quotes">"Why do sales numbers never match?"</h2>
+        </div>
+      </div>
+      <div class="pain-point">
+        <div class="painpoint_container" >
+        <h2 class="painpoint_quotes">"Who owns these Excel sheets?"</h2>
+        </div>
+      </div>
+      <div class="pain-point">
+        <div class="painpoint_container" >
+         <h2 class="painpoint_quotes"> "Where can I find this information?"</h2>
+        </div>
+      </div>
+      <div class="pain-point">
+        <div class="painpoint_container" >
+          <h2 class="painpoint_quotes">"Why does every department have a different version of the truth?"</h2>
+        </div>
+      </div>
+      <div class="pain-point">
+        <div class="painpoint_container" >
+         <h2 class="painpoint_quotes"> "Can we trust this dashboard or is it outdated?"</h2>
+        </div>
+      </div>
+      <div class="pain-point">
+        <div class="painpoint_container" >
+         <h2 class="painpoint_quotes"> "Who is responsible fixing these broken reports?"</h2>
+        </div>
+      </div>
+            <div class="pain-point">
+        <div class="painpoint_container" >
+         <h2 class="painpoint_quotes"> "We want AI, but our data foundation isn't ready - where do we begin?"</h2>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: center;">  
+        <h3 class="section_subtitle" id="section1_subtitle" style="color: white; width: 50%;  font-size: 42px; font-weight: 400; text-align: left;">
+              What is our first step?
+          </h3>
+      </div>
+          <div style="display: flex; justify-content: center;">  
+        <h3 class="section_subtitle" id="section1_subtitle" style="color: white; width: 50%;  font-size: 42px; font-weight: 400; text-align: right;">
+              Let's plan our data blueprint...
+          </h3>
+      </div>
+  </div>
+
 </div>
 <div style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section" style="background-color: white; width: 80%;  border-radius: 20px;">
+  <div class="main_section" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
     <div style=" text-align: center;">
       <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">WHERE IS YOUR <span style="color: #dd5050;">DATA</span> TODAY?</h1>
       <div style="display: flex; justify-content: center;">  
@@ -825,50 +928,86 @@ justify-content: center;
       </div>
     </div>
     <div class="main_body" style="padding: 3%;">
-      <div class="body_cards" style="background-color: rgba(205, 128, 50, 0.342)" >
-        <img class="medallian_image" style="max-width: 250px; border-radius: 20px; cursor: pointer;" src="/portfolio/images/bronze.png">
-        <h1>BRONZE</h1>
-        <ul class="section1_list" style="list-style: none; padding: 0; margin: 0; text-align: center; color: #000000; line-height: 1.3; font-size: 25px;">
-          <li>Not organized</li>
-          <li>Unstructured & scattered</li>
-          <li>Hard to search or connect</li>
-          <br>
-          <li style="font-weight: 800;">First step:<span style="color: #1e7c01; font-weight: 800;"> Locate & Organize</span> </li>
-        </ul>
-        <h3 class="subitem">Question: How long would it take your team to find a critical file if you weren't here?</h3>
-      </div>
-    <div class="body_cards" style=" background-color: rgba(192, 192, 192, 0.407)">
-      <img class="medallian_image" style="max-width: 250px; border-radius: 20px; cursor: pointer;" src="/portfolio/images/silver.png">
-      <h1 >SILVER</h1>
-      <ul style="list-style: none; padding: 0; margin: 0; text-align: center; color: #000000; line-height: 1.3; font-size: 25px;">
-        <li>Data is standardized and reliable</li>
-        <li>Relationships are clear and usable</li>
-        <li>Teams can work from the same source</li>
-        <br>
-        <li style="font-weight: 800;">Second step: <span style="color: #1e7c01; font-weight: 800;">Combine & Standardize</span></li>
+<div class="body_cards" style="background-color: rgba(205, 128, 50, 0.342); padding: 2%; max-height: 600px; display: flex; flex-direction: column; justify-content: space-between;">
+  <img class="medallian_image" style="max-width: 200px; border-radius: 20px; cursor: pointer; margin: 0 auto;" src="/portfolio/images/bronze.png">
+  
+  <h1 style="font-size: 32px; text-align: center; margin: 0.3em 0;">BRONZE</h1>
 
-      </ul>
-        <h3 class="subitem">Question: Can anyone in your team confidently use this data to make decisions without asking you?</h3>
-    </div>
-    <div class="body_cards" style=" background-color: rgba(255, 217, 0, 0.228);">
-      <img class="medallian_image" style="max-width: 250px; border-radius: 20px; cursor: pointer;" src="/portfolio/images/gold.png">
-      <h1 >GOLD</h1>
-      <ul style="list-style: none; padding: 0; margin: 0; text-align: center; color: #000000; line-height: 1.3; font-size: 25px;">
-        <li>ETL, dashboards, and cloud workflows</li>
-        <li>Instant reporting & advanced analytics</li>
-        <li>Future-ready and built to grow</li>
-        <br>
-        <li style="font-weight: 800;">Final step:<span style="color: #1e7c01; font-weight: 800;"> Build, Share & Deploy</span></li>
-      </ul>
-        <h3 class="subitem">Question: Can your team make data-driven decisions instantly without manual intervention?</h3>
-    </div>
+  <ul  class="medallian_list" style="list-style: none; padding: 0; margin: 0; text-align: center; color: #000000; line-height: 1.2; font-size: 22px;">
+    <li>Not organized</li>
+    <li>Unstructured & scattered</li>
+    <li>Hard to search or connect</li>
+  </ul>
+
+  <div style="display: flex; flex-direction: column; gap: 0.1em; align-items: center; margin-top: 0.5em; padding: 5%;">
+    <h3 style="margin: 0; font-size: 28px;">First Step</h3>
+    <h2 style="margin-top: 1%; margin: 0; font-size: 25px; color: #28a745; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Locate & Organize</h2>
   </div>
+
+  <h3 class="subitem" style="color: #ac0000; font-size: 1.4em; margin-top: 0.5em; text-align: center;">
+    Question: How long would it take your team to find a critical file if you weren't here?
+  </h3>
+</div>
+
+<div class="body_cards" style="background-color: rgba(192, 192, 192, 0.407); padding: 2%; max-height: 600px; display: flex; flex-direction: column; justify-content: space-between;">
+  <img class="medallian_image" style="max-width: 200px; border-radius: 20px; cursor: pointer; margin: 0 auto;" src="/portfolio/images/silver.png">
+  
+  <h1 style="font-size: 32px; text-align: center; margin: 0.3em 0;">SILVER</h1>
+
+  <ul class="medallian_list" style="list-style: none; padding: 0; margin: 0; text-align: center; color: #000000; line-height: 1.2; font-size: 22px;">
+    <li>Data is standardized and reliable</li>
+    <li>Relationships are clear and usable</li>
+    <li>Teams can work from the same source</li>
+  </ul>
+
+  <div style="padding: 5%; display: flex; flex-direction: column; gap: 0.1em; align-items: center; margin-top: 0.5em;">
+    <h3 style="margin: 0; font-size: 28px;">Second Step</h3>
+    <h2 style="margin: 0; font-size: 25px; color: #28a745; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Combine & Standardize</h2>
+  </div>
+
+  <h3 class="subitem" style="color: #ac0000; font-size: 1.4em; margin-top: 0.5em; text-align: center;">
+    Question: Can anyone in your team confidently use this data to make decisions without asking you?
+  </h3>
+</div>
+
+<div class="body_cards" style="background-color: rgba(255, 217, 0, 0.228); padding: 2%; max-height: 600px; display: flex; flex-direction: column; justify-content: space-between;">
+  <img class="medallian_image" style="max-width: 200px; border-radius: 20px; cursor: pointer; margin: 0 auto;" src="/portfolio/images/gold.png">
+  <h1 style="font-size: 32px; text-align: center; margin: 0.3em 0;">GOLD</h1>
+  <ul class="medallian_list" style="list-style: none; padding: 0; margin: 0; text-align: center; color: #000000; line-height: 1.2; font-size: 22px;">
+    <li>ETL, dashboards, and cloud workflows</li>
+    <li>Instant reporting & advanced analytics</li>
+    <li>Future-ready and built to grow</li>
+  </ul>
+  <div style="padding: 5%; display: flex; flex-direction: column; gap: 0.1em; align-items: center; margin-top: 0.5em;">
+    <h3 style="margin: 0; font-size: 28px;">Final Step</h3>
+    <h2 style="margin: 0; font-size: 25px; color: #28a745; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Build, Share & Deploy</h2>
+  </div>
+  <h3 class="subitem" style="color: #ac0000; font-size: 1.4em; margin-top: 0.5em; text-align: center;">
+    Question: Can your team make data-driven decisions instantly without manual intervention?
+  </h3>
+</div>
+
+  </div>
+  </div>
+</div>
+<div style="display: flex; align-items: center; justify-content: center;">
+  <div class="main_section" style="background-color: rgba(255, 255, 255, 0); width: 80%;  border-radius: 20px; margin-top: 4%;">
+    <div style="display: flex; justify-content: center;">  
+      <h3 class="section_subtitle" id="section1_subtitle" style="margin-top: 1%; color: white; width: 60%;  font-size: 42px; font-weight: 400; text-align: right;">
+            How do we advance to the next stage?
+        </h3>
+    </div>
+    <div style="display: flex; justify-content: center;">  
+      <h3 class="section_subtitle" id="section1_subtitle" style="margin-top: 1%; color: white; width: 60%;  font-size: 42px; font-weight: 400; text-align: left;">
+           Which tools help us level up without the extra cost?
+        </h3>
+    </div>
   </div>
 </div>
 <div style="display: flex; align-items: center; justify-content: center;">
   <div class="main_section" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
     <div style=" text-align: center;">
-      <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">HOW WE WORK</h1>
+      <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">LET'S HELP YOU </h1>
     </div>
   <div class="case_study_container">
       <div class="case_study_cards" style="background-color: #edededd2; box-shadow: 0px 3px 9px  rgba(0, 0, 0, 0.429);">
@@ -916,11 +1055,11 @@ justify-content: center;
       </div>
     </div>
   </section>
-  <p class="section_footer_paragraph" style=" text-align: center; color: rgb(0, 0, 0); margin-top: 1.2rem; font-size: 25px; font-weight: 550;">
-      Tools vary depending on your current setup - from <span style="color: rgba(0, 147, 27, 0.498);">Excel</span> 
+  <p class="section_footer_paragraph" style=" text-align: center; color: rgba(0, 0, 0, 0.441); margin-top: 1.2rem; font-size: 25px; font-weight: 550;">
+      Depending on your setup, tools can range from <span style="color: rgb(0, 184, 0);">Excel</span> 
       for simple datasets to <span style="color: orange;">Spark</span> and 
-      <span style="color: #5091DD;">cloud pipelines</span> or larger workflows. 
-      <br>We tailor to your needs with no extra cost or set up.
+      <span style="color: #5091DD;">cloud pipelines</span> for larger workflows. 
+      <br>We focus on solutions that fit your existing tools, minimizing extra cost or setup wherever possible.
   </p>
   </div>
 </div>
@@ -928,17 +1067,15 @@ justify-content: center;
   <div id="why_choose_us" class="main_section" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
     <div style=" text-align: center;">
 <h1 class="section_title" id="section1_maintitle" > WHAT SETS US APART</h1>
-
-
       <div style="display: flex; justify-content: center;">
         <h3 class="section_subtitle" id="section1_subtitle" 
-            style="width: 50%; font-size: 25px; font-weight: 400;">
-         Data problems can't wait. 
+            style="width: 50%; font-size: 25px; font-weight: 550;">
+        <span style="color: red;"> Data problems can't wait. </span>
           Stop waiting days for a Microsoft engineer or  
-         burning time on endless planning and costly hires.  
+         burning time on endless planning and expensive hires.  
           We provide hands-on mentoring and  
-         tailored data engineering solutions - fast, focused and  
-         built around your needs.
+        <span style="color: rgb(0, 184, 0);"> tailored data engineering solutions -  fast, focused and  
+         built around your needs.</span>
         </h3>
       </div>
     </div>
@@ -985,8 +1122,8 @@ justify-content: center;
     <div style=" text-align: center;">
       <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">DELIVERING IMPACT ACROSS TEAMS</h1>
       <div style="display: flex; justify-content: center;">
-        <h3 class="section_subtitle" id="section1_subtitle" style="width: 50%;  font-size: 25px; font-weight: 400;">
-          We've helped departments and clients turn scattered data into reliable insights, with automated pipelines and clear reporting.
+        <h3 class="section_subtitle" id="section1_subtitle" style="width: 50%;  font-size: 25px; font-weight: 550;">
+          We've helped departments and clients turn  <span style="color: red;"> scattered data </span> into <span style="color: rgb(0, 184, 0);"> reliable insights</span>, with  <span style="color: rgb(0, 184, 0);">automated pipelines </span> and <span style="color: rgb(0, 184, 0);">clear reporting.</span>
           Our work spans internal teams and external collaborators alike.
         </h3>
       </div>
@@ -1028,11 +1165,10 @@ justify-content: center;
       <div class="case_study_cards">
         <h3 class="case_study_card_title">Sales Team</h3>
           <p class="case_study_paragraph">
-            The sales team relied on <span class="problem_text">quotas from their reps</span>
-            , including metrics like <span class="problem_text">calls made</span>
-            , <span class="problem_text">videos created</span>
-            , <span class="problem_text">emails sent</span>
-            , and <span class="problem_text">first appointments booked</span>.
+            The sales team relied on <span class="problem_text">quotas from their reps,</span> including metrics like <span class="problem_text">calls made, </span>
+            <span class="problem_text">videos created, </span>
+            <span class="problem_text">emails sent, </span>
+            and <span class="problem_text">first appointments booked</span>.
             These metrics directly affected <span class="problem_text">bonuses</span> 
             and tracked each rep's performance on the team. Existing <spa">Power BI aggregations</span> 
             were often <span class="problem_text">inaccurate</span>,
@@ -1113,7 +1249,7 @@ justify-content: center;
             <input name="company_email" type="email" placeholder="Company Email*" required  style="font-size: 1.2em; padding: 0.6em; width: 100%;  background-color: #043435; color: white;">
             <input name="first_name" type="text" placeholder="First Name*" required style="font-size: 1.2em; padding: 0.6em; width: 100%;   background-color: #043435; color: white;">
             <input name="last_name" type="text" placeholder="Last Name*" required style="font-size: 1.2em; padding: 0.6em; width: 100%;  background-color: #043435; color: white;">
-            <input name="phone" type="text" placeholder="Phone Number*" required style="font-size: 1.2em; padding: 0.6em; width: 100%;  background-color: #043435; color: white;">
+            <input name="phone" type="text" placeholder="Phone Number"  style="font-size: 1.2em; padding: 0.6em; width: 100%;  background-color: #043435; color: white;">
         </div>
         <textarea name="project_details" rows="10" placeholder="Provide any details we should know about your project..." style="width: 100%; margin-top: 10px; padding: 0.6em; font-size: 1.2em;  background-color: #043435; color: white;"></textarea>
         <button  type="submit"  style="width: 100%;" id="send_button"  class="buttons">Send</button>
@@ -1180,11 +1316,12 @@ document.getElementById("my-form").addEventListener("submit", async function(eve
                     });
       var response = await fetch(request);
       this.elements["company_name"].value = ""
-      this.elements["company_email"].value = ""
-      this.elements["first_name"].value = ""
-      this.elements["last_name"].value = ""
+      // this.elements["company_email"].value = ""
+      // this.elements["first_name"].value = ""
+      // this.elements["last_name"].value = ""
       this.elements["phone"].value = ""
       this.elements["project_details"].value = ""
+      document.getElementById("send_button").innerHTML = "Form Submitted!"
       alert("Request sent! A confirmation email will be sent out to you soon.")
 });
 
