@@ -88,6 +88,11 @@ body {
 }
 
 .topnav {
+  transition: top 0.3s ease; 
+}
+
+
+.topnav {
   position: fixed;
   top: 0;
   left: 0;
@@ -112,13 +117,14 @@ body {
   .topnav{
     text-align: center;
     justify-content: center;
+    height: 6%;
   /* background-color: #01000ede;  */
 
 
   }
   #lets_talk{
     width: 85%;
-    margin-top: 10px;
+    margin-top: 20px;
     margin-bottom: 20px;
     margin-left: 50px;
 
@@ -715,7 +721,7 @@ justify-content: center;
   }
 
   .footer_title{
-    font-size: 3em !important;
+    font-size: 42px !important;
     
   }
   
@@ -854,7 +860,7 @@ justify-content: center;
   }
   .all_painpoints{
     gap: 2em;
-    margin-top: 5%;
+    margin-top: 2%;
     margin-bottom: 2%;
 
   }
@@ -1155,12 +1161,15 @@ justify-content: center;
       </div> 
 </div>
 
-    <h1 class="phone_intro" id="section1_maintitle" style="text-align: center; font-size: 42px; color: white; margin-top: 2em; ">Too much data, not enough insight?</h1>
+  <div class="phone_intro" style="background-color: #ffffff; width: 100%; border-radius: 20px; ">
+    <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; padding: 5%; ">Too much data, not enough insight?</h1>
     <div style="display: flex; justify-content: center; text-align: center;">  
-    <h3 class="phone_intro" id="section1_subtitle" style="text-align: center; color: white; width: 50%;  font-size: 32px; font-weight: 400; ">
+    <h3  id="_subtitle" style="text-align: center; color: rgb(0, 0, 0); width: 100%; font-size: 42px;font-weight: 400; ">
               We've heard it all before...
     </h3>
     </div>
+    </div>
+
     <div class="all_painpoints" style=" display: flex; flex-direction: column; text-align: center; ">
       <div class="pain-point">
         <div class="painpoint_container" >
@@ -1198,15 +1207,16 @@ justify-content: center;
         </div>
       </div>
     </div>
+
 <div class="phone_intro">
         <div style="display: flex; justify-content: center;">  
-        <h3 class="section_subtitle" id="section1_subtitle2" style=" width: 100%; text-align: center;  margin: 0 auto; color: rgb(255, 255, 255); padding: 6%; font-size: 4em; font-weight: 500; margin-bottom: 15%; margin-top: 15%;">
+        <h3 class="section_subtitle" id="section1_subtitle2" style=" width: 100%; text-align: center;  margin: 0 auto; color: rgb(255, 255, 255); padding: 5%; font-size: 42px; font-weight: 500; margin-bottom: 15%; margin-top: 15%;">
               What is our first step?
           </h3>
       </div>
 
       <div style="display: flex; justify-content: center;">  
-        <h3 class="section_subtitle" id="section1_subtitle2" style=" width: 100%; text-align: center;  margin: 0 auto; color: rgb(255, 255, 255); padding: 6%; font-size: 4em; font-weight: 500; margin-bottom: 15%; margin-top: 15%;">
+        <h3 class="section_subtitle" id="section1_subtitle2" style=" width: 100%; text-align: center;  margin: 0 auto; color: rgb(255, 255, 255); padding: 5%; font-size: 42px; font-weight: 500; margin-bottom: 15%; margin-top: 15%;">
               Let's plan your data blueprint...
           </h3>
       </div> 
@@ -1292,13 +1302,13 @@ justify-content: center;
 
 <div class="phone_intro">
         <div style="display: flex; justify-content: center;">  
-        <h3 class="section_subtitle" id="section1_subtitle2" style=" width: 100%; text-align: center;  margin: 0 auto; color: rgb(255, 255, 255); padding: 5%; font-size: 4em; font-weight: 500; margin-bottom: 15%; margin-top: 15%;">
+        <h3 class="section_subtitle"  style=" width: 100%; text-align: center;  margin: 0 auto; color: rgb(255, 255, 255); padding: 5%; font-size: 42px; font-weight: 500; margin-bottom: 15%; margin-top: 15%;">
               How do we advance to the next stage?
           </h3>
       </div>
 
       <div style="display: flex; justify-content: center;">  
-        <h3 class="section_subtitle" id="section1_subtitle2" style=" width: 100%; text-align: center;  margin: 0 auto; color: rgb(255, 255, 255); padding: 5%; font-size: 4em; font-weight: 500; margin-bottom: 15%; margin-top: 15%;">
+        <h3 class="section_subtitle" style=" width: 100%; text-align: center;  margin: 0 auto; color: rgb(255, 255, 255); padding: 5%; font-size: 42px; font-weight: 500; margin-bottom: 15%; margin-top: 15%;">
               Which tools help us level up without the extra cost?
           </h3>
       </div> 
@@ -1707,6 +1717,31 @@ function scrollToView(id) {
         }
 }
 </script>
+
+<script>
+let lastScroll = 0;
+const topnav = document.querySelector('.topnav');
+
+window.addEventListener('scroll', () => {
+  const currentScroll = window.pageYOffset;
+
+  if (window.innerWidth > 768) return;
+
+  if (currentScroll <= 0) {
+    topnav.style.top = '0';
+    return;
+  }
+
+  if (currentScroll > lastScroll) {
+    topnav.style.top = '-100px'; 
+  } else {
+    topnav.style.top = '0';
+  }
+
+  lastScroll = currentScroll;
+});
+</script>
+
 
 
 </html>
