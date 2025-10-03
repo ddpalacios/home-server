@@ -85,6 +85,24 @@ void process_route(struct Socket *sockets,struct Socket *socket,char* http_heade
 	if (strcmp(route,"/portfolio/images/scatteredteam.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/scatteredteam.png");
 		}
+		if (strcmp(route,"/portfolio/images/nonprofit.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/nonprofit.png");
+		}
+		if (strcmp(route,"/portfolio/images/sales.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/sales.png");
+		}
+		if (strcmp(route,"/portfolio/images/internal.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/internal.png");
+		}
+		if (strcmp(route,"/portfolio/images/helpdesk.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/helpdesk.png");
+		}
+		if (strcmp(route,"/portfolio/images/finance.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/finance.png");
+		}
+		if (strcmp(route,"/portfolio/images/marketing.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/marketing.png");
+		}
 		if (strcmp(route,"/portfolio/images/green.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/green.png");
 		}

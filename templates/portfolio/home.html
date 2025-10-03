@@ -123,12 +123,17 @@ body {
     margin-left: 50px;
 
   }
+  #title_bar{
+    display: none;
+  }
   #company_name{
+    font-size: 20px;
     width: 100%; 
-    margin-left: 0%;
-    padding: 3%;
+
+    /* 
+    
     margin-right: 0%;
-    margin-bottom: 1%;
+   */
     display: none;
   }
 
@@ -504,32 +509,33 @@ justify-content: center;
   transform: none;
 }
 
+.case_study_cards {
+  transition: transform 0.5s ease; 
+}
+
+
 .case_study_cards:hover{
     transform: scale(1.2);
      z-index: 5;            
 
 
 }
-
-.case_study_cards::after {
+/* .case_study_cards::after {
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
- background-color: #11111123;
-  opacity: 0;
-  border-radius: inherit;
-  z-index: 1;              
-}
-
-.case_study_cards:hover::after {
-    pointer-events: none;
-}
-
-
-
-
-
-
+  background: none !important; 
+  opacity: 0 !important;
+  pointer-events: none;
+} */
+/* .case_study_cards:hover::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: none !important; 
+  opacity: 0 !important;
+  pointer-events: none;
+} */
 
 
 </style>
@@ -694,6 +700,7 @@ justify-content: center;
     gap: 1.5em; 
   }
 @media (max-width: 1250px) {
+
       .submit_form {
     flex-direction: column; /* stack the two halves */
     padding: 3% !important;
@@ -732,10 +739,11 @@ justify-content: center;
     transform: none;       
   }
   .quote{
-    text-align: justify; 
+    text-align: left !important; 
     padding: 10% !important;
     text-justify: inter-word;
-    font-size: 1.5em !important;
+    word-spacing: 2px;
+    font-size: 1.3em !important;
     max-width: 90%;  
     margin: 0 auto;  
   }
@@ -836,6 +844,7 @@ justify-content: center;
     text-align: center;
     margin: 0 auto; /* removes the offset */
   }
+
   .pain-point{
     width: 100%;
   }
@@ -897,6 +906,13 @@ justify-content: center;
     margin-top: 10% !important;
   }
 
+  #why_choose_us_description{
+      width: 100% !important;
+      padding: 6% !important;
+      font-size: 30px !important;
+      text-align: left !important;
+      margin-left: 2% !important
+  }
   .section_subtitle1{
     text-align: left !important;
     margin-bottom: 2% !important;
@@ -987,12 +1003,108 @@ justify-content: center;
 
 </style>
 
+<style>
+
+
+.flip-card {
+  background-color: transparent;
+  perspective: 1000px;
+  width: 450px;
+  height: 350px;
+  position: relative;
+  text-align: center;
+  background-color: transparent;
+  border-radius: 10px; 
+}
+.flip-card-image{
+  width: 350px;
+}
+.flip-card-front {
+  width: 100%;
+  height: 100%; 
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; 
+  align-items: center;     
+  text-align: center;
+  box-shadow: 10px 10px 18px  rgba(0, 0, 0, 0.516);
+
+}
+.flip-card-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%; 
+  background: linear-gradient(to bottom, rgba(0,0,0,0.85), rgba(0,0,0,0));
+  color: #fff;
+  font-size: 4em;
+  font-weight: 700;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  box-sizing: border-box;
+  z-index: 2;
+  display: flex;
+  align-items: center;   
+  justify-content: center; 
+  padding: 0; 
+  margin: 0;
+}
+
+
+.flip-card-front .flip-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* ensures the image covers the div without stretching */
+  display: block;
+}
+
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 1s;
+  transform-style: preserve-3d;
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+}
+
+.flip-card:hover .flip-card-inner {
+  transform: rotateY(180deg);
+}
+.flip-card-front, .flip-card-back {
+    position: absolute;
+    width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+.flip-card-back {
+
+  background-color: #ededed;
+  transform: rotateY(180deg);
+  padding: 3%;
+} 
+  @media (max-width: 1280px) {
+  .flip-card-header{
+    font-size: 2em !important;
+  }
+  .case_study_paragraph1{
+    font-size: 20px !important;
+  }
+}
+</style>
+
 </head>
 <body>
 
 
 <div class="topnav" >
-  <h1 onclick="scrollToView(this.id)" id="company_name"><span style="color: rgb(255, 255, 255);  height: 100%;">PALACIOS SOLUTIONS | Your Personal Data Engineer</span></h1>
+  <h1 onclick="scrollToView(this.id)" id="company_name"><span style="color: rgb(255, 255, 255);  height: 100%;">PALACIOS SOLUTIONS <span id="title_bar">|</span> Your Personal Data Engineer</span></h1>
   <button class="buttons" id="lets_talk" onclick="scrollToView(this.id)" >Let's Talk</button>
 </div>
 
@@ -1197,27 +1309,27 @@ justify-content: center;
       <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">LET US HELP YOU </h1>
     </div>
   <div class="case_study_container">
-      <div class="case_study_cards" style="background-color: #edededd2; box-shadow: 0px 3px 9px  rgba(0, 0, 0, 0.429);">
-        <h3 style="color: rgb(0, 152, 0); text-align: center;" class="case_study_card_title">Free Discovery Call</h3>
-        <p style="color: black;" class="case_study_paragraph">No cost, no commitment - just answers.</p>
+      <div id="free_call" class="case_study_cards" style=" background: linear-gradient(135deg, rgba(205,128,50,0.6) 0%, rgba(230,180,80,0.3) 50%, rgba(205, 128, 50, 0.87) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
+        <h3 style="color: rgb(255, 255, 255); text-align: center;" class="case_study_card_title">Free Discovery Call</h3>
+        <p style="color: black;" class="case_study_paragraph"><span style="font-weight: 800;">No cost</span>, no commitment - <span style="font-weight: 800;">just answers.</span></p>
         <p style="color: black;" class="case_study_paragraph">Pinpoint your biggest data pain points.</p>
-        <p style="color: black;" class="case_study_paragraph">Get tailored advice you can act on today.</p>
-        <p style="color: black;" class="case_study_paragraph">Walk away with a clear action plan.</p>
+        <p style="color: black;" class="case_study_paragraph"><span style="color: green; font-weight: 800;">Get tailored advice</span> you can act on <span style="color: red;font-weight: 800;">today.</span></p>
+        <p style="color: black;" class="case_study_paragraph">Walk away with a  <span style="color: green; font-weight: 800;">clear action plan.</span></p>
       </div>
-    <div class="case_study_cards" style="background-color: #edededd2; box-shadow: 0px 3px 9px  rgba(0, 0, 0, 0.429);">
+    <div class="case_study_cards" style="background: linear-gradient(135deg, rgb(192, 192, 192) 20%, rgba(255, 255, 255, 0.3) 50%, rgb(192, 192, 192) 90%);  box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
           <h3 class="case_study_card_title" style="color: blue; text-align: center;">Blueprint Your Data</h3>
-          <p style="color: black;"  class="case_study_paragraph">Turn messy files into a clear structure.</p>
+          <p style="color: black;"  class="case_study_paragraph">Turn messy files into a <span style="color: green; font-weight: 800;">clear structure.</span></p>
           <p style="color: black;"  class="case_study_paragraph">Standardize, clean, and connect everything.</p>
-          <p style="color: black;"  class="case_study_paragraph">Make data easy to access and ready to use.</p>
+          <p style="color: black;"  class="case_study_paragraph">Make data <span style="color: green; font-weight: 800;">easy to access</span> and ready to use.</p>
           <p style="color: black;"  class="case_study_paragraph">Build a foundation your whole team can trust.</p>
-          <p style="color: black;" class="case_study_paragraph">Work in short, focused phases - so you see progress fast without waiting months.</p>
+          <p style="color: black;" class="case_study_paragraph">Work in short, focused phases - so you <span style="font-weight: 800;">see progress fast</span> without waiting months.</p>
     </div>
-    <div class="case_study_cards" style="background-color: #edededd2; box-shadow: 0px 3px 9px  rgba(0, 0, 0, 0.429);">
+    <div class="case_study_cards" style="background: linear-gradient(135deg, rgba(255, 217, 0, 0.829) 0%, rgba(255,240,128,0.3) 50%, rgba(255,215,0,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
       <h3 style="color: red;  text-align: center;" class="case_study_card_title">Build & Launch</h3>
-      <p style="color: black;"  class="case_study_paragraph">Get reliable, decision-ready data.</p>
+      <p style="color: black;"  class="case_study_paragraph">Get<span style="color: green; font-weight: 800;"> reliable, decision-ready data.</span></p>
       <p style="color: black;"  class="case_study_paragraph">Share insights seamlessly with your team.</p>
       <p style="color: black;"  class="case_study_paragraph">Scale with confidence - no rebuilding required.</p>
-      <p style="color: black;"  class="case_study_paragraph">Smooth handoff so your team can own it.</p>
+      <p style="color: black;"  class="case_study_paragraph"><span style="color: green; font-weight: 800;">Smooth handoff</span> so your team can own it.</p>
     </div>
   </div>
   <section class="testimonial_section" style="margin-top: 2%;">
@@ -1255,51 +1367,66 @@ justify-content: center;
     <div style=" text-align: center;">
 <h1 class="section_title" id="section1_maintitle" > WHAT SETS US APART</h1>
       <div style="display: flex; justify-content: center;">
-        <h3 class="section_subtitle" id="section1_subtitle" 
-            style="width: 50%; font-size: 25px; font-weight: 550;">
-        <span style="color: red;"> Data problems can't wait. </span>
+        <h3 class="section_subtitle" id="why_choose_us_description" style="width: 50%;  font-size: 25px; font-weight: 550;">
+          <span style="color: red;"> Data problems can't wait. </span>
           Stop waiting days for a Microsoft engineer or  
          burning time on endless planning and expensive hires.  
           We provide hands-on mentoring and  
-        <span style="color: rgb(0, 184, 0);"> tailored data engineering solutions -  fast, focused and  
-         built around your needs.</span>
+        <span style="color: rgb(0, 184, 0); font-weight: 800;"> tailored </span> data engineering solutions - <span style="color: rgb(0, 184, 0); font-weight: 800;">fast</span>,<span style="color: rgb(0, 184, 0); font-weight: 800;"> focused</span> and  
+         <span style="color: rgb(0, 184, 0); font-weight: 800;">built</span> around your needs.
         </h3>
       </div>
     </div>
       <div class="case_study_container">
-        <div class="case_study_cards" >
+        <div class="case_study_cards"  >
           <h3 class="case_study_card_title">Speed That Matches Your Deadlines</h3>
-          <p class="case_study_paragraph">We deliver work in structured sprints, focusing on incremental development that produces real business value quickly and reliably.</p>
+          <p class="case_study_paragraph">
+            We deliver work in <span style="font-weight: 800;">structured sprints</span>, focusing on <span style="font-weight: 800;">incremental development</span> that produces <span style="font-weight: 800;">real business value</span> quickly and reliably.
+          </p>
+
         </div>
       <div class="case_study_cards">
         <h3 class="case_study_card_title">From Chaos to Clarity in Your Data</h3>
         <p class="case_study_paragraph">
-          We design a blueprint of your data while also keeping track on what each table means,
-          their dimensions, who owns it, how often it's updated, and the changes that occured to it. 
-          That way, there is full transparency between you and your data
+          We design a <span style="font-weight: 800;">blueprint of your data</span> while also keeping track of <span style="font-weight: 800;">what each table means</span>, 
+          their <span style="font-weight: 800;">dimensions</span>, <span style="font-weight: 800;">who owns it</span>, <span style="font-weight: 800;">how often it's updated</span>, 
+          and the <span style="font-weight: 800;">changes that occurred to it</span>. That way, there is <span style="font-weight: 800;">full transparency</span> between you and your data.
         </p>
+
       </div>
       <div class="case_study_cards" >
         <h3 class="case_study_card_title">Support That Doesn't Vanish After Delivery</h3>
-        <p class="case_study_paragraph">Mon-Friday support for new data pipelines, engineering tasks, and ongoing maintenance - focused on keeping your data reliable.</p>
+       <p class="case_study_paragraph">
+  <span style="font-weight: 800;">Mon-Friday support</span> for <span style="font-weight: 800;">new data pipelines</span>, <span style="font-weight: 800;">engineering tasks</span>, 
+  and <span style="font-weight: 800;">ongoing maintenance</span> - focused on keeping your data <span style="font-weight: 800;">reliable</span>.
+</p>
+
       </div>
       <div class="case_study_cards" >
         <h3 class="case_study_card_title">Hands-On Mentoring for Actionable Power BI Dashboards</h3>
-        <p class="case_study_paragraph">Learn to build real-time dashboards and reports for your department with 1-on-1 Power BI mentoring-speeding up your day-to-day work.</p>
+       <p class="case_study_paragraph">
+  Learn to build <span style="font-weight: 800;">real-time dashboards and reports</span> for your department with 
+  <span style="font-weight: 800;">1-on-1 Power BI mentoring</span> - speeding up your <span style="font-weight: 800;">day-to-day work</span>.
+</p>
+
       </div>
       <div class="case_study_cards" >
         <h3 class="case_study_card_title">Proven Expertise, Backed by 5+ Years in the Field</h3>
         <p class="case_study_paragraph">
-            With over five years of experience building pipelines, optimizing reports, and transforming scattered data into reliable systems, 
-            we bring practical, battle-tested solutions-not theory.
+          With over <span style="font-weight: 800;">five years of experience</span> building <span style="font-weight: 800;">pipelines</span>, 
+          <span style="font-weight: 800;">optimizing reports</span>, and <span style="font-weight: 800;">transforming scattered data into reliable systems</span>, 
+          we bring <span style="font-weight: 800;">practical, battle-tested solutions</span> - not theory.
         </p>
+
       </div>
       <div class="case_study_cards" >
         <h3 class="case_study_card_title">No AI Without Solid Data Engineering</h3>
-        <p class="case_study_paragraph">
-          Everyone wants AI but want to skip the steps to get there. Without proper data engineering, AI can't succeed. 
-          We set up the foundation so predictive modeling works as intended.
-        </p>
+          <p class="case_study_paragraph">
+            Everyone wants <span style="font-weight: 800;">AI</span> but want to skip the steps to get there. 
+            Without proper <span style="font-weight: 800;">data engineering</span>, <span style="font-weight: 800;">AI can't succeed</span>. 
+            We set up the <span style="font-weight: 800;">foundation</span> so <span style="font-weight: 800;">predictive modeling works as intended</span>.
+          </p>
+
       </div>
     </div>
   </div>
@@ -1316,67 +1443,118 @@ justify-content: center;
       </div>
     </div>
     <div class="case_study_container">
-      <div class="case_study_cards" >
-        <h3 class="case_study_card_title">Small Non-Profit Orginization</h3>
-        <p class="case_study_paragraph">
+      <div class="flip-card">
+        <div class="flip-card-inner">
+        <div class="flip-card-front" >
+          <img class="flip-card-image" src="/portfolio/images/nonprofit.png">
+          <h3 class="flip-card-header">Non-Profit Orginization</h3>
+
+        </div>
+          <div class="flip-card-back">
+            <h1 class="case_study_card_title">Non-Profit</h1> 
+           <p class="case_study_paragraph1" style="font-size: 25px">
             The client was managing <span class="problem_text">scattered Excel files & Word-Docs</span> with <span class="problem_text">no real structure</span>.  
             We organized their data into <span class="solution_text">clean, standardized tables</span>, making it easy to generate <span class="solution_text">reports and dashboards</span>.  
             They can now track <span class="solution_text">sales, inventory, and customer behavior</span> efficiently.
-        </p>
+          </p>
+          </div>
+        </div>
       </div>
-      <div class="case_study_cards">
-        <h3 class="case_study_card_title">Marketing Team</h3>
-        <p class="case_study_paragraph">
+      <div class="flip-card">
+        <div class="flip-card-inner">
+          <div class="flip-card-front">
+            <img  class="flip-card-image"src="/portfolio/images/marketing.png">
+            <h3 class="flip-card-header">Marketing</h3>
+          </div>
+          <div class="flip-card-back">
+            <h1 class="case_study_card_title">Marketing Team</h1> 
+           <p class="case_study_paragraph1" style="font-size: 25px">
             The marketing team relied on <span class="problem_text">multiple social media data sources</span>,  
             making it <span class="problem_text">difficult to see the full picture</span>.  
             We pulled and combined all sources into a <span class="solution_text">single, unified location</span>,  
             allowing the team to easily view <span class="solution_text">trends and correlations across platforms</span>.
         </p>
+          </div>
+        </div>
       </div>
-     <div class="case_study_cards">
-      <h3 class="case_study_card_title">Finance Department</h3>
-      <p class="case_study_paragraph">
-        The finance department needed a better way to track <span class="problem_text">employee utilization and billable hours</span> across multiple departments.  
-        We created <span class="solution_text">consolidated Power BI datasets</span>, providing <span class="solution_text">clear, real-time insights</span> into <span class="solution_text">team performance and resource allocation</span>.
-      </p>
-     </div>
-    <div class="case_study_cards">
-      <h3 class="case_study_card_title">Help-Desk</h3>
-      <p class="case_study_paragraph">
-        The department manages both <span class="problem_text">internal and external ticketing</span>, with a <span class="problem_text">data model spanning over 100 tables</span>.  
-        Users previously spent <span class="problem_text">hours just to gain insight from a single ticket</span>.  
-        We built <span class="solution_text">automated pipelines</span> that consolidated all transformations, reducing the model to <span class="solution_text">5 tables</span>.  
-        This created a <span class="solution_text">single source of truth</span>, enabling <span class="solution_text">multiple new reports and actionable insights</span> across ticketing.
-      </p>
-      </div>
-      <div class="case_study_cards">
-        <h3 class="case_study_card_title">Sales Team</h3>
-          <p class="case_study_paragraph">
-            The sales team relied on <span class="problem_text">quotas from their reps,</span> including metrics like <span class="problem_text">calls made, </span>
-            <span class="problem_text">videos created, </span>
-            <span class="problem_text">emails sent, </span>
-            and <span class="problem_text">first appointments booked</span>.
-            These metrics directly affected <span class="problem_text">bonuses</span> 
-            and tracked each rep's performance on the team. Existing <spa">Power BI aggregations</span> 
-            were often <span class="problem_text">inaccurate</span>,
-              leading to <span class="problem_text">discrepancies</span>.
-            We transitioned these calculations into
-            <span class="solution_text" >automated SQL scripts</span>, 
-            enabling <span class="solution_text" >precise, reliable tracking</span> 
-            and creating a <span class="solution_text" >staged system</span> 
-            for <span class="solution_text" >consistent, dependable reporting</span>.
+      <div class="flip-card">
+        <div class="flip-card-inner">
+          <div class="flip-card-front">
+            <img class="flip-card-image" src="/portfolio/images/finance.png">
+            <h3 class="flip-card-header">Finance</h3>
+
+          </div>
+          <div class="flip-card-back">
+            <h1 class="case_study_card_title">Finance Department</h1> 
+            <p class="case_study_paragraph1" style="font-size: 25px">
+            The finance department needed a better way to track <span class="problem_text">employee utilization and billable hours</span> across multiple departments.  
+            We created <span class="solution_text">consolidated Power BI datasets</span>, providing <span class="solution_text">clear, real-time insights</span> into <span class="solution_text">team performance and resource allocation</span>.
           </p>
+          </div>
+        </div>
       </div>
-      <div class="case_study_cards">
-        <h3 class="case_study_card_title">Internal Team</h3>
-        <p class="case_study_paragraph">
-          The internal team initially relied on <span class="problem_text">Power BI</span> to perform all <span class="problem_text">data transformations</span>, which made models <span class="problem_text">heavy and slow</span>.  
-          We transitioned their workflows to an <span class="solution_text">Azure cloud environment</span>, creating a <span class="solution_text">data lake</span> and the first version of a <span class="solution_text">data definitions table</span>.  
-          With transformations handled in the cloud, <span class="solution_text">Power BI models</span> became <span class="solution_text">lighter, faster, and easier to maintain</span>, giving the team a <span class="solution_text">scalable and reliable reporting solution</span>.
-        </p>
+      <div class="flip-card">
+        <div class="flip-card-inner">
+          <div class="flip-card-front">
+            <img class="flip-card-image" src="/portfolio/images/helpdesk.png">
+            <h3 class="flip-card-header">Help Desk</h3>
+
+          </div>
+          <div class="flip-card-back">
+            <h1 class="case_study_card_title">Help Desk</h1> 
+            <p class="case_study_paragraph1" style="font-size: 25px">
+            The finance department needed a better way to track <span class="problem_text">employee utilization and billable hours</span> across multiple departments.  
+            We created <span class="solution_text">consolidated Power BI datasets</span>, providing <span class="solution_text">clear, real-time insights</span> into <span class="solution_text">team performance and resource allocation</span>.
+          </p>
+          </div>
+        </div>
       </div>
+      <div class="flip-card" >
+        <div class="flip-card-inner">
+          <div class="flip-card-front">
+            <img class="flip-card-image" src="/portfolio/images/sales.png">
+            <h3 class="flip-card-header">Sales</h3>
+
+          </div>
+          <div class="flip-card-back">
+            <h1 class="case_study_card_title">Sales Team</h1> 
+           <p class="case_study_paragraph1" style="font-size: 25px">
+  The sales team relied on <span class="problem_text">rep quotas</span>-<span class="problem_text">calls, 
+    videos, emails, and first appointments</span>-to determine 
+    <span class="problem_text">bonuses</span> and track performance. Existing 
+    <span class="problem_text">Power BI reports</span> were
+     <span class="problem_text">inaccurate</span>, causing 
+     <span class="problem_text">discrepancies</span>. We replaced them with 
+     <span class="solution_text">automated SQL scripts</span>, ensuring 
+     <span class="solution_text">accurate, consistent reporting</span> through a 
+     <span class="solution_text">staged system</span>.
+</p>
+
+          </div>
+        </div>
+      </div>
+      <div class="flip-card">
+        <div class="flip-card-inner">
+          <div class="flip-card-front">
+            <img class="flip-card-image" src="/portfolio/images/internal.png">
+            <h3 class="flip-card-header">Internal</h3>
+
+          </div>
+          <div class="flip-card-back">
+            <h1 class="case_study_card_title">Internal Dev Team</h1> 
+<p class="case_study_paragraph1" style="font-size: 25px;">
+  The internal team worked with <span class="problem_text">enormous SQL models</span> to build client apps, making development <span class="problem_text">slow and complex</span>.  
+  We redesigned their workflows with <span class="solution_text">staged pipelines</span>, feeding a <span class="solution_text">structured data lake</span> and <span class="solution_text">definitions table</span>.  
+  This gave them <span class="solution_text">simpler, faster datasets</span>, so apps could be built <span class="solution_text">quicker, cleaner, and more reliable</span>.
+</p>
+
+
+          </div>
+        </div>
+      </div>
+
     </div>
-    <section class="testimonial_section" >
+     <section class="testimonial_section" >
       <div class="scroll-container">
         <div class="scroll-content">
           <div class="logos">
@@ -1410,6 +1588,7 @@ justify-content: center;
         </div>
       </div>
     </section>
+
   </div>
 </div>
 <section class="testimonial_section" style="margin-top: 2%; text-align: center; padding: 3rem 1rem; color: white; background-color: #04343522; border-radius: 5px; padding: 2%;"  >
@@ -1523,7 +1702,7 @@ function scrollToView(id) {
           document.getElementById("why_choose_us").scrollIntoView({ behavior: "smooth" });
           
         }
-        if (id == "lets_talk"){
+        if (id == "lets_talk" || id == 'free_call'){
           document.getElementById("formview").scrollIntoView({ behavior: "smooth" });
         }
 }
