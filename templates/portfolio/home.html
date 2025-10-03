@@ -498,6 +498,8 @@ justify-content: center;
 }
 
 
+
+
 .case_study_card_title{
    font-size: 35px; 
    margin: 0;
@@ -576,7 +578,8 @@ justify-content: center;
 
 .scroll-content {
   display: flex;
-  width: max-content;
+  justify-content: center;
+  /* width: max-content; */
   animation: scroll 30s linear infinite;
 }
 
@@ -908,7 +911,42 @@ justify-content: center;
   display: none !important;
 }
 
-@media (max-width: 1280px) {
+@media (max-width: 1780px) {
+
+.desktop_intro_sections {
+  display: flex;
+  gap: 2em;
+}
+
+#desktop_intro_section_image {
+  flex: 1;
+  display: flex;
+}
+
+#desktop_intro_section_image img {
+  width: 100% !important;
+  object-fit: cover; 
+  border-radius: 10px;
+  opacity: 0.5;
+  display: block;    
+  } 
+.painpoints_list{
+  font-size: 20px !important;
+  }
+}
+  /* .case_study_paragraph{
+    font-size: 15px !important;
+  } */
+  
+
+@media (max-width: 1279px) {
+
+
+  .phone_intro{
+    margin-top: 80px !important;
+
+  }
+
   .desktop_intro, .topnav{
     display: none !important;
 
@@ -1010,18 +1048,17 @@ justify-content: center;
 
 .painpoints_list li {
   margin-bottom: 0.6em;
-  padding-left: 1.5em;
   position: relative;
   color: black;
 }
 
-.painpoints_list li::before {
+/* .painpoints_list li::before {
   content: "*";
   color: #19545b;
   font-weight: bold;
   position: absolute;
   left: 0;
-}
+} */
 
 
 
@@ -1145,14 +1182,14 @@ justify-content: center;
 <div class="desktop_intro" style="display: flex; align-items: center; justify-content: center;">
   <div class="main_section" id="intro_section" style="background-color: #fff; width: 80%; border-radius: 20px; margin-top: 5%; padding: 2%;">
     
-    <div style="display: flex; justify-content: center; width: 100%; gap: 2em;">
+    <div class="desktop_intro_sections" style="display: flex; justify-content: center; width: 100%; gap: 2em;">
       
-      <div style="flex: 1; text-align: center;">
+      <div id="desktop_intro_section_image" style="flex: 1; text-align: right;">
         <img id="intro_image" style="max-width: 700px; border-radius: 10px; margin: 0 auto; opacity: .5;" 
              src="/portfolio/images/scatteredteam.png">
       </div>
-      <div style="flex: 1; text-align: left;">
-        <h3 class="section_title" style="font-size: 42px; font-weight: 800; margin: 0 0 0.3em 0; color: #000;">
+      <div id="desktop_intro_section_questions" style="flex: 1; text-align: left;">
+        <h3 class="section_title" id="desktop_intro_section_question_title" style="font-size: 42px; font-weight: 800; margin: 0 0 0.3em 0; color: #000; text-align: left;">
           Too much data, not enough insight?
         </h3>
 
@@ -1161,12 +1198,12 @@ justify-content: center;
         </h3>
 
         <ul class="painpoints_list">
-          <li>"Why do sales numbers never match?"</li>
           <li>"Who owns these Excel sheets?"</li>
           <li>"Where can I find this information?"</li>
-          <li>"Why does every department have a different version of the truth?"</li>
+          <li>"Why do sales numbers never match?"</li>
           <li>"Can we trust this dashboard or is it outdated?"</li>
           <li>"Who is responsible for fixing these broken reports?"</li>
+          <li>"Why does every department have a different version of the truth?"</li>
           <li>"We want AI, but our data foundation isn't ready - where do we begin?"</li>
         </ul>
       </div>
@@ -1176,6 +1213,9 @@ justify-content: center;
 
   </div>
 </div>
+
+
+
 <div class="desktop_intro">
    <div style="display: flex; justify-content: center;">  
         <h3 class="section_subtitle" id="section1_subtitle" style="  margin: 0 auto;  color: rgb(255, 255, 255); width: 40%;  font-size: 42px; font-weight: 500; text-align: left; margin-top: 4%;">
@@ -1275,7 +1315,7 @@ justify-content: center;
           <h2 style="margin-top: 1%; margin: 0; font-size: 25px; color: #28a745; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Locate & Organize</h2>
         </div>
         <h3 class="subitem" style="color: red; font-size: 1.4em; margin-top: 0.5em; text-align: center;">
-          Question: How long would it take your team to find a critical file if you weren't here?
+          How long would it take your team to find a critical file if you weren't here?
       </h3>
       </div>
 <div class="case_study_cards silver" style="background: linear-gradient(135deg, rgba(192,192,192,0.6) 0%, rgba(220,220,220,0.3) 50%, rgba(192,192,192,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
@@ -1291,7 +1331,7 @@ justify-content: center;
             <h2 style="margin: 0; font-size: 25px; color: #28a745; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Combine & Standardize</h2>
           </div>
           <h3 class="subitem" style="color: red; font-size: 1.4em; margin-top: 0.5em; text-align: center;">
-            Question: Can anyone in your team confidently use this data to make decisions without asking you?
+            Can anyone in your team confidently use this data to make decisions without asking you?
         </h3>
     </div>
 <div class="case_study_cards gold" style="background: linear-gradient(135deg, rgba(255,215,0,0.6) 0%, rgba(255,240,128,0.3) 50%, rgba(255,215,0,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
@@ -1307,7 +1347,7 @@ justify-content: center;
         <h2 style="margin: 0; font-size: 25px; color: #28a745; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Build, Share & Deploy</h2>
       </div>
       <h3 class="subitem" style="color: red; font-size: 1.4em; margin-top: 0.5em; text-align: center;">
-          Question: Can your team make data-driven decisions instantly without manual intervention?
+          Can your team make data-driven decisions instantly without manual intervention?
         </h3>
     </div>
   </div>
@@ -1347,22 +1387,22 @@ justify-content: center;
       <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">LET US HELP YOU </h1>
     </div>
   <div class="case_study_container">
-      <div id="free_call" class="case_study_cards" style=" background: linear-gradient(135deg, rgba(205,128,50,0.6) 0%, rgba(230,180,80,0.3) 50%, rgba(205, 128, 50, 0.87) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
+      <div id="freecall" class="case_study_cards" style=" background: linear-gradient(135deg, rgba(205,128,50,0.6) 0%, rgba(230,180,80,0.3) 50%, rgba(205, 128, 50, 0.87) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
         <h3 style="color: rgb(255, 255, 255); text-align: center;" class="case_study_card_title">Free Discovery Call</h3>
         <p style="color: black;" class="case_study_paragraph"><span style="font-weight: 800;">No cost</span>, no commitment - <span style="font-weight: 800;">just answers.</span></p>
         <p style="color: black;" class="case_study_paragraph">Pinpoint your biggest data pain points.</p>
         <p style="color: black;" class="case_study_paragraph"><span style="color: green; font-weight: 800;">Get tailored advice</span> you can act on <span style="color: red;font-weight: 800;">today.</span></p>
         <p style="color: black;" class="case_study_paragraph">Walk away with a  <span style="color: green; font-weight: 800;">clear action plan.</span></p>
       </div>
-    <div class="case_study_cards" style="background: linear-gradient(135deg, rgb(192, 192, 192) 20%, rgba(255, 255, 255, 0.3) 50%, rgb(192, 192, 192) 90%);  box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
+    <div id="blueprint" class="case_study_cards" style="background: linear-gradient(135deg, rgb(192, 192, 192) 20%, rgba(255, 255, 255, 0.3) 50%, rgb(192, 192, 192) 90%);  box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
           <h3 class="case_study_card_title" style="color: blue; text-align: center;">Blueprint Your Data</h3>
           <p style="color: black;"  class="case_study_paragraph">Turn messy files into a <span style="color: green; font-weight: 800;">clear structure.</span></p>
           <p style="color: black;"  class="case_study_paragraph">Standardize, clean, and connect everything.</p>
           <p style="color: black;"  class="case_study_paragraph">Make data <span style="color: green; font-weight: 800;">easy to access</span> and ready to use.</p>
-          <p style="color: black;"  class="case_study_paragraph">Build a foundation your whole team can trust.</p>
-          <p style="color: black;" class="case_study_paragraph">Work in short, focused phases - so you <span style="font-weight: 800;">see progress fast</span> without waiting months.</p>
+          <!-- <p style="color: black;"  class="case_study_paragraph">Build a foundation your whole team can trust.</p> -->
+          <p style="color: black;" class="case_study_paragraph">Work in short, focused phases - so you <span style="color: green; font-weight: 800;">see progress fast</span> without waiting months.</p>
     </div>
-    <div class="case_study_cards" style="background: linear-gradient(135deg, rgba(255, 217, 0, 0.829) 0%, rgba(255,240,128,0.3) 50%, rgba(255,215,0,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
+    <div id="launch" class="case_study_cards" style="background: linear-gradient(135deg, rgba(255, 217, 0, 0.829) 0%, rgba(255,240,128,0.3) 50%, rgba(255,215,0,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
       <h3 style="color: red;  text-align: center;" class="case_study_card_title">Build & Launch</h3>
       <p style="color: black;"  class="case_study_paragraph">Get<span style="color: green; font-weight: 800;"> reliable, decision-ready data.</span></p>
       <p style="color: black;"  class="case_study_paragraph">Share insights seamlessly with your team.</p>
@@ -1370,28 +1410,32 @@ justify-content: center;
       <p style="color: black;"  class="case_study_paragraph"><span style="color: green; font-weight: 800;">Smooth handoff</span> so your team can own it.</p>
     </div>
   </div>
-  <section class="testimonial_section" style="margin-top: 2%;">
-    <div class="scroll-container">
-      <div class="scroll-content">
-        <div class="logos">
-          <img src="/portfolio/images/spark.png" />
-          <img src="/portfolio/images/PowerBIlogo.png" />
-          <img src="/portfolio/images/Tableau.png" />
-          <img src="/portfolio/images/azure.png" />
-          <img src="/portfolio/images/excel.png" />
-          <img src="/portfolio/images/sql.png" />
-        </div>
-        <div class="logos">
-          <img src="/portfolio/images/spark.png" />
-          <img src="/portfolio/images/PowerBIlogo.png" />
-          <img src="/portfolio/images/Tableau.png" />
-          <img src="/portfolio/images/azure.png" />
-          <img src="/portfolio/images/excel.png" />
-          <img src="/portfolio/images/sql.png" />
+  <div style="display: flex; justify-content: center; align-items: center; outline: 1px ">
+    <section class="testimonial_section" style="margin-top: 2%; width: 100%;">
+      <div class="scroll-container">
+        
+        <div class="scroll-content" >
+          <div class="logos">
+            <img src="/portfolio/images/spark.png" />
+            <img src="/portfolio/images/PowerBIlogo.png" />
+            <img src="/portfolio/images/Tableau.png" />
+            <img src="/portfolio/images/azure.png" />
+            <img src="/portfolio/images/excel.png" />
+            <img src="/portfolio/images/sql.png" />
+          </div>
+          <div class="logos">
+            <img src="/portfolio/images/spark.png" />
+            <img src="/portfolio/images/PowerBIlogo.png" />
+            <img src="/portfolio/images/Tableau.png" />
+            <img src="/portfolio/images/azure.png" />
+            <img src="/portfolio/images/excel.png" />
+            <img src="/portfolio/images/sql.png" />
+          </div>
         </div>
       </div>
+      </section>
+
     </div>
-  </section>
   <p class="section_footer_paragraph" style=" text-align: center; color: rgba(0, 0, 0, 0.441); margin-top: 1.2rem; font-size: 25px; font-weight: 550;">
       Depending on your setup, tools can range from <span style="color: rgb(0, 184, 0);">Excel</span> 
       for simple datasets to <span style="color: orange;">Spark</span> and 
@@ -1540,10 +1584,19 @@ justify-content: center;
           </div>
           <div class="flip-card-back">
             <h1 class="case_study_card_title">Help Desk</h1> 
-            <p class="case_study_paragraph1" style="font-size: 25px">
-            The finance department needed a better way to track <span class="problem_text">employee utilization and billable hours</span> across multiple departments.  
-            We created <span class="solution_text">consolidated Power BI datasets</span>, providing <span class="solution_text">clear, real-time insights</span> into <span class="solution_text">team performance and resource allocation</span>.
-          </p>
+           <p class="case_study_paragraph" style="font-size: 25px;">
+  The department managed <span class="problem_text">ticketing across 100+ tables</span>, where <span class="problem_text">teams spent hours figuring out which tables to join and chasing others for the right data</span>.  
+  We built <span class="solution_text">automated pipelines</span> that reduced it to <span class="solution_text">5-10 tables</span>, creating a <span class="solution_text">single source of truth</span> and enabling <span class="solution_text">new reports and actionable insights</span>.
+</p>
+
+
+
+             <!-- <p class="case_study_paragraph" style="font-size: 25px;">
+                  The department manages both <span class="problem_text">internal and external ticketing</span>, with a <span class="problem_text">data model spanning over 100 tables</span>.  
+                  Users previously spent <span class="problem_text">hours just to gain insight from a single ticket</span>.  
+                  We built <span class="solution_text">automated pipelines</span> that consolidated all transformations, reducing the model to <span class="solution_text">5 tables</span>.  
+                  This created a <span class="solution_text">single source of truth</span>, enabling <span class="solution_text">multiple new reports and actionable insights</span> across ticketing.
+              </p> -->
           </div>
         </div>
       </div>
@@ -1753,7 +1806,7 @@ const topnav = document.querySelector('.phonenav');
 window.addEventListener('scroll', () => {
   const currentScroll = window.pageYOffset;
 
-  if (window.innerWidth > 768) return;
+  if (window.innerWidth > 1279) return;
 
   if (currentScroll <= 0) {
     topnav.style.top = '0';
