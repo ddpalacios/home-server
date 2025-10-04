@@ -791,15 +791,22 @@ justify-content: center;
    
     /* text-justify: inter-word; */
     /* word-spacing: 2px; */
-    /* font-size: 1.3em !important; */
+    font-size: 1.5em !important;
     /* max-width: 90%;   */
   }
-  /*
+  .quotation_mark{
+    font-size: 1.2em !important;
+    font-weight: 800;
+    font-family: 'Courier New', Courier, monospace
+
+    
+  }
+  
   .quote_from{
     font-size: 1.8em !important;
     padding: 5% !important;
 
-  } */
+  }
   .testimonial_section{
     margin-top: 15% !important;
 
@@ -960,6 +967,12 @@ justify-content: center;
   
 
 @media (max-width: 1279px) {
+  
+  .logos img {
+  height: 50px;
+  margin: 0 2rem;
+  object-fit: contain;
+}
 
 
   .phone_intro{
@@ -1388,7 +1401,7 @@ justify-content: center;
         </h3>
     </div>
     <div style="display: flex; justify-content: center;">  
-      <h3 class="section_subtitle" id="section1_subtitle" style="margin-top: 1%; color: white; width: 60%;  font-size: 42px; font-weight: 400; text-align: right;">
+      <h3 class="section_subtitle" id="section1_subtitle" style="margin-top: 1%; color: white; width: 70%;  font-size: 42px; font-weight: 400; text-align: right;">
            Which tools help us level up without the extra cost?
         </h3>
     </div>
@@ -1722,10 +1735,15 @@ justify-content: center;
   </div>
 </div>
 <section class="testimonial_section" style="margin-top: 2%; text-align: center; padding: 3rem 1rem; color: white; background-color: #04343522; border-radius: 5px;">
-  <blockquote class="quote" style="position: relative; font-size: 2.5rem; font-style: italic; max-width: 900px; margin: 0 auto; line-height: 1.4; text-align: justify; padding-left: 3rem;">
-    <span style=" position: absolute; top: -10px; left: 0; font-weight: 800; font-size: 3.8rem; font-family: 'Playfair Display', serif; color: #ffffff; line-height: 1;">"</span>
-    Daniel excels at <span style="color: #dd5050;">end-to-end data architecture</span> - handling everything from extraction and storage to transformation, loading, and visualization in Microsoft Fabric and Power BI.
-  </blockquote>
+<blockquote class="quote" style="position: relative; font-size: 2.2rem; font-style: italic; max-width: 900px; margin: 0 auto; line-height: 1.5; text-align: justify; padding: 2rem 2.5rem; color: #fff;">
+  <!-- <span class="quotation_mark" style="position: absolute; top: 0; left: 0; transform: translate(-40%, -20%); font-weight: 900; font-size: 4rem; font-family: 'Playfair Display', serif; color: rgba(255, 255, 255, 0.35); line-height: 1;">"</span> -->
+  
+  <span class="quotation_mark"> "</span> Daniel excels at <span style="color: #dd5050;">end-to-end data architecture</span> - handling everything from extraction and storage to transformation, loading, and visualization in Microsoft Fabric and Power BI.<span class="quotation_mark">"</span>
+  
+  <!-- <span class="quotation_mark"  style="position: absolute; bottom: 0; right: 0; transform: translate(40%, 40%); font-weight: 900; font-size: 4rem; font-family: 'Playfair Display', serif; color: rgba(255, 255, 255, 0.35); line-height: 1;">"</span> -->
+</blockquote>
+
+
   <p class="quote_from" style="margin-top: 1.3rem; font-size: 1.8em; color: #5aa1f2;">
     - Alex Servlosky, Data Engineer
   </p>
