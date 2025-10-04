@@ -1200,6 +1200,154 @@ justify-content: center;
 
 </style>
 
+<style>
+.fade-up {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.fade-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.all_painpoints {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  gap: 2em;
+}
+
+.pain-point {
+  width: 100%;
+  max-width: 1000px;
+}
+
+.painpoint_container {
+  background: none;
+}
+
+.painpoint_quotes {
+  color: white;
+  font-size: 2rem;
+  line-height: 1.4;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.visible .painpoint_quotes {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.2s;
+}
+
+.phone_intro {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.phone_intro.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.phone_intro h3 {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.phone_intro.visible h3 {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Optional: stagger fade for a smoother feel */
+.phone_intro.visible h3:nth-child(1) {
+  transition-delay: 0.2s;
+}
+
+.phone_intro.visible h3:nth-child(2) {
+  transition-delay: 0.4s;
+}
+
+.quote {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.quote.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Optional: make quotation marks fade separately for flair */
+.quotation_mark {
+  opacity: 0;
+  transition: opacity 0.8s ease-out;
+}
+
+.quote.visible .quotation_mark {
+  opacity: 1;
+  transition-delay: 0.2s;
+}
+
+/* Initial hidden state */
+.desktop_intro h3 {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+/* When visible */
+.desktop_intro.visible h3 {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Optional stagger for smoother entrance */
+.desktop_intro.visible h3:nth-child(1) {
+  transition-delay: 0.1s;
+}
+
+.desktop_intro.visible h3:nth-child(2) {
+  transition-delay: 0.3s;
+}
+/* Initial state for each list item */
+.painpoints_list li {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+/* When parent section is visible */
+.painpoints_list.visible li {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Optional: stagger each li for nice sequential effect */
+.painpoints_list.visible li:nth-child(1) { transition-delay: 0.2s; }
+.painpoints_list.visible li:nth-child(2) { transition-delay: 0.4s; }
+.painpoints_list.visible li:nth-child(3) { transition-delay: 0.6s; }
+.painpoints_list.visible li:nth-child(4) { transition-delay: 0.8s; }
+.painpoints_list.visible li:nth-child(5) { transition-delay: 1.0s; }
+.painpoints_list.visible li:nth-child(6) { transition-delay: 1.2s; }
+.painpoints_list.visible li:nth-child(7) { transition-delay: 1.4s; }
+
+
+
+
+
+
+</style>
+
 </head>
 <body>
 
@@ -1232,9 +1380,9 @@ justify-content: center;
           Too much data, not enough insight?
         </h3>
 
-        <h3 id="intro_comment" class="section_subtitle" style="color: #030303; font-size: 28px; font-weight: 900; margin: 1 0 1em 0; text-align: left;">
+        <p id="intro_comment" class="section_subtitle" style="color: #030303; font-size: 28px; font-weight: 900; margin: 1 0 1em 0; text-align: left;">
           We've heard it all before...
-        </h3>
+        </p>
 
         <ul class="painpoints_list">
           <li>"Who owns these Excel sheets?"</li>
@@ -1243,7 +1391,7 @@ justify-content: center;
           <li>"Can we trust this dashboard or is it outdated?"</li>
           <li>"Who is responsible for fixing these broken reports?"</li>
           <li>"Why does every department have a different version of the truth?"</li>
-          <li>"We want AI, but our data foundation isn't ready - where do we begin?"</li>
+          <li>"We want AI, but our data foundation isn't ready"</li>
         </ul>
       </div>
 
@@ -1258,7 +1406,7 @@ justify-content: center;
 <div class="desktop_intro">
    <div style="display: flex; justify-content: center;">  
         <h3 class="section_subtitle" id="section1_subtitle" style="  margin: 0 auto;  color: rgb(255, 255, 255); width: 40%;  font-size: 42px; font-weight: 500; text-align: left; margin-top: 4%;">
-              What is our first step?
+               Where do we begin?
           </h3>
       </div>
       <div style="display: flex; justify-content: center;">  
@@ -1269,13 +1417,15 @@ justify-content: center;
 </div>
 
 <div class="phone_intro" style="margin-top: 5%; width:100%;background:linear-gradient(to bottom,#017070,#003333,#000000);">
-    <h1  id="section1_maintitle" style="text-align: center; color: white; font-size: 42px; padding: 5%; ">Too much data, not enough insight?</h1>
+  <header>
+    <h1  id="sect_maintitle" style="text-align: center; color: white; font-size: 42px; padding: 5%; ">Too much data, not enough insight?</h1>
     <div style="display: flex; justify-content: center; text-align: center;">  
     <h3 style="text-align: center; color: rgb(255, 255, 255); width: 100%; font-size: 42px;font-weight: 800; padding: 5%; ">
               We've heard it all before...
     </h3>
     </div>
-    </div>
+    </header>
+  </div>
 
     <div class="all_painpoints" style=" display: flex; flex-direction: column; text-align: center; ">
       <div class="pain-point">
@@ -1310,7 +1460,7 @@ justify-content: center;
       </div>
             <div class="pain-point">
         <div class="painpoint_container" >
-         <h2 class="painpoint_quotes"> "We want AI, but our data foundation isn't ready - where do we begin?"</h2>
+         <h2 class="painpoint_quotes"> "We want AI, but our data foundation isn't ready"</h2>
         </div>
       </div>
     </div>
@@ -1318,7 +1468,7 @@ justify-content: center;
 <div class="phone_intro">
         <div style="display: flex; justify-content: center;">  
         <h3 class="section_subtitle" id="section1_subtitle2" style=" width: 100%; text-align: center;  margin: 0 auto; color: rgb(255, 255, 255); padding: 5%; font-size: 42px; font-weight: 500; margin-bottom: 15%; margin-top: 15%;">
-              What is our first step?
+              Where do we begin?
           </h3>
       </div>
 
@@ -1396,12 +1546,12 @@ justify-content: center;
 <div class="desktop_intro" style="display: flex; align-items: center; justify-content: center;">
   <div class="main_section1" style="background-color: rgba(255, 255, 255, 0); width: 80%;  border-radius: 20px; margin-top: 4%;">
     <div style="display: flex; justify-content: center;">  
-      <h3 class="section_subtitle" id="section1_subtitle" style="margin-top: 1%; color: white; width: 60%;  font-size: 42px; font-weight: 400; text-align: left;">
+      <h3 class="section_subtitle" id="section1_subtitle" style="margin-top: 1%; color: white; width: 70%;  font-size: 42px; font-weight: 400; text-align: left;">
             How do we advance to the next stage?
         </h3>
     </div>
     <div style="display: flex; justify-content: center;">  
-      <h3 class="section_subtitle" id="section1_subtitle" style="margin-top: 1%; color: white; width: 70%;  font-size: 42px; font-weight: 400; text-align: right;">
+      <h3 class="section_subtitle" id="section1_subtitle" style="margin-top: 1%; color: white; width: 90%;  font-size: 42px; font-weight: 400; text-align: right;">
            Which tools help us level up without the extra cost?
         </h3>
     </div>
@@ -1736,11 +1886,7 @@ justify-content: center;
 </div>
 <section class="testimonial_section" style="margin-top: 2%; text-align: center; padding: 3rem 1rem; color: white; background-color: #04343522; border-radius: 5px;">
 <blockquote class="quote" style="position: relative; font-size: 2.2rem; font-style: italic; max-width: 900px; margin: 0 auto; line-height: 1.5; text-align: justify; padding: 2rem 2.5rem; color: #fff;">
-  <!-- <span class="quotation_mark" style="position: absolute; top: 0; left: 0; transform: translate(-40%, -20%); font-weight: 900; font-size: 4rem; font-family: 'Playfair Display', serif; color: rgba(255, 255, 255, 0.35); line-height: 1;">"</span> -->
-  
   <span class="quotation_mark"> "</span> Daniel excels at <span style="color: #dd5050;">end-to-end data architecture</span> - handling everything from extraction and storage to transformation, loading, and visualization in Microsoft Fabric and Power BI.<span class="quotation_mark">"</span>
-  
-  <!-- <span class="quotation_mark"  style="position: absolute; bottom: 0; right: 0; transform: translate(40%, 40%); font-weight: 900; font-size: 4rem; font-family: 'Playfair Display', serif; color: rgba(255, 255, 255, 0.35); line-height: 1;">"</span> -->
 </blockquote>
 
 
@@ -1862,14 +2008,13 @@ function scrollToView(id) {
 </script>
 
 <script>
+// ===== Nav Hide/Show on Scroll =====
 let lastScroll = 0;
 const topnav = document.querySelector('.phonenav');
 const mainnav = document.querySelector('.topnav');
 
 window.addEventListener('scroll', () => {
   const currentScroll = window.pageYOffset;
-
-  // if (window.innerWidth > 1279) return;
 
   if (currentScroll <= 0) {
     topnav.style.top = '0';
@@ -1887,8 +2032,44 @@ window.addEventListener('scroll', () => {
 
   lastScroll = currentScroll;
 });
+
+// ===== IntersectionObserver for Fade-In-On-Scroll =====
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    } else {
+      entry.target.classList.remove('visible');
+    }
+  });
+}, { threshold: 0.1 });
+
+// ===== Observe elements to fade in =====
+const fadeElements = document.querySelectorAll(
+  '.quote, .phone_intro, .pain-point, .desktop_intro'
+);
+
+fadeElements.forEach(el => {
+  el.classList.add('fade-up'); // optional default fade-up class
+  observer.observe(el);
+});
+
+// ===== Special handling for painpoints_list items (staggered fade) =====
+const listObserver = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    const list = entry.target;
+    if (entry.isIntersecting) {
+      list.classList.add('visible');
+    } else {
+      list.classList.remove('visible');
+    }
+  });
+}, { threshold: 0.1 });
+
+// Observe each UL of pain points
+document.querySelectorAll('.painpoints_list').forEach(list => {
+  listObserver.observe(list);
+});
 </script>
-
-
 
 </html>
