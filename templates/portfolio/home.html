@@ -111,7 +111,7 @@ body {
 
 .topnav {
   position: fixed;
-  transition: top 0.3s ease; 
+  transition: top 1.5s ease; 
   top: 0;
   left: 0;
   width: 100%;
@@ -131,7 +131,7 @@ body {
 
 
 
-@media screen and (max-width: 1050px) {
+@media screen and (max-width: 1269px) {
   .topnav{
     text-align: center;
     justify-content: center;
@@ -524,16 +524,19 @@ justify-content: center;
 }
 
 .case_study_cards.bronze:hover {
-  background-color: inherit;
-  transform: none;
+    transform: scale(1.05);
+     z-index: 5;            
+
 }
 .case_study_cards.silver:hover {
-  background-color: inherit;
-  transform: none;
+    transform: scale(1.05);
+     z-index: 5;            
+
 }
 .case_study_cards.gold:hover {
-  background-color: inherit;
-  transform: none;
+    transform: scale(1.05);
+    z-index: 5;            
+
 }
 
 .case_study_cards {
@@ -571,16 +574,16 @@ justify-content: center;
 <style>
 .scroll-container {
   overflow: hidden;
-  width: 100%;
+  /* width: 100%; */
   background-color: #00000000;
   padding: 2rem 0;
 }
 
 .scroll-content {
   display: flex;
-  justify-content: center;
-  /* width: max-content; */
-  animation: scroll 15s linear infinite;
+  /* justify-content: center; */
+  width: max-content;
+  animation: scroll 20s linear infinite;
 }
 
 .logos {
@@ -588,7 +591,7 @@ justify-content: center;
 }
 
 .logos img {
-  height: 60px;
+  height: 100px;
   margin: 0 2rem;
   object-fit: contain;
 }
@@ -766,20 +769,37 @@ justify-content: center;
      background-color: inherit;
     transform: none;       
   }
-  .quote{
-    text-align: left !important; 
-    padding: 10% !important;
-    text-justify: inter-word;
-    word-spacing: 2px;
-    font-size: 1.3em !important;
-    max-width: 90%;  
+  
+.case_study_cards.bronze:hover {
+     background-color: inherit;
+    transform: none;          
+
+}
+.case_study_cards.silver:hover {
+      background-color: inherit;
+    transform: none;            
+
+}
+.case_study_cards.gold:hover {
+      background-color: inherit;
+    transform: none;    
+}       
+ .quote{
+   /* padding: 10% !important; */
+    /* text-align: justify !important;  */
     margin: 0 auto;  
+   
+    /* text-justify: inter-word; */
+    /* word-spacing: 2px; */
+    /* font-size: 1.3em !important; */
+    /* max-width: 90%;   */
   }
+  /*
   .quote_from{
     font-size: 1.8em !important;
     padding: 5% !important;
 
-  }
+  } */
   .testimonial_section{
     margin-top: 15% !important;
 
@@ -866,7 +886,7 @@ justify-content: center;
   text-align: right;
 } */
 
-@media (max-width:750px) {
+@media (max-width:1269px) {
 .pain-point:nth-child(even),
   .pain-point:nth-child(odd) {
     text-align: center;
@@ -1159,6 +1179,12 @@ justify-content: center;
     font-size: 20px !important;
   }
 }
+
+.carasol_img{
+  width:100px; 
+  height:700px;
+} 
+
 </style>
 
 </head>
@@ -1171,9 +1197,9 @@ justify-content: center;
 </div>
 
 <div class="phonenav" >
-  <h3 style="color: white; margin: 0 auto;">PALACIOS SOLUTIONS</h3>
-  <hr style="color:white; width: 50%; margin: .01 auto;">
-  <h3 style="color: white; margin: 0 auto; font-size: 15px;"> Your Personal Data Engineer</h3>
+  <h3 id="phonenav_compname"onclick="scrollToView(this.id)" style="color: white; margin: 0 auto;">PALACIOS SOLUTIONS</h3>
+  <hr id="phonenav_hr" onclick="scrollToView(this.id)" style="color:white; width: 50%; margin: .01 auto;">
+  <h3 id="phonenav_headline"onclick="scrollToView(this.id)" style="color: white; margin: 0 auto; font-size: 15px;"> Your Personal Data Engineer</h3>
  
   <button style="height: auto; margin: 0 auto; margin-top: 10px;" class="buttons" id="lets_talk" onclick="scrollToView(this.id)" >Let's Talk</button>
 </div>
@@ -1301,7 +1327,7 @@ justify-content: center;
     </div>
 
     <div class="case_study_container">
-<div class="case_study_cards bronze" style="background: linear-gradient(135deg, rgba(205,128,50,0.6) 0%, rgba(230,180,80,0.3) 50%, rgba(205,128,50,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
+<div class="case_study_cards bronze" style="background: linear-gradient(135deg, rgba(200, 138, 76, 0.432) 0%, rgba(230,180,80,0.3) 50%, rgba(205,128,50,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
         <div style="display: flex; justify-content: center;">
           <img class="medallian_image" style="max-width: 50px; border-radius: 20px; margin: 0 auto;" src="/portfolio/images/bronze.png">
         </div>
@@ -1315,7 +1341,7 @@ justify-content: center;
           <h2 style="margin-top: 1%; margin: 0; font-size: 25px; color: #28a745; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Locate & Organize</h2>
         </div>
         <h3 class="subitem" style="color: red; font-size: 1.4em; margin-top: 0.5em; text-align: center;">
-          How long would it take your team to find a critical file if you weren't here?
+          How long would it take your team to find a critical file without your help?
       </h3>
       </div>
 <div class="case_study_cards silver" style="background: linear-gradient(135deg, rgba(192,192,192,0.6) 0%, rgba(220,220,220,0.3) 50%, rgba(192,192,192,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
@@ -1331,7 +1357,7 @@ justify-content: center;
             <h2 style="margin: 0; font-size: 25px; color: #28a745; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Combine & Standardize</h2>
           </div>
           <h3 class="subitem" style="color: red; font-size: 1.4em; margin-top: 0.5em; text-align: center;">
-            Can anyone in your team confidently use this data to make decisions without asking you?
+            Can your team confidently use this data to make decisions without asking you?
         </h3>
     </div>
 <div class="case_study_cards gold" style="background: linear-gradient(135deg, rgba(255,215,0,0.6) 0%, rgba(255,240,128,0.3) 50%, rgba(255,215,0,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
@@ -1339,15 +1365,16 @@ justify-content: center;
         <img class="medallian_image" style="max-width: 50px; border-radius: 20px; margin: 0 auto;" src="/portfolio/images/gold.png">
       </div>
         <h3 style="font-size: 40px; text-align: center; letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85) 0%, rgba(0,90,110,0.9) 50%, rgba(0,0,0,0.95) 100%); -webkit-background-clip: text; color: transparent;" class="case_study_card_title">GOLD</h3>
-      <p style="color: black;margin: 0.3em 0; padding-left: 1em;  position: relative; font-weight: 600; "  class="case_study_paragraph">Future-ready and built to grow.</p>
-      <p style="color: black;margin: 0.3em 0; padding-left: 1em;  position: relative; font-weight: 600;"  class="case_study_paragraph">ETL, dashboards, and cloud workflows.</p>
-      <p style="color: black;margin: 0.3em 0; padding-left: 1em;  position: relative; font-weight: 600;"  class="case_study_paragraph">Instant reporting & advanced analytics.</p>
+<p style="color: black;margin: 0.3em 0; padding-left: 1em; position: relative; font-weight: 600;" class="case_study_paragraph">Data that grows with your business.</p>
+<p style="color: black;margin: 0.3em 0; padding-left: 1em; position: relative; font-weight: 600;" class="case_study_paragraph">Automated pipelines-no manual work.</p>
+<p style="color: black;margin: 0.3em 0; padding-left: 1em; position: relative; font-weight: 600;" class="case_study_paragraph">Self-service reports your team can trust.</p>
+
       <div style="padding: 5%; display: flex; flex-direction: column; gap: 0.1em; align-items: center; margin-top: 0.5em;">
         <h3 style="margin: 0; font-size: 28px;letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85) 0%, rgba(0,90,110,0.9) 50%, rgba(0,0,0,0.95) 100%); -webkit-background-clip: text; color: transparent;">MATURITY</h3>
         <h2 style="margin: 0; font-size: 25px; color: #28a745; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Build, Share & Deploy</h2>
       </div>
       <h3 class="subitem" style="color: red; font-size: 1.4em; margin-top: 0.5em; text-align: center;">
-          Can your team make data-driven decisions instantly without manual intervention?
+          Can your team make data-driven decisions without manual intervention?
         </h3>
     </div>
   </div>
@@ -1387,74 +1414,99 @@ justify-content: center;
       <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">LET US HELP YOU </h1>
     </div>
   <div class="case_study_container">
-      <div id="freecall" class="case_study_cards" style=" background: linear-gradient(135deg, rgba(205,128,50,0.6) 0%, rgba(230,180,80,0.3) 50%, rgba(205, 128, 50, 0.87) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
+      <div id="freecall" class="case_study_cards" style="background: linear-gradient(135deg, rgba(201, 130, 59, 0.444)  0%, rgb(241, 234, 218) 50%, rgb(199, 168, 135) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
         <h3 style="color: rgb(255, 255, 255); text-align: center;" class="case_study_card_title">Free Discovery Call</h3>
-        <p style="color: black;" class="case_study_paragraph"><span style="font-weight: 800;">No cost</span>, no commitment - <span style="font-weight: 800;">just answers.</span></p>
-        <p style="color: black;" class="case_study_paragraph">Pinpoint your biggest data pain points.</p>
-        <p style="color: black;" class="case_study_paragraph"><span style="color: green; font-weight: 800;">Get tailored advice</span> you can act on <span style="color: red;font-weight: 800;">today.</span></p>
-        <p style="color: black;" class="case_study_paragraph">Walk away with a  <span style="color: green; font-weight: 800;">clear action plan.</span></p>
+        <p style="color: black; text-align: left; " class="case_study_paragraph"><span style="font-weight: 800;">No cost</span>, no commitment-just clarity.</p>
+        <p style="color: black;  text-align: left;" class="case_study_paragraph"><span style="font-weight: 800;">1 hour</span> to pinpoint your biggest data pain points.</p>
+        <p style="color: black;  text-align: left;" class="case_study_paragraph"><span style=" font-weight: 800;">Get tailored advice</span> you can act on immediately.</p>
+        <p style="color: black;  text-align: left;" class="case_study_paragraph">Walk away with a <span style="color: red; font-weight: 900;">clear action plan.</span></p>
+
       </div>
-    <div id="blueprint" class="case_study_cards" style="background: linear-gradient(135deg, rgb(192, 192, 192) 20%, rgba(255, 255, 255, 0.3) 50%, rgb(192, 192, 192) 90%);  box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
-          <h3 class="case_study_card_title" style="color: blue; text-align: center;">Blueprint Your Data</h3>
-          <p style="color: black;"  class="case_study_paragraph">Turn messy files into a <span style="color: green; font-weight: 800;">clear structure.</span></p>
-          <p style="color: black;"  class="case_study_paragraph">Standardize, clean, and connect everything.</p>
-          <p style="color: black;"  class="case_study_paragraph">Make data <span style="color: green; font-weight: 800;">easy to access</span> and ready to use.</p>
-          <!-- <p style="color: black;"  class="case_study_paragraph">Build a foundation your whole team can trust.</p> -->
-          <p style="color: black;" class="case_study_paragraph">Work in short, focused phases - so you <span style="color: green; font-weight: 800;">see progress fast</span> without waiting months.</p>
+    <div id="blueprint" class="case_study_cards" style="background: linear-gradient(135deg, rgb(192, 192, 192) 20%, rgba(255, 255, 255, 0.923) 50%, rgb(192, 192, 192) 90%);  box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
+          <h3 class="case_study_card_title" style="color: blue; text-align: center;">Plan. Build. Execute.</h3>
+          <p style="color: black; text-align: left;" class="case_study_paragraph"><span style="font-weight: 800;">Plan </span>a custom blueprint from our discovery call.</p>
+          <p style="color: black; text-align: left;" class="case_study_paragraph"><span style="font-weight: 800;">Build </span>a data foundation your team can trust.</p>
+          <p style="color: black; text-align: left;" class="case_study_paragraph"><span style="font-weight: 800;">Execute</span> in short, focused sprints.</p>
+          <p style="color: black; text-align: left;" class="case_study_paragraph">Show <span style="font-weight: 800; color: red;">measurable progress</span> every step of the way.</p>
+
     </div>
-    <div id="launch" class="case_study_cards" style="background: linear-gradient(135deg, rgba(255, 217, 0, 0.829) 0%, rgba(255,240,128,0.3) 50%, rgba(255,215,0,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
+    <div id="launch" class="case_study_cards" style="background: linear-gradient(135deg, rgb(254, 230, 93) 0%, rgb(245, 241, 216) 50%, rgba(255,215,0,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
+  <h3 style="color: red; text-align: center;" class="case_study_card_title">Turn Data Into Action</h3>
+  <p style="color: black; text-align: left;" class="case_study_paragraph"><span style="font-weight: 800;">Create & share </span>insights across your team.</p>
+  <p style="color: black; text-align: left;" class="case_study_paragraph"><span style=" font-weight: 800;">Access reliable data</span> at your fingertips</p>
+
+  <p style="color: black; text-align: left;" class="case_study_paragraph"><span style="font-weight: 800;">Scale your data</span> with ease and confidence.</p>
+  <p style="color: black; text-align: left;" class="case_study_paragraph">Empower your team to <span style="color: red;font-weight: 800;">own reports and decisions.</span> </p>
+</div>
+
+    <!-- <div id="launch" class="case_study_cards" style="background: linear-gradient(135deg, rgba(255, 217, 0, 0.829) 0%, rgba(255,240,128,0.3) 50%, rgba(255,215,0,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
       <h3 style="color: red;  text-align: center;" class="case_study_card_title">Build & Launch</h3>
-      <p style="color: black;"  class="case_study_paragraph">Get<span style="color: green; font-weight: 800;"> reliable, decision-ready data.</span></p>
-      <p style="color: black;"  class="case_study_paragraph">Share insights seamlessly with your team.</p>
-      <p style="color: black;"  class="case_study_paragraph">Scale with confidence - no rebuilding required.</p>
-      <p style="color: black;"  class="case_study_paragraph"><span style="color: green; font-weight: 800;">Smooth handoff</span> so your team can own it.</p>
+      <p style="color: black; text-align: left;"  class="case_study_paragraph">Get<span style="color: green; font-weight: 800;"> reliable, decision-ready data.</span></p>
+      <p style="color: black; text-align: left;"  class="case_study_paragraph">Share insights seamlessly with your team.</p>
+      <p style="color: black; text-align: left;"  class="case_study_paragraph">Scale with confidence - no rebuilding required.</p>
+      <p style="color: black; text-align: left;"  class="case_study_paragraph"><span style="color: green; font-weight: 800;">Smooth handoff</span> so your team can own it.</p>
     </div>
+     -->
   </div>
-  <div style="display: flex; justify-content: center; align-items: center; outline: 1px ">
-    <section class="testimonial_section" style="margin-top: 2%; width: 100%;">
+  <!-- <div style="display: flex; justify-content: center; align-items: center; outline: 1px "> -->
+    <section class="testimonial_section" style="margin-top: 2%; ">
       <div class="scroll-container">
         
         <div class="scroll-content" >
           <div class="logos">
-            <img src="/portfolio/images/spark.png" />
-            <img src="/portfolio/images/PowerBIlogo.png" />
-            <img src="/portfolio/images/Tableau.png" />
-            <img src="/portfolio/images/azure.png" />
-            <img src="/portfolio/images/excel.png" />
-            <img src="/portfolio/images/sql.png" />
+            <img class="carasol_img" src="/portfolio/images/spark.png" />
+            <img class="carasol_img"  src="/portfolio/images/PowerBIlogo.png" />
+            <img class="carasol_img"  src="/portfolio/images/fabric.png" />
+            <img class="carasol_img"  src="/portfolio/images/Tableau.png" />
+            <img class="carasol_img"  src="/portfolio/images/excel.png" />
+            <img class="carasol_img"  src="/portfolio/images/sql.png" />
+            <img class="carasol_img"  src="/portfolio/images/gcs.png" />
+            <img class="carasol_img"  src="/portfolio/images/azure.png" />
+            <img class="carasol_img"  src="/portfolio/images/aws.png" />
+            <img class="carasol_img"  src="/portfolio/images/adf.png" />
+            <img class="carasol_img"  src="/portfolio/images/synapse.png" />
+            <img class="carasol_img"  src="/portfolio/images/databricks.png" />
           </div>
           <div class="logos">
-            <img src="/portfolio/images/spark.png" />
-            <img src="/portfolio/images/PowerBIlogo.png" />
-            <img src="/portfolio/images/Tableau.png" />
-            <img src="/portfolio/images/azure.png" />
-            <img src="/portfolio/images/excel.png" />
-            <img src="/portfolio/images/sql.png" />
+            <img class="carasol_img" src="/portfolio/images/spark.png" />
+            <img class="carasol_img"  src="/portfolio/images/PowerBIlogo.png" />
+            <img class="carasol_img"  src="/portfolio/images/fabric.png" />
+            <img class="carasol_img"  src="/portfolio/images/Tableau.png" />
+            <img class="carasol_img"  src="/portfolio/images/excel.png" />
+            <img class="carasol_img"  src="/portfolio/images/sql.png" />
+            <img class="carasol_img"  src="/portfolio/images/gcs.png" />
+            <img class="carasol_img"  src="/portfolio/images/azure.png" />
+            <img class="carasol_img"  src="/portfolio/images/aws.png" />
+            <img class="carasol_img"  src="/portfolio/images/adf.png" />
+            <img class="carasol_img"  src="/portfolio/images/synapse.png" />
+            <img class="carasol_img"  src="/portfolio/images/databricks.png" />
+
           </div>
+          
         </div>
       </div>
       </section>
 
-    </div>
-  <p class="section_footer_paragraph" style=" text-align: center; color: rgba(0, 0, 0, 0.441); margin-top: 1.2rem; font-size: 25px; font-weight: 550;">
+    <!-- </div> -->
+  <p class="section_footer_paragraph" style=" text-align: center; color: rgba(0, 0, 0, 0.441); margin-top: 1.2rem; font-size: 24px; font-weight: 550; padding: 2%; margin-bottom: 5%;">
       Depending on your setup, tools can range from <span style="color: rgb(0, 184, 0);">Excel</span> 
       for simple datasets to <span style="color: orange;">Spark</span> and 
       <span style="color: #5091DD;">cloud pipelines</span> for larger workflows. 
-      <br>We focus on solutions that fit your existing tools, minimizing extra cost or setup wherever possible.
+      <br><br>We focus on solutions that fit your existing tools, <span style="font-weight: 800; color: black;">minimizing extra cost</span> or setup wherever possible.
   </p>
   </div>
 </div>
 <div  style="display: flex; align-items: center; justify-content: center;">
   <div id="why_choose_us" class="main_section1" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
     <div style=" text-align: center;">
-<h1 class="section_title" id="section1_maintitle" > WHAT SETS US APART</h1>
+      <h1 class="section_title" id="section1_maintitle" > WHAT SETS US APART</h1>
       <div style="display: flex; justify-content: center;">
         <h3 class="section_subtitle" id="why_choose_us_description" style="width: 50%;  font-size: 25px; font-weight: 550;">
           <span style="color: red;"> Data problems can't wait. </span>
           Stop waiting days for a Microsoft engineer or  
          burning time on endless planning and expensive hires.  
           We provide hands-on mentoring and  
-        <span style="color: rgb(0, 184, 0); font-weight: 800;"> tailored </span> data engineering solutions - <span style="color: rgb(0, 184, 0); font-weight: 800;">fast</span>,<span style="color: rgb(0, 184, 0); font-weight: 800;"> focused</span> and  
+        tailored data engineering solutions - <span style="color: rgb(0, 184, 0); font-weight: 800;">fast</span>,<span style="color: rgb(0, 184, 0); font-weight: 800;"> focused</span> and  
          <span style="color: rgb(0, 184, 0); font-weight: 800;">built</span> around your needs.
         </h3>
       </div>
@@ -1465,7 +1517,6 @@ justify-content: center;
           <p class="case_study_paragraph">
             We deliver work in <span style="font-weight: 800;">structured sprints</span>, focusing on <span style="font-weight: 800;">incremental development</span> that produces <span style="font-weight: 800;">real business value</span> quickly and reliably.
           </p>
-
         </div>
       <div class="case_study_cards">
         <h3 class="case_study_card_title">From Chaos to Clarity in Your Data</h3>
@@ -1474,23 +1525,20 @@ justify-content: center;
           their <span style="font-weight: 800;">dimensions</span>, <span style="font-weight: 800;">who owns it</span>, <span style="font-weight: 800;">how often it's updated</span>, 
           and the <span style="font-weight: 800;">changes that occurred to it</span>. That way, there is <span style="font-weight: 800;">full transparency</span> between you and your data.
         </p>
-
       </div>
       <div class="case_study_cards" >
         <h3 class="case_study_card_title">Support That Doesn't Vanish After Delivery</h3>
        <p class="case_study_paragraph">
-  <span style="font-weight: 800;">Mon-Friday support</span> for <span style="font-weight: 800;">new data pipelines</span>, <span style="font-weight: 800;">engineering tasks</span>, 
-  and <span style="font-weight: 800;">ongoing maintenance</span> - focused on keeping your data <span style="font-weight: 800;">reliable</span>.
-</p>
+        <span style="font-weight: 800;">Mon-Friday support</span> for <span style="font-weight: 800;">new data pipelines</span>, <span style="font-weight: 800;">engineering tasks</span>, 
+        and <span style="font-weight: 800;">ongoing maintenance</span> - focused on keeping your data <span style="font-weight: 800;">reliable</span>.
+      </p>
 
       </div>
       <div class="case_study_cards" >
         <h3 class="case_study_card_title">Hands-On Mentoring for Actionable Power BI Dashboards</h3>
-       <p class="case_study_paragraph">
-  Learn to build <span style="font-weight: 800;">real-time dashboards and reports</span> for your department with 
-  <span style="font-weight: 800;">1-on-1 Power BI mentoring</span> - speeding up your <span style="font-weight: 800;">day-to-day work</span>.
-</p>
-
+       <p class="case_study_paragraph">Learn to build <span style="font-weight: 800;">real-time dashboards and reports</span> for your department with 
+        <span style="font-weight: 800;">1-on-1 Power BI mentoring</span> - speeding up your <span style="font-weight: 800;">day-to-day work</span>.
+      </p>
       </div>
       <div class="case_study_cards" >
         <h3 class="case_study_card_title">Proven Expertise, Backed by 5+ Years in the Field</h3>
@@ -1588,15 +1636,6 @@ justify-content: center;
                 The department managed <span class="problem_text">ticketing across 100+ tables</span>, where <span class="problem_text">teams spent hours figuring out which tables to join and chasing others for the right data</span>.  
                 We built <span class="solution_text">automated pipelines</span> that reduced it to <span class="solution_text">10 tables</span>, creating a <span class="solution_text">single source of truth</span> and enabling <span class="solution_text">new reports and actionable insights</span>.
               </p>
-
-
-
-             <!-- <p class="case_study_paragraph" style="font-size: 25px;">
-                  The department manages both <span class="problem_text">internal and external ticketing</span>, with a <span class="problem_text">data model spanning over 100 tables</span>.  
-                  Users previously spent <span class="problem_text">hours just to gain insight from a single ticket</span>.  
-                  We built <span class="solution_text">automated pipelines</span> that consolidated all transformations, reducing the model to <span class="solution_text">5 tables</span>.  
-                  This created a <span class="solution_text">single source of truth</span>, enabling <span class="solution_text">multiple new reports and actionable insights</span> across ticketing.
-              </p> -->
           </div>
         </div>
       </div>
@@ -1649,32 +1688,32 @@ justify-content: center;
       <div class="scroll-container">
         <div class="scroll-content">
           <div class="logos">
-            <img src="/portfolio/images/dynamics365.png" />
-            <img src="/portfolio/images/hubspot.png" />
-            <img src="/portfolio/images/salesloft.png" />
-            <img src="/portfolio/images/snowflake.png" />
-            <img src="/portfolio/images/sharepoint.png" />
-            <img src="/portfolio/images/graphapi.png" />
-            <img src="/portfolio/images/msft.png" />
-            <img src="/portfolio/images/dialpad.png" />
-            <img src="/portfolio/images/halopsa.png" />
-            <img src="/portfolio/images/airtable.png" />
-            <img src="/portfolio/images/surveymonkey.png" />
-            <img src="/portfolio/images/ceojuice.png" />
+            <img class="carasol_img" src="/portfolio/images/dynamics365.png" />
+            <img  class="carasol_img" src="/portfolio/images/hubspot.png" />
+            <img  class="carasol_img" src="/portfolio/images/salesloft.png" />
+            <img class="carasol_img" src="/portfolio/images/snowflake.png" />
+            <img class="carasol_img" src="/portfolio/images/sharepoint.png" />
+            <img class="carasol_img" src="/portfolio/images/graphapi.png" />
+            <img class="carasol_img" src="/portfolio/images/msft.png" />
+            <img class="carasol_img" src="/portfolio/images/dialpad.png" />
+            <img class="carasol_img" src="/portfolio/images/halopsa.png" />
+            <img class="carasol_img" src="/portfolio/images/airtable.png" />
+            <img class="carasol_img" src="/portfolio/images/surveymonkey.png" />
+            <img class="carasol_img" src="/portfolio/images/cosmos.png" />
           </div>
           <div class="logos">
-            <img src="/portfolio/images/dynamics365.png" />
-            <img src="/portfolio/images/hubspot.png" />
-            <img src="/portfolio/images/salesloft.png" />
-            <img src="/portfolio/images/snowflake.png" />
-            <img src="/portfolio/images/sharepoint.png" />
-            <img src="/portfolio/images/graphapi.png" />
-            <img src="/portfolio/images/msft.png" />
-            <img src="/portfolio/images/dialpad.png" />
-            <img src="/portfolio/images/halopsa.png" />
-            <img src="/portfolio/images/airtable.png" />
-            <img src="/portfolio/images/surveymonkey.png" />
-            <img src="/portfolio/images/ceojuice.png" />
+            <img class="carasol_img" src="/portfolio/images/dynamics365.png" />
+            <img class="carasol_img" src="/portfolio/images/hubspot.png" />
+            <img class="carasol_img" src="/portfolio/images/salesloft.png" />
+            <img class="carasol_img" src="/portfolio/images/snowflake.png" />
+            <img class="carasol_img" src="/portfolio/images/sharepoint.png" />
+            <img class="carasol_img" src="/portfolio/images/graphapi.png" />
+            <img class="carasol_img" src="/portfolio/images/msft.png" />
+            <img class="carasol_img" src="/portfolio/images/dialpad.png" />
+            <img class="carasol_img" src="/portfolio/images/halopsa.png" />
+            <img class="carasol_img" src="/portfolio/images/airtable.png" />
+            <img class="carasol_img" src="/portfolio/images/surveymonkey.png" />
+            <img class="carasol_img" src="/portfolio/images/cosmos.png" />
           </div>
         </div>
       </div>
@@ -1682,19 +1721,21 @@ justify-content: center;
 
   </div>
 </div>
-<section class="testimonial_section" style="margin-top: 2%; text-align: center; padding: 3rem 1rem; color: white; background-color: #04343522; border-radius: 5px; padding: 2%;"  >
-  <blockquote class="quote" style=" font-size: 2.5rem; font-style: italic; max-width: 900px; margin: 0 auto; line-height: 1.6; text-align: justify; ">
-    "Daniel excels at <span style="color: #dd5050;">end-to-end data architecture</span> - handling everything from extraction and storage to transformation, loading, and visualization in Microsoft Fabric and Power BI."
+<section class="testimonial_section" style="margin-top: 2%; text-align: center; padding: 3rem 1rem; color: white; background-color: #04343522; border-radius: 5px;">
+  <blockquote class="quote" style="position: relative; font-size: 2.5rem; font-style: italic; max-width: 900px; margin: 0 auto; line-height: 1.4; text-align: justify; padding-left: 3rem;">
+    <span style=" position: absolute; top: -10px; left: 0; font-weight: 800; font-size: 3.8rem; font-family: 'Playfair Display', serif; color: #ffffff; line-height: 1;">"</span>
+    Daniel excels at <span style="color: #dd5050;">end-to-end data architecture</span> - handling everything from extraction and storage to transformation, loading, and visualization in Microsoft Fabric and Power BI.
   </blockquote>
-  <p class="quote_from"  style="margin-top: 1.3rem; font-size: 1.8em; color: #5aa1f2;">
+  <p class="quote_from" style="margin-top: 1.3rem; font-size: 1.8em; color: #5aa1f2;">
     - Alex Servlosky, Data Engineer
   </p>
 </section>
+
 <div style="display: flex; align-items: center; justify-content: center;">
   <div style=" width: 100%;  border-radius: 20px; margin-top: 4%;">
     <div id="formview" class="submit_form" style="display: flex; justify-content: center;  text-align: center;">
       <div class="form_1" style="background-color: rgba(0, 0, 0, 0.105); text-align: center; width: 50%; ">
-          <h1 class="footer_title" style="font-size: 3em; text-align: center; margin-top: 10%; color: white;">Your Path To Clean Data Starts Here</h1>
+          <h1 class="footer_title" style="font-size: 3em; text-align: center; margin-top: 10%; padding: 5%; color: white;">Your Path To Clean Data Starts Here</h1>
           <h2 class="footer_subtitle" style=" font-size: 2em; color: white"><span style="color: rgb(255, 255, 255);">Book a <strong style="font-weight: 800; color: rgb(2, 196, 2);">free</strong> consulting call</span> </h2>
           <hr style="width: 50%;">
           <h2  class="footer_subtitle" style=" font-size: 2em; color: white;">Get a response within <span style="color: rgba(255, 0, 0, 0.768);">1 business day.</span> </h2>
@@ -1789,6 +1830,9 @@ document.getElementById("my-form").addEventListener("submit", async function(eve
 <script>
 
 function scrollToView(id) {
+        if (id.includes("phonenav_")){
+          document.getElementById("why_choose_us").scrollIntoView({ behavior: "smooth" });
+        }
         if (id == "company_name"){
           document.getElementById("why_choose_us").scrollIntoView({ behavior: "smooth" });
           
@@ -1802,21 +1846,25 @@ function scrollToView(id) {
 <script>
 let lastScroll = 0;
 const topnav = document.querySelector('.phonenav');
+const mainnav = document.querySelector('.topnav');
 
 window.addEventListener('scroll', () => {
   const currentScroll = window.pageYOffset;
 
-  if (window.innerWidth > 1279) return;
+  // if (window.innerWidth > 1279) return;
 
   if (currentScroll <= 0) {
     topnav.style.top = '0';
+    mainnav.style.top = '0';
     return;
   }
 
   if (currentScroll > lastScroll) {
     topnav.style.top = '-100px'; 
+    mainnav.style.top = '-100px'; 
   } else {
     topnav.style.top = '0';
+    mainnav.style.top = '0';
   }
 
   lastScroll = currentScroll;

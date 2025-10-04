@@ -88,6 +88,30 @@ void process_route(struct Socket *sockets,struct Socket *socket,char* http_heade
 		if (strcmp(route,"/portfolio/images/nonprofit.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/nonprofit.png");
 		}
+		if (strcmp(route,"/portfolio/images/synapse.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/synapse.png");
+		}
+		if (strcmp(route,"/portfolio/images/databricks.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/databricks.png");
+		}
+		if (strcmp(route,"/portfolio/images/gcs.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/gcs.png");
+		}
+		if (strcmp(route,"/portfolio/images/scrum.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/scrum.png");
+		}
+		if (strcmp(route,"/portfolio/images/aws.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/aws.png");
+		}
+		if (strcmp(route,"/portfolio/images/fabric.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/fabric.png");
+		}
+		if (strcmp(route,"/portfolio/images/cosmos.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/cosmos.png");
+		}
+		if (strcmp(route,"/portfolio/images/adf.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/adf.png");
+		}
 		if (strcmp(route,"/portfolio/images/sales.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/sales.png");
 		}
