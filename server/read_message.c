@@ -267,6 +267,98 @@ void free_message(struct Websocket_Message* msg) {
 }
 
 void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int fd_count){
+	if (is_tcp_buffer(buf)){
+		printf("Detected TCP Buffer\n");
+		char* tcp_buf = malloc(BUFFER_SIZE);
+		int nbytes =  read_tcp_message(socket->cSSL, &tcp_buf);
+		int payload_length = 0;
+		if (nbytes <= 125){
+			payload_length = 125;
+		}else{
+			payload_length = 126;
+		}
+		cJSON* root = cJSON_Parse(tcp_buf);
+		if (root !=NULL){
+			cJSON *value = cJSON_GetObjectItem(root, "client_type");
+			if (cJSON_IsString(value) && (value->valuestring != NULL) ) {
+				char* res = value->valuestring;
+				printf("CLIENT TYPE: %s\n", res);
+				if (strcmp(res,"email")==0){
+					socket->isEmail = 0x1;
+					socket->keep_alive = 0x1;
+				}else{
+					socket->keep_alive = 0x0;
+				}
+			}else{
+				printf("NO CLIENT TYPE\n");
+				socket->keep_alive = 0x0;
+			}
+		cJSON_Delete(root);
+		}else{
+			printf("INVALID JSON\n");
+			socket->keep_alive = 0x0;
+
+		}
+		if (tcp_buf != NULL){
+			free(tcp_buf);
+			tcp_buf = NULL;
+		}
+	}else if (buf != NULL && strstr(buf, "HTTP/1.1")!=NULL){
+			char* peeked_http_header = malloc(1024);
+			memset(peeked_http_header, 0, 1024);
+			int header_length = get_http_header(buf, peeked_http_header);
+			char* http_header = malloc(header_length+4+1);
+			int nbytes = read_exact_bytes(socket->cSSL, header_length+4, http_header);
+			http_header[nbytes] = '\0';
+			int content_length = 0;
+			char* value_start = strstr(peeked_http_header,"Content-Length: ");
+
+			char* body = NULL; 
+			if (value_start != NULL){
+				char* content_length_val = strchr(value_start, ' ');
+				content_length_val++;
+				content_length = atoi(content_length_val);
+			}
+			if (content_length > 0){
+				body = malloc(content_length+1);
+				read_exact_bytes(socket->cSSL, content_length, body);
+				body[content_length] = '\0';
+			}
+
+			process_route(sockets, socket, http_header, body,fd_count);
+
+			if (peeked_http_header != NULL){
+				free(peeked_http_header);
+				peeked_http_header = NULL;
+			}
+			if (http_header != NULL){
+				free(http_header);
+				http_header = NULL;
+			}
+			if (body != NULL){
+				free(body);
+				body = NULL;
+			}
+		}
+	}
+/*
+ 
+		// // send_tcp_message(socket->cSSL,0x1, 0x1,nbytes, tcp_buf);
+		// size_t total_sessions = 0;
+		// struct Websocket* websockets =  get_websocket_session_by_name("chicago-transits", &total_sessions);
+		// for (int i=0; i<total_sessions; i++){
+		// 	struct Websocket ws = websockets[i];
+		// 	for (int j=0; j<fd_count; j++){
+		// 		struct Socket socket = sockets[j];
+		// 		if (strcmp(socket.Id, ws.socketId) == 0){
+		// 			send_websocket_message(sockets,socket, fd_count,payload_length, nbytes, tcp_buf);
+		// 		}
+		// 	}
+		// }
+		// if (websockets != NULL){
+		// 	free(websockets);
+		// 	websockets = NULL;
+		// }
 	if (is_websocket_buffer(buf)){
 		unsigned char* websocket_buf = malloc(2);
 		if (!websocket_buf){perror("error"); exit(1);}
@@ -350,95 +442,4 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 				websocket_buf = NULL;
 			}
 	
-	}else if (is_tcp_buffer(buf)){
-		printf("Detected TCP Buffer\n");
-		char* tcp_buf = malloc(BUFFER_SIZE);
-		int nbytes =  read_tcp_message(socket->cSSL, &tcp_buf);
-		int payload_length = 0;
-		if (nbytes <= 125){
-			payload_length = 125;
-		}else{
-			payload_length = 126;
-		}
-		printf("MESSAGE: %s\n",tcp_buf);
-		cJSON* root = cJSON_Parse(tcp_buf);
-		if (root !=NULL){
-			cJSON *value = cJSON_GetObjectItem(root, "client_type");
-			if (cJSON_IsString(value) && (value->valuestring != NULL) ) {
-				char* res = value->valuestring;
-				printf("CLIENT TYPE: %s\n", res);
-				if (strcmp(res,"email")==0){
-					socket->isEmail = 0x1;
-					socket->keep_alive = 0x1;
-				}else{
-					socket->keep_alive = 0x0;
-				}
-			}else{
-				printf("NO CLIENT TYPE\n");
-				socket->keep_alive = 0x0;
-			}
-		cJSON_Delete(root);
-		}else{
-			printf("INVALID JSON\n");
-			socket->keep_alive = 0x0;
-
-		}
-		if (tcp_buf != NULL){
-			free(tcp_buf);
-			tcp_buf = NULL;
-		}
-		// // send_tcp_message(socket->cSSL,0x1, 0x1,nbytes, tcp_buf);
-		// size_t total_sessions = 0;
-		// struct Websocket* websockets =  get_websocket_session_by_name("chicago-transits", &total_sessions);
-		// for (int i=0; i<total_sessions; i++){
-		// 	struct Websocket ws = websockets[i];
-		// 	for (int j=0; j<fd_count; j++){
-		// 		struct Socket socket = sockets[j];
-		// 		if (strcmp(socket.Id, ws.socketId) == 0){
-		// 			send_websocket_message(sockets,socket, fd_count,payload_length, nbytes, tcp_buf);
-		// 		}
-		// 	}
-		// }
-		// if (websockets != NULL){
-		// 	free(websockets);
-		// 	websockets = NULL;
-		// }
-		
-
-	}else if (buf != NULL && strstr(buf, "HTTP/1.1")!=NULL){
-			char* peeked_http_header = malloc(1024);
-			if (!peeked_http_header) { /* handle error */ }
-			memset(peeked_http_header, 0, 1024);
-			int header_length = get_http_header(buf, peeked_http_header);
-			char* http_header = malloc(header_length+4+1);
-			int nbytes = read_exact_bytes(socket->cSSL, header_length+4, http_header);
-			http_header[nbytes] = '\0';
-			int content_length = 0;
-			char* value_start = strstr(peeked_http_header,"Content-Length: ");
-
-			char* body = NULL; 
-			if (value_start != NULL){
-				char* content_length_val = strchr(value_start, ' ');
-				content_length_val++;
-				content_length = atoi(content_length_val);
-			}
-			if (content_length > 0){
-				body = malloc(content_length+1);
-				read_exact_bytes(socket->cSSL, content_length, body);
-				body[content_length] = '\0';
-			}
-			process_route(sockets, socket, http_header, body,fd_count);
-			if (peeked_http_header != NULL){
-				free(peeked_http_header);
-				peeked_http_header = NULL;
-			}
-			if (http_header != NULL){
-				free(http_header);
-				http_header = NULL;
-			}
-			if (body != NULL){
-				free(body);
-				body = NULL;
-			}
-	}
-}
+*/

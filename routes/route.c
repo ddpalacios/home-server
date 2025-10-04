@@ -56,33 +56,13 @@ void process_route(struct Socket *sockets,struct Socket *socket,char* http_heade
 	strncpy(request_type, http_header, request_type_len);
 	request_type[request_type_len] = '\0';
 	printf("Route: '%s %s'\n",request_type,route);
-	if (strcmp(request_type, "GET")==0 && strcmp(route, "/css/searchicon.png")==0){
-		send_response_code(cSSL, 404);
-	}
-	else if (strcmp(request_type, "GET")==0 && strcmp(route, "robots.txt")==0){
-		send_response_code(cSSL, 404);
-	}
-	else if (strcmp(request_type, "PROPFIND")==0 && strcmp(route, "/")==0){
-		send_response_code(cSSL, 404);
-	}
-	else if (strcmp(request_type, "GET")==0 && strcmp(route, "/favicon.ico")==0){
-		send_response_code(cSSL, 404);
-	}
-	else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/login")==0){
-		get_login_page(cSSL, http_header, "index.html");
-	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/life-of-sounds/live_studio/user")==0){
-		post_user(socket,http_header,body, route);
-	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home")==0){
-		get_live_html(cSSL, http_header, "home.html");
-	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/live_studio")==0){
-		get_live_html(cSSL, http_header, "live_studio.html");
-	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/canvas_style.css")==0){
-		get_gol_script(cSSL, http_header, "canvas_style.css");
-	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/chatbox_style.css")==0){
-		get_gol_script(cSSL, http_header, "chatbox_style.css");
 
+	if (strcmp(request_type, "GET")==0 && strcmp(route, "/") == 0){
+		get_live_html(cSSL, http_header, "/portfolio/home.html");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/favicon.ico")==0){
+		send_response_code(cSSL, 404);
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/portfolio/images/")!=NULL){
-	if (strcmp(route,"/portfolio/images/scatteredteam.png") ==0){
+		if (strcmp(route,"/portfolio/images/scatteredteam.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/scatteredteam.png");
 		}
 		if (strcmp(route,"/portfolio/images/nonprofit.png") ==0){
@@ -214,20 +194,23 @@ void process_route(struct Socket *sockets,struct Socket *socket,char* http_heade
 		if (strcmp(route,"/portfolio/images/WhiteETL.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/WhiteETL.png");
 		}
-	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/portfolio/videos/")!=NULL){
-		if (strcmp(route,"/portfolio/videos/WSGOL.mp4") ==0){
-			get_video_file(cSSL, http_header, "/portfolio/videos/WSGOL.mp4");
-		}else if (strcmp(route,"/portfolio/videos/AudioGameOFLife.mp4") ==0){
-			get_video_file(cSSL, http_header, "portfolio/videos/AudioGameOFLife.mp4");
-		}
-		else if (strcmp(route,"/portfolio/videos/App1.mp4") ==0){
-			get_video_file(cSSL, http_header, "portfolio/videos/App1.mp4");
-		}else if (strcmp(route,"/portfolio/videos/App2.mp4") ==0){
-			get_video_file(cSSL, http_header, "portfolio/videos/App2.mp4");
-		}
-		else if (strcmp(route,"/portfolio/videos/App3.mp4") ==0){
-			get_video_file(cSSL, http_header, "portfolio/videos/App3.mp4");
-		}
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/blob-storage/")!=NULL){
+		get_blob_storage_files(socket,http_header,body, route);
+	}else if (strcmp(request_type, "POST")==0 && strstr(route, "/blob-storage/")!=NULL){
+		post_blob(sockets,socket,http_header,body, route,fd_count);
+	}else{
+		send_response_code(cSSL, 404);
+	}
+	if (route != NULL){
+		free(route);
+		route = NULL;
+	}
+	if (request_type != NULL){
+		free(request_type);
+		request_type = NULL;
+	}
+}
+	/*
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/handle_messages.js")==0){
 		get_gol_script(cSSL, http_header, "handle_messages.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/onload_session.js")==0){
@@ -278,38 +261,19 @@ void process_route(struct Socket *sockets,struct Socket *socket,char* http_heade
 		get_gol_script(cSSL, http_header, "/chicago-transits/websocket.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/chicago-transits/onload_session.js")==0){
 		get_gol_script(cSSL, http_header, "/chicago-transits/onload_session.js");
-	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/home")!=NULL){
-		get_live_html(cSSL, http_header, "/portfolio/home.html");
-	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/blob-storage/")!=NULL){
-		get_blob_storage_files(socket,http_header,body, route);
-	}else if (strcmp(request_type, "POST")==0 && strstr(route, "/blob-storage/")!=NULL){
-		post_blob(sockets,socket,http_header,body, route,fd_count);
-	}else{
-		send_response_code(cSSL, 404);
-	}
-	
+	*/
+	/*
+	else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/login")==0){
+		get_login_page(cSSL, http_header, "index.html");
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/life-of-sounds/live_studio/user")==0){
+		post_user(socket,http_header,body, route);
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home")==0){
+		get_live_html(cSSL, http_header, "home.html");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/live_studio")==0){
+		get_live_html(cSSL, http_header, "live_studio.html");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/canvas_style.css")==0){
+		get_gol_script(cSSL, http_header, "canvas_style.css");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/chatbox_style.css")==0){
+		get_gol_script(cSSL, http_header, "chatbox_style.css");
+	*/
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	if (route != NULL){
-		free(route);
-		route = NULL;
-	}
-	if (request_type != NULL){
-		free(request_type);
-		request_type = NULL;
-	}
-}

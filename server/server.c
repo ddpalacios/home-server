@@ -213,33 +213,33 @@ void start_listening_for_clients(char* port){
 			 printf("FD Count: %d\n", fd_count);
                  }
 	     }else{
-			 for (int i=0; i<fd_count; i++){
-				 struct Socket *socket = &sockets[i];
-				 SSL* cSSL  = sockets[i].cSSL;
-				 if (socket->fd != triggered_fd){
-					 continue;
+		 for (int i=0; i<fd_count; i++){
+			 struct Socket *socket = &sockets[i];
+			 SSL* cSSL  = sockets[i].cSSL;
+			 if (socket->fd != triggered_fd){
+				 continue;
+			 }
+			 char *peek_buf = malloc(BUFFER_SIZE+1);
+			 int bytes_peeked = peek_exact_bytes(cSSL, BUFFER_SIZE, peek_buf);
+			 if (bytes_peeked <=0){
+				socket->keep_alive = 0x0;
+				 remove_file_descriptor(sockets,pfds, socket->fd, &fd_count);
+			 }else{
+				 if (peek_buf != NULL){
+					 process_bytes(sockets, socket, peek_buf, fd_count);
+					 free(peek_buf);
+					 peek_buf = NULL;
 				 }
-				 char *peek_buf = malloc(BUFFER_SIZE+1);
-				 int bytes_peeked = peek_exact_bytes(cSSL, BUFFER_SIZE, peek_buf);
-				 if (bytes_peeked <=0){
-					socket->keep_alive = 0x0;
-					 remove_file_descriptor(sockets,pfds, socket->fd, &fd_count);
-				 }else{
-					 if (peek_buf != NULL){
-						 process_bytes(sockets, socket, peek_buf, fd_count);
-						 free(peek_buf);
-						 peek_buf = NULL;
-					 }
-				 if (!socket->keep_alive){
+			 if (!socket->keep_alive){
 
-					 if (websocketclient_exists_by_socketid(socket->Id)){
-						 struct WebsocketClient ws_client =  get_websocketclientBySocketId(socket->Id);
-						delete_websocketclient_by_Id(ws_client.Id);
-					 }
-					 remove_file_descriptor(sockets,pfds, socket->fd, &fd_count);
-					 }
+				 if (websocketclient_exists_by_socketid(socket->Id)){
+					 struct WebsocketClient ws_client =  get_websocketclientBySocketId(socket->Id);
+					delete_websocketclient_by_Id(ws_client.Id);
+				 }
+				 remove_file_descriptor(sockets,pfds, socket->fd, &fd_count);
 				 }
 			 }
+		 }
 	     }
 	}
 }
