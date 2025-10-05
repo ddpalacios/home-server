@@ -266,7 +266,46 @@ void free_message(struct Websocket_Message* msg) {
     free(msg->userid);
 }
 
-void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int fd_count){
+void process_bytes(struct Socket *socket, char* buf, int fd_count){
+		if (buf != NULL && strstr(buf, "HTTP/1.1")!=NULL){
+			char* peeked_http_header = malloc(1024);
+			memset(peeked_http_header, 0, 1024);
+			int header_length = get_http_header(buf, peeked_http_header);
+			char* http_header = malloc(header_length+4+1);
+			int nbytes = read_exact_bytes(socket->cSSL, header_length+4, http_header);
+			http_header[nbytes] = '\0';
+			int content_length = 0;
+			char* value_start = strstr(peeked_http_header,"Content-Length: ");
+			char* body = NULL; 
+			if (value_start != NULL){
+				char* content_length_val = strchr(value_start, ' ');
+				content_length_val++;
+				content_length = atoi(content_length_val);
+			}
+			if (content_length > 0){
+				body = malloc(content_length+1);
+				read_exact_bytes(socket->cSSL, content_length, body);
+				body[content_length] = '\0';
+			}
+			process_route(socket, http_header, body,fd_count);
+
+			if (peeked_http_header != NULL){
+				free(peeked_http_header);
+				peeked_http_header = NULL;
+			}
+			if (http_header != NULL){
+				free(http_header);
+				http_header = NULL;
+			}
+			if (body != NULL){
+				free(body);
+				body = NULL;
+			}
+		}
+	}
+/*
+
+
 	if (is_tcp_buffer(buf)){
 		printf("Detected TCP Buffer\n");
 		char* tcp_buf = malloc(BUFFER_SIZE);
@@ -303,45 +342,6 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 			free(tcp_buf);
 			tcp_buf = NULL;
 		}
-	}else if (buf != NULL && strstr(buf, "HTTP/1.1")!=NULL){
-			char* peeked_http_header = malloc(1024);
-			memset(peeked_http_header, 0, 1024);
-			int header_length = get_http_header(buf, peeked_http_header);
-			char* http_header = malloc(header_length+4+1);
-			int nbytes = read_exact_bytes(socket->cSSL, header_length+4, http_header);
-			http_header[nbytes] = '\0';
-			int content_length = 0;
-			char* value_start = strstr(peeked_http_header,"Content-Length: ");
-
-			char* body = NULL; 
-			if (value_start != NULL){
-				char* content_length_val = strchr(value_start, ' ');
-				content_length_val++;
-				content_length = atoi(content_length_val);
-			}
-			if (content_length > 0){
-				body = malloc(content_length+1);
-				read_exact_bytes(socket->cSSL, content_length, body);
-				body[content_length] = '\0';
-			}
-
-			process_route(sockets, socket, http_header, body,fd_count);
-
-			if (peeked_http_header != NULL){
-				free(peeked_http_header);
-				peeked_http_header = NULL;
-			}
-			if (http_header != NULL){
-				free(http_header);
-				http_header = NULL;
-			}
-			if (body != NULL){
-				free(body);
-				body = NULL;
-			}
-		}
-	}
-/*
  
 		// // send_tcp_message(socket->cSSL,0x1, 0x1,nbytes, tcp_buf);
 		// size_t total_sessions = 0;

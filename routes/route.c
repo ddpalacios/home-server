@@ -41,7 +41,7 @@
 #include "life-of-sounds/GET/get_user.h"
 #include "life-of-sounds/GET/login.h"
 
-void process_route(struct Socket *sockets,struct Socket *socket,char* http_header, char* body, int fd_count){
+void process_route(struct Socket *socket,char* http_header, char* body, int fd_count){
 	SSL *cSSL =  socket->cSSL;
 	char* route_start = strchr(http_header, ' ');	
 	route_start++;
@@ -61,6 +61,8 @@ void process_route(struct Socket *sockets,struct Socket *socket,char* http_heade
 		get_live_html(cSSL, http_header, "portfolio/home.html");
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/favicon.ico")!=NULL){
 		get_image_file(cSSL, http_header, "/portfolio/images/favicon.ico");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/form.js")==0){
+		get_gol_script(cSSL, http_header, "/portfolio/form.js");
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/portfolio/images/")!=NULL){
 		if (strcmp(route,"/portfolio/images/scatteredteam.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/scatteredteam.png");
@@ -125,11 +127,9 @@ void process_route(struct Socket *sockets,struct Socket *socket,char* http_heade
 		if (strcmp(route,"/portfolio/images/sharepoint.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/sharepoint.png");
 		}
-
 		if (strcmp(route,"/portfolio/images/graphapi.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/graphapi.png");
-		}
-		
+		}	
 		if (strcmp(route,"/portfolio/images/msft.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/msft.png");
 		}
@@ -169,7 +169,6 @@ void process_route(struct Socket *sockets,struct Socket *socket,char* http_heade
 		if (strcmp(route,"/portfolio/images/clean_data.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/clean_data.png");
 		}
-
 		if (strcmp(route,"/portfolio/images/bronze.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/bronze.png");
 		}
@@ -197,7 +196,7 @@ void process_route(struct Socket *sockets,struct Socket *socket,char* http_heade
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/blob-storage/")!=NULL){
 		get_blob_storage_files(socket,http_header,body, route);
 	}else if (strcmp(request_type, "POST")==0 && strstr(route, "/blob-storage/")!=NULL){
-		post_blob(sockets,socket,http_header,body, route,fd_count);
+		post_blob(socket,http_header,body, route,fd_count);
 	}else{
 		send_response_code(cSSL, 404);
 	}

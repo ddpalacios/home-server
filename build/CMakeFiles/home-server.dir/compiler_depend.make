@@ -1694,8 +1694,14 @@ CMakeFiles/home-server.dir/routes/blob-storage/POST/post_blob.c.o: ../routes/blo
   /usr/include/x86_64-linux-gnu/asm/sockios.h \
   /usr/include/asm-generic/sockios.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
+  /usr/include/arpa/inet.h \
+  /usr/include/netinet/in.h \
+  /usr/include/x86_64-linux-gnu/bits/in.h \
   ../utilities/http_utilities.h \
-  ../models/session.h
+  ../models/session.h \
+  /usr/include/netdb.h \
+  /usr/include/rpc/netdb.h \
+  /usr/include/x86_64-linux-gnu/bits/netdb.h
 
 CMakeFiles/home-server.dir/routes/chicago-transits/GET/get_template.c.o: ../routes/chicago-transits/GET/get_template.c \
   /usr/include/stdc-predef.h \
