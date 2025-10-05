@@ -153,7 +153,7 @@ int send_websocket_message(struct Socket *sockets,struct Socket socket,int fd_co
 	}
 }
 int send_tcp_message(SSL *cSSL,int fin, int opcode, int payload_length, char* payload){
-    char* frame_json = get_file_buffer("../frame.json");
+    char* frame_json = get_file_buffer("frame.json");
     cJSON* root = cJSON_Parse(frame_json);
     free(frame_json);
     if (!is_valid_frame(root)){

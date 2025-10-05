@@ -47,10 +47,18 @@ unsigned char *read_binary_file(const char *filename, size_t *out_size) {
 }
 
 void get_image_file(SSL* cSSL, char* request, char* template_name){
-	 if (strstr(template_name, ".png") != NULL){
-				char template_dir[50] = "../templates/";
-				strcat(template_dir, template_name);
-				size_t image_size;
+	char template_dir[50] = "../templates/";
+	strcat(template_dir, template_name);
+	size_t image_size;
+
+	if (strstr(template_name, ".ico") != NULL ){
+		unsigned char *image_data = read_binary_file(template_dir, &image_size);
+		send_favicon_response_code(cSSL,200, image_size);
+		SSL_write(cSSL, image_data, image_size);	 
+		free(image_data);
+
+	 }
+	 else if (strstr(template_name, ".png") != NULL ){
 				unsigned char *image_data = read_binary_file(template_dir, &image_size);
 				send_image_response_code(cSSL,200, image_size);
 				SSL_write(cSSL, image_data, image_size);	 

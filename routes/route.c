@@ -58,9 +58,9 @@ void process_route(struct Socket *sockets,struct Socket *socket,char* http_heade
 	printf("Route: '%s %s'\n",request_type,route);
 
 	if (strcmp(request_type, "GET")==0 && strcmp(route, "/") == 0){
-		get_live_html(cSSL, http_header, "/portfolio/home.html");
-	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/favicon.ico")==0){
-		send_response_code(cSSL, 404);
+		get_live_html(cSSL, http_header, "portfolio/home.html");
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/favicon.ico")!=NULL){
+		get_image_file(cSSL, http_header, "/portfolio/images/favicon.ico");
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/portfolio/images/")!=NULL){
 		if (strcmp(route,"/portfolio/images/scatteredteam.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/scatteredteam.png");

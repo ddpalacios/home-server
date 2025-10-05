@@ -141,7 +141,7 @@ char *get_file_buffer(char* filename) {
 
 char* open_html_template_page(char*template_name, char* request){
 	// char* request_cookie = get_cookie(request);
-	char template_dir[50] = "../templates/";
+	char template_dir[50] = "templates/";
 	strcat(template_dir, template_name);
 	char *html_buffer = get_file_buffer(template_dir);
 	return html_buffer;
@@ -385,6 +385,29 @@ void send_image_response_code(SSL* cSSL,int code, int content_length){
 		snprintf(http_header, sizeof(http_header),
 				 "HTTP/1.1 %s\r\n"
 				  "Content-Type: image/png\r\n"
+				   "Connection: close\r\n"
+				   "\r\n", code_text);
+	 SSL_write(cSSL, http_header, strlen(http_header));
+	}
+}
+
+void send_favicon_response_code(SSL* cSSL,int code, int content_length){
+	char http_header[2048];
+	char* code_text = malloc(50);
+	if (code == 200) {
+		code_text = "200 OK";
+		snprintf(http_header, sizeof(http_header),
+				 "HTTP/1.1 %s\r\n"
+				  "Content-Type: image/x-icon\r\n"
+				   "Connection: close\r\n"
+				   "Content-Length: %d\r\n"
+				   "\r\n", code_text,content_length);
+	 SSL_write(cSSL, http_header, strlen(http_header));
+	}else if (code == 404){
+		code_text = "404 Not Found";
+		snprintf(http_header, sizeof(http_header),
+				 "HTTP/1.1 %s\r\n"
+				  "Content-Type: image/x-icon\r\n"
 				   "Connection: close\r\n"
 				   "\r\n", code_text);
 	 SSL_write(cSSL, http_header, strlen(http_header));

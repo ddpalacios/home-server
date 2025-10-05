@@ -14,7 +14,7 @@ void post_blob(struct Socket *sockets,struct Socket* socket,char* http_header, c
 
 	if (strstr(route, "/set_appointment")){
 		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/bronze_portfolio_appointments.json");
-		snprintf(path, sizeof(path),"../blob-storage/bronze_portfolio_appointments.json");
+		snprintf(path, sizeof(path),"blob-storage/bronze_portfolio_appointments.json");
 		for (int i=0; i<fd_count; i++){
 			struct Socket target_socket = sockets[i];
 			if (target_socket.isEmail){
@@ -24,7 +24,7 @@ void post_blob(struct Socket *sockets,struct Socket* socket,char* http_header, c
 	}else{
 		char* rt = get_query_parameter(route, "rt");
 		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/bronze_CTA_ctabustracker_%s_predictions.json", rt);
-		snprintf(path, sizeof(path),"../blob-storage/bronze_CTA_ctabustracker_%s_predictions.json", rt);
+		snprintf(path, sizeof(path),"blob-storage/bronze_CTA_ctabustracker_%s_predictions.json", rt);
 	}
 	
 	char* frame_json = get_file_buffer(path);

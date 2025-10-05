@@ -69,7 +69,7 @@ int read_exact_bytes(SSL *cSSL, int nbytes, char* buf){
 
 
 int read_tcp_message(SSL *cSSL, char** payload){
-	char* frame_json = get_file_buffer("../frame.json");
+	char* frame_json = get_file_buffer("frame.json");
 	cJSON* root = cJSON_Parse(frame_json);
 	if (!is_valid_frame(root)){
 		printf("Not a valid FRAME");
@@ -287,16 +287,16 @@ void process_bytes(struct Socket *sockets,struct Socket *socket, char* buf, int 
 					socket->isEmail = 0x1;
 					socket->keep_alive = 0x1;
 				}else{
-					socket->keep_alive = 0x0;
+					// socket->keep_alive = 0x0;
 				}
 			}else{
 				printf("NO CLIENT TYPE\n");
-				socket->keep_alive = 0x0;
+				// socket->keep_alive = 0x0;
 			}
-		cJSON_Delete(root);
+			cJSON_Delete(root);
 		}else{
 			printf("INVALID JSON\n");
-			socket->keep_alive = 0x0;
+			// socket->keep_alive = 0x0;
 
 		}
 		if (tcp_buf != NULL){
