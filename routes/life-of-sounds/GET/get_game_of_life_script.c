@@ -47,7 +47,7 @@ unsigned char *read_binary_file(const char *filename, size_t *out_size) {
 }
 
 void get_image_file(SSL* cSSL, char* request, char* template_name){
-	char template_dir[50] = "../templates/";
+	char template_dir[50] = "templates/";
 	strcat(template_dir, template_name);
 	size_t image_size;
 
@@ -69,7 +69,7 @@ void get_image_file(SSL* cSSL, char* request, char* template_name){
 
 void get_video_file(SSL* cSSL, char* request, char* template_name){
 	 if (strstr(template_name, ".mp4") != NULL){
-				char template_dir[50] = "../templates/";
+				char template_dir[50] = "templates/";
 				strcat(template_dir, template_name);
 				size_t mp4_size;
 				unsigned char *mp4_data = read_binary_file(template_dir, &mp4_size);

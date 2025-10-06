@@ -10,6 +10,7 @@ typedef struct Socket{
 	SSL* cSSL;
 	int keep_alive;
 	int is_listener;
+	int finished;
 	int isEmail;
 	int exists;
 

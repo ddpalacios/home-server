@@ -141,7 +141,7 @@ char *get_file_buffer(char* filename) {
 
 char* open_html_template_page(char*template_name, char* request){
 	// char* request_cookie = get_cookie(request);
-	char template_dir[50] = "../templates/";
+	char template_dir[50] = "templates/";
 	strcat(template_dir, template_name);
 	char *html_buffer = get_file_buffer(template_dir);
 	return html_buffer;

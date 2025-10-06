@@ -25,8 +25,10 @@
 #include <string.h>
 #include <netdb.h>
 #include <poll.h>
+#define MAX_CLIENTS 1024
 #define BUFFER_SIZE 1024 
 #define IPSTRLEN INET6_ADDRSTRLEN
+pthread_mutex_t fd_lock = PTHREAD_MUTEX_INITIALIZER;
 struct Socket *sockets;
 struct pollfd *pfds;
 int fd_count;
@@ -144,29 +146,23 @@ void fill_address_info(struct addrinfo *hints){
 	hints->ai_flags= AI_PASSIVE;
 }
 
-
-
 void* process_thread(void* arg){
-	struct Socket *new_client =  (struct Socket *)arg; 
-	printf("FD Count: %d\n", fd_count);
-	printf("Socket ID %s\n", new_client->Id);
-	char *peek_buf = malloc(BUFFER_SIZE+1);
-	int bytes_peeked = peek_exact_bytes(new_client->cSSL, BUFFER_SIZE, peek_buf);
-	if (bytes_peeked <=0){
-		new_client->keep_alive = 0x0;
-		remove_file_descriptor(sockets,pfds, new_client->fd, &fd_count);
-	}else{
-		if (peek_buf != NULL){
-			process_bytes(new_client, peek_buf, fd_count);
-			free(peek_buf);
-			peek_buf = NULL;
-		}
-		if (!new_client->keep_alive){
-			remove_file_descriptor(sockets,pfds, new_client->fd, &fd_count);
-		}
-	}
-	pthread_exit(NULL);
+    struct Socket *new_client = (struct Socket *)arg;
+
+    char *peek_buf = malloc(BUFFER_SIZE+1);
+    int bytes_peeked = peek_exact_bytes(new_client->cSSL, BUFFER_SIZE, peek_buf);
+
+    if (bytes_peeked > 0 && peek_buf != NULL) {
+        process_bytes(new_client, peek_buf, fd_count);
+        free(peek_buf);
+    }
+
+    new_client->keep_alive = 0x0;
+    new_client->finished = 1;  
+    pthread_exit(NULL);
 }
+
+
 
 void start_listening_for_clients(char* port){
         SSL_library_init(); 
@@ -183,20 +179,35 @@ void start_listening_for_clients(char* port){
 			socket->keep_alive = 0x0;
         }
         insert_file_descriptor(&sockets,&pfds, listener_fd,NULL,"localhost", &fd_count, &max_socket_size, 0x1);
-        while(1){
-			int triggered_fd = wait_for_event(&pfds, fd_count);
-			if (triggered_fd == listener_fd){
-				struct Socket* new_client = accept_new_client(listener_fd, &sockets, &pfds, &fd_count, &max_socket_size);
-				if (!new_client){
-					printf("Invalid Client Connection.\n");
-					continue;
-				}
-				pthread_t thread;
-				if (pthread_create(&thread, NULL, process_thread, (void *)new_client) != 0) {
-				perror("Failed to create thread");
-				break;
-				}
-				
-			}
+	pthread_t threads[MAX_CLIENTS];
+	struct Socket* clients[MAX_CLIENTS];
+	int thread_count = 0;
+
+	while(1) {
+	    int triggered_fd = wait_for_event(&pfds, fd_count);
+
+	    if (triggered_fd == listener_fd) {
+		struct Socket* new_client = accept_new_client(listener_fd, &sockets, &pfds, &fd_count, &max_socket_size);
+		if (!new_client) continue;
+
+		pthread_create(&threads[thread_count], NULL, process_thread, (void*)new_client);
+		clients[thread_count] = new_client;
+		thread_count++;
+	    }
+
+	    for (int i = 0; i < thread_count; i++) {
+		if (clients[i]->finished) {
+		    pthread_join(threads[i], NULL);
+		    remove_file_descriptor(sockets, pfds, clients[i]->fd, &fd_count);
+
+		    for (int j = i; j < thread_count - 1; j++) {
+			threads[j] = threads[j + 1];
+			clients[j] = clients[j + 1];
+		    }
+		    thread_count--;
+		    i--; 
 		}
+	    }
 	}
+
+}

@@ -68,7 +68,7 @@ void post_blob(struct Socket* socket,char* http_header, char*body, char* route, 
 	char path[2048];
 	char write_path[2048];
 
-	if (strstr(route, "/email")){
+	if (strstr(route, "/blob-storage/email")){
 		connect_to_server("127.0.0.1", "5000", body);
 		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/bronze_portfolio_appointments.json");
 		snprintf(path, sizeof(path),"blob-storage/bronze_portfolio_appointments.json");
