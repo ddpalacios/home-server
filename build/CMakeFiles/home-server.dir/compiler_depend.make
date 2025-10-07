@@ -6097,9 +6097,11 @@ CMakeFiles/home-server.dir/server/server.c.o: /home/dpalacios/home-server/server
   /usr/include/asm-generic/bitsperlong.h \
   /usr/include/asm-generic/errno-base.h \
   /usr/include/asm-generic/errno.h \
+  /usr/include/asm-generic/int-ll64.h \
   /usr/include/asm-generic/posix_types.h \
   /usr/include/asm-generic/socket.h \
   /usr/include/asm-generic/sockios.h \
+  /usr/include/asm-generic/types.h \
   /usr/include/cjson/cJSON.h \
   /usr/include/endian.h \
   /usr/include/errno.h \
@@ -6107,10 +6109,13 @@ CMakeFiles/home-server.dir/server/server.c.o: /home/dpalacios/home-server/server
   /usr/include/features.h \
   /usr/include/inttypes.h \
   /usr/include/limits.h \
+  /usr/include/linux/close_range.h \
   /usr/include/linux/errno.h \
   /usr/include/linux/limits.h \
   /usr/include/linux/posix_types.h \
+  /usr/include/linux/sched/types.h \
   /usr/include/linux/stddef.h \
+  /usr/include/linux/types.h \
   /usr/include/netdb.h \
   /usr/include/netinet/in.h \
   /usr/include/openssl/asn1.h \
@@ -6198,6 +6203,7 @@ CMakeFiles/home-server.dir/server/server.c.o: /home/dpalacios/home-server/server
   /usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
   /usr/include/x86_64-linux-gnu/asm/socket.h \
   /usr/include/x86_64-linux-gnu/asm/sockios.h \
+  /usr/include/x86_64-linux-gnu/asm/types.h \
   /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
   /usr/include/x86_64-linux-gnu/bits/byteswap.h \
   /usr/include/x86_64-linux-gnu/bits/confname.h \
@@ -6220,7 +6226,6 @@ CMakeFiles/home-server.dir/server/server.c.o: /home/dpalacios/home-server/server
   /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
   /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
   /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
   /usr/include/x86_64-linux-gnu/bits/sched.h \
@@ -6240,6 +6245,7 @@ CMakeFiles/home-server.dir/server/server.c.o: /home/dpalacios/home-server/server
   /usr/include/x86_64-linux-gnu/bits/time.h \
   /usr/include/x86_64-linux-gnu/bits/time64.h \
   /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/bits/timex.h \
   /usr/include/x86_64-linux-gnu/bits/types.h \
   /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
   /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
@@ -6248,10 +6254,13 @@ CMakeFiles/home-server.dir/server/server.c.o: /home/dpalacios/home-server/server
   /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigval_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/error_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigevent_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
@@ -6266,11 +6275,13 @@ CMakeFiles/home-server.dir/server/server.c.o: /home/dpalacios/home-server/server
   /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
   /usr/include/x86_64-linux-gnu/bits/typesizes.h \
   /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
   /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
   /usr/include/x86_64-linux-gnu/bits/waitflags.h \
   /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
   /usr/include/x86_64-linux-gnu/bits/wchar.h \
   /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs.h \
   /usr/include/x86_64-linux-gnu/openssl/configuration.h \
@@ -6778,8 +6789,6 @@ CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_client.c.o:
 
 CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_user.c.o:
 
-CMakeFiles/home-server.dir/routes/life-of-sounds/PATCH/patch_browser_session.c.o:
-
 CMakeFiles/home-server.dir/routes/life-of-sounds/GET/websocket_protocol.c.o:
 
 CMakeFiles/home-server.dir/routes/life-of-sounds/GET/home.c.o:
@@ -6824,8 +6833,6 @@ CMakeFiles/home-server.dir/routes/life-of-sounds/PATCH/patch_websocket_client.c.
 
 /usr/lib/x86_64-linux-gnu/libmysqlclient.so:
 
-/usr/lib/x86_64-linux-gnu/libgcc_s.so.1:
-
 /usr/lib/x86_64-linux-gnu/libcjson.so:
 
 /usr/lib/x86_64-linux-gnu/crti.o:
@@ -6851,6 +6858,26 @@ CMakeFiles/home-server.dir/routes/route.c.o:
 /home/dpalacios/home-server/utilities/json_utilities.c:
 
 /home/dpalacios/home-server/utilities/http_utilities.c:
+
+CMakeFiles/home-server.dir/routes/life-of-sounds/PATCH/patch_browser_session.c.o:
+
+/usr/include/x86_64-linux-gnu/bits/xopen_lim.h:
+
+/usr/include/x86_64-linux-gnu/bits/uio_lim.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/error_t.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/__sigval_t.h:
+
+/usr/include/x86_64-linux-gnu/asm/types.h:
+
+/usr/include/linux/types.h:
+
+/usr/lib/x86_64-linux-gnu/libgcc_s.so.1:
+
+/usr/include/linux/close_range.h:
+
+/usr/include/asm-generic/int-ll64.h:
 
 CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_websocket_client.c.o:
 
@@ -6909,6 +6936,8 @@ CMakeFiles/home-server.dir/routes/life-of-sounds/GET/login.c.o:
 /home/dpalacios/home-server/routes/life-of-sounds/GET/get_session_messages.h:
 
 /home/dpalacios/home-server/routes/life-of-sounds/GET/get_live_page.h:
+
+/usr/include/linux/sched/types.h:
 
 /home/dpalacios/home-server/routes/life-of-sounds/GET/get_html_utilities_script.h:
 
@@ -7118,6 +7147,8 @@ CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_web_audio_api_script.c.
 
 CMakeFiles/home-server.dir/server/server.c.o:
 
+/usr/include/asm-generic/types.h:
+
 /usr/include/asm-generic/bitsperlong.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/14/include/stdarg.h:
@@ -7199,6 +7230,8 @@ CMakeFiles/home-server.dir/server/server.c.o:
 /usr/include/openssl/core_dispatch.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/FILE.h:
+
+/usr/include/x86_64-linux-gnu/bits/timex.h:
 
 /usr/include/x86_64-linux-gnu/bits/stdio_lim.h:
 
@@ -7427,6 +7460,8 @@ CMakeFiles/home-server.dir/models/websocket.c.o:
 /usr/include/x86_64-linux-gnu/sys/socket.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/sigevent_t.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h:
 

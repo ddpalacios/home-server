@@ -1,7 +1,10 @@
+#define _GNU_SOURCE
 #include  <cjson/cJSON.h>
 #include <pthread.h>
 #include <sys/socket.h>
 #include <stdlib.h>
+#include <time.h>
+#include <errno.h>
 #include <stdio.h>
 #include "Socket.h"
 #include "route.h"
@@ -47,7 +50,7 @@ int bind_address_to_port(char* port,struct addrinfo hints){
         exit(1);
 
     }
-	if (listen(sockfd, 5) <  0){
+	if (listen(sockfd, 100) <  0){
         printf("ERROR in LISTEN\n");
         exit(1);
     }
@@ -190,24 +193,44 @@ void start_listening_for_clients(char* port){
 		struct Socket* new_client = accept_new_client(listener_fd, &sockets, &pfds, &fd_count, &max_socket_size);
 		if (!new_client) continue;
 
+		printf("FD Count: %d\n", fd_count);
 		pthread_create(&threads[thread_count], NULL, process_thread, (void*)new_client);
 		clients[thread_count] = new_client;
 		thread_count++;
 	    }
+	    printf("Removing %d threads\n", thread_count);
+		for (int i = 0; i < thread_count; i++) {
+		    if (clients[i]->finished) {
+			printf("Waiting for thread %d...\n", i);
 
-	    for (int i = 0; i < thread_count; i++) {
-		if (clients[i]->finished) {
-		    pthread_join(threads[i], NULL);
-		    remove_file_descriptor(sockets, pfds, clients[i]->fd, &fd_count);
+			struct timespec ts;
+			clock_gettime(CLOCK_REALTIME, &ts);
+			ts.tv_sec += 1;  // wait up to 3 seconds
 
-		    for (int j = i; j < thread_count - 1; j++) {
-			threads[j] = threads[j + 1];
-			clients[j] = clients[j + 1];
+			int rc = pthread_timedjoin_np(threads[i], NULL, &ts);
+
+			if (rc == 0) {
+			    printf("Thread %d joined successfully.\n", i);
+			} else if (rc == ETIMEDOUT) {
+			    printf("Thread %d timed out — cancelling.\n", i);
+			    pthread_cancel(threads[i]);
+			    pthread_join(threads[i], NULL); // ensure cleanup
+			} else {
+			    perror("pthread_timedjoin_np");
+			}
+
+			// Remove its socket and compact arrays
+			remove_file_descriptor(sockets, pfds, clients[i]->fd, &fd_count);
+
+			for (int j = i; j < thread_count - 1; j++) {
+			    threads[j] = threads[j + 1];
+			    clients[j] = clients[j + 1];
+			}
+
+			thread_count--;
+			i--; // adjust index after shifting
 		    }
-		    thread_count--;
-		    i--; 
 		}
-	    }
 	}
 
 }
