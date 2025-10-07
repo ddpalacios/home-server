@@ -156,11 +156,9 @@ void* process_thread(void* arg){
     int bytes_peeked = peek_exact_bytes(new_client->cSSL, BUFFER_SIZE, peek_buf);
 
     if (bytes_peeked > 0 && peek_buf != NULL) {
-        process_bytes(new_client, peek_buf, fd_count);
+        process_bytes(sockets,new_client, peek_buf, fd_count);
         free(peek_buf);
     }
-
-    new_client->keep_alive = 0x0;
     new_client->finished = 1;  
     pthread_exit(NULL);
 }
@@ -187,6 +185,7 @@ void start_listening_for_clients(char* port){
 	int thread_count = 0;
 
 	while(1) {
+	    delete_expired_tokens();
 	    int triggered_fd = wait_for_event(&pfds, fd_count);
 
 	    if (triggered_fd == listener_fd) {
@@ -197,20 +196,29 @@ void start_listening_for_clients(char* port){
 		pthread_create(&threads[thread_count], NULL, process_thread, (void*)new_client);
 		clients[thread_count] = new_client;
 		thread_count++;
+	    }else{
+		    for (int i=0; i < fd_count;i++){
+			    struct Socket* client = &sockets[i];
+			    if (client->fd != triggered_fd){
+				    continue;
+			    }else{
+				pthread_create(&threads[thread_count], NULL, process_thread, (void*)client);
+				clients[thread_count] = client;
+				thread_count++;
+			    }
+		    }
 	    }
-	    printf("Removing %d threads\n", thread_count);
 		for (int i = 0; i < thread_count; i++) {
 		    if (clients[i]->finished) {
-			printf("Waiting for thread %d...\n", i);
-
+			//printf("Waiting for thread %d...\n", i);
 			struct timespec ts;
 			clock_gettime(CLOCK_REALTIME, &ts);
-			ts.tv_sec += 1;  // wait up to 3 seconds
+			ts.tv_sec += 1;  
 
 			int rc = pthread_timedjoin_np(threads[i], NULL, &ts);
 
 			if (rc == 0) {
-			    printf("Thread %d joined successfully.\n", i);
+			    //printf("Thread %d joined successfully.\n", i);
 			} else if (rc == ETIMEDOUT) {
 			    printf("Thread %d timed out — cancelling.\n", i);
 			    pthread_cancel(threads[i]);
@@ -219,16 +227,21 @@ void start_listening_for_clients(char* port){
 			    perror("pthread_timedjoin_np");
 			}
 
-			// Remove its socket and compact arrays
-			remove_file_descriptor(sockets, pfds, clients[i]->fd, &fd_count);
+			if (!clients[i]->keep_alive){
+				 if (websocketclient_exists_by_socketid(clients[i]->Id)){
+					struct WebsocketClient ws_client =  get_websocketclientBySocketId(clients[i]->Id);
+					delete_websocketclient_by_Id(ws_client.Id);
+				 }
+
+				remove_file_descriptor(sockets, pfds, clients[i]->fd, &fd_count);
+			}
 
 			for (int j = i; j < thread_count - 1; j++) {
 			    threads[j] = threads[j + 1];
 			    clients[j] = clients[j + 1];
 			}
-
 			thread_count--;
-			i--; // adjust index after shifting
+			i--; 
 		    }
 		}
 	}

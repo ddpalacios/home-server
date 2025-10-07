@@ -63,7 +63,7 @@ void connect_to_server(const char* host, const char* port, char*body){
  	}
  }
 
-void post_blob(struct Socket* socket,char* http_header, char*body, char* route, int fd_count){
+void post_blob(struct Socket* socket,char* http_header, char*body, char* route){
 	SSL* cSSL = socket->cSSL;
 	char path[2048];
 	char write_path[2048];

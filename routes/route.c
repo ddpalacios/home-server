@@ -41,7 +41,7 @@
 #include "life-of-sounds/GET/get_user.h"
 #include "life-of-sounds/GET/login.h"
 
-void process_route(struct Socket *socket,char* http_header, char* body, int fd_count){
+void process_route(struct Socket *socket,char* http_header, char* body){
 	SSL *cSSL =  socket->cSSL;
 	char* route_start = strchr(http_header, ' ');	
 	route_start++;
@@ -196,7 +196,50 @@ void process_route(struct Socket *socket,char* http_header, char* body, int fd_c
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/blob-storage/")!=NULL){
 		get_blob_storage_files(socket,http_header,body, route);
 	}else if (strcmp(request_type, "POST")==0 && strstr(route, "/blob-storage/")!=NULL){
-		post_blob(socket,http_header,body, route,fd_count);
+		post_blob(socket,http_header,body, route);
+
+
+
+
+
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/")==0){
+		get_live_html(cSSL, http_header, "live_studio.html");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/game_of_life.js")==0){
+		get_gol_script(cSSL, http_header, "game_of_life.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/onload_session.js")==0){
+		get_gol_script(cSSL, http_header, "onload_session.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/websocket.js")==0){
+		get_gol_script(cSSL, http_header, "websocket.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/canvas_style.css")==0){
+		get_gol_script(cSSL, http_header, "canvas_style.css");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/chatbox.js")==0){
+		get_gol_script(cSSL, http_header, "chatbox.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/chatbox_style.css")==0){
+		get_gol_script(cSSL, http_header, "chatbox_style.css");
+
+
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/life-of-sounds/session/join?Id=") != NULL){
+		char* sessionId = get_query_parameter(route, "Id");
+		if (websocket_session_exists(sessionId)){
+			get_live_html(cSSL, http_header, "live_studio.html");
+		}
+	}else if (strcmp(request_type, "DELETE")==0 && strstr(route, "/life-of-sounds/session?Id=") != NULL){
+		delete_websocket_session(socket,http_header,body, route);
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/life-of-sounds/session?") != NULL){
+		get_websocket_protocol(socket,http_header,body, route);
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/life-of-sounds/session")==0){
+		post_websocket_session(socket,http_header,body, route);
+
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/life-of-sounds/live_studio/session/messages")!=NULL){
+		get_session_messages(socket, http_header, body, route);
+
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/life-of-sounds/client")!=NULL){
+		 get_websocket_client(socket,http_header,body, route);
+
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/life-of-sounds/user")==0){
+		post_user(socket,http_header,body, route);
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/user")==0){
+		get_user(socket,http_header,body, route);
 	}else{
 		send_response_code(cSSL, 404);
 	}

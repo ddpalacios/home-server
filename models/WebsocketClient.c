@@ -42,7 +42,7 @@ char* get_websocketclientsBySessionId_json(char* sessionId){
 	snprintf(sql,sizeof(sql), "SELECT * FROM WebsocketClient WHERE sessionId = '%s'",
 			sessionId
 			);
-	// printf("%s\n", sql);
+	printf("%s\n", sql);
 	MYSQL_RES* res = query(conn, sql);
 	MYSQL_ROW row;
 	size_t count = 0;
@@ -91,6 +91,8 @@ struct WebsocketClient* get_websocketclientsBySessionId(char* sessionId, size_t 
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[255];
 	snprintf(sql, sizeof(sql),"SELECT * FROM WebsocketClient WHERE sessionId = '%s'", sessionId);
+	printf("%s\n", sql);
+
 	MYSQL_RES* res = query(conn, sql);
 	MYSQL_ROW row;
 	struct WebsocketClient *websocketclients;

@@ -1,5 +1,4 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/home-server.dir/link.d"
   "CMakeFiles/home-server.dir/database/SQL.c.o"
   "CMakeFiles/home-server.dir/database/SQL.c.o.d"
   "CMakeFiles/home-server.dir/main.c.o"

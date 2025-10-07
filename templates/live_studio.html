@@ -27,14 +27,14 @@
 </script>
 <script src="/life-of-sounds/game_of_life.js"></script>
 <script>
-    var pixel_size = 2
+    var pixel_size = 1
     var numRows =  Math.floor(canvas.height / pixel_size);
     var numCols =Math.floor(canvas.width / pixel_size);
     var big_canvas_grid = []
     var color = 'white'
     const connected_clients = new Map()
-    var mag_view_w =10
-    var mag_view_h = 10
+    var mag_view_w =5
+    var mag_view_h = 5
     var mouse_x = 0;
     var mouse_y = 0;
     var gol = new GameOfLife(big_canvas_grid, numRows,numCols, pixel_size);

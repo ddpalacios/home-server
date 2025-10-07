@@ -38,7 +38,19 @@
         var current_x = Math.floor(x/pixel_size)
         var current_y = Math.floor(y/pixel_size)
         let active_cells = []
-        color = randomLightColor()
+        color = randomLightColor();
+        for (let i=0; i<mag_view_h*10; i++){
+                for (let j=0; j<mag_view_w*10; j++){
+                    gol.grid[current_y+i][current_x + j] =1
+                    }
+            }
+        if (websocket != null){
+            websocket.send_payload({'grid_x': current_x, 'grid_y': current_y})
+        }
+
+}     
+
+	   /*
         for (let i=0; i<mag_view_h*10; i++){
                 for (let j=0; j<mag_view_w*10; j++){
                     gol.grid[current_y+i][current_x + j] =1
@@ -48,7 +60,7 @@
         if (websocket != null){
             websocket.send_payload(active_cells)
         }
-	}     
+	*/
 
     function mouseMove(e){
         e.preventDefault();
@@ -114,9 +126,8 @@
         websocket.initialize()
         websocket.session.onmessage = async (event) => {
                 let data = JSON.parse(event.data)
+		console.log("Message from server",data)
                 if (data['operation'] == 'message'){
-                    // console.log("Message from server", event.data);
-
                     let content = data['content']
                     let is_notification = data["is_notification"]
                     let username = data['username']
@@ -126,7 +137,7 @@
                     // console.log("Message from server", event.data);
                     
                     websocket.session.close()
-                    location.href = "/life-of-sounds/live_studio"
+                    location.href = "/life-of-sounds/"
                 }
                 else if (data['operation'] == 'coordinates' && data['request'] == 'MOUSE'){
                     let client_x = data['content']['x']
@@ -144,18 +155,20 @@
                     });
                 }
                 else if (data['operation'] == 'send' && data['request'] == 'PAYLOAD'){
-                    // console.log("Message from server", event.data);
-                    data['content'].forEach(cords => {
-                        let x = cords['x']
-                        let y = cords['y']
-                        gol.grid[y][x] = 1
-                    });
+			var current_y = data['content']['grid_y']
+			var current_x = data['content']['grid_x']
+
+			for (let i=0; i<mag_view_h*10; i++){
+				for (let j=0; j<mag_view_w*10; j++){
+				    gol.grid[current_y+i][current_x + j] =1
+				    }
+			    }
                 }
 
         }
     }
     async function get_session_by_sessionId(sessionId){
-		var request = new Request('life-of-sounds/live_studio/session?Id='+sessionId, {
+		var request = new Request('life-of-sounds/session?Id='+sessionId, {
 							method: 'GET',
 							headers: new Headers({
 										'Accept': 'application/json'
@@ -169,7 +182,7 @@
         return session;
     }
     async function get_session_by_userId(userId){
-		var request = new Request('life-of-sounds/live_studio/session?userId='+userId, {
+		var request = new Request('life-of-sounds/session?userId='+userId, {
 							method: 'GET',
 							headers: new Headers({
 										'Accept': 'application/json'
@@ -188,7 +201,7 @@
             let isHost = 0
             let sessionid = window.location.hash.split("session=")[1]
             sessionStorage.setItem("sessionid", sessionid)
-            var request = new Request('life-of-sounds/live_studio/session?userId='+user['Id'], {
+            var request = new Request('life-of-sounds/session?userId='+user['Id'], {
                                         method: 'GET',
                                         headers: new Headers({
                                                     'Accept': 'application/json'
@@ -218,7 +231,7 @@
 
     }
     async function create_user(){
-            var request = new Request('/life-of-sounds/live_studio/user', {
+            var request = new Request('/life-of-sounds/user', {
                                 method: 'POST',
                                 headers: new Headers({
                                             'Accept': 'application/json'
@@ -238,7 +251,7 @@
             return null;
     }
     async function get_user(){
-         var request = new Request('/life-of-sounds/live_studio/user', {
+         var request = new Request('/life-of-sounds/user', {
                                 method: 'GET',
                                 headers: new Headers({'Accept': 'application/json'})});
             var user = null;
@@ -253,7 +266,7 @@
     async function create_session(sessionName, user){
          let userId = user['Id'];
          let fullName = user['fullName'];
-         var request = new Request('/life-of-sounds/live_studio/session', {
+         var request = new Request('/life-of-sounds/session', {
                             method: 'POST',
                             headers: new Headers({
                                         'Accept': 'application/json',
@@ -285,7 +298,7 @@
         cpy_btn.onclick = function () {
                 let sessionId = sessionStorage.getItem("sessionId");
                 cpy_btn.style.backgroundColor = 'rgba(4, 200, 4, 0.9)';
-                navigator.clipboard.writeText(window.location.href + "/session/join?Id="+sessionId );
+                navigator.clipboard.writeText(window.location.href + "session/join?Id="+sessionId );
                 cpy_btn.textContent = "Copied!"
                 setTimeout(function(){ 
                     cpy_btn.textContent = "Copy Invitation URL"
@@ -317,7 +330,7 @@
         }else{
             stop_session_btn.onclick = function(){
                 let sessionId = sessionStorage.getItem("sessionId")
-                var request = new Request('life-of-sounds/live_studio/session?Id='+sessionId, {
+                var request = new Request('life-of-sounds/session?Id='+sessionId, {
                                     method: 'DELETE',
                                     headers: new Headers({
                                                 'Accept': 'application/json'
@@ -325,7 +338,7 @@
                         });
                 fetch(request)
                 websocket.close_all_connections();
-                location.href = "/life-of-sounds/live_studio"
+                location.href = "/life-of-sounds/"
                 // session_btn.style.display = "inline-block"
                 // stop_session_btn.style.display = "none"
                 // var chatbox_contents =  document.getElementById("chatbox_contents");
@@ -367,7 +380,7 @@
         text = text.replace("\\", "")
         text = text.replace("'", "")
         add_message_to_chat(current_user['fullname'], text, 0)
-        websocket.send_message(text, 0)
+        websocket.send_message(current_user['fullname'],text, 0)
         document.getElementById("messagebox").value = ''
         let chat = document.getElementById('messages')
         chat.scrollTop = chat.scrollHeight;
@@ -383,10 +396,12 @@
             .then((response)=> response.json())
             .then((data)=> {
                 let messages = data['values'];
+		        
+                console.log(messages);
                 messages.forEach(element => {
                     let text = element['content']
                     let is_notification = element['is_notification']
-                    add_message_to_chat(current_user['fullname'], text, is_notification)
+                    add_message_to_chat(element['username'], text, is_notification)
                 });
                 let chat = document.getElementById('messages')
                 chat.scrollTop = chat.scrollHeight;
@@ -501,7 +516,7 @@
     }
     function draw(){
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        draw_host_cursor();
+       draw_host_cursor();
         draw_client_cursor();
         gol.initialize();
         gol.updateGrid();
@@ -560,7 +575,51 @@
         let current_session = null;
         let sessionId = null;
         let sessionName = null;
+        this.sessionStorage.setItem("userId", userId);
+
+        if (this.window.location.href.includes("session/join?Id=")){
+            sessionId = this.window.location.href.split("session/join?Id=")[1];
+            if (sessionId != '' && sessionId.length > 0){
+                current_session = await get_session_by_sessionId(sessionId)
+                if (current_session == null){
+                    this.alert("Session Not Found"); 
+                    return;
+                }
+                sessionName = current_session['name']
+                this.sessionStorage.setItem("isHost", false)
+            }else{
+                this.alert("Invalid Join Session ID")
+            }
+	 }
+	else{
+            current_session = await get_session_by_userId(userId);
+            if (current_session == null){
+                    this.alert("Session Retrieval Server Error"); 
+                    return;
+                }
+		console.log(current_session);
+            if (current_session['values'].length > 0){
+                sessionId = current_session['values'][0]['sessionid']
+                sessionName = current_session['values'][0]['name']
+                this.sessionStorage.setItem("isHost", true)
+	    }
+    }
+        if (sessionId != null && sessionName != null){
+                sessionStorage.setItem("sessionId", sessionId)
+                display_session_button();
+                display_session(sessionName, current_user);
+                load_messages(current_user, sessionId);
+                start_session(sessionId, current_user);
+            }
+    })
+/*
+        let current_user = await get_user();
+        let userId = current_user['Id']
+        let current_session = null;
+        let sessionId = null;
+        let sessionName = null;
         this.sessionStorage.setItem("userId", userId)
+
         if (this.window.location.href.includes("session/join?Id=")){
             sessionId = this.window.location.href.split("session/join?Id=")[1];
             if (sessionId != '' && sessionId.length > 0){
@@ -595,8 +654,9 @@
             }
     })
 
+*/
     canvas.addEventListener('mousedown', function(e) {
 	getCursorPosition(canvas, e)
-})
+    })
     canvas.addEventListener("mousemove", mouseMove, false);
     draw()
