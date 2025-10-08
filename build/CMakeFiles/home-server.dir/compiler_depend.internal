@@ -2205,6 +2205,7 @@ CMakeFiles/home-server.dir/routes/life-of-sounds/DELETE/delete_websocket_session
  /home/dpalacios/home-server/utilities/http_utilities.h
  /home/dpalacios/home-server/models/websocket.h
  /home/dpalacios/home-server/models/WebsocketClient.h
+ /home/dpalacios/home-server/models/Websocket_Message.h
  /home/dpalacios/home-server/models/Socket.h
  /usr/include/x86_64-linux-gnu/sys/socket.h
  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h

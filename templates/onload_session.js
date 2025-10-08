@@ -137,7 +137,7 @@
                     // console.log("Message from server", event.data);
                     
                     websocket.session.close()
-                    location.href = "/life-of-sounds/"
+                    location.href = "/game_of_life/"
                 }
                 else if (data['operation'] == 'coordinates' && data['request'] == 'MOUSE'){
                     let client_x = data['content']['x']
@@ -325,7 +325,7 @@
             default_color =  'rgba(152, 147, 0, 0.55)'
             onhover_color = 'rgba(147, 152, 0, 0.81)'; 
             stop_session_btn.onclick = function(){
-               location.href = "/life-of-sounds/live_studio"
+               location.href = "/game_of_life/"
             }
         }else{
             stop_session_btn.onclick = function(){
@@ -338,7 +338,7 @@
                         });
                 fetch(request)
                 websocket.close_all_connections();
-                location.href = "/life-of-sounds/"
+                location.href = "/game_of_life/"
                 // session_btn.style.display = "inline-block"
                 // stop_session_btn.style.display = "none"
                 // var chatbox_contents =  document.getElementById("chatbox_contents");

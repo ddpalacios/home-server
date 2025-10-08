@@ -202,7 +202,7 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 
 
 
-	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/")==0){
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/game_of_life/")==0){
 		get_live_html(cSSL, http_header, "live_studio.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/game_of_life.js")==0){
 		get_gol_script(cSSL, http_header, "game_of_life.js");
@@ -217,8 +217,7 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/chatbox_style.css")==0){
 		get_gol_script(cSSL, http_header, "chatbox_style.css");
 
-
-	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/life-of-sounds/session/join?Id=") != NULL){
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/game_of_life/session/join?Id=") != NULL){
 		char* sessionId = get_query_parameter(route, "Id");
 		if (websocket_session_exists(sessionId)){
 			get_live_html(cSSL, http_header, "live_studio.html");
