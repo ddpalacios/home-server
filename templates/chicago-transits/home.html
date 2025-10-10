@@ -1,66 +1,1413 @@
-
+<!DOCTYPE html>
 <html>
-  <head>
+<head>
+<title>Your Personal Data Engineer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+ <link rel="stylesheet" href="/dynamic_table_style.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <link rel="stylesheet" href="/default_body_style.css">
-    <link rel="stylesheet" href="/chatbox_style.css">
-    <script src="/websocket.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="icon" href="/portfolio/images/favicon.ico" type="image/x-icon">
+<style>
 
-    <link rel="stylesheet" href="/dynamic_table_style.css">
+  h1, h2,p,h3,li{
+    font-family: 'Garamond';
 
-    <style>
-      #map {
-          height: 50vh;   
-          width: 100%;    
-          margin-top: 0;  
-          z-index: 4;     
+  }
+  * {
+box-sizing: border-box;
+}
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+    margin: 0;
+       overflow-x: hidden;
+      font-family: Arial, Helvetica, sans-serif;
+  background: linear-gradient(
+    360deg,
+    rgba(0, 0, 0, 1) 43%,
+    rgba(2, 42, 44, 1) 76%,
+    rgba(17, 115, 107, 1) 100%
+  );
+  background-attachment: fixed; 
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+
+    
+    
+</style>
+
+<style>
+    /* NAVIGATION BAR*/
+.buttons{
+    width: auto;  
+    padding: 10px;
+    font-weight: bold;
+    font-family: 'Garamond';
+    color: rgba(67, 67, 67, 0.844);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+#lets_talk{
+  float: right;
+    width: 10%;  
+    font-size: larger;
+  margin-right: 7%;
+    margin-top: .5%;
+    margin-bottom: .5%;
+      opacity: 1;
+
+
+
+}
+#company_name{
+  float: left;
+  margin-left: 5%;
+    margin-top: .5%;
+    margin-bottom: .5%;
+    font-family: 'Garamond';
+    color: white;
+}
+#company_name:hover {
+    color: white;
+    transform: scale(1.02);
+    cursor: pointer;
+      opacity: 1;
+
+}
+
+#lets_talk:hover {
+    background-color: rgba(8, 152, 0, 0.815);
+    color: white;
+    transform: scale(1.10);
+      opacity: 1;
+      
+
+}
+
+.phonenav {
+  position: fixed;
+  transition: top 1s ease; 
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  background: linear-gradient(
+    20deg,
+    rgba(0, 0, 0, 0.774) 15%,
+    rgba(26, 106, 120, 0.854) 85%,
+    rgba(0, 136, 136, 0.45) ,
+    rgba(0, 0, 0, 0.45)
+  );
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5em 1em;
+
+
+}
+
+
+.topnav {
+  position: fixed;
+  transition: top 1.5s ease; 
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background: linear-gradient(
+    20deg,
+    rgba(0, 0, 0, 0.774) 15%,
+    rgba(26, 106, 120, 0.854) 85%,
+    rgba(0, 136, 136, 0.45) ,
+    rgba(0, 0, 0, 0.45)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5em 1em;
+}
+
+
+
+@media screen and (max-width: 1269px) {
+  .topnav{
+    text-align: center;
+    justify-content: center;
+    height: 6%;
+  /* background-color: #01000ede;  */
+
+
+  }
+  #lets_talk{
+    width: 65%;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    margin-left: 50px;
+
+  }
+  #title_bar{
+    display: none;
+  }
+  #company_name{
+    font-size: 20px;
+    width: 100%; 
+
+    /* 
+    
+    margin-right: 0%;
+   */
+    display: none;
+  }
+
+}
+
+</style>
+<style>
+/* Main Video */
+.Intro{
+  position: relative;
+  width: auto;
+  height: auto;
+  text-align: center;
+}
+@keyframes fadeVideo {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+#intro_video {
+  mix-blend-mode: screen;
+  animation: fadeVideo 8s ease-in-out infinite;
+  width: auto;
+ object-fit: fill;
+}
+
+@media screen and (max-width: 1050px) {
+  .Intro {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* full viewport height */
+  }
+
+  #intro_video {
+    display: none;
+  }
+
+}
+  @media screen and (min-width: 2100px) {
+   #intro_video {
+       width: 45%;
+
+  }
+}
+
+
+
+
+</style>
+
+<style>
+.Workload {
+    /* outline: 1px solid black; */
+    display: flex;
+    margin-top:2%;
+    justify-content: center;
+  }
+
+#workload_info{
+    background-color: #00013091;
+  }
+
+.flex-container {
+  display: flex;
+  flex-direction: row;
+  font-size: 30px;
+  text-align: center;
+}
+
+.flex-item-left {
+  background-color: #00010f1e;
+  padding: 10px;
+  flex: 50%;
+}
+
+.flex-item-right {
+  background-color: #00013091;
+  padding: 10px;
+  flex: 50%;
+}
+#clean_data:hover {
+    transform: scale(1.9);
+    cursor: pointer;
+    opacity: 1;
+    height: 50vh;
+
+
+}
+
+#raw_data:hover {
+    transform: scale(1.5);
+    cursor: pointer;
+    opacity: 1;
+        height: 50vh;
+        margin-left: 70px;
+
+
+}
+
+@media screen and (max-width: 1050px) {
+   #clean_data:hover {
+    transform: scale(1.5);
+    cursor: pointer;
+    opacity: 1;
+    height: auto;
+
+}
+
+#raw_data:hover {
+    transform: scale(1.5);
+    cursor: pointer;
+    opacity: 1;
+    height: auto;
+
+
+}
+
+}
+
+
+
+  @media screen and (min-width: 2100px) {
+   #raw_data {
+       width: 45% !important;
+        height: 50vh;
+
+  }
+     #clean_data {
+       width: 45% !important;
+       height: 50vh;
+
+  }
+  .workload_title{
+    font-size: 1vw;
+
+  }
+
+  #clean_data:hover {
+    transform: scale(1.6);
+    cursor: pointer;
+    opacity: 1;
+
+}
+
+#raw_data:hover {
+    transform: scale(1.6);
+    cursor: pointer;
+    opacity: 1;
+
+}
+}
+
+@media (max-width: 800px) {
+  .flex-container {
+    flex-direction: column;
+  }
+}
+
+</style>
+
+
+
+<style>
+  .Home {
+    outline: 1px solid black;
+    display: flex;
+    margin-top: 10%;
+justify-content: center;
+  }
+
+
+.cards {
+  margin: 0 auto;
+  display: grid;
+  gap: .5rem;
+  width: 90%;
+  grid-auto-rows: auto;
+  
+}
+
+.card {
+  position: relative;    
+  background-color: #1c1d7083;
+  color: white;
+  width: auto;
+   align-items: center;
+  cursor: pointer;
+
+  border-radius: 8px;
+}
+
+.card::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(255, 255, 255, 0.753);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: inherit;
+  z-index: 1;             
+}
+
+.card img {
+  position: relative;
+  z-index: 2;             
+}
+
+.card:hover::after {
+  opacity: 1;
+    pointer-events: none;
+}
+
+ 
+
+@media (min-width: 600px) {
+  .cards { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 900px) {
+  .cards { grid-template-columns: repeat(3, 1fr); }
+}
+
+ @media screen and (min-width: 2100px) {
+   .tools {
+       width: auto !important;
+  }
+  #tool_list{
+    font-size: 1vw;
+
+  }
+  .cards{
+  grid-auto-rows: 500px; 
+
+  }
+}
+
+</style>
+
+<style>
+.features {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.silver_items h2 {
+  color: white;
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+}
+
+
+
+  ul.myUL {
+  text-align: left;
+  list-style-position: inside; 
+  padding-left: 1rem;        
+  margin: 0;
+}
+.list_item {
+   margin: 10px 0;
+   color: white;
+   font-size: 20px;
+   opacity: 1;
+}
+
+  #clean_list-bullet{
+   list-style-type: "✅ "; 
+}
+
+.card ul {
+  max-width: 100%;       
+  word-wrap: break-word;  
+  white-space: normal;    
+  padding: 0 1rem;        
+  box-sizing: border-box; /
+}
+
+@media (max-width: 1250px) {
+  .work_info {
+    flex-direction: column;
+    align-items: center; /* keep them centered */
+  }
+  .work_steps{
+    flex-direction: column;
+    align-items: center; /* keep them centered */
+  }
+  #work_step2, #work_step1,#work_step3{
+    width: auto !important;
+  }
+}
+
+</style>
+
+
+<style>
+
+    .Contact {
+      outline: 1px solid black;
+      display: flex;
+      margin-top: 2%;
+      justify-content: center;
       }
-    </style>
-  </head>
-  <body>
-  <div class="topnav" >
+
+      @media screen and (max-width: 650px) {
+  .Home,
+  .Contact {
+    margin-bottom: 5rem; 
+    padding: 1rem;     
+  }
+}
+
+</style>
+
+<style>
+  
+
+.case_study_container{
+  display: flex;
+  justify-content: center;
+  padding: 2%;
+  flex-wrap: wrap; 
+  gap: 2rem; 
+}
+.case_study_cards{
+  position: relative;
+  cursor: pointer;
+  background-color: #ededed;
+  box-shadow: 10px 10px 18px  rgba(0, 0, 0, 0.516);
+  padding: 2rem; 
+  border-radius: 10px; 
+  max-width: 450px;
+  
+}
+
+
+
+
+.case_study_card_title{
+   font-size: 35px; 
+   margin: 0;
+   color: black;
+   text-align: center;
+  font-weight: 800; 
+  background: linear-gradient(20deg, #000000, #1a6a78, #088, #000000);
+    -webkit-background-clip: text; 
+    -webkit-text-fill-color: transparent; 
+    margin-bottom: 2rem; 
+    letter-spacing: -0.5px;
+
+}
+.case_study_paragraph{
+  color: black;
+  font-size: 20px;
+  text-align: center;
+}
+.case_study_cards.bronze, .case_study_cards.silver, .case_study_cards.gold{
+  cursor: default;
+  padding: 1em;
+}
+
+.case_study_cards.bronze:hover {
+    transform: scale(1.05);
+     z-index: 5;            
+
+}
+.case_study_cards.silver:hover {
+    transform: scale(1.05);
+     z-index: 5;            
+
+}
+.case_study_cards.gold:hover {
+    transform: scale(1.05);
+    z-index: 5;            
+
+}
+
+.case_study_cards {
+  transition: transform 0.5s ease; 
+}
+
+
+.case_study_cards:hover{
+    transform: scale(1.2);
+     z-index: 5;            
+
+
+}
+/* .case_study_cards::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: none !important; 
+  opacity: 0 !important;
+  pointer-events: none;
+} */
+/* .case_study_cards:hover::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: none !important; 
+  opacity: 0 !important;
+  pointer-events: none;
+} */
+
+
+</style>
+
+
+<style>
+.scroll-container {
+  overflow: hidden;
+  /* width: 100%; */
+  background-color: #00000000;
+  padding: 2rem 0;
+}
+
+.scroll-content {
+  display: flex;
+  /* justify-content: center; */
+  width: max-content;
+  animation: scroll 20s linear infinite;
+}
+
+.logos {
+  display: flex;
+}
+
+.logos img {
+  height: 100px;
+  margin: 0 2rem;
+  object-fit: contain;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+</style>
+
+<style>
+  #send_button{
+    font-size: 20px;
+    margin-top: 10px;
+    background-color: #043435;
+    color: white;
+
+    
+  }
+
+  #send_button:hover {
+    background-color: rgba(8, 152, 0, 0.815);
+    color: white;
+    transform: scale(1.03);
+      opacity: 1;
+      
+
+}
+</style>
+
+<style>
+    /* NEW MAIN VERSION */
+    .main{
+      outline: 1px solid black;
+    }
+
+    .body_cards{
+      background-color: white;
+      cursor: pointer;
+      border: 1px solid #ddd;
+      padding: 2em;
+      box-shadow: 10px 10px 18px  rgba(0, 0, 0, 0.516);
+      text-align: center;
+    }
+
+  .body_cards:hover{
+    transform: scale(1.01);
+     z-index: 1;              /* put overlay above card background */
+}
+  .subitem {
+  color: #8e0000;
+  font-weight: 500;
+  font-size: 1.3rem;
+  padding: 1%;
+  font-weight: 600;
+}
+@media (max-width: 1250px) {
+  #why_choose_us{
+    width: 100% !important;
+  }
+  .main_body {
+      grid-template-columns: 1fr;
+     width: 95%; 
+  }
+  .submit_form{
+     flex-direction: column;
+    align-items: center;
+
+  }
+  .form_1{
+    width: 100% !important;
+    padding: 10px;
+  }
+}
+
+.problem_text{
+  color: #c91616; 
+  font-weight: bold;
+}
+.solution_text{
+  color: rgb(0, 184, 0);
+  font-weight: bold;
+}
+
+</style>
+
+
+<style>
+.section_title {
+  text-align: center;
+  font-size: 3rem;
+  font-weight: 800;
+  background: linear-gradient(
+    90deg,
+    #00555f,   /* darker teal on the left */
+    #0f7a91,   /* middle toned-down teal */
+    #02293d,   /* deep navy before black */
+    #000000    /* right edge black */
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 2rem;
+  letter-spacing: -0.5px;
+}
+
+    .section_subtitle{
+    text-align: center;
+    font-size: 3rem; 
+    font-weight: 800; 
+    margin-bottom: 1rem; 
+    /* letter-spacing: 0.5px; */
+
+
+  }
+
+  #section1_maintitle {
+  margin: 0;
+  margin-top: 40px;       
+}
+
+#section1_subtitle {
+  margin: 0;
+  padding: 2%;
+
+}
+  .medallian_image{
+    max-width: 100px !important;
+  }
+
+  .main_body{
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5em; 
+  }
+@media (max-width: 1250px) {
+
+
+      .submit_form {
+    flex-direction: column; /* stack the two halves */
+    padding: 3% !important;
+  }
+
+  .form_1 {
+    width: 100% !important; /* full width instead of 50% */
+  }
+
+  .form_1 form div {
+    grid-template-columns: 1fr !important; /* stack inputs */
+  }
+
+  .footer_title{
+    font-size: 42px !important;
+    
+  }
+  
+  .footer_subtitle{
+    text-align: center !important;
+    font-size: 2em !important;
+    padding: 6%;
+    max-width: 95%;
+    text-justify: inter-word;
+
+  }
+  .medallian_image{
+    max-width: 150px !important;
+  }
+  .body_cards{
+    background-color: inherit; 
+    transform: none;           
+  }
+  .case_study_cards:hover {
+     background-color: inherit;
+    transform: none;       
+  }
+  
+.case_study_cards.bronze:hover {
+     background-color: inherit;
+    transform: none;          
+
+}
+.case_study_cards.silver:hover {
+      background-color: inherit;
+    transform: none;            
+
+}
+.case_study_cards.gold:hover {
+      background-color: inherit;
+    transform: none;    
+}       
+ .quote{
+   /* padding: 10% !important; */
+    /* text-align: justify !important;  */
+    margin: 0 auto;  
+   
+    /* text-justify: inter-word; */
+    /* word-spacing: 2px; */
+    font-size: 1.5em !important;
+    /* max-width: 90%;   */
+  }
+  .quotation_mark{
+    font-size: 1.2em !important;
+    font-weight: 800;
+    font-family: 'Courier New', Courier, monospace
+
+    
+  }
+  
+  .quote_from{
+    font-size: 1.8em !important;
+    padding: 5% !important;
+
+  }
+  .testimonial_section{
+    margin-top: 15% !important;
+
+  }
+  .section_footer_paragraph{
+    text-align: justify !important;
+    padding: 7%;
+  }
+  .main_section{
+    width: 100% !important;
+  }
+  .subitem{
+    text-align: justify !important;
+
+
+  }
+  .body_cards{
+     margin-left: 10px;
+  }
+  .section1_list{
+    font-size: 20px !important;
+    padding: 5%;
+  }
+  #section1_maintitle {
+    font-size: 40px !important;
+    padding: 2rem 1rem; 
+  }
+  #section1_subtitle {
+    font-size: 30px !important;
+    text-align: justify !important; 
+    padding: 1rem; 
+    width: 90% !important;
+    margin: 0 auto; 
+  }
+  .main_body {
+    grid-template-columns: 1fr;
+    width: 95%;
+    padding: 5% !important;
+  }
+
+  }
+
+  input::placeholder {
+  color: #ffffff62;   /* your color */
+  opacity: 1;    /* some browsers default it faded */
+}
+    textarea::placeholder {
+  color: #ffffff62;   /* your color */
+  opacity: 1;    /* some browsers default it faded */
+}
+</style>
+
+<style>
+
+.pain-point {
+  background: rgba(255, 255, 255, 0.08);
+  /* border-left: 4px solid #19545b; */
+  margin: 1em auto;
+  border-radius: 8px;
+  width: 70%;
+  text-align: left;
+}
+.painpoint_quotes {
+  text-align: center;
+  font-size: 1.5em;
+  color: #fff;
+}
+/* .pain-point:nth-child(even) {
+  text-align: left;
+  margin-left: 10%;
+}
+.pain-point:nth-child(odd) {
+  text-align: right;
+  margin-right: 10%;
+}
+
+.pain-point:nth-child(even) .painpoint_quotes {
+  margin-left: 20%;
+  text-align: left;
+}
+
+.pain-point:nth-child(odd) .painpoint_quotes {
+  margin-right: 20%;
+  text-align: right;
+} */
+
+@media (max-width:1269px) {
+.pain-point:nth-child(even),
+  .pain-point:nth-child(odd) {
+    text-align: center;
+    margin: 0 auto; /* removes the offset */
+  }
+
+  .pain-point{
+    width: 100%;
+  }
+  #section1_maintitle2{
+    text-align: center !important;
+    padding: 5%;
+  }
+  .all_painpoints{
+    gap: 2em;
+    /* margin-top: 2%; */
+    margin-bottom: 2%;
+
+  }
+  .painpoint_quotes {
+    text-align: center !important;
+
+}
+.medallian_list{
+  font-size: 20px !important;
+}
+.subitem{
+  padding: 2%;
+}
+
+}
+
+.phone_intro, .phonenav{
+  display: none;
+}
+.all_painpoints{
+  display: none;
+}
+
+.phone_intro,
+.all_painpoints {
+  display: none !important;
+}
+
+@media (max-width: 1780px) {
+
+.desktop_intro_sections {
+  display: flex;
+  gap: 2em;
+}
+
+#desktop_intro_section_image {
+  flex: 1;
+  display: flex;
+}
+
+#desktop_intro_section_image img {
+  width: 100% !important;
+  object-fit: cover; 
+  border-radius: 10px;
+  opacity: 0.5;
+  display: block;    
+  } 
+.painpoints_list{
+  font-size: 20px !important;
+  }
+}
+  /* .case_study_paragraph{
+    font-size: 15px !important;
+  } */
+  
+
+@media (max-width: 1279px) {
+  
+  .logos img {
+  height: 50px;
+  margin: 0 2rem;
+  object-fit: contain;
+}
+.definitions_table{
+  display: none !important;
+}
+.live_stage{
+  display: none !important;
+}
+
+
+  .phone_intro{
+    margin-top: 80px !important;
+
+  }
+
+   .topnav{
+    display: none !important;
+
+    
+  }
+  .phone_intro,.phonenav,
+  .all_painpoints {
+    display: flex !important;  
+    flex-direction: column;    
+    align-items: center;       
+    width: 100%;              
+  }
+  .painpoint_quotes{
+    padding: 3% !important;
+  }
+  .main_section1{
+    width: 100% !important;
+  }
+  #intro_section{
+    margin-top: 10% !important;
+  }
+
+  #why_choose_us_description{
+    display: none;
+     
+  }
+  #case_study_subtitle{
+    display: none;
+  }
+  .section_subtitle1{
+    text-align: left !important;
+    margin-bottom: 2% !important;
+  }
+  #intro_comment{
+      text-align: center !important;
+      font-weight: 600;
+  }
+.painpoints_list li::before {
+  font-size: 1.5em;
+}
+  #intro_image{
+    display: none;
+  }
+  .main_section{
+    margin-top: 5% !important;
+  }
+  .painpoints_list{
+    text-align: center !important;
+    font-size: 1.4em !important;
+    font-weight: 900;
+    padding: 6% !important;
+  }
+
+  .main_section > div[style*="display: flex"] {
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+  .main_section > div[style*="display: flex"] > div {
+    width: 100% !important;
+    text-align: center !important;
+  }
+  .main_section > div[style*="display: flex"] img {
+    width: 80% !important;
+    margin-bottom: 1.5em !important;
+  }
+  .main_section > div:last-child,
+  .main_section > div:nth-last-child(2) {
+    flex-direction: column !important;
+    text-align: center !important;
+    width: 100% !important;
+  }
+  .main_section > div:last-child h3,
+  .main_section > div:nth-last-child(2) h3 {
+    width: 100% !important;
+    text-align: center !important;
+  }
+
+  .case_study_paragraph{
+    text-align: left !important;
+    margin-bottom: 10px !important;
+    word-spacing: 1px;
+    
+
+}
+  .case_study_container {
+    align-items: center;      
+  }
+
+
+}
+
+.painpoints_list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 1.5em;
+  line-height: 1.3;
+  color: #000000;
+}
+
+.painpoints_list li {
+  margin-bottom: 0.6em;
+  position: relative;
+  color: black;
+}
+
+/* .painpoints_list li::before {
+  content: "*";
+  color: #19545b;
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+} */
+
+
+
+
+</style>
+
+<style>
+
+
+.flip-card {
+  background-color: transparent;
+  perspective: 1000px;
+  width: 450px;
+  height: 350px;
+  position: relative;
+  text-align: center;
+  background-color: transparent;
+  border-radius: 10px; 
+}
+.flip-card-image{
+  width: 350px;
+}
+.flip-card-front {
+  width: 100%;
+  height: 100%; 
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; 
+  align-items: center;     
+  text-align: center;
+  box-shadow: 10px 10px 18px  rgba(0, 0, 0, 0.516);
+
+}
+.flip-card-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%; 
+  background: linear-gradient(to bottom, rgba(0,0,0,0.85), rgba(0,0,0,0));
+  color: #fff;
+  font-size: 4em;
+  font-weight: 700;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  box-sizing: border-box;
+  z-index: 2;
+  display: flex;
+  align-items: center;   
+  justify-content: center; 
+  padding: 0; 
+  margin: 0;
+}
+
+
+.flip-card-front .flip-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* ensures the image covers the div without stretching */
+  display: block;
+}
+
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 1s;
+  transform-style: preserve-3d;
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+}
+
+.flip-card:hover .flip-card-inner {
+  transform: rotateY(180deg);
+}
+.flip-card-front, .flip-card-back {
+    position: absolute;
+    width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+.flip-card-back {
+
+  background-color: #ededed;
+  transform: rotateY(180deg);
+  padding: 3%;
+} 
+  @media (max-width: 1280px) {
+  .flip-card-header{
+    font-size: 2em !important;
+  }
+  .case_study_paragraph1{
+    font-size: 20px !important;
+  }
+}
+
+.carasol_img{
+  width:100px; 
+  height:700px;
+} 
+
+</style>
+
+<style>
+.fade-up {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.fade-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.all_painpoints {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  gap: 2em;
+}
+
+.pain-point {
+  width: 100%;
+  max-width: 1000px;
+}
+
+.painpoint_container {
+  background: none;
+}
+
+.painpoint_quotes {
+  color: white;
+  font-size: 2rem;
+  line-height: 1.4;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.visible .painpoint_quotes {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.2s;
+}
+
+.phone_intro {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.phone_intro.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.phone_intro h3 {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.phone_intro.visible h3 {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Optional: stagger fade for a smoother feel */
+.phone_intro.visible h3:nth-child(1) {
+  transition-delay: 0.2s;
+}
+
+.phone_intro.visible h3:nth-child(2) {
+  transition-delay: 0.4s;
+}
+
+.quote {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.quote.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Optional: make quotation marks fade separately for flair */
+.quotation_mark {
+  opacity: 0;
+  transition: opacity 0.8s ease-out;
+}
+
+.quote.visible .quotation_mark {
+  opacity: 1;
+  transition-delay: 0.2s;
+}
+
+/* Initial hidden state */
+.desktop_intro h3 {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+/* When visible */
+.desktop_intro.visible h3 {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Optional stagger for smoother entrance */
+.desktop_intro.visible h3:nth-child(1) {
+  transition-delay: 0.1s;
+}
+
+.desktop_intro.visible h3:nth-child(2) {
+  transition-delay: 0.3s;
+}
+/* Initial state for each list item */
+.painpoints_list li {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+/* When parent section is visible */
+.painpoints_list.visible li {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Optional: stagger each li for nice sequential effect */
+.painpoints_list.visible li:nth-child(1) { transition-delay: 0.2s; }
+.painpoints_list.visible li:nth-child(2) { transition-delay: 0.4s; }
+.painpoints_list.visible li:nth-child(3) { transition-delay: 0.6s; }
+.painpoints_list.visible li:nth-child(4) { transition-delay: 0.8s; }
+.painpoints_list.visible li:nth-child(5) { transition-delay: 1.0s; }
+.painpoints_list.visible li:nth-child(6) { transition-delay: 1.2s; }
+.painpoints_list.visible li:nth-child(7) { transition-delay: 1.4s; }
+
+</style>
+
+<style>
+  #map {
+      height: 50vh;   
+      width: 100%;    
+      margin-top: 0;  
+  }
+</style>
+</head>
+<body>
+
+
+<div class="topnav" >
   <h1 onclick="scrollToView(this.id)" id="company_name"><span style="color: rgb(255, 255, 255);  height: 100%;">PALACIOS SOLUTIONS <span id="title_bar">|</span> Your Personal Data Engineer</span></h1>
-  <button class="buttons" id="lets_talk" onclick="scrollToView(this.id)" style="color: black;" >Let's Talk</button>
+  <button class="buttons" id="lets_talk" onclick="scrollToView(this.id)" >Let's Talk</button>
 </div>
 
 <div class="phonenav" >
   <h3 id="phonenav_compname"onclick="scrollToView(this.id)" style="color: white; margin: 0 auto;">PALACIOS SOLUTIONS</h3>
   <hr id="phonenav_hr" onclick="scrollToView(this.id)" style="color:white; width: 50%; margin: .01 auto;">
   <h3 id="phonenav_headline"onclick="scrollToView(this.id)" style="color: white; margin: 0 auto; font-size: 15px;"> Your Personal Data Engineer</h3>
-
-  <button style="height: auto; margin: 0 auto; margin-top: 10px; color: black;" class="buttons" id="lets_talk" onclick="scrollToView(this.id)" >Let's Talk</button>
+  <button style="height: auto; margin: 0 auto; margin-top: 10px;" class="buttons" id="lets_talk" onclick="scrollToView(this.id)" >Let's Talk</button>
 </div>
 
-<div class="desktop_intro" style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section" id="intro_section" style="background-color: #fff; width: 80%; border-radius: 20px; margin-top: 10%; padding: 2%;">
-          <div style=" text-align: center; margin-bottom: 2%;" >
-        <h1 class="section_title" style=" font-size: 42px; ">CHOOSE A ROUTE:</h1>
+
+<div class="desktop_intro" style="display: flex; align-items: center; justify-content: center; margin-top: 2%;">
+  <div class="main_section" id="intro_section" style="background-color: #fff; width: 80%; border-radius: 20px; margin-top: 5%; padding: 2%;">
+    <div style=" text-align: center;">
+      <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">CHOOSE A ROUTE:</h1>
+    </div>
+      <div style="display: flex; flex-direction: row; gap: 2%; justify-content: center; align-items: center; margin-top: 5%;">
+          <div style="display: flex; flex-direction: column; align-items: center;">
+              <label for="busRoute" style="font-size: 1.2rem; font-weight: bold; margin-bottom: 5px;">Bus Route:</label>
+              <input list="routes" id="busRoute" name="busRoute" 
+                    style="padding: 10px 12px; font-size: 1.1rem; border-radius: 6px; border: 1px solid #ccc; width: 200px;" />
+              <datalist id="routes"></datalist>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center;">
+              <label for="direction" style="font-size: 1.2rem; font-weight: bold; margin-bottom: 5px;">Direction:</label>
+              <input list="directions" id="direction" name="direction" 
+                    style="padding: 10px 12px; font-size: 1.1rem; border-radius: 6px; border: 1px solid #ccc; width: 200px;" />
+              <datalist id="directions"></datalist>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center;">
+              <label for="stopName" style="font-size: 1.2rem; font-weight: bold; margin-bottom: 5px;">Stop Name:</label>
+              <input list="stops" id="stopName" name="stopName" 
+                    style="padding: 10px 12px; font-size: 1.1rem; border-radius: 6px; border: 1px solid #ccc; width: 200px;" />
+              <datalist id="stops"></datalist>
+          </div>
+
       </div>
-    <div style="display: flex; flex-direction: row; align-items: flex-start; gap: 5%; justify-content: flex-start; font-family: Arial, sans-serif;">
-        <div style="display: flex; flex-direction: column;">
-          <label for="busRoute" style="font-size: 1.2rem; font-weight: bold; margin-bottom: 5px;">Bus Route:</label>
-          <input list="routes" id="busRoute" name="busRoute" 
-                style="padding: 10px 12px; font-size: 1.1rem; border-radius: 6px; border: 1px solid #ccc; width: 200px;" />
-          <datalist id="routes"></datalist>
-        </div>
-
-        <div style="display: flex; flex-direction: column;">
-          <label for="direction" style="font-size: 1.2rem; font-weight: bold; margin-bottom: 5px;">Direction:</label>
-          <input list="directions" id="direction" name="direction" 
-                style="padding: 10px 12px; font-size: 1.1rem; border-radius: 6px; border: 1px solid #ccc; width: 200px;" />
-          <datalist id="directions"></datalist>
-        </div>
-
-        <div style="display: flex; flex-direction: column;">
-          <label for="stopName" style="font-size: 1.2rem; font-weight: bold; margin-bottom: 5px;">Stop Name:</label>
-          <input list="stops" id="stopName" name="stopName" 
-                style="padding: 10px 12px; font-size: 1.1rem; border-radius: 6px; border: 1px solid #ccc; width: 200px;" />
-          <datalist id="stops"></datalist>
-        </div>
-
-        <div style="display: flex; flex-direction: column;">
+      <div style="display: flex; flex-direction: row; gap: 2%; justify-content: center; align-items: center; margin-top: 2%;">
+                <div style="display: flex; flex-direction: column;">
           <label style="font-size: 1.2rem; font-weight: bold;">Next Bus Arrival:</label>
           <h1 style="font-size: 50px; margin: 0 auto; color: purple; font-style: italic;" id="next_arrival"></h1>
 
@@ -69,1423 +1416,264 @@
         <div style="display: flex; flex-direction: column;">
           <label style="font-size: 1.2rem; font-weight: bold;">Total In-Service:</label>
           <h1 style="font-size: 50px; margin: 0 auto; color: purple; font-style: italic;" id="total_inservice"></h1>
-
-        </div>
-    </div>
-    <div id="map" style="margin-top: 1%;"></div>
-  </div>
-</div>
-<div class="desktop_intro" style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section" id="intro_section" style="background-color: #fff; width: 80%; border-radius: 20px; margin-top: 1%; padding: 2%;">
-      <div style=" text-align: center;">
-        <h1 class="section_title" style=" font-size: 42px; ">LIVE DATA STAGING</h1>
-      </div>
-    <div class="case_study_container">
-      
-      <!-- BRONZE -->
-      <div class="case_study_cards bronze" style="background: linear-gradient(135deg, rgba(200,138,76,0.432), rgba(230,180,80,0.3), rgba(205,128,50,0.6)); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
-        <img class="medallian_image" style="max-width: 50px; border-radius: 20px; margin: 0 auto;" src="/portfolio/images/bronze.png">
-        <h3 style="font-size: 40px; text-align: center; letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85), rgba(0,90,110,0.9), rgba(0,0,0,0.95)); -webkit-background-clip: text; color: transparent;">BRONZE</h3>
-        <div class="outputs" id="bronzejsonContainer"
-            style="
-                width:100%;
-                background:#0f111a;
-                color:#eee;
-                font-family:monospace;
-                padding:1em;
-                border-radius:8px;
-                max-height:500px;
-                overflow-y:auto;
-                white-space:pre;
-                line-height:1.4;
-                box-sizing:border-box;
-            ">
         </div>
 
-
       </div>
-      
-      <!-- SILVER -->
-      <div class="case_study_cards silver" style="background: linear-gradient(135deg, rgba(192,192,192,0.6), rgba(220,220,220,0.3), rgba(192,192,192,0.6)); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
-        <img class="medallian_image" style="max-width: 50px; border-radius: 20px; margin: 0 auto;" src="/portfolio/images/silver.png">
-        <h3 style="font-size: 40px; text-align: center; letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85), rgba(0,90,110,0.9), rgba(0,0,0,0.95)); -webkit-background-clip: text; color: transparent;">SILVER</h3>
-        <div class="outputs" id="silverjsonContainer"
-            style="
-                width:100%;
-                background:#0f111a;
-                color:#eee;
-                font-family:monospace;
-                padding:1em;
-                border-radius:8px;
-                max-height:500px;
-                overflow-y:auto;
-                white-space:pre;
-                line-height:1.4;
-                box-sizing:border-box;
-            ">
-        </div>
-      </div>
-      
-      <!-- GOLD -->
-      <div class="case_study_cards gold" style="background: linear-gradient(135deg, rgba(255,215,0,0.6), rgba(255,240,128,0.3), rgba(255,215,0,0.6)); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
-        <img class="medallian_image" style="max-width: 50px; border-radius: 20px; margin: 0 auto;" src="/portfolio/images/gold.png">
-        <h3 style="font-size: 40px; text-align: center; letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85), rgba(0,90,110,0.9), rgba(0,0,0,0.95)); -webkit-background-clip: text; color: transparent;">GOLD</h3>
-        <div class="outputs" id="goldjsonContainer"
-            style="
-                width:100%;
-                background:#0f111a;
-                color:#eee;
-                font-family:monospace;
-                padding:1em;
-                border-radius:8px;
-                max-height:500px;
-                overflow-y:auto;
-                white-space:pre;
-                line-height:1.4;
-                box-sizing:border-box;
-            ">
-        </div>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<div class="desktop_intro" style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section" id="intro_section" style="background-color: #fff; width: 80%; border-radius: 20px; margin-top: 1%; padding: 2%;">
-      <div style=" text-align: center; margin-bottom: 1%;" >
-        <h1 class="section_title" style=" font-size: 42px; ">OVERALL VEHICAL DELAYS</h1>
-      </div>
-      <canvas id="areaLineChart" width="400" height="200"></canvas>
-  </div>
-</div>
-
-<div class="desktop_intro" style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section" id="intro_section" style="background-color: #fff; width: 80%; border-radius: 20px; margin-top: 1%; padding: 2%;">
-      <div style=" text-align: center; margin-bottom: 1%;" >
-        <h1 class="section_title" style=" font-size: 42px; ">CURRENT DELAYS BY ROUTE</h1>
-      </div>
-      <canvas id="route_delays" width="400" height="200"></canvas>
-  </div>
-</div>
-
-<div class="desktop_intro" style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section" id="intro_section" style="background-color: #fff; width: 80%; border-radius: 20px; margin-top: 1%; padding: 2%;">
-      <div style=" text-align: center; margin-bottom: 1%;" >
-        <h1 class="section_title" style=" font-size: 42px; ">TOP 10 DELAYS BY BUS STOP NAME</h1>
-      </div>
-      <canvas id="stop_delays" width="400" height="200"></canvas>
-  </div>
-</div>
-<div class="desktop_intro" style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section" id="intro_section" style="background-color: #fff; width: 80%; border-radius: 20px; margin-top: 1%; padding: 2%;">
-      <div style=" text-align: center; margin-bottom: 1%;" >
-        <h1 class="section_title" style=" font-size: 42px; ">CURRENT DELAYS BY DIRECTION</h1>
-      </div>
-<div style="width: 50%; height: 50vh; display: flex; justify-content: center; align-items: center; margin: 0 auto;">
-  <canvas id="direction_delays" style="max-width: 100%; max-height: 100%;"></canvas>
-</div>
-
+      <div id="map" style="margin-top: 1%;"></div>
   </div>
 </div>
 
 
-
-<div class="desktop_intro" style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section" id="intro_section" style="background-color: #fff; width: 80%; border-radius: 20px; margin-top: 1%; padding: 2%;">
-      <div style=" text-align: center;">
-        <h1 class="section_title" style=" font-size: 42px; ">DATA COLUMN DEFINITIONS </h1>
-      </div>
-
-      
-        <div class="filter-container">
-          <label for="columnSelect">Filter by column:</label>
-          <select id="columnSelect-definitions"></select>
-          <input type="text" id="filterInput-definitions" placeholder="Enter filter text...">
-        </div>
-
-      <div id="table-container-definitions"></div>
-  </div>
-  
-</div>
-
-
-<div class="desktop_intro" style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section" id="intro_section" style="background-color: #fff; width: 80%; border-radius: 20px; margin-top: 1%; padding: 2%;">
-      <div style=" text-align: center;">
-        <h1 class="section_title" style=" font-size: 42px; ">DATA TABLE DEFINITIONS </h1>
-      </div>
-
-      
-        <div class="filter-container">
-          <label for="columnSelect">Filter by column:</label>
-          <select id="columnSelect-columndefinitions"></select>
-          <input type="text" id="filterInput-columndefinitions" placeholder="Enter filter text...">
-        </div>
-
-      <div id="table-container-columndefinitions"></div>
-  </div>
-  
-</div>
-
-</body>
-
-  <script>
-    async function get_delay_summary(){
-      var request = new Request('/blob-storage/silver/CTA/ctabustracker/delays', {
-                          method: 'GET',
-                          headers: new Headers({'Accept': 'application/json'})});
-      var response = await fetch(request);
-      let result = null
-      if (response.ok){ 
-          result = await response.json()
-          result = result['values']
-      }
-      return result;
-
-    }
-
-    async function plot(){
-    var delays = await get_delay_summary()
-    console.log(delays)
-    labels = []
-    y = []
-    delays.forEach(element => {
-      labels.push(element['Hour']+":"+element['Minute'])
-      y.push(element['total_delayed'])
-    });
-    console.log(labels)
-
-    
-    const ctx = document.getElementById('areaLineChart').getContext('2d');
-    const areaLineChart = new Chart(ctx, {
-      type: 'line', // Line chart type
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Delayed Vehicals',
-          data: y,
-          borderColor: 'rgba(75, 192, 192, 1)', // Line color
-          backgroundColor: 'rgba(75, 192, 192, 0.2)', // Fill color for the area
-          borderWidth: 2,
-          pointRadius: 20,
-
-          fill: true // Enables the area fill
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            display: true,
-            position: 'top'
-          }
-        },
-        scales: {
-          x: {
-            title: {
-              display: true,
-              text: 'Hour:Minute'
-              ,color: '#000000', // black
-          font: {
-            size: 18,       // font size in pixels
-            weight: 'bold', // optional
-        }
-            }
-          },
-          y: {
-            title: {
-              display: false,
-              text: 'Delays'
-            },
-            beginAtZero: true
-          }
-        }
-      }
-    });
-  }
-  plot()
-  </script>
-  <script>
-    async function get_route_delay_summary(){
-      var request = new Request('/blob-storage/silver/CTA/ctabustracker/route_delays', {
-                          method: 'GET',
-                          headers: new Headers({'Accept': 'application/json'})});
-      var response = await fetch(request);
-      let result = null
-      if (response.ok){ 
-          result = await response.json()
-          result = result['values']
-      }
-      return result;
-
-    }
-
-    async function plot(){
-      var rt_delays = await get_route_delay_summary()
-      console.log(rt_delays)
-      labels = []
-      y = []
-      rt_delays.forEach(element => {
-        labels.push(element['rt'])
-        y.push(element['total_delayed'])
-      });
-      console.log(labels)
-
-      
-      const ctx = document.getElementById('route_delays').getContext('2d');
-      new Chart(ctx, {
-        type: 'bar', 
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Delayed Vehicals',
-            data: y,
-            borderColor: 'rgba(75, 192, 192, 1)', // Line color
-            backgroundColor: 'rgba(75, 192, 192, 0.2)', // Fill color for the area
-            borderWidth: 2,
-            pointRadius: 20,
-
-            fill: true // Enables the area fill
-          }]
-        },
-        options: {
-    // indexAxis: 'y',
-    elements: {
-      bar: {
-        borderWidth: 2,
-      }
-    },
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: false,
-        text: 'Delayed Routes'
-      }
-    }
-    , scales: {   
-      y: {
-        title: {
-          display: true,
-          text: 'TOTAL DELAYS',
-          color: '#000000', // black
-          font: {
-            size: 18,       // font size in pixels
-            weight: 'bold', // optional
-        }
-      }
-      },
-      x: {
-        title: {
-          display: true,
-          text: 'ROUTE'
-          ,color: '#000000', // black
-          font: {
-            size: 18,       // font size in pixels
-            weight: 'bold', // optional
-        }
-        }
-      }
-    }
-  },
-
-      });
-  }
-  plot()
-  </script>
-
-  <script>
-    async function get_stop_delay_summary(){
-      var request = new Request('/blob-storage/silver/CTA/ctabustracker/stop_delays', {
-                          method: 'GET',
-                          headers: new Headers({'Accept': 'application/json'})});
-      var response = await fetch(request);
-      let result = null
-      if (response.ok){ 
-          result = await response.json()
-          result = result['values']
-      }
-      return result;
-
-    }
-
-    async function plot(){
-      var rt_delays = await get_stop_delay_summary()
-      console.log(rt_delays)
-      labels = []
-      y = []
-      let top = 10
-      let count =0;
-      rt_delays.forEach(element => {
-        if (count < top){
-           labels.push(element['stpnm'])
-            y.push(element['total_delayed'])
-            count+=1
-
-        
-        }
-
-      });
-      console.log(labels)
-
-      
-      const ctx = document.getElementById('stop_delays').getContext('2d');
-      new Chart(ctx, {
-        type: 'bar', 
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Delayed Vehicals',
-            data: y,
-            borderColor: 'rgba(75, 192, 192, 1)', // Line color
-            backgroundColor: 'rgba(75, 192, 192, 0.2)', // Fill color for the area
-            borderWidth: 2,
-            pointRadius: 20,
-
-            fill: true // Enables the area fill
-          }]
-        },
-        options: {
-    indexAxis: 'y',
-    elements: {
-      bar: {
-        borderWidth: 2,
-      }
-    },
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: false,
-        text: 'Delayed Routes'
-      }
-    }
-    , scales: {   
-      y: {
-        title: {
-          display: true,
-          text: 'STOP NAME',
-          color: '#000000', // black
-          font: {
-            size: 18,       // font size in pixels
-            weight: 'bold', // optional
-        }
-      }
-      },
-      x: {
-        title: {
-          display: true,
-          text: 'TOTAL DELAYS'
-          ,color: '#000000', // black
-          font: {
-            size: 18,       // font size in pixels
-            weight: 'bold', // optional
-        }
-        }
-      }
-    }
-  },
-
-      });
-  }
-  plot()
-  </script>
-
-  <script>
-    async function get_direction_delay_summary(){
-      var request = new Request('/blob-storage/silver/CTA/ctabustracker/direction_delays', {
-                          method: 'GET',
-                          headers: new Headers({'Accept': 'application/json'})});
-      var response = await fetch(request);
-      let result = null
-      if (response.ok){ 
-          result = await response.json()
-          result = result['values']
-      }
-      return result;
-
-    }
-
-    async function plot(){
-      var rt_delays = await get_direction_delay_summary()
-      console.log(rt_delays)
-      labels = []
-      y = []
-      let top = 10
-      let count =0;
-      rt_delays.forEach(element => {
-        if (count < top){
-           labels.push(element['rtdir'])
-            y.push(element['total_delayed'])
-            count+=1
-
-        
-        }
-
-      });
-      console.log(labels)
-
-      
-      const ctx = document.getElementById('direction_delays').getContext('2d');
-new Chart(ctx, {
-  type: 'pie', 
-  data: {
-    labels: labels,
-    datasets: [{
-      label: 'Delayed Vehicles',
-      data: y,
-      backgroundColor: [
-        '#4bc0c0', '#ff6384', '#ffcd56', '#36a2eb', '#9966ff', '#ff9f40'
-      ], // add more colors if needed
-      // borderColor: '#000000', // optional border
-      borderWidth: 2
-    }]
-  },
-  options: {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          font: {
-            // size: 16, // legend font size
-            // weight: 'bold'
-          },
-          color: '#000000' // legend font color
-        }
-      },
-      title: {
-        display: false,
-        text: 'Delayed Routes',
-        font: {
-          size: 20,
-          weight: 'bold'
-        },
-        color: '#000000'
-      }
-    }
-
-  },
-
-      });
-  }
-  plot()
-  </script>
-
-
-<script src="/create_table.js"></script>
-<script>
-  let data = [
-  {
-    "originalColumnName": "rt",
-    "columnName": "Route",
-    "description": "Unique route identifier assigned to each bus line.",
-    "dataType": "STRING",
-    "source": "CTA",
-    "database": "ctabustracker",
-    "tableName": "CTA_BusPrediction",
-    "originalTableName": "getpredictions"
-    ,'isIncluded': true
-  },
-  {
-    "originalColumnName": "stpnm",
-    "columnName": "Stop_Name",
-    "description": "Name of the bus stop or location.",
-    "dataType": "STRING",
-    "source": "CTA",
-    "database": "ctabustracker",
-    "tableName": "CTA_BusPrediction",
-    "originalTableName": "getpredictions"
-    ,'isIncluded': true
-
-
-  },
-  {
-    "originalColumnName": "vehical_lat",
-    "columnName": "Bus_Latitude",
-    "description": "Latitude coordinate of the actual bus.",
-    "dataType": "FLOAT",
-    "source": "CTA",
-    "database": "ctabustracker",
-    "tableName": "CTA_BusPrediction",
-    "originalTableName": "getpredictions"
-    ,'isIncluded': true
-
-  },
-  {
-    "originalColumnName": "vehical_lon",
-    "columnName": "Bus_Longitude",
-    "description": "Longitude coordinate of the actual bus.",
-    "dataType": "FLOAT",
-    "source": "CTA",
-    "database": "ctabustracker",
-    "tableName": "CTA_BusPrediction",
-    "originalTableName": "getpredictions"
-    ,'isIncluded': true
-
-  },
-  {
-    "originalColumnName": "stpid",
-    "columnName": "Stop_ID",
-    "description": "Unique stop identifier used by the CTA system.",
-    "dataType": "STRING",
-    "source": "CTA",
-    "database": "ctabustracker",
-    "tableName": "CTA_BusPrediction",
-    "originalTableName": "getpredictions"
-    ,'isIncluded': true
-
-  },
-  {
-    "originalColumnName": "rtdir",
-    "columnName": "Direction",
-    "description": "Direction of the route (e.g., Northbound, Southbound).",
-    "dataType": "STRING",
-    "source": "CTA",
-    "database": "ctabustracker",
-    "tableName": "CTA_BusPrediction",
-    "originalTableName": "getpredictions"
-    ,'isIncluded': true
-
-  },
-  {
-    "originalColumnName": "prdtm",
-    "columnName": "Predicted_Time",
-    "description": "Date & Time of bus arrival to the stop",
-    "dataType": "STRING",
-    "source": "CTA",
-    "database": "ctabustracker",
-    "tableName": "CTA_BusPrediction",
-    "originalTableName": "getpredictions"
-    ,'isIncluded': true
-
-  },
-  {
-    "originalColumnName": "prdctdn",
-    "columnName": "Predicted_ArrivesIn",
-    "description": "Date & Time of bus arrival in minutes to stop",
-    "dataType": "STRING",
-    "source": "CTA",
-    "database": "ctabustracker",
-    "tableName": "CTA_BusPrediction",
-    "originalTableName": "getpredictions"
-    ,'isIncluded': true
-
-  },
-  {
-    "originalColumnName": "dly",
-    "columnName": "Bus_IsDelayed",
-    "description": "True/False if bus is delayed to arrive at station",
-    "dataType": "STRING",
-    "source": "CTA",
-    "database": "ctabustracker",
-    "tableName": "CTA_BusPrediction",
-    "originalTableName": "getpredictions"
-    ,'isIncluded': true
-
-  }
-  ,
-  {
-    "originalColumnName": "tmstmp",
-    "columnName": "Sync_TimeStamp",
-    "description": "Synchronized time stamp with CTA",
-    "dataType": "STRING",
-    "source": "CTA",
-    "database": "ctabustracker",
-    "tableName": "CTA_BusPrediction",
-    "originalTableName": "getpredictions"
-    ,'isIncluded': false
-
-  }
-  ,
-  {
-    "originalColumnName": "typ",
-    "columnName": "Type",
-    "description": "Vehical code type",
-    "dataType": "STRING",
-    "source": "CTA",
-    "database": "ctabustracker",
-    "tableName": "CTA_BusPrediction",
-    "originalTableName": "getpredictions"
-    ,'isIncluded': false
-
-  }
-   ,
-  {
-    "originalColumnName": "vid",
-    "columnName": "Vehical ID",
-    "description": "Vehical Identifier",
-    "dataType": "STRING",
-    "source": "CTA",
-    "database": "ctabustracker",
-    "tableName": "CTA_BusPrediction",
-    "originalTableName": "getpredictions"
-    ,'isIncluded': false
-
-  }
-  ,
-  {
-    "originalColumnName": "dstp",
-    "columnName": "DistanceStop",
-    "description": "Linear Distance (feet) left to be traveled",
-    "dataType": "INT",
-    "source": "CTA",
-    "database": "ctabustracker",
-    "tableName": "CTA_BusPrediction",
-    "originalTableName": "getpredictions"
-    ,'isIncluded': false
-
-  }
-   ,
-  {
-    "originalColumnName": "rtdd",
-    "columnName": "Route Language",
-    "description": "Language Specific route designator",
-    "dataType": "STRING",
-    "source": "CTA",
-    "database": "ctabustracker",
-    "tableName": "CTA_BusPrediction",
-    "originalTableName": "getpredictions"
-    ,'isIncluded': false
-
-  }
-    ,
-  {
-    "originalColumnName": "des",
-    "columnName": "Destination",
-    "description": "target destiniation of vehical",
-    "dataType": "STRING",
-    "source": "CTA",
-    "database": "ctabustracker",
-    "tableName": "CTA_BusPrediction",
-    "originalTableName": "getpredictions"
-    ,'isIncluded': true
-
-  }
-   ,
-  {
-    "originalColumnName": "tablockid",
-    "columnName": "Tab Lock ID",
-    "description": "Scheduled Block Identifer for work currently being performed by the vehical",
-    "dataType": "STRING",
-    "source": "CTA",
-    "database": "ctabustracker",
-    "tableName": "CTA_BusPrediction",
-    "originalTableName": "getpredictions"
-    ,'isIncluded': false
-
-  }
-   ,
-  {
-    "originalColumnName": "tatripid",
-    "columnName": "TA_Trip_Identifier",
-    "description": " TA's version of the scheduled trip identifier for the vehicle's current trip. ",
-    "dataType": "STRING",
-    "source": "CTA",
-    "database": "ctabustracker",
-    "tableName": "CTA_BusPrediction",
-    "originalTableName": "getpredictions"
-    ,'isIncluded': false
-
-  },
-  {
-    "originalColumnName": "origtatripno",
-    "columnName": "TA_Original_Trip_Identifier",
-    "description": " Trip ID defined by the TA scheduling system",
-    "dataType": "STRING",
-    "source": "CTA",
-    "database": "ctabustracker",
-    "tableName": "CTA_BusPrediction",
-    "originalTableName": "getpredictions"
-    ,'isIncluded': false
-
-  } , {
-    "originalColumnName": "dyn",
-    "columnName": "Dynamic_Action",
-    "description": "The dynamic action type affecting this prediction",
-    "dataType": "STRING",
-    "source": "CTA",
-    "database": "ctabustracker",
-    "tableName": "CTA_BusPrediction",
-    "originalTableName": "getpredictions"
-    ,'isIncluded': false
-
-  }
-  , {
-    "originalColumnName": "zone",
-    "columnName": "Zone",
-    "description": "The zone name if the vehicle has entered a defined zones, otherwise blank. ",
-    "dataType": "STRING",
-    "source": "CTA",
-    "database": "ctabustracker",
-    "tableName": "CTA_BusPrediction",
-    "originalTableName": "getpredictions"
-    ,'isIncluded': false
-
-  }  , {
-    "originalColumnName": "psgld",
-    "columnName": "Passenger_Load",
-    "description": " String representing the ratio of the current passenger count to the vehicle's total capacity",
-    "dataType": "STRING",
-    "source": "CTA",
-    "database": "ctabustracker",
-    "tableName": "CTA_BusPrediction",
-    "originalTableName": "getpredictions"
-    ,'isIncluded': false
-
-  }
-   , {
-    "originalColumnName": "stst",
-    "columnName": "Scehduled_Start",
-    "description": " Contains the time (in seconds past midnight) of the scheduled start of the trip.",
-    "dataType": "STRING",
-    "source": "CTA",
-    "database": "ctabustracker",
-    "tableName": "CTA_BusPrediction",
-    "originalTableName": "getpredictions"
-    ,'isIncluded': false
-
-  }  , {
-    "originalColumnName": "stsd",
-    "columnName": "Formatted_Scehduled_Start",
-    "description": " Contains the date (in “yyyy-mm-dd” format) of the scheduled start of the trip. ",
-    "dataType": "STRING",
-    "source": "CTA",
-    "database": "ctabustracker",
-    "tableName": "CTA_BusPrediction",
-    "originalTableName": "getpredictions"
-    ,'isIncluded': false
-
-  }
-  , {
-    "originalColumnName": "flagstop",
-    "columnName": "Flag_Stop",
-    "description": "An integer code representing the flagstop information for the prediction. ",
-    "dataType": "INT",
-    "source": "CTA",
-    "database": "ctabustracker",
-    "tableName": "CTA_BusPrediction",
-    "originalTableName": "getpredictions"
-    ,'isIncluded': false
-
-  }
-  
-  
-]
-  let tableContainer = document.getElementById("table-container-definitions");
-  let columnSelect = document.getElementById("columnSelect-definitions");
-  let filterInput = document.getElementById("filterInput-definitions");
-
-
-
-  filterInput.addEventListener("input", () => {
-      const column = columnSelect.value;
-      const filterText = filterInput.value.toLowerCase();
-      const filteredData = data.filter(item =>
-        String(item[column]).toLowerCase().includes(filterText)
-      );
-      createTable(filteredData,tableContainer);
-    });
-
-  let columns = Object.keys(data[0]);
-  columns.forEach(col => {
-      const option = document.createElement("option");
-      option.value = col;
-      option.textContent = col;
-      columnSelect.appendChild(option);
-  });
-  createTable(data,tableContainer)
-</script>
-
-<script>
-   data =[{
-    'originalTableName': "ttpositions.aspx",
-    'tableName': 'CTA_TrainPosition',
-    'source': "CTA",
-    'unrollBy': "route",
-    'database': "lapi.transitchicago",
-    'api_version': "1.0",
-    'description': "Real-time train positions and status information."
-},
-{
-    "originalTableName": "getroutes",
-    "tableName": "CTA_BusRoute",
-    'source': "CTA",
-    'unrollBy': 'routes',
-    'database': "ctabustracker",
-    'api_version': "v3",
-    'description': "List of all CTA bus routes with route details."
-},
-{
-    "originalTableName": "getpatterns",
-    "tableName": "CTA_BusPatterns",
-    'source': "CTA",
-    'unrollBy': 'ptr',
-    'database': "ctabustracker",
-    'api_version': "v3",
-    'description': "Bus route patterns and stop sequences."
-},
-{
-    "originalTableName": "getvehicles",
-    "tableName": "CTA_BusVehicle",
-    'source': "CTA",
-    'unrollBy': 'vehicle',
-    'database': "ctabustracker",
-    'api_version': "v3",
-    'description': "Current locations and status of CTA buses."
-},
-{
-    "originalTableName": "getpredictions",
-    "tableName": "CTA_BusPrediction",
-    'source': "CTA",
-    'unrollBy': 'prd',
-    'database': "ctabustracker",
-    'api_version': "v3",
-    'description': "Predicted arrival times for CTA buses at stops."
-}]
-
-
-
- tableContainer = document.getElementById("table-container-columndefinitions");
-   columnSelect = document.getElementById("columnSelect-columndefinitions");
-   filterInput = document.getElementById("filterInput-columndefinitions");
-
-
-
-  filterInput.addEventListener("input", () => {
-      const column = columnSelect.value;
-      const filterText = filterInput.value.toLowerCase();
-      const filteredData = data.filter(item =>
-        String(item[column]).toLowerCase().includes(filterText)
-      );
-      createTable(filteredData,tableContainer);
-    });
-
-   columns = Object.keys(data[0]);
-  columns.forEach(col => {
-      const option = document.createElement("option");
-      option.value = col;
-      option.textContent = col;
-      columnSelect.appendChild(option);
-  });
-  createTable(data,tableContainer)
-</script>
-
-
-
-<script>
-    var map = L.map('map', {zoomControl: false}).setView([41.881832, -87.623177], 12);
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 22,
-    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    }).addTo(map);
-    var markerGroup = L.layerGroup();
-    var pLineGroup = L.layerGroup()
-    var liveTrainMarkerGroup = L.layerGroup();
-    var markergroups = []
-    var stopMarkerGroup = L.layerGroup();
-    var selectedMarkerGroup = L.layerGroup();
-    markergroups.push(stopMarkerGroup)
-    markergroups.push(selectedMarkerGroup)
-    markergroups.push(liveTrainMarkerGroup)
-
-  var live_interval_id = null;
-</script>
-
-
-<script>
-  async function get_routes(){
-      var request = new Request('/blob-storage/bronze/CTA/ctabustracker/getroutes', {
-                          method: 'GET',
-                          headers: new Headers({'Accept': 'application/json'})});
-      var response = await fetch(request);
-      let result = null
-      if (response.ok){ 
-          result = await response.json()
-          console.log(result)
-          result = result['bustime-response']['routes']
-      }
-      return result;
-  }
-
-  async function silver_get_routes(rt){
-        var request = new Request('/blob-storage/silver/CTA/ctabustracker/getroutes', {
-                            method: 'GET',
-                            headers: new Headers({'Accept': 'application/json'})});
-        var response = await fetch(request);
-        let result = null
-        if (response.ok){ 
-            result = await response.json()
-            result = result['values']
-            if (rt != null && rt != undefined){
-              filtered_results = []
-              result.forEach(element => {
-                if (element['rt']==rt){
-                  filtered_results.push(element)
-                }
-              });
-              result = filtered_results
-            }
-        }
-        return result;
-    }
-
-  async function get_route_stops(){
-        var request = new Request('/blob-storage/silver/CTA/ctabustracker/getroutestops', {
-                  method: 'GET',
-                  headers: new Headers({'Accept': 'application/json'})});
-        var response = await fetch(request);
-        let result = null
-        if (response.ok){ 
-            result = await response.json()
-            result = result['values']
-        }
-        return result;
-    }
-
-function create_circle_marker(lat,lon, color, popup_html, group){
-        var marker = L.circleMarker([lat, lon], {
-                                color: 'black',      
-                                fillColor: color, 
-                                fillOpacity: 0.8,
-                                radius: 25 
-                            });
-        var popup = L.popup()
-            .setContent(popup_html);
-
-        marker.bindPopup(popup).openPopup();
-            marker.on('mouseover', function (e) {
-            this.openPopup();
-        });
-        marker.on('mouseout', function (e) {
-            this.closePopup();
-        });
-
-        group.addLayer(marker);
-        group.addTo(map);
-    }
-
-
-  function create_polyline(latLngs, linecolor){
-          pLineGroup.clearLayers();
-          var polyline = L.polyline(latLngs, { color: linecolor, weight: 8 });
-          pLineGroup.addLayer(polyline)
-          pLineGroup.addTo(map)
-          map.fitBounds(polyline.getBounds());
-
-      }
-
-
-  async function populate_routes() {
-  const routes = await get_routes();
-  console.log(routes);
-  const datalist = document.getElementById("routes");
-
-  datalist.innerHTML = "";
-
-  routes.forEach(route => {
-    const option = document.createElement("option");
-    option.value = route['rt'] + ' - ' + route['rtnm'];
-    option.dataset.directions = JSON.stringify(route['directions']);
-    option.dataset.rt = JSON.stringify(route['rt']);
-    option.dataset.rtclr = JSON.stringify(route['rtclr']);
-    datalist.appendChild(option);
-  });
-}
-
-
-async function populate_stops(rt, direction) {
-  const routes = await get_route_stops();
-  console.log(routes);
-  const datalist = document.getElementById("stops");
-
-  datalist.innerHTML = "";
-
-  routes.forEach(route => {
-    if (route['rt'] == rt && route['directions'].includes(direction)){
-      const option = document.createElement("option");
-      option.value =route['stpnm']
-      datalist.appendChild(option);
-    }
-  });
-}
-
-
-</script>
-
-<script>
-
-
-const stops = document.getElementById("stops");
-const stopNameInput = document.getElementById("stopName")
-const busRouteInput = document.getElementById("busRoute");
-const directionInput = document.getElementById("direction");
-const datalist = document.getElementById("routes");
-
-populate_routes()
-
-
-</script>
-
-
-<script>
-    var rtclr = null;
-    var websocket = null;
-    live_interval_id = null;
-    let socketId= null
-
-
-    function draw_bus_icon(vinfo, stop_pred){
-       let vlat = vinfo['lat']
-       let vlon = vinfo['lon']
-       let popup_html = `
-        <div style="font-family: 'Segoe UI', sans-serif; min-width: 200px;">
-          <h3 style="margin: 0; font-size: 16px; color: #00704a;">
-            Bus ${vinfo['vid']} - Route ${vinfo['rt']}
+<!-- <div class="phone_intro">
+        <div style="display: flex; justify-content: center;">  
+        <h3 class="section_subtitle" id="section1_subtitle2" style=" width: 100%; text-align: center;  margin: 0 auto; color: rgb(255, 255, 255); padding: 5%; font-size: 42px; font-weight: 500; margin-bottom: 15%; margin-top: 15%;">
+              Where do we begin?
           </h3>
-          <p style="margin: 4px 0; font-size: 14px;">
-            <strong>Direction:</strong> ${stop_pred['rtdir'] || 'Unknown'}
-          </p>
-          <p style="margin: 4px 0; font-size: 14px;">
-            <strong>Destination:</strong> ${vinfo['des'] || stop_pred['des'] || 'N/A'}
-          </p>
-          <p style="margin: 4px 0; font-size: 14px;">
-            <strong>Next Stop:</strong> ${stop_pred['stpnm'] || 'N/A'}
-          </p>
-          <p style="margin: 4px 0; font-size: 14px;">
-            <strong>Arrival:</strong> ${stop_pred['prdtm'] || '—'}
-          </p>
-          <p style="margin: 6px 0 0; font-size: 43px; color: red;">
-            <em>
-              ${stop_pred['prdctdn'] 
-                ? (stop_pred['prdctdn'] === 'DUE' ? '1 min away' : `${stop_pred['prdctdn']} min away`) 
-                : ''}
-            </em>
-          </p>
+      </div>
 
+      <div style="display: flex; justify-content: center;">  
+        <h3 class="section_subtitle" id="section1_subtitle2" style=" width: 100%; text-align: center;  margin: 0 auto; color: rgb(255, 255, 255); padding: 5%; font-size: 42px; font-weight: 500; margin-bottom: 15%; margin-top: 15%;">
+              Let's plan your data blueprint...
+          </h3>
+      </div> 
+</div>
+ -->
+
+<div class="live_stage" style="display: flex; align-items: center; justify-content: center;">
+  <div class="main_section" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 2%; padding: 2%; ">
+    <div style=" text-align: center;">
+      <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">LIVE DATA STAGING</h1>
+      <div style="display: flex; justify-content: center;">
+        <h3 class="section_subtitle" id="section1_subtitle" style="width: 50%;  font-size: 25px; font-weight: 550;">
+          <span style="color: #dd5050;">View</span> how data is staged from Bronze to Gold.
+        </h3>
+      </div>
+    </div>
+
+<div style="display: flex; align-items: stretch; justify-content: center; gap: 2%; flex-wrap: wrap;">
+  <!-- BRONZE -->
+  <div class="case_study_cards bronze" style="flex: 1 1 30%; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(135deg, rgba(200, 138, 76, 0.432) 0%, rgba(230,180,80,0.3) 50%, rgba(205,128,50,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em; min-width: 250px; max-width: 30%;">
+    <div style="display: flex; justify-content: center;">
+      <img style="max-width: 50px; border-radius: 20px;" src="/portfolio/images/bronze.png">
+    </div>
+    <h3 style="font-size: 40px; text-align: center; letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85) 0%, rgba(0,90,110,0.9) 50%, rgba(0,0,0,0.95) 100%); -webkit-background-clip: text; color: transparent;">BRONZE</h3>
+    <div class="outputs" id="bronzejsonContainer"
+      style="flex: 1; background:#0f111a; color:#eee; font-family:monospace; padding:1em; border-radius:8px; max-height:500px; overflow-y:auto; white-space:pre; line-height:1.4; box-sizing:border-box;">
+    </div>
+  </div>
+
+  <!-- SILVER -->
+  <div class="case_study_cards silver" style="flex: 1 1 30%; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(135deg, rgba(192,192,192,0.6) 0%, rgba(220,220,220,0.3) 50%, rgba(192,192,192,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em; min-width: 250px; max-width: 30%;">
+    <div style="display: flex; justify-content: center;">
+      <img style="max-width: 50px; border-radius: 20px;" src="/portfolio/images/silver.png">
+    </div>
+    <h3 style="font-size: 40px; text-align: center; letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85) 0%, rgba(0,90,110,0.9) 50%, rgba(0,0,0,0.95) 100%); -webkit-background-clip: text; color: transparent;">SILVER</h3>
+    <div class="outputs" id="silverjsonContainer"
+      style="flex: 1; background:#0f111a; color:#eee; font-family:monospace; padding:1em; border-radius:8px; max-height:500px; overflow-y:auto; white-space:pre; line-height:1.4; box-sizing:border-box;">
+    </div>
+  </div>
+
+  <!-- GOLD -->
+  <div class="case_study_cards gold" style="flex: 1 1 30%; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(135deg, rgba(255,215,0,0.6) 0%, rgba(255,240,128,0.3) 50%, rgba(255,215,0,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em; min-width: 250px; max-width: 30%;">
+    <div style="display: flex; justify-content: center;">
+      <img style="max-width: 50px; border-radius: 20px;" src="/portfolio/images/gold.png">
+    </div>
+    <h3 style="font-size: 40px; text-align: center; letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85) 0%, rgba(0,90,110,0.9) 50%, rgba(0,0,0,0.95) 100%); -webkit-background-clip: text; color: transparent;">GOLD</h3>
+    <div class="outputs" id="goldjsonContainer"
+      style="flex: 1; background:#0f111a; color:#eee; font-family:monospace; padding:1em; border-radius:8px; max-height:500px; overflow-y:auto; white-space:pre; line-height:1.4; box-sizing:border-box;">
+    </div>
+  </div>
+</div>
+
+  </div>
+</div>
+<div class="definitions_table"  style="display: flex; align-items: center; justify-content: center;">
+  <div  style="background-color: white; width: 80%; border-radius: 20px; margin-top: 4%;">
+    <div style="text-align: center;">
+      <h1 class="section_title" style="font-size: 42px;">DATA COLUMN DEFINITIONS</h1>
+    </div>
+    <div class="filter-container" style="padding: 2%; margin: 0 auto;">
+      <label for="columnSelect">Filter by column:</label>
+      <select id="columnSelect-definitions"></select>
+      <input type="text" id="filterInput-definitions" placeholder="Enter filter text...">
+    </div>
+
+    <div class="table-responsive">
+      <div id="table-container-definitions" style="padding: 2%;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="phone_intro">
+      
+
+      <div style="display: flex; justify-content: center;">  
+        <h3 class="section_subtitle" style=" width: 100%; text-align: center;  margin: 0 auto; color: rgb(255, 255, 255); padding: 5%; font-size: 42px; font-weight: 500; margin-bottom: 15%;">
+             Data Analysis
+          </h3>
+      </div> 
+</div>
+<div style="display: flex; align-items: center; justify-content: center;">
+  <div class="main_section1" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
+    <div style=" text-align: center;">
+      <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">OVERALL VEHICAL DELAYS</h1>
+    </div>
+   <canvas style="padding: 2%;" id="areaLineChart" width="400" height="200"></canvas>
+  </div>
+</div>
+
+<div style="display: flex; align-items: center; justify-content: center;">
+  <div class="main_section1" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
+    <div style=" text-align: center;">
+      <h1 class="section_title" style=" font-size: 42px; ">CURRENT DELAYS BY ROUTE</h1>
+    </div>
+   <canvas style="padding: 2%;" id="route_delays" width="400" height="200"></canvas>
+  </div>
+</div>
+<div style="display: flex; align-items: center; justify-content: center;">
+  <div class="main_section1" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
+    <div style=" text-align: center;">
+      <h1 class="section_title" style=" font-size: 42px; ">TOP 10 DELAYS BY BUS STOP NAME</h1>
+    </div>
+   <canvas style="padding: 2%;" id="stop_delays" width="400" height="200"></canvas>
+  </div>
+</div>
+
+<div style="display: flex; align-items: center; justify-content: center;">
+  <div class="main_section1" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
+    <div style=" text-align: center;">
+      <h1 class="section_title" style=" font-size: 42px; ">CURRENT DELAYS BY DIRECTION</h1>
+    </div>
+   <div style="width: 70%; height: 50vh; display: flex; justify-content: center; align-items: center; margin: 0 auto;">
+  <canvas style="padding: 2%;" id="direction_delays" style="max-width: 100%; max-height: 100%;"></canvas>
+</div>
+  </div>
+</div>
+
+
+
+<div style="display: flex; align-items: center; justify-content: center;">
+  <div style=" width: 100%;  border-radius: 20px; margin-top: 4%;">
+    <div id="formview" class="submit_form" style="display: flex; justify-content: center;  text-align: center;">
+      <div class="form_1" style="background-color: rgba(0, 0, 0, 0.105); text-align: center; width: 50%; ">
+          <h1 class="footer_title" style="font-size: 3em; text-align: center; margin-top: 10%; padding: 5%; color: white;">Your Path To Clean Data Starts Here</h1>
+          <h2 class="footer_subtitle" style=" font-size: 2em; color: white"><span style="color: rgb(255, 255, 255);">Book a <strong style="font-weight: 800; color: rgb(2, 196, 2);">free</strong> consulting call</span> </h2>
+          <hr style="width: 50%;">
+          <h2  class="footer_subtitle" style=" font-size: 2em; color: white;">Get a response within <span style="color: rgba(255, 0, 0, 0.768);">1 business day.</span> </h2>
+      </div>
+      <div class="form_1"  style="background-color: rgba(0, 0, 0, 0.105);  width: 50%; padding: 2%; display: flex; flex-direction: column; gap: 1rem;">
+         <form id="my-form" method="post" action="#" >
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+            <input  name="company_name" type="text" placeholder="Company Name"  style="font-size: 1.2em; padding: 0.6em; width: 100%; background-color: #043435; color: white;">
+            <input name="company_email" type="email" placeholder="Company Email*" required  style="font-size: 1.2em; padding: 0.6em; width: 100%;  background-color: #043435; color: white;">
+            <input name="first_name" type="text" placeholder="First Name*" required style="font-size: 1.2em; padding: 0.6em; width: 100%;   background-color: #043435; color: white;">
+            <input name="last_name" type="text" placeholder="Last Name*" required style="font-size: 1.2em; padding: 0.6em; width: 100%;  background-color: #043435; color: white;">
+            <input name="phone" type="text" placeholder="Phone Number"  style="font-size: 1.2em; padding: 0.6em; width: 100%;  background-color: #043435; color: white;">
         </div>
-      `;
+        <textarea name="project_details" rows="10" placeholder="Provide any details we should know about your project..." style="width: 100%; margin-top: 10px; padding: 0.6em; font-size: 1.2em;  background-color: #043435; color: white;"></textarea>
+        <button  type="submit"  style="width: 100%;" id="send_button"  class="buttons">Send</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<footer class="footer" style="padding: 3em 1em; background-color: rgb(1, 1, 1); text-align: center; margin-top: 1px;">
+  <h2 style="margin: 0 0 0.5em 0; font-size: 1.8em; color: #ffffff; font-family: 'Alegreya SC', serif;">
+    Palacios Solutions
+  </h2>
+  <div style="margin: 1em 0;">
+    <img src="/portfolio/images/profile.png" alt="Profile" style="width: 120px; border-radius: 50%; border: 3px solid #fff; display: block; margin: 0 auto;">
+    <p style="margin: 0.5em 0 0; font-size: 1.2em; color: #ffffff;">
+      Daniel Palacios - Data Engineer
+    </p>
+    <p style="margin: 0.5em 0 0; font-size: 1.2em; color: #ffffff;">
+      danieldario@palacios-solutions.com
+    </p>
+  </div>
+  <p style="margin: 1.2em 0 0.5em 0; font-size: 1.2em; color: #ffffff;">
+    Connect with me on LinkedIn:
+  </p>
+  <a href="https://www.linkedin.com/in/palacios-solutions" target="_blank" 
+     style="color: #0077B5; font-size: 2em; margin: 0 0.5em; text-decoration: none;">
+    <i class="fab fa-linkedin"></i>
+  </a>
 
-        var busIcon = L.divIcon({
-        className: 'bus-icon',
-        html: `
-            <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="purple">
-            <path d="M4 16c0 1.1.9 2 2 2v1.5c0 .8.7 1.5 1.5 1.5S9 20.3 9 19.5V18h6v1.5c0 .8.7 1.5 1.5 1.5s1.5-.7 1.5-1.5V18c1.1 0 2-.9 2-2V6c0-2-2-4-8-4s-8 2-8 4v10zm2-7h12v5H6V9zm0-3h12v2H6V6z"/>
-            </svg>
-        `,
-        iconSize: [56, 56],
-        iconAnchor: [28, 28]
-        });
+</footer>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="form.js"></script>
+<script src="/websocket.js"></script>
+<script src="map.js"></script>
+<script src="graphs.js"></script>
+<script src="/create_table.js"></script>
+<script src="/definitions.js"></script>
+<script>
 
-
-      let marker = L.marker([vlat, vlon], { icon: busIcon })
-      var popup = L.popup()
-      .setContent(popup_html);
-
-      marker.bindPopup(popup).openPopup();
-          marker.on('mouseover', function (e) {
-          this.openPopup();
-      });
-      marker.on('mouseout', function (e) {
-          this.closePopup();
-      });
-
-      liveTrainMarkerGroup.addLayer(marker);
-      liveTrainMarkerGroup.addTo(map);
-
-    }
-
-
-    function handle_payload(payload){
-      if (!payload.hasOwnProperty("values")){
-        console.log("Values not found")
-        return
-      }
-      let values = payload['values']
-      if (values.hasOwnProperty("prd")){
-        let predictions = values['prd']
-        if (predictions.hasOwnProperty("Stop_Predictions")){
-          let stop_predictions = predictions['Stop_Predictions']
-       
-          if (predictions.hasOwnProperty("Vehicle_Predictions")){
-            let vehicle_predictions = predictions['Vehicle_Predictions']
-            liveTrainMarkerGroup.clearLayers()
-            let busEst = []
-            vehicle_predictions.forEach(element => {
-              stop_predictions.forEach(stp => {
-                if (stp['vid'] == element['vid']){
-                  let est = stp['prdctdn']
-                  if (est == 'DUE'){
-                    est = 1 
-                  }else{
-                    est = parseInt(est)
-                  }
-                  busEst.push(est)
-                  draw_bus_icon(element, stp)
-                }
-              });
-            });
-            bustEst = busEst.sort((a, b) => a - b);
-            console.log(busEst)
-            console.log("Next Bus Arrival Time:", busEst[0], "min away")
-            document.getElementById("next_arrival").innerHTML =busEst[0] + " min away"
-            document.getElementById('total_inservice').innerHTML = busEst.length
-
-          }
-        }
-      }
-    }
-
-
-function prettyPrintJson(obj) {
-  // Safely stringify
-  let json = JSON.stringify(obj, null, 2);
-
-  // Syntax highlight
-  json = json
-    .replace(/&/g, '&amp;') // escape HTML
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|\b\d+\b)/g, match => {
-      let color = '#ce9178'; // default: string
-      if (/^"/.test(match)) {
-        color = /:$/.test(match) ? '#9cdcfe' : '#ce9178'; // key vs value
-      } else if (/true|false/.test(match)) {
-        color = '#569cd6';
-      } else if (/null/.test(match)) {
-        color = '#569cd6';
-      } else if (/^[0-9]+$/.test(match)) {
-        color = '#b5cea8';
-      }
-      return `<span style="color:${color}">${match}</span>`;
-    });
-    return json
+function scrollToView(id) {
+          document.getElementById("formview").scrollIntoView({ behavior: "smooth" });
 }
-
-    function start_session(onstartmesg, sendTo){
-        websocket = new Websocket_Session();
-        websocket.initialize()
-        
-        websocket.session.onmessage = async (event) => {
-                let data = JSON.parse(event.data)
-                console.log("Message From Server:",data)
-                if (data['request'] == 'new_connection'){
-                  socketId = data['value']
-                  websocket.send_payload(onstartmesg,sendTo, socketId)
-                }else{
-                  handle_payload(data)
-                  document.getElementById('bronzejsonContainer').innerHTML = prettyPrintJson(data['values']['prd']['bronze']);
-                  document.getElementById('silverjsonContainer').innerHTML = prettyPrintJson(data['values']['prd']['silver']);
-                  document.getElementById('goldjsonContainer').innerHTML = prettyPrintJson(data['values']['prd']['gold']);
-
-                //   document.querySelectorAll('.json-box').forEach(box => {
-                //   box.addEventListener('click', () => box.classList.toggle('expanded'));
-                // });
-                }
-        }
-    }
-
-document.querySelectorAll('.outputs').forEach(el => {
-  el.addEventListener('click', function () {
-    const element = this;
-
-    if (document.fullscreenElement) {
-      document.exitFullscreen();
-      element.style.cursor = 'zoom-in';
-      return;
-    }
-
-    element.requestFullscreen().then(() => {
-      element.style.cursor = 'zoom-out';
-      element.style.maxHeight = 'none';
-      element.style.width = '100%';
-    }).catch(err => {
-      console.error("Fullscreen failed:", err);
-    });
-  });
-});
-
-// Reset style whenzzexiting fullscreen
-document.addEventListener('fullscreenchange', () => {
-  document.querySelectorAll('.outputs').forEach(el => {
-    if (!document.fullscreenElement) {
-      el.style.maxHeight = '500px';
-      el.style.cursor = 'zoom-in';
-    }
-  });
-});
-
-
-
-    function draw_route_line(target_routes, rtcolor){
-      let latLngs = []
-      liveTrainMarkerGroup.clearLayers()
-      markerGroup.clearLayers();
-      selectedMarkerGroup.clearLayers();
-      
-      target_routes.forEach(r => {
-          let cords = [r['lat'], r['lon']]
-          latLngs.push(cords)
-          console.log(r)
-          popup_html = `
-            <div style="font-family: 'Segoe UI', sans-serif; min-width: 180px;">
-              <h3 style="margin: 0 0 6px 0; font-size: 16px; color: ${r['rtclr'] || '#004e64'};">
-                Route ${r['rt'] || 'N/A'}
-              </h3>
-              <p style="margin: 2px 0; font-size: 14px;">
-                <strong>Stop:</strong> ${r['stpnm'] || 'Unknown Stop'}
-              </p>
-              <p style="margin: 2px 0; font-size: 14px;">
-                <strong>Direction:</strong> ${r['rtdir'] || 'Unknown'}
-              </p>
-              <p style="margin: 2px 0; font-size: 13px; color: #555;">
-                <strong>Stop ID:</strong> ${r['stpid'] || 'N/A'}
-              </p>
-              <hr style="border: none; border-top: 1px solid #ddd; margin: 6px 0;">
-              <p style="margin: 2px 0; font-size: 12px; color: #777;">
-                <em>Lat:</em> ${r['lat']?.toFixed(6) || '—'}, 
-                <em>Lon:</em> ${r['lon']?.toFixed(6) || '—'}
-              </p>
-            </div>
-          `
-
-          create_circle_marker(r['lat'],r['lon'], rtcolor, popup_html,selectedMarkerGroup)
-
-      });
-        // create_polyline(latLngs, rtcolor)
-    }
-    
-    busRouteInput.addEventListener("input", async () => {
-          const busroute_selection = busRouteInput.value;
-          const selectedOption = Array.from(datalist.options).find(
-            o => o.value === busroute_selection
-          );
-
-          if (selectedOption) {
-              if (live_interval_id != null){
-                clearInterval(live_interval_id)
-            }
-            directionInput.value= ""
-            const directions = JSON.parse(selectedOption.dataset.directions);
-            const rt = JSON.parse(selectedOption.dataset.rt);
-            rtclr = JSON.parse(selectedOption.dataset.rtclr);
-            console.log("Valid route selected:", rt, rtclr,directions);
-            let target_routes = await silver_get_routes(rt);
-            draw_route_line(target_routes, rtclr)
-
-
-
-
-            const datalist = document.getElementById("directions");
-            datalist.innerHTML = "";
-            directions.forEach(d => {
-                const option = document.createElement("option");
-                option.value = d['name']
-                datalist.appendChild(option);
-              });
-          }else{
-            directionInput.value= ""
-            const datalist = document.getElementById("directions");
-            document.getElementById("stopName").value = ""
-            document.getElementById("stops").innerHTML = ""
-            datalist.innerHTML = "";
-           pLineGroup.clearLayers();
-
-          }
-        });
-
-    directionInput.addEventListener("input", async () => {
-      const routeValue = busRouteInput.value.trim();
-      const directionValue = directionInput.value.trim();
-
-      const routeOption = Array.from(datalist.options).find(
-        o => o.value === routeValue
-      );
-
-      if (routeOption && directionValue) {
-        const routeId = JSON.parse(routeOption.dataset.rt);
-        const direction = directionValue;
-        let target_routes = await silver_get_routes(routeId);
-        let filtered_results = []
-        target_routes.forEach(element => {
-          if (element['rtdir'] == direction){
-            filtered_results.push(element)
-          }
-        });
-        target_routes = filtered_results
-        
-        draw_route_line(target_routes, rtclr)
-
-
-        console.log("Selected Route:", routeId);
-        console.log("Selected Direction:", direction);
-
-        populate_stops(routeId, direction);
-      } else {
-        // Either route or direction is empty → clear stops
-        console.log("Clearing stops");
-      liveTrainMarkerGroup.clearLayers()
-        if (live_interval_id != null){
-                clearInterval(live_interval_id)
-            }
-
-        const stopInput = document.getElementById("stopName");
-        stopInput.value = "";
-        document.getElementById("stops").innerHTML = "";
-        // pLineGroup.clearLayers();
-      }
-    });
-
-    stopNameInput.addEventListener("input",async () => {
-      const routeValue = busRouteInput.value.trim();
-      const directionValue = directionInput.value.trim();
-      const stopNameValue = stopNameInput.value.trim();
-        const routeOption = Array.from(datalist.options).find(
-        o => o.value === routeValue
-      );
-
-      if (routeOption && directionValue) {
-        const routeId = JSON.parse(routeOption.dataset.rt);
-        let target_routes = await silver_get_routes(routeId);
-        let filtered_results = []
-        target_routes.forEach(element => {
-          if (element['rtdir'] == directionValue && element['stpnm'] == stopNameValue){
-            filtered_results.push(element)
-          }
-        });
-        target_routes = filtered_results
-        if (live_interval_id != null){
-                clearInterval(live_interval_id)
-            }
-        if (target_routes.length > 0){
-          let lat = target_routes[0]['lat']
-          let lon = target_routes[0]['lon']
-          map.setView([lat, lon], 12);
-          
-          socketId = start_session({'type': 'bus', 'values':target_routes},'tcp')
-       
-          live_interval_id = setInterval(() => {
-              if (websocket.session.readyState === WebSocket.OPEN){
-                    websocket.send_payload({'type': 'bus', 'values':target_routes},'tcp', socketId)
-                                
-              }
-            }, 5000);
-
-
-        
-           
-        }
-        draw_route_line(target_routes, rtclr)
-      }
-
-      
-    })
-
 </script>
+
+<script>
+let lastScroll = 0;
+const topnav = document.querySelector('.phonenav');
+const mainnav = document.querySelector('.topnav');
+
+window.addEventListener('scroll', () => {
+  const currentScroll = window.pageYOffset;
+
+  if (currentScroll <= 0) {
+    topnav.style.top = '0';
+    mainnav.style.top = '0';
+    return;
+  }
+
+  if (currentScroll > lastScroll) {
+    topnav.style.top = '-100px'; 
+    mainnav.style.top = '-100px'; 
+  } else {
+    topnav.style.top = '0';
+    mainnav.style.top = '0';
+  }
+
+  lastScroll = currentScroll;
+});
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    } else {
+      entry.target.classList.remove('visible');
+    }
+  });
+}, { threshold: 0.1 });
+
+const fadeElements = document.querySelectorAll(
+  '.quote, .phone_intro, .pain-point, .desktop_intro'
+);
+
+fadeElements.forEach(el => {
+  el.classList.add('fade-up'); 
+  observer.observe(el);
+});
+
+const listObserver = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    const list = entry.target;
+    if (entry.isIntersecting) {
+      list.classList.add('visible');
+    } else {
+      list.classList.remove('visible');
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.painpoints_list').forEach(list => {
+  listObserver.observe(list);
+});
+</script>
+
+
 
 </html>

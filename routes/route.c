@@ -62,6 +62,12 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_live_html(cSSL, http_header, "portfolio/home.html");
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/favicon.ico")!=NULL){
 		get_image_file(cSSL, http_header, "/portfolio/images/favicon.ico");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/definitions.js")==0){
+		get_gol_script(cSSL, http_header, "/chicago-transits/definitions.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/graphs.js")==0){
+		get_gol_script(cSSL, http_header, "/chicago-transits/graphs.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/map.js")==0){
+		get_gol_script(cSSL, http_header, "/chicago-transits/map.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/form.js")==0){
 		get_gol_script(cSSL, http_header, "/portfolio/form.js");
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/portfolio/images/")!=NULL){

@@ -69,5 +69,35 @@
 			"Hour":	22,
 			"Minute":	31,
 			"total_delayed":	361
+		}, {
+			"pulldatetime":	"2025-10-09 22:39:06",
+			"Hour":	22,
+			"Minute":	39,
+			"total_delayed":	202
+		}, {
+			"pulldatetime":	"2025-10-10 00:24:33",
+			"Hour":	0,
+			"Minute":	24,
+			"total_delayed":	113
+		}, {
+			"pulldatetime":	"2025-10-10 00:50:29",
+			"Hour":	0,
+			"Minute":	50,
+			"total_delayed":	29
+		}, {
+			"pulldatetime":	"2025-10-10 01:12:48",
+			"Hour":	1,
+			"Minute":	12,
+			"total_delayed":	64
+		}, {
+			"pulldatetime":	"2025-10-10 01:20:39",
+			"Hour":	1,
+			"Minute":	20,
+			"total_delayed":	134
+		}, {
+			"pulldatetime":	"2025-10-10 01:49:09",
+			"Hour":	1,
+			"Minute":	49,
+			"total_delayed":	100
 		}]
 }

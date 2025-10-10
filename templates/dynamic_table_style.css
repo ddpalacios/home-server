@@ -1,36 +1,11 @@
-  .filter-container {
-    margin-bottom: 10px;
-  }
-  body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-  }
-  table {
-    border-collapse: collapse;
-    width: 100%;
-    margin-top: 10px;
-  }
+body {
+  font-family: Arial, sans-serif;
+  margin: 10px;
+}
 
-  th, td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: left;
-  }
-
-  th {
-    background-color: #f4f4f4;
-  }
-
-  input, select {
-    padding: 5px;
-    margin-left: 5px;
-    margin-right: 10px;
-  }
-
-  /* Make filter inputs responsive */
 .filter-container {
   display: flex;
-  flex-wrap: wrap; /* allows stacking on small screens */
+  flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 10px;
 }
@@ -42,38 +17,60 @@
 
 .filter-container select,
 .filter-container input {
-  flex: 1 1 200px;  /* grow and shrink, minimum 200px */
-  max-width: 300px; /* optional, prevents huge on desktop */
+  flex: 1 1 200px;
+  max-width: 300px;
   padding: 8px;
   box-sizing: border-box;
 }
 
-/* Scrollable table wrapper */
+/* Table wrapper: scroll horizontally instead of overflowing */
 .table-responsive {
   width: 100%;
   overflow-x: auto;
+  border-radius: 10px;
+  margin-top: 10px;
 }
 
-/* Table styling */
+/* Table styles */
 table {
-  width: 100%;          /* fills container */
+  width: 100%;
   border-collapse: collapse;
-  min-width: 400px;     /* ensures readable on small screens */
+  min-width: 500px; /* lets columns breathe, but scrolls on small screens */
 }
 
 th, td {
   border: 1px solid #ccc;
   padding: 8px;
   text-align: left;
+  word-break: break-word;
 }
 
 th {
   background-color: #f4f4f4;
 }
 
-/* Stack filter vertically on small screens */
+/* Make headings and spacing smaller on phones */
 @media (max-width: 600px) {
+  .main_section1 {
+    width: 95% !important;
+    padding: 10px !important;
+  }
+
+  .section_title {
+    font-size: 24px !important;
+  }
+
   .filter-container {
     flex-direction: column;
+  }
+
+  select,
+  input {
+    max-width: 100% !important;
+  }
+
+  table {
+    min-width: unset; /* let it shrink */
+    font-size: 12px;
   }
 }
