@@ -1369,6 +1369,8 @@ justify-content: center;
 
 <div class="topnav" >
   <h1 onclick="scrollToView(this.id)" id="company_name"><span style="color: rgb(255, 255, 255);  height: 100%;">PALACIOS SOLUTIONS <span id="title_bar">|</span> Your Personal Data Engineer</span></h1>
+  <h1 onclick="window.location='/'" id="company_name"><span style="color: rgb(255, 237, 72);  height: 100%;">Back To Home </span></h1>
+  
   <button class="buttons" id="lets_talk" onclick="scrollToView(this.id)" >Let's Talk</button>
 </div>
 
@@ -1385,7 +1387,20 @@ justify-content: center;
     <div style=" text-align: center;">
       <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">CHOOSE A ROUTE:</h1>
     </div>
-      <div style="display: flex; flex-direction: row; gap: 2%; justify-content: center; align-items: center; margin-top: 5%;">
+          <div style="display: flex; justify-content: center;">
+        <h3 class="section_subtitle" id="section1_subtitle" style="width: 50%;  font-size: 25px; font-weight: 550;">
+          <span style="color: #dd5050;">Pick a bus route</span> and see the live location of every bus heading to that station.
+        </h3>
+
+      </div>
+          <div style="display: flex; justify-content: center; margin: 0 auto;">
+
+              <h3 class="section_subtitle" id="section1_subtitle" style="width: 50%;  font-size: 15px; font-weight: 550; ">
+          <span style="color: #dd5050;">Heads Up:</span> See no vehicals? Try selecting a new location.
+        </h3>
+      </div>
+
+      <div style="display: flex; flex-direction: row; gap: 2%; justify-content: center; align-items: center; ">
           <div style="display: flex; flex-direction: column; align-items: center;">
               <label for="busRoute" style="font-size: 1.2rem; font-weight: bold; margin-bottom: 5px;">Bus Route:</label>
               <input list="routes" id="busRoute" name="busRoute" 
@@ -1445,7 +1460,7 @@ justify-content: center;
       <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">LIVE DATA STAGING</h1>
       <div style="display: flex; justify-content: center;">
         <h3 class="section_subtitle" id="section1_subtitle" style="width: 50%;  font-size: 25px; font-weight: 550;">
-          <span style="color: #dd5050;">View</span> how data is staged from Bronze to Gold.
+          <span style="color: #dd5050;">Explore</span> the exact stages this real-time data goes through.
         </h3>
       </div>
     </div>
@@ -1492,6 +1507,7 @@ justify-content: center;
     <div style="text-align: center;">
       <h1 class="section_title" style="font-size: 42px;">DATA COLUMN DEFINITIONS</h1>
     </div>
+    
     <div class="filter-container" style="padding: 2%; margin: 0 auto;">
       <label for="columnSelect">Filter by column:</label>
       <select id="columnSelect-definitions"></select>
