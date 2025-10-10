@@ -26,7 +26,7 @@ class Websocket_Session{
 		this.session.send(JSON.stringify(this.#protocol))
 	}
 	initialize(){
-		this.session = new WebSocket('wss://' + window.location.host  +'/life-of-sounds/live_studio/session?Id='+this.sessionId);
+		this.session = new WebSocket('wss://' + window.location.host  +'/websocket');
 		this.session.onopen = async () => {
             console.log("Websocket connection established");
 			let operation = "client";

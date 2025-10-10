@@ -1,0 +1,73 @@
+{
+	"values":	[{
+			"pulldatetime":	"2025-10-09 21:02:27",
+			"Hour":	21,
+			"Minute":	2,
+			"total_delayed":	284
+		}, {
+			"pulldatetime":	"2025-10-09 21:03:59",
+			"Hour":	21,
+			"Minute":	3,
+			"total_delayed":	213
+		}, {
+			"pulldatetime":	"2025-10-09 21:05:26",
+			"Hour":	21,
+			"Minute":	5,
+			"total_delayed":	153
+		}, {
+			"pulldatetime":	"2025-10-09 21:07:42",
+			"Hour":	21,
+			"Minute":	7,
+			"total_delayed":	196
+		}, {
+			"pulldatetime":	"2025-10-09 21:11:10",
+			"Hour":	21,
+			"Minute":	11,
+			"total_delayed":	233
+		}, {
+			"pulldatetime":	"2025-10-09 21:12:30",
+			"Hour":	21,
+			"Minute":	12,
+			"total_delayed":	202
+		}, {
+			"pulldatetime":	"2025-10-09 21:30:39",
+			"Hour":	21,
+			"Minute":	30,
+			"total_delayed":	388
+		}, {
+			"pulldatetime":	"2025-10-09 21:35:54",
+			"Hour":	21,
+			"Minute":	35,
+			"total_delayed":	292
+		}, {
+			"pulldatetime":	"2025-10-09 21:37:42",
+			"Hour":	21,
+			"Minute":	37,
+			"total_delayed":	288
+		}, {
+			"pulldatetime":	"2025-10-09 21:44:35",
+			"Hour":	21,
+			"Minute":	44,
+			"total_delayed":	273
+		}, {
+			"pulldatetime":	"2025-10-09 21:49:55",
+			"Hour":	21,
+			"Minute":	49,
+			"total_delayed":	365
+		}, {
+			"pulldatetime":	"2025-10-09 22:05:40",
+			"Hour":	22,
+			"Minute":	5,
+			"total_delayed":	114
+		}, {
+			"pulldatetime":	"2025-10-09 22:18:24",
+			"Hour":	22,
+			"Minute":	18,
+			"total_delayed":	203
+		}, {
+			"pulldatetime":	"2025-10-09 22:31:03",
+			"Hour":	22,
+			"Minute":	31,
+			"total_delayed":	361
+		}]
+}

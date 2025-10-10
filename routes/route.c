@@ -7,6 +7,7 @@
 #include "Invitation.h"
 #include "http_utilities.h"
 #include "database-server/POST/post_frame.h"
+#include "Websocket/GET/start_websocket_session.h"
 #include "life-of-sounds/POST/post_user.h"
 #include "life-of-sounds/POST/login.h"
 #include "life-of-sounds/POST/post_websocket_session.h"
@@ -197,11 +198,35 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_blob_storage_files(socket,http_header,body, route);
 	}else if (strcmp(request_type, "POST")==0 && strstr(route, "/blob-storage/")!=NULL){
 		post_blob(socket,http_header,body, route);
-
-
-
-
-
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/chicago-transits")==0){
+		get_live_html(cSSL, http_header, "/chicago-transits/home.html");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/create_table.js")==0){
+		get_gol_script(cSSL, http_header, "/create_table.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/chicago-transits/onload_session.js")==0){
+		get_gol_script(cSSL, http_header, "/chicago-transits/onload_session.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/websocket.js")==0){
+		get_gol_script(cSSL, http_header, "websocket.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/default_body_style.css")==0){
+		get_gol_script(cSSL, http_header, "default_body_style.css");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/dynamic_table_style.css")==0){
+		get_gol_script(cSSL, http_header, "dynamic_table_style.css");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/websocket_session")==0){
+		start_websocket_session(socket,http_header,body, route);
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/chatbox_style.css")==0){
+		get_gol_script(cSSL, http_header, "chatbox_style.css");
+	}else{
+		send_response_code(cSSL, 404);
+	}
+	if (route != NULL){
+		free(route);
+		route = NULL;
+	}
+	if (request_type != NULL){
+		free(request_type);
+		request_type = NULL;
+	}
+}
+	/*
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/game_of_life/")==0){
 		get_live_html(cSSL, http_header, "live_studio.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/game_of_life.js")==0){
@@ -224,7 +249,7 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		}
 	}else if (strcmp(request_type, "DELETE")==0 && strstr(route, "/life-of-sounds/session?Id=") != NULL){
 		delete_websocket_session(socket,http_header,body, route);
-	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/life-of-sounds/session?") != NULL){
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/session?") != NULL){
 		get_websocket_protocol(socket,http_header,body, route);
 	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/life-of-sounds/session")==0){
 		post_websocket_session(socket,http_header,body, route);
@@ -239,19 +264,6 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		post_user(socket,http_header,body, route);
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/user")==0){
 		get_user(socket,http_header,body, route);
-	}else{
-		send_response_code(cSSL, 404);
-	}
-	if (route != NULL){
-		free(route);
-		route = NULL;
-	}
-	if (request_type != NULL){
-		free(request_type);
-		request_type = NULL;
-	}
-}
-	/*
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/handle_messages.js")==0){
 		get_gol_script(cSSL, http_header, "handle_messages.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/onload_session.js")==0){

@@ -23,10 +23,12 @@ file(GLOB MAIN
     "utilities/*.c"
     "routes/route.c"
     "routes/chicago-transits/GET/*.c"
+    "routes/Websocket/GET/*.c"
     "routes/blob-storage/POST/*.c"
     "routes/blob-storage/GET/*.c"
     "routes/database-server/POST/*.c"
     "routes/life-of-sounds/GET/login.c"
+    
     "routes/life-of-sounds/GET/home.c"
     "routes/life-of-sounds/GET/get_session_messages.c"
     "routes/life-of-sounds/GET/get_live_page.c"
@@ -62,6 +64,7 @@ target_include_directories(home-server PRIVATE
     ${PROJECT_SOURCE_DIR}/routes/database-server/POST
     ${PROJECT_SOURCE_DIR}/routes/life-of-sounds/GET
     ${PROJECT_SOURCE_DIR}/routes/chicago-transits/GET
+    ${PROJECT_SOURCE_DIR}/routes/Websocket/GET
     ${PROJECT_SOURCE_DIR}/routes/blob-storage/GET
     ${PROJECT_SOURCE_DIR}/routes/blob-storage/POST
     ${PROJECT_SOURCE_DIR}/routes/life-of-sounds/POST

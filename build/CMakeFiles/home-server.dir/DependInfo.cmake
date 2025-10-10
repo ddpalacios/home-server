@@ -20,6 +20,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/dpalacios/home-server/models/Websocket_Message.c" "CMakeFiles/home-server.dir/models/Websocket_Message.c.o" "gcc" "CMakeFiles/home-server.dir/models/Websocket_Message.c.o.d"
   "/home/dpalacios/home-server/models/session.c" "CMakeFiles/home-server.dir/models/session.c.o" "gcc" "CMakeFiles/home-server.dir/models/session.c.o.d"
   "/home/dpalacios/home-server/models/websocket.c" "CMakeFiles/home-server.dir/models/websocket.c.o" "gcc" "CMakeFiles/home-server.dir/models/websocket.c.o.d"
+  "/home/dpalacios/home-server/routes/Websocket/GET/start_websocket_session.c" "CMakeFiles/home-server.dir/routes/Websocket/GET/start_websocket_session.c.o" "gcc" "CMakeFiles/home-server.dir/routes/Websocket/GET/start_websocket_session.c.o.d"
   "/home/dpalacios/home-server/routes/blob-storage/GET/get_blob_storage_files.c" "CMakeFiles/home-server.dir/routes/blob-storage/GET/get_blob_storage_files.c.o" "gcc" "CMakeFiles/home-server.dir/routes/blob-storage/GET/get_blob_storage_files.c.o.d"
   "/home/dpalacios/home-server/routes/blob-storage/POST/post_blob.c" "CMakeFiles/home-server.dir/routes/blob-storage/POST/post_blob.c.o" "gcc" "CMakeFiles/home-server.dir/routes/blob-storage/POST/post_blob.c.o.d"
   "/home/dpalacios/home-server/routes/chicago-transits/GET/get_template.c" "CMakeFiles/home-server.dir/routes/chicago-transits/GET/get_template.c.o" "gcc" "CMakeFiles/home-server.dir/routes/chicago-transits/GET/get_template.c.o.d"

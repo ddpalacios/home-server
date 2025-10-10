@@ -1,0 +1,79 @@
+  .filter-container {
+    margin-bottom: 10px;
+  }
+  body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  th, td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+  }
+
+  th {
+    background-color: #f4f4f4;
+  }
+
+  input, select {
+    padding: 5px;
+    margin-left: 5px;
+    margin-right: 10px;
+  }
+
+  /* Make filter inputs responsive */
+.filter-container {
+  display: flex;
+  flex-wrap: wrap; /* allows stacking on small screens */
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.filter-container label {
+  flex-basis: 100%;
+  font-weight: bold;
+}
+
+.filter-container select,
+.filter-container input {
+  flex: 1 1 200px;  /* grow and shrink, minimum 200px */
+  max-width: 300px; /* optional, prevents huge on desktop */
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+/* Scrollable table wrapper */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Table styling */
+table {
+  width: 100%;          /* fills container */
+  border-collapse: collapse;
+  min-width: 400px;     /* ensures readable on small screens */
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background-color: #f4f4f4;
+}
+
+/* Stack filter vertically on small screens */
+@media (max-width: 600px) {
+  .filter-container {
+    flex-direction: column;
+  }
+}

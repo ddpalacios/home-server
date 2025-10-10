@@ -3,111 +3,51 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Header + Sections Fade In Up on Scroll</title>
-  <style>
-    /* Page setup */
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: #f0f2f5;
-      overflow-x: hidden;
-    }
-
-    /* ===== Header Area ===== */
-    header {
-      width: 100%;
-      padding: 120px 20px;
-      text-align: center;
-      background: #263238;
-      color: white;
-    }
-
-    header h1, 
-    header p {
-      opacity: 0;
-      transform: translateY(50px);
-      transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-      margin: 20px 0;
-    }
-
-    header h1.visible,
-    header p.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    /* ===== Scroll Sections ===== */
-    section {
-      width: 100%;
-      padding: 120px 0;
-      text-align: center;
-      font-size: 2em;
-      color: white;
-      opacity: 0;
-      transform: translateY(60px);
-      transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-    }
-
-    section:nth-child(odd) {
-      background: #00796b;
-    }
-
-    section:nth-child(even) {
-      background: #004d40;
-    }
-
-    section.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  </style>
+  <title>Area Line Graph</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <!-- Header -->
-  <header>
-    <h1 class="fade-text">Welcome to My Site</h1>
-    <p class="fade-text">Scroll down to see each section rise into view.</p>
-  </header>
-
-  <!-- Full-width sections -->
-  <section>
-    <h2>Section 1</h2>
-    <p>Fade-in animation works for every scroll.</p>
-  </section>
-
-  <section>
-    <h2>Section 2</h2>
-    <p>Each block slides up when visible.</p>
-  </section>
-
-  <section>
-    <h2>Section 3</h2>
-    <p>Simple, clean, and responsive.</p>
-  </section>
-
-  <section>
-    <h2>Section 4</h2>
-    <p>Even the header joins the scroll magic.</p>
-  </section>
-
+  <canvas id="areaLineChart" width="400" height="200"></canvas>
   <script>
-    // IntersectionObserver to trigger fades
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-        } else {
-          entry.target.classList.remove('visible');
+    const ctx = document.getElementById('areaLineChart').getContext('2d');
+    const areaLineChart = new Chart(ctx, {
+      type: 'line', // Line chart type
+      data: {
+        labels: ['January', 'February', 'March', 'April', 'May', 'June'], // X-axis labels
+        datasets: [{
+          label: 'Sales Data',
+          data: [30, 50, 40, 60, 70, 90], // Y-axis data
+          borderColor: 'rgba(75, 192, 192, 1)', // Line color
+          backgroundColor: 'rgba(75, 192, 192, 0.2)', // Fill color for the area
+          borderWidth: 2,
+          fill: true // Enables the area fill
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top'
+          }
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Months'
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Sales'
+            },
+            beginAtZero: true
+          }
         }
-      });
-    }, { threshold: 0.1 });
-
-    // Observe header texts
-    document.querySelectorAll('header .fade-text').forEach(el => observer.observe(el));
-
-    // Observe sections
-    document.querySelectorAll('section').forEach(sec => observer.observe(sec));
+      }
+    });
   </script>
-
 </body>
 </html>

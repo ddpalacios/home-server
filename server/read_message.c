@@ -69,7 +69,7 @@ int read_exact_bytes(SSL *cSSL, int nbytes, char* buf){
 
 
 int read_tcp_message(SSL *cSSL, char** payload){
-	char* frame_json = get_file_buffer("frame.json");
+	char* frame_json = get_file_buffer("../frame.json");
 	cJSON* root = cJSON_Parse(frame_json);
 	if (!is_valid_frame(root)){
 		printf("Not a valid FRAME");
@@ -91,6 +91,7 @@ int read_tcp_message(SSL *cSSL, char** payload){
 
 			unsigned char* buf = malloc(byte_length+1);
 			int fbytes = read_exact_bytes(cSSL,byte_length, buf);
+			printf("READ BYTES: %d\n", fbytes);
 			if (is_length_prefix->valueint){
 				prefix_length = (buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + (buf[3]);
 			}else if (strcmp(name->valuestring , "PAYLOAD")==0){
@@ -272,6 +273,7 @@ void process_websocket_message(struct Socket* sockets,struct Socket* socket,int 
 	if (json) {
 		char* operation = get_value(json,"operation");
 		char* request = get_value(json,"request");
+		char* send_to = get_value(json,"send_to");
 
 		if (request && operation) {
 			if (strcmp(request, "POST")==0 &&strcmp(operation, "client")==0){
@@ -288,7 +290,19 @@ void process_websocket_message(struct Socket* sockets,struct Socket* socket,int 
 				free_message(&ws_message);
 
 			}
-			send_websocket_message(sockets,socket,fd_count, payload_length, nbytes, message);
+
+			if (strcmp(send_to, "tcp")==0){
+				for (int i=0; i<fd_count;i++){
+					struct Socket* s = &sockets[i];
+					if (!s->is_tcp){
+						continue;
+					}
+					printf("FOUND TCP SOCKET\n");
+					send_tcp_message(s->cSSL, 0x1, 0x1, nbytes, message);
+				}
+			}else{
+				send_websocket_message(sockets,socket,fd_count, payload_length, nbytes, message);
+			}
 		}
 		cJSON_Delete(json);
 		if (message != NULL){
@@ -358,6 +372,42 @@ void process_websocket_message(struct Socket* sockets,struct Socket* socket,int 
 				}
 				*/
 void process_bytes(struct Socket *sockets, struct Socket *socket, char* buf, int fd_count){
+		if (is_tcp_buffer(buf)){
+			printf("Detected TCP Buffer\n");
+			char* tcp_buf = malloc(BUFFER_SIZE);
+			int nbytes =  read_tcp_message(socket->cSSL, &tcp_buf);
+			printf("%s\n", tcp_buf);
+			if (socket->is_tcp){
+				int payload_length = 0;
+				if (nbytes <= 125){
+					payload_length = 125;
+				}else{
+					payload_length = 126;
+				}
+				cJSON *json = cJSON_Parse(tcp_buf);
+				if (json) {
+					char* socketId = get_value(json,"socketId");
+					for (int i=0; i<fd_count; i++){
+						struct Socket* s = &sockets[i];
+						if (strcmp(s->Id, socketId)==0){
+							send_message_to_socket(s, fd_count,payload_length ,nbytes, tcp_buf); 
+						
+						}
+					
+					}
+
+					cJSON_Delete(json);
+				}
+			}else{
+				socket->is_tcp = 0x1;
+				socket->keep_alive = 0x1;
+			}
+
+			if (tcp_buf != NULL){
+				free(tcp_buf);
+				tcp_buf = NULL;
+			}
+		}
 		if (is_websocket_buffer(buf)){
 			unsigned char* websocket_buf = malloc(2);
 			if (!websocket_buf){perror("error"); exit(1);}

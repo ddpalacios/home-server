@@ -55,7 +55,7 @@ void get_websocket_protocol(struct Socket* socket,char* http_header, char*body, 
 				  char* sessionId = get_query_parameter(route, "Id");
 				  char* username = get_query_parameter(route, "username");
 			  }
-			  else if (strstr(http_header, "/session?Id=")){
+			  else if (strcmp(http_header, "/session?Id=")){
 					char* sessionId = get_query_parameter(route, "Id");
 					activate_websocket_session(sessionId, http_header, socket);
 			  }else if (strstr(http_header, "/session?userId=")){

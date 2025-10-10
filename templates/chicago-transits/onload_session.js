@@ -444,8 +444,8 @@
     }
 
 
-    function start_session(sessionId, current_user){
-        websocket = new Websocket_Session(sessionId,current_user['Id'],current_user['fullname']);
+    function start_session(){
+        websocket = new Websocket_Session();
         websocket.initialize()
         websocket.session.onmessage = async (event) => {
                 let data = JSON.parse(event.data)
@@ -512,23 +512,23 @@
             return user;
     }
     
-    async function create_session(sessionName, user){
-         let userId = user['Id'];
-         let fullName = user['fullName'];
-         var request = new Request('/life-of-sounds/live_studio/session', {
-                            method: 'POST',
-                            headers: new Headers({
-                                        'Accept': 'application/json',
-                                        'Content-Type': 'text/json'
-                                    })
-                            ,body: JSON.stringify({'name': sessionName,'userid': userId,'username':fullName})});
-        var response = await fetch(request);
-        var session = null;
-        if (response.ok){ 
-            session = await response.json()
-        }
-        return session;
-    }
+    // async function create_session(sessionName, user){
+    //      let userId = user['Id'];
+    //      let fullName = user['fullName'];
+    //      var request = new Request('/life-of-sounds/live_studio/session', {
+    //                         method: 'POST',
+    //                         headers: new Headers({
+    //                                     'Accept': 'application/json',
+    //                                     'Content-Type': 'text/json'
+    //                                 })
+    //                         ,body: JSON.stringify({'name': sessionName,'userid': userId,'username':fullName})});
+    //     var response = await fetch(request);
+    //     var session = null;
+    //     if (response.ok){ 
+    //         session = await response.json()
+    //     }
+    //     return session;
+    // }
 
     async function get_bus_patterns() {
         var request = new Request('/blob-storage/bronze/CTA/ctabustracker/getpatterns', {
@@ -594,24 +594,6 @@
     }
 
    window.addEventListener("load", async function(){
-        let current_user = await get_user();
-        let userId = current_user['Id']
-        this.sessionStorage.setItem("userId", userId)
-        let current_session = await get_session_by_userId(userId);
-        let sessionId = null;
-        if (current_session == null){
-                this.alert("Session Retrieval Server Error"); 
-                return;
-            }
-        if (current_session['values'].length == 0){
-            current_session = await create_session("chicago-transits", current_user);
-            sessionId = current_session['sessionId']
-        }else{
-            sessionId = current_session['values'][0]['sessionid']
-        }
-        this.sessionStorage.setItem("sessionId", sessionId)
-        if (sessionId != null && userId != null){
-            populist_searchlist()
-            start_session(sessionId, current_user);
-        }
+    start_session();
+    // populist_searchlist();
     })

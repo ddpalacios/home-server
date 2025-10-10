@@ -73,30 +73,50 @@ void post_blob(struct Socket* socket,char* http_header, char*body, char* route){
 		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/bronze_portfolio_appointments.json");
 		snprintf(path, sizeof(path),"blob-storage/bronze_portfolio_appointments.json");
 
-	}else{
+	}
+	else if (strstr(route, "/blob-storage/bronze/CTA/ctabustracker/predictions?rt")!= NULL){
 		char* rt = get_query_parameter(route, "rt");
 		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/bronze_CTA_ctabustracker_%s_predictions.json", rt);
-		snprintf(path, sizeof(path),"blob-storage/bronze_CTA_ctabustracker_%s_predictions.json", rt);
+		snprintf(path, sizeof(path)," ");
+	}
+	else if (strstr(route, "/blob-storage/silver/CTA/ctabustracker/delays")){
+		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/silver_CTA_ctabustracker_delays.json");
+		snprintf(path, sizeof(path),"../blob-storage/silver_CTA_ctabustracker_delays.json");
+	}
+	else if (strstr(route, "/blob-storage/silver/CTA/ctabustracker/route_delays")){
+		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/silver_CTA_ctabustracker_route_delays.json");
+		snprintf(path, sizeof(path)," ");
+	}
+	else if (strstr(route, "/blob-storage/silver/CTA/ctabustracker/direction_delays")){
+		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/silver_CTA_ctabustracker_direction_delays.json");
+		snprintf(path, sizeof(path)," ");
+	}
+	else if (strstr(route, "/blob-storage/silver/CTA/ctabustracker/stop_delays")){
+		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/silver_CTA_ctabustracker_stop_delays.json");
+		snprintf(path, sizeof(path)," ");
 	}
 	
 	char* frame_json = get_file_buffer(path);
-
 	if (frame_json == NULL){
 		FILE *file = fopen(write_path, "w");
 		if (!file) {
 			perror("Failed to open file");
 			send_response_code(cSSL, 500);
-			return;
 		}
 
 		if (fputs(body, file) == EOF) {
 			perror("Failed to write to file");
 			fclose(file);
-			return;
 		}
+		printf("Closing File...\n");
 		fclose(file);
+		printf("Sending Response...\n");
+
 		send_response_code(cSSL, 200);
-	}else{
+		printf("Response Sent\n");
+	}
+	
+	else{
 		cJSON* root = cJSON_Parse(frame_json);
 		cJSON* old_values = cJSON_GetObjectItem(root, "values");
 		cJSON *json = cJSON_Parse(body);

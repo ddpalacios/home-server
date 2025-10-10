@@ -76,7 +76,6 @@ struct Socket* insert_file_descriptor(struct Socket *sockets[],struct pollfd *pf
     (*sockets)[*fd_count].keep_alive = 0x0;
     (*sockets)[*fd_count].is_listener = is_listener;
     (*sockets)[*fd_count].isEmail = 0x0;
-    (*sockets)[*fd_count].is_tcp = 0x0;
     (*sockets)[*fd_count].cSSL = cSSL;
     struct Socket* socket = &((*sockets)[*fd_count]);
     (*fd_count)++;
@@ -155,18 +154,11 @@ void* process_thread(void* arg){
 
     char *peek_buf = malloc(BUFFER_SIZE+1);
     int bytes_peeked = peek_exact_bytes(new_client->cSSL, BUFFER_SIZE, peek_buf);
-	printf("PEEKED BYTES: %d\n", bytes_peeked);
 
     if (bytes_peeked > 0 && peek_buf != NULL) {
-        process_bytes(sockets,new_client, peek_buf, fd_count);
+        process_bytes(new_client, peek_buf);
         free(peek_buf);
-    }else{
-		new_client->keep_alive = 0x0;
-		// int ret = SSL_shutdown(new_client->cSSL);
-		// SSL_free(new_client->cSSL);
-		// close(new_client->fd);
-
-	}
+    }
     new_client->finished = 1;  
     pthread_exit(NULL);
 }
@@ -193,7 +185,6 @@ void start_listening_for_clients(char* port){
 	int thread_count = 0;
 
 	while(1) {
-	    delete_expired_tokens();
 	    int triggered_fd = wait_for_event(&pfds, fd_count);
 
 	    if (triggered_fd == listener_fd) {
@@ -205,7 +196,7 @@ void start_listening_for_clients(char* port){
 		clients[thread_count] = new_client;
 		thread_count++;
 	    }else{
-		    for (int i=0; i < fd_count;i++){
+		    for (int i=0; i < fd_count,i++){
 			    struct Socket* client = &sockets[i];
 			    if (client->fd != triggered_fd){
 				    continue;
@@ -218,7 +209,7 @@ void start_listening_for_clients(char* port){
 	    }
 		for (int i = 0; i < thread_count; i++) {
 		    if (clients[i]->finished) {
-			//printf("Waiting for thread %d...\n", i);
+			printf("Waiting for thread %d...\n", i);
 			struct timespec ts;
 			clock_gettime(CLOCK_REALTIME, &ts);
 			ts.tv_sec += 1;  
@@ -226,7 +217,7 @@ void start_listening_for_clients(char* port){
 			int rc = pthread_timedjoin_np(threads[i], NULL, &ts);
 
 			if (rc == 0) {
-			    //printf("Thread %d joined successfully.\n", i);
+			    printf("Thread %d joined successfully.\n", i);
 			} else if (rc == ETIMEDOUT) {
 			    printf("Thread %d timed out — cancelling.\n", i);
 			    pthread_cancel(threads[i]);
@@ -236,11 +227,6 @@ void start_listening_for_clients(char* port){
 			}
 
 			if (!clients[i]->keep_alive){
-				 if (websocketclient_exists_by_socketid(clients[i]->Id)){
-					struct WebsocketClient ws_client =  get_websocketclientBySocketId(clients[i]->Id);
-					delete_websocketclient_by_Id(ws_client.Id);
-				 }
-
 				remove_file_descriptor(sockets, pfds, clients[i]->fd, &fd_count);
 			}
 

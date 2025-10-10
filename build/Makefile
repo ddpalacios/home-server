@@ -417,6 +417,30 @@ models/websocket.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/models/websocket.c.s
 .PHONY : models/websocket.c.s
 
+routes/Websocket/GET/start_websocket_session.o: routes/Websocket/GET/start_websocket_session.c.o
+.PHONY : routes/Websocket/GET/start_websocket_session.o
+
+# target to build an object file
+routes/Websocket/GET/start_websocket_session.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/Websocket/GET/start_websocket_session.c.o
+.PHONY : routes/Websocket/GET/start_websocket_session.c.o
+
+routes/Websocket/GET/start_websocket_session.i: routes/Websocket/GET/start_websocket_session.c.i
+.PHONY : routes/Websocket/GET/start_websocket_session.i
+
+# target to preprocess a source file
+routes/Websocket/GET/start_websocket_session.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/Websocket/GET/start_websocket_session.c.i
+.PHONY : routes/Websocket/GET/start_websocket_session.c.i
+
+routes/Websocket/GET/start_websocket_session.s: routes/Websocket/GET/start_websocket_session.c.s
+.PHONY : routes/Websocket/GET/start_websocket_session.s
+
+# target to generate assembly for a file
+routes/Websocket/GET/start_websocket_session.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/Websocket/GET/start_websocket_session.c.s
+.PHONY : routes/Websocket/GET/start_websocket_session.c.s
+
 routes/blob-storage/GET/get_blob_storage_files.o: routes/blob-storage/GET/get_blob_storage_files.c.o
 .PHONY : routes/blob-storage/GET/get_blob_storage_files.o
 
@@ -1230,6 +1254,9 @@ help:
 	@echo "... models/websocket.o"
 	@echo "... models/websocket.i"
 	@echo "... models/websocket.s"
+	@echo "... routes/Websocket/GET/start_websocket_session.o"
+	@echo "... routes/Websocket/GET/start_websocket_session.i"
+	@echo "... routes/Websocket/GET/start_websocket_session.s"
 	@echo "... routes/blob-storage/GET/get_blob_storage_files.o"
 	@echo "... routes/blob-storage/GET/get_blob_storage_files.i"
 	@echo "... routes/blob-storage/GET/get_blob_storage_files.s"

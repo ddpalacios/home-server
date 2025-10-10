@@ -23,6 +23,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/home-server.dir/models/session.c.o.d"
   "CMakeFiles/home-server.dir/models/websocket.c.o"
   "CMakeFiles/home-server.dir/models/websocket.c.o.d"
+  "CMakeFiles/home-server.dir/routes/Websocket/GET/start_websocket_session.c.o"
+  "CMakeFiles/home-server.dir/routes/Websocket/GET/start_websocket_session.c.o.d"
   "CMakeFiles/home-server.dir/routes/blob-storage/GET/get_blob_storage_files.c.o"
   "CMakeFiles/home-server.dir/routes/blob-storage/GET/get_blob_storage_files.c.o.d"
   "CMakeFiles/home-server.dir/routes/blob-storage/POST/post_blob.c.o"
