@@ -64,6 +64,8 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_image_file(cSSL, http_header, "/portfolio/images/favicon.ico");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/definitions.js")==0){
 		get_gol_script(cSSL, http_header, "/chicago-transits/definitions.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/sounds/graphs.js")==0){
+		get_gol_script(cSSL, http_header, "/sounds/graphs.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/graphs.js")==0){
 		get_gol_script(cSSL, http_header, "/chicago-transits/graphs.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/map.js")==0){
@@ -73,6 +75,12 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/portfolio/images/")!=NULL){
 		if (strcmp(route,"/portfolio/images/scatteredteam.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/scatteredteam.png");
+		}
+		if (strcmp(route,"/portfolio/images/lifeofsounds.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/lifeofsounds.png");
+		}
+				if (strcmp(route,"/portfolio/images/livetransits.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/livetransits.png");
 		}
 		if (strcmp(route,"/portfolio/images/nonprofit.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/nonprofit.png");
@@ -204,12 +212,16 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_blob_storage_files(socket,http_header,body, route);
 	}else if (strcmp(request_type, "POST")==0 && strstr(route, "/blob-storage/")!=NULL){
 		post_blob(socket,http_header,body, route);
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds")==0){
+		get_live_html(cSSL, http_header, "/sounds/home.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/chicago-transits")==0){
 		get_live_html(cSSL, http_header, "/chicago-transits/home.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/create_table.js")==0){
 		get_gol_script(cSSL, http_header, "/create_table.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/chicago-transits/onload_session.js")==0){
 		get_gol_script(cSSL, http_header, "/chicago-transits/onload_session.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/audio.js")==0){
+		get_gol_script(cSSL, http_header, "/sounds/audio.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/websocket.js")==0){
 		get_gol_script(cSSL, http_header, "websocket.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/default_body_style.css")==0){
