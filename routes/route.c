@@ -219,6 +219,12 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 	// 	}
 	}else if (strcmp(request_type, "POST")==0 && strstr(route, "/blob-storage/")!=NULL){
 		post_blob(socket,http_header,body, route);
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/game-of-life")==0){
+		get_live_html(cSSL, http_header, "/game-of-life/home.html");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/onload_session.js")==0){
+		get_gol_script(cSSL, http_header, "/game-of-life/onload_session.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/game_of_life.js")==0){
+		get_gol_script(cSSL, http_header, "/game-of-life/game_of_life.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds")==0){
 		get_live_html(cSSL, http_header, "/sounds/home.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/chicago-transits")==0){
@@ -229,12 +235,16 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_gol_script(cSSL, http_header, "/chicago-transits/onload_session.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/audio.js")==0){
 		get_gol_script(cSSL, http_header, "/sounds/audio.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/chatbox.js")==0){
+		get_gol_script(cSSL, http_header, "game-of-life/chatbox.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/websocket.js")==0){
 		get_gol_script(cSSL, http_header, "websocket.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/chatbox_style.css")==0){
+		get_gol_script(cSSL, http_header, "game-of-life/chatbox_style.css");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/default_body_style.css")==0){
 		get_gol_script(cSSL, http_header, "default_body_style.css");
-	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/dynamic_table_style.css")==0){
-		get_gol_script(cSSL, http_header, "dynamic_table_style.css");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/canvas_style.css")==0){
+		get_gol_script(cSSL, http_header, "game-of-life/canvas_style.css");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/websocket_session")==0){
 		start_websocket_session(socket,http_header,body, route);
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/chatbox_style.css")==0){
