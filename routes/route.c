@@ -21,6 +21,7 @@
 #include "chicago-transits/GET/get_template.h"
 #include "blob-storage/GET/get_blob_storage_files.h"
 #include "blob-storage/POST/post_blob.h"
+#include "local-server/POST/post_local_server.h"
 #include "life-of-sounds/GET/get_web_audio_api_script.h"
 #include "life-of-sounds/GET/get_game_of_life_script.h"
 #include "life-of-sounds/GET/data_page.h"
@@ -41,6 +42,8 @@
 #include "life-of-sounds/GET/websocket_protocol.h"
 #include "life-of-sounds/GET/get_user.h"
 #include "life-of-sounds/GET/login.h"
+
+
 
 void process_route(struct Socket *socket,char* http_header, char* body){
 	SSL *cSSL =  socket->cSSL;
@@ -210,6 +213,10 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		}
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/blob-storage/")!=NULL){
 		get_blob_storage_files(socket,http_header,body, route);
+	// }else if (strcmp(request_type, "POST") ==0 && strstr(route, "/local-server/")!=NULL){
+	// 	if (strstr(route,"/ctabustracker/getpredictions/run") != NULL){
+	// 		post_ctabustracker_getpredictions(socket,http_header,body, route);	
+	// 	}
 	}else if (strcmp(request_type, "POST")==0 && strstr(route, "/blob-storage/")!=NULL){
 		post_blob(socket,http_header,body, route);
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds")==0){

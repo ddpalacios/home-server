@@ -73,6 +73,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_client.c.o.d"
   "CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_session.c.o"
   "CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_session.c.o.d"
+  "CMakeFiles/home-server.dir/routes/local-server/POST/post_local_server.c.o"
+  "CMakeFiles/home-server.dir/routes/local-server/POST/post_local_server.c.o.d"
   "CMakeFiles/home-server.dir/routes/route.c.o"
   "CMakeFiles/home-server.dir/routes/route.c.o.d"
   "CMakeFiles/home-server.dir/server/read_message.c.o"

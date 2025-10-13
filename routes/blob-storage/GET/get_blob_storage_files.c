@@ -102,6 +102,11 @@ void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, 
                 send_JSON_response_code(cSSL, 200, result);
                 free(result);
             }
+               else if (strstr(route, "/predictions")){
+                char* result = get_file_buffer("../blob-storage/silver_CTA_ctabustracker_predictions.json");
+                send_JSON_response_code(cSSL, 200, result);
+                free(result);
+              }
               else if (strstr(route, "/stop_delays")){
                 char* result = get_file_buffer("../blob-storage/silver_CTA_ctabustracker_stop_delays.json");
                 send_JSON_response_code(cSSL, 200, result);
@@ -143,4 +148,31 @@ void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, 
           }
         }
   }
+   else if (strstr(route, "blob-storage/gold/")){
+      if (strstr(route, "CTA/")){
+           if (strstr(route, "/ctabustracker/")){
+              if (strstr(route, "/delays")){
+                char* result = get_file_buffer("../blob-storage/gold_CTA_ctabustracker_delays.json");
+                send_JSON_response_code(cSSL, 200, result);
+                free(result);
+              }
+              else if (strstr(route, "/direction_delays")){
+                char* result = get_file_buffer("../blob-storage/gold_CTA_ctabustracker_direction_delays.json");
+                send_JSON_response_code(cSSL, 200, result);
+                free(result);
+              }
+              else if (strstr(route, "/route_delays")){
+                char* result = get_file_buffer("../blob-storage/gold_CTA_ctabustracker_route_delays.json");
+                send_JSON_response_code(cSSL, 200, result);
+                free(result);
+              }
+                else if (strstr(route, "/stop_delays")){
+                char* result = get_file_buffer("../blob-storage/gold_CTA_ctabustracker_stop_delays.json");
+                send_JSON_response_code(cSSL, 200, result);
+                free(result);
+              }
+           }
+          }
+
+   }
 }

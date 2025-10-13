@@ -64,6 +64,23 @@ body {
 
 
 }
+#view_applications{
+  float: left;
+  margin-left: 5%;
+    margin-top: .5%;
+    margin-bottom: .5%;
+    font-family: 'Garamond';
+    color: white;
+}
+#view_applications:hover {
+    color: white;
+    transform: scale(1.02);
+    cursor: pointer;
+      opacity: 1;
+
+}
+
+
 #company_name{
   float: left;
   margin-left: 5%;
@@ -1346,6 +1363,63 @@ justify-content: center;
 
 </style>
 
+<style>
+.audio_charts_container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+  justify-items: center;
+  align-items: start;
+  margin-top: 20px;
+  padding: 0 10px;
+  width: 100%;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.main_section1 {
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  padding: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.main_section1:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.main_section1 canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: transparent;
+  border-radius: 10px;
+}
+
+#spectogram_chart, #mel_spectogram_chart {
+  background: rgba(0, 0, 0, 0);
+}
+
+@media (max-width: 900px) {
+  .audio_charts_container {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .audio_charts_container {
+    grid-template-columns: 1fr;
+  }
+}
+
+</style>
+
+
 </head>
 <body>
 
@@ -1353,6 +1427,7 @@ justify-content: center;
 <div class="topnav" >
   <h1 onclick="scrollToView(this.id)" id="company_name"><span style="color: rgb(255, 255, 255);  height: 100%;">PALACIOS SOLUTIONS <span id="title_bar">|</span> Your Personal Data Engineer</span></h1>
   <!-- <h1 onclick="window.location='/chicago-transits'" id="company_name"><span style="color:  rgb(255, 237, 72);  height: 100%;">Live Data Staging (new!) </span></h1> -->
+   <h1 onclick="scrollToView(this.id)" id="view_applications"><span style="color: rgb(255, 255, 255);  height: 100%;">View Applications</span></h1>
   
   <button class="buttons" id="lets_talk" onclick="scrollToView(this.id)" >Let's Talk</button>
 </div>
@@ -1864,7 +1939,7 @@ justify-content: center;
 </div>
 
 <div style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section1" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
+  <div id="applications" class="main_section1" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
     <div style=" text-align: center;">
       <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">APPLICATIONS</h1>
       <div style="display: flex; justify-content: center;">
@@ -1879,15 +1954,13 @@ justify-content: center;
         <div class="flip-card-inner">
         <div class="flip-card-front" >
           <img class="flip-card-image" src="/portfolio/images/livetransits.png">
-          <h3 class="flip-card-header">Live City Transits</h3>
+          <h3 class="flip-card-header">Chicago Bus Delays</h3>
 
         </div>
           <div class="flip-card-back">
-            <h1 class="case_study_card_title">Live City Transits</h1> 
+            <h1 class="case_study_card_title">Chicago Bus Delays</h1> 
            <p class="case_study_paragraph1" style="font-size: 25px">
-            - Watch buses move across the city.<br><br>
-            - See JSON transform into structure.<br><br>
-            - And understand data staging like never before
+           A live dashboard that visualizes bus delays across all Chicago Transit routes and stops. Data updates every 30 minutes, revealing evolving delay trends and patterns.
           </p>
           </div>
         </div>
@@ -1901,8 +1974,9 @@ justify-content: center;
           <div class="flip-card-back">
             <h1 class="case_study_card_title">Life Of Sounds</h1> 
            <p class="case_study_paragraph1" style="font-size: 25px">
-            Experience different ways to visualize sounds with a slight twist with classic "Game Of Life" 
-            simulation.</p>
+           Explore sound visualizations reimagined through the classic Game of Life simulation.
+          
+          </p>
           </div>
         </div>
       </div>
@@ -1973,6 +2047,9 @@ justify-content: center;
 <script>
 
 function scrollToView(id) {
+        if (id.includes("view_applications")){
+          document.getElementById("applications").scrollIntoView({ behavior: "smooth" });
+        }
         if (id.includes("phonenav_")){
           document.getElementById("why_choose_us").scrollIntoView({ behavior: "smooth" });
         }

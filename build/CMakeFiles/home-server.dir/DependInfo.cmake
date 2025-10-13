@@ -45,6 +45,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/dpalacios/home-server/routes/life-of-sounds/POST/post_user.c" "CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_user.c.o" "gcc" "CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_user.c.o.d"
   "/home/dpalacios/home-server/routes/life-of-sounds/POST/post_websocket_client.c" "CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_client.c.o" "gcc" "CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_client.c.o.d"
   "/home/dpalacios/home-server/routes/life-of-sounds/POST/post_websocket_session.c" "CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_session.c.o" "gcc" "CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_session.c.o.d"
+  "/home/dpalacios/home-server/routes/local-server/POST/post_local_server.c" "CMakeFiles/home-server.dir/routes/local-server/POST/post_local_server.c.o" "gcc" "CMakeFiles/home-server.dir/routes/local-server/POST/post_local_server.c.o.d"
   "/home/dpalacios/home-server/routes/route.c" "CMakeFiles/home-server.dir/routes/route.c.o" "gcc" "CMakeFiles/home-server.dir/routes/route.c.o.d"
   "/home/dpalacios/home-server/server/read_message.c" "CMakeFiles/home-server.dir/server/read_message.c.o" "gcc" "CMakeFiles/home-server.dir/server/read_message.c.o.d"
   "/home/dpalacios/home-server/server/send_message.c" "CMakeFiles/home-server.dir/server/send_message.c.o" "gcc" "CMakeFiles/home-server.dir/server/send_message.c.o.d"

@@ -4,7 +4,7 @@
 # compile C with /usr/bin/cc
 C_DEFINES = 
 
-C_INCLUDES = -I/home/dpalacios/home-server/server -I/home/dpalacios/home-server/utilities -I/home/dpalacios/home-server/routes -I/home/dpalacios/home-server/database -I/home/dpalacios/home-server/models -I/home/dpalacios/home-server/routes/database-server/POST -I/home/dpalacios/home-server/routes/life-of-sounds/GET -I/home/dpalacios/home-server/routes/chicago-transits/GET -I/home/dpalacios/home-server/routes/Websocket/GET -I/home/dpalacios/home-server/routes/blob-storage/GET -I/home/dpalacios/home-server/routes/blob-storage/POST -I/home/dpalacios/home-server/routes/life-of-sounds/POST
+C_INCLUDES = -I/home/dpalacios/home-server/server -I/home/dpalacios/home-server/utilities -I/home/dpalacios/home-server/routes -I/home/dpalacios/home-server/database -I/home/dpalacios/home-server/models -I/home/dpalacios/home-server/routes/database-server/POST -I/home/dpalacios/home-server/routes/life-of-sounds/GET -I/home/dpalacios/home-server/routes/chicago-transits/GET -I/home/dpalacios/home-server/routes/Websocket/GET -I/home/dpalacios/home-server/routes/blob-storage/GET -I/home/dpalacios/home-server/routes/local-server/POST -I/home/dpalacios/home-server/routes/blob-storage/POST -I/home/dpalacios/home-server/routes/life-of-sounds/POST
 
 C_FLAGS = -std=gnu99
 

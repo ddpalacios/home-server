@@ -1017,6 +1017,30 @@ routes/life-of-sounds/POST/post_websocket_session.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_session.c.s
 .PHONY : routes/life-of-sounds/POST/post_websocket_session.c.s
 
+routes/local-server/POST/post_local_server.o: routes/local-server/POST/post_local_server.c.o
+.PHONY : routes/local-server/POST/post_local_server.o
+
+# target to build an object file
+routes/local-server/POST/post_local_server.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/local-server/POST/post_local_server.c.o
+.PHONY : routes/local-server/POST/post_local_server.c.o
+
+routes/local-server/POST/post_local_server.i: routes/local-server/POST/post_local_server.c.i
+.PHONY : routes/local-server/POST/post_local_server.i
+
+# target to preprocess a source file
+routes/local-server/POST/post_local_server.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/local-server/POST/post_local_server.c.i
+.PHONY : routes/local-server/POST/post_local_server.c.i
+
+routes/local-server/POST/post_local_server.s: routes/local-server/POST/post_local_server.c.s
+.PHONY : routes/local-server/POST/post_local_server.s
+
+# target to generate assembly for a file
+routes/local-server/POST/post_local_server.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/local-server/POST/post_local_server.c.s
+.PHONY : routes/local-server/POST/post_local_server.c.s
+
 routes/route.o: routes/route.c.o
 .PHONY : routes/route.o
 
@@ -1329,6 +1353,9 @@ help:
 	@echo "... routes/life-of-sounds/POST/post_websocket_session.o"
 	@echo "... routes/life-of-sounds/POST/post_websocket_session.i"
 	@echo "... routes/life-of-sounds/POST/post_websocket_session.s"
+	@echo "... routes/local-server/POST/post_local_server.o"
+	@echo "... routes/local-server/POST/post_local_server.i"
+	@echo "... routes/local-server/POST/post_local_server.s"
 	@echo "... routes/route.o"
 	@echo "... routes/route.i"
 	@echo "... routes/route.s"

@@ -25,6 +25,7 @@ file(GLOB MAIN
     "routes/chicago-transits/GET/*.c"
     "routes/Websocket/GET/*.c"
     "routes/blob-storage/POST/*.c"
+    "routes/local-server/POST/*.c"
     "routes/blob-storage/GET/*.c"
     "routes/database-server/POST/*.c"
     "routes/life-of-sounds/GET/login.c"
@@ -61,15 +62,18 @@ target_include_directories(home-server PRIVATE
     ${PROJECT_SOURCE_DIR}/routes
     ${PROJECT_SOURCE_DIR}/database
     ${PROJECT_SOURCE_DIR}/models
+
     ${PROJECT_SOURCE_DIR}/routes/database-server/POST
     ${PROJECT_SOURCE_DIR}/routes/life-of-sounds/GET
     ${PROJECT_SOURCE_DIR}/routes/chicago-transits/GET
     ${PROJECT_SOURCE_DIR}/routes/Websocket/GET
     ${PROJECT_SOURCE_DIR}/routes/blob-storage/GET
+    ${PROJECT_SOURCE_DIR}/routes/local-server/POST
     ${PROJECT_SOURCE_DIR}/routes/blob-storage/POST
     ${PROJECT_SOURCE_DIR}/routes/life-of-sounds/POST
 
 )
+
 
 find_package(OpenSSL REQUIRED)
 target_link_libraries(home-server OpenSSL::SSL OpenSSL::Crypto)

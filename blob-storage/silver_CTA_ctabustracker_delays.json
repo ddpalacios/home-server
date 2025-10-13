@@ -99,5 +99,35 @@
 			"Hour":	1,
 			"Minute":	49,
 			"total_delayed":	100
+		}, {
+			"pulldatetime":	"2025-10-11 13:07:48",
+			"Hour":	13,
+			"Minute":	7,
+			"total_delayed":	212
+		}, {
+			"pulldatetime":	"2025-10-11 13:32:38",
+			"Hour":	13,
+			"Minute":	32,
+			"total_delayed":	135
+		}, {
+			"pulldatetime":	"2025-10-13 06:02:44",
+			"Hour":	6,
+			"Minute":	2,
+			"total_delayed":	141
+		}, {
+			"pulldatetime":	"2025-10-13 07:48:50",
+			"Hour":	7,
+			"Minute":	48,
+			"total_delayed":	254
+		}, {
+			"pulldatetime":	"2025-10-13 07:51:58",
+			"Hour":	7,
+			"Minute":	51,
+			"total_delayed":	278
+		}, {
+			"pulldatetime":	"2025-10-13 08:05:26",
+			"Hour":	8,
+			"Minute":	5,
+			"total_delayed":	273
 		}]
 }

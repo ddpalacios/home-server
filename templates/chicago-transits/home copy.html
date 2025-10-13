@@ -6,6 +6,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
  <link rel="stylesheet" href="/dynamic_table_style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <link rel="icon" href="/portfolio/images/favicon.ico" type="image/x-icon">
 <style>
 
@@ -734,12 +736,7 @@ justify-content: center;
     gap: 1.5em; 
   }
 @media (max-width: 1250px) {
-    .case_study_cards{
-        width: 100% !important;
-        max-width:100% !important;
 
-    }
-    
 
       .submit_form {
     flex-direction: column; /* stack the two halves */
@@ -769,19 +766,14 @@ justify-content: center;
   }
   .medallian_image{
     max-width: 150px !important;
-
   }
   .body_cards{
     background-color: inherit; 
-    transform: none;     
-        max-width: 100%!important;
-        width: 100% !important;
-
+    transform: none;           
   }
   .case_study_cards:hover {
      background-color: inherit;
-    transform: none;  
-        max-width: 100%!important     
+    transform: none;       
   }
   
 .case_study_cards.bronze:hover {
@@ -987,17 +979,20 @@ justify-content: center;
   margin: 0 2rem;
   object-fit: contain;
 }
+.definitions_table{
+  display: none !important;
+}
+.live_stage{
+  display: none !important;
+}
 
 
   .phone_intro{
     margin-top: 80px !important;
 
   }
-  .desktop_intro{
-    margin-top: 30% !important;
-  }
 
- .topnav{
+   .topnav{
     display: none !important;
 
     
@@ -1361,133 +1356,19 @@ justify-content: center;
 
 </style>
 
-
-<!-- <style>
-    .fade-text {
-      font-size: 2rem;
-      color: #333;
-      animation: fadeInOut 3s infinite;
-    }
-
-    @keyframes fadeInOut {
-      0%, 100% {
-        opacity: 0;
-      }
-      50% {
-        opacity: 1;
-      }
-    }
-</style>
-  <style>
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: left;
-    }
-    th {
-      background-color: #f4f4f4;
-    }
-    td[contenteditable="true"] {
-      background-color: #f9f9f9;
-      outline: none;
-    }
-    td[contenteditable="true"]:focus {
-      background-color: #e8f0fe;
-    }
-    button {
-      margin-top: 10px;
-      padding: 8px 12px;
-      background-color: black;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #EFA9E3
-    }
-
-    * { margin: 0; padding: 0;}
-
-
-
-
-* { margin: 0; padding: 0;}
-
-body, html { height:100%;  overflow: hidden; background-color: black;}
-
-        #visualizer {
-           position:absolute;
-            border: 1px solid black;
-             width: 100%; height: 100%;
-        }
-* {cursor: none;}
-</style> -->
-
 <style>
-.audio_charts_container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 20px;
-  justify-items: center;
-  align-items: start;
-  margin-top: 20px;
-  padding: 0 10px;
-  width: 100%;
-  max-width: 1400px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.main_section1 {
-  background-color: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  padding: 10px;
-  width: 100%;
-  box-sizing: border-box;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-
-.main_section1:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-}
-
-.main_section1 canvas {
-  width: 100%;
-  height: auto;
-  display: block;
-  background: transparent;
-  border-radius: 10px;
-}
-
-#spectogram_chart, #mel_spectogram_chart {
-  background: rgba(0, 0, 0, 0);
-}
-
-@media (max-width: 900px) {
-  .audio_charts_container {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  #map {
+      height: 50vh;   
+      width: 100%;    
+      margin-top: 0;  
   }
-}
-
-@media (max-width: 600px) {
-  .audio_charts_container {
-    grid-template-columns: 1fr;
-  }
-}
-
 </style>
 </head>
 <body>
 
 
 <div class="topnav" >
-  <h1 onclick="scrollToView(this.id)"  id="company_name"><span style="color: rgb(255, 255, 255);  height: 100%;">PALACIOS SOLUTIONS <span id="title_bar">|</span> Your Personal Data Engineer</span></h1>
+  <h1 onclick="scrollToView(this.id)" id="company_name"><span style="color: rgb(255, 255, 255);  height: 100%;">PALACIOS SOLUTIONS <span id="title_bar">|</span> Your Personal Data Engineer</span></h1>
   <h1 onclick="window.location='/'" id="company_name"><span style="color: rgb(255, 237, 72);  height: 100%;">Back To Home </span></h1>
   
   <button class="buttons" id="lets_talk" onclick="scrollToView(this.id)" >Let's Talk</button>
@@ -1500,56 +1381,174 @@ body, html { height:100%;  overflow: hidden; background-color: black;}
   <button style="height: auto; margin: 0 auto; margin-top: 10px;" class="buttons" id="lets_talk" onclick="scrollToView(this.id)" >Let's Talk</button>
 </div>
 
-<div class="desktop_intro" style="display: flex; justify-content: center; align-items: center; width: 100%; padding: 10px 0; margin-top: 3%;">
-  <div class="main_section" id="intro_section" style="background-color: transparent; width: 100%; max-width: 1230px; border-radius: 20px; padding: 10px;">
+
+<div class="desktop_intro" style="display: flex; align-items: center; justify-content: center; margin-top: 2%;">
+  <div class="main_section" id="intro_section" style="background-color: #fff; width: 80%; border-radius: 20px; margin-top: 5%; padding: 2%;">
+    <div style=" text-align: center;">
+      <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">CHOOSE A ROUTE:</h1>
+    </div>
+          <div style="display: flex; justify-content: center;">
+        <h3 class="section_subtitle" id="section1_subtitle" style="width: 50%;  font-size: 25px; font-weight: 550;">
+          <span style="color: #dd5050;">Pick a bus route</span> and see the live location of every bus heading to that station.
+        </h3>
+
+      </div>
+          <div style="display: flex; justify-content: center; margin: 0 auto;">
+
+              <h3 class="section_subtitle" id="section1_subtitle" style="width: 50%;  font-size: 15px; font-weight: 550; ">
+          <span style="color: #dd5050;">Heads Up:</span> See no vehicals? Try selecting a new location.
+        </h3>
+      </div>
+
+      <div style="display: flex; flex-direction: row; gap: 2%; justify-content: center; align-items: center; ">
+          <div style="display: flex; flex-direction: column; align-items: center;">
+              <label for="busRoute" style="font-size: 1.2rem; font-weight: bold; margin-bottom: 5px;">Bus Route:</label>
+              <input list="routes" id="busRoute" name="busRoute" 
+                    style="padding: 10px 12px; font-size: 1.1rem; border-radius: 6px; border: 1px solid #ccc; width: 200px;" />
+              <datalist id="routes"></datalist>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center;">
+              <label for="direction" style="font-size: 1.2rem; font-weight: bold; margin-bottom: 5px;">Direction:</label>
+              <input list="directions" id="direction" name="direction" 
+                    style="padding: 10px 12px; font-size: 1.1rem; border-radius: 6px; border: 1px solid #ccc; width: 200px;" />
+              <datalist id="directions"></datalist>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center;">
+              <label for="stopName" style="font-size: 1.2rem; font-weight: bold; margin-bottom: 5px;">Stop Name:</label>
+              <input list="stops" id="stopName" name="stopName" 
+                    style="padding: 10px 12px; font-size: 1.1rem; border-radius: 6px; border: 1px solid #ccc; width: 200px;" />
+              <datalist id="stops"></datalist>
+          </div>
+
+      </div>
+      <div style="display: flex; flex-direction: row; gap: 2%; justify-content: center; align-items: center; margin-top: 2%;">
+                <div style="display: flex; flex-direction: column;">
+          <label style="font-size: 1.2rem; font-weight: bold;">Next Bus Arrival:</label>
+          <h1 style="font-size: 50px; margin: 0 auto; color: purple; font-style: italic;" id="next_arrival"></h1>
+
+        </div>
+
+        <div style="display: flex; flex-direction: column;">
+          <label style="font-size: 1.2rem; font-weight: bold;">Total In-Service:</label>
+          <h1 style="font-size: 50px; margin: 0 auto; color: purple; font-style: italic;" id="total_inservice"></h1>
+        </div>
+
+      </div>
+      <div id="map" style="margin-top: 1%;"></div>
+  </div>
+</div>
+
+<div class="live_stage" style="display: flex; align-items: center; justify-content: center;">
+  <div class="main_section" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 2%; padding: 2%; ">
+    <div style=" text-align: center;">
+      <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">LIVE DATA STAGING</h1>
+      <div style="display: flex; justify-content: center;">
+        <h3 class="section_subtitle" id="section1_subtitle" style="width: 50%;  font-size: 25px; font-weight: 550;">
+          <span style="color: #dd5050;">Explore</span> the exact stages this real-time data goes through.
+        </h3>
+      </div>
+    </div>
+
+<div style="display: flex; align-items: stretch; justify-content: center; gap: 2%; flex-wrap: wrap;">
+  <div class="case_study_cards bronze" style="flex: 1 1 30%; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(135deg, rgba(200, 138, 76, 0.432) 0%, rgba(230,180,80,0.3) 50%, rgba(205,128,50,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em; min-width: 250px; max-width: 30%;">
+    <div style="display: flex; justify-content: center;">
+      <img style="max-width: 50px; border-radius: 20px;" src="/portfolio/images/bronze.png">
+    </div>
+    <h3 style="font-size: 40px; text-align: center; letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85) 0%, rgba(0,90,110,0.9) 50%, rgba(0,0,0,0.95) 100%); -webkit-background-clip: text; color: transparent;">BRONZE</h3>
+    <div class="outputs" id="bronzejsonContainer"
+      style="flex: 1; background:#0f111a; color:#eee; font-family:monospace; padding:1em; border-radius:8px; max-height:500px; overflow-y:auto; white-space:pre; line-height:1.4; box-sizing:border-box;">
+    </div>
+  </div>
+
+  <div class="case_study_cards silver" style="flex: 1 1 30%; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(135deg, rgba(192,192,192,0.6) 0%, rgba(220,220,220,0.3) 50%, rgba(192,192,192,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em; min-width: 250px; max-width: 30%;">
+    <div style="display: flex; justify-content: center;">
+      <img style="max-width: 50px; border-radius: 20px;" src="/portfolio/images/silver.png">
+    </div>
+    <h3 style="font-size: 40px; text-align: center; letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85) 0%, rgba(0,90,110,0.9) 50%, rgba(0,0,0,0.95) 100%); -webkit-background-clip: text; color: transparent;">SILVER</h3>
+    <div class="outputs" id="silverjsonContainer"
+      style="flex: 1; background:#0f111a; color:#eee; font-family:monospace; padding:1em; border-radius:8px; max-height:500px; overflow-y:auto; white-space:pre; line-height:1.4; box-sizing:border-box;">
+    </div>
+  </div>
+
+  <div class="case_study_cards gold" style="flex: 1 1 30%; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(135deg, rgba(255,215,0,0.6) 0%, rgba(255,240,128,0.3) 50%, rgba(255,215,0,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em; min-width: 250px; max-width: 30%;">
+    <div style="display: flex; justify-content: center;">
+      <img style="max-width: 50px; border-radius: 20px;" src="/portfolio/images/gold.png">
+    </div>
+    <h3 style="font-size: 40px; text-align: center; letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85) 0%, rgba(0,90,110,0.9) 50%, rgba(0,0,0,0.95) 100%); -webkit-background-clip: text; color: transparent;">GOLD</h3>
+    <div class="outputs" id="goldjsonContainer"
+      style="flex: 1; background:#0f111a; color:#eee; font-family:monospace; padding:1em; border-radius:8px; max-height:500px; overflow-y:auto; white-space:pre; line-height:1.4; box-sizing:border-box;">
+    </div>
+  </div>
+</div>
+
+  </div>
+</div>
+<div class="definitions_table"  style="display: flex; align-items: center; justify-content: center;">
+  <div  style="background-color: white; width: 80%; border-radius: 20px; margin-top: 4%;">
+    <div style="text-align: center;">
+      <h1 class="section_title" style="font-size: 42px;">DATA COLUMN DEFINITIONS</h1>
+    </div>
+    
+    <div class="filter-container" style="padding: 2%; margin: 0 auto;">
+      <label for="columnSelect">Filter by column:</label>
+      <select id="columnSelect-definitions"></select>
+      <input type="text" id="filterInput-definitions" placeholder="Enter filter text...">
+    </div>
+
+    <div class="table-responsive">
+      <div id="table-container-definitions" style="padding: 2%;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="phone_intro">
+      
+
+      <div style="display: flex; justify-content: center;">  
+        <h3 class="section_subtitle" style=" width: 100%; text-align: center;  margin: 0 auto; color: rgb(255, 255, 255); padding: 5%; font-size: 42px; font-weight: 500; margin-bottom: 15%;">
+             Data Analysis
+          </h3>
+      </div> 
+</div>
+<div style="display: flex; align-items: center; justify-content: center;">
+  <div class="main_section1" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
+    <div style=" text-align: center;">
+      <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">OVERALL VEHICAL DELAYS</h1>
+    </div>
    <canvas style="padding: 2%;" id="areaLineChart" width="400" height="200"></canvas>
   </div>
 </div>
-<div class="audio_charts_container" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 20px; width: 100%; padding: 0 10px;">
 
-  <div class="main_section1" style="background-color: white; flex: 1 1 400px; max-width: 800px; border-radius: 20px; padding: 10px;">
-    <canvas style="padding: 2%;" id="direction_delays" width="400" height="200"></canvas>
-  </div>
-
-  <div class="main_section1" style="background-color: white; flex: 1 1 400px; max-width: 800px; border-radius: 20px; padding: 10px;">
+<div style="display: flex; align-items: center; justify-content: center;">
+  <div class="main_section1" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
+    <div style=" text-align: center;">
+      <h1 class="section_title" style=" font-size: 42px; ">CURRENT DELAYS BY ROUTE</h1>
+    </div>
    <canvas style="padding: 2%;" id="route_delays" width="400" height="200"></canvas>
   </div>
-
-
 </div>
-
-<div style="display: flex; justify-content: center; width: 100%; margin-top: 2%;">
-  <div class="live_stage" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; width: 90%; max-width: 1200px;">
-
-    <div class="case_study_cards bronze" style="flex: 1 1 300px; max-width: 45%; min-width: 280px; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(135deg, rgba(201, 130, 59, 0.444) 0%, rgb(241, 234, 218) 50%, rgb(199, 168, 135) 100%); border-radius: 10px; padding: 1em;">
-      <div style="display: flex; justify-content: center;">
-        <img style="max-width: 50px; border-radius: 20px;" src="/portfolio/images/bronze.png">
-      </div>
-      <h3 style="font-size: 40px; text-align: center; letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85) 0%, rgba(0,90,110,0.9) 50%, rgba(0,0,0,0.95) 100%); -webkit-background-clip: text; color: transparent;">BRONZE</h3>
-      <div class="outputs" id="bronzejsonContainer" style="flex: 1; background:#0f111a; color:#eee; font-family:monospace; padding:1em; border-radius:8px; max-height:500px; overflow-y:auto; white-space:pre; line-height:1.4; box-sizing:border-box;">
-      </div>
+<div style="display: flex; align-items: center; justify-content: center;">
+  <div class="main_section1" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
+    <div style=" text-align: center;">
+      <h1 class="section_title" style=" font-size: 42px; ">TOP 10 DELAYS BY BUS STOP NAME</h1>
     </div>
-
-    <div class="case_study_cards silver" style="flex: 1 1 300px; max-width: 45%; min-width: 280px; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(135deg, rgb(192, 192, 192) 20%, rgba(255, 255, 255, 0.923) 50%, rgb(192, 192, 192) 90%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
-      <div style="display: flex; justify-content: center;">
-        <img style="max-width: 50px; border-radius: 20px;" src="/portfolio/images/silver.png">
-      </div>
-      <h3 style="font-size: 40px; text-align: center; letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85) 0%, rgba(0,90,110,0.9) 50%, rgba(0,0,0,0.95) 100%); -webkit-background-clip: text; color: transparent;">SILVER</h3>
-      <div class="outputs" id="silverjsonContainer" style="flex: 1; background:#0f111a; color:#eee; font-family:monospace; padding:1em; border-radius:8px; max-height:500px; overflow-y:auto; white-space:pre; line-height:1.4; box-sizing:border-box;">
-      </div>
-    </div>
-
-    <div class="case_study_cards gold" style="flex: 1 1 300px; max-width: 45%; min-width: 280px; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(135deg, rgb(254, 230, 93) 0%, rgb(245, 241, 216) 50%, rgba(255,215,0,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
-      <div style="display: flex; justify-content: center;">
-        <img style="max-width: 50px; border-radius: 20px;" src="/portfolio/images/gold.png">
-      </div>
-      <h3 style="font-size: 40px; text-align: center; letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85) 0%, rgba(0,90,110,0.9) 50%, rgba(0,0,0,0.95) 100%); -webkit-background-clip: text; color: transparent;">GOLD</h3>
-      <div class="outputs" id="goldjsonContainer" style="flex: 1; background:#0f111a; color:#eee; font-family:monospace; padding:1em; border-radius:8px; max-height:500px; overflow-y:auto; white-space:pre; line-height:1.4; box-sizing:border-box;">
-      </div>
-    </div>
-
+   <canvas style="padding: 2%;" id="stop_delays" width="400" height="200"></canvas>
   </div>
 </div>
+
+<div style="display: flex; align-items: center; justify-content: center;">
+  <div class="main_section1" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
+    <div style=" text-align: center;">
+      <h1 class="section_title" style=" font-size: 42px; ">CURRENT DELAYS BY DIRECTION</h1>
+    </div>
+   <div style="width: 70%; height: 50vh; display: flex; justify-content: center; align-items: center; margin: 0 auto;">
+  <canvas style="padding: 2%;" id="direction_delays" style="max-width: 100%; max-height: 100%;"></canvas>
+</div>
+  </div>
+</div>
+
+
+
 <div style="display: flex; align-items: center; justify-content: center;">
   <div style=" width: 100%;  border-radius: 20px; margin-top: 4%;">
     <div id="formview" class="submit_form" style="display: flex; justify-content: center;  text-align: center;">
@@ -1600,18 +1599,18 @@ body, html { height:100%;  overflow: hidden; background-color: black;}
 </body>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="form.js"></script>
-<!-- <script src="/websocket.js"></script> -->
-<!-- <script src="map.js"></script> -->
+<script src="/websocket.js"></script>
+<script src="map.js"></script>
 <script src="graphs.js"></script>
-<!-- <script src="/create_table.js"></script> -->
-<!-- <script src="/definitions.js"></script> -->
-
+<script src="/create_table.js"></script>
+<script src="/definitions.js"></script>
 <script>
 
 function scrollToView(id) {
           document.getElementById("formview").scrollIntoView({ behavior: "smooth" });
 }
 </script>
+
 <script>
 let lastScroll = 0;
 const topnav = document.querySelector('.phonenav');
@@ -1671,6 +1670,7 @@ document.querySelectorAll('.painpoints_list').forEach(list => {
   listObserver.observe(list);
 });
 </script>
+
 
 
 </html>
