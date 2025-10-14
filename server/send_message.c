@@ -67,11 +67,9 @@ void add_int_to_byte(unsigned char**frame, int data,int byte_length, int*bytes_a
 }
 
 void send_to_clients(char* frame, struct Socket *sockets, struct Socket *socket, int total_bytes, int fd_count){
-		printf("Socket ID %s\n", socket->Id);
 		struct WebsocketClient wsc =  get_websocketclientBySocketId(socket->Id);
 		char* sessionId = wsc.sessionId;
 		size_t total_clients;
-		printf("SESSION ID %s\n", sessionId);
 		struct WebsocketClient *ws_clients = get_websocketclientsBySessionId(sessionId, &total_clients);
 		int count = 0;
 		for (int i=0; i<total_clients; i++){

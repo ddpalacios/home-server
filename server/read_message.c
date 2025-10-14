@@ -268,7 +268,6 @@ void free_message(struct Websocket_Message* msg) {
 }
 
 void process_websocket_message(struct Socket* sockets,struct Socket* socket,int fd_count, char* message,int payload_length,int nbytes ){
-	printf("%s\n", message);
 	cJSON *json = cJSON_Parse(message);
 	if (json) {
 		char* operation = get_value(json,"operation");

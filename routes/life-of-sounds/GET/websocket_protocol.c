@@ -54,15 +54,16 @@ void get_websocket_protocol(struct Socket* socket,char* http_header, char*body, 
 			if (strstr(http_header, "/join?connect=true&Id=")){
 				  char* sessionId = get_query_parameter(route, "Id");
 				  char* username = get_query_parameter(route, "username");
-			  }
-			  else if (strcmp(http_header, "/session?Id=")){
+			}else if (strstr(http_header, "/session?Id=") != NULL){
 					char* sessionId = get_query_parameter(route, "Id");
 					activate_websocket_session(sessionId, http_header, socket);
-			  }else if (strstr(http_header, "/session?userId=")){
-				  char* userId = get_query_parameter(route, "userId");
-				  char* ws_sessions = get_websocket_sessions_by_userId(userId);
-				  send_JSON_response_code(cSSL, 200, ws_sessions);
-				}else{
+			}else if (strstr(http_header, "/session?userId=")){
+					printf("WS Protocol Search %s\n", http_header);
+				  	char* userId = get_query_parameter(route, "userId");
+					printf("USER ID %s\n", userId);
+				  	char* ws_sessions = get_websocket_sessions_by_userId(userId);
+				  	send_JSON_response_code(cSSL, 200, ws_sessions);
+			}else{
 					send_response_code(cSSL, 400);
 					socket->keep_alive = 0x0;
 				}

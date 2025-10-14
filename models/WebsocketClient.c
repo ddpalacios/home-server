@@ -39,10 +39,9 @@ struct WebsocketClient create_websocketclient(char* sessionid, char*socketId,cha
 char* get_websocketclientsBySessionId_json(char* sessionId){
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[255];
-	snprintf(sql,sizeof(sql), "SELECT * FROM WebsocketClient WHERE sessionId = '%s'",
+	snprintf(sql,sizeof(sql), "SELECT wc.*, u.username FROM WebsocketClient wc INNER JOIN user u ON  u.user_id = wc.userId WHERE sessionId = '%s'",
 			sessionId
 			);
-	printf("%s\n", sql);
 	MYSQL_RES* res = query(conn, sql);
 	MYSQL_ROW row;
 	size_t count = 0;
@@ -54,6 +53,7 @@ char* get_websocketclientsBySessionId_json(char* sessionId){
 		cJSON_AddStringToObject(root_sessions, "socketId", strdup(row[1]));
 		cJSON_AddStringToObject(root_sessions, "sessionId", strdup(row[2]));
 		cJSON_AddStringToObject(root_sessions, "userId", strdup(row[3]));
+		cJSON_AddStringToObject(root_sessions, "username", strdup(row[4]));
 		cJSON_AddItemToArray(sessions_json, root_sessions);
 		count++;
 	}
@@ -91,7 +91,6 @@ struct WebsocketClient* get_websocketclientsBySessionId(char* sessionId, size_t 
 	MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 	char sql[255];
 	snprintf(sql, sizeof(sql),"SELECT * FROM WebsocketClient WHERE sessionId = '%s'", sessionId);
-	printf("%s\n", sql);
 
 	MYSQL_RES* res = query(conn, sql);
 	MYSQL_ROW row;

@@ -155,7 +155,7 @@ void* process_thread(void* arg){
 
     char *peek_buf = malloc(BUFFER_SIZE+1);
     int bytes_peeked = peek_exact_bytes(new_client->cSSL, BUFFER_SIZE, peek_buf);
-	printf("PEEKED BYTES: %d\n", bytes_peeked);
+	// printf("PEEKED BYTES: %d\n", bytes_peeked);
 
     if (bytes_peeked > 0 && peek_buf != NULL) {
         process_bytes(sockets,new_client, peek_buf, fd_count);

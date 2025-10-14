@@ -97,6 +97,9 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		if (strcmp(route,"/portfolio/images/gcs.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/gcs.png");
 		}
+		if (strcmp(route,"/portfolio/images/gol.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/gol.png");
+		}
 		if (strcmp(route,"/portfolio/images/scrum.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/scrum.png");
 		}
@@ -213,18 +216,41 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		}
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/blob-storage/")!=NULL){
 		get_blob_storage_files(socket,http_header,body, route);
-	// }else if (strcmp(request_type, "POST") ==0 && strstr(route, "/local-server/")!=NULL){
-	// 	if (strstr(route,"/ctabustracker/getpredictions/run") != NULL){
-	// 		post_ctabustracker_getpredictions(socket,http_header,body, route);	
-	// 	}
+
 	}else if (strcmp(request_type, "POST")==0 && strstr(route, "/blob-storage/")!=NULL){
 		post_blob(socket,http_header,body, route);
+
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/game-of-life/session/join?Id=") != NULL){
+		char* sessionId = get_query_parameter(route, "Id");
+		if (websocket_session_exists(sessionId)){
+			get_live_html(cSSL, http_header, "/game-of-life/home.html");
+		}
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/game-of-life")==0){
 		get_live_html(cSSL, http_header, "/game-of-life/home.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/onload_session.js")==0){
 		get_gol_script(cSSL, http_header, "/game-of-life/onload_session.js");
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/game-of-life/user")==0){
+		post_user(socket,http_header,body, route);
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/game-of-life/user")==0){
+		get_user(socket,http_header,body, route);
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/game-of-life/session?") != NULL){
+		get_websocket_protocol(socket,http_header,body, route);
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/game_of_life.js")==0){
 		get_gol_script(cSSL, http_header, "/game-of-life/game_of_life.js");
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/game-of-life/session")==0){
+			post_websocket_session(socket,http_header,body, route);
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/game_of_life/websocket.js")==0){
+		get_gol_script(cSSL, http_header, "/game-of-life/websocket.js");	
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/game_of_life/data_staging.js")==0){
+		get_gol_script(cSSL, http_header, "/game-of-life/data_staging.js");
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/game-of-life/session/messages")!=NULL){
+		get_session_messages(socket, http_header, body, route);
+
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/game-of-life/client")!=NULL){
+		 get_websocket_client(socket,http_header,body, route);
+	}else if (strcmp(request_type, "DELETE")==0 && strstr(route, "/game-of-life/session?Id=") != NULL){
+		delete_websocket_session(socket,http_header,body, route);
+
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds")==0){
 		get_live_html(cSSL, http_header, "/sounds/home.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/chicago-transits")==0){
