@@ -56,7 +56,7 @@ int connect_to_local_server(const char* host, const char* port){
  	}
  }
 
- void post_ctabustracker_getpredictions(struct Socket* socket,char* http_header, char*body, char* route){
+void post_ctabustracker_getpredictions(struct Socket* socket,char* http_header, char*body, char* route){
     int sfd  = connect_to_local_server("127.0.0.1", "5000");
     char request[2048];
     snprintf(request, sizeof(request), 
@@ -65,6 +65,25 @@ int connect_to_local_server(const char* host, const char* port){
             "Connection: close\r\n"
             "\r\n",
             "127.0.0.1","5000");
+    send(sfd,request, strlen(request),0);
+    close(sfd);
+
+
+ }
+
+ void post_generate_phrase(struct Socket* socket,char* http_header, char*body, char* route){
+    int sfd  = connect_to_local_server("127.0.0.1", "5000");
+    char request[2048];
+	snprintf(request, sizeof(request),
+		"POST /phrase-matching/generate HTTP/1.1\r\n"
+		"Host: %s:%s\r\n"
+		"Content-Type: application/json\r\n"
+		"Content-Length: %zu\r\n"
+		"Connection: close\r\n"
+		"\r\n"
+		"%s",
+		"127.0.0.1", "5000", strlen(body), body);
+	printf("Request %s\n", request);
     send(sfd,request, strlen(request),0);
     close(sfd);
 

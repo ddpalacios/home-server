@@ -205,6 +205,12 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		if (strcmp(route,"/portfolio/images/excel.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/excel.png");
 		}
+		if (strcmp(route,"/portfolio/images/ga.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/ga.png");
+		}
+		if (strcmp(route,"/portfolio/images/ai.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/ai.png");
+		}
 		if (strcmp(route,"/portfolio/images/spark.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/spark.png");
 		}
@@ -225,6 +231,19 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		if (websocket_session_exists(sessionId)){
 			get_live_html(cSSL, http_header, "/game-of-life/home.html");
 		}
+	
+
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/connect")==0){
+		start_websocket_session(socket,http_header,body, route);
+
+
+
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/phrase-matching")==0){
+		get_live_html(cSSL, http_header, "/phrase-matching/home.html");
+		
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/phrase-matching/generate")==0){
+		post_generate_phrase(socket,http_header,body, route);
+
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/game-of-life")==0){
 		get_live_html(cSSL, http_header, "/game-of-life/home.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/onload_session.js")==0){

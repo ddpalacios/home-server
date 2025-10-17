@@ -372,36 +372,27 @@ void process_websocket_message(struct Socket* sockets,struct Socket* socket,int 
 				*/
 void process_bytes(struct Socket *sockets, struct Socket *socket, char* buf, int fd_count){
 		if (is_tcp_buffer(buf)){
-			printf("Detected TCP Buffer\n");
 			char* tcp_buf = malloc(BUFFER_SIZE);
 			int nbytes =  read_tcp_message(socket->cSSL, &tcp_buf);
-			printf("%s\n", tcp_buf);
-			if (socket->is_tcp){
-				int payload_length = 0;
-				if (nbytes <= 125){
-					payload_length = 125;
-				}else{
-					payload_length = 126;
-				}
-				cJSON *json = cJSON_Parse(tcp_buf);
-				if (json) {
+			socket->is_tcp = 0x1;
+			socket->keep_alive = 0x1;
+			int payload_length = 0;
+			if (nbytes <= 125){
+				payload_length = 125;
+			}else{
+				payload_length = 126;
+			}
+			cJSON *json = cJSON_Parse(tcp_buf);
+			if (json) {
 					char* socketId = get_value(json,"socketId");
 					for (int i=0; i<fd_count; i++){
 						struct Socket* s = &sockets[i];
 						if (strcmp(s->Id, socketId)==0){
 							send_message_to_socket(s, fd_count,payload_length ,nbytes, tcp_buf); 
-						
 						}
-					
 					}
-
 					cJSON_Delete(json);
 				}
-			}else{
-				socket->is_tcp = 0x1;
-				socket->keep_alive = 0x1;
-			}
-
 			if (tcp_buf != NULL){
 				free(tcp_buf);
 				tcp_buf = NULL;

@@ -194,7 +194,9 @@ void start_listening_for_clients(char* port){
 
 	while(1) {
 	    delete_expired_tokens();
+		// printf("Total Sockets: %d\n", fd_count);
 	    int triggered_fd = wait_for_event(&pfds, fd_count);
+
 
 	    if (triggered_fd == listener_fd) {
 		struct Socket* new_client = accept_new_client(listener_fd, &sockets, &pfds, &fd_count, &max_socket_size);
