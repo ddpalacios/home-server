@@ -1,0 +1,2081 @@
+<!-- <!DOCTYPE html>
+<html>
+<head>
+<title>Your Personal Data Engineer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="icon" href="/portfolio/images/favicon.ico" type="image/x-icon">
+<style>
+
+  h1, h2,p,h3,li{
+    font-family: 'Garamond';
+
+  }
+  * {
+box-sizing: border-box;
+}
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+    margin: 0;
+       overflow-x: hidden;
+      font-family: Arial, Helvetica, sans-serif;
+  background: linear-gradient(
+    360deg,
+    rgba(0, 0, 0, 1) 43%,
+    rgba(2, 42, 44, 1) 76%,
+    rgba(17, 115, 107, 1) 100%
+  );
+  background-attachment: fixed; 
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+
+    
+    
+</style>
+
+<style>
+    /* NAVIGATION BAR*/
+.buttons{
+    width: auto;  
+    padding: 10px;
+    font-weight: bold;
+    font-family: 'Garamond';
+    color: rgba(67, 67, 67, 0.844);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+#lets_talk{
+  float: right;
+    width: 10%;  
+    font-size: larger;
+  margin-right: 7%;
+    margin-top: .5%;
+    margin-bottom: .5%;
+      opacity: 1;
+
+
+
+}
+#company_name{
+  float: left;
+  margin-left: 5%;
+    margin-top: .5%;
+    margin-bottom: .5%;
+    font-family: 'Garamond';
+    color: white;
+}
+#company_name:hover {
+    color: white;
+    transform: scale(1.02);
+    cursor: pointer;
+      opacity: 1;
+
+}
+
+#lets_talk:hover {
+    background-color: rgba(8, 152, 0, 0.815);
+    color: white;
+    transform: scale(1.10);
+      opacity: 1;
+      
+
+}
+
+.phonenav {
+  position: fixed;
+  transition: top 1s ease; 
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  background: linear-gradient(
+    20deg,
+    rgba(0, 0, 0, 0.774) 15%,
+    rgba(26, 106, 120, 0.854) 85%,
+    rgba(0, 136, 136, 0.45) ,
+    rgba(0, 0, 0, 0.45)
+  );
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5em 1em;
+
+
+}
+
+
+.topnav {
+  position: fixed;
+  transition: top 1.5s ease; 
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background: linear-gradient(
+    20deg,
+    rgba(0, 0, 0, 0.774) 15%,
+    rgba(26, 106, 120, 0.854) 85%,
+    rgba(0, 136, 136, 0.45) ,
+    rgba(0, 0, 0, 0.45)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5em 1em;
+}
+
+
+
+@media screen and (max-width: 1269px) {
+  .topnav{
+    text-align: center;
+    justify-content: center;
+    height: 6%;
+  /* background-color: #01000ede;  */
+
+
+  }
+  #lets_talk{
+    width: 65%;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    margin-left: 50px;
+
+  }
+  #title_bar{
+    display: none;
+  }
+  #company_name{
+    font-size: 20px;
+    width: 100%; 
+
+    /* 
+    
+    margin-right: 0%;
+   */
+    display: none;
+  }
+
+}
+
+</style>
+<style>
+/* Main Video */
+.Intro{
+  position: relative;
+  width: auto;
+  height: auto;
+  text-align: center;
+}
+@keyframes fadeVideo {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+#intro_video {
+  mix-blend-mode: screen;
+  animation: fadeVideo 8s ease-in-out infinite;
+  width: auto;
+ object-fit: fill;
+}
+
+@media screen and (max-width: 1050px) {
+  .Intro {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* full viewport height */
+  }
+
+  #intro_video {
+    display: none;
+  }
+
+}
+  @media screen and (min-width: 2100px) {
+   #intro_video {
+       width: 45%;
+
+  }
+}
+
+
+
+
+</style>
+
+<style>
+.Workload {
+    /* outline: 1px solid black; */
+    display: flex;
+    margin-top:2%;
+    justify-content: center;
+  }
+
+#workload_info{
+    background-color: #00013091;
+  }
+
+.flex-container {
+  display: flex;
+  flex-direction: row;
+  font-size: 30px;
+  text-align: center;
+}
+
+.flex-item-left {
+  background-color: #00010f1e;
+  padding: 10px;
+  flex: 50%;
+}
+
+.flex-item-right {
+  background-color: #00013091;
+  padding: 10px;
+  flex: 50%;
+}
+#clean_data:hover {
+    transform: scale(1.9);
+    cursor: pointer;
+    opacity: 1;
+    height: 50vh;
+
+
+}
+
+#raw_data:hover {
+    transform: scale(1.5);
+    cursor: pointer;
+    opacity: 1;
+        height: 50vh;
+        margin-left: 70px;
+
+
+}
+
+@media screen and (max-width: 1050px) {
+   #clean_data:hover {
+    transform: scale(1.5);
+    cursor: pointer;
+    opacity: 1;
+    height: auto;
+
+}
+
+#raw_data:hover {
+    transform: scale(1.5);
+    cursor: pointer;
+    opacity: 1;
+    height: auto;
+
+
+}
+
+}
+
+
+
+  @media screen and (min-width: 2100px) {
+   #raw_data {
+       width: 45% !important;
+        height: 50vh;
+
+  }
+     #clean_data {
+       width: 45% !important;
+       height: 50vh;
+
+  }
+  .workload_title{
+    font-size: 1vw;
+
+  }
+
+  #clean_data:hover {
+    transform: scale(1.6);
+    cursor: pointer;
+    opacity: 1;
+
+}
+
+#raw_data:hover {
+    transform: scale(1.6);
+    cursor: pointer;
+    opacity: 1;
+
+}
+}
+
+@media (max-width: 800px) {
+  .flex-container {
+    flex-direction: column;
+  }
+}
+
+</style>
+
+
+
+<style>
+  .Home {
+    outline: 1px solid black;
+    display: flex;
+    margin-top: 10%;
+justify-content: center;
+  }
+
+
+.cards {
+  margin: 0 auto;
+  display: grid;
+  gap: .5rem;
+  width: 90%;
+  grid-auto-rows: auto;
+  
+}
+
+.card {
+  position: relative;    
+  background-color: #1c1d7083;
+  color: white;
+  width: auto;
+   align-items: center;
+  cursor: pointer;
+
+  border-radius: 8px;
+}
+
+.card::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(255, 255, 255, 0.753);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: inherit;
+  z-index: 1;             
+}
+
+.card img {
+  position: relative;
+  z-index: 2;             
+}
+
+.card:hover::after {
+  opacity: 1;
+    pointer-events: none;
+}
+
+ 
+
+@media (min-width: 600px) {
+  .cards { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 900px) {
+  .cards { grid-template-columns: repeat(3, 1fr); }
+}
+
+ @media screen and (min-width: 2100px) {
+   .tools {
+       width: auto !important;
+  }
+  #tool_list{
+    font-size: 1vw;
+
+  }
+  .cards{
+  grid-auto-rows: 500px; 
+
+  }
+}
+
+</style>
+
+<style>
+.features {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.silver_items h2 {
+  color: white;
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+}
+
+
+
+  ul.myUL {
+  text-align: left;
+  list-style-position: inside; 
+  padding-left: 1rem;        
+  margin: 0;
+}
+.list_item {
+   margin: 10px 0;
+   color: white;
+   font-size: 20px;
+   opacity: 1;
+}
+
+  #clean_list-bullet{
+   list-style-type: "✅ "; 
+}
+
+.card ul {
+  max-width: 100%;       
+  word-wrap: break-word;  
+  white-space: normal;    
+  padding: 0 1rem;        
+  box-sizing: border-box; /
+}
+
+@media (max-width: 1250px) {
+  .work_info {
+    flex-direction: column;
+    align-items: center; /* keep them centered */
+  }
+  .work_steps{
+    flex-direction: column;
+    align-items: center; /* keep them centered */
+  }
+  #work_step2, #work_step1,#work_step3{
+    width: auto !important;
+  }
+}
+
+</style>
+
+
+<style>
+
+    .Contact {
+      outline: 1px solid black;
+      display: flex;
+      margin-top: 2%;
+      justify-content: center;
+      }
+
+      @media screen and (max-width: 650px) {
+  .Home,
+  .Contact {
+    margin-bottom: 5rem; 
+    padding: 1rem;     
+  }
+}
+
+</style>
+
+<style>
+  
+
+.case_study_container{
+  display: flex;
+  justify-content: center;
+  padding: 2%;
+  flex-wrap: wrap; 
+  gap: 2rem; 
+}
+.case_study_cards{
+  position: relative;
+  cursor: pointer;
+  background-color: #ededed;
+  box-shadow: 10px 10px 18px  rgba(0, 0, 0, 0.516);
+  padding: 2rem; 
+  border-radius: 10px; 
+  max-width: 450px;
+  
+}
+
+
+
+
+.case_study_card_title{
+   font-size: 35px; 
+   margin: 0;
+   color: black;
+   text-align: center;
+  font-weight: 800; 
+  background: linear-gradient(20deg, #000000, #1a6a78, #088, #000000);
+    -webkit-background-clip: text; 
+    -webkit-text-fill-color: transparent; 
+    margin-bottom: 2rem; 
+    letter-spacing: -0.5px;
+
+}
+.case_study_paragraph{
+  color: black;
+  font-size: 20px;
+  text-align: center;
+}
+.case_study_cards.bronze, .case_study_cards.silver, .case_study_cards.gold{
+  cursor: default;
+  padding: 1em;
+}
+
+.case_study_cards.bronze:hover {
+    transform: scale(1.05);
+     z-index: 5;            
+
+}
+.case_study_cards.silver:hover {
+    transform: scale(1.05);
+     z-index: 5;            
+
+}
+.case_study_cards.gold:hover {
+    transform: scale(1.05);
+    z-index: 5;            
+
+}
+
+.case_study_cards {
+  transition: transform 0.5s ease; 
+}
+
+
+.case_study_cards:hover{
+    transform: scale(1.2);
+     z-index: 5;            
+
+
+}
+/* .case_study_cards::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: none !important; 
+  opacity: 0 !important;
+  pointer-events: none;
+} */
+/* .case_study_cards:hover::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: none !important; 
+  opacity: 0 !important;
+  pointer-events: none;
+} */
+
+
+</style>
+
+
+<style>
+.scroll-container {
+  overflow: hidden;
+  /* width: 100%; */
+  background-color: #00000000;
+  padding: 2rem 0;
+}
+
+.scroll-content {
+  display: flex;
+  /* justify-content: center; */
+  width: max-content;
+  animation: scroll 20s linear infinite;
+}
+
+.logos {
+  display: flex;
+}
+
+.logos img {
+  height: 100px;
+  margin: 0 2rem;
+  object-fit: contain;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+</style>
+
+<style>
+  #send_button{
+    font-size: 20px;
+    margin-top: 10px;
+    background-color: #043435;
+    color: white;
+
+    
+  }
+
+  #send_button:hover {
+    background-color: rgba(8, 152, 0, 0.815);
+    color: white;
+    transform: scale(1.03);
+      opacity: 1;
+      
+
+}
+</style>
+
+<style>
+    /* NEW MAIN VERSION */
+    .main{
+      outline: 1px solid black;
+    }
+
+    .body_cards{
+      background-color: white;
+      cursor: pointer;
+      border: 1px solid #ddd;
+      padding: 2em;
+      box-shadow: 10px 10px 18px  rgba(0, 0, 0, 0.516);
+      text-align: center;
+    }
+
+  .body_cards:hover{
+    transform: scale(1.01);
+     z-index: 1;              /* put overlay above card background */
+}
+  .subitem {
+  color: #8e0000;
+  font-weight: 500;
+  font-size: 1.3rem;
+  padding: 1%;
+  font-weight: 600;
+}
+@media (max-width: 1250px) {
+  #why_choose_us{
+    width: 100% !important;
+  }
+  .main_body {
+      grid-template-columns: 1fr;
+     width: 95%; 
+  }
+  .submit_form{
+     flex-direction: column;
+    align-items: center;
+
+  }
+  .form_1{
+    width: 100% !important;
+    padding: 10px;
+  }
+}
+
+.problem_text{
+  color: #c91616; 
+  font-weight: bold;
+}
+.solution_text{
+  color: rgb(0, 184, 0);
+  font-weight: bold;
+}
+
+</style>
+
+
+<style>
+.section_title {
+  text-align: center;
+  font-size: 3rem;
+  font-weight: 800;
+  background: linear-gradient(
+    90deg,
+    #00555f,   /* darker teal on the left */
+    #0f7a91,   /* middle toned-down teal */
+    #02293d,   /* deep navy before black */
+    #000000    /* right edge black */
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 2rem;
+  letter-spacing: -0.5px;
+}
+
+    .section_subtitle{
+    text-align: center;
+    font-size: 3rem; 
+    font-weight: 800; 
+    margin-bottom: 1rem; 
+    /* letter-spacing: 0.5px; */
+
+
+  }
+
+  #section1_maintitle {
+  margin: 0;
+  margin-top: 40px;       
+}
+
+#section1_subtitle {
+  margin: 0;
+  padding: 2%;
+
+}
+  .medallian_image{
+    max-width: 100px !important;
+  }
+
+  .main_body{
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5em; 
+  }
+@media (max-width: 1250px) {
+    .case_study_cards{
+        width: 100% !important;
+        max-width:100% !important;
+
+    }
+    
+
+      .submit_form {
+    flex-direction: column; /* stack the two halves */
+    padding: 3% !important;
+  }
+
+  .form_1 {
+    width: 100% !important; /* full width instead of 50% */
+  }
+
+  .form_1 form div {
+    grid-template-columns: 1fr !important; /* stack inputs */
+  }
+
+  .footer_title{
+    font-size: 42px !important;
+    
+  }
+  
+  .footer_subtitle{
+    text-align: center !important;
+    font-size: 2em !important;
+    padding: 6%;
+    max-width: 95%;
+    text-justify: inter-word;
+
+  }
+  .medallian_image{
+    max-width: 150px !important;
+
+  }
+  .body_cards{
+    background-color: inherit; 
+    transform: none;     
+        max-width: 100%!important;
+        width: 100% !important;
+
+  }
+  .case_study_cards:hover {
+     background-color: inherit;
+    transform: none;  
+        max-width: 100%!important     
+  }
+  
+.case_study_cards.bronze:hover {
+     background-color: inherit;
+    transform: none;          
+
+}
+.case_study_cards.silver:hover {
+      background-color: inherit;
+    transform: none;            
+
+}
+.case_study_cards.gold:hover {
+      background-color: inherit;
+    transform: none;    
+}       
+ .quote{
+   /* padding: 10% !important; */
+    /* text-align: justify !important;  */
+    margin: 0 auto;  
+   
+    /* text-justify: inter-word; */
+    /* word-spacing: 2px; */
+    font-size: 1.5em !important;
+    /* max-width: 90%;   */
+  }
+  .quotation_mark{
+    font-size: 1.2em !important;
+    font-weight: 800;
+    font-family: 'Courier New', Courier, monospace
+
+    
+  }
+  
+  .quote_from{
+    font-size: 1.8em !important;
+    padding: 5% !important;
+
+  }
+  .testimonial_section{
+    margin-top: 15% !important;
+
+  }
+  .section_footer_paragraph{
+    text-align: justify !important;
+    padding: 7%;
+  }
+  .main_section{
+    width: 100% !important;
+  }
+  .subitem{
+    text-align: justify !important;
+
+
+  }
+  .body_cards{
+     margin-left: 10px;
+  }
+  .section1_list{
+    font-size: 20px !important;
+    padding: 5%;
+  }
+  #section1_maintitle {
+    font-size: 40px !important;
+    padding: 2rem 1rem; 
+  }
+  #section1_subtitle {
+    font-size: 30px !important;
+    text-align: justify !important; 
+    padding: 1rem; 
+    width: 90% !important;
+    margin: 0 auto; 
+  }
+  .main_body {
+    grid-template-columns: 1fr;
+    width: 95%;
+    padding: 5% !important;
+  }
+
+  }
+
+  input::placeholder {
+  color: #ffffff62;   /* your color */
+  opacity: 1;    /* some browsers default it faded */
+}
+    textarea::placeholder {
+  color: #ffffff62;   /* your color */
+  opacity: 1;    /* some browsers default it faded */
+}
+</style>
+
+<style>
+
+.pain-point {
+  background: rgba(255, 255, 255, 0.08);
+  /* border-left: 4px solid #19545b; */
+  margin: 1em auto;
+  border-radius: 8px;
+  width: 70%;
+  text-align: left;
+}
+.painpoint_quotes {
+  text-align: center;
+  font-size: 1.5em;
+  color: #fff;
+}
+/* .pain-point:nth-child(even) {
+  text-align: left;
+  margin-left: 10%;
+}
+.pain-point:nth-child(odd) {
+  text-align: right;
+  margin-right: 10%;
+}
+
+.pain-point:nth-child(even) .painpoint_quotes {
+  margin-left: 20%;
+  text-align: left;
+}
+
+.pain-point:nth-child(odd) .painpoint_quotes {
+  margin-right: 20%;
+  text-align: right;
+} */
+
+@media (max-width:1269px) {
+.pain-point:nth-child(even),
+  .pain-point:nth-child(odd) {
+    text-align: center;
+    margin: 0 auto; /* removes the offset */
+  }
+
+  .pain-point{
+    width: 100%;
+  }
+  #section1_maintitle2{
+    text-align: center !important;
+    padding: 5%;
+  }
+  .all_painpoints{
+    gap: 2em;
+    /* margin-top: 2%; */
+    margin-bottom: 2%;
+
+  }
+  .painpoint_quotes {
+    text-align: center !important;
+
+}
+.medallian_list{
+  font-size: 20px !important;
+}
+.subitem{
+  padding: 2%;
+}
+
+}
+
+.phone_intro, .phonenav{
+  display: none;
+}
+.all_painpoints{
+  display: none;
+}
+
+.phone_intro,
+.all_painpoints {
+  display: none !important;
+}
+
+@media (max-width: 1780px) {
+
+.desktop_intro_sections {
+  display: flex;
+  gap: 2em;
+}
+
+#desktop_intro_section_image {
+  flex: 1;
+  display: flex;
+}
+
+#desktop_intro_section_image img {
+  width: 100% !important;
+  object-fit: cover; 
+  border-radius: 10px;
+  opacity: 0.5;
+  display: block;    
+  } 
+.painpoints_list{
+  font-size: 20px !important;
+  }
+}
+  /* .case_study_paragraph{
+    font-size: 15px !important;
+  } */
+  
+
+@media (max-width: 1279px) {
+  
+  .logos img {
+  height: 50px;
+  margin: 0 2rem;
+  object-fit: contain;
+}
+
+
+  .phone_intro{
+    margin-top: 80px !important;
+
+  }
+  .desktop_intro{
+    margin-top: 30% !important;
+  }
+
+ .topnav{
+    display: none !important;
+
+    
+  }
+  .phone_intro,.phonenav,
+  .all_painpoints {
+    display: flex !important;  
+    flex-direction: column;    
+    align-items: center;       
+    width: 100%;              
+  }
+  .painpoint_quotes{
+    padding: 3% !important;
+  }
+  .main_section1{
+    width: 100% !important;
+  }
+  #intro_section{
+    margin-top: 10% !important;
+  }
+
+  #why_choose_us_description{
+    display: none;
+     
+  }
+  #case_study_subtitle{
+    display: none;
+  }
+  .section_subtitle1{
+    text-align: left !important;
+    margin-bottom: 2% !important;
+  }
+  #intro_comment{
+      text-align: center !important;
+      font-weight: 600;
+  }
+.painpoints_list li::before {
+  font-size: 1.5em;
+}
+  #intro_image{
+    display: none;
+  }
+  .main_section{
+    margin-top: 5% !important;
+  }
+  .painpoints_list{
+    text-align: center !important;
+    font-size: 1.4em !important;
+    font-weight: 900;
+    padding: 6% !important;
+  }
+
+  .main_section > div[style*="display: flex"] {
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+  .main_section > div[style*="display: flex"] > div {
+    width: 100% !important;
+    text-align: center !important;
+  }
+  .main_section > div[style*="display: flex"] img {
+    width: 80% !important;
+    margin-bottom: 1.5em !important;
+  }
+  .main_section > div:last-child,
+  .main_section > div:nth-last-child(2) {
+    flex-direction: column !important;
+    text-align: center !important;
+    width: 100% !important;
+  }
+  .main_section > div:last-child h3,
+  .main_section > div:nth-last-child(2) h3 {
+    width: 100% !important;
+    text-align: center !important;
+  }
+
+  .case_study_paragraph{
+    text-align: left !important;
+    margin-bottom: 10px !important;
+    word-spacing: 1px;
+    
+
+}
+  .case_study_container {
+    align-items: center;      
+  }
+
+
+}
+
+.painpoints_list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 1.5em;
+  line-height: 1.3;
+  color: #000000;
+}
+
+.painpoints_list li {
+  margin-bottom: 0.6em;
+  position: relative;
+  color: black;
+}
+
+/* .painpoints_list li::before {
+  content: "*";
+  color: #19545b;
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+} */
+
+
+
+
+</style>
+
+<style>
+
+
+.flip-card {
+  background-color: transparent;
+  perspective: 1000px;
+  width: 450px;
+  height: 350px;
+  position: relative;
+  text-align: center;
+  background-color: transparent;
+  border-radius: 10px; 
+}
+.flip-card-image{
+  width: 350px;
+}
+.flip-card-front {
+  width: 100%;
+  height: 100%; 
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; 
+  align-items: center;     
+  text-align: center;
+  box-shadow: 10px 10px 18px  rgba(0, 0, 0, 0.516);
+
+}
+.flip-card-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%; 
+  background: linear-gradient(to bottom, rgba(0,0,0,0.85), rgba(0,0,0,0));
+  color: #fff;
+  font-size: 4em;
+  font-weight: 700;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  box-sizing: border-box;
+  z-index: 2;
+  display: flex;
+  align-items: center;   
+  justify-content: center; 
+  padding: 0; 
+  margin: 0;
+}
+
+
+.flip-card-front .flip-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* ensures the image covers the div without stretching */
+  display: block;
+}
+
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 1s;
+  transform-style: preserve-3d;
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+}
+
+.flip-card:hover .flip-card-inner {
+  transform: rotateY(180deg);
+}
+.flip-card-front, .flip-card-back {
+    position: absolute;
+    width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+.flip-card-back {
+
+  background-color: #ededed;
+  transform: rotateY(180deg);
+  padding: 3%;
+} 
+  @media (max-width: 1280px) {
+  .flip-card-header{
+    font-size: 2em !important;
+  }
+  .case_study_paragraph1{
+    font-size: 20px !important;
+  }
+}
+
+.carasol_img{
+  width:100px; 
+  height:700px;
+} 
+
+</style>
+
+<style>
+.fade-up {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.fade-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.all_painpoints {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  gap: 2em;
+}
+
+.pain-point {
+  width: 100%;
+  max-width: 1000px;
+}
+
+.painpoint_container {
+  background: none;
+}
+
+.painpoint_quotes {
+  color: white;
+  font-size: 2rem;
+  line-height: 1.4;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.visible .painpoint_quotes {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.2s;
+}
+
+.phone_intro {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.phone_intro.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.phone_intro h3 {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.phone_intro.visible h3 {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Optional: stagger fade for a smoother feel */
+.phone_intro.visible h3:nth-child(1) {
+  transition-delay: 0.2s;
+}
+
+.phone_intro.visible h3:nth-child(2) {
+  transition-delay: 0.4s;
+}
+
+.quote {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.quote.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Optional: make quotation marks fade separately for flair */
+.quotation_mark {
+  opacity: 0;
+  transition: opacity 0.8s ease-out;
+}
+
+.quote.visible .quotation_mark {
+  opacity: 1;
+  transition-delay: 0.2s;
+}
+
+/* Initial hidden state */
+.desktop_intro h3 {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+/* When visible */
+.desktop_intro.visible h3 {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Optional stagger for smoother entrance */
+.desktop_intro.visible h3:nth-child(1) {
+  transition-delay: 0.1s;
+}
+
+.desktop_intro.visible h3:nth-child(2) {
+  transition-delay: 0.3s;
+}
+/* Initial state for each list item */
+.painpoints_list li {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+/* When parent section is visible */
+.painpoints_list.visible li {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Optional: stagger each li for nice sequential effect */
+.painpoints_list.visible li:nth-child(1) { transition-delay: 0.2s; }
+.painpoints_list.visible li:nth-child(2) { transition-delay: 0.4s; }
+.painpoints_list.visible li:nth-child(3) { transition-delay: 0.6s; }
+.painpoints_list.visible li:nth-child(4) { transition-delay: 0.8s; }
+.painpoints_list.visible li:nth-child(5) { transition-delay: 1.0s; }
+.painpoints_list.visible li:nth-child(6) { transition-delay: 1.2s; }
+.painpoints_list.visible li:nth-child(7) { transition-delay: 1.4s; }
+
+</style>
+<style>
+    .activity_title{
+        color: black;
+
+    }
+    .activity{
+        cursor: pointer;
+        border-radius: 80px;
+        background-color: rgba(255, 255, 255, 0.748);
+        border: 5px solid rgb(0, 0, 0);
+
+    }
+
+   .activity:hover {
+    background-color: rgba(0, 119, 152, 0.815);
+    color: white;
+    transform: scale(1.10);
+      opacity: 1;
+      
+
+}
+
+</style>
+
+</head>
+<body>
+
+
+
+<div class="desktop_intro" style="display: flex; align-items: center; justify-content: center; height: 100%;">
+  <div class="main_section" id="intro_section" style="background-color: #ffffff00; width: 100%; height: 100%; border-radius: 20px; ">
+    <div style="display: flex; justify-content: center; height: 100%;">
+        <div style="flex: 1;  height: 100%; width: 100%;  background-color: rgba(0, 0, 0, 0.2); ">
+            <div style="display: flex; flex-direction: column; text-align: center; justify-content: center; gap: 3em; height: 100%; padding: 5%;  ">
+                    <div id="import_activity" class="activity" >
+                        <h1 class="activity_title">IMPORT</h1>
+                    </div>
+                    <div class="activity" >
+                        <h1 class="activity_title">FILTER</h1>
+                    </div>
+                    <div class="activity" >
+                        <h1 class="activity_title">JOIN</h1>
+                    </div>
+                    <div class="activity" >
+                        <h1 class="activity_title">EXPORT</h1>
+                    </div>
+            </div>
+        </div>
+        <div style="flex: 5;  height: 100%; width: 100%;">
+            <canvas id="visualizer" style="width: 100%; height: 100%; background-color: #ffffff00;"></canvas>
+        </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div style="display: flex; align-items: center; justify-content: center;">
+  <div style=" width: 100%;  border-radius: 20px; margin-top: 4%;">
+    <div id="formview" class="submit_form" style="display: flex; justify-content: center;  text-align: center;">
+      <div class="form_1" style="background-color: rgba(0, 0, 0, 0.105); text-align: center; width: 50%; ">
+          <h1 class="footer_title" style="font-size: 3em; text-align: center; margin-top: 10%; padding: 5%; color: white;">Your Path To Clean Data Starts Here</h1>
+          <h2 class="footer_subtitle" style=" font-size: 2em; color: white"><span style="color: rgb(255, 255, 255);">Book a <strong style="font-weight: 800; color: rgb(2, 196, 2);">free</strong> consulting call</span> </h2>
+          <hr style="width: 50%;">
+          <h2  class="footer_subtitle" style=" font-size: 2em; color: white;">Get a response within <span style="color: rgba(255, 0, 0, 0.768);">1 business day.</span> </h2>
+      </div>
+      <div class="form_1"  style="background-color: rgba(0, 0, 0, 0.105);  width: 50%; padding: 2%; display: flex; flex-direction: column; gap: 1rem;">
+         <form id="my-form" method="post" action="#" >
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+            <input  name="company_name" type="text" placeholder="Company Name"  style="font-size: 1.2em; padding: 0.6em; width: 100%; background-color: #043435; color: white;">
+            <input name="company_email" type="email" placeholder="Company Email*" required  style="font-size: 1.2em; padding: 0.6em; width: 100%;  background-color: #043435; color: white;">
+            <input name="first_name" type="text" placeholder="First Name*" required style="font-size: 1.2em; padding: 0.6em; width: 100%;   background-color: #043435; color: white;">
+            <input name="last_name" type="text" placeholder="Last Name*" required style="font-size: 1.2em; padding: 0.6em; width: 100%;  background-color: #043435; color: white;">
+            <input name="phone" type="text" placeholder="Phone Number"  style="font-size: 1.2em; padding: 0.6em; width: 100%;  background-color: #043435; color: white;">
+        </div>
+        <textarea name="project_details" rows="10" placeholder="Provide any details we should know about your project..." style="width: 100%; margin-top: 10px; padding: 0.6em; font-size: 1.2em;  background-color: #043435; color: white;"></textarea>
+        <button  type="submit"  style="width: 100%;" id="send_button"  class="buttons">Send</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<footer class="footer" style="padding: 3em 1em; background-color: rgb(1, 1, 1); text-align: center; margin-top: 1px;">
+  <h2 style="margin: 0 0 0.5em 0; font-size: 1.8em; color: #ffffff; font-family: 'Alegreya SC', serif;">
+    Palacios Solutions
+  </h2>
+  <div style="margin: 1em 0;">
+    <img src="/portfolio/images/profile.png" alt="Profile" style="width: 120px; border-radius: 50%; border: 3px solid #fff; display: block; margin: 0 auto;">
+    <p style="margin: 0.5em 0 0; font-size: 1.2em; color: #ffffff;">
+      Daniel Palacios - Data Engineer
+    </p>
+    <p style="margin: 0.5em 0 0; font-size: 1.2em; color: #ffffff;">
+      danieldario@palacios-solutions.com
+    </p>
+  </div>
+  <p style="margin: 1.2em 0 0.5em 0; font-size: 1.2em; color: #ffffff;">
+    Connect with me on LinkedIn:
+  </p>
+  <a href="https://www.linkedin.com/in/palacios-solutions" target="_blank" 
+     style="color: #0077B5; font-size: 2em; margin: 0 0.5em; text-decoration: none;">
+    <i class="fab fa-linkedin"></i>
+  </a>
+
+</footer>
+</body>
+<script src="form.js"></script>
+<script src="/websocket.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script>
+    let canvas = document.querySelector("#visualizer");
+    let ctx = canvas.getContext("2d");
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.scale(dpr, dpr);
+    let activites = []
+    let activity_width = 275
+    let activity_height = 150
+    let is_dragging = false
+    let startX = 0
+    let startY = 0
+    let current_shape = null;
+
+    function mouseup(){
+        if (is_dragging){
+            is_dragging = false
+            console.log("Stopped Dragging")
+            current_shape = null;
+        }
+    }
+
+    function mousemove(e){
+         e.preventDefault();
+        cPostX = e.pageX - canvas.offsetLeft;
+        cPostY = e.pageY - canvas.offsetTop;
+        mouse_x = cPostX;
+        mouse_y = cPostY;
+        if (is_dragging){
+            let dx = mouse_x - startX
+            let dy = mouse_y - startY
+            console.log("Dragging", dx, dy)
+            current_shape.x += dx
+            current_shape.y +=dy
+                startX = mouse_x;
+            startY = mouse_y;
+           
+        }
+
+    }
+
+
+    function mousePress(canvas, event) {
+        const rect = canvas.getBoundingClientRect()
+        var x = event.clientX - rect.left
+        var y = event.clientY - rect.top
+        startX = x
+        startY = y
+        activites.forEach(shape => {
+            if ((x > shape.x && x < shape.x + shape.width) && (y > shape.y && y < shape.y + shape.height)){
+                console.log("Dragging")
+                is_dragging = true
+                current_shape = shape
+            }
+        });
+       
+    }     
+
+    function create_activity(shape){
+        ctx.fillStyle = shape.color
+        ctx.strokeStyle = "rgb(255, 255, 255)";
+        ctx.beginPath();
+        ctx.roundRect(shape.x, shape.y, shape.width, shape.height, 15);
+        ctx.stroke();
+        ctx.fill();
+    }
+    document.getElementById("import_activity").onclick = function(){
+        activites.push({'x': canvas.width/2, 'y': canvas.height/2, 'color': 'grey', 'width': activity_width, 'height': activity_height})
+    }
+
+    function draw(){
+        ctx.clearRect(0,0, canvas.width, canvas.height)
+        activites.forEach(shape => {
+             create_activity(shape)
+        });
+
+        requestAnimationFrame(draw)
+    }
+    draw()
+    canvas.addEventListener('mousedown', function(e) {
+	mousePress(canvas, e)
+    })
+
+    canvas.addEventListener('mouseup', function(e) {
+	mouseup(canvas, e)
+    })
+canvas.addEventListener("mousemove", mousemove, false);
+</script>
+
+
+
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>Home</title>
+	<meta charset="utf-8">
+
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<!-- jQuery & jQuery UI are required -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+
+	<!-- Flowchart CSS and JS -->
+	<link rel="stylesheet" href="/etl/jquery.flowchart.css">
+	<script src="/etl/jquery.flowchart.js"></script>
+
+	<style>
+		.flowchart-example-container {
+			width: 100%;
+			height: 80vh;
+			background: white;
+			border: 1px solid #BBB;
+			margin-bottom: 10px;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="chart_container">
+		<div class="flowchart-example-container" id="flowchartworkspace"></div>
+	</div>
+
+	<button id="import_activity" class="create_operator">Create Import</button>
+	<button  id="filter_activity" class="create_operator">Create Filter</button>
+	<button  id="select_activity" class="create_operator">Create Select</button>
+	<button  id="flatten_activity" class="create_operator">Create Flatten</button>
+	<button  id="export_activity" class="create_operator">Create export</button>
+	<button  id="join_activity" class="create_operator">Create join</button>
+	<button class="delete_selected_button">Delete selected operator / link</button>
+	<div id="operator_properties" style="display: block;">
+		<label for="operator_title">Operator's title: </label><input id="operator_title" type="text">
+	</div>
+	<div id="link_properties" style="display: block;">
+		<label for="link_color">Link's color: </label><input id="link_color" type="color">
+	</div>
+	<button class="get_data" id="get_data">Get data</button>
+	<button class="set_data" id="set_data">Set data</button>
+	<button id="save_local">Save to local storage</button>
+	<button id="load_local">Load from local storage</button>
+	<div>
+    
+		<textarea id="flowchart_data"></textarea>
+	</div>
+  <div id="selected_activity_settings" style="display: flex; flex-direction: column; gap: 10px;">
+  </div>
+  <script src="etl/activities.js"></script>
+  <script>
+      document.addEventListener('mousemove', function(event) {
+          // console.log('Mouse X:', event.clientX, 'Mouse Y:', event.clientY);
+
+      });
+  </script>
+
+	<script type="text/javascript">
+    var activites = []
+		/* global $ */
+		$(document).ready(function() {
+			var $flowchart = $('#flowchartworkspace');
+			var $container = $flowchart.parent();
+
+
+			// Apply the plugin on a standard, empty div...
+			$flowchart.flowchart({
+				// data: defaultFlowchartData,
+				defaultSelectedLinkColor: '#000055',
+				grid: 10,
+				multipleLinksOnInput: false,
+				multipleLinksOnOutput: true
+			});
+
+
+			function getOperatorData($element) {
+				var nbInputs = parseInt($element.data('nb-inputs'), 10);
+				var nbOutputs = parseInt($element.data('nb-outputs'), 10);
+				var data = {
+					properties: {
+						title: $element.text(),
+						inputs: {},
+						outputs: {}
+					}
+				};
+
+				var i = 0;
+				for (i = 0; i < nbInputs; i++) {
+					data.properties.inputs['input_' + i] = {
+						label: 'Input ' + (i + 1)
+					};
+				}
+				for (i = 0; i < nbOutputs; i++) {
+					data.properties.outputs['output_' + i] = {
+						label: 'Output ' + (i + 1)
+					};
+				}
+
+				return data;
+			}
+
+
+
+			//-----------------------------------------
+			//--- operator and link properties
+			//--- start
+			var $operatorProperties = $('#operator_properties');
+			var $selected_activity_settings = $('#selected_activity_settings');
+			$operatorProperties.hide();
+      $selected_activity_settings.hide()
+			var $linkProperties = $('#link_properties');
+			$linkProperties.hide();
+			var $operatorTitle = $('#operator_title');
+			var $linkColor = $('#link_color');
+
+			$flowchart.flowchart({
+				onOperatorSelect: function(operatorId) {
+
+					$operatorProperties.show();
+          $selected_activity_settings.show()
+
+					$operatorTitle.val($flowchart.flowchart('getOperatorTitle', operatorId));     
+          let activity = $flowchart.flowchart('getOperatorActivity', operatorId)
+          console.log("Selected ",activity)
+
+
+          let activity_settings_element = get_activity_settings_element($flowchart, activity)
+          console.log("Settings", activity_settings_element)
+          if (activity_settings_element != undefined){
+            let settings_div = document.getElementById('selected_activity_settings')
+            settings_div.innerHTML = ''
+            settings_div.appendChild(activity_settings_element)
+          }
+
+					return true;
+				},
+				onOperatorUnselect: function() {
+					$operatorProperties.hide();
+          $selected_activity_settings.hide();
+        
+					return true;
+				},
+				onLinkSelect: function(linkId) {
+					$linkProperties.show();
+					$linkColor.val($flowchart.flowchart('getLinkMainColor', linkId));
+					return true;
+				},
+				onLinkUnselect: function() {
+					$linkProperties.hide();
+					return true;
+				}
+			});
+
+			$operatorTitle.keyup(function() {
+				var selectedOperatorId = $flowchart.flowchart('getSelectedOperatorId');
+				if (selectedOperatorId != null) {
+					$flowchart.flowchart('setOperatorTitle', selectedOperatorId, $operatorTitle.val());
+				}
+			});
+
+			$linkColor.change(function() {
+				var selectedLinkId = $flowchart.flowchart('getSelectedLinkId');
+				if (selectedLinkId != null) {
+					$flowchart.flowchart('setLinkMainColor', selectedLinkId, $linkColor.val());
+				}
+			});
+			//--- end
+			//--- operator and link properties
+			//-----------------------------------------
+
+			//-----------------------------------------
+			//--- delete operator / link button
+			//--- start
+
+      $('html').keyup(function(e){
+          if(e.keyCode == 46) {
+              $flowchart.flowchart('deleteSelected');
+          }
+      });
+
+			$flowchart.parent().siblings('.delete_selected_button').click(function() {
+				$flowchart.flowchart('deleteSelected');
+			});
+			//--- end
+			//--- delete operator / link button
+			//-----------------------------------------
+
+
+
+			//-----------------------------------------
+			//--- create operator button
+			//--- start
+			var operatorI = 0;
+			$flowchart.parent().siblings('#import_activity').click(function() {
+
+
+				var operatorId = 'created_operator_' + operatorI;
+				var operatorData = {
+          operatorId: operatorId,
+					top: ($flowchart.height() / 2) - 30,
+					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+					properties: {
+					 title: 'Import Data' ,
+           fileType: null,
+            activityType: 'import',
+            inputs:{
+						},
+						outputs: {
+							output: {
+								label: 'Output',
+                value: null
+							}
+						}
+					}
+				};
+				operatorI++;
+				$flowchart.flowchart('createOperator', operatorId, operatorData);
+				activites =  $flowchart.flowchart('getOperators');
+        console.log(activites)
+
+			});
+
+			$flowchart.parent().siblings('#select_activity').click(function() {
+				var operatorId = 'created_operator_' + operatorI;
+				var operatorData = {
+					top: ($flowchart.height() / 2) - 30,
+					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+					properties: {
+						title: 'Select Columns' ,
+            activityType: 'select',
+						inputs: {
+							input: {
+								label: 'Input',
+							}
+						},
+						outputs: {
+							output: {
+								label: 'Output',
+							}
+						}
+					}
+				};
+				operatorI++;
+				$flowchart.flowchart('createOperator', operatorId, operatorData);
+				activites =  $flowchart.flowchart('getOperators');
+        
+			});
+
+			$flowchart.parent().siblings('#join_activity').click(function() {
+				var operatorId = 'created_operator_' + operatorI;
+				var operatorData = {
+					top: ($flowchart.height() / 2) - 30,
+					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+					properties: {
+						title: 'Join' ,
+            activityType: 'join',
+						inputs: {
+							input: {
+								label: 'Table 1',
+							},
+              input: {
+								label: 'Table 2',
+							}
+						},
+						outputs: {
+							output: {
+								label: 'Output',
+							}
+						}
+					}
+				};
+				operatorI++;
+
+				$flowchart.flowchart('createOperator', operatorId, operatorData);
+				activites =  $flowchart.flowchart('getOperators');
+        
+			});
+
+    $flowchart.parent().siblings('#export_activity').click(function() {
+				var operatorId = 'created_operatorexp_' + operatorI;
+				var operatorData = {
+					top: ($flowchart.height() / 2) - 30,
+					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+					properties: {
+						title: 'Export' ,
+            activityType: 'export',
+						inputs: {
+							input: {
+								label: 'Input',
+							},
+           
+						},
+            outputs : {}
+					}
+				};
+				operatorI++;
+
+
+
+				$flowchart.flowchart('createOperator', operatorId, operatorData);
+				activites =  $flowchart.flowchart('getOperators');
+
+			});
+
+      $flowchart.parent().siblings('#flatten_activity').click(function() {
+				var operatorId = 'created_operator_flat' + operatorI;
+				var operatorData = {
+					top: ($flowchart.height() / 2) - 30,
+					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+					properties: {
+						title: 'Flatten' ,
+            activityType: 'flatten',
+						inputs: {
+							input: {
+								label: 'Input',
+                value: null
+							}
+						},
+						outputs: {
+							output: {
+								label: 'Output',
+                value: null
+							}
+						}
+					}
+				};
+				operatorI++;
+
+				$flowchart.flowchart('createOperator', operatorId, operatorData);
+				activites =  $flowchart.flowchart('getOperators');
+
+			});
+
+
+      $flowchart.parent().siblings('#filter_activity').click(function() {
+				var operatorId = 'created_operator_' + operatorI;
+				var operatorData = {
+					top: ($flowchart.height() / 2) - 30,
+					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+					properties: {
+						title: 'Filter' ,
+            activityType: 'filter',
+						inputs: {
+							input: {
+								label: 'Input',
+							}
+						},
+						outputs: {
+							output: {
+								label: 'Output',
+							}
+						}
+					}
+				};
+				operatorI++;
+				$flowchart.flowchart('createOperator', operatorId, operatorData);
+				activites =  $flowchart.flowchart('getOperators');
+
+			});
+			//--- end
+			//--- create operator button
+			//-----------------------------------------
+
+
+
+
+			//-----------------------------------------
+			//--- draggable operators
+			//--- start
+			//var operatorId = 0;
+			var $draggableOperators = $('.draggable_operator');
+			$draggableOperators.draggable({
+				cursor: "move",
+				opacity: 0.7,
+
+				// helper: 'clone',
+				appendTo: 'body',
+				zIndex: 1000,
+
+				helper: function(e) {
+					var $this = $(this);
+					var data = getOperatorData($this);
+					return $flowchart.flowchart('getOperatorElement', data);
+				},
+				stop: function(e, ui) {
+					var $this = $(this);
+					var elOffset = ui.offset;
+					var containerOffset = $container.offset();
+					if (elOffset.left > containerOffset.left &&
+						elOffset.top > containerOffset.top &&
+						elOffset.left < containerOffset.left + $container.width() &&
+						elOffset.top < containerOffset.top + $container.height()) {
+
+						var flowchartOffset = $flowchart.offset();
+
+						var relativeLeft = elOffset.left - flowchartOffset.left;
+						var relativeTop = elOffset.top - flowchartOffset.top;
+
+						var positionRatio = $flowchart.flowchart('getPositionRatio');
+						relativeLeft /= positionRatio;
+						relativeTop /= positionRatio;
+
+						var data = getOperatorData($this);
+						data.left = relativeLeft;
+						data.top = relativeTop;
+
+						$flowchart.flowchart('addOperator', data);
+					}
+				}
+			});
+			//--- end
+			//--- draggable operators
+			//-----------------------------------------
+
+
+			//-----------------------------------------
+			//--- save and load
+			//--- start
+			function Flow2Text() {
+				var data = $flowchart.flowchart('getData');
+				$('#flowchart_data').val(JSON.stringify(data, null, 2));
+			}
+			$('#get_data').click(Flow2Text);
+
+			function Text2Flow() {
+				var data = JSON.parse($('#flowchart_data').val());
+				$flowchart.flowchart('setData', data);
+			}
+			$('#set_data').click(Text2Flow);
+
+			/*global localStorage*/
+			function SaveToLocalStorage() {
+				if (typeof localStorage !== 'object') {
+					alert('local storage not available');
+					return;
+				}
+				Flow2Text();
+				localStorage.setItem("stgLocalFlowChart", $('#flowchart_data').val());
+			}
+			$('#save_local').click(SaveToLocalStorage);
+
+			function LoadFromLocalStorage() {
+				if (typeof localStorage !== 'object') {
+					alert('local storage not available');
+					return;
+				}
+				var s = localStorage.getItem("stgLocalFlowChart");
+				if (s != null) {
+					$('#flowchart_data').val(s);
+					Text2Flow();
+				}
+				else {
+					alert('local storage empty');
+				}
+			}
+			$('#load_local').click(LoadFromLocalStorage);
+			//--- end
+			//--- save and load
+			//-----------------------------------------
+
+
+		});
+
+		var defaultFlowchartData = {
+			operators: {
+				operator1: {
+					top: 20,
+					left: 20,
+					properties: {
+						title: 'Operator 1',
+						inputs: {},
+						outputs: {
+							output_1: {
+								label: 'Output 1',
+							}
+						}
+					}
+				},
+				operator2: {
+					top: 80,
+					left: 300,
+					properties: {
+						title: 'Operator 2',
+						inputs: {
+							input_1: {
+								label: 'Input 1',
+							},
+							input_2: {
+								label: 'Input 2',
+							},
+						},
+						outputs: {}
+					}
+				},
+			},
+			links: {
+				link_1: {
+					fromOperator: 'operator1',
+					fromConnector: 'output_1',
+					toOperator: 'operator2',
+					toConnector: 'input_2',
+				},
+			}
+		};
+		if (false) console.log('remove lint unused warning', defaultFlowchartData);
+	</script>
+</body>
+
+</html>

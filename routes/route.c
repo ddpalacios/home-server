@@ -236,11 +236,21 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/connect")==0){
 		start_websocket_session(socket,http_header,body, route);
 
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl")==0){
+		get_live_html(cSSL, http_header, "/etl/home.html");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/activities.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/activities.js");
+
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/jquery.flowchart.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/jquery.flowchart.js");
+
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/jquery.flowchart.css")==0){
+		get_gol_script(cSSL, http_header, "/etl/jquery.flowchart.css");
 
 
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/phrase-matching")==0){
 		get_live_html(cSSL, http_header, "/phrase-matching/home.html");
-		
+
 	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/phrase-matching/generate")==0){
 		post_generate_phrase(socket,http_header,body, route);
 
