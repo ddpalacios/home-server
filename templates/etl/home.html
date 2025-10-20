@@ -1601,6 +1601,7 @@ canvas.addEventListener("mousemove", mousemove, false);
 	<button  id="select_activity" class="create_operator">Create Select</button>
 	<button  id="flatten_activity" class="create_operator">Create Flatten</button>
 	<button  id="export_activity" class="create_operator">Create export</button>
+	<button  id="aggregate_activity" class="create_operator">Create Aggregate</button>
 	<button  id="join_activity" class="create_operator">Create join</button>
 	<button class="delete_selected_button">Delete selected operator / link</button>
 	<div id="operator_properties" style="display: block;">
@@ -1619,6 +1620,7 @@ canvas.addEventListener("mousemove", mousemove, false);
 	</div>
   <div id="selected_activity_settings" style="display: flex; flex-direction: column; gap: 10px;">
   </div>
+  <script src="/websocket.js"></script>
   <script src="etl/activities.js"></script>
   <script>
       document.addEventListener('mousemove', function(event) {
@@ -1694,15 +1696,23 @@ canvas.addEventListener("mousemove", mousemove, false);
 					$operatorTitle.val($flowchart.flowchart('getOperatorTitle', operatorId));     
           let activity = $flowchart.flowchart('getOperatorActivity', operatorId)
           console.log("Selected ",activity)
+           $flowchart.flowchart('run_activity', operatorId);
+
+          //  let new_output_val = get_output_values(activity)
+          //  if (new_output_val != undefined && new_output_val != null){
+          //  $flowchart.flowchart('setoutputVal', operatorId, 'output', new_output_val)
+          //  }
 
 
-          let activity_settings_element = get_activity_settings_element($flowchart, activity)
-          console.log("Settings", activity_settings_element)
-          if (activity_settings_element != undefined){
-            let settings_div = document.getElementById('selected_activity_settings')
-            settings_div.innerHTML = ''
-            settings_div.appendChild(activity_settings_element)
-          }
+           
+          
+          //  let activity_settings_element = get_activity_settings_element($flowchart, activity)
+          //   if (activity_settings_element != undefined){
+          //       let settings_div = document.getElementById('selected_activity_settings')
+          //       settings_div.innerHTML = ''
+          //       settings_div.appendChild(activity_settings_element)
+          //   }
+         
 
 					return true;
 				},
@@ -1832,6 +1842,33 @@ canvas.addEventListener("mousemove", mousemove, false);
 							},
               input: {
 								label: 'Table 2',
+							}
+						},
+						outputs: {
+							output: {
+								label: 'Output',
+							}
+						}
+					}
+				};
+				operatorI++;
+
+				$flowchart.flowchart('createOperator', operatorId, operatorData);
+				activites =  $flowchart.flowchart('getOperators');
+        
+			});
+
+    $flowchart.parent().siblings('#aggregate_activity').click(function() {
+				var operatorId = 'created_operator_' + operatorI;
+				var operatorData = {
+					top: ($flowchart.height() / 2) - 30,
+					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+					properties: {
+						title: 'Aggregate' ,
+            activityType: 'aggregate',
+						inputs: {
+							input: {
+								label: 'Table 1',
 							}
 						},
 						outputs: {

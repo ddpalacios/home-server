@@ -582,7 +582,7 @@ jQuery(function ($) {
             $operator_title.appendTo($operator);
             $operator_body = document.createElement('div');
             console.log("Body", operatorData)
-            $operator_body.id = "actvitiy_body_"+operatorData.operatorId
+            $operator_body.id = "activity_body_"+operatorData.operatorId
 
             $operator_body.className = 'flowchart-operator-body';
             let element = get_activity_body_element(this,operatorData)
@@ -675,6 +675,119 @@ jQuery(function ($) {
             fullElement.connectors[connectorKey].push($operator_connector);
             fullElement.connectorArrows[connectorKey].push($operator_connector_arrow);
             fullElement.connectorSmallArrows[connectorKey].push($operator_connector_small_arrow);
+        },
+
+        get_ordered_operations: function(operatorId,sorted_nodes){
+             let activity = this.data.operators[operatorId].internal.properties
+            let link_from = activity.link_from[0]
+            if (link_from == null || link_from == undefined){
+                return sorted_nodes
+            }
+            let link_from_id = link_from.operatorId 
+            sorted_nodes.push(link_from)
+            this.get_ordered_operations(link_from_id,sorted_nodes)
+            return sorted_nodes
+        },
+        run_activity: function(operatorId){
+            let sorted_nodes = []
+            let activity = this.data.operators[operatorId].internal.properties
+            ordered_nodes = this.get_ordered_operations(operatorId,sorted_nodes)
+            ordered_nodes.push(activity)
+            let output = null
+            let hasImport = false
+
+            console.log("Orderded nodes", ordered_nodes)
+
+            for (let i=0; i<ordered_nodes.length; i++){
+                let node = ordered_nodes[i]
+                console.log("node", node)
+                if (i >0 && hasImport==false){
+                    console.log("No Import Found")
+                    break
+                }
+                if (node.activityType == 'import'){
+                    output = node.outputs.output
+                    hasImport = true
+                    add_import_activity_settings(this.getOperatorActivity(node.operatorId), output)
+                }
+                if (node.activityType == 'select'){
+                    add_activity_body(this.getOperatorActivity(node.operatorId), output)
+                }
+                if (node.activityType == 'flatten'){
+                    add_activity_body(this.getOperatorActivity(node.operatorId), output)
+                    add_flatten_activity_settings(this.getOperatorActivity(node.operatorId), output)
+                }
+            }
+
+         
+            // console.log("Sorted", reversed)
+            // this.data.operators[operatorId].internal.properties['operatorId'] = operatorId
+            // let activity = this.data.operators[operatorId].internal.properties
+
+            // if (activity.activityType =='import'){
+            //     console.log("importing", activity)
+            //     let link_from = activity.link_from[0]
+            //     if (link_from == null || link_from == undefined){
+            //         return
+            //     }
+            //     let link_from_id = link_from.operatorId 
+            //     // this.run_activity(link_from_id)
+            // }
+            // else if (activity.activityType == 'flatten'){
+            //     console.log("Flatenning", activity)
+            //     let link_from = activity.link_from[0]
+            //     if (link_from == null || link_from == undefined){
+            //         return
+            //     }
+            //     let link_from_id = link_from.operatorId 
+            //     // this.run_activity(link_from_id)
+            // }
+            // else if (activity.activityType == 'select'){
+            //     console.log("selecting", activity)
+            //     let link_from = activity.link_from[0]
+            //     if (link_from == null || link_from == undefined){
+            //         return
+            //     }
+            //     let link_from_id = link_from.operatorId 
+            //     // this.run_activity(link_from_id)
+            // }
+            // else if (activity.activityType == 'export'){
+            //     console.log("exporting", activity)
+            //     let link_from = activity.link_from[0]
+            //     if (link_from == null || link_from == undefined){
+            //         return
+            //     }
+            //     let link_from_id = link_from.operatorId 
+            //     // this.run_activity(link_from_id)
+            // }
+            // else if (activity.activityType == 'filter'){
+            //     console.log("filtering", activity)
+            //     let link_from = activity.link_from[0]
+            //     if (link_from == null || link_from == undefined){
+            //         return
+            //     }
+            //     let link_from_id = link_from.operatorId 
+            //     // this.run_activity(link_from_id)
+            // }
+            // else if (activity.activityType == 'join'){
+            //     console.log("joining", activity)
+            //     let link_from = activity.link_from[0]
+            //     if (link_from == null || link_from == undefined){
+            //         return
+            //     }
+            //     let link_from_id = link_from.operatorId 
+            //     // this.run_activity(link_from_id)
+            // }
+            // else if (activity.activityType == 'aggregate'){
+            //     console.log("aggergating", activity)
+            //     let link_from = activity.link_from[0]
+            //     if (link_from == null || link_from == undefined){
+            //         return
+            //     }
+            //     let link_from_id = link_from.operatorId 
+            //     // this.run_activity(link_from_id)
+            // }
+
         },
 
         getOperatorElement: function (operatorData) {
@@ -814,65 +927,96 @@ jQuery(function ($) {
                     toConnector: connector,
                     toSubConnector: subConnector
                 };
+                console.log("Added Link!",linkData)
 
                 this.addLink(linkData);
                 this._unsetTemporaryLink();
-                console.log("Added Link!")
-                let fromOperator = this.getOperatorActivity(linkData['fromOperator'])
-                let toOperator = this.getOperatorActivity(linkData['toOperator'])
-                console.log(fromOperator, toOperator)
+                onLinkCreation(this, linkData)
+                // let fromOperator = this.getOperatorActivity(linkData['fromOperator'])
+                // let toOperator = this.getOperatorActivity(linkData['toOperator'])
+                // console.log(fromOperator, toOperator)
 
-                if (fromOperator.activityType == 'import' && toOperator.activityType == 'flatten'){
-                    if (fromOperator.outputs.output != null){
-                        let body_element = get_flatten_activity_body(toOperator)
-                         console.log("Looking for", "actvitiy_body_"+linkData['toOperator'])
-                        let body = document.getElementById("actvitiy_body_"+linkData['toOperator'])
-                        body.appendChild(body_element);
-                        let activity_settings_element = get_activity_settings_element(this, toOperator)
-                        console.log("Settings",activity_settings_element)
-                         let settings_div = document.getElementById('selected_activity_settings')
-                        settings_div.innerHTML = ''
-                        settings_div.appendChild(activity_settings_element)
-                         this.setoutputVal(linkData['toOperator'], 'output', fromOperator.outputs.output)
+                // if (toOperator.activityType == 'flatten'){
+                //     if (fromOperator.outputs.output != null){
+                //         console.log("Connecting To Flattend!")
+                //         const div = document.createElement('div');
+                //         previous_activity_outputVal = toOperator.link_from[0].outputs.output
+                //         array_values = []
+                //         Object.keys(previous_activity_outputVal).forEach(key => {
+                //             if (Array.isArray(previous_activity_outputVal[key])){
+                //                 array_values.push(key)
+                //             }
+                //         });
+                //         if (array_values.length > 0){
+                //             let selector_element = get_selector_element("flatten_body_select_"+toOperator.operatorId, array_values, array_values[0])
+                //             div.appendChild(selector_element)
+                //         }else{
+                //             let selector_element = get_selector_element("flatten_body_select_"+toOperator.operatorId, array_values, {})
+                //             div.appendChild(selector_element)
+
+                //         }
+                //         let body = document.getElementById("actvitiy_body_"+linkData['toOperator'])
+                //         body.appendChild(div);
+
+                //         let activity_settings_element = get_activity_settings_element(this, toOperator)
+                //          let settings_div = document.getElementById('selected_activity_settings')
+                //         settings_div.innerHTML = ''
+                //         settings_div.appendChild(activity_settings_element)
+
+                //         // let body_element = get_flatten_activity_body(toOperator)
+                //         //  console.log("Looking for", "actvitiy_body_"+linkData['toOperator'])
+                //         // let body = document.getElementById("actvitiy_body_"+linkData['toOperator'])
+                //         // body.appendChild(body_element);
+                //         // let activity_settings_element = get_activity_settings_element(this, toOperator)
+                //         // console.log("Settings",activity_settings_element)
+                //         //  let settings_div = document.getElementById('selected_activity_settings')
+                //         // settings_div.innerHTML = ''
+                //         // settings_div.appendChild(activity_settings_element)
+                        
+
+                //         // let select_element = document.getElementById("flatten_body_select_"+toOperator.operatorId)
+                //         //  this.setoutputVal(linkData['toOperator'], 'output', fromOperator.outputs.output[select_element.value])
+                //     }
+                // }
+                // if (toOperator.activityType == 'export'){
+                //     if (fromOperator.outputs.output != null){
+                //         let export_button = document.createElement('button')
+                //         export_button.id = "export_button_body_"+toOperator.operatorId
+                //         export_button.className = 'buttons'
+                //         console.log("settings widger to",export_button.id)
+                //         export_button.innerHTML = 'Export Data'
+                //         export_button.style.color = 'black'
+                //         export_button.style.backgroundColor = 'green'
+                //         export_button.style.fontSiz3='20px'
+                //         export_button.onclick = function(){
+                //             let export_button_id = this.id;
+                //             console.log("Getting widget", export_button_id);
+                //             let widget = $("#" + export_button_id).data("widget");
+                //             console.log("Widget ref:", widget);
+                //             let operatorId = export_button_id.replace('export_button_body_', "")
+                //             let current_activity = widget.getOperatorActivity(operatorId)
+                //             let from_output_value = current_activity.link_from[0].outputs.output
+                //             let csv = jsonToCsv(from_output_value)
+                //              export_data(csv)
 
 
-                    }
-                }
-                if (toOperator.activityType == 'export'){
-                    if (fromOperator.outputs.output != null){
-                        let export_button = document.createElement('button')
-                        export_button.className = 'buttons'
-                        export_button.setAttribute("fromoutputVal",JSON.stringify(fromOperator.outputs.output))
-                        export_button.innerHTML = 'Export Data'
-                        export_button.style.color = 'black'
-                        export_button.style.backgroundColor = 'green'
-                        export_button.style.fontSiz3='20px'
-                        export_button.onclick = function(){
-                            let values = JSON.parse(this.getAttribute('fromoutputVal'))['values']
-                            console.log("Exporting", values)
-                            let csv = jsonToCsv(values)
-                             export_data(csv)
-
-
-                        }
-                        let body = document.getElementById("actvitiy_body_"+linkData['toOperator'])
-                        body.appendChild(export_button);
-                         let settings_div = document.getElementById('selected_activity_settings')
-                        settings_div.innerHTML = ''
+                //         }
+                //         let body = document.getElementById("actvitiy_body_"+linkData['toOperator'])
+                //         body.appendChild(export_button);
+                //          let settings_div = document.getElementById('selected_activity_settings')
+                //         settings_div.innerHTML = ''
+                //         $("#" + export_button.id).data("widget", this);
 
 
 
 
-                        // let body_element = get_flatten_activity_body(toOperator)
-                        // $operator_body.appendChild(body_element);
-                        // let activity_settings_element = get_activity_settings_element(this, toOperator)
-                        //  let settings_div = document.getElementById('selected_activity_settings')
-                        // settings_div.innerHTML = ''
-                        // settings_div.appendChild(activity_settings_element)
+                //     }
+                // }
+                // if (toOperator.activityType == 'select'){
+                //     let previous_activity_outputVal = toOperator.link_from[0].outputs.output
 
-
-                    }
-                }
+                // }
+             
 
             }
         },
@@ -1213,11 +1357,14 @@ jQuery(function ($) {
             }
             all_to_links = []
             for (let i=0; i<to.length; i++){
-                let target_to_operator = this.data.operators[to[i].fromOperator].internal.properties  
-                target_to_operator['operatorId'] = to[i].fromOperator
+                let target_to_operator = this.data.operators[to[i].toOperator].internal.properties  
+                target_to_operator['operatorId'] = to[i].toOperator
                 all_to_links.push(target_to_operator)
             }
             
+
+            // console.log("Links to", all_to_links)
+            // console.log("Links from", all_from_links)
             this.data.operators[operatorId].internal.properties['link_to'] = all_to_links
             this.data.operators[operatorId].internal.properties['link_from'] = all_from_links
 
