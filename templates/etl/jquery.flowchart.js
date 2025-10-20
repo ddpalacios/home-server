@@ -566,7 +566,10 @@ jQuery(function ($) {
             return infos;
         },
         setoutputVal: function(operatorId,outputName, value){
-            this.data.operators[operatorId].internal.properties.outputs[outputName] = value;
+            this.data.operators[operatorId].internal.properties.outputs[outputName].value = value;
+        },
+        setinputVal: function(operatorId,inputName, value){
+            this.data.operators[operatorId].internal.properties.inputs[inputName].value = value;
         },
         setFileType: function(operatorId, fileType){
             this.data.operators[operatorId].internal.properties['fileType'] = fileType;
@@ -581,12 +584,10 @@ jQuery(function ($) {
             $operator_title.html(infos.title);
             $operator_title.appendTo($operator);
             $operator_body = document.createElement('div');
-            console.log("Body", operatorData)
             $operator_body.id = "activity_body_"+operatorData.operatorId
-
             $operator_body.className = 'flowchart-operator-body';
-            let element = get_activity_body_element(this,operatorData)
-            $operator_body.appendChild(element);
+            // let element = get_import_activity_body_element(this,operatorData)
+            // $operator_body.appendChild(element);
             $($operator_body).appendTo($operator);
             var $operator_inputs_outputs = $('<div class="flowchart-operator-inputs-outputs"></div>');
             var $operator_inputs = $('<div class="flowchart-operator-inputs"></div>');
@@ -679,43 +680,63 @@ jQuery(function ($) {
 
         get_ordered_operations: function(operatorId,sorted_nodes){
              let activity = this.data.operators[operatorId].internal.properties
-            let link_from = activity.link_from[0]
-            if (link_from == null || link_from == undefined){
+             console.log("node", activity)
+            sorted_nodes.push(activity)
+            let link_to = activity.link_to[0]
+            if (link_to == null || link_to == undefined){
                 return sorted_nodes
             }
-            let link_from_id = link_from.operatorId 
-            sorted_nodes.push(link_from)
-            this.get_ordered_operations(link_from_id,sorted_nodes)
+            let link_to_id = link_to.operatorId 
+            this.get_ordered_operations(link_to_id,sorted_nodes)
             return sorted_nodes
         },
         run_activity: function(operatorId){
             let sorted_nodes = []
             let activity = this.data.operators[operatorId].internal.properties
-            ordered_nodes = this.get_ordered_operations(operatorId,sorted_nodes)
-            ordered_nodes.push(activity)
+            let ordered_nodes = this.get_ordered_operations(operatorId,sorted_nodes)
+            console.log(ordered_nodes)
+
             let output = null
             let hasImport = false
 
-            console.log("Orderded nodes", ordered_nodes)
 
             for (let i=0; i<ordered_nodes.length; i++){
                 let node = ordered_nodes[i]
-                console.log("node", node)
                 if (i >0 && hasImport==false){
                     console.log("No Import Found")
                     break
                 }
                 if (node.activityType == 'import'){
-                    output = node.outputs.output
+                    console.log('Import', node)
+                    output = node.outputs.output.value
+                    console.log(output)
+                    this.setoutputVal(node.operatorId ,'output', output)
                     hasImport = true
-                    add_import_activity_settings(this.getOperatorActivity(node.operatorId), output)
                 }
                 if (node.activityType == 'select'){
-                    add_activity_body(this.getOperatorActivity(node.operatorId), output)
+                    this.setinputVal(node.operatorId,'input', output)
+                    this.setoutputVal(node.operatorId ,'output', output)
                 }
                 if (node.activityType == 'flatten'){
-                    add_activity_body(this.getOperatorActivity(node.operatorId), output)
-                    add_flatten_activity_settings(this.getOperatorActivity(node.operatorId), output)
+                    console.log('Flatten', node)
+                    this.setoutputVal(node.operatorId ,'output', output)
+                    
+                    if (output == null){continue}
+                    let array_values = []
+                    Object.keys(output).forEach(key => {
+                        if (Array.isArray(output[key])){
+                            array_values.push(key)
+                        }
+                    }); 
+                    if (array_values.length == 0){continue}
+                    let target_column = array_values[0]
+                    let target_values = output[target_column]
+                    this.setoutputVal(node.operatorId ,'output', target_values)
+                    output = target_values
+                }
+                if (node.activityType == 'export'){
+                    this.setoutputVal(node.operatorId ,'output', output)
+
                 }
             }
 
@@ -980,27 +1001,27 @@ jQuery(function ($) {
                 // }
                 // if (toOperator.activityType == 'export'){
                 //     if (fromOperator.outputs.output != null){
-                //         let export_button = document.createElement('button')
-                //         export_button.id = "export_button_body_"+toOperator.operatorId
-                //         export_button.className = 'buttons'
-                //         console.log("settings widger to",export_button.id)
-                //         export_button.innerHTML = 'Export Data'
-                //         export_button.style.color = 'black'
-                //         export_button.style.backgroundColor = 'green'
-                //         export_button.style.fontSiz3='20px'
-                //         export_button.onclick = function(){
-                //             let export_button_id = this.id;
-                //             console.log("Getting widget", export_button_id);
-                //             let widget = $("#" + export_button_id).data("widget");
-                //             console.log("Widget ref:", widget);
-                //             let operatorId = export_button_id.replace('export_button_body_', "")
-                //             let current_activity = widget.getOperatorActivity(operatorId)
-                //             let from_output_value = current_activity.link_from[0].outputs.output
-                //             let csv = jsonToCsv(from_output_value)
-                //              export_data(csv)
+                        // let export_button = document.createElement('button')
+                        // export_button.id = "export_button_body_"+toOperator.operatorId
+                        // export_button.className = 'buttons'
+                        // console.log("settings widger to",export_button.id)
+                        // export_button.innerHTML = 'Export Data'
+                        // export_button.style.color = 'black'
+                        // export_button.style.backgroundColor = 'green'
+                        // export_button.style.fontSiz3='20px'
+                        // export_button.onclick = function(){
+                        //     let export_button_id = this.id;
+                        //     console.log("Getting widget", export_button_id);
+                        //     let widget = $("#" + export_button_id).data("widget");
+                        //     console.log("Widget ref:", widget);
+                        //     let operatorId = export_button_id.replace('export_button_body_', "")
+                        //     let current_activity = widget.getOperatorActivity(operatorId)
+                        //     let from_output_value = current_activity.link_from[0].outputs.output
+                        //     let csv = jsonToCsv(from_output_value)
+                        //      export_data(csv)
 
 
-                //         }
+                        // }
                 //         let body = document.getElementById("actvitiy_body_"+linkData['toOperator'])
                 //         body.appendChild(export_button);
                 //          let settings_div = document.getElementById('selected_activity_settings')
@@ -1361,10 +1382,6 @@ jQuery(function ($) {
                 target_to_operator['operatorId'] = to[i].toOperator
                 all_to_links.push(target_to_operator)
             }
-            
-
-            // console.log("Links to", all_to_links)
-            // console.log("Links from", all_from_links)
             this.data.operators[operatorId].internal.properties['link_to'] = all_to_links
             this.data.operators[operatorId].internal.properties['link_from'] = all_from_links
 

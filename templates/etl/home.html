@@ -1603,20 +1603,11 @@ canvas.addEventListener("mousemove", mousemove, false);
 	<button  id="export_activity" class="create_operator">Create export</button>
 	<button  id="aggregate_activity" class="create_operator">Create Aggregate</button>
 	<button  id="join_activity" class="create_operator">Create join</button>
-	<button class="delete_selected_button">Delete selected operator / link</button>
 	<div id="operator_properties" style="display: block;">
 		<label for="operator_title">Operator's title: </label><input id="operator_title" type="text">
 	</div>
 	<div id="link_properties" style="display: block;">
 		<label for="link_color">Link's color: </label><input id="link_color" type="color">
-	</div>
-	<button class="get_data" id="get_data">Get data</button>
-	<button class="set_data" id="set_data">Set data</button>
-	<button id="save_local">Save to local storage</button>
-	<button id="load_local">Load from local storage</button>
-	<div>
-    
-		<textarea id="flowchart_data"></textarea>
 	</div>
   <div id="selected_activity_settings" style="display: flex; flex-direction: column; gap: 10px;">
   </div>
@@ -1695,8 +1686,20 @@ canvas.addEventListener("mousemove", mousemove, false);
 
 					$operatorTitle.val($flowchart.flowchart('getOperatorTitle', operatorId));     
           let activity = $flowchart.flowchart('getOperatorActivity', operatorId)
-          console.log("Selected ",activity)
-           $flowchart.flowchart('run_activity', operatorId);
+          if (activity.activityType == 'import'){
+             add_import_activity_settings($flowchart,  $flowchart.flowchart('getOperatorActivity', operatorId), activity.outputs.output.value)
+          }
+          if (activity.activityType == 'flatten'){
+            console.log("Selected", activity)
+            add_flatten_activity_settings($flowchart, activity, activity.outputs.output.value)
+          }
+          if (activity.activityType == 'export'){
+             add_export_activity_settings($flowchart, activity, activity.outputs.output.value)
+          }
+          if (activity.activityType == 'select'){
+             add_select_activity_settings($flowchart, activity, activity.outputs.output.value)
+          }
+          //  $flowchart.flowchart('run_activity', operatorId);
 
           //  let new_output_val = get_output_values(activity)
           //  if (new_output_val != undefined && new_output_val != null){
@@ -1786,6 +1789,8 @@ canvas.addEventListener("mousemove", mousemove, false);
            fileType: null,
             activityType: 'import',
             inputs:{
+              value: null
+              
 						},
 						outputs: {
 							output: {
@@ -1813,6 +1818,7 @@ canvas.addEventListener("mousemove", mousemove, false);
 						inputs: {
 							input: {
 								label: 'Input',
+                value: null
 							}
 						},
 						outputs: {
@@ -1839,9 +1845,11 @@ canvas.addEventListener("mousemove", mousemove, false);
 						inputs: {
 							input: {
 								label: 'Table 1',
+                value: null
 							},
               input: {
 								label: 'Table 2',
+                value: null
 							}
 						},
 						outputs: {
@@ -1869,6 +1877,7 @@ canvas.addEventListener("mousemove", mousemove, false);
 						inputs: {
 							input: {
 								label: 'Table 1',
+                value: null
 							}
 						},
 						outputs: {
@@ -1896,10 +1905,17 @@ canvas.addEventListener("mousemove", mousemove, false);
 						inputs: {
 							input: {
 								label: 'Input',
+                value: null
 							},
            
 						},
-            outputs : {}
+            outputs : {
+              output: {
+                  label : ''
+                  ,value: null
+              }
+							}
+            
 					}
 				};
 				operatorI++;
@@ -1952,6 +1968,7 @@ canvas.addEventListener("mousemove", mousemove, false);
 						inputs: {
 							input: {
 								label: 'Input',
+                value: null
 							}
 						},
 						outputs: {

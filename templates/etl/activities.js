@@ -16,7 +16,6 @@ function export_data(data){
     const a = document.createElement('a');
     // Set the URL and download attribute of the anchor tag
     a.href = url;
-    console.log(url, data)
     a.download = 'download.csv';
     // Trigger the download by clicking the anchor tag
     a.click();
@@ -48,25 +47,25 @@ function key_name_change(obj,element){
     return obj
 }
 
-function get_flatten_activity_body(activity){
-    const div = document.createElement('div');
+// function get_flatten_activity_body(activity){
+//     const div = document.createElement('div');
 
-    previous_activity_outputVal = activity.link_from[0].outputs.output
-    array_values = []
-    Object.keys(previous_activity_outputVal).forEach(key => {
-        if (Array.isArray(previous_activity_outputVal[key])){
-            // console.log("Detected array!")
-            array_values.push(key)
-        }
-    });
-    if (array_values.length > 0){
-        let selector_element = get_selector_element("flatten_body_select_"+activity.operatorId, array_values, array_values[0])
+//     previous_activity_outputVal = activity.link_from[0].outputs.output
+//     array_values = []
+//     Object.keys(previous_activity_outputVal).forEach(key => {
+//         if (Array.isArray(previous_activity_outputVal[key])){
+//             // console.log("Detected array!")
+//             array_values.push(key)
+//         }
+//     });
+//     if (array_values.length > 0){
+//         let selector_element = get_selector_element("flatten_body_select_"+activity.operatorId, array_values, array_values[0])
      
-        div.appendChild(selector_element)
-    }
-    return div
+//         div.appendChild(selector_element)
+//     }
+//     return div
 
-}
+// }
 
 function get_output_values(activity){
     if (activity.activityType == 'flatten'){
@@ -87,47 +86,43 @@ function get_output_values(activity){
 
 }
 
-function get_activity_body_element(widget,activity){
-    const div = document.createElement('div');
-    if(activity.properties.activityType == 'import'){
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.setAttribute('operatorId', activity.operatorId)
-        const pre = document.createElement('pre');
-        pre.id = 'output';
-        input.onchange = async function(e){
+// function get_import_activity_body_element(widget,activity){
+//     const div = document.createElement('div');
+//     if(activity.properties.activityType == 'import'){
+//         const input = document.createElement('input');
+//         input.type = 'file';
+//         input.setAttribute('operatorId', activity.operatorId)
+//         const pre = document.createElement('pre');
+//         pre.id = 'output';
+//         input.onchange = async function(e){
+//              const file = e.target.files?.item(0);
+//             if (!file) {
+//                 e.preventDefault();
+//                 console.warn("No file selected, keeping existing content.");
+//                 return;
+//             }
+//              if (file.name.includes(".json")){
+//                 const text = await file.text();
+//                 let obj = JSON.parse(text);
+//                 let operatorId = input.getAttribute('operatorId')
+//                 widget.setFileType(operatorId, 'json')
+//                 widget.setoutputVal(operatorId,'output',obj)
+//                 activity = widget.getOperatorActivity(operatorId)
+//                 // let activity_settings_element = get_activity_settings_element(widget, activity)
+//                 // let settings_div = document.getElementById('selected_activity_settings')
+//                 // settings_div.innerHTML = ''
+//                 // settings_div.appendChild(activity_settings_element)
+//                 }
+//             }
+//         div.appendChild(input)
+//         div.appendChild(pre)
+//         return div
 
-             const file = e.target.files?.item(0);
-            if (!file) {
-                e.preventDefault();
-                console.warn("No file selected, keeping existing content.");
-                return;
-            }
-
-             if (file.name.includes(".json")){
-                const text = await file.text();
-                let obj = JSON.parse(text);
-                let operatorId = input.getAttribute('operatorId')
-
-                widget.setFileType(operatorId, 'json')
-                widget.setoutputVal(operatorId,'output',obj)
-                activity = widget.getOperatorActivity(operatorId)
-
-                // let activity_settings_element = get_activity_settings_element(widget, activity)
-                // let settings_div = document.getElementById('selected_activity_settings')
-                // settings_div.innerHTML = ''
-                // settings_div.appendChild(activity_settings_element)
-                }
-            }
-        div.appendChild(input)
-        div.appendChild(pre)
-        return div
-
-    }
+//     }
  
-     return div
+//      return div
 
-}
+// }
 function get_selector_element(id,options, default_value){
     let selected_options = []
     options.forEach(element => {
@@ -407,7 +402,6 @@ function get_activity_settings_element(widget, activity){
 }
 
 function add_activity_body(activity, outputVal){
-    console.log("Adding body",activity)
     if (activity.activityType == 'flatten'){
         let array_values = []
         Object.keys(outputVal).forEach(key => {
@@ -415,7 +409,6 @@ function add_activity_body(activity, outputVal){
                 array_values.push(key)
             }
         });
-        console.log("found array vals", array_values, outputVal)
         if (array_values.length>0){
             let select_body_element = get_selector_element("flatten_body_select_"+activity.operatorId, array_values, array_values[0])
             let body = document.getElementById("activity_body_"+activity.operatorId)
@@ -431,19 +424,22 @@ function add_activity_body(activity, outputVal){
     }
 
 }
-function add_flatten_activity_settings(activity, outputVal){
+function add_flatten_activity_settings(widget, activity, outputVal){
+        let settings_div = document.getElementById('selected_activity_settings')
+        settings_div.innerHTML = ""
+        console.log("Cleared settings", outputVal)
+        if (outputVal == null){return}
         let array_values = []
-        Object.keys(outputVal).forEach(key => {
-            if (Array.isArray(outputVal[key])){
+        Object.keys(activity.link_from[0].outputs.output.value).forEach(key => {
+            if (Array.isArray(activity.link_from[0].outputs.output.value[key])){
                 array_values.push(key)
             }
         }); 
-        if (array_values.length == 0){return}
-        let target_column = array_values[0]
-        let target_values = outputVal[target_column]
+        let target_values = outputVal
         let target_value = target_values[0]
-        console.log(target_values, target_value)
-        console.log(Object.keys(target_value))
+        if (target_value == null || target_value == undefined){
+            return
+        }
         let original_columns = Object.keys(target_value)
         let add_button = document.createElement('button')
         add_button.setAttribute('operatorId', activity.operatorId)
@@ -453,35 +449,36 @@ function add_flatten_activity_settings(activity, outputVal){
         add_button.style.color = 'black'
         add_button.style.backgroundColor = 'green'
         add_button.onclick = function(){
-            let operatorId = this.getAttribute('operatorId')
-            let settings_div = document.getElementById('selected_activity_settings')
-            let settings_json_list = JSON.parse(settings_div.getAttribute("settings_json"))
-            let output_data = JSON.parse(settings_div.getAttribute('original_record'))
-            let visible_columns  = []
-            let original_columns = Object.keys(output_data)
-            settings_json_list.forEach(element => {
-                let columnName = element['columnName']
-                visible_columns.push(columnName)
-            });
-            let new_record = {'operatorId': operatorId}
-            console.log(output_data)
-            for (let i=0; i<original_columns.length; i++){
-                let original_column = original_columns[i]
-                if (!visible_columns.includes(original_column)){
-                    console.log(original_column)
-                    new_record['columnName'] = original_column
-                    new_record['dataType'] = typeof output_data[original_column]
-                    new_record['updatedName'] = original_column
-                    break
-                }
-            }
-            settings_create_column_edit_record(original_columns, new_record)
+            // let operatorId = this.getAttribute('operatorId')
+            // let settings_div = document.getElementById('selected_activity_settings')
+            // let settings_json_list = JSON.parse(settings_div.getAttribute("settings_json"))
+            // let output_data = JSON.parse(settings_div.getAttribute('original_record'))
+            // let visible_columns  = []
+            // let original_columns = Object.keys(output_data)
+            // settings_json_list.forEach(element => {
+            //     let columnName = element['columnName']
+            //     visible_columns.push(columnName)
+            // });
+            // let new_record = {'operatorId': operatorId}
+            // console.log(output_data)
+            // for (let i=0; i<original_columns.length; i++){
+            //     let original_column = original_columns[i]
+            //     if (!visible_columns.includes(original_column)){
+            //         console.log(original_column)
+            //         new_record['columnName'] = original_column
+            //         new_record['dataType'] = typeof output_data[original_column]
+            //         new_record['updatedName'] = original_column
+            //         break
+            //     }
+            // }
+            // settings_create_column_edit_record(widget,original_columns, new_record)
         
             }
+        let select_body_element = get_selector_element("flatten_select_root_"+activity.operatorId, array_values, array_values[0])
             
-        let settings_div = document.getElementById('selected_activity_settings')
-        settings_div.innerHTML = ""
+  
         add_div.appendChild(add_button)
+        add_div.appendChild(select_body_element)
         let settings_json_list = []
         let columns = []
         let total_dupes = 0
@@ -501,20 +498,248 @@ function add_flatten_activity_settings(activity, outputVal){
             columns.push(column)
         });
 
-        settings_div.setAttribute('settings_json', JSON.stringify(settings_json_list))
-        settings_div.setAttribute('original_record', JSON.stringify(target_value))
+        // settings_div.setAttribute('settings_json', JSON.stringify(settings_json_list))
+        // settings_div.setAttribute('original_record', JSON.stringify(target_value))
         settings_div.appendChild(add_div)
         settings_json_list.forEach(new_record => {
-            settings_create_column_edit_record(original_columns,new_record)
+            settings_create_column_edit_record(widget,original_columns,new_record)
             
         });
 
 }
-function add_import_activity_settings(activity, outputVal){
-        Object.keys(outputVal).forEach(key => {
+
+function add_export_activity_settings(widget, activity, outputVal){
+    let settings_div = document.getElementById('selected_activity_settings')
+    settings_div.innerHTML = ""
+    let export_button = document.createElement('button')
+    let div = document.createElement('div')
+    export_button.className = 'buttons'
+    export_button.innerHTML = 'Export Data'
+    export_button.style.color = 'black'
+    export_button.style.backgroundColor = 'green'
+    export_button.style.fontSiz3='20px'
+    export_button.onclick = function(){
+        let from_output_value = outputVal
+        let csv = jsonToCsv(from_output_value)
+        export_data(csv)
+    }
+    div.appendChild(export_button)
+
+    settings_div.appendChild(div)
+    if (outputVal !== null && outputVal != undefined) {
+            if (Array.isArray(outputVal)){
+                Object.keys(outputVal[0]).forEach(key => {
+                let record = {'columnName': key, 'dataType': typeof outputVal[0][key],'updatedName': key}
+                settings_create_column_edit_record(widget,Object.keys(outputVal[0]),record)
+             })
+
+            }else{
+                 Object.keys(outputVal).forEach(key => {
                 let record = {'columnName': key, 'dataType': typeof outputVal[key],'updatedName': key}
-                settings_create_column_edit_record(Object.keys(outputVal[key]),record)
-        }); 
+                settings_create_column_edit_record(widget,Object.keys(outputVal),record)
+             })
+            }
+
+          
+        }
+
+}
+
+
+function add_select_activity_settings(widget, activity, outputVal){
+    let settings_div = document.getElementById('selected_activity_settings')
+    settings_div.innerHTML = ""
+    let add_button = document.createElement('button')
+    add_button.setAttribute('operatorId', activity.operatorId)
+    add_button.setAttribute('outputVal', JSON.stringify(outputVal))
+    let add_div = document.createElement('div')
+    add_button.innerHTML = '+ Add'
+    add_button.className = 'buttons'
+    add_button.style.color = 'black'
+    add_button.style.backgroundColor = 'green'
+    add_button.onclick = function(){
+        let operatorId = this.getAttribute('operatorId')
+        let activity = widget.flowchart('getOperatorActivity', operatorId)
+        let outputVal = activity.outputs.output.value//JSON.parse(this.getAttribute('outputVal'))
+
+        let settings_div = document.getElementById('selected_activity_settings');
+        let visible_columns = Object.keys(activity.inputs.input.value)
+
+        console.log(activity,visible_columns)
+        // let rename_elems = settings_div.getElementsByClassName('rename_settings');
+        // let visible_columns = []
+        // for (let el of rename_elems) {
+        //     visible_columns.push(el.children[0].value)
+        // }
+        let all_columns = []
+        for (let i=0; i<Object.keys(outputVal).length; i++){
+            let key = Object.keys(outputVal)[i]
+             if (typeof outputVal[key] == 'object' && !Array.isArray(outputVal[key])){
+                Object.keys(outputVal[key]).forEach(element => {
+                    all_columns.push(key+"."+element)
+                });
+
+             }else{
+                all_columns.push(key)
+             }
+        }
+        let new_record = null
+        for (let i=0; i<all_columns.length; i++){
+            let new_column = all_columns[i]
+            if (!visible_columns.includes(new_column)){
+                let data_type = null
+                if (new_column.includes(".")){
+                    let root = new_column.split('.')[0]
+                    let attr = new_column.split('.')[1]
+                    data_type = typeof outputVal[root][attr]
+                    let record = {'columnName': new_column, 'dataType': data_type,'updatedName': new_column}
+                    new_record = record
+                    let columnOptions = []
+                    all_columns.forEach(element => {
+                        if (element.includes(".")){
+                            if (element.split(".")[0] == root){
+                            columnOptions.push(element)
+                            }
+                        }
+                    });
+                    settings_create_column_edit_record(widget,columnOptions,record)
+                }else{
+                    data_type = typeof outputVal[new_column]
+                }
+                break
+            }
+        }
+
+        if (new_record !=null){
+            let new_column = new_record['columnName']
+            if (new_column.includes('.')){
+                let root = new_column.split('.')[0]
+                let attr = new_column.split('.')[1]
+                outputVal[new_column] = outputVal[root][attr]
+                widget.flowchart('setoutputVal', operatorId,'output',outputVal)
+
+            }
+
+
+        }
+
+    }
+    
+    
+    
+    
+    
+
+    add_div.appendChild(add_button)
+    settings_div.appendChild(add_div)
+
+    if (outputVal !== null) {
+        if (Array.isArray(outputVal)){
+            Object.keys(outputVal[0]).forEach(key => {
+            let record = {'columnName': key, 'dataType': typeof outputVal[0][key],'updatedName': key}
+            settings_create_column_edit_record(widget,Object.keys(outputVal[0]),record)})
+        }else{
+            if (outputVal == null || outputVal == undefined){
+                return;
+            }
+            Object.keys(outputVal).forEach(key => {
+                if (typeof outputVal[key] == 'object' && !Array.isArray(outputVal[key])){
+                    // if its json object
+                    // let columns = Object.keys(outputVal[key])
+                    // let columnOptions = []
+                    // let default_val = null
+                    // columns.forEach(column => {
+                    //     columnOptions.push(key + "."+column)
+                    //     if (default_val == null){
+                    //         default_val = key + "."+column
+                    //     }
+                    // });
+                    let record = {'operatorId':activity.operatorId,'columnName': key, 'dataType': typeof outputVal[key],'updatedName':key}
+                    settings_create_column_edit_record(widget,Object.keys(outputVal),record)
+                }else{
+                    let record = {'operatorId':activity.operatorId,'columnName': key, 'dataType': typeof outputVal[key],'updatedName':outputVal[key]}
+                    settings_create_column_edit_record(widget,Object.keys(outputVal),record)
+
+                }
+        })
+        }
+    }
+
+
+
+
+
+}
+
+function add_import_activity_settings(widget, activity, outputVal){
+        let settings_div = document.getElementById('selected_activity_settings')
+        // $(settings_div).data('widget', widget);
+        settings_div.innerHTML = ""
+        const div = document.createElement('div');
+        const input = document.createElement('input');
+        if (settings_div.getAttribute('settings_json')!=null){
+            let file_name_element = document.createElement('p')
+            console.log("Settings json", JSON.parse(settings_div.getAttribute('settings_json')))
+            file_name_element.innerHTML = JSON.parse(settings_div.getAttribute('settings_json'))['fileName']
+            settings_div.appendChild(file_name_element)
+        }
+        div.appendChild(input)
+        settings_div.insertBefore(div, settings_div.firstChild)
+        if (outputVal !== null) {
+            Object.keys(outputVal).forEach(key => {
+            let record = {'operatorId':activity.operatorId,'columnName': key, 'dataType': typeof outputVal[key],'updatedName': key}
+            settings_create_column_edit_record(widget,Object.keys(outputVal),record)
+        })
+        }
+
+
+
+
+        input.type = 'file';
+        input.setAttribute('operatorId', activity.operatorId)
+        input.onchange = async function(e){
+            let settings_json = {'fileName': null, 'values':null}
+            let settings_div = document.getElementById('selected_activity_settings')
+            //  widget = $(settings_div).data('widget');
+            const file = e.target.files?.item(0);
+            if (!file) {
+                e.preventDefault();
+                console.warn("No file selected, keeping existing content.");
+                return;
+            }
+             if (file.name.includes(".json")){
+                const text = await file.text();
+                settings_json['fileName'] =  file.name
+                settings_json['values'] =  outputVal
+                let obj = JSON.parse(text);
+                let operatorId = input.getAttribute('operatorId')
+                document.querySelectorAll('.rename_settings').forEach(el => el.remove());
+                document.querySelectorAll('p').forEach(el => el.remove());
+                widget.flowchart('setFileType', operatorId,'json')
+                widget.flowchart('setoutputVal', operatorId,'output',obj)
+                // widget.setFileType(operatorId, 'json')
+                // widget.setoutputVal(operatorId,'output',obj)
+                let file_name_element = document.createElement('p')
+                file_name_element.innerHTML = settings_json['fileName']
+                settings_div.appendChild(file_name_element)
+                Object.keys(obj).forEach(key => {
+                let record = {'operatorId':operatorId,'columnName': key, 'dataType': typeof obj[key],'updatedName': key}
+                settings_create_column_edit_record(widget,Object.keys(obj),record)
+                settings_div.setAttribute('settings_json', JSON.stringify(settings_json))
+                widget.flowchart('run_activity', operatorId)
+
+                // widget.run_activity(operatorId)
+                
+            }); 
+
+                }
+            
+            }
+
+
+
+
+     
 
 
 
@@ -522,8 +747,7 @@ function add_import_activity_settings(activity, outputVal){
 }
 
 
-function settings_create_column_edit_record(original_columns,new_record){
-                console.log("adding..", new_record)
+function settings_create_column_edit_record(widget,original_columns,new_record){
 
         if (Object.keys(new_record).length <=1){
                 console.log("Returning..")
@@ -546,16 +770,30 @@ function settings_create_column_edit_record(original_columns,new_record){
                                                 )
 
             let delete_button = document.createElement('button')
-                            delete_button.setAttribute('operatorId', operatorId)
-                            delete_button.setAttribute('target_columnName', new_record['columnName'])
-                            delete_button.innerHTML = 'remove'
-                            delete_button.className = 'buttons'
-                            delete_button.style.color = 'red'
-                            delete_button.onclick = function(){
-                                operatorId = this.getAttribute('operatorId')
-                                let target_column = this.getAttribute('target_columnName');
-                                
-                            }
+            delete_button.setAttribute('operatorId', operatorId)
+            delete_button.setAttribute('target_columnName', new_record['columnName'])
+            delete_button.innerHTML = 'remove'
+            delete_button.className = 'buttons'
+            delete_button.style.color = 'red'
+            delete_button.onclick = function(){
+                const operatorId = this.getAttribute('operatorId')
+                let target_column = this.getAttribute('target_columnName');
+                const parent = this.parentElement;
+                console.log('Parent element:', parent, target_column, operatorId);
+                parent.remove();
+                let activity = widget.flowchart('getOperatorActivity', operatorId)
+                let outputVal = activity.outputs.output.value
+                if (outputVal.hasOwnProperty(target_column)){
+                    delete outputVal[target_column];
+                    widget.flowchart('setoutputVal', operatorId,'output',outputVal)
+                    console.log("Deleted", outputVal)
+                    
+                }
+                
+
+
+                
+            }
 
                 let new_key_input = document.createElement('input')
                 new_key_input.value = new_record['columnName']
@@ -569,18 +807,19 @@ function settings_create_column_edit_record(original_columns,new_record){
 
 }
 
-
 function onLinkCreation(widget,linkData){
     console.log(linkData)
     let toOperator = widget.getOperatorActivity(linkData['toOperator'])
     let fromOperator  = widget.getOperatorActivity(linkData['fromOperator'])
     outputVal = fromOperator.outputs.output
+    widget.setinputVal(linkData['toOperator'],'input', outputVal)
     if (toOperator.activityType == 'flatten'){
          // get body contents
-         add_activity_body(toOperator, outputVal)
-
         // get settings contents
+        console.log("FROM",fromOperator)
+        // add_flatten_activity_settings(toOperator, fromOperator.outputs.output.value)
     }
+
 
 
 }
