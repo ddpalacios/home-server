@@ -826,10 +826,10 @@ jQuery(function ($) {
                     output = target_values
                 }
                 if (node.activityType == 'export'){
-                    // let copy = JSON.parse(JSON.stringify(output))
-                    // this.setinputVal(node.operatorId,'input', copy)
-                    // let copy2 = JSON.parse(JSON.stringify(output))
-                    this.setoutputVal(node.operatorId ,'output', output)
+                    let copy = JSON.parse(JSON.stringify(output))
+                    this.setinputVal(node.operatorId,'input', copy)
+                    let copy2 = JSON.parse(JSON.stringify(output))
+                    this.setoutputVal(node.operatorId ,'output', copy2)
 
                 }
             }

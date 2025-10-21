@@ -150,38 +150,69 @@ function add_flatten_activity_settings(widget, activity, outputVal){
 function add_export_activity_settings(widget, activity, outputVal){
     let settings_div = document.getElementById('selected_activity_settings')
     settings_div.innerHTML = ""
-    let export_button = document.createElement('button')
     let div = document.createElement('div')
+    div.id ='export_div'
+    if (activity.inputs.input.value == null){
+        return
+    }
+
+    let operatorId = activity.operatorId;
+    let array_values = []
+    Object.keys(activity.inputs.input.value).forEach(key => {
+        if (Array.isArray(activity.inputs.input.value[key])){
+            array_values.push(key)
+        }
+    }); 
+
+    if (array_values.length == 0){
+        return
+    }
+    let default_root_array = null
+    if (div.getAttribute('root') == null){
+         default_root_array = array_values[0]
+        div.setAttribute('root', default_root_array)
+    }else{
+         default_root_array = div.getAttribute('root')
+    }
+
+
+
+    let array_selector = get_selector_element(
+                                            "export_datatype_"+operatorId
+                                            , array_values
+                                            ,default_root_array
+                                                )
+    widget.flowchart('setoutputVal', operatorId,'output',activity.inputs.input.value[default_root_array])
+    array_selector.setAttribute("inputs", JSON.stringify(activity.inputs.input.value))                                        
+    array_selector.setAttribute("operatorId", operatorId)   
+    array_selector.onchange = function(){
+        let div = document.getElementById('export_div')
+        console.log("Changed to", this.value)
+        let inputs = JSON.parse(this.getAttribute('inputs'))
+        let flattened_output = inputs[this.value]
+         if (Array.isArray(flattened_output)){
+            div.setAttribute('root', this.value)
+            console.log("Updating output",flattened_output )
+             widget.flowchart('setoutputVal', operatorId,'output',JSON.parse(JSON.stringify(flattened_output)))
+          
+        }
+
+    }
+    let export_button = document.createElement('button')
+
     export_button.className = 'buttons'
     export_button.innerHTML = 'Export Data'
     export_button.style.color = 'black'
     export_button.style.backgroundColor = 'green'
     export_button.style.fontSiz3='20px'
     export_button.onclick = function(){
-        let from_output_value = outputVal
+        let from_output_value = activity.outputs.output.value
         let csv = jsonToCsv(from_output_value)
         export_data(csv)
     }
     div.appendChild(export_button)
-
+    div.appendChild(array_selector)
     settings_div.appendChild(div)
-    if (outputVal !== null && outputVal != undefined) {
-            if (Array.isArray(outputVal)){
-                Object.keys(outputVal[0]).forEach(key => {
-                let record = {'columnName': key, 'dataType': typeof outputVal[0][key],'updatedName': key}
-                settings_create_column_edit_record(widget,Object.keys(outputVal[0]),record)
-             })
-
-            }else{
-                 Object.keys(outputVal).forEach(key => {
-                let record = {'columnName': key, 'dataType': typeof outputVal[key],'updatedName': key}
-                settings_create_column_edit_record(widget,Object.keys(outputVal),record)
-             })
-            }
-
-          
-        }
-
 }
 
 function expand_struct(struct){
@@ -405,13 +436,13 @@ function settings_create_column_edit_record(widget,original_columns,new_record){
                                                     , datatype_options
                                                     ,data_type
                                                 )
-            
+            data_type_selector_element.disabled = true
             let originalName_selector_element = get_selector_element(
                                                     "flatten_name_"+operatorId
                                                     , original_columns
                                                     ,new_record['columnName']
                                                 )
-
+            originalName_selector_element.disabled = true
             let delete_button = document.createElement('button')
             delete_button.setAttribute('operatorId', operatorId)
             delete_button.setAttribute('target_columnName', new_record['columnName'])
@@ -441,6 +472,7 @@ function settings_create_column_edit_record(widget,original_columns,new_record){
             }
 
                 let new_key_input = document.createElement('input')
+                new_key_input.disabled = true
                 new_key_input.value = new_record['columnName']
                 let div = document.createElement('div')
                 div.className = 'rename_settings'
