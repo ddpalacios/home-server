@@ -681,15 +681,18 @@ jQuery(function ($) {
         get_ordered_operations: function(operatorId,sorted_nodes){
              let activity = this.data.operators[operatorId].internal.properties
             sorted_nodes.push(activity)
-            let link_to = activity.link_to[0]
-            if (link_to == null || link_to == undefined){
-                return sorted_nodes
-            }
-            let link_to_id = link_to.operatorId 
-            this.get_ordered_operations(link_to_id,sorted_nodes)
+            activity.link_to.forEach(link_to => {
+                if (link_to == null || link_to == undefined){
+                    return sorted_nodes
+                }
+                let link_to_id = link_to.operatorId 
+                this.get_ordered_operations(link_to_id,sorted_nodes)
+                
+            });
             return sorted_nodes
+            // let link_to = activity.link_to[0]
+          
         },
-
         update_activity_inputs: function(operatorId){
             let sorted_nodes = []
             let activity = this.data.operators[operatorId].internal.properties
@@ -707,14 +710,14 @@ jQuery(function ($) {
                 if (node.activityType == 'import'){
                      let copy = JSON.parse(JSON.stringify(output))
                     this.setinputVal(node.operatorId,'input', copy)
-                    let copy2 = JSON.parse(JSON.stringify(output))
-                    this.setoutputVal(node.operatorId ,'output', copy2)
+                    // let copy2 = JSON.parse(JSON.stringify(output))
+                    // this.setoutputVal(node.operatorId ,'output', copy2)
                 }
                 if (node.activityType == 'select'){
                      let copy = JSON.parse(JSON.stringify(output))
                     this.setinputVal(node.operatorId,'input', copy)
-                    let copy2 = JSON.parse(JSON.stringify(output))
-                    this.setoutputVal(node.operatorId ,'output', copy2)
+                    output =node.outputs.output.value
+
                 }
                 // if (node.activityType == 'flatten'){
                 //      let copy = JSON.parse(JSON.stringify(output))
@@ -726,8 +729,53 @@ jQuery(function ($) {
                 if (node.activityType == 'export'){
                     let copy = JSON.parse(JSON.stringify(output))
                     this.setinputVal(node.operatorId,'input', copy)
+                    // let copy2 = JSON.parse(JSON.stringify(output))
+                    // this.setoutputVal(node.operatorId ,'output', copy2)
+
+                }
+            }
+        },
+
+        update_activity_input_outputs: function(operatorId){
+            let sorted_nodes = []
+            let activity = this.data.operators[operatorId].internal.properties
+            let ordered_nodes = this.get_ordered_operations(operatorId,sorted_nodes)
+            console.log(ordered_nodes)
+
+            let output =activity.outputs.output.value
+
+            for (let i=0; i<ordered_nodes.length; i++){
+                let node = ordered_nodes[i]
+                if (node.operatorId == activity.operatorId){
+                    continue
+                }
+            
+                if (node.activityType == 'import'){
+                     let copy = JSON.parse(JSON.stringify(output))
+                    this.setinputVal(node.operatorId,'input', copy)
+                    // let copy2 = JSON.parse(JSON.stringify(output))
+                    // this.setoutputVal(node.operatorId ,'output', copy2)
+                }
+                if (node.activityType == 'select'){
+                     let copy = JSON.parse(JSON.stringify(output))
+                    this.setinputVal(node.operatorId,'input', copy)
                     let copy2 = JSON.parse(JSON.stringify(output))
                     this.setoutputVal(node.operatorId ,'output', copy2)
+                    output =node.outputs.output.value
+
+                }
+                // if (node.activityType == 'flatten'){
+                //      let copy = JSON.parse(JSON.stringify(output))
+                //     this.setinputVal(node.operatorId,'input', copy)
+                //     let copy2 = JSON.parse(JSON.stringify(output))
+                //     this.setoutputVal(node.operatorId ,'output', copy2)
+                   
+                // }
+                if (node.activityType == 'export'){
+                    // let copy = JSON.parse(JSON.stringify(output))
+                    this.setinputVal(node.operatorId,'input', output)
+                    // let copy2 = JSON.parse(JSON.stringify(output))
+                    // this.setoutputVal(node.operatorId ,'output', copy2)
 
                 }
             }
@@ -736,7 +784,7 @@ jQuery(function ($) {
             let sorted_nodes = []
             let activity = this.data.operators[operatorId].internal.properties
             let ordered_nodes = this.get_ordered_operations(operatorId,sorted_nodes)
-            console.log(ordered_nodes)
+            // console.log(ordered_nodes)
 
             let output =activity.outputs.output.value
             let hasImport = false
@@ -758,9 +806,12 @@ jQuery(function ($) {
                     this.setoutputVal(node.operatorId ,'output', copy2)
                 }
                 if (node.activityType == 'flatten'){
+                    let copy = JSON.parse(JSON.stringify(output))
+                    let copy2 = JSON.parse(JSON.stringify(output))
+
+                    this.setinputVal(node.operatorId,'input', copy)
                     // console.log('Flatten', node)
-                    this.setoutputVal(node.operatorId ,'output', output)
-                    
+                    this.setoutputVal(node.operatorId ,'output', copy2)
                     if (output == null){continue}
                     let array_values = []
                     Object.keys(output).forEach(key => {
@@ -770,11 +821,14 @@ jQuery(function ($) {
                     }); 
                     if (array_values.length == 0){continue}
                     let target_column = array_values[0]
-                    let target_values = output[target_column]
+                    let target_values = copy2[target_column]
                     this.setoutputVal(node.operatorId ,'output', target_values)
                     output = target_values
                 }
                 if (node.activityType == 'export'){
+                    // let copy = JSON.parse(JSON.stringify(output))
+                    // this.setinputVal(node.operatorId,'input', copy)
+                    // let copy2 = JSON.parse(JSON.stringify(output))
                     this.setoutputVal(node.operatorId ,'output', output)
 
                 }
@@ -838,7 +892,6 @@ jQuery(function ($) {
                     }
                 }
             }
-
             // Small fix has been added in order to manage eventual zoom
             // http://stackoverflow.com/questions/2930092/jquery-draggable-with-zoom-problem
             if (this.options.canUserMoveOperators) {
