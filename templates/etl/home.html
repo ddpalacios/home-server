@@ -1595,7 +1595,7 @@ canvas.addEventListener("mousemove", mousemove, false);
 	<div id="chart_container">
 		<div class="flowchart-example-container" id="flowchartworkspace"></div>
 	</div>
-
+	<button id="run_pipeline" class="create_operator">Run</button>
 	<button id="import_activity" class="create_operator">Create Import</button>
 	<button  id="filter_activity" class="create_operator">Create Filter</button>
 	<button  id="select_activity" class="create_operator">Create Select</button>
@@ -1621,6 +1621,10 @@ canvas.addEventListener("mousemove", mousemove, false);
   </script>
 
 	<script type="text/javascript">
+    function areArraysEqual(arr1, arr2) {
+  return arr1.length === arr2.length && new Set(arr1).size === new Set(arr2).size && arr1.every(item => arr2.includes(item));
+}
+
     var activites = []
 		/* global $ */
 		$(document).ready(function() {
@@ -1686,6 +1690,7 @@ canvas.addEventListener("mousemove", mousemove, false);
 
 					$operatorTitle.val($flowchart.flowchart('getOperatorTitle', operatorId));     
           let activity = $flowchart.flowchart('getOperatorActivity', operatorId)
+          console.log("Selected", activity)
           if (activity.activityType == 'import'){
              add_import_activity_settings($flowchart,  $flowchart.flowchart('getOperatorActivity', operatorId), activity.outputs.output.value)
           }
@@ -1775,6 +1780,11 @@ canvas.addEventListener("mousemove", mousemove, false);
 			//-----------------------------------------
 			//--- create operator button
 			//--- start
+	  $flowchart.parent().siblings('#run_pipeline').click(function() {
+
+
+    })
+
 			var operatorI = 0;
 			$flowchart.parent().siblings('#import_activity').click(function() {
 
@@ -1789,7 +1799,10 @@ canvas.addEventListener("mousemove", mousemove, false);
            fileType: null,
             activityType: 'import',
             inputs:{
-              value: null
+            input: {
+								label: '',
+                value: null
+							}
               
 						},
 						outputs: {

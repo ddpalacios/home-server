@@ -680,7 +680,6 @@ jQuery(function ($) {
 
         get_ordered_operations: function(operatorId,sorted_nodes){
              let activity = this.data.operators[operatorId].internal.properties
-             console.log("node", activity)
             sorted_nodes.push(activity)
             let link_to = activity.link_to[0]
             if (link_to == null || link_to == undefined){
@@ -690,35 +689,76 @@ jQuery(function ($) {
             this.get_ordered_operations(link_to_id,sorted_nodes)
             return sorted_nodes
         },
+
+        update_activity_inputs: function(operatorId){
+            let sorted_nodes = []
+            let activity = this.data.operators[operatorId].internal.properties
+            let ordered_nodes = this.get_ordered_operations(operatorId,sorted_nodes)
+            console.log(ordered_nodes)
+
+            let output =activity.outputs.output.value
+
+            for (let i=0; i<ordered_nodes.length; i++){
+                let node = ordered_nodes[i]
+                if (node.operatorId == activity.operatorId){
+                    continue
+                }
+            
+                if (node.activityType == 'import'){
+                     let copy = JSON.parse(JSON.stringify(output))
+                    this.setinputVal(node.operatorId,'input', copy)
+                    let copy2 = JSON.parse(JSON.stringify(output))
+                    this.setoutputVal(node.operatorId ,'output', copy2)
+                }
+                if (node.activityType == 'select'){
+                     let copy = JSON.parse(JSON.stringify(output))
+                    this.setinputVal(node.operatorId,'input', copy)
+                    let copy2 = JSON.parse(JSON.stringify(output))
+                    this.setoutputVal(node.operatorId ,'output', copy2)
+                }
+                // if (node.activityType == 'flatten'){
+                //      let copy = JSON.parse(JSON.stringify(output))
+                //     this.setinputVal(node.operatorId,'input', copy)
+                //     let copy2 = JSON.parse(JSON.stringify(output))
+                //     this.setoutputVal(node.operatorId ,'output', copy2)
+                   
+                // }
+                if (node.activityType == 'export'){
+                    let copy = JSON.parse(JSON.stringify(output))
+                    this.setinputVal(node.operatorId,'input', copy)
+                    let copy2 = JSON.parse(JSON.stringify(output))
+                    this.setoutputVal(node.operatorId ,'output', copy2)
+
+                }
+            }
+        },
         run_activity: function(operatorId){
             let sorted_nodes = []
             let activity = this.data.operators[operatorId].internal.properties
             let ordered_nodes = this.get_ordered_operations(operatorId,sorted_nodes)
             console.log(ordered_nodes)
 
-            let output = null
+            let output =activity.outputs.output.value
             let hasImport = false
 
 
             for (let i=0; i<ordered_nodes.length; i++){
                 let node = ordered_nodes[i]
-                if (i >0 && hasImport==false){
-                    console.log("No Import Found")
-                    break
-                }
                 if (node.activityType == 'import'){
-                    console.log('Import', node)
-                    output = node.outputs.output.value
-                    console.log(output)
-                    this.setoutputVal(node.operatorId ,'output', output)
-                    hasImport = true
+                    // console.log('Import', node)
+                    let copy = JSON.parse(JSON.stringify(output))
+                    this.setinputVal(node.operatorId,'input', copy)
+                    let copy2 = JSON.parse(JSON.stringify(output))
+                    this.setoutputVal(node.operatorId ,'output', copy2)
                 }
                 if (node.activityType == 'select'){
-                    this.setinputVal(node.operatorId,'input', output)
-                    this.setoutputVal(node.operatorId ,'output', output)
+                    let copy = JSON.parse(JSON.stringify(output))
+                    this.setinputVal(node.operatorId,'input', copy)
+                    let copy2 = JSON.parse(JSON.stringify(output))
+                    this.setoutputVal(node.operatorId ,'output', copy2)
                 }
                 if (node.activityType == 'flatten'){
-                    console.log('Flatten', node)
+                    // console.log('Flatten', node)
                     this.setoutputVal(node.operatorId ,'output', output)
                     
                     if (output == null){continue}
@@ -739,76 +779,6 @@ jQuery(function ($) {
 
                 }
             }
-
-         
-            // console.log("Sorted", reversed)
-            // this.data.operators[operatorId].internal.properties['operatorId'] = operatorId
-            // let activity = this.data.operators[operatorId].internal.properties
-
-            // if (activity.activityType =='import'){
-            //     console.log("importing", activity)
-            //     let link_from = activity.link_from[0]
-            //     if (link_from == null || link_from == undefined){
-            //         return
-            //     }
-            //     let link_from_id = link_from.operatorId 
-            //     // this.run_activity(link_from_id)
-            // }
-            // else if (activity.activityType == 'flatten'){
-            //     console.log("Flatenning", activity)
-            //     let link_from = activity.link_from[0]
-            //     if (link_from == null || link_from == undefined){
-            //         return
-            //     }
-            //     let link_from_id = link_from.operatorId 
-            //     // this.run_activity(link_from_id)
-            // }
-            // else if (activity.activityType == 'select'){
-            //     console.log("selecting", activity)
-            //     let link_from = activity.link_from[0]
-            //     if (link_from == null || link_from == undefined){
-            //         return
-            //     }
-            //     let link_from_id = link_from.operatorId 
-            //     // this.run_activity(link_from_id)
-            // }
-            // else if (activity.activityType == 'export'){
-            //     console.log("exporting", activity)
-            //     let link_from = activity.link_from[0]
-            //     if (link_from == null || link_from == undefined){
-            //         return
-            //     }
-            //     let link_from_id = link_from.operatorId 
-            //     // this.run_activity(link_from_id)
-            // }
-            // else if (activity.activityType == 'filter'){
-            //     console.log("filtering", activity)
-            //     let link_from = activity.link_from[0]
-            //     if (link_from == null || link_from == undefined){
-            //         return
-            //     }
-            //     let link_from_id = link_from.operatorId 
-            //     // this.run_activity(link_from_id)
-            // }
-            // else if (activity.activityType == 'join'){
-            //     console.log("joining", activity)
-            //     let link_from = activity.link_from[0]
-            //     if (link_from == null || link_from == undefined){
-            //         return
-            //     }
-            //     let link_from_id = link_from.operatorId 
-            //     // this.run_activity(link_from_id)
-            // }
-            // else if (activity.activityType == 'aggregate'){
-            //     console.log("aggergating", activity)
-            //     let link_from = activity.link_from[0]
-            //     if (link_from == null || link_from == undefined){
-            //         return
-            //     }
-            //     let link_from_id = link_from.operatorId 
-            //     // this.run_activity(link_from_id)
-            // }
-
         },
 
         getOperatorElement: function (operatorData) {

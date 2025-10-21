@@ -425,88 +425,110 @@ function add_activity_body(activity, outputVal){
 
 }
 function add_flatten_activity_settings(widget, activity, outputVal){
-        let settings_div = document.getElementById('selected_activity_settings')
-        settings_div.innerHTML = ""
-        console.log("Cleared settings", outputVal)
-        if (outputVal == null){return}
-        let array_values = []
-        Object.keys(activity.link_from[0].outputs.output.value).forEach(key => {
-            if (Array.isArray(activity.link_from[0].outputs.output.value[key])){
-                array_values.push(key)
-            }
-        }); 
-        let target_values = outputVal
-        let target_value = target_values[0]
-        if (target_value == null || target_value == undefined){
-            return
+    let settings_div = document.getElementById('selected_activity_settings')
+    settings_div.innerHTML = ""
+    if (activity.inputs.input.value == null){
+        return
+    }
+    if (activity.link_from[0].outputs.output.value == null || activity.link_from[0].outputs.output.value == undefined){
+        return
+    }
+
+
+    if (Array.isArray(activity.outputs.output.value)){
+        Object.keys(activity.outputs.output.value[0]).forEach(key => {
+        let record = {'operatorId':activity.operatorId,'columnName': key, 'dataType': typeof activity.outputs.output.value[0][key],'updatedName': key}
+        settings_create_column_edit_record(widget,Object.keys(activity.outputs.output.value[0]),record)})
         }
-        let original_columns = Object.keys(target_value)
-        let add_button = document.createElement('button')
-        add_button.setAttribute('operatorId', activity.operatorId)
-        let add_div = document.createElement('div')
-        add_button.innerHTML = '+ Add'
-        add_button.className = 'buttons'
-        add_button.style.color = 'black'
-        add_button.style.backgroundColor = 'green'
-        add_button.onclick = function(){
-            // let operatorId = this.getAttribute('operatorId')
-            // let settings_div = document.getElementById('selected_activity_settings')
-            // let settings_json_list = JSON.parse(settings_div.getAttribute("settings_json"))
-            // let output_data = JSON.parse(settings_div.getAttribute('original_record'))
-            // let visible_columns  = []
-            // let original_columns = Object.keys(output_data)
-            // settings_json_list.forEach(element => {
-            //     let columnName = element['columnName']
-            //     visible_columns.push(columnName)
-            // });
-            // let new_record = {'operatorId': operatorId}
-            // console.log(output_data)
-            // for (let i=0; i<original_columns.length; i++){
-            //     let original_column = original_columns[i]
-            //     if (!visible_columns.includes(original_column)){
-            //         console.log(original_column)
-            //         new_record['columnName'] = original_column
-            //         new_record['dataType'] = typeof output_data[original_column]
-            //         new_record['updatedName'] = original_column
-            //         break
-            //     }
-            // }
-            // settings_create_column_edit_record(widget,original_columns, new_record)
+    else{
+            let expanded_input_values = expand_struct(activity.outputs.output.value)
+    let all_available_columns = Object.keys(expanded_input_values) 
+        all_available_columns.forEach(key => {
+            let record = {'operatorId':activity.operatorId,'columnName': key, 'dataType': typeof expanded_input_values[key],'updatedName':expanded_input_values[key]}
+            settings_create_column_edit_record(widget,Object.keys(expanded_input_values),record)
+        });
+    }
+    }
+
+        // console.log("Cleared settings", outputVal)
+        // if (outputVal == null){return}
+        // let array_values = []
+        // Object.keys(activity.link_from[0].outputs.output.value).forEach(key => {
+        //     if (Array.isArray(activity.link_from[0].outputs.output.value[key])){
+        //         array_values.push(key)
+        //     }
+        // }); 
+        // let target_values = outputVal
+        // let target_value = target_values[0]
+        // if (target_value == null || target_value == undefined){
+        //     return
+        // }
+        // let original_columns = Object.keys(target_value)
+        // let add_button = document.createElement('button')
+        // add_button.setAttribute('operatorId', activity.operatorId)
+        // let add_div = document.createElement('div')
+        // add_button.innerHTML = '+ Add'
+        // add_button.className = 'buttons'
+        // add_button.style.color = 'black'
+        // add_button.style.backgroundColor = 'green'
+        // add_button.onclick = function(){
+        //     // let operatorId = this.getAttribute('operatorId')
+        //     // let settings_div = document.getElementById('selected_activity_settings')
+        //     // let settings_json_list = JSON.parse(settings_div.getAttribute("settings_json"))
+        //     // let output_data = JSON.parse(settings_div.getAttribute('original_record'))
+        //     // let visible_columns  = []
+        //     // let original_columns = Object.keys(output_data)
+        //     // settings_json_list.forEach(element => {
+        //     //     let columnName = element['columnName']
+        //     //     visible_columns.push(columnName)
+        //     // });
+        //     // let new_record = {'operatorId': operatorId}
+        //     // console.log(output_data)
+        //     // for (let i=0; i<original_columns.length; i++){
+        //     //     let original_column = original_columns[i]
+        //     //     if (!visible_columns.includes(original_column)){
+        //     //         console.log(original_column)
+        //     //         new_record['columnName'] = original_column
+        //     //         new_record['dataType'] = typeof output_data[original_column]
+        //     //         new_record['updatedName'] = original_column
+        //     //         break
+        //     //     }
+        //     // }
+        //     // settings_create_column_edit_record(widget,original_columns, new_record)
         
-            }
-        let select_body_element = get_selector_element("flatten_select_root_"+activity.operatorId, array_values, array_values[0])
+        //     }
+        // let select_body_element = get_selector_element("flatten_select_root_"+activity.operatorId, array_values, array_values[0])
             
   
-        add_div.appendChild(add_button)
-        add_div.appendChild(select_body_element)
-        let settings_json_list = []
-        let columns = []
-        let total_dupes = 0
-        original_columns.forEach(column => {
-            let settings_json = {}
-            let dataType =typeof target_value[column]
-            settings_json['operatorId'] = activity.operatorId
-            settings_json['columnName'] = column
-            settings_json['dataType'] = dataType
-            settings_json['updatedName'] = column
-            if (columns.includes(column)){
-                console.log("Dupe Column", column);
-                settings_json['columnName'] = column + "_"+String.toString(total_dupes)
-                total_dupes +=1
-            }
-            settings_json_list.push(settings_json)
-            columns.push(column)
-        });
+        // add_div.appendChild(add_button)
+        // add_div.appendChild(select_body_element)
+        // let settings_json_list = []
+        // let columns = []
+        // let total_dupes = 0
+        // original_columns.forEach(column => {
+        //     let settings_json = {}
+        //     let dataType =typeof target_value[column]
+        //     settings_json['operatorId'] = activity.operatorId
+        //     settings_json['columnName'] = column
+        //     settings_json['dataType'] = dataType
+        //     settings_json['updatedName'] = column
+        //     if (columns.includes(column)){
+        //         console.log("Dupe Column", column);
+        //         settings_json['columnName'] = column + "_"+String.toString(total_dupes)
+        //         total_dupes +=1
+        //     }
+        //     settings_json_list.push(settings_json)
+        //     columns.push(column)
+        // });
 
-        // settings_div.setAttribute('settings_json', JSON.stringify(settings_json_list))
-        // settings_div.setAttribute('original_record', JSON.stringify(target_value))
-        settings_div.appendChild(add_div)
-        settings_json_list.forEach(new_record => {
-            settings_create_column_edit_record(widget,original_columns,new_record)
+        // // settings_div.setAttribute('settings_json', JSON.stringify(settings_json_list))
+        // // settings_div.setAttribute('original_record', JSON.stringify(target_value))
+        // settings_div.appendChild(add_div)
+        // settings_json_list.forEach(new_record => {
+        //     settings_create_column_edit_record(widget,original_columns,new_record)
             
-        });
+        // });
 
-}
 
 function add_export_activity_settings(widget, activity, outputVal){
     let settings_div = document.getElementById('selected_activity_settings')
@@ -545,13 +567,28 @@ function add_export_activity_settings(widget, activity, outputVal){
 
 }
 
+function expand_struct(struct){
+    Object.keys(struct).forEach(key => {
+        let value = struct[key]
+        if (typeof value == 'object' && !Array.isArray(value)){
+            let child_keys = Object.keys(value);
+            child_keys.forEach(ck => {
+                struct[key+'.'+ck] = value[ck]
+            });
+            delete struct[key]
+        }
+        
+    });
+  return struct
+
+
+}
 
 function add_select_activity_settings(widget, activity, outputVal){
     let settings_div = document.getElementById('selected_activity_settings')
     settings_div.innerHTML = ""
     let add_button = document.createElement('button')
     add_button.setAttribute('operatorId', activity.operatorId)
-    add_button.setAttribute('outputVal', JSON.stringify(outputVal))
     let add_div = document.createElement('div')
     add_button.innerHTML = '+ Add'
     add_button.className = 'buttons'
@@ -560,182 +597,149 @@ function add_select_activity_settings(widget, activity, outputVal){
     add_button.onclick = function(){
         let operatorId = this.getAttribute('operatorId')
         let activity = widget.flowchart('getOperatorActivity', operatorId)
-        let outputVal = activity.outputs.output.value//JSON.parse(this.getAttribute('outputVal'))
-
-        let settings_div = document.getElementById('selected_activity_settings');
-        let visible_columns = Object.keys(activity.inputs.input.value)
-
-        console.log(activity,visible_columns)
-        // let rename_elems = settings_div.getElementsByClassName('rename_settings');
-        // let visible_columns = []
-        // for (let el of rename_elems) {
-        //     visible_columns.push(el.children[0].value)
-        // }
-        let all_columns = []
-        for (let i=0; i<Object.keys(outputVal).length; i++){
-            let key = Object.keys(outputVal)[i]
-             if (typeof outputVal[key] == 'object' && !Array.isArray(outputVal[key])){
-                Object.keys(outputVal[key]).forEach(element => {
-                    all_columns.push(key+"."+element)
-                });
-
-             }else{
-                all_columns.push(key)
+        let expanded_input_values = expand_struct(activity.inputs.input.value)
+        let all_available_columns = Object.keys(expanded_input_values)
+        console.log("All columns", all_available_columns)
+        let expanded_output_values = expand_struct(activity.outputs.output.value)
+        let all_visible_columns = Object.keys(expanded_output_values)
+        console.log("Visible columns",all_visible_columns )
+        for (let i =0; i<all_available_columns.length; i++){
+            let original_column = all_available_columns[i]
+             if (!all_visible_columns.includes(original_column)){
+                let data_type = typeof expanded_input_values[original_column]
+                let record = {'operatorId':activity.operatorId,'columnName': original_column, 'dataType': data_type,'updatedName': original_column}
+                console.log("Adding New column", record)
+                settings_create_column_edit_record(widget,all_available_columns,record)
+                activity.outputs.output.value[original_column] = expanded_input_values[original_column]
+                widget.flowchart('setoutputVal', operatorId,'output',JSON.parse(JSON.stringify(activity.outputs.output.value)))
+                widget.flowchart('run_activity', operatorId)
+                break
              }
         }
-        let new_record = null
-        for (let i=0; i<all_columns.length; i++){
-            let new_column = all_columns[i]
-            if (!visible_columns.includes(new_column)){
-                let data_type = null
-                if (new_column.includes(".")){
-                    let root = new_column.split('.')[0]
-                    let attr = new_column.split('.')[1]
-                    data_type = typeof outputVal[root][attr]
-                    let record = {'columnName': new_column, 'dataType': data_type,'updatedName': new_column}
-                    new_record = record
-                    let columnOptions = []
-                    all_columns.forEach(element => {
-                        if (element.includes(".")){
-                            if (element.split(".")[0] == root){
-                            columnOptions.push(element)
-                            }
-                        }
-                    });
-                    settings_create_column_edit_record(widget,columnOptions,record)
-                }else{
-                    data_type = typeof outputVal[new_column]
-                }
-                break
-            }
-        }
-
-        if (new_record !=null){
-            let new_column = new_record['columnName']
-            if (new_column.includes('.')){
-                let root = new_column.split('.')[0]
-                let attr = new_column.split('.')[1]
-                outputVal[new_column] = outputVal[root][attr]
-                widget.flowchart('setoutputVal', operatorId,'output',outputVal)
-
-            }
-
-
-        }
-
     }
-    
-    
-    
-    
-    
-
     add_div.appendChild(add_button)
     settings_div.appendChild(add_div)
-
-    if (outputVal !== null) {
-        if (Array.isArray(outputVal)){
-            Object.keys(outputVal[0]).forEach(key => {
-            let record = {'columnName': key, 'dataType': typeof outputVal[0][key],'updatedName': key}
-            settings_create_column_edit_record(widget,Object.keys(outputVal[0]),record)})
-        }else{
-            if (outputVal == null || outputVal == undefined){
-                return;
-            }
-            Object.keys(outputVal).forEach(key => {
-                if (typeof outputVal[key] == 'object' && !Array.isArray(outputVal[key])){
-                    // if its json object
-                    // let columns = Object.keys(outputVal[key])
-                    // let columnOptions = []
-                    // let default_val = null
-                    // columns.forEach(column => {
-                    //     columnOptions.push(key + "."+column)
-                    //     if (default_val == null){
-                    //         default_val = key + "."+column
-                    //     }
-                    // });
-                    let record = {'operatorId':activity.operatorId,'columnName': key, 'dataType': typeof outputVal[key],'updatedName':key}
-                    settings_create_column_edit_record(widget,Object.keys(outputVal),record)
-                }else{
-                    let record = {'operatorId':activity.operatorId,'columnName': key, 'dataType': typeof outputVal[key],'updatedName':outputVal[key]}
-                    settings_create_column_edit_record(widget,Object.keys(outputVal),record)
-
-                }
-        })
-        }
+    if (activity.inputs.input.value == null){
+        return
     }
-
-
-
-
-
+    if (activity.link_from[0].outputs.output.value == null || activity.link_from[0].outputs.output.value == undefined){
+        return
+    }
+    let expanded_input_values = expand_struct(activity.outputs.output.value)
+    let all_available_columns = Object.keys(expanded_input_values) 
+    if (Array.isArray(expanded_input_values)){
+        Object.keys(expanded_input_values[0]).forEach(key => {
+        let record = {'operatorId':activity.operatorId,'columnName': key, 'dataType': typeof expanded_input_values[0][key],'updatedName': key}
+        settings_create_column_edit_record(widget,Object.keys(expanded_input_values[0]),record)})
+        }
+    else{
+        all_available_columns.forEach(key => {
+            let record = {'operatorId':activity.operatorId,'columnName': key, 'dataType': typeof expanded_input_values[key],'updatedName':expanded_input_values[key]}
+            settings_create_column_edit_record(widget,Object.keys(expanded_input_values),record)
+        });
+    }
 }
+
 
 function add_import_activity_settings(widget, activity, outputVal){
         let settings_div = document.getElementById('selected_activity_settings')
-        // $(settings_div).data('widget', widget);
         settings_div.innerHTML = ""
+        let add_button = document.createElement('button')
+        add_button.setAttribute('operatorId', activity.operatorId)
+        let add_div = document.createElement('div')
+        add_button.innerHTML = '+ Add'
+        add_button.className = 'buttons'
+        add_button.style.color = 'black'
+        add_button.style.backgroundColor = 'green'
+        add_button.onclick = function(){
+            let operatorId = this.getAttribute('operatorId')
+            let activity = widget.flowchart('getOperatorActivity', operatorId)
+
+            if (activity.inputs.input.value == null){return}
+            let expanded_input_values = expand_struct(activity.inputs.input.value)
+            let all_available_columns = Object.keys(expanded_input_values)
+            console.log("All columns", all_available_columns)
+            let expanded_output_values = expand_struct(activity.outputs.output.value)
+            let all_visible_columns = Object.keys(expanded_output_values)
+            console.log("Visible columns",all_visible_columns )
+            for (let i =0; i<all_available_columns.length; i++){
+                let original_column = all_available_columns[i]
+                if (!all_visible_columns.includes(original_column)){
+                    let data_type = typeof expanded_input_values[original_column]
+                    let record = {'operatorId':activity.operatorId,'columnName': original_column, 'dataType': data_type,'updatedName': original_column}
+                    console.log("Adding New column", record)
+                    settings_create_column_edit_record(widget,all_available_columns,record)
+                    activity.outputs.output.value[original_column] = expanded_input_values[original_column]
+                    widget.flowchart('setoutputVal', operatorId,'output',JSON.parse(JSON.stringify(activity.outputs.output.value)))
+                    widget.flowchart('run_activity', operatorId)
+                    break
+                }
+            }
+        }
+        add_div.appendChild(add_button)
+        settings_div.appendChild(add_div)
         const div = document.createElement('div');
         const input = document.createElement('input');
-        if (settings_div.getAttribute('settings_json')!=null){
-            let file_name_element = document.createElement('p')
-            console.log("Settings json", JSON.parse(settings_div.getAttribute('settings_json')))
-            file_name_element.innerHTML = JSON.parse(settings_div.getAttribute('settings_json'))['fileName']
-            settings_div.appendChild(file_name_element)
-        }
-        div.appendChild(input)
-        settings_div.insertBefore(div, settings_div.firstChild)
-        if (outputVal !== null) {
-            Object.keys(outputVal).forEach(key => {
-            let record = {'operatorId':activity.operatorId,'columnName': key, 'dataType': typeof outputVal[key],'updatedName': key}
-            settings_create_column_edit_record(widget,Object.keys(outputVal),record)
-        })
-        }
-
-
-
-
         input.type = 'file';
         input.setAttribute('operatorId', activity.operatorId)
         input.onchange = async function(e){
             let settings_json = {'fileName': null, 'values':null}
             let settings_div = document.getElementById('selected_activity_settings')
-            //  widget = $(settings_div).data('widget');
             const file = e.target.files?.item(0);
             if (!file) {
                 e.preventDefault();
                 console.warn("No file selected, keeping existing content.");
                 return;
             }
-             if (file.name.includes(".json")){
+            if (file.name.includes(".json")){
                 const text = await file.text();
-                settings_json['fileName'] =  file.name
-                settings_json['values'] =  outputVal
-                let obj = JSON.parse(text);
                 let operatorId = input.getAttribute('operatorId')
+                settings_json['fileName'] =  file.name
+                settings_div.setAttribute('settings_json', JSON.stringify(settings_json))
                 document.querySelectorAll('.rename_settings').forEach(el => el.remove());
                 document.querySelectorAll('p').forEach(el => el.remove());
-                widget.flowchart('setFileType', operatorId,'json')
-                widget.flowchart('setoutputVal', operatorId,'output',obj)
-                // widget.setFileType(operatorId, 'json')
-                // widget.setoutputVal(operatorId,'output',obj)
                 let file_name_element = document.createElement('p')
                 file_name_element.innerHTML = settings_json['fileName']
                 settings_div.appendChild(file_name_element)
-                Object.keys(obj).forEach(key => {
-                let record = {'operatorId':operatorId,'columnName': key, 'dataType': typeof obj[key],'updatedName': key}
-                settings_create_column_edit_record(widget,Object.keys(obj),record)
+                let obj = JSON.parse(text);
+                let expanded_obj = expand_struct(obj)
+                Object.keys(expanded_obj).forEach(key => {
+                let record = {'operatorId':operatorId,'columnName': key, 'dataType': typeof expanded_obj[key],'updatedName': key}
+                settings_create_column_edit_record(widget,Object.keys(expanded_obj),record)
                 settings_div.setAttribute('settings_json', JSON.stringify(settings_json))
+                console.log("CHANGING OUTPUT")
+                widget.flowchart('setoutputVal', operatorId,'output',JSON.parse(JSON.stringify(expanded_obj)))
                 widget.flowchart('run_activity', operatorId)
-
-                // widget.run_activity(operatorId)
-                
-            }); 
-
-                }
-            
+                }); 
             }
+        }
+        div.appendChild(input)
+        if (settings_div.getAttribute('settings_json')!=null){
+            let file_name_element = document.createElement('p')
+            file_name_element.innerHTML = JSON.parse(settings_div.getAttribute('settings_json'))['fileName']
+            settings_div.appendChild(file_name_element)
+        }
 
+        settings_div.insertBefore(div, settings_div.firstChild)
+        if (activity.outputs.output.value != null && activity.outputs.output.value != undefined){
+            console.log("Expanding", activity.outputs.output.value)
+            let expanded_input_values = expand_struct(activity.outputs.output.value)
+            if (expanded_input_values == null || expanded_input_values == undefined){return}
+            let all_available_columns = Object.keys(expanded_input_values)
+            if (Array.isArray(expanded_input_values)){
+                Object.keys(expanded_input_values[0]).forEach(key => {
+                let record = {'operatorId':activity.operatorId,'columnName': key, 'dataType': typeof expanded_input_values[0][key],'updatedName': key}
+                settings_create_columnedit_record(widget,Object.keys(expanded_input_values[0]),record)})
+                }
+            else{
+                all_available_columns.forEach(key => {
+                    let record = {'operatorId':activity.operatorId,'columnName': key, 'dataType': typeof expanded_input_values[key],'updatedName':expanded_input_values[key]}
+                    settings_create_column_edit_record(widget,Object.keys(expanded_input_values),record)
+                });
+            }
+        }
+
+       
 
 
 
@@ -745,7 +749,6 @@ function add_import_activity_settings(widget, activity, outputVal){
 
 
 }
-
 
 function settings_create_column_edit_record(widget,original_columns,new_record){
 
@@ -783,12 +786,18 @@ function settings_create_column_edit_record(widget,original_columns,new_record){
                 parent.remove();
                 let activity = widget.flowchart('getOperatorActivity', operatorId)
                 let outputVal = activity.outputs.output.value
-                if (outputVal.hasOwnProperty(target_column)){
-                    delete outputVal[target_column];
-                    widget.flowchart('setoutputVal', operatorId,'output',outputVal)
-                    console.log("Deleted", outputVal)
+                console.log("Deleting", outputVal, target_column)
+                delete outputVal[target_column];
+                widget.flowchart('setoutputVal', operatorId,'output',JSON.parse(JSON.stringify(expand_struct(outputVal))))
+                widget.flowchart('update_activity_inputs', operatorId)
+                
+
+                // if (outputVal.hasOwnProperty(target_column)){
+                //     delete outputVal[target_column];
+                    // widget.flowchart('setoutputVal', operatorId,'output',JSON.parse(JSON.stringify(outputVal)))
+                //     console.log("Deleted", outputVal)
                     
-                }
+                // }
                 
 
 
