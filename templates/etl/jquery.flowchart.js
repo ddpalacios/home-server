@@ -565,6 +565,65 @@ jQuery(function ($) {
             }
             return infos;
         },
+         removeSelectColumn: function(operatorId, select_id){
+            let vals = this.data.operators[operatorId].internal.properties['settings']['select']
+            for(let i=0; i<vals.length; i++){
+                let val = vals[i]
+                if (val.id  ==select_id){
+                    this.data.operators[operatorId].internal.properties['settings']['select'].splice(i,1)
+                }
+            }
+        },
+        addSelectColumn: function(operatorId, column_to_select){
+            let vals = this.data.operators[operatorId].internal.properties['settings']['select']
+            for(let i=0; i<vals.length; i++){
+                let val = vals[i]
+                if (val.id  == column_to_select.id){
+                    this.data.operators[operatorId].internal.properties['settings']['select'].splice(i,1)
+                }
+            }
+           
+            this.data.operators[operatorId].internal.properties['settings']['select'].push(column_to_select)
+        },
+        
+        renameSelectColumn: function(operatorId, select_id, new_name){
+            let vals = this.data.operators[operatorId].internal.properties['settings']['select']
+            for(let i=0; i<vals.length; i++){
+                let val = vals[i]
+                if (val.id  == select_id){
+                    this.data.operators[operatorId].internal.properties['settings']['select'][i]['as'] = new_name
+                    break
+                }
+            }
+        },
+        addCustomValue: function(operatorId, select_id, custom_value){
+            let vals = this.data.operators[operatorId].internal.properties['settings']['select']
+            for(let i=0; i<vals.length; i++){
+                let val = vals[i]
+                if (val.id  == select_id){
+                    this.data.operators[operatorId].internal.properties['settings']['select'][i]['custom_value'] = custom_value
+                    break
+                }
+            }
+        },
+        changeDataTypeSelectColumn: function(operatorId, select_id, datatype){
+            let vals = this.data.operators[operatorId].internal.properties['settings']['select']
+            for(let i=0; i<vals.length; i++){
+                let val = vals[i]
+                if (val.id  == select_id){
+                    this.data.operators[operatorId].internal.properties['settings']['select'][i]['datatype'] = datatype
+                    break
+                }
+            }
+        },
+        
+        
+        addDropColumn: function(operatorId, column_to_delete){
+            this.data.operators[operatorId].internal.properties['settings']['drop'].push(column_to_delete)
+        },
+        removeDropColumn: function(operatorId, column_to_delete){
+            this.data.operators[operatorId].internal.properties['settings']['drop'].push(column_to_delete)
+        },
         setoutputVal: function(operatorId,outputName, value){
             this.data.operators[operatorId].internal.properties.outputs[outputName].value = value;
         },

@@ -223,7 +223,7 @@ void start_listening_for_clients(char* port){
 			//printf("Waiting for thread %d...\n", i);
 			struct timespec ts;
 			clock_gettime(CLOCK_REALTIME, &ts);
-			ts.tv_sec += 1;  
+			ts.tv_sec += 10000;  
 
 			int rc = pthread_timedjoin_np(threads[i], NULL, &ts);
 

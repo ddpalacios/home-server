@@ -35,6 +35,23 @@ function jsonToCsv(jsonData) {
     return csv;
 }
 
+function csvToJson(csv) {
+  const lines = csv.split("\n");
+  const headers = lines[0].split(",");
+  const result = lines.slice(1).map(line => {
+    const values = line.split(",");
+    return headers.reduce((acc, header, index) => {
+      header = header.replace("\"","")
+      header = header.replace("\"","")
+      acc[header] = values[index];
+      return acc;
+    }, {});
+  });
+  return result;
+}
+
+
+
 function key_name_change(obj,element){
      let original_key = element.getAttribute('data-info')
      let new_key = element.value
@@ -69,31 +86,26 @@ function get_output_values(activity){
 }
 
 
-function get_selector_element(id,options, default_value){
-    let selected_options = []
+function get_selector_element(id, options, default_value) {
+    const selected_options = [];
+
+    if (default_value === "") {
+        selected_options.push('<option value="" selected></option>');
+    }
+
     options.forEach(element => {
-        let e;
-        if (element == default_value){
-            e = `<option value="${element}" selected>${element}</option>`
-        }else{
-         e = `<option value="${element}">${element}</option>`
+        if (element === default_value) {
+            selected_options.push(`<option value="${element}" selected>${element}</option>`);
+        } else {
+            selected_options.push(`<option value="${element}">${element}</option>`);
         }
-        selected_options.push(e)
     });
 
-    let selectHTML = '<select>'
-    selected_options.forEach(element => {
-        selectHTML+=element
-    });
-    selectHTML +='</select>'
-
+    const selectHTML = `<select id="${id}">${selected_options.join('')}</select>`;
 
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = selectHTML;
-    const selectElement = tempDiv.firstElementChild;
-    selectElement.id = id
-    return selectElement
-
+    return tempDiv.firstElementChild;
 }
 
 
@@ -120,6 +132,7 @@ function add_activity_body(activity, outputVal){
     }
 
 }
+
 function add_flatten_activity_settings(widget, activity, outputVal){
     let settings_div = document.getElementById('selected_activity_settings')
     settings_div.innerHTML = ""
@@ -355,8 +368,10 @@ function add_import_activity_settings(widget, activity, outputVal){
         input.type = 'file';
         input.setAttribute('operatorId', activity.operatorId)
         input.onchange = async function(e){
+            let operatorId = input.getAttribute('operatorId')
             let settings_json = {'fileName': null, 'values':null}
             let settings_div = document.getElementById('selected_activity_settings')
+            let obj = null
             const file = e.target.files?.item(0);
             if (!file) {
                 e.preventDefault();
@@ -364,61 +379,91 @@ function add_import_activity_settings(widget, activity, outputVal){
                 return;
             }
             if (file.name.includes(".json")){
-                const text = await file.text();
-                let operatorId = input.getAttribute('operatorId')
-                settings_json['fileName'] =  file.name
-                settings_div.setAttribute('settings_json', JSON.stringify(settings_json))
-                document.querySelectorAll('.rename_settings').forEach(el => el.remove());
-                document.querySelectorAll('p').forEach(el => el.remove());
-                let file_name_element = document.createElement('p')
-                file_name_element.innerHTML = settings_json['fileName']
-                settings_div.appendChild(file_name_element)
-                let obj = JSON.parse(text);
-                let expanded_obj = expand_struct(obj)
-                Object.keys(expanded_obj).forEach(key => {
+                 let text = await file.text();
+                  obj = JSON.parse(text);
+
+            }
+            if (file.name.includes('.csv')){
+                let text = await file.text();
+                obj = csvToJson(text);
+                widget.flowchart('setinputVal', operatorId,'input',JSON.parse(JSON.stringify(obj)))
+                widget.flowchart('setoutputVal', operatorId,'output',JSON.parse(JSON.stringify(obj)))
+
+                 obj = obj[0]
+            }
+
+            if (obj == null){
+                alert("Invalid File. Not a CSV or JSON.");
+                return
+            }
+
+            settings_json['fileName'] =  file.name
+            console.log("Object", obj)
+            settings_div.setAttribute('settings_json', JSON.stringify(settings_json))
+            document.querySelectorAll('.rename_settings').forEach(el => el.remove());
+            document.querySelectorAll('p').forEach(el => el.remove());
+            let file_name_element = document.createElement('p')
+            file_name_element.innerHTML = settings_json['fileName']
+            settings_div.appendChild(file_name_element)
+            let expanded_obj = expand_struct(obj)
+            console.log("Expanded Object", expanded_obj)
+
+            Object.keys(expanded_obj).forEach(key => {
+                console.log(key)
                 let record = {'operatorId':operatorId,'columnName': key, 'dataType': typeof expanded_obj[key],'updatedName': key}
                 settings_create_column_edit_record(widget,Object.keys(expanded_obj),record)
                 settings_div.setAttribute('settings_json', JSON.stringify(settings_json))
-                widget.flowchart('setoutputVal', operatorId,'output',JSON.parse(JSON.stringify(expanded_obj)))
-                widget.flowchart('run_activity', operatorId)
-                }); 
-            }
+             
+            }); 
+            widget.flowchart('run_activity', operatorId)
+
         }
+
         div.appendChild(input)
         if (settings_div.getAttribute('settings_json')!=null){
             let file_name_element = document.createElement('p')
             file_name_element.innerHTML = JSON.parse(settings_div.getAttribute('settings_json'))['fileName']
             settings_div.appendChild(file_name_element)
         }
-
         settings_div.insertBefore(div, settings_div.firstChild)
-        if (activity.outputs.output.value != null && activity.outputs.output.value != undefined){
-            console.log("Expanding", activity.outputs.output.value)
-            let expanded_input_values = expand_struct(activity.outputs.output.value)
-            if (expanded_input_values == null || expanded_input_values == undefined){return}
-            let all_available_columns = Object.keys(expanded_input_values)
-            if (Array.isArray(expanded_input_values)){
-                Object.keys(expanded_input_values[0]).forEach(key => {
-                let record = {'operatorId':activity.operatorId,'columnName': key, 'dataType': typeof expanded_input_values[0][key],'updatedName': key}
-                settings_create_columnedit_record(widget,Object.keys(expanded_input_values[0]),record)})
-                }
-            else{
-                all_available_columns.forEach(key => {
+        if (activity.outputs.output.value == null || activity.outputs.output.value == undefined){
+            return div
+        }
+        let current_output = activity.outputs.output.value
+        if (Array.isArray(current_output)){
+            Object.keys(current_output[0]).forEach(key => {
+                let record = {'operatorId':activity.operatorId,'columnName': key, 'dataType': typeof current_output[0][key],'updatedName': key}
+                settings_create_columnedit_record(widget,Object.keys(current_output[0]),record)
+                })
+        }else{
+                let expanded_input_values = expand_struct(activity.outputs.output.value)
+                let all_available_columns = Object.keys(expanded_input_values)
+                 all_available_columns.forEach(key => {
                     let record = {'operatorId':activity.operatorId,'columnName': key, 'dataType': typeof expanded_input_values[key],'updatedName':expanded_input_values[key]}
                     settings_create_column_edit_record(widget,Object.keys(expanded_input_values),record)
                 });
-            }
+
         }
-
-       
-
-
-
-     
+        
+        return div
 
 
 
-
+            // console.log("Expanding", activity.outputs.output.value)
+            // let expanded_input_values = expand_struct(activity.outputs.output.value)
+            // if (expanded_input_values == null || expanded_input_values == undefined){return}
+            // let all_available_columns = Object.keys(expanded_input_values)
+            // if (Array.isArray(expanded_input_values)){
+                // Object.keys(expanded_input_values[0]).forEach(key => {
+                // let record = {'operatorId':activity.operatorId,'columnName': key, 'dataType': typeof expanded_input_values[0][key],'updatedName': key}
+                // settings_create_columnedit_record(widget,Object.keys(expanded_input_values[0]),record)})
+                // }
+            // else{
+                // all_available_columns.forEach(key => {
+                //     let record = {'operatorId':activity.operatorId,'columnName': key, 'dataType': typeof expanded_input_values[key],'updatedName':expanded_input_values[key]}
+                //     settings_create_column_edit_record(widget,Object.keys(expanded_input_values),record)
+                // });
+            // }
 }
 
 function settings_create_column_edit_record(widget,original_columns,new_record){

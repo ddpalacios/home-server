@@ -240,20 +240,22 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_live_html(cSSL, http_header, "/etl/home.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/activities.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/activities.js");
-
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/import.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/import.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/run.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/run.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/jquery.flowchart.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/jquery.flowchart.js");
 
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/jquery.flowchart.css")==0){
 		get_gol_script(cSSL, http_header, "/etl/jquery.flowchart.css");
-
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/run/")==0){
+		post_run_activity(socket,http_header,body, route);
 
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/phrase-matching")==0){
 		get_live_html(cSSL, http_header, "/phrase-matching/home.html");
-
 	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/phrase-matching/generate")==0){
 		post_generate_phrase(socket,http_header,body, route);
-
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/game-of-life")==0){
 		get_live_html(cSSL, http_header, "/game-of-life/home.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/onload_session.js")==0){
