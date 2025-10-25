@@ -606,6 +606,9 @@ jQuery(function ($) {
                 }
             }
         },
+        addDataTypes: function(operatorId, datatypes){
+            this.data.operators[operatorId].internal.properties['settings']['datatypes'] = datatypes
+        },
         changeDataTypeSelectColumn: function(operatorId, select_id, datatype){
             let vals = this.data.operators[operatorId].internal.properties['settings']['select']
             for(let i=0; i<vals.length; i++){
@@ -625,9 +628,11 @@ jQuery(function ($) {
             this.data.operators[operatorId].internal.properties['settings']['drop'].push(column_to_delete)
         },
         setoutputVal: function(operatorId,outputName, value){
+            console.log("Setting output", value)
             this.data.operators[operatorId].internal.properties.outputs[outputName].value = value;
         },
         setinputVal: function(operatorId,inputName, value){
+            console.log("Setting input", value)
             this.data.operators[operatorId].internal.properties.inputs[inputName].value = value;
         },
         setFileType: function(operatorId, fileType){

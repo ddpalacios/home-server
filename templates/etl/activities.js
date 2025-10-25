@@ -1,11 +1,410 @@
-class Activity{
-    constructor(id, type, title, inputs,outputs){
-        this.id = id 
-        this.type = type
-        this.title = title
-        this.inputs = inputs
-        this.outputs = outputs
+class Settings{
+        constructor(flowchart,activity){
+        this.activity = activity
+        this.activityId = activity.operatorId
+        this.flowchart = flowchart
+        this.add_button_label = "+ Add"
+        this.add_button_element = null;
+        }
+    get_input_value_columns(){
+         let input_value;
+         let all_columns;
+        if (Array.isArray( this.activity.inputs.input.value.values)){
+            all_columns = Object.keys(this.activity.inputs.input.value.values[0])
+            input_value = this.activity.inputs.input.value.values[0]
+        }else{
+            all_columns = Object.keys(this.activity.inputs.input.value.values)
+            input_value = this.activity.inputs.input.value.values
+        }
+        return all_columns
     }
+    get_output_columns(){
+        if (this.activity.inputs.input.value.values == null){
+            return
+        }
+         let current_output = this.activity.inputs.input.value.values
+         if (Array.isArray(current_output)){
+            return Object.keys(current_output[0])
+         }else{
+            return Object.keys(current_output)
+         }
+    }
+
+    get_setting_rows(){
+        return [
+            {
+                'type': 'selector'
+                ,'order':1
+                ,'options': this.get_output_columns()
+                ,'default_value': this.get_output_columns()[0]
+            },
+             {
+                'type': 'selector'
+                ,'order':2
+                ,'options': ['string', 'int']
+                ,'default_value': 'string'
+            }
+             , {
+                'type': 'input'
+                ,'order':3
+                ,'placeholder' : 'Column Name'
+            }
+            ,{
+                'type': 'input'
+                ,'order':4
+                ,'placeholder' : 'Column Value'
+            }
+            ,{
+                'type': 'button'
+                ,'order':5
+                ,'label': 'remove'
+                ,'color': 'red'
+            }
+        ]
+    }
+
+    _add_custom_value(e, widget, activity){
+        let parent_element = e.target.parentElement;
+        console.log(e.target.value)
+        widget.flowchart('addCustomValue', activity.activityId, parent_element.id, e.target.value)
+
+    }
+    _add_column(e, widget, activity){
+        let all_columns = []
+        let activityId = activity.activityId
+        if (Array.isArray( activity.activity.inputs.input.value.values)){
+            all_columns = Object.keys(activity.activity.inputs.input.value.values[0])
+        }else{
+            all_columns = Object.keys(activity.activity.inputs.input.value.values)
+
+        }
+        let settings = [
+            {
+                'type': 'selector'
+                ,'order':1
+                ,'options':all_columns
+                ,'default_value': ""
+            },
+             {
+                'type': 'selector'
+                ,'order':2
+                ,'options': ['string', 'int']
+                ,'default_value': ""
+            }
+             , {
+                'type': 'input'
+                ,'order':3
+                ,'placeholder' : 'Column Name'
+            }
+            ,{
+                'type': 'input'
+                ,'order':4
+                ,'placeholder' : 'Column Value'
+            }
+            ,{
+                'type': 'button'
+                ,'order':5
+                ,'label': 'remove'
+                ,'color': 'red'
+            }]
+            let columns_div = document.getElementById(activityId+"_column_edit")
+            let column_edit_element = this.get_column_selection_element(widget,settings)
+            columns_div.appendChild(column_edit_element)
+            let select_val = {'select': "", 'as': "", 'datatype':"",'id':column_edit_element.id }
+            widget.flowchart('addSelectColumn', activity.activityId, select_val)
+    }
+    _on_button_click(e, widget, activity){
+        let parent_element = e.target.parentElement;
+        parent_element.remove()
+        console.log("deleting", parent_element.id)
+        widget.flowchart('removeSelectColumn', activity.activityId, parent_element.id)
+    }
+    _on_selector_change(e, widget,activity){
+        let parent_element = e.target.parentElement;
+        console.log(e.target.value)
+        // widget.flowchart('changeDataTypeSelectColumn', activity.activityId, parent_element.id, e.target.value)
+    }
+    _on_input_change(e, widget,activity){
+        let parent_element = e.target.parentElement;
+        console.log(e.target.value)
+        // widget.flowchart('renameSelectColumn', activity.activityId, parent_element.id, e.target.value)
+    }
+    _on_column_select(e, widget, activity){
+        let selected_column  = e.target.value
+        let div = document.getElementById(activity.activityId+"_column_edit")
+        let current_named_columns = []
+        for (let i =0; i < div.children.length; i++){
+            if (div.children[i].className != 'rename_settings'){continue}
+            current_named_columns.push(div.children[i].children[2].value)
+        }
+        let total_dupes = 1
+        let name = selected_column
+        while(1){
+            if (current_named_columns.includes(name)){
+                name  = selected_column + "_" +total_dupes.toString()
+                total_dupes +=1
+            }else{
+                break
+            }
+        }
+
+        let datatypes = widget.flowchart('getOperatorActivity', activity.activityId).settings.datatypes;
+        console.log("Looking for", selected_column, 'in', datatypes)
+        let datatype = datatypes[selected_column]
+
+
+          e.target.parentElement.children[2].value =  name
+          e.target.parentElement.children[1].value =  datatype
+          let select_val = {'select': selected_column, 'as': name, 'datatype': datatype, 'id':e.target.parentElement.id }
+          widget.flowchart('addSelectColumn', activity.activityId, select_val)
+          console.log(widget.flowchart('getOperatorActivity', activity.activityId))
+    }
+     get_selector_element(options, default_value) {
+    const selected_options = [];
+
+    if (default_value === "") {
+        selected_options.push('<option value="" selected></option>');
+    }
+
+    options.forEach(element => {
+        if (element === default_value) {
+            selected_options.push(`<option value="${element}" selected>${element}</option>`);
+        } else {
+            selected_options.push(`<option value="${element}">${element}</option>`);
+        }
+    });
+
+    const selectHTML = `<select>${selected_options.join('')}</select>`;
+
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = selectHTML;
+    return tempDiv.firstElementChild;
+}
+     get_column_selection_element(widget,rows,flexDirection){
+        let div = document.createElement('div')
+        div.className = 'rename_settings'
+        div.id = crypto.randomUUID();
+        if (flexDirection != null || flexDirection != undefined){
+            div.style.display = 'flex'
+            div.style.flexDirection = flexDirection
+        }
+        rows.forEach(element => {
+            let elem_type = element['type']
+            if (elem_type == 'selector'){
+                let options = element['options']
+                let default_value =element['default_value']
+                let selector_element = this.get_selector_element(options,default_value)
+                selector_element.addEventListener("change", (event) => this._on_selector_change(event, widget, this));
+                div.appendChild(selector_element)
+            }
+            if (elem_type == 'input'){
+                let input = document.createElement('input')
+                input.placeholder = element['placeholder']
+                input.addEventListener("change", (event) => this._on_input_change(event, widget, this));
+                div.appendChild(input)
+            }
+            if (elem_type == 'button'){
+                let button = document.createElement('button')
+                button.innerHTML = element['label']
+                button.style.color = element['color']
+                button.addEventListener("click", (event) => this._on_button_click(event, widget, this));
+                div.appendChild(button)
+            }
+             if (elem_type == 'span'){
+                let span = document.createElement('span')
+                span.innerHTML = element['label']
+                span.style.color = element['color']
+                div.appendChild(span)
+            }
+             if (elem_type == 'div'){
+                let span = document.createElement('span')
+                span.innerHTML = element['label']
+                span.style.color = element['color']
+                div.appendChild(span)
+            }
+            
+        });
+        return div
+
+}
+    async _inputFile_onchange(e, widget, activity){
+        let activityId = activity.activityId
+        const file = e.target.files?.item(0);
+        if (!file) {
+            e.preventDefault();
+            console.warn("No file selected, keeping existing content.");
+            return;
+        }
+        let obj = null
+        if (file.name.includes(".json")){
+                let text = await file.text();
+                obj = JSON.parse(text);
+                widget.flowchart('setinputVal', activityId,'input', {'datatypes': null, 'values': obj})
+                // widget.flowchart('setoutputVal', activityId,'output',JSON.parse(JSON.stringify(expand_struct(obj))))
+
+        }
+        if (file.name.includes('.csv')){
+            let text = await file.text();
+            obj = csvToJson(text);
+            widget.flowchart('setinputVal', activityId,'input',{'datatypes': null, 'values': obj})
+            // widget.flowchart('setoutputVal', activityId,'output',JSON.parse(JSON.stringify(obj)))
+            obj = obj[0]
+        }
+        if (obj == null){
+            alert("Invalid File. Not a CSV or JSON.");
+            return
+        }
+        let response = await run_activity_flow(widget.flowchart('getOperatorActivity', activity.activityId),widget)
+        widget.flowchart('setoutputVal', activityId,'output',response)
+        let column_datatypes = response['datatypes']
+        widget.flowchart('addDataTypes',activity.activityId,column_datatypes)
+
+        let expanded_obj = expand_struct(obj)
+        let settings_div = document.getElementById('selected_activity_settings')
+        let columns_div = document.createElement('div')
+        columns_div.id = this.activityId+ "_column_edit"
+        let settings = []
+         Object.keys(expanded_obj).forEach(key => {
+            let data_type = column_datatypes[key]
+            settings = [
+            {
+                'type': 'selector'
+                ,'order':1
+                ,'options': this.get_output_columns()
+                ,'default_value': key
+            },
+             {
+                'type': 'selector'
+                ,'order':2
+                ,'options': Object.values(column_datatypes)
+                ,'default_value': data_type
+            }
+             , {
+                'type': 'input'
+                ,'order':3
+                ,'placeholder' : 'Column Name'
+            }
+            ,{
+                'type': 'button'
+                ,'order':5
+                ,'label': 'remove'
+                ,'color': 'red'
+            }]
+            let column_edit_element = this.get_column_selection_element(widget,settings)
+            columns_div.appendChild(column_edit_element)
+            let select_val = {'select': key, 'as': key, 'datatype':data_type,'id':column_edit_element.id }
+            widget.flowchart('addSelectColumn', activity.activityId, select_val)
+        }); 
+        settings_div.appendChild(columns_div)
+        // widget.flowchart('run_activity', activityId);
+    }
+    get_settings_element(){
+        let div = document.createElement('div')
+        div.id = this.activityId
+        let add_button = document.createElement('button')
+        let add_div = document.createElement('div')
+        add_button.setAttribute('operatorId', this.activityId)
+        add_button.innerHTML = this.add_button_label
+        add_button.className = 'buttons'
+        add_button.style.color = 'black'
+        this.add_button_element = add_button
+        add_button.addEventListener("click", (event) => this._add_column(event, this.flowchart, this));
+
+        add_div.appendChild(add_button)
+        div.appendChild(add_div)
+        if (this.activity.activityType == 'import'){
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.addEventListener("change", (event) => this._inputFile_onchange(event, this.flowchart, this));
+            div.appendChild(input)
+        }
+        if (this.activity.outputs.output.value?.values == null || this.activity.outputs.output.value?.values == undefined){
+            return div
+        }
+
+        let current_output = this.activity.outputs.output.value.values
+        let columns_div = document.createElement('div')
+        if (Array.isArray(current_output)){
+            Object.keys(current_output[0]).forEach(key => {
+                    let data_type =  typeof current_output[0][key]
+                    if (data_type == 'string'){
+                        data_type = 'TEXT'
+                    }
+                    if (data_type == 'number'){
+                        data_type = 'INTEGER'
+                    }
+                    if (data_type == 'decimal'){
+                        data_type = 'DECIMAL'
+                    }
+                    if (data_type == 'object'){
+                        data_type = 'LIST'
+                    }
+                    let record = {'operatorId':this.activityId,'columnName': key, 'dataType': data_type,'updatedName': key}
+                    let column_edit_element = this.get_column_selection_element(this.flowchart,Object.keys(current_output[0]),record)
+                    columns_div.appendChild(column_edit_element)
+            })
+        }else{
+                let expanded_input_values = expand_struct(this.activity.outputs.output.value.values)
+                let all_available_columns = Object.keys(expanded_input_values)
+                 all_available_columns.forEach(key => {
+                        let data_type =  typeof expanded_input_values[key]
+                        if (data_type == 'string'){
+                            data_type = 'TEXT'
+                        }
+                        if (data_type == 'number'){
+                            data_type = 'INTEGER'
+                        }
+                        if (data_type == 'decimal'){
+                            data_type = 'DECIMAL'
+                        }
+                        if (data_type == 'object'){
+                            data_type = 'LIST'
+                        }
+                        let record = {'operatorId':this.activityId,'columnName': key, 'dataType':data_type,'updatedName':expanded_input_values[key]}
+                        let column_edit_element = this.get_column_selection_element(this.flowchart,Object.keys(expanded_input_values),record)
+                        columns_div.appendChild(column_edit_element)
+                });
+
+        }
+        div.appendChild(columns_div)
+        return div
+    }
+}
+
+class Activity extends Settings{
+    constructor(flowchart,activity){
+        super(flowchart, activity)
+        this.activity = activity
+        this.activityId = activity.operatorId
+        this.flowchart = flowchart
+    }
+    async run(){
+    let body = {
+        'activity_type' :  this.activity_type
+        ,'operations':  this.activity.settings
+        ,'data':  this.activity.inputs.input.value.values
+    }
+    var request = new Request('/etl/run/', {
+                                method: 'POST',
+                                headers: new Headers({
+                                            'Accept': 'application/json'
+                                        })
+			       ,body: JSON.stringify(body)
+                    });
+    var response = await fetch(request);
+    if (response.ok){ 
+        try{
+            const data = await response.json()
+            this.flowchart.flowchart('setoutputVal', this.activityId,'output',data)
+            return data;
+        }catch(error){}
+    }
+    return null;
+
+    
+}
+
+
 }
 
 function export_data(data){
@@ -21,34 +420,34 @@ function export_data(data){
     a.click();
 }
 
-function jsonToCsv(jsonData) {
-    let csv = '';
+// function jsonToCsv(jsonData) {
+//     let csv = '';
     
-    const headers = Object.keys(jsonData[0]);
-    csv += headers.join(',') + '\n';
+//     const headers = Object.keys(jsonData[0]);
+//     csv += headers.join(',') + '\n';
     
-    jsonData.forEach(obj => {
-        const values = headers.map(header => obj[header]);
-        csv += values.join(',') + '\n';
-    });
+//     jsonData.forEach(obj => {
+//         const values = headers.map(header => obj[header]);
+//         csv += values.join(',') + '\n';
+//     });
     
-    return csv;
-}
+//     return csv;
+// }
 
-function csvToJson(csv) {
-  const lines = csv.split("\n");
-  const headers = lines[0].split(",");
-  const result = lines.slice(1).map(line => {
-    const values = line.split(",");
-    return headers.reduce((acc, header, index) => {
-      header = header.replace("\"","")
-      header = header.replace("\"","")
-      acc[header] = values[index];
-      return acc;
-    }, {});
-  });
-  return result;
-}
+// function csvToJson(csv) {
+//   const lines = csv.split("\n");
+//   const headers = lines[0].split(",");
+//   const result = lines.slice(1).map(line => {
+//     const values = line.split(",");
+//     return headers.reduce((acc, header, index) => {
+//       header = header.replace("\"","")
+//       header = header.replace("\"","")
+//       acc[header] = values[index];
+//       return acc;
+//     }, {});
+//   });
+//   return result;
+// }
 
 
 
@@ -101,7 +500,7 @@ function get_selector_element(id, options, default_value) {
         }
     });
 
-    const selectHTML = `<select id="${id}">${selected_options.join('')}</select>`;
+    const selectHTML = `<select>${selected_options.join('')}</select>`;
 
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = selectHTML;
@@ -230,9 +629,8 @@ function add_export_activity_settings(widget, activity, outputVal){
 
 function expand_struct(struct){
     Object.keys(struct).forEach(key => {
-        let value = struct[key]
-        if (typeof value == 'object' && !Array.isArray(value)){
-            let child_keys = Object.keys(value);
+        if (typeof value == 'object' && !Array?.isArray(value)){
+            let child_keys = Object?.keys(value);
             child_keys.forEach(ck => {
                 struct[key+'.'+ck] = value[ck]
             });
@@ -475,7 +873,19 @@ function settings_create_column_edit_record(widget,original_columns,new_record){
         let operatorId = new_record.operatorId
         let settings_div = document.getElementById('selected_activity_settings')
         let data_type = new_record['dataType']
-        const datatype_options = ['string', 'number', 'decimal', 'object'];
+        const datatype_options = ['TEXT', 'INTEGER', 'DECIMAL', 'LIST'];
+        if (data_type == 'string'){
+            data_type = 'TEXT'
+        }
+        if (data_type == 'number'){
+            data_type = 'INTEGER'
+        }
+        if (data_type == 'decimal'){
+            data_type = 'DECIMAL'
+        }
+        if (data_type == 'object'){
+            data_type = 'LIST'
+        }
         let data_type_selector_element = get_selector_element(
                                                     "flatten_datatype_"+operatorId
                                                     , datatype_options
@@ -533,12 +943,24 @@ function onLinkCreation(widget,linkData){
     console.log(linkData)
     let toOperator = widget.getOperatorActivity(linkData['toOperator'])
     let fromOperator  = widget.getOperatorActivity(linkData['fromOperator'])
-    outputVal = fromOperator.outputs.output.value
+    let outputVal = fromOperator.outputs.output.value
     if (outputVal == null){
         return
     }
-    widget.setinputVal(linkData['toOperator'],'input', outputVal)
-    widget.setoutputVal(linkData['toOperator'],'output', outputVal)
+    if (toOperator.activityType == 'join'){
+        if (linkData.toConnector == 'input_1'){
+            widget.setinputVal(linkData['toOperator'],'input_1', fromOperator)
+        }
+        if (linkData.toConnector == 'input_2'){
+            widget.setinputVal(linkData['toOperator'],'input_2', fromOperator)
+        }
+    }else{
+        widget.setinputVal(linkData['toOperator'],'input', outputVal)
+        widget.setoutputVal(linkData['toOperator'],'output', outputVal)
+    }
+
+
+    // widget.addDataTypes(linkData['toOperator'], datatypes)
     // widget.update_activity_input_outputs(fromOperator.operatorId)
 
     // if (toOperator.activityType == 'flatten'){

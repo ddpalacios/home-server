@@ -133,7 +133,7 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 
-	<link rel="stylesheet" href="/etl/jquery.flowchart.css">
+<link rel="stylesheet" href="/etl/jquery.flowchart.css">
 	<script src="/etl/jquery.flowchart.js"></script>
 
 	<style>
@@ -154,11 +154,12 @@
 	<button id="run_pipeline" class="create_operator">Run</button>
 	<button id="import_activity" class="create_operator">Create Import</button>
 	<button  id="filter_activity" class="create_operator">Create Filter</button>
-	<button  id="select_activity" class="create_operator">Create Select</button>
-	<button  id="flatten_activity" class="create_operator">Create Flatten</button>
+	<!-- <button  id="flatten_activity" class="create_operator">Create Flatten</button> -->
 	<button  id="export_activity" class="create_operator">Create export</button>
 	<button  id="aggregate_activity" class="create_operator">Create Aggregate</button>
 	<button  id="join_activity" class="create_operator">Create join</button>
+	<button  id="custom_activity" class="create_operator">Create custom</button>
+	<button  id="replace_activity" class="create_operator">Replace Value</button>
 	<div id="operator_properties" style="display: block;">
 		<label for="operator_title">Operator's title: </label><input id="operator_title" type="text">
 	</div>
@@ -171,6 +172,11 @@
   <script src="etl/run.js"></script>
 
   <script src="etl/import.js"></script>
+  <script src="etl/join.js"></script>
+  <script src="etl/group.js"></script>
+  <script src="etl/custom_column.js"></script>
+  <script src="etl/filter.js"></script>
+  <script src="etl/replace.js"></script>
   
   <script>
       document.addEventListener('mousemove', function(event) {
@@ -192,7 +198,7 @@
 				defaultSelectedLinkColor: '#000055',
 				grid: 10,
 				multipleLinksOnInput: false,
-				multipleLinksOnOutput: false
+				multipleLinksOnOutput: true
 			});
 			function getOperatorData($element) {
 				var nbInputs = parseInt($element.data('nb-inputs'), 10);
@@ -230,6 +236,8 @@
 			var $linkColor = $('#link_color');
 
 			$flowchart.flowchart({
+
+				
 				onOperatorSelect: function(operatorId) {
 					$operatorProperties.show();
           			$selected_activity_settings.show()
@@ -261,7 +269,113 @@
 							settings_div.insertBefore(elem, settings_div.firstChild);
 						}
 					}
+
+					if (activity.activityType == 'filter'){
+						let filter_activity = new Filter_Activity($flowchart,activity)
+						
+						let elem = filter_activity.settings
+						if (elem == null || elem == undefined){return}
+						let found = false;
+        				for (let i=0; i<settings_div.children.length; i++){
+							if (settings_div.children[i].id == elem.id){
+								found = true
+								settings_div.children[i].style.display = 'block'
+							}
+							if (settings_div.children[i].id == elem.id+"_column_edit"){
+								found = true
+								settings_div.children[i].style.display = 'block'
+
+							}
+						}
+						if (!found){
+							settings_div.insertBefore(elem, settings_div.firstChild);
+						}
+
+					}
+					
+					if (activity.activityType == 'join'){
+						let join_activity = new Join_Activity($flowchart,activity)
+						let elem = join_activity.settings
+						if (elem == null || elem == undefined){return}
+						let found = false;
+        				for (let i=0; i<settings_div.children.length; i++){
+							if (settings_div.children[i].id == elem.id){
+								found = true
+								settings_div.children[i].style.display = 'block'
+							}
+							if (settings_div.children[i].id == elem.id+"_column_edit"){
+								found = true
+								settings_div.children[i].style.display = 'block'
+
+							}
+						}
+						if (!found){
+							settings_div.insertBefore(elem, settings_div.firstChild);
+						}
+
+					}
 				
+					if (activity.activityType == 'group'){
+						let group_activity = new Group_Activity($flowchart,activity)
+						let elem = group_activity.settings
+						if (elem == null || elem == undefined){return}
+						let found = false;
+        				for (let i=0; i<settings_div.children.length; i++){
+							if (settings_div.children[i].id == elem.id){
+								found = true
+								settings_div.children[i].style.display = 'block'
+							}
+							if (settings_div.children[i].id == elem.id+"_column_edit"){
+								found = true
+								settings_div.children[i].style.display = 'block'
+							}
+						}
+						if (!found){
+							settings_div.insertBefore(elem, settings_div.firstChild);
+						}
+
+					}
+					if (activity.activityType == 'custom'){
+						let custom_activity = new Custom_Activity($flowchart,activity)
+						let elem = custom_activity.settings
+						if (elem == null || elem == undefined){return}
+						let found = false;
+        				for (let i=0; i<settings_div.children.length; i++){
+							if (settings_div.children[i].id == elem.id){
+								found = true
+								settings_div.children[i].style.display = 'block'
+							}
+							if (settings_div.children[i].id == elem.id+"_column_edit"){
+								found = true
+								settings_div.children[i].style.display = 'block'
+							}
+						}
+						if (!found){
+							settings_div.insertBefore(elem, settings_div.firstChild);
+						}
+
+					}
+					if (activity.activityType == 'replace'){
+						let replace_activity = new Replace_Activity($flowchart,activity)
+						let elem = replace_activity.settings
+						if (elem == null || elem == undefined){return}
+						let found = false;
+        				for (let i=0; i<settings_div.children.length; i++){
+							if (settings_div.children[i].id == elem.id){
+								found = true
+								settings_div.children[i].style.display = 'block'
+							}
+							if (settings_div.children[i].id == elem.id+"_column_edit"){
+								found = true
+								settings_div.children[i].style.display = 'block'
+							}
+						}
+						if (!found){
+							settings_div.insertBefore(elem, settings_div.firstChild);
+						}
+
+					}
+
 					return true;
 				},
 				onOperatorUnselect: function() {
@@ -280,33 +394,7 @@
 					return true;
 				}
 			});
-        //   if (activity.activityType == 'flatten'){
-        //     console.log("Selected", activity)
-        //     add_flatten_activity_settings($flowchart, activity, activity.outputs.output.value)
-        //   }
-        //   if (activity.activityType == 'export'){
-        //      add_export_activity_settings($flowchart, activity, activity.outputs.output.value)
-        //   }
-        //   if (activity.activityType == 'select'){
-        //      add_select_activity_settings($flowchart, activity, activity.outputs.output.value)
-        //   }
-          //  $flowchart.flowchart('run_activity', operatorId);
-
-          //  let new_output_val = get_output_values(activity)
-          //  if (new_output_val != undefined && new_output_val != null){
-          //  $flowchart.flowchart('setoutputVal', operatorId, 'output', new_output_val)
-          //  }
-
-
-           
-          
-          //  let activity_settings_element = get_activity_settings_element($flowchart, activity)
-          //   if (activity_settings_element != undefined){
-          //       let settings_div = document.getElementById('selected_activity_settings')
-          //       settings_div.innerHTML = ''
-          //       settings_div.appendChild(activity_settings_element)
-          //   }
-         
+    
 			$operatorTitle.keyup(function() {
 				var selectedOperatorId = $flowchart.flowchart('getSelectedOperatorId');
 				if (selectedOperatorId != null) {
@@ -344,54 +432,50 @@
 			//-----------------------------------------
 			//--- create operator button
 			//--- start
-	  $flowchart.parent().siblings('#run_pipeline').click(async function() {
+	$flowchart.parent().siblings('#run_pipeline').click(async function() {
 		
 		let activites = $flowchart.flowchart('getOperators')
-		console.log("Running", activites)
 		for (let i=0; i<Object.keys(activites).length;i++){
 			let activityId = Object.keys(activites)[i]
 			let activity = activites[activityId].properties
 			if (activity.activityType == 'import'){
-					let response = await run_activity(activity)
-					console.log(response)
-					if (response == null){
-						continue;
-					}
-					$flowchart.flowchart('setoutputVal', activityId, 'output', response)
+				console.log("Running", activity)
+				execute($flowchart, activityId)
+				// $flowchart.flowchart('run_activity',activityId)
+					// let response = await run_activity_flow(activity)
+					// console.log(response)
+					// if (response == null){
+					// 	continue;
+					// }
+					// $flowchart.flowchart('setoutputVal', activityId, 'output', response)
 			}
-
 			
 		}
-		
-		
-
-
     })
-
 			var operatorI = 0;
-			$flowchart.parent().siblings('#import_activity').click(function() {
+	$flowchart.parent().siblings('#import_activity').click(function() {
 
 
 				var operatorId = 'created_operator_' + operatorI;
 				var operatorData = {
-          operatorId: operatorId,
+					operatorId: operatorId,
 					top: ($flowchart.height() / 2) - 30,
 					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
 					properties: {
-					 title: 'Import Data' ,
+					 	title: 'Import Data' ,
 						fileType: null,
-						settings: {'drop': [],'select':[]},
+						settings: {'datatypes':[],'drop': [],'select':[]},
 						activityType: 'import',
 						inputs:{
 						input: {
 							label: '',
-							value: null
+							value: {'datatypes': null, 'values':null}
 							}
 						},
 						outputs: {
 							output: {
 								label: 'Output',
-                value: null
+								value: {'datatypes': null, 'values':null}
 							}
 						}
 					}
@@ -403,7 +487,7 @@
 
 			});
 
-			$flowchart.parent().siblings('#select_activity').click(function() {
+	$flowchart.parent().siblings('#select_activity').click(function() {
 				var operatorId = 'created_operator_' + operatorI;
 				var operatorData = {
 					top: ($flowchart.height() / 2) - 30,
@@ -432,22 +516,22 @@
         
 			});
 
-			$flowchart.parent().siblings('#join_activity').click(function() {
+	$flowchart.parent().siblings('#join_activity').click(function() {
 				var operatorId = 'created_operator_' + operatorI;
 				var operatorData = {
 					top: ($flowchart.height() / 2) - 30,
 					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
 					properties: {
 						title: 'Join' ,
-            activityType: 'join',
+            			activityType: 'join',
 						inputs: {
-							input: {
+							input_1: {
 								label: 'Table 1',
-                value: null
+                				value: null
 							},
-              input: {
+              				input_2: {
 								label: 'Table 2',
-                value: null
+                				value: null
 							}
 						},
 						outputs: {
@@ -471,11 +555,66 @@
 					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
 					properties: {
 						title: 'Aggregate' ,
-            activityType: 'aggregate',
+            activityType: 'group',
 						inputs: {
 							input: {
 								label: 'Table 1',
                 value: null
+							}
+						},
+						outputs: {
+							output: {
+								label: 'Output',
+							}
+						}
+					}
+				};
+				operatorI++;
+
+				$flowchart.flowchart('createOperator', operatorId, operatorData);
+				activites =  $flowchart.flowchart('getOperators');
+        
+			});
+    
+	$flowchart.parent().siblings('#custom_activity').click(function() {
+				var operatorId = 'created_operator_' + operatorI;
+				var operatorData = {
+					top: ($flowchart.height() / 2) - 30,
+					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+					properties: {
+						title: 'Custom Column' ,
+            activityType: 'custom',
+						inputs: {
+							input: {
+								label: 'Table 1',
+                				value: null
+							}
+						},
+						outputs: {
+							output: {
+								label: 'Output',
+							}
+						}
+					}
+				};
+				operatorI++;
+
+				$flowchart.flowchart('createOperator', operatorId, operatorData);
+				activites =  $flowchart.flowchart('getOperators');
+        
+			});
+	$flowchart.parent().siblings('#replace_activity').click(function() {
+				var operatorId = 'created_operator_' + operatorI;
+				var operatorData = {
+					top: ($flowchart.height() / 2) - 30,
+					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+					properties: {
+						title: 'Replace Value' ,
+            activityType: 'replace',
+						inputs: {
+							input: {
+								label: 'Table 1',
+                				value: null
 							}
 						},
 						outputs: {
@@ -525,7 +664,7 @@
 
 			});
 
-      $flowchart.parent().siblings('#flatten_activity').click(function() {
+	$flowchart.parent().siblings('#flatten_activity').click(function() {
 				var operatorId = 'created_operator_flat' + operatorI;
 				var operatorData = {
 					top: ($flowchart.height() / 2) - 30,
@@ -562,16 +701,18 @@
 					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
 					properties: {
 						title: 'Filter' ,
-            activityType: 'filter',
+						settings: {'datatypes':[],'drop': [],'select':[]},
+            			activityType: 'filter',
 						inputs: {
 							input: {
 								label: 'Input',
-                value: null
+                				value: {'datatypes': null, 'values':null}
 							}
 						},
 						outputs: {
 							output: {
 								label: 'Output',
+								value: {'datatypes': null, 'values':null}
 							}
 						}
 					}
