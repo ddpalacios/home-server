@@ -92,8 +92,14 @@ void post_generate_phrase(struct Socket* socket,char* http_header, char*body, ch
 
 void post_run_activity(struct Socket* socket,char* http_header, char*body, char* route){
 	int sfd  = connect_to_local_server("127.0.0.1", "5001");
-    char request[strlen(body)+ 1024];
-	snprintf(request, sizeof(request),
+	size_t req_size = strlen(body) + 2048;
+	char *request = malloc(req_size);
+	if (!request) {
+		perror("malloc failed");
+		return;
+	}
+
+	snprintf(request, req_size,
 		"POST /etl/run HTTP/1.1\r\n"
 		"Host: %s:%s\r\n"
 		"Content-Type: application/json\r\n"
@@ -102,7 +108,10 @@ void post_run_activity(struct Socket* socket,char* http_header, char*body, char*
 		"\r\n"
 		"%s",
 		"127.0.0.1", "5001", strlen(body), body);
-    send(sfd,request, strlen(request),0);
+
+	send(sfd, request, strlen(request), 0);
+	free(request);
+
     char buf[8192]; 
     char *response = NULL;
     size_t total = 0;

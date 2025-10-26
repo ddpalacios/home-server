@@ -160,6 +160,7 @@
 	<button  id="join_activity" class="create_operator">Create join</button>
 	<button  id="custom_activity" class="create_operator">Create custom</button>
 	<button  id="replace_activity" class="create_operator">Replace Value</button>
+	<button  id="split_activity" class="create_operator">Split Value</button>
 	<div id="operator_properties" style="display: block;">
 		<label for="operator_title">Operator's title: </label><input id="operator_title" type="text">
 	</div>
@@ -175,6 +176,8 @@
   <script src="etl/join.js"></script>
   <script src="etl/group.js"></script>
   <script src="etl/custom_column.js"></script>
+  <script src="etl/split.js"></script>
+  <script src="etl/export.js"></script>
   <script src="etl/filter.js"></script>
   <script src="etl/replace.js"></script>
   
@@ -190,7 +193,7 @@
   return arr1.length === arr2.length && new Set(arr1).size === new Set(arr2).size && arr1.every(item => arr2.includes(item));
 }
 
-    var activites = []
+    var main_activities = {}
 	$(document).ready(function() {
 			var $flowchart = $('#flowchartworkspace');
 			var $container = $flowchart.parent();
@@ -249,9 +252,8 @@
 						child.style.display = 'none';
 					});		
 					if (activity.activityType == 'import'){
-						let import_activity = new Import_Activity($flowchart,activity)
-						let elem = import_activity.get_settings_element()
-						console.log("Adding settings", elem)
+						let target_activity = main_activities[operatorId]
+						let elem = target_activity.settings
 						if (elem == null || elem == undefined){return}
 						let found = false;
         				for (let i=0; i<settings_div.children.length; i++){
@@ -271,9 +273,8 @@
 					}
 
 					if (activity.activityType == 'filter'){
-						let filter_activity = new Filter_Activity($flowchart,activity)
-						
-						let elem = filter_activity.settings
+						let target_activity = main_activities[operatorId]
+						let elem = target_activity.settings
 						if (elem == null || elem == undefined){return}
 						let found = false;
         				for (let i=0; i<settings_div.children.length; i++){
@@ -294,8 +295,8 @@
 					}
 					
 					if (activity.activityType == 'join'){
-						let join_activity = new Join_Activity($flowchart,activity)
-						let elem = join_activity.settings
+						let target_activity = main_activities[operatorId]
+						let elem = target_activity.settings
 						if (elem == null || elem == undefined){return}
 						let found = false;
         				for (let i=0; i<settings_div.children.length; i++){
@@ -316,8 +317,8 @@
 					}
 				
 					if (activity.activityType == 'group'){
-						let group_activity = new Group_Activity($flowchart,activity)
-						let elem = group_activity.settings
+						let target_activity = main_activities[operatorId]
+						let elem = target_activity.settings
 						if (elem == null || elem == undefined){return}
 						let found = false;
         				for (let i=0; i<settings_div.children.length; i++){
@@ -335,9 +336,30 @@
 						}
 
 					}
+					
 					if (activity.activityType == 'custom'){
-						let custom_activity = new Custom_Activity($flowchart,activity)
-						let elem = custom_activity.settings
+						let target_activity = main_activities[operatorId]
+						let elem = target_activity.settings
+						if (elem == null || elem == undefined){return}
+						let found = false;
+        				for (let i=0; i<settings_div.children.length; i++){
+							if (settings_div.children[i].id == elem.id){
+								found = true
+								settings_div.children[i].style.display = 'block'
+							}
+							if (settings_div.children[i].id == elem.id+"_column_edit"){
+								found = true
+								settings_div.children[i].style.display = 'block'
+							}
+						}
+						if (!found){
+							settings_div.insertBefore(elem, settings_div.firstChild);
+						}
+
+					}
+					if (activity.activityType == 'export'){
+						let target_activity = main_activities[operatorId]
+						let elem = target_activity.settings
 						if (elem == null || elem == undefined){return}
 						let found = false;
         				for (let i=0; i<settings_div.children.length; i++){
@@ -356,8 +378,29 @@
 
 					}
 					if (activity.activityType == 'replace'){
-						let replace_activity = new Replace_Activity($flowchart,activity)
-						let elem = replace_activity.settings
+						let target_activity = main_activities[operatorId]
+						let elem = target_activity.settings
+						if (elem == null || elem == undefined){return}
+						let found = false;
+        				for (let i=0; i<settings_div.children.length; i++){
+							if (settings_div.children[i].id == elem.id){
+								found = true
+								settings_div.children[i].style.display = 'block'
+							}
+							if (settings_div.children[i].id == elem.id+"_column_edit"){
+								found = true
+								settings_div.children[i].style.display = 'block'
+							}
+						}
+						if (!found){
+							settings_div.insertBefore(elem, settings_div.firstChild);
+						}
+
+					}
+					
+					if (activity.activityType == 'split'){
+						let target_activity = main_activities[operatorId]
+						let elem = target_activity.settings
 						if (elem == null || elem == undefined){return}
 						let found = false;
         				for (let i=0; i<settings_div.children.length; i++){
@@ -466,6 +509,7 @@
 						fileType: null,
 						settings: {'datatypes':[],'drop': [],'select':[]},
 						activityType: 'import',
+						activityId: operatorId,
 						inputs:{
 						input: {
 							label: '',
@@ -482,6 +526,9 @@
 				};
 				operatorI++;
 				$flowchart.flowchart('createOperator', operatorId, operatorData);
+				let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
+				let import_activity = new Import_Activity($flowchart,new_activity)
+				main_activities[operatorId] = import_activity
 				activites =  $flowchart.flowchart('getOperators');
         console.log(activites)
 
@@ -544,6 +591,9 @@
 				operatorI++;
 
 				$flowchart.flowchart('createOperator', operatorId, operatorData);
+				let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
+				let join_activity = new Join_Activity($flowchart,new_activity)
+				main_activities[operatorId] = join_activity
 				activites =  $flowchart.flowchart('getOperators');
         
 			});
@@ -572,6 +622,9 @@
 				operatorI++;
 
 				$flowchart.flowchart('createOperator', operatorId, operatorData);
+				let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
+				let group_activity = new Group_Activity($flowchart,new_activity)
+				main_activities[operatorId] = group_activity
 				activites =  $flowchart.flowchart('getOperators');
         
 			});
@@ -600,6 +653,9 @@
 				operatorI++;
 
 				$flowchart.flowchart('createOperator', operatorId, operatorData);
+				let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
+				let custom_activity = new Custom_Activity($flowchart,new_activity)
+				main_activities[operatorId] = custom_activity
 				activites =  $flowchart.flowchart('getOperators');
         
 			});
@@ -627,6 +683,9 @@
 				operatorI++;
 
 				$flowchart.flowchart('createOperator', operatorId, operatorData);
+				let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
+				let replace_activity = new Replace_Activity($flowchart,new_activity)
+				main_activities[operatorId] = replace_activity
 				activites =  $flowchart.flowchart('getOperators');
         
 			});
@@ -660,6 +719,9 @@
 
 
 				$flowchart.flowchart('createOperator', operatorId, operatorData);
+				let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
+				let export_activity = new Export_Activity($flowchart,new_activity)
+				main_activities[operatorId] = export_activity
 				activites =  $flowchart.flowchart('getOperators');
 
 			});
@@ -694,7 +756,7 @@
 			});
 
 
-      $flowchart.parent().siblings('#filter_activity').click(function() {
+	$flowchart.parent().siblings('#filter_activity').click(function() {
 				var operatorId = 'created_operator_' + operatorI;
 				var operatorData = {
 					top: ($flowchart.height() / 2) - 30,
@@ -719,9 +781,46 @@
 				};
 				operatorI++;
 				$flowchart.flowchart('createOperator', operatorId, operatorData);
+				let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
+				let filter_activity = new Filter_Activity($flowchart,new_activity)
+				main_activities[operatorId] = filter_activity
 				activites =  $flowchart.flowchart('getOperators');
 
 			});
+			
+	$flowchart.parent().siblings('#split_activity').click(function() {
+		var operatorId = 'created_operator_' + operatorI;
+		var operatorData = {
+			top: ($flowchart.height() / 2) - 30,
+			left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+			properties: {
+				title: 'Split' ,
+				settings: {'datatypes':[],'drop': [],'select':[]},
+				activityType: 'split',
+				inputs: {
+					input: {
+						label: 'Input',
+						value: {'datatypes': null, 'values':null}
+					}
+				},
+				outputs: {
+					output: {
+						label: 'Output',
+						value: {'datatypes': null, 'values':null}
+					}
+				}
+			}
+		};
+		operatorI++;
+		$flowchart.flowchart('createOperator', operatorId, operatorData);
+		let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
+		let split_activity = new Split_Activity($flowchart,new_activity)
+		main_activities[operatorId] = split_activity
+		activites =  $flowchart.flowchart('getOperators');
+
+		});
+			
+			
 			//--- end
 			//--- create operator button
 			//-----------------------------------------

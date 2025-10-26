@@ -6,6 +6,11 @@ class Group_Activity extends Activity{
         this.add_button_label = "+ Add Group By"
         this.settings = this.get_settings_element()
     }
+    get_operation_settings(){
+        let settings = super.get_operation_settings('group')
+        this.flowchart.flowchart('setSettings', this.activityId, settings)
+        return settings
+    }
 
     _add_column(e, widget, activity){
         let all_columns = []
@@ -41,6 +46,7 @@ class Group_Activity extends Activity{
                 'type': 'selector'
                 ,'options':all_columns
                 ,'default_value': all_columns[0]
+                ,'name':'column_name'
             },
                 {
                 'type': 'span'
@@ -50,6 +56,7 @@ class Group_Activity extends Activity{
               ,{
                 'type': 'input'
                 ,'placeholder' : 'New column name'
+                ,'name':'new_column_name'
             }
             , {
                 'type': 'span'
@@ -61,6 +68,8 @@ class Group_Activity extends Activity{
                 ,'order':3
                 ,'options': this.group_operators
                 ,'default_value': this.group_operators[0]
+                ,'name':'operation'
+                
             }
                , {
                 'type': 'span'
@@ -71,15 +80,16 @@ class Group_Activity extends Activity{
                 'type': 'selector'
                 ,'options':all_columns
                 ,'default_value': ""
+                ,'name': 'value'
             }
           ]
           
             let column_edit_element = this.get_column_selection_element(widget,settings)
             columns_div.appendChild(column_edit_element)
     }
-    _on_selector_change(e, widget,activity){
-        alert("Changed")
-    }
+    // _on_selector_change(e, widget,activity){
+    //     alert("Changed")
+    // }
     
     // get_settings_element(){
     // let columns_div = document.createElement('div');

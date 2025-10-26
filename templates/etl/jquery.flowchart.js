@@ -597,7 +597,9 @@ jQuery(function ($) {
             }
         },
         addCustomValue: function(operatorId, select_id, custom_value){
+            console.log("ADDING CUSTOM VALE")
             let vals = this.data.operators[operatorId].internal.properties['settings']['select']
+            console.log(vals, select_id)
             for(let i=0; i<vals.length; i++){
                 let val = vals[i]
                 if (val.id  == select_id){
@@ -608,6 +610,9 @@ jQuery(function ($) {
         },
         addDataTypes: function(operatorId, datatypes){
             this.data.operators[operatorId].internal.properties['settings']['datatypes'] = datatypes
+        },
+        setSettings: function(operatorId, settings){
+            this.data.operators[operatorId].internal.properties['settings'] = settings
         },
         changeDataTypeSelectColumn: function(operatorId, select_id, datatype){
             let vals = this.data.operators[operatorId].internal.properties['settings']['select']
@@ -856,46 +861,68 @@ jQuery(function ($) {
 
             for (let i=0; i<ordered_nodes.length; i++){
                 let node = ordered_nodes[i]
+                if (node.operatorId == activity.operatorId){
+                    continue
+                }
                 if (node.activityType == 'import'){
+                    console.log('Import', node)
+                }
+                if (node.activityType == 'filter'){
+                    console.log('filter', node)
+                    let previous_output_value = node.link_from[0].outputs.output.value
+
+                    let copy = JSON.parse(JSON.stringify(previous_output_value))
+                    this.setinputVal(node.operatorId,'input', copy)
+                    let copy2 = JSON.parse(JSON.stringify(previous_output_value))
+                    this.setoutputVal(node.operatorId ,'output', copy2)
+
+
+                }
                     // console.log('Import', node)
-                    let copy = JSON.parse(JSON.stringify(output))
-                    this.setinputVal(node.operatorId,'input', copy)
-                    let copy2 = JSON.parse(JSON.stringify(output))
-                    this.setoutputVal(node.operatorId ,'output', copy2)
-                }
-                if (node.activityType == 'select'){
-                    let copy = JSON.parse(JSON.stringify(output))
-                    this.setinputVal(node.operatorId,'input', copy)
-                    let copy2 = JSON.parse(JSON.stringify(output))
-                    this.setoutputVal(node.operatorId ,'output', copy2)
-                }
-                if (node.activityType == 'flatten'){
-                    let copy = JSON.parse(JSON.stringify(output))
-                    let copy2 = JSON.parse(JSON.stringify(output))
+                //     let copy = JSON.parse(JSON.stringify(output))
+                //     this.setinputVal(node.operatorId,'input', copy)
+                //     let copy2 = JSON.parse(JSON.stringify(output))
+                //     this.setoutputVal(node.operatorId ,'output', copy2)
+                // }
+                //  if (node.activityType == 'filter'){
+                    // let copy = JSON.parse(JSON.stringify(output))
+                    // this.setinputVal(node.operatorId,'input', copy)
+                    // let copy2 = JSON.parse(JSON.stringify(output))
+                    // this.setoutputVal(node.operatorId ,'output', copy2)
+                // }
+                // if (node.activityType == 'select'){
+                //     let copy = JSON.parse(JSON.stringify(output))
+                //     this.setinputVal(node.operatorId,'input', copy)
+                //     let copy2 = JSON.parse(JSON.stringify(output))
+                //     this.setoutputVal(node.operatorId ,'output', copy2)
+                // }
+                // if (node.activityType == 'flatten'){
+                //     let copy = JSON.parse(JSON.stringify(output))
+                //     let copy2 = JSON.parse(JSON.stringify(output))
 
-                    this.setinputVal(node.operatorId,'input', copy)
-                    // console.log('Flatten', node)
-                    this.setoutputVal(node.operatorId ,'output', copy2)
-                    if (output == null){continue}
-                    let array_values = []
-                    Object.keys(output).forEach(key => {
-                        if (Array.isArray(output[key])){
-                            array_values.push(key)
-                        }
-                    }); 
-                    if (array_values.length == 0){continue}
-                    let target_column = array_values[0]
-                    let target_values = copy2[target_column]
-                    this.setoutputVal(node.operatorId ,'output', target_values)
-                    output = target_values
-                }
-                if (node.activityType == 'export'){
-                    let copy = JSON.parse(JSON.stringify(output))
-                    this.setinputVal(node.operatorId,'input', copy)
-                    let copy2 = JSON.parse(JSON.stringify(output))
-                    this.setoutputVal(node.operatorId ,'output', copy2)
+                //     this.setinputVal(node.operatorId,'input', copy)
+                //     // console.log('Flatten', node)
+                //     this.setoutputVal(node.operatorId ,'output', copy2)
+                //     if (output == null){continue}
+                //     let array_values = []
+                //     Object.keys(output).forEach(key => {
+                //         if (Array.isArray(output[key])){
+                //             array_values.push(key)
+                //         }
+                //     }); 
+                //     if (array_values.length == 0){continue}
+                //     let target_column = array_values[0]
+                //     let target_values = copy2[target_column]
+                //     this.setoutputVal(node.operatorId ,'output', target_values)
+                //     output = target_values
+                // }
+                // if (node.activityType == 'export'){
+                //     let copy = JSON.parse(JSON.stringify(output))
+                //     this.setinputVal(node.operatorId,'input', copy)
+                //     let copy2 = JSON.parse(JSON.stringify(output))
+                //     this.setoutputVal(node.operatorId ,'output', copy2)
 
-                }
+                // }
             }
         },
 

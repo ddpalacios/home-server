@@ -9,7 +9,12 @@ class Join_Activity extends Activity{
         this.add_button_label = "+ Add Join"
         this.settings = this.get_settings_element()
     }
-
+    get_operation_settings(){
+        let settings = super.get_operation_settings('join')
+        console.log("JOIN SETTINGS", settings)
+        this.flowchart.flowchart('setSettings', this.activityId, settings)
+        return settings
+    }
         _add_column(e, widget, activity){
             let all_columns = []
             let activityId = activity.activityId
@@ -60,6 +65,7 @@ class Join_Activity extends Activity{
                 ,'order':3
                 ,'options': table1_columns
                 ,'default_value': ""
+                ,'name':'column_name_1'
             }
                 ,{
                 'type': 'span'
@@ -72,12 +78,15 @@ class Join_Activity extends Activity{
                 ,'order':5
                 ,'options': table2_columns
                 ,'default_value': ""
+                ,'name':'column_name_2'
+
             }
             , {
                 'type': 'selector'
                 ,'order':3
                 ,'options': this.join_operators
                 ,'default_value': this.join_operators[0]
+                ,'name':'operation'
             }
           ]
 
@@ -85,9 +94,9 @@ class Join_Activity extends Activity{
         
 
     }
-    _on_selector_change(e, widget,activity){
-        alert("Changed")
-    }
+    // _on_selector_change(e, widget,activity){
+    //     alert("Changed")
+    // }
 
     // get_settings_element(){
     //     let columns_div = document.createElement('div')

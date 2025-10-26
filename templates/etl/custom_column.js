@@ -4,7 +4,15 @@ class Custom_Activity extends Activity{
         super(flowchart, activity)
         this.add_button_label = "+ Add Colunn"
         this.settings = this.get_settings_element()
+        this.string_operations = ['EQUALS', 'DOES NOT EQUAL', 'STARTS_WITH', 'DOES NOT START WITH', 'ENDS_WITH', 'DOES NOT END WITH', 'CONTAINS','DOES NOT CONTAIN']
+        this.number_operations = ['EQUALS', 'DOES NOT EQUAL', 'GREATER THAN', 'GREATER THAN OR EQUAL TO', 'LESS THAN', 'LESS THAN OR EQUAL TO', 'BETWEEN']
     }
+    get_operation_settings(){
+        let settings = super.get_operation_settings('custom')
+        this.flowchart.flowchart('setSettings', this.activityId, settings)
+        return settings
+    }
+
 
     _add_column(e, widget, activity){
         let all_columns = []
@@ -17,6 +25,12 @@ class Custom_Activity extends Activity{
             columns_div.id = this.activityId+ "_column_edit"
             settings_div.appendChild(columns_div)
         }
+        if (Array.isArray( activity.activity.inputs.input.value.values)){
+            all_columns = Object.keys(activity.activity.inputs.input.value.values[0])
+        }else{
+            all_columns = Object.keys(activity.activity.inputs.input.value.values)
+
+        }
 
         let settings = [
               {
@@ -27,6 +41,8 @@ class Custom_Activity extends Activity{
               ,{
                 'type': 'input'
                 ,'placeholder' : ''
+                ,'name':'new_column_name'
+
             }
             , {
                 'type': 'span'
@@ -37,6 +53,7 @@ class Custom_Activity extends Activity{
                 'type': 'selector'
                 ,'options': ['string', 'int','datetime']
                 ,'default_value': ""
+                ,'name':'data_type'
             }
             , {
                 'type': 'span'
@@ -46,11 +63,41 @@ class Custom_Activity extends Activity{
             ,{
                 'type': 'input'
                 ,'placeholder' : ''
+                ,'name':'value'
+            }
+            , {
+                'type': 'span'
+                ,'label':"IF"
+                ,'color': 'black'
             }
             ,{
-                'type': 'button'
-                ,'label': '+ Add Condition'
-                ,'color': 'green'
+                'type': 'selector'
+                ,'options':all_columns
+                ,'default_value': all_columns[0]
+                ,'name': 'column_name'
+            }
+            , {
+                'type': 'selector'
+                ,'options': this.string_operations
+                ,'default_value': this.string_operations[0]
+                ,'name': 'operation'
+            }
+            ,{
+                'type': 'input'
+                ,'placeholder' : ''
+                ,'name': 'condition_value'
+
+            }
+             , {
+                'type': 'span'
+                ,'label':"THEN"
+                ,'color': 'black'
+            }
+            ,{
+                'type': 'input'
+                ,'placeholder' : ''
+                ,'name': 'then_value'
+
             }
             ,{
                 'type': 'button'
@@ -62,75 +109,6 @@ class Custom_Activity extends Activity{
             let column_edit_element = this.get_column_selection_element(widget,settings)
             columns_div.appendChild(column_edit_element)
     }
-    _on_selector_change(e, widget,activity){
-        alert("Changed")
-    }
-    
-    // get_settings_element(){
-    // let columns_div = document.createElement('div');
-    // columns_div.id = this.activityId + "_column_edit";
 
-    // let div = document.createElement('div');
-    // let table_group_div = document.createElement('div');
-    // table_group_div.style.display = 'flex';
-    // table_group_div.style.flexDirection = 'column';
-    // table_group_div.style.gap = '20px';
-    // table_group_div.style.marginTop = '10px';
-
-    // let group_section = document.createElement('div');
-    // group_section.style.display = 'flex';
-    // group_section.style.flexDirection = 'row';
-    // group_section.style.alignItems = 'center';
-    // group_section.style.flexWrap = 'wrap';
-    // group_section.style.gap = '10px';
-
-    // let span = document.createElement('span');
-    // span.textContent = "Group By:";
-
-    // let all_columns = this.get_input_value_columns
-    //     ? this.get_input_value_columns()
-    //     : ["department", "job_title", "salary", "hours"];
-
-    // let group_by_selector = get_selector_element(null, all_columns, "");
-
-    // group_section.appendChild(span);
-    // group_section.appendChild(group_by_selector);
-
-    // let agg_section = document.createElement('div');
-    // agg_section.style.display = 'flex';
-    // agg_section.style.flexDirection = 'row';
-    // agg_section.style.alignItems = 'center';
-    // agg_section.style.flexWrap = 'wrap';
-    // agg_section.style.gap = '10px';
-
-    // let agg_label = document.createElement('span');
-    // agg_label.textContent = "Aggregate:";
-
-    // let operations = ["COUNT", "SUM", "AVG", "MIN", "MAX"];
-    // let operation_selector = get_selector_element(null, operations, "SUM");
-
-    // let agg_column_selector = get_selector_element(null, all_columns, "");
-
-    // let d = document.createElement("div")
-    // let new_col_input = document.createElement('input');
-    // new_col_input.type = "text";
-    // new_col_input.placeholder = "New column name";
-    // new_col_input.style.padding = "4px 6px";
-    // new_col_input.style.border = "1px solid #ccc";
-    // new_col_input.style.borderRadius = "6px";
-    // new_col_input.style.flex = "1";
-    // d.appendChild(new_col_input)
-
-    // agg_section.appendChild(agg_label);
-    // agg_section.appendChild(operation_selector);
-    // agg_section.appendChild(agg_column_selector);
-    // agg_section.appendChild(d);
-
-    // table_group_div.appendChild(group_section);
-    // table_group_div.appendChild(agg_section);
-    // columns_div.appendChild(table_group_div);
-    // div.appendChild(columns_div);
-
-    //     return div
-    // }
+  
 }

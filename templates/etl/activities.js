@@ -5,6 +5,7 @@ class Settings{
         this.flowchart = flowchart
         this.add_button_label = "+ Add"
         this.add_button_element = null;
+        this.operation_settings = null
         }
     get_input_value_columns(){
          let input_value;
@@ -29,40 +30,6 @@ class Settings{
             return Object.keys(current_output)
          }
     }
-
-    get_setting_rows(){
-        return [
-            {
-                'type': 'selector'
-                ,'order':1
-                ,'options': this.get_output_columns()
-                ,'default_value': this.get_output_columns()[0]
-            },
-             {
-                'type': 'selector'
-                ,'order':2
-                ,'options': ['string', 'int']
-                ,'default_value': 'string'
-            }
-             , {
-                'type': 'input'
-                ,'order':3
-                ,'placeholder' : 'Column Name'
-            }
-            ,{
-                'type': 'input'
-                ,'order':4
-                ,'placeholder' : 'Column Value'
-            }
-            ,{
-                'type': 'button'
-                ,'order':5
-                ,'label': 'remove'
-                ,'color': 'red'
-            }
-        ]
-    }
-
     _add_custom_value(e, widget, activity){
         let parent_element = e.target.parentElement;
         console.log(e.target.value)
@@ -84,12 +51,14 @@ class Settings{
                 ,'order':1
                 ,'options':all_columns
                 ,'default_value': ""
+                ,'name':'column_name'
             },
              {
                 'type': 'selector'
                 ,'order':2
                 ,'options': ['string', 'int']
                 ,'default_value': ""
+                ,'name':'data_type'
             }
              , {
                 'type': 'input'
@@ -100,6 +69,7 @@ class Settings{
                 'type': 'input'
                 ,'order':4
                 ,'placeholder' : 'Column Value'
+                ,'name':'custom_value'
             }
             ,{
                 'type': 'button'
@@ -159,6 +129,13 @@ class Settings{
           widget.flowchart('addSelectColumn', activity.activityId, select_val)
           console.log(widget.flowchart('getOperatorActivity', activity.activityId))
     }
+    _update_activity(e, widget, activity){
+        console.log("UPDATIN INPUTS", activity)
+        activity = activity.activity
+        let link_from_output = activity.link_from[0].outputs.output.value
+         widget.flowchart('setinputVal', activity.operatorId,'input', link_from_output)
+
+    }
      get_selector_element(options, default_value) {
     const selected_options = [];
 
@@ -194,12 +171,18 @@ class Settings{
                 let options = element['options']
                 let default_value =element['default_value']
                 let selector_element = this.get_selector_element(options,default_value)
+                selector_element.name = element?.name
+                selector_element.disabled = element?.disabled
                 selector_element.addEventListener("change", (event) => this._on_selector_change(event, widget, this));
                 div.appendChild(selector_element)
             }
             if (elem_type == 'input'){
                 let input = document.createElement('input')
                 input.placeholder = element['placeholder']
+                input.name = element?.name
+                if (element?.value != undefined){
+                    input.value = element?.value
+                }
                 input.addEventListener("change", (event) => this._on_input_change(event, widget, this));
                 div.appendChild(input)
             }
@@ -255,6 +238,7 @@ class Settings{
             return
         }
         let response = await run_activity_flow(widget.flowchart('getOperatorActivity', activity.activityId),widget)
+        console.log("RESPONSE", response, activityId)
         widget.flowchart('setoutputVal', activityId,'output',response)
         let column_datatypes = response['datatypes']
         widget.flowchart('addDataTypes',activity.activityId,column_datatypes)
@@ -272,17 +256,20 @@ class Settings{
                 ,'order':1
                 ,'options': this.get_output_columns()
                 ,'default_value': key
+                ,'name': 'column_name'
             },
              {
                 'type': 'selector'
                 ,'order':2
-                ,'options': Object.values(column_datatypes)
+                ,'options': [...new Set(Object.values(column_datatypes))] 
                 ,'default_value': data_type
+                ,'name': 'data_type'
             }
              , {
                 'type': 'input'
                 ,'order':3
                 ,'placeholder' : 'Column Name'
+                ,'value': key
             }
             ,{
                 'type': 'button'
@@ -296,7 +283,7 @@ class Settings{
             widget.flowchart('addSelectColumn', activity.activityId, select_val)
         }); 
         settings_div.appendChild(columns_div)
-        // widget.flowchart('run_activity', activityId);
+        widget.flowchart('run_activity', activityId);
     }
     get_settings_element(){
         let div = document.createElement('div')
@@ -317,6 +304,13 @@ class Settings{
             input.type = 'file';
             input.addEventListener("change", (event) => this._inputFile_onchange(event, this.flowchart, this));
             div.appendChild(input)
+        }
+        else{
+            const button = document.createElement('button');
+            button.innerHTML = "Update View"
+            button.addEventListener("click", (event) => this._update_activity(event, this.flowchart, this));
+            div.appendChild(button)
+
         }
         if (this.activity.outputs.output.value?.values == null || this.activity.outputs.output.value?.values == undefined){
             return div
@@ -369,6 +363,90 @@ class Settings{
         div.appendChild(columns_div)
         return div
     }
+    get_operation_settings(type) {
+    const record = document.getElementById(this.activityId + "_column_edit");
+    console.log("RECORD", record)
+    if (!record) return null;
+
+    const statements = [];
+
+    for (let i = 0; i < record.children.length; i++) {
+        const row = record.children[i];
+        console.log("ROW", row)
+        const statement = {};
+
+        for (let j = 0; j < row.children.length; j++) {
+            const element = row.children[j];
+            if (!element.name) continue;
+
+            switch (element.name) {
+                case 'column_name_1':
+                    statement.columnName_1 = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'column_name_2':
+                    statement.columnName_2 = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'new_column_name':
+                    statement.new_column_name = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'new_column_name_1':
+                    statement.new_column_name_1 = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'new_column_name_2':
+                    statement.new_column_name_2 = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'column_name':
+                    statement.columnName = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'case':
+                    statement.case = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'data_type':
+                    statement.data_type = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'operation':
+                    statement.operation = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'condition_value':
+                    statement.condition_value = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'value':
+                    statement.value = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'then_value':
+                    statement.then_value = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'else_value':
+                    statement.else_value = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'logical':
+                    statement.logical = element.value;
+                    statement.row_id = row.id
+                    continue
+            }
+        }
+        statements.push(statement);
+
+    }
+
+
+    this.operation_settings = { [type]: statements };
+    return this.operation_settings;
+}
+
 }
 
 class Activity extends Settings{
@@ -380,26 +458,27 @@ class Activity extends Settings{
     }
     async run(){
     let body = {
-        'activity_type' :  this.activity_type
-        ,'operations':  this.activity.settings
+        'activity_type' :  this.activity.activityType
+        ,'operations':  this.get_operation_settings("where")
         ,'data':  this.activity.inputs.input.value.values
     }
-    var request = new Request('/etl/run/', {
-                                method: 'POST',
-                                headers: new Headers({
-                                            'Accept': 'application/json'
-                                        })
-			       ,body: JSON.stringify(body)
-                    });
-    var response = await fetch(request);
-    if (response.ok){ 
-        try{
-            const data = await response.json()
-            this.flowchart.flowchart('setoutputVal', this.activityId,'output',data)
-            return data;
-        }catch(error){}
-    }
-    return null;
+    console.log("RUN",body)
+    // var request = new Request('/etl/run/', {
+    //                             method: 'POST',
+    //                             headers: new Headers({
+    //                                         'Accept': 'application/json'
+    //                                     })
+	// 		       ,body: JSON.stringify(body)
+    //                 });
+    // var response = await fetch(request);
+    // if (response.ok){ 
+    //     try{
+    //         const data = await response.json()
+    //         this.flowchart.flowchart('setoutputVal', this.activityId,'output',data)
+    //         return data;
+    //     }catch(error){}
+    // }
+    // return null;
 
     
 }

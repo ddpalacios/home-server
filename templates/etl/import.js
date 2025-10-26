@@ -35,13 +35,80 @@ function csvToJson(text, headers, quoteChar = '"', delimiter = ',') {
 class Import_Activity extends Activity{
     constructor(flowchart,activity){
         super(flowchart,activity)
+        this.settings = this.get_settings_element()
     }
 
 
+    _on_selector_change(event, widget, activity){
+        let parent_element = event.target.parentElement;
+        console.log(event.target.value)
+        console.log(event.target)
+        console.log(parent_element)
+        console.log("Name: ", event.target.name)
+
+        if (event.target.name == 'data_type'){
+            let parent_element = event.target.parentElement;
+            widget.flowchart('changeDataTypeSelectColumn', activity.activityId, parent_element.id, event.target.value)
+            return
+        }
+
+        let selected_column  = event.target.value
+        if (selected_column != "" && parent_element.children.length > 4){
+            parent_element.children[3].remove()
+        }
+        if (selected_column == "" && parent_element.children.length == 4){
+            let input = document.createElement('input')
+            input.name = 'custom_value'
+            input.placeholder = "Column Value"
+            input.addEventListener("change", (event) => this._on_input_change(event, widget, this));
+            let children = parent_element.children;
+            let insertIndex = children.length - 1;
+            parent_element.insertBefore(input, children[insertIndex]);
+        }
+        let div = document.getElementById(activity.activityId+"_column_edit")
+        let current_named_columns = []
+        for (let i =0; i < div.children.length; i++){
+            if (div.children[i].className != 'rename_settings'){continue}
+            current_named_columns.push(div.children[i].children[2].value)
+        }
+        let total_dupes = 1
+        let name = selected_column
+        while(1){
+            if (current_named_columns.includes(name)){
+                name  = selected_column + "_" +total_dupes.toString()
+                total_dupes +=1
+            }else{
+                break
+            }
+        }
+
+        let datatypes = widget.flowchart('getOperatorActivity', activity.activityId).settings.datatypes;
+        let datatype = datatypes[selected_column]
+
+
+        event.target.parentElement.children[2].value =  name
+        event.target.parentElement.children[1].value =  datatype
+        let select_val = {'select': selected_column, 'as': name, 'datatype': datatype, 'id':event.target.parentElement.id }
+        widget.flowchart('addSelectColumn', activity.activityId, select_val)
+        console.log(widget.flowchart('getOperatorActivity', activity.activityId))
+    }
+    _on_input_change(e, widget,activity){
+        if (e.target.name == 'custom_value'){
+            let parent_element = e.target.parentElement;
+            console.log(e.target.value)
+            widget.flowchart('addCustomValue', activity.activityId, parent_element.id, e.target.value)
+            return
+        }
+
+        let parent_element = e.target.parentElement;
+        console.log(e.target.value)
+        widget.flowchart('renameSelectColumn', activity.activityId, parent_element.id, e.target.value)
+    }
+
 //     _add_custom_value(e, widget, activity){
-//         let parent_element = e.target.parentElement;
-//         console.log(e.target.value)
-//         widget.flowchart('addCustomValue', activity.activityId, parent_element.id, e.target.value)
+        // let parent_element = e.target.parentElement;
+        // console.log(e.target.value)
+        // widget.flowchart('addCustomValue', activity.activityId, parent_element.id, e.target.value)
 
 //     }
 //     _add_column(e, widget, activity){
@@ -78,9 +145,9 @@ class Import_Activity extends Activity{
 //         widget.flowchart('removeSelectColumn', activity.activityId, parent_element.id)
 //     }
 //     _on_datatype_select(e, widget,activity){
-//         let parent_element = e.target.parentElement;
-//         console.log(e.target.value)
-//         widget.flowchart('changeDataTypeSelectColumn', activity.activityId, parent_element.id, e.target.value)
+        // let parent_element = e.target.parentElement;
+        // console.log(e.target.value)
+        // widget.flowchart('changeDataTypeSelectColumn', activity.activityId, parent_element.id, e.target.value)
 //     }
 //     _on_rename_column(e, widget,activity){
 //         let parent_element = e.target.parentElement;
@@ -88,34 +155,34 @@ class Import_Activity extends Activity{
 //         widget.flowchart('renameSelectColumn', activity.activityId, parent_element.id, e.target.value)
 //     }
 //     _on_column_select(e, widget, activity){
-//         let selected_column  = e.target.value
-//         let div = document.getElementById(activity.activityId+"_column_edit")
-//         let current_named_columns = []
-//         for (let i =0; i < div.children.length; i++){
-//             if (div.children[i].className != 'rename_settings'){continue}
-//             current_named_columns.push(div.children[i].children[2].value)
-//         }
-//         let total_dupes = 1
-//         let name = selected_column
-//         while(1){
-//             if (current_named_columns.includes(name)){
-//                 name  = selected_column + "_" +total_dupes.toString()
-//                 total_dupes +=1
-//             }else{
-//                 break
-//             }
-//         }
+        // let selected_column  = e.target.value
+        // let div = document.getElementById(activity.activityId+"_column_edit")
+        // let current_named_columns = []
+        // for (let i =0; i < div.children.length; i++){
+        //     if (div.children[i].className != 'rename_settings'){continue}
+        //     current_named_columns.push(div.children[i].children[2].value)
+        // }
+        // let total_dupes = 1
+        // let name = selected_column
+        // while(1){
+        //     if (current_named_columns.includes(name)){
+        //         name  = selected_column + "_" +total_dupes.toString()
+        //         total_dupes +=1
+        //     }else{
+        //         break
+        //     }
+        // }
 
-//         let datatypes = widget.flowchart('getOperatorActivity', activity.activityId).settings.datatypes;
-//         console.log("Looking for", selected_column, 'in', datatypes)
-//         let datatype = datatypes[selected_column]
+        // let datatypes = widget.flowchart('getOperatorActivity', activity.activityId).settings.datatypes;
+        // console.log("Looking for", selected_column, 'in', datatypes)
+        // let datatype = datatypes[selected_column]
 
 
-//           e.target.parentElement.children[2].value =  name
-//           e.target.parentElement.children[1].value =  datatype
-//           let select_val = {'select': selected_column, 'as': name, 'datatype': datatype, 'id':e.target.parentElement.id }
-//           widget.flowchart('addSelectColumn', activity.activityId, select_val)
-//           console.log(widget.flowchart('getOperatorActivity', activity.activityId))
+        //   e.target.parentElement.children[2].value =  name
+        //   e.target.parentElement.children[1].value =  datatype
+        //   let select_val = {'select': selected_column, 'as': name, 'datatype': datatype, 'id':e.target.parentElement.id }
+        //   widget.flowchart('addSelectColumn', activity.activityId, select_val)
+        //   console.log(widget.flowchart('getOperatorActivity', activity.activityId))
 //     }
 //      get_column_selection_element(widget,original_columns,new_record){
 //         if (Object.keys(new_record).length <=1){

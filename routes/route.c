@@ -254,7 +254,10 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_gol_script(cSSL, http_header, "/etl/replace.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/group.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/group.js");
-
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/split.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/split.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/export.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/export.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/jquery.flowchart.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/jquery.flowchart.js");
 
