@@ -1,4 +1,4 @@
-<!-- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -19,7 +19,7 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 250px;
+    width: 300px;
     height: 100%;
     background: #34495e;
     color: white;
@@ -30,7 +30,7 @@
   }
 
   .content-wrapper {
-    margin-left: 250px;
+    margin-left: 320px;
     display: flex;
     flex-direction: column;
     height: 100vh;
@@ -39,7 +39,7 @@
   .content {
     flex: 1;
     background: #f0f0f0;
-    padding: 20px;
+    /* padding: 20px; */
     overflow: auto;
   }
 
@@ -60,7 +60,30 @@
     cursor: ns-resize;
     background: rgba(255, 255, 255, 0.2);
   }
+  .buttons{
+    width: auto;  
+    padding: 10px;
+	font-size: 20px;
+    font-weight: bold;
+    font-family: 'Garamond';
+    color: rgb(0, 0, 0);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.buttons:hover{
+    transform: scale(1.05);
+
+}
 </style>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+	<link rel="stylesheet" href="/etl/jquery.flowchart.css">
+
+	<script src="/etl/jquery.flowchart.js"></script>
 	<style>
 		.flowchart-example-container {
 			width: 100%;
@@ -71,123 +94,69 @@
 </head>
 <body>
 
-  <div class="sidebar" id="sidebar">
-    <h3>Sidebar</h3>
-    <button>Example Button</button>
+  <div class="sidebar" id="sidebar" style="overflow-y: hidden; " >
+	<div style="text-align: center;"><h3>Activities</h3></div>
+	<div style="display: flex; flex-direction: column; gap: 15px; text-align: center; justify-content: center; justify-items: center; height: 100vh; ">
+	<button id="import_activity" class="create_operator buttons">Create Import</button>
+	<button  id="filter_activity" class="create_operator buttons">Create Filter</button>
+	<button  id="export_activity" class="create_operator buttons">Create export</button>
+	<button  id="aggregate_activity" class="create_operator buttons">Create Aggregate</button>
+	<button  id="join_activity" class="create_operator buttons">Create join</button>
+	<button  id="custom_activity" class="create_operator buttons">Create custom</button>
+	<button  id="replace_activity" class="create_operator buttons">Replace Value</button>
+	<button  id="split_activity" class="create_operator buttons">Split Value</button>
+	</div>
   </div>
 
   <div class="content-wrapper">
     <div class="content">
-      <h2>Main Content</h2>
       	 <div id="chart_container">
-		      <div class="flowchart-example-container" id="flowchartworkspace">
-          </div>
+					<div class="navbar" style=" padding: 10px; z-index: 1000; position: fixed; top: 0;  border: 1px solid black; width: 100%;">
+						<button id="run_pipeline" class="buttons" style="color: rgb(0, 0, 0); background-color: rgb(117, 255, 112);">Run Pipeline</button>
+					</div>
+					<div class="flowchart-example-container" id="flowchartworkspace">
+
+					</div>
 	      </div> 
     </div>
 
-    <div class="footer" id="footer">
+    <div class="footer" id="footer" style="overflow-x: hidden;">
       <div class="resize-handle" id="resizeHandle"></div>
-      <p>Resizable footer content here.</p>
+	  		<div class="navbar" style=" padding: 20px; z-index: 1000;   border: 1px solid black; width: 100%; display: flex; flex-direction: row; gap: 50px;">
+					<button class="buttons" style="color: rgb(0, 0, 0); background-color: rgb(117, 255, 112);">Settings</button>
+					<button class="buttons" style="color: rgb(0, 0, 0); background-color: rgb(117, 255, 112);">Preview</button>
+						
+
+			</div>
+			<div id="operator_properties" style="display: block;">
+						<label for="operator_title">Operator's title: </label><input id="operator_title" type="text">
+			</div>
+			<div id="link_properties" style="display: block;">
+				<label for="link_color">Link's color: </label><input id="link_color" type="color">
+			</div>
+			<div id="selected_activity_settings" style="display: flex; flex-direction: column; gap: 10px;"></div>
+	  
     </div>
   </div>
 
-<script>
-  const footer = document.getElementById('footer');
-  const handle = document.getElementById('resizeHandle');
 
-  let isResizing = false;
-  let startY, startHeight;
+<script src="/websocket.js" defer></script>
+  <script src="etl/activities.js" defer></script>
+  <script src="etl/run.js" defer></script>
 
-  handle.addEventListener('mousedown', e => {
-    isResizing = true;
-     
-    startY = e.clientY;
-    startHeight = parseInt(window.getComputedStyle(footer).height, 10);
-    document.body.style.userSelect = 'none';
-  });
-
-  document.addEventListener('mousemove', e => {
-    if (!isResizing) return;
-    const dy = startY - e.clientY;
-    footer.style.height = `${startHeight + dy}px`;
-  });
-
-  document.addEventListener('mouseup', () => {
-    isResizing = false;
-    document.body.style.userSelect = '';
-  });
-</script>
-
-</body>
-</html> -->
-
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-	<title>Home</title>
-	<meta charset="utf-8">
-
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-
-<link rel="stylesheet" href="/etl/jquery.flowchart.css">
-	<script src="/etl/jquery.flowchart.js"></script>
-
-	<style>
-		.flowchart-example-container {
-			width: 100%;
-			height: 80vh;
-			background: white;
-			border: 1px solid #BBB;
-			margin-bottom: 10px;
-		}
-	</style>
-</head>
-
-<body>
-	<div id="chart_container">
-		<div class="flowchart-example-container" id="flowchartworkspace"></div>
-	</div>
-	<button id="run_pipeline" class="create_operator">Run</button>
-	<button id="import_activity" class="create_operator">Create Import</button>
-	<button  id="filter_activity" class="create_operator">Create Filter</button>
-	<!-- <button  id="flatten_activity" class="create_operator">Create Flatten</button> -->
-	<button  id="export_activity" class="create_operator">Create export</button>
-	<button  id="aggregate_activity" class="create_operator">Create Aggregate</button>
-	<button  id="join_activity" class="create_operator">Create join</button>
-	<button  id="custom_activity" class="create_operator">Create custom</button>
-	<button  id="replace_activity" class="create_operator">Replace Value</button>
-	<button  id="split_activity" class="create_operator">Split Value</button>
-	<div id="operator_properties" style="display: block;">
-		<label for="operator_title">Operator's title: </label><input id="operator_title" type="text">
-	</div>
-	<div id="link_properties" style="display: block;">
-		<label for="link_color">Link's color: </label><input id="link_color" type="color">
-	</div>
-  <div id="selected_activity_settings" style="display: flex; flex-direction: column; gap: 10px;"></div>
-  <script src="/websocket.js"></script>
-  <script src="etl/activities.js"></script>
-  <script src="etl/run.js"></script>
-
-  <script src="etl/import.js"></script>
-  <script src="etl/join.js"></script>
-  <script src="etl/group.js"></script>
-  <script src="etl/custom_column.js"></script>
-  <script src="etl/split.js"></script>
-  <script src="etl/export.js"></script>
-  <script src="etl/filter.js"></script>
-  <script src="etl/replace.js"></script>
-  
+  <script src="etl/import.js" defer></script>
+  <script src="etl/join.js" defer></script>
+  <script src="etl/group.js" defer></script>
+  <script src="etl/custom_column.js" defer></script>
+  <script src="etl/split.js"defer></script>
+  <script src="etl/export.js" defer></script>
+  <script src="etl/filter.js" defer></script>
+  <script src="etl/replace.js" defer></script>
   <script>
       document.addEventListener('mousemove', function(event) {
           // console.log('Mouse X:', event.clientX, 'Mouse Y:', event.clientY);
       });
   </script>
-
-
 <script type="text/javascript">
     function areArraysEqual(arr1, arr2) {
   return arr1.length === arr2.length && new Set(arr1).size === new Set(arr2).size && arr1.every(item => arr2.includes(item));
@@ -246,7 +215,8 @@
           			$selected_activity_settings.show()
 					$operatorTitle.val($flowchart.flowchart('getOperatorTitle', operatorId));     
 					let activity = $flowchart.flowchart('getOperatorActivity', operatorId)
-					console.log("Selected", activity)
+					let all_dependecies = $flowchart.flowchart('getDependencies')
+					console.log("Selected", activity, 'dependencies',all_dependecies )
 					let settings_div = document.getElementById('selected_activity_settings')
 					Array.from(settings_div.children).forEach(child => {
 						child.style.display = 'none';
@@ -465,7 +435,7 @@
 				}
 			});
 
-			$flowchart.parent().siblings('.delete_selected_button').click(function() {
+			$('.delete_selected_button').on('click', function() {
 				$flowchart.flowchart('deleteSelected');
 			});
 			//--- end
@@ -475,15 +445,16 @@
 			//-----------------------------------------
 			//--- create operator button
 			//--- start
-	$flowchart.parent().siblings('#run_pipeline').click(async function() {
+	$('#run_pipeline').on('click', function() {
 		
 		let activites = $flowchart.flowchart('getOperators')
-		for (let i=0; i<Object.keys(activites).length;i++){
-			let activityId = Object.keys(activites)[i]
-			let activity = activites[activityId].properties
-			if (activity.activityType == 'import'){
-				console.log("Running", activity)
-				execute($flowchart, activityId)
+		execute($flowchart)
+		// for (let i=0; i<Object.keys(activites).length;i++){
+		// 	let activityId = Object.keys(activites)[i]
+		// 	let activity = activites[activityId].properties
+		// 	if (activity.activityType == 'import'){
+		// 		console.log("Running", activity)
+		// 		execute($flowchart, activityId)
 				// $flowchart.flowchart('run_activity',activityId)
 					// let response = await run_activity_flow(activity)
 					// console.log(response)
@@ -491,13 +462,9 @@
 					// 	continue;
 					// }
 					// $flowchart.flowchart('setoutputVal', activityId, 'output', response)
-			}
-			
-		}
     })
 			var operatorI = 0;
-	$flowchart.parent().siblings('#import_activity').click(function() {
-
+	$('#import_activity').on('click', function() {
 
 				var operatorId = 'created_operator_' + operatorI;
 				var operatorData = {
@@ -507,7 +474,8 @@
 					properties: {
 					 	title: 'Import Data' ,
 						fileType: null,
-						settings: {'datatypes':[],'drop': [],'select':[]},
+						settings: null,//{'datatypes':[],'drop': [],'select':[]},
+						dependencies: [],
 						activityType: 'import',
 						activityId: operatorId,
 						inputs:{
@@ -534,13 +502,15 @@
 
 			});
 
-	$flowchart.parent().siblings('#select_activity').click(function() {
+	$('#select_activity').on('click', function() {
 				var operatorId = 'created_operator_' + operatorI;
 				var operatorData = {
 					top: ($flowchart.height() / 2) - 30,
 					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
 					properties: {
 						title: 'Select Columns' ,
+						dependencies: [],
+
             activityType: 'select',
 						inputs: {
 							input: {
@@ -563,7 +533,7 @@
         
 			});
 
-	$flowchart.parent().siblings('#join_activity').click(function() {
+	$('#join_activity').on('click', function() {
 				var operatorId = 'created_operator_' + operatorI;
 				var operatorData = {
 					top: ($flowchart.height() / 2) - 30,
@@ -571,6 +541,8 @@
 					properties: {
 						title: 'Join' ,
             			activityType: 'join',
+						dependencies: [],
+
 						inputs: {
 							input_1: {
 								label: 'Table 1',
@@ -584,6 +556,8 @@
 						outputs: {
 							output: {
 								label: 'Output',
+                				value: null
+
 							}
 						}
 					}
@@ -598,13 +572,15 @@
         
 			});
 
-    $flowchart.parent().siblings('#aggregate_activity').click(function() {
+    $('#aggregate_activity').on('click', function() {
 				var operatorId = 'created_operator_' + operatorI;
 				var operatorData = {
 					top: ($flowchart.height() / 2) - 30,
 					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
 					properties: {
 						title: 'Aggregate' ,
+						dependencies: [],
+
             activityType: 'group',
 						inputs: {
 							input: {
@@ -629,13 +605,15 @@
         
 			});
     
-	$flowchart.parent().siblings('#custom_activity').click(function() {
+	$('#custom_activity').on('click', function() {
 				var operatorId = 'created_operator_' + operatorI;
 				var operatorData = {
 					top: ($flowchart.height() / 2) - 30,
 					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
 					properties: {
 						title: 'Custom Column' ,
+						dependencies: [],
+
             activityType: 'custom',
 						inputs: {
 							input: {
@@ -659,13 +637,15 @@
 				activites =  $flowchart.flowchart('getOperators');
         
 			});
-	$flowchart.parent().siblings('#replace_activity').click(function() {
+	$('#replace_activity').on('click', function() {
 				var operatorId = 'created_operator_' + operatorI;
 				var operatorData = {
 					top: ($flowchart.height() / 2) - 30,
 					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
 					properties: {
 						title: 'Replace Value' ,
+						dependencies: [],
+
             activityType: 'replace',
 						inputs: {
 							input: {
@@ -690,13 +670,15 @@
         
 			});
 
-    $flowchart.parent().siblings('#export_activity').click(function() {
+    $('#export_activity').on('click', function() {
 				var operatorId = 'created_operatorexp_' + operatorI;
 				var operatorData = {
 					top: ($flowchart.height() / 2) - 30,
 					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
 					properties: {
 						title: 'Export' ,
+						dependencies: [],
+
             activityType: 'export',
 						inputs: {
 							input: {
@@ -726,13 +708,15 @@
 
 			});
 
-	$flowchart.parent().siblings('#flatten_activity').click(function() {
+	$('#flatten_activity').on('click', function() {
 				var operatorId = 'created_operator_flat' + operatorI;
 				var operatorData = {
 					top: ($flowchart.height() / 2) - 30,
 					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
 					properties: {
 						title: 'Flatten' ,
+						dependencies: [],
+
             activityType: 'flatten',
 						inputs: {
 							input: {
@@ -756,7 +740,7 @@
 			});
 
 
-	$flowchart.parent().siblings('#filter_activity').click(function() {
+	$('#filter_activity').on('click', function() {
 				var operatorId = 'created_operator_' + operatorI;
 				var operatorData = {
 					top: ($flowchart.height() / 2) - 30,
@@ -765,6 +749,8 @@
 						title: 'Filter' ,
 						settings: {'datatypes':[],'drop': [],'select':[]},
             			activityType: 'filter',
+						dependencies: [],
+
 						inputs: {
 							input: {
 								label: 'Input',
@@ -788,13 +774,15 @@
 
 			});
 			
-	$flowchart.parent().siblings('#split_activity').click(function() {
+	$('#split_activity').on('click', function() {
 		var operatorId = 'created_operator_' + operatorI;
 		var operatorData = {
 			top: ($flowchart.height() / 2) - 30,
 			left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
 			properties: {
 				title: 'Split' ,
+				dependencies: [],
+
 				settings: {'datatypes':[],'drop': [],'select':[]},
 				activityType: 'split',
 				inputs: {
@@ -971,7 +959,32 @@
 
 
 
-</body>
+<script>
+  const footer = document.getElementById('footer');
+  const handle = document.getElementById('resizeHandle');
 
+  let isResizing = false;
+  let startY, startHeight;
+
+  handle.addEventListener('mousedown', e => {
+    isResizing = true;
+     
+    startY = e.clientY;
+    startHeight = parseInt(window.getComputedStyle(footer).height, 10);
+    document.body.style.userSelect = 'none';
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!isResizing) return;
+    const dy = startY - e.clientY;
+    footer.style.height = `${startHeight + dy}px`;
+  });
+
+  document.addEventListener('mouseup', () => {
+    isResizing = false;
+    document.body.style.userSelect = '';
+  });
+</script>
+
+</body>
 </html>
-   

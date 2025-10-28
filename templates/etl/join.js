@@ -12,6 +12,14 @@ class Join_Activity extends Activity{
     get_operation_settings(){
         let settings = super.get_operation_settings('join')
         console.log("JOIN SETTINGS", settings)
+        // let in_1_data = this.activity.inputs.input_1.value.outputs.output.value
+        // let in_2_data = this.activity.inputs.input_2.value.outputs.output.value
+        // console.log("JOIN INPITS", in_1_data, in_2_data)
+        // let r = {
+        //     'query' : settings['join'][0]
+        //     ,'input1_data': in_1_data
+        //     ,'input2_data' : in_2_data
+        // }
         this.flowchart.flowchart('setSettings', this.activityId, settings)
         return settings
     }

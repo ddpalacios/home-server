@@ -36,58 +36,58 @@ class Settings{
         widget.flowchart('addCustomValue', activity.activityId, parent_element.id, e.target.value)
 
     }
-    _add_column(e, widget, activity){
-        let all_columns = []
-        let activityId = activity.activityId
-        if (Array.isArray( activity.activity.inputs.input.value.values)){
-            all_columns = Object.keys(activity.activity.inputs.input.value.values[0])
-        }else{
-            all_columns = Object.keys(activity.activity.inputs.input.value.values)
+    // _add_column(e, widget, activity){
+    //     let all_columns = []
+    //     let activityId = activity.activityId
+    //     if (Array.isArray( activity.activity.inputs.input.value.values)){
+    //         all_columns = Object.keys(activity.activity.inputs.input.value.values[0])
+    //     }else{
+    //         all_columns = Object.keys(activity.activity.inputs.input.value.values)
 
-        }
-        let settings = [
-            {
-                'type': 'selector'
-                ,'order':1
-                ,'options':all_columns
-                ,'default_value': ""
-                ,'name':'column_name'
-            },
-             {
-                'type': 'selector'
-                ,'order':2
-                ,'options': ['string', 'int']
-                ,'default_value': ""
-                ,'name':'data_type'
-            }
-             , {
-                'type': 'input'
-                ,'order':3
-                ,'placeholder' : 'Column Name'
-            }
-            ,{
-                'type': 'input'
-                ,'order':4
-                ,'placeholder' : 'Column Value'
-                ,'name':'custom_value'
-            }
-            ,{
-                'type': 'button'
-                ,'order':5
-                ,'label': 'remove'
-                ,'color': 'red'
-            }]
-            let columns_div = document.getElementById(activityId+"_column_edit")
-            let column_edit_element = this.get_column_selection_element(widget,settings)
-            columns_div.appendChild(column_edit_element)
-            let select_val = {'select': "", 'as': "", 'datatype':"",'id':column_edit_element.id }
-            widget.flowchart('addSelectColumn', activity.activityId, select_val)
-    }
+    //     }
+    //     let settings = [
+    //         {
+    //             'type': 'selector'
+    //             ,'order':1
+    //             ,'options':all_columns
+    //             ,'default_value': ""
+    //             ,'name':'column_name'
+    //         },
+    //          {
+    //             'type': 'selector'
+    //             ,'order':2
+    //             ,'options': ['string', 'int']
+    //             ,'default_value': ""
+    //             ,'name':'data_type'
+    //         }
+    //          , {
+    //             'type': 'input'
+    //             ,'order':3
+    //             ,'placeholder' : 'Column Name'
+    //         }
+    //         ,{
+    //             'type': 'input'
+    //             ,'order':4
+    //             ,'placeholder' : 'Column Value'
+    //             ,'name':'custom_value'
+    //         }
+    //         ,{
+    //             'type': 'button'
+    //             ,'order':5
+    //             ,'label': 'remove'
+    //             ,'color': 'red'
+    //         }]
+    //         let columns_div = document.getElementById(activityId+"_column_edit")
+    //         let column_edit_element = this.get_column_selection_element(widget,settings)
+    //         columns_div.appendChild(column_edit_element)
+    //         let select_val = {'select': "", 'as': "", 'datatype':"",'id':column_edit_element.id }
+    //         widget.flowchart('addSelectColumn', activity.activityId, select_val)
+    // }
     _on_button_click(e, widget, activity){
         let parent_element = e.target.parentElement;
         parent_element.remove()
         console.log("deleting", parent_element.id)
-        widget.flowchart('removeSelectColumn', activity.activityId, parent_element.id)
+        // widget.flowchart('removeSelectColumn', activity.activityId, parent_element.id)
     }
     _on_selector_change(e, widget,activity){
         let parent_element = e.target.parentElement;
@@ -210,81 +210,7 @@ class Settings{
         return div
 
 }
-    async _inputFile_onchange(e, widget, activity){
-        let activityId = activity.activityId
-        const file = e.target.files?.item(0);
-        if (!file) {
-            e.preventDefault();
-            console.warn("No file selected, keeping existing content.");
-            return;
-        }
-        let obj = null
-        if (file.name.includes(".json")){
-                let text = await file.text();
-                obj = JSON.parse(text);
-                widget.flowchart('setinputVal', activityId,'input', {'datatypes': null, 'values': obj})
-                // widget.flowchart('setoutputVal', activityId,'output',JSON.parse(JSON.stringify(expand_struct(obj))))
 
-        }
-        if (file.name.includes('.csv')){
-            let text = await file.text();
-            obj = csvToJson(text);
-            widget.flowchart('setinputVal', activityId,'input',{'datatypes': null, 'values': obj})
-            // widget.flowchart('setoutputVal', activityId,'output',JSON.parse(JSON.stringify(obj)))
-            obj = obj[0]
-        }
-        if (obj == null){
-            alert("Invalid File. Not a CSV or JSON.");
-            return
-        }
-        let response = await run_activity_flow(widget.flowchart('getOperatorActivity', activity.activityId),widget)
-        console.log("RESPONSE", response, activityId)
-        widget.flowchart('setoutputVal', activityId,'output',response)
-        let column_datatypes = response['datatypes']
-        widget.flowchart('addDataTypes',activity.activityId,column_datatypes)
-
-        let expanded_obj = expand_struct(obj)
-        let settings_div = document.getElementById('selected_activity_settings')
-        let columns_div = document.createElement('div')
-        columns_div.id = this.activityId+ "_column_edit"
-        let settings = []
-         Object.keys(expanded_obj).forEach(key => {
-            let data_type = column_datatypes[key]
-            settings = [
-            {
-                'type': 'selector'
-                ,'order':1
-                ,'options': this.get_output_columns()
-                ,'default_value': key
-                ,'name': 'column_name'
-            },
-             {
-                'type': 'selector'
-                ,'order':2
-                ,'options': [...new Set(Object.values(column_datatypes))] 
-                ,'default_value': data_type
-                ,'name': 'data_type'
-            }
-             , {
-                'type': 'input'
-                ,'order':3
-                ,'placeholder' : 'Column Name'
-                ,'value': key
-            }
-            ,{
-                'type': 'button'
-                ,'order':5
-                ,'label': 'remove'
-                ,'color': 'red'
-            }]
-            let column_edit_element = this.get_column_selection_element(widget,settings)
-            columns_div.appendChild(column_edit_element)
-            let select_val = {'select': key, 'as': key, 'datatype':data_type,'id':column_edit_element.id }
-            widget.flowchart('addSelectColumn', activity.activityId, select_val)
-        }); 
-        settings_div.appendChild(columns_div)
-        widget.flowchart('run_activity', activityId);
-    }
     get_settings_element(){
         let div = document.createElement('div')
         div.id = this.activityId
@@ -365,14 +291,12 @@ class Settings{
     }
     get_operation_settings(type) {
     const record = document.getElementById(this.activityId + "_column_edit");
-    console.log("RECORD", record)
     if (!record) return null;
 
     const statements = [];
 
     for (let i = 0; i < record.children.length; i++) {
         const row = record.children[i];
-        console.log("ROW", row)
         const statement = {};
 
         for (let j = 0; j < row.children.length; j++) {
@@ -1023,10 +947,11 @@ function onLinkCreation(widget,linkData){
     let toOperator = widget.getOperatorActivity(linkData['toOperator'])
     let fromOperator  = widget.getOperatorActivity(linkData['fromOperator'])
     let outputVal = fromOperator.outputs.output.value
-    if (outputVal == null){
-        return
-    }
+
     if (toOperator.activityType == 'join'){
+        console.log("ADDING dependency")
+        widget.setDependency(linkData['toOperator'],fromOperator)
+
         if (linkData.toConnector == 'input_1'){
             widget.setinputVal(linkData['toOperator'],'input_1', fromOperator)
         }
@@ -1034,6 +959,12 @@ function onLinkCreation(widget,linkData){
             widget.setinputVal(linkData['toOperator'],'input_2', fromOperator)
         }
     }else{
+        console.log("ADDING dependency")
+        widget.setDependency(linkData['toOperator'],fromOperator)
+
+            if (outputVal == null){
+                return
+            }
         widget.setinputVal(linkData['toOperator'],'input', outputVal)
         widget.setoutputVal(linkData['toOperator'],'output', outputVal)
     }

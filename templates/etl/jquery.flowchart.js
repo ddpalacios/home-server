@@ -636,6 +636,44 @@ jQuery(function ($) {
             console.log("Setting output", value)
             this.data.operators[operatorId].internal.properties.outputs[outputName].value = value;
         },
+        getDependencies: function(){
+            let dependencies = {}
+            Object.keys(this.data.operators).forEach(parent_node_id => {
+                let n = this.data.operators[parent_node_id]
+                    let d = []
+                    n.properties.dependencies.forEach(element => {
+                        d.push(element.operatorId)
+                        
+                    });
+
+                    dependencies[parent_node_id] = {"dependencies":d, 'query': n.properties?.settings, 'activityType': n.properties.activityType}
+            });
+            return dependencies
+         
+        },
+         setDependencies: function(parentNodeId, value){
+            if (Array.isArray(value)){
+                this.data.operators[parentNodeId].internal.properties.dependencies = value
+            }else{
+                console.log("Could not overwrite depencies.  Value is not a list")
+            }
+        },
+        setDependency: function(parentNodeId, value){
+            if (this.data.operators[parentNodeId].internal.properties.activityType != 'join'){
+                this.data.operators[parentNodeId].internal.properties.dependencies = []
+                this.data.operators[parentNodeId].internal.properties.dependencies.push(value)
+            }else{
+                if (this.data.operators[parentNodeId].internal.properties.dependencies.length > 2){
+                    this.data.operators[parentNodeId].internal.properties.dependencies = []
+                    this.data.operators[parentNodeId].internal.properties.dependencies.push(value)
+
+                }else{
+                    this.data.operators[parentNodeId].internal.properties.dependencies.push(value)
+                }
+
+            }
+
+        },
         setinputVal: function(operatorId,inputName, value){
             console.log("Setting input", value)
             this.data.operators[operatorId].internal.properties.inputs[inputName].value = value;
@@ -1366,6 +1404,22 @@ jQuery(function ($) {
             var toOperator = linkData.toOperator;
             var toConnector = linkData.toConnector;
             var overallGroup = linkData.internal.els.overallGroup;
+            let parent_node = this.getOperatorActivity(linkData.toOperator)
+            let new_dependent_list = []
+            for (let i=0; i<parent_node.dependencies.length; i++){
+                let dependent = parent_node.dependencies[i]
+                if (dependent.operatorId == linkData.fromOperator){
+                     parent_node.dependencies.splice(i, 1);
+                     new_dependent_list = parent_node.dependencies
+                     break
+                }
+
+            }
+            console.log("NEW DEPENDENTS",new_dependent_list)
+            this.setDependencies(linkData.toOperator,new_dependent_list)
+                
+                
+
             if (overallGroup.remove) {
                 overallGroup.remove();
             } else {
