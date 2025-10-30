@@ -63,10 +63,16 @@ void connect_to_server(const char* host, const char* port, char*body){
  	}
  }
 
-void post_blob(struct Socket* socket,char* http_header, char*body, char* route){
+
+
+
+
+
+ void post_blob(struct Socket* socket,char* http_header, char*body, char* route){
 	SSL* cSSL = socket->cSSL;
 	char path[2048];
 	char write_path[2048];
+	int overwrite = 0;
 
 	if (strstr(route, "/blob-storage/email")){
 		connect_to_server("127.0.0.1", "5000", body);
@@ -81,9 +87,9 @@ void post_blob(struct Socket* socket,char* http_header, char*body, char* route){
 	}
 	else if (strstr(route, "/blob-storage/bronze/etl/pipeline?")!= NULL){
 		char* userId = get_query_parameter(route, "userId");
-		char* pipeline_id = get_query_parameter(route, "pipeline_id");
-		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/bronze_etl_%s_pipeline_%s.json", userId, pipeline_id);
-		snprintf(path, sizeof(path)," ");
+		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/bronze_etl_%s_pipelines.json", userId);
+		snprintf(path, sizeof(path),"../blob-storage/bronze_etl_%s_pipelines.json", userId);
+		overwrite =1;
 	}
 
 	else if (strstr(route, "/blob-storage/silver/CTA/ctabustracker/predictions")){
@@ -134,10 +140,36 @@ void post_blob(struct Socket* socket,char* http_header, char*body, char* route){
 		cJSON* old_values = cJSON_GetObjectItem(root, "values");
 		cJSON *json = cJSON_Parse(body);
 		cJSON* new_values = cJSON_GetObjectItem(json, "values");
-		for (int i = 0 ; i < cJSON_GetArraySize(new_values) ; i++){
-			cJSON *subitem = cJSON_GetArrayItem(new_values, i);
-			cJSON_AddItemToArray(old_values, subitem);
+
+		if (!overwrite){
+			for (int i = 0 ; i < cJSON_GetArraySize(new_values) ; i++){
+				cJSON *subitem = cJSON_GetArrayItem(new_values, i);
+				cJSON_AddItemToArray(old_values, subitem);
 			}
+		
+		}else{
+			for (int i = 0 ; i < cJSON_GetArraySize(new_values) ; i++){
+				cJSON *subitem = cJSON_GetArrayItem(new_values, i);
+				cJSON *value = cJSON_GetObjectItem(subitem, "Id");
+				if (cJSON_IsString(value) && (value->valuestring != NULL)) {
+					printf("SubItem ID: %s\n",value->valuestring);
+					char* target_id = value->valuestring;
+					for (int j = 0 ; j < cJSON_GetArraySize(old_values) ; j++){
+						cJSON *old_subitem = cJSON_GetArrayItem(old_values, j);
+						cJSON *old_value = cJSON_GetObjectItem(subitem, "Id");
+						if (cJSON_IsString(old_value) && (old_value->valuestring != NULL)) {
+							if (strcmp(old_value->valuestring, target_id) ==0){
+								cJSON_DeleteItemFromArray(old_values, j);
+								break;
+
+							}
+
+						}
+					}
+					cJSON_AddItemToArray(old_values, subitem);
+				}
+			}
+		}
 
 		FILE *file = fopen(write_path, "w");
 		char *r = cJSON_Print(root);
@@ -146,19 +178,16 @@ void post_blob(struct Socket* socket,char* http_header, char*body, char* route){
 			send_response_code(cSSL, 500);
 			return;
 		}
-
 		if (fputs(r, file) == EOF) {
 			perror("Failed to write to file");
 			send_response_code(cSSL, 500);
 			fclose(file);
 			return;
 		}
-
 		fclose(file);
-
 		free(r);
 		cJSON_Delete(root);
 		send_response_code(cSSL, 200);
-
+		printf("Done\n");
 	}
 }

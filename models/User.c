@@ -4,6 +4,7 @@
 #include <string.h>
 #include "User.h"
 #include "SQL.h"
+#include "Blob.h"
 #include "string_utilities.h"
 #include <openssl/sha.h>
 
@@ -31,10 +32,14 @@ char* convert_users_to_json(struct User* user, int count){
 	 count = 0;
 	 while (user[count].Id != NULL) {
 		 cJSON* root_users = cJSON_CreateObject();
-		 cJSON_AddStringToObject(root_users, "Id", user[count].Id);
+		  cJSON_AddStringToObject(root_users, "Id", user[count].Id);
 		 cJSON_AddStringToObject(root_users, "fullname", user[count].fullname);
 		 cJSON_AddStringToObject(root_users, "email", user[count].email);
+	
+		 
 		 cJSON_AddItemToArray(users, root_users);
+
+		
 		 count++;
 	 }
 
@@ -44,11 +49,17 @@ char* convert_users_to_json(struct User* user, int count){
 }
 
 char* convert_user_to_json(struct User user){
-	 cJSON *root = cJSON_CreateObject();
-	 cJSON_AddStringToObject(root, "Id", user.Id);
-	 cJSON_AddStringToObject(root, "fullname", user.fullname);
-	//  cJSON_AddStringToObject(root, "sessionId", user.sessionId);
-	//  cJSON_AddNumberToObject(root, "isHost", user.isHost);
+	cJSON *root = cJSON_CreateObject();
+	cJSON_AddStringToObject(root, "Id", user.Id);
+	cJSON_AddStringToObject(root, "fullname", user.fullname);
+	char* pipeline_json = get_blob_by_path("bronze","etl",user.Id, "pipelines", "json");
+	if (pipeline_json != NULL){
+		cJSON* new_obj = cJSON_Parse(pipeline_json);
+		cJSON_AddItemToObject(root, "pipelines", new_obj);
+		free(pipeline_json);
+	}
+
+
 	 char* json_string = cJSON_Print(root);
 	 cJSON_Delete(root);
 	 return json_string;
@@ -88,7 +99,6 @@ struct User get_user_by_session_token(char* session_token){
     MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
     char sql[1024];
 	snprintf(sql, sizeof(sql),"%s WHERE u.session_token = '%s'", user_sql,session_token);
-
     struct User user;
 	user.exists = 0;
 	MYSQL_RES* res = query(conn, sql);
@@ -115,14 +125,6 @@ struct User get_user_by_id(char* userid){
 	while((row = mysql_fetch_row(res))!= NULL){
 		user.Id = strdup( row[0]);
 		user.fullname = strdup(row[1]);
-		// if (row[7] != NULL){
-		// 	user.sessionId = strdup(row[7]);
-		// }
-		// if (row[8] != NULL){
-		// 	user.isHost = atoi(row[8]);
-		// }else{
-		// 	user.isHost = -1;
-		// }
 		user.exists = 1;
 		close_sql_connection(conn);
 		return user;

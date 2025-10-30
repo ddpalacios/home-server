@@ -177,6 +177,30 @@ main.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/main.c.s
 .PHONY : main.c.s
 
+models/Blob.o: models/Blob.c.o
+.PHONY : models/Blob.o
+
+# target to build an object file
+models/Blob.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/models/Blob.c.o
+.PHONY : models/Blob.c.o
+
+models/Blob.i: models/Blob.c.i
+.PHONY : models/Blob.i
+
+# target to preprocess a source file
+models/Blob.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/models/Blob.c.i
+.PHONY : models/Blob.c.i
+
+models/Blob.s: models/Blob.c.s
+.PHONY : models/Blob.s
+
+# target to generate assembly for a file
+models/Blob.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/models/Blob.c.s
+.PHONY : models/Blob.c.s
+
 models/Frame.o: models/Frame.c.o
 .PHONY : models/Frame.o
 
@@ -1248,6 +1272,9 @@ help:
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... models/Blob.o"
+	@echo "... models/Blob.i"
+	@echo "... models/Blob.s"
 	@echo "... models/Frame.o"
 	@echo "... models/Frame.i"
 	@echo "... models/Frame.s"

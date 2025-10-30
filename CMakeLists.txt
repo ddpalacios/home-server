@@ -9,6 +9,7 @@ file(GLOB MAIN
     "server/send_message.c"
     "server/read_message.c"
     "models/SQL.c"
+    "models/Blob.c"
     "models/session.c"
     "models/websocket.c"
     "models/Invitation.c"

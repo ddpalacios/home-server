@@ -3,6 +3,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/home-server.dir/database/SQL.c.o.d"
   "CMakeFiles/home-server.dir/main.c.o"
   "CMakeFiles/home-server.dir/main.c.o.d"
+  "CMakeFiles/home-server.dir/models/Blob.c.o"
+  "CMakeFiles/home-server.dir/models/Blob.c.o.d"
   "CMakeFiles/home-server.dir/models/Frame.c.o"
   "CMakeFiles/home-server.dir/models/Frame.c.o.d"
   "CMakeFiles/home-server.dir/models/FrameField.c.o"

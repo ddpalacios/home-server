@@ -1,0 +1,205 @@
+{
+	"values":	[{
+			"Id":	"573b5574-9353-4399-b52c-301f6e7e90d1",
+			"activities":	{
+				"0":	{
+					"top":	150,
+					"operatorId":	"0",
+					"left":	70,
+					"properties":	{
+						"title":	"Import Data",
+						"settings":	{
+							"select":	[{
+									"columnName":	"arrangement_id",
+									"row_id":	"8698200e-e08a-4bdd-9f93-d00c13fa003f",
+									"data_type":	"bigint",
+									"new_column_name":	"arrangement_id"
+								}, {
+									"columnName":	"event_id",
+									"row_id":	"dc521b07-742f-43d2-a415-c5a18fc54781",
+									"data_type":	"bigint",
+									"new_column_name":	"event_id"
+								}, {
+									"columnName":	"arrangement_xid",
+									"row_id":	"c8380bdc-be89-4aae-9b1a-e803fbed146b",
+									"data_type":	"string",
+									"new_column_name":	"arrangement_xid"
+								}, {
+									"columnName":	"event_xid",
+									"row_id":	"c9285236-871d-44e0-8f37-03038d8414b2",
+									"data_type":	"string",
+									"new_column_name":	"event_xid"
+								}, {
+									"columnName":	"arrangement_name",
+									"row_id":	"01de1a5f-a88d-451d-a640-90f516b0116c",
+									"data_type":	"string",
+									"new_column_name":	"arrangement_name"
+								}, {
+									"columnName":	"event_name",
+									"row_id":	"06bbb1e9-9d39-4be0-b61c-58fd5df7b5fb",
+									"data_type":	"string",
+									"new_column_name":	"event_name"
+								}, {
+									"columnName":	"category",
+									"row_id":	"3801950a-468b-4bbf-9959-288282c8622f",
+									"data_type":	"string",
+									"new_column_name":	"category"
+								}, {
+									"columnName":	"start_at",
+									"row_id":	"bbb7de83-c0a6-48b8-a592-879344a797c8",
+									"data_type":	"string",
+									"new_column_name":	"start_at"
+								}, {
+									"columnName":	"end_at",
+									"row_id":	"dccb1ec5-b4c7-4b5b-87cb-29a48005dc76",
+									"data_type":	"string",
+									"new_column_name":	"end_at"
+								}, {
+									"columnName":	"location_name",
+									"row_id":	"871f851f-f707-4447-8ca0-ce5c9f494837",
+									"data_type":	"string",
+									"new_column_name":	"location_name"
+								}]
+						},
+						"activityType":	"import",
+						"activityId":	0,
+						"operatorId":	"0",
+						"inputs":	{
+							"input":	{
+								"value":	null,
+								"label":	""
+							}
+						},
+						"outputs":	{
+							"output":	{
+								"value":	null,
+								"label":	"Output"
+							}
+						},
+						"link_to":	[6, 5],
+						"link_from":	[],
+						"dependencies":	[]
+					}
+				},
+				"5":	{
+					"top":	200,
+					"operatorId":	5,
+					"left":	390,
+					"properties":	{
+						"title":	"Aggregate",
+						"activityType":	"group",
+						"operatorId":	"5",
+						"inputs":	{
+							"input":	{
+								"value":	null,
+								"label":	"Table 1"
+							}
+						},
+						"outputs":	{
+							"output":	{
+								"value":	null,
+								"label":	"Output"
+							}
+						},
+						"link_to":	[],
+						"link_from":	[],
+						"dependencies":	["0"]
+					}
+				},
+				"6":	{
+					"top":	100,
+					"operatorId":	6,
+					"left":	390,
+					"properties":	{
+						"title":	"Aggregate",
+						"activityType":	"group",
+						"operatorId":	"6",
+						"inputs":	{
+							"input":	{
+								"value":	null,
+								"label":	"Table 1"
+							}
+						},
+						"outputs":	{
+							"output":	{
+								"value":	null,
+								"label":	"Output"
+							}
+						},
+						"link_to":	[],
+						"link_from":	[],
+						"dependencies":	["0"]
+					}
+				}
+			},
+			"links":	{
+				"0":	{
+					"fromOperator":	"0",
+					"fromConnector":	"output",
+					"fromSubConnector":	0,
+					"toOperator":	6,
+					"toConnector":	"input",
+					"toSubConnector":	0,
+					"link_id":	0,
+					"internal":	{
+						"els":	{
+							"fromSmallConnector":	{
+								"0":	{
+								},
+								"length":	1
+							},
+							"toSmallConnector":	{
+								"0":	{
+								},
+								"length":	1
+							},
+							"overallGroup":	{
+								"sizzle1761855021962":	{
+									"undefined":	{
+										"parentNode":	[1024, 7, true]
+									}
+								}
+							},
+							"mask":	{
+							},
+							"path":	{
+							},
+							"rect":	{
+							}
+						}
+					}
+				},
+				"1":	{
+					"fromOperator":	"0",
+					"fromConnector":	"output",
+					"fromSubConnector":	0,
+					"toOperator":	5,
+					"toConnector":	"input",
+					"toSubConnector":	0,
+					"link_id":	1,
+					"internal":	{
+						"els":	{
+							"fromSmallConnector":	{
+								"0":	{
+								},
+								"length":	1
+							},
+							"toSmallConnector":	{
+								"0":	{
+								},
+								"length":	1
+							},
+							"overallGroup":	{
+							},
+							"mask":	{
+							},
+							"path":	{
+							},
+							"rect":	{
+							}
+						}
+					}
+				}
+			}
+		}]
+}

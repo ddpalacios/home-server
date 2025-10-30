@@ -415,9 +415,10 @@ th {
         <button id="split_activity" class="create_operator buttons">Split Value</button>
         <button id="select_activity" class="create_operator buttons">Select</button>
         <button id="sort_activity" class="create_operator buttons">Sort</button>
+        <!-- <button id="get_data" class="create_operator buttons">POST Pipeline</button>
+        <button id="load_local" class="create_operator buttons">LOAD Pipeline</button> -->
     </div>
 </div>
-
 
   <div class="content-wrapper">
     <div class="content">
@@ -522,7 +523,7 @@ function openCity(evt, cityName) {
 <script>
 	let pipeline_id
     async function post_pipeline(userId, body){
-            var request = new Request('/blob-storage/bronze/etl/pipeline?userId='+userId+"&pipeline_id="+body['Id'], {
+            var request = new Request('/blob-storage/bronze/etl/pipeline?userId='+userId, {
                                 method: 'POST',
                                 headers: new Headers({
                                             'Accept': 'application/json'
@@ -539,47 +540,53 @@ function openCity(evt, cityName) {
             // }
             // return null;
     }
-    async function create_user(){
-            var request = new Request('/game-of-life/user', {
-                                method: 'POST',
-                                headers: new Headers({
-                                            'Accept': 'application/json'
-                                        })
-			       ,body: JSON.stringify({
-					       "username": "User"
-				       })
-                    });
+    // async function create_user(){
+    //         var request = new Request('/game-of-life/user', {
+    //                             method: 'POST',
+    //                             headers: new Headers({
+    //                                         'Accept': 'application/json'
+    //                                     })
+	// 		       ,body: JSON.stringify({
+	// 				       "username": "User"
+	// 			       })
+    //                 });
 
-            var response = await fetch(request);
-            if (response.ok){ 
-                try{
-                    const data = await response.json()
-                    return data;
-                }catch(error){}
-            }
-            return null;
-    }
-    async function get_user(){
-         var request = new Request('/game-of-life/user', {
-                                method: 'GET',
-                                headers: new Headers({'Accept': 'application/json'})});
-            var user = null;
-            var response = await fetch(request);
-            if (response.ok){ 
-                user = await response.json()
-            }else{
-                user = create_user();
-            }
-            return user;
-    }
+    //         var response = await fetch(request);
+    //         if (response.ok){ 
+    //             try{
+    //                 const data = await response.json()
+    //                 return data;
+    //             }catch(error){}
+    //         }
+    //         return null;
+    // }
+    // async function get_user(){
+    //      var request = new Request('/game-of-life/user', {
+    //                             method: 'GET',
+    //                             headers: new Headers({'Accept': 'application/json'})});
+    //         var user = null;
+    //         var response = await fetch(request);
+    //         if (response.ok){ 
+    //             user = await response.json()
+    //         }else{
+    //             user = create_user();
+    //         }
+    //         return user;
+    // }
 
-	async function main(){
-		let user = await get_user()
-		console.log(user)
-		sessionStorage.setItem("userId", user.Id)
-		pipeline_id =  crypto.randomUUID()
-	}
-	main()
+	// async function main(){
+	// 	let user = await get_user()
+	// 	console.log(user)
+	// 	sessionStorage.setItem("userId", user.Id)
+	// 	sessionStorage.setItem("user_json", JSON.stringify(user))
+	// 	if (sessionStorage.getItem('pipeline_id') == null){
+	// 		pipeline_id =  crypto.randomUUID()
+	// 		sessionStorage.setItem('pipeline_id', pipeline_id)
+	// 	}else{
+	// 		pipeline_id = sessionStorage.getItem('pipeline_id')
+	// 	}
+	// }
+	// main()
 
 </script>
 
@@ -757,7 +764,7 @@ let count = 0
 					$operatorTitle.val($flowchart.flowchart('getOperatorTitle', operatorId));     
 					let activity = $flowchart.flowchart('getOperatorActivity', operatorId)
 					let all_dependecies = $flowchart.flowchart('getDependencies')
-					console.log("Selected", activity, 'dependencies',all_dependecies )
+					// console.log("Selected", activity, 'dependencies',all_dependecies )
 					let settings_div = document.getElementById('selected_activity_settings')
 					Array.from(settings_div.children).forEach(child => {
 						child.style.display = 'none';
@@ -1068,11 +1075,16 @@ let count = 0
 
 
 	$('#refresh_preview').on('click', async function() {
-		await execute($flowchart)
-		let outputs = $flowchart.flowchart('getoutputVal', this.value, 'output')
-
 		let activity_previews = document.getElementById("activity_previews")
 		let data_preview_container = document.getElementById(this.value+"_data_preview")
+		let loading_text = document.createElement("h1");
+		loading_text.textContent = "Loading...";
+		loading_text.style.color = "black";
+
+		activity_previews.prepend(loading_text);
+		await execute($flowchart)
+		activity_previews.removeChild(loading_text)
+		let outputs = $flowchart.flowchart('getoutputVal', this.value, 'output')
 		if (data_preview_container == null || data_preview_container == undefined){
 			 data_preview_container = document.createElement('div')
 			data_preview_container.id = this.value + "_data_preview"
@@ -1111,11 +1123,11 @@ let count = 0
 		let activites = $flowchart.flowchart('getOperators')
 		execute($flowchart)
     })
-			var operatorI = 0;
+	var operatorI = 0;
 	$('#import_activity').on('click', function() {
 				const footer = document.getElementById('footer');
 				startHeight = parseInt(window.getComputedStyle(footer).height, 10);
-				var operatorId = 'created_operator_' + operatorI;
+				var operatorId =  operatorI;
 				var operatorData = {
 					operatorId: operatorId,
 					top: ($flowchart.height() / 2) - (startHeight/2),
@@ -1146,15 +1158,13 @@ let count = 0
 				let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
 				let import_activity = new Import_Activity($flowchart,new_activity)
 				main_activities[operatorId] = import_activity
-				// console.log("setting to",operatorId)
-				// document.getElementById("refresh_preview").value = operatorId
 				activites =  $flowchart.flowchart('getOperators');
-        console.log(activites)
+        		// console.log(activites)
 
 			});
 
 	$('#select_activity').on('click', function() {
-		var operatorId = 'created_operator_' + operatorI;
+		var operatorId = operatorI;
 		const footer = document.getElementById('footer');
 		startHeight = parseInt(window.getComputedStyle(footer).height, 10);
 		var operatorData = {
@@ -1189,7 +1199,7 @@ let count = 0
 
 		});
 	$('#sort_activity').on('click', function() {
-		var operatorId = 'created_operator_' + operatorI;
+		var operatorId = operatorI;
 		const footer = document.getElementById('footer');
 		startHeight = parseInt(window.getComputedStyle(footer).height, 10);
 		var operatorData = {
@@ -1223,7 +1233,7 @@ let count = 0
 
 		});	
 	$('#join_activity').on('click', function() {
-				var operatorId = 'created_operator_' + operatorI;
+				var operatorId = operatorI;
 				const footer = document.getElementById('footer');
 				startHeight = parseInt(window.getComputedStyle(footer).height, 10);
 				var operatorData = {
@@ -1264,7 +1274,7 @@ let count = 0
 			});
 
     $('#aggregate_activity').on('click', function() {
-				var operatorId = 'created_operator_' + operatorI;
+				var operatorId = operatorI;
 				const footer = document.getElementById('footer');
 				startHeight = parseInt(window.getComputedStyle(footer).height, 10);
 				var operatorData = {
@@ -1299,7 +1309,7 @@ let count = 0
 			});
     
 	$('#custom_activity').on('click', function() {
-				var operatorId = 'created_operator_' + operatorI;
+				var operatorId = operatorI;
 				const footer = document.getElementById('footer');
 				startHeight = parseInt(window.getComputedStyle(footer).height, 10);
 				var operatorData = {
@@ -1333,7 +1343,7 @@ let count = 0
         
 			});
 	$('#replace_activity').on('click', function() {
-				var operatorId = 'created_operator_' + operatorI;
+				var operatorId = operatorI;
 				const footer = document.getElementById('footer');
 				startHeight = parseInt(window.getComputedStyle(footer).height, 10);
 				var operatorData = {
@@ -1442,7 +1452,7 @@ let count = 0
 
 
 	$('#filter_activity').on('click', function() {
-				var operatorId = 'created_operator_' + operatorI;
+				var operatorId = operatorI;
 				const footer = document.getElementById('footer');
 				startHeight = parseInt(window.getComputedStyle(footer).height, 10);
 				var operatorData = {
@@ -1478,7 +1488,7 @@ let count = 0
 			});
 			
 	$('#split_activity').on('click', function() {
-		var operatorId = 'created_operator_' + operatorI;
+		var operatorId = operatorI;
 		const footer = document.getElementById('footer');
 		startHeight = parseInt(window.getComputedStyle(footer).height, 10);
 		var operatorData = {
@@ -1574,9 +1584,10 @@ let count = 0
 			//--- save and load
 			//--- start
 			function Flow2Text() {
-				// var data = $flowchart.flowchart('getData', pipeline_Id);
-				// let userId = sessionStorage.getItem("userId")
-				// post_pipeline(userId, data )
+				var data = $flowchart.flowchart('getData', pipeline_id);
+				let userId = sessionStorage.getItem("userId")
+				data = {'values' :[data]}
+				post_pipeline(userId, data )
 
 				// $('#flowchart_data').val(JSON.stringify(data, null, 2));
 			}
@@ -1600,18 +1611,94 @@ let count = 0
 			$('#save_local').click(SaveToLocalStorage);
 
 			function LoadFromLocalStorage() {
-				if (typeof localStorage !== 'object') {
-					alert('local storage not available');
-					return;
-				}
-				var s = localStorage.getItem("stgLocalFlowChart");
-				if (s != null) {
-					$('#flowchart_data').val(s);
-					Text2Flow();
-				}
-				else {
-					alert('local storage empty');
-				}
+				let user = sessionStorage.getItem('user_json')
+				user = JSON.parse(user)
+				let pipelines = user['pipelines']['values']
+				let activities = pipelines[0]['activities']
+				let links = pipelines[0]['links']
+				// console.log(activities)
+				let Ids = []
+				Object.keys(activities).forEach(operatorId => {
+					let operatorData = activities[operatorId]
+					Ids.push(parseInt(operatorId))
+					$flowchart.flowchart('createOperator', operatorId, operatorData);
+					let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
+					let a;
+					if (operatorData.properties.activityType == 'import'){
+							a = new Import_Activity($flowchart,new_activity)
+					}
+					if (operatorData.properties.activityType == 'filter'){
+							a = new Filter_Activity($flowchart,new_activity)
+					}
+					if (operatorData.properties.activityType == 'export'){
+							a = new Export_Activity($flowchart,new_activity)
+					}
+					if (operatorData.properties.activityType == 'group'){
+							a = new Group_Activity($flowchart,new_activity)
+					}
+					if (operatorData.properties.activityType == 'join'){
+							a = new Join_Activity($flowchart,new_activity)
+					}
+					if (operatorData.properties.activityType == 'custom'){
+							a = new Custom_Activity($flowchart,new_activity)
+					}
+					if (operatorData.properties.activityType == 'replace'){
+							a = new Replace_Activity($flowchart,new_activity)
+					}
+					if (operatorData.properties.activityType == 'split'){
+							a = new Split_Activity($flowchart,new_activity)
+					}
+					if (operatorData.properties.activityType == 'select'){
+							a = new Select_Activity($flowchart,new_activity)
+					}if (operatorData.properties.activityType == 'sort'){
+							a = new Sort_Activity($flowchart,new_activity)
+					}
+
+					main_activities[operatorId] = a
+					activites =  $flowchart.flowchart('getOperators');
+
+					
+				});
+				
+				$flowchart.flowchart('setData',pipelines[0]);
+				const maxVal = Math.max(...Ids);
+				operatorI = maxVal+1
+
+				// Object.values(links).forEach(l =>{
+				// 	console.log("LINK", l)
+				// })
+				
+
+				/*
+				var operatorData = {
+					operatorId: operatorId,
+					top: ($flowchart.height() / 2) - (startHeight/2),
+					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+					properties: {
+					 	title: 'Import Data' ,
+						fileType: null,
+						settings: null,//{'datatypes':[],'drop': [],'select':[]},
+						dependencies: [],
+						activityType: 'import',
+						activityId: operatorId,
+						inputs:{
+						input: {
+							label: '',
+							value: {'datatypes': null, 'values':null}
+							}
+						},
+						outputs: {
+							output: {
+								label: 'Output',
+								value: {'datatypes': null, 'values':null}
+							}
+						}
+					}
+				};
+
+				*/
+
+			
 			}
 			$('#load_local').click(LoadFromLocalStorage);
 			//--- end

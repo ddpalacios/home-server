@@ -1,0 +1,67 @@
+{
+	"values":	[{
+			"Id":	"e0042bb1-dba9-4e57-8fe8-6624ffb5081a",
+			"activities":	{
+				"created_operator_0":	{
+					"top":	200,
+					"operatorId":	"created_operator_0",
+					"left":	0,
+					"properties":	{
+						"title":	"Import Data",
+						"filteType":	null,
+						"settings":	null,
+						"activityType":	"import",
+						"activityId":	"created_operator_0",
+						"operatorId":	"created_operator_0",
+						"inputs":	{
+							"input":	{
+								"value":	null,
+								"label":	""
+							}
+						},
+						"outputs":	{
+							"output":	{
+								"value":	null,
+								"label":	"Output"
+							}
+						},
+						"link_to":	[],
+						"link_from":	[],
+						"dependencies":	[]
+					}
+				},
+				"created_operator_2":	{
+					"top":	200,
+					"operatorId":	"created_operator_2",
+					"left":	410,
+					"properties":	{
+						"title":	"Filter",
+						"settings":	{
+							"datatypes":	[],
+							"drop":	[],
+							"select":	[]
+						},
+						"activityType":	"filter",
+						"operatorId":	"created_operator_2",
+						"inputs":	{
+							"input":	{
+								"value":	null,
+								"label":	"Input"
+							}
+						},
+						"outputs":	{
+							"output":	{
+								"value":	null,
+								"label":	"Output"
+							}
+						},
+						"link_to":	[],
+						"link_from":	[],
+						"dependencies":	[]
+					}
+				}
+			},
+			"links":	{
+			}
+		}]
+}

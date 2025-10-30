@@ -35,8 +35,11 @@ function csvToJson(text, headers, quoteChar = '"', delimiter = ',') {
 class Import_Activity extends Activity{
     constructor(flowchart,activity){
         super(flowchart,activity)
+        this.operation_type = "select"
         this.settings = this.get_settings_element()
     }
+
+
     async _inputFile_onchange(e, widget, activity){
         let activityId = activity.activityId
         const file = e.target.files?.item(0);
@@ -103,9 +106,9 @@ class Import_Activity extends Activity{
 
 
         let target_activity = widget.flowchart('getOperatorActivity', activity.activityId)
-        console.log("ACTIVITY FILE CHANGE", target_activity) 
+        // console.log("ACTIVITY FILE CHANGE", target_activity) 
         let response = await run_activity_flow(target_activity,widget)
-        console.log("RESPONSE", response, activityId)
+        // console.log("RESPONSE", response, activityId)
          widget.flowchart('setinputVal', activityId,'input',{'datatypes': response.datatypes, 'values': response.values})
         widget.flowchart('setoutputVal', activityId,'output',response)
         all_columns.forEach(column => {
@@ -197,7 +200,7 @@ class Import_Activity extends Activity{
     _on_selector_change(event, widget, activity){
         let parent_element = event.target.parentElement;
         let div = document.getElementById(activity.activityId+"_column_edit")
-        console.log("Name: ", event.target.name)
+        // console.log("Name: ", event.target.name)
         if (event.target.name != 'column_name'){
             return
         }
@@ -220,7 +223,7 @@ class Import_Activity extends Activity{
         }
         let datatypes = widget.flowchart('getOperatorActivity', activity.activityId).inputs.input.value.datatypes;
         let datatype = datatypes[selected_column]
-        console.log("Data type", datatype)
+        // console.log("Data type", datatype)
         event.target.parentElement.children[1].value =  datatype
 
         event.target.parentElement.children[2].value =  name
@@ -274,13 +277,13 @@ class Import_Activity extends Activity{
     _on_input_change(e, widget,activity){
         if (e.target.name == 'custom_value'){
             let parent_element = e.target.parentElement;
-            console.log(e.target.value)
+            // console.log(e.target.value)
             widget.flowchart('addCustomValue', activity.activityId, parent_element.id, e.target.value)
             return
         }
 
         let parent_element = e.target.parentElement;
-        console.log(e.target.value)
+        // console.log(e.target.value)
         widget.flowchart('renameSelectColumn', activity.activityId, parent_element.id, e.target.value)
     }
 }

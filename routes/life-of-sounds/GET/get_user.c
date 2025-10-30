@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "http_utilities.h"
 #include "User.h"
+#include "Blob.h"
 #include "User_Token.h"
 #include "session.h"
 #include "Socket.h"
@@ -63,12 +64,11 @@ void get_user(struct Socket* socket,char* http_header, char*body, char* route){
 		trim(refresh_token, trimmed_token);
 		struct User_Token user_token = get_token(trimmed_token);
 		if (user_token.exists){
-			char* path = "/life-of-sounds/";
-
+			// char* path = "/life-of-sounds/";
 			struct User user = get_user_by_id(user_token.userId);
 			if (user.exists){
 				struct User_Token session_token = create_token(user.Id);
-				char* session_cookie = create_session_cookie(path, session_token.token);
+				char* session_cookie = create_session_cookie(route, session_token.token);
 				char* user_json =  convert_user_to_json(user);
 				char http_header[2048];
 				int json_length = strlen(user_json);

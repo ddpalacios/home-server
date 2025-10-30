@@ -7,14 +7,14 @@ async function run_activity_flow(activity, widget, data){
         ,'operations': activity.settings
         ,'data':data
         }
-        console.log("SENDING BODY", body)
+        // console.log("SENDING BODY", body)
     }else{
         body = {
             'activity_type' : activity_type
             ,'operations': activity.settings
             ,'data': activity.inputs.input.value.values
         }
-        console.log("SENDING BODY", body)
+        // console.log("SENDING BODY", body)
 
     }
     if (body == undefined){return}
@@ -76,7 +76,7 @@ async function run_pipeline(dependencies, target_node_ids){
                 console.log(settings)
                 let d = []
                 activity.dependencies.forEach(element => {
-                        d.push(element.operatorId)
+                        d.push(element)
                         
                     });
                 dependencies[key] = {'tableName':key,"dependencies":d, 'query': settings, 'activityType':activity.activityType}

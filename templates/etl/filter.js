@@ -42,7 +42,7 @@ class Filter_Activity extends Activity{
 
     _on_input_change(e, widget,activity){
         let parent_element = e.target.parentElement;
-        console.log(e.target.value)
+        // console.log(e.target.value)
         // widget.flowchart('renameSelectColumn', activity.activityId, parent_element.id, e.target.value)
     }
     get_operation_settings(){
@@ -54,7 +54,7 @@ class Filter_Activity extends Activity{
         let parent_element = e.target.parentElement;
         parent_element.remove()
         let row_id = parent_element.id
-        console.log("deleting", parent_element.id)
+        // console.log("deleting", parent_element.id)
         let settings = []
         activity.activity.settings?.where.forEach(element => {
             if (element.row_id != row_id){
@@ -68,7 +68,7 @@ class Filter_Activity extends Activity{
         let settings_div = document.getElementById('selected_activity_settings')
 
         let activityId = activity.activityId
-        console.log("FILTER ID", activityId)
+        // console.log("FILTER ID", activityId)
         let columns_div = document.getElementById(activityId + "_column_edit");
         if (columns_div == null || columns_div == undefined){
              settings_div = document.getElementById('selected_activity_settings')
@@ -76,7 +76,7 @@ class Filter_Activity extends Activity{
             columns_div.id = this.activityId+ "_column_edit"
             settings_div.appendChild(columns_div)
         }
-        console.log("CONDITION", activity)
+        // console.log("CONDITION", activity)
         if (Array.isArray( activity.activity.inputs.input.value.values)){
             all_columns = Object.keys(activity.activity.inputs.input.value.values[0])
         }else{
@@ -147,7 +147,7 @@ class Filter_Activity extends Activity{
         let target_element = e.target
         let target_name = e.target.name
         let datatypes = widget.flowchart("getOperatorActivity", activity.activityId).inputs.input.value.datatypes
-        console.log("DATA TYPES", datatypes)
+        // console.log("DATA TYPES", datatypes)
         if (target_name == 'column_name'){
             parent_element.children[2].value = datatypes[value]
             e.target.parentElement.children[3].innerHTML = ''

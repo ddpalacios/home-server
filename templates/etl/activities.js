@@ -86,7 +86,7 @@ class Settings{
     _on_button_click(e, widget, activity){
         let parent_element = e.target.parentElement;
         parent_element.remove()
-        console.log("deleting", parent_element.id)
+        // console.log("deleting", parent_element.id)
         // widget.flowchart('removeSelectColumn', activity.activityId, parent_element.id)
     }
     _on_selector_change(e, widget,activity){
@@ -130,7 +130,7 @@ class Settings{
           console.log(widget.flowchart('getOperatorActivity', activity.activityId))
     }
     _update_activity(e, widget, activity){
-        console.log("UPDATIN INPUTS", activity)
+        // console.log("UPDATIN INPUTS", activity)
         activity = activity.activity
         let link_from_output = activity.link_from[0].outputs.output.value
          widget.flowchart('setinputVal', activity.operatorId,'input', link_from_output)
@@ -300,7 +300,7 @@ class Settings{
 
         // }
         if (this.activity.outputs.output.value?.values == null || this.activity.outputs.output.value?.values == undefined){
-            console.log("Returning empty")
+            // console.log("Returning empty")
             return div
         }
 
@@ -355,10 +355,10 @@ class Settings{
     const record = document.getElementById(this.activityId + "_column_edit");
 
     if (type == 'aggregate'){
-        console.log("GETTING SORTS ACTIVITG ID", this.activityId + "_column_edit")
-        console.log("GETTING SORTS RECORD",record)
+        // console.log("GETTING SORTS ACTIVITG ID", this.activityId + "_column_edit")
+        // console.log("GETTING SORTS RECORD",record)
 
-        console.log("GETTING SORTS CHILDREN",record.children)
+        // console.log("GETTING SORTS CHILDREN",record.children)
     }
 
     if (!record) return null;
@@ -469,7 +469,7 @@ class Activity extends Settings{
         ,'operations':  this.get_operation_settings("where")
         ,'data':  this.activity.inputs.input.value.values
     }
-    console.log("RUN",body)
+    // console.log("RUN",body)
     // var request = new Request('/etl/run/', {
     //                             method: 'POST',
     //                             headers: new Headers({
@@ -555,7 +555,7 @@ function get_output_values(activity){
     if (activity.activityType == 'flatten'){
         let previous_activity_outputVal = activity.link_from[0].outputs.output
         let elem = document.getElementById("flatten_body_select_"+activity.operatorId)
-        console.log('Output elem',elem)
+        // console.log('Output elem',elem)
         let value = elem.value
         let new_output = previous_activity_outputVal[value]
         return new_output
@@ -685,12 +685,12 @@ function add_export_activity_settings(widget, activity, outputVal){
     array_selector.setAttribute("operatorId", operatorId)   
     array_selector.onchange = function(){
         let div = document.getElementById('export_div')
-        console.log("Changed to", this.value)
+        // console.log("Changed to", this.value)
         let inputs = JSON.parse(this.getAttribute('inputs'))
         let flattened_output = inputs[this.value]
          if (Array.isArray(flattened_output)){
             div.setAttribute('root', this.value)
-            console.log("Updating output",flattened_output )
+            // console.log("Updating output",flattened_output )
              widget.flowchart('setoutputVal', operatorId,'output',JSON.parse(JSON.stringify(flattened_output)))
           
         }
@@ -758,16 +758,16 @@ function add_select_activity_settings(widget, activity, outputVal){
         let activity = widget.flowchart('getOperatorActivity', operatorId)
         let expanded_input_values = expand_struct(activity.inputs.input.value)
         let all_available_columns = Object.keys(expanded_input_values)
-        console.log("All columns", all_available_columns)
+        // console.log("All columns", all_available_columns)
         let expanded_output_values = expand_struct(activity.outputs.output.value)
         let all_visible_columns = Object.keys(expanded_output_values)
-        console.log("Visible columns",all_visible_columns )
+        // console.log("Visible columns",all_visible_columns )
         for (let i =0; i<all_available_columns.length; i++){
             let original_column = all_available_columns[i]
              if (!all_visible_columns.includes(original_column)){
                 let data_type = typeof expanded_input_values[original_column]
                 let record = {'operatorId':activity.operatorId,'columnName': original_column, 'dataType': data_type,'updatedName': original_column}
-                console.log("Adding New column", record)
+                // console.log("Adding New column", record)
                 settings_create_column_edit_record(widget,all_available_columns,record)
 
                 activity.outputs.output.value[original_column] = expanded_input_values[original_column]
@@ -1026,14 +1026,14 @@ function settings_create_column_edit_record(widget,original_columns,new_record){
 }
 
 function onLinkCreation(widget,linkData){
-    console.log(linkData)
+    // console.log(linkData)
     let toOperator = widget.getOperatorActivity(linkData['toOperator'])
     let fromOperator  = widget.getOperatorActivity(linkData['fromOperator'])
     let outputVal = fromOperator.outputs.output.value
 
     if (toOperator.activityType == 'join'){
-        console.log("ADDING dependency")
-        widget.setDependency(linkData['toOperator'],fromOperator)
+        // console.log("ADDING dependency")
+        widget.setDependency(linkData['toOperator'],fromOperator.operatorId)
 
         if (linkData.toConnector == 'input_1'){
             widget.setinputVal(linkData['toOperator'],'input_1', fromOperator)
@@ -1042,8 +1042,8 @@ function onLinkCreation(widget,linkData){
             widget.setinputVal(linkData['toOperator'],'input_2', fromOperator)
         }
     }else{
-        console.log("ADDING dependency")
-        widget.setDependency(linkData['toOperator'],fromOperator)
+        // console.log("ADDING dependency")
+        widget.setDependency(linkData['toOperator'],fromOperator.operatorId)
 
             if (outputVal == null){
                 return
