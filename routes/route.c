@@ -236,6 +236,10 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/connect")==0){
 		start_websocket_session(socket,http_header,body, route);
 
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/etl/images/")!=NULL){
+			if (strcmp(route,"/etl/images/drag.png") ==0){
+				get_image_file(cSSL, http_header, "/etl/images/drag.png");
+		}
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl")==0){
 		get_live_html(cSSL, http_header, "/etl/home.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/activities.js")==0){
@@ -246,6 +250,10 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_gol_script(cSSL, http_header, "/etl/filter.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/run.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/run.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/select.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/select.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/sort.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/sort.js");
 
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/join.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/join.js");

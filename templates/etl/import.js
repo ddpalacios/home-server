@@ -64,19 +64,39 @@ class Import_Activity extends Activity{
         }
 
         let all_columns = []
+        let add_button = document.createElement("button")
+        add_button.innerHTML = this.add_button_label
+        add_button.style.width = '15%'
+        add_button.className = 'buttons'
+        add_button.style.backgroundColor = "#28a745"; // modern bootstrap green
+        add_button.style.color = "white";
+        add_button.style.border = "none";
+        add_button.style.borderRadius = "6px";
+        add_button.style.padding = "8px 12px";
+        add_button.style.cursor = "pointer";
+        add_button.style.transition = "background 0.2s ease";
+
+        
+        add_button.addEventListener("click", (event) => this._add_column(event, widget, this));
         let columns_div = document.getElementById(activity.activityId + "_column_edit");
         if (columns_div == null || columns_div == undefined){
             let settings_div = document.getElementById('selected_activity_settings')
                 columns_div = document.createElement('div')
+                columns_div.style.display = 'flex'
+                columns_div.style.flexDirection = 'column'
+                columns_div.style.gap = "15px"
+
             columns_div.id = this.activityId+ "_column_edit"
             settings_div.appendChild(columns_div)
         }
+
           if (Array.isArray( activity.activity.inputs.input.value.values)){
             all_columns = Object.keys(activity.activity.inputs.input.value.values[0])
         }else{
             all_columns = Object.keys(activity.activity.inputs.input.value.values)
 
         }
+        columns_div.appendChild(add_button)
         // let datatypes = widget.flowchart("getOperatorActivity", activity.activityId).inputs.input.value.datatypes;
         // let s = new Set(Object.values(datatypes));
         // datatypes = [...s]
@@ -110,7 +130,7 @@ class Import_Activity extends Activity{
             }
             ,{
                 'type': 'button'
-                ,'label': 'remove'
+                ,'label': 'DROP'
                 ,'color': 'red'
             }]
             let column_edit_element = this.get_column_selection_element(widget,settings)
@@ -126,6 +146,9 @@ class Import_Activity extends Activity{
         if (columns_div == null || columns_div == undefined){
             let settings_div = document.getElementById('selected_activity_settings')
                 columns_div = document.createElement('div')
+                columns_div.style.display = 'flex'
+                columns_div.style.flexDirection = 'column'
+                columns_div.style.gap = "5px"
             columns_div.id = this.activityId+ "_column_edit"
             settings_div.appendChild(columns_div)
         }
@@ -159,7 +182,7 @@ class Import_Activity extends Activity{
             }
             ,{
                 'type': 'button'
-                ,'label': 'remove'
+                ,'label': 'DROP'
                 ,'color': 'red'
             }]
         let column_edit_element = this.get_column_selection_element(widget,settings)
@@ -210,7 +233,7 @@ class Import_Activity extends Activity{
 
         // let selected_column  = event.target.value
         // if (selected_column != "" && parent_element.children.length > 4){
-        //     parent_element.children[3].remove()
+        //     parent_element.children[3].DROP()
         // }
         // if (selected_column == "" && parent_element.children.length == 4){
         //     let input = document.createElement('input')

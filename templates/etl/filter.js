@@ -6,8 +6,40 @@ class Filter_Activity extends Activity{
         this.number_operations = ['EQUALS', 'DOES NOT EQUAL', 'GREATER THAN', 'GREATER THAN OR EQUAL TO', 'LESS THAN', 'LESS THAN OR EQUAL TO', 'IS NOT NULL', 'IS NULL']
         this.add_button_label = "+ Add Condition"
         this.settings = this.get_settings_element()
-        // this.operation_settings= null
     }
+
+
+    // get_settings_element(){
+    //     let settings_div = document.getElementById('selected_activity_settings')
+    //     let add_button = document.createElement("button")
+    //     add_button.innerHTML = this.add_button_label
+    //     add_button.style.width = '15%'
+    //     add_button.className = 'buttons'
+    //     add_button.style.backgroundColor = "#28a745"; 
+    //     add_button.style.color = "white";
+    //     add_button.style.border = "none";
+    //     add_button.style.borderRadius = "6px";
+    //     add_button.style.padding = "8px 12px";
+    //     add_button.style.cursor = "pointer";
+    //     add_button.style.transition = "background 0.2s ease";
+    //     add_button.addEventListener("click", (event) => this._add_column(event, this.flowchart, this));
+    //     let columns_div = document.getElementById(this.activity.activityId + "_column_edit");
+    //     if (columns_div == null || columns_div == undefined){
+    //          settings_div = document.getElementById('selected_activity_settings')
+    //             columns_div = document.createElement('div')
+    //             columns_div.style.display = 'flex'
+    //             columns_div.style.flexDirection = 'column'
+    //             columns_div.style.gap = "15px"
+
+    //         columns_div.id = this.activityId+ "_column_edit"
+    //         settings_div.appendChild(columns_div)
+    //     }
+    //     columns_div.appendChild(add_button)
+
+    // }
+
+
+
     _on_input_change(e, widget,activity){
         let parent_element = e.target.parentElement;
         console.log(e.target.value)
@@ -33,10 +65,13 @@ class Filter_Activity extends Activity{
     }
     _add_column(e, widget, activity){
         let all_columns = []
+        let settings_div = document.getElementById('selected_activity_settings')
+
         let activityId = activity.activityId
-        let columns_div = document.getElementById(activity.activityId + "_column_edit");
+        console.log("FILTER ID", activityId)
+        let columns_div = document.getElementById(activityId + "_column_edit");
         if (columns_div == null || columns_div == undefined){
-            let settings_div = document.getElementById('selected_activity_settings')
+             settings_div = document.getElementById('selected_activity_settings')
              columns_div = document.createElement('div')
             columns_div.id = this.activityId+ "_column_edit"
             settings_div.appendChild(columns_div)

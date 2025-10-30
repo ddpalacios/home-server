@@ -632,8 +632,10 @@ jQuery(function ($) {
         removeDropColumn: function(operatorId, column_to_delete){
             this.data.operators[operatorId].internal.properties['settings']['drop'].push(column_to_delete)
         },
+        getoutputVal: function(operatorId,outputName){
+            return this.data.operators[operatorId].internal.properties.outputs[outputName].value
+        },
         setoutputVal: function(operatorId,outputName, value){
-            console.log("Setting output", value)
             this.data.operators[operatorId].internal.properties.outputs[outputName].value = value;
         },
         getDependencies: function(){
@@ -1483,23 +1485,54 @@ jQuery(function ($) {
             return this.positionRatio;
         },
 
-        getData: function () {
+        getData: function (Id) {
             var keys = ['operators', 'links'];
-            var data = {};
-            data.operators = $.extend(true, {}, this.data.operators);
-            data.links = $.extend(true, {}, this.data.links);
-            for (var keyI in keys) {
-                if (keys.hasOwnProperty(keyI)) {
-                    var key = keys[keyI];
-                    for (var objId in data[key]) {
-                        if (data[key].hasOwnProperty(objId)) {
-                            delete data[key][objId].internal;
-                        }
+            let data = null
+            let pipeline = {'Id': Id,'activities': {}}
+            Object.keys(this.data.operators).forEach(element => {
+                let operator = this.data.operators[element]
+                if (operator.properties.activityType != 'import'){
+                    operator.properties.inputs = {
+                    input: { value: null
+                        ,label: operator.properties.inputs.input.label
+                     }
+                    };
+
+                     operator.properties.outputs = {
+                    output: { value: null 
+                        ,label: operator.properties.inputs.input.label
+
                     }
+                    };
+                    
                 }
-            }
-            data.operatorTypes = this.data.operatorTypes;
-            return data;
+
+                pipeline['activities'][operator.operatorId] = {
+                    'top': operator.top,
+                    'operatorId': operator.operatorId,
+                    'left':operator.left
+                    ,'properties':operator.properties
+                }
+            });
+            pipeline['links'] = this.data.links
+            console.log("DATA",pipeline)
+            
+            // var data = this.getOperators()
+
+            // data.operators = $.extend(true, {}, this.data.operators);
+            // data.links = $.extend(true, {}, this.data.links);
+            // for (var keyI in keys) {
+            //     if (keys.hasOwnProperty(keyI)) {
+            //         var key = keys[keyI];
+            //         for (var objId in data[key]) {
+            //             if (data[key].hasOwnProperty(objId)) {
+            //                 delete data[key][objId].internal;
+            //             }
+            //         }
+            //     }
+            // }
+            // data.operatorTypes = this.data.operatorTypes;
+            return pipeline;
         },
 
         getDataRef: function () {

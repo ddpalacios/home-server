@@ -157,6 +157,29 @@ class Settings{
     tempDiv.innerHTML = selectHTML;
     return tempDiv.firstElementChild;
 }
+    get_multiple_selector_element(options, default_value){
+        const selected_options = [];
+    if (default_value === "") {
+    selected_options.push('<option value="" selected></option>');
+}
+
+    options.forEach(element => {
+        if (Array.isArray(default_value) && default_value.includes(element)) {
+            selected_options.push(`<option value="${element}" selected>${element}</option>`);
+        } else if (element === default_value) {
+            selected_options.push(`<option value="${element}" selected>${element}</option>`);
+        } else {
+            selected_options.push(`<option value="${element}">${element}</option>`);
+        }
+    });
+
+    const selectHTML = `<select multiple size="5">${selected_options.join('')}</select>`;
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = selectHTML;
+    return tempDiv.firstElementChild;
+
+}
+
      get_column_selection_element(widget,rows,flexDirection){
         let div = document.createElement('div')
         div.className = 'rename_settings'
@@ -170,7 +193,13 @@ class Settings{
             if (elem_type == 'selector'){
                 let options = element['options']
                 let default_value =element['default_value']
-                let selector_element = this.get_selector_element(options,default_value)
+                let selector_element;
+                if (element?.ismultiple!= undefined && element?.ismultiple !=null){
+                    selector_element= this.get_multiple_selector_element(options, default_value)
+                }else{
+                 selector_element = this.get_selector_element(options,default_value)
+                }
+                selector_element.className = "item_select"
                 selector_element.name = element?.name
                 selector_element.disabled = element?.disabled
                 selector_element.addEventListener("change", (event) => this._on_selector_change(event, widget, this));
@@ -179,6 +208,8 @@ class Settings{
             if (elem_type == 'input'){
                 let input = document.createElement('input')
                 input.placeholder = element['placeholder']
+                input.className = "text_input_value"
+
                 input.name = element?.name
                 if (element?.value != undefined){
                     input.value = element?.value
@@ -188,6 +219,7 @@ class Settings{
             }
             if (elem_type == 'button'){
                 let button = document.createElement('button')
+                button.className = "buttons"
                 button.innerHTML = element['label']
                 button.style.color = element['color']
                 button.addEventListener("click", (event) => this._on_button_click(event, widget, this));
@@ -214,31 +246,61 @@ class Settings{
     get_settings_element(){
         let div = document.createElement('div')
         div.id = this.activityId
-        let add_button = document.createElement('button')
         let add_div = document.createElement('div')
-        add_button.setAttribute('operatorId', this.activityId)
-        add_button.innerHTML = this.add_button_label
-        add_button.className = 'buttons'
-        add_button.style.color = 'black'
+        let add_button = document.createElement('button')
+        add_button.className = "buttons"
         this.add_button_element = add_button
-        add_button.addEventListener("click", (event) => this._add_column(event, this.flowchart, this));
 
-        add_div.appendChild(add_button)
-        div.appendChild(add_div)
+        // let add_button = document.createElement('button')
+        // add_button.setAttribute('operatorId', this.activityId)
+        // add_button.innerHTML = this.add_button_label
+        // add_button.className = 'buttons'
+        // add_button.style.color = 'black'
+        // this.add_button_element = add_button
+        // add_button.addEventListener("click", (event) => this._add_column(event, this.flowchart, this));
+
+        // div.appendChild(add_div)
         if (this.activity.activityType == 'import'){
             const input = document.createElement('input');
             input.type = 'file';
             input.addEventListener("change", (event) => this._inputFile_onchange(event, this.flowchart, this));
             div.appendChild(input)
         }
-        else{
-            const button = document.createElement('button');
-            button.innerHTML = "Update View"
-            button.addEventListener("click", (event) => this._update_activity(event, this.flowchart, this));
-            div.appendChild(button)
+        else if (this.activity.activityType == 'select'){
+                const input = document.createElement('input');
+                input.innerHTML = "sync columns"
+                input.value = "Sync Columns"
+                input.type = 'button';
+                input.addEventListener("click", (event) => this._sync_columns(event, this.flowchart, this));
+                div.appendChild(input)
+            }
+         
+        else {
+          
 
+            let add_button = document.createElement("button")
+            add_button.innerHTML = this.add_button_label
+            add_button.style.width = '15%'
+            add_button.className = 'buttons'
+            add_button.style.backgroundColor = "#28a745"; 
+            add_button.style.color = "white";
+            add_button.style.border = "none";
+            add_button.style.borderRadius = "6px";
+            add_button.style.padding = "8px 12px";
+            add_button.style.cursor = "pointer";
+            add_button.style.transition = "background 0.2s ease";
+            add_button.addEventListener("click", (event) => this._add_column(event, this.flowchart, this));
+            div.appendChild(add_button)
         }
+        // else{
+        //     const button = document.createElement('button');
+        //     button.innerHTML = "Update View"
+        //     button.addEventListener("click", (event) => this._update_activity(event, this.flowchart, this));
+        //     div.appendChild(button)
+
+        // }
         if (this.activity.outputs.output.value?.values == null || this.activity.outputs.output.value?.values == undefined){
+            console.log("Returning empty")
             return div
         }
 
@@ -291,6 +353,14 @@ class Settings{
     }
     get_operation_settings(type) {
     const record = document.getElementById(this.activityId + "_column_edit");
+
+    if (type == 'aggregate'){
+        console.log("GETTING SORTS ACTIVITG ID", this.activityId + "_column_edit")
+        console.log("GETTING SORTS RECORD",record)
+
+        console.log("GETTING SORTS CHILDREN",record.children)
+    }
+
     if (!record) return null;
 
     const statements = [];
@@ -301,6 +371,8 @@ class Settings{
 
         for (let j = 0; j < row.children.length; j++) {
             const element = row.children[j];
+         
+
             if (!element.name) continue;
 
             switch (element.name) {
@@ -324,6 +396,11 @@ class Settings{
                     statement.new_column_name_2 = element.value;
                     statement.row_id = row.id
                     continue
+                case 'multiple_column_names':
+                    const selectedValues = Array.from(element.selectedOptions).map(opt => opt.value);
+                    statement.columnName = selectedValues;
+                    statement.row_id = row.id
+                    continue
                 case 'column_name':
                     statement.columnName = element.value;
                     statement.row_id = row.id
@@ -334,6 +411,10 @@ class Settings{
                     continue
                 case 'data_type':
                     statement.data_type = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'orderby':
+                    statement.orderby = element.value;
                     statement.row_id = row.id
                     continue
                 case 'operation':
@@ -362,10 +443,12 @@ class Settings{
                     continue
             }
         }
+        if (Object.keys(statement).length > 0){
         statements.push(statement);
 
-    }
+        }
 
+    }
 
     this.operation_settings = { [type]: statements };
     return this.operation_settings;

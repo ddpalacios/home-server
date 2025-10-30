@@ -21,7 +21,7 @@
     left: 0;
     width: 300px;
     height: 100%;
-    background: #34495e;
+    background: whitesmoke;
     color: white;
     padding: 10px;
     box-shadow: 2px 0 5px rgba(0,0,0,0.3);
@@ -45,25 +45,46 @@
 
   .footer {
     position: relative;
-    background: #2c3e50;
     color: white;
-    height: 100px;
+    height: 500px;
     overflow: auto;
   }
 
   .resize-handle {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 8px;
+    position: relative;
+    height: 18px;
     width: 100%;
     cursor: ns-resize;
-    background: rgba(255, 255, 255, 0.2);
+	  display: flex;
+  justify-content: center; 
+  align-items: center;   
+    background: whitesmoke;
   }
+
+  .resize-handle img {
+  width: 20px; 
+  height: 20px;
+  pointer-events: none; 
+}
+  /* .resize-handle {
+  position: relative;
+  width: 100%;
+  height: 20px; 
+  display: flex;
+  justify-content: center; 
+  align-items: center;     
+}
+
+.resize-handle img {
+  width: 20px; 
+  height: 20px;
+  pointer-events: none; 
+} */
+
   .buttons{
     width: auto;  
     padding: 10px;
-	font-size: 20px;
+	 font-size: 0.8em;
     font-weight: bold;
     font-family: 'Garamond';
     color: rgb(0, 0, 0);
@@ -91,50 +112,370 @@
 			background: white;
 		}
 	</style>
+	<style>
+
+/* Style the tab */
+.tab {
+  overflow: hidden;
+  /* border: 1px solid #ccc; */
+  background-color: #f1f1f100;
+  display: flex;
+  width: 100%;
+  flex-direction: row;
+  gap: 50px;
+}
+
+/* Style the buttons inside the tab */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+  font-size: 17px;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+  color: #006dfb;
+  
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+ color: #006dfb;
+}
+
+/* Style the tab content */
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+}
+
+/* --- Base Select Box --- */
+select {
+
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: linear-gradient(145deg, #f9f9f9, #e6e6e6);
+  padding: 10px 40px 10px 14px;
+  font-size: 15px;
+  color: #333;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.25s ease-in-out;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  position: relative;
+}
+
+/* --- Hover and Focus States --- */
+select:hover,
+select:focus {
+  background: linear-gradient(145deg, #ffffff, #e9e9e9);
+  border-color: #999;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+}
+
+
+/* --- Optional container styling --- */
+.select-container {
+  display: inline-block;
+  position: relative;
+}
+
+.select-container::after {
+  content: "▼";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8em;
+  color: #555;
+  pointer-events: none;
+}
+.text_input_value, #operator_title {
+  padding: 8px 12px;
+   font-size: 0.8em;
+
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #f8f8f8;
+  color: #333;
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.text_input_value:hover {
+  border-color: #999;
+  background: #fefefe;
+}
+
+.text_input_value:focus {
+  border-color: #0078ff;
+  background: #fff;
+}
+
+#selected_activity_settings, #operator_properties {
+  display: flex;
+  flex-direction: column;
+  margin-left: 10px;
+ padding: 10px;
+  gap: 10px;
+  max-height: 700px;
+  overflow-y: auto;  
+  scrollbar-width: thin; 
+}
+
+#selected_activity_settings::-webkit-scrollbar {
+  width: 6px;
+}
+#selected_activity_settings::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 3px;
+}
+#selected_activity_settings::-webkit-scrollbar-thumb:hover {
+  background-color: #999;
+}
+
+</style>
+
+<style>
+	/* body {
+  font-family: Arial, sans-serif;
+  margin: 10px;
+} */
+
+.filter-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.filter-container label {
+  flex-basis: 100%;
+  font-weight: bold;
+}
+
+.filter-container select,
+.filter-container input {
+  flex: 1 1 200px;
+  max-width: 300px;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+/* Table wrapper: scroll horizontally instead of overflowing */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 10px;
+  margin-top: 10px;
+}
+
+/* Table styles */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 500px; /* lets columns breathe, but scrolls on small screens */
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  color: black;
+  text-align: left;
+  word-break: break-word;
+}
+
+th {
+  background-color: #f4f4f4;
+}
+
+/* Make headings and spacing smaller on phones */
+@media (max-width: 600px) {
+  .main_section1 {
+    width: 95% !important;
+    padding: 10px !important;
+  }
+
+  .section_title {
+    font-size: 24px !important;
+  }
+
+  .filter-container {
+    flex-direction: column;
+  }
+
+  select,
+  input {
+    max-width: 100% !important;
+  }
+
+  table {
+    min-width: unset; /* let it shrink */
+    font-size: 12px;
+  }
+}
+#data_table_container {
+  max-height: 800px;   /* or whatever height you want */
+  overflow-y: auto;    /* vertical scroll */
+  overflow-x: auto;    /* horizontal scroll if needed */
+  border: 1px solid #ccc; /* optional border */
+}
+
+#data_table {
+  width: 100%;         /* make table fill container */
+  border-collapse: collapse;
+}
+
+#data_table th, #data_table td {
+  padding: 8px;
+  border: 1px solid #ccc;
+  text-align: left;
+}
+/* Sidebar container */
+.sidebar {
+    background-color: #f0f4f8;    
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+    overflow-y: auto;            
+}
+
+/* Sidebar header */
+.sidebar-header {
+    background-color: #f0f4f8;    
+    color: black;
+    padding: 15px 10px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Buttons container */
+.sidebar-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 15px 10px;
+}
+
+/* Buttons */
+.sidebar-buttons .buttons {
+    background-color: #ffffff;
+    border: 1px solid #0a0a0a;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 1rem;
+    color: #000000;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+/* Button hover effect */
+.sidebar-buttons .buttons:hover {
+    background-color: #4da6ff;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+}
+
+/* Button active effect */
+.sidebar-buttons .buttons:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+
+
+
+</style>
 </head>
 <body>
 
-  <div class="sidebar" id="sidebar" style="overflow-y: hidden; " >
-	<div style="text-align: center;"><h3>Activities</h3></div>
-	<div style="display: flex; flex-direction: column; gap: 15px; text-align: center; justify-content: center; justify-items: center; height: 100vh; ">
-	<button id="import_activity" class="create_operator buttons">Create Import</button>
-	<button  id="filter_activity" class="create_operator buttons">Create Filter</button>
-	<button  id="export_activity" class="create_operator buttons">Create export</button>
-	<button  id="aggregate_activity" class="create_operator buttons">Create Aggregate</button>
-	<button  id="join_activity" class="create_operator buttons">Create join</button>
-	<button  id="custom_activity" class="create_operator buttons">Create custom</button>
-	<button  id="replace_activity" class="create_operator buttons">Replace Value</button>
-	<button  id="split_activity" class="create_operator buttons">Split Value</button>
-	</div>
-  </div>
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h3>Activities</h3>
+    </div>
+    <div class="sidebar-buttons">
+        <button id="import_activity" class="create_operator buttons">Create Import</button>
+        <button id="filter_activity" class="create_operator buttons">Create Filter</button>
+        <button id="export_activity" class="create_operator buttons">Create Export</button>
+        <button id="aggregate_activity" class="create_operator buttons">Create Aggregate</button>
+        <button id="join_activity" class="create_operator buttons">Create Join</button>
+        <button id="custom_activity" class="create_operator buttons">Create Custom</button>
+        <button id="replace_activity" class="create_operator buttons">Replace Value</button>
+        <button id="split_activity" class="create_operator buttons">Split Value</button>
+        <button id="select_activity" class="create_operator buttons">Select</button>
+        <button id="sort_activity" class="create_operator buttons">Sort</button>
+    </div>
+</div>
+
 
   <div class="content-wrapper">
     <div class="content">
       	 <div id="chart_container">
-					<div class="navbar" style=" padding: 10px; z-index: 1000; position: fixed; top: 0;  border: 1px solid black; width: 100%;">
+					<!-- <div class="navbar" style=" padding: 10px;  position: fixed; top: 0;  border: 1px solid black; width: 100%;">
 						<button id="run_pipeline" class="buttons" style="color: rgb(0, 0, 0); background-color: rgb(117, 255, 112);">Run Pipeline</button>
-					</div>
+					</div> -->
 					<div class="flowchart-example-container" id="flowchartworkspace">
 
 					</div>
 	      </div> 
     </div>
 
-    <div class="footer" id="footer" style="overflow-x: hidden;">
-      <div class="resize-handle" id="resizeHandle"></div>
-	  		<div class="navbar" style=" padding: 20px; z-index: 1000;   border: 1px solid black; width: 100%; display: flex; flex-direction: row; gap: 50px;">
-					<button class="buttons" style="color: rgb(0, 0, 0); background-color: rgb(117, 255, 112);">Settings</button>
-					<button class="buttons" style="color: rgb(0, 0, 0); background-color: rgb(117, 255, 112);">Preview</button>
-						
+    <div class="footer" id="footer" style="overflow-x: hidden; overflow-y: hidden;">
+      <div class="resize-handle" id="resizeHandle"> <img src="/etl/images/drag.png" width="50" height="50"></div>
+	  		<div class="navbar" style=" padding: 20px; z-index: 1000; background-color: whitesmoke;   border: 1px solid rgb(255, 255, 255); width: 100%; display: flex; flex-direction: row; gap: 50px;">
+				<div class="tab">
+				<button class="tablinks" onclick="openCity(event, 'London')">General</button>
+				<button class="tablinks" onclick="openCity(event, 'Paris')">Settings</button>
+				<button class="tablinks" onclick="openCity(event, 'data_preview')">Data Preview</button>
+				</div>
+				
 
 			</div>
-			<div id="operator_properties" style="display: block;">
-						<label for="operator_title">Operator's title: </label><input id="operator_title" type="text">
+			<div id="London" class="tabcontent" style="display: flex; flex-direction: column; gap: 30px;">
+				<div id="operator_properties" style="display: flex; flex-direction: column;;">
+					<label style="font-size: 20px; color: black" for="operator_title; " >Name: </label><input style="width: 15%;" id="operator_title" type="text">
+					<label style="font-size: 20px; color: black" for="operator_title; " >Description: </label><textarea style="width: 15%;" rows="5" cols="10" id="" type="text"></textarea>
+				</div>
+				
 			</div>
-			<div id="link_properties" style="display: block;">
-				<label for="link_color">Link's color: </label><input id="link_color" type="color">
+				<div id="Paris" class="tabcontent">
+					<div id="link_properties" style="display: block;">
+					<label for="link_color">Link's color: </label><input id="link_color" type="color"></div>
+				<div id="selected_activity_settings" style="display: flex; flex-direction: column; gap: 10px;"></div>
+				
 			</div>
-			<div id="selected_activity_settings" style="display: flex; flex-direction: column; gap: 10px;"></div>
+					<div id="data_preview" class="tabcontent">
+						<div style="display: flex; flex-direction: row; gap: 10px; align-items: end;">
+					<button id="refresh_preview" class="buttons"style="width: 15%;position: relative;background-color: #f5f5f5;color: blue;border: none;border-radius: 6px;padding: 8px 12px;box-shadow: 0 2px 4px rgba(0,0,0,0.2);transition: all 0.2s ease;">
+					Refresh
+					</button>
+
+					<button id="export_preview" class="buttons"style="width: 15%;position: relative;background-color: #eaeaea;color: green;border: none;border-radius: 6px;padding: 8px 12px;box-shadow: 0 2px 4px rgba(0,0,0,0.2);transition: all 0.2s ease;">Export</button></div>
+					<div id="activity_previews"></div>
+					<!-- <div class="filter-container">
+						<label for="columnSelect">Filter by column:</label>
+						<select id="columnSelect"></select>
+						<input type="text" id="filterInput" placeholder="Enter filter text...">
+					</div>
+					<div class="table-responsive">
+						<div id="data_table_container">
+							<table id="data_table"></table>
+						</div>
+					</div> -->
+				</div>
+			
+			
 	  
     </div>
   </div>
@@ -152,17 +493,204 @@
   <script src="etl/export.js" defer></script>
   <script src="etl/filter.js" defer></script>
   <script src="etl/replace.js" defer></script>
+  <script src="etl/select.js" defer></script>
+  <script src="etl/sort.js" defer></script>
+  <script>
+function openCity(evt, cityName) {
+  var i, tabcontent, tablinks;
+  tabcontent = document.getElementsByClassName("tabcontent");
+  for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+  }
+  tablinks = document.getElementsByClassName("tablinks");
+  for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].className = tablinks[i].className.replace(" active", "");
+  }
+  document.getElementById(cityName).style.display = "flex";
+  document.getElementById(cityName).style.flexDirection = "column";
+  document.getElementById(cityName).style.gap = "30px";
+  
+  evt.currentTarget.className += " active";
+}
+</script>
   <script>
       document.addEventListener('mousemove', function(event) {
           // console.log('Mouse X:', event.clientX, 'Mouse Y:', event.clientY);
       });
   </script>
+
+<script>
+	let pipeline_id
+    async function post_pipeline(userId, body){
+            var request = new Request('/blob-storage/bronze/etl/pipeline?userId='+userId+"&pipeline_id="+body['Id'], {
+                                method: 'POST',
+                                headers: new Headers({
+                                            'Accept': 'application/json'
+                                        })
+			       ,body: JSON.stringify(body)
+                    });
+
+            fetch(request);
+            // if (response.ok){ 
+            //     try{
+            //         const data = await response.json()
+            //         return data;
+            //     }catch(error){}
+            // }
+            // return null;
+    }
+    async function create_user(){
+            var request = new Request('/game-of-life/user', {
+                                method: 'POST',
+                                headers: new Headers({
+                                            'Accept': 'application/json'
+                                        })
+			       ,body: JSON.stringify({
+					       "username": "User"
+				       })
+                    });
+
+            var response = await fetch(request);
+            if (response.ok){ 
+                try{
+                    const data = await response.json()
+                    return data;
+                }catch(error){}
+            }
+            return null;
+    }
+    async function get_user(){
+         var request = new Request('/game-of-life/user', {
+                                method: 'GET',
+                                headers: new Headers({'Accept': 'application/json'})});
+            var user = null;
+            var response = await fetch(request);
+            if (response.ok){ 
+                user = await response.json()
+            }else{
+                user = create_user();
+            }
+            return user;
+    }
+
+	async function main(){
+		let user = await get_user()
+		console.log(user)
+		sessionStorage.setItem("userId", user.Id)
+		pipeline_id =  crypto.randomUUID()
+	}
+	main()
+
+</script>
+
+<script>
+	function jsonToCsv(jsonData) {
+    if (!Array.isArray(jsonData) || jsonData.length === 0) return '';
+
+    // get all headers (union of all keys)
+    const headers = [...new Set(jsonData.flatMap(obj => Object.keys(obj)))];
+
+    // helper to safely escape values
+    const escape = (val) => {
+        if (val === null || val === undefined) return '';
+        val = String(val);
+        // wrap in quotes if contains comma, newline, or quote
+        if (/[",\n\r]/.test(val)) {
+            return `"${val.replace(/"/g, '""')}"`;
+        }
+        return val;
+    }
+
+    const csv = [
+        headers.join(','), // header row
+        ...jsonData.map(obj => headers.map(h => escape(obj[h])).join(','))
+    ].join('\n');
+
+    return csv;
+}
+
+function createTable(jsonArray, tableContainer, activityId) {
+	const filterInput = document.getElementById(activityId+"_filterInput");
+const columnSelect = document.getElementById(activityId+"_columnSelect");
+
+  tableContainer.innerHTML = ""; // Clear old table
+
+  if (!jsonArray.length) {
+    tableContainer.textContent = "No data matches your filter.";
+    return;
+  }
+
+  const table = document.createElement("table");
+  const thead = document.createElement("thead");
+  const tbody = document.createElement("tbody");
+
+  // Header
+  const headerRow = document.createElement("tr");
+  const columns = Object.keys(jsonArray[0]);
+  columns.forEach(key => {
+    const th = document.createElement("th");
+    th.textContent = key;
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+
+  // Rows
+let limit = 100
+let count = 0
+  jsonArray.forEach(item => {
+		if (count < limit){
+
+		const row = document.createElement("tr");
+		columns.forEach(key => {
+		const td = document.createElement("td");
+		td.textContent = item[key];
+		row.appendChild(td);
+		});
+		tbody.appendChild(row);
+		count +=1
+}
+  });
+
+  table.appendChild(thead);
+  table.appendChild(tbody);
+  tableContainer.appendChild(table);
+
+  // Populate dropdown only once
+  if (!columnSelect.options.length) {
+    columns.forEach(col => {
+      const opt = document.createElement("option");
+      opt.value = col;
+      opt.textContent = col;
+      columnSelect.appendChild(opt);
+    });
+  }
+
+  // Attach filter handler once
+  if (!filterInput.dataset.bound) {
+    filterInput.addEventListener("input", () => {
+      const column = columnSelect.value;
+      const filterText = filterInput.value.toLowerCase();
+
+      const filteredData = jsonArray.filter(item =>
+        String(item[column]).toLowerCase().includes(filterText)
+      );
+
+      // Re-render table with filtered data
+      createTable(filteredData, tableContainer, activityId);
+    });
+    filterInput.dataset.bound = true; // Prevent re-binding
+  }
+}
+
+</script>
+
 <script type="text/javascript">
     function areArraysEqual(arr1, arr2) {
   return arr1.length === arr2.length && new Set(arr1).size === new Set(arr2).size && arr1.every(item => arr2.includes(item));
 }
 
     var main_activities = {}
+	let height_offset  = 300
 	$(document).ready(function() {
 			var $flowchart = $('#flowchartworkspace');
 			var $container = $flowchart.parent();
@@ -200,6 +728,8 @@
 
 			var $operatorProperties = $('#operator_properties');
 			var $selected_activity_settings = $('#selected_activity_settings');
+			var $data_preview_settings = $('#data_preview');
+			$data_preview_settings.hide()
 			$operatorProperties.hide();
       		$selected_activity_settings.hide()
 			var $linkProperties = $('#link_properties');
@@ -212,7 +742,18 @@
 				
 				onOperatorSelect: function(operatorId) {
 					$operatorProperties.show();
+					// $data_preview_settings.show()
+					var $activity_previews = $('#activity_previews');
+					$activity_previews.children().hide()
           			$selected_activity_settings.show()
+					var $preview_table = $('#'+operatorId+"_data_preview");
+					if ($preview_table != null && $preview_table  != undefined){
+						$preview_table.show()
+					}
+
+					
+					document.getElementById("refresh_preview").value = operatorId
+					document.getElementById("export_preview").value = operatorId
 					$operatorTitle.val($flowchart.flowchart('getOperatorTitle', operatorId));     
 					let activity = $flowchart.flowchart('getOperatorActivity', operatorId)
 					let all_dependecies = $flowchart.flowchart('getDependencies')
@@ -233,13 +774,16 @@
 							}
 							if (settings_div.children[i].id == elem.id+"_column_edit"){
 								found = true
-								settings_div.children[i].style.display = 'block'
+								settings_div.children[i].style.display = 'flex'
+								settings_div.children[i].style.flexDirection = 'column'
+								settings_div.children[i].style.gap = "15px"
 
 							}
 						}
 						if (!found){
 							settings_div.insertBefore(elem, settings_div.firstChild);
 						}
+
 					}
 
 					if (activity.activityType == 'filter'){
@@ -254,7 +798,9 @@
 							}
 							if (settings_div.children[i].id == elem.id+"_column_edit"){
 								found = true
-								settings_div.children[i].style.display = 'block'
+									settings_div.children[i].style.display = 'flex'
+								settings_div.children[i].style.flexDirection = 'column'
+								settings_div.children[i].style.gap = "15px"
 
 							}
 						}
@@ -276,7 +822,9 @@
 							}
 							if (settings_div.children[i].id == elem.id+"_column_edit"){
 								found = true
-								settings_div.children[i].style.display = 'block'
+									settings_div.children[i].style.display = 'flex'
+								settings_div.children[i].style.flexDirection = 'column'
+								settings_div.children[i].style.gap = "15px"
 
 							}
 						}
@@ -298,7 +846,9 @@
 							}
 							if (settings_div.children[i].id == elem.id+"_column_edit"){
 								found = true
-								settings_div.children[i].style.display = 'block'
+									settings_div.children[i].style.display = 'flex'
+								settings_div.children[i].style.flexDirection = 'column'
+								settings_div.children[i].style.gap = "15px"
 							}
 						}
 						if (!found){
@@ -319,7 +869,9 @@
 							}
 							if (settings_div.children[i].id == elem.id+"_column_edit"){
 								found = true
-								settings_div.children[i].style.display = 'block'
+									settings_div.children[i].style.display = 'flex'
+								settings_div.children[i].style.flexDirection = 'column'
+								settings_div.children[i].style.gap = "15px"
 							}
 						}
 						if (!found){
@@ -359,7 +911,9 @@
 							}
 							if (settings_div.children[i].id == elem.id+"_column_edit"){
 								found = true
-								settings_div.children[i].style.display = 'block'
+									settings_div.children[i].style.display = 'flex'
+								settings_div.children[i].style.flexDirection = 'column'
+								settings_div.children[i].style.gap = "15px"
 							}
 						}
 						if (!found){
@@ -380,7 +934,55 @@
 							}
 							if (settings_div.children[i].id == elem.id+"_column_edit"){
 								found = true
+								settings_div.children[i].style.display = 'flex'
+								settings_div.children[i].style.flexDirection = 'column'
+								settings_div.children[i].style.gap = "15px"
+							}
+						}
+						if (!found){
+							settings_div.insertBefore(elem, settings_div.firstChild);
+						}
+
+					}
+										
+					if (activity.activityType == 'select'){
+						let target_activity = main_activities[operatorId]
+						let elem = target_activity.settings
+						// target_activity.display_columns()
+						if (elem == null || elem == undefined){return}
+						let found = false;
+        				for (let i=0; i<settings_div.children.length; i++){
+							if (settings_div.children[i].id == elem.id){
+								found = true
 								settings_div.children[i].style.display = 'block'
+							}
+							if (settings_div.children[i].id == elem.id+"_column_edit"){
+								found = true
+								settings_div.children[i].style.display = 'flex'
+								settings_div.children[i].style.flexDirection = 'column'
+								settings_div.children[i].style.gap = "15px"
+							}
+						}
+						if (!found){
+							settings_div.insertBefore(elem, settings_div.firstChild);
+						}
+
+					}
+					if (activity.activityType == 'sort'){
+						let target_activity = main_activities[operatorId]
+						let elem = target_activity.settings
+						if (elem == null || elem == undefined){return}
+						let found = false;
+        				for (let i=0; i<settings_div.children.length; i++){
+							if (settings_div.children[i].id == elem.id){
+								found = true
+								settings_div.children[i].style.display = 'block'
+							}
+							if (settings_div.children[i].id == elem.id+"_column_edit"){
+								found = true
+								settings_div.children[i].style.display = 'flex'
+								settings_div.children[i].style.flexDirection = 'column'
+								settings_div.children[i].style.gap = "15px"
 							}
 						}
 						if (!found){
@@ -394,6 +996,8 @@
 				onOperatorUnselect: function() {
 				$operatorProperties.hide();
 				$selected_activity_settings.hide();
+				$data_preview_settings.hide()
+
 	
 				return true;
 				},
@@ -445,31 +1049,76 @@
 			//-----------------------------------------
 			//--- create operator button
 			//--- start
+		// $('#get_data').on('click', function() {
+		// 	 $flowchart.flowchart('getData');
+
+		// })
+
+	$('#export_preview').on('click', async function() {
+
+		 let data = $flowchart.flowchart('getoutputVal', this.value, 'output')
+        data = jsonToCsv(data.values)
+        const blob = new Blob([data], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'download.csv';
+        a.click();
+	})
+
+
+	$('#refresh_preview').on('click', async function() {
+		await execute($flowchart)
+		let outputs = $flowchart.flowchart('getoutputVal', this.value, 'output')
+
+		let activity_previews = document.getElementById("activity_previews")
+		let data_preview_container = document.getElementById(this.value+"_data_preview")
+		if (data_preview_container == null || data_preview_container == undefined){
+			 data_preview_container = document.createElement('div')
+			data_preview_container.id = this.value + "_data_preview"
+			let filter_div = document.createElement('div')
+			filter_div.className = "filter-container"
+			let label = document.createElement('label')
+			label.innerHTML = "Filter by column:"
+			let select = document.createElement('select')
+			select.id = this.value+"_columnSelect"
+			let input = document.createElement('input')
+			input.id = this.value+"_filterInput"
+			input.placeholder = "Enter filter text..."
+			filter_div.appendChild(label)
+			filter_div.appendChild(select)
+			filter_div.appendChild(input)
+			data_preview_container.appendChild(filter_div)
+			let table_responsive = document.createElement('div')
+			let data_table_container = document.createElement('div')
+			data_table_container.id ="data_table_container"
+			table_responsive.className = "table-responsive"
+			let t = document.createElement('table')
+			t.id = this.value+"_data_table"
+			data_table_container.appendChild(t)
+			table_responsive.appendChild(data_table_container)
+			data_preview_container.appendChild(table_responsive)
+			activity_previews.appendChild(data_preview_container)
+		}
+
+
+		createTable(outputs.values,document.getElementById(this.value+"_data_table"), this.value) 
+
+
+	})
+	
 	$('#run_pipeline').on('click', function() {
-		
 		let activites = $flowchart.flowchart('getOperators')
 		execute($flowchart)
-		// for (let i=0; i<Object.keys(activites).length;i++){
-		// 	let activityId = Object.keys(activites)[i]
-		// 	let activity = activites[activityId].properties
-		// 	if (activity.activityType == 'import'){
-		// 		console.log("Running", activity)
-		// 		execute($flowchart, activityId)
-				// $flowchart.flowchart('run_activity',activityId)
-					// let response = await run_activity_flow(activity)
-					// console.log(response)
-					// if (response == null){
-					// 	continue;
-					// }
-					// $flowchart.flowchart('setoutputVal', activityId, 'output', response)
     })
 			var operatorI = 0;
 	$('#import_activity').on('click', function() {
-
+				const footer = document.getElementById('footer');
+				startHeight = parseInt(window.getComputedStyle(footer).height, 10);
 				var operatorId = 'created_operator_' + operatorI;
 				var operatorData = {
 					operatorId: operatorId,
-					top: ($flowchart.height() / 2) - 30,
+					top: ($flowchart.height() / 2) - (startHeight/2),
 					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
 					properties: {
 					 	title: 'Import Data' ,
@@ -497,46 +1146,88 @@
 				let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
 				let import_activity = new Import_Activity($flowchart,new_activity)
 				main_activities[operatorId] = import_activity
+				// console.log("setting to",operatorId)
+				// document.getElementById("refresh_preview").value = operatorId
 				activites =  $flowchart.flowchart('getOperators');
         console.log(activites)
 
 			});
 
 	$('#select_activity').on('click', function() {
-				var operatorId = 'created_operator_' + operatorI;
-				var operatorData = {
-					top: ($flowchart.height() / 2) - 30,
-					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
-					properties: {
-						title: 'Select Columns' ,
-						dependencies: [],
+		var operatorId = 'created_operator_' + operatorI;
+		const footer = document.getElementById('footer');
+		startHeight = parseInt(window.getComputedStyle(footer).height, 10);
+		var operatorData = {
+			top: ($flowchart.height() / 2) - (startHeight/2),
+			left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+			properties: {
+				title: 'Select' ,
+				dependencies: [],
 
-            activityType: 'select',
-						inputs: {
-							input: {
-								label: 'Input',
-                value: null
-							}
-						},
-						outputs: {
-							output: {
-								label: 'Output',
-                value: null
-
-							}
-						}
+				settings: {'datatypes':[],'drop': [],'select':[]},
+				activityType: 'select',
+				inputs: {
+					input: {
+						label: 'Input',
+						value: {'datatypes': null, 'values':null}
 					}
-				};
-				operatorI++;
-				$flowchart.flowchart('createOperator', operatorId, operatorData);
-				activites =  $flowchart.flowchart('getOperators');
-        
-			});
+				},
+				outputs: {
+					output: {
+						label: 'Output',
+						value: {'datatypes': null, 'values':null}
+					}
+				}
+			}
+		};
+		operatorI++;
+		$flowchart.flowchart('createOperator', operatorId, operatorData);
+		let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
+		let split_activity = new Select_Activity($flowchart,new_activity)
+		main_activities[operatorId] = split_activity
+		activites =  $flowchart.flowchart('getOperators');
 
+		});
+	$('#sort_activity').on('click', function() {
+		var operatorId = 'created_operator_' + operatorI;
+		const footer = document.getElementById('footer');
+		startHeight = parseInt(window.getComputedStyle(footer).height, 10);
+		var operatorData = {
+			top: ($flowchart.height() / 2) - (startHeight/2),
+			left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+			properties: {
+				title: 'Sort' ,
+				activityType: 'sort',
+				dependencies: [],
+				settings: {'datatypes':[],'drop': [],'select':[]},
+				inputs: {
+					input: {
+						label: 'Input',
+						value: {'datatypes': null, 'values':null}
+					}
+				},
+				outputs: {
+					output: {
+						label: 'Output',
+						value: {'datatypes': null, 'values':null}
+					}
+				}
+			}
+		};
+		operatorI++;
+		$flowchart.flowchart('createOperator', operatorId, operatorData);
+		let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
+		let sort_activity = new Sort_Activity($flowchart,new_activity)
+		main_activities[operatorId] = sort_activity
+		activites =  $flowchart.flowchart('getOperators');
+
+		});	
 	$('#join_activity').on('click', function() {
 				var operatorId = 'created_operator_' + operatorI;
+				const footer = document.getElementById('footer');
+				startHeight = parseInt(window.getComputedStyle(footer).height, 10);
 				var operatorData = {
-					top: ($flowchart.height() / 2) - 30,
+					top: ($flowchart.height() / 2) - (startHeight/2),
 					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
 					properties: {
 						title: 'Join' ,
@@ -574,8 +1265,10 @@
 
     $('#aggregate_activity').on('click', function() {
 				var operatorId = 'created_operator_' + operatorI;
+				const footer = document.getElementById('footer');
+				startHeight = parseInt(window.getComputedStyle(footer).height, 10);
 				var operatorData = {
-					top: ($flowchart.height() / 2) - 30,
+					top: ($flowchart.height() / 2) -(startHeight/2),
 					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
 					properties: {
 						title: 'Aggregate' ,
@@ -607,8 +1300,10 @@
     
 	$('#custom_activity').on('click', function() {
 				var operatorId = 'created_operator_' + operatorI;
+				const footer = document.getElementById('footer');
+				startHeight = parseInt(window.getComputedStyle(footer).height, 10);
 				var operatorData = {
-					top: ($flowchart.height() / 2) - 30,
+					top: ($flowchart.height() / 2) - (startHeight/2),
 					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
 					properties: {
 						title: 'Custom Column' ,
@@ -639,8 +1334,10 @@
 			});
 	$('#replace_activity').on('click', function() {
 				var operatorId = 'created_operator_' + operatorI;
+				const footer = document.getElementById('footer');
+				startHeight = parseInt(window.getComputedStyle(footer).height, 10);
 				var operatorData = {
-					top: ($flowchart.height() / 2) - 30,
+					top: ($flowchart.height() / 2) -(startHeight/2),
 					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
 					properties: {
 						title: 'Replace Value' ,
@@ -672,8 +1369,10 @@
 
     $('#export_activity').on('click', function() {
 				var operatorId = 'created_operatorexp_' + operatorI;
+				const footer = document.getElementById('footer');
+				startHeight = parseInt(window.getComputedStyle(footer).height, 10);
 				var operatorData = {
-					top: ($flowchart.height() / 2) - 30,
+					top: ($flowchart.height() / 2) - (startHeight/2),
 					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
 					properties: {
 						title: 'Export' ,
@@ -710,8 +1409,10 @@
 
 	$('#flatten_activity').on('click', function() {
 				var operatorId = 'created_operator_flat' + operatorI;
+				const footer = document.getElementById('footer');
+				startHeight = parseInt(window.getComputedStyle(footer).height, 10);
 				var operatorData = {
-					top: ($flowchart.height() / 2) - 30,
+					top: ($flowchart.height() / 2) - (startHeight/2),
 					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
 					properties: {
 						title: 'Flatten' ,
@@ -742,8 +1443,10 @@
 
 	$('#filter_activity').on('click', function() {
 				var operatorId = 'created_operator_' + operatorI;
+				const footer = document.getElementById('footer');
+				startHeight = parseInt(window.getComputedStyle(footer).height, 10);
 				var operatorData = {
-					top: ($flowchart.height() / 2) - 30,
+					top: ($flowchart.height() / 2) - (startHeight/2),
 					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
 					properties: {
 						title: 'Filter' ,
@@ -776,8 +1479,10 @@
 			
 	$('#split_activity').on('click', function() {
 		var operatorId = 'created_operator_' + operatorI;
+		const footer = document.getElementById('footer');
+		startHeight = parseInt(window.getComputedStyle(footer).height, 10);
 		var operatorData = {
-			top: ($flowchart.height() / 2) - 30,
+			top: ($flowchart.height() / 2) - (startHeight/2),
 			left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
 			properties: {
 				title: 'Split' ,
@@ -869,8 +1574,11 @@
 			//--- save and load
 			//--- start
 			function Flow2Text() {
-				var data = $flowchart.flowchart('getData');
-				$('#flowchart_data').val(JSON.stringify(data, null, 2));
+				// var data = $flowchart.flowchart('getData', pipeline_Id);
+				// let userId = sessionStorage.getItem("userId")
+				// post_pipeline(userId, data )
+
+				// $('#flowchart_data').val(JSON.stringify(data, null, 2));
 			}
 			$('#get_data').click(Flow2Text);
 
@@ -955,8 +1663,13 @@
 		}
 	};
 	if (false) console.log('remove lint unused warning', defaultFlowchartData);
+
 </script>
 
+
+<script>
+
+</script>
 
 
 <script>

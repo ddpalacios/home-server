@@ -79,6 +79,12 @@ void post_blob(struct Socket* socket,char* http_header, char*body, char* route){
 		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/bronze_CTA_ctabustracker_%s_predictions.json", rt);
 		snprintf(path, sizeof(path)," ");
 	}
+	else if (strstr(route, "/blob-storage/bronze/etl/pipeline?")!= NULL){
+		char* userId = get_query_parameter(route, "userId");
+		char* pipeline_id = get_query_parameter(route, "pipeline_id");
+		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/bronze_etl_%s_pipeline_%s.json", userId, pipeline_id);
+		snprintf(path, sizeof(path)," ");
+	}
 
 	else if (strstr(route, "/blob-storage/silver/CTA/ctabustracker/predictions")){
 		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/silver_CTA_ctabustracker_predictions.json");
@@ -101,9 +107,10 @@ void post_blob(struct Socket* socket,char* http_header, char*body, char* route){
 		snprintf(path, sizeof(path)," ");
 	}
 	
-	
+	printf("GETTING FILE...\n");
 	char* frame_json = get_file_buffer(path);
 	if (frame_json == NULL){
+		printf("CREATING PATH...\n");
 		FILE *file = fopen(write_path, "w");
 		if (!file) {
 			perror("Failed to open file");

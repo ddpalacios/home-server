@@ -73,6 +73,7 @@ async function run_pipeline(dependencies, target_node_ids){
                 let activity = operators[key].properties
                 let main_activity = main_activities[key]
                 let settings = main_activity.get_operation_settings()
+                console.log(settings)
                 let d = []
                 activity.dependencies.forEach(element => {
                         d.push(element.operatorId)
@@ -88,8 +89,8 @@ async function run_pipeline(dependencies, target_node_ids){
 
             let data = await run_pipeline(dependencies, Object.keys(dependencies))
             console.log("ORDERED", data)
-            data['ordered_nodes'].forEach(async node => {
-                let activity  = widget.flowchart('getOperatorActivity',node['tableName'])
+            for (const node of data['ordered_nodes']) {
+                let activity = widget.flowchart('getOperatorActivity', node['tableName']);
                 console.log("node",activity)
                 if (activity.activityType != 'export'){
                     if (activity.activityType == 'join'){
@@ -104,12 +105,30 @@ async function run_pipeline(dependencies, target_node_ids){
                         if (response == null){return}
                         widget.flowchart('setoutputVal',activity.operatorId,'output', response)
                     }
+            }
+        }
+            // data['ordered_nodes'].forEach(async node => {
+            //     let activity  = widget.flowchart('getOperatorActivity',node['tableName'])
+                // console.log("node",activity)
+                // if (activity.activityType != 'export'){
+                //     if (activity.activityType == 'join'){
+                //             let input_data = {'table_1': activity.inputs.input_1.value.outputs.output.value.values, 'table_2': activity.inputs.input_2.value.outputs.output.value.values}
+                //             let response = await run_activity_flow(activity, widget,input_data)
+                //             if (response == null){return}
+                //             console.log("JOIN RESPONSE", response)
+                //              widget.flowchart('setoutputVal',activity.operatorId,'output', response)
+                //     }else{
+                //      let response = await run_activity_flow(activity, widget)
+                //         console.log("Ordered Response",response)
+                //         if (response == null){return}
+                //         widget.flowchart('setoutputVal',activity.operatorId,'output', response)
+                //     }
 
 
-                }
+            //     }
                 
                 
-            });
+            // });
 
 
 

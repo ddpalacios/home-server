@@ -14,7 +14,7 @@ void post_user(struct Socket* socket,char* http_header, char*body, char* route){
 		struct User new_user = create_user(username,  NULL, NULL);
 		struct User_Token refresh_token = create_token(new_user.Id);
 		struct User_Token session_token = create_token(new_user.Id);
-		char* path = "/game-of-life/";
+		char* path =  route;
 		char http_header[2048];
 		char* user_json =  convert_user_to_json(new_user);
 		int json_length = strlen(user_json);
