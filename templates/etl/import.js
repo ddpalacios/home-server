@@ -82,6 +82,7 @@ class Import_Activity extends Activity{
         
         add_button.addEventListener("click", (event) => this._add_column(event, widget, this));
         let columns_div = document.getElementById(activity.activityId + "_column_edit");
+
         if (columns_div == null || columns_div == undefined){
             let settings_div = document.getElementById('selected_activity_settings')
                 columns_div = document.createElement('div')
@@ -91,6 +92,9 @@ class Import_Activity extends Activity{
 
             columns_div.id = this.activityId+ "_column_edit"
             settings_div.appendChild(columns_div)
+        }else{
+         columns_div.innerHTML = ""
+
         }
 
           if (Array.isArray( activity.activity.inputs.input.value.values)){
@@ -107,7 +111,13 @@ class Import_Activity extends Activity{
 
         let target_activity = widget.flowchart('getOperatorActivity', activity.activityId)
         // console.log("ACTIVITY FILE CHANGE", target_activity) 
+        let loading_text = document.createElement("h1");
+		loading_text.textContent = "Loading...";
+		loading_text.style.color = "black";
+		columns_div.prepend(loading_text);
         let response = await run_activity_flow(target_activity,widget)
+		columns_div.removeChild(loading_text)
+
         // console.log("RESPONSE", response, activityId)
          widget.flowchart('setinputVal', activityId,'input',{'datatypes': response.datatypes, 'values': response.values})
         widget.flowchart('setoutputVal', activityId,'output',response)

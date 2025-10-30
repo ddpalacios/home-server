@@ -1080,7 +1080,6 @@ let count = 0
 		let loading_text = document.createElement("h1");
 		loading_text.textContent = "Loading...";
 		loading_text.style.color = "black";
-
 		activity_previews.prepend(loading_text);
 		await execute($flowchart)
 		activity_previews.removeChild(loading_text)
