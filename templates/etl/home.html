@@ -745,8 +745,6 @@ let count = 0
 			var $linkColor = $('#link_color');
 
 			$flowchart.flowchart({
-
-				
 				onOperatorSelect: function(operatorId) {
 					$operatorProperties.show();
 					// $data_preview_settings.show()
@@ -758,13 +756,15 @@ let count = 0
 						$preview_table.show()
 					}
 
+
+
 					
 					document.getElementById("refresh_preview").value = operatorId
 					document.getElementById("export_preview").value = operatorId
 					$operatorTitle.val($flowchart.flowchart('getOperatorTitle', operatorId));     
 					let activity = $flowchart.flowchart('getOperatorActivity', operatorId)
 					let all_dependecies = $flowchart.flowchart('getDependencies')
-					// console.log("Selected", activity, 'dependencies',all_dependecies )
+					console.log("Selected", activity, 'dependencies',all_dependecies )
 					let settings_div = document.getElementById('selected_activity_settings')
 					Array.from(settings_div.children).forEach(child => {
 						child.style.display = 'none';
@@ -1073,15 +1073,20 @@ let count = 0
         a.click();
 	})
 
-
+	let running = false
 	$('#refresh_preview').on('click', async function() {
+		if (running){return}
 		let activity_previews = document.getElementById("activity_previews")
 		let data_preview_container = document.getElementById(this.value+"_data_preview")
 		let loading_text = document.createElement("h1");
 		loading_text.textContent = "Loading...";
 		loading_text.style.color = "black";
 		activity_previews.prepend(loading_text);
-		await execute($flowchart)
+		running = true
+		await execute_activity($flowchart,this.value.toString())
+		running = false
+
+
 		activity_previews.removeChild(loading_text)
 		let outputs = $flowchart.flowchart('getoutputVal', this.value, 'output')
 		if (data_preview_container == null || data_preview_container == undefined){

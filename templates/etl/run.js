@@ -64,6 +64,45 @@ async function run_pipeline(dependencies, target_node_ids){
 
 }
 
+async function execute_activity(widget,activityid){
+            let dependencies = {}
+            let operators = widget.flowchart('getOperators')
+            Object.keys(operators).forEach(key => {
+                let activity = operators[key].properties
+                let main_activity = main_activities[key]
+                let settings = main_activity.get_operation_settings()
+                let d = []
+                activity.dependencies.forEach(element => {
+                        d.push(element.toString())
+                        
+                    });
+                dependencies[key] = {'tableName':key,"dependencies":d, 'query': {}, 'activityType':activity.activityType}
+            });
+            // console.log("table lookup",dependencies)
+            // console.log("Target ID", activityid)
+
+        let data = await run_pipeline(dependencies, [activityid])
+        console.log("ORDERED", data)
+        for (const node of data['ordered_nodes']) {
+            let activity = widget.flowchart('getOperatorActivity', node['tableName']);
+            // console.log("node",activity)
+            if (activity.activityType != 'export'){
+                if (activity.activityType == 'join'){
+                        let input_data = {'table_1': activity.inputs.input_1.value.outputs.output.value.values, 'table_2': activity.inputs.input_2.value.outputs.output.value.values}
+                        let response = await run_activity_flow(activity, widget,input_data)
+                        if (response == null){return}
+                        console.log("JOIN RESPONSE", response)
+                            widget.flowchart('setoutputVal',activity.operatorId,'output', response)
+                }else{
+                    let response = await run_activity_flow(activity, widget)
+                    // console.log("Ordered Response",response)
+                    if (response == null){return}
+                    widget.flowchart('setoutputVal',activity.operatorId,'output', response)
+                }
+            }
+        }
+}
+
   async function execute(widget){
             let sorted_nodes = []
             let dependencies = {}
@@ -86,7 +125,6 @@ async function run_pipeline(dependencies, target_node_ids){
             
             });
 
-
             let data = await run_pipeline(dependencies, Object.keys(dependencies))
             console.log("ORDERED", data)
             for (const node of data['ordered_nodes']) {
@@ -107,112 +145,4 @@ async function run_pipeline(dependencies, target_node_ids){
                     }
             }
         }
-            // data['ordered_nodes'].forEach(async node => {
-            //     let activity  = widget.flowchart('getOperatorActivity',node['tableName'])
-                // console.log("node",activity)
-                // if (activity.activityType != 'export'){
-                //     if (activity.activityType == 'join'){
-                //             let input_data = {'table_1': activity.inputs.input_1.value.outputs.output.value.values, 'table_2': activity.inputs.input_2.value.outputs.output.value.values}
-                //             let response = await run_activity_flow(activity, widget,input_data)
-                //             if (response == null){return}
-                //             console.log("JOIN RESPONSE", response)
-                //              widget.flowchart('setoutputVal',activity.operatorId,'output', response)
-                //     }else{
-                //      let response = await run_activity_flow(activity, widget)
-                //         console.log("Ordered Response",response)
-                //         if (response == null){return}
-                //         widget.flowchart('setoutputVal',activity.operatorId,'output', response)
-                //     }
-
-
-            //     }
-                
-                
-            // });
-
-
-
-            // let activity  = widget.flowchart('getOperatorActivity',operatorId)
-            // let ordered_nodes = widget.flowchart('get_ordered_operations',operatorId,sorted_nodes)
-            // console.log('ordered nodes',ordered_nodes)
-            // let output =activity.outputs.output.value.values
-            // console.log(activity, 'executing')
-            // let dependencies = {}
-            
-            
-            // Object.values(ordered_nodes).forEach(node => {
-            //         let d = []
-            //         let main_activity = main_activities[node.operatorId]
-            //         let settings = main_activity.get_operation_settings()
-                    // node.dependencies.forEach(element => {
-                    //     d.push(element.operatorId)
-                        
-                    // });
-
-            //         console.log("SETTINGS for", node.operatorId, node.settings)
-
-            //         dependencies[node.operatorId] = {"dependencies":d, 'query': settings, 'activityType':node.activityType}
-            // });
-            // console.log("SENDINFG DEPENDENTS", dependencies)
-        
-
-            // for (let i=0; i<ordered_nodes.length; i++){
-            //     let node = ordered_nodes[i]
-            //     if (node.activityType == 'import'){
-            //         let response = await run_activity_flow(node, widget)
-            //         console.log(response)
-            //         if (response == null){return}
-            //          widget.flowchart('setoutputVal',node.operatorId,'output', response)
-            //     }
-            //     if (node.activityType == 'filter'){
-            //         let main_activity = main_activities[node.operatorId]
-            //         let settings = main_activity.get_operation_settings()
-            //         console.log(settings)
-            //         let response = await run_activity_flow(node, widget)
-            //         if (response == null){return}
-            //          widget.flowchart('setoutputVal',node.operatorId,'output', response)
-            //     }
-            //     if (node.activityType == 'group'){
-            //         let main_activity = main_activities[node.operatorId]
-            //         let settings = main_activity.get_operation_settings()
-            //         console.log(settings)
-            //         let response = await run_activity_flow(node, widget)
-                    // if (response == null){return}
-                    //  widget.flowchart('setoutputVal',node.operatorId,'output', response)
-            //     }
-
-            //     if (node.activityType == 'replace'){
-            //         let main_activity = main_activities[node.operatorId]
-            //         let settings = main_activity.get_operation_settings()
-            //         console.log(settings)
-            //         let response = await run_activity_flow(node, widget)
-            //         if (response == null){return}
-            //          widget.flowchart('setoutputVal',node.operatorId,'output', response)
-            //     }
-            //     if (node.activityType == 'split'){
-            //         let main_activity = main_activities[node.operatorId]
-            //         let settings = main_activity.get_operation_settings()
-            //         console.log(settings)
-            //         let response = await run_activity_flow(node, widget)
-            //         if (response == null){return}
-            //          widget.flowchart('setoutputVal',node.operatorId,'output', response)
-            //     }
-            //       if (node.activityType == 'custom'){
-            //         let main_activity = main_activities[node.operatorId]
-            //         let settings = main_activity.get_operation_settings()
-            //         console.log(settings)
-            //         let response = await run_activity_flow(node, widget)
-            //         if (response == null){return}
-            //          widget.flowchart('setoutputVal',node.operatorId,'output', response)
-            //     }
-                // if (node.activityType == 'join'){
-                //     let main_activity = main_activities[node.operatorId]
-                //     let settings = main_activity.get_operation_settings()
-                //     console.log(settings)
-                //     let input_data = {'table_1': node.inputs.input_1.value.outputs.output.value.values, 'table_2': node.inputs.input_2.value.outputs.output.value.values}
-                //     let response = await run_activity_flow(node, widget,input_data)
-                //     // if (response == null){return}
-                //     //  widget.flowchart('setoutputVal',node.operatorId,'output', response)
-                // }
-            // }
-        }
+ }
