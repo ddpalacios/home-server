@@ -38,8 +38,6 @@ class Filter_Activity extends Activity{
 
     // }
 
-
-
     _on_input_change(e, widget,activity){
         let parent_element = e.target.parentElement;
         // console.log(e.target.value)

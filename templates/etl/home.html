@@ -415,6 +415,8 @@ th {
         <button id="split_activity" class="create_operator buttons">Split Value</button>
         <button id="select_activity" class="create_operator buttons">Select</button>
         <button id="sort_activity" class="create_operator buttons">Sort</button>
+        <button id="flatten_activity" class="create_operator buttons">Flatten</button>
+        <button id="sink_activity" class="create_operator buttons">Sink</button>
         <!-- <button id="get_data" class="create_operator buttons">POST Pipeline</button>
         <button id="load_local" class="create_operator buttons">LOAD Pipeline</button> -->
     </div>
@@ -436,21 +438,19 @@ th {
       <div class="resize-handle" id="resizeHandle"> <img src="/etl/images/drag.png" width="50" height="50"></div>
 	  		<div class="navbar" style=" padding: 20px; z-index: 1000; background-color: whitesmoke;   border: 1px solid rgb(255, 255, 255); width: 100%; display: flex; flex-direction: row; gap: 50px;">
 				<div class="tab">
-				<button class="tablinks" onclick="openCity(event, 'London')">General</button>
-				<button class="tablinks" onclick="openCity(event, 'Paris')">Settings</button>
-				<button class="tablinks" onclick="openCity(event, 'data_preview')">Data Preview</button>
+				<button class="tablinks" onclick="open_settings(event, 'general')">General</button>
+				<button class="tablinks" onclick="open_settings(event, 'settings')">Settings</button>
+				<button class="tablinks" onclick="open_settings(event, 'data_preview')">Data Preview</button>
 				</div>
-				
-
 			</div>
-			<div id="London" class="tabcontent" style="display: flex; flex-direction: column; gap: 30px;">
+			<div id="general" class="tabcontent" style="display: flex; flex-direction: column; gap: 30px;">
 				<div id="operator_properties" style="display: flex; flex-direction: column;;">
 					<label style="font-size: 20px; color: black" for="operator_title; " >Name: </label><input style="width: 15%;" id="operator_title" type="text">
 					<label style="font-size: 20px; color: black" for="operator_title; " >Description: </label><textarea style="width: 15%;" rows="5" cols="10" id="" type="text"></textarea>
 				</div>
 				
 			</div>
-				<div id="Paris" class="tabcontent">
+				<div id="settings" class="tabcontent">
 					<div id="link_properties" style="display: block;">
 					<label for="link_color">Link's color: </label><input id="link_color" type="color"></div>
 				<div id="selected_activity_settings" style="display: flex; flex-direction: column; gap: 10px;"></div>
@@ -464,16 +464,6 @@ th {
 
 					<button id="export_preview" class="buttons"style="width: 15%;position: relative;background-color: #eaeaea;color: green;border: none;border-radius: 6px;padding: 8px 12px;box-shadow: 0 2px 4px rgba(0,0,0,0.2);transition: all 0.2s ease;">Export</button></div>
 					<div id="activity_previews"></div>
-					<!-- <div class="filter-container">
-						<label for="columnSelect">Filter by column:</label>
-						<select id="columnSelect"></select>
-						<input type="text" id="filterInput" placeholder="Enter filter text...">
-					</div>
-					<div class="table-responsive">
-						<div id="data_table_container">
-							<table id="data_table"></table>
-						</div>
-					</div> -->
 				</div>
 			
 			
@@ -482,10 +472,9 @@ th {
   </div>
 
 
-<script src="/websocket.js" defer></script>
+  <script src="/websocket.js" defer></script>
   <script src="etl/activities.js" defer></script>
   <script src="etl/run.js" defer></script>
-
   <script src="etl/import.js" defer></script>
   <script src="etl/join.js" defer></script>
   <script src="etl/group.js" defer></script>
@@ -493,27 +482,31 @@ th {
   <script src="etl/split.js"defer></script>
   <script src="etl/export.js" defer></script>
   <script src="etl/filter.js" defer></script>
+  <script src="etl/BlobStorage.js" defer></script>
   <script src="etl/replace.js" defer></script>
   <script src="etl/select.js" defer></script>
   <script src="etl/sort.js" defer></script>
-  <script>
-function openCity(evt, cityName) {
-  var i, tabcontent, tablinks;
-  tabcontent = document.getElementsByClassName("tabcontent");
-  for (i = 0; i < tabcontent.length; i++) {
-    tabcontent[i].style.display = "none";
-  }
-  tablinks = document.getElementsByClassName("tablinks");
-  for (i = 0; i < tablinks.length; i++) {
-    tablinks[i].className = tablinks[i].className.replace(" active", "");
-  }
-  document.getElementById(cityName).style.display = "flex";
-  document.getElementById(cityName).style.flexDirection = "column";
-  document.getElementById(cityName).style.gap = "30px";
-  
-  evt.currentTarget.className += " active";
-}
-</script>
+  <script src="etl/SparkClient.js" defer></script>
+  <script src="etl/flatten.js" defer></script>
+  <script src="etl/sink.js" defer></script>
+
+  	<script>
+		function open_settings(evt, cityName) {
+			var i, tabcontent, tablinks;
+			tabcontent = document.getElementsByClassName("tabcontent");
+			for (i = 0; i < tabcontent.length; i++) {
+				tabcontent[i].style.display = "none";
+			}
+			tablinks = document.getElementsByClassName("tablinks");
+			for (i = 0; i < tablinks.length; i++) {
+				tablinks[i].className = tablinks[i].className.replace(" active", "");
+			}
+			document.getElementById(cityName).style.display = "flex";
+			document.getElementById(cityName).style.flexDirection = "column";
+			document.getElementById(cityName).style.gap = "30px";
+			evt.currentTarget.className += " active";
+			}
+	</script>
   <script>
       document.addEventListener('mousemove', function(event) {
           // console.log('Mouse X:', event.clientX, 'Mouse Y:', event.clientY);
@@ -532,76 +525,17 @@ function openCity(evt, cityName) {
                     });
 
             fetch(request);
-            // if (response.ok){ 
-            //     try{
-            //         const data = await response.json()
-            //         return data;
-            //     }catch(error){}
-            // }
-            // return null;
     }
-    // async function create_user(){
-    //         var request = new Request('/game-of-life/user', {
-    //                             method: 'POST',
-    //                             headers: new Headers({
-    //                                         'Accept': 'application/json'
-    //                                     })
-	// 		       ,body: JSON.stringify({
-	// 				       "username": "User"
-	// 			       })
-    //                 });
-
-    //         var response = await fetch(request);
-    //         if (response.ok){ 
-    //             try{
-    //                 const data = await response.json()
-    //                 return data;
-    //             }catch(error){}
-    //         }
-    //         return null;
-    // }
-    // async function get_user(){
-    //      var request = new Request('/game-of-life/user', {
-    //                             method: 'GET',
-    //                             headers: new Headers({'Accept': 'application/json'})});
-    //         var user = null;
-    //         var response = await fetch(request);
-    //         if (response.ok){ 
-    //             user = await response.json()
-    //         }else{
-    //             user = create_user();
-    //         }
-    //         return user;
-    // }
-
-	// async function main(){
-	// 	let user = await get_user()
-	// 	console.log(user)
-	// 	sessionStorage.setItem("userId", user.Id)
-	// 	sessionStorage.setItem("user_json", JSON.stringify(user))
-	// 	if (sessionStorage.getItem('pipeline_id') == null){
-	// 		pipeline_id =  crypto.randomUUID()
-	// 		sessionStorage.setItem('pipeline_id', pipeline_id)
-	// 	}else{
-	// 		pipeline_id = sessionStorage.getItem('pipeline_id')
-	// 	}
-	// }
-	// main()
 
 </script>
 
 <script>
 	function jsonToCsv(jsonData) {
     if (!Array.isArray(jsonData) || jsonData.length === 0) return '';
-
-    // get all headers (union of all keys)
     const headers = [...new Set(jsonData.flatMap(obj => Object.keys(obj)))];
-
-    // helper to safely escape values
     const escape = (val) => {
         if (val === null || val === undefined) return '';
         val = String(val);
-        // wrap in quotes if contains comma, newline, or quote
         if (/[",\n\r]/.test(val)) {
             return `"${val.replace(/"/g, '""')}"`;
         }
@@ -650,7 +584,10 @@ let count = 0
 		const row = document.createElement("tr");
 		columns.forEach(key => {
 		const td = document.createElement("td");
-		td.textContent = item[key];
+		if (typeof item[key] === 'object' && item[key] !== null) {
+			item[key] = JSON.stringify(item[key]);
+			}
+		td.textContent = item[key]
 		row.appendChild(td);
 		});
 		tbody.appendChild(row);
@@ -692,13 +629,11 @@ let count = 0
 </script>
 
 <script type="text/javascript">
-    function areArraysEqual(arr1, arr2) {
-  return arr1.length === arr2.length && new Set(arr1).size === new Set(arr2).size && arr1.every(item => arr2.includes(item));
-}
 
     var main_activities = {}
 	let height_offset  = 300
 	$(document).ready(function() {
+
 			var $flowchart = $('#flowchartworkspace');
 			var $container = $flowchart.parent();
 			$flowchart.flowchart({
@@ -707,6 +642,8 @@ let count = 0
 				multipleLinksOnInput: false,
 				multipleLinksOnOutput: true
 			});
+			
+			
 			function getOperatorData($element) {
 				var nbInputs = parseInt($element.data('nb-inputs'), 10);
 				var nbOutputs = parseInt($element.data('nb-outputs'), 10);
@@ -755,9 +692,6 @@ let count = 0
 					if ($preview_table != null && $preview_table  != undefined){
 						$preview_table.show()
 					}
-
-
-
 					
 					document.getElementById("refresh_preview").value = operatorId
 					document.getElementById("export_preview").value = operatorId
@@ -997,6 +931,50 @@ let count = 0
 						}
 
 					}
+					if (activity.activityType == 'flatten'){
+						let target_activity = main_activities[operatorId]
+						let elem = target_activity.settings
+						if (elem == null || elem == undefined){return}
+						let found = false;
+        				for (let i=0; i<settings_div.children.length; i++){
+							if (settings_div.children[i].id == elem.id){
+								found = true
+								settings_div.children[i].style.display = 'block'
+							}
+							if (settings_div.children[i].id == elem.id+"_column_edit"){
+								found = true
+								settings_div.children[i].style.display = 'flex'
+								settings_div.children[i].style.flexDirection = 'column'
+								settings_div.children[i].style.gap = "15px"
+							}
+						}
+						if (!found){
+							settings_div.insertBefore(elem, settings_div.firstChild);
+						}
+
+					}
+					if (activity.activityType == 'sink'){
+						let target_activity = main_activities[operatorId]
+						let elem = target_activity.settings
+						if (elem == null || elem == undefined){return}
+						let found = false;
+        				for (let i=0; i<settings_div.children.length; i++){
+							if (settings_div.children[i].id == elem.id){
+								found = true
+								settings_div.children[i].style.display = 'block'
+							}
+							if (settings_div.children[i].id == elem.id+"_column_edit"){
+								found = true
+								settings_div.children[i].style.display = 'flex'
+								settings_div.children[i].style.flexDirection = 'column'
+								settings_div.children[i].style.gap = "15px"
+							}
+						}
+						if (!found){
+							settings_div.insertBefore(elem, settings_div.firstChild);
+						}
+
+					}
 
 					return true;
 				},
@@ -1032,13 +1010,6 @@ let count = 0
 					$flowchart.flowchart('setLinkMainColor', selectedLinkId, $linkColor.val());
 				}
 			});
-			//--- end
-			//--- operator and link properties
-			//-----------------------------------------
-
-			//-----------------------------------------
-			//--- delete operator / link button
-			//--- start
 
       		$('html').keyup(function(e){
 				if(e.keyCode == 46) {
@@ -1049,17 +1020,7 @@ let count = 0
 			$('.delete_selected_button').on('click', function() {
 				$flowchart.flowchart('deleteSelected');
 			});
-			//--- end
-			//--- delete operator / link button
-			//-----------------------------------------
-
-			//-----------------------------------------
-			//--- create operator button
-			//--- start
-		// $('#get_data').on('click', function() {
-		// 	 $flowchart.flowchart('getData');
-
-		// })
+		
 
 	$('#export_preview').on('click', async function() {
 
@@ -1166,7 +1127,6 @@ let count = 0
         		// console.log(activites)
 
 			});
-
 	$('#select_activity').on('click', function() {
 		var operatorId = operatorI;
 		const footer = document.getElementById('footer');
@@ -1450,11 +1410,13 @@ let count = 0
 				operatorI++;
 
 				$flowchart.flowchart('createOperator', operatorId, operatorData);
+				let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
+				let flatten_activity = new Flatten_Activity($flowchart,new_activity)
+				main_activities[operatorId] = flatten_activity
 				activites =  $flowchart.flowchart('getOperators');
 
+
 			});
-
-
 	$('#filter_activity').on('click', function() {
 				var operatorId = operatorI;
 				const footer = document.getElementById('footer');
@@ -1526,7 +1488,42 @@ let count = 0
 		activites =  $flowchart.flowchart('getOperators');
 
 		});
-			
+	$('#sink_activity').on('click', function() {
+		var operatorId = operatorI;
+		const footer = document.getElementById('footer');
+		startHeight = parseInt(window.getComputedStyle(footer).height, 10);
+		var operatorData = {
+			top: ($flowchart.height() / 2) - (startHeight/2),
+			left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+			properties: {
+				title: 'Sink' ,
+				dependencies: [],
+
+				settings: {'datatypes':[],'drop': [],'select':[]},
+				activityType: 'sink',
+				inputs: {
+					input: {
+						label: 'Input',
+						value: {'datatypes': null, 'values':null}
+					}
+				},
+				outputs: {
+					output: {
+						label: 'Output',
+						value: {'datatypes': null, 'values':null}
+					}
+				}
+			}
+		};
+		operatorI++;
+		$flowchart.flowchart('createOperator', operatorId, operatorData);
+		let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
+		let sink_activity = new Sink_Activity($flowchart,new_activity)
+		main_activities[operatorId] = sink_activity
+		activites =  $flowchart.flowchart('getOperators');
+
+		});
+					
 			
 			//--- end
 			//--- create operator button
@@ -1654,8 +1651,12 @@ let count = 0
 					}
 					if (operatorData.properties.activityType == 'select'){
 							a = new Select_Activity($flowchart,new_activity)
-					}if (operatorData.properties.activityType == 'sort'){
+					}
+					if (operatorData.properties.activityType == 'sort'){
 							a = new Sort_Activity($flowchart,new_activity)
+					}
+					if (operatorData.properties.activityType == 'flatten'){
+							a = new Flatten_Activity($flowchart,new_activity)
 					}
 
 					main_activities[operatorId] = a
@@ -1667,48 +1668,9 @@ let count = 0
 				$flowchart.flowchart('setData',pipelines[0]);
 				const maxVal = Math.max(...Ids);
 				operatorI = maxVal+1
-
-				// Object.values(links).forEach(l =>{
-				// 	console.log("LINK", l)
-				// })
-				
-
-				/*
-				var operatorData = {
-					operatorId: operatorId,
-					top: ($flowchart.height() / 2) - (startHeight/2),
-					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
-					properties: {
-					 	title: 'Import Data' ,
-						fileType: null,
-						settings: null,//{'datatypes':[],'drop': [],'select':[]},
-						dependencies: [],
-						activityType: 'import',
-						activityId: operatorId,
-						inputs:{
-						input: {
-							label: '',
-							value: {'datatypes': null, 'values':null}
-							}
-						},
-						outputs: {
-							output: {
-								label: 'Output',
-								value: {'datatypes': null, 'values':null}
-							}
-						}
-					}
-				};
-
-				*/
-
-			
 			}
 			$('#load_local').click(LoadFromLocalStorage);
-			//--- end
-			//--- save and load
-			//-----------------------------------------
-
+		
 
 		});
 
@@ -1758,9 +1720,6 @@ let count = 0
 </script>
 
 
-<script>
-
-</script>
 
 
 <script>

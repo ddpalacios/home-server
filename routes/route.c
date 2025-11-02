@@ -223,9 +223,11 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		if (strcmp(route,"/portfolio/images/WhiteETL.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/WhiteETL.png");
 		}
+
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/blob-storage/files?")!=NULL){
+		get_blob_directory_files(socket,http_header,body, route);
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/blob-storage/")!=NULL){
 		get_blob_storage_files(socket,http_header,body, route);
-
 	}else if (strcmp(request_type, "POST")==0 && strstr(route, "/blob-storage/")!=NULL){
 		post_blob(socket,http_header,body, route);
 
@@ -257,9 +259,15 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_gol_script(cSSL, http_header, "/etl/select.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/sort.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/sort.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/flatten.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/flatten.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/BlobStorage.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/BlobStorage.js");
 
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/join.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/join.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/SparkClient.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/SparkClient.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/custom_column.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/custom_column.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/replace.js")==0){
@@ -272,12 +280,17 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_gol_script(cSSL, http_header, "/etl/export.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/jquery.flowchart.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/jquery.flowchart.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/sink.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/sink.js");
 
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/jquery.flowchart.css")==0){
 		get_gol_script(cSSL, http_header, "/etl/jquery.flowchart.css");
 	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/run/pipeline/")==0){
 		post_run_activity(socket,http_header,body, route);
 	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/run/")==0){
+		post_run_activity(socket,http_header,body, route);
+
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/sparkclient/process")==0){
 		post_run_activity(socket,http_header,body, route);
 
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/phrase-matching")==0){

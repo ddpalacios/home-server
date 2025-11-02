@@ -2,11 +2,13 @@
 #include "json_utilities.h"
 #include <string.h>
 #include <stdlib.h>
+#include <cjson/cJSON.h>
 #include <stdio.h>
 #include "http_utilities.h"
 #include "session.h"
 #include "User.h"
 #include "Socket.h"
+#include <dirent.h>
 
 void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, char* route){
     SSL* cSSL = socket->cSSL;
@@ -92,7 +94,25 @@ void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, 
                 free(result);
             }
           }
-      }
+        }
+       else if (strstr(route, "etl/")){
+
+         if (strstr(route, "/imports/")){
+          char write_path[2048];
+          printf("Current Route %s\n", route);
+          snprintf(write_path, sizeof(write_path),"..%s", route);
+          printf("Getting from %s\n", write_path);
+          char* result = get_file_buffer(write_path);
+           send_JSON_response_code(cSSL, 200, result);
+            free(result);
+
+
+
+         }
+
+       }
+
+
   }
     else if (strstr(route, "blob-storage/silver/")){
       if (strstr(route, "CTA/")){
@@ -147,6 +167,21 @@ void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, 
             }
           }
         }
+      else if (strstr(route, "etl/")){
+         if (strstr(route, "/imports/")){
+          char write_path[2048];
+          printf("Current Route %s\n", route);
+          snprintf(write_path, sizeof(write_path),"..%s", route);
+          printf("Getting from %s\n", write_path);
+          char* result = get_file_buffer(write_path);
+           send_JSON_response_code(cSSL, 200, result);
+            free(result);
+
+
+
+         }
+
+       }
   }
    else if (strstr(route, "blob-storage/gold/")){
       if (strstr(route, "CTA/")){
@@ -175,4 +210,68 @@ void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, 
           }
 
    }
+}
+
+void get_blob_directory_files(struct Socket* socket,char* http_header, char*body, char* route){
+  SSL* cSSL = socket->cSSL;
+  printf("Getting files...\n");
+
+  char* source = get_query_parameter(route, "source");
+  char* database = get_query_parameter(route, "database");
+  char* container = get_query_parameter(route, "container");
+  printf("%s %s %s\n", source, database, container);
+  if (source == NULL || database == NULL || container == NULL){
+    send_response_code(cSSL, 404);
+  }else{
+    char write_path[2048];
+    snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/%s/%s/%s", container, source, database);
+    DIR *dir = opendir(write_path);
+     if (dir == NULL) {
+        perror("opendir");
+        send_response_code(cSSL, 404);
+      }else{
+
+     char** file_names = malloc(sizeof(char*) * 5000);
+      if (!file_names) {
+          perror("malloc");
+          send_response_code(cSSL, 500);
+          closedir(dir);
+          return;
+      }
+
+      struct dirent *entry;
+      int count = 0;
+
+      while ((entry = readdir(dir)) != NULL) {
+          if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+              continue;
+          file_names[count++] = strdup(entry->d_name);
+      }
+      file_names[count] = NULL;
+
+      cJSON *root = cJSON_CreateObject();
+      cJSON_AddNumberToObject(root, "total_count", count);
+      cJSON *names = cJSON_AddArrayToObject(root, "values");
+
+      for (int i = 0; i < count; i++) {
+          cJSON *obj = cJSON_CreateObject();
+          cJSON_AddStringToObject(obj, "filename", file_names[i]);
+          cJSON_AddItemToArray(names, obj);
+      }
+
+      char *json_string = cJSON_Print(root);
+      send_JSON_response_code(cSSL, 200, json_string);
+
+      for (int i = 0; i < count; i++) free(file_names[i]);
+        free(file_names);
+        free(json_string);
+        cJSON_Delete(root);
+        closedir(dir);
+      }
+
+  }
+
+
+
+  
 }

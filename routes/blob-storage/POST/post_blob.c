@@ -67,12 +67,13 @@ void connect_to_server(const char* host, const char* port, char*body){
 
 
 
-
  void post_blob(struct Socket* socket,char* http_header, char*body, char* route){
 	SSL* cSSL = socket->cSSL;
 	char path[2048];
 	char write_path[2048];
 	int overwrite = 0;
+const char *home = getenv("HOME");
+
 
 	if (strstr(route, "/blob-storage/email")){
 		connect_to_server("127.0.0.1", "5000", body);
@@ -80,22 +81,49 @@ void connect_to_server(const char* host, const char* port, char*body){
 		snprintf(path, sizeof(path),"blob-storage/bronze_portfolio_appointments.json");
 
 	}
-	else if (strstr(route, "/blob-storage/bronze/CTA/ctabustracker/predictions?rt")!= NULL){
-		char* rt = get_query_parameter(route, "rt");
-		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/bronze_CTA_ctabustracker_%s_predictions.json", rt);
-		snprintf(path, sizeof(path)," ");
-	}
-	else if (strstr(route, "/blob-storage/bronze/etl/pipeline?")!= NULL){
-		char* userId = get_query_parameter(route, "userId");
-		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/bronze_etl_%s_pipelines.json", userId);
-		snprintf(path, sizeof(path),"../blob-storage/bronze_etl_%s_pipelines.json", userId);
-		overwrite =1;
+
+	else if (strstr(route, "/blob-storage/bronze/")){
+
+		 if (strstr(route, "/blob-storage/bronze/CTA/ctabustracker/predictions?rt")!= NULL){
+			char* rt = get_query_parameter(route, "rt");
+			snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/bronze_CTA_ctabustracker_%s_predictions.json", rt);
+			snprintf(path, sizeof(path)," ");
+		}
+		else if (strstr(route, "/blob-storage/bronze/etl/pipeline?")!= NULL){
+			char* userId = get_query_parameter(route, "userId");
+			snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/bronze_etl_%s_pipelines.json", userId);
+			snprintf(path, sizeof(path),"../blob-storage/bronze_etl_%s_pipelines.json", userId);
+			overwrite =1;
+		
+		
+		
+		}else{
+			snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server%s", route);
+			snprintf(path, sizeof(path)," ");
+			printf("Writing to %s\n", write_path);
+
+		}
 	}
 
-	else if (strstr(route, "/blob-storage/silver/CTA/ctabustracker/predictions")){
+	else if (strstr(route, "/blob-storage/silver/")){
+	  if (strstr(route, "/blob-storage/silver/CTA/ctabustracker/predictions")){
 		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/silver_CTA_ctabustracker_predictions.json");
 		snprintf(path, sizeof(path),"../blob-storage/silver_CTA_ctabustracker_predictions.json");
+		}else{
+			snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server%s", route);
+			snprintf(path, sizeof(path)," ");
+			printf("Writing to %s\n", write_path);
+
+		}
+
 	}
+
+
+
+
+
+
+
 	else if (strstr(route, "/blob-storage/gold/CTA/ctabustracker/delays")){
 		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/gold_CTA_ctabustracker_delays.json");
 		snprintf(path, sizeof(path),"../blob-storage/gold_CTA_ctabustracker_delays.json");

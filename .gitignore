@@ -1,1 +1,3 @@
 blob-storage/*_predictions.json
+blob-storage/etl/imports/bronze/
+blob-storage/etl/imports/silver/

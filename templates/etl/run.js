@@ -1,7 +1,7 @@
 async function run_activity_flow(activity, widget, data){
     let activity_type = activity.activityType
      let body;
-    if (data != undefined){
+    if (data != undefined || data != null){
            body = {
         'activity_type' : activity_type
         ,'operations': activity.settings
@@ -13,11 +13,13 @@ async function run_activity_flow(activity, widget, data){
             'activity_type' : activity_type
             ,'operations': activity.settings
             ,'data': activity.inputs.input.value.values
+
         }
         // console.log("SENDING BODY", body)
 
     }
     if (body == undefined){return}
+    console.log("Sending body", body)
     var request = new Request('/etl/run/', {
                                 method: 'POST',
                                 headers: new Headers({
@@ -33,8 +35,6 @@ async function run_activity_flow(activity, widget, data){
         }catch(error){}
     }
     return null;
-
-    
 }
 
 

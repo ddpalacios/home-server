@@ -242,8 +242,16 @@ class Settings{
         return div
 
 }
+    async get_blob_directory_files(div){
+        let bs = new BlobStorage()
+        let files = await bs.get_blob_directory_files('bronze', 'etl','imports')
+        let blob_selector = this.get_selector_element(files,"")
+        blob_selector.name = 'blob_selection'
+        blob_selector.addEventListener("change", (event) => this._inputFile_onchange(event, this.flowchart, this));
+        div.appendChild(blob_selector)
+    }
 
-    get_settings_element(){
+     get_settings_element(){
         let div = document.createElement('div')
         div.id = this.activityId
         let add_div = document.createElement('div')
@@ -264,7 +272,9 @@ class Settings{
             const input = document.createElement('input');
             input.type = 'file';
             input.addEventListener("change", (event) => this._inputFile_onchange(event, this.flowchart, this));
+            this.get_blob_directory_files(div)
             div.appendChild(input)
+
         }
         else if (this.activity.activityType == 'select'){
                 const input = document.createElement('input');
@@ -274,10 +284,8 @@ class Settings{
                 input.addEventListener("click", (event) => this._sync_columns(event, this.flowchart, this));
                 div.appendChild(input)
             }
-         
+      
         else {
-          
-
             let add_button = document.createElement("button")
             add_button.innerHTML = this.add_button_label
             add_button.style.width = '15%'
@@ -353,14 +361,6 @@ class Settings{
     }
     get_operation_settings(type) {
     const record = document.getElementById(this.activityId + "_column_edit");
-
-    if (type == 'aggregate'){
-        // console.log("GETTING SORTS ACTIVITG ID", this.activityId + "_column_edit")
-        // console.log("GETTING SORTS RECORD",record)
-
-        // console.log("GETTING SORTS CHILDREN",record.children)
-    }
-
     if (!record) return null;
 
     const statements = [];

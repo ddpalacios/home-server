@@ -40,33 +40,7 @@ class Import_Activity extends Activity{
     }
 
 
-    async _inputFile_onchange(e, widget, activity){
-        let activityId = activity.activityId
-        const file = e.target.files?.item(0);
-        if (!file) {
-            e.preventDefault();
-            console.warn("No file selected, keeping existing content.");
-            return;
-        }
-        let obj = null
-        if (file.name.includes(".json")){
-                let text = await file.text();
-                obj = JSON.parse(text);
-                widget.flowchart('setinputVal', activityId,'input', {'datatypes': null, 'values': obj})
-
-        }
-        if (file.name.includes('.csv')){
-            let text = await file.text();
-            obj = csvToJson(text);
-            widget.flowchart('setinputVal', activityId,'input',{'datatypes': null, 'values': obj})
-            obj = obj[0]
-        }
-        if (obj == null){
-            alert("Invalid File. Not a CSV or JSON.");
-            return
-        }
-
-        let all_columns = []
+    get_add_button(){
         let add_button = document.createElement("button")
         add_button.innerHTML = this.add_button_label
         add_button.style.width = '15%'
@@ -78,67 +52,50 @@ class Import_Activity extends Activity{
         add_button.style.padding = "8px 12px";
         add_button.style.cursor = "pointer";
         add_button.style.transition = "background 0.2s ease";
+        add_button.addEventListener("click", (event) => this._add_column(event, this.flowchart, this));
+        return add_button
+    }
 
-        
-        add_button.addEventListener("click", (event) => this._add_column(event, widget, this));
-        let columns_div = document.getElementById(activity.activityId + "_column_edit");
-
+    async add_settings(metadata){
+        if (metadata == null){return}
+        metadata = metadata['data']
+        let columns_div = document.getElementById(this.activityId + "_column_edit");
         if (columns_div == null || columns_div == undefined){
             let settings_div = document.getElementById('selected_activity_settings')
                 columns_div = document.createElement('div')
                 columns_div.style.display = 'flex'
                 columns_div.style.flexDirection = 'column'
                 columns_div.style.gap = "15px"
-
-            columns_div.id = this.activityId+ "_column_edit"
-            settings_div.appendChild(columns_div)
+                columns_div.id = this.activityId+ "_column_edit"
+                settings_div.appendChild(columns_div)
         }else{
-         columns_div.innerHTML = ""
-
+            columns_div.innerHTML = ""
         }
-
-          if (Array.isArray( activity.activity.inputs.input.value.values)){
-            all_columns = Object.keys(activity.activity.inputs.input.value.values[0])
-        }else{
-            all_columns = Object.keys(activity.activity.inputs.input.value.values)
-
-        }
+        let add_button = this.get_add_button()
         columns_div.appendChild(add_button)
-        // let datatypes = widget.flowchart("getOperatorActivity", activity.activityId).inputs.input.value.datatypes;
-        // let s = new Set(Object.values(datatypes));
-        // datatypes = [...s]
+        let all_columns=[]
+        metadata.forEach(element => {
+            all_columns.push(element['name'])
+        });
 
-
-        let target_activity = widget.flowchart('getOperatorActivity', activity.activityId)
-        // console.log("ACTIVITY FILE CHANGE", target_activity) 
-        let loading_text = document.createElement("h1");
-		loading_text.textContent = "Loading...";
-		loading_text.style.color = "black";
-		columns_div.prepend(loading_text);
-        let response = await run_activity_flow(target_activity,widget)
-		columns_div.removeChild(loading_text)
-
-        // console.log("RESPONSE", response, activityId)
-         widget.flowchart('setinputVal', activityId,'input',{'datatypes': response.datatypes, 'values': response.values})
-        widget.flowchart('setoutputVal', activityId,'output',response)
-        all_columns.forEach(column => {
+        metadata.forEach(column => {
             let settings = [
             {
                 'type': 'selector'
                 ,'options': all_columns
-                ,'default_value': column
+                ,'default_value': column['name']
                 ,'name': 'column_name'
             },
              {
                 'type': 'selector'
-                ,'options': [...new Set(Object.values(response.datatypes))]
-                ,'default_value': response.datatypes[column]
+                ,'options': ['string','int', 'datetime','decimal','array']
+                ,'default_value': column['type']
                 ,'name': 'data_type'
             }
              , {
                 'type': 'input'
                 ,'placeholder' : 'Column Name'
-                ,'value': column
+                ,'value': column['name']
                 ,'name': 'new_column_name'
             }
             ,{
@@ -146,12 +103,98 @@ class Import_Activity extends Activity{
                 ,'label': 'DROP'
                 ,'color': 'red'
             }]
-            let column_edit_element = this.get_column_selection_element(widget,settings)
+            let column_edit_element = this.get_column_selection_element(this.flowchart,settings)
             columns_div.appendChild(column_edit_element)
         });
-        widget.flowchart('run_activity', activityId);
     }
 
+     async _inputFile_onchange(e, widget, activity){
+        let settings_div = document.getElementById('selected_activity_settings')
+		let loading_text = document.createElement("h1");
+		loading_text.textContent = "Loading...";
+		loading_text.style.color = "black";
+		settings_div.prepend(loading_text);
+
+        let blobstorage = new BlobStorage();
+        let sparkclient = new SparkClient();
+        let filename;
+        let data;
+        let dataslice = 100000
+        let filetype = 'json'
+        if (e.target.name == 'blob_selection'){
+            filename = e.target.value
+            let file = await blobstorage.get_blob_by_path('bronze','etl', 'imports',filename)
+            if (filename.includes('.csv')){
+                data = csvToJson(file);
+                filetype = 'csv'
+                data = data.slice(1,dataslice)
+            }else{
+                data = file
+
+            }
+
+        }else{
+            const file = e.target.files?.item(0);
+            if (!file){
+                e.preventDefault();
+                console.warn("No file selected, keeping existing content.");
+                return;
+            }
+            filename = file.name
+            let blob_files = await blobstorage.get_blob_directory_files('bronze', 'etl','imports')
+            if (!blob_files.includes(filename)){
+                let text = await file.text();
+                 if (file.name.includes(".json")){
+                        data = JSON.parse(text);
+                        // data = JSON.stringify(data)
+                 }else{
+                         data = csvToJson(text);
+                         data = data.slice(1,dataslice)
+                         filetype = 'csv'
+                 }
+                // console.log(text)
+                blobstorage.post_blob_by_path('bronze', 'etl','imports', filename,  text)
+            }
+        }
+        let metadata = await sparkclient.process(data, filetype);
+        console.log("META DATA", metadata)
+        this.add_settings(metadata)
+        this.flowchart.flowchart('setinputVal', this.activityId ,'input',{'datatypes': metadata['data'], 'values': data})
+        this.flowchart.flowchart('setoutputVal', this.activityId ,'output',{'datatypes': metadata['data'], 'values': data})
+        settings_div.removeChild(loading_text)
+        //  widget.flowchart('run_activity', activityId);
+     }
+
+
+    async _on_selector_change(event, widget, activity){
+        let div = document.getElementById(activity.activityId+"_column_edit")
+
+         if (event.target.name != 'column_name'){
+            return
+        }
+
+        let total_dupes = 1
+        let selected_column  = event.target.value
+        let name = selected_column
+        let current_named_columns = []
+        for (let i =0; i < div.children.length; i++){
+            if (div.children[i].className != 'rename_settings'){continue}
+            current_named_columns.push(div.children[i].children[2].value)
+        }
+        while(1){
+            if (current_named_columns.includes(name)){
+                name  = selected_column + "_" +total_dupes.toString()
+                total_dupes +=1
+            }else{
+                break
+            }
+        }
+        let datatypes = widget.flowchart('getOperatorActivity', activity.activityId).inputs.input.value.datatypes;
+        let datatype = datatypes[selected_column]
+        event.target.parentElement.children[1].value =  datatype
+        event.target.parentElement.children[2].value =  name
+
+    }
     _add_column(e, widget, activity){
         let all_columns = []
         let activityId = activity.activityId
@@ -183,7 +226,7 @@ class Import_Activity extends Activity{
             },
              {
                 'type': 'selector'
-                ,'options':datatypes
+                ,'options':['string','int', 'datetime','decimal','array']
                 ,'default_value': datatypes[0]
                 ,'name': 'data_type'
             }
@@ -207,83 +250,7 @@ class Import_Activity extends Activity{
         this.flowchart.flowchart('setSettings', this.activityId, settings)
         return settings
     }
-    _on_selector_change(event, widget, activity){
-        let parent_element = event.target.parentElement;
-        let div = document.getElementById(activity.activityId+"_column_edit")
-        // console.log("Name: ", event.target.name)
-        if (event.target.name != 'column_name'){
-            return
-        }
-        let total_dupes = 1
-        let selected_column  = event.target.value
-        let name = selected_column
 
-        let current_named_columns = []
-        for (let i =0; i < div.children.length; i++){
-            if (div.children[i].className != 'rename_settings'){continue}
-            current_named_columns.push(div.children[i].children[2].value)
-        }
-        while(1){
-            if (current_named_columns.includes(name)){
-                name  = selected_column + "_" +total_dupes.toString()
-                total_dupes +=1
-            }else{
-                break
-            }
-        }
-        let datatypes = widget.flowchart('getOperatorActivity', activity.activityId).inputs.input.value.datatypes;
-        let datatype = datatypes[selected_column]
-        // console.log("Data type", datatype)
-        event.target.parentElement.children[1].value =  datatype
-
-        event.target.parentElement.children[2].value =  name
-
-        // if (event.target.name == 'data_type'){
-        //     let parent_element = event.target.parentElement;
-        //     widget.flowchart('changeDataTypeSelectColumn', activity.activityId, parent_element.id, event.target.value)
-        //     return
-        // }
-
-        // let selected_column  = event.target.value
-        // if (selected_column != "" && parent_element.children.length > 4){
-        //     parent_element.children[3].DROP()
-        // }
-        // if (selected_column == "" && parent_element.children.length == 4){
-        //     let input = document.createElement('input')
-        //     input.name = 'custom_value'
-        //     input.placeholder = "Column Value"
-        //     input.addEventListener("change", (event) => this._on_input_change(event, widget, this));
-        //     let children = parent_element.children;
-        //     let insertIndex = children.length - 1;
-        //     parent_element.insertBefore(input, children[insertIndex]);
-        // }
-        // let div = document.getElementById(activity.activityId+"_column_edit")
-        // let current_named_columns = []
-        // for (let i =0; i < div.children.length; i++){
-        //     if (div.children[i].className != 'rename_settings'){continue}
-        //     current_named_columns.push(div.children[i].children[2].value)
-        // }
-        // let total_dupes = 1
-        // let name = selected_column
-        // while(1){
-        //     if (current_named_columns.includes(name)){
-        //         name  = selected_column + "_" +total_dupes.toString()
-        //         total_dupes +=1
-        //     }else{
-        //         break
-        //     }
-        // }
-
-        // let datatypes = widget.flowchart('getOperatorActivity', activity.activityId).settings.datatypes;
-        // let datatype = datatypes[selected_column]
-
-
-        // event.target.parentElement.children[2].value =  name
-        // event.target.parentElement.children[1].value =  datatype
-        // let select_val = {'select': selected_column, 'as': name, 'datatype': datatype, 'id':event.target.parentElement.id }
-        // widget.flowchart('addSelectColumn', activity.activityId, select_val)
-        // console.log(widget.flowchart('getOperatorActivity', activity.activityId))
-    }
     _on_input_change(e, widget,activity){
         if (e.target.name == 'custom_value'){
             let parent_element = e.target.parentElement;
