@@ -177,8 +177,6 @@ void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, 
            send_JSON_response_code(cSSL, 200, result);
             free(result);
 
-
-
          }
 
        }
