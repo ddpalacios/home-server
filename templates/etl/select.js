@@ -123,7 +123,7 @@ class Select_Activity extends Activity{
             },
              {
                 'type': 'selector'
-                ,'options': unique_datatypes
+                ,'options': ['string','int', 'datetime','decimal','array']
                 ,'default_value': datatypes[column]
                 ,'name': 'data_type'
             }
