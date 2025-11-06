@@ -391,6 +391,29 @@ void send_image_response_code(SSL* cSSL,int code, int content_length){
 	}
 }
 
+
+void send_pdf_response_code(SSL* cSSL,int code, int content_length){
+	char http_header[2048];
+	char* code_text = malloc(50);
+	if (code == 200) {
+		code_text = "200 OK";
+		snprintf(http_header, sizeof(http_header),
+				 "HTTP/1.1 %s\r\n"
+				  "Content-Type: application/pdf\r\n"
+				   "Connection: close\r\n"
+				   "Content-Length: %d\r\n"
+				   "\r\n", code_text,content_length);
+	 SSL_write(cSSL, http_header, strlen(http_header));
+	}else if (code == 404){
+		code_text = "404 Not Found";
+		snprintf(http_header, sizeof(http_header),
+				 "HTTP/1.1 %s\r\n"
+				  "Content-Type: application/pdf\r\n"
+				   "Connection: close\r\n"
+				   "\r\n", code_text);
+	 SSL_write(cSSL, http_header, strlen(http_header));
+	}
+}
 void send_favicon_response_code(SSL* cSSL,int code, int content_length){
 	char http_header[2048];
 	char* code_text = malloc(50);

@@ -64,6 +64,12 @@ void get_image_file(SSL* cSSL, char* request, char* template_name){
 				SSL_write(cSSL, image_data, image_size);	 
 				free(image_data);
 	 }
+	 	 else if (strstr(template_name, ".pdf") != NULL ){
+				unsigned char *image_data = read_binary_file(template_dir, &image_size);
+				send_pdf_response_code(cSSL,200, image_size);
+				SSL_write(cSSL, image_data, image_size);	 
+				free(image_data);
+	 }
 }
 
 

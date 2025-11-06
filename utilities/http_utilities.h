@@ -9,6 +9,7 @@ void send_html_response_code(SSL* cSSL,int code, int content_length);
 void send_css_response_code(SSL* cSSL,int code, int content_length);
 void send_video_response_code(SSL* cSSL,int code, int content_length);
 void send_image_response_code(SSL* cSSL,int code, int content_length);
+void send_pdf_response_code(SSL* cSSL,int code, int content_length);
 void send_favicon_response_code(SSL* cSSL,int code, int content_length);
 void send_response_code(SSL *cSSL,int code);
 void set_and_send_session_cookie(SSL* cSSL, char*session_token, char* path);
