@@ -273,6 +273,8 @@ void process_websocket_message(struct Socket* sockets,struct Socket* socket,int 
 		char* operation = get_value(json,"operation");
 		char* request = get_value(json,"request");
 		char* send_to = get_value(json,"send_to");
+		char* socketId = get_value(json,"socketId");
+		// printf("WEBSOCKET %s %s %s\n", operation, request, send_to);
 
 		if (request && operation) {
 			if (strcmp(request, "POST")==0 &&strcmp(operation, "client")==0){
@@ -293,15 +295,15 @@ void process_websocket_message(struct Socket* sockets,struct Socket* socket,int 
 			if (strcmp(send_to, "tcp")==0){
 				for (int i=0; i<fd_count;i++){
 					struct Socket* s = &sockets[i];
-					if (!s->is_tcp){
-						continue;
-					}
+					if (s->is_tcp){
 					printf("FOUND TCP SOCKET\n");
 					send_tcp_message(s->cSSL, 0x1, 0x1, nbytes, message);
 				}
-			}else{
-				send_websocket_message(sockets,socket,fd_count, payload_length, nbytes, message);
 			}
+		}
+			// }else{
+			// 	send_websocket_message(sockets,socket,fd_count, payload_length, nbytes, message);
+			// }
 		}
 		cJSON_Delete(json);
 		if (message != NULL){
@@ -374,6 +376,7 @@ void process_bytes(struct Socket *sockets, struct Socket *socket, char* buf, int
 		if (is_tcp_buffer(buf)){
 			char* tcp_buf = malloc(BUFFER_SIZE);
 			int nbytes =  read_tcp_message(socket->cSSL, &tcp_buf);
+			// printf("TCP Buf %s\n", tcp_buf);
 			socket->is_tcp = 0x1;
 			socket->keep_alive = 0x1;
 			int payload_length = 0;
@@ -382,8 +385,10 @@ void process_bytes(struct Socket *sockets, struct Socket *socket, char* buf, int
 			}else{
 				payload_length = 126;
 			}
+
 			cJSON *json = cJSON_Parse(tcp_buf);
 			if (json) {
+
 					char* socketId = get_value(json,"socketId");
 					for (int i=0; i<fd_count; i++){
 						struct Socket* s = &sockets[i];
@@ -413,6 +418,7 @@ void process_bytes(struct Socket *sockets, struct Socket *socket, char* buf, int
 				nbytes = read_websocket_message(socket->cSSL, payload_length, &message);
 				int message_length = nbytes;
 				message[nbytes] = '\0';
+				// printf("WEBSOCKET MESSAGE %s\n", message);
 				process_websocket_message(sockets,socket, fd_count, message,payload_length, nbytes);
 				if (websocket_buf != NULL) {
 					free(websocket_buf);

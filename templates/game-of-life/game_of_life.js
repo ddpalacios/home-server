@@ -42,6 +42,10 @@ class GameOfLife{
             newGrid[i] = [];
             for (let j = 0; j < this.numCols; j++) {
                 const neighbors = this.countNeighbors(i, j);
+                if (this.grid[i][j] === 2){
+                    newGrid[i][j] = this.grid[i][j];
+                    continue;
+                }
                 if ((this.grid[i][j] === 1) && (neighbors < 2 || neighbors > 3)) {
                 newGrid[i][j] = 0;
                 } else if (this.grid[i][j] === 0 && neighbors === 3) {
@@ -55,7 +59,7 @@ class GameOfLife{
         return this.grid
     }
     draw_grid(){
-        let rgb = color
+        let rgb = "red"
         ctx.fillStyle =rgb
 
         let active_cells_cords = []
@@ -63,7 +67,18 @@ class GameOfLife{
             for (let j =0; j<this.numCols; j++){
                 var x = j * this.pixel_size
                 var y = i * this.pixel_size
+                 if (this.grid[i][j] ==2){
+                    ctx.fillStyle ="blue"
+                        ctx.fillRect(x, y , this.pixel_size, this.pixel_size);
+                        active_cells_cords.push({
+                            'x':x
+                            ,'y':y
+                        })
+                }
                 if (this.grid[i][j] ==1){
+                        rgb = "red"
+                        ctx.fillStyle =rgb
+  
                         ctx.fillRect(x, y , this.pixel_size, this.pixel_size);
                         active_cells_cords.push({
                             'x':x

@@ -86,9 +86,75 @@ void post_generate_phrase(struct Socket* socket,char* http_header, char*body, ch
 	printf("Request %s\n", request);
     send(sfd,request, strlen(request),0);
     close(sfd);
+ }
+
+ 
+void post_to_local(struct Socket* socket,char* http_header, char*body, char* route){
+	int sfd  = connect_to_local_server("127.0.0.1", "5000");
+	size_t req_size = strlen(body) + 2048;
+	char *request = malloc(req_size);
+	if (!request) {
+		perror("malloc failed");
+		return;
+	}
+
+	snprintf(request, req_size,
+		"POST %s HTTP/1.1\r\n"
+		"Host: %s:%s\r\n"
+		"Content-Type: application/json\r\n"
+		"Content-Length: %zu\r\n"
+		"Connection: close\r\n"
+		"\r\n"
+		"%s",
+		route,
+		"127.0.0.1", "5001", strlen(body), body);
+	
+	send(sfd, request, strlen(request), 0);
+	free(request);
+	char buf[8192]; 
+    char *response = NULL;
+    size_t total = 0;
+
+    for (;;) {
+        int bytes_recved = recv(sfd, buf, sizeof(buf), 0);
+        if (bytes_recved <= 0)
+            break;
+        char *tmp = realloc(response, total + bytes_recved + 1);
+        if (!tmp) {
+            perror("realloc");
+            free(response);
+            return;
+        }
+			response = tmp;
+			memcpy(response + total, buf, bytes_recved);
+			total += bytes_recved;
+		}
+		if (!response) {
+			printf("No data received\n");
+			return;
+		}
+
+		response[total] = '\0'; 
+		printf("Total bytes received: %zu\n", total);
+
+		char *res_body = strstr(response, "\r\n\r\n");
+		if (res_body) {
+			res_body += 4;
+			size_t body_len = strlen(res_body);
+
+			send_html_response_code(socket->cSSL, 200, body_len);
+			
+			SSL_write(socket->cSSL, res_body, body_len);
+		} else {
+			printf("No HTTP body found\n");
+		}
+
+    free(response);
+    close(sfd);
 
 
  }
+
 
 //  void post_run_pipeline(struct Socket* socket,char* http_header, char*body, char* route){
 // 	int sfd  = connect_to_local_server("127.0.0.1", "5001");

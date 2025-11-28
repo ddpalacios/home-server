@@ -45,6 +45,7 @@ int bind_address_to_port(char* port,struct addrinfo hints){
     }
 	int yes =1;
 	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+	// setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &yes, sizeof(int));
 	if (bind(sockfd, res->ai_addr, res->ai_addrlen) < 0){
         printf("ERROR in BIND\n");
         exit(1);

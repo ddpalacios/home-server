@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Your Personal Data Engineer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+ <!-- <link rel="stylesheet" href="/chatbox_style.css"> -->
+<link rel="icon" href="/portfolio/images/favicon.ico" type="image/x-icon">
+<style>
+
+  body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: sans-serif;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 300px;
+    height: 100%;
+    background: whitesmoke;
+    color: white;
+    padding: 10px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+    overflow-y: auto;
+    z-index: 1000;
+  }
+
+  .content-wrapper {
+    margin-left: 320px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  .content {
+    flex: 1;
+    background: #f0f0f0;
+    /* padding: 20px; */
+    overflow: auto;
+  }
+
+  .footer {
+    position: relative;
+    color: white;
+    height: 500px;
+    overflow: auto;
+  }
+
+  .resize-handle {
+    position: relative;
+    height: 18px;
+    width: 100%;
+    cursor: ns-resize;
+	  display: flex;
+  justify-content: center; 
+  align-items: center;   
+    background: whitesmoke;
+  }
+
+  .resize-handle img {
+  width: 20px; 
+  height: 20px;
+  pointer-events: none; 
+}
+  /* .resize-handle {
+  position: relative;
+  width: 100%;
+  height: 20px; 
+  display: flex;
+  justify-content: center; 
+  align-items: center;     
+}
+
+.resize-handle img {
+  width: 20px; 
+  height: 20px;
+  pointer-events: none; 
+} */
+
+  .buttons{
+    width: auto;  
+    padding: 10px;
+	 font-size: 0.8em;
+    font-weight: bold;
+    font-family: 'Garamond';
+    color: rgb(0, 0, 0);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.buttons:hover{
+    transform: scale(1.05);
+
+}
+</style>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+	<link rel="stylesheet" href="/etl/jquery.flowchart.css">
+
+	<script src="/etl/jquery.flowchart.js"></script>
+	<style>
+		.flowchart-example-container {
+			width: 100%;
+			height: 100vh;
+			background: white;
+		}
+	</style>
+	<style>
+
+/* Style the tab */
+.tab {
+  overflow: hidden;
+  /* border: 1px solid #ccc; */
+  background-color: #f1f1f100;
+  display: flex;
+  width: 100%;
+  flex-direction: row;
+  gap: 50px;
+}
+
+/* Style the buttons inside the tab */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+  font-size: 17px;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+  color: #006dfb;
+  
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+ color: #006dfb;
+}
+
+/* Style the tab content */
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+}
+
+/* --- Base Select Box --- */
+select {
+
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: linear-gradient(145deg, #f9f9f9, #e6e6e6);
+  padding: 10px 40px 10px 14px;
+  font-size: 15px;
+  color: #333;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.25s ease-in-out;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  position: relative;
+}
+
+/* --- Hover and Focus States --- */
+select:hover,
+select:focus {
+  background: linear-gradient(145deg, #ffffff, #e9e9e9);
+  border-color: #999;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+}
+
+
+/* --- Optional container styling --- */
+.select-container {
+  display: inline-block;
+  position: relative;
+}
+
+.select-container::after {
+  content: "▼";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8em;
+  color: #555;
+  pointer-events: none;
+}
+.text_input_value, #operator_title {
+  padding: 8px 12px;
+   font-size: 0.8em;
+
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #f8f8f8;
+  color: #333;
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.text_input_value:hover {
+  border-color: #999;
+  background: #fefefe;
+}
+
+.text_input_value:focus {
+  border-color: #0078ff;
+  background: #fff;
+}
+
+#selected_activity_settings, #operator_properties {
+  display: flex;
+  flex-direction: column;
+  margin-left: 10px;
+ padding: 10px;
+  gap: 10px;
+  max-height: 700px;
+  overflow-y: auto;  
+  scrollbar-width: thin; 
+}
+
+#selected_activity_settings::-webkit-scrollbar {
+  width: 6px;
+}
+#selected_activity_settings::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 3px;
+}
+#selected_activity_settings::-webkit-scrollbar-thumb:hover {
+  background-color: #999;
+}
+
+</style>
+
+<style>
+	/* body {
+  font-family: Arial, sans-serif;
+  margin: 10px;
+} */
+
+.filter-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.filter-container label {
+  flex-basis: 100%;
+  font-weight: bold;
+}
+
+.filter-container select,
+.filter-container input {
+  flex: 1 1 200px;
+  max-width: 300px;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+/* Table wrapper: scroll horizontally instead of overflowing */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 10px;
+  margin-top: 10px;
+}
+
+/* Table styles */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 500px; /* lets columns breathe, but scrolls on small screens */
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  color: black;
+  text-align: left;
+  word-break: break-word;
+}
+
+th {
+  background-color: #f4f4f4;
+}
+
+/* Make headings and spacing smaller on phones */
+@media (max-width: 600px) {
+  .main_section1 {
+    width: 95% !important;
+    padding: 10px !important;
+  }
+
+  .section_title {
+    font-size: 24px !important;
+  }
+
+  .filter-container {
+    flex-direction: column;
+  }
+
+  select,
+  input {
+    max-width: 100% !important;
+  }
+
+  table {
+    min-width: unset; /* let it shrink */
+    font-size: 12px;
+  }
+}
+.data_table_container {
+  max-height: 800px;   
+  overflow-y: auto;   
+  overflow-x: auto;   
+  border: 1px solid #ccc; 
+}
+
+table {
+  width: 100%;         /* make table fill container */
+  border-collapse: collapse;
+    max-height: 800px;   
+  overflow-y: auto;   
+  overflow-x: auto;   
+  border: 1px solid #ccc; 
+}
+
+table th, table td {
+  padding: 8px;
+  border: 1px solid #ccc;
+  text-align: left;
+}
+/* Sidebar container */
+.sidebar {
+    background-color: #f0f4f8;    
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+    overflow-y: auto;            
+}
+
+/* Sidebar header */
+.sidebar-header {
+    background-color: #f0f4f8;    
+    color: black;
+    padding: 15px 10px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Buttons container */
+.sidebar-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 15px 10px;
+}
+
+/* Buttons */
+.sidebar-buttons .buttons {
+    background-color: #ffffff;
+    border: 1px solid #0a0a0a;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 1rem;
+    color: #000000;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+/* Button hover effect */
+.sidebar-buttons .buttons:hover {
+    background-color: #4da6ff;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+}
+
+/* Button active effect */
+.sidebar-buttons .buttons:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+
+
+
+</style>
+</head>
+<body>
+
+  
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h3>Activities</h3>
+    </div>
+    <div class="sidebar-buttons">
+        <button id="import_activity" class="create_operator buttons">Create Import</button>
+        <button id="filter_activity" class="create_operator buttons">Create Filter</button>
+        <button id="export_activity" class="create_operator buttons">Create Export</button>
+        <button id="aggregate_activity" class="create_operator buttons">Create Aggregate</button>
+        <button id="join_activity" class="create_operator buttons">Create Join</button>
+        <button id="custom_activity" class="create_operator buttons">Create Custom</button>
+        <button id="replace_activity" class="create_operator buttons">Replace Value</button>
+        <button id="split_activity" class="create_operator buttons">Split Value</button>
+        <button id="select_activity" class="create_operator buttons">Select</button>
+        <button id="sort_activity" class="create_operator buttons">Sort</button>
+    </div>
+</div>
+
+  <div class="content-wrapper">
+    <div class="content">
+      	 <div id="chart_container">
+					 <canvas id="visualizer" style="width: 100%; height: 100%; background-color: black;"></canvas>
+
+	      </div> 
+    </div>
+
+    <div class="footer" id="footer" style="overflow-x: hidden; overflow-y: hidden;">
+      <div class="resize-handle" id="resizeHandle"> <img src="/etl/images/drag.png" width="50" height="50"></div>
+	  		<div class="navbar" style=" padding: 20px; z-index: 1000; background-color: whitesmoke;   border: 1px solid rgb(255, 255, 255); width: 100%; display: flex; flex-direction: row; gap: 50px;">
+				<div class="tab", id="tab_btn_group">
+				<button class="tablinks" onclick="openCity(event, 'London')">General</button>
+				<button class="tablinks" onclick="openCity(event, 'Paris')">Innovations</button>
+				<button class="tablinks" onclick="openCity(event, 'data_preview')">Data Preview</button>
+				</div>
+				
+
+			</div>
+			<div id="London" class="tabcontent" style="display: flex; flex-direction: column; gap: 30px;">
+				<div id="operator_properties" style="display: flex; flex-direction: column;;">
+					<label style="font-size: 20px; color: black" for="operator_title; " >Name: </label><input style="width: 15%;" id="operator_title" type="text">
+					<label style="font-size: 20px; color: black" for="operator_title; " >Description: </label><textarea style="width: 15%;" rows="5" cols="10" id="" type="text"></textarea>
+				</div>
+				
+			</div>
+				<div id="Paris" class="tabcontent">
+					<div id="link_properties" style="display: block;">
+					<label for="link_color">Link's color: </label><input id="link_color" type="color"></div>
+				<div id="selected_activity_settings" style="display: flex; flex-direction: column; gap: 10px;"></div>
+			</div>
+        <!-- <div id="data_preview" class="tabcontent">
+					<div class="table-responsive">
+						<div id="data_table_container">
+							<table id="data_table"></table>
+						</div>
+					</div>
+				</div> -->
+			
+			
+	  
+    </div>
+  </div>
+
+
+
+
+
+</body>
+<script>
+    let ws = null;
+    let canvas = document.querySelector("#visualizer");
+    let ctx = canvas.getContext("2d");
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.scale(dpr, dpr);
+</script>
+
+
+
+
+
+<script src="/game_of_life.js"></script>
+<script src="/websocket.js"></script>
+
+<script>
+
+function create_table_tab(tabId, values){
+   if (!document.getElementById(tabId)) {
+                    let footer = document.getElementById('footer')
+                    let tabgroup = document.getElementById('tab_btn_group')
+                    let pop_summary_div = document.createElement('div')
+                    pop_summary_div.id = tabId
+                    pop_summary_div.className = 'tabcontent'
+                    let table_responsive_div = document.createElement('div')
+                    table_responsive_div.className = "table-responsive"
+                    let data_table_container = document.createElement('div')
+                    data_table_container.id = tabId+'_table'
+                    data_table_container.className = 'data_table_container'
+
+                    table_responsive_div.appendChild(data_table_container)
+                    pop_summary_div.appendChild(table_responsive_div)
+                    footer.appendChild(pop_summary_div)
+
+                    let tab_button = document.createElement('button')
+                    tab_button.className = 'tablinks'
+                    tab_button.innerHTML = tabId
+                    tab_button.onclick = function(){
+                      openCity(event, tabId)
+                    }
+                    tabgroup.appendChild(tab_button)
+                  }
+  createTable(values,tabId+'_table')
+  
+}
+
+
+
+function createTable(jsonArray, tableContainerId) {
+  tableContainer = document.getElementById(tableContainerId);
+  tableContainer.innerHTML = ""; 
+  const table = document.createElement("table");
+  const thead = document.createElement("thead");
+  const tbody = document.createElement("tbody");
+
+  const headerRow = document.createElement("tr");
+  if (jsonArray.length == 0){
+    return
+  }
+  const columns = Object.keys(jsonArray[0]);
+  columns.forEach(key => {
+    if (key != 'points' && key != 'mouse_points'){
+    const th = document.createElement("th");
+    th.textContent = key;
+    headerRow.appendChild(th);
+    }
+  });
+  thead.appendChild(headerRow);
+
+let limit = 100
+let count = 0
+  jsonArray.forEach(item => {
+		if (count < limit){
+
+		const row = document.createElement("tr");
+		columns.forEach(key => {
+		const td = document.createElement("td");
+    if (key != 'points'&& key != 'mouse_points'){
+        td.textContent = item[key];
+        row.appendChild(td);
+        }
+
+		});
+		tbody.appendChild(row);
+		count +=1
+
+}
+  });
+
+  table.appendChild(thead);
+  table.appendChild(tbody);
+  tableContainer.appendChild(table);
+
+
+}
+
+
+</script>
+
+
+
+
+<script>
+
+  function pointsInCircle(centerX, centerY, radius, gridSize) {
+    const points = [];
+    for (let y = Math.max(0, centerY - radius); y <= Math.min(gridSize - 1, centerY + radius); y++) {
+        for (let x = Math.max(0, centerX - radius); x <= Math.min(gridSize - 1, centerX + radius); x++) {
+            if ((x - centerX) ** 2 + (y - centerY) ** 2 <= radius ** 2) {
+                points.push([x, y]);
+            }
+        }
+    }
+    return points;
+}
+
+
+    async function initalize_neat(socketId, body){
+    if (socketId == null || socketId == undefined){
+        alert("No Socket Found")
+        return
+    }
+          var request = new Request('/rtneat/initialize', {
+                                method: 'POST',
+                                headers: new Headers({
+                                            'Accept': 'application/json'
+                                        })
+			       ,body: JSON.stringify({
+                           'socketId': socketId,
+                           'data': body
+				       })
+                    });
+           fetch(request);
+    }
+    function connect(body){
+        if (ws ==null){
+            ws = new Websocket_Session(app='neat')
+            ws.initialize()
+          }
+          ws.session.onmessage = async (event) => {
+              let data = JSON.parse(event.data)
+               if (data['request'] == 'neat'){
+              for (let i = 0; i < grid.length; i++) {
+                  for (let j = 0; j < grid[i].length; j++) {
+                          grid[i][j] = 0;
+                  }
+              }
+
+              grid[data.mouse_y][data.mouse_x] = 3
+              points = pointsInCircle(data.mouse_x, data.mouse_y, data.body_radius_size, data.gridSize);
+              points.forEach(point => {
+                                const px = point[0];
+                                const py = point[1];
+                                if (grid[py][px] !== 2) {
+                                  grid[py][px] = 5;
+                                }
+                              });
+              data.bodies.forEach(network => {
+                const x = network.pos_x;
+                const y = network.pos_y;
+                grid[y][x] = 2;
+                points = pointsInCircle(x, y, data.body_radius_size, data.gridSize);
+                points.forEach(point => {
+                  const px = point[0];
+                  const py = point[1];
+                  if (grid[py][px] !== 2) {
+                    grid[py][px] = 1;
+                  }
+                });
+                });
+                data.bodies.sort((a, b) => b.fitness - a.fitness);
+                create_table_tab('Summary', data.bodies)
+
+
+                //  let foods = data['foods']
+                //  console.log("Foods", foods)
+                //   Object.values(foods).forEach(food => {
+                //       const x = food.pos_x;
+                //       const y = food.pos_y;
+                //       grid[y][x] = 4; 
+                //     })
+                  // grid[network.mouse_y][network.mouse_x] = 3
+
+                  // network.mouse_points.forEach(point => {
+                  //   const px = point[0];
+                  //   const py = point[1];
+
+                  //   if (px !== x || py !== y) {
+                  //     if (grid[py][px] !== 2 && grid[py][px] !== 3) {
+                  //       grid[py][px] = 1;
+                  //     }
+                  //   }
+                  // });
+
+                  // network.points.forEach(point => {
+                  //   const px = point[0];
+                  //   const py = point[1];
+
+                  //   if (px !== x || py !== y) {
+                  //     if (grid[py][px] !== 2) {
+                  //       grid[py][px] = 1;
+                  //     }
+                  //   }
+                  // });
+
+                  // data.bodies.sort((a, b) => b.fitness - a.fitness);
+                  // data.node_weights.sort((a, b) => b.node_avg_strength - a.node_avg_strength);
+                  // create_table_tab('Summary', data.bodies)
+                  // create_table_tab('Node_Weights', data.node_weights)
+                  // create_table_tab('Networks', data.network_weights)
+
+               }
+              if (data['request'] == 'new_connection'){
+                  socketId = data['value']
+                  console.log("Socket ID", socketId)
+                  initalize_neat(socketId,body)
+                  // const myInterval = setInterval(sendmouseCords, 50);
+
+
+
+              }
+          }
+        }
+
+</script>
+<script>
+    let pixel_size = 10
+    var numRows =  Math.floor(canvas.height / pixel_size);
+    var numCols =Math.floor(canvas.width / pixel_size);
+    var big_canvas_grid = []
+    var color = 'white'
+    const connected_clients = new Map()
+    var mag_view_w =1
+    var mag_view_h = 1
+    var mouse_x = 0;
+    var mouse_y = 0;
+    var gol = new GameOfLife(big_canvas_grid, numRows,numCols, pixel_size);
+    let grid = Array(numRows).fill(0).map(() => Array(numCols).fill(0));
+    let pop_size = 20
+    let body = {
+          'pop_size': pop_size
+          ,'rows': gol.numRows
+          ,'cols': gol.numCols
+          ,'min_time_alive': 50
+          ,'ineligibility_rate': 0.5
+          ,'forget_rate': 2
+          ,'total_ins': 4
+          ,'total_outs': 8
+      }
+      connect(body)
+</script>
+<script src="/neat/simulation.js"></script>
+<script>
+function openCity(evt, cityName) {
+  var i, tabcontent, tablinks;
+  tabcontent = document.getElementsByClassName("tabcontent");
+  for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+  }
+  tablinks = document.getElementsByClassName("tablinks");
+  for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].className = tablinks[i].className.replace(" active", "");
+  }
+  document.getElementById(cityName).style.display = "flex";
+  document.getElementById(cityName).style.flexDirection = "column";
+  document.getElementById(cityName).style.gap = "30px";
+  
+  evt.currentTarget.className += " active";
+}
+</script>
+<script>
+  const footer = document.getElementById('footer');
+  const handle = document.getElementById('resizeHandle');
+
+  let isResizing = false;
+  let startY, startHeight;
+
+  handle.addEventListener('mousedown', e => {
+    isResizing = true;
+     
+    startY = e.clientY;
+    startHeight = parseInt(window.getComputedStyle(footer).height, 10);
+    document.body.style.userSelect = 'none';
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!isResizing) return;
+    const dy = startY - e.clientY;
+    footer.style.height = `${startHeight + dy}px`;
+  });
+
+  document.addEventListener('mouseup', () => {
+    isResizing = false;
+    document.body.style.userSelect = '';
+  });
+</script>
+</html>
