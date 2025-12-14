@@ -1,2269 +1,1349 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Your Personal Data Engineer</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-<link rel="icon" href="/portfolio/images/favicon.ico" type="image/x-icon">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Palacios Solutions – Data Automation & Reporting</title>
+
 <style>
-
-  h1, h2,p,h3,li{
-    font-family: 'Garamond';
-
+  @media (max-width: 700px) {
+  #who-we-help {
+    text-align: center;
   }
-  * {
-box-sizing: border-box;
+
+  #who-we-help > div:first-child {
+    flex: 1 1 100%;
+    min-width: 0 !important;
+    display: flex;
+    justify-content: center;
+  }
+
+  #who-we-help img {
+    width: 90%;
+    max-width: 360px;
+    height: auto;
+    object-fit: cover;
+  }
 }
-html, body {
-  height: 100%;
-  margin: 0;
+
+  /* Desktop: show table, hide mobile cards */
+.pricing-table-mobile {
+  display: none;
+}
+
+/* Mobile view */
+@media (max-width: 650px) {
+  .pricing-table-desktop {
+    display: none;
+  }
+
+  .pricing-table-mobile {
+    display: block;
+  }
+
+  .pricing-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 1.2em 1.4em;
+    margin-bottom: 1.2em;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+  }
+
+  .pricing-card h4 {
+    margin: 0 0 0.5em 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #14233b;
+  }
+
+  .pricing-card p {
+    font-size: 1.05rem;
+    color: #4a5568;
+    margin-bottom: 0.6em;
+    line-height: 1.5;
+  }
+
+  .pricing-card strong {
+    font-size: 1.15rem;
+    color: #2b6cb0;
+    font-weight: 700;
+  }
+}
+
+
+  /* Hide floating button on mobile */
+@media (max-width: 768px) {
+  .sticky-contact {
+    display: none !important;
+  }
+}
+
+
+  
+/* -------------------------------------------------------
+   GLOBAL STYLE RESET & THEME
+------------------------------------------------------- */
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
 body {
-    margin: 0;
-       overflow-x: hidden;
-      font-family: Arial, Helvetica, sans-serif;
-  background: linear-gradient(
-    360deg,
-    rgba(0, 0, 0, 1) 43%,
-    rgba(2, 42, 44, 1) 76%,
-    rgba(17, 115, 107, 1) 100%
-  );
-  background-attachment: fixed; 
-  background-repeat: no-repeat;
-  background-size: cover;
+  margin: 0;
+  font-family: "Inter", "Segoe UI", Arial, Helvetica, sans-serif;
+  background: #f3f4f7;
+  color: #1a1a1a;
+  line-height: 1.65;
 }
 
-
-    
-    
-</style>
-
-<style>
-    /* NAVIGATION BAR*/
-.buttons{
-    width: auto;  
-    padding: 10px;
-    font-weight: bold;
-    font-family: 'Garamond';
-    color: rgba(67, 67, 67, 0.844);
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-}
-#lets_talk{
-  float: right;
-    width: 10%;  
-    font-size: larger;
-  margin-right: 7%;
-    margin-top: .5%;
-    margin-bottom: .5%;
-      opacity: 1;
-
-
-
-}
-#view_applications{
-  float: left;
-  margin-left: 5%;
-    margin-top: .5%;
-    margin-bottom: .5%;
-    font-family: 'Garamond';
-    color: white;
-}
-#view_applications:hover {
-    color: white;
-    transform: scale(1.02);
-    cursor: pointer;
-      opacity: 1;
-
+a {
+  text-decoration: none;
+  color: inherit;
 }
 
-
-#company_name{
-  float: left;
-  margin-left: 5%;
-    margin-top: .5%;
-    margin-bottom: .5%;
-    font-family: 'Garamond';
-    color: white;
-}
-#company_name:hover {
-    color: white;
-    transform: scale(1.02);
-    cursor: pointer;
-      opacity: 1;
-
-}
-
-#lets_talk:hover {
-    background-color: rgba(8, 152, 0, 0.815);
-    color: white;
-    transform: scale(1.10);
-      opacity: 1;
-      
-
-}
-
-.phonenav {
-  position: fixed;
-  transition: top 1s ease; 
-  top: 0;
-  left: 0;
-  z-index: 1000;
-  background: linear-gradient(
-    20deg,
-    rgba(0, 0, 0, 0.774) 15%,
-    rgba(26, 106, 120, 0.854) 85%,
-    rgba(0, 136, 136, 0.45) ,
-    rgba(0, 0, 0, 0.45)
-  );
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0.5em 1em;
-
-
-}
-
-
-.topnav {
-  position: fixed;
-  transition: top 1.5s ease; 
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 1000;
-  background: linear-gradient(
-    20deg,
-    rgba(0, 0, 0, 0.774) 15%,
-    rgba(26, 106, 120, 0.854) 85%,
-    rgba(0, 136, 136, 0.45) ,
-    rgba(0, 0, 0, 0.45)
-  );
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.5em 1em;
-}
-
-
-
-@media screen and (max-width: 1269px) {
-  .topnav{
-    text-align: center;
-    justify-content: center;
-    height: 6%;
-  /* background-color: #01000ede;  */
-
-
-  }
-  #lets_talk{
-    width: 65%;
-    margin-top: 20px;
-    margin-bottom: 20px;
-    margin-left: 50px;
-
-  }
-  #title_bar{
-    display: none;
-  }
-  #company_name{
-    font-size: 20px;
-    width: 100%; 
-
-    /* 
-    
-    margin-right: 0%;
-   */
-    display: none;
-  }
-
-}
-
-</style>
-<style>
-/* Main Video */
-.Intro{
-  position: relative;
-  width: auto;
-  height: auto;
-  text-align: center;
-}
-@keyframes fadeVideo {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.85; }
-}
-
-#intro_video {
-  mix-blend-mode: screen;
-  animation: fadeVideo 8s ease-in-out infinite;
-  width: auto;
- object-fit: fill;
-}
-
-@media screen and (max-width: 1050px) {
-  .Intro {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh; /* full viewport height */
-  }
-
-  #intro_video {
-    display: none;
-  }
-
-}
-  @media screen and (min-width: 2100px) {
-   #intro_video {
-       width: 45%;
-
-  }
-}
-
-
-
-
-</style>
-
-<style>
-.Workload {
-    /* outline: 1px solid black; */
-    display: flex;
-    margin-top:2%;
-    justify-content: center;
-  }
-
-#workload_info{
-    background-color: #00013091;
-  }
-
-.flex-container {
-  display: flex;
-  flex-direction: row;
-  font-size: 30px;
-  text-align: center;
-}
-
-.flex-item-left {
-  background-color: #00010f1e;
-  padding: 10px;
-  flex: 50%;
-}
-
-.flex-item-right {
-  background-color: #00013091;
-  padding: 10px;
-  flex: 50%;
-}
-#clean_data:hover {
-    transform: scale(1.9);
-    cursor: pointer;
-    opacity: 1;
-    height: 50vh;
-
-
-}
-
-#raw_data:hover {
-    transform: scale(1.5);
-    cursor: pointer;
-    opacity: 1;
-        height: 50vh;
-        margin-left: 70px;
-
-
-}
-
-@media screen and (max-width: 1050px) {
-   #clean_data:hover {
-    transform: scale(1.5);
-    cursor: pointer;
-    opacity: 1;
-    height: auto;
-
-}
-
-#raw_data:hover {
-    transform: scale(1.5);
-    cursor: pointer;
-    opacity: 1;
-    height: auto;
-
-
-}
-
-}
-
-
-
-  @media screen and (min-width: 2100px) {
-   #raw_data {
-       width: 45% !important;
-        height: 50vh;
-
-  }
-     #clean_data {
-       width: 45% !important;
-       height: 50vh;
-
-  }
-  .workload_title{
-    font-size: 1vw;
-
-  }
-
-  #clean_data:hover {
-    transform: scale(1.6);
-    cursor: pointer;
-    opacity: 1;
-
-}
-
-#raw_data:hover {
-    transform: scale(1.6);
-    cursor: pointer;
-    opacity: 1;
-
-}
-}
-
-@media (max-width: 800px) {
-  .flex-container {
-    flex-direction: column;
-  }
-}
-
-</style>
-
-
-
-<style>
-  .Home {
-    outline: 1px solid black;
-    display: flex;
-    margin-top: 10%;
-justify-content: center;
-  }
-
-
-.cards {
+.container {
+  width: 92%;
+  max-width: 1280px;
   margin: 0 auto;
-  display: grid;
-  gap: .5rem;
-  width: 90%;
-  grid-auto-rows: auto;
-  
 }
 
-.card {
-  position: relative;    
-  background-color: #1c1d7083;
-  color: white;
-  width: auto;
-   align-items: center;
-  cursor: pointer;
+/* -------------------------------------------------------
+   COLOR SYSTEM
+------------------------------------------------------- */
+:root {
+  --primary: #2b6cb0;
+  --primary-dark: #1e4f86;
+  --primary-light: #dbe8f7;
 
-  border-radius: 8px;
+  --card-bg: #ffffff;
+  --border: #e2e8f0;
+
+  --text-main: #1a202c;
+  --text-muted: #4a5568;
+
+  --radius: 16px;
+  --shadow: 0 10px 35px rgba(0,0,0,0.08);
 }
 
-.card::after {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: rgba(255, 255, 255, 0.753);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  border-radius: inherit;
-  z-index: 1;             
-}
-
-.card img {
-  position: relative;
-  z-index: 2;             
-}
-
-.card:hover::after {
-  opacity: 1;
-    pointer-events: none;
-}
-
- 
-
-@media (min-width: 600px) {
-  .cards { grid-template-columns: repeat(2, 1fr); }
-}
-@media (min-width: 900px) {
-  .cards { grid-template-columns: repeat(3, 1fr); }
-}
-
- @media screen and (min-width: 2100px) {
-   .tools {
-       width: auto !important;
-  }
-  #tool_list{
-    font-size: 1vw;
-
-  }
-  .cards{
-  grid-auto-rows: 500px; 
-
-  }
-}
-
-</style>
-
-<style>
-.features {
+/* -------------------------------------------------------
+   HERO
+------------------------------------------------------- */
+.hero {
+  background: linear-gradient(135deg, #edf2f7, #ffffff);
+  border-radius: var(--radius);
+  padding: 4em 3em;
+  margin: 3em auto;
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: 3em;
+  box-shadow: var(--shadow);
 }
 
-.silver_items h2 {
-  color: white;
-  font-size: 2rem;
-  font-weight: 600;
-  margin: 0;
-  text-align: center;
-}
-
-
-
-  ul.myUL {
-  text-align: left;
-  list-style-position: inside; 
-  padding-left: 1rem;        
-  margin: 0;
-}
-.list_item {
-   margin: 10px 0;
-   color: white;
-   font-size: 20px;
-   opacity: 1;
-}
-
-  #clean_list-bullet{
-   list-style-type: "✅ "; 
-}
-
-.card ul {
-  max-width: 100%;       
-  word-wrap: break-word;  
-  white-space: normal;    
-  padding: 0 1rem;        
-  box-sizing: border-box; /
-}
-
-@media (max-width: 1250px) {
-  .work_info {
-    flex-direction: column;
-    align-items: center; /* keep them centered */
-  }
-  .work_steps{
-    flex-direction: column;
-    align-items: center; /* keep them centered */
-  }
-  #work_step2, #work_step1,#work_step3{
-    width: auto !important;
-  }
-}
-
-</style>
-
-
-<style>
-
-    .Contact {
-      outline: 1px solid black;
-      display: flex;
-      margin-top: 2%;
-      justify-content: center;
-      }
-
-      @media screen and (max-width: 650px) {
-  .Home,
-  .Contact {
-    margin-bottom: 5rem; 
-    padding: 1rem;     
-  }
-}
-
-</style>
-
-<style>
-  
-
-.case_study_container{
-  display: flex;
-  justify-content: center;
-  padding: 2%;
-  flex-wrap: wrap; 
-  gap: 2rem; 
-}
-.case_study_cards{
-  position: relative;
-  cursor: pointer;
-  background-color: #ededed;
-  box-shadow: 10px 10px 18px  rgba(0, 0, 0, 0.516);
-  padding: 2rem; 
-  border-radius: 10px; 
-  max-width: 450px;
-  
-}
-
-
-
-
-.case_study_card_title{
-   font-size: 35px; 
-   margin: 0;
-   color: black;
-   text-align: center;
-  font-weight: 800; 
-  background: linear-gradient(20deg, #000000, #1a6a78, #088, #000000);
-    -webkit-background-clip: text; 
-    -webkit-text-fill-color: transparent; 
-    margin-bottom: 2rem; 
-    letter-spacing: -0.5px;
-
-}
-.case_study_paragraph{
-  color: black;
-  font-size: 20px;
-  text-align: center;
-}
-.case_study_cards.bronze, .case_study_cards.silver, .case_study_cards.gold{
-  cursor: default;
-  padding: 1em;
-}
-
-.case_study_cards.bronze:hover {
-    transform: scale(1.05);
-     z-index: 5;            
-
-}
-.case_study_cards.silver:hover {
-    transform: scale(1.05);
-     z-index: 5;            
-
-}
-.case_study_cards.gold:hover {
-    transform: scale(1.05);
-    z-index: 5;            
-
-}
-
-.case_study_cards {
-  transition: transform 0.5s ease; 
-}
-
-
-.case_study_cards:hover{
-    transform: scale(1.2);
-     z-index: 5;            
-
-
-}
-/* .case_study_cards::after {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: none !important; 
-  opacity: 0 !important;
-  pointer-events: none;
-} */
-/* .case_study_cards:hover::after {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: none !important; 
-  opacity: 0 !important;
-  pointer-events: none;
-} */
-
-
-</style>
-
-
-<style>
-.scroll-container {
-  overflow: hidden;
-  /* width: 100%; */
-  background-color: #00000000;
-  padding: 2rem 0;
-}
-
-.scroll-content {
-  display: flex;
-  /* justify-content: center; */
-  width: max-content;
-  animation: scroll 20s linear infinite;
-}
-
-.logos {
-  display: flex;
-}
-
-.logos img {
-  height: 100px;
-  margin: 0 2rem;
-  object-fit: contain;
-}
-
-@keyframes scroll {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
-}
-</style>
-
-<style>
-  #send_button{
-    font-size: 20px;
-    margin-top: 10px;
-    background-color: #043435;
-    color: white;
-
-    
-  }
-
-  #send_button:hover {
-    background-color: rgba(8, 152, 0, 0.815);
-    color: white;
-    transform: scale(1.03);
-      opacity: 1;
-      
-
-}
-</style>
-
-<style>
-    /* NEW MAIN VERSION */
-    .main{
-      outline: 1px solid black;
-    }
-
-    .body_cards{
-      background-color: white;
-      cursor: pointer;
-      border: 1px solid #ddd;
-      padding: 2em;
-      box-shadow: 10px 10px 18px  rgba(0, 0, 0, 0.516);
-      text-align: center;
-    }
-
-  .body_cards:hover{
-    transform: scale(1.01);
-     z-index: 1;              /* put overlay above card background */
-}
-  .subitem {
-  color: #8e0000;
-  font-weight: 500;
-  font-size: 1.3rem;
-  padding: 1%;
-  font-weight: 600;
-}
-@media (max-width: 1250px) {
-  #why_choose_us{
-    width: 100% !important;
-  }
-  .main_body {
-      grid-template-columns: 1fr;
-     width: 95%; 
-  }
-  .submit_form{
-     flex-direction: column;
-    align-items: center;
-
-  }
-  .form_1{
-    width: 100% !important;
-    padding: 10px;
-  }
-}
-
-.problem_text{
-  color: #c91616; 
-  font-weight: bold;
-}
-.solution_text{
-  color: rgb(0, 184, 0);
-  font-weight: bold;
-}
-
-</style>
-
-
-<style>
-.section_title {
-  text-align: center;
-  font-size: 3rem;
-  font-weight: 800;
-  background: linear-gradient(
-    90deg,
-    #00555f,   /* darker teal on the left */
-    #0f7a91,   /* middle toned-down teal */
-    #02293d,   /* deep navy before black */
-    #000000    /* right edge black */
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 2rem;
-  letter-spacing: -0.5px;
-}
-
-    .section_subtitle{
-    text-align: center;
-    font-size: 3rem; 
-    font-weight: 800; 
-    margin-bottom: 1rem; 
-    /* letter-spacing: 0.5px; */
-
-
-  }
-
-  #section1_maintitle {
-  margin: 0;
-  margin-top: 40px;       
-}
-
-#section1_subtitle {
-  margin: 0;
-  padding: 2%;
-
-}
-  .medallian_image{
-    max-width: 100px !important;
-  }
-
-  .main_body{
-    display: grid; 
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5em; 
-  }
-@media (max-width: 1250px) {
-
-      .submit_form {
-    flex-direction: column; /* stack the two halves */
-    padding: 3% !important;
-  }
-
-  .form_1 {
-    width: 100% !important; /* full width instead of 50% */
-  }
-
-  .form_1 form div {
-    grid-template-columns: 1fr !important; /* stack inputs */
-  }
-
-  .footer_title{
-    font-size: 42px !important;
-    
-  }
-  
-  .footer_subtitle{
-    text-align: center !important;
-    font-size: 2em !important;
-    padding: 6%;
-    max-width: 95%;
-    text-justify: inter-word;
-
-  }
-  .medallian_image{
-    max-width: 150px !important;
-  }
-  .body_cards{
-    background-color: inherit; 
-    transform: none;           
-  }
-  .case_study_cards:hover {
-     background-color: inherit;
-    transform: none;       
-  }
-  
-.case_study_cards.bronze:hover {
-     background-color: inherit;
-    transform: none;          
-
-}
-.case_study_cards.silver:hover {
-      background-color: inherit;
-    transform: none;            
-
-}
-.case_study_cards.gold:hover {
-      background-color: inherit;
-    transform: none;    
-}       
- .quote{
-   /* padding: 10% !important; */
-    /* text-align: justify !important;  */
-    margin: 0 auto;  
-   
-    /* text-justify: inter-word; */
-    /* word-spacing: 2px; */
-    font-size: 1.5em !important;
-    /* max-width: 90%;   */
-  }
-  .quotation_mark{
-    font-size: 1.2em !important;
-    font-weight: 800;
-    font-family: 'Courier New', Courier, monospace
-
-    
-  }
-  
-  .quote_from{
-    font-size: 1.8em !important;
-    padding: 5% !important;
-
-  }
-  .testimonial_section{
-    margin-top: 15% !important;
-
-  }
-  .section_footer_paragraph{
-    text-align: justify !important;
-    padding: 7%;
-  }
-  .main_section{
-    width: 100% !important;
-  }
-  .subitem{
-    text-align: justify !important;
-
-
-  }
-  .body_cards{
-     margin-left: 10px;
-  }
-  .section1_list{
-    font-size: 20px !important;
-    padding: 5%;
-  }
-  #section1_maintitle {
-    font-size: 40px !important;
-    padding: 2rem 1rem; 
-  }
-  #section1_subtitle {
-    font-size: 30px !important;
-    text-align: justify !important; 
-    padding: 1rem; 
-    width: 90% !important;
-    margin: 0 auto; 
-  }
-  .main_body {
-    grid-template-columns: 1fr;
-    width: 95%;
-    padding: 5% !important;
-  }
-
-  }
-
-  input::placeholder {
-  color: #ffffff62;   /* your color */
-  opacity: 1;    /* some browsers default it faded */
-}
-    textarea::placeholder {
-  color: #ffffff62;   /* your color */
-  opacity: 1;    /* some browsers default it faded */
-}
-</style>
-
-<style>
-
-.pain-point {
-  background: rgba(255, 255, 255, 0.08);
-  /* border-left: 4px solid #19545b; */
-  margin: 1em auto;
-  border-radius: 8px;
-  width: 70%;
-  text-align: left;
-}
-.painpoint_quotes {
-  text-align: center;
-  font-size: 1.5em;
-  color: #fff;
-}
-/* .pain-point:nth-child(even) {
-  text-align: left;
-  margin-left: 10%;
-}
-.pain-point:nth-child(odd) {
-  text-align: right;
-  margin-right: 10%;
-}
-
-.pain-point:nth-child(even) .painpoint_quotes {
-  margin-left: 20%;
-  text-align: left;
-}
-
-.pain-point:nth-child(odd) .painpoint_quotes {
-  margin-right: 20%;
-  text-align: right;
-} */
-
-@media (max-width:1269px) {
-.pain-point:nth-child(even),
-  .pain-point:nth-child(odd) {
-    text-align: center;
-    margin: 0 auto; /* removes the offset */
-  }
-
-  .pain-point{
-    width: 100%;
-  }
-  #section1_maintitle2{
-    text-align: center !important;
-    padding: 5%;
-  }
-  .all_painpoints{
-    gap: 2em;
-    /* margin-top: 2%; */
-    margin-bottom: 2%;
-
-  }
-  .painpoint_quotes {
-    text-align: center !important;
-
-}
-.medallian_list{
-  font-size: 20px !important;
-}
-.subitem{
-  padding: 2%;
-}
-
-}
-
-.phone_intro, .phonenav{
-  display: none;
-}
-.all_painpoints{
-  display: none;
-}
-
-.phone_intro,
-.all_painpoints {
-  display: none !important;
-}
-
-@media (max-width: 1780px) {
-
-.desktop_intro_sections {
-  display: flex;
-  gap: 2em;
-}
-
-#desktop_intro_section_image {
+.hero-text {
   flex: 1;
+  min-width: 300px;
+}
+
+.hero-text h1 {
+  font-size: 3.2rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 0.3em;
+}
+
+.hero-text h2 {
+  font-size: 1.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 1em;
+}
+
+.hero-text p {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  max-width: 600px;
+}
+
+.hero-image {
+  flex: 1;
+  text-align: center;
+}
+
+.hero-image img {
+  width: 95%;
+  max-width: 550px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  opacity: 0.9;
+}
+
+/* -------------------------------------------------------
+   SECTIONS
+------------------------------------------------------- */
+.section {
+  background: var(--card-bg);
+  padding: 3em 2.5em;
+  border-radius: var(--radius);
+  margin-bottom: 3em;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.section h3 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin-bottom: 0.5em;
+  color: var(--text-main);
+}
+
+.section ul {
+  margin-top: 1em;
+  padding-left: 1.2em;
+  font-size: 1.2rem;
+  color: var(--text-muted);
+}
+
+/* -------------------------------------------------------
+   CASE STUDIES
+------------------------------------------------------- */
+.case-studies {
   display: flex;
-}
-
-#desktop_intro_section_image img {
-  width: 100% !important;
-  object-fit: cover; 
-  border-radius: 10px;
-  opacity: 0.5;
-  display: block;    
-  } 
-.painpoints_list{
-  font-size: 20px !important;
-  }
-}
-  /* .case_study_paragraph{
-    font-size: 15px !important;
-  } */
-  
-
-@media (max-width: 1279px) {
-  
-  .logos img {
-  height: 50px;
-  margin: 0 2rem;
-  object-fit: contain;
-}
-
-
-  .phone_intro{
-    margin-top: 80px !important;
-
-  }
-
-  .desktop_intro, .topnav{
-    display: none !important;
-
-    
-  }
-  .phone_intro,.phonenav,
-  .all_painpoints {
-    display: flex !important;  
-    flex-direction: column;    
-    align-items: center;       
-    width: 100%;              
-  }
-  .painpoint_quotes{
-    padding: 3% !important;
-  }
-  .main_section1{
-    width: 100% !important;
-  }
-  #intro_section{
-    margin-top: 10% !important;
-  }
-
-  #why_choose_us_description{
-    display: none;
-     
-  }
-  #case_study_subtitle{
-    display: none;
-  }
-  .section_subtitle1{
-    text-align: left !important;
-    margin-bottom: 2% !important;
-  }
-  #intro_comment{
-      text-align: center !important;
-      font-weight: 600;
-  }
-.painpoints_list li::before {
-  font-size: 1.5em;
-}
-  #intro_image{
-    display: none;
-  }
-  .main_section{
-    margin-top: 5% !important;
-  }
-  .painpoints_list{
-    text-align: center !important;
-    font-size: 1.4em !important;
-    font-weight: 900;
-    padding: 6% !important;
-  }
-
-  .main_section > div[style*="display: flex"] {
-    flex-direction: column !important;
-    align-items: center !important;
-  }
-  .main_section > div[style*="display: flex"] > div {
-    width: 100% !important;
-    text-align: center !important;
-  }
-  .main_section > div[style*="display: flex"] img {
-    width: 80% !important;
-    margin-bottom: 1.5em !important;
-  }
-  .main_section > div:last-child,
-  .main_section > div:nth-last-child(2) {
-    flex-direction: column !important;
-    text-align: center !important;
-    width: 100% !important;
-  }
-  .main_section > div:last-child h3,
-  .main_section > div:nth-last-child(2) h3 {
-    width: 100% !important;
-    text-align: center !important;
-  }
-
-  .case_study_paragraph{
-    text-align: left !important;
-    margin-bottom: 10px !important;
-    word-spacing: 1px;
-    
-
-}
-  .case_study_container {
-    align-items: center;      
-  }
-
-
-}
-
-.painpoints_list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  font-size: 1.5em;
-  line-height: 1.3;
-  color: #000000;
-}
-
-.painpoints_list li {
-  margin-bottom: 0.6em;
-  position: relative;
-  color: black;
-}
-
-/* .painpoints_list li::before {
-  content: "*";
-  color: #19545b;
-  font-weight: bold;
-  position: absolute;
-  left: 0;
-} */
-
-
-
-
-</style>
-
-<style>
-
-
-.flip-card {
-  background-color: transparent;
-  perspective: 1000px;
-  width: 450px;
-  height: 350px;
-  position: relative;
-  text-align: center;
-  background-color: transparent;
-  border-radius: 10px; 
-}
-.flip-card-image{
-  width: 350px;
-}
-.flip-card-front {
-  width: 100%;
-  height: 100%; 
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: center; 
-  align-items: center;     
-  text-align: center;
-  box-shadow: 10px 10px 18px  rgba(0, 0, 0, 0.516);
-
-}
-.flip-card-header {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%; 
-  background: linear-gradient(to bottom, rgba(0,0,0,0.85), rgba(0,0,0,0));
-  color: #fff;
-  font-size: 4em;
-  font-weight: 700;
-  text-align: center;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.7);
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
-  box-sizing: border-box;
-  z-index: 2;
-  display: flex;
-  align-items: center;   
-  justify-content: center; 
-  padding: 0; 
-  margin: 0;
-}
-
-
-.flip-card-front .flip-card-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* ensures the image covers the div without stretching */
-  display: block;
-}
-
-
-.flip-card-inner {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  text-align: center;
-  transition: transform 1s;
-  transform-style: preserve-3d;
-  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
-}
-
-.flip-card:hover .flip-card-inner {
-  transform: rotateY(180deg);
-}
-.flip-card-front, .flip-card-back {
-    position: absolute;
-    width: 100%;
-  height: 100%;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-}
-.flip-card-back {
-
-  background-color: #ededed;
-  transform: rotateY(180deg);
-  padding: 3%;
-} 
-  @media (max-width: 1280px) {
-  .flip-card-header{
-    font-size: 2em !important;
-  }
-  .case_study_paragraph1{
-    font-size: 20px !important;
-  }
-}
-
-.carasol_img{
-  width:100px; 
-  height:700px;
-} 
-
-</style>
-
-<style>
-.fade-up {
-  opacity: 0;
-  transform: translateY(40px);
-  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-}
-
-.fade-up.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.all_painpoints {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  width: 100%;
+  flex-wrap: wrap;
   gap: 2em;
 }
 
-.pain-point {
+.case-study {
+  flex: 1;
+  min-width: 280px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.8em;
+  box-shadow: var(--shadow);
+  transition: transform 0.25s ease;
+}
+
+.case-study:hover {
+  transform: translateY(-6px);
+}
+
+.case-study img {
   width: 100%;
-  max-width: 1000px;
+  border-radius: 12px;
+  margin-bottom: 1em;
 }
 
-.painpoint_container {
-  background: none;
+.case-study h4 {
+  font-size: 1.45rem;
+  font-weight: 700;
+  margin-bottom: 0.5em;
 }
 
-.painpoint_quotes {
-  color: white;
-  font-size: 2rem;
-  line-height: 1.4;
-  opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+.case-study p {
+  color: #4a5568;
+  font-size: 1.05rem;
 }
 
-.visible .painpoint_quotes {
-  opacity: 1;
-  transform: translateY(0);
-  transition-delay: 0.2s;
-}
-
-.phone_intro {
-  opacity: 0;
-  transform: translateY(50px);
-  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-}
-
-.phone_intro.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.phone_intro h3 {
-  opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-}
-
-.phone_intro.visible h3 {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Optional: stagger fade for a smoother feel */
-.phone_intro.visible h3:nth-child(1) {
-  transition-delay: 0.2s;
-}
-
-.phone_intro.visible h3:nth-child(2) {
-  transition-delay: 0.4s;
-}
-
-.quote {
-  opacity: 0;
-  transform: translateY(40px);
-  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-}
-
-.quote.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Optional: make quotation marks fade separately for flair */
-.quotation_mark {
-  opacity: 0;
-  transition: opacity 0.8s ease-out;
-}
-
-.quote.visible .quotation_mark {
-  opacity: 1;
-  transition-delay: 0.2s;
-}
-
-/* Initial hidden state */
-.desktop_intro h3 {
-  opacity: 0;
-  transform: translateY(40px);
-  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-}
-
-/* When visible */
-.desktop_intro.visible h3 {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Optional stagger for smoother entrance */
-.desktop_intro.visible h3:nth-child(1) {
-  transition-delay: 0.1s;
-}
-
-.desktop_intro.visible h3:nth-child(2) {
-  transition-delay: 0.3s;
-}
-/* Initial state for each list item */
-.painpoints_list li {
-  opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-}
-
-/* When parent section is visible */
-.painpoints_list.visible li {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Optional: stagger each li for nice sequential effect */
-.painpoints_list.visible li:nth-child(1) { transition-delay: 0.2s; }
-.painpoints_list.visible li:nth-child(2) { transition-delay: 0.4s; }
-.painpoints_list.visible li:nth-child(3) { transition-delay: 0.6s; }
-.painpoints_list.visible li:nth-child(4) { transition-delay: 0.8s; }
-.painpoints_list.visible li:nth-child(5) { transition-delay: 1.0s; }
-.painpoints_list.visible li:nth-child(6) { transition-delay: 1.2s; }
-.painpoints_list.visible li:nth-child(7) { transition-delay: 1.4s; }
-
-</style>
-
-<style>
-.audio_charts_container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 20px;
-  justify-items: center;
-  align-items: start;
-  margin-top: 20px;
-  padding: 0 10px;
+/* -------------------------------------------------------
+   PRICING TABLE
+------------------------------------------------------- */
+table {
   width: 100%;
-  max-width: 1400px;
-  margin-left: auto;
-  margin-right: auto;
+  border-collapse: collapse;
+  margin-top: 1.2em;
+  font-size: 1.15rem;
 }
 
-.main_section1 {
-  background-color: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  padding: 10px;
-  width: 100%;
-  box-sizing: border-box;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+th, td {
+  padding: 1em;
+  border: 1px solid var(--border);
 }
 
-.main_section1:hover {
+th {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  font-weight: 700;
+}
+
+/* -------------------------------------------------------
+   CTA BUTTON
+------------------------------------------------------- */
+.cta-button {
+  display: inline-block;
+  background: var(--primary);
+  color: #fff;
+  padding: 0.9em 2em;
+  font-size: 1.25rem;
+  border-radius: 12px;
+  margin-top: 1.8em;
+  box-shadow: 0 5px 18px rgba(43,108,176,0.25);
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.cta-button:hover {
+  background: var(--primary-dark);
   transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
-.main_section1 canvas {
-  width: 100%;
-  height: auto;
-  display: block;
-  background: transparent;
-  border-radius: 10px;
+/* -------------------------------------------------------
+   CONTACT FORM
+------------------------------------------------------- */
+#my-form input,
+#my-form textarea {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 1.1rem;
 }
 
-#spectogram_chart, #mel_spectogram_chart {
-  background: rgba(0, 0, 0, 0);
+#send_button {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 1em 2em;
+  border-radius: 12px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  cursor: pointer;
+  width: 240px;
+  transition: background 0.25s ease;
 }
 
+#send_button:hover {
+  background: var(--primary-dark);
+}
+
+/* -------------------------------------------------------
+   STICKY CONTACT BUTTON
+------------------------------------------------------- */
+.sticky-contact {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #38a169;
+  color: #fff;
+  padding: 0.9em 1.5em;
+  border-radius: 40px;
+  font-weight: 700;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  z-index: 999;
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+
+.sticky-contact:hover {
+  transform: translateY(-3px);
+  background: #2f855a;
+}
+
+/* -------------------------------------------------------
+   RESPONSIVE
+------------------------------------------------------- */
 @media (max-width: 900px) {
-  .audio_charts_container {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  .hero {
+    flex-direction: column-reverse;
+    text-align: center;
+    padding: 3em 2em;
+  }
+
+  .hero-text h1 {
+    font-size: 2.6rem;
+  }
+
+  .hero-text h2 {
+    font-size: 1.6rem;
+  }
+
+  .case-study {
+    min-width: 100%;
   }
 }
 
-@media (max-width: 600px) {
-  .audio_charts_container {
-    grid-template-columns: 1fr;
+@media (max-width: 500px) {
+  .hero-text h1 {
+    font-size: 2.1rem;
+  }
+
+  .hero-text h2 {
+    font-size: 1.35rem;
+  }
+
+  table {
+    font-size: 1rem;
+  }
+}
+
+/* Desktop nav shows only on screens above 900px */
+.desktop-nav {
+  display: flex;
+}
+
+.mobile-nav {
+  display: none;
+}
+
+/* Mobile nav activates below 900px */
+@media (max-width: 900px) {
+  .desktop-nav {
+    display: none !important;
+  }
+  .mobile-nav {
+    display: flex !important;
   }
 }
 
 </style>
-
-
 </head>
 <body>
-
-
-<div class="topnav" >
-  <h1 onclick="scrollToView(this.id)" id="company_name"><span style="color: rgb(255, 255, 255);  height: 100%;">PALACIOS SOLUTIONS <span id="title_bar">|</span> Your Personal Data Engineer</span></h1>
-  <!-- <h1 onclick="window.location='/chicago-transits'" id="company_name"><span style="color:  rgb(255, 237, 72);  height: 100%;">Live Data Staging (new!) </span></h1> -->
-   <h1 onclick="scrollToView(this.id)" id="view_applications"><span style="color: rgb(255, 255, 255);  height: 100%;">View Applications</span></h1>
-  
-  <button class="buttons" id="lets_talk" onclick="scrollToView(this.id)" >Let's Talk</button>
-</div>
-
-<div class="phonenav" >
-  <h3 id="phonenav_compname"onclick="scrollToView(this.id)" style="color: white; margin: 0 auto;">PALACIOS SOLUTIONS</h3>
-  <hr id="phonenav_hr" onclick="scrollToView(this.id)" style="color:white; width: 50%; margin: .01 auto;">
-  <h3 id="phonenav_headline"onclick="scrollToView(this.id)" style="color: white; margin: 0 auto; font-size: 15px;"> Your Personal Data Engineer</h3>
- 
-  <button style="height: auto; margin: 0 auto; margin-top: 10px;" class="buttons" id="lets_talk" onclick="scrollToView(this.id)" >Let's Talk</button>
-</div>
-
-
-<div class="desktop_intro" style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section" id="intro_section" style="background-color: #fff; width: 80%; border-radius: 20px; margin-top: 5%; padding: 2%;">
-    
-    <div class="desktop_intro_sections" style="display: flex; justify-content: center; width: 100%; gap: 2em;">
-      
-      <div id="desktop_intro_section_image" style="flex: 1; text-align: right;">
-        <img id="intro_image" style="max-width: 700px; border-radius: 10px; margin: 0 auto; opacity: .5;" 
-             src="/portfolio/images/scatteredteam.png">
-      </div>
-      <div id="desktop_intro_section_questions" style="flex: 1; text-align: left;">
-        <h3 class="section_title" id="desktop_intro_section_question_title" style="font-size: 42px; font-weight: 800; margin: 0 0 0.3em 0; color: #000; text-align: left;">
-          Too much data, not enough insight?
-        </h3>
-
-        <p id="intro_comment" class="section_subtitle" style="color: #030303; font-size: 28px; font-weight: 900; margin: 1 0 1em 0; text-align: left;">
-          We've heard it all before...
-        </p>
-
-        <ul class="painpoints_list">
-          <li>"Who owns these Excel sheets?"</li>
-          <li>"Where can I find this information?"</li>
-          <li>"Why do sales numbers never match?"</li>
-          <li>"Can we trust this dashboard or is it outdated?"</li>
-          <li>"Who is responsible for fixing these broken reports?"</li>
-          <li>"Why does every department have a different version of the truth?"</li>
-          <li>"We want AI, but our data foundation isn't ready"</li>
-        </ul>
-      </div>
-
+<!-- ========================= NAVBAR ========================= -->
+<nav class="desktop-nav" style="
+  width:100%;
+  background:#ffffff;
+  border-bottom:1px solid #e2e8f0;
+  box-shadow:0 4px 15px rgba(0,0,0,0.05);
+  position:sticky;
+  top:0;
+  z-index:1000;
+">
+  <div class="container" style="
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:1em 0;
+  ">
+    <div style="font-size:1.5rem; font-weight:800; color:#2b6cb0;">
+      Palacios Solutions
     </div>
 
-
-  </div>
-</div>
-
-
-
-<div class="desktop_intro">
-   <div style="display: flex; justify-content: center;">  
-        <h3 class="section_subtitle" id="section1_subtitle" style="  margin: 0 auto;  color: rgb(255, 255, 255); width: 40%;  font-size: 42px; font-weight: 500; text-align: left; margin-top: 4%;">
-               Where do we begin?
-          </h3>
-      </div>
-      <div style="display: flex; justify-content: center;">  
-        <h3 class="section_subtitle" id="section1_subtitle2" style="  margin: 0 auto; color: rgb(255, 255, 255); width: 40%;  font-size: 42px; font-weight: 500; text-align: right; margin-bottom: 4%;">
-              Let's plan your data blueprint...
-          </h3>
-      </div> 
-</div>
-
-<div class="phone_intro" style="margin-top: 5%; width:100%;background:linear-gradient(to bottom,#017070,#003333,#000000);">
-  <header>
-    <h1  id="sect_maintitle" style="text-align: center; color: white; font-size: 42px; padding: 5%; ">Too much data, not enough insight?</h1>
-    <div style="display: flex; justify-content: center; text-align: center;">  
-    <h3 style="text-align: center; color: rgb(255, 255, 255); width: 100%; font-size: 42px;font-weight: 800; padding: 5%; ">
-              We've heard it all before...
-    </h3>
-    </div>
-    </header>
-  </div>
-
-    <div class="all_painpoints" style=" display: flex; flex-direction: column; text-align: center; ">
-      <div class="pain-point">
-        <div class="painpoint_container" >
-        <h2 class="painpoint_quotes">"Why do sales numbers never match?"</h2>
-        </div>
-      </div>
-      <div class="pain-point">
-        <div class="painpoint_container" >
-        <h2 class="painpoint_quotes">"Who owns these Excel sheets?"</h2>
-        </div>
-      </div>
-      <div class="pain-point">
-        <div class="painpoint_container" >
-         <h2 class="painpoint_quotes"> "Where can I find this information?"</h2>
-        </div>
-      </div>
-      <div class="pain-point">
-        <div class="painpoint_container" >
-          <h2 class="painpoint_quotes">"Why does every department have a different version of the truth?"</h2>
-        </div>
-      </div>
-      <div class="pain-point">
-        <div class="painpoint_container" >
-         <h2 class="painpoint_quotes"> "Can we trust this dashboard or is it outdated?"</h2>
-        </div>
-      </div>
-      <div class="pain-point">
-        <div class="painpoint_container" >
-         <h2 class="painpoint_quotes"> "Who is responsible fixing these broken reports?"</h2>
-        </div>
-      </div>
-            <div class="pain-point">
-        <div class="painpoint_container" >
-         <h2 class="painpoint_quotes"> "We want AI, but our data foundation isn't ready"</h2>
-        </div>
-      </div>
-    </div>
-
-<div class="phone_intro">
-        <div style="display: flex; justify-content: center;">  
-        <h3 class="section_subtitle" id="section1_subtitle2" style=" width: 100%; text-align: center;  margin: 0 auto; color: rgb(255, 255, 255); padding: 5%; font-size: 42px; font-weight: 500; margin-bottom: 15%; margin-top: 15%;">
-              Where do we begin?
-          </h3>
-      </div>
-
-      <div style="display: flex; justify-content: center;">  
-        <h3 class="section_subtitle" id="section1_subtitle2" style=" width: 100%; text-align: center;  margin: 0 auto; color: rgb(255, 255, 255); padding: 5%; font-size: 42px; font-weight: 500; margin-bottom: 15%; margin-top: 15%;">
-              Let's plan your data blueprint...
-          </h3>
-      </div> 
-</div>
-<div style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 2%;">
-    <div style=" text-align: center;">
-      <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">WHERE IS YOUR <span style="color: #dd5050;">DATA</span> TODAY?</h1>
-      <div style="display: flex; justify-content: center;">
-        <h3 class="section_subtitle" id="section1_subtitle" style="width: 50%;  font-size: 25px; font-weight: 550;">
-          <span style="color: #dd5050;">Pinpoint</span> where your data is today and discover how to move it to the next stage.
-        </h3>
-      </div>
-    </div>
-
-    <div class="case_study_container">
-<div class="case_study_cards bronze" style="background: linear-gradient(135deg, rgba(200, 138, 76, 0.432) 0%, rgba(230,180,80,0.3) 50%, rgba(205,128,50,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
-        <div style="display: flex; justify-content: center;">
-          <img class="medallian_image" style="max-width: 50px; border-radius: 20px; margin: 0 auto;" src="/portfolio/images/bronze.png">
-        </div>
-        <h3 style=" font-size: 40px; text-align: center; letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85) 0%, rgba(0,90,110,0.9) 50%, rgba(0,0,0,0.95) 100%); -webkit-background-clip: text; color: transparent;" class="case_study_card_title">RAW</h3>
-        <p style="color: black; margin: 0.3em 0; padding-left: 1em;  position: relative; font-weight: 600; " class="case_study_paragraph">Data is unstructured and inconsistent.</p>
-        <p style="color: black; margin: 0.3em 0; padding-left: 1em;  position: relative; font-weight: 600;" class="case_study_paragraph" >Documents are scattered and hard to track.</p>
-        <p style="color: black; margin: 0.3em 0; padding-left: 1em;  position: relative; font-weight: 600;" class="case_study_paragraph">Information is difficult to search or connect.</p>
-        <div style="display: flex; flex-direction: column; gap: 0.1em; align-items: center ; margin-top: 0.5em; padding: 5%;">
-          <h3 style="margin: 0; font-size: 28px; letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85) 0%, rgba(0,90,110,0.9) 50%, rgba(0,0,0,0.95) 100%); -webkit-background-clip: text; color: transparent;">FOUNDATION</h3>
-
-          <h2 style="margin-top: 1%; margin: 0; font-size: 25px; color: #28a745; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Locate & Organize</h2>
-        </div>
-        <h3 class="subitem" style="color: red; font-size: 1.4em; margin-top: 0.5em; text-align: center;">
-          How long would it take your team to find a critical file without your help?
-      </h3>
-      </div>
-<div class="case_study_cards silver" style="background: linear-gradient(135deg, rgba(192,192,192,0.6) 0%, rgba(220,220,220,0.3) 50%, rgba(192,192,192,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
-      <div style="display: flex; justify-content: center;">
-        <img class="medallian_image" style="max-width: 50px; border-radius: 20px; margin: 0 auto;" src="/portfolio/images/silver.png">
-      </div>
-        <h3 style="font-size: 40px; text-align: center;letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85) 0%, rgba(0,90,110,0.9) 50%, rgba(0,0,0,0.95) 100%); -webkit-background-clip: text; color: transparent; " class="case_study_card_title">TRANSFORMED</h3>
-          <p style="color: black; margin: 0.3em 0; padding-left: 1em;  position: relative;  font-weight: 600;"  class="case_study_paragraph">Data is standardized and reliable.</p>
-          <p style="color: black; margin: 0.3em 0; padding-left: 1em;  position: relative; font-weight: 600;"  class="case_study_paragraph">Relationships are clear and usable.</p>
-          <p style="color: black; margin: 0.3em 0; padding-left: 1em;  position: relative; font-weight: 600;"  class="case_study_paragraph">Teams can work from the same source.</p>
-          <div style="padding: 5%; display: flex; flex-direction: column; gap: 0.1em; align-items: center; margin-top: 0.5em;">
-            <h3 style="margin: 0; font-size: 28px; letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85) 0%, rgba(0,90,110,0.9) 50%, rgba(0,0,0,0.95) 100%); -webkit-background-clip: text; color: transparent;">GROWTH</h3>
-            <h2 style="margin: 0; font-size: 25px; color: #28a745; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Combine & Standardize</h2>
-          </div>
-          <h3 class="subitem" style="color: red; font-size: 1.4em; margin-top: 0.5em; text-align: center;">
-            Can your team confidently use this data to make decisions without asking you?
-        </h3>
-    </div>
-<div class="case_study_cards gold" style="background: linear-gradient(135deg, rgba(255,215,0,0.6) 0%, rgba(255,240,128,0.3) 50%, rgba(255,215,0,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
-      <div style="display: flex; justify-content: center;">
-        <img class="medallian_image" style="max-width: 50px; border-radius: 20px; margin: 0 auto;" src="/portfolio/images/gold.png">
-      </div>
-        <h3 style="font-size: 40px; text-align: center; letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85) 0%, rgba(0,90,110,0.9) 50%, rgba(0,0,0,0.95) 100%); -webkit-background-clip: text; color: transparent;" class="case_study_card_title">BUSINESS-READY</h3>
-<p style="color: black;margin: 0.3em 0; padding-left: 1em; position: relative; font-weight: 600;" class="case_study_paragraph">Data that grows with your business.</p>
-<p style="color: black;margin: 0.3em 0; padding-left: 1em; position: relative; font-weight: 600;" class="case_study_paragraph">Automated pipelines-no manual work.</p>
-<p style="color: black;margin: 0.3em 0; padding-left: 1em; position: relative; font-weight: 600;" class="case_study_paragraph">Self-service reports your team can trust.</p>
-
-      <div style="padding: 5%; display: flex; flex-direction: column; gap: 0.1em; align-items: center; margin-top: 0.5em;">
-        <h3 style="margin: 0; font-size: 28px;letter-spacing: 4px; background: linear-gradient(90deg, rgba(0,40,45,0.85) 0%, rgba(0,90,110,0.9) 50%, rgba(0,0,0,0.95) 100%); -webkit-background-clip: text; color: transparent;">MATURITY</h3>
-        <h2 style="margin: 0; font-size: 25px; color: #28a745; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">Build, Share & Deploy</h2>
-      </div>
-      <h3 class="subitem" style="color: red; font-size: 1.4em; margin-top: 0.5em; text-align: center;">
-          Can your team make data-driven decisions without manual intervention?
-        </h3>
+    <div style="display:flex; gap:2em; font-size:1.15rem;">
+      <a href="#who-we-help">Who We Help</a>
+      <a href="#automation">Automation</a>
+      <a href="#value">Value</a>
+      <a href="#case-studies">Case Studies</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#contact-form" style="color:#2b6cb0; font-weight:700;">Contact</a>
     </div>
   </div>
+</nav>
+<nav class="mobile-nav" style="
+  width:100%;
+  background:#ffffff;
+  border-bottom:1px solid #e2e8f0;
+  box-shadow:0 4px 12px rgba(0,0,0,0.05);
+  position:sticky;
+  top:0;
+  z-index:1000;
+  padding:1em;
+  justify-content:space-between;
+  align-items:center;
+">
+
+  <!-- Brand -->
+  <div style="font-size:1.4rem; font-weight:800; color:#2b6cb0;">
+    Palacios Solutions
   </div>
+
+  <!-- Hamburger icon -->
+  <div id="mobile-menu-button" style="
+    font-size:2rem;
+    cursor:pointer;
+    user-select:none;
+  ">☰</div>
+</nav>
+
+<!-- Mobile dropdown menu -->
+<div id="mobile-menu" style="
+  display:none;
+  background:#ffffff;
+  border-bottom:1px solid #e2e8f0;
+  box-shadow:0 4px 15px rgba(0,0,0,0.08);
+  position:sticky;
+  top:60px;
+  z-index:999;
+  padding:1.2em;
+">
+  <a href="#who-we-help" style="display:block; padding:0.8em 0;">Who We Help</a>
+  <a href="#automation" style="display:block; padding:0.8em 0;">Automation</a>
+  <a href="#value" style="display:block; padding:0.8em 0;">Value</a>
+  <a href="#case-studies" style="display:block; padding:0.8em 0;">Case Studies</a>
+  <a href="#pricing" style="display:block; padding:0.8em 0;">Pricing</a>
+  <a href="#contact-form" style="display:block; padding:0.8em 0; color:#2b6cb0; font-weight:700;">Contact</a>
 </div>
-<div class="desktop_intro" style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section1" style="background-color: rgba(255, 255, 255, 0); width: 80%;  border-radius: 20px; margin-top: 4%;">
-    <div style="display: flex; justify-content: center;">  
-      <h3 class="section_subtitle" id="section1_subtitle" style="margin-top: 1%; color: white; width: 70%;  font-size: 42px; font-weight: 400; text-align: left;">
-            How do we advance to the next stage?
-        </h3>
+
+
+<!-- ========================= HERO ========================= -->
+<section class="hero container" style="padding:5em 3em; border-radius:20px;">
+
+  <div class="hero-text">
+
+    <!-- Modern Accent Badge -->
+    <div style="
+      display:inline-block;
+      background:linear-gradient(135deg, #2b6cb0, #4f9de8);
+      color:#fff;
+      padding:0.45em 1em;
+      border-radius:50px;
+      font-size:0.95rem;
+      font-weight:600;
+      margin-bottom:1.5em;
+      letter-spacing:0.5px;">
+      Automated Reporting • Zero Manual Work
     </div>
-    <div style="display: flex; justify-content: center;">  
-      <h3 class="section_subtitle" id="section1_subtitle" style="margin-top: 1%; color: white; width: 90%;  font-size: 42px; font-weight: 400; text-align: right;">
-           Which tools help us level up without the extra cost?
-        </h3>
-    </div>
-  </div>
-</div>
 
-<div class="phone_intro">
-        <div style="display: flex; justify-content: center;">  
-        <h3 class="section_subtitle"  style=" width: 100%; text-align: center;  margin: 0 auto; color: rgb(255, 255, 255); padding: 5%; font-size: 42px; font-weight: 500; margin-bottom: 15%; margin-top: 15%;">
-              How do we advance to the next stage?
-          </h3>
-      </div>
-
-      <div style="display: flex; justify-content: center;">  
-        <h3 class="section_subtitle" style=" width: 100%; text-align: center;  margin: 0 auto; color: rgb(255, 255, 255); padding: 5%; font-size: 42px; font-weight: 500; margin-bottom: 15%; margin-top: 15%;">
-              Which tools help us level up without the extra cost?
-          </h3>
-      </div> 
-</div>
-<div style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section1" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
-    <div style=" text-align: center;">
-      <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">LET US HELP YOU </h1>
-    </div>
-  <div class="case_study_container">
-      <div id="freecall" class="case_study_cards" style="background: linear-gradient(135deg, rgba(201, 130, 59, 0.444)  0%, rgb(241, 234, 218) 50%, rgb(199, 168, 135) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
-        <h3 style="color: rgb(255, 255, 255); text-align: center;" class="case_study_card_title">Free Discovery Call</h3>
-        <p style="color: black; text-align: left; " class="case_study_paragraph"><span style="font-weight: 800;">No cost</span>, no commitment-just clarity.</p>
-        <p style="color: black;  text-align: left;" class="case_study_paragraph"><span style="font-weight: 800;">1 hour</span> to pinpoint your biggest data pain points.</p>
-        <p style="color: black;  text-align: left;" class="case_study_paragraph"><span style=" font-weight: 800;">Get tailored advice</span> you can act on immediately.</p>
-        <p style="color: black;  text-align: left;" class="case_study_paragraph">Walk away with a <span style="color: red; font-weight: 900;">clear action plan.</span></p>
-
-      </div>
-    <div id="blueprint" class="case_study_cards" style="background: linear-gradient(135deg, rgb(192, 192, 192) 20%, rgba(255, 255, 255, 0.923) 50%, rgb(192, 192, 192) 90%);  box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
-          <h3 class="case_study_card_title" style="color: blue; text-align: center;">Plan. Build. Execute.</h3>
-          <p style="color: black; text-align: left;" class="case_study_paragraph"><span style="font-weight: 800;">Plan </span>a custom blueprint from our discovery call.</p>
-          <p style="color: black; text-align: left;" class="case_study_paragraph"><span style="font-weight: 800;">Build </span>a data foundation your team can trust.</p>
-          <p style="color: black; text-align: left;" class="case_study_paragraph"><span style="font-weight: 800;">Execute</span> in short, focused sprints.</p>
-          <p style="color: black; text-align: left;" class="case_study_paragraph">Show <span style="font-weight: 800; color: red;">measurable progress</span> every step of the way.</p>
-
-    </div>
-    <div id="launch" class="case_study_cards" style="background: linear-gradient(135deg, rgb(254, 230, 93) 0%, rgb(245, 241, 216) 50%, rgba(255,215,0,0.6) 100%); box-shadow: 0px 3px 9px rgba(0,0,0,0.429); border-radius: 10px; padding: 1em;">
-  <h3 style="color: red; text-align: center;" class="case_study_card_title">Turn Data Into Action</h3>
-  <p style="color: black; text-align: left;" class="case_study_paragraph"><span style="font-weight: 800;">Create & share </span>insights across your team.</p>
-  <p style="color: black; text-align: left;" class="case_study_paragraph"><span style=" font-weight: 800;">Access reliable data</span> at your fingertips</p>
-
-  <p style="color: black; text-align: left;" class="case_study_paragraph"><span style="font-weight: 800;">Scale your data</span> with ease and confidence.</p>
-  <p style="color: black; text-align: left;" class="case_study_paragraph">Empower your team to <span style="color: red;font-weight: 800;">own reports and decisions.</span> </p>
-</div>
-  </div>
-    <section class="testimonial_section" style="margin-top: 2%; ">
-      <div class="scroll-container">
-        <div class="scroll-content" >
-          <div class="logos">
-            <img class="carasol_img" src="/portfolio/images/spark.png" />
-            <img class="carasol_img"  src="/portfolio/images/PowerBIlogo.png" />
-            <img class="carasol_img"  src="/portfolio/images/fabric.png" />
-            <img class="carasol_img"  src="/portfolio/images/Tableau.png" />
-            <img class="carasol_img"  src="/portfolio/images/excel.png" />
-            <img class="carasol_img"  src="/portfolio/images/sql.png" />
-            <img class="carasol_img"  src="/portfolio/images/gcs.png" />
-            <img class="carasol_img"  src="/portfolio/images/azure.png" />
-            <img class="carasol_img"  src="/portfolio/images/aws.png" />
-            <img class="carasol_img"  src="/portfolio/images/adf.png" />
-            <img class="carasol_img"  src="/portfolio/images/synapse.png" />
-            <img class="carasol_img"  src="/portfolio/images/databricks.png" />
-          </div>
-          <div class="logos">
-            <img class="carasol_img" src="/portfolio/images/spark.png" />
-            <img class="carasol_img"  src="/portfolio/images/PowerBIlogo.png" />
-            <img class="carasol_img"  src="/portfolio/images/fabric.png" />
-            <img class="carasol_img"  src="/portfolio/images/Tableau.png" />
-            <img class="carasol_img"  src="/portfolio/images/excel.png" />
-            <img class="carasol_img"  src="/portfolio/images/sql.png" />
-            <img class="carasol_img"  src="/portfolio/images/gcs.png" />
-            <img class="carasol_img"  src="/portfolio/images/azure.png" />
-            <img class="carasol_img"  src="/portfolio/images/aws.png" />
-            <img class="carasol_img"  src="/portfolio/images/adf.png" />
-            <img class="carasol_img"  src="/portfolio/images/synapse.png" />
-            <img class="carasol_img"  src="/portfolio/images/databricks.png" />
-
-          </div>
-          
-        </div>
-      </div>
-      </section>
-  <p class="section_footer_paragraph" style=" text-align: center; color: rgba(0, 0, 0, 0.441); margin-top: 1.2rem; font-size: 24px; font-weight: 550; padding: 2%; margin-bottom: 5%;">
-      Depending on your setup, tools can range from <span style="color: rgb(0, 184, 0);">Excel</span> 
-      for simple datasets to <span style="color: orange;">Spark</span> and 
-      <span style="color: #5091DD;">cloud pipelines</span> for larger workflows. 
-      <br><br>We focus on solutions that fit your existing tools, <span style="font-weight: 800; color: black;">minimizing extra cost</span> or setup wherever possible.
-  </p>
-  </div>
-</div>
-<div class="desktop_intro" style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section1" style="background-color: rgba(255, 255, 255, 0); width: 80%;  border-radius: 20px; margin-top: 4%;">
-    <div style="display: flex; justify-content: center;">  
-      <h3 class="section_subtitle" id="section1_subtitle" style="margin-top: 1%; color: white; width: 70%;  font-size: 42px; font-weight: 400; text-align: left;">
-            Start Visualizing Your Data...
-        </h3>
-    </div>
-    <div style="display: flex; justify-content: center;">  
-      <h3 class="section_subtitle" id="section1_subtitle" style="margin-top: 1%; color: white; width: 90%;  font-size: 42px; font-weight: 400; text-align: right;">
-            Explore Reports That Drive Real Decisions
-        </h3>
-    </div>
-  </div>
-</div>
-
-<div class="phone_intro">
-        <div style="display: flex; justify-content: center;">  
-        <h3 class="section_subtitle"  style=" width: 100%; text-align: center;  margin: 0 auto; color: rgb(255, 255, 255); padding: 5%; font-size: 42px; font-weight: 500; margin-bottom: 15%; margin-top: 15%;">
-              Start Visualizing Your Data...
-          </h3>
-      </div>
-
-      <div style="display: flex; justify-content: center;">  
-        <h3 class="section_subtitle" style=" width: 100%; text-align: center;  margin: 0 auto; color: rgb(255, 255, 255); padding: 5%; font-size: 42px; font-weight: 500; margin-bottom: 15%; margin-top: 15%;">
-            Explore Reports That Drive Real Decisions
-          </h3>
-      </div> 
-</div>
-
-<!-- OVERSEE YOUR DATA Section -->
-<div style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section1" style="background-color: white; width: 80%; border-radius: 20px; margin-top: 4%; box-shadow: 0 10px 25px rgba(0,0,0,0.08); padding: 40px 0; text-align: center; position: relative;">
-
-    <!-- Section Title -->
-    <h1 class="section_title" id="section1_maintitle" style="font-size: 42px; font-weight: 700; color: #222; margin-bottom: 15px;">
-      EMPLOYEE UTILIZATION
+    <!-- Gradient Headline -->
+    <h1 style="
+      font-size:3.1rem;
+      font-weight:900;
+      line-height:1.30;
+      margin:0;
+      background:linear-gradient(135deg, #1a2b4e 0%, #3a7bd5 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;">
+      Automate Your Reporting & Unlock Real-Time Insights
     </h1>
 
-    <!-- Section Description -->
-    <p style="font-size: 18px; color: #555; margin-top: 10px; max-width: 800px; margin-left: auto; margin-right: auto; margin-bottom: 40px;">
-       Show how team members spend their time across projects and tasks. Explore metrics, trends, and patterns to understand workforce allocation and activity levels.
-<div style="margin-bottom: 30px; width: 70%; margin-left: auto; margin-right: auto; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); background-color: white;">
-  <img 
-    src="/portfolio/images/utilization.png" 
-    alt="Employee Utilization Report" 
-    style="width: 100%; height: auto; display: block; border-radius: 12px;" 
-  />
-</div>
+    <!-- Modern Subheadline -->
+    <h2 style="
+      margin-top:1em;
+      font-size:1.55rem;
+      font-weight:500;
+      color:#4a5d73;">
+      Replace hours of spreadsheets with fully automated, refresh-ready data systems.
+    </h2>
 
-
-  </div>
-</div>
-
-<!-- OVERSEE YOUR DATA Section -->
-<div style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section1" style="background-color: white; width: 80%; border-radius: 20px; margin-top: 4%; box-shadow: 0 10px 25px rgba(0,0,0,0.08); padding: 40px 0; text-align: center; position: relative;">
-
-    <!-- Section Title -->
-    <h1 class="section_title" id="section1_maintitle" style="font-size: 42px; font-weight: 700; color: #222; margin-bottom: 15px;">
-      TEAM PERFORMANCE
-    </h1>
-
-    <!-- Section Description -->
-    <p style="font-size: 18px; color: #555; margin-top: 10px; max-width: 800px; margin-left: auto; margin-right: auto; margin-bottom: 40px;">
-      Track metrics such as emails sent, calls made, and deals closed to visualize productivity, monitor engagement, and understand overall performance trends.
+    <!-- Supporting Paragraph -->
+    <p style="
+      margin-top:1.2em;
+      font-size:1.2rem;
+      max-width:580px;
+      color:#5d6f85;">
+      We build end-to-end automation workflows that clean, refresh, transform, and deliver your reporting on a schedule —
+      giving you instant visibility into performance without any manual effort.
     </p>
 
-    <!-- PDF Report Embed -->
- <!-- Image Embed -->
-<div style="margin-bottom: 30px; width: 70%; margin-left: auto; margin-right: auto; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); background-color: white;">
-  <img 
-    src="/portfolio/images/salesdash.png" 
-    alt="Employee Utilization Report" 
-    style="width: 100%; height: auto; display: block; border-radius: 12px;" 
-  />
-</div>
+    <!-- CTA Buttons -->
+    <div style="margin-top:2em; display:flex; gap:1em; flex-wrap:wrap;">
+      <a href="#contact-form" 
+         style="
+           background:#2b6cb0;
+           color:#fff;
+           padding:0.9em 1.8em;
+           border-radius:12px;
+           font-size:1.15rem;
+           font-weight:600;
+           box-shadow:0 8px 22px rgba(43,108,176,0.25);
+           transition:0.25s ease;">
+        Get a Free Assessment
+      </a>
 
+      <a href="#case-studies"
+         style="
+           padding:0.9em 1.8em;
+           border-radius:12px;
+           font-size:1.15rem;
+           font-weight:600;
+           background:#fff;
+           border:2px solid #d0d7e2;
+           color:#2b6cb0;
+           transition:0.25s ease;">
+        View Case Studies
+      </a>
+    </div>
 
   </div>
-</div>
-<div style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section1" style="background-color: white; width: 80%; border-radius: 20px; margin-top: 4%; box-shadow: 0 10px 25px rgba(0,0,0,0.08); padding: 40px 0; text-align: center; position: relative;">
 
-    <!-- Section Title -->
-    <h1 class="section_title" id="section1_maintitle" style="font-size: 42px; font-weight: 700; color: #222; margin-bottom: 15px;">
-      CUSTOMER FEEDBACK AT A GLANCE
-    </h1>
-
-    <!-- Section Description -->
-    <p style="font-size: 18px; color: #555; margin-top: 10px; max-width: 800px; margin-left: auto; margin-right: auto; margin-bottom: 40px;">
-    Display your Net Promoter Score (NPS) and customer feedback trends. Track promoters, passives, and detractors over time to understand customer loyalty, identify areas for improvement, and visualize overall sentiment at a glance.
-    </p>
-
-    <!-- PDF Report Embed -->
- <!-- Image Embed -->
-<div style="margin-bottom: 30px; width: 70%; margin-left: auto; margin-right: auto; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); background-color: white;">
-  <img 
-    src="/portfolio/images/surveys.png" 
-    alt="Employee Utilization Report" 
-    style="width: 100%; height: auto; display: block; border-radius: 12px;" 
-  />
-</div>
-
-
+  <div class="hero-image">
+    <img src="/portfolio/images/main.png" alt="Data automation team" />
   </div>
-</div>
 
-<div  style="display: flex; align-items: center; justify-content: center;">
-  <div id="why_choose_us" class="main_section1" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
-    <div style=" text-align: center;">
-      <h1 class="section_title" id="section1_maintitle" > WHAT SETS US APART</h1>
-      <div style="display: flex; justify-content: center;">
-        <h3 class="section_subtitle" id="why_choose_us_description" style="width: 50%;  font-size: 25px; font-weight: 550;">
-          <span style="color: red;"> Data problems can't wait. </span>
-          Stop waiting days for a Microsoft engineer or  
-         burning time on endless planning and expensive hires.  
-          We provide hands-on mentoring and  
-        tailored data engineering solutions - <span style="color: rgb(0, 184, 0); font-weight: 800;">fast</span>,<span style="color: rgb(0, 184, 0); font-weight: 800;"> focused</span> and  
-         <span style="color: rgb(0, 184, 0); font-weight: 800;">built</span> around your needs.
-        </h3>
-      </div>
-    </div>
-      <div class="case_study_container">
-        <div class="case_study_cards"  >
-          <h3 class="case_study_card_title">Trusted By 100+ Clients</h3>
-          <p class="case_study_paragraph">
-          We are <span style="font-weight: 800;">building trust in your data</span> by delivering <span style="font-weight: 800;">accurate, actionable insights</span> through <span style="font-weight: 800;">reliable analytics workflows</span>, so every decision is backed by confidence.
-          </p>
-        </div>
-        <div class="case_study_cards"  >
-          <h3 class="case_study_card_title">Speed That Matches Your Deadlines</h3>
-          <p class="case_study_paragraph">
-            We deliver work in <span style="font-weight: 800;">structured sprints</span>, focusing on <span style="font-weight: 800;">incremental development</span> that produces <span style="font-weight: 800;">real business value</span> quickly and reliably.
-          </p>
-        </div>
-      <div class="case_study_cards">
-        <h3 class="case_study_card_title">From Chaos to Clarity in Your Data</h3>
-        <p class="case_study_paragraph">
-          We design a <span style="font-weight: 800;">blueprint of your data</span> while also keeping track of <span style="font-weight: 800;">what each table means</span>, 
-          their <span style="font-weight: 800;">dimensions</span>, <span style="font-weight: 800;">who owns it</span>, <span style="font-weight: 800;">how often it's updated</span>, 
-          and the <span style="font-weight: 800;">changes that occurred to it</span>. That way, there is <span style="font-weight: 800;">full transparency</span> between you and your data.
-        </p>
-      </div>
-      <div class="case_study_cards" >
-        <h3 class="case_study_card_title">Support That Doesn't Vanish After Delivery</h3>
-       <p class="case_study_paragraph">
-        <span style="font-weight: 800;">Mon-Friday support</span> for <span style="font-weight: 800;">new data pipelines</span>, <span style="font-weight: 800;">engineering tasks</span>, 
-        and <span style="font-weight: 800;">ongoing maintenance</span> - focused on keeping your data <span style="font-weight: 800;">reliable</span>.
-      </p>
-
-      </div>
-      <div class="case_study_cards" >
-        <h3 class="case_study_card_title">Hands-On Mentoring for Actionable Power BI Dashboards</h3>
-       <p class="case_study_paragraph">Learn to build <span style="font-weight: 800;">real-time dashboards and reports</span> for your department with 
-        <span style="font-weight: 800;">1-on-1 Power BI mentoring</span> - speeding up your <span style="font-weight: 800;">day-to-day work</span>.
-      </p>
-      </div>
-      <div class="case_study_cards" >
-        <h3 class="case_study_card_title">Proven Expertise, Backed by 5+ Years in the Field</h3>
-        <p class="case_study_paragraph">
-          With over <span style="font-weight: 800;">five years of experience</span> building <span style="font-weight: 800;">pipelines</span>, 
-          <span style="font-weight: 800;">optimizing reports</span>, and <span style="font-weight: 800;">transforming scattered data into reliable systems</span>, 
-          we bring <span style="font-weight: 800;">practical, battle-tested solutions</span> - not theory.
-        </p>
-
-      </div>
-      <!-- <div class="case_study_cards" >
-        <h3 class="case_study_card_title">No AI Without Solid Data Engineering</h3>
-          <p class="case_study_paragraph">
-            Everyone wants <span style="font-weight: 800;">AI</span> but want to skip the steps to get there. 
-            Without proper <span style="font-weight: 800;">data engineering</span>, <span style="font-weight: 800;">AI can't succeed</span>. 
-            We set up the <span style="font-weight: 800;">foundation</span> so <span style="font-weight: 800;">predictive modeling works as intended</span>.
-          </p>
-      </div> -->
-    </div>
-  </div>
-</div>
-<div style="display: flex; align-items: center; justify-content: center;">
-  <div class="main_section1" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
-    <div style=" text-align: center;">
-      <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">DELIVERING IMPACT ACROSS TEAMS</h1>
-      <div style="display: flex; justify-content: center;">
-        <h3 class="section_subtitle" id="case_study_subtitle" style="width: 50%;  font-size: 25px; font-weight: 550;">
-          We've helped departments and clients turn  <span style="color: red;"> scattered data </span> into <span style="color: rgb(0, 184, 0);"> reliable insights</span>, with  <span style="color: rgb(0, 184, 0);">automated pipelines </span> and <span style="color: rgb(0, 184, 0);">clear reporting.</span>
-          Our work spans internal teams and external collaborators alike.
-        </h3>
-      </div>
-    </div>
-    <div class="case_study_container">
-      <div class="flip-card">
-        <div class="flip-card-inner">
-        <div class="flip-card-front" >
-          <img class="flip-card-image" src="/portfolio/images/nonprofit.png">
-          <h3 class="flip-card-header">Non-Profit Orginization</h3>
-
-        </div>
-          <div class="flip-card-back">
-            <h1 class="case_study_card_title">Non-Profit</h1> 
-           <p class="case_study_paragraph1" style="font-size: 25px">
-            The client was managing <span class="problem_text">scattered Excel files & Word-Docs</span> with <span class="problem_text">no real structure</span>.  
-            We organized their data into <span class="solution_text">clean, standardized tables</span>, making it easy to generate <span class="solution_text">reports and dashboards</span>.  
-            They can now track <span class="solution_text">sales, inventory, and customer behavior</span> efficiently.
-          </p>
-          </div>
-        </div>
-      </div>
-      <div class="flip-card">
-        <div class="flip-card-inner">
-          <div class="flip-card-front">
-            <img  class="flip-card-image"src="/portfolio/images/marketing.png">
-            <h3 class="flip-card-header">Marketing</h3>
-          </div>
-          <div class="flip-card-back">
-            <h1 class="case_study_card_title">Marketing Team</h1> 
-           <p class="case_study_paragraph1" style="font-size: 25px">
-            The marketing team relied on <span class="problem_text">multiple social media data sources</span>,  
-            making it <span class="problem_text">difficult to see the full picture</span>.  
-            We pulled and combined all sources into a <span class="solution_text">single, unified location</span>,  
-            allowing the team to easily view <span class="solution_text">trends and correlations across platforms</span>.
-        </p>
-          </div>
-        </div>
-      </div>
-      <div class="flip-card">
-        <div class="flip-card-inner">
-          <div class="flip-card-front">
-            <img class="flip-card-image" src="/portfolio/images/finance.png">
-            <h3 class="flip-card-header">Finance</h3>
-          </div>
-          <div class="flip-card-back">
-            <h1 class="case_study_card_title">Finance Department</h1> 
-            <p class="case_study_paragraph1" style="font-size: 25px">
-            The finance department needed a better way to track <span class="problem_text">employee utilization and billable hours</span> across multiple departments.  
-            We created <span class="solution_text">consolidated Power BI datasets</span>, providing <span class="solution_text">clear, real-time insights</span> into <span class="solution_text">team performance and resource allocation</span>.
-          </p>
-          </div>
-        </div>
-      </div>
-      <div class="flip-card">
-        <div class="flip-card-inner">
-          <div class="flip-card-front">
-            <img class="flip-card-image" src="/portfolio/images/helpdesk.png">
-            <h3 class="flip-card-header">Help Desk</h3>
-          </div>
-          <div class="flip-card-back">
-            <h1 class="case_study_card_title">Help Desk</h1> 
-                <p class="case_study_paragraph1" style="font-size: 25px">
-                The department managed <span class="problem_text">ticketing across 100+ tables</span>, where <span class="problem_text">teams spent hours figuring out which tables to join and chasing others for the right data</span>.  
-                We built <span class="solution_text">automated pipelines</span> that reduced it to <span class="solution_text">10 tables</span>, creating a <span class="solution_text">single source of truth</span> and enabling <span class="solution_text">new reports and actionable insights</span>.
-              </p>
-          </div>
-        </div>
-      </div>
-      <div class="flip-card" >
-        <div class="flip-card-inner">
-          <div class="flip-card-front">
-            <img class="flip-card-image" src="/portfolio/images/sales.png">
-            <h3 class="flip-card-header">Sales</h3>
-          </div>
-          <div class="flip-card-back">
-            <h1 class="case_study_card_title">Sales Team</h1> 
-           <p class="case_study_paragraph1" style="font-size: 25px">
-              The sales team relied on <span class="problem_text">rep quotas</span>-<span class="problem_text">calls, 
-                videos, emails, and first appointments</span>-to determine 
-                <span class="problem_text">bonuses</span> and track performance. Existing 
-                <span class="problem_text">Power BI reports</span> were
-                <span class="problem_text">inaccurate</span>, causing 
-                <span class="problem_text">discrepancies</span>. We replaced them with 
-                <span class="solution_text">automated SQL scripts</span>, ensuring 
-                <span class="solution_text">accurate, consistent reporting</span> through a 
-                <span class="solution_text">staged system</span>.
-            </p>
-          </div>
-        </div>
-      </div>
-      <div class="flip-card">
-        <div class="flip-card-inner">
-          <div class="flip-card-front">
-            <img class="flip-card-image" src="/portfolio/images/internal.png">
-            <h3 class="flip-card-header">Internal</h3>
-          </div>
-          <div class="flip-card-back">
-            <h1 class="case_study_card_title">Internal Dev Team</h1> 
-              <p class="case_study_paragraph1" style="font-size: 25px;">
-                The internal team worked with <span class="problem_text">enormous SQL models</span> to build client apps, making development <span class="problem_text">slow and complex</span>.  
-                We redesigned their workflows with <span class="solution_text">staged pipelines</span>, feeding a <span class="solution_text">structured data lake</span> and <span class="solution_text">definitions table</span>.  
-                This gave them <span class="solution_text">simpler, faster datasets</span>, so apps could be built <span class="solution_text">quicker, cleaner, and more reliable</span>.
-              </p>
-          </div>
-        </div>
-      </div>
-    </div>
-     <section class="testimonial_section" >
-      <div class="scroll-container">
-        <div class="scroll-content">
-          <div class="logos">
-            <img class="carasol_img" src="/portfolio/images/dynamics365.png" />
-            <img  class="carasol_img" src="/portfolio/images/hubspot.png" />
-            <img  class="carasol_img" src="/portfolio/images/salesloft.png" />
-            <img class="carasol_img" src="/portfolio/images/snowflake.png" />
-            <img class="carasol_img" src="/portfolio/images/sharepoint.png" />
-            <img class="carasol_img" src="/portfolio/images/graphapi.png" />
-            <img class="carasol_img" src="/portfolio/images/msft.png" />
-            <img class="carasol_img" src="/portfolio/images/dialpad.png" />
-            <img class="carasol_img" src="/portfolio/images/halopsa.png" />
-            <img class="carasol_img" src="/portfolio/images/airtable.png" />
-            <img class="carasol_img" src="/portfolio/images/surveymonkey.png" />
-            <img class="carasol_img" src="/portfolio/images/cosmos.png" />
-          </div>
-          <div class="logos">
-            <img class="carasol_img" src="/portfolio/images/dynamics365.png" />
-            <img class="carasol_img" src="/portfolio/images/hubspot.png" />
-            <img class="carasol_img" src="/portfolio/images/salesloft.png" />
-            <img class="carasol_img" src="/portfolio/images/snowflake.png" />
-            <img class="carasol_img" src="/portfolio/images/sharepoint.png" />
-            <img class="carasol_img" src="/portfolio/images/graphapi.png" />
-            <img class="carasol_img" src="/portfolio/images/msft.png" />
-            <img class="carasol_img" src="/portfolio/images/dialpad.png" />
-            <img class="carasol_img" src="/portfolio/images/halopsa.png" />
-            <img class="carasol_img" src="/portfolio/images/airtable.png" />
-            <img class="carasol_img" src="/portfolio/images/surveymonkey.png" />
-            <img class="carasol_img" src="/portfolio/images/cosmos.png" />
-          </div>
-        </div>
-      </div>
-    </section>
-
-  </div>
-</div>
-
-<!-- <div style="display: flex; align-items: center; justify-content: center;">
-  <div id="applications" class="main_section1" style="background-color: white; width: 80%;  border-radius: 20px; margin-top: 4%;">
-    <div style=" text-align: center;">
-      <h1 class="section_title" id="section1_maintitle" style=" font-size: 42px; ">APPLICATIONS</h1>
-      <div style="display: flex; justify-content: center;">
-        <h3 class="section_subtitle" id="case_study_subtitle" style="width: 50%;  font-size: 25px; font-weight: 550;">
-            <span style="color: rgb(0, 136, 41);"> Learn & Explore</span> each application to understand how clean data can be used and analyzed!
-
-        </h3>
-      </div>
-    </div>
-    <div class="case_study_container">
-      <div class="flip-card" onclick="window.location='/chicago-transits'" style="cursor: pointer;">
-        <div class="flip-card-inner">
-        <div class="flip-card-front" >
-          <img class="flip-card-image" src="/portfolio/images/livetransits.png">
-          <h3 class="flip-card-header">Chicago Bus Delays</h3>
-
-        </div>
-          <div class="flip-card-back">
-            <h1 class="case_study_card_title">Chicago Bus Delays</h1> 
-           <p class="case_study_paragraph1" style="font-size: 25px">
-           A live dashboard that visualizes bus delays across all Chicago Transit routes and stops. Data updates every 30 minutes, revealing evolving delay trends and patterns.
-          </p>
-          </div>
-        </div>
-      </div>
-      <div class="flip-card" onclick="window.location='/life-of-sounds'" style="cursor: pointer;">
-        <div class="flip-card-inner">
-          <div class="flip-card-front">
-            <img  class="flip-card-image"src="/portfolio/images/lifeofsounds.png">
-            <h3 class="flip-card-header">Life Of Sounds</h3>
-          </div>
-          <div class="flip-card-back">
-            <h1 class="case_study_card_title">Life Of Sounds</h1> 
-           <p class="case_study_paragraph1" style="font-size: 25px">
-           Explore sound visualizations reimagined through the classic Game of Life simulation.
-          </p>
-          </div>
-        </div>
-      </div>
-      <div class="flip-card" onclick="window.location='/game-of-life'" style="cursor: pointer;">
-        <div class="flip-card-inner">
-          <div class="flip-card-front">
-            <img  class="flip-card-image"src="/portfolio/images/gol.png">
-            <h3 class="flip-card-header">Game of Life - Multiplayer</h3>
-          </div>
-          <div class="flip-card-back">
-            <h1 class="case_study_card_title">Game of Life</h1> 
-           <p class="case_study_paragraph1" style="font-size: 25px">
-           Experience Conway's classic Game of Life in a whole new way -
-           Each player can interact with the grid simultaneously, 
-         Experiment and explore emergent patterns together!
-          </p>
-          </div>
-        </div>
-      </div>
-      <div class="flip-card" onclick="window.location='/phrase-matching'" style="cursor: pointer;">
-        <div class="flip-card-inner">
-          <div class="flip-card-front">
-            <img  class="flip-card-image"src="/portfolio/images/ga.png">
-            <h3 class="flip-card-header">Phrase Matching - AI</h3>
-          </div>
-          <div class="flip-card-back">
-            <h1 class="case_study_card_title">Genetic Algorithims - Phrase Matching</h1> 
-           <p class="case_study_paragraph1" style="font-size: 25px">
-            Experiment building your own AI model utilzing a reinforcement techinique called Genetic Algorithims. This is a simple application that handles matching the target phrase using the 
-            same steps found in evolution. 
-          </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div> -->
-
-<section class="testimonial_section" style="margin-top: 2%; text-align: center; padding: 3rem 1rem; color: white; background-color: #04343522; border-radius: 5px;">
-<blockquote class="quote" style="position: relative; font-size: 2.2rem; font-style: italic; max-width: 900px; margin: 0 auto; line-height: 1.5; text-align: justify; padding: 2rem 2.5rem; color: #fff;">
-  <span class="quotation_mark"> "</span> Daniel excels at <span style="color: #dd5050;">end-to-end data architecture</span> - handling everything from extraction and storage to transformation, loading, and visualization in Microsoft Fabric and Power BI.<span class="quotation_mark">"</span>
-</blockquote>
-
-
-  <p class="quote_from" style="margin-top: 1.3rem; font-size: 1.8em; color: #5aa1f2;">
-    - Alex Serlovsky, Data Engineer
-  </p>
 </section>
 
-<div style="display: flex; align-items: center; justify-content: center;">
-  <div style=" width: 100%;  border-radius: 20px; margin-top: 4%;">
-    <div id="formview" class="submit_form" style="display: flex; justify-content: center;  text-align: center;">
-      <div class="form_1" style="background-color: rgba(0, 0, 0, 0.105); text-align: center; width: 50%; ">
-          <h1 class="footer_title" style="font-size: 3em; text-align: center; margin-top: 10%; padding: 5%; color: white;">Your Path To Clean Data Starts Here</h1>
-          <h2 class="footer_subtitle" style=" font-size: 2em; color: white"><span style="color: rgb(255, 255, 255);">Book a <strong style="font-weight: 800; color: rgb(2, 196, 2);">free</strong> consulting call</span> </h2>
-          <hr style="width: 50%;">
-          <h2  class="footer_subtitle" style=" font-size: 2em; color: white;">Get a response within <span style="color: rgba(255, 0, 0, 0.768);">1 business day.</span> </h2>
-      </div>
-      <div class="form_1"  style="background-color: rgba(0, 0, 0, 0.105);  width: 50%; padding: 2%; display: flex; flex-direction: column; gap: 1rem;">
-         <form id="my-form" method="post" action="#" >
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
-            <input  name="company_name" type="text" placeholder="Company Name"  style="font-size: 1.2em; padding: 0.6em; width: 100%; background-color: #043435; color: white;">
-            <input name="company_email" type="email" placeholder="Company Email*" required  style="font-size: 1.2em; padding: 0.6em; width: 100%;  background-color: #043435; color: white;">
-            <input name="first_name" type="text" placeholder="First Name*" required style="font-size: 1.2em; padding: 0.6em; width: 100%;   background-color: #043435; color: white;">
-            <input name="last_name" type="text" placeholder="Last Name*" required style="font-size: 1.2em; padding: 0.6em; width: 100%;  background-color: #043435; color: white;">
-            <input name="phone" type="text" placeholder="Phone Number"  style="font-size: 1.2em; padding: 0.6em; width: 100%;  background-color: #043435; color: white;">
-        </div>
-        <textarea name="project_details" rows="10" placeholder="Provide any details we should know about your project..." style="width: 100%; margin-top: 10px; padding: 0.6em; font-size: 1.2em;  background-color: #043435; color: white;"></textarea>
-        <button  type="submit"  style="width: 100%;" id="send_button"  class="buttons">Send</button>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
-<footer class="footer" style="padding: 3em 1em; background-color: rgb(1, 1, 1); text-align: center; margin-top: 1px;">
-  <h2 style="margin: 0 0 0.5em 0; font-size: 1.8em; color: #ffffff; font-family: 'Alegreya SC', serif;">
-    Palacios Solutions
-  </h2>
-  <div style="margin: 1em 0;">
-    <img src="/portfolio/images/profile.png" alt="Profile" style="width: 120px; border-radius: 50%; border: 3px solid #fff; display: block; margin: 0 auto;">
-    <p style="margin: 0.5em 0 0; font-size: 1.2em; color: #ffffff;">
-      Daniel Palacios - Data Engineer
-    </p>
-    <p style="margin: 0.5em 0 0; font-size: 1.2em; color: #ffffff;">
-      danieldario@palacios-solutions.com
-    </p>
-  </div>
-  <p style="margin: 1.2em 0 0.5em 0; font-size: 1.2em; color: #ffffff;">
-    Connect with me on LinkedIn:
-  </p>
-  <a href="https://www.linkedin.com/in/palacios-solutions" target="_blank" 
-     style="color: #0077B5; font-size: 2em; margin: 0 0.5em; text-decoration: none;">
-    <i class="fab fa-linkedin"></i>
-  </a>
 
-</footer>
-</body>
+<!-- ========================= WHO WE HELP ========================= -->
+<section id="who-we-help" class="section container"
+         style="display:flex; flex-wrap:wrap; align-items:stretch; gap:3em; padding:3em; border-radius:20px;">
+
+  <!-- IMAGE -->
+  <div style="flex:1.2; min-width:330px; overflow:hidden; border-radius:16px;">
+    <img src="/portfolio/images/sales.png"
+         alt="Collaboration team"
+         style="width:100%; height:100%; object-fit:cover; display:block;">
+  </div>
+
+  <!-- TEXT -->
+  <div style="flex:1; min-width:280px; display:flex; flex-direction:column; justify-content:center;">
+
+    <!-- Accent Tag -->
+    <div style="
+      display:inline-block;
+      background:linear-gradient(135deg,#2b6cb0,#3f8de1);
+      color:#fff;
+      padding:0.45em 1em;
+      border-radius:40px;
+      font-size:0.9rem;
+      font-weight:600;
+      letter-spacing:0.4px;
+      margin-bottom:1.2em;">
+      Our Clients
+    </div>
+
+    <!-- Gradient Header -->
+    <h3 style="
+      margin:0 0 0.4em 0;
+      font-size:2rem;
+      font-weight:800;
+      background:linear-gradient(135deg,#1a2b4e,#3a7bd5);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;">
+      Who We Help
+    </h3>
+
+    <!-- Short Intro -->
+    <p style="color:#5d6f85; font-size:1.15rem; margin:0.5em 0 1.2em;">
+      We partner with teams that need clearer visibility, faster reporting, and automated systems they can rely on.
+    </p>
+
+    <!-- List -->
+    <ul style="color:#4a5568; font-size:1.2rem; line-height:1.7; padding-left:1.2em;">
+      <li>Business managers needing real performance visibility</li>
+      <li>Small business owners overwhelmed by manual reporting</li>
+      <li>Department leads responsible for KPIs, forecasting, and planning</li>
+      <li>Teams stuck in spreadsheet-heavy reporting cycles</li>
+    </ul>
+  </div>
+
+</section>
+
+
+<section id="automation" class="section container"
+         style="display:flex; flex-wrap:wrap; align-items:center; gap:3em; padding:3em; border-radius:20px;">
+
+  <!-- TEXT BLOCK -->
+  <div style="flex:1; min-width:300px;">
+
+    <!-- Accent Tag -->
+    <div style="
+      display:inline-block;
+      background:linear-gradient(135deg,#2b6cb0,#3f8de1);
+      color:#fff;
+      padding:0.45em 1em;
+      border-radius:40px;
+      font-size:0.9rem;
+      font-weight:600;
+      letter-spacing:0.4px;
+      margin-bottom:1.2em;">
+      Automation First
+    </div>
+
+    <!-- Gradient Header -->
+    <h3 style="
+      margin:0 0 0.4em 0;
+      font-size:2rem;
+      font-weight:800;
+      background:linear-gradient(135deg,#1a2b4e,#3a7bd5);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;">
+      How We Deliver Automation
+    </h3>
+
+    <!-- Intro Copy -->
+    <p style="font-size:1.15rem; color:#5d6f85; line-height:1.75; margin-top:1em;">
+      We design automated data workflows that eliminate manual reporting forever. Power Query and Power BI
+      act as the transformation engines — but the core service is automation, not licensing.
+    </p>
+
+    <p style="font-size:1.15rem; color:#5d6f85; margin-top:1em;">
+      If you prefer not to use Power BI licenses, we can still deliver fully automated outputs:
+    </p>
+
+    <!-- Bullet List -->
+    <ul style="font-size:1.15rem; color:#4a5568; line-height:1.75; padding-left:1.2em; margin-top:0.5em;">
+      <li>Static reports exported automatically</li>
+      <li>Automated Excel or CSV output files</li>
+      <li>PDF dashboards refreshed on schedule</li>
+      <li>Internal workflow automations (no BI viewer required)</li>
+    </ul>
+
+    <!-- Licensing Clarification -->
+    <p style="font-size:1.15rem; color:#5d6f85; margin-top:1.2em;">
+      For interactive dashboards, Power BI Pro is the most affordable and scalable option at $14/user/month.
+    </p>
+
+    <!-- Power BI Link -->
+    <p style="font-size:1rem; margin-top:0.6em;">
+      <a href="https://powerbi.microsoft.com" target="_blank" 
+         style="color:#1a73e8; text-decoration:none; font-weight:600;">
+        Learn more about Microsoft Power BI →
+      </a>
+    </p>
+  </div>
+
+  <!-- IMAGE BLOCK -->
+  <div style="flex:1; min-width:300px; overflow:hidden; border-radius:16px;">
+    <img src="/portfolio/images/auto.png"
+         alt="Automation workflow illustration"
+         style="width:100%; height:100%; object-fit:cover;">
+  </div>
+
+</section>
+
+<!-- ========================= VALUE DELIVERED ========================= -->
+<section id="value" class="section container"
+         style="display:flex; flex-wrap:wrap; align-items:stretch; gap:3em; padding:3em; border-radius:20px;">
+
+  <!-- IMAGE -->
+  <div style="flex:1; min-width:300px; overflow:hidden; border-radius:18px;">
+    <img src="/portfolio/images/team.png"
+         alt="Data value illustration"
+         style="width:100%; height:100%; object-fit:cover; display:block;">
+  </div>
+
+  <!-- TEXT CONTENT -->
+  <div style="flex:1; min-width:300px; display:flex; flex-direction:column; justify-content:center;">
+
+    <!-- Accent Tag -->
+    <div style="
+      display:inline-block;
+      background:linear-gradient(135deg,#3182ce,#63b3ed);
+      color:#fff;
+      padding:0.45em 1em;
+      border-radius:40px;
+      font-size:0.85rem;
+      font-weight:600;
+      letter-spacing:0.4px;
+      margin-bottom:1.2em;">
+      Impact
+    </div>
+
+    <!-- Gradient Title -->
+    <h3 style="
+      margin:0;
+      font-size:2rem;
+      font-weight:800;
+      background:linear-gradient(135deg,#1a2b4e,#3a7bd5);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      margin-bottom:1em;">
+      The Value We Deliver
+    </h3>
+
+    <!-- Bullet List -->
+    <ul style="color:#5b6b7f; font-size:1.2rem; line-height:1.75; padding-left:1.2em;">
+      <li><strong>Save Time:</strong> Automate the workflows that steal hours every week.</li>
+      <li><strong>Increase Clarity:</strong> Replace messy spreadsheets with a single source of truth.</li>
+      <li><strong>Make Faster Decisions:</strong> Real-time reporting means your team never waits for answers.</li>
+      <li><strong>Build Trust:</strong> Reliable data systems reduce errors, uncertainty, and rework.</li>
+    </ul>
+
+  </div>
+
+</section>
+
+
+
+
+
+
+<!-- ========================= CASE STUDIES ========================= -->
+<section id="case-studies" class="section container" style="padding:3.5em; border-radius:20px;">
+
+  <!-- Title -->
+  <div style="text-align:center; margin-bottom:2em; max-width:800px; margin-left:auto; margin-right:auto;">
+
+    <!-- Accent Tag -->
+    <div style="
+      display:inline-block;
+      background:linear-gradient(135deg,#2b6cb0,#63b3ed);
+      color:#fff;
+      padding:0.45em 1em;
+      border-radius:40px;
+      font-size:0.85rem;
+      font-weight:600;
+      letter-spacing:0.4px;
+      margin-bottom:1.2em;">
+      Real Results
+    </div>
+
+    <!-- Gradient Header -->
+    <h3 style="
+      margin:0;
+      font-size:2.3rem;
+      font-weight:800;
+      background:linear-gradient(135deg,#1a2b4e,#3a7bd5);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;">
+      Case Studies
+    </h3>
+
+    <p style="font-size:1.2rem; color:#5d6f85; margin-top:0.8em;">
+      A few examples of how automated reporting pipelines transformed operations, clarified decision-making, 
+      and eliminated hours of manual reporting.
+    </p>
+  </div>
+
+  <!-- ====================== CASE STUDY 1 ====================== -->
+<!-- EMPLOYEE UTILIZATION CASE STUDY -->
+<section class="section container"
+         style="
+           border-radius:20px; 
+           padding:2.5em;
+           box-shadow:0 8px 28px rgba(0,0,0,0.08);
+           margin-bottom:3em;
+           background:#ffffff;
+         ">
+
+  <h4 style="
+      font-size:1.9rem; 
+      font-weight:800; 
+      margin-bottom:1em; 
+      color:#14233b;
+      letter-spacing:-0.5px;
+      text-align:center;
+  ">
+    Employee Utilization Dashboard
+  </h4>
+
+  <!-- IMAGE TOP -->
+   <div style="
+  text-align:center;
+  font-size:0.95rem;
+  color:#6b7a90;
+  margin-top:0.6em;
+  font-style:italic;
+">
+  Click to enlarge image
+</div>
+
+  <div style="
+      width:100%;
+      border-radius:16px;
+      overflow:hidden;
+      background:#f9fbfe;
+      padding:1em;
+      margin-bottom:2em;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+  ">
+<img src="/portfolio/images/utilization.png"
+     alt="Employee Utilization Dashboard"
+     onclick="openImageModal(this.src)"
+     style="
+        width:100%;
+        height:auto;
+        max-height:700px;
+        object-fit:contain;
+        border-radius:14px;
+        cursor:pointer;
+        box-shadow:0 6px 20px rgba(0,0,0,0.06);
+     ">
+     
+
+  </div>
+
+  <!-- TEXT -->
+<div style="max-width:900px; margin:0 auto;">
+
+  <p style="color:#5a6b82; font-size:1.15rem; line-height:1.75; margin-bottom:1.1em;">
+    <strong style="color:#1f3c88;">Problem:</strong>
+    All employee time data came from <em>multiple unrelated software systems</em> — PTO, labor hours,
+    internal project time, and billable work — each using different structures, naming conventions,
+    and reporting rules.  
+    Managers could not reliably calculate utilization because nothing tied together cleanly,
+    and every report required heavy manual cleanup just to get a monthly snapshot.
+  </p>
+
+<p style="color:#5a6b82; font-size:1.15rem; line-height:1.75; margin-bottom:1.1em;">
+  <strong style="color:#1f3c88;">Solution:</strong>
+  Built a unified utilization model by:
+  <br>• integrating PTO systems, labor-hour exports, and internal project logs  
+  <br>• transforming inconsistent fields, timestamps, and employee identifiers  
+  <br>• engineering logic to classify all hours as <strong>billable vs. internal</strong>  
+  <br>• creating utilization, billable ratios, and capacity KPIs  
+  <br><br>
+  Power Query handled the semantic modeling, but the heavy ETL was automated through 
+  <strong>Azure Pipelines</strong>, which pulled, cleaned, merged, and delivered refreshed datasets 
+  on a daily schedule.
+</p>
+
+
+  <p style="color:#5a6b82; font-size:1.15rem; line-height:1.75;">
+    <strong style="color:#1f3c88;">Result:</strong>
+    Leadership finally has a reliable, real-time view of employee utilization — not just total hours,
+    but how much time is spent on <strong>billable work vs. internal or non-revenue activities</strong>.  
+    Managers can spot under-utilization earlier, adjust staffing proactively, and eliminate the hours
+    previously spent reconciling inconsistent time systems.
+  </p>
+
+</div>
+
+
+</section>
+
+<!-- NPS SURVEYS CASE STUDY -->
+<section class="section container"
+         style="
+           border-radius:20px; 
+           padding:2.5em;
+           box-shadow:0 8px 28px rgba(0,0,0,0.08);
+           margin-bottom:3em;
+           background:#ffffff;
+         ">
+
+  <h4 style="
+      font-size:1.9rem; 
+      font-weight:800; 
+      margin-bottom:1em; 
+      color:#14233b;
+      letter-spacing:-0.5px;
+      text-align:center;
+  ">
+    NPS Survey Analytics Automation
+  </h4>
+
+  <!-- IMAGE TOP -->
+   <div style="
+  text-align:center;
+  font-size:0.95rem;
+  color:#6b7a90;
+  margin-top:0.6em;
+  font-style:italic;
+">
+  Click to enlarge image
+</div>
+
+  <div style="
+      width:100%;
+      border-radius:16px;
+      overflow:hidden;
+      background:#f9fbfe;
+      padding:1em;
+      margin-bottom:2em;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+  ">
+    <img src="/portfolio/images/surveys.png"
+         alt="NPS Survey Dashboard"
+         onclick="openImageModal(this.src)"
+         style="
+            width:100%;
+            height:auto;
+            max-height:700px;
+            object-fit:contain;
+             cursor:pointer;
+            border-radius:14px;
+            box-shadow:0 6px 20px rgba(0,0,0,0.06);
+         ">
+  </div>
+
+  <!-- TEXT -->
+  <div style="max-width:900px; margin:0 auto;">
+
+    <p style="color:#5a6b82; font-size:1.15rem; line-height:1.75; margin-bottom:1.1em;">
+      <strong style="color:#1f3c88;">Problem:</strong>
+      The company collected customer feedback across multiple systems, including SQL and Cosmos DB.  
+      The data structure was inconsistent, messy, and difficult to interpret.  
+      Leaders had no unified view of customer sentiment and no reliable way to identify trends or drivers behind score changes.
+    </p>
+
+    <p style="color:#5a6b82; font-size:1.15rem; line-height:1.75; margin-bottom:1.1em;">
+      <strong style="color:#1f3c88;">Solution:</strong>
+      Built a complete automated ingestion pipeline that:
+      <br>• pulled survey responses from SQL and Cosmos  
+      <br>• cleaned and normalized the structures  
+      <br>• filtered the correct survey types  
+      <br>• transformed free-text answers into analyzable fields  
+      <br>• engineered NPS scores, sentiment, and segmentation  
+      All processed into a clean model ready for reporting.
+    </p>
+
+    <p style="color:#5a6b82; font-size:1.15rem; line-height:1.75;">
+      <strong style="color:#1f3c88;">Result:</strong>
+      The company gained a real-time, organization-wide NPS dashboard.  
+      Customer sentiment insights became visible daily, and leadership distributed the report to the entire company — improving transparency and accelerating responses to customer issues.  
+      Manual processing dropped by more than 90%.
+    </p>
+
+  </div>
+
+</section>
+
+
+<!-- SALES QUOTA TRACKER CASE STUDY -->
+<section class="section container"
+         style="
+           border-radius:20px; 
+           padding:2.5em;
+           box-shadow:0 8px 28px rgba(0,0,0,0.08);
+           margin-bottom:3em;
+           background:#ffffff;
+         ">
+
+  <h4 style="
+      font-size:1.9rem; 
+      font-weight:800; 
+      margin-bottom:1em; 
+      color:#14233b;
+      letter-spacing:-0.5px;
+      text-align:center;
+  ">
+    Sales Quota Performance Tracker
+  </h4>
+<div style="
+  text-align:center;
+  font-size:0.95rem;
+  color:#6b7a90;
+  margin-top:0.6em;
+  font-style:italic;
+">
+  Click to enlarge image
+</div>
+
+  <!-- IMAGE TOP -->
+  <div style="
+      width:100%;
+      border-radius:16px;
+      overflow:hidden;
+      background:#f9fbfe;
+      padding:1em;
+      margin-bottom:2em;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+  ">
+    <img src="/portfolio/images/salesdash.png"
+         alt="Sales Quota Tracker Dashboard"
+          onclick="openImageModal(this.src)"
+         style="
+            width:100%;
+            height:auto;
+            max-height:700px;
+            object-fit:contain;
+            border-radius:14px;
+             cursor:pointer;
+            box-shadow:0 6px 20px rgba(0,0,0,0.06);
+         ">
+  </div>
+
+  <!-- TEXT -->
+  <div style="max-width:900px; margin:0 auto;">
+
+<p style="color:#5a6b82; font-size:1.15rem; line-height:1.75; margin-bottom:1.1em;">
+  <strong style="color:#1f3c88;">Problem:</strong>
+  Sales performance data was scattered across multiple systems — phone activity logs, CRM exports, 
+  quota files, and pipeline tracking tools. None of these systems talked to each other.  
+  Managers were relying on manual spreadsheets without a reliable way to see how daily activity 
+  connected to quota attainment or pacing.
+</p>
+
+<p style="color:#5a6b82; font-size:1.15rem; line-height:1.75; margin-bottom:1.1em;">
+  <strong style="color:#1f3c88;">Solution:</strong>
+  Consolidated all sales activity sources into a unified dataset by:
+  <br>• integrating phone-call data, CRM opportunity stages, quota assignments, and rep activity logs  
+  <br>• normalizing inconsistent identifiers across systems  
+  <br>• aggregating daily activity into rep-level performance metrics  
+  <br>• engineering pacing logic, attainment calculations, and forecasting KPIs  
+  <br><br>
+  Azure Pipelines automated the ETL process, ensuring all sources refreshed together and fed a single 
+  clean model for quota tracking.
+</p>
+
+<p style="color:#5a6b82; font-size:1.15rem; line-height:1.75;">
+  <strong style="color:#1f3c88;">Result:</strong>
+  Sales leadership gained a real-time, unified view of performance, enabling earlier detection of 
+  underperformance and more accurate coaching. Manual reporting was eliminated entirely, and quota 
+  pacing became reliable for the first time.
+</p>
+
+
+  </div>
+
+</section>
+
+
+
+
+<!-- 
+  CASE STUDIES GRID
+  <div class="case-studies" style="margin-top:3em; gap:2.5em;">
+
+    <div class="case-study" style="border-radius:18px; padding:2em; border:1px solid #e2e8f0;">
+      <img src="/portfolio/images/utilization.png" alt="Employee Utilization Dashboard"
+           style="border-radius:14px; margin-bottom:1.2em;">
+      <h4 style="font-size:1.5rem; font-weight:700; margin-bottom:0.5em;">Employee Utilization Dashboard</h4>
+      <p style="color:#4a5568;"><strong>Problem:</strong> Managers were manually merging data from hundreds of small tables across different software systems to understand employee utilization. This process was time-consuming and prone to errors, making it difficult to get a real-time view of resource allocation.</p>
+      <p style="color:#4a5568;"><strong>Solution:</strong> We created an automated pipeline that pulled data from all these disparate sources, applied the necessary transformations, and built a unified utilization model in Power BI. We integrated data from multiple software platforms, ensuring that all the necessary relationships and metrics were in place.</p>
+      <p style="color:#4a5568;"><strong>Result:</strong> Better staffing decisions, reduced burnout risk, and improved team productivity.</p>
+    </div>
+
+    <div class="case-study" style="border-radius:18px; padding:2em; border:1px solid #e2e8f0;">
+      <img src="/portfolio/images/salesdash.png" alt="Sales Quota Tracker Dashboard"
+           style="border-radius:14px; margin-bottom:1.2em;">
+      <h4 style="font-size:1.5rem; font-weight:700; margin-bottom:0.5em;">Sales Quota Tracker</h4>
+      <p style="color:#4a5568;"><strong>Problem:</strong> Sales managers lacked real-time visibility into quota performance and relied heavily on manual reports.</p>
+      <p style="color:#4a5568;"><strong>Solution:</strong> Automated a live quota tracker with pacing, variance analysis, rep-level performance, and forecasting.</p>
+      <p style="color:#4a5568;"><strong>Result:</strong> Faster interventions, stronger coaching insights, and earlier identification of performance gaps.</p>
+    </div>
+
+    <div class="case-study" style="border-radius:18px; padding:2em; border:1px solid #e2e8f0;">
+      <img src="/portfolio/images/surveys.png" alt="Company NPS Dashboard"
+           style="border-radius:14px; margin-bottom:1.2em;">
+      <h4 style="font-size:1.5rem; font-weight:700; margin-bottom:0.5em;">Company NPS Survey Insights</h4>
+      <p style="color:#4a5568;"><strong>Problem:</strong> Feedback was scattered across tools, making it difficult to identify trends or root causes behind customer sentiment changes.</p>
+      <p style="color:#4a5568;"><strong>Solution:</strong> Automated NPS ingestion, sentiment tagging, segmentation, and driver analysis.</p>
+      <p style="color:#4a5568;"><strong>Result:</strong> 90% reduction in manual processing and clearer insights that guided actions improving customer satisfaction.</p>
+    </div>
+
+  </div> -->
+</section>
+
+
+<!-- ========================= PRICING ========================= -->
+<section id="pricing" class="section container" style="padding:3em; border-radius:20px;">
+
+  <!-- Accent Tag -->
+  <div style="
+    display:inline-block;
+    background:linear-gradient(135deg,#2b6cb0,#63b3ed);
+    color:#fff;
+    padding:0.45em 1em;
+    border-radius:40px;
+    font-size:0.85rem;
+    font-weight:600;
+    letter-spacing:0.4px;
+    margin-bottom:1.2em;">
+    Simple & Transparent Pricing
+  </div>
+
+  <!-- Gradient Header -->
+  <h3 style="
+    margin-top:0;
+    font-size:2.3rem;
+    font-weight:800;
+    background:linear-gradient(135deg,#1a2b4e,#3a7bd5);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    margin-bottom:0.8em;">
+    Pricing
+  </h3>
+
+  <!-- Intro Copy -->
+<p style="font-size:1.2rem; color:#5d6f85; line-height:1.75; max-width:800px;">
+  Every project is scoped based on the complexity of the work required—data preparation,
+  modeling, automation logic, visual design, and integration across multiple systems.
+  Instead of hourly billing, each deliverable is classified as low, medium, or high complexity
+  depending on the effort involved.
+</p>
+
+<p style="font-size:1.2rem; color:#5d6f85; margin-top:1em; max-width:800px;">
+  This ensures transparent, predictable pricing and allows you to know exactly what you're paying for
+  before any work begins—no surprises, no hourly overages, and full clarity into how your solution is built.
+</p>
+
+
+  <!-- Pricing Table -->
+   <div class="pricing-table-desktop">
+    <table style="margin-top:2em;">
+      <thead>
+        <tr>
+          <th>Complexity</th>
+          <th>Description</th>
+          <th>Estimated Price Range</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Low</td>
+          <td>Basic transformations, simple data prep, or individual visual updates</td>
+          <td>$75 – $225</td>
+        </tr>
+        <tr>
+          <td>Medium</td>
+          <td>Multi-source preparation, modeling, automated outputs, or full-page visuals</td>
+          <td>$225 – $375</td>
+        </tr>
+        <tr>
+          <td>High</td>
+          <td>Complex integrations, heavy automation logic, advanced calculations, or full dashboards</td>
+          <td>$600+</td>
+        </tr>
+      </tbody>
+    </table>
+</div>
+<div class="pricing-table-mobile">
+  
+  <div class="pricing-card">
+    <h4>Low</h4>
+    <p>Basic transformations, simple data prep, or individual visual updates</p>
+    <strong>$75 – $225</strong>
+  </div>
+
+  <div class="pricing-card">
+    <h4>Medium</h4>
+    <p>Multi-source preparation, modeling, automated outputs, or full-page visuals</p>
+    <strong>$225 – $375</strong>
+  </div>
+
+  <div class="pricing-card">
+    <h4>High</h4>
+    <p>Complex integrations, heavy automation logic, advanced calculations, or full dashboards</p>
+    <strong>$600+</strong>
+  </div>
+
+</div>
+
+<!-- Example Block -->
+<div style="
+    background:#f7fafc;
+    padding:1.5em 2em;
+    border-radius:16px;
+    margin-top:2em;
+    border-left:6px solid #2b6cb0;">
+  <p style="font-size:1.15rem; color:#4a5568; margin:0;">
+    <strong>Example:</strong>  
+    A typical dashboard consists of a mix of low, medium, and high-complexity tasks.
+    Your quote includes a clear breakdown of each task category and an estimated
+    price range for the project 
+    <strong>before any work begins.</strong>
+  </p>
+</div>
+
+
+  <a href="#contact-form" class="cta-button" style="margin-top:2em; display:inline-block;">
+    Get Your Fixed Quote
+  </a>
+</section>
+
+
+<!-- ========================= CONTACT FORM ========================= -->
+<section id="contact-form" class="section container" style="padding:3em; border-radius:20px;">
+
+  <!-- Accent Tag -->
+  <div style="
+    display:inline-block;
+    background:linear-gradient(135deg,#2b6cb0,#63b3ed);
+    color:#fff;
+    padding:0.45em 1em;
+    border-radius:40px;
+    font-size:0.85rem;
+    font-weight:600;
+    letter-spacing:0.4px;
+    margin-bottom:1.2em;">
+    Get in Touch
+  </div>
+
+  <!-- Gradient Header -->
+  <h3 style="
+    margin-top:0;
+    font-size:2.3rem;
+    font-weight:800;
+    background:linear-gradient(135deg,#1a2b4e,#3a7bd5);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    margin-bottom:0.5em;">
+    Contact Us
+  </h3>
+
+  <p style="font-size:1.2rem; color:#5d6f85; max-width:700px; margin-bottom:1.8em;">
+    Tell us about your reporting challenges or automation goals.  
+    We’ll reply within <strong>24 hours</strong> with next steps.
+  </p>
+
+  <form id="my-form" style="display:flex; flex-direction:column; gap:1.4em;">
+
+    <!-- Row 1: Name -->
+    <div style="display:flex; flex-wrap:wrap; gap:1em;">
+      <input type="text" name="first_name" placeholder="First Name" required
+             style="flex:1; min-width:200px; padding:14px; border-radius:12px; border:1px solid #d0d7e0; font-size:1.05rem;">
+      <input type="text" name="last_name" placeholder="Last Name" required
+             style="flex:1; min-width:200px; padding:14px; border-radius:12px; border:1px solid #d0d7e0; font-size:1.05rem;">
+    </div>
+
+    <!-- Row 2: Email & Phone -->
+    <div style="display:flex; flex-wrap:wrap; gap:1em;">
+      <input type="email" name="company_email" placeholder="Email" required
+             style="flex:1; min-width:200px; padding:14px; border-radius:12px; border:1px solid #d0d7e0; font-size:1.05rem;">
+      <input type="text" name="phone" placeholder="Phone (Optional)"
+             style="flex:1; min-width:200px; padding:14px; border-radius:12px; border:1px solid #d0d7e0; font-size:1.05rem;">
+    </div>
+
+    <!-- Company Name -->
+    <input type="text" name="company_name" placeholder="Company Name (Optional)"
+           style="padding:14px; border-radius:12px; border:1px solid #d0d7e0; font-size:1.05rem;">
+
+    <!-- Project Details -->
+    <textarea 
+      name="project_details"
+      placeholder="Describe the reporting problems you're facing or what you'd like to automate."
+      rows="6"
+      required
+      style="padding:14px; border-radius:12px; border:1px solid #d0d7e0; font-size:1.05rem; resize:vertical;">
+    </textarea>
+
+    <!-- Submit Button -->
+    <button id="send_button" type="submit"
+            style="
+              background:linear-gradient(135deg,#2b6cb0,#3f8de1);
+              color:#fff;
+              border:none;
+              padding:1em 2em;
+              border-radius:14px;
+              font-size:1.25rem;
+              font-weight:700;
+              cursor:pointer;
+              width:260px;
+              transition:0.25s ease;">
+      Send Message
+    </button>
+  </form>
+</section>
+
+<!-- STICKY BUTTON -->
+<a href="#contact-form" class="sticky-contact">Contact Us</a>
+
+
+<!-- FORM JS -->
 <script src="form.js"></script>
 <script>
-
-function scrollToView(id) {
-        if (id.includes("view_applications")){
-          document.getElementById("applications").scrollIntoView({ behavior: "smooth" });
-        }
-        if (id.includes("phonenav_")){
-          document.getElementById("why_choose_us").scrollIntoView({ behavior: "smooth" });
-        }
-        if (id == "company_name"){
-          document.getElementById("why_choose_us").scrollIntoView({ behavior: "smooth" });
-          
-        }
-        if (id == "lets_talk" || id == 'free_call'){
-          document.getElementById("formview").scrollIntoView({ behavior: "smooth" });
-        }
-}
+document.getElementById("mobile-menu-button").onclick = function () {
+  const menu = document.getElementById("mobile-menu");
+  menu.style.display = menu.style.display === "block" ? "none" : "block";
+};
 </script>
+<!-- Image Modal -->
+<div id="imageModal" style="
+    display:none;
+    position:fixed;
+    z-index:9999;
+    left:0; top:0;
+    width:100%; height:100%;
+    background:rgba(0,0,0,0.85);
+    backdrop-filter:blur(3px);
+    justify-content:center;
+    align-items:center;
+">
+  <img id="modalImg" src="" style="
+      max-width:90%;
+      max-height:90%;
+      border-radius:12px;
+      box-shadow:0 8px 30px rgba(0,0,0,0.5);
+      object-fit:contain;
+  ">
+</div>
 
 <script>
-let lastScroll = 0;
-const topnav = document.querySelector('.phonenav');
-const mainnav = document.querySelector('.topnav');
+function openImageModal(src) {
+  const modal = document.getElementById("imageModal");
+  const modalImg = document.getElementById("modalImg");
+  modal.style.display = "flex";
+  modalImg.src = src;
+}
 
-window.addEventListener('scroll', () => {
-  const currentScroll = window.pageYOffset;
-
-  if (currentScroll <= 0) {
-    topnav.style.top = '0';
-    mainnav.style.top = '0';
-    return;
-  }
-
-  if (currentScroll > lastScroll) {
-    topnav.style.top = '-100px'; 
-    mainnav.style.top = '-100px'; 
-  } else {
-    topnav.style.top = '0';
-    mainnav.style.top = '0';
-  }
-
-  lastScroll = currentScroll;
-});
-
-const observer = new IntersectionObserver(entries => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
-    } else {
-      entry.target.classList.remove('visible');
-    }
-  });
-}, { threshold: 0.1 });
-
-const fadeElements = document.querySelectorAll(
-  '.quote, .phone_intro, .pain-point, .desktop_intro'
-);
-
-fadeElements.forEach(el => {
-  el.classList.add('fade-up'); 
-  observer.observe(el);
-});
-
-const listObserver = new IntersectionObserver(entries => {
-  entries.forEach(entry => {
-    const list = entry.target;
-    if (entry.isIntersecting) {
-      list.classList.add('visible');
-    } else {
-      list.classList.remove('visible');
-    }
-  });
-}, { threshold: 0.1 });
-
-document.querySelectorAll('.painpoints_list').forEach(list => {
-  listObserver.observe(list);
-});
+document.getElementById("imageModal").onclick = function () {
+  this.style.display = "none";
+};
 </script>
 
+</body>
 </html>

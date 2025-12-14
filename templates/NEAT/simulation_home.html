@@ -406,74 +406,7 @@ table th, table td {
 </style>
 </head>
 <body>
-
-  
-<div class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-        <h3>Activities</h3>
-    </div>
-    <div class="sidebar-buttons">
-        <button id="import_activity" class="create_operator buttons">Create Import</button>
-        <button id="filter_activity" class="create_operator buttons">Create Filter</button>
-        <button id="export_activity" class="create_operator buttons">Create Export</button>
-        <button id="aggregate_activity" class="create_operator buttons">Create Aggregate</button>
-        <button id="join_activity" class="create_operator buttons">Create Join</button>
-        <button id="custom_activity" class="create_operator buttons">Create Custom</button>
-        <button id="replace_activity" class="create_operator buttons">Replace Value</button>
-        <button id="split_activity" class="create_operator buttons">Split Value</button>
-        <button id="select_activity" class="create_operator buttons">Select</button>
-        <button id="sort_activity" class="create_operator buttons">Sort</button>
-    </div>
-</div>
-
-  <div class="content-wrapper">
-    <div class="content">
-      	 <div id="chart_container">
-					 <canvas id="visualizer" style="width: 100%; height: 100%; background-color: black;"></canvas>
-
-	      </div> 
-    </div>
-
-    <div class="footer" id="footer" style="overflow-x: hidden; overflow-y: hidden;">
-      <div class="resize-handle" id="resizeHandle"> <img src="/etl/images/drag.png" width="50" height="50"></div>
-	  		<div class="navbar" style=" padding: 20px; z-index: 1000; background-color: whitesmoke;   border: 1px solid rgb(255, 255, 255); width: 100%; display: flex; flex-direction: row; gap: 50px;">
-				<div class="tab", id="tab_btn_group">
-				<button class="tablinks" onclick="openCity(event, 'London')">General</button>
-				<button class="tablinks" onclick="openCity(event, 'Paris')">Innovations</button>
-				<button class="tablinks" onclick="openCity(event, 'data_preview')">Data Preview</button>
-				</div>
-				
-
-			</div>
-			<div id="London" class="tabcontent" style="display: flex; flex-direction: column; gap: 30px;">
-				<div id="operator_properties" style="display: flex; flex-direction: column;;">
-					<label style="font-size: 20px; color: black" for="operator_title; " >Name: </label><input style="width: 15%;" id="operator_title" type="text">
-					<label style="font-size: 20px; color: black" for="operator_title; " >Description: </label><textarea style="width: 15%;" rows="5" cols="10" id="" type="text"></textarea>
-				</div>
-				
-			</div>
-				<div id="Paris" class="tabcontent">
-					<div id="link_properties" style="display: block;">
-					<label for="link_color">Link's color: </label><input id="link_color" type="color"></div>
-				<div id="selected_activity_settings" style="display: flex; flex-direction: column; gap: 10px;"></div>
-			</div>
-        <!-- <div id="data_preview" class="tabcontent">
-					<div class="table-responsive">
-						<div id="data_table_container">
-							<table id="data_table"></table>
-						</div>
-					</div>
-				</div> -->
-			
-			
-	  
-    </div>
-  </div>
-
-
-
-
-
+  <canvas id="visualizer" style="width: 100%; height: 100%; background-color: black;"></canvas>
 </body>
 <script>
     let ws = null;
@@ -627,15 +560,15 @@ let count = 0
                   }
               }
 
-              grid[data.mouse_y][data.mouse_x] = 3
-              points = pointsInCircle(data.mouse_x, data.mouse_y, data.body_radius_size, data.gridSize);
-              points.forEach(point => {
-                                const px = point[0];
-                                const py = point[1];
-                                if (grid[py][px] !== 2) {
-                                  grid[py][px] = 5;
-                                }
-                              });
+              // grid[data.mouse_y][data.mouse_x] = 3
+              // points = pointsInCircle(data.mouse_x, data.mouse_y, data.body_radius_size, data.gridSize);
+              // points.forEach(point => {
+              //                   const px = point[0];
+              //                   const py = point[1];
+              //                   if (grid[py][px] !== 2) {
+              //                     grid[py][px] = 5;
+              //                   }
+              //                 });
               data.bodies.forEach(network => {
                 const x = network.pos_x;
                 const y = network.pos_y;
@@ -649,8 +582,8 @@ let count = 0
                   }
                 });
                 });
-                data.bodies.sort((a, b) => b.fitness - a.fitness);
-                create_table_tab('Summary', data.bodies)
+                // data.bodies.sort((a, b) => b.fitness - a.fitness);
+                // create_table_tab('Summary', data.bodies)
 
 
                 //  let foods = data['foods']

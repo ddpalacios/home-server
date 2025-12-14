@@ -91,6 +91,16 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		if (strcmp(route,"/portfolio/images/ETL.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/ETL.png");
 		}
+
+				if (strcmp(route,"/portfolio/images/auto.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/auto.png");
+		}
+		if (strcmp(route,"/portfolio/images/team.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/team.png");
+		}
+				if (strcmp(route,"/portfolio/images/main.png") ==0){
+				get_image_file(cSSL, http_header, "/portfolio/images/main.png");
+		}
 		if (strcmp(route,"/portfolio/images/synapse.png") ==0){
 				get_image_file(cSSL, http_header, "/portfolio/images/synapse.png");
 		}
