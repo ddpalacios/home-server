@@ -50,6 +50,21 @@ class Filter_Activity extends Activity{
         this.flowchart.flowchart('setSettings', this.activityId, settings)
         return settings
     }
+    _get_input_columns(activityId){
+        const current_activity = this.flowchart.flowchart("getOperatorActivity", activityId);
+        const input_types = current_activity?.inputs?.input?.value?.datatypes;
+        if (input_types && typeof input_types === "object") {
+            return Object.keys(input_types);
+        }
+        const input_values = current_activity?.inputs?.input?.value?.values;
+        if (Array.isArray(input_values) && input_values.length > 0){
+            return Object.keys(input_values[0]);
+        }
+        if (input_values && typeof input_values === "object") {
+            return Object.keys(input_values);
+        }
+        return [];
+    }
     _on_button_click(e, widget, activity){
         let parent_element = e.target.parentElement;
         parent_element.remove()
@@ -64,28 +79,18 @@ class Filter_Activity extends Activity{
         this.flowchart.flowchart('setSettings', this.activityId, settings)
     }
     _add_column(e, widget, activity){
-        let all_columns = []
-        let settings_div = document.getElementById('selected_activity_settings')
-
         let activityId = activity.activityId
-        // console.log("FILTER ID", activityId)
         let columns_div = document.getElementById(activityId + "_column_edit");
         if (columns_div == null || columns_div == undefined){
-             settings_div = document.getElementById('selected_activity_settings')
-             columns_div = document.createElement('div')
-            columns_div.id = this.activityId+ "_column_edit"
-            settings_div.appendChild(columns_div)
+            return
         }
-        // console.log("CONDITION", activity)
-        if (Array.isArray( activity.activity.inputs.input.value.values)){
-            all_columns = Object.keys(activity.activity.inputs.input.value.values[0])
-        }else{
-            all_columns = Object.keys(activity.activity.inputs.input.value.values)
-
+        let all_columns = this._get_input_columns(activityId)
+        if (all_columns.length === 0) {
+            all_columns = [""]
         }
-        let datatypes = widget.flowchart("getOperatorActivity", activity.activityId).inputs.input.value.datatypes;
-        let s = new Set(Object.values(datatypes));
-        datatypes = [...s]
+        const datatype_map = widget.flowchart("getOperatorActivity", activity.activityId).inputs.input.value.datatypes || {};
+        let s = new Set(Object.values(datatype_map));
+        let datatypes = [...s]
 
         let settings = [
             {
@@ -136,7 +141,7 @@ class Filter_Activity extends Activity{
                 ,'name':'remove'
             }
           ]
-          
+         
             let column_edit_element = this.get_column_selection_element(widget,settings)
             columns_div.appendChild(column_edit_element)
     }
@@ -166,6 +171,35 @@ class Filter_Activity extends Activity{
 
         }
         // alert("Changed")
+    }
+
+    get_settings_element(){
+        let div = document.createElement('div')
+        div.id = this.activityId
+
+        const section = document.createElement('div')
+        section.className = "combine-section"
+
+        const add_button = document.createElement("button")
+        add_button.innerHTML = this.add_button_label
+        add_button.className = 'buttons add-button'
+        add_button.style.padding = "8px 12px";
+        add_button.style.cursor = "pointer";
+        add_button.style.transition = "background 0.2s ease";
+        add_button.addEventListener("click", (event) => this._add_column(event, this.flowchart, this));
+        section.appendChild(add_button)
+
+        const columns_div = document.createElement('div')
+        columns_div.id = this.activityId+ "_column_edit"
+        columns_div.style.display = 'flex'
+        columns_div.style.flexDirection = 'column'
+        columns_div.style.gap = "12px"
+        section.appendChild(columns_div)
+
+        div.appendChild(section)
+        this._add_column(null, this.flowchart, this)
+
+        return div
     }
 
 

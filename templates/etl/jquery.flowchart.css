@@ -27,10 +27,23 @@
     cursor: default;
 }
 
+.flowchart-link path {
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 1px 2px rgba(15, 23, 42, 0.2));
+    transition: stroke 0.15s ease;
+}
+
+.flowchart-temporary-link-layer path {
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
 .flowchart-operator-connector {
     position: relative;
-    padding-top: 5px;
-    padding-bottom: 5px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    min-height: 28px;
 }
 
 .flowchart-operator-connector-label {
@@ -38,20 +51,20 @@
 }
 
 .flowchart-operator-inputs .flowchart-operator-connector-label {
-    margin-left: 14px;
+    margin-left: 20px;
 }
 
 .flowchart-operator-outputs .flowchart-operator-connector-label {
     text-align: right;
-    margin-right: 5px;
+    margin-right: 12px;
 }
 
 .flowchart-operator-connector-arrow {
     width: 0px;
     height: 0px;
-    border-top: 10px solid transparent;
-    border-bottom: 10px solid transparent;
-    border-left: 10px solid rgb(204, 204, 204);
+    border-top: 14px solid transparent;
+    border-bottom: 14px solid transparent;
+    border-left: 14px solid rgb(204, 204, 204);
     position: absolute;
     top: 0px;
 }
@@ -59,32 +72,32 @@
 .flowchart-operator-connector-small-arrow {
     width: 0px;
     height: 0px;
-    border-top: 5px solid transparent;
-    border-bottom: 5px solid transparent;
-    border-left: 5px solid transparent; /*rgb(100, 100, 100);*/
+    border-top: 7px solid transparent;
+    border-bottom: 7px solid transparent;
+    border-left: 7px solid transparent; /*rgb(100, 100, 100);*/
     position: absolute;
-    top: 5px;
+    top: 7px;
     pointer-events: none;
 }
 
 .flowchart-operator-connector:hover .flowchart-operator-connector-arrow {
-    border-left: 10px solid rgb(153, 153, 153);
+    border-left: 14px solid rgb(153, 153, 153);
 }
 
 .flowchart-operator-inputs .flowchart-operator-connector-arrow {
-    left: -1px;
+    left: -2px;
 }
 
 .flowchart-operator-outputs .flowchart-operator-connector-arrow {
-    right: -10px;
+    right: -14px;
 }
 
 .flowchart-operator-inputs .flowchart-operator-connector-small-arrow {
-    left: -1px;
+    left: -2px;
 }
 
 .flowchart-operator-outputs .flowchart-operator-connector-small-arrow {
-    right: -7px;
+    right: -10px;
 }
 
 .unselectable {
@@ -110,42 +123,61 @@
 
 .flowchart-operator {
     position: absolute;
-    width: 250px;
-    border: 5px solid #CCCCCC;
-    background: #FAFAFA;
+    width: 260px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow:
+        0 2px 0 rgba(255, 255, 255, 0.8) inset,
+        0 -6px 12px rgba(15, 23, 42, 0.06) inset,
+        0 18px 32px rgba(15, 23, 42, 0.18);
     pointer-events: auto;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
 .flowchart-operator.hover {
-    border-color: #999;
+    border-color: rgba(37, 99, 235, 0.45);
+    box-shadow: 0 16px 28px rgba(37, 99, 235, 0.18);
+    transform: translateY(-2px);
 }
 
 .flowchart-operator.selected {
-    border-color: #555;
+    border-color: rgba(37, 99, 235, 0.9);
+    box-shadow:
+        0 2px 0 rgba(255, 255, 255, 0.9) inset,
+        0 -8px 14px rgba(37, 99, 235, 0.12) inset,
+        0 22px 36px rgba(37, 99, 235, 0.28);
 }
 
 
 
 .flowchart-operator .flowchart-operator-title {
     width: 100%;
-    padding: 5px;
-    font-weight: bold;
+    padding: 10px 12px;
+    font-weight: 600;
     box-sizing: border-box;
-    border-bottom: 1px solid #DDDDDD;
-    background: #F0F0F0;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    background: #0f5fbf;
+    color: #0b0b0b;
     height: auto;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     cursor: move;
+    box-shadow:
+        inset 0 2px 2px rgba(255, 255, 255, 0.45),
+        inset 0 -2px 6px rgba(0, 0, 0, 0.25),
+        0 3px 6px rgba(15, 23, 42, 0.25);
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.35);
 }
 
 .flowchart-operator .flowchart-operator-inputs-outputs {
     display: table;
     width: 100%;
-    margin-top: 5px;
-    margin-bottom: 5px;
+    margin-top: 8px;
+    margin-bottom: 8px;
 }
+
 
 .flowchart-operator .flowchart-operator-inputs, .flowchart-default-operator .flowchart-operator-outputs {
     display: table-cell;
@@ -178,30 +210,30 @@
     margin-left: auto;
 }
 .flowchart-vertical .flowchart-operator-connector-arrow {
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    border-top: 10px solid #ccc;
-    left: calc(50% - 10px);
+    border-left: 14px solid transparent;
+    border-right: 14px solid transparent;
+    border-top: 14px solid #ccc;
+    left: calc(50% - 14px);
 }
 .flowchart-vertical .flowchart-operator-connector:hover .flowchart-operator-connector-arrow {
     border-left-color: transparent;
     border-top-color: #999;
 }
 .flowchart-vertical .flowchart-operator-connector-small-arrow {
-    border-right: 5px solid transparent;
-    top: 2px;
-    left: calc(50% - 5px);
+    border-right: 7px solid transparent;
+    top: 4px;
+    left: calc(50% - 7px);
 }
 .flowchart-vertical .flowchart-operator-connector-arrow {
     top: 0px;
 }
 .flowchart-vertical .flowchart-operator-outputs .flowchart-operator-connector-arrow {
-    bottom: -20px;
+    bottom: -28px;
     top: auto;
 }
 .flowchart-vertical .flowchart-operator-outputs .flowchart-operator-connector-small-arrow {
-    left: calc(50% - 5px);
-    bottom: -12px;
+    left: calc(50% - 7px);
+    bottom: -16px;
     top: auto;
 }
 .flowchart-vertical .flowchart-link rect {
@@ -212,6 +244,26 @@
  * flowchart-operator-body
  */
 .flowchart-operator-body {
-    padding: 5px;
+    padding: 8px 10px 10px;
     cursor: move;
+}
+
+.flowchart-operator-description {
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: rgba(15, 23, 42, 0.75);
+    background: rgba(148, 163, 184, 0.12);
+    border-radius: 8px;
+    padding: 6px 8px;
+    margin-bottom: 6px;
+    display: none;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+.flowchart-operator-body-content {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }

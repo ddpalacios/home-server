@@ -320,6 +320,7 @@ jQuery(function ($) {
             this._drawLink(linkId);
 
             this.callbackEvent('afterChange', ['link_create']);
+            console.log("Created link", linkId, linkData)
         },
 
         _autoCreateSubConnector: function (operator, connector, connectorType, subConnector) {
@@ -566,17 +567,26 @@ jQuery(function ($) {
             }
             return infos;
         },
-         removeSelectColumn: function(operatorId, select_id){
+        removeSelectColumn: function(operatorId, select_id){
             let vals = this.data.operators[operatorId].internal.properties['settings']['select']
             for(let i=0; i<vals.length; i++){
                 let val = vals[i]
                 if (val.id  ==select_id){
                     this.data.operators[operatorId].internal.properties['settings']['select'].splice(i,1)
+                    return
                 }
             }
         },
         addSelectColumn: function(operatorId, column_to_select){
-            let vals = this.data.operators[operatorId].internal.properties['settings']['select']
+            let settings = this.data.operators[operatorId].internal.properties['settings'];
+            if (!settings) {
+                settings = {};
+                this.data.operators[operatorId].internal.properties['settings'] = settings;
+            }
+            if (!Array.isArray(settings.select)) {
+                settings.select = [];
+            }
+            let vals = settings['select'];
             for(let i=0; i<vals.length; i++){
                 let val = vals[i]
                 if (val.id  == column_to_select.id){
@@ -643,13 +653,17 @@ jQuery(function ($) {
             let dependencies = {}
             Object.keys(this.data.operators).forEach(parent_node_id => {
                 let n = this.data.operators[parent_node_id]
-                    let d = []
-                    n.properties.dependencies.forEach(element => {
-                        d.push(element.operatorId)
-                        
-                    });
+                let d = []
+                let raw_dependencies = (n.internal?.properties?.dependencies ?? n.properties?.dependencies ?? [])
+                raw_dependencies.forEach(element => {
+                    let dep_id = element && element.operatorId !== undefined ? element.operatorId : element
+                    if (dep_id === null || dep_id === undefined) {
+                        return
+                    }
+                    d.push(dep_id)
+                });
 
-                    dependencies[parent_node_id] = {"dependencies":d, 'query': n.properties?.settings, 'activityType': n.properties.activityType}
+                dependencies[parent_node_id] = {"dependencies":d, 'query': n.properties?.settings, 'activityType': n.properties.activityType}
             });
             return dependencies
          
@@ -662,7 +676,8 @@ jQuery(function ($) {
             }
         },
         setDependency: function(parentNodeId, value){
-            if (this.data.operators[parentNodeId].internal.properties.activityType != 'join'){
+            if (this.data.operators[parentNodeId].internal.properties.activityType != 'join' &&
+                this.data.operators[parentNodeId].internal.properties.activityType != 'append'){
                 this.data.operators[parentNodeId].internal.properties.dependencies = []
                 this.data.operators[parentNodeId].internal.properties.dependencies.push(value)
             }else{
@@ -910,6 +925,9 @@ jQuery(function ($) {
                 }
                 if (node.activityType == 'filter'){
                     // console.log('filter', node)
+                    if (!node.link_from || node.link_from.length === 0) {
+                        continue
+                    }
                     let previous_output_value = node.link_from[0].outputs.output.value
                     let copy = JSON.parse(JSON.stringify(previous_output_value))
                     this.setinputVal(node.operatorId,'input', copy)
@@ -918,6 +936,9 @@ jQuery(function ($) {
 
                 }
                 if (node.activityType == 'select'){
+                    if (!node.link_from || node.link_from.length === 0) {
+                        continue
+                    }
                     let previous_output_value = node.link_from[0].outputs.output.value
                     let copy = JSON.parse(JSON.stringify(previous_output_value))
                     this.setinputVal(node.operatorId,'input', copy)
@@ -925,6 +946,9 @@ jQuery(function ($) {
                     this.setoutputVal(node.operatorId ,'output', copy2)
                 }
                 if (node.activityType == 'group'){
+                    if (!node.link_from || node.link_from.length === 0) {
+                        continue
+                    }
                     let previous_output_value = node.link_from[0].outputs.output.value
                     // console.log("UPDATING GROUP". node,previous_output_value)
 
@@ -934,6 +958,19 @@ jQuery(function ($) {
                     this.setoutputVal(node.operatorId ,'output', copy2)
                 }
                 if (node.activityType == 'split'){
+                    if (!node.link_from || node.link_from.length === 0) {
+                        continue
+                    }
+                    let previous_output_value = node.link_from[0].outputs.output.value
+                    let copy = JSON.parse(JSON.stringify(previous_output_value))
+                    this.setinputVal(node.operatorId,'input', copy)
+                    let copy2 = JSON.parse(JSON.stringify(previous_output_value))
+                    this.setoutputVal(node.operatorId ,'output', copy2)
+                }
+                if (node.activityType == 'combine'){
+                    if (!node.link_from || node.link_from.length === 0) {
+                        continue
+                    }
                     let previous_output_value = node.link_from[0].outputs.output.value
                     let copy = JSON.parse(JSON.stringify(previous_output_value))
                     this.setinputVal(node.operatorId,'input', copy)
@@ -941,6 +978,9 @@ jQuery(function ($) {
                     this.setoutputVal(node.operatorId ,'output', copy2)
                 }
                 if (node.activityType == 'replace'){
+                    if (!node.link_from || node.link_from.length === 0) {
+                        continue
+                    }
                     let previous_output_value = node.link_from[0].outputs.output.value
                     let copy = JSON.parse(JSON.stringify(previous_output_value))
                     this.setinputVal(node.operatorId,'input', copy)
@@ -948,6 +988,9 @@ jQuery(function ($) {
                     this.setoutputVal(node.operatorId ,'output', copy2)
                 }
                 if (node.activityType == 'sort'){
+                    if (!node.link_from || node.link_from.length === 0) {
+                        continue
+                    }
                     let previous_output_value = node.link_from[0].outputs.output.value
                     let copy = JSON.parse(JSON.stringify(previous_output_value))
                     this.setinputVal(node.operatorId,'input', copy)
@@ -955,6 +998,9 @@ jQuery(function ($) {
                     this.setoutputVal(node.operatorId ,'output', copy2)
                 }
                 if (node.activityType == 'export'){
+                    if (!node.link_from || node.link_from.length === 0) {
+                        continue
+                    }
                     let previous_output_value = node.link_from[0].outputs.output.value
                     let copy = JSON.parse(JSON.stringify(previous_output_value))
                     this.setinputVal(node.operatorId,'input', copy)
@@ -1056,7 +1102,7 @@ jQuery(function ($) {
                 var pointerY;
                 fullElement.operator.draggable({
                     containment: operatorData.internal.properties.uncontained ? false : this.element,
-                    handle: '.flowchart-operator-title, .flowchart-operator-body',
+                    cancel: '.flowchart-operator-connector, input, select, textarea, button',
                     start: function (e, ui) {
                         if (self.lastOutputConnectorClicked != null) {
                             e.preventDefault();

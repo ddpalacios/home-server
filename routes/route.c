@@ -286,6 +286,10 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_gol_script(cSSL, http_header, "/etl/select.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/sort.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/sort.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/home-ui.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/home-ui.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/home.css")==0){
+		get_gol_script(cSSL, http_header, "/etl/home.css");
 
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/join.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/join.js");
@@ -297,8 +301,12 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_gol_script(cSSL, http_header, "/etl/group.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/split.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/split.js");
-	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/export.js")==0){
-		get_gol_script(cSSL, http_header, "/etl/export.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/combine.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/combine.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/append.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/append.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/google_sheets.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/google_sheets.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/jquery.flowchart.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/jquery.flowchart.js");
 
@@ -478,4 +486,3 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/chatbox_style.css")==0){
 		get_gol_script(cSSL, http_header, "chatbox_style.css");
 	*/
-

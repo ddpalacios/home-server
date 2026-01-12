@@ -5,99 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-<style>
-  body {
-    margin: 0;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    font-family: sans-serif;
-  }
-
-  .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 300px;
-    height: 100%;
-    background: whitesmoke;
-    color: white;
-    padding: 10px;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.3);
-    overflow-y: auto;
-    z-index: 1000;
-  }
-
-  .content-wrapper {
-    margin-left: 320px;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-  }
-
-  .content {
-    flex: 1;
-    background: #f0f0f0;
-    /* padding: 20px; */
-    overflow: auto;
-  }
-
-  .footer {
-    position: relative;
-    color: white;
-    height: 500px;
-    overflow: auto;
-  }
-
-  .resize-handle {
-    position: relative;
-    height: 18px;
-    width: 100%;
-    cursor: ns-resize;
-	  display: flex;
-  justify-content: center; 
-  align-items: center;   
-    background: whitesmoke;
-  }
-
-  .resize-handle img {
-  width: 20px; 
-  height: 20px;
-  pointer-events: none; 
-}
-  /* .resize-handle {
-  position: relative;
-  width: 100%;
-  height: 20px; 
-  display: flex;
-  justify-content: center; 
-  align-items: center;     
-}
-
-.resize-handle img {
-  width: 20px; 
-  height: 20px;
-  pointer-events: none; 
-} */
-
-  .buttons{
-    width: auto;  
-    padding: 10px;
-	 font-size: 0.8em;
-    font-weight: bold;
-    font-family: 'Garamond';
-    color: rgb(0, 0, 0);
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-}
-.buttons:hover{
-    transform: scale(1.05);
-
-}
-</style>
-	<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/etl/home.css">
+<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -105,324 +17,135 @@
 	<link rel="stylesheet" href="/etl/jquery.flowchart.css">
 
 	<script src="/etl/jquery.flowchart.js"></script>
-	<style>
-		.flowchart-example-container {
-			width: 100%;
-			height: 100vh;
-			background: white;
-		}
-	</style>
-	<style>
-
-/* Style the tab */
-.tab {
-  overflow: hidden;
-  /* border: 1px solid #ccc; */
-  background-color: #f1f1f100;
-  display: flex;
-  width: 100%;
-  flex-direction: row;
-  gap: 50px;
-}
-
-/* Style the buttons inside the tab */
-.tab button {
-  background-color: inherit;
-  float: left;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  padding: 14px 16px;
-  transition: 0.3s;
-  font-size: 17px;
-}
-
-/* Change background color of buttons on hover */
-.tab button:hover {
-  color: #006dfb;
-  
-}
-
-/* Create an active/current tablink class */
-.tab button.active {
- color: #006dfb;
-}
-
-/* Style the tab content */
-.tabcontent {
-  display: none;
-  padding: 6px 12px;
-  border: 1px solid #ccc;
-  border-top: none;
-}
-
-/* --- Base Select Box --- */
-select {
-
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background: linear-gradient(145deg, #f9f9f9, #e6e6e6);
-  padding: 10px 40px 10px 14px;
-  font-size: 15px;
-  color: #333;
-  outline: none;
-  cursor: pointer;
-  transition: all 0.25s ease-in-out;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  position: relative;
-}
-
-/* --- Hover and Focus States --- */
-select:hover,
-select:focus {
-  background: linear-gradient(145deg, #ffffff, #e9e9e9);
-  border-color: #999;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-}
-
-
-/* --- Optional container styling --- */
-.select-container {
-  display: inline-block;
-  position: relative;
-}
-
-.select-container::after {
-  content: "▼";
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 0.8em;
-  color: #555;
-  pointer-events: none;
-}
-.text_input_value, #operator_title {
-  padding: 8px 12px;
-   font-size: 0.8em;
-
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background: #f8f8f8;
-  color: #333;
-  outline: none;
-  transition: border-color 0.2s ease, background 0.2s ease;
-}
-
-.text_input_value:hover {
-  border-color: #999;
-  background: #fefefe;
-}
-
-.text_input_value:focus {
-  border-color: #0078ff;
-  background: #fff;
-}
-
-#selected_activity_settings, #operator_properties {
-  display: flex;
-  flex-direction: column;
-  margin-left: 10px;
- padding: 10px;
-  gap: 10px;
-  max-height: 700px;
-  overflow-y: auto;  
-  scrollbar-width: thin; 
-}
-
-#selected_activity_settings::-webkit-scrollbar {
-  width: 6px;
-}
-#selected_activity_settings::-webkit-scrollbar-thumb {
-  background-color: #ccc;
-  border-radius: 3px;
-}
-#selected_activity_settings::-webkit-scrollbar-thumb:hover {
-  background-color: #999;
-}
-
-</style>
-
-<style>
-	/* body {
-  font-family: Arial, sans-serif;
-  margin: 10px;
-} */
-
-.filter-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.filter-container label {
-  flex-basis: 100%;
-  font-weight: bold;
-}
-
-.filter-container select,
-.filter-container input {
-  flex: 1 1 200px;
-  max-width: 300px;
-  padding: 8px;
-  box-sizing: border-box;
-}
-
-/* Table wrapper: scroll horizontally instead of overflowing */
-.table-responsive {
-  width: 100%;
-  overflow-x: auto;
-  border-radius: 10px;
-  margin-top: 10px;
-}
-
-/* Table styles */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 500px; /* lets columns breathe, but scrolls on small screens */
-}
-
-th, td {
-  border: 1px solid #ccc;
-  padding: 8px;
-  color: black;
-  text-align: left;
-  word-break: break-word;
-}
-
-th {
-  background-color: #f4f4f4;
-}
-
-/* Make headings and spacing smaller on phones */
-@media (max-width: 600px) {
-  .main_section1 {
-    width: 95% !important;
-    padding: 10px !important;
-  }
-
-  .section_title {
-    font-size: 24px !important;
-  }
-
-  .filter-container {
-    flex-direction: column;
-  }
-
-  select,
-  input {
-    max-width: 100% !important;
-  }
-
-  table {
-    min-width: unset; /* let it shrink */
-    font-size: 12px;
-  }
-}
-#data_table_container {
-  max-height: 800px;   /* or whatever height you want */
-  overflow-y: auto;    /* vertical scroll */
-  overflow-x: auto;    /* horizontal scroll if needed */
-  border: 1px solid #ccc; /* optional border */
-}
-
-#data_table {
-  width: 100%;         /* make table fill container */
-  border-collapse: collapse;
-}
-
-#data_table th, #data_table td {
-  padding: 8px;
-  border: 1px solid #ccc;
-  text-align: left;
-}
-/* Sidebar container */
-.sidebar {
-    background-color: #f0f4f8;    
-    display: flex;
-    flex-direction: column;
-    box-shadow: 2px 0 8px rgba(0,0,0,0.15);
-    overflow-y: auto;            
-}
-
-/* Sidebar header */
-.sidebar-header {
-    background-color: #f0f4f8;    
-    color: black;
-    padding: 15px 10px;
-    text-align: center;
-    font-weight: bold;
-    font-size: 1.2rem;
-    border-bottom: 1px solid rgba(0,0,0,0.1);
-}
-
-/* Buttons container */
-.sidebar-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 15px 10px;
-}
-
-/* Buttons */
-.sidebar-buttons .buttons {
-    background-color: #ffffff;
-    border: 1px solid #0a0a0a;
-    border-radius: 8px;
-    padding: 10px;
-    font-size: 1rem;
-    color: #000000;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    width: 100%;
-}
-
-/* Button hover effect */
-.sidebar-buttons .buttons:hover {
-    background-color: #4da6ff;
-    color: #fff;
-    transform: translateY(-2px);
-    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-}
-
-/* Button active effect */
-.sidebar-buttons .buttons:active {
-    transform: translateY(0);
-    box-shadow: none;
-}
-
-
-
-
-</style>
-</head>
+	</head>
 <body>
 
 <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
-        <h3>Activities</h3>
+        <div class="sidebar-header-row">
+            <h3>Activities</h3>
+            <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Collapse activities panel">
+              Hide
+            </button>
+        </div>
+        <p class="sidebar-subtitle">Build your flow faster.</p>
     </div>
     <div class="sidebar-buttons">
-        <button id="import_activity" class="create_operator buttons">Create Import</button>
-        <button id="filter_activity" class="create_operator buttons">Create Filter</button>
-        <button id="export_activity" class="create_operator buttons">Create Export</button>
-        <button id="aggregate_activity" class="create_operator buttons">Create Aggregate</button>
-        <button id="join_activity" class="create_operator buttons">Create Join</button>
-        <button id="custom_activity" class="create_operator buttons">Create Custom</button>
-        <button id="replace_activity" class="create_operator buttons">Replace Value</button>
-        <button id="split_activity" class="create_operator buttons">Split Value</button>
-        <button id="select_activity" class="create_operator buttons">Select</button>
-        <button id="sort_activity" class="create_operator buttons">Sort</button>
-        <!-- <button id="get_data" class="create_operator buttons">POST Pipeline</button>
-        <button id="load_local" class="create_operator buttons">LOAD Pipeline</button> -->
+        <details class="activity-group" open>
+            <summary>Ingest</summary>
+            <div class="activity-group-content">
+                <button id="import_activity" class="create_operator buttons">
+                    <span class="activity-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M12 4v12"/><path d="M7 9l5 5 5-5"/><path d="M5 20h14"/></svg>
+                    </span>
+                    Create Import
+                </button>
+                <button id="sheets_read_activity" class="create_operator buttons">
+                    <span class="activity-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h6"/></svg>
+                    </span>
+                    Google Sheets (Read)
+                </button>
+            </div>
+        </details>
+        <details class="activity-group" open>
+            <summary>Transform</summary>
+            <div class="activity-group-content">
+                <button id="filter_activity" class="create_operator buttons">
+                    <span class="activity-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M3 5h18l-7 8v5l-4 2v-7z"/></svg>
+                    </span>
+                    Create Filter
+                </button>
+                <button id="aggregate_activity" class="create_operator buttons">
+                    <span class="activity-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M4 18h4M10 14h4M16 10h4"/></svg>
+                    </span>
+                    Create Aggregate
+                </button>
+                <button id="join_activity" class="create_operator buttons">
+                    <span class="activity-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M7 7h4v4H7zM13 13h4v4h-4z"/><path d="M11 9l2 2"/></svg>
+                    </span>
+                    Create Join
+                </button>
+                <button id="custom_activity" class="create_operator buttons">
+                    <span class="activity-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M4 16l6-6 4 4 6-6"/></svg>
+                    </span>
+                    Create Custom
+                </button>
+                <button id="flatten_activity" class="create_operator buttons">
+                    <span class="activity-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M4 7h10M4 12h16M4 17h12"/><path d="M16 6l3 3-3 3"/></svg>
+                    </span>
+                    Flatten
+                </button>
+                <button id="replace_activity" class="create_operator buttons">
+                    <span class="activity-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M4 18h6l8-8-6-6-8 8z"/><path d="M14 6l4 4"/></svg>
+                    </span>
+                    Replace Value
+                </button>
+                <button id="split_activity" class="create_operator buttons">
+                    <span class="activity-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M4 6l8 8M4 18l8-8"/><path d="M14 6h6M14 18h6"/></svg>
+                    </span>
+                    Split Value
+                </button>
+                <button id="combine_activity" class="create_operator buttons">
+                    <span class="activity-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M4 7h6v4H4zM14 13h6v4h-6z"/><path d="M10 9l4 4"/></svg>
+                    </span>
+                    Combine Columns
+                </button>
+                <button id="select_activity" class="create_operator buttons">
+                    <span class="activity-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M5 6h10M5 12h10M5 18h10"/><path d="M18 6l1.5 1.5L22 5"/></svg>
+                    </span>
+                    Select
+                </button>
+                <button id="sort_activity" class="create_operator buttons">
+                    <span class="activity-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M7 4v16M7 4l-3 3M7 4l3 3"/><path d="M17 20V4M17 20l-3-3M17 20l3-3"/></svg>
+                    </span>
+                    Sort
+                </button>
+                <button id="append_activity" class="create_operator buttons">
+                    <span class="activity-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                    </span>
+                    Append
+                </button>
+            </div>
+        </details>
+        <details class="activity-group" open>
+            <summary>Sink</summary>
+            <div class="activity-group-content">
+                <button id="sheets_write_activity" class="create_operator buttons">
+                    <span class="activity-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h6"/></svg>
+                    </span>
+                    Google Sheets (Write)
+                </button>
+            </div>
+        </details>
     </div>
 </div>
 
+<button id="sidebarToggleFloating" class="sidebar-toggle sidebar-toggle--floating" type="button" aria-label="Show activities panel">
+  Activities
+</button>
+
   <div class="content-wrapper">
     <div class="content">
+      <div class="pipeline-run">
+        <button id="run_pipeline" type="button" aria-label="Run pipeline">
+          <svg class="run-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7V5z"/></svg>
+        </button>
+      </div>
       	 <div id="chart_container">
+				 <div class="drag-boundary-outline" aria-hidden="true"></div>
 				
 					<div class="flowchart-example-container" id="flowchartworkspace">
 
@@ -430,1363 +153,68 @@ th {
 	      </div> 
     </div>
 
+    <div class="zoom-controls">
+      <button id="zoomIn" type="button" aria-label="Zoom in">+</button>
+      <button id="zoomOut" type="button" aria-label="Zoom out">−</button>
+      <button id="zoomReset" type="button" aria-label="Recenter view">⟳</button>
+    </div>
+
     <div class="footer" id="footer" style="overflow-x: hidden; overflow-y: hidden;">
       <div class="resize-handle" id="resizeHandle"> <img src="/etl/images/drag.png" width="50" height="50"></div>
-	  		<div class="navbar" style=" padding: 20px; z-index: 1000; background-color: whitesmoke;   border: 1px solid rgb(255, 255, 255); width: 100%; display: flex; flex-direction: row; gap: 50px;">
+	  		<div class="navbar" style=" padding: 16px 20px; z-index: 1000; background: linear-gradient(135deg, #cfd7e2 0%, #bcc6d4 100%); border: 1px solid rgba(15, 23, 42, 0.08); width: 100%; display: flex; flex-direction: row; gap: 50px; transition: background 0.3s ease;">
 				<div class="tab">
-				<button class="tablinks" onclick="openCity(event, 'London')">General</button>
-				<button class="tablinks" onclick="openCity(event, 'Paris')">Settings</button>
-				<button class="tablinks" onclick="openCity(event, 'data_preview')">Data Preview</button>
+				<button class="tablinks" id="tabGeneral" onclick="switchTabPanel(event, 'tab_general')">General</button>
+				<button class="tablinks" id="tabSettings" onclick="switchTabPanel(event, 'tab_settings')">Settings</button>
+				<button class="tablinks" id="tabDataPreview" onclick="switchTabPanel(event, 'data_preview')">Data Preview</button>
 				</div>
 				
 
 			</div>
-			<div id="London" class="tabcontent" style="display: flex; flex-direction: column; gap: 30px;">
-				<div id="operator_properties" style="display: flex; flex-direction: column;;">
-					<label style="font-size: 20px; color: black" for="operator_title; " >Name: </label><input style="width: 15%;" id="operator_title" type="text">
-					<label style="font-size: 20px; color: black" for="operator_title; " >Description: </label><textarea style="width: 15%;" rows="5" cols="10" id="" type="text"></textarea>
+			<div id="tab_general" class="tabcontent" style="display: flex; flex-direction: column; gap: 30px;">
+				<div id="pipeline_properties" class="general-panel" style="display: flex; flex-direction: column; gap: 10px;">
+					<label for="pipeline_title">Pipeline Name</label>
+					<input id="pipeline_title" type="text" placeholder="Untitled pipeline">
+					<label for="pipeline_description">Description</label>
+					<textarea rows="5" cols="10" id="pipeline_description" type="text" placeholder="Describe the pipeline purpose"></textarea>
+				</div>
+				<div id="operator_properties" class="general-panel" style="display: flex; flex-direction: column; gap: 10px;">
+					<label for="operator_title">Name</label>
+					<input id="operator_title" type="text">
+					<label for="operator_description">Description</label>
+					<textarea rows="5" cols="10" id="operator_description" type="text" placeholder="Describe what this activity does"></textarea>
 				</div>
 				
 			</div>
-				<div id="Paris" class="tabcontent">
-					<div id="link_properties" style="display: block;">
+				<div id="tab_settings" class="tabcontent">
+				<div id="link_properties" style="display: block;">
 					<label for="link_color">Link's color: </label><input id="link_color" type="color"></div>
 				<div id="selected_activity_settings" style="display: flex; flex-direction: column; gap: 10px;"></div>
 				
 			</div>
 					<div id="data_preview" class="tabcontent">
-						<div style="display: flex; flex-direction: row; gap: 10px; align-items: end;">
-					<button id="refresh_preview" class="buttons"style="width: 15%;position: relative;background-color: #f5f5f5;color: blue;border: none;border-radius: 6px;padding: 8px 12px;box-shadow: 0 2px 4px rgba(0,0,0,0.2);transition: all 0.2s ease;">
-					Refresh
-					</button>
-
-					<button id="export_preview" class="buttons"style="width: 15%;position: relative;background-color: #eaeaea;color: green;border: none;border-radius: 6px;padding: 8px 12px;box-shadow: 0 2px 4px rgba(0,0,0,0.2);transition: all 0.2s ease;">Export</button></div>
-					<div id="activity_previews"></div>
-					<!-- <div class="filter-container">
-						<label for="columnSelect">Filter by column:</label>
-						<select id="columnSelect"></select>
-						<input type="text" id="filterInput" placeholder="Enter filter text...">
-					</div>
-					<div class="table-responsive">
-						<div id="data_table_container">
-							<table id="data_table"></table>
+						<div id="preview_button_stash" style="display: none;">
+							<button id="refresh_preview" class="buttons" type="button">Refresh</button>
+							<button id="export_preview" class="buttons" type="button">Export</button>
 						</div>
-					</div> -->
+						<div id="activity_previews"></div>
 				</div>
-			
-			
-	  
     </div>
   </div>
-
-
-<script src="/websocket.js" defer></script>
+  <script src="/websocket.js" defer></script>
   <script src="etl/activities.js" defer></script>
   <script src="etl/run.js" defer></script>
-
   <script src="etl/import.js" defer></script>
   <script src="etl/join.js" defer></script>
   <script src="etl/group.js" defer></script>
   <script src="etl/custom_column.js" defer></script>
   <script src="etl/split.js"defer></script>
-  <script src="etl/export.js" defer></script>
+  <script src="etl/combine.js" defer></script>
+  <script src="etl/append.js" defer></script>
+  <script src="etl/google_sheets.js" defer></script>
   <script src="etl/filter.js" defer></script>
   <script src="etl/replace.js" defer></script>
   <script src="etl/select.js" defer></script>
   <script src="etl/sort.js" defer></script>
-  <script>
-function openCity(evt, cityName) {
-  var i, tabcontent, tablinks;
-  tabcontent = document.getElementsByClassName("tabcontent");
-  for (i = 0; i < tabcontent.length; i++) {
-    tabcontent[i].style.display = "none";
-  }
-  tablinks = document.getElementsByClassName("tablinks");
-  for (i = 0; i < tablinks.length; i++) {
-    tablinks[i].className = tablinks[i].className.replace(" active", "");
-  }
-  document.getElementById(cityName).style.display = "flex";
-  document.getElementById(cityName).style.flexDirection = "column";
-  document.getElementById(cityName).style.gap = "30px";
-  
-  evt.currentTarget.className += " active";
-}
-</script>
-  <script>
-      document.addEventListener('mousemove', function(event) {
-          // console.log('Mouse X:', event.clientX, 'Mouse Y:', event.clientY);
-      });
-  </script>
-
-<script>
-	let pipeline_id
-    async function post_pipeline(userId, body){
-            var request = new Request('/blob-storage/bronze/etl/pipeline?userId='+userId, {
-                                method: 'POST',
-                                headers: new Headers({
-                                            'Accept': 'application/json'
-                                        })
-			       ,body: JSON.stringify(body)
-                    });
-
-            fetch(request);
-            // if (response.ok){ 
-            //     try{
-            //         const data = await response.json()
-            //         return data;
-            //     }catch(error){}
-            // }
-            // return null;
-    }
-    // async function create_user(){
-    //         var request = new Request('/game-of-life/user', {
-    //                             method: 'POST',
-    //                             headers: new Headers({
-    //                                         'Accept': 'application/json'
-    //                                     })
-	// 		       ,body: JSON.stringify({
-	// 				       "username": "User"
-	// 			       })
-    //                 });
-
-    //         var response = await fetch(request);
-    //         if (response.ok){ 
-    //             try{
-    //                 const data = await response.json()
-    //                 return data;
-    //             }catch(error){}
-    //         }
-    //         return null;
-    // }
-    // async function get_user(){
-    //      var request = new Request('/game-of-life/user', {
-    //                             method: 'GET',
-    //                             headers: new Headers({'Accept': 'application/json'})});
-    //         var user = null;
-    //         var response = await fetch(request);
-    //         if (response.ok){ 
-    //             user = await response.json()
-    //         }else{
-    //             user = create_user();
-    //         }
-    //         return user;
-    // }
-
-	// async function main(){
-	// 	let user = await get_user()
-	// 	console.log(user)
-	// 	sessionStorage.setItem("userId", user.Id)
-	// 	sessionStorage.setItem("user_json", JSON.stringify(user))
-	// 	if (sessionStorage.getItem('pipeline_id') == null){
-	// 		pipeline_id =  crypto.randomUUID()
-	// 		sessionStorage.setItem('pipeline_id', pipeline_id)
-	// 	}else{
-	// 		pipeline_id = sessionStorage.getItem('pipeline_id')
-	// 	}
-	// }
-	// main()
-
-</script>
-
-<script>
-	function jsonToCsv(jsonData) {
-    if (!Array.isArray(jsonData) || jsonData.length === 0) return '';
-
-    // get all headers (union of all keys)
-    const headers = [...new Set(jsonData.flatMap(obj => Object.keys(obj)))];
-
-    // helper to safely escape values
-    const escape = (val) => {
-        if (val === null || val === undefined) return '';
-        val = String(val);
-        // wrap in quotes if contains comma, newline, or quote
-        if (/[",\n\r]/.test(val)) {
-            return `"${val.replace(/"/g, '""')}"`;
-        }
-        return val;
-    }
-
-    const csv = [
-        headers.join(','), // header row
-        ...jsonData.map(obj => headers.map(h => escape(obj[h])).join(','))
-    ].join('\n');
-
-    return csv;
-}
-
-function createTable(jsonArray, tableContainer, activityId) {
-	const filterInput = document.getElementById(activityId+"_filterInput");
-const columnSelect = document.getElementById(activityId+"_columnSelect");
-
-  tableContainer.innerHTML = ""; // Clear old table
-
-  if (!jsonArray.length) {
-    tableContainer.textContent = "No data matches your filter.";
-    return;
-  }
-
-  const table = document.createElement("table");
-  const thead = document.createElement("thead");
-  const tbody = document.createElement("tbody");
-
-  // Header
-  const headerRow = document.createElement("tr");
-  const columns = Object.keys(jsonArray[0]);
-  columns.forEach(key => {
-    const th = document.createElement("th");
-    th.textContent = key;
-    headerRow.appendChild(th);
-  });
-  thead.appendChild(headerRow);
-
-  // Rows
-let limit = 100
-let count = 0
-  jsonArray.forEach(item => {
-		if (count < limit){
-
-		const row = document.createElement("tr");
-		columns.forEach(key => {
-		const td = document.createElement("td");
-		td.textContent = item[key];
-		row.appendChild(td);
-		});
-		tbody.appendChild(row);
-		count +=1
-}
-  });
-
-  table.appendChild(thead);
-  table.appendChild(tbody);
-  tableContainer.appendChild(table);
-
-  // Populate dropdown only once
-  if (!columnSelect.options.length) {
-    columns.forEach(col => {
-      const opt = document.createElement("option");
-      opt.value = col;
-      opt.textContent = col;
-      columnSelect.appendChild(opt);
-    });
-  }
-
-  // Attach filter handler once
-  if (!filterInput.dataset.bound) {
-    filterInput.addEventListener("input", () => {
-      const column = columnSelect.value;
-      const filterText = filterInput.value.toLowerCase();
-
-      const filteredData = jsonArray.filter(item =>
-        String(item[column]).toLowerCase().includes(filterText)
-      );
-
-      // Re-render table with filtered data
-      createTable(filteredData, tableContainer, activityId);
-    });
-    filterInput.dataset.bound = true; // Prevent re-binding
-  }
-}
-
-</script>
-
-<script type="text/javascript">
-    function areArraysEqual(arr1, arr2) {
-  return arr1.length === arr2.length && new Set(arr1).size === new Set(arr2).size && arr1.every(item => arr2.includes(item));
-}
-
-    var main_activities = {}
-	let height_offset  = 300
-	$(document).ready(function() {
-			var $flowchart = $('#flowchartworkspace');
-			var $container = $flowchart.parent();
-			$flowchart.flowchart({
-				defaultSelectedLinkColor: '#000055',
-				grid: 10,
-				multipleLinksOnInput: false,
-				multipleLinksOnOutput: true
-			});
-			function getOperatorData($element) {
-				var nbInputs = parseInt($element.data('nb-inputs'), 10);
-				var nbOutputs = parseInt($element.data('nb-outputs'), 10);
-				var data = {
-					properties: {
-						title: $element.text(),
-						inputs: {},
-						outputs: {}
-					}
-				};
-
-				var i = 0;
-				for (i = 0; i < nbInputs; i++) {
-					data.properties.inputs['input_' + i] = {
-						label: 'Input ' + (i + 1)
-					};
-				}
-				for (i = 0; i < nbOutputs; i++) {
-					data.properties.outputs['output_' + i] = {
-						label: 'Output ' + (i + 1)
-					};
-				}
-
-				return data;
-			}
-
-			var $operatorProperties = $('#operator_properties');
-			var $selected_activity_settings = $('#selected_activity_settings');
-			var $data_preview_settings = $('#data_preview');
-			$data_preview_settings.hide()
-			$operatorProperties.hide();
-      		$selected_activity_settings.hide()
-			var $linkProperties = $('#link_properties');
-			$linkProperties.hide();
-			var $operatorTitle = $('#operator_title');
-			var $linkColor = $('#link_color');
-
-			$flowchart.flowchart({
-				onOperatorSelect: function(operatorId) {
-					$operatorProperties.show();
-					// $data_preview_settings.show()
-					var $activity_previews = $('#activity_previews');
-					$activity_previews.children().hide()
-          			$selected_activity_settings.show()
-					var $preview_table = $('#'+operatorId+"_data_preview");
-					if ($preview_table != null && $preview_table  != undefined){
-						$preview_table.show()
-					}
-
-
-
-					
-					document.getElementById("refresh_preview").value = operatorId
-					document.getElementById("export_preview").value = operatorId
-					$operatorTitle.val($flowchart.flowchart('getOperatorTitle', operatorId));     
-					let activity = $flowchart.flowchart('getOperatorActivity', operatorId)
-					let all_dependecies = $flowchart.flowchart('getDependencies')
-					console.log("Selected", activity, 'dependencies',all_dependecies )
-					let settings_div = document.getElementById('selected_activity_settings')
-					Array.from(settings_div.children).forEach(child => {
-						child.style.display = 'none';
-					});		
-					if (activity.activityType == 'import'){
-						let target_activity = main_activities[operatorId]
-						let elem = target_activity.settings
-						if (elem == null || elem == undefined){return}
-						let found = false;
-        				for (let i=0; i<settings_div.children.length; i++){
-							if (settings_div.children[i].id == elem.id){
-								found = true
-								settings_div.children[i].style.display = 'block'
-							}
-							if (settings_div.children[i].id == elem.id+"_column_edit"){
-								found = true
-								settings_div.children[i].style.display = 'flex'
-								settings_div.children[i].style.flexDirection = 'column'
-								settings_div.children[i].style.gap = "15px"
-
-							}
-						}
-						if (!found){
-							settings_div.insertBefore(elem, settings_div.firstChild);
-						}
-
-					}
-
-					if (activity.activityType == 'filter'){
-						let target_activity = main_activities[operatorId]
-						let elem = target_activity.settings
-						if (elem == null || elem == undefined){return}
-						let found = false;
-        				for (let i=0; i<settings_div.children.length; i++){
-							if (settings_div.children[i].id == elem.id){
-								found = true
-								settings_div.children[i].style.display = 'block'
-							}
-							if (settings_div.children[i].id == elem.id+"_column_edit"){
-								found = true
-									settings_div.children[i].style.display = 'flex'
-								settings_div.children[i].style.flexDirection = 'column'
-								settings_div.children[i].style.gap = "15px"
-
-							}
-						}
-						if (!found){
-							settings_div.insertBefore(elem, settings_div.firstChild);
-						}
-
-					}
-					
-					if (activity.activityType == 'join'){
-						let target_activity = main_activities[operatorId]
-						let elem = target_activity.settings
-						if (elem == null || elem == undefined){return}
-						let found = false;
-        				for (let i=0; i<settings_div.children.length; i++){
-							if (settings_div.children[i].id == elem.id){
-								found = true
-								settings_div.children[i].style.display = 'block'
-							}
-							if (settings_div.children[i].id == elem.id+"_column_edit"){
-								found = true
-									settings_div.children[i].style.display = 'flex'
-								settings_div.children[i].style.flexDirection = 'column'
-								settings_div.children[i].style.gap = "15px"
-
-							}
-						}
-						if (!found){
-							settings_div.insertBefore(elem, settings_div.firstChild);
-						}
-
-					}
-				
-					if (activity.activityType == 'group'){
-						let target_activity = main_activities[operatorId]
-						let elem = target_activity.settings
-						if (elem == null || elem == undefined){return}
-						let found = false;
-        				for (let i=0; i<settings_div.children.length; i++){
-							if (settings_div.children[i].id == elem.id){
-								found = true
-								settings_div.children[i].style.display = 'block'
-							}
-							if (settings_div.children[i].id == elem.id+"_column_edit"){
-								found = true
-									settings_div.children[i].style.display = 'flex'
-								settings_div.children[i].style.flexDirection = 'column'
-								settings_div.children[i].style.gap = "15px"
-							}
-						}
-						if (!found){
-							settings_div.insertBefore(elem, settings_div.firstChild);
-						}
-
-					}
-					
-					if (activity.activityType == 'custom'){
-						let target_activity = main_activities[operatorId]
-						let elem = target_activity.settings
-						if (elem == null || elem == undefined){return}
-						let found = false;
-        				for (let i=0; i<settings_div.children.length; i++){
-							if (settings_div.children[i].id == elem.id){
-								found = true
-								settings_div.children[i].style.display = 'block'
-							}
-							if (settings_div.children[i].id == elem.id+"_column_edit"){
-								found = true
-									settings_div.children[i].style.display = 'flex'
-								settings_div.children[i].style.flexDirection = 'column'
-								settings_div.children[i].style.gap = "15px"
-							}
-						}
-						if (!found){
-							settings_div.insertBefore(elem, settings_div.firstChild);
-						}
-
-					}
-					if (activity.activityType == 'export'){
-						let target_activity = main_activities[operatorId]
-						let elem = target_activity.settings
-						if (elem == null || elem == undefined){return}
-						let found = false;
-        				for (let i=0; i<settings_div.children.length; i++){
-							if (settings_div.children[i].id == elem.id){
-								found = true
-								settings_div.children[i].style.display = 'block'
-							}
-							if (settings_div.children[i].id == elem.id+"_column_edit"){
-								found = true
-								settings_div.children[i].style.display = 'block'
-							}
-						}
-						if (!found){
-							settings_div.insertBefore(elem, settings_div.firstChild);
-						}
-
-					}
-					if (activity.activityType == 'replace'){
-						let target_activity = main_activities[operatorId]
-						let elem = target_activity.settings
-						if (elem == null || elem == undefined){return}
-						let found = false;
-        				for (let i=0; i<settings_div.children.length; i++){
-							if (settings_div.children[i].id == elem.id){
-								found = true
-								settings_div.children[i].style.display = 'block'
-							}
-							if (settings_div.children[i].id == elem.id+"_column_edit"){
-								found = true
-									settings_div.children[i].style.display = 'flex'
-								settings_div.children[i].style.flexDirection = 'column'
-								settings_div.children[i].style.gap = "15px"
-							}
-						}
-						if (!found){
-							settings_div.insertBefore(elem, settings_div.firstChild);
-						}
-
-					}
-					
-					if (activity.activityType == 'split'){
-						let target_activity = main_activities[operatorId]
-						let elem = target_activity.settings
-						if (elem == null || elem == undefined){return}
-						let found = false;
-        				for (let i=0; i<settings_div.children.length; i++){
-							if (settings_div.children[i].id == elem.id){
-								found = true
-								settings_div.children[i].style.display = 'block'
-							}
-							if (settings_div.children[i].id == elem.id+"_column_edit"){
-								found = true
-								settings_div.children[i].style.display = 'flex'
-								settings_div.children[i].style.flexDirection = 'column'
-								settings_div.children[i].style.gap = "15px"
-							}
-						}
-						if (!found){
-							settings_div.insertBefore(elem, settings_div.firstChild);
-						}
-
-					}
-										
-					if (activity.activityType == 'select'){
-						let target_activity = main_activities[operatorId]
-						let elem = target_activity.settings
-						// target_activity.display_columns()
-						if (elem == null || elem == undefined){return}
-						let found = false;
-        				for (let i=0; i<settings_div.children.length; i++){
-							if (settings_div.children[i].id == elem.id){
-								found = true
-								settings_div.children[i].style.display = 'block'
-							}
-							if (settings_div.children[i].id == elem.id+"_column_edit"){
-								found = true
-								settings_div.children[i].style.display = 'flex'
-								settings_div.children[i].style.flexDirection = 'column'
-								settings_div.children[i].style.gap = "15px"
-							}
-						}
-						if (!found){
-							settings_div.insertBefore(elem, settings_div.firstChild);
-						}
-
-					}
-					if (activity.activityType == 'sort'){
-						let target_activity = main_activities[operatorId]
-						let elem = target_activity.settings
-						if (elem == null || elem == undefined){return}
-						let found = false;
-        				for (let i=0; i<settings_div.children.length; i++){
-							if (settings_div.children[i].id == elem.id){
-								found = true
-								settings_div.children[i].style.display = 'block'
-							}
-							if (settings_div.children[i].id == elem.id+"_column_edit"){
-								found = true
-								settings_div.children[i].style.display = 'flex'
-								settings_div.children[i].style.flexDirection = 'column'
-								settings_div.children[i].style.gap = "15px"
-							}
-						}
-						if (!found){
-							settings_div.insertBefore(elem, settings_div.firstChild);
-						}
-
-					}
-
-					return true;
-				},
-				onOperatorUnselect: function() {
-				$operatorProperties.hide();
-				$selected_activity_settings.hide();
-				$data_preview_settings.hide()
-
-	
-				return true;
-				},
-				onLinkSelect: function(linkId) {
-					$linkProperties.show();
-					$linkColor.val($flowchart.flowchart('getLinkMainColor', linkId));
-					return true;
-				},
-				onLinkUnselect: function() {
-					$linkProperties.hide();
-					return true;
-				}
-			});
-    
-			$operatorTitle.keyup(function() {
-				var selectedOperatorId = $flowchart.flowchart('getSelectedOperatorId');
-				if (selectedOperatorId != null) {
-					$flowchart.flowchart('setOperatorTitle', selectedOperatorId, $operatorTitle.val());
-				}
-			});
-
-			$linkColor.change(function() {
-				var selectedLinkId = $flowchart.flowchart('getSelectedLinkId');
-				if (selectedLinkId != null) {
-					$flowchart.flowchart('setLinkMainColor', selectedLinkId, $linkColor.val());
-				}
-			});
-			//--- end
-			//--- operator and link properties
-			//-----------------------------------------
-
-			//-----------------------------------------
-			//--- delete operator / link button
-			//--- start
-
-      		$('html').keyup(function(e){
-				if(e.keyCode == 46) {
-					$flowchart.flowchart('deleteSelected');
-				}
-			});
-
-			$('.delete_selected_button').on('click', function() {
-				$flowchart.flowchart('deleteSelected');
-			});
-			//--- end
-			//--- delete operator / link button
-			//-----------------------------------------
-
-			//-----------------------------------------
-			//--- create operator button
-			//--- start
-		// $('#get_data').on('click', function() {
-		// 	 $flowchart.flowchart('getData');
-
-		// })
-
-	$('#export_preview').on('click', async function() {
-
-		 let data = $flowchart.flowchart('getoutputVal', this.value, 'output')
-        data = jsonToCsv(data.values)
-        const blob = new Blob([data], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'download.csv';
-        a.click();
-	})
-
-	let running = false
-	$('#refresh_preview').on('click', async function() {
-		if (running){return}
-		let activity_previews = document.getElementById("activity_previews")
-		let data_preview_container = document.getElementById(this.value+"_data_preview")
-		let loading_text = document.createElement("h1");
-		loading_text.textContent = "Loading...";
-		loading_text.style.color = "black";
-		activity_previews.prepend(loading_text);
-		running = true
-		await execute_activity($flowchart,this.value.toString())
-		running = false
-
-
-		activity_previews.removeChild(loading_text)
-		let outputs = $flowchart.flowchart('getoutputVal', this.value, 'output')
-		if (data_preview_container == null || data_preview_container == undefined){
-			 data_preview_container = document.createElement('div')
-			data_preview_container.id = this.value + "_data_preview"
-			let filter_div = document.createElement('div')
-			filter_div.className = "filter-container"
-			let label = document.createElement('label')
-			label.innerHTML = "Filter by column:"
-			let select = document.createElement('select')
-			select.id = this.value+"_columnSelect"
-			let input = document.createElement('input')
-			input.id = this.value+"_filterInput"
-			input.placeholder = "Enter filter text..."
-			filter_div.appendChild(label)
-			filter_div.appendChild(select)
-			filter_div.appendChild(input)
-			data_preview_container.appendChild(filter_div)
-			let table_responsive = document.createElement('div')
-			let data_table_container = document.createElement('div')
-			data_table_container.id ="data_table_container"
-			table_responsive.className = "table-responsive"
-			let t = document.createElement('table')
-			t.id = this.value+"_data_table"
-			data_table_container.appendChild(t)
-			table_responsive.appendChild(data_table_container)
-			data_preview_container.appendChild(table_responsive)
-			activity_previews.appendChild(data_preview_container)
-		}
-
-
-		createTable(outputs.values,document.getElementById(this.value+"_data_table"), this.value) 
-
-
-	})
-	
-	$('#run_pipeline').on('click', function() {
-		let activites = $flowchart.flowchart('getOperators')
-		execute($flowchart)
-    })
-	var operatorI = 0;
-	$('#import_activity').on('click', function() {
-				const footer = document.getElementById('footer');
-				startHeight = parseInt(window.getComputedStyle(footer).height, 10);
-				var operatorId =  operatorI;
-				var operatorData = {
-					operatorId: operatorId,
-					top: ($flowchart.height() / 2) - (startHeight/2),
-					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
-					properties: {
-					 	title: 'Import Data' ,
-						fileType: null,
-						settings: null,//{'datatypes':[],'drop': [],'select':[]},
-						dependencies: [],
-						activityType: 'import',
-						activityId: operatorId,
-						inputs:{
-						input: {
-							label: '',
-							value: {'datatypes': null, 'values':null}
-							}
-						},
-						outputs: {
-							output: {
-								label: 'Output',
-								value: {'datatypes': null, 'values':null}
-							}
-						}
-					}
-				};
-				operatorI++;
-				$flowchart.flowchart('createOperator', operatorId, operatorData);
-				let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
-				let import_activity = new Import_Activity($flowchart,new_activity)
-				main_activities[operatorId] = import_activity
-				activites =  $flowchart.flowchart('getOperators');
-        		// console.log(activites)
-
-			});
-
-	$('#select_activity').on('click', function() {
-		var operatorId = operatorI;
-		const footer = document.getElementById('footer');
-		startHeight = parseInt(window.getComputedStyle(footer).height, 10);
-		var operatorData = {
-			top: ($flowchart.height() / 2) - (startHeight/2),
-			left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
-			properties: {
-				title: 'Select' ,
-				dependencies: [],
-
-				settings: {'datatypes':[],'drop': [],'select':[]},
-				activityType: 'select',
-				inputs: {
-					input: {
-						label: 'Input',
-						value: {'datatypes': null, 'values':null}
-					}
-				},
-				outputs: {
-					output: {
-						label: 'Output',
-						value: {'datatypes': null, 'values':null}
-					}
-				}
-			}
-		};
-		operatorI++;
-		$flowchart.flowchart('createOperator', operatorId, operatorData);
-		let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
-		let split_activity = new Select_Activity($flowchart,new_activity)
-		main_activities[operatorId] = split_activity
-		activites =  $flowchart.flowchart('getOperators');
-
-		});
-	$('#sort_activity').on('click', function() {
-		var operatorId = operatorI;
-		const footer = document.getElementById('footer');
-		startHeight = parseInt(window.getComputedStyle(footer).height, 10);
-		var operatorData = {
-			top: ($flowchart.height() / 2) - (startHeight/2),
-			left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
-			properties: {
-				title: 'Sort' ,
-				activityType: 'sort',
-				dependencies: [],
-				settings: {'datatypes':[],'drop': [],'select':[]},
-				inputs: {
-					input: {
-						label: 'Input',
-						value: {'datatypes': null, 'values':null}
-					}
-				},
-				outputs: {
-					output: {
-						label: 'Output',
-						value: {'datatypes': null, 'values':null}
-					}
-				}
-			}
-		};
-		operatorI++;
-		$flowchart.flowchart('createOperator', operatorId, operatorData);
-		let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
-		let sort_activity = new Sort_Activity($flowchart,new_activity)
-		main_activities[operatorId] = sort_activity
-		activites =  $flowchart.flowchart('getOperators');
-
-		});	
-	$('#join_activity').on('click', function() {
-				var operatorId = operatorI;
-				const footer = document.getElementById('footer');
-				startHeight = parseInt(window.getComputedStyle(footer).height, 10);
-				var operatorData = {
-					top: ($flowchart.height() / 2) - (startHeight/2),
-					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
-					properties: {
-						title: 'Join' ,
-            			activityType: 'join',
-						dependencies: [],
-
-						inputs: {
-							input_1: {
-								label: 'Table 1',
-                				value: null
-							},
-              				input_2: {
-								label: 'Table 2',
-                				value: null
-							}
-						},
-						outputs: {
-							output: {
-								label: 'Output',
-                				value: null
-
-							}
-						}
-					}
-				};
-				operatorI++;
-
-				$flowchart.flowchart('createOperator', operatorId, operatorData);
-				let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
-				let join_activity = new Join_Activity($flowchart,new_activity)
-				main_activities[operatorId] = join_activity
-				activites =  $flowchart.flowchart('getOperators');
-        
-			});
-
-    $('#aggregate_activity').on('click', function() {
-				var operatorId = operatorI;
-				const footer = document.getElementById('footer');
-				startHeight = parseInt(window.getComputedStyle(footer).height, 10);
-				var operatorData = {
-					top: ($flowchart.height() / 2) -(startHeight/2),
-					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
-					properties: {
-						title: 'Aggregate' ,
-						dependencies: [],
-
-            activityType: 'group',
-						inputs: {
-							input: {
-								label: 'Table 1',
-                value: null
-							}
-						},
-						outputs: {
-							output: {
-								label: 'Output',
-							}
-						}
-					}
-				};
-				operatorI++;
-
-				$flowchart.flowchart('createOperator', operatorId, operatorData);
-				let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
-				let group_activity = new Group_Activity($flowchart,new_activity)
-				main_activities[operatorId] = group_activity
-				activites =  $flowchart.flowchart('getOperators');
-        
-			});
-    
-	$('#custom_activity').on('click', function() {
-				var operatorId = operatorI;
-				const footer = document.getElementById('footer');
-				startHeight = parseInt(window.getComputedStyle(footer).height, 10);
-				var operatorData = {
-					top: ($flowchart.height() / 2) - (startHeight/2),
-					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
-					properties: {
-						title: 'Custom Column' ,
-						dependencies: [],
-
-            activityType: 'custom',
-						inputs: {
-							input: {
-								label: 'Table 1',
-                				value: null
-							}
-						},
-						outputs: {
-							output: {
-								label: 'Output',
-							}
-						}
-					}
-				};
-				operatorI++;
-
-				$flowchart.flowchart('createOperator', operatorId, operatorData);
-				let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
-				let custom_activity = new Custom_Activity($flowchart,new_activity)
-				main_activities[operatorId] = custom_activity
-				activites =  $flowchart.flowchart('getOperators');
-        
-			});
-	$('#replace_activity').on('click', function() {
-				var operatorId = operatorI;
-				const footer = document.getElementById('footer');
-				startHeight = parseInt(window.getComputedStyle(footer).height, 10);
-				var operatorData = {
-					top: ($flowchart.height() / 2) -(startHeight/2),
-					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
-					properties: {
-						title: 'Replace Value' ,
-						dependencies: [],
-
-            activityType: 'replace',
-						inputs: {
-							input: {
-								label: 'Table 1',
-                				value: null
-							}
-						},
-						outputs: {
-							output: {
-								label: 'Output',
-							}
-						}
-					}
-				};
-				operatorI++;
-
-				$flowchart.flowchart('createOperator', operatorId, operatorData);
-				let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
-				let replace_activity = new Replace_Activity($flowchart,new_activity)
-				main_activities[operatorId] = replace_activity
-				activites =  $flowchart.flowchart('getOperators');
-        
-			});
-
-    $('#export_activity').on('click', function() {
-				var operatorId = 'created_operatorexp_' + operatorI;
-				const footer = document.getElementById('footer');
-				startHeight = parseInt(window.getComputedStyle(footer).height, 10);
-				var operatorData = {
-					top: ($flowchart.height() / 2) - (startHeight/2),
-					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
-					properties: {
-						title: 'Export' ,
-						dependencies: [],
-
-            activityType: 'export',
-						inputs: {
-							input: {
-								label: 'Input',
-                value: null
-							},
-           
-						},
-            outputs : {
-              output: {
-                  label : ''
-                  ,value: null
-              }
-							}
-            
-					}
-				};
-				operatorI++;
-
-
-
-				$flowchart.flowchart('createOperator', operatorId, operatorData);
-				let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
-				let export_activity = new Export_Activity($flowchart,new_activity)
-				main_activities[operatorId] = export_activity
-				activites =  $flowchart.flowchart('getOperators');
-
-			});
-
-	$('#flatten_activity').on('click', function() {
-				var operatorId = 'created_operator_flat' + operatorI;
-				const footer = document.getElementById('footer');
-				startHeight = parseInt(window.getComputedStyle(footer).height, 10);
-				var operatorData = {
-					top: ($flowchart.height() / 2) - (startHeight/2),
-					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
-					properties: {
-						title: 'Flatten' ,
-						dependencies: [],
-
-            activityType: 'flatten',
-						inputs: {
-							input: {
-								label: 'Input',
-                value: null
-							}
-						},
-						outputs: {
-							output: {
-								label: 'Output',
-                value: null
-							}
-						}
-					}
-				};
-				operatorI++;
-
-				$flowchart.flowchart('createOperator', operatorId, operatorData);
-				activites =  $flowchart.flowchart('getOperators');
-
-			});
-
-
-	$('#filter_activity').on('click', function() {
-				var operatorId = operatorI;
-				const footer = document.getElementById('footer');
-				startHeight = parseInt(window.getComputedStyle(footer).height, 10);
-				var operatorData = {
-					top: ($flowchart.height() / 2) - (startHeight/2),
-					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
-					properties: {
-						title: 'Filter' ,
-						settings: {'datatypes':[],'drop': [],'select':[]},
-            			activityType: 'filter',
-						dependencies: [],
-
-						inputs: {
-							input: {
-								label: 'Input',
-                				value: {'datatypes': null, 'values':null}
-							}
-						},
-						outputs: {
-							output: {
-								label: 'Output',
-								value: {'datatypes': null, 'values':null}
-							}
-						}
-					}
-				};
-				operatorI++;
-				$flowchart.flowchart('createOperator', operatorId, operatorData);
-				let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
-				let filter_activity = new Filter_Activity($flowchart,new_activity)
-				main_activities[operatorId] = filter_activity
-				activites =  $flowchart.flowchart('getOperators');
-
-			});
-			
-	$('#split_activity').on('click', function() {
-		var operatorId = operatorI;
-		const footer = document.getElementById('footer');
-		startHeight = parseInt(window.getComputedStyle(footer).height, 10);
-		var operatorData = {
-			top: ($flowchart.height() / 2) - (startHeight/2),
-			left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
-			properties: {
-				title: 'Split' ,
-				dependencies: [],
-
-				settings: {'datatypes':[],'drop': [],'select':[]},
-				activityType: 'split',
-				inputs: {
-					input: {
-						label: 'Input',
-						value: {'datatypes': null, 'values':null}
-					}
-				},
-				outputs: {
-					output: {
-						label: 'Output',
-						value: {'datatypes': null, 'values':null}
-					}
-				}
-			}
-		};
-		operatorI++;
-		$flowchart.flowchart('createOperator', operatorId, operatorData);
-		let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
-		let split_activity = new Split_Activity($flowchart,new_activity)
-		main_activities[operatorId] = split_activity
-		activites =  $flowchart.flowchart('getOperators');
-
-		});
-			
-			
-			//--- end
-			//--- create operator button
-			//-----------------------------------------
-
-
-
-
-			//-----------------------------------------
-			//--- draggable operators
-			//--- start
-			//var operatorId = 0;
-			var $draggableOperators = $('.draggable_operator');
-			$draggableOperators.draggable({
-				cursor: "move",
-				opacity: 0.7,
-
-				// helper: 'clone',
-				appendTo: 'body',
-				zIndex: 1000,
-
-				helper: function(e) {
-					var $this = $(this);
-					var data = getOperatorData($this);
-					return $flowchart.flowchart('getOperatorElement', data);
-				},
-				stop: function(e, ui) {
-					var $this = $(this);
-					var elOffset = ui.offset;
-					var containerOffset = $container.offset();
-					if (elOffset.left > containerOffset.left &&
-						elOffset.top > containerOffset.top &&
-						elOffset.left < containerOffset.left + $container.width() &&
-						elOffset.top < containerOffset.top + $container.height()) {
-
-						var flowchartOffset = $flowchart.offset();
-
-						var relativeLeft = elOffset.left - flowchartOffset.left;
-						var relativeTop = elOffset.top - flowchartOffset.top;
-
-						var positionRatio = $flowchart.flowchart('getPositionRatio');
-						relativeLeft /= positionRatio;
-						relativeTop /= positionRatio;
-
-						var data = getOperatorData($this);
-						data.left = relativeLeft;
-						data.top = relativeTop;
-
-						$flowchart.flowchart('addOperator', data);
-					}
-				}
-			});
-			//--- end
-			//--- draggable operators
-			//-----------------------------------------
-
-
-			//-----------------------------------------
-			//--- save and load
-			//--- start
-			function Flow2Text() {
-				var data = $flowchart.flowchart('getData', pipeline_id);
-				let userId = sessionStorage.getItem("userId")
-				data = {'values' :[data]}
-				post_pipeline(userId, data )
-
-				// $('#flowchart_data').val(JSON.stringify(data, null, 2));
-			}
-			$('#get_data').click(Flow2Text);
-
-			function Text2Flow() {
-				var data = JSON.parse($('#flowchart_data').val());
-				$flowchart.flowchart('setData', data);
-			}
-			$('#set_data').click(Text2Flow);
-
-			/*global localStorage*/
-			function SaveToLocalStorage() {
-				if (typeof localStorage !== 'object') {
-					alert('local storage not available');
-					return;
-				}
-				Flow2Text();
-				localStorage.setItem("stgLocalFlowChart", $('#flowchart_data').val());
-			}
-			$('#save_local').click(SaveToLocalStorage);
-
-			function LoadFromLocalStorage() {
-				let user = sessionStorage.getItem('user_json')
-				user = JSON.parse(user)
-				let pipelines = user['pipelines']['values']
-				let activities = pipelines[0]['activities']
-				let links = pipelines[0]['links']
-				// console.log(activities)
-				let Ids = []
-				Object.keys(activities).forEach(operatorId => {
-					let operatorData = activities[operatorId]
-					Ids.push(parseInt(operatorId))
-					$flowchart.flowchart('createOperator', operatorId, operatorData);
-					let new_activity = $flowchart.flowchart('getOperatorActivity', operatorId)
-					let a;
-					if (operatorData.properties.activityType == 'import'){
-							a = new Import_Activity($flowchart,new_activity)
-					}
-					if (operatorData.properties.activityType == 'filter'){
-							a = new Filter_Activity($flowchart,new_activity)
-					}
-					if (operatorData.properties.activityType == 'export'){
-							a = new Export_Activity($flowchart,new_activity)
-					}
-					if (operatorData.properties.activityType == 'group'){
-							a = new Group_Activity($flowchart,new_activity)
-					}
-					if (operatorData.properties.activityType == 'join'){
-							a = new Join_Activity($flowchart,new_activity)
-					}
-					if (operatorData.properties.activityType == 'custom'){
-							a = new Custom_Activity($flowchart,new_activity)
-					}
-					if (operatorData.properties.activityType == 'replace'){
-							a = new Replace_Activity($flowchart,new_activity)
-					}
-					if (operatorData.properties.activityType == 'split'){
-							a = new Split_Activity($flowchart,new_activity)
-					}
-					if (operatorData.properties.activityType == 'select'){
-							a = new Select_Activity($flowchart,new_activity)
-					}if (operatorData.properties.activityType == 'sort'){
-							a = new Sort_Activity($flowchart,new_activity)
-					}
-
-					main_activities[operatorId] = a
-					activites =  $flowchart.flowchart('getOperators');
-
-					
-				});
-				
-				$flowchart.flowchart('setData',pipelines[0]);
-				const maxVal = Math.max(...Ids);
-				operatorI = maxVal+1
-
-				// Object.values(links).forEach(l =>{
-				// 	console.log("LINK", l)
-				// })
-				
-
-				/*
-				var operatorData = {
-					operatorId: operatorId,
-					top: ($flowchart.height() / 2) - (startHeight/2),
-					left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
-					properties: {
-					 	title: 'Import Data' ,
-						fileType: null,
-						settings: null,//{'datatypes':[],'drop': [],'select':[]},
-						dependencies: [],
-						activityType: 'import',
-						activityId: operatorId,
-						inputs:{
-						input: {
-							label: '',
-							value: {'datatypes': null, 'values':null}
-							}
-						},
-						outputs: {
-							output: {
-								label: 'Output',
-								value: {'datatypes': null, 'values':null}
-							}
-						}
-					}
-				};
-
-				*/
-
-			
-			}
-			$('#load_local').click(LoadFromLocalStorage);
-			//--- end
-			//--- save and load
-			//-----------------------------------------
-
-
-		});
-
-	var defaultFlowchartData = {
-		operators: {
-			operator1: {
-				top: 20,
-				left: 20,
-				properties: {
-					title: 'Operator 1',
-					inputs: {},
-					outputs: {
-						output_1: {
-							label: 'Output 1',
-						}
-					}
-				}
-			},
-			operator2: {
-				top: 80,
-				left: 300,
-				properties: {
-					title: 'Operator 2',
-					inputs: {
-						input_1: {
-							label: 'Input 1',
-						},
-						input_2: {
-							label: 'Input 2',
-						},
-					},
-					outputs: {}
-				}
-			},
-		},
-		links: {
-			link_1: {
-				fromOperator: 'operator1',
-				fromConnector: 'output_1',
-				toOperator: 'operator2',
-				toConnector: 'input_2',
-			},
-		}
-	};
-	if (false) console.log('remove lint unused warning', defaultFlowchartData);
-
-</script>
-
-
-<script>
-
-</script>
-
-
-<script>
-  const footer = document.getElementById('footer');
-  const handle = document.getElementById('resizeHandle');
-
-  let isResizing = false;
-  let startY, startHeight;
-
-  handle.addEventListener('mousedown', e => {
-    isResizing = true;
-     
-    startY = e.clientY;
-    startHeight = parseInt(window.getComputedStyle(footer).height, 10);
-    document.body.style.userSelect = 'none';
-  });
-
-  document.addEventListener('mousemove', e => {
-    if (!isResizing) return;
-    const dy = startY - e.clientY;
-    footer.style.height = `${startHeight + dy}px`;
-  });
-
-  document.addEventListener('mouseup', () => {
-    isResizing = false;
-    document.body.style.userSelect = '';
-  });
-</script>
-
-</body>
+  <script src="etl/home-ui.js" defer></script>
+  </body>
 </html>

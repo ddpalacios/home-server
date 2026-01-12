@@ -85,6 +85,13 @@ class Settings{
     // }
     _on_button_click(e, widget, activity){
         let parent_element = e.target.parentElement;
+        if (parent_element && parent_element.closest) {
+            const wrapper = parent_element.closest(".select-column-row");
+            if (wrapper) {
+                wrapper.remove();
+                return;
+            }
+        }
         parent_element.remove()
         // console.log("deleting", parent_element.id)
         // widget.flowchart('removeSelectColumn', activity.activityId, parent_element.id)
@@ -267,12 +274,7 @@ class Settings{
             div.appendChild(input)
         }
         else if (this.activity.activityType == 'select'){
-                const input = document.createElement('input');
-                input.innerHTML = "sync columns"
-                input.value = "Sync Columns"
-                input.type = 'button';
-                input.addEventListener("click", (event) => this._sync_columns(event, this.flowchart, this));
-                div.appendChild(input)
+                // Add button is managed by Select_Activity settings UI.
             }
          
         else {
@@ -280,12 +282,7 @@ class Settings{
 
             let add_button = document.createElement("button")
             add_button.innerHTML = this.add_button_label
-            add_button.style.width = '15%'
-            add_button.className = 'buttons'
-            add_button.style.backgroundColor = "#28a745"; 
-            add_button.style.color = "white";
-            add_button.style.border = "none";
-            add_button.style.borderRadius = "6px";
+            add_button.className = 'buttons add-button'
             add_button.style.padding = "8px 12px";
             add_button.style.cursor = "pointer";
             add_button.style.transition = "background 0.2s ease";
@@ -450,7 +447,17 @@ class Settings{
 
     }
 
-    this.operation_settings = { [type]: statements };
+    let normalized_statements = statements
+    if (type == 'select') {
+        normalized_statements = statements.map(statement => {
+            return {
+                column_name: statement.columnName,
+                renamed_name: statement.new_column_name || statement.columnName,
+                data_type: statement.data_type
+            }
+        })
+    }
+    this.operation_settings = { [type]: normalized_statements };
     return this.operation_settings;
 }
 
@@ -596,6 +603,11 @@ function get_selector_element(id, options, default_value) {
 
 function add_activity_body(activity, outputVal){
     if (activity.activityType == 'flatten'){
+        const body = document.getElementById("activity_body_"+activity.operatorId)
+        let description = null;
+        if (body) {
+            description = body.querySelector(".flowchart-operator-description");
+        }
         let array_values = []
         Object.keys(outputVal).forEach(key => {
             if (Array.isArray(outputVal[key])){
@@ -604,15 +616,28 @@ function add_activity_body(activity, outputVal){
         });
         if (array_values.length>0){
             let select_body_element = get_selector_element("flatten_body_select_"+activity.operatorId, array_values, array_values[0])
-            let body = document.getElementById("activity_body_"+activity.operatorId)
-            body.appendChild(select_body_element)
-            body.innerHTML = '';
-            body.appendChild(select_body_element);
+            if (body) {
+                body.innerHTML = '';
+                if (description) {
+                    body.appendChild(description);
+                }
+                const content = document.createElement("div");
+                content.className = "flowchart-operator-body-content";
+                content.appendChild(select_body_element);
+                body.appendChild(content);
+            }
         }else{
             let select_body_element = get_selector_element("flatten_body_select_"+activity.operatorId, ['-'], "-")
-            let body = document.getElementById("activity_body_"+activity.operatorId)
-            body.innerHTML = '';
-            body.appendChild(select_body_element);
+            if (body) {
+                body.innerHTML = '';
+                if (description) {
+                    body.appendChild(description);
+                }
+                const content = document.createElement("div");
+                content.className = "flowchart-operator-body-content";
+                content.appendChild(select_body_element);
+                body.appendChild(content);
+            }
         }
     }
 
