@@ -545,6 +545,32 @@ jQuery(function ($) {
             }
             this._refreshInternalProperties(operatorData);
             var infos = $.extend(true, {}, operatorData.internal.properties);
+            if (typeof infos.headerColor == 'undefined' && infos.activityType) {
+                var headerColors = {
+                    import: "#a7d8ff",
+                    sheets_read: "#7af4de",
+                    sheets_write: "#7cc6ff",
+                    filter: "#6ee7ff",
+                    group: "#8fb6ff",
+                    join: "#ff8aa2",
+                    custom: "#d5a6ff",
+                    flatten: "#7fe3b2",
+                    replace: "#ff9aa2",
+                    fill: "#9fd0ff",
+                    clean: "#a8f0c2",
+                    dedupe: "#c2b0ff",
+                    cast: "#ffd591",
+                    regex: "#ffb47d",
+                    pivot: "#ffb8e0",
+                    window: "#ffd08a",
+                    split: "#ff9f6a",
+                    combine: "#b4a6ff",
+                    select: "#8fd9ff",
+                    sort: "#ffd36b",
+                    append: "#7dd9c7"
+                };
+                infos.headerColor = headerColors[infos.activityType] || "#dbe7ff";
+            }
 
             for (var connectorId_i in infos.inputs) {
                 if (infos.inputs.hasOwnProperty(connectorId_i)) {
@@ -597,16 +623,16 @@ jQuery(function ($) {
             this.data.operators[operatorId].internal.properties['settings']['select'].push(column_to_select)
         },
         
-        renameSelectColumn: function(operatorId, select_id, new_name){
-            let vals = this.data.operators[operatorId].internal.properties['settings']['select']
-            for(let i=0; i<vals.length; i++){
-                let val = vals[i]
-                if (val.id  == select_id){
-                    this.data.operators[operatorId].internal.properties['settings']['select'][i]['as'] = new_name
-                    break
-                }
-            }
-        },
+        // renameSelectColumn: function(operatorId, select_id, new_name){
+        //     let vals = this.data.operators[operatorId].internal.properties['settings']['select']
+        //     for(let i=0; i<vals.length; i++){
+        //         let val = vals[i]
+        //         if (val.id  == select_id){
+        //             this.data.operators[operatorId].internal.properties['settings']['select'][i]['as'] = new_name
+        //             break
+        //         }
+        //     }
+        // },
         addCustomValue: function(operatorId, select_id, custom_value){
             // console.log("ADDING CUSTOM VALE")
             let vals = this.data.operators[operatorId].internal.properties['settings']['select']
@@ -705,9 +731,12 @@ jQuery(function ($) {
             var $operator = $('<div class="flowchart-operator"></div>');
             $operator.addClass(infos.class);
 
-            var $operator_title = $('<div class="flowchart-operator-title" style="background-color: lightblue;"></div>');
+            var headerColor = infos.headerColor || 'lightblue';
+            var $operator_title = $('<div class="flowchart-operator-title"></div>');
+            $operator_title.css('background-color', headerColor);
             $operator_title.html(infos.title);
             $operator_title.appendTo($operator);
+            $operator.css('--operator-accent', headerColor);
             $operator_body = document.createElement('div');
             $operator_body.id = "activity_body_"+operatorData.operatorId
             $operator_body.className = 'flowchart-operator-body';
@@ -1109,36 +1138,83 @@ jQuery(function ($) {
                             return;
                         }
                         var elementOffset = self.element.offset();
-                        pointerX = (e.pageX - elementOffset.left) / self.positionRatio - parseInt($(e.target).css('left'), 10);
-                        pointerY = (e.pageY - elementOffset.top) / self.positionRatio - parseInt($(e.target).css('top'), 10);
+                        var $operatorEl = $(this);
+                        pointerX = (e.pageX - elementOffset.left) / self.positionRatio - parseInt($operatorEl.css('left'), 10);
+                        pointerY = (e.pageY - elementOffset.top) / self.positionRatio - parseInt($operatorEl.css('top'), 10);
+                        if ($(this).hasClass('multi-selected')) {
+                            var startLeft = parseInt($operatorEl.css('left'), 10) || 0;
+                            var startTop = parseInt($operatorEl.css('top'), 10) || 0;
+                            self.multiDrag = {
+                                startLeft: startLeft,
+                                startTop: startTop,
+                                items: []
+                            };
+                            self.objs.layers.operators.find('.flowchart-operator.multi-selected').each(function () {
+                                var $operator = $(this);
+                                var operatorId = $operator.data('operator_id');
+                                var left = parseInt($operator.css('left'), 10) || 0;
+                                var top = parseInt($operator.css('top'), 10) || 0;
+                                self.multiDrag.items.push({id: operatorId, left: left, top: top, el: $operator});
+                            });
+                        } else {
+                            self.multiDrag = null;
+                        }
                     },
                     drag: function (e, ui) {
+                        var elementOffset = self.element.offset();
+                        var nextLeft = (e.pageX - elementOffset.left) / self.positionRatio - pointerX;
+                        var nextTop = (e.pageY - elementOffset.top) / self.positionRatio - pointerY;
                         if (self.options.grid) {
                             var grid = self.options.grid;
-                            var elementOffset = self.element.offset();
-                            ui.position.left = Math.round(((e.pageX - elementOffset.left) / self.positionRatio - pointerX) / grid) * grid;
-                            ui.position.top = Math.round(((e.pageY - elementOffset.top) / self.positionRatio - pointerY) / grid) * grid;
-                            
-                            if (!operatorData.internal.properties.uncontained) {
-                                var $this = $(this);
-                                ui.position.left = Math.min(Math.max(ui.position.left, 0), self.element.width() - $this.outerWidth());
-                                ui.position.top = Math.min(Math.max(ui.position.top, 0), self.element.height() - $this.outerHeight());
-                            }
-                            
-                            ui.offset.left = Math.round(ui.position.left + elementOffset.left);
-                            ui.offset.top = Math.round(ui.position.top + elementOffset.top);
-                            fullElement.operator.css({left: ui.position.left, top: ui.position.top});
+                            nextLeft = Math.round(nextLeft / grid) * grid;
+                            nextTop = Math.round(nextTop / grid) * grid;
                         }
-                        operatorChangedPosition($(this).data('operator_id'), ui.position);
+
+                        if (!operatorData.internal.properties.uncontained) {
+                            var $this = $(this);
+                            nextLeft = Math.min(Math.max(nextLeft, 0), self.element.width() - $this.outerWidth());
+                            nextTop = Math.min(Math.max(nextTop, 0), self.element.height() - $this.outerHeight());
+                        }
+
+                        ui.position.left = nextLeft;
+                        ui.position.top = nextTop;
+                        ui.offset.left = Math.round(nextLeft + elementOffset.left);
+                        ui.offset.top = Math.round(nextTop + elementOffset.top);
+
+                        if (self.multiDrag && self.multiDrag.items && self.multiDrag.items.length > 0) {
+                            var deltaX = nextLeft - self.multiDrag.startLeft;
+                            var deltaY = nextTop - self.multiDrag.startTop;
+                            self.multiDrag.items.forEach(function (item) {
+                                var itemLeft = item.left + deltaX;
+                                var itemTop = item.top + deltaY;
+                                item.el.css({left: itemLeft, top: itemTop});
+                                operatorChangedPosition(item.id, {left: itemLeft, top: itemTop});
+                            });
+                        } else {
+                            fullElement.operator.css({left: nextLeft, top: nextTop});
+                            operatorChangedPosition($(this).data('operator_id'), ui.position);
+                        }
                     },
                     stop: function (e, ui) {
                         self._unsetTemporaryLink();
                         var operatorId = $(this).data('operator_id');
-                        operatorChangedPosition(operatorId, ui.position);
                         fullElement.operator.css({
                             height: 'auto'
                         });
 
+                        if (self.multiDrag && self.multiDrag.items && self.multiDrag.items.length > 0) {
+                            self.multiDrag.items.forEach(function (item) {
+                                var left = parseInt(item.el.css('left'), 10) || 0;
+                                var top = parseInt(item.el.css('top'), 10) || 0;
+                                operatorChangedPosition(item.id, {left: left, top: top});
+                                self.callbackEvent('operatorMoved', [item.id, {left: left, top: top}]);
+                            });
+                            self.callbackEvent('afterChange', ['operator_moved']);
+                            self.multiDrag = null;
+                            return;
+                        }
+
+                        operatorChangedPosition(operatorId, ui.position);
                         self.callbackEvent('operatorMoved', [operatorId, ui.position]);
                         self.callbackEvent('afterChange', ['operator_moved']);
                     }

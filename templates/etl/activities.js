@@ -229,6 +229,10 @@ class Settings{
                 button.className = "buttons"
                 button.innerHTML = element['label']
                 button.style.color = element['color']
+                if (element['color'] === 'red') {
+                    button.classList.add('danger-button')
+                    button.setAttribute('data-action', 'drop')
+                }
                 button.addEventListener("click", (event) => this._on_button_click(event, widget, this));
                 div.appendChild(button)
             }
@@ -361,80 +365,110 @@ class Settings{
     if (!record) return null;
 
     const statements = [];
-
     for (let i = 0; i < record.children.length; i++) {
-        const row = record.children[i];
+        let row = record.children[i];
+        if (row && row.classList && row.classList.contains("select-column-row")) {
+            const inner_row = row.querySelector(".rename_settings");
+            if (inner_row) {
+                row = inner_row;
+            }
+        }
+        if (!row || !row.children) {
+            continue;
+        }
         const statement = {};
 
-        for (let j = 0; j < row.children.length; j++) {
-            const element = row.children[j];
+        const named_elements = row.querySelectorAll("[name]");
+        for (let j = 0; j < named_elements.length; j++) {
+            const element = named_elements[j];
          
 
             if (!element.name) continue;
 
             switch (element.name) {
                 case 'column_name_1':
+                    // First column selector (e.g., join/combine/replace left side).
                     statement.columnName_1 = element.value;
                     statement.row_id = row.id
                     continue
                 case 'column_name_2':
+                    // Second column selector (e.g., join/combine/replace right side).
                     statement.columnName_2 = element.value;
                     statement.row_id = row.id
                     continue
                 case 'new_column_name':
+                    // Rename target or newly created column name.
                     statement.new_column_name = element.value;
                     statement.row_id = row.id
                     continue
                 case 'new_column_name_1':
+                    // First output name (e.g., split part 1 column name).
                     statement.new_column_name_1 = element.value;
                     statement.row_id = row.id
                     continue
                 case 'new_column_name_2':
+                    // Second output name (e.g., split part 2 column name).
                     statement.new_column_name_2 = element.value;
                     statement.row_id = row.id
                     continue
                 case 'multiple_column_names':
+                    // Multi-select column list (e.g., group-by columns).
                     const selectedValues = Array.from(element.selectedOptions).map(opt => opt.value);
                     statement.columnName = selectedValues;
                     statement.row_id = row.id
                     continue
                 case 'column_name':
+                    // Single column selector for the row.
                     statement.columnName = element.value;
                     statement.row_id = row.id
                     continue
                 case 'case':
+                    // Flag-like selector (e.g., split drop original TRUE/FALSE).
                     statement.case = element.value;
                     statement.row_id = row.id
                     continue
                 case 'data_type':
+                    // Selected data type for the row/column.
                     statement.data_type = element.value;
                     statement.row_id = row.id
                     continue
                 case 'orderby':
+                    // Sort direction (ASC/DESC).
                     statement.orderby = element.value;
                     statement.row_id = row.id
                     continue
                 case 'operation':
+                    // Operation selector (e.g., filter/custom/replace/combine op).
                     statement.operation = element.value;
                     statement.row_id = row.id
                     continue
                 case 'condition_value':
+                    // Condition value for comparisons.
                     statement.condition_value = element.value;
                     statement.row_id = row.id
                     continue
+                case 'find_value':
+                    // Replacement search value/pattern.
+                    statement.find_value = element.value;
+                    statement.row_id = row.id
+                    continue
                 case 'value':
+                    // Generic value input (delimiter, replacement, etc.).
                     statement.value = element.value;
                     statement.row_id = row.id
                     continue
                 case 'then_value':
+                    // Then-branch value (custom/replace).
                     statement.then_value = element.value;
                     statement.row_id = row.id
                     continue
                 case 'else_value':
+                    // Else-branch value (custom/replace).
                     statement.else_value = element.value;
                     statement.row_id = row.id
                     continue
                 case 'logical':
+                    // Logical join for conditions (AND/OR).
                     statement.logical = element.value;
                     statement.row_id = row.id
                     continue
@@ -446,7 +480,7 @@ class Settings{
         }
 
     }
-
+    console.log("STATEMENTS", statements)
     let normalized_statements = statements
     if (type == 'select') {
         normalized_statements = statements.map(statement => {
@@ -1056,7 +1090,7 @@ function onLinkCreation(widget,linkData){
     let fromOperator  = widget.getOperatorActivity(linkData['fromOperator'])
     let outputVal = fromOperator.outputs.output.value
 
-    if (toOperator.activityType == 'join'){
+    if (toOperator.activityType == 'join' || toOperator.activityType == 'append'){
         // console.log("ADDING dependency")
         widget.setDependency(linkData['toOperator'],fromOperator.operatorId)
 

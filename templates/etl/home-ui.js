@@ -17,12 +17,20 @@ function switchTabPanel(evt, cityName) {
   }
 }
 
+
 document.addEventListener("DOMContentLoaded", function() {
   var body = document.body;
   var toggleButtons = [
     document.getElementById("sidebarToggle"),
     document.getElementById("sidebarToggleFloating")
   ];
+  var searchInput = document.getElementById("activitySearch");
+  var activityButtons = Array.prototype.slice.call(
+    document.querySelectorAll(".sidebar-buttons .create_operator")
+  );
+  var activityGroups = Array.prototype.slice.call(
+    document.querySelectorAll(".activity-group")
+  );
 
   function syncSidebarToggle() {
     var isCollapsed = body.classList.contains("sidebar-collapsed");
@@ -52,6 +60,55 @@ document.addEventListener("DOMContentLoaded", function() {
       button.addEventListener("click", toggleSidebar);
     }
   });
+
+  if (searchInput) {
+    searchInput.addEventListener("input", function(event) {
+      var query = (event.target.value || "").trim().toLowerCase();
+      activityButtons.forEach(function(button) {
+        var label = (button.textContent || "").toLowerCase();
+        var matches = query.length === 0 || label.indexOf(query) !== -1;
+        button.style.display = matches ? "" : "none";
+      });
+
+      activityGroups.forEach(function(group) {
+        var groupButtons = group.querySelectorAll(".create_operator");
+        var hasVisible = false;
+        for (var i = 0; i < groupButtons.length; i++) {
+          if (groupButtons[i].style.display !== "none") {
+            hasVisible = true;
+            break;
+          }
+        }
+        group.style.display = hasVisible ? "" : "none";
+      });
+    });
+  }
+
+  var themeToggle = document.getElementById("themeToggle");
+  if (themeToggle) {
+    var savedTheme = localStorage.getItem("etlTheme");
+    if (savedTheme === "dark") {
+      body.classList.add("theme-dark");
+    }
+
+    function syncThemeToggle() {
+      var isDark = body.classList.contains("theme-dark");
+      themeToggle.setAttribute(
+        "aria-label",
+        isDark ? "Switch to light mode" : "Switch to dark mode"
+      );
+      themeToggle.querySelector(".theme-toggle-icon").textContent = isDark ? "🌙" : "☀";
+      themeToggle.lastChild.textContent = isDark ? " Dark" : " Light";
+    }
+
+    themeToggle.addEventListener("click", function() {
+      body.classList.toggle("theme-dark");
+      localStorage.setItem("etlTheme", body.classList.contains("theme-dark") ? "dark" : "light");
+      syncThemeToggle();
+    });
+
+    syncThemeToggle();
+  }
 
   syncSidebarToggle();
 });
@@ -253,6 +310,9 @@ function areArraysEqual(arr1, arr2) {
 var main_activities = {};
 let height_offset = 300;
 var $flowchart;
+
+
+
 $(document).ready(function() {
   $flowchart = $("#flowchartworkspace");
   var $container = $flowchart.parent();
@@ -265,6 +325,9 @@ $(document).ready(function() {
     multipleLinksOnInput: false,
     multipleLinksOnOutput: true
   });
+
+
+
   function getOperatorData($element) {
     var nbInputs = parseInt($element.data("nb-inputs"), 10);
     var nbOutputs = parseInt($element.data("nb-outputs"), 10);
@@ -312,6 +375,9 @@ $(document).ready(function() {
   var isPanning = false;
   var panStart = { x: 0, y: 0 };
   var panOrigin = { x: 0, y: 0 };
+  var isSelecting = false;
+  var selectionStart = { x: 0, y: 0 };
+  var selectionBox = null;
 
 
 
@@ -416,6 +482,7 @@ $(document).ready(function() {
   setActivityTabsVisible(false);
 
   $flowchart.flowchart({
+
     onOperatorSelect: function(operatorId) {
       $operatorProperties.show();
       $pipelineProperties.hide();
@@ -448,12 +515,20 @@ $(document).ready(function() {
       $operatorDescription.val(currentDescription);
       updateOperatorDescription(operatorId, currentDescription);
       let all_dependecies = $flowchart.flowchart("getDependencies");
+
+
+
       console.log("Selected", activity, "dependencies", all_dependecies);
+
+
+
       let settings_div = document.getElementById("selected_activity_settings");
       Array.from(settings_div.children).forEach(child => {
         child.style.display = "none";
       });
       if (activity.activityType == "import") {
+        // Adds specific settings for import activity
+
         let target_activity = main_activities[operatorId];
         let elem = target_activity.settings;
         if (elem == null || elem == undefined) { return; }
@@ -583,6 +658,153 @@ $(document).ready(function() {
           settings_div.insertBefore(elem, settings_div.firstChild);
         }
       }
+      if (activity.activityType == "fill") {
+        let target_activity = main_activities[operatorId];
+        let elem = target_activity.settings;
+        if (elem == null || elem == undefined) { return; }
+        let found = false;
+        for (let i = 0; i < settings_div.children.length; i++) {
+          if (settings_div.children[i].id == elem.id) {
+            found = true;
+            settings_div.children[i].style.display = "block";
+          }
+          if (settings_div.children[i].id == elem.id + "_column_edit") {
+            found = true;
+            settings_div.children[i].style.display = "flex";
+            settings_div.children[i].style.flexDirection = "column";
+            settings_div.children[i].style.gap = "15px";
+          }
+        }
+        if (!found) {
+          settings_div.insertBefore(elem, settings_div.firstChild);
+        }
+      }
+      if (activity.activityType == "clean") {
+        let target_activity = main_activities[operatorId];
+        let elem = target_activity.settings;
+        if (elem == null || elem == undefined) { return; }
+        let found = false;
+        for (let i = 0; i < settings_div.children.length; i++) {
+          if (settings_div.children[i].id == elem.id) {
+            found = true;
+            settings_div.children[i].style.display = "block";
+          }
+          if (settings_div.children[i].id == elem.id + "_column_edit") {
+            found = true;
+            settings_div.children[i].style.display = "flex";
+            settings_div.children[i].style.flexDirection = "column";
+            settings_div.children[i].style.gap = "15px";
+          }
+        }
+        if (!found) {
+          settings_div.insertBefore(elem, settings_div.firstChild);
+        }
+      }
+      if (activity.activityType == "dedupe") {
+        let target_activity = main_activities[operatorId];
+        let elem = target_activity.settings;
+        if (elem == null || elem == undefined) { return; }
+        let found = false;
+        for (let i = 0; i < settings_div.children.length; i++) {
+          if (settings_div.children[i].id == elem.id) {
+            found = true;
+            settings_div.children[i].style.display = "block";
+          }
+          if (settings_div.children[i].id == elem.id + "_column_edit") {
+            found = true;
+            settings_div.children[i].style.display = "flex";
+            settings_div.children[i].style.flexDirection = "column";
+            settings_div.children[i].style.gap = "15px";
+          }
+        }
+        if (!found) {
+          settings_div.insertBefore(elem, settings_div.firstChild);
+        }
+      }
+      if (activity.activityType == "cast") {
+        let target_activity = main_activities[operatorId];
+        let elem = target_activity.settings;
+        if (elem == null || elem == undefined) { return; }
+        let found = false;
+        for (let i = 0; i < settings_div.children.length; i++) {
+          if (settings_div.children[i].id == elem.id) {
+            found = true;
+            settings_div.children[i].style.display = "block";
+          }
+          if (settings_div.children[i].id == elem.id + "_column_edit") {
+            found = true;
+            settings_div.children[i].style.display = "flex";
+            settings_div.children[i].style.flexDirection = "column";
+            settings_div.children[i].style.gap = "15px";
+          }
+        }
+        if (!found) {
+          settings_div.insertBefore(elem, settings_div.firstChild);
+        }
+      }
+      if (activity.activityType == "regex") {
+        let target_activity = main_activities[operatorId];
+        let elem = target_activity.settings;
+        if (elem == null || elem == undefined) { return; }
+        let found = false;
+        for (let i = 0; i < settings_div.children.length; i++) {
+          if (settings_div.children[i].id == elem.id) {
+            found = true;
+            settings_div.children[i].style.display = "block";
+          }
+          if (settings_div.children[i].id == elem.id + "_column_edit") {
+            found = true;
+            settings_div.children[i].style.display = "flex";
+            settings_div.children[i].style.flexDirection = "column";
+            settings_div.children[i].style.gap = "15px";
+          }
+        }
+        if (!found) {
+          settings_div.insertBefore(elem, settings_div.firstChild);
+        }
+      }
+      if (activity.activityType == "pivot") {
+        let target_activity = main_activities[operatorId];
+        let elem = target_activity.settings;
+        if (elem == null || elem == undefined) { return; }
+        let found = false;
+        for (let i = 0; i < settings_div.children.length; i++) {
+          if (settings_div.children[i].id == elem.id) {
+            found = true;
+            settings_div.children[i].style.display = "block";
+          }
+          if (settings_div.children[i].id == elem.id + "_column_edit") {
+            found = true;
+            settings_div.children[i].style.display = "flex";
+            settings_div.children[i].style.flexDirection = "column";
+            settings_div.children[i].style.gap = "15px";
+          }
+        }
+        if (!found) {
+          settings_div.insertBefore(elem, settings_div.firstChild);
+        }
+      }
+      if (activity.activityType == "window") {
+        let target_activity = main_activities[operatorId];
+        let elem = target_activity.settings;
+        if (elem == null || elem == undefined) { return; }
+        let found = false;
+        for (let i = 0; i < settings_div.children.length; i++) {
+          if (settings_div.children[i].id == elem.id) {
+            found = true;
+            settings_div.children[i].style.display = "block";
+          }
+          if (settings_div.children[i].id == elem.id + "_column_edit") {
+            found = true;
+            settings_div.children[i].style.display = "flex";
+            settings_div.children[i].style.flexDirection = "column";
+            settings_div.children[i].style.gap = "15px";
+          }
+        }
+        if (!found) {
+          settings_div.insertBefore(elem, settings_div.firstChild);
+        }
+      }
       if (activity.activityType == "sheets_read") {
         let target_activity = main_activities[operatorId];
         let elem = target_activity.settings;
@@ -661,7 +883,6 @@ $(document).ready(function() {
 
       if (activity.activityType == "select") {
         let target_activity = main_activities[operatorId];
-        console.log("Target activity for select", activity);
         let elem = target_activity.settings;
         if (elem == null || elem == undefined) { return; }
         let found = false;
@@ -685,7 +906,7 @@ $(document).ready(function() {
         //   if (operator_activity && operator_activity.outputs && operator_activity.outputs.output) {
         //     $flowchart.flowchart('setinputVal', operatorId, 'input', operator_activity.outputs.output.value);
         //   }
-        //   target_activity._sync_columns(null, $flowchart, target_activity);
+          // target_activity._sync_columns(null, $flowchart, target_activity);
         // }
       }
       if (activity.activityType == "sort") {
@@ -725,7 +946,7 @@ $(document).ready(function() {
         }
       }
 
-      update_missing_columns_message(operatorId, settings_div);
+      // update_missing_columns_message(operatorId, settings_div);
       return true;
     },
     onOperatorUnselect: function() {
@@ -750,6 +971,13 @@ $(document).ready(function() {
 
   const $workspace = $("#flowchartworkspace");
   $workspace.addClass("flowchart-pan-ready");
+  const $chartContainer = $("#chart_container");
+  if ($chartContainer.length) {
+    selectionBox = document.createElement("div");
+    selectionBox.className = "flowchart-selection-box";
+    selectionBox.style.display = "none";
+    $chartContainer[0].appendChild(selectionBox);
+  }
 
   function setZoom(nextZoom) {
     zoomLevel = Math.min(2, Math.max(0.5, nextZoom));
@@ -771,17 +999,67 @@ $(document).ready(function() {
   });
 
   $workspace.on("mousedown", function(event) {
+    if (event.button !== 0 && event.button !== 1) {
+      return;
+    }
     if ($(event.target).closest(".flowchart-operator, .flowchart-link, .flowchart-operator-connector").length) {
       return;
     }
-    isPanning = true;
-    panStart = { x: event.clientX, y: event.clientY };
-    panOrigin = { x: panOffset.x, y: panOffset.y };
-    $workspace.addClass("flowchart-panning");
+    if (event.shiftKey || event.button === 1) {
+      isPanning = true;
+      panStart = { x: event.clientX, y: event.clientY };
+      panOrigin = { x: panOffset.x, y: panOffset.y };
+      $workspace.addClass("flowchart-panning");
+      return;
+    }
+    if (!selectionBox) {
+      return;
+    }
+    isSelecting = true;
+    selectionStart = { x: event.clientX, y: event.clientY };
+    selectionBox.style.display = "block";
+    selectionBox.style.left = "0px";
+    selectionBox.style.top = "0px";
+    selectionBox.style.width = "0px";
+    selectionBox.style.height = "0px";
+    $flowchart.flowchart("unselectOperator");
+    $flowchart.flowchart("unselectLink");
+    $flowchart.find(".flowchart-operator").removeClass("multi-selected");
   });
 
   $(document).on("mousemove", function(event) {
     if (!isPanning) {
+      if (!isSelecting || !selectionBox || !$chartContainer.length) {
+        return;
+      }
+      const containerRect = $chartContainer[0].getBoundingClientRect();
+      const startX = selectionStart.x - containerRect.left;
+      const startY = selectionStart.y - containerRect.top;
+      const currentX = event.clientX - containerRect.left;
+      const currentY = event.clientY - containerRect.top;
+      const left = Math.min(startX, currentX);
+      const top = Math.min(startY, currentY);
+      const width = Math.abs(currentX - startX);
+      const height = Math.abs(currentY - startY);
+      selectionBox.style.left = `${left}px`;
+      selectionBox.style.top = `${top}px`;
+      selectionBox.style.width = `${width}px`;
+      selectionBox.style.height = `${height}px`;
+
+      const selectionRect = {
+        left: containerRect.left + left,
+        top: containerRect.top + top,
+        right: containerRect.left + left + width,
+        bottom: containerRect.top + top + height
+      };
+      $flowchart.find(".flowchart-operator").each(function() {
+        const rect = this.getBoundingClientRect();
+        const intersects = !(rect.right < selectionRect.left ||
+          rect.left > selectionRect.right ||
+          rect.bottom < selectionRect.top ||
+          rect.top > selectionRect.bottom);
+        this.classList.toggle("multi-selected", intersects);
+      });
       return;
     }
     panOffset.x = panOrigin.x + (event.clientX - panStart.x);
@@ -794,7 +1072,14 @@ $(document).ready(function() {
       isPanning = false;
       $workspace.removeClass("flowchart-panning");
     }
+    if (isSelecting) {
+      isSelecting = false;
+      if (selectionBox) {
+        selectionBox.style.display = "none";
+      }
+    }
   });
+
 
   applyPanZoom();
 
@@ -932,19 +1217,23 @@ $(document).ready(function() {
     if (!targetId) {
       return;
     }
+    // Prevent overlapping preview requests.
     if (running) { return; }
     let activity_previews = document.getElementById("activity_previews");
     let data_preview_container = ensurePreviewContainer(targetId);
+    // Show a transient loading state while the ordered run completes.
     let loading_text = document.createElement("h1");
     loading_text.textContent = "Loading...";
-    loading_text.style.color = "black";
+    loading_text.style.color = "#ffffff";
     activity_previews.prepend(loading_text);
     running = true;
-    let pipeline_data = await run_pipeline($flowchart, [targetId.toString()]);
+    // Ask the server for dependency order, then run the ordered activities.
+    let pipeline_data = await get_ordered_nodes($flowchart, [targetId.toString()]);
     let outputs = null;
     if (pipeline_data && Array.isArray(pipeline_data.ordered_nodes)) {
       const activities = build_ordered_activities_payload($flowchart, pipeline_data, targetId);
       const response = await post_ordered_activities(activities);
+
       if (response && Array.isArray(response.results)) {
         response.results.forEach(entry => {
           if (entry && entry.operatorId != null && entry.result) {
@@ -957,10 +1246,12 @@ $(document).ready(function() {
     }
     running = false;
 
+    // Remove loading state and fall back to cached outputs if needed.
     activity_previews.removeChild(loading_text);
     if (!outputs) {
       outputs = $flowchart.flowchart("getoutputVal", targetId, "output");
     }
+    // Render preview table for the selected activity output.
     if (outputs && outputs.values) {
       createTable(outputs.values, document.getElementById(targetId + "_data_table"), targetId);
     }
@@ -975,7 +1266,7 @@ $(document).ready(function() {
       icon.innerHTML = '<rect x="6" y="6" width="12" height="12" rx="2"></rect>';
       let activites = $flowchart.flowchart("getOperators");
       console.log(activites)
-      let data = await run_pipeline($flowchart);
+      let data = await get_ordered_nodes($flowchart);
       console.log("ORDERED", data)
       const activities = build_ordered_activities_payload($flowchart, data);
       console.log("ACTIVITIES", activities)
@@ -1025,6 +1316,7 @@ $(document).ready(function() {
     };
     operatorI++;
     $flowchart.flowchart("createOperator", operatorId, operatorData);
+
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
     let import_activity = new Import_Activity($flowchart, new_activity);
     main_activities[operatorId] = import_activity;
@@ -1242,6 +1534,251 @@ $(document).ready(function() {
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
     let replace_activity = new Replace_Activity($flowchart, new_activity);
     main_activities[operatorId] = replace_activity;
+    activites = $flowchart.flowchart("getOperators");
+  });
+
+  $("#fill_activity").on("click", function() {
+    var operatorId = operatorI;
+    const footer = document.getElementById("footer");
+    startHeight = parseInt(window.getComputedStyle(footer).height, 10);
+    var operatorData = {
+      top: ($flowchart.height() / 2) - (startHeight / 2),
+      left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+      properties: {
+        title: "Fill",
+        dependencies: [],
+
+        activityType: "fill",
+        inputs: {
+          input: {
+            label: "Input",
+            value: { "datatypes": null, "values": null }
+          }
+        },
+        outputs: {
+          output: {
+            label: "Output",
+            value: { "datatypes": null, "values": null }
+          }
+        }
+      }
+    };
+    operatorI++;
+
+    $flowchart.flowchart("createOperator", operatorId, operatorData);
+    let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
+    let fill_activity = new Fill_Activity($flowchart, new_activity);
+    main_activities[operatorId] = fill_activity;
+    activites = $flowchart.flowchart("getOperators");
+  });
+
+  $("#clean_activity").on("click", function() {
+    var operatorId = operatorI;
+    const footer = document.getElementById("footer");
+    startHeight = parseInt(window.getComputedStyle(footer).height, 10);
+    var operatorData = {
+      top: ($flowchart.height() / 2) - (startHeight / 2),
+      left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+      properties: {
+        title: "Trim/Clean",
+        dependencies: [],
+
+        activityType: "clean",
+        inputs: {
+          input: {
+            label: "Input",
+            value: { "datatypes": null, "values": null }
+          }
+        },
+        outputs: {
+          output: {
+            label: "Output",
+            value: { "datatypes": null, "values": null }
+          }
+        }
+      }
+    };
+    operatorI++;
+
+    $flowchart.flowchart("createOperator", operatorId, operatorData);
+    let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
+    let clean_activity = new Clean_Activity($flowchart, new_activity);
+    main_activities[operatorId] = clean_activity;
+    activites = $flowchart.flowchart("getOperators");
+  });
+
+  $("#dedupe_activity").on("click", function() {
+    var operatorId = operatorI;
+    const footer = document.getElementById("footer");
+    startHeight = parseInt(window.getComputedStyle(footer).height, 10);
+    var operatorData = {
+      top: ($flowchart.height() / 2) - (startHeight / 2),
+      left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+      properties: {
+        title: "Dedupe",
+        dependencies: [],
+
+        activityType: "dedupe",
+        inputs: {
+          input: {
+            label: "Input",
+            value: { "datatypes": null, "values": null }
+          }
+        },
+        outputs: {
+          output: {
+            label: "Output",
+            value: { "datatypes": null, "values": null }
+          }
+        }
+      }
+    };
+    operatorI++;
+
+    $flowchart.flowchart("createOperator", operatorId, operatorData);
+    let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
+    let dedupe_activity = new Dedupe_Activity($flowchart, new_activity);
+    main_activities[operatorId] = dedupe_activity;
+    activites = $flowchart.flowchart("getOperators");
+  });
+
+  $("#cast_activity").on("click", function() {
+    var operatorId = operatorI;
+    const footer = document.getElementById("footer");
+    startHeight = parseInt(window.getComputedStyle(footer).height, 10);
+    var operatorData = {
+      top: ($flowchart.height() / 2) - (startHeight / 2),
+      left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+      properties: {
+        title: "Type Cast",
+        dependencies: [],
+
+        activityType: "cast",
+        inputs: {
+          input: {
+            label: "Input",
+            value: { "datatypes": null, "values": null }
+          }
+        },
+        outputs: {
+          output: {
+            label: "Output",
+            value: { "datatypes": null, "values": null }
+          }
+        }
+      }
+    };
+    operatorI++;
+
+    $flowchart.flowchart("createOperator", operatorId, operatorData);
+    let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
+    let cast_activity = new Cast_Activity($flowchart, new_activity);
+    main_activities[operatorId] = cast_activity;
+    activites = $flowchart.flowchart("getOperators");
+  });
+
+  $("#regex_activity").on("click", function() {
+    var operatorId = operatorI;
+    const footer = document.getElementById("footer");
+    startHeight = parseInt(window.getComputedStyle(footer).height, 10);
+    var operatorData = {
+      top: ($flowchart.height() / 2) - (startHeight / 2),
+      left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+      properties: {
+        title: "Regex Extract",
+        dependencies: [],
+
+        activityType: "regex",
+        inputs: {
+          input: {
+            label: "Input",
+            value: { "datatypes": null, "values": null }
+          }
+        },
+        outputs: {
+          output: {
+            label: "Output",
+            value: { "datatypes": null, "values": null }
+          }
+        }
+      }
+    };
+    operatorI++;
+
+    $flowchart.flowchart("createOperator", operatorId, operatorData);
+    let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
+    let regex_activity = new Regex_Activity($flowchart, new_activity);
+    main_activities[operatorId] = regex_activity;
+    activites = $flowchart.flowchart("getOperators");
+  });
+
+  $("#pivot_activity").on("click", function() {
+    var operatorId = operatorI;
+    const footer = document.getElementById("footer");
+    startHeight = parseInt(window.getComputedStyle(footer).height, 10);
+    var operatorData = {
+      top: ($flowchart.height() / 2) - (startHeight / 2),
+      left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+      properties: {
+        title: "Pivot/Unpivot",
+        dependencies: [],
+
+        activityType: "pivot",
+        inputs: {
+          input: {
+            label: "Input",
+            value: { "datatypes": null, "values": null }
+          }
+        },
+        outputs: {
+          output: {
+            label: "Output",
+            value: { "datatypes": null, "values": null }
+          }
+        }
+      }
+    };
+    operatorI++;
+
+    $flowchart.flowchart("createOperator", operatorId, operatorData);
+    let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
+    let pivot_activity = new Pivot_Activity($flowchart, new_activity);
+    main_activities[operatorId] = pivot_activity;
+    activites = $flowchart.flowchart("getOperators");
+  });
+
+  $("#window_activity").on("click", function() {
+    var operatorId = operatorI;
+    const footer = document.getElementById("footer");
+    startHeight = parseInt(window.getComputedStyle(footer).height, 10);
+    var operatorData = {
+      top: ($flowchart.height() / 2) - (startHeight / 2),
+      left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+      properties: {
+        title: "Window/Rank",
+        dependencies: [],
+
+        activityType: "window",
+        inputs: {
+          input: {
+            label: "Input",
+            value: { "datatypes": null, "values": null }
+          }
+        },
+        outputs: {
+          output: {
+            label: "Output",
+            value: { "datatypes": null, "values": null }
+          }
+        }
+      }
+    };
+    operatorI++;
+
+    $flowchart.flowchart("createOperator", operatorId, operatorData);
+    let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
+    let window_activity = new Window_Activity($flowchart, new_activity);
+    main_activities[operatorId] = window_activity;
     activites = $flowchart.flowchart("getOperators");
   });
 
@@ -1583,6 +2120,27 @@ $(document).ready(function() {
       if (operatorData.properties.activityType == "replace") {
         a = new Replace_Activity($flowchart, new_activity);
       }
+      if (operatorData.properties.activityType == "fill") {
+        a = new Fill_Activity($flowchart, new_activity);
+      }
+      if (operatorData.properties.activityType == "clean") {
+        a = new Clean_Activity($flowchart, new_activity);
+      }
+      if (operatorData.properties.activityType == "dedupe") {
+        a = new Dedupe_Activity($flowchart, new_activity);
+      }
+      if (operatorData.properties.activityType == "cast") {
+        a = new Cast_Activity($flowchart, new_activity);
+      }
+      if (operatorData.properties.activityType == "regex") {
+        a = new Regex_Activity($flowchart, new_activity);
+      }
+      if (operatorData.properties.activityType == "pivot") {
+        a = new Pivot_Activity($flowchart, new_activity);
+      }
+      if (operatorData.properties.activityType == "window") {
+        a = new Window_Activity($flowchart, new_activity);
+      }
       if (operatorData.properties.activityType == "split") {
         a = new Split_Activity($flowchart, new_activity);
       }
@@ -1632,6 +2190,12 @@ function build_ordered_activities_payload(flowchart, data, targetId){
     let activity_data = null
     if (activity.activityType == "import" || activity.activityType == "sheets_read") {
       activity_data = activity?.inputs?.input?.value?.values ?? activity?.outputs?.output?.value?.values ?? null
+    } else if (activity.activityType == "join" || activity.activityType == "append") {
+      const table_1 = activity?.inputs?.input_1?.value?.outputs?.output?.value?.values ?? null
+      const table_2 = activity?.inputs?.input_2?.value?.outputs?.output?.value?.values ?? null
+      if (table_1 && table_2) {
+        activity_data = { table_1: table_1, table_2: table_2 }
+      }
     }
     return {
       operatorId: operatorId,
@@ -1640,29 +2204,6 @@ function build_ordered_activities_payload(flowchart, data, targetId){
       data: activity_data
     }
   })
-}
-
-async function post_ordered_activities(activities){
-  if (!Array.isArray(activities) || activities.length === 0) {
-    return null
-  }
-  const body = { activities: activities }
-  const request = new Request('/etl/run/', {
-    method: 'POST',
-    headers: new Headers({
-      'Accept': 'application/json'
-    }),
-    body: JSON.stringify(body)
-  })
-  const response = await fetch(request)
-  if (response.ok){
-    try{
-      return await response.json()
-    }catch(error){
-      return null
-    }
-  }
-  return null
 }
 
 function get_input_columns(values){

@@ -102,9 +102,9 @@ class Join_Activity extends Activity{
         
 
     }
-    // _on_selector_change(e, widget,activity){
-    //     alert("Changed")
-    // }
+    _on_selector_change(e, widget,activity){
+        this.get_operation_settings();
+    }
 
     // get_settings_element(){
     //     let columns_div = document.createElement('div')

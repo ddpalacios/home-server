@@ -47,7 +47,12 @@
 }
 
 .flowchart-operator-connector-label {
-    font-size: small;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #0f172a;
+    text-transform: uppercase;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.65);
 }
 
 .flowchart-operator-inputs .flowchart-operator-connector-label {
@@ -64,9 +69,10 @@
     height: 0px;
     border-top: 14px solid transparent;
     border-bottom: 14px solid transparent;
-    border-left: 14px solid rgb(204, 204, 204);
+    border-left: 14px solid var(--operator-accent, rgba(30, 41, 59, 0.9));
     position: absolute;
     top: 0px;
+    filter: drop-shadow(0 2px 2px rgba(15, 23, 42, 0.2));
 }
 
 .flowchart-operator-connector-small-arrow {
@@ -74,14 +80,14 @@
     height: 0px;
     border-top: 7px solid transparent;
     border-bottom: 7px solid transparent;
-    border-left: 7px solid transparent; /*rgb(100, 100, 100);*/
+    border-left: 7px solid rgba(255, 255, 255, 0.85);
     position: absolute;
     top: 7px;
     pointer-events: none;
 }
 
 .flowchart-operator-connector:hover .flowchart-operator-connector-arrow {
-    border-left: 14px solid rgb(153, 153, 153);
+    border-left: 14px solid var(--operator-accent, rgba(2, 132, 199, 0.95));
 }
 
 .flowchart-operator-inputs .flowchart-operator-connector-arrow {
@@ -142,11 +148,21 @@
 }
 
 .flowchart-operator.selected {
-    border-color: rgba(37, 99, 235, 0.9);
+    border-color: rgba(0, 0, 0, 0.85);
     box-shadow:
         0 2px 0 rgba(255, 255, 255, 0.9) inset,
-        0 -8px 14px rgba(37, 99, 235, 0.12) inset,
-        0 22px 36px rgba(37, 99, 235, 0.28);
+        0 -8px 14px rgba(0, 0, 0, 0.12) inset,
+        0 28px 52px rgba(0, 0, 0, 0.5),
+        0 0 0 3px rgba(0, 0, 0, 0.35);
+}
+
+.flowchart-operator.multi-selected {
+    border-color: rgba(0, 0, 0, 0.85);
+    box-shadow:
+        0 2px 0 rgba(255, 255, 255, 0.9) inset,
+        0 -8px 14px rgba(0, 0, 0, 0.12) inset,
+        0 28px 52px rgba(0, 0, 0, 0.5),
+        0 0 0 3px rgba(0, 0, 0, 0.35);
 }
 
 

@@ -38,7 +38,7 @@ async function run_activity_flow(activity, widget, data){
 }
 
 
-async function run_pipeline(widget, targetIds){
+async function get_ordered_nodes(widget, targetIds){
     let all_dependecies = widget.flowchart("getDependencies");
     console.log("dependencies", all_dependecies);
     let dependencies = {}
@@ -60,8 +60,7 @@ async function run_pipeline(widget, targetIds){
     let body = {'dependencies': JSON.stringify(dependencies)
         ,'target_ids': target_ids
     }
-    console.log("RUN PIPELINE BODY", body);
-    var request = new Request('/etl/run/pipeline/', {
+    var request = new Request('/etl/pipeline/order', {
                                 method: 'POST',
                                 headers: new Headers({
                                             'Accept': 'application/json'
@@ -80,6 +79,29 @@ async function run_pipeline(widget, targetIds){
 
 }
 
+async function post_ordered_activities(activities){
+    if (!Array.isArray(activities) || activities.length === 0) {
+        return null
+    }
+    const body = { activities: activities }
+    console.log("Posting activities:", body)
+    var request = new Request('/etl/run/', {
+                                method: 'POST',
+                                headers: new Headers({
+                                            'Accept': 'application/json'
+                                        })
+			       ,body: JSON.stringify(body)
+                    });
+    var response = await fetch(request);
+    if (response.ok){ 
+        try{
+            const data = await response.json()
+            return data;
+        }catch(error){}
+    }
+    return null;
+}
+
 async function execute_activity(widget,activityid){
             let dependencies = {}
             let operators = widget.flowchart('getOperators')
@@ -94,7 +116,7 @@ async function execute_activity(widget,activityid){
                     });
                 dependencies[key] = {'tableName':key,"dependencies":d, 'query': {}, 'activityType':activity.activityType}
             });
-        let data = await run_pipeline(widget, [activityid])
+        let data = await get_ordered_nodes(widget, [activityid])
         console.log("ORDERED", data)
 
 
@@ -163,7 +185,7 @@ async function execute_activity(widget,activityid){
             
         //     });
 
-        //     let data = await run_pipeline(dependencies, Object.keys(dependencies))
+        //     let data = await get_ordered_nodes(dependencies, Object.keys(dependencies))
         //     console.log("ORDERED", data)
         //     for (const node of data['ordered_nodes']) {
         //         let activity = widget.flowchart('getOperatorActivity', node['tableName']);

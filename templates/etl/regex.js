@@ -1,17 +1,21 @@
-class Combine_Activity extends Activity{
+class Regex_Activity extends Activity{
     constructor(flowchart,activity){
         super(flowchart, activity)
-        this.add_button_label = "+ Add Combine"
+        this.add_button_label = "+ Add Extract"
+        this.pattern_presets = {
+            'Custom': '',
+            'Email': '([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,})',
+            'Digits': '(\\d+)',
+            'Date (YYYY-MM-DD)': '(\\d{4}-\\d{2}-\\d{2})',
+            'Phone': '(\\+?\\d[\\d\\s().-]{7,})',
+            'URL': '(https?:\\/\\/[^\\s]+)'
+        }
         this.settings = this.get_settings_element()
     }
     get_operation_settings(){
-        let settings = super.get_operation_settings('combine')
+        let settings = super.get_operation_settings('regex')
         this.flowchart.flowchart('setSettings', this.activityId, settings)
         return settings
-    }
-    _on_input_change(e, widget,activity){
-        console.log(e.target.value)
-        this.get_operation_settings()
     }
     _get_input_columns(activityId){
         const current_activity = this.flowchart.flowchart("getOperatorActivity", activityId);
@@ -29,8 +33,10 @@ class Combine_Activity extends Activity{
         return [];
     }
     _on_button_click(e, widget, activity){
-        let parent_element = e.target.parentElement;
-        parent_element.remove()
+        const row = e.target.closest(".rename_settings") || e.target.parentElement;
+        if (row) {
+            row.remove()
+        }
         this.get_operation_settings()
     }
     _add_column(e, widget, activity){
@@ -43,75 +49,101 @@ class Combine_Activity extends Activity{
         if (all_columns.length === 0) {
             all_columns = [""]
         }
+
         let settings = [
             {
                 'type': 'span'
-                ,'order':1
-                ,'label':"Combine"
+                ,'label':"Extract From"
                 ,'color': 'black'
             },
             {
                 'type': 'selector'
-                ,'order':2
                 ,'options':all_columns
                 ,'default_value': all_columns[0]
-                ,'name': "column_name_1"
+                ,'name': "column_name"
             },
-             {
+            {
                 'type': 'span'
-                ,'order':3
-                ,'label':"With"
+                ,'label':"Pattern Type"
                 ,'color': 'black'
             },
             {
                 'type': 'selector'
-                ,'order':4
-                ,'options':all_columns
-                ,'default_value': all_columns[0]
-                ,'name': "column_name_2"
-            }
-            , {
+                ,'options': Object.keys(this.pattern_presets)
+                ,'default_value': 'Custom'
+                ,'name': 'operation'
+            },
+            {
                 'type': 'span'
-                ,'order':5
-                ,'label':"Delimiter"
+                ,'label':"Pattern"
                 ,'color': 'black'
-            }
-            ,{
+            },
+            {
                 'type': 'input'
-                ,'placeholder' : 'Delimiter'
+                ,'placeholder' : 'Regex pattern'
                 ,'name': 'value'
-            }
-            , {
+            },
+            {
                 'type': 'span'
-                ,'order':6
-                ,'label':"As"
+                ,'label':"Set"
                 ,'color': 'black'
-            }
-            ,{
+            },
+            {
                 'type': 'input'
                 ,'placeholder' : 'New column name'
                 ,'name': 'new_column_name'
-            }
-            ,{
+            },
+            {
                 'type': 'button'
-                ,'order':7
                 ,'label': 'remove'
                 ,'color': 'red'
-                ,'name':'remove'
             }
-          ]
+        ]
 
-            let column_edit_element = this.get_column_selection_element(widget,settings)
-            columns_div.appendChild(column_edit_element)
+        let column_edit_element = this.get_column_selection_element(widget,settings)
+        column_edit_element.style.display = "grid"
+        column_edit_element.style.gridTemplateColumns = "repeat(auto-fit, minmax(180px, 1fr))"
+        column_edit_element.style.gap = "10px"
+        column_edit_element.style.alignItems = "center"
+        column_edit_element.style.width = "100%"
+        column_edit_element.style.boxSizing = "border-box"
+        column_edit_element.style.padding = "12px 14px"
+        column_edit_element.style.border = "1px solid rgba(31, 79, 214, 0.16)"
+        column_edit_element.style.borderRadius = "12px"
+        column_edit_element.style.background = "linear-gradient(135deg, #eef4ff 0%, #dfe9ff 100%)"
+        column_edit_element.style.boxShadow = "0 10px 18px rgba(15, 23, 42, 0.08)"
+        Array.from(column_edit_element.children).forEach((child) => {
+            if (child.tagName === "INPUT" || child.tagName === "SELECT") {
+                child.style.width = "100%"
+                child.style.minWidth = "0"
+                child.style.boxSizing = "border-box"
+            }
+            if (child.tagName === "SPAN") {
+                child.style.fontSize = "0.75rem"
+                child.style.fontWeight = "600"
+                child.style.letterSpacing = "0.05em"
+                child.style.textTransform = "uppercase"
+                child.style.color = "rgba(15, 23, 42, 0.6)"
+            }
+        })
+        columns_div.appendChild(column_edit_element)
     }
     _on_selector_change(e, widget,activity){
-        console.log(e.target.value)
-        let value = e.target.value
-        let parent_element = e.target.parentElement
-        let target_name = e.target.name
-        if (target_name != 'column_name_1' && target_name != 'column_name_2'){
-            return
+        if (e && e.target && e.target.name === 'operation') {
+            const row = e.target.closest(".rename_settings") || e.target.parentElement;
+            if (row) {
+                const pattern_input = row.querySelector("input[name='value']");
+                if (pattern_input) {
+                    const preset = this.pattern_presets[e.target.value];
+                    if (preset !== undefined) {
+                        pattern_input.value = preset;
+                    }
+                }
+            }
         }
+        this.get_operation_settings()
+    }
+    _on_input_change(e, widget,activity){
         this.get_operation_settings()
     }
     get_settings_element(){

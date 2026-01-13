@@ -297,6 +297,20 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_gol_script(cSSL, http_header, "/etl/custom_column.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/replace.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/replace.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/fill.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/fill.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/clean.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/clean.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/dedupe.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/dedupe.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/cast.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/cast.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/regex.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/regex.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/pivot.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/pivot.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/window.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/window.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/group.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/group.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/split.js")==0){
@@ -312,7 +326,7 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/jquery.flowchart.css")==0){
 		get_gol_script(cSSL, http_header, "/etl/jquery.flowchart.css");
-	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/run/pipeline/")==0){
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/pipeline/order")==0){
 		post_run_activity(socket,http_header,body, route);
 	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/run/")==0){
 		post_run_activity(socket,http_header,body, route);
