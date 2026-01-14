@@ -472,6 +472,41 @@ class Settings{
                     statement.logical = element.value;
                     statement.row_id = row.id
                     continue
+                case 'url':
+                    // HTTP request URL.
+                    statement.url = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'request_type':
+                    // HTTP method.
+                    statement.request_type = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'headers':
+                    // HTTP headers.
+                    statement.headers = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'body':
+                    // HTTP request body.
+                    statement.body = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'unroll_by':
+                    // Flatten array field to unroll.
+                    statement.unroll_by = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'header_key':
+                    // HTTP header key.
+                    statement.header_key = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'header_value':
+                    // HTTP header value.
+                    statement.header_value = element.value;
+                    statement.row_id = row.id
+                    continue
             }
         }
         if (Object.keys(statement).length > 0){
@@ -488,6 +523,13 @@ class Settings{
                 column_name: statement.columnName,
                 renamed_name: statement.new_column_name || statement.columnName,
                 data_type: statement.data_type
+            }
+        })
+    }
+    if (type == 'flatten') {
+        normalized_statements = statements.map(statement => {
+            return {
+                unroll_by: statement.unroll_by || statement.columnName || statement.column_name
             }
         })
     }
@@ -592,26 +634,6 @@ function key_name_change(obj,element){
 
 
 
-function get_output_values(activity){
-    if (activity.activityType == 'flatten'){
-        let previous_activity_outputVal = activity.link_from[0].outputs.output
-        let elem = document.getElementById("flatten_body_select_"+activity.operatorId)
-        // console.log('Output elem',elem)
-        let value = elem.value
-        let new_output = previous_activity_outputVal[value]
-        return new_output
-    }
-    else if (activity.activityType == 'select'){
-         let previous_activity_outputVal = activity.link_from[0].outputs.output
-        let new_output = previous_activity_outputVal
-        return new_output
-
-    }
-  
-
-}
-
-
 function get_selector_element(id, options, default_value) {
     const selected_options = [];
 
@@ -634,74 +656,6 @@ function get_selector_element(id, options, default_value) {
     return tempDiv.firstElementChild;
 }
 
-
-function add_activity_body(activity, outputVal){
-    if (activity.activityType == 'flatten'){
-        const body = document.getElementById("activity_body_"+activity.operatorId)
-        let description = null;
-        if (body) {
-            description = body.querySelector(".flowchart-operator-description");
-        }
-        let array_values = []
-        Object.keys(outputVal).forEach(key => {
-            if (Array.isArray(outputVal[key])){
-                array_values.push(key)
-            }
-        });
-        if (array_values.length>0){
-            let select_body_element = get_selector_element("flatten_body_select_"+activity.operatorId, array_values, array_values[0])
-            if (body) {
-                body.innerHTML = '';
-                if (description) {
-                    body.appendChild(description);
-                }
-                const content = document.createElement("div");
-                content.className = "flowchart-operator-body-content";
-                content.appendChild(select_body_element);
-                body.appendChild(content);
-            }
-        }else{
-            let select_body_element = get_selector_element("flatten_body_select_"+activity.operatorId, ['-'], "-")
-            if (body) {
-                body.innerHTML = '';
-                if (description) {
-                    body.appendChild(description);
-                }
-                const content = document.createElement("div");
-                content.className = "flowchart-operator-body-content";
-                content.appendChild(select_body_element);
-                body.appendChild(content);
-            }
-        }
-    }
-
-}
-
-function add_flatten_activity_settings(widget, activity, outputVal){
-    let settings_div = document.getElementById('selected_activity_settings')
-    settings_div.innerHTML = ""
-    if (activity.inputs.input.value == null){
-        return
-    }
-    if (activity.link_from[0].outputs.output.value == null || activity.link_from[0].outputs.output.value == undefined){
-        return
-    }
-
-
-    if (Array.isArray(activity.outputs.output.value)){
-        Object.keys(activity.outputs.output.value[0]).forEach(key => {
-        let record = {'operatorId':activity.operatorId,'columnName': key, 'dataType': typeof activity.outputs.output.value[0][key],'updatedName': key}
-        settings_create_column_edit_record(widget,Object.keys(activity.outputs.output.value[0]),record)})
-        }
-    else{
-            let expanded_input_values = expand_struct(activity.outputs.output.value)
-    let all_available_columns = Object.keys(expanded_input_values) 
-        all_available_columns.forEach(key => {
-            let record = {'operatorId':activity.operatorId,'columnName': key, 'dataType': typeof expanded_input_values[key],'updatedName':expanded_input_values[key]}
-            settings_create_column_edit_record(widget,Object.keys(expanded_input_values),record)
-        });
-    }
-    }
 
 
 function add_export_activity_settings(widget, activity, outputVal){
@@ -1107,6 +1061,9 @@ function onLinkCreation(widget,linkData){
             if (outputVal == null){
                 return
             }
+
+
+        console.log("Setting input and output", outputVal)
         widget.setinputVal(linkData['toOperator'],'input', outputVal)
         widget.setoutputVal(linkData['toOperator'],'output', outputVal)
     }
@@ -1114,14 +1071,5 @@ function onLinkCreation(widget,linkData){
 
     // widget.addDataTypes(linkData['toOperator'], datatypes)
     // widget.update_activity_input_outputs(fromOperator.operatorId)
-
-    // if (toOperator.activityType == 'flatten'){
-    //      // get body contents
-    //     // get settings contents
-    //     console.log("FROM",fromOperator)
-    //     // add_flatten_activity_settings(toOperator, fromOperator.outputs.output.value)
-    // }
-
-
 
 }

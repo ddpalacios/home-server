@@ -31,6 +31,7 @@ document.addEventListener("DOMContentLoaded", function() {
   var activityGroups = Array.prototype.slice.call(
     document.querySelectorAll(".activity-group")
   );
+  var groupToggle = document.getElementById("groupToggle");
 
   function syncSidebarToggle() {
     var isCollapsed = body.classList.contains("sidebar-collapsed");
@@ -54,6 +55,36 @@ document.addEventListener("DOMContentLoaded", function() {
       window.applyFlowchartPanZoom();
     }
   }
+
+  function syncGroupToggle() {
+    if (!groupToggle) {
+      return;
+    }
+    var allOpen = activityGroups.every(function(group) {
+      return group.open;
+    });
+    groupToggle.textContent = allOpen ? "Collapse All" : "Expand All";
+    groupToggle.setAttribute(
+      "aria-label",
+      allOpen ? "Collapse all activity groups" : "Expand all activity groups"
+    );
+  }
+
+  if (groupToggle) {
+    groupToggle.addEventListener("click", function() {
+      var shouldOpenAll = activityGroups.some(function(group) {
+        return !group.open;
+      });
+      activityGroups.forEach(function(group) {
+        group.open = shouldOpenAll;
+      });
+      syncGroupToggle();
+    });
+  }
+
+  activityGroups.forEach(function(group) {
+    group.addEventListener("toggle", syncGroupToggle);
+  });
 
   toggleButtons.forEach(function(button) {
     if (button) {
@@ -84,32 +115,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  var themeToggle = document.getElementById("themeToggle");
-  if (themeToggle) {
-    var savedTheme = localStorage.getItem("etlTheme");
-    if (savedTheme === "dark") {
-      body.classList.add("theme-dark");
-    }
-
-    function syncThemeToggle() {
-      var isDark = body.classList.contains("theme-dark");
-      themeToggle.setAttribute(
-        "aria-label",
-        isDark ? "Switch to light mode" : "Switch to dark mode"
-      );
-      themeToggle.querySelector(".theme-toggle-icon").textContent = isDark ? "🌙" : "☀";
-      themeToggle.lastChild.textContent = isDark ? " Dark" : " Light";
-    }
-
-    themeToggle.addEventListener("click", function() {
-      body.classList.toggle("theme-dark");
-      localStorage.setItem("etlTheme", body.classList.contains("theme-dark") ? "dark" : "light");
-      syncThemeToggle();
-    });
-
-    syncThemeToggle();
-  }
-
+  syncGroupToggle();
   syncSidebarToggle();
 });
 
@@ -155,6 +161,14 @@ function jsonToCsv(jsonData) {
 function createTable(jsonArray, tableContainer, activityId) {
   const filterInput = document.getElementById(activityId + "_filterInput");
   const columnSelect = document.getElementById(activityId + "_columnSelect");
+  const activity = $flowchart && $flowchart.flowchart
+    ? $flowchart.flowchart("getOperatorActivity", activityId)
+    : null;
+  const prettyJson = activity && activity.activityType === "http_request";
+
+  if (jsonArray && !Array.isArray(jsonArray)) {
+    jsonArray = [jsonArray];
+  }
 
   tableContainer.innerHTML = "";
 
@@ -190,7 +204,25 @@ function createTable(jsonArray, tableContainer, activityId) {
       const row = document.createElement("tr");
       columns.forEach(key => {
         const td = document.createElement("td");
-        td.textContent = item[key];
+        let value = item[key];
+        if (key.indexOf(".") !== -1) {
+          const parts = key.split(".");
+          value = item;
+          for (let i = 0; i < parts.length; i++) {
+            if (value == null) {
+              break;
+            }
+            value = value[parts[i]];
+          }
+        }
+        if (prettyJson && value && typeof value === "object") {
+          td.textContent = JSON.stringify(value, null, 2);
+          td.style.whiteSpace = "pre-wrap";
+        } else if (value && typeof value === "object") {
+          td.textContent = JSON.stringify(value);
+        } else {
+          td.textContent = value;
+        }
         row.appendChild(td);
       });
       tbody.appendChild(row);
@@ -198,7 +230,17 @@ function createTable(jsonArray, tableContainer, activityId) {
   };
 
   const headerRow = document.createElement("tr");
-  const columns = Object.keys(jsonArray[0]);
+  const columns = [];
+  Object.keys(jsonArray[0]).forEach(key => {
+    const value = jsonArray[0][key];
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      Object.keys(value).forEach(child => {
+        columns.push(key + "." + child);
+      });
+    } else {
+      columns.push(key);
+    }
+  });
   columns.forEach((key, index) => {
     const th = document.createElement("th");
     const labelSpan = document.createElement("span");
@@ -264,7 +306,7 @@ function createTable(jsonArray, tableContainer, activityId) {
   thead.appendChild(headerRow);
   updateSortIndicators();
 
-  let limit = 100;
+  let limit = 5000;
   let count = 0;
   const limitedRows = [];
   jsonArray.forEach(item => {
@@ -375,9 +417,33 @@ $(document).ready(function() {
   var isPanning = false;
   var panStart = { x: 0, y: 0 };
   var panOrigin = { x: 0, y: 0 };
+  var importPlaceholder = document.getElementById("importPlaceholder");
+  var selectPlaceholders = document.getElementById("selectPlaceholders");
+  var ingestMenu = document.getElementById("ingestMenu");
+  var importSlotGap = 60;
+  var importBaseLeft = 50;
+  var importBaseTop = 50;
+  var selectBaseOffset = 240;
+  var selectStepOffset = 60;
+  var branchLinkColors = ["#ff4d4f", "#fa8c16", "#fadb14", "#52c41a", "#13c2c2", "#1890ff", "#722ed1", "#eb2f96"];
+  var branchColorIndex = 0;
+  var chooseMenu = document.getElementById("chooseMenu");
+  var chooseMenuList = document.getElementById("chooseMenuList");
+  var chooseMenuSearch = document.getElementById("chooseMenuSearch");
+  var linkAddLayer = document.getElementById("linkAddLayer");
+  var activeChoosePlaceholder = null;
+  var activeInsertLink = null;
+  var allowLockedLinkDelete = false;
   var isSelecting = false;
   var selectionStart = { x: 0, y: 0 };
   var selectionBox = null;
+  var linkAddRefreshTimer = null;
+
+  function getNextBranchColor() {
+    var color = branchLinkColors[branchColorIndex % branchLinkColors.length];
+    branchColorIndex += 1;
+    return color;
+  }
 
 
 
@@ -425,8 +491,1148 @@ $(document).ready(function() {
         // ignore if draggable not yet initialized
       }
     });
+    scheduleLinkAddRefresh();
   }
   window.applyFlowchartPanZoom = applyPanZoom;
+
+
+  function scheduleLinkAddRefresh() {
+    if (!linkAddLayer) {
+      return;
+    }
+    if (linkAddRefreshTimer) {
+      clearTimeout(linkAddRefreshTimer);
+    }
+    linkAddRefreshTimer = setTimeout(refreshLinkAddButtons, 0);
+  }
+
+  function getLinkMidpoint(linkId) {
+    var data = $flowchart.flowchart("getDataRef");
+    if (!data || !data.links || !data.links[linkId]) {
+      return null;
+    }
+    var link = data.links[linkId];
+    var path = link?.internal?.els?.path;
+    if (path && typeof path.getTotalLength === "function") {
+      var length = path.getTotalLength();
+      var point = path.getPointAtLength(length / 2);
+      if (point) {
+        return { x: point.x, y: point.y };
+      }
+    }
+    var fromEl = data.operators?.[link.fromOperator]?.internal?.els?.operator;
+    var toEl = data.operators?.[link.toOperator]?.internal?.els?.operator;
+    if (!fromEl || !toEl || !fromEl.length || !toEl.length) {
+      return null;
+    }
+    var fromLeft = parseInt(fromEl.css("left"), 10) || 0;
+    var fromTop = parseInt(fromEl.css("top"), 10) || 0;
+    var fromWidth = fromEl.outerWidth() || 0;
+    var fromHeight = fromEl.outerHeight() || 0;
+    var toLeft = parseInt(toEl.css("left"), 10) || 0;
+    var toTop = parseInt(toEl.css("top"), 10) || 0;
+    var toWidth = toEl.outerWidth() || 0;
+    var toHeight = toEl.outerHeight() || 0;
+    return {
+      x: (fromLeft + fromWidth + toLeft) / 2,
+      y: (fromTop + fromHeight / 2 + toTop + toHeight / 2) / 2
+    };
+  }
+
+  function refreshLinkAddButtons() {
+    if (!linkAddLayer) {
+      return;
+    }
+    linkAddLayer.innerHTML = "";
+    var data = $flowchart.flowchart("getDataRef");
+    if (!data || !data.links) {
+      return;
+    }
+    Object.keys(data.links).forEach(function(linkId) {
+      var link = data.links[linkId];
+      var midpoint = getLinkMidpoint(linkId);
+      if (!link || !midpoint) {
+        return;
+      }
+      if (link.toConnector === "input_2") {
+        return;
+      }
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "link-add-button";
+      button.textContent = "+";
+      button.setAttribute("aria-label", "Insert activity");
+      button.setAttribute("data-link-id", linkId);
+      button.setAttribute("data-from-id", link.fromOperator);
+      button.setAttribute("data-to-id", link.toOperator);
+      button.style.left = (midpoint.x - 14) + "px";
+      button.style.top = (midpoint.y - 14) + "px";
+      linkAddLayer.appendChild(button);
+    });
+  }
+
+  function openChooseMenuAt(left, top) {
+    if (!chooseMenu) {
+      return;
+    }
+    chooseMenu.style.display = "flex";
+    chooseMenu.setAttribute("aria-hidden", "false");
+    chooseMenu.style.left = left + "px";
+    chooseMenu.style.top = top + "px";
+    if (chooseMenuSearch) {
+      chooseMenuSearch.value = "";
+      chooseMenuSearch.focus();
+    }
+    if (chooseMenuList) {
+      var items = chooseMenuList.querySelectorAll("button[data-activity]");
+      items.forEach(function(item) {
+        item.style.display = "";
+      });
+      var newRowButton = chooseMenuList.querySelector("button[data-action=\"new-row\"]");
+      if (newRowButton) {
+        newRowButton.style.display = activeInsertLink ? "" : "none";
+        newRowButton.classList.remove("is-active");
+      }
+      var sinkHeader = chooseMenuList.querySelector(".activity-group-label[data-group=\"sink\"]");
+      if (sinkHeader) {
+        var sinkButtons = chooseMenuList.querySelectorAll("button[data-group=\"sink\"]");
+        sinkHeader.style.display = sinkButtons.length ? "" : "none";
+      }
+    }
+  }
+
+  function getImportSlotPosition() {
+    if (!importPlaceholder) {
+      return { left: importBaseLeft, top: importBaseTop };
+    }
+    return {
+      left: parseInt(importPlaceholder.style.left || String(importBaseLeft), 10),
+      top: parseInt(importPlaceholder.style.top || String(importBaseTop), 10)
+    };
+  }
+
+  function advanceImportSlot(currentTop, height) {
+    if (!importPlaceholder) {
+      return;
+    }
+    var nextTop = currentTop + height + importSlotGap;
+    importPlaceholder.style.top = nextTop + "px";
+  }
+
+  function getMaxBottomForTypes(types) {
+    var operators = $flowchart.flowchart("getOperators") || {};
+    var maxBottom = null;
+    Object.keys(operators).forEach(function(id) {
+      var operator = operators[id];
+      var activityType = operator?.internal?.properties?.activityType || operator?.properties?.activityType;
+      if (types.indexOf(activityType) === -1) {
+        return;
+      }
+      var el = operator?.internal?.els?.operator;
+      if (!el || !el.length) {
+        return;
+      }
+      var top = parseInt(el.css("top"), 10) || 0;
+      var height = el.outerHeight() || 0;
+      var bottom = top + height;
+      if (maxBottom === null || bottom > maxBottom) {
+        maxBottom = bottom;
+      }
+    });
+    return maxBottom;
+  }
+
+
+  function repositionImportPlaceholder() {
+    if (!importPlaceholder) {
+      return;
+    }
+    var maxBottom = getMaxBottomForTypes(["import", "sheets_read", "http_request"]);
+
+    if (maxBottom === null) {
+      importPlaceholder.style.left = importBaseLeft + "px";
+      importPlaceholder.style.top = importBaseTop + "px";
+      return;
+    }
+
+    importPlaceholder.style.left = importBaseLeft + "px";
+    importPlaceholder.style.top = (maxBottom + importSlotGap) + "px";
+  }
+
+  function ensureSelectPlaceholder(ingestId) {
+    if (!selectPlaceholders) {
+      return null;
+    }
+    var existing = selectPlaceholders.querySelector("[data-ingest-id='" + ingestId + "']");
+    if (existing) {
+      return existing;
+    }
+    var button = document.createElement("button");
+    button.type = "button";
+    button.className = "select-placeholder";
+    button.textContent = "+ Choose Activity";
+    button.setAttribute("data-ingest-id", ingestId);
+    selectPlaceholders.appendChild(button);
+    return button;
+  }
+
+  function updateSelectPlaceholderPosition(ingestId) {
+    if (!selectPlaceholders) {
+      return;
+    }
+    var operators = $flowchart.flowchart("getOperators") || {};
+    var lastNode = getLastNodeForIngest(ingestId);
+    var baseOperator = operators[lastNode] || operators[ingestId];
+    var activityType = baseOperator?.internal?.properties?.activityType || baseOperator?.properties?.activityType;
+    if (activityType === "sheets_write") {
+      var existing = selectPlaceholders.querySelector("[data-ingest-id='" + ingestId + "']");
+      if (existing) {
+        existing.remove();
+      }
+      return;
+    }
+    var placeholder = ensureSelectPlaceholder(ingestId);
+    var el = baseOperator?.internal?.els?.operator;
+    if (!el || !el.length) {
+      return;
+    }
+    var top = parseInt(el.css("top"), 10) || 0;
+    var left = parseInt(el.css("left"), 10) || 0;
+    var width = el.outerWidth() || selectBaseOffset;
+    placeholder.style.top = top + "px";
+    placeholder.style.left = (left + width + selectStepOffset) + "px";
+  }
+
+  function repositionSelectPlaceholders() {
+    if (!selectPlaceholders) {
+      return;
+    }
+    var operators = $flowchart.flowchart("getOperators") || {};
+    var ingestIds = [];
+    Object.keys(operators).forEach(function(id) {
+      var operator = operators[id];
+      var activityType = operator?.internal?.properties?.activityType || operator?.properties?.activityType;
+      if (activityType === "import" || activityType === "sheets_read" || activityType === "http_request") {
+        ingestIds.push(id);
+      }
+    });
+    var existing = Array.from(selectPlaceholders.querySelectorAll(".select-placeholder"));
+    existing.forEach(function(placeholder) {
+      if (placeholder.classList.contains("branch-placeholder")) {
+        return;
+      }
+      var ingestId = placeholder.getAttribute("data-ingest-id");
+      if (ingestIds.indexOf(ingestId) === -1) {
+        placeholder.remove();
+      }
+    });
+    ingestIds.forEach(function(ingestId) {
+      updateSelectPlaceholderPosition(ingestId);
+    });
+  }
+
+  function createIngestAtSlot(activityType) {
+    const footer = document.getElementById("footer");
+    startHeight = parseInt(window.getComputedStyle(footer).height, 10);
+    var operatorId = operatorI;
+    var slot = getImportSlotPosition();
+    var title = "Import Data";
+    if (activityType === "sheets_read") {
+      title = "Google Sheets (Read)";
+    } else if (activityType === "http_request") {
+      title = "HTTP Request";
+    }
+    var operatorData = {
+      operatorId: operatorId,
+      top: slot.top,
+      left: slot.left,
+      properties: {
+        title: title,
+        fileType: null,
+        settings: null,
+        dependencies: [],
+        activityType: activityType,
+        activityId: operatorId,
+        locked: true,
+        inputs: {
+          input: {
+            label: "",
+            value: { "datatypes": null, "values": null }
+          }
+        },
+        outputs: {
+          output: {
+            label: "Output",
+            value: { "datatypes": null, "values": null }
+          }
+        }
+      }
+    };
+    operatorI++;
+    $flowchart.flowchart("createOperator", operatorId, operatorData);
+
+    let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
+    if (activityType === "import") {
+      let import_activity = new Import_Activity($flowchart, new_activity);
+      main_activities[operatorId] = import_activity;
+    } else if (activityType === "sheets_read") {
+      let sheets_activity = new GoogleSheets_Activity($flowchart, new_activity);
+      main_activities[operatorId] = sheets_activity;
+    } else if (activityType === "http_request") {
+      let http_activity = new Http_Request_Activity($flowchart, new_activity);
+      main_activities[operatorId] = http_activity;
+    }
+    activites = $flowchart.flowchart("getOperators");
+
+    const operatorElement = new_activity?.internal?.els?.operator;
+    if (operatorElement && operatorElement.length) {
+      advanceImportSlot(slot.top, operatorElement.outerHeight());
+    } else {
+      advanceImportSlot(slot.top, 120);
+    }
+    repositionSelectPlaceholders();
+  }
+
+  function getLatestIngestId() {
+    var operators = $flowchart.flowchart("getOperators") || {};
+    var latest = null;
+    var latestTop = null;
+    Object.keys(operators).forEach(function(id) {
+      var operator = operators[id];
+      var activityType = operator?.internal?.properties?.activityType || operator?.properties?.activityType;
+      if (activityType !== "import" && activityType !== "sheets_read" && activityType !== "http_request") {
+        return;
+      }
+      var el = operator?.internal?.els?.operator;
+      if (!el || !el.length) {
+        return;
+      }
+      var top = parseInt(el.css("top"), 10) || 0;
+      if (latestTop === null || top > latestTop) {
+        latestTop = top;
+        latest = id;
+      }
+    });
+    return latest;
+  }
+
+  function createSelectAtPlaceholder(placeholder) {
+    var operatorId = operatorI;
+    var slot = {
+      left: parseInt(placeholder.style.left || String(importBaseLeft + selectBaseOffset), 10),
+      top: parseInt(placeholder.style.top || String(importBaseTop), 10)
+    };
+    var operatorData = {
+      top: slot.top,
+      left: slot.left,
+      properties: {
+        title: "Select",
+        dependencies: [],
+        settings: { "datatypes": [], "drop": [], "select": [] },
+        activityType: "select",
+        locked: true,
+        inputs: {
+          input: {
+            label: "Input",
+            value: { "datatypes": null, "values": null }
+          }
+        },
+        outputs: {
+          output: {
+            label: "Output",
+            value: { "datatypes": null, "values": null }
+          }
+        }
+      }
+    };
+    operatorI++;
+    $flowchart.flowchart("createOperator", operatorId, operatorData);
+    let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
+    let select_activity = new Select_Activity($flowchart, new_activity);
+    main_activities[operatorId] = select_activity;
+    activites = $flowchart.flowchart("getOperators");
+    createAutoLinkFromPlaceholder(placeholder, operatorId);
+    updateSelectPlaceholderPosition(placeholder.getAttribute("data-ingest-id"));
+  }
+
+  function createActivityAtPlaceholder(activityType, placeholder) {
+    if (!placeholder) {
+      return;
+    }
+    var branchFromId = placeholder.getAttribute("data-from-id");
+    var branchColor = placeholder.getAttribute("data-branch-color");
+    if (activityType === "select") {
+      if (branchFromId) {
+        var slot = {
+          left: parseInt(placeholder.style.left || String(importBaseLeft + selectBaseOffset), 10),
+          top: parseInt(placeholder.style.top || String(importBaseTop), 10)
+        };
+        var operatorId = operatorI;
+        var operatorData = {
+          top: slot.top,
+          left: slot.left,
+          properties: {
+            title: "Select",
+            dependencies: [],
+            settings: { "datatypes": [], "drop": [], "select": [] },
+            activityType: "select",
+            locked: true,
+            inputs: {
+              input: {
+                label: "Input",
+                value: { "datatypes": null, "values": null }
+              }
+            },
+            outputs: {
+              output: {
+                label: "Output",
+                value: { "datatypes": null, "values": null }
+              }
+            }
+          }
+        };
+        operatorI++;
+        $flowchart.flowchart("createOperator", operatorId, operatorData);
+        let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
+        let select_activity = new Select_Activity($flowchart, new_activity);
+        main_activities[operatorId] = select_activity;
+        activites = $flowchart.flowchart("getOperators");
+        createAutoLink(branchFromId, operatorId, branchColor);
+        placeholder.remove();
+        createBranchNextPlaceholder(operatorId, branchColor);
+        repositionSelectPlaceholders();
+        scheduleLinkAddRefresh();
+      } else {
+        createSelectAtPlaceholder(placeholder);
+      }
+      return;
+    }
+    var slot = {
+      left: parseInt(placeholder.style.left || String(importBaseLeft + selectBaseOffset), 10),
+      top: parseInt(placeholder.style.top || String(importBaseTop), 10)
+    };
+    var beforeId = operatorI;
+    var buttonMap = {
+      select: "#select_activity",
+      filter: "#filter_activity",
+      sort: "#sort_activity",
+      join: "#join_activity",
+      aggregate: "#aggregate_activity",
+      custom: "#custom_activity",
+      replace: "#replace_activity",
+      fill: "#fill_activity",
+      clean: "#clean_activity",
+      dedupe: "#dedupe_activity",
+      cast: "#cast_activity",
+      regex: "#regex_activity",
+      pivot: "#pivot_activity",
+      window: "#window_activity",
+      split: "#split_activity",
+      combine: "#combine_activity",
+      append: "#append_activity",
+      flatten: "#flatten_activity",
+      sheets_write: "#sheets_write_activity"
+    };
+    var selector = buttonMap[activityType];
+    if (selector) {
+      var btn = document.querySelector(selector);
+      if (btn) {
+        btn.click();
+      }
+    }
+    var newId = operatorI - 1;
+    if (newId >= beforeId) {
+      var operators = $flowchart.flowchart("getOperators") || {};
+      var operatorData = operators[newId];
+      if (operatorData && operatorData.internal && operatorData.internal.els && operatorData.internal.els.operator) {
+        operatorData.top = slot.top;
+        operatorData.left = slot.left;
+        operatorData.internal.els.operator.css({ left: slot.left, top: slot.top });
+        operatorData.internal.properties.locked = true;
+        if (branchFromId) {
+          createAutoLink(branchFromId, newId, branchColor);
+          placeholder.remove();
+          createBranchNextPlaceholder(newId, branchColor);
+          repositionSelectPlaceholders();
+          scheduleLinkAddRefresh();
+        } else {
+          createAutoLinkFromPlaceholder(placeholder, newId);
+          updateSelectPlaceholderPosition(placeholder.getAttribute("data-ingest-id"));
+        }
+      }
+    }
+  }
+
+  function resolveInputConnector(activity) {
+    if (!activity || !activity.inputs) {
+      return "input";
+    }
+    if (activity.inputs.input_1) {
+      return "input_1";
+    }
+    if (activity.inputs.input) {
+      return "input";
+    }
+    var keys = Object.keys(activity.inputs);
+    return keys.length > 0 ? keys[0] : "input";
+  }
+
+  function linkExists(fromId, toId, toConnector) {
+    var data = $flowchart.flowchart("getDataRef");
+    if (!data || !data.links) {
+      return false;
+    }
+    return Object.keys(data.links).some(function(linkId) {
+      var link = data.links[linkId];
+      return link.fromOperator == fromId &&
+        link.toOperator == toId &&
+        link.toConnector == toConnector;
+    });
+  }
+
+  function createAutoLink(fromId, toId, color) {
+    if (fromId == null || toId == null) {
+      return;
+    }
+    var activity = $flowchart.flowchart("getOperatorActivity", toId);
+    var toConnector = resolveInputConnector(activity);
+    createAutoLinkWithConnector(fromId, toId, toConnector, color);
+  }
+
+  function createAutoLinkWithConnector(fromId, toId, toConnector, color) {
+    if (fromId == null || toId == null) {
+      return;
+    }
+    if (linkExists(fromId, toId, toConnector)) {
+      return;
+    }
+    var linkData = {
+      fromOperator: fromId,
+      fromConnector: "output",
+      toOperator: toId,
+      toConnector: toConnector,
+      locked: true
+    };
+    if (color) {
+      linkData.color = color;
+    }
+    var linkId = $flowchart.flowchart("addLink", linkData);
+    if (color && linkId != null) {
+      $flowchart.flowchart("setLinkMainColor", linkId, color);
+    }
+    var flowchartInstance = $flowchart.flowchart("instance");
+    if (flowchartInstance && typeof onLinkCreation === "function") {
+      onLinkCreation(flowchartInstance, linkData);
+    }
+  }
+
+  function createAutoLinkFromPlaceholder(placeholder, toId) {
+    if (!placeholder) {
+      return;
+    }
+    var ingestId = placeholder.getAttribute("data-ingest-id");
+    if (!ingestId) {
+      return;
+    }
+    var fromId = getLastNodeForIngest(ingestId) || ingestId;
+    createAutoLink(fromId, toId);
+    updateSelectPlaceholderPosition(ingestId);
+  }
+
+  function getLastNodeForIngest(ingestId) {
+    var data = $flowchart.flowchart("getDataRef");
+    if (!data || !data.links) {
+      return ingestId;
+    }
+    var current = ingestId;
+    var seen = {};
+    while (current != null && !seen[current]) {
+      seen[current] = true;
+      var next = null;
+      Object.keys(data.links).some(function(linkId) {
+        var link = data.links[linkId];
+        if (!link || !link.locked) {
+          return false;
+        }
+        if (link.fromOperator == current) {
+          next = link.toOperator;
+          return true;
+        }
+        return false;
+      });
+      if (next == null) {
+        return current;
+      }
+      current = next;
+    }
+    return current || ingestId;
+  }
+
+  function getIngestForNode(nodeId) {
+    var data = $flowchart.flowchart("getDataRef");
+    if (!data || !data.links || !data.operators) {
+      return null;
+    }
+    var current = nodeId;
+    var seen = {};
+    while (current != null && !seen[current]) {
+      seen[current] = true;
+      var operator = data.operators[current];
+      var activityType = operator?.internal?.properties?.activityType || operator?.properties?.activityType;
+      if (activityType === "import" || activityType === "sheets_read" || activityType === "http_request") {
+        return current;
+      }
+      var previous = null;
+      Object.keys(data.links).some(function(linkId) {
+        var link = data.links[linkId];
+        if (!link || !link.locked) {
+          return false;
+        }
+        if (link.toOperator == current) {
+          previous = link.fromOperator;
+          return true;
+        }
+        return false;
+      });
+      if (!previous) {
+        return null;
+      }
+      current = previous;
+    }
+    return null;
+  }
+
+  function getChainFrom(startId) {
+    var data = $flowchart.flowchart("getDataRef");
+    if (!data || !data.links) {
+      return [];
+    }
+    var chain = [];
+    var current = startId;
+    var seen = {};
+    while (current != null && !seen[current]) {
+      seen[current] = true;
+      chain.push(current);
+      var next = null;
+      Object.keys(data.links).some(function(linkId) {
+        var link = data.links[linkId];
+        if (!link || !link.locked) {
+          return false;
+        }
+        if (link.fromOperator == current) {
+          next = link.toOperator;
+          return true;
+        }
+        return false;
+      });
+      if (!next) {
+        break;
+      }
+      current = next;
+    }
+    return chain;
+  }
+
+  function shiftChainRight(startId, deltaX) {
+    if (!deltaX) {
+      return;
+    }
+    var data = $flowchart.flowchart("getDataRef");
+    if (!data || !data.operators) {
+      return;
+    }
+    var chain = getChainFrom(startId);
+    chain.forEach(function(id) {
+      var operator = data.operators[id];
+      var el = operator?.internal?.els?.operator;
+      if (!operator || !el || !el.length) {
+        return;
+      }
+      var left = parseInt(el.css("left"), 10) || 0;
+      var top = parseInt(el.css("top"), 10) || 0;
+      var nextLeft = left + deltaX;
+      operator.left = nextLeft;
+      operator.top = top;
+      el.css({ left: nextLeft, top: top });
+    });
+    $flowchart.flowchart("redrawLinksLayer");
+  }
+
+  function isSameRow(fromEl, toEl) {
+    if (!fromEl || !toEl || !fromEl.length || !toEl.length) {
+      return true;
+    }
+    var fromTop = parseInt(fromEl.css("top"), 10) || 0;
+    var toTop = parseInt(toEl.css("top"), 10) || 0;
+    return Math.abs(fromTop - toTop) <= 30;
+  }
+
+  function compactChainFrom(startId) {
+    var data = $flowchart.flowchart("getDataRef");
+    if (!data || !data.operators || !data.links) {
+      return;
+    }
+    var current = startId;
+    var seen = {};
+    while (current != null && !seen[current]) {
+      seen[current] = true;
+      var currentEl = data.operators?.[current]?.internal?.els?.operator;
+      if (!currentEl || !currentEl.length) {
+        break;
+      }
+      var next = null;
+      Object.keys(data.links).some(function(linkId) {
+        var link = data.links[linkId];
+        if (!link || !link.locked) {
+          return false;
+        }
+        if (link.fromOperator == current) {
+          next = link.toOperator;
+          return true;
+        }
+        return false;
+      });
+      if (!next) {
+        break;
+      }
+      var nextEl = data.operators?.[next]?.internal?.els?.operator;
+      if (!nextEl || !nextEl.length) {
+        break;
+      }
+      if (!isSameRow(currentEl, nextEl)) {
+        break;
+      }
+      var currentLeft = parseInt(currentEl.css("left"), 10) || 0;
+      var currentWidth = currentEl.outerWidth() || 0;
+      var nextLeft = currentLeft + currentWidth + selectStepOffset;
+      data.operators[next].left = nextLeft;
+      nextEl.css({ left: nextLeft, top: parseInt(nextEl.css("top"), 10) || 0 });
+      current = next;
+    }
+    $flowchart.flowchart("redrawLinksLayer");
+  }
+
+  function shiftRowRight(anchorEl, startLeft, delta) {
+    if (!delta) {
+      return;
+    }
+    var data = $flowchart.flowchart("getDataRef");
+    if (!data || !data.operators) {
+      return;
+    }
+    var anchorTop = parseInt(anchorEl.css("top"), 10) || 0;
+    Object.keys(data.operators).forEach(function(operatorId) {
+      var operator = data.operators[operatorId];
+      var el = operator?.internal?.els?.operator;
+      if (!el || !el.length) {
+        return;
+      }
+      var top = parseInt(el.css("top"), 10) || 0;
+      if (Math.abs(top - anchorTop) > 30) {
+        return;
+      }
+      var left = parseInt(el.css("left"), 10) || 0;
+      if (left < startLeft) {
+        return;
+      }
+      var nextLeft = left + delta;
+      operator.left = nextLeft;
+      operator.top = top;
+      el.css({ left: nextLeft, top: top });
+    });
+    $flowchart.flowchart("redrawLinksLayer");
+  }
+
+  function shiftImportPlaceholderDown(delta) {
+    if (!importPlaceholder || !delta) {
+      return;
+    }
+    var currentTop = parseInt(importPlaceholder.style.top || String(importBaseTop), 10);
+    importPlaceholder.style.top = (currentTop + delta) + "px";
+  }
+
+  function createBranchPlaceholder(linkContext) {
+    if (!selectPlaceholders || !linkContext) {
+      return;
+    }
+    var data = $flowchart.flowchart("getDataRef");
+    if (!data || !data.links) {
+      return;
+    }
+    var link = data.links[linkContext.linkId];
+    if (!link) {
+      return;
+    }
+    var fromId = linkContext.fromId || link.fromOperator;
+    var toId = linkContext.toId || link.toOperator;
+    var fromEl = data.operators?.[fromId]?.internal?.els?.operator;
+    var toEl = data.operators?.[toId]?.internal?.els?.operator;
+    if (!fromEl || !fromEl.length) {
+      return;
+    }
+    var fromLeft = parseInt(fromEl.css("left"), 10) || 0;
+    var fromTop = parseInt(fromEl.css("top"), 10) || 0;
+    var fromWidth = fromEl.outerWidth() || 0;
+    var fromHeight = fromEl.outerHeight() || 0;
+    var targetLeft = fromLeft + fromWidth + selectStepOffset;
+    if (toEl && toEl.length) {
+      targetLeft = parseInt(toEl.css("left"), 10) || targetLeft;
+    }
+    var rowGap = fromHeight + importSlotGap;
+    var targetTop = fromTop + rowGap;
+
+    shiftRowsDown(fromTop, rowGap);
+    shiftImportPlaceholderDown(rowGap);
+
+    var branchColor = linkContext.branchColor || getNextBranchColor();
+    linkContext.branchColor = branchColor;
+    var existing = selectPlaceholders.querySelector(".branch-placeholder[data-link-id='" + linkContext.linkId + "']");
+    if (existing) {
+      existing.remove();
+    }
+    var placeholder = document.createElement("button");
+    placeholder.type = "button";
+    placeholder.className = "select-placeholder branch-placeholder";
+    placeholder.textContent = "+ Choose Activity";
+    placeholder.setAttribute("data-from-id", fromId);
+    placeholder.setAttribute("data-link-id", linkContext.linkId);
+    placeholder.setAttribute("data-branch-color", branchColor);
+    placeholder.style.left = targetLeft + "px";
+    placeholder.style.top = targetTop + "px";
+    selectPlaceholders.appendChild(placeholder);
+
+    repositionSelectPlaceholders();
+    scheduleLinkAddRefresh();
+  }
+
+  function createBranchNextPlaceholder(fromId, branchColor) {
+    if (!selectPlaceholders || fromId == null) {
+      return;
+    }
+    var data = $flowchart.flowchart("getDataRef");
+    var operator = data?.operators?.[fromId];
+    var activityType = operator?.internal?.properties?.activityType || operator?.properties?.activityType;
+    if (activityType === "sheets_write") {
+      return;
+    }
+    var el = operator?.internal?.els?.operator;
+    if (!el || !el.length) {
+      return;
+    }
+    var left = parseInt(el.css("left"), 10) || 0;
+    var top = parseInt(el.css("top"), 10) || 0;
+    var width = el.outerWidth() || selectBaseOffset;
+    var placeholder = document.createElement("button");
+    placeholder.type = "button";
+    placeholder.className = "select-placeholder branch-placeholder";
+    placeholder.textContent = "+ Choose Activity";
+    placeholder.setAttribute("data-from-id", fromId);
+    if (branchColor) {
+      placeholder.setAttribute("data-branch-color", branchColor);
+    }
+    placeholder.style.left = (left + width + selectStepOffset) + "px";
+    placeholder.style.top = top + "px";
+    selectPlaceholders.appendChild(placeholder);
+  }
+  function shiftRowsDown(anchorTop, delta) {
+    if (!delta) {
+      return;
+    }
+    var data = $flowchart.flowchart("getDataRef");
+    if (!data || !data.operators) {
+      return;
+    }
+    Object.keys(data.operators).forEach(function(operatorId) {
+      var operator = data.operators[operatorId];
+      var el = operator?.internal?.els?.operator;
+      if (!el || !el.length) {
+        return;
+      }
+      var top = parseInt(el.css("top"), 10) || 0;
+      if (top <= anchorTop + 30) {
+        return;
+      }
+      var left = parseInt(el.css("left"), 10) || 0;
+      var nextTop = top + delta;
+      operator.top = nextTop;
+      operator.left = left;
+      el.css({ left: left, top: nextTop });
+    });
+    if (selectPlaceholders) {
+      var placeholders = Array.from(selectPlaceholders.querySelectorAll(".select-placeholder"));
+      placeholders.forEach(function(placeholder) {
+        var top = parseInt(placeholder.style.top || "0", 10) || 0;
+        if (top <= anchorTop + 30) {
+          return;
+        }
+        placeholder.style.top = (top + delta) + "px";
+      });
+    }
+    $flowchart.flowchart("redrawLinksLayer");
+  }
+
+  function ensureRowGapFromOperator(operatorId, minGap) {
+    var data = $flowchart.flowchart("getDataRef");
+    var operator = data?.operators?.[operatorId];
+    var el = operator?.internal?.els?.operator;
+    if (!el || !el.length) {
+      return;
+    }
+    var rowTop = parseInt(el.css("top"), 10) || 0;
+    var left = parseInt(el.css("left"), 10) || 0;
+    var width = el.outerWidth() || 0;
+    var startLeft = left + width;
+    var minBlockingLeft = null;
+    Object.keys(data.operators || {}).forEach(function(id) {
+      if (id == operatorId) {
+        return;
+      }
+      var otherEl = data.operators[id]?.internal?.els?.operator;
+      if (!otherEl || !otherEl.length) {
+        return;
+      }
+      var top = parseInt(otherEl.css("top"), 10) || 0;
+      if (Math.abs(top - rowTop) > 30) {
+        return;
+      }
+      var otherLeft = parseInt(otherEl.css("left"), 10) || 0;
+      if (otherLeft < startLeft) {
+        return;
+      }
+      if (minBlockingLeft === null || otherLeft < minBlockingLeft) {
+        minBlockingLeft = otherLeft;
+      }
+    });
+    if (minBlockingLeft === null) {
+      return;
+    }
+    var currentGap = minBlockingLeft - startLeft;
+    if (currentGap < minGap) {
+      shiftRowRight(el, minBlockingLeft, minGap - currentGap);
+    }
+  }
+
+  function ensureRowGapFromPosition(anchorEl, startLeft, minGap) {
+    if (!anchorEl || !anchorEl.length) {
+      return;
+    }
+    var data = $flowchart.flowchart("getDataRef");
+    if (!data || !data.operators) {
+      return;
+    }
+    var rowTop = parseInt(anchorEl.css("top"), 10) || 0;
+    var minBlockingLeft = null;
+    Object.keys(data.operators).forEach(function(id) {
+      var otherEl = data.operators[id]?.internal?.els?.operator;
+      if (!otherEl || !otherEl.length) {
+        return;
+      }
+      var top = parseInt(otherEl.css("top"), 10) || 0;
+      if (Math.abs(top - rowTop) > 30) {
+        return;
+      }
+      var otherLeft = parseInt(otherEl.css("left"), 10) || 0;
+      if (otherLeft < startLeft) {
+        return;
+      }
+      if (minBlockingLeft === null || otherLeft < minBlockingLeft) {
+        minBlockingLeft = otherLeft;
+      }
+    });
+    if (minBlockingLeft === null) {
+      return;
+    }
+    var currentGap = minBlockingLeft - startLeft;
+    if (currentGap < minGap) {
+      shiftRowRight(anchorEl, minBlockingLeft, minGap - currentGap);
+    }
+  }
+
+  function createSelectAtPosition(slot) {
+    var operatorId = operatorI;
+    var operatorData = {
+      top: slot.top,
+      left: slot.left,
+      properties: {
+        title: "Select",
+        dependencies: [],
+        settings: { "datatypes": [], "drop": [], "select": [] },
+        activityType: "select",
+        locked: true,
+        inputs: {
+          input: {
+            label: "Input",
+            value: { "datatypes": null, "values": null }
+          }
+        },
+        outputs: {
+          output: {
+            label: "Output",
+            value: { "datatypes": null, "values": null }
+          }
+        }
+      }
+    };
+    operatorI++;
+    $flowchart.flowchart("createOperator", operatorId, operatorData);
+    let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
+    let select_activity = new Select_Activity($flowchart, new_activity);
+    main_activities[operatorId] = select_activity;
+    activites = $flowchart.flowchart("getOperators");
+    return operatorId;
+  }
+
+  function positionOperator(operatorId, slot) {
+    var operators = $flowchart.flowchart("getOperators") || {};
+    var operatorData = operators[operatorId];
+    var el = operatorData?.internal?.els?.operator;
+    if (!operatorData || !el || !el.length) {
+      return;
+    }
+    operatorData.top = slot.top;
+    operatorData.left = slot.left;
+    el.css({ left: slot.left, top: slot.top });
+    if (operatorData.internal && operatorData.internal.properties) {
+      operatorData.internal.properties.locked = true;
+    }
+  }
+
+  function createActivityAtPosition(activityType, slot) {
+    if (activityType === "select") {
+      return createSelectAtPosition(slot);
+    }
+    var beforeId = operatorI;
+    var buttonMap = {
+      select: "#select_activity",
+      filter: "#filter_activity",
+      sort: "#sort_activity",
+      join: "#join_activity",
+      aggregate: "#aggregate_activity",
+      custom: "#custom_activity",
+      replace: "#replace_activity",
+      fill: "#fill_activity",
+      clean: "#clean_activity",
+      dedupe: "#dedupe_activity",
+      cast: "#cast_activity",
+      regex: "#regex_activity",
+      pivot: "#pivot_activity",
+      window: "#window_activity",
+      split: "#split_activity",
+      combine: "#combine_activity",
+      append: "#append_activity",
+      flatten: "#flatten_activity",
+      sheets_write: "#sheets_write_activity"
+    };
+    var selector = buttonMap[activityType];
+    if (selector) {
+      var btn = document.querySelector(selector);
+      if (btn) {
+        btn.click();
+      }
+    }
+    var newId = operatorI - 1;
+    if (newId >= beforeId) {
+      positionOperator(newId, slot);
+      return newId;
+    }
+    return null;
+  }
+
+  function createActivityBetween(activityType, linkContext) {
+    if (!linkContext) {
+      return;
+    }
+    var data = $flowchart.flowchart("getDataRef");
+    if (!data || !data.links) {
+      return;
+    }
+    var link = data.links[linkContext.linkId];
+    if (!link) {
+      return;
+    }
+    var linkColor = link.color;
+    var fromId = linkContext.fromId || link.fromOperator;
+    var toId = linkContext.toId || link.toOperator;
+    var fromEl = data.operators?.[fromId]?.internal?.els?.operator;
+    var toEl = data.operators?.[toId]?.internal?.els?.operator;
+    var fromLeft = fromEl && fromEl.length ? parseInt(fromEl.css("left"), 10) || 0 : 0;
+    var fromTop = fromEl && fromEl.length ? parseInt(fromEl.css("top"), 10) || 0 : 0;
+    var fromWidth = fromEl && fromEl.length ? fromEl.outerWidth() || 0 : 0;
+    var insertGap = selectStepOffset;
+    var extraAfterGap = 50;
+    var targetLeft = fromLeft + fromWidth + insertGap;
+    var targetTop = fromTop;
+    var newId = createActivityAtPosition(activityType, { left: targetLeft, top: targetTop });
+    if (newId == null) {
+      return;
+    }
+    var newOperatorEl = data.operators?.[newId]?.internal?.els?.operator;
+    var newWidth = newOperatorEl && newOperatorEl.length ? newOperatorEl.outerWidth() || 0 : 0;
+    if (fromEl && fromEl.length) {
+      ensureRowGapFromPosition(fromEl, targetLeft + newWidth, extraAfterGap);
+    }
+    if (isSameRow(fromEl, toEl)) {
+      var toLeft = toEl && toEl.length ? parseInt(toEl.css("left"), 10) || 0 : 0;
+      var existingGap = toLeft - (fromLeft + fromWidth);
+      var neededGap = newWidth + insertGap + extraAfterGap;
+      var shiftBy = existingGap < neededGap ? (neededGap - existingGap) : 0;
+      if (shiftBy) {
+        shiftChainRight(toId, shiftBy);
+      }
+    }
+    allowLockedLinkDelete = true;
+    try {
+      $flowchart.flowchart("deleteLink", linkContext.linkId);
+    } finally {
+      allowLockedLinkDelete = false;
+    }
+    createAutoLink(fromId, newId, linkColor);
+    createAutoLinkWithConnector(newId, toId, link.toConnector || resolveInputConnector($flowchart.flowchart("getOperatorActivity", toId)), linkColor);
+    var ingestId = getIngestForNode(fromId);
+    if (ingestId) {
+      updateSelectPlaceholderPosition(ingestId);
+    }
+    scheduleLinkAddRefresh();
+  }
+
+  function createActivityAsNewRow(activityType, linkContext) {
+    if (!linkContext) {
+      return;
+    }
+    var data = $flowchart.flowchart("getDataRef");
+    if (!data || !data.links) {
+      return;
+    }
+    var link = data.links[linkContext.linkId];
+    if (!link) {
+      return;
+    }
+    var fromId = linkContext.fromId || link.fromOperator;
+    var toId = linkContext.toId || link.toOperator;
+    var fromEl = data.operators?.[fromId]?.internal?.els?.operator;
+    var toEl = data.operators?.[toId]?.internal?.els?.operator;
+    var fromLeft = fromEl && fromEl.length ? parseInt(fromEl.css("left"), 10) || 0 : 0;
+    var fromTop = fromEl && fromEl.length ? parseInt(fromEl.css("top"), 10) || 0 : 0;
+    var fromWidth = fromEl && fromEl.length ? fromEl.outerWidth() || 0 : 0;
+    var fromHeight = fromEl && fromEl.length ? fromEl.outerHeight() || 0 : 0;
+    var targetLeft = fromLeft + fromWidth + selectStepOffset;
+    if (toEl && toEl.length) {
+      targetLeft = parseInt(toEl.css("left"), 10) || targetLeft;
+    }
+    var rowGap = fromHeight + importSlotGap;
+    var targetTop = fromTop + rowGap;
+    shiftRowsDown(fromTop, rowGap);
+    var newId = createActivityAtPosition(activityType, { left: targetLeft, top: targetTop });
+    if (newId == null) {
+      return;
+    }
+    createAutoLink(fromId, newId);
+    var ingestId = getIngestForNode(fromId);
+    if (ingestId) {
+      updateSelectPlaceholderPosition(ingestId);
+    }
+    scheduleLinkAddRefresh();
+  }
 
   function ensureDescriptionElement(operatorId) {
     const body = document.getElementById("activity_body_" + operatorId);
@@ -638,6 +1844,48 @@ $(document).ready(function() {
         }
       }
       if (activity.activityType == "replace") {
+        let target_activity = main_activities[operatorId];
+        let elem = target_activity.settings;
+        if (elem == null || elem == undefined) { return; }
+        let found = false;
+        for (let i = 0; i < settings_div.children.length; i++) {
+          if (settings_div.children[i].id == elem.id) {
+            found = true;
+            settings_div.children[i].style.display = "block";
+          }
+          if (settings_div.children[i].id == elem.id + "_column_edit") {
+            found = true;
+            settings_div.children[i].style.display = "flex";
+            settings_div.children[i].style.flexDirection = "column";
+            settings_div.children[i].style.gap = "15px";
+          }
+        }
+        if (!found) {
+          settings_div.insertBefore(elem, settings_div.firstChild);
+        }
+      }
+      if (activity.activityType == "flatten") {
+        let target_activity = main_activities[operatorId];
+        let elem = target_activity.settings;
+        if (elem == null || elem == undefined) { return; }
+        let found = false;
+        for (let i = 0; i < settings_div.children.length; i++) {
+          if (settings_div.children[i].id == elem.id) {
+            found = true;
+            settings_div.children[i].style.display = "block";
+          }
+          if (settings_div.children[i].id == elem.id + "_column_edit") {
+            found = true;
+            settings_div.children[i].style.display = "flex";
+            settings_div.children[i].style.flexDirection = "column";
+            settings_div.children[i].style.gap = "15px";
+          }
+        }
+        if (!found) {
+          settings_div.insertBefore(elem, settings_div.firstChild);
+        }
+      }
+      if (activity.activityType == "http_request") {
         let target_activity = main_activities[operatorId];
         let elem = target_activity.settings;
         if (elem == null || elem == undefined) { return; }
@@ -967,6 +2215,79 @@ $(document).ready(function() {
       $linkProperties.hide();
       return true;
     }
+    ,onLinkCreate: function(linkId, linkData) {
+      scheduleLinkAddRefresh();
+      setTimeout(repositionSelectPlaceholders, 0);
+      if (linkData && linkData.toConnector === "input_2") {
+        var data = $flowchart.flowchart("getDataRef");
+        var targetType = data?.operators?.[linkData.toOperator]?.internal?.properties?.activityType
+          || data?.operators?.[linkData.toOperator]?.properties?.activityType;
+        if (targetType === "join") {
+          ensureRowGapFromOperator(linkData.fromOperator, selectStepOffset + 50);
+        }
+      }
+      return true;
+    }
+    ,onAfterChange: function() {
+      scheduleLinkAddRefresh();
+      setTimeout(repositionSelectPlaceholders, 0);
+    }
+    ,onOperatorDelete: function(operatorId, forced) {
+      var data = $flowchart.flowchart("getDataRef");
+      var previousId = null;
+      var nextId = null;
+      var nextConnector = null;
+      if (selectPlaceholders) {
+        var placeholders = Array.from(selectPlaceholders.querySelectorAll(".select-placeholder.branch-placeholder"));
+        placeholders.forEach(function(placeholder) {
+          var fromId = placeholder.getAttribute("data-from-id");
+          if (fromId && fromId.toString() === operatorId.toString()) {
+            placeholder.remove();
+          }
+        });
+      }
+      if (data && data.links) {
+        Object.keys(data.links).forEach(function(linkId) {
+          var link = data.links[linkId];
+          if (!link || !link.locked) {
+            return;
+          }
+          if (link.toOperator == operatorId) {
+            previousId = link.fromOperator;
+          }
+          if (link.fromOperator == operatorId) {
+            nextId = link.toOperator;
+            nextConnector = link.toConnector;
+          }
+        });
+      }
+      setTimeout(function() {
+        if (previousId != null && nextId != null) {
+          createAutoLinkWithConnector(previousId, nextId, nextConnector || resolveInputConnector($flowchart.flowchart("getOperatorActivity", nextId)));
+          var prevEl = data?.operators?.[previousId]?.internal?.els?.operator;
+          var nextEl = data?.operators?.[nextId]?.internal?.els?.operator;
+          if (prevEl && prevEl.length && nextEl && nextEl.length && isSameRow(prevEl, nextEl)) {
+            compactChainFrom(previousId);
+          }
+        }
+        repositionImportPlaceholder();
+        repositionSelectPlaceholders();
+        scheduleLinkAddRefresh();
+      }, 0);
+      return true;
+    }
+    ,onLinkDelete: function(linkId, forced) {
+      var data = $flowchart.flowchart("getDataRef");
+      if (!data || !data.links || forced) {
+        return true;
+      }
+      var link = data.links[linkId];
+      if (link && link.locked) {
+        return allowLockedLinkDelete;
+      }
+      setTimeout(repositionSelectPlaceholders, 0);
+      return true;
+    }
   });
 
   const $workspace = $("#flowchartworkspace");
@@ -997,6 +2318,7 @@ $(document).ready(function() {
     panOffset = { x: 0, y: 0 };
     applyPanZoom();
   });
+
 
   $workspace.on("mousedown", function(event) {
     if (event.button !== 0 && event.button !== 1) {
@@ -1232,11 +2554,12 @@ $(document).ready(function() {
     let outputs = null;
     if (pipeline_data && Array.isArray(pipeline_data.ordered_nodes)) {
       const activities = build_ordered_activities_payload($flowchart, pipeline_data, targetId);
-      const response = await post_ordered_activities(activities);
+      const response = await post_ordered_activities(activities, true);
 
       if (response && Array.isArray(response.results)) {
         response.results.forEach(entry => {
           if (entry && entry.operatorId != null && entry.result) {
+            console.log("Storing output for operator:", entry.operatorId, entry.result);
             $flowchart.flowchart("setoutputVal", entry.operatorId, "output", entry.result);
           }
         });
@@ -1253,6 +2576,7 @@ $(document).ready(function() {
     }
     // Render preview table for the selected activity output.
     if (outputs && outputs.values) {
+      console.log("Using cached outputs for preview:", outputs);
       createTable(outputs.values, document.getElementById(targetId + "_data_table"), targetId);
     }
   });
@@ -1275,7 +2599,7 @@ $(document).ready(function() {
         alert("Pipeline has an error. Check activity settings.")
         return
       }
-      await post_ordered_activities(activities)
+      await post_ordered_activities(activities, false)
 
 
     } else {
@@ -1286,44 +2610,262 @@ $(document).ready(function() {
 
   var operatorI = 0;
   $("#import_activity").on("click", function() {
-    const footer = document.getElementById("footer");
-    startHeight = parseInt(window.getComputedStyle(footer).height, 10);
-    var operatorId = operatorI;
-    var operatorData = {
-      operatorId: operatorId,
-      top: ($flowchart.height() / 2) - (startHeight / 2),
-      left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
-      properties: {
-        title: "Import Data",
-        fileType: null,
-        settings: null,
-        dependencies: [],
-        activityType: "import",
-        activityId: operatorId,
-        inputs: {
-          input: {
-            label: "",
-            value: { "datatypes": null, "values": null }
-          }
-        },
-        outputs: {
-          output: {
-            label: "Output",
-            value: { "datatypes": null, "values": null }
-          }
-        }
-      }
-    };
-    operatorI++;
-    $flowchart.flowchart("createOperator", operatorId, operatorData);
-
-    let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
-    let import_activity = new Import_Activity($flowchart, new_activity);
-    main_activities[operatorId] = import_activity;
-    activites = $flowchart.flowchart("getOperators");
+    createIngestAtSlot("import");
   });
 
-  $("#select_activity").on("click", function() {
+  if (importPlaceholder) {
+    importPlaceholder.addEventListener("click", function() {
+      if (!ingestMenu) {
+        createIngestAtSlot("import");
+        return;
+      }
+      ingestMenu.style.display = ingestMenu.style.display === "flex" ? "none" : "flex";
+      ingestMenu.setAttribute("aria-hidden", ingestMenu.style.display === "none" ? "true" : "false");
+      var slot = getImportSlotPosition();
+      ingestMenu.style.left = slot.left + "px";
+      ingestMenu.style.top = slot.top + "px";
+    });
+  }
+
+  if (selectPlaceholders) {
+    selectPlaceholders.addEventListener("click", function(event) {
+      var target = event.target.closest(".select-placeholder");
+      if (!target) {
+        return;
+      }
+      activeChoosePlaceholder = target;
+      activeInsertLink = null;
+      if (!chooseMenu) {
+        createSelectAtPlaceholder(target);
+        return;
+      }
+      var left = parseInt(target.style.left || String(importBaseLeft), 10);
+      var top = parseInt(target.style.top || String(importBaseTop), 10);
+      openChooseMenuAt(left + 10, top + 60);
+    });
+  }
+
+  if (linkAddLayer) {
+    linkAddLayer.addEventListener("click", function(event) {
+      var target = event.target.closest(".link-add-button");
+      if (!target) {
+        return;
+      }
+      var linkId = target.getAttribute("data-link-id");
+      if (!linkId) {
+        return;
+      }
+      activeInsertLink = {
+        linkId: linkId,
+        fromId: target.getAttribute("data-from-id"),
+        toId: target.getAttribute("data-to-id"),
+        mode: null
+      };
+      activeChoosePlaceholder = null;
+      var left = parseInt(target.style.left || "0", 10);
+      var top = parseInt(target.style.top || "0", 10);
+      openChooseMenuAt(left + 10, top + 34);
+    });
+  }
+
+  if (ingestMenu) {
+    ingestMenu.addEventListener("click", function(event) {
+      var button = event.target.closest("button[data-ingest]");
+      if (!button) {
+        return;
+      }
+      var type = button.getAttribute("data-ingest");
+      createIngestAtSlot(type);
+      ingestMenu.style.display = "none";
+      ingestMenu.setAttribute("aria-hidden", "true");
+    });
+  }
+
+  if (chooseMenuList) {
+    var iconMap = {
+      select: '<svg viewBox="0 0 24 24"><path d="M5 6h10M5 12h10M5 18h10"/><path d="M18 6l1.5 1.5L22 5"/></svg>',
+      filter: '<svg viewBox="0 0 24 24"><path d="M3 5h18l-7 8v5l-4 2v-7z"/></svg>',
+      sort: '<svg viewBox="0 0 24 24"><path d="M7 4v16M7 4l-3 3M7 4l3 3"/><path d="M17 20V4M17 20l-3-3M17 20l3-3"/></svg>',
+      join: '<svg viewBox="0 0 24 24"><path d="M7 7h4v4H7zM13 13h4v4h-4z"/><path d="M11 9l2 2"/></svg>',
+      aggregate: '<svg viewBox="0 0 24 24"><path d="M4 18h4M10 14h4M16 10h4"/></svg>',
+      custom: '<svg viewBox="0 0 24 24"><path d="M4 16l6-6 4 4 6-6"/></svg>',
+      replace: '<svg viewBox="0 0 24 24"><path d="M4 18h6l8-8-6-6-8 8z"/><path d="M14 6l4 4"/></svg>',
+      fill: '<svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M6 12h12"/><path d="M9 17h6"/></svg>',
+      clean: '<svg viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M7 12h10"/><path d="M10 18h4"/></svg>',
+      dedupe: '<svg viewBox="0 0 24 24"><path d="M7 7h10v10H7z"/><path d="M4 4h10v10H4z"/></svg>',
+      cast: '<svg viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M8 12h8"/><path d="M10 18h4"/></svg>',
+      regex: '<svg viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M7 12h10"/><path d="M9 17h6"/></svg>',
+      pivot: '<svg viewBox="0 0 24 24"><path d="M5 5h6v6H5z"/><path d="M13 5h6v6h-6z"/><path d="M5 13h6v6H5z"/></svg>',
+      window: '<svg viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M6 12h12"/><path d="M8 18h8"/></svg>',
+      split: '<svg viewBox="0 0 24 24"><path d="M4 6l8 8M4 18l8-8"/><path d="M14 6h6M14 18h6"/></svg>',
+      combine: '<svg viewBox="0 0 24 24"><path d="M4 7h6v4H4zM14 13h6v4h-6z"/><path d="M10 9l4 4"/></svg>',
+      append: '<svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg>',
+      flatten: '<svg viewBox="0 0 24 24"><path d="M4 7h10M4 12h16M4 17h12"/><path d="M16 6l3 3-3 3"/></svg>',
+      sheets_write: '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h6"/></svg>'
+    };
+    var newRowButton = document.createElement("button");
+    newRowButton.type = "button";
+    newRowButton.className = "create_operator buttons";
+    newRowButton.setAttribute("data-action", "new-row");
+    newRowButton.innerHTML =
+      '<span class="activity-icon" aria-hidden="true">' +
+      '<svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg>' +
+      "</span>" +
+      "Add as new flow";
+    chooseMenuList.appendChild(newRowButton);
+    var options = [
+      { type: "select", label: "Select" },
+      { type: "filter", label: "Filter" },
+      { type: "sort", label: "Sort" },
+      { type: "join", label: "Join" },
+      { type: "aggregate", label: "Aggregate" },
+      { type: "custom", label: "Custom" },
+      { type: "replace", label: "Replace" },
+      { type: "fill", label: "Fill" },
+      { type: "clean", label: "Trim/Clean" },
+      { type: "dedupe", label: "Dedupe" },
+      { type: "cast", label: "Type Cast" },
+      { type: "regex", label: "Regex Extract" },
+      { type: "pivot", label: "Pivot/Unpivot" },
+      { type: "window", label: "Window/Rank" },
+      { type: "split", label: "Split" },
+      { type: "combine", label: "Combine" },
+      { type: "append", label: "Append" },
+      { type: "flatten", label: "Flatten" }
+    ];
+    var sinkOptions = [
+      { type: "sheets_write", label: "Google Sheets (Write)" }
+    ];
+    options.forEach(function(option) {
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "create_operator buttons";
+      button.setAttribute("data-activity", option.type);
+      button.innerHTML =
+        '<span class="activity-icon" aria-hidden="true">' +
+        (iconMap[option.type] || "") +
+        "</span>" +
+        option.label;
+      chooseMenuList.appendChild(button);
+    });
+    if (sinkOptions.length) {
+      var sinkHeader = document.createElement("div");
+      sinkHeader.className = "activity-group-label";
+      sinkHeader.setAttribute("data-group", "sink");
+      sinkHeader.textContent = "Sink";
+      chooseMenuList.appendChild(sinkHeader);
+      sinkOptions.forEach(function(option) {
+        var button = document.createElement("button");
+        button.type = "button";
+        button.className = "create_operator buttons";
+        button.setAttribute("data-activity", option.type);
+        button.setAttribute("data-group", "sink");
+        button.innerHTML =
+          '<span class="activity-icon" aria-hidden="true">' +
+          (iconMap[option.type] || "") +
+          "</span>" +
+          option.label;
+        chooseMenuList.appendChild(button);
+      });
+    }
+  }
+
+  if (chooseMenuList) {
+    chooseMenuList.addEventListener("click", function(event) {
+      var button = event.target.closest("button[data-activity]");
+      var actionButton = event.target.closest("button[data-action=\"new-row\"]");
+      if (actionButton && activeInsertLink) {
+        createBranchPlaceholder(activeInsertLink);
+        chooseMenu.style.display = "none";
+        chooseMenu.setAttribute("aria-hidden", "true");
+        if (chooseMenuSearch) {
+          chooseMenuSearch.value = "";
+        }
+        var resetButtons = chooseMenuList.querySelectorAll("button[data-activity], button[data-action=\"new-row\"]");
+        resetButtons.forEach(function(item) {
+          item.style.display = "";
+          item.classList.remove("is-active");
+        });
+        activeChoosePlaceholder = null;
+        activeInsertLink = null;
+        return;
+      }
+      if (!button || (!activeChoosePlaceholder && !activeInsertLink)) {
+        return;
+      }
+      var type = button.getAttribute("data-activity");
+      if (activeInsertLink) {
+        createActivityBetween(type, activeInsertLink);
+      } else {
+        createActivityAtPlaceholder(type, activeChoosePlaceholder);
+      }
+      chooseMenu.style.display = "none";
+      chooseMenu.setAttribute("aria-hidden", "true");
+      if (chooseMenuSearch) {
+        chooseMenuSearch.value = "";
+      }
+      var buttons = chooseMenuList.querySelectorAll("button[data-activity], button[data-action=\"new-row\"]");
+      buttons.forEach(function(item) {
+        item.style.display = "";
+        item.classList.remove("is-active");
+      });
+      activeChoosePlaceholder = null;
+      activeInsertLink = null;
+    });
+  }
+
+  if (chooseMenuSearch) {
+    chooseMenuSearch.addEventListener("input", function(event) {
+      var query = (event.target.value || "").toLowerCase();
+      var buttons = chooseMenuList ? chooseMenuList.querySelectorAll("button[data-activity], button[data-action=\"new-row\"]") : [];
+      buttons.forEach(function(button) {
+        if (button.getAttribute("data-action") === "new-row") {
+          button.style.display = activeInsertLink ? "" : "none";
+          return;
+        }
+        var label = (button.textContent || "").toLowerCase();
+        button.style.display = label.indexOf(query) !== -1 ? "" : "none";
+      });
+      if (chooseMenuList) {
+        var sinkHeader = chooseMenuList.querySelector(".activity-group-label[data-group=\"sink\"]");
+        if (sinkHeader) {
+          var sinkButtons = chooseMenuList.querySelectorAll("button[data-group=\"sink\"]");
+          var anyVisible = false;
+          sinkButtons.forEach(function(button) {
+            if (button.style.display !== "none") {
+              anyVisible = true;
+            }
+          });
+          sinkHeader.style.display = anyVisible ? "" : "none";
+        }
+      }
+    });
+  }
+
+  document.addEventListener("click", function(event) {
+    if (ingestMenu && importPlaceholder) {
+      if (event.target !== importPlaceholder && !importPlaceholder.contains(event.target) && !ingestMenu.contains(event.target)) {
+        ingestMenu.style.display = "none";
+        ingestMenu.setAttribute("aria-hidden", "true");
+      }
+    }
+    if (chooseMenu && activeChoosePlaceholder) {
+      if (!chooseMenu.contains(event.target) && !event.target.closest(".select-placeholder")) {
+        chooseMenu.style.display = "none";
+        chooseMenu.setAttribute("aria-hidden", "true");
+        activeChoosePlaceholder = null;
+      }
+    }
+    if (chooseMenu && activeInsertLink) {
+      if (!chooseMenu.contains(event.target) && !event.target.closest(".link-add-button")) {
+        chooseMenu.style.display = "none";
+        chooseMenu.setAttribute("aria-hidden", "true");
+        activeInsertLink = null;
+      }
+    }
+  });
+
+  function createSelectAtFallback() {
     var operatorId = operatorI;
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
@@ -1333,7 +2875,6 @@ $(document).ready(function() {
       properties: {
         title: "Select",
         dependencies: [],
-
         settings: { "datatypes": [], "drop": [], "select": [] },
         activityType: "select",
         inputs: {
@@ -1353,9 +2894,19 @@ $(document).ready(function() {
     operatorI++;
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
-    let split_activity = new Select_Activity($flowchart, new_activity);
-    main_activities[operatorId] = split_activity;
+    let select_activity = new Select_Activity($flowchart, new_activity);
+    main_activities[operatorId] = select_activity;
     activites = $flowchart.flowchart("getOperators");
+  }
+
+  $("#select_activity").on("click", function() {
+    var ingestId = getLatestIngestId();
+    if (ingestId && selectPlaceholders) {
+      var placeholder = ensureSelectPlaceholder(ingestId);
+      createSelectAtPlaceholder(placeholder);
+      return;
+    }
+    createSelectAtFallback();
   });
 
   $("#sort_activity").on("click", function() {
@@ -1783,7 +3334,7 @@ $(document).ready(function() {
   });
 
   $("#flatten_activity").on("click", function() {
-    var operatorId = "created_operator_flat" + operatorI;
+    var operatorId = operatorI;
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorData = {
@@ -1792,23 +3343,23 @@ $(document).ready(function() {
       properties: {
         title: "Flatten",
         dependencies: [],
-
         activityType: "flatten",
         inputs: {
           input: {
             label: "Input",
-            value: null
+            value: { "datatypes": null, "values": null }
           }
         },
         outputs: {
           output: {
             label: "Output",
-            value: null
+            value: { "datatypes": null, "values": null }
           }
         }
       }
     };
     operatorI++;
+
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
     let flatten_activity = new Flatten_Activity($flowchart, new_activity);
@@ -1921,37 +3472,11 @@ $(document).ready(function() {
   });
 
   $("#sheets_read_activity").on("click", function() {
-    var operatorId = operatorI;
-    const footer = document.getElementById("footer");
-    startHeight = parseInt(window.getComputedStyle(footer).height, 10);
-    var operatorData = {
-      top: ($flowchart.height() / 2) - (startHeight / 2),
-      left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
-      properties: {
-        title: "Google Sheets (Read)",
-        activityType: "sheets_read",
-        dependencies: [],
-        settings: {},
-        inputs: {
-          input: {
-            label: "Input",
-            value: { "datatypes": null, "values": null }
-          }
-        },
-        outputs: {
-          output: {
-            label: "Output",
-            value: { "datatypes": null, "values": null }
-          }
-        }
-      }
-    };
-    operatorI++;
-    $flowchart.flowchart("createOperator", operatorId, operatorData);
-    let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
-    let sheets_activity = new GoogleSheets_Activity($flowchart, new_activity);
-    main_activities[operatorId] = sheets_activity;
-    activites = $flowchart.flowchart("getOperators");
+    createIngestAtSlot("sheets_read");
+  });
+
+  $("#http_request_activity").on("click", function() {
+    createIngestAtSlot("http_request");
   });
 
   $("#sheets_write_activity").on("click", function() {
@@ -2105,6 +3630,12 @@ $(document).ready(function() {
       if (operatorData.properties.activityType == "import") {
         a = new Import_Activity($flowchart, new_activity);
       }
+      if (operatorData.properties.activityType == "flatten") {
+        a = new Flatten_Activity($flowchart, new_activity);
+      }
+      if (operatorData.properties.activityType == "http_request") {
+        a = new Http_Request_Activity($flowchart, new_activity);
+      }
       if (operatorData.properties.activityType == "filter") {
         a = new Filter_Activity($flowchart, new_activity);
       }
@@ -2170,6 +3701,10 @@ $(document).ready(function() {
   }
   $("#load_local").click(LoadFromLocalStorage);
 
+  repositionImportPlaceholder();
+  repositionSelectPlaceholders();
+  scheduleLinkAddRefresh();
+
 });
 
 function build_ordered_activities_payload(flowchart, data, targetId){
@@ -2188,7 +3723,7 @@ function build_ordered_activities_payload(flowchart, data, targetId){
       settings = main_activity.get_operation_settings()
     }
     let activity_data = null
-    if (activity.activityType == "import" || activity.activityType == "sheets_read") {
+    if (activity.activityType == "import" || activity.activityType == "sheets_read" || activity.activityType == "http_request") {
       activity_data = activity?.inputs?.input?.value?.values ?? activity?.outputs?.output?.value?.values ?? null
     } else if (activity.activityType == "join" || activity.activityType == "append") {
       const table_1 = activity?.inputs?.input_1?.value?.outputs?.output?.value?.values ?? null

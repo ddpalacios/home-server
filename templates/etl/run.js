@@ -18,7 +18,11 @@ async function run_activity_flow(activity, widget, data){
 
     }
     if (body == undefined){return}
-    var request = new Request('/etl/run/', {
+    var requestUrl = '/etl/run/';
+    if (activity_type === 'http_request') {
+        requestUrl = '/etl/call';
+    }
+    var request = new Request(requestUrl, {
                                 method: 'POST',
                                 headers: new Headers({
                                             'Accept': 'application/json'
@@ -79,11 +83,11 @@ async function get_ordered_nodes(widget, targetIds){
 
 }
 
-async function post_ordered_activities(activities){
+async function post_ordered_activities(activities, preview = false){
     if (!Array.isArray(activities) || activities.length === 0) {
         return null
     }
-    const body = { activities: activities }
+    const body = { activities: activities, preview: !!preview }
     console.log("Posting activities:", body)
     var request = new Request('/etl/run/', {
                                 method: 'POST',

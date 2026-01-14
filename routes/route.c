@@ -311,6 +311,8 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_gol_script(cSSL, http_header, "/etl/pivot.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/window.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/window.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/flatten.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/flatten.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/group.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/group.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/split.js")==0){
@@ -321,6 +323,8 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_gol_script(cSSL, http_header, "/etl/append.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/google_sheets.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/google_sheets.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/http_request.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/http_request.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/jquery.flowchart.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/jquery.flowchart.js");
 
@@ -329,6 +333,8 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/pipeline/order")==0){
 		post_run_activity(socket,http_header,body, route);
 	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/run/")==0){
+		post_run_activity(socket,http_header,body, route);
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/call")==0){
 		post_run_activity(socket,http_header,body, route);
 
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/phrase-matching")==0){

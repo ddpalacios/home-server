@@ -565,9 +565,10 @@ jQuery(function ($) {
                     window: "#ffd08a",
                     split: "#ff9f6a",
                     combine: "#b4a6ff",
-                    select: "#8fd9ff",
+                    select: "#c7f9cc",
                     sort: "#ffd36b",
-                    append: "#7dd9c7"
+                    append: "#7dd9c7",
+                    http_request: "#9ad0ff"
                 };
                 infos.headerColor = headerColors[infos.activityType] || "#dbe7ff";
             }
@@ -719,7 +720,7 @@ jQuery(function ($) {
 
         },
         setinputVal: function(operatorId,inputName, value){
-            // console.log("Setting input", value)
+            console.log("Setting input", value)
             this.data.operators[operatorId].internal.properties.inputs[inputName].value = value;
         },
         setFileType: function(operatorId, fileType){
@@ -873,13 +874,6 @@ jQuery(function ($) {
                     output =node.outputs.output.value
 
                 }
-                // if (node.activityType == 'flatten'){
-                //      let copy = JSON.parse(JSON.stringify(output))
-                //     this.setinputVal(node.operatorId,'input', copy)
-                //     let copy2 = JSON.parse(JSON.stringify(output))
-                //     this.setoutputVal(node.operatorId ,'output', copy2)
-                   
-                // }
                 if (node.activityType == 'export'){
                     let copy = JSON.parse(JSON.stringify(output))
                     this.setinputVal(node.operatorId,'input', copy)
@@ -918,13 +912,6 @@ jQuery(function ($) {
                     output =node.outputs.output.value
 
                 }
-                // if (node.activityType == 'flatten'){
-                //      let copy = JSON.parse(JSON.stringify(output))
-                //     this.setinputVal(node.operatorId,'input', copy)
-                //     let copy2 = JSON.parse(JSON.stringify(output))
-                //     this.setoutputVal(node.operatorId ,'output', copy2)
-                   
-                // }
                 if (node.activityType == 'export'){
                     // let copy = JSON.parse(JSON.stringify(output))
                     this.setinputVal(node.operatorId,'input', output)
@@ -1036,34 +1023,6 @@ jQuery(function ($) {
                     let copy2 = JSON.parse(JSON.stringify(previous_output_value))
                     this.setoutputVal(node.operatorId ,'output', copy2)
                 }
-                
-                // if (node.activityType == 'flatten'){
-                //     let copy = JSON.parse(JSON.stringify(output))
-                //     let copy2 = JSON.parse(JSON.stringify(output))
-
-                //     this.setinputVal(node.operatorId,'input', copy)
-                //     // console.log('Flatten', node)
-                //     this.setoutputVal(node.operatorId ,'output', copy2)
-                //     if (output == null){continue}
-                //     let array_values = []
-                //     Object.keys(output).forEach(key => {
-                //         if (Array.isArray(output[key])){
-                //             array_values.push(key)
-                //         }
-                //     }); 
-                //     if (array_values.length == 0){continue}
-                //     let target_column = array_values[0]
-                //     let target_values = copy2[target_column]
-                //     this.setoutputVal(node.operatorId ,'output', target_values)
-                //     output = target_values
-                // }
-                // if (node.activityType == 'export'){
-                //     let copy = JSON.parse(JSON.stringify(output))
-                //     this.setinputVal(node.operatorId,'input', copy)
-                //     let copy2 = JSON.parse(JSON.stringify(output))
-                //     this.setoutputVal(node.operatorId ,'output', copy2)
-
-                // }
             }
         },
 
@@ -1137,6 +1096,10 @@ jQuery(function ($) {
                             e.preventDefault();
                             return;
                         }
+                        if (operatorData.internal && operatorData.internal.properties && operatorData.internal.properties.locked) {
+                            e.preventDefault();
+                            return;
+                        }
                         var elementOffset = self.element.offset();
                         var $operatorEl = $(this);
                         pointerX = (e.pageX - elementOffset.left) / self.positionRatio - parseInt($operatorEl.css('left'), 10);
@@ -1152,6 +1115,12 @@ jQuery(function ($) {
                             self.objs.layers.operators.find('.flowchart-operator.multi-selected').each(function () {
                                 var $operator = $(this);
                                 var operatorId = $operator.data('operator_id');
+                                if (self.data.operators[operatorId] &&
+                                    self.data.operators[operatorId].internal &&
+                                    self.data.operators[operatorId].internal.properties &&
+                                    self.data.operators[operatorId].internal.properties.locked) {
+                                    return;
+                                }
                                 var left = parseInt($operator.css('left'), 10) || 0;
                                 var top = parseInt($operator.css('top'), 10) || 0;
                                 self.multiDrag.items.push({id: operatorId, left: left, top: top, el: $operator});
@@ -1259,7 +1228,6 @@ jQuery(function ($) {
                 // let toOperator = this.getOperatorActivity(linkData['toOperator'])
                 // console.log(fromOperator, toOperator)
 
-                // if (toOperator.activityType == 'flatten'){
                 //     if (fromOperator.outputs.output != null){
                 //         console.log("Connecting To Flattend!")
                 //         const div = document.createElement('div');
@@ -1271,10 +1239,8 @@ jQuery(function ($) {
                 //             }
                 //         });
                 //         if (array_values.length > 0){
-                //             let selector_element = get_selector_element("flatten_body_select_"+toOperator.operatorId, array_values, array_values[0])
                 //             div.appendChild(selector_element)
                 //         }else{
-                //             let selector_element = get_selector_element("flatten_body_select_"+toOperator.operatorId, array_values, {})
                 //             div.appendChild(selector_element)
 
                 //         }
@@ -1286,7 +1252,6 @@ jQuery(function ($) {
                 //         settings_div.innerHTML = ''
                 //         settings_div.appendChild(activity_settings_element)
 
-                //         // let body_element = get_flatten_activity_body(toOperator)
                 //         //  console.log("Looking for", "actvitiy_body_"+linkData['toOperator'])
                 //         // let body = document.getElementById("actvitiy_body_"+linkData['toOperator'])
                 //         // body.appendChild(body_element);
@@ -1297,10 +1262,6 @@ jQuery(function ($) {
                 //         // settings_div.appendChild(activity_settings_element)
                         
 
-                //         // let select_element = document.getElementById("flatten_body_select_"+toOperator.operatorId)
-                //         //  this.setoutputVal(linkData['toOperator'], 'output', fromOperator.outputs.output[select_element.value])
-                //     }
-                // }
                 // if (toOperator.activityType == 'export'){
                 //     if (fromOperator.outputs.output != null){
                         // let export_button = document.createElement('button')

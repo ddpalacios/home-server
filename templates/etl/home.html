@@ -27,6 +27,9 @@
             <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Collapse activities panel">
               Hide
             </button>
+            <button id="groupToggle" class="sidebar-toggle sidebar-toggle--group" type="button" aria-label="Collapse all activity groups">
+              Collapse All
+            </button>
         </div>
         <p class="sidebar-subtitle">Build your flow faster.</p>
         <div class="sidebar-search" role="search">
@@ -53,159 +56,38 @@
                     </span>
                     Google Sheets (Read)
                 </button>
-            </div>
-        </details>
-        <details class="activity-group" open>
-            <summary>Prepare / Clean</summary>
-            <div class="activity-group-content">
-                <button id="clean_activity" class="create_operator buttons">
+                <button id="http_request_activity" class="create_operator buttons">
                     <span class="activity-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M7 12h10"/><path d="M10 18h4"/></svg>
+                        <svg viewBox="0 0 24 24"><path d="M4 7h10M4 12h16M4 17h12"/><path d="M18 7l2 2-2 2"/></svg>
                     </span>
-                    Trim/Clean
-                </button>
-                <button id="fill_activity" class="create_operator buttons">
-                    <span class="activity-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M6 12h12"/><path d="M9 17h6"/></svg>
-                    </span>
-                    Fill
-                </button>
-                <button id="dedupe_activity" class="create_operator buttons">
-                    <span class="activity-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M7 7h10v10H7z"/><path d="M4 4h10v10H4z"/></svg>
-                    </span>
-                    Dedupe
-                </button>
-            </div>
-        </details>
-        <details class="activity-group" open>
-            <summary>Select / Shape</summary>
-            <div class="activity-group-content">
-                <button id="select_activity" class="create_operator buttons">
-                    <span class="activity-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M5 6h10M5 12h10M5 18h10"/><path d="M18 6l1.5 1.5L22 5"/></svg>
-                    </span>
-                    Select
-                </button>
-                <button id="split_activity" class="create_operator buttons">
-                    <span class="activity-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M4 6l8 8M4 18l8-8"/><path d="M14 6h6M14 18h6"/></svg>
-                    </span>
-                    Split Value
-                </button>
-                <button id="combine_activity" class="create_operator buttons">
-                    <span class="activity-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M4 7h6v4H4zM14 13h6v4h-6z"/><path d="M10 9l4 4"/></svg>
-                    </span>
-                    Combine Columns
-                </button>
-                <button id="cast_activity" class="create_operator buttons">
-                    <span class="activity-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M8 12h8"/><path d="M10 18h4"/></svg>
-                    </span>
-                    Type Cast
-                </button>
-                <button id="regex_activity" class="create_operator buttons">
-                    <span class="activity-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M5 7h14"/><path d="M7 12h10"/><path d="M9 17h6"/></svg>
-                    </span>
-                    Regex Extract
-                </button>
-            </div>
-        </details>
-        <details class="activity-group" open>
-            <summary>Filter / Reduce</summary>
-            <div class="activity-group-content">
-                <button id="filter_activity" class="create_operator buttons">
-                    <span class="activity-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M3 5h18l-7 8v5l-4 2v-7z"/></svg>
-                    </span>
-                    Create Filter
-                </button>
-                <button id="sort_activity" class="create_operator buttons">
-                    <span class="activity-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M7 4v16M7 4l-3 3M7 4l3 3"/><path d="M17 20V4M17 20l-3-3M17 20l3-3"/></svg>
-                    </span>
-                    Sort
-                </button>
-            </div>
-        </details>
-        <details class="activity-group" open>
-            <summary>Aggregate / Summarize</summary>
-            <div class="activity-group-content">
-                <button id="aggregate_activity" class="create_operator buttons">
-                    <span class="activity-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M4 18h4M10 14h4M16 10h4"/></svg>
-                    </span>
-                    Create Aggregate
-                </button>
-                <button id="pivot_activity" class="create_operator buttons">
-                    <span class="activity-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M5 5h6v6H5z"/><path d="M13 5h6v6h-6z"/><path d="M5 13h6v6H5z"/></svg>
-                    </span>
-                    Pivot/Unpivot
-                </button>
-                <button id="window_activity" class="create_operator buttons">
-                    <span class="activity-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M6 12h12"/><path d="M8 18h8"/></svg>
-                    </span>
-                    Window/Rank
-                </button>
-            </div>
-        </details>
-        <details class="activity-group" open>
-            <summary>Join / Merge</summary>
-            <div class="activity-group-content">
-                <button id="join_activity" class="create_operator buttons">
-                    <span class="activity-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M7 7h4v4H7zM13 13h4v4h-4z"/><path d="M11 9l2 2"/></svg>
-                    </span>
-                    Create Join
-                </button>
-                <button id="append_activity" class="create_operator buttons">
-                    <span class="activity-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-                    </span>
-                    Append
-                </button>
-            </div>
-        </details>
-        <details class="activity-group" open>
-            <summary>Custom / Advanced</summary>
-            <div class="activity-group-content">
-                <button id="custom_activity" class="create_operator buttons">
-                    <span class="activity-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M4 16l6-6 4 4 6-6"/></svg>
-                    </span>
-                    Create Custom
-                </button>
-                <button id="flatten_activity" class="create_operator buttons">
-                    <span class="activity-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M4 7h10M4 12h16M4 17h12"/><path d="M16 6l3 3-3 3"/></svg>
-                    </span>
-                    Flatten
-                </button>
-                <button id="replace_activity" class="create_operator buttons">
-                    <span class="activity-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M4 18h6l8-8-6-6-8 8z"/><path d="M14 6l4 4"/></svg>
-                    </span>
-                    Replace Value
-                </button>
-            </div>
-        </details>
-        <details class="activity-group" open>
-            <summary>Sink</summary>
-            <div class="activity-group-content">
-                <button id="sheets_write_activity" class="create_operator buttons">
-                    <span class="activity-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h6"/></svg>
-                    </span>
-                    Google Sheets (Write)
+                    HTTP Request
                 </button>
             </div>
         </details>
     </div>
     </div>
+</div>
+
+<div class="activity-buttons-hidden" aria-hidden="true">
+    <button id="select_activity" type="button"></button>
+    <button id="filter_activity" type="button"></button>
+    <button id="sort_activity" type="button"></button>
+    <button id="join_activity" type="button"></button>
+    <button id="aggregate_activity" type="button"></button>
+    <button id="custom_activity" type="button"></button>
+    <button id="replace_activity" type="button"></button>
+    <button id="fill_activity" type="button"></button>
+    <button id="clean_activity" type="button"></button>
+    <button id="dedupe_activity" type="button"></button>
+    <button id="cast_activity" type="button"></button>
+    <button id="regex_activity" type="button"></button>
+    <button id="pivot_activity" type="button"></button>
+    <button id="window_activity" type="button"></button>
+    <button id="split_activity" type="button"></button>
+    <button id="combine_activity" type="button"></button>
+    <button id="append_activity" type="button"></button>
+    <button id="flatten_activity" type="button"></button>
+    <button id="sheets_write_activity" type="button"></button>
 </div>
 
 <button id="sidebarToggleFloating" class="sidebar-toggle sidebar-toggle--floating" type="button" aria-label="Show activities panel">
@@ -223,6 +105,23 @@
 				 <div class="drag-boundary-outline" aria-hidden="true"></div>
 				
 					<div class="flowchart-example-container" id="flowchartworkspace">
+           <button id="importPlaceholder" class="import-placeholder" type="button" aria-label="Place import activity">
+             + Import
+           </button>
+           <div id="selectPlaceholders" class="select-placeholders" aria-hidden="true"></div>
+           <div id="linkAddLayer" class="link-add-layer" aria-hidden="true"></div>
+           <div id="chooseMenu" class="choose-menu" role="menu" aria-hidden="true">
+             <div class="choose-menu-search">
+               <span class="choose-menu-icon" aria-hidden="true">🔍</span>
+               <input id="chooseMenuSearch" type="search" placeholder="Search activities">
+             </div>
+             <div id="chooseMenuList" class="choose-menu-list"></div>
+           </div>
+           <div id="ingestMenu" class="ingest-menu" role="menu" aria-hidden="true">
+             <button type="button" data-ingest="import" role="menuitem">Import Data</button>
+             <button type="button" data-ingest="sheets_read" role="menuitem">Google Sheets (Read)</button>
+             <button type="button" data-ingest="http_request" role="menuitem">HTTP Request</button>
+           </div>
 
 					</div>
 	      </div> 
@@ -233,11 +132,6 @@
       <button id="zoomOut" type="button" aria-label="Zoom out">−</button>
       <button id="zoomReset" type="button" aria-label="Recenter view">⟳</button>
     </div>
-
-    <button id="themeToggle" class="theme-toggle" type="button" aria-label="Switch to dark mode">
-      <span class="theme-toggle-icon" aria-hidden="true">☀</span>
-      Light
-    </button>
 
     <div class="footer" id="footer" style="overflow-x: hidden; overflow-y: hidden;">
       <div class="resize-handle" id="resizeHandle"> <img src="/etl/images/drag.png" width="50" height="50"></div>
@@ -284,6 +178,7 @@
   <script src="etl/activities.js" defer></script>
   <script src="etl/run.js" defer></script>
   <script src="etl/import.js" defer></script>
+  <script src="etl/http_request.js" defer></script>
   <script src="etl/join.js" defer></script>
   <script src="etl/group.js" defer></script>
   <script src="etl/custom_column.js" defer></script>
@@ -300,6 +195,7 @@
   <script src="etl/regex.js" defer></script>
   <script src="etl/pivot.js" defer></script>
   <script src="etl/window.js" defer></script>
+  <script src="etl/flatten.js" defer></script>
   <script src="etl/select.js" defer></script>
   <script src="etl/sort.js" defer></script>
   <script src="etl/home-ui.js" defer></script>
