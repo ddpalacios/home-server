@@ -585,7 +585,19 @@ $(document).ready(function() {
     }
     if (chooseMenuList) {
       var items = chooseMenuList.querySelectorAll("button[data-activity]");
+      var hideSink = false;
+      if (activeInsertLink) {
+        var data = $flowchart.flowchart("getDataRef");
+        var link = data && data.links ? data.links[activeInsertLink.linkId] : null;
+        var fromId = activeInsertLink.fromId || link?.fromOperator;
+        var toId = activeInsertLink.toId || link?.toOperator;
+        hideSink = isSinkOperator(fromId) || isSinkOperator(toId);
+      }
       items.forEach(function(item) {
+        if (hideSink && item.getAttribute("data-activity") === "sheets_write") {
+          item.style.display = "none";
+          return;
+        }
         item.style.display = "";
       });
       var newRowButton = chooseMenuList.querySelector("button[data-action=\"new-row\"]");
@@ -642,12 +654,30 @@ $(document).ready(function() {
     return maxBottom;
   }
 
+  function getMaxBottomForOperators() {
+    var operators = $flowchart.flowchart("getOperators") || {};
+    var maxBottom = null;
+    Object.keys(operators).forEach(function(id) {
+      var operator = operators[id];
+      var el = operator?.internal?.els?.operator;
+      if (!el || !el.length) {
+        return;
+      }
+      var top = parseInt(el.css("top"), 10) || 0;
+      var height = el.outerHeight() || 0;
+      var bottom = top + height;
+      if (maxBottom === null || bottom > maxBottom) {
+        maxBottom = bottom;
+      }
+    });
+    return maxBottom;
+  }
 
   function repositionImportPlaceholder() {
     if (!importPlaceholder) {
       return;
     }
-    var maxBottom = getMaxBottomForTypes(["import", "sheets_read", "http_request"]);
+    var maxBottom = getMaxBottomForOperators();
 
     if (maxBottom === null) {
       importPlaceholder.style.left = importBaseLeft + "px";
@@ -729,6 +759,16 @@ $(document).ready(function() {
     ingestIds.forEach(function(ingestId) {
       updateSelectPlaceholderPosition(ingestId);
     });
+  }
+
+  function isSinkOperator(operatorId) {
+    if (operatorId == null) {
+      return false;
+    }
+    var operators = $flowchart.flowchart("getOperators") || {};
+    var operator = operators[operatorId];
+    var activityType = operator?.internal?.properties?.activityType || operator?.properties?.activityType;
+    return activityType === "sheets_write";
   }
 
   function createIngestAtSlot(activityType) {
@@ -2824,6 +2864,16 @@ $(document).ready(function() {
           return;
         }
         var label = (button.textContent || "").toLowerCase();
+        if (button.getAttribute("data-activity") === "sheets_write") {
+          var data = $flowchart.flowchart("getDataRef");
+          var link = data && data.links ? data.links[activeInsertLink?.linkId] : null;
+          var fromId = activeInsertLink?.fromId || link?.fromOperator;
+          var toId = activeInsertLink?.toId || link?.toOperator;
+          if (activeInsertLink && (isSinkOperator(fromId) || isSinkOperator(toId))) {
+            button.style.display = "none";
+            return;
+          }
+        }
         button.style.display = label.indexOf(query) !== -1 ? "" : "none";
       });
       if (chooseMenuList) {
