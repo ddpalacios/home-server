@@ -93,6 +93,7 @@ class Flatten_Activity extends Activity{
 
     _sync_arrays_onclick(e, widget, activity){
         let activityId = activity.activityId
+        activity.activity = widget.flowchart('getOperatorActivity', activityId)
         const link_output = activity.activity.link_from?.[0]?.outputs?.output?.value
         if (!link_output) {
             console.warn("No linked output available for sync.");

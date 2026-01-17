@@ -80,6 +80,43 @@ void connect_to_server(const char* host, const char* port, char*body){
 		snprintf(path, sizeof(path),"blob-storage/bronze_portfolio_appointments.json");
 
 	}
+	else if (strstr(route, "/blob-storage/etl/pipeline/save")!= NULL){
+		char* pipelineId = get_query_parameter(route, "pipelineId");
+		if (pipelineId == NULL){
+			send_response_code(cSSL, 400);
+			return;
+		}
+		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/%s.json", pipelineId);
+		FILE *file = fopen(write_path, "w");
+		if (!file) {
+			perror("Failed to open file");
+			send_response_code(cSSL, 500);
+			return;
+		}
+		if (fputs(body, file) == EOF) {
+			perror("Failed to write to file");
+			fclose(file);
+			send_response_code(cSSL, 500);
+			return;
+		}
+		fclose(file);
+		send_response_code(cSSL, 200);
+		return;
+	}
+	else if (strstr(route, "/blob-storage/etl/pipeline/delete")!= NULL){
+		char* pipelineId = get_query_parameter(route, "pipelineId");
+		if (pipelineId == NULL){
+			send_response_code(cSSL, 400);
+			return;
+		}
+		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/%s.json", pipelineId);
+		if (remove(write_path) != 0){
+			send_response_code(cSSL, 404);
+			return;
+		}
+		send_response_code(cSSL, 200);
+		return;
+	}
 	else if (strstr(route, "/blob-storage/bronze/CTA/ctabustracker/predictions?rt")!= NULL){
 		char* rt = get_query_parameter(route, "rt");
 		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/bronze_CTA_ctabustracker_%s_predictions.json", rt);

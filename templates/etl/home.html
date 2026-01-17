@@ -41,6 +41,12 @@
     </div>
     <div class="sidebar-scroll">
     <div class="sidebar-buttons">
+        <div class="pipeline-panel">
+            <button id="newPipelineButton" class="pipeline-new-button" type="button">
+              + New Pipeline
+            </button>
+            <div id="pipelineList" class="pipeline-list"></div>
+        </div>
         <details class="activity-group" open>
             <summary>Ingest</summary>
             <div class="activity-group-content">
@@ -198,6 +204,14 @@
   <script src="etl/flatten.js" defer></script>
   <script src="etl/select.js" defer></script>
   <script src="etl/sort.js" defer></script>
+  <script>
+    window.GOOGLE_OAUTH_CONFIG = {
+      client_id: "639323802562-f5i8qpon5o6umajc5bvvqcgqjudpnhf6.apps.googleusercontent.com",
+      redirect_uri: "http://127.0.0.1:5000/etl/google/callback",
+      scopes: "openid email profile https://www.googleapis.com/auth/spreadsheets",
+      state: ""
+    };
+  </script>
   <script src="etl/home-ui.js" defer></script>
   </body>
 </html>

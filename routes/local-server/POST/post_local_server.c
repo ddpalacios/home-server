@@ -9,6 +9,7 @@
 #include "http_utilities.h"
 #include "session.h"
 #include "Socket.h"
+#include "json_utilities.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -89,7 +90,7 @@ void post_generate_phrase(struct Socket* socket,char* http_header, char*body, ch
  }
 
  
-void post_to_local(struct Socket* socket,char* http_header, char*body, char* route){
+ void post_to_local(struct Socket* socket,char* http_header, char*body, char* route){
 	int sfd  = connect_to_local_server("127.0.0.1", "5000");
 	size_t req_size = strlen(body) + 2048;
 	char *request = malloc(req_size);
@@ -153,6 +154,63 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, char* rou
     close(sfd);
 
 
+ }
+
+ void get_from_local(struct Socket* socket,char* http_header, char*body, char* route){
+	int sfd  = connect_to_local_server("127.0.0.1", "5000");
+	size_t req_size = strlen(route) + 512;
+	char *request = malloc(req_size);
+	if (!request) {
+		perror("malloc failed");
+		return;
+	}
+
+	snprintf(request, req_size,
+		"GET %s HTTP/1.1\r\n"
+		"Host: %s:%s\r\n"
+		"Connection: close\r\n"
+		"\r\n",
+		route,
+		"127.0.0.1", "5000");
+	
+	send(sfd, request, strlen(request), 0);
+	free(request);
+	char buf[8192]; 
+    char *response = NULL;
+    size_t total = 0;
+
+    for (;;) {
+        int bytes_recved = recv(sfd, buf, sizeof(buf), 0);
+        if (bytes_recved <= 0)
+            break;
+        char *tmp = realloc(response, total + bytes_recved + 1);
+        if (!tmp) {
+            perror("realloc");
+            free(response);
+            return;
+        }
+			response = tmp;
+			memcpy(response + total, buf, bytes_recved);
+			total += bytes_recved;
+		}
+		if (!response) {
+			printf("No data received\n");
+			return;
+		}
+
+		response[total] = '\0'; 
+
+		char *res_body = strstr(response, "\r\n\r\n");
+		if (res_body) {
+			res_body += 4;
+			size_t body_len = strlen(res_body);
+			send_JSON_response_code(socket->cSSL, 200, res_body);
+		} else {
+			printf("No HTTP body found\n");
+		}
+
+    free(response);
+    close(sfd);
  }
 
 

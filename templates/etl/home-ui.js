@@ -17,6 +17,149 @@ function switchTabPanel(evt, cityName) {
   }
 }
 
+function createGoogleLoginButton() {
+  var container = document.getElementById("chart_container");
+  if (!container || document.getElementById("googleLoginButton")) {
+    return;
+  }
+
+  var button = document.createElement("button");
+  button.id = "googleLoginButton";
+  button.type = "button";
+  button.className = "google-login-button";
+  button.setAttribute("aria-label", "Sign in with Google");
+  button.innerHTML = [
+    '<span class="google-login-icon" aria-hidden="true">',
+    '<svg viewBox="0 0 24 24" role="img">',
+    '<path fill="#EA4335" d="M12 10.2v3.6h5.1c-.2 1.2-1.4 3.5-5.1 3.5-3.1 0-5.6-2.5-5.6-5.6S8.9 6 12 6c1.8 0 3 .7 3.7 1.4l2.5-2.5C16.8 3.5 14.6 2.6 12 2.6 7.2 2.6 3.4 6.4 3.4 11.2S7.2 19.8 12 19.8c5.2 0 8.6-3.6 8.6-8.6 0-.6-.1-1.1-.2-1.6H12z"/>',
+    '<path fill="#34A853" d="M3.9 7.2l3 2.2C7.8 7.6 9.7 6 12 6c1.8 0 3 .7 3.7 1.4l2.5-2.5C16.8 3.5 14.6 2.6 12 2.6c-3.4 0-6.3 1.9-8.1 4.6z"/>',
+    '<path fill="#FBBC05" d="M12 19.8c2.6 0 4.8-.9 6.4-2.4l-3-2.4c-.8.6-1.9 1-3.4 1-2.3 0-4.3-1.6-5-3.7l-3 2.3c1.7 3.3 5.1 5.2 8 5.2z"/>',
+    '<path fill="#4285F4" d="M20.4 11.2c0-.6-.1-1.1-.2-1.6H12v3.6h5.1c-.3 1.3-1.4 2.9-3.4 3.7l3 2.4c1.8-1.6 2.7-4 2.7-7.1z"/>',
+    "</svg>",
+    "</span>",
+    "<span>Sign in</span>"
+  ].join("");
+
+  button.addEventListener("click", function() {
+    startGoogleLogin(button);
+  });
+
+  container.appendChild(button);
+  updateGoogleLoginButtonStatus();
+}
+
+function startGoogleLogin(button) {
+  if (button) {
+    button.disabled = true;
+    button.classList.add("is-loading");
+  }
+
+  var oauthConfig = window.GOOGLE_OAUTH_CONFIG || {};
+  var payload = {
+    client_id: oauthConfig.client_id || "",
+    redirect_uri: oauthConfig.redirect_uri || "",
+    scopes: oauthConfig.scopes || "",
+    state: oauthConfig.state || ""
+  };
+  var fallbackUrl = buildGoogleLoginUrl(payload);
+
+  var request = new Request("/etl/google/login", {
+    method: "POST",
+    headers: new Headers({
+      "Accept": "application/json",
+      "Content-Type": "application/json"
+    }),
+    body: JSON.stringify(payload)
+  });
+
+  fetch(request)
+    .then(function(response) {
+      if (!response.ok) {
+        throw new Error("Google login request failed");
+      }
+      return response.json();
+    })
+    .then(function(data) {
+      if (!data || !data.url) {
+        if (fallbackUrl) {
+          window.location.href = fallbackUrl;
+          return;
+        }
+        throw new Error("Google login URL missing");
+      }
+      window.location.href = data.url;
+    })
+    .catch(function(error) {
+      console.error(error);
+      if (button) {
+        button.disabled = false;
+        button.classList.remove("is-loading");
+      }
+    });
+}
+
+function buildGoogleLoginUrl(payload) {
+  if (!payload || !payload.client_id || !payload.redirect_uri) {
+    return null;
+  }
+  var params = new URLSearchParams({
+    client_id: payload.client_id,
+    redirect_uri: payload.redirect_uri,
+    response_type: "code",
+    scope: payload.scopes || "openid email profile",
+    access_type: "offline",
+    prompt: "consent",
+    include_granted_scopes: "true"
+  });
+  if (payload.state) {
+    params.set("state", payload.state);
+  }
+  return "https://accounts.google.com/o/oauth2/v2/auth?" + params.toString();
+}
+
+function updateGoogleLoginButtonStatus() {
+  var button = document.getElementById("googleLoginButton");
+  if (!button) {
+    return;
+  }
+  var request = new Request("/etl/google/status", {
+    method: "GET",
+    headers: new Headers({
+      "Accept": "application/json"
+    })
+  });
+  fetch(request)
+    .then(function(response) {
+      if (!response.ok) {
+        throw new Error("Google status request failed");
+      }
+      return response.json();
+    })
+    .then(function(data) {
+      if (!data || !data.logged_in) {
+        return;
+      }
+      window.googleLoginProfile = data;
+      loadPipelineFromBlobStorage();
+      fetchPipelineList();
+      var icon = button.querySelector(".google-login-icon");
+      var label = button.querySelector("span:last-child");
+      if (icon && data.picture) {
+        icon.innerHTML = '<img class="google-login-avatar" src="' + data.picture + '" alt="Google profile">';
+      }
+      if (label) {
+        label.textContent = data.name ? data.name : "Signed in";
+      }
+      button.classList.add("is-signed-in");
+      if (data.email) {
+        button.title = data.email;
+      }
+    })
+    .catch(function(error) {
+      console.error(error);
+    });
+}
+
 
 document.addEventListener("DOMContentLoaded", function() {
   var body = document.body;
@@ -32,6 +175,7 @@ document.addEventListener("DOMContentLoaded", function() {
     document.querySelectorAll(".activity-group")
   );
   var groupToggle = document.getElementById("groupToggle");
+  var newPipelineButton = document.getElementById("newPipelineButton");
 
   function syncSidebarToggle() {
     var isCollapsed = body.classList.contains("sidebar-collapsed");
@@ -82,6 +226,14 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
+  if (newPipelineButton) {
+    newPipelineButton.addEventListener("click", function() {
+      if (typeof window.flowchartClearWorkspace === "function") {
+        window.flowchartClearWorkspace();
+      }
+    });
+  }
+
   activityGroups.forEach(function(group) {
     group.addEventListener("toggle", syncGroupToggle);
   });
@@ -117,6 +269,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   syncGroupToggle();
   syncSidebarToggle();
+  createGoogleLoginButton();
 });
 
 document.addEventListener("mousemove", function(event) {
@@ -124,8 +277,42 @@ document.addEventListener("mousemove", function(event) {
 });
 
 let pipeline_id;
-async function post_pipeline(userId, body) {
-  var request = new Request("/blob-storage/bronze/etl/pipeline?userId=" + userId, {
+var pipelineNameCounter = 1;
+var suspendPipelineSave = false;
+
+function setCurrentPipelineId(value) {
+  pipeline_id = value;
+  try {
+    localStorage.setItem("etl_pipeline_id", value || "");
+  } catch (error) {
+    // ignore storage errors
+  }
+}
+
+function generatePipelineId() {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return "pipeline-" + Date.now().toString(16);
+}
+
+function getNextPipelineName() {
+  var name = "pipeline_" + pipelineNameCounter;
+  var list = document.getElementById("pipelineList");
+  if (list) {
+    var existing = Array.from(list.querySelectorAll("button[data-pipeline-id]"))
+      .map(button => (button.textContent || "").trim());
+    while (existing.indexOf(name) !== -1) {
+      pipelineNameCounter += 1;
+      name = "pipeline_" + pipelineNameCounter;
+    }
+  }
+  pipelineNameCounter += 1;
+  return name;
+}
+
+async function post_pipeline(googleId, pipelineId, body) {
+  var request = new Request("/blob-storage/etl/pipeline/save?googleId=" + googleId + "&pipelineId=" + pipelineId, {
     method: "POST",
     headers: new Headers({
       "Accept": "application/json"
@@ -134,6 +321,328 @@ async function post_pipeline(userId, body) {
   });
 
   fetch(request);
+}
+
+function renderPipelineListSelection(activeId) {
+  var list = document.getElementById("pipelineList");
+  if (!list) {
+    return;
+  }
+  var buttons = list.querySelectorAll("button[data-pipeline-id]");
+  buttons.forEach(function(button) {
+    var id = button.getAttribute("data-pipeline-id");
+    if (id && id === activeId) {
+      button.classList.add("is-active");
+    } else {
+      button.classList.remove("is-active");
+    }
+  });
+}
+
+function renderPipelineList(pipelines) {
+  var list = document.getElementById("pipelineList");
+  if (!list) {
+    return;
+  }
+  list.innerHTML = "";
+  pipelines.forEach(function(item) {
+    var row = document.createElement("div");
+    row.className = "pipeline-list-row";
+    var button = document.createElement("button");
+    button.type = "button";
+    button.textContent = item.pipeline_name || "Untitled Pipeline";
+    button.setAttribute("data-pipeline-id", item.pipeline_id);
+    button.addEventListener("click", function() {
+      loadPipelineById(item.pipeline_id);
+    });
+    var deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "pipeline-delete-button";
+    deleteButton.setAttribute("aria-label", "Delete pipeline");
+    deleteButton.textContent = "🗑";
+    deleteButton.addEventListener("click", function(event) {
+      event.stopPropagation();
+      deletePipeline(item.pipeline_id);
+    });
+    row.appendChild(button);
+    row.appendChild(deleteButton);
+    list.appendChild(row);
+  });
+  renderPipelineListSelection(pipeline_id);
+}
+
+function fetchPipelineList() {
+  var googleId = "unknown";
+  if (window.googleLoginProfile && (window.googleLoginProfile.google_id || window.googleLoginProfile.email)) {
+    googleId = window.googleLoginProfile.google_id || window.googleLoginProfile.email;
+  }
+  var safeGoogleId = googleId.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_-]/g, "");
+  var request = new Request("/blob-storage/etl/pipeline/list?googleId=" + safeGoogleId, {
+    method: "GET",
+    headers: new Headers({
+      "Accept": "application/json"
+    })
+  });
+  fetch(request)
+    .then(function(response) {
+      if (!response.ok) {
+        return { values: [] };
+      }
+      return response.json();
+    })
+    .then(function(result) {
+      if (!result || !Array.isArray(result.values)) {
+        return;
+      }
+      renderPipelineList(result.values);
+      if (!pipeline_id && result.values.length) {
+        loadPipelineById(result.values[0].pipeline_id);
+      }
+    })
+    .catch(function(error) {
+      console.error(error);
+    });
+}
+
+function loadPipelineById(pipelineId) {
+  if (!pipelineId) {
+    return;
+  }
+  var request = new Request("/blob-storage/etl/pipeline/load?pipelineId=" + pipelineId, {
+    method: "GET",
+    headers: new Headers({
+      "Accept": "application/json"
+    })
+  });
+  fetch(request)
+    .then(function(response) {
+      if (!response.ok) {
+        return null;
+      }
+      return response.json();
+    })
+    .then(function(pipeline) {
+      if (!pipeline) {
+        return;
+      }
+      if (!pipeline.pipeline_id) {
+        pipeline.pipeline_id = pipelineId;
+      }
+      LoadFromBlobStorage(pipeline);
+      renderPipelineListSelection(pipelineId);
+    })
+    .catch(function(error) {
+      console.error(error);
+    });
+}
+
+function loadPipelineFromBlobStorage() {
+  if (!$flowchart) {
+    return;
+  }
+  var storedPipelineId = pipeline_id;
+  if (!storedPipelineId) {
+    try {
+      storedPipelineId = localStorage.getItem("etl_pipeline_id") || "";
+    } catch (error) {
+      storedPipelineId = "";
+    }
+  }
+  if (!storedPipelineId) {
+    fetchPipelineList();
+    return;
+  }
+  loadPipelineById(storedPipelineId);
+}
+
+function LoadFromBlobStorage(pipeline) {
+  if (!$flowchart || !pipeline || !pipeline.activities) {
+    return;
+  }
+  var existing = $flowchart.flowchart("getOperators") || {};
+  Object.keys(existing).forEach(function(operatorId) {
+    $flowchart.flowchart("deleteOperator", operatorId);
+  });
+  main_activities = {};
+  if (pipeline.pipeline_id) {
+    setCurrentPipelineId(pipeline.pipeline_id);
+  }
+  if (pipeline.pipeline_name) {
+    $("#pipeline_title").val(pipeline.pipeline_name);
+  }
+  if (pipeline.description) {
+    $("#pipeline_description").val(pipeline.description);
+  }
+  let activities = pipeline["activities"];
+  let links = pipeline["links"] || {};
+  let Ids = [];
+  Object.keys(activities).forEach(operatorId => {
+    let operatorData = activities[operatorId];
+    Ids.push(parseInt(operatorId));
+    $flowchart.flowchart("createOperator", operatorId, operatorData);
+    let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
+    if (operatorData.properties && operatorData.properties.activity_description) {
+      updateOperatorDescription(operatorId, operatorData.properties.activity_description);
+    }
+    let a;
+    if (operatorData.properties.activityType == "import") {
+      a = new Import_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "flatten") {
+      a = new Flatten_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "http_request") {
+      a = new Http_Request_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "filter") {
+      a = new Filter_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "group") {
+      a = new Group_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "join") {
+      a = new Join_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "custom") {
+      a = new Custom_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "replace") {
+      a = new Replace_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "fill") {
+      a = new Fill_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "clean") {
+      a = new Clean_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "dedupe") {
+      a = new Dedupe_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "cast") {
+      a = new Cast_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "regex") {
+      a = new Regex_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "pivot") {
+      a = new Pivot_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "window") {
+      a = new Window_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "split") {
+      a = new Split_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "sheets_read") {
+      a = new GoogleSheets_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "sheets_write") {
+      a = new GoogleSheets_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "select") {
+      a = new Select_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "sort") {
+      a = new Sort_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "append") {
+      a = new Append_Activity($flowchart, new_activity);
+    }
+    main_activities[operatorId] = a;
+    activites = $flowchart.flowchart("getOperators");
+  });
+
+  $flowchart.flowchart("setData", { links: {} });
+  Object.keys(links).forEach(function(linkId) {
+    var link = links[linkId];
+    if (!link || link.fromOperator == null || link.toOperator == null) {
+      return;
+    }
+    var linkData = {
+      fromOperator: link.fromOperator,
+      fromConnector: link.fromConnector || "output",
+      toOperator: link.toOperator,
+      toConnector: link.toConnector || "input",
+      locked: true
+    };
+    if (link.color) {
+      linkData.color = link.color;
+    }
+    $flowchart.flowchart("addLink", linkData);
+    var flowchartInstance = $flowchart.flowchart("instance");
+    if (flowchartInstance && typeof onLinkCreation === "function") {
+      onLinkCreation(flowchartInstance, linkData);
+    }
+  });
+  Object.keys(main_activities).forEach(function(operatorId) {
+    var activity = main_activities[operatorId];
+    if (activity) {
+      activity.activity = $flowchart.flowchart("getOperatorActivity", operatorId);
+      activity.activityId = operatorId;
+    }
+  });
+  if (Ids.length > 0) {
+    const maxVal = Math.max(...Ids);
+    if (typeof window.flowchartSetOperatorIndex === "function") {
+      window.flowchartSetOperatorIndex(maxVal + 1);
+    }
+  }
+  var flowchartInstance = $flowchart.flowchart("instance");
+  if (flowchartInstance && flowchartInstance.options) {
+    flowchartInstance.options.canUserMoveOperators = false;
+  }
+  $flowchart.find(".flowchart-operator").each(function() {
+    try {
+      $(this).draggable("disable");
+    } catch (error) {
+      // ignore
+    }
+  });
+  var refData = $flowchart.flowchart("getDataRef");
+  if (refData && refData.operators) {
+    Object.keys(refData.operators).forEach(function(operatorId) {
+      var op = refData.operators[operatorId];
+      if (op && op.internal && op.internal.properties) {
+        op.internal.properties.locked = true;
+      }
+    });
+  }
+  setTimeout(function() {
+    if (typeof window.repositionImportPlaceholder === "function") {
+      window.repositionImportPlaceholder();
+    }
+    if (typeof window.repositionSelectPlaceholders === "function") {
+      window.repositionSelectPlaceholders();
+    }
+    if (typeof window.scheduleLinkAddRefresh === "function") {
+      window.scheduleLinkAddRefresh();
+    }
+  }, 0);
+}
+
+function deletePipeline(pipelineId) {
+  if (!pipelineId) {
+    return;
+  }
+  var request = new Request("/blob-storage/etl/pipeline/delete?pipelineId=" + pipelineId, {
+    method: "POST",
+    headers: new Headers({
+      "Accept": "application/json"
+    })
+  });
+  fetch(request)
+    .then(function(response) {
+      if (!response.ok) {
+        return;
+      }
+      if (pipeline_id === pipelineId && typeof window.flowchartClearWorkspace === "function") {
+        window.flowchartClearWorkspace();
+      }
+      fetchPipelineList();
+    })
+    .catch(function(error) {
+      console.error(error);
+    });
 }
 
 function jsonToCsv(jsonData) {
@@ -368,6 +877,19 @@ $(document).ready(function() {
     multipleLinksOnOutput: true
   });
 
+  if (!pipeline_id) {
+    try {
+      var storedPipelineId = localStorage.getItem("etl_pipeline_id") || "";
+      if (storedPipelineId) {
+        setCurrentPipelineId(storedPipelineId);
+      } else {
+        setCurrentPipelineId(generatePipelineId());
+      }
+    } catch (error) {
+      setCurrentPipelineId(generatePipelineId());
+    }
+  }
+
 
 
   function getOperatorData($element) {
@@ -439,6 +961,36 @@ $(document).ready(function() {
   var selectionBox = null;
   var linkAddRefreshTimer = null;
 
+  function clearFlowchartWorkspace() {
+    suspendPipelineSave = true;
+    var operators = $flowchart.flowchart("getOperators") || {};
+    Object.keys(operators).forEach(function(operatorId) {
+      $flowchart.flowchart("deleteOperator", operatorId);
+    });
+    main_activities = {};
+    if (selectPlaceholders) {
+      selectPlaceholders.innerHTML = "";
+    }
+    if (importPlaceholder) {
+      importPlaceholder.style.visibility = "";
+      importPlaceholder.style.left = importBaseLeft + "px";
+      importPlaceholder.style.top = importBaseTop + "px";
+    }
+    if (typeof window.flowchartSetOperatorIndex === "function") {
+      window.flowchartSetOperatorIndex(0);
+    }
+    setCurrentPipelineId(generatePipelineId());
+    $("#pipeline_title").val(getNextPipelineName());
+    $("#pipeline_description").val("");
+    suspendPipelineSave = false;
+    repositionImportPlaceholder();
+    repositionSelectPlaceholders();
+    scheduleLinkAddRefresh();
+    schedulePipelineSave();
+    fetchPipelineList();
+  }
+  window.flowchartClearWorkspace = clearFlowchartWorkspace;
+
   function getNextBranchColor() {
     var color = branchLinkColors[branchColorIndex % branchLinkColors.length];
     branchColorIndex += 1;
@@ -505,6 +1057,7 @@ $(document).ready(function() {
     }
     linkAddRefreshTimer = setTimeout(refreshLinkAddButtons, 0);
   }
+  window.scheduleLinkAddRefresh = scheduleLinkAddRefresh;
 
   function getLinkMidpoint(linkId) {
     var data = $flowchart.flowchart("getDataRef");
@@ -760,6 +1313,8 @@ $(document).ready(function() {
       updateSelectPlaceholderPosition(ingestId);
     });
   }
+  window.repositionImportPlaceholder = repositionImportPlaceholder;
+  window.repositionSelectPlaceholders = repositionSelectPlaceholders;
 
   function isSinkOperator(operatorId) {
     if (operatorId == null) {
@@ -1064,6 +1619,7 @@ $(document).ready(function() {
     if (flowchartInstance && typeof onLinkCreation === "function") {
       onLinkCreation(flowchartInstance, linkData);
     }
+    schedulePipelineSave();
   }
 
   function createAutoLinkFromPlaceholder(placeholder, toId) {
@@ -1707,11 +2263,12 @@ $(document).ready(function() {
     if (flowchartData && flowchartData.operators && flowchartData.operators[operatorId]) {
       flowchartData.operators[operatorId].properties =
         flowchartData.operators[operatorId].properties || {};
-      flowchartData.operators[operatorId].properties.description = descriptionText;
+      flowchartData.operators[operatorId].properties.activity_description = descriptionText;
       if (flowchartData.operators[operatorId].internal) {
-        flowchartData.operators[operatorId].internal.properties.description = descriptionText;
+        flowchartData.operators[operatorId].internal.properties.activity_description = descriptionText;
       }
     }
+    schedulePipelineSave();
   }
 
   function setActivityTabsVisible(isVisible) {
@@ -1722,6 +2279,203 @@ $(document).ready(function() {
       $tabSettings.hide();
       $tabDataPreview.hide();
       $tabGeneral.trigger("click");
+    }
+  }
+
+  function applySavedSettingsToActivity(operatorId) {
+    if (!$flowchart || operatorId == null) {
+      return;
+    }
+    var activity = $flowchart.flowchart("getOperatorActivity", operatorId);
+    if (!activity || !activity.settings) {
+      return;
+    }
+    var settings = activity.settings;
+    var rows = null;
+    if (Array.isArray(settings)) {
+      rows = settings;
+    } else if (typeof settings === "object") {
+      Object.keys(settings).some(function(key) {
+        if (Array.isArray(settings[key])) {
+          rows = settings[key];
+          return true;
+        }
+        return false;
+      });
+    }
+    if (!rows || rows.length === 0) {
+      return;
+    }
+    var container = document.getElementById(operatorId + "_column_edit");
+    if (!container) {
+      return;
+    }
+    var activityInstance = main_activities[operatorId];
+    if (activity.activityType === "flatten" && activityInstance) {
+      container.innerHTML = "";
+      if (typeof activityInstance._setup_column_container === "function") {
+        var addButton = document.createElement("button");
+        addButton.innerHTML = activityInstance.add_button_label || "+ Add Flatten";
+        addButton.className = "buttons add-button";
+        addButton.addEventListener("click", function(event) {
+          activityInstance._add_column(event, $flowchart, activityInstance);
+        });
+        activityInstance._setup_column_container(container, addButton);
+      }
+      var savedColumns = rows.map(function(item) {
+        return item.unroll_by || item.columnName || item.column_name;
+      }).filter(Boolean);
+      var options = savedColumns.length > 0 ? savedColumns : [""];
+      rows.forEach(function(statement) {
+        var value = statement.unroll_by || statement.columnName || statement.column_name || "";
+        var settingsRow = [
+          { type: "span", label: "Flatten Array", color: "black" },
+          { type: "selector", options: options, default_value: value, name: "unroll_by" },
+          { type: "button", label: "DROP", color: "red" }
+        ];
+        var column_edit_element = activityInstance.get_column_selection_element($flowchart, settingsRow);
+        var column_wrapper = document.createElement("div");
+        column_wrapper.className = "select-column-row";
+        var drag_handle = document.createElement("span");
+        drag_handle.className = "drag-handle";
+        drag_handle.title = "Drag to reorder";
+        column_wrapper.appendChild(drag_handle);
+        column_wrapper.appendChild(column_edit_element);
+        container.appendChild(column_wrapper);
+      });
+      if (typeof activityInstance._enable_column_sorting === "function") {
+        activityInstance._enable_column_sorting(container);
+      }
+      if (activityInstance && typeof activityInstance.get_operation_settings === "function") {
+        activityInstance.get_operation_settings();
+      }
+      return;
+    }
+
+    if (activityInstance && typeof activityInstance._setup_column_container === "function") {
+      var hasActions = container.querySelector(".column-settings-actions");
+      if (!hasActions && activityInstance.add_button_label && typeof activityInstance._add_column === "function") {
+        var addButton = document.createElement("button");
+        addButton.innerHTML = activityInstance.add_button_label;
+        addButton.className = "buttons add-button";
+        addButton.addEventListener("click", function(event) {
+          activityInstance._add_column(event, $flowchart, activityInstance);
+        });
+        activityInstance._setup_column_container(container, addButton);
+      }
+    }
+
+    function collectRows() {
+      var collected = [];
+      Array.from(container.children).forEach(function(child) {
+        var row = child;
+        if (row.classList && row.classList.contains("select-column-row")) {
+          var inner = row.querySelector(".rename_settings");
+          if (inner) {
+            row = inner;
+          }
+        }
+        if (row && row.querySelectorAll && row.querySelectorAll("[name]").length > 0) {
+          collected.push(row);
+        }
+      });
+      return collected;
+    }
+
+    var rowElements = collectRows();
+    while (rowElements.length < rows.length && activityInstance && typeof activityInstance._add_column === "function") {
+      activityInstance._add_column(null, $flowchart, activityInstance);
+      rowElements = collectRows();
+    }
+    rows.forEach(function(statement, index) {
+      var row = rowElements[index];
+      if (!row || !statement) {
+        return;
+      }
+      var elements = row.querySelectorAll("[name]");
+      elements.forEach(function(element) {
+        var name = element.name;
+        var value = null;
+        if (name === "multiple_column_names") {
+          value = Array.isArray(statement.columnName) ? statement.columnName : [];
+        } else if (name === "column_name") {
+          value = statement.columnName || statement.column_name;
+        } else if (name === "column_name_1") {
+          value = statement.columnName_1 || statement.column_name_1;
+        } else if (name === "column_name_2") {
+          value = statement.columnName_2 || statement.column_name_2;
+        } else if (name === "new_column_name") {
+          value = statement.new_column_name || statement.renamed_name;
+        } else if (name === "new_column_name_1") {
+          value = statement.new_column_name_1;
+        } else if (name === "new_column_name_2") {
+          value = statement.new_column_name_2;
+        } else if (name === "data_type") {
+          value = statement.data_type;
+        } else if (name === "orderby") {
+          value = statement.orderby;
+        } else if (name === "operation") {
+          value = statement.operation;
+        } else if (name === "condition_value") {
+          value = statement.condition_value;
+        } else if (name === "find_value") {
+          value = statement.find_value;
+        } else if (name === "value") {
+          value = statement.value;
+        } else if (name === "then_value") {
+          value = statement.then_value;
+        } else if (name === "else_value") {
+          value = statement.else_value;
+        } else if (name === "logical") {
+          value = statement.logical;
+        } else if (name === "case") {
+          value = statement.case;
+        } else if (name === "unroll_by") {
+          value = statement.unroll_by;
+        } else if (name === "header_key") {
+          value = statement.header_key;
+        } else if (name === "header_value") {
+          value = statement.header_value;
+        } else if (name === "url") {
+          value = statement.url;
+        } else if (name === "request_type") {
+          value = statement.request_type;
+        } else if (name === "body") {
+          value = statement.body;
+        }
+        if (value == null) {
+          return;
+        }
+        if (element.tagName === "SELECT") {
+          if (element.multiple) {
+            var values = Array.isArray(value) ? value : [value];
+            values.forEach(function(item) {
+              if (Array.from(element.options).every(function(option) { return option.value !== item; })) {
+                var newOption = document.createElement("option");
+                newOption.value = item;
+                newOption.textContent = item;
+                element.appendChild(newOption);
+              }
+            });
+            Array.from(element.options).forEach(function(option) {
+              option.selected = values.indexOf(option.value) !== -1;
+            });
+          } else {
+            if (Array.from(element.options).every(function(option) { return option.value !== value; })) {
+              var option = document.createElement("option");
+              option.value = value;
+              option.textContent = value;
+              element.appendChild(option);
+            }
+            element.value = value;
+          }
+        } else {
+          element.value = value;
+        }
+      });
+    });
+    if (activityInstance && typeof activityInstance.get_operation_settings === "function") {
+      activityInstance.get_operation_settings();
     }
   }
 
@@ -1752,7 +2506,7 @@ $(document).ready(function() {
       $operatorTitle.val($flowchart.flowchart("getOperatorTitle", operatorId));
       let activity = $flowchart.flowchart("getOperatorActivity", operatorId);
       let currentDescription =
-        activity.description ||
+        activity.activity_description ||
         $flowchart.flowchart("getOperatorBody", operatorId) ||
         "";
       if (typeof currentDescription !== "string") {
@@ -2234,6 +2988,15 @@ $(document).ready(function() {
         }
       }
 
+      applySavedSettingsToActivity(operatorId);
+      settings_div.oninput = function() {
+        var target_activity = main_activities[operatorId];
+        if (target_activity && typeof target_activity.get_operation_settings === "function") {
+          target_activity.get_operation_settings();
+        }
+        schedulePipelineSave();
+      };
+      settings_div.onchange = settings_div.oninput;
       // update_missing_columns_message(operatorId, settings_div);
       return true;
     },
@@ -2271,6 +3034,7 @@ $(document).ready(function() {
     ,onAfterChange: function() {
       scheduleLinkAddRefresh();
       setTimeout(repositionSelectPlaceholders, 0);
+      schedulePipelineSave();
     }
     ,onOperatorDelete: function(operatorId, forced) {
       var data = $flowchart.flowchart("getDataRef");
@@ -2313,6 +3077,7 @@ $(document).ready(function() {
         repositionImportPlaceholder();
         repositionSelectPlaceholders();
         scheduleLinkAddRefresh();
+        schedulePipelineSave();
       }, 0);
       return true;
     }
@@ -2326,6 +3091,7 @@ $(document).ready(function() {
         return allowLockedLinkDelete;
       }
       setTimeout(repositionSelectPlaceholders, 0);
+      schedulePipelineSave();
       return true;
     }
   });
@@ -2603,6 +3369,15 @@ $(document).ready(function() {
             $flowchart.flowchart("setoutputVal", entry.operatorId, "output", entry.result);
           }
         });
+        if (typeof main_activities === "object" && main_activities !== null) {
+          Object.keys(main_activities).forEach(function(operatorId) {
+            var activity = main_activities[operatorId];
+            if (activity) {
+              activity.activity = $flowchart.flowchart("getOperatorActivity", operatorId);
+              activity.activityId = operatorId;
+            }
+          });
+        }
         const target_result = response.results.find(entry => entry && entry.operatorId == targetId);
         outputs = target_result ? target_result.result : null;
       }
@@ -2646,6 +3421,13 @@ $(document).ready(function() {
       button.setAttribute("aria-label", "Run pipeline");
       icon.innerHTML = '<path d="M8 5l11 7-11 7V5z"></path>';
     }
+  });
+
+  $("#pipeline_title").on("blur", function() {
+    schedulePipelineSave();
+  });
+  $("#pipeline_description").on("blur", function() {
+    schedulePipelineSave();
   });
 
   var operatorI = 0;
@@ -3640,11 +4422,66 @@ $(document).ready(function() {
     }
   });
 
-  function Flow2Text() {
-    var data = $flowchart.flowchart("getData", pipeline_id);
-    let userId = sessionStorage.getItem("userId");
-    data = { "values": [data] };
-    post_pipeline(userId, data);
+  var pipelineSaveTimer = null;
+  function schedulePipelineSave() {
+    if (suspendPipelineSave) {
+      return;
+    }
+    if (pipelineSaveTimer) {
+      clearTimeout(pipelineSaveTimer);
+    }
+    pipelineSaveTimer = setTimeout(function() {
+      Flow2Text(1);
+    }, 50);
+  }
+  window.flowchartSchedulePipelineSave = schedulePipelineSave;
+
+  function Flow2Text(retryCount) {
+    var data = null;
+    try {
+      if (typeof main_activities === "object" && main_activities !== null) {
+        Object.keys(main_activities).forEach(function(key) {
+          var activity = main_activities[key];
+          if (!activity || typeof activity.get_operation_settings !== "function") {
+            return;
+          }
+          var element = document.getElementById(activity.activityId);
+          if (!element) {
+            return;
+          }
+          activity.get_operation_settings();
+        });
+      }
+      data = $flowchart.flowchart("getData", pipeline_id || "local");
+    } catch (error) {
+      if (retryCount && retryCount < 3) {
+        setTimeout(function() {
+          Flow2Text(retryCount + 1);
+        }, 100);
+      }
+      return;
+    }
+    var googleId = "unknown";
+    if (window.googleLoginProfile && (window.googleLoginProfile.google_id || window.googleLoginProfile.email)) {
+      googleId = window.googleLoginProfile.google_id || window.googleLoginProfile.email;
+    }
+    var safeGoogleId = googleId.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_-]/g, "");
+    if (!safeGoogleId) {
+      safeGoogleId = "unknown";
+    }
+    if (!pipeline_id) {
+      setCurrentPipelineId(generatePipelineId());
+    }
+    var pipelineName = ($("#pipeline_title").val() || "pipeline").trim();
+    if (!pipelineName) {
+      pipelineName = "pipeline";
+    }
+    data.pipeline_name = pipelineName;
+    data.description = ($("#pipeline_description").val() || "").trim();
+    data.pipeline_id = pipeline_id;
+    data.google_id = safeGoogleId;
+    post_pipeline(safeGoogleId, pipeline_id, data);
+    fetchPipelineList();
   }
   $("#get_data").click(Flow2Text);
 

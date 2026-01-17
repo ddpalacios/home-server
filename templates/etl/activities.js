@@ -1044,6 +1044,17 @@ function onLinkCreation(widget,linkData){
     let fromOperator  = widget.getOperatorActivity(linkData['fromOperator'])
     let outputVal = fromOperator.outputs.output.value
 
+    if (typeof main_activities === "object" && main_activities !== null) {
+        const toActivity = main_activities[linkData['toOperator']]
+        if (toActivity) {
+            toActivity.activity = widget.getOperatorActivity(linkData['toOperator'])
+        }
+        const fromActivity = main_activities[linkData['fromOperator']]
+        if (fromActivity) {
+            fromActivity.activity = widget.getOperatorActivity(linkData['fromOperator'])
+        }
+    }
+
     if (toOperator.activityType == 'join' || toOperator.activityType == 'append'){
         // console.log("ADDING dependency")
         widget.setDependency(linkData['toOperator'],fromOperator.operatorId)

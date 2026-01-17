@@ -1614,6 +1614,7 @@ jQuery(function ($) {
                 operator_copy['properties']['activityType']=operator.activityType 
                 operator_copy['properties']['activityId']=operator.activityId 
                 operator_copy['properties']['operatorId']=operator.operatorId 
+                operator_copy['properties']['activity_description']=operator.activity_description 
  
                 operator.link_to.forEach(link_to_operator => {
                     link_to.push(link_to_operator.operatorId)

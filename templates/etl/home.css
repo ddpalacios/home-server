@@ -1369,3 +1369,101 @@ body.sidebar-collapsed .sidebar-toggle--floating {
 .sidebar-buttons .buttons {
     transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
+
+.google-login-button {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(15, 23, 42, 0.16);
+    background: #ffffff;
+    color: #111827;
+    font-weight: 600;
+    cursor: pointer;
+    z-index: 30;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
+}
+
+.google-login-button.is-loading {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+.google-login-button.is-signed-in {
+    background: #f8fafc;
+}
+
+.google-login-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.google-login-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    object-fit: cover;
+    display: block;
+}
+
+.pipeline-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.pipeline-new-button {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, #111827 0%, #4b5563 100%);
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.pipeline-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pipeline-list-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pipeline-list-row button {
+    flex: 1;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    background: #fff;
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-align: left;
+}
+
+.pipeline-list-row button.is-active {
+    border-color: #111827;
+    box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.12);
+}
+
+.pipeline-delete-button {
+    border: none;
+    background: transparent;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 0.95rem;
+}

@@ -65,6 +65,37 @@ class Http_Request_Activity extends Activity {
         columns_div.appendChild(actions)
 
         div.appendChild(columns_div)
+        const saved_settings = this.activity.settings?.call
+        if (Array.isArray(saved_settings) && saved_settings.length > 0) {
+            const base = saved_settings[0] || {}
+            if (base.url) {
+                url_input.value = base.url
+            }
+            if (base.request_type) {
+                method_select.value = base.request_type
+            }
+            if (base.body) {
+                body_input.value = base.body
+            }
+            if (base.headers && typeof base.headers === "object") {
+                Object.keys(base.headers).forEach(header_key => {
+                    this._add_column(null, this.flowchart, this)
+                    const rows = columns_div.querySelectorAll(".select-column-row")
+                    const row = rows[rows.length - 1]
+                    if (!row) {
+                        return
+                    }
+                    const key_input = row.querySelector("input[name='header_key']")
+                    const value_input = row.querySelector("input[name='header_value']")
+                    if (key_input) {
+                        key_input.value = header_key
+                    }
+                    if (value_input) {
+                        value_input.value = base.headers[header_key]
+                    }
+                })
+            }
+        }
         return div
     }
 

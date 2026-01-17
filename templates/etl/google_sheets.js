@@ -45,6 +45,7 @@ class GoogleSheets_Activity extends Activity{
         url_input.className = "text_input_value"
         url_input.id = this.activityId + "_sheet_url"
         url_input.placeholder = "https://docs.google.com/spreadsheets/d/..."
+        url_input.addEventListener("input", () => this.get_operation_settings())
         div.appendChild(url_input)
 
         const tab_label = document.createElement('label')
@@ -57,6 +58,7 @@ class GoogleSheets_Activity extends Activity{
         tab_input.className = "text_input_value"
         tab_input.id = this.activityId + "_sheet_tab"
         tab_input.placeholder = "Sheet1"
+        tab_input.addEventListener("input", () => this.get_operation_settings())
         div.appendChild(tab_input)
 
         const range_label = document.createElement('label')
@@ -69,15 +71,17 @@ class GoogleSheets_Activity extends Activity{
         range_input.className = "text_input_value"
         range_input.id = this.activityId + "_sheet_range"
         range_input.placeholder = "A1:Z100"
+        range_input.addEventListener("input", () => this.get_operation_settings())
         div.appendChild(range_input)
 
+        let mode_select = null
         if (this.activity.activityType == "sheets_write"){
             const mode_label = document.createElement('label')
             mode_label.textContent = "Write Mode"
             mode_label.style.color = "black"
             div.appendChild(mode_label)
 
-            const mode_select = document.createElement('select')
+            mode_select = document.createElement('select')
             mode_select.id = this.activityId + "_sheet_mode"
             mode_select.className = "text_input_value"
             ;["append", "overwrite"].forEach(mode => {
@@ -86,7 +90,18 @@ class GoogleSheets_Activity extends Activity{
                 option.textContent = mode.toUpperCase()
                 mode_select.appendChild(option)
             })
+            mode_select.addEventListener("change", () => this.get_operation_settings())
             div.appendChild(mode_select)
+        }
+
+        const saved_settings = this.activity.settings?.sheets
+        if (saved_settings) {
+            url_input.value = saved_settings.url || ""
+            tab_input.value = saved_settings.tab || ""
+            range_input.value = saved_settings.range || ""
+            if (mode_select && saved_settings.mode) {
+                mode_select.value = saved_settings.mode
+            }
         }
 
         return div
