@@ -1421,49 +1421,216 @@ body.sidebar-collapsed .sidebar-toggle--floating {
     border: 1px solid rgba(15, 23, 42, 0.08);
 }
 
+.pipeline-collapsible {
+    margin: 12px 0;
+    border-radius: 18px;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(238, 244, 248, 0.95) 100%);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.pipeline-collapsible summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 12px 16px;
+    font-weight: 600;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.pipeline-collapsible summary::-webkit-details-marker {
+    display: none;
+}
+
+.pipeline-collapsible summary::after {
+    content: "+";
+    font-weight: 700;
+    color: #0f172a;
+    opacity: 0.6;
+}
+
+.pipeline-collapsible[open] summary::after {
+    content: "-";
+    opacity: 0.7;
+}
+
+.pipeline-collapsible-body {
+    padding: 0 16px 16px;
+}
+
+.pipeline-collapsible .pipeline-panel {
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+}
+
 .pipeline-new-button {
     width: 100%;
-    padding: 10px 12px;
-    border-radius: 10px;
-    border: none;
-    background: linear-gradient(135deg, #111827 0%, #4b5563 100%);
-    color: #fff;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(31, 79, 214, 0.3);
+    background: linear-gradient(135deg, #e3ecff 0%, #b9d1ff 100%);
+    color: #0f172a;
     font-weight: 600;
     cursor: pointer;
+    letter-spacing: 0.3px;
+    box-shadow: 0 10px 20px rgba(31, 79, 214, 0.18);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.pipeline-new-button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0) 65%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.pipeline-new-button:hover {
+    border-color: rgba(31, 79, 214, 0.55);
+    box-shadow: 0 14px 26px rgba(31, 79, 214, 0.24);
+    transform: translateY(-1px);
+}
+
+.pipeline-new-button:hover::after {
+    opacity: 1;
+}
+
+.pipeline-new-button:active {
+    transform: translateY(0);
+    box-shadow: 0 8px 16px rgba(31, 79, 214, 0.18);
 }
 
 .pipeline-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
 }
 
 .pipeline-list-row {
     display: flex;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+}
+
+.pipeline-list-item {
+    display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+    position: relative;
+    width: 100%;
+    min-width: 0;
 }
 
-.pipeline-list-row button {
+.sidebar-buttons .pipeline-list-item {
+    overflow: visible;
+}
+
+.pipeline-list-item .activity-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.pipeline-list-item .activity-icon {
+    flex-shrink: 0;
+}
+
+.pipeline-list-label {
     flex: 1;
-    border: 1px solid rgba(15, 23, 42, 0.12);
-    background: #fff;
-    border-radius: 10px;
-    padding: 8px 10px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    text-align: left;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: calc(100% - 64px);
 }
 
-.pipeline-list-row button.is-active {
+.pipeline-list-item.is-active {
     border-color: #111827;
     box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.12);
 }
 
-.pipeline-delete-button {
+.pipeline-options-trigger {
     border: none;
     background: transparent;
-    color: #ef4444;
+    color: #1f4fd6;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 6px 8px;
+    border-radius: 10px;
     cursor: pointer;
-    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+.pipeline-options-trigger:hover {
+    background: rgba(31, 79, 214, 0.12);
+}
+
+.pipeline-options-trigger svg {
+    width: 22px;
+    height: 22px;
+    display: block;
+    fill: currentColor;
+}
+
+.pipeline-options-menu {
+    min-width: 160px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(242, 246, 252, 0.98) 100%);
+    border: 1px solid rgba(15, 23, 42, 0.14);
+    border-radius: 14px;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+    padding: 8px;
+    display: none;
+    z-index: 3000;
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.pipeline-options-menu--floating {
+    position: fixed;
+}
+
+.pipeline-list-item.menu-open {
+    z-index: 2001;
+}
+
+.pipeline-options-menu.is-open {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.pipeline-options-menu button {
+    border: none;
+    background: transparent;
+    text-align: left;
+    padding: 9px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #0f172a;
+    letter-spacing: 0.2px;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.pipeline-options-menu button:hover {
+    background: rgba(15, 23, 42, 0.08);
+    transform: translateX(2px);
+}
+
+.pipeline-options-menu button.is-destructive {
+    color: #dc2626;
+}
+
+.pipeline-options-menu button.is-destructive:hover {
+    background: rgba(220, 38, 38, 0.12);
 }

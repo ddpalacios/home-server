@@ -159,12 +159,14 @@ class Select_Activity extends Activity{
         }
         this._setup_column_container(columns_div);
         this._enable_column_sorting(columns_div);
-          let current_values = activity.activity.inputs.input.value.values
-          let sample = current_values
-          if (Array.isArray(current_values)) {
-            sample = current_values[0] || {}
-          }
-          if (sample && typeof sample === "object") {
+        const input_values = activity?.activity?.inputs?.input?.value?.values
+        let sample = null
+        if (Array.isArray(input_values)) {
+            sample = input_values[0] || {}
+        } else if (input_values && typeof input_values === "object") {
+            sample = input_values
+        }
+        if (sample && typeof sample === "object") {
             Object.keys(sample).forEach(key => {
                 const value = sample[key]
                 if (value && typeof value === "object" && !Array.isArray(value)) {
@@ -175,10 +177,17 @@ class Select_Activity extends Activity{
                     all_columns.push(key)
                 }
             })
-          }
-          if (all_columns.length === 0) {
+        } else {
+            const saved_select = activity?.activity?.settings?.select
+            if (Array.isArray(saved_select)) {
+                all_columns = saved_select
+                    .map(item => item?.column_name || item?.columnName)
+                    .filter(Boolean)
+            }
+        }
+        if (all_columns.length === 0) {
             all_columns = [""]
-          }
+        }
 
         let settings = [
             {

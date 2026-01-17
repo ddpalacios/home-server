@@ -176,6 +176,17 @@ document.addEventListener("DOMContentLoaded", function() {
   );
   var groupToggle = document.getElementById("groupToggle");
   var newPipelineButton = document.getElementById("newPipelineButton");
+  var pipelinePanel = document.querySelector(".pipeline-panel");
+  var sidebarButtons = document.querySelector(".sidebar-buttons");
+  var pipelineGroup = null;
+  var ingestGroup = null;
+  Array.prototype.slice.call(document.querySelectorAll(".activity-group summary")).some(function(summary) {
+    if ((summary.textContent || "").trim().toLowerCase() === "ingest") {
+      ingestGroup = summary.parentElement;
+      return true;
+    }
+    return false;
+  });
 
   function syncSidebarToggle() {
     var isCollapsed = body.classList.contains("sidebar-collapsed");
@@ -207,6 +218,9 @@ document.addEventListener("DOMContentLoaded", function() {
     var allOpen = activityGroups.every(function(group) {
       return group.open;
     });
+    if (pipelineGroup) {
+      allOpen = allOpen && pipelineGroup.open;
+    }
     groupToggle.textContent = allOpen ? "Collapse All" : "Expand All";
     groupToggle.setAttribute(
       "aria-label",
@@ -219,9 +233,15 @@ document.addEventListener("DOMContentLoaded", function() {
       var shouldOpenAll = activityGroups.some(function(group) {
         return !group.open;
       });
+      if (pipelineGroup && !pipelineGroup.open) {
+        shouldOpenAll = true;
+      }
       activityGroups.forEach(function(group) {
         group.open = shouldOpenAll;
       });
+      if (pipelineGroup) {
+        pipelineGroup.open = shouldOpenAll;
+      }
       syncGroupToggle();
     });
   }
@@ -232,6 +252,23 @@ document.addEventListener("DOMContentLoaded", function() {
         window.flowchartClearWorkspace();
       }
     });
+  }
+
+  if (pipelinePanel && ingestGroup && sidebarButtons) {
+    var pipelineDetails = document.createElement("details");
+    pipelineDetails.className = "pipeline-collapsible";
+    pipelineDetails.open = true;
+    var pipelineSummary = document.createElement("summary");
+    pipelineSummary.textContent = "Saved Pipelines";
+    pipelineSummary.setAttribute("aria-controls", "pipelinePanelBody");
+    var pipelineBody = document.createElement("div");
+    pipelineBody.className = "pipeline-collapsible-body";
+    pipelineBody.id = "pipelinePanelBody";
+    pipelineBody.appendChild(pipelinePanel);
+    pipelineDetails.appendChild(pipelineSummary);
+    pipelineDetails.appendChild(pipelineBody);
+    sidebarButtons.insertBefore(pipelineDetails, ingestGroup.nextSibling);
+    pipelineGroup = pipelineDetails;
   }
 
   activityGroups.forEach(function(group) {
@@ -264,6 +301,17 @@ document.addEventListener("DOMContentLoaded", function() {
         }
         group.style.display = hasVisible ? "" : "none";
       });
+
+      var pipelineList = document.getElementById("pipelineList");
+      if (pipelineList) {
+        var rows = pipelineList.querySelectorAll(".pipeline-list-row");
+        rows.forEach(function(row) {
+          var labelEl = row.querySelector(".pipeline-list-label");
+          var name = (labelEl && labelEl.textContent ? labelEl.textContent : "").toLowerCase();
+          var matches = query.length === 0 || name.indexOf(query) !== -1;
+          row.style.display = matches ? "" : "none";
+        });
+      }
     });
   }
 
@@ -280,6 +328,7 @@ let pipeline_id;
 var pipelineNameCounter = 1;
 var suspendPipelineSave = false;
 var emptyPipelineSeeded = false;
+var suppressEmptyPipelineSeed = false;
 var operatorI = 0;
 
 function setOperatorIndexFromActivities(activities) {
@@ -366,13 +415,13 @@ function renderPipelineListSelection(activeId) {
   if (!list) {
     return;
   }
-  var buttons = list.querySelectorAll("button[data-pipeline-id]");
-  buttons.forEach(function(button) {
-    var id = button.getAttribute("data-pipeline-id");
+  var entries = list.querySelectorAll("[data-pipeline-id]");
+  entries.forEach(function(entry) {
+    var id = entry.getAttribute("data-pipeline-id");
     if (id && id === activeId) {
-      button.classList.add("is-active");
+      entry.classList.add("is-active");
     } else {
-      button.classList.remove("is-active");
+      entry.classList.remove("is-active");
     }
   });
 }
@@ -383,27 +432,218 @@ function renderPipelineList(pipelines) {
     return;
   }
   list.innerHTML = "";
+  function getDuplicateName(baseName) {
+    var normalized = (baseName || "pipeline").replace(/_duplicate_\d+$/i, "");
+    var maxIndex = 0;
+    var sourceList = (floatingMenu && Array.isArray(floatingMenu._pipelines)) ? floatingMenu._pipelines : pipelines;
+    sourceList.forEach(function(item) {
+      var name = (item && item.pipeline_name) || "";
+      var match = name.match(new RegExp("^" + normalized.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&") + "_duplicate_(\\d+)$", "i"));
+      if (match && match[1]) {
+        var idx = parseInt(match[1], 10);
+        if (!isNaN(idx)) {
+          maxIndex = Math.max(maxIndex, idx);
+        }
+      }
+    });
+    return normalized + "_duplicate_" + (maxIndex + 1);
+  }
+  var floatingMenu = document.getElementById("pipelineOptionsMenu");
+  if (!floatingMenu) {
+    floatingMenu = document.createElement("div");
+    floatingMenu.id = "pipelineOptionsMenu";
+    floatingMenu.className = "pipeline-options-menu pipeline-options-menu--floating";
+    var renameBtn = document.createElement("button");
+    renameBtn.type = "button";
+    renameBtn.textContent = "Rename Pipeline";
+    renameBtn.addEventListener("click", function() {
+      var pipelineId = floatingMenu.dataset.pipelineId;
+      var pipelineName = floatingMenu.dataset.pipelineName || "Untitled Pipeline";
+      closePipelineMenus();
+      if (!pipelineId) {
+        return;
+      }
+      var nextName = prompt("Rename pipeline", pipelineName);
+      if (!nextName) {
+        return;
+      }
+      var request = new Request("/blob-storage/etl/pipeline/load?pipelineId=" + pipelineId, {
+        method: "GET",
+        headers: new Headers({
+          "Accept": "application/json"
+        })
+      });
+      fetch(request)
+        .then(function(response) {
+          if (!response.ok) {
+            return null;
+          }
+          return response.json();
+        })
+        .then(function(pipeline) {
+          if (!pipeline) {
+            return;
+          }
+          pipeline.pipeline_name = nextName.trim() || "pipeline";
+          if (!pipeline.pipeline_id) {
+            pipeline.pipeline_id = pipelineId;
+          }
+          var googleId = "unknown";
+          if (window.googleLoginProfile && (window.googleLoginProfile.google_id || window.googleLoginProfile.email)) {
+            googleId = window.googleLoginProfile.google_id || window.googleLoginProfile.email;
+          }
+          var safeGoogleId = googleId.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_-]/g, "");
+          if (!safeGoogleId) {
+            safeGoogleId = "unknown";
+          }
+          post_pipeline(safeGoogleId, pipeline.pipeline_id, pipeline);
+          fetchPipelineList();
+          if (pipeline_id === pipelineId) {
+            $("#pipeline_title").val(pipeline.pipeline_name);
+          }
+        })
+        .catch(function(error) {
+          console.error(error);
+        });
+    });
+    var duplicateBtn = document.createElement("button");
+    duplicateBtn.type = "button";
+    duplicateBtn.textContent = "Duplicate Pipeline";
+    duplicateBtn.addEventListener("click", function() {
+      var pipelineId = floatingMenu.dataset.pipelineId;
+      if (!pipelineId) {
+        return;
+      }
+      closePipelineMenus();
+      var request = new Request("/blob-storage/etl/pipeline/load?pipelineId=" + pipelineId, {
+        method: "GET",
+        headers: new Headers({
+          "Accept": "application/json"
+        })
+      });
+      fetch(request)
+        .then(function(response) {
+          if (!response.ok) {
+            return null;
+          }
+          return response.json();
+        })
+        .then(function(pipeline) {
+          if (!pipeline) {
+            return;
+          }
+          var newId = generatePipelineId();
+          var nextName = getDuplicateName(pipeline.pipeline_name || "pipeline");
+          pipeline.pipeline_id = newId;
+          pipeline.pipeline_name = nextName;
+          var googleId = "unknown";
+          if (window.googleLoginProfile && (window.googleLoginProfile.google_id || window.googleLoginProfile.email)) {
+            googleId = window.googleLoginProfile.google_id || window.googleLoginProfile.email;
+          }
+          var safeGoogleId = googleId.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_-]/g, "");
+          if (!safeGoogleId) {
+            safeGoogleId = "unknown";
+          }
+          post_pipeline(safeGoogleId, pipeline.pipeline_id, pipeline);
+          fetchPipelineList();
+        })
+        .catch(function(error) {
+          console.error(error);
+        });
+    });
+    var deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "is-destructive";
+    deleteBtn.textContent = "Delete Pipeline";
+    deleteBtn.addEventListener("click", function() {
+      var pipelineId = floatingMenu.dataset.pipelineId;
+      closePipelineMenus();
+      if (!pipelineId) {
+        return;
+      }
+      deletePipeline(pipelineId);
+    });
+    floatingMenu.appendChild(renameBtn);
+    floatingMenu.appendChild(duplicateBtn);
+    floatingMenu.appendChild(deleteBtn);
+    document.body.appendChild(floatingMenu);
+  }
+  floatingMenu._pipelines = pipelines;
+  function closePipelineMenus() {
+    if (floatingMenu) {
+      floatingMenu.classList.remove("is-open");
+      floatingMenu.dataset.pipelineId = "";
+      floatingMenu.dataset.pipelineName = "";
+    }
+    var openTriggers = list.querySelectorAll(".pipeline-options-trigger[aria-expanded=\"true\"]");
+    openTriggers.forEach(function(trigger) {
+      trigger.setAttribute("aria-expanded", "false");
+      var card = trigger.closest(".pipeline-list-item");
+      if (card) {
+        card.classList.remove("menu-open");
+      }
+    });
+  }
+  if (!list.dataset.menuBound) {
+    document.addEventListener("click", function() {
+      closePipelineMenus();
+    });
+    list.dataset.menuBound = "true";
+  }
   pipelines.forEach(function(item) {
     var row = document.createElement("div");
     row.className = "pipeline-list-row";
-    var button = document.createElement("button");
-    button.type = "button";
-    button.textContent = item.pipeline_name || "Untitled Pipeline";
-    button.setAttribute("data-pipeline-id", item.pipeline_id);
-    button.addEventListener("click", function() {
+    var card = document.createElement("div");
+    card.className = "pipeline-list-item buttons";
+    card.setAttribute("data-pipeline-id", item.pipeline_id);
+    card.setAttribute("role", "button");
+    card.setAttribute("tabindex", "0");
+    var icon = document.createElement("span");
+    icon.className = "activity-icon";
+    icon.setAttribute("aria-hidden", "true");
+    icon.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 6h6v6H6z"/><path d="M12 12h6v6h-6z"/><path d="M12 9l3 3"/></svg>';
+    var label = document.createElement("span");
+    label.className = "pipeline-list-label";
+    label.textContent = item.pipeline_name || "Untitled Pipeline";
+    var menuTrigger = document.createElement("button");
+    menuTrigger.type = "button";
+    menuTrigger.className = "pipeline-options-trigger";
+    menuTrigger.setAttribute("aria-label", "Pipeline options");
+    menuTrigger.setAttribute("aria-haspopup", "true");
+    menuTrigger.setAttribute("aria-expanded", "false");
+    menuTrigger.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="18" cy="12" r="1.8"/></svg>';
+    menuTrigger.addEventListener("click", function(event) {
+      event.stopPropagation();
+      var isOpen = floatingMenu.classList.contains("is-open");
+      closePipelineMenus();
+      if (!isOpen) {
+        var rect = menuTrigger.getBoundingClientRect();
+        floatingMenu.style.left = (rect.right - 180) + "px";
+        floatingMenu.style.top = (rect.bottom + 6) + "px";
+        floatingMenu.dataset.pipelineId = item.pipeline_id;
+        floatingMenu.dataset.pipelineName = item.pipeline_name || "Untitled Pipeline";
+        floatingMenu.classList.add("is-open");
+      }
+      menuTrigger.setAttribute("aria-expanded", (!isOpen).toString());
+      if (!isOpen) {
+        card.classList.add("menu-open");
+      } else {
+        card.classList.remove("menu-open");
+      }
+    });
+    card.addEventListener("click", function() {
       loadPipelineById(item.pipeline_id);
     });
-    var deleteButton = document.createElement("button");
-    deleteButton.type = "button";
-    deleteButton.className = "pipeline-delete-button";
-    deleteButton.setAttribute("aria-label", "Delete pipeline");
-    deleteButton.textContent = "🗑";
-    deleteButton.addEventListener("click", function(event) {
-      event.stopPropagation();
-      deletePipeline(item.pipeline_id);
+    card.addEventListener("keydown", function(event) {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        loadPipelineById(item.pipeline_id);
+      }
     });
-    row.appendChild(button);
-    row.appendChild(deleteButton);
+    card.appendChild(icon);
+    card.appendChild(label);
+    card.appendChild(menuTrigger);
+    row.appendChild(card);
     list.appendChild(row);
   });
   renderPipelineListSelection(pipeline_id);
@@ -411,6 +651,10 @@ function renderPipelineList(pipelines) {
 
 function seedEmptyPipelineIfNeeded(pipelines) {
   if (emptyPipelineSeeded) {
+    return;
+  }
+  if (suppressEmptyPipelineSeed) {
+    suppressEmptyPipelineSeed = false;
     return;
   }
   if (!Array.isArray(pipelines) || pipelines.length > 0) {
@@ -715,7 +959,8 @@ function deletePipeline(pipelineId) {
         return;
       }
       if (pipeline_id === pipelineId && typeof window.flowchartClearWorkspace === "function") {
-        window.flowchartClearWorkspace();
+        suppressEmptyPipelineSeed = true;
+        window.flowchartClearWorkspace({ skipNewPipeline: true, skipSave: true, skipFetch: true });
       }
       fetchPipelineList();
     })
@@ -1040,7 +1285,8 @@ $(document).ready(function() {
   var selectionBox = null;
   var linkAddRefreshTimer = null;
 
-  function clearFlowchartWorkspace() {
+  function clearFlowchartWorkspace(options) {
+    var opts = options || {};
     suspendPipelineSave = true;
     var operators = $flowchart.flowchart("getOperators") || {};
     Object.keys(operators).forEach(function(operatorId) {
@@ -1062,15 +1308,25 @@ $(document).ready(function() {
       window.flowchartSetOperatorIndex(0);
     }
     operatorI = 0;
-    setCurrentPipelineId(generatePipelineId());
-    $("#pipeline_title").val(getNextPipelineName());
-    $("#pipeline_description").val("");
+    if (opts.skipNewPipeline) {
+      setCurrentPipelineId("");
+      $("#pipeline_title").val("");
+      $("#pipeline_description").val("");
+    } else {
+      setCurrentPipelineId(generatePipelineId());
+      $("#pipeline_title").val(getNextPipelineName());
+      $("#pipeline_description").val("");
+    }
     suspendPipelineSave = false;
     repositionImportPlaceholder();
     repositionSelectPlaceholders();
     scheduleLinkAddRefresh();
-    schedulePipelineSave();
-    fetchPipelineList();
+    if (!opts.skipSave) {
+      schedulePipelineSave();
+    }
+    if (!opts.skipFetch) {
+      fetchPipelineList();
+    }
   }
   window.flowchartClearWorkspace = clearFlowchartWorkspace;
 
@@ -2475,8 +2731,12 @@ $(document).ready(function() {
 
     var rowElements = collectRows();
     while (rowElements.length < rows.length && activityInstance && typeof activityInstance._add_column === "function") {
+      var beforeLength = rowElements.length;
       activityInstance._add_column(null, $flowchart, activityInstance);
       rowElements = collectRows();
+      if (rowElements.length <= beforeLength) {
+        break;
+      }
     }
     rows.forEach(function(statement, index) {
       var row = rowElements[index];
@@ -3570,10 +3830,13 @@ $(document).ready(function() {
   $("#run_pipeline").on("click", async function() {
     const button = this;
     const icon = button.querySelector(".run-icon");
-    button.classList.toggle("is-running");
     if (button.classList.contains("is-running")) {
-      button.setAttribute("aria-label", "Stop pipeline");
-      icon.innerHTML = '<rect x="6" y="6" width="12" height="12" rx="2"></rect>';
+      return;
+    }
+    button.classList.add("is-running");
+    button.setAttribute("aria-label", "Stop pipeline");
+    icon.innerHTML = '<rect x="6" y="6" width="12" height="12" rx="2"></rect>';
+    try {
       let activites = $flowchart.flowchart("getOperators");
       console.log(activites)
       let data = await get_ordered_nodes($flowchart);
@@ -3586,9 +3849,10 @@ $(document).ready(function() {
         return
       }
       await post_ordered_activities(activities, false)
-
-
-    } else {
+    } catch (error) {
+      console.error("Pipeline run failed:", error);
+    } finally {
+      button.classList.remove("is-running");
       button.setAttribute("aria-label", "Run pipeline");
       icon.innerHTML = '<path d="M8 5l11 7-11 7V5z"></path>';
     }
@@ -4793,11 +5057,15 @@ function build_ordered_activities_payload(flowchart, data, targetId){
         activity_data = { table_1: table_1, table_2: table_2 }
       }
     }
+    const dependencies = Array.isArray(activity?.dependencies)
+      ? activity.dependencies.map(dep => dep.toString())
+      : []
     return {
       operatorId: operatorId,
       activityType: activity.activityType,
       settings: settings,
-      data: activity_data
+      data: activity_data,
+      dependencies: dependencies
     }
   })
 }

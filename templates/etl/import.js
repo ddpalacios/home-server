@@ -208,11 +208,18 @@ class Import_Activity extends Activity{
         }
         this._setup_column_container(columns_div);
         this._enable_column_sorting(columns_div);
-          if (Array.isArray( activity.activity.inputs.input.value.values)){
-            all_columns = Object.keys(activity.activity.inputs.input.value.values[0])
-        }else{
-            all_columns = Object.keys(activity.activity.inputs.input.value.values)
-
+        const input_values = activity?.activity?.inputs?.input?.value?.values
+        if (Array.isArray(input_values)) {
+            all_columns = Object.keys(input_values[0] || {})
+        } else if (input_values && typeof input_values === "object") {
+            all_columns = Object.keys(input_values)
+        } else {
+            const saved_select = activity?.activity?.settings?.select
+            if (Array.isArray(saved_select)) {
+                all_columns = saved_select
+                    .map(item => item?.column_name || item?.columnName)
+                    .filter(Boolean)
+            }
         }
 
         let settings = [
