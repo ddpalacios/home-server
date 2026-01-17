@@ -464,6 +464,10 @@ function LoadFromBlobStorage(pipeline) {
     $flowchart.flowchart("deleteOperator", operatorId);
   });
   main_activities = {};
+  var settingsPanel = document.getElementById("selected_activity_settings");
+  if (settingsPanel) {
+    settingsPanel.innerHTML = "";
+  }
   if (pipeline.pipeline_id) {
     setCurrentPipelineId(pipeline.pipeline_id);
   }
@@ -482,7 +486,9 @@ function LoadFromBlobStorage(pipeline) {
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
     if (operatorData.properties && operatorData.properties.activity_description) {
-      updateOperatorDescription(operatorId, operatorData.properties.activity_description);
+      if (typeof window.flowchartApplyActivityDescription === "function") {
+        window.flowchartApplyActivityDescription(operatorId, operatorData.properties.activity_description);
+      }
     }
     let a;
     if (operatorData.properties.activityType == "import") {
@@ -968,6 +974,9 @@ $(document).ready(function() {
       $flowchart.flowchart("deleteOperator", operatorId);
     });
     main_activities = {};
+    if ($selected_activity_settings && $selected_activity_settings.length) {
+      $selected_activity_settings.empty();
+    }
     if (selectPlaceholders) {
       selectPlaceholders.innerHTML = "";
     }
@@ -2548,6 +2557,14 @@ $(document).ready(function() {
         if (!found) {
           settings_div.insertBefore(elem, settings_div.firstChild);
         }
+        if (found) {
+          for (let i = 0; i < settings_div.children.length; i++) {
+            if (settings_div.children[i].id == elem.id && settings_div.children[i] !== elem) {
+              settings_div.children[i].replaceWith(elem);
+              break;
+            }
+          }
+        }
       }
 
       if (activity.activityType == "filter") {
@@ -2569,6 +2586,14 @@ $(document).ready(function() {
         }
         if (!found) {
           settings_div.insertBefore(elem, settings_div.firstChild);
+        }
+        if (found) {
+          for (let i = 0; i < settings_div.children.length; i++) {
+            if (settings_div.children[i].id == elem.id && settings_div.children[i] !== elem) {
+              settings_div.children[i].replaceWith(elem);
+              break;
+            }
+          }
         }
       }
 
@@ -2592,6 +2617,14 @@ $(document).ready(function() {
         if (!found) {
           settings_div.insertBefore(elem, settings_div.firstChild);
         }
+        if (found) {
+          for (let i = 0; i < settings_div.children.length; i++) {
+            if (settings_div.children[i].id == elem.id && settings_div.children[i] !== elem) {
+              settings_div.children[i].replaceWith(elem);
+              break;
+            }
+          }
+        }
       }
 
       if (activity.activityType == "group") {
@@ -2613,6 +2646,14 @@ $(document).ready(function() {
         }
         if (!found) {
           settings_div.insertBefore(elem, settings_div.firstChild);
+        }
+        if (found) {
+          for (let i = 0; i < settings_div.children.length; i++) {
+            if (settings_div.children[i].id == elem.id && settings_div.children[i] !== elem) {
+              settings_div.children[i].replaceWith(elem);
+              break;
+            }
+          }
         }
       }
 
@@ -2636,6 +2677,14 @@ $(document).ready(function() {
         if (!found) {
           settings_div.insertBefore(elem, settings_div.firstChild);
         }
+        if (found) {
+          for (let i = 0; i < settings_div.children.length; i++) {
+            if (settings_div.children[i].id == elem.id && settings_div.children[i] !== elem) {
+              settings_div.children[i].replaceWith(elem);
+              break;
+            }
+          }
+        }
       }
       if (activity.activityType == "replace") {
         let target_activity = main_activities[operatorId];
@@ -2656,6 +2705,14 @@ $(document).ready(function() {
         }
         if (!found) {
           settings_div.insertBefore(elem, settings_div.firstChild);
+        }
+        if (found) {
+          for (let i = 0; i < settings_div.children.length; i++) {
+            if (settings_div.children[i].id == elem.id && settings_div.children[i] !== elem) {
+              settings_div.children[i].replaceWith(elem);
+              break;
+            }
+          }
         }
       }
       if (activity.activityType == "flatten") {
@@ -2678,6 +2735,14 @@ $(document).ready(function() {
         if (!found) {
           settings_div.insertBefore(elem, settings_div.firstChild);
         }
+        if (found) {
+          for (let i = 0; i < settings_div.children.length; i++) {
+            if (settings_div.children[i].id == elem.id && settings_div.children[i] !== elem) {
+              settings_div.children[i].replaceWith(elem);
+              break;
+            }
+          }
+        }
       }
       if (activity.activityType == "http_request") {
         let target_activity = main_activities[operatorId];
@@ -2699,6 +2764,14 @@ $(document).ready(function() {
         if (!found) {
           settings_div.insertBefore(elem, settings_div.firstChild);
         }
+        if (found) {
+          for (let i = 0; i < settings_div.children.length; i++) {
+            if (settings_div.children[i].id == elem.id && settings_div.children[i] !== elem) {
+              settings_div.children[i].replaceWith(elem);
+              break;
+            }
+          }
+        }
       }
       if (activity.activityType == "fill") {
         let target_activity = main_activities[operatorId];
@@ -2719,6 +2792,14 @@ $(document).ready(function() {
         }
         if (!found) {
           settings_div.insertBefore(elem, settings_div.firstChild);
+        }
+        if (found) {
+          for (let i = 0; i < settings_div.children.length; i++) {
+            if (settings_div.children[i].id == elem.id && settings_div.children[i] !== elem) {
+              settings_div.children[i].replaceWith(elem);
+              break;
+            }
+          }
         }
       }
       if (activity.activityType == "clean") {
