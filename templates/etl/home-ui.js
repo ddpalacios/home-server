@@ -3454,8 +3454,10 @@ $(document).ready(function() {
           Object.keys(main_activities).forEach(function(operatorId) {
             var activity = main_activities[operatorId];
             if (activity) {
-              activity.activity = $flowchart.flowchart("getOperatorActivity", operatorId);
-              activity.activityId = operatorId;
+              if ($flowchart.flowchart("doesOperatorExists", operatorId)) {
+                activity.activity = $flowchart.flowchart("getOperatorActivity", operatorId);
+                activity.activityId = operatorId;
+              }
             }
           });
         }
