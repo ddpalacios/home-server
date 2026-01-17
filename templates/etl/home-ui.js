@@ -279,6 +279,44 @@ document.addEventListener("mousemove", function(event) {
 let pipeline_id;
 var pipelineNameCounter = 1;
 var suspendPipelineSave = false;
+var emptyPipelineSeeded = false;
+var operatorI = 0;
+
+function setOperatorIndexFromActivities(activities) {
+  var ids = [];
+  if (activities && typeof activities === "object") {
+    Object.keys(activities).forEach(function(operatorId) {
+      var parsed = parseInt(operatorId, 10);
+      if (!isNaN(parsed)) {
+        ids.push(parsed);
+      }
+    });
+  }
+  var nextId = ids.length ? Math.max.apply(null, ids) + 1 : 0;
+  operatorI = nextId;
+  if (typeof window.flowchartSetOperatorIndex === "function") {
+    window.flowchartSetOperatorIndex(nextId);
+  }
+}
+
+function normalizeLinkOperatorIds(links) {
+  if (!links || typeof links !== "object") {
+    return links;
+  }
+  Object.keys(links).forEach(function(linkId) {
+    var link = links[linkId];
+    if (!link) {
+      return;
+    }
+    if (link.fromOperator != null) {
+      link.fromOperator = String(link.fromOperator);
+    }
+    if (link.toOperator != null) {
+      link.toOperator = String(link.toOperator);
+    }
+  });
+  return links;
+}
 
 function setCurrentPipelineId(value) {
   pipeline_id = value;
@@ -371,6 +409,47 @@ function renderPipelineList(pipelines) {
   renderPipelineListSelection(pipeline_id);
 }
 
+function seedEmptyPipelineIfNeeded(pipelines) {
+  if (emptyPipelineSeeded) {
+    return;
+  }
+  if (!Array.isArray(pipelines) || pipelines.length > 0) {
+    return;
+  }
+  if (!window.googleLoginProfile || !window.googleLoginProfile.logged_in) {
+    return;
+  }
+  emptyPipelineSeeded = true;
+  if (typeof window.flowchartClearWorkspace === "function") {
+    window.flowchartClearWorkspace();
+    return;
+  }
+  var googleId = window.googleLoginProfile.google_id || window.googleLoginProfile.email || "unknown";
+  var safeGoogleId = googleId.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_-]/g, "");
+  if (!safeGoogleId) {
+    safeGoogleId = "unknown";
+  }
+  if (!pipeline_id) {
+    setCurrentPipelineId(generatePipelineId());
+  }
+  var data = {};
+  if ($flowchart && $flowchart.flowchart) {
+    data = $flowchart.flowchart("getData", pipeline_id || "local") || {};
+  }
+  if (!data.activities) {
+    data.activities = {};
+  }
+  if (!data.links) {
+    data.links = {};
+  }
+  data.pipeline_name = getNextPipelineName();
+  data.description = "";
+  data.pipeline_id = pipeline_id;
+  data.google_id = safeGoogleId;
+  post_pipeline(safeGoogleId, pipeline_id, data);
+  fetchPipelineList();
+}
+
 function fetchPipelineList() {
   var googleId = "unknown";
   if (window.googleLoginProfile && (window.googleLoginProfile.google_id || window.googleLoginProfile.email)) {
@@ -395,6 +474,7 @@ function fetchPipelineList() {
         return;
       }
       renderPipelineList(result.values);
+      seedEmptyPipelineIfNeeded(result.values);
       if (!pipeline_id && result.values.length) {
         loadPipelineById(result.values[0].pipeline_id);
       }
@@ -478,11 +558,9 @@ function LoadFromBlobStorage(pipeline) {
     $("#pipeline_description").val(pipeline.description);
   }
   let activities = pipeline["activities"];
-  let links = pipeline["links"] || {};
-  let Ids = [];
+  let links = normalizeLinkOperatorIds(pipeline["links"] || {});
   Object.keys(activities).forEach(operatorId => {
     let operatorData = activities[operatorId];
-    Ids.push(parseInt(operatorId));
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
     if (operatorData.properties && operatorData.properties.activity_description) {
@@ -565,9 +643,9 @@ function LoadFromBlobStorage(pipeline) {
       return;
     }
     var linkData = {
-      fromOperator: link.fromOperator,
+      fromOperator: String(link.fromOperator),
       fromConnector: link.fromConnector || "output",
-      toOperator: link.toOperator,
+      toOperator: String(link.toOperator),
       toConnector: link.toConnector || "input",
       locked: true
     };
@@ -587,12 +665,7 @@ function LoadFromBlobStorage(pipeline) {
       activity.activityId = operatorId;
     }
   });
-  if (Ids.length > 0) {
-    const maxVal = Math.max(...Ids);
-    if (typeof window.flowchartSetOperatorIndex === "function") {
-      window.flowchartSetOperatorIndex(maxVal + 1);
-    }
-  }
+  setOperatorIndexFromActivities(activities);
   var flowchartInstance = $flowchart.flowchart("instance");
   if (flowchartInstance && flowchartInstance.options) {
     flowchartInstance.options.canUserMoveOperators = false;
@@ -988,6 +1061,7 @@ $(document).ready(function() {
     if (typeof window.flowchartSetOperatorIndex === "function") {
       window.flowchartSetOperatorIndex(0);
     }
+    operatorI = 0;
     setCurrentPipelineId(generatePipelineId());
     $("#pipeline_title").val(getNextPipelineName());
     $("#pipeline_description").val("");
@@ -2301,7 +2375,9 @@ $(document).ready(function() {
     }
     var settings = activity.settings;
     var rows = null;
-    if (Array.isArray(settings)) {
+    if (activity.activityType && Array.isArray(settings[activity.activityType])) {
+      rows = settings[activity.activityType];
+    } else if (Array.isArray(settings)) {
       rows = settings;
     } else if (typeof settings === "object") {
       Object.keys(settings).some(function(key) {
@@ -2315,11 +2391,17 @@ $(document).ready(function() {
     if (!rows || rows.length === 0) {
       return;
     }
+    var activityInstance = main_activities[operatorId];
     var container = document.getElementById(operatorId + "_column_edit");
     if (!container) {
-      return;
+      var settings_div = document.getElementById("selected_activity_settings");
+      if (!settings_div) {
+        return;
+      }
+      container = document.createElement("div");
+      container.id = operatorId + "_column_edit";
+      settings_div.appendChild(container);
     }
-    var activityInstance = main_activities[operatorId];
     if (activity.activityType === "flatten" && activityInstance) {
       container.innerHTML = "";
       if (typeof activityInstance._setup_column_container === "function") {
@@ -3122,6 +3204,9 @@ $(document).ready(function() {
       var previousId = null;
       var nextId = null;
       var nextConnector = null;
+      if (main_activities && main_activities[operatorId]) {
+        delete main_activities[operatorId];
+      }
       if (selectPlaceholders) {
         var placeholders = Array.from(selectPlaceholders.querySelectorAll(".select-placeholder.branch-placeholder"));
         placeholders.forEach(function(placeholder) {
@@ -3160,6 +3245,7 @@ $(document).ready(function() {
         scheduleLinkAddRefresh();
         schedulePipelineSave();
       }, 0);
+      schedulePipelineSave();
       return true;
     }
     ,onLinkDelete: function(linkId, forced) {
@@ -3316,11 +3402,13 @@ $(document).ready(function() {
   $("html").keyup(function(e) {
     if (e.keyCode == 46) {
       $flowchart.flowchart("deleteSelected");
+      schedulePipelineSave();
     }
   });
 
   $(".delete_selected_button").on("click", function() {
     $flowchart.flowchart("deleteSelected");
+    schedulePipelineSave();
   });
 
   function resolvePreviewTargetId(buttonId) {
@@ -3513,7 +3601,6 @@ $(document).ready(function() {
     schedulePipelineSave();
   });
 
-  var operatorI = 0;
   $("#import_activity").on("click", function() {
     createIngestAtSlot("import");
   });
@@ -4522,6 +4609,10 @@ $(document).ready(function() {
   function Flow2Text(retryCount) {
     var data = null;
     try {
+      var operators = $flowchart.flowchart("getOperators") || {};
+      Object.keys(operators).forEach(function(operatorId) {
+        $flowchart.flowchart("getOperatorActivity", operatorId);
+      });
       if (typeof main_activities === "object" && main_activities !== null) {
         Object.keys(main_activities).forEach(function(key) {
           var activity = main_activities[key];
@@ -4589,11 +4680,9 @@ $(document).ready(function() {
     user = JSON.parse(user);
     let pipelines = user["pipelines"]["values"];
     let activities = pipelines[0]["activities"];
-    let links = pipelines[0]["links"];
-    let Ids = [];
+    let links = normalizeLinkOperatorIds(pipelines[0]["links"]);
     Object.keys(activities).forEach(operatorId => {
       let operatorData = activities[operatorId];
-      Ids.push(parseInt(operatorId));
       $flowchart.flowchart("createOperator", operatorId, operatorData);
       let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
       let a;
@@ -4665,9 +4754,11 @@ $(document).ready(function() {
       activites = $flowchart.flowchart("getOperators");
     });
 
-    $flowchart.flowchart("setData", pipelines[0]);
-    const maxVal = Math.max(...Ids);
-    operatorI = maxVal + 1;
+    $flowchart.flowchart("setData", {
+      activities: activities,
+      links: links || {}
+    });
+    setOperatorIndexFromActivities(activities);
   }
   $("#load_local").click(LoadFromLocalStorage);
 

@@ -7,6 +7,9 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
  <!-- <link rel="stylesheet" href="/chatbox_style.css"> -->
 <link rel="icon" href="/portfolio/images/favicon.ico" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 
   body {
@@ -404,20 +407,206 @@ table th, table td {
 
 
 </style>
+<link rel="stylesheet" href="/etl/home.css">
+<style>
+  #visualizer {
+    position: fixed;
+    top: 0;
+    left: var(--sidebar-total);
+    width: calc(100% - var(--sidebar-total));
+    height: 100vh;
+    background-color: black;
+    display: block;
+    z-index: 1;
+  }
+
+  .footer-panel {
+    height: calc(100% - 18px);
+  }
+
+  .content-wrapper {
+    margin-left: var(--sidebar-total);
+    width: calc(100% - var(--sidebar-total));
+    height: 100vh;
+  }
+
+  .content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .footer {
+    position: fixed;
+    left: var(--sidebar-total);
+    bottom: 0;
+    width: calc(100% - var(--sidebar-total));
+    height: 280px;
+    background: linear-gradient(180deg, rgba(232, 237, 244, 0.96) 0%, rgba(246, 248, 251, 0.96) 100%);
+    border-top: 1px solid rgba(15, 23, 42, 0.12);
+    box-shadow: 0 -18px 30px rgba(15, 23, 42, 0.12);
+    backdrop-filter: blur(8px);
+    z-index: 30;
+    overflow: visible !important;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .resize-handle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 18px;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  }
+</style>
 </head>
 <body>
-  <canvas id="visualizer" style="width: 100%; height: 100%; background-color: black;"></canvas>
+
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-header-row">
+            <h3>Activities</h3>
+            <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Collapse activities panel">
+              Hide
+            </button>
+        </div>
+    </div>
+    <div class="sidebar-scroll">
+      <div class="sidebar-buttons"></div>
+    </div>
+</div>
+
+<button id="sidebarToggleFloating" class="sidebar-toggle sidebar-toggle--floating" type="button" aria-label="Show activities panel">
+  Activities
+</button>
+
+  <div class="content-wrapper">
+    <div class="content">
+      <canvas id="visualizer"></canvas>
+    </div>
+
+    <div class="footer" id="footer" style="overflow-x: hidden; overflow-y: hidden;">
+      <div class="resize-handle" id="resizeHandle">
+        <img src="/etl/images/drag.png" width="50" height="50" alt="">
+      </div>
+      <div class="footer-panel" id="bottomPanel">
+        <div id="tab_btn_group"></div>
+      </div>
+    </div>
+  </div>
 </body>
 <script>
     let ws = null;
     let canvas = document.querySelector("#visualizer");
     let ctx = canvas.getContext("2d");
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
-    ctx.scale(dpr, dpr);
+
+    /* -----------------
+    Added code block:
+    Description: Cache bodies and radius offsets once per tick so we avoid rebuilding the full grid.
+    let bodies = [];
+    let radiusOffsets = null;
+    let currentRadius = null;
+
+    function buildRadiusOffsets(radius) {
+      const offsets = [];
+      for (let dy = -radius; dy <= radius; dy++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+          if (dx * dx + dy * dy <= radius * radius) {
+            offsets.push([dx, dy]);
+          }
+        }
+      }
+      return offsets;
+    }
+    ----------------- */
+    let bodies = [];
+    let radiusOffsets = null;
+    let currentRadius = null;
+
+    function buildRadiusOffsets(radius) {
+      const offsets = [];
+      for (let dy = -radius; dy <= radius; dy++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+          if (dx * dx + dy * dy <= radius * radius) {
+            offsets.push([dx, dy]);
+          }
+        }
+      }
+      return offsets;
+    }
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+      canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  var body = document.body;
+  var toggleButtons = [
+    document.getElementById("sidebarToggle"),
+    document.getElementById("sidebarToggleFloating")
+  ];
+
+  function syncSidebarToggle() {
+    var isCollapsed = body.classList.contains("sidebar-collapsed");
+    toggleButtons.forEach(function(button) {
+      if (!button) {
+        return;
+      }
+      button.textContent = isCollapsed ? "Activities" : "Hide";
+      button.setAttribute(
+        "aria-label",
+        isCollapsed ? "Show activities panel" : "Collapse activities panel"
+      );
+    });
+  }
+
+  function toggleSidebar() {
+    body.classList.toggle("sidebar-collapsed");
+    syncSidebarToggle();
+    window.dispatchEvent(new Event("resize"));
+  }
+
+  toggleButtons.forEach(function(button) {
+    if (button) {
+      button.addEventListener("click", toggleSidebar);
+    }
+  });
+  syncSidebarToggle();
+});
+
+const footer = document.getElementById("footer");
+const handle = document.getElementById("resizeHandle");
+
+let isResizing = false;
+let startY, startHeight;
+
+handle.addEventListener("mousedown", (event) => {
+  isResizing = true;
+  startY = event.clientY;
+  startHeight = parseInt(window.getComputedStyle(footer).height, 10);
+  document.body.style.userSelect = "none";
+});
+
+document.addEventListener("mousemove", (event) => {
+  if (!isResizing) return;
+  const dy = startY - event.clientY;
+  footer.style.height = `${startHeight + dy}px`;
+});
+
+document.addEventListener("mouseup", () => {
+  isResizing = false;
+  document.body.style.userSelect = "";
+});
 </script>
 
 
@@ -554,75 +743,32 @@ let count = 0
           ws.session.onmessage = async (event) => {
               let data = JSON.parse(event.data)
                if (data['request'] == 'neat'){
-              for (let i = 0; i < grid.length; i++) {
-                  for (let j = 0; j < grid[i].length; j++) {
-                          grid[i][j] = 0;
-                  }
+            /* -----------------
+            Added code block:
+            Description: Update cached bodies and rebuild radius offsets only when radius changes.
+              ----------------- */
+              bodies = data.bodies || [];
+              if (Array.isArray(bodies) && bodies.length > 0) {
+                const sortedBodies = bodies
+                  .slice()
+                  .filter(body => body.fitness != null)
+                  .sort((a, b) => b.fitness - a.fitness);
+                const topCount = Math.min(10, sortedBodies.length);
+                const topIds = new Set(
+                  sortedBodies.slice(0, topCount).map(body => body.body_id)
+                );
+                bodies.forEach(body => {
+                  body.isTopFitness = topIds.has(body.body_id);
+                });
               }
-
-              // grid[data.mouse_y][data.mouse_x] = 3
-              // points = pointsInCircle(data.mouse_x, data.mouse_y, data.body_radius_size, data.gridSize);
-              // points.forEach(point => {
-              //                   const px = point[0];
-              //                   const py = point[1];
-              //                   if (grid[py][px] !== 2) {
-              //                     grid[py][px] = 5;
-              //                   }
-              //                 });
-              data.bodies.forEach(network => {
-                const x = network.pos_x;
-                const y = network.pos_y;
-                grid[y][x] = 2;
-                points = pointsInCircle(x, y, data.body_radius_size, data.gridSize);
-                points.forEach(point => {
-                  const px = point[0];
-                  const py = point[1];
-                  if (grid[py][px] !== 2) {
-                    grid[py][px] = 1;
-                  }
-                });
-                });
-                // data.bodies.sort((a, b) => b.fitness - a.fitness);
-                // create_table_tab('Summary', data.bodies)
-
-
-                //  let foods = data['foods']
-                //  console.log("Foods", foods)
-                //   Object.values(foods).forEach(food => {
-                //       const x = food.pos_x;
-                //       const y = food.pos_y;
-                //       grid[y][x] = 4; 
-                //     })
-                  // grid[network.mouse_y][network.mouse_x] = 3
-
-                  // network.mouse_points.forEach(point => {
-                  //   const px = point[0];
-                  //   const py = point[1];
-
-                  //   if (px !== x || py !== y) {
-                  //     if (grid[py][px] !== 2 && grid[py][px] !== 3) {
-                  //       grid[py][px] = 1;
-                  //     }
-                  //   }
-                  // });
-
-                  // network.points.forEach(point => {
-                  //   const px = point[0];
-                  //   const py = point[1];
-
-                  //   if (px !== x || py !== y) {
-                  //     if (grid[py][px] !== 2) {
-                  //       grid[py][px] = 1;
-                  //     }
-                  //   }
-                  // });
-
-                  // data.bodies.sort((a, b) => b.fitness - a.fitness);
-                  // data.node_weights.sort((a, b) => b.node_avg_strength - a.node_avg_strength);
-                  // create_table_tab('Summary', data.bodies)
-                  // create_table_tab('Node_Weights', data.node_weights)
-                  // create_table_tab('Networks', data.network_weights)
-
+              if (data.body_radius_size !== currentRadius) {
+                currentRadius = data.body_radius_size;
+                radiusOffsets = buildRadiusOffsets(currentRadius);
+              }
+              if (typeof renderFrame === "function") {
+                renderFrame();
+              }
+        
                }
               if (data['request'] == 'new_connection'){
                   socketId = data['value']
@@ -681,31 +827,5 @@ function openCity(evt, cityName) {
   
   evt.currentTarget.className += " active";
 }
-</script>
-<script>
-  const footer = document.getElementById('footer');
-  const handle = document.getElementById('resizeHandle');
-
-  let isResizing = false;
-  let startY, startHeight;
-
-  handle.addEventListener('mousedown', e => {
-    isResizing = true;
-     
-    startY = e.clientY;
-    startHeight = parseInt(window.getComputedStyle(footer).height, 10);
-    document.body.style.userSelect = 'none';
-  });
-
-  document.addEventListener('mousemove', e => {
-    if (!isResizing) return;
-    const dy = startY - e.clientY;
-    footer.style.height = `${startHeight + dy}px`;
-  });
-
-  document.addEventListener('mouseup', () => {
-    isResizing = false;
-    document.body.style.userSelect = '';
-  });
 </script>
 </html>

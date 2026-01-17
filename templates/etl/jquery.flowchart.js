@@ -1602,6 +1602,8 @@ jQuery(function ($) {
                 let operator_copy = {}
                 let link_from = []
                 let link_to = []
+                let link_from_details = []
+                let link_to_details = []
                 let dependencies = []
                 let operator = this.getOperatorActivity(element)//this.data.operators[element]
                 operator_copy['top'] = this.data.operators[element].top 
@@ -1618,9 +1620,17 @@ jQuery(function ($) {
  
                 operator.link_to.forEach(link_to_operator => {
                     link_to.push(link_to_operator.operatorId)
+                    link_to_details.push({
+                        operatorId: link_to_operator.operatorId,
+                        outputs: link_to_operator.outputs || {}
+                    })
                 });
                 operator.link_from.forEach(link_from_operator => {
                     link_from.push(link_from_operator.operatorId)
+                    link_from_details.push({
+                        operatorId: link_from_operator.operatorId,
+                        outputs: link_from_operator.outputs || {}
+                    })
                 });
                 operator.dependencies.forEach(dependent => {
                     dependencies.push(dependent)
@@ -1660,6 +1670,8 @@ jQuery(function ($) {
                 
                 operator_copy['properties']['link_to'] = link_to
                 operator_copy['properties']['link_from']  = link_from
+                operator_copy['properties']['link_to_details'] = link_to_details
+                operator_copy['properties']['link_from_details'] = link_from_details
                 operator_copy['properties']['dependencies'] = dependencies
 
 
@@ -1688,6 +1700,7 @@ jQuery(function ($) {
             //     }
             // }
             // data.operatorTypes = this.data.operatorTypes;
+            console.log("PIPELINE DATA",pipeline)
             return pipeline;
         },
 
@@ -1741,6 +1754,7 @@ jQuery(function ($) {
             }
             this.data.operators[operatorId].internal.properties['link_to'] = all_to_links
             this.data.operators[operatorId].internal.properties['link_from'] = all_from_links
+            console.log("SETTING LINKS OUT AND IN", all_to_links, all_from_links)
 
             
             return  this.data.operators[operatorId].internal.properties
@@ -1797,11 +1811,12 @@ jQuery(function ($) {
 
         getLinksFrom: function(operatorId) {
             var result = [];
+            var targetId = String(operatorId);
 
             for (var linkId in this.data.links) {
                 if (this.data.links.hasOwnProperty(linkId)) {
                     var linkData = this.data.links[linkId];
-                    if (linkData.fromOperator === operatorId) {
+                    if (linkData && String(linkData.fromOperator) === targetId) {
                         result.push(linkData);
                     }
                 }
@@ -1812,11 +1827,12 @@ jQuery(function ($) {
 
         getLinksTo: function(operatorId) {
             var result = [];
+            var targetId = String(operatorId);
 
             for (var linkId in this.data.links) {
                 if (this.data.links.hasOwnProperty(linkId)) {
                     var linkData = this.data.links[linkId];
-                    if (linkData.toOperator === operatorId) {
+                    if (linkData && String(linkData.toOperator) === targetId) {
                         result.push(linkData);
                     }
                 }
