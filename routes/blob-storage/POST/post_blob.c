@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <dirent.h>
 #include "http_utilities.h"
 #include "session.h"
 #include "Socket.h"
@@ -103,6 +104,27 @@ void connect_to_server(const char* host, const char* port, char*body){
 		send_response_code(cSSL, 200);
 		return;
 	}
+	else if (strstr(route, "/blob-storage/etl/trigger/save")!= NULL){
+		char* triggerId = get_query_parameter(route, "triggerId");
+		if (triggerId == NULL){
+			send_response_code(cSSL, 400);
+			return;
+		}
+		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/%s.json", triggerId);
+		FILE *file = fopen(write_path, "w");
+		if (!file) {
+			send_response_code(cSSL, 500);
+			return;
+		}
+		if (fputs(body, file) == EOF) {
+			fclose(file);
+			send_response_code(cSSL, 500);
+			return;
+		}
+		fclose(file);
+		send_response_code(cSSL, 200);
+		return;
+	}
 	else if (strstr(route, "/blob-storage/etl/pipeline/delete")!= NULL){
 		char* pipelineId = get_query_parameter(route, "pipelineId");
 		if (pipelineId == NULL){
@@ -110,6 +132,50 @@ void connect_to_server(const char* host, const char* port, char*body){
 			return;
 		}
 		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/%s.json", pipelineId);
+		if (remove(write_path) != 0){
+			send_response_code(cSSL, 404);
+			return;
+		}
+		DIR *dir = opendir("/home/dpalacios/home-server/blob-storage");
+		if (dir != NULL){
+			struct dirent *entry;
+			while ((entry = readdir(dir)) != NULL){
+				if (entry->d_type != DT_REG){
+					continue;
+				}
+				if (strncmp(entry->d_name, "triggers_", 9) != 0){
+					continue;
+				}
+				char trigger_path[2048];
+				snprintf(trigger_path, sizeof(trigger_path), "/home/dpalacios/home-server/blob-storage/%s", entry->d_name);
+				char* content = get_file_buffer(trigger_path);
+				if (content == NULL){
+					continue;
+				}
+				cJSON* parsed = cJSON_Parse(content);
+				free(content);
+				if (parsed == NULL){
+					continue;
+				}
+				cJSON* stored_pipeline = cJSON_GetObjectItem(parsed, "pipeline_id");
+				if (cJSON_IsString(stored_pipeline) && stored_pipeline->valuestring != NULL &&
+					strcmp(stored_pipeline->valuestring, pipelineId) == 0) {
+					remove(trigger_path);
+				}
+				cJSON_Delete(parsed);
+			}
+			closedir(dir);
+		}
+		send_response_code(cSSL, 200);
+		return;
+	}
+	else if (strstr(route, "/blob-storage/etl/trigger/delete")!= NULL){
+		char* triggerId = get_query_parameter(route, "triggerId");
+		if (triggerId == NULL){
+			send_response_code(cSSL, 400);
+			return;
+		}
+		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/%s.json", triggerId);
 		if (remove(write_path) != 0){
 			send_response_code(cSSL, 404);
 			return;

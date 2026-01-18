@@ -28,6 +28,23 @@ void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, 
       free(result);
       return;
     }
+    if (strstr(route, "/blob-storage/etl/trigger/load") != NULL){
+      char* triggerId = get_query_parameter(route, "triggerId");
+      if (triggerId == NULL){
+        send_response_code(cSSL, 400);
+        return;
+      }
+      char path[2048];
+      snprintf(path, sizeof(path), "../blob-storage/%s.json", triggerId);
+      char* result = get_file_buffer(path);
+      if (result == NULL){
+        send_response_code(cSSL, 404);
+        return;
+      }
+      send_JSON_response_code(cSSL, 200, result);
+      free(result);
+      return;
+    }
     if (strstr(route, "/blob-storage/etl/pipeline/list") != NULL){
       char* googleId = get_query_parameter(route, "googleId");
       if (googleId == NULL){
@@ -47,6 +64,9 @@ void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, 
           continue;
         }
         if (!strstr(entry->d_name, ".json")){
+          continue;
+        }
+        if (strncmp(entry->d_name, "triggers_", 9) == 0){
           continue;
         }
         char path[2048];
@@ -78,6 +98,82 @@ void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, 
           cJSON_AddStringToObject(item, "pipeline_name", pipeline_name->valuestring);
         } else {
           cJSON_AddStringToObject(item, "pipeline_name", "Untitled Pipeline");
+        }
+        cJSON* description = cJSON_GetObjectItem(parsed, "description");
+        if (cJSON_IsString(description)) {
+          cJSON_AddStringToObject(item, "description", description->valuestring);
+        } else {
+          cJSON_AddStringToObject(item, "description", "");
+        }
+        cJSON* stored_pipeline = cJSON_GetObjectItem(parsed, "pipeline_id");
+        if (cJSON_IsString(stored_pipeline)) {
+          cJSON_AddStringToObject(item, "pipeline_id", stored_pipeline->valuestring);
+        } else {
+          cJSON_AddStringToObject(item, "pipeline_id", "");
+        }
+        cJSON_AddItemToArray(values, item);
+        cJSON_Delete(parsed);
+      }
+      closedir(dir);
+      char* json_string = cJSON_Print(root);
+      send_JSON_response_code(cSSL, 200, json_string);
+      free(json_string);
+      cJSON_Delete(root);
+      return;
+    }
+    if (strstr(route, "/blob-storage/etl/trigger/list") != NULL){
+      char* googleId = get_query_parameter(route, "googleId");
+      if (googleId == NULL){
+        send_response_code(cSSL, 400);
+        return;
+      }
+      DIR *dir = opendir("/home/dpalacios/home-server/blob-storage");
+      if (dir == NULL){
+        send_response_code(cSSL, 500);
+        return;
+      }
+      cJSON* root = create_json_object();
+      cJSON* values = cJSON_AddArrayToObject(root, "values");
+      struct dirent *entry;
+      while ((entry = readdir(dir)) != NULL){
+        if (entry->d_type != DT_REG){
+          continue;
+        }
+        if (!strstr(entry->d_name, ".json")){
+          continue;
+        }
+        if (strncmp(entry->d_name, "triggers_", 9) != 0){
+          continue;
+        }
+        char path[2048];
+        snprintf(path, sizeof(path), "/home/dpalacios/home-server/blob-storage/%s", entry->d_name);
+        char* content = get_file_buffer(path);
+        if (content == NULL){
+          continue;
+        }
+        cJSON* parsed = cJSON_Parse(content);
+        free(content);
+        if (parsed == NULL){
+          continue;
+        }
+        cJSON* stored_google = cJSON_GetObjectItem(parsed, "google_id");
+        if (!cJSON_IsString(stored_google) || strcmp(stored_google->valuestring, googleId) != 0){
+          cJSON_Delete(parsed);
+          continue;
+        }
+        cJSON* item = cJSON_CreateObject();
+        char trigger_id[256];
+        snprintf(trigger_id, sizeof(trigger_id), "%s", entry->d_name);
+        char* dot = strstr(trigger_id, ".json");
+        if (dot){
+          *dot = '\0';
+        }
+        cJSON_AddStringToObject(item, "trigger_id", trigger_id);
+        cJSON* trigger_name = cJSON_GetObjectItem(parsed, "name");
+        if (cJSON_IsString(trigger_name)) {
+          cJSON_AddStringToObject(item, "name", trigger_name->valuestring);
+        } else {
+          cJSON_AddStringToObject(item, "name", "Untitled Trigger");
         }
         cJSON* description = cJSON_GetObjectItem(parsed, "description");
         if (cJSON_IsString(description)) {

@@ -47,6 +47,15 @@
             </button>
             <div id="pipelineList" class="pipeline-list"></div>
         </div>
+        <details id="savedTriggersGroup" class="activity-group saved-triggers-group" open>
+            <summary>Saved Triggers</summary>
+            <div class="activity-group-content">
+                <button id="newTriggerButton" class="pipeline-new-button" type="button">
+                  + New Trigger
+                </button>
+                <div id="triggerList" class="pipeline-list"></div>
+            </div>
+        </details>
         <details class="activity-group" open>
             <summary>Ingest</summary>
             <div class="activity-group-content">
@@ -105,6 +114,13 @@
       <div class="pipeline-run">
         <button id="run_pipeline" type="button" aria-label="Run pipeline">
           <svg class="run-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7V5z"/></svg>
+          <span>Run Flow</span>
+        </button>
+        <button id="createTrigger" class="create-trigger-button" type="button">
+          <svg class="create-trigger-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M13 2L4 14h6l-1 8 11-14h-6l1-6z"/>
+          </svg>
+          <!-- <span>+ Create Trigger</span> -->
         </button>
       </div>
       	 <div id="chart_container">
@@ -178,6 +194,87 @@
 						</div>
 						<div id="activity_previews"></div>
 				</div>
+    </div>
+  </div>
+  <div id="triggerModal" class="trigger-modal" role="dialog" aria-modal="true" aria-labelledby="triggerModalTitle" aria-hidden="true">
+    <div class="trigger-modal__backdrop" data-trigger-close></div>
+    <div class="trigger-modal__panel" role="document">
+      <div class="trigger-modal__header">
+        <h2 id="triggerModalTitle">New trigger</h2>
+        <button type="button" class="trigger-modal__close" data-trigger-close aria-label="Close">x</button>
+      </div>
+      <div class="trigger-modal__body">
+        <label for="trigger_pipeline_name">Pipeline</label>
+        <input id="trigger_pipeline_name" type="text" disabled>
+        <select id="trigger_pipeline_select" class="trigger-field-hidden"></select>
+
+        <label for="trigger_name">Name *</label>
+        <input id="trigger_name" type="text" placeholder="trigger_schedule">
+
+        <label for="trigger_description">Description</label>
+        <textarea id="trigger_description" rows="3" placeholder="Describe this trigger"></textarea>
+
+        <label for="trigger_start_date">Start date *</label>
+        <input id="trigger_start_date" type="datetime-local">
+
+        <label for="trigger_time_of_day" class="trigger-time-label trigger-field-hidden">Time of day *</label>
+        <input id="trigger_time_of_day" type="time" class="trigger-time-input trigger-field-hidden">
+
+        <label for="trigger_recurrence_unit">Recurrence *</label>
+        <div class="trigger-recurrence">
+          <input id="trigger_recurrence_value" type="number" min="1" value="1">
+          <select id="trigger_recurrence_unit">
+            <option value="minutes">Minutes</option>
+            <option value="hours">Hours</option>
+            <option value="days">Days</option>
+            <option value="weekly">Weekly</option>
+          </select>
+        </div>
+
+        <div id="trigger_weekdays" class="trigger-weekdays" aria-hidden="true">
+          <span>Select days</span>
+          <label><input type="checkbox" value="mon"><span>Mon</span></label>
+          <label><input type="checkbox" value="tue"><span>Tue</span></label>
+          <label><input type="checkbox" value="wed"><span>Wed</span></label>
+          <label><input type="checkbox" value="thu"><span>Thu</span></label>
+          <label><input type="checkbox" value="fri"><span>Fri</span></label>
+          <label><input type="checkbox" value="sat"><span>Sat</span></label>
+          <label><input type="checkbox" value="sun"><span>Sun</span></label>
+        </div>
+
+        <div id="trigger_hours" class="trigger-weekdays trigger-field-hidden" aria-hidden="true">
+          <span>Select hours</span>
+          <label><input type="checkbox" value="00"><span>00</span></label>
+          <label><input type="checkbox" value="01"><span>01</span></label>
+          <label><input type="checkbox" value="02"><span>02</span></label>
+          <label><input type="checkbox" value="03"><span>03</span></label>
+          <label><input type="checkbox" value="04"><span>04</span></label>
+          <label><input type="checkbox" value="05"><span>05</span></label>
+          <label><input type="checkbox" value="06"><span>06</span></label>
+          <label><input type="checkbox" value="07"><span>07</span></label>
+          <label><input type="checkbox" value="08"><span>08</span></label>
+          <label><input type="checkbox" value="09"><span>09</span></label>
+          <label><input type="checkbox" value="10"><span>10</span></label>
+          <label><input type="checkbox" value="11"><span>11</span></label>
+          <label><input type="checkbox" value="12"><span>12</span></label>
+          <label><input type="checkbox" value="13"><span>13</span></label>
+          <label><input type="checkbox" value="14"><span>14</span></label>
+          <label><input type="checkbox" value="15"><span>15</span></label>
+          <label><input type="checkbox" value="16"><span>16</span></label>
+          <label><input type="checkbox" value="17"><span>17</span></label>
+          <label><input type="checkbox" value="18"><span>18</span></label>
+          <label><input type="checkbox" value="19"><span>19</span></label>
+          <label><input type="checkbox" value="20"><span>20</span></label>
+          <label><input type="checkbox" value="21"><span>21</span></label>
+          <label><input type="checkbox" value="22"><span>22</span></label>
+          <label><input type="checkbox" value="23"><span>23</span></label>
+        </div>
+      </div>
+      <div class="trigger-modal__footer">
+        <button type="button" cl
+        ass="trigger-modal__btn trigger-modal__btn--ghost" data-trigger-close>Cancel</button>
+        <button id="triggerModalOk" type="button" class="trigger-modal__btn trigger-modal__btn--primary">OK</button>
+      </div>
     </div>
   </div>
   <script src="/websocket.js" defer></script>
