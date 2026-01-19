@@ -18,7 +18,7 @@ void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, 
         return;
       }
       char path[2048];
-      snprintf(path, sizeof(path), "../blob-storage/%s.json", pipelineId);
+      snprintf(path, sizeof(path), "../blob-storage/raw/etl/pipeline/%s.json", pipelineId);
       char* result = get_file_buffer(path);
       if (result == NULL){
         send_response_code(cSSL, 404);
@@ -35,7 +35,7 @@ void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, 
         return;
       }
       char path[2048];
-      snprintf(path, sizeof(path), "../blob-storage/%s.json", triggerId);
+      snprintf(path, sizeof(path), "../blob-storage/raw/etl/trigger/%s.json", triggerId);
       char* result = get_file_buffer(path);
       if (result == NULL){
         send_response_code(cSSL, 404);
@@ -51,7 +51,14 @@ void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, 
         send_response_code(cSSL, 400);
         return;
       }
-      DIR *dir = opendir("/home/dpalacios/home-server/blob-storage");
+      const char *home = getenv("HOME");
+      if (!home || !home[0]){
+        send_response_code(cSSL, 500);
+        return;
+      }
+      char pipeline_dir[2048];
+      snprintf(pipeline_dir, sizeof(pipeline_dir), "%s/home-server/blob-storage/raw/etl/pipeline", home);
+      DIR *dir = opendir(pipeline_dir);
       if (dir == NULL){
         send_response_code(cSSL, 500);
         return;
@@ -70,7 +77,7 @@ void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, 
           continue;
         }
         char path[2048];
-        snprintf(path, sizeof(path), "/home/dpalacios/home-server/blob-storage/%s", entry->d_name);
+        snprintf(path, sizeof(path), "%s/home-server/blob-storage/raw/etl/pipeline/%s", home, entry->d_name);
         char* content = get_file_buffer(path);
         if (content == NULL){
           continue;
@@ -127,7 +134,14 @@ void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, 
         send_response_code(cSSL, 400);
         return;
       }
-      DIR *dir = opendir("/home/dpalacios/home-server/blob-storage");
+      const char *home = getenv("HOME");
+      if (!home || !home[0]){
+        send_response_code(cSSL, 500);
+        return;
+      }
+      char trigger_dir[2048];
+      snprintf(trigger_dir, sizeof(trigger_dir), "%s/home-server/blob-storage/raw/etl/trigger", home);
+      DIR *dir = opendir(trigger_dir);
       if (dir == NULL){
         send_response_code(cSSL, 500);
         return;
@@ -146,7 +160,7 @@ void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, 
           continue;
         }
         char path[2048];
-        snprintf(path, sizeof(path), "/home/dpalacios/home-server/blob-storage/%s", entry->d_name);
+        snprintf(path, sizeof(path), "%s/home-server/blob-storage/raw/etl/trigger/%s", home, entry->d_name);
         char* content = get_file_buffer(path);
         if (content == NULL){
           continue;

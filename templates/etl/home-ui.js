@@ -15,6 +15,303 @@ function switchTabPanel(evt, cityName) {
   if (evt && evt.currentTarget) {
     evt.currentTarget.className += " active";
   }
+  if (cityName === "scheduled_triggers") {
+    refreshScheduledTriggerRuns();
+  }
+  if (cityName === "test_runs") {
+    refreshTestRuns();
+  }
+}
+
+var cachedTriggers = [];
+var selectedTriggerId = "";
+var scheduledTriggerRuns = [];
+var selectedTestRunPipelineId = "";
+var testRunRows = [];
+
+function updateScheduledTriggerOptions(triggers, activePipelineId) {
+  var select = document.getElementById("scheduled_trigger_select");
+  if (!select) {
+    return;
+  }
+  select.innerHTML = "";
+  var effectivePipelineId = activePipelineId || pipeline_id || "";
+  var filtered = Array.isArray(triggers)
+    ? triggers.filter(function(item) {
+        if (!effectivePipelineId) {
+          return true;
+        }
+        return !item.pipeline_id || item.pipeline_id === effectivePipelineId;
+      })
+    : [];
+  filtered.forEach(function(item) {
+    var opt = document.createElement("option");
+    opt.value = item.trigger_id || "";
+    opt.textContent = item.name || item.trigger_id || "Untitled Trigger";
+    select.appendChild(opt);
+  });
+  var hasSelected = filtered.some(function(item) {
+    return item.trigger_id === selectedTriggerId;
+  });
+  if ((!selectedTriggerId || !hasSelected) && filtered.length) {
+    selectedTriggerId = filtered[0].trigger_id || "";
+  }
+  if (selectedTriggerId) {
+    select.value = selectedTriggerId;
+  }
+  refreshScheduledTriggerRuns();
+}
+
+function setSelectedTrigger(triggerId) {
+  selectedTriggerId = triggerId || "";
+  var select = document.getElementById("scheduled_trigger_select");
+  if (select && selectedTriggerId) {
+    select.value = selectedTriggerId;
+  }
+}
+
+function setSelectedTestRunPipeline(pipelineId) {
+  selectedTestRunPipelineId = pipelineId || "";
+  var select = document.getElementById("test_runs_pipeline_select");
+  if (select && selectedTestRunPipelineId) {
+    select.value = selectedTestRunPipelineId;
+  }
+}
+
+function refreshScheduledTriggerRuns() {
+  var list = document.getElementById("scheduled_trigger_list");
+  var empty = document.getElementById("scheduled_trigger_empty");
+  var table = document.getElementById("scheduled_trigger_table");
+  if (!table || !empty) {
+    return;
+  }
+  if (!selectedTriggerId) {
+    table.innerHTML = "";
+    empty.textContent = "Select a trigger to see run history.";
+    empty.style.display = "block";
+    return;
+  }
+  var request = new Request("/etl/trigger/runs?triggerId=" + encodeURIComponent(selectedTriggerId), {
+    method: "GET",
+    headers: new Headers({
+      "Accept": "application/json"
+    })
+  });
+  fetch(request)
+    .then(function(response) {
+      if (!response.ok) {
+        return { runs: [] };
+      }
+      return response.json();
+    })
+    .then(function(result) {
+      var runs = result && Array.isArray(result.runs) ? result.runs : [];
+      renderScheduledTriggerRuns(runs);
+    })
+    .catch(function(error) {
+      console.error(error);
+    });
+}
+
+function renderScheduledTriggerRuns(runs) {
+  var list = document.getElementById("scheduled_trigger_table");
+  var empty = document.getElementById("scheduled_trigger_empty");
+  if (!list || !empty) {
+    return;
+  }
+  list.innerHTML = "";
+  if (!runs.length) {
+    empty.textContent = "No executions logged yet.";
+    empty.style.display = "block";
+    scheduledTriggerRuns = [];
+    return;
+  }
+  empty.style.display = "none";
+  var triggerName = getTriggerNameById(selectedTriggerId);
+  scheduledTriggerRuns = runs.slice().map(function(entry) {
+    var startedAt = entry.started_at || "";
+    var finishedAt = entry.finished_at || "";
+    return {
+      "trigger name": triggerName || selectedTriggerId,
+      "start": formatRunTimestamp(startedAt) || "Unknown",
+      "end": finishedAt ? formatRunTimestamp(finishedAt) : "In progress",
+      "duration": formatRunDuration(startedAt, finishedAt),
+      "status": entry.status || "unknown"
+    };
+  }).reverse();
+  createTable(scheduledTriggerRuns, list, "scheduled_trigger");
+  decorateStatusTable("scheduled_trigger_table");
+}
+
+function updateTestRunOptions(pipelines) {
+  var select = document.getElementById("test_runs_pipeline_select");
+  if (!select) {
+    return;
+  }
+  select.innerHTML = "";
+  var items = Array.isArray(pipelines) ? pipelines : [];
+  items.forEach(function(item) {
+    var opt = document.createElement("option");
+    opt.value = item.pipeline_id || "";
+    opt.textContent = item.pipeline_name || item.pipeline_id || "Untitled Pipeline";
+    select.appendChild(opt);
+  });
+  var hasSelected = items.some(function(item) {
+    return item.pipeline_id === selectedTestRunPipelineId;
+  });
+  if ((!selectedTestRunPipelineId || !hasSelected) && items.length) {
+    selectedTestRunPipelineId = items[0].pipeline_id || "";
+  }
+  if (selectedTestRunPipelineId) {
+    select.value = selectedTestRunPipelineId;
+  }
+  refreshTestRuns();
+}
+
+function refreshTestRuns() {
+  var table = document.getElementById("test_runs_table");
+  var empty = document.getElementById("test_runs_empty");
+  if (!table || !empty) {
+    return;
+  }
+  if (!selectedTestRunPipelineId) {
+    table.innerHTML = "";
+    empty.textContent = "Select a pipeline to see run history.";
+    empty.style.display = "block";
+    return;
+  }
+  var request = new Request("/etl/pipeline/runs?pipelineId=" + encodeURIComponent(selectedTestRunPipelineId), {
+    method: "GET",
+    headers: new Headers({
+      "Accept": "application/json"
+    })
+  });
+  fetch(request)
+    .then(function(response) {
+      if (!response.ok) {
+        return { runs: [] };
+      }
+      return response.json();
+    })
+    .then(function(result) {
+      var runs = result && Array.isArray(result.runs) ? result.runs : [];
+      renderTestRuns(runs);
+    })
+    .catch(function(error) {
+      console.error(error);
+    });
+}
+
+function renderTestRuns(runs) {
+  var table = document.getElementById("test_runs_table");
+  var empty = document.getElementById("test_runs_empty");
+  if (!table || !empty) {
+    return;
+  }
+  table.innerHTML = "";
+  if (!runs.length) {
+    empty.textContent = "No executions logged yet.";
+    empty.style.display = "block";
+    testRunRows = [];
+    return;
+  }
+  empty.style.display = "none";
+  var pipelineName = getPipelineNameById(selectedTestRunPipelineId) || "Untitled Pipeline";
+  testRunRows = runs.slice().map(function(entry) {
+    var startedAt = entry.started_at || "";
+    var finishedAt = entry.finished_at || "";
+    return {
+      "pipeline_name": entry.pipeline_name || pipelineName,
+      "start": formatRunTimestamp(startedAt) || "Unknown",
+      "end": finishedAt ? formatRunTimestamp(finishedAt) : "In progress",
+      "duration": formatRunDuration(startedAt, finishedAt),
+      "status": entry.status || "unknown"
+    };
+  }).reverse();
+  createTable(testRunRows, table, "test_runs");
+  decorateStatusTable("test_runs_table");
+}
+
+function formatRunTimestamp(value) {
+  if (!value) {
+    return "";
+  }
+  var parsed = new Date(value);
+  if (isNaN(parsed.getTime())) {
+    return value;
+  }
+  return parsed.toLocaleString();
+}
+
+function getTriggerNameById(triggerId) {
+  if (!triggerId || !Array.isArray(cachedTriggers)) {
+    return "";
+  }
+  var match = cachedTriggers.find(function(item) {
+    return item.trigger_id === triggerId;
+  });
+  return match ? (match.name || "") : "";
+}
+
+function formatRunDuration(startValue, endValue) {
+  if (!startValue || !endValue) {
+    return "In progress";
+  }
+  var start = new Date(startValue);
+  var end = new Date(endValue);
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+    return "Unknown";
+  }
+  var diffMs = Math.max(0, end.getTime() - start.getTime());
+  var totalMinutesRaw = diffMs / 60000;
+  var totalMinutes = Math.floor(totalMinutesRaw);
+  var hours = Math.floor(totalMinutes / 60);
+  var minutes = totalMinutes % 60;
+  if (totalMinutes === 0) {
+    return totalMinutesRaw.toFixed(2) + " min";
+  }
+  if (hours <= 0) {
+    return minutes + " min";
+  }
+  return hours + " hr " + minutes + " min";
+}
+
+function decorateStatusTable(tableId) {
+  var container = document.getElementById(tableId);
+  if (!container) {
+    return;
+  }
+  var table = container.querySelector("table");
+  if (!table) {
+    return;
+  }
+  var headers = Array.from(table.querySelectorAll("thead th"));
+  var statusIndex = headers.findIndex(function(th) {
+    return (th.dataset.label || "").toLowerCase() === "status";
+  });
+  if (statusIndex === -1) {
+    return;
+  }
+  var rows = table.querySelectorAll("tbody tr");
+  rows.forEach(function(row) {
+    var cell = row.children[statusIndex];
+    if (!cell) {
+      return;
+    }
+    var value = (cell.textContent || "").trim().toLowerCase();
+    var pill = document.createElement("span");
+    pill.className = "status-pill";
+    pill.textContent = value || "unknown";
+    if (value === "success") {
+      pill.classList.add("is-success");
+    } else if (value === "in progress") {
+      pill.classList.add("is-running");
+    } else if (value === "error") {
+      pill.classList.add("is-error");
+    }
+    cell.textContent = "";
+    cell.appendChild(pill);
+  });
 }
 
 function createGoogleLoginButton() {
@@ -181,6 +478,12 @@ document.addEventListener("DOMContentLoaded", function() {
   var pipelinePanel = document.querySelector(".pipeline-panel");
   var triggerGroup = document.getElementById("savedTriggersGroup");
   var sidebarButtons = document.querySelector(".sidebar-buttons");
+  var scheduledTriggerSelect = document.getElementById("scheduled_trigger_select");
+  var scheduledTriggerRefresh = document.getElementById("scheduled_trigger_refresh");
+  var scheduledTriggerExport = document.getElementById("scheduled_trigger_export");
+  var testRunsPipelineSelect = document.getElementById("test_runs_pipeline_select");
+  var testRunsRefresh = document.getElementById("test_runs_refresh");
+  var testRunsExport = document.getElementById("test_runs_export");
   var pipelineGroup = null;
   var ingestGroup = null;
   Array.prototype.slice.call(document.querySelectorAll(".activity-group summary")).some(function(summary) {
@@ -255,6 +558,57 @@ document.addEventListener("DOMContentLoaded", function() {
         triggerGroup.open = shouldOpenAll;
       }
       syncGroupToggle();
+    });
+  }
+
+  if (scheduledTriggerSelect) {
+    scheduledTriggerSelect.addEventListener("change", function() {
+      setSelectedTrigger(this.value);
+      refreshScheduledTriggerRuns();
+    });
+  }
+  if (scheduledTriggerRefresh) {
+    scheduledTriggerRefresh.addEventListener("click", function() {
+      refreshScheduledTriggerRuns();
+    });
+  }
+  if (scheduledTriggerExport) {
+    scheduledTriggerExport.addEventListener("click", function() {
+      if (!scheduledTriggerRuns.length) {
+        return;
+      }
+      var data = jsonToCsv(scheduledTriggerRuns);
+      const blob = new Blob([data], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "scheduled_trigger_runs.csv";
+      a.click();
+    });
+  }
+  if (testRunsPipelineSelect) {
+    testRunsPipelineSelect.addEventListener("change", function() {
+      setSelectedTestRunPipeline(this.value);
+      refreshTestRuns();
+    });
+  }
+  if (testRunsRefresh) {
+    testRunsRefresh.addEventListener("click", function() {
+      refreshTestRuns();
+    });
+  }
+  if (testRunsExport) {
+    testRunsExport.addEventListener("click", function() {
+      if (!testRunRows.length) {
+        return;
+      }
+      var data = jsonToCsv(testRunRows);
+      const blob = new Blob([data], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "test_run_history.csv";
+      a.click();
     });
   }
 
@@ -459,7 +813,31 @@ async function post_trigger(googleId, triggerId, body) {
     body: JSON.stringify(body)
   });
 
-  fetch(request);
+  return fetch(request);
+}
+
+async function post_trigger_cron(body) {
+  var request = new Request("/etl/trigger/cron", {
+    method: "POST",
+    headers: new Headers({
+      "Accept": "application/json"
+    }),
+    body: JSON.stringify(body)
+  });
+
+  return fetch(request);
+}
+
+async function post_trigger_cron_delete(triggerId) {
+  var request = new Request("/etl/trigger/cron/delete", {
+    method: "POST",
+    headers: new Headers({
+      "Accept": "application/json"
+    }),
+    body: JSON.stringify({ trigger_id: triggerId })
+  });
+
+  return fetch(request);
 }
 
 function renderPipelineListSelection(activeId) {
@@ -685,11 +1063,13 @@ function renderPipelineList(pipelines) {
       }
     });
     card.addEventListener("click", function() {
+      setSelectedTestRunPipeline(item.pipeline_id);
       loadPipelineById(item.pipeline_id);
     });
     card.addEventListener("keydown", function(event) {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
+        setSelectedTestRunPipeline(item.pipeline_id);
         loadPipelineById(item.pipeline_id);
       }
     });
@@ -700,6 +1080,7 @@ function renderPipelineList(pipelines) {
     list.appendChild(row);
   });
   renderPipelineListSelection(pipeline_id);
+  updateTestRunOptions(cachedPipelines);
 }
 
 function getPipelineNameById(pipelineId) {
@@ -721,6 +1102,7 @@ function renderTriggerList(triggers, pipelineId) {
   if (!Array.isArray(triggers)) {
     return;
   }
+  cachedTriggers = triggers.slice();
   var floatingMenu = document.getElementById("triggerOptionsMenu");
   if (!floatingMenu) {
     floatingMenu = document.createElement("div");
@@ -809,6 +1191,7 @@ function renderTriggerList(triggers, pipelineId) {
       if (!item.trigger_id) {
         return;
       }
+      setSelectedTrigger(item.trigger_id);
       var request = new Request("/blob-storage/etl/trigger/load?triggerId=" + item.trigger_id, {
         method: "GET",
         headers: new Headers({
@@ -844,6 +1227,7 @@ function renderTriggerList(triggers, pipelineId) {
     row.appendChild(card);
     list.appendChild(row);
   });
+  updateScheduledTriggerOptions(cachedTriggers, effectivePipelineId);
 }
 
 function seedEmptyPipelineIfNeeded(pipelines) {
@@ -1065,6 +1449,9 @@ function LoadFromBlobStorage(pipeline) {
     if (operatorData.properties.activityType == "http_request") {
       a = new Http_Request_Activity($flowchart, new_activity);
     }
+    if (operatorData.properties.activityType == "http_sink") {
+      a = new Http_Sink_Activity($flowchart, new_activity);
+    }
     if (operatorData.properties.activityType == "filter") {
       a = new Filter_Activity($flowchart, new_activity);
     }
@@ -1200,20 +1587,11 @@ function openTriggerModalWithData(trigger) {
   var startDateField = document.getElementById("trigger_start_date");
   var recurrenceValueField = document.getElementById("trigger_recurrence_value");
   var recurrenceUnitField = document.getElementById("trigger_recurrence_unit");
-  var timeField = document.getElementById("trigger_time_of_day");
   var weekdays = document.getElementById("trigger_weekdays");
   var hours = document.getElementById("trigger_hours");
   if (nameField) nameField.value = trigger.name || "";
   if (descriptionField) descriptionField.value = trigger.description || "";
   if (startDateField) startDateField.value = trigger.start_date || "";
-  if (timeField) {
-    var timeValue = "";
-    if (trigger.start_date && trigger.start_date.indexOf("T") !== -1) {
-      timeValue = trigger.start_date.split("T")[1] || "";
-      timeValue = timeValue.slice(0, 5);
-    }
-    timeField.value = timeValue;
-  }
   if (recurrenceValueField && trigger.recurrence) {
     recurrenceValueField.value = trigger.recurrence.value != null ? String(trigger.recurrence.value) : "1";
   }
@@ -1232,8 +1610,37 @@ function openTriggerModalWithData(trigger) {
     var checkedHours = Array.isArray(trigger.recurrence && trigger.recurrence.hours)
       ? trigger.recurrence.hours
       : [];
+    var hourMinutesMap = {};
+    checkedHours.forEach(function(entry) {
+      if (entry == null) {
+        return;
+      }
+      var parts = String(entry).split(":");
+      var hourValue = parts[0] || "";
+      var minuteValue = parts[1] || "00";
+      if (hourValue.length === 1) {
+        hourValue = "0" + hourValue;
+      }
+      if (minuteValue.length === 1) {
+        minuteValue = "0" + minuteValue;
+      }
+      hourMinutesMap[hourValue] = minuteValue;
+    });
     Array.from(hours.querySelectorAll("input[type=\"checkbox\"]")).forEach(function(input) {
-      input.checked = checkedHours.indexOf(input.value) !== -1;
+      var minuteSelect = input.closest("label") && input.closest("label").querySelector(".trigger-hour-minutes");
+      if (Object.prototype.hasOwnProperty.call(hourMinutesMap, input.value)) {
+        input.checked = true;
+        if (minuteSelect) {
+          minuteSelect.value = hourMinutesMap[input.value];
+          minuteSelect.disabled = false;
+        }
+      } else {
+        input.checked = false;
+        if (minuteSelect) {
+          minuteSelect.value = "00";
+          minuteSelect.disabled = true;
+        }
+      }
     });
   }
   if (typeof window.updateTriggerWeekdays === "function") {
@@ -1279,6 +1686,9 @@ function deleteTrigger(triggerId) {
   if (!triggerId) {
     return;
   }
+  if (triggerId === selectedTriggerId) {
+    selectedTriggerId = "";
+  }
   var triggerRow = document.querySelector(".pipeline-list-item[data-trigger-id=\"" + triggerId + "\"]");
   if (triggerRow && triggerRow.parentElement) {
     triggerRow.parentElement.remove();
@@ -1289,7 +1699,7 @@ function deleteTrigger(triggerId) {
       "Accept": "application/json"
     })
   });
-  fetch(request)
+  Promise.all([fetch(request), post_trigger_cron_delete(triggerId)])
     .catch(function(error) {
       console.error(error);
     })
@@ -1323,9 +1733,16 @@ function jsonToCsv(jsonData) {
 function createTable(jsonArray, tableContainer, activityId) {
   const filterInput = document.getElementById(activityId + "_filterInput");
   const columnSelect = document.getElementById(activityId + "_columnSelect");
-  const activity = $flowchart && $flowchart.flowchart
-    ? $flowchart.flowchart("getOperatorActivity", activityId)
-    : null;
+  let activity = null;
+  if (activityId && $flowchart && $flowchart.flowchart) {
+    try {
+      if ($flowchart.flowchart("doesOperatorExists", activityId)) {
+        activity = $flowchart.flowchart("getOperatorActivity", activityId);
+      }
+    } catch (error) {
+      activity = null;
+    }
+  }
   const prettyJson = activity && activity.activityType === "http_request";
 
   if (jsonArray && !Array.isArray(jsonArray)) {
@@ -1389,6 +1806,12 @@ function createTable(jsonArray, tableContainer, activityId) {
       });
       tbody.appendChild(row);
     });
+    if (activityId === "scheduled_trigger") {
+      decorateStatusTable("scheduled_trigger_table");
+    }
+    if (activityId === "test_runs") {
+      decorateStatusTable("test_runs_table");
+    }
   };
 
   const headerRow = document.createElement("tr");
@@ -1482,33 +1905,76 @@ function createTable(jsonArray, tableContainer, activityId) {
   table.appendChild(thead);
   table.appendChild(tbody);
   tableContainer.appendChild(table);
-
-  if (!columnSelect.options.length) {
-    columns.forEach(col => {
-      const opt = document.createElement("option");
-      opt.value = col;
-      opt.textContent = col;
-      columnSelect.appendChild(opt);
-    });
+  if (activityId === "scheduled_trigger") {
+    decorateStatusTable("scheduled_trigger_table");
+  }
+  if (activityId === "test_runs") {
+    decorateStatusTable("test_runs_table");
   }
 
-  if (!filterInput.dataset.bound) {
-    filterInput.addEventListener("input", () => {
-      const column = columnSelect.value;
-      const filterText = filterInput.value.toLowerCase();
+  if (columnSelect) {
+    if (!columnSelect.options.length) {
+      columns.forEach(col => {
+        const opt = document.createElement("option");
+        opt.value = col;
+        opt.textContent = col;
+        columnSelect.appendChild(opt);
+      });
+    }
+  }
 
-      const filteredData = jsonArray.filter(item =>
-        String(item[column]).toLowerCase().includes(filterText)
-      );
+  if (filterInput && columnSelect) {
+    if (!filterInput.dataset.bound) {
+      filterInput.addEventListener("input", () => {
+        const column = columnSelect.value;
+        const filterText = filterInput.value.toLowerCase();
 
-      createTable(filteredData, tableContainer, activityId);
-    });
-    filterInput.dataset.bound = true;
+        const filteredData = jsonArray.filter(item =>
+          String(item[column]).toLowerCase().includes(filterText)
+        );
+
+        createTable(filteredData, tableContainer, activityId);
+      });
+      filterInput.dataset.bound = true;
+    }
   }
 }
 
 function areArraysEqual(arr1, arr2) {
   return arr1.length === arr2.length && new Set(arr1).size === new Set(arr2).size && arr1.every(item => arr2.includes(item));
+}
+
+function getHttpSinkInputPayload(operatorId) {
+  if (!$flowchart || !operatorId) {
+    return null;
+  }
+  const deps = $flowchart.flowchart("getDependencies") || {};
+  const entry = deps[operatorId] || {};
+  const dependencyIds = Array.isArray(entry.dependencies) ? entry.dependencies : [];
+  if (dependencyIds.length) {
+    const depId = dependencyIds[dependencyIds.length - 1];
+    const output = $flowchart.flowchart("getoutputVal", depId, "output");
+    if (output && output.values !== undefined) {
+      return output.values;
+    }
+    if (output !== undefined) {
+      return output;
+    }
+  }
+  const activity = $flowchart.flowchart("getOperatorActivity", operatorId);
+  const inputValue = activity && activity.inputs && activity.inputs.input && activity.inputs.input.value;
+  if (inputValue && inputValue.values !== undefined) {
+    return inputValue.values;
+  }
+  return inputValue || null;
+}
+
+function updateHttpSinkBodyPreview(operatorId) {
+  const activity = main_activities[operatorId];
+  if (!activity || typeof activity.update_body_preview !== "function") {
+    return;
+  }
+  activity.update_body_preview(getHttpSinkInputPayload(operatorId));
 }
 
 var main_activities = {};
@@ -1815,9 +2281,12 @@ $(document).ready(function() {
         hideSink = isSinkOperator(fromId) || isSinkOperator(toId);
       }
       items.forEach(function(item) {
-        if (hideSink && item.getAttribute("data-activity") === "sheets_write") {
-          item.style.display = "none";
-          return;
+        if (hideSink) {
+          var activity = item.getAttribute("data-activity");
+          if (activity === "sheets_write" || activity === "http_sink") {
+            item.style.display = "none";
+            return;
+          }
         }
         item.style.display = "";
       });
@@ -1935,7 +2404,7 @@ $(document).ready(function() {
     var lastNode = getLastNodeForIngest(ingestId);
     var baseOperator = operators[lastNode] || operators[ingestId];
     var activityType = baseOperator?.internal?.properties?.activityType || baseOperator?.properties?.activityType;
-    if (activityType === "sheets_write") {
+    if (activityType === "sheets_write" || activityType === "http_sink") {
       var existing = selectPlaceholders.querySelector("[data-ingest-id='" + ingestId + "']");
       if (existing) {
         existing.remove();
@@ -1991,7 +2460,7 @@ $(document).ready(function() {
     var operators = $flowchart.flowchart("getOperators") || {};
     var operator = operators[operatorId];
     var activityType = operator?.internal?.properties?.activityType || operator?.properties?.activityType;
-    return activityType === "sheets_write";
+    return activityType === "sheets_write" || activityType === "http_sink";
   }
 
   function createIngestAtSlot(activityType) {
@@ -2194,7 +2663,8 @@ $(document).ready(function() {
       combine: "#combine_activity",
       append: "#append_activity",
       flatten: "#flatten_activity",
-      sheets_write: "#sheets_write_activity"
+      sheets_write: "#sheets_write_activity",
+      http_sink: "#http_sink_activity"
     };
     var selector = buttonMap[activityType];
     if (selector) {
@@ -2576,7 +3046,7 @@ $(document).ready(function() {
     var data = $flowchart.flowchart("getDataRef");
     var operator = data?.operators?.[fromId];
     var activityType = operator?.internal?.properties?.activityType || operator?.properties?.activityType;
-    if (activityType === "sheets_write") {
+    if (activityType === "sheets_write" || activityType === "http_sink") {
       return;
     }
     var el = operator?.internal?.els?.operator;
@@ -3415,7 +3885,7 @@ $(document).ready(function() {
           }
         }
       }
-      if (activity.activityType == "http_request") {
+      if (activity.activityType == "http_request" || activity.activityType == "http_sink") {
         let target_activity = main_activities[operatorId];
         let elem = target_activity.settings;
         if (elem == null || elem == undefined) { return; }
@@ -3442,6 +3912,9 @@ $(document).ready(function() {
               break;
             }
           }
+        }
+        if (activity.activityType == "http_sink") {
+          updateHttpSinkBodyPreview(operatorId);
         }
       }
       if (activity.activityType == "fill") {
@@ -4149,6 +4622,10 @@ $(document).ready(function() {
     if (!outputs) {
       outputs = $flowchart.flowchart("getoutputVal", targetId, "output");
     }
+    const targetActivity = $flowchart.flowchart("getOperatorActivity", targetId);
+    if (targetActivity && targetActivity.activityType === "http_sink") {
+      updateHttpSinkBodyPreview(targetId);
+    }
     // Render preview table for the selected activity output.
     if (outputs && outputs.values) {
       console.log("Using cached outputs for preview:", outputs);
@@ -4184,7 +4661,14 @@ $(document).ready(function() {
         alert("Pipeline has an error. Check activity settings.")
         return
       }
-      await post_ordered_activities(activities, false)
+      var pipelineName = ($("#pipeline_title").val() || "").trim();
+      if (!pipelineName && pipeline_id) {
+        pipelineName = getPipelineNameById(pipeline_id) || "";
+      }
+      await post_ordered_activities(activities, false, {
+        pipeline_id: pipeline_id || "",
+        pipeline_name: pipelineName || "Untitled Pipeline"
+      })
     } catch (error) {
       console.error("Pipeline run failed:", error);
     } finally {
@@ -4209,8 +4693,6 @@ $(document).ready(function() {
     const recurrenceUnit = document.getElementById("trigger_recurrence_unit");
     const weekdays = document.getElementById("trigger_weekdays");
     const hours = document.getElementById("trigger_hours");
-    const timeLabel = document.querySelector(".trigger-time-label");
-    const timeField = document.getElementById("trigger_time_of_day");
     const okButton = document.getElementById("triggerModalOk");
 
     function setPipelineField(mode) {
@@ -4277,7 +4759,6 @@ $(document).ready(function() {
       const unit = recurrenceUnit.value;
       const isWeekly = unit === "weekly";
       const showHours = unit === "weekly" || unit === "days";
-      const showTime = !showHours;
       weekdays.classList.toggle("is-visible", isWeekly);
       weekdays.setAttribute("aria-hidden", isWeekly ? "false" : "true");
       if (hours) {
@@ -4285,9 +4766,24 @@ $(document).ready(function() {
         hours.classList.toggle("trigger-field-hidden", !showHours);
         hours.setAttribute("aria-hidden", showHours ? "false" : "true");
       }
-      if (timeLabel && timeField) {
-        timeLabel.classList.toggle("trigger-field-hidden", showHours);
-        timeField.classList.toggle("trigger-field-hidden", showHours);
+    }
+
+    function syncHourMinuteSelection(target) {
+      if (!target || target.type !== "checkbox") {
+        return;
+      }
+      var minuteSelect = target.closest("label") && target.closest("label").querySelector(".trigger-hour-minutes");
+      if (!minuteSelect) {
+        return;
+      }
+      if (target.checked) {
+        minuteSelect.disabled = false;
+        if (!minuteSelect.value) {
+          minuteSelect.value = "00";
+        }
+      } else {
+        minuteSelect.value = "00";
+        minuteSelect.disabled = true;
       }
     }
 
@@ -4305,45 +4801,39 @@ $(document).ready(function() {
       updateWeekdays();
     }
     if (hours) {
+      var minuteOptionsHtml = "";
+      for (var i = 0; i < 60; i += 1) {
+        var value = i < 10 ? "0" + i : String(i);
+        minuteOptionsHtml += "<option value=\"" + value + "\">" + value + "</option>";
+      }
+      hours.querySelectorAll(".trigger-hour-minutes").forEach(function(select) {
+        if (!select.options.length) {
+          select.innerHTML = minuteOptionsHtml;
+        }
+        select.value = "00";
+        select.disabled = true;
+      });
+      hours.querySelectorAll("input[type=\"checkbox\"]").forEach(function(input) {
+        syncHourMinuteSelection(input);
+      });
       hours.addEventListener("change", function(event) {
-        if (!recurrenceUnit) {
-          return;
-        }
-        if (recurrenceUnit.value !== "days") {
-          return;
-        }
-        var valueField = document.getElementById("trigger_recurrence_value");
-        var value = valueField ? Number(valueField.value || 0) : 0;
-        if (value !== 1) {
-          return;
-        }
-        var target = event.target;
-        if (!target || target.type !== "checkbox" || !target.checked) {
-          return;
-        }
-        hours.querySelectorAll("input[type=\"checkbox\"]").forEach(function(input) {
-          if (input !== target) {
-            input.checked = false;
-          }
-        });
+        syncHourMinuteSelection(event.target);
       });
     }
 
     if (okButton) {
-      okButton.addEventListener("click", function() {
+      okButton.addEventListener("click", async function() {
         const nameField = document.getElementById("trigger_name");
         const startDateField = document.getElementById("trigger_start_date");
         const recurrenceValueField = document.getElementById("trigger_recurrence_value");
         const recurrenceUnitField = document.getElementById("trigger_recurrence_unit");
         const pipelineSelectField = document.getElementById("trigger_pipeline_select");
         const pipelineNameField = document.getElementById("trigger_pipeline_name");
-        const timeField = document.getElementById("trigger_time_of_day");
         const hoursField = document.getElementById("trigger_hours");
         const nameValue = nameField ? nameField.value.trim() : "";
         const startDateValue = startDateField ? startDateField.value.trim() : "";
         const recurrenceValue = recurrenceValueField ? recurrenceValueField.value.trim() : "";
         const recurrenceUnit = recurrenceUnitField ? recurrenceUnitField.value.trim() : "";
-        const timeValue = timeField ? timeField.value.trim() : "";
         if (!nameValue || !startDateValue || !recurrenceValue || !recurrenceUnit) {
           alert("Please fill out Name, Start date, and Recurrence.");
           return;
@@ -4355,7 +4845,10 @@ $(document).ready(function() {
         var selectedHours = [];
         if ((recurrenceUnit === "weekly" || recurrenceUnit === "days") && hoursField) {
           selectedHours = Array.from(hoursField.querySelectorAll("input:checked")).map(function(input) {
-            return input.value;
+            var hourValue = input.value;
+            var minuteSelect = input.closest("label") && input.closest("label").querySelector(".trigger-hour-minutes");
+            var minuteValue = minuteSelect && minuteSelect.value ? minuteSelect.value : "00";
+            return hourValue + ":" + minuteValue;
           });
           if (!selectedHours.length) {
             alert("Please select at least one hour.");
@@ -4371,29 +4864,31 @@ $(document).ready(function() {
         const selectedPipelineId = pipelineSelectField && !pipelineSelectField.classList.contains("trigger-field-hidden")
           ? pipelineSelectField.value
           : (pipeline_id || "");
-        var startDateOutput = startDateValue;
-        if (timeValue) {
-          var datePart = startDateValue.split("T")[0];
-          startDateOutput = datePart + "T" + timeValue;
+        var recurrencePayload = {
+          value: Number(recurrenceValue),
+          unit: recurrenceUnit,
+          hours: selectedHours
+        };
+        if (recurrenceUnit === "weekly") {
+          recurrencePayload.days = Array.from(document.querySelectorAll("#trigger_weekdays input:checked")).map(function(input) {
+            return input.value;
+          });
         }
+        const orderedData = await get_ordered_nodes($flowchart);
+        const commandActivities = build_ordered_activities_payload($flowchart, orderedData);
         const payload = {
           google_id: safeGoogleId,
           trigger_id: triggerId,
           pipeline_id: selectedPipelineId,
           name: nameValue,
           description: (document.getElementById("trigger_description") || {}).value || "",
-          start_date: startDateOutput,
-          recurrence: {
-            value: Number(recurrenceValue),
-            unit: recurrenceUnit,
-            days: Array.from(document.querySelectorAll("#trigger_weekdays input:checked")).map(function(input) {
-              return input.value;
-            }),
-            hours: selectedHours
-          }
+          start_date: startDateValue,
+          command: commandActivities,
+          recurrence: recurrencePayload
         };
         console.log("Trigger saved (placeholder).", payload);
-        post_trigger(safeGoogleId, triggerId, payload);
+        await post_trigger(safeGoogleId, triggerId, payload);
+        await post_trigger_cron(payload);
         fetchTriggerList();
         const descriptionField = document.getElementById("trigger_description");
         if (nameField) nameField.value = "";
@@ -4404,10 +4899,13 @@ $(document).ready(function() {
         if (pipelineSelectField) {
           pipelineSelectField.selectedIndex = 0;
         }
-        if (timeField) timeField.value = "";
         if (hoursField) {
           hoursField.querySelectorAll("input:checked").forEach(function(input) {
             input.checked = false;
+          });
+          hoursField.querySelectorAll(".trigger-hour-minutes").forEach(function(select) {
+            select.value = "00";
+            select.disabled = true;
           });
         }
         document.querySelectorAll("#trigger_weekdays input:checked").forEach(function(input) {
@@ -4520,7 +5018,8 @@ $(document).ready(function() {
       combine: '<svg viewBox="0 0 24 24"><path d="M4 7h6v4H4zM14 13h6v4h-6z"/><path d="M10 9l4 4"/></svg>',
       append: '<svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg>',
       flatten: '<svg viewBox="0 0 24 24"><path d="M4 7h10M4 12h16M4 17h12"/><path d="M16 6l3 3-3 3"/></svg>',
-      sheets_write: '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h6"/></svg>'
+      sheets_write: '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h6"/></svg>',
+      http_sink: '<svg viewBox="0 0 24 24"><path d="M4 12h16"/><path d="M14 6l6 6-6 6"/></svg>'
     };
     var newRowButton = document.createElement("button");
     newRowButton.type = "button";
@@ -4553,7 +5052,8 @@ $(document).ready(function() {
       { type: "flatten", label: "Flatten" }
     ];
     var sinkOptions = [
-      { type: "sheets_write", label: "Google Sheets (Write)" }
+      { type: "sheets_write", label: "Google Sheets (Write)" },
+      { type: "http_sink", label: "HTTP Request (Post)" }
     ];
     options.forEach(function(option) {
       var button = document.createElement("button");
@@ -4643,7 +5143,7 @@ $(document).ready(function() {
           return;
         }
         var label = (button.textContent || "").toLowerCase();
-        if (button.getAttribute("data-activity") === "sheets_write") {
+        if (button.getAttribute("data-activity") === "sheets_write" || button.getAttribute("data-activity") === "http_sink") {
           var data = $flowchart.flowchart("getDataRef");
           var link = data && data.links ? data.links[activeInsertLink?.linkId] : null;
           var fromId = activeInsertLink?.fromId || link?.fromOperator;
@@ -5342,6 +5842,40 @@ $(document).ready(function() {
     activites = $flowchart.flowchart("getOperators");
   });
 
+  $("#http_sink_activity").on("click", function() {
+    var operatorId = operatorI;
+    const footer = document.getElementById("footer");
+    startHeight = parseInt(window.getComputedStyle(footer).height, 10);
+    var operatorData = {
+      top: ($flowchart.height() / 2) - (startHeight / 2),
+      left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+      properties: {
+        title: "HTTP Request (Post)",
+        activityType: "http_sink",
+        dependencies: [],
+        settings: {},
+        inputs: {
+          input: {
+            label: "Input",
+            value: { "datatypes": null, "values": null }
+          }
+        },
+        outputs: {
+          output: {
+            label: "",
+            value: null
+          }
+        }
+      }
+    };
+    operatorI++;
+    $flowchart.flowchart("createOperator", operatorId, operatorData);
+    let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
+    let http_activity = new Http_Sink_Activity($flowchart, new_activity);
+    main_activities[operatorId] = http_activity;
+    activites = $flowchart.flowchart("getOperators");
+  });
+
   $("#append_activity").on("click", function() {
     var operatorId = operatorI;
     const footer = document.getElementById("footer");
@@ -5521,6 +6055,9 @@ $(document).ready(function() {
       }
       if (operatorData.properties.activityType == "http_request") {
         a = new Http_Request_Activity($flowchart, new_activity);
+      }
+      if (operatorData.properties.activityType == "http_sink") {
+        a = new Http_Sink_Activity($flowchart, new_activity);
       }
       if (operatorData.properties.activityType == "filter") {
         a = new Filter_Activity($flowchart, new_activity);

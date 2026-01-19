@@ -134,4 +134,10 @@ CMakeFiles/home-server.dir/routes/blob-storage/POST/post_blob.c.o: \
  /usr/include/x86_64-linux-gnu/bits/dirent_ext.h \
  /home/dpalacios/home-server/utilities/http_utilities.h \
  /home/dpalacios/home-server/models/session.h /usr/include/netdb.h \
- /usr/include/rpc/netdb.h /usr/include/x86_64-linux-gnu/bits/netdb.h
+ /usr/include/rpc/netdb.h /usr/include/x86_64-linux-gnu/bits/netdb.h \
+ /usr/include/x86_64-linux-gnu/sys/stat.h \
+ /usr/include/x86_64-linux-gnu/bits/stat.h \
+ /usr/include/x86_64-linux-gnu/bits/struct_stat.h /usr/include/errno.h \
+ /usr/include/x86_64-linux-gnu/bits/errno.h /usr/include/linux/errno.h \
+ /usr/include/x86_64-linux-gnu/asm/errno.h \
+ /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h

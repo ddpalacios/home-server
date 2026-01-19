@@ -103,6 +103,7 @@
     <button id="append_activity" type="button"></button>
     <button id="flatten_activity" type="button"></button>
     <button id="sheets_write_activity" type="button"></button>
+    <button id="http_sink_activity" type="button"></button>
 </div>
 
 <button id="sidebarToggleFloating" class="sidebar-toggle sidebar-toggle--floating" type="button" aria-label="Show activities panel">
@@ -162,6 +163,8 @@
 				<button class="tablinks" id="tabGeneral" onclick="switchTabPanel(event, 'tab_general')">General</button>
 				<button class="tablinks" id="tabSettings" onclick="switchTabPanel(event, 'tab_settings')">Settings</button>
 				<button class="tablinks" id="tabDataPreview" onclick="switchTabPanel(event, 'data_preview')">Data Preview</button>
+				<button class="tablinks" id="tabScheduledTriggers" onclick="switchTabPanel(event, 'scheduled_triggers')">Scheduled Triggers</button>
+				<button class="tablinks" id="tabTestRuns" onclick="switchTabPanel(event, 'test_runs')">Test Runs</button>
 				</div>
 				
 
@@ -193,6 +196,38 @@
 							<button id="export_preview" class="buttons" type="button">Export</button>
 						</div>
 						<div id="activity_previews"></div>
+				</div>
+				<div id="scheduled_triggers" class="tabcontent">
+					<div class="scheduled-triggers__toolbar">
+						<div class="scheduled-triggers__controls">
+							<label for="scheduled_trigger_select">Trigger</label>
+							<select id="scheduled_trigger_select"></select>
+						</div>
+						<div class="scheduled-triggers__actions">
+							<button id="scheduled_trigger_refresh" type="button" class="buttons">Refresh</button>
+							<button id="scheduled_trigger_export" type="button" class="buttons">Export</button>
+						</div>
+					</div>
+					<div id="scheduled_trigger_empty" class="scheduled-triggers__empty">Select a trigger to see run history.</div>
+					<div class="table-responsive">
+						<div id="scheduled_trigger_table"></div>
+					</div>
+				</div>
+				<div id="test_runs" class="tabcontent">
+					<div class="scheduled-triggers__toolbar">
+						<div class="scheduled-triggers__controls">
+							<label for="test_runs_pipeline_select">Pipeline</label>
+							<select id="test_runs_pipeline_select"></select>
+						</div>
+						<div class="scheduled-triggers__actions">
+							<button id="test_runs_refresh" type="button" class="buttons">Refresh</button>
+							<button id="test_runs_export" type="button" class="buttons">Export</button>
+						</div>
+					</div>
+					<div id="test_runs_empty" class="scheduled-triggers__empty">Select a pipeline to see run history.</div>
+					<div class="table-responsive">
+						<div id="test_runs_table"></div>
+					</div>
 				</div>
     </div>
   </div>
@@ -242,32 +277,33 @@
           <label><input type="checkbox" value="sun"><span>Sun</span></label>
         </div>
 
-        <div id="trigger_hours" class="trigger-weekdays trigger-field-hidden" aria-hidden="true">
-          <span>Select hours</span>
-          <label><input type="checkbox" value="00"><span>00</span></label>
-          <label><input type="checkbox" value="01"><span>01</span></label>
-          <label><input type="checkbox" value="02"><span>02</span></label>
-          <label><input type="checkbox" value="03"><span>03</span></label>
-          <label><input type="checkbox" value="04"><span>04</span></label>
-          <label><input type="checkbox" value="05"><span>05</span></label>
-          <label><input type="checkbox" value="06"><span>06</span></label>
-          <label><input type="checkbox" value="07"><span>07</span></label>
-          <label><input type="checkbox" value="08"><span>08</span></label>
-          <label><input type="checkbox" value="09"><span>09</span></label>
-          <label><input type="checkbox" value="10"><span>10</span></label>
-          <label><input type="checkbox" value="11"><span>11</span></label>
-          <label><input type="checkbox" value="12"><span>12</span></label>
-          <label><input type="checkbox" value="13"><span>13</span></label>
-          <label><input type="checkbox" value="14"><span>14</span></label>
-          <label><input type="checkbox" value="15"><span>15</span></label>
-          <label><input type="checkbox" value="16"><span>16</span></label>
-          <label><input type="checkbox" value="17"><span>17</span></label>
-          <label><input type="checkbox" value="18"><span>18</span></label>
-          <label><input type="checkbox" value="19"><span>19</span></label>
-          <label><input type="checkbox" value="20"><span>20</span></label>
-          <label><input type="checkbox" value="21"><span>21</span></label>
-          <label><input type="checkbox" value="22"><span>22</span></label>
-          <label><input type="checkbox" value="23"><span>23</span></label>
+        <div id="trigger_hours" class="trigger-weekdays trigger-hours trigger-field-hidden" aria-hidden="true">
+          <span class="trigger-hours__title">Select hours and minutes</span>
+          <span class="trigger-hours__hint">Check an hour to enable its minute picker.</span>
+          <label><input type="checkbox" value="00"><span class="trigger-hour-value">00</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="01"><span class="trigger-hour-value">01</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="02"><span class="trigger-hour-value">02</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="03"><span class="trigger-hour-value">03</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="04"><span class="trigger-hour-value">04</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="05"><span class="trigger-hour-value">05</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="06"><span class="trigger-hour-value">06</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="07"><span class="trigger-hour-value">07</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="08"><span class="trigger-hour-value">08</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="09"><span class="trigger-hour-value">09</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="10"><span class="trigger-hour-value">10</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="11"><span class="trigger-hour-value">11</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="12"><span class="trigger-hour-value">12</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="13"><span class="trigger-hour-value">13</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="14"><span class="trigger-hour-value">14</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="15"><span class="trigger-hour-value">15</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="16"><span class="trigger-hour-value">16</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="17"><span class="trigger-hour-value">17</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="18"><span class="trigger-hour-value">18</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="19"><span class="trigger-hour-value">19</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="20"><span class="trigger-hour-value">20</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="21"><span class="trigger-hour-value">21</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="22"><span class="trigger-hour-value">22</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="23"><span class="trigger-hour-value">23</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
         </div>
       </div>
       <div class="trigger-modal__footer">

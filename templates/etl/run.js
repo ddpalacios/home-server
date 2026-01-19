@@ -1,3 +1,98 @@
+function normalizeHttpSinkRows(data) {
+    if (Array.isArray(data)) {
+        return data;
+    }
+    if (data && typeof data === "object") {
+        return [data];
+    }
+    if (data != null) {
+        return [{ value: data }];
+    }
+    return [];
+}
+
+function csvEscape(value) {
+    if (value === null || value === undefined) {
+        return "";
+    }
+    let str = String(value);
+    if (/[\",\n\r]/.test(str)) {
+        str = '"' + str.replace(/"/g, '""') + '"';
+    }
+    return str;
+}
+
+function rowsToCsv(rows) {
+    const headers = [];
+    rows.forEach(row => {
+        if (row && typeof row === "object" && !Array.isArray(row)) {
+            Object.keys(row).forEach(key => {
+                if (!headers.includes(key)) {
+                    headers.push(key);
+                }
+            });
+        }
+    });
+    if (!headers.length) {
+        return "";
+    }
+    const lines = [];
+    lines.push(headers.map(csvEscape).join(","));
+    rows.forEach(row => {
+        if (row && typeof row === "object" && !Array.isArray(row)) {
+            lines.push(headers.map(key => csvEscape(row[key])).join(","));
+        } else {
+            lines.push(headers.map(() => "").join(","));
+        }
+    });
+    return lines.join("\n");
+}
+
+function extractHttpCallSettings(settings) {
+    if (!settings) {
+        return {};
+    }
+    if (Array.isArray(settings.call) && settings.call.length) {
+        return settings.call[0] || {};
+    }
+    if (settings.call && typeof settings.call === "object") {
+        return settings.call;
+    }
+    return settings;
+}
+
+async function postHttpSinkActivity(activity, data) {
+    const settings = extractHttpCallSettings(activity.settings || {});
+    const url = settings.url || "";
+    if (!url) {
+        return null;
+    }
+    const rows = normalizeHttpSinkRows(data);
+    const lowerUrl = url.toLowerCase();
+    let body = "";
+    const headers = new Headers({ "Accept": "application/json" });
+    if (lowerUrl.endsWith(".csv")) {
+        body = rowsToCsv(rows);
+        headers.set("Content-Type", "text/csv");
+    } else {
+        body = JSON.stringify(rows);
+        headers.set("Content-Type", "application/json");
+    }
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    try {
+        const request = new Request(url, {
+            method: "POST",
+            headers: headers,
+            body: body,
+            signal: controller.signal
+        });
+        return await fetch(request);
+    } finally {
+        clearTimeout(timeout);
+    }
+}
+
 async function run_activity_flow(activity, widget, data){
     let activity_type = activity.activityType
      let body;
@@ -5,7 +100,7 @@ async function run_activity_flow(activity, widget, data){
            body = {
         'activity_type' : activity_type
         ,'operations': activity.settings
-        ,'data':data
+            ,'data':data
         }
         console.log("SENDING BODY", body)
     }else{
@@ -18,6 +113,10 @@ async function run_activity_flow(activity, widget, data){
 
     }
     if (body == undefined){return}
+    if (activity_type === 'http_sink') {
+        const response = await postHttpSinkActivity(activity, body.data);
+        return response && response.ok ? { ok: true } : null;
+    }
     var requestUrl = '/etl/run/';
     if (activity_type === 'http_request') {
         requestUrl = '/etl/call';
@@ -53,7 +152,7 @@ async function get_ordered_nodes(widget, targetIds){
         let query= all_dependecies[key].query
         let activityType = all_dependecies[key].activityType
         dependencies[key] = {'tableName':key,"dependencies":target_dependencies, 'query': query, 'activityType':activityType}
-        if (activityType == 'sheets_write'){
+        if (activityType == 'sheets_write' || activityType == 'http_sink'){
             target_ids.push(key)
         }
     
@@ -83,11 +182,15 @@ async function get_ordered_nodes(widget, targetIds){
 
 }
 
-async function post_ordered_activities(activities, preview = false){
+async function post_ordered_activities(activities, preview = false, meta){
     if (!Array.isArray(activities) || activities.length === 0) {
         return null
     }
-    const body = { activities: activities, preview: !!preview }
+    const httpSinkActivities = activities.filter(activity => activity.activityType === "http_sink");
+    const body = { activities: activities, preview: !!preview, skip_http_sink: true }
+    if (meta && typeof meta === "object") {
+        body.test_run_meta = meta
+    }
     console.log("Posting activities:", body)
     var request = new Request('/etl/run/', {
                                 method: 'POST',
@@ -100,6 +203,27 @@ async function post_ordered_activities(activities, preview = false){
     if (response.ok){ 
         try{
             const data = await response.json()
+            if (!preview && httpSinkActivities.length && data && Array.isArray(data.results)) {
+                const resultsById = {}
+                data.results.forEach(entry => {
+                    if (entry && entry.operatorId != null && entry.result) {
+                        resultsById[String(entry.operatorId)] = entry.result
+                    }
+                })
+                for (const sink of httpSinkActivities) {
+                    let sinkData = sink.data
+                    if ((sinkData == null || sinkData === []) && Array.isArray(sink.dependencies) && sink.dependencies.length) {
+                        const depId = sink.dependencies[sink.dependencies.length - 1]
+                        const depResult = resultsById[String(depId)]
+                        if (depResult && depResult.values !== undefined) {
+                            sinkData = depResult.values
+                        } else if (depResult) {
+                            sinkData = depResult
+                        }
+                    }
+                    await postHttpSinkActivity(sink, sinkData)
+                }
+            }
             return data;
         }catch(error){}
     }

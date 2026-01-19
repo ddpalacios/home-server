@@ -12,6 +12,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <sys/stat.h>
+#include <errno.h>
 #define IPSTRLEN INET6_ADDRSTRLEN
 void connect_to_server(const char* host, const char* port, char*body){
 	struct addrinfo hints;
@@ -77,7 +79,12 @@ void connect_to_server(const char* host, const char* port, char*body){
 
 	if (strstr(route, "/blob-storage/email")){
 		connect_to_server("127.0.0.1", "5000", body);
-		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/bronze_portfolio_appointments.json");
+		const char *home = getenv("HOME");
+		if (!home || !home[0]){
+			send_response_code(cSSL, 500);
+			return;
+		}
+		snprintf(write_path, sizeof(write_path),"%s/home-server/blob-storage/bronze_portfolio_appointments.json", home);
 		snprintf(path, sizeof(path),"blob-storage/bronze_portfolio_appointments.json");
 
 	}
@@ -87,7 +94,12 @@ void connect_to_server(const char* host, const char* port, char*body){
 			send_response_code(cSSL, 400);
 			return;
 		}
-		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/%s.json", pipelineId);
+		const char *home = getenv("HOME");
+		if (!home || !home[0]){
+			send_response_code(cSSL, 500);
+			return;
+		}
+		snprintf(write_path, sizeof(write_path),"%s/home-server/blob-storage/raw/etl/pipeline/%s.json", home, pipelineId);
 		FILE *file = fopen(write_path, "w");
 		if (!file) {
 			perror("Failed to open file");
@@ -110,7 +122,12 @@ void connect_to_server(const char* host, const char* port, char*body){
 			send_response_code(cSSL, 400);
 			return;
 		}
-		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/%s.json", triggerId);
+		const char *home = getenv("HOME");
+		if (!home || !home[0]){
+			send_response_code(cSSL, 500);
+			return;
+		}
+		snprintf(write_path, sizeof(write_path),"%s/home-server/blob-storage/raw/etl/trigger/%s.json", home, triggerId);
 		FILE *file = fopen(write_path, "w");
 		if (!file) {
 			send_response_code(cSSL, 500);
@@ -131,12 +148,19 @@ void connect_to_server(const char* host, const char* port, char*body){
 			send_response_code(cSSL, 400);
 			return;
 		}
-		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/%s.json", pipelineId);
+		const char *home = getenv("HOME");
+		if (!home || !home[0]){
+			send_response_code(cSSL, 500);
+			return;
+		}
+		snprintf(write_path, sizeof(write_path),"%s/home-server/blob-storage/raw/etl/pipeline/%s.json", home, pipelineId);
 		if (remove(write_path) != 0){
 			send_response_code(cSSL, 404);
 			return;
 		}
-		DIR *dir = opendir("/home/dpalacios/home-server/blob-storage");
+		char trigger_dir[2048];
+		snprintf(trigger_dir, sizeof(trigger_dir), "%s/home-server/blob-storage/raw/etl/trigger", home);
+		DIR *dir = opendir(trigger_dir);
 		if (dir != NULL){
 			struct dirent *entry;
 			while ((entry = readdir(dir)) != NULL){
@@ -147,7 +171,7 @@ void connect_to_server(const char* host, const char* port, char*body){
 					continue;
 				}
 				char trigger_path[2048];
-				snprintf(trigger_path, sizeof(trigger_path), "/home/dpalacios/home-server/blob-storage/%s", entry->d_name);
+				snprintf(trigger_path, sizeof(trigger_path), "%s/home-server/blob-storage/raw/etl/trigger/%s", home, entry->d_name);
 				char* content = get_file_buffer(trigger_path);
 				if (content == NULL){
 					continue;
@@ -175,7 +199,12 @@ void connect_to_server(const char* host, const char* port, char*body){
 			send_response_code(cSSL, 400);
 			return;
 		}
-		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/%s.json", triggerId);
+		const char *home = getenv("HOME");
+		if (!home || !home[0]){
+			send_response_code(cSSL, 500);
+			return;
+		}
+		snprintf(write_path, sizeof(write_path),"%s/home-server/blob-storage/raw/etl/trigger/%s.json", home, triggerId);
 		if (remove(write_path) != 0){
 			send_response_code(cSSL, 404);
 			return;
@@ -183,38 +212,93 @@ void connect_to_server(const char* host, const char* port, char*body){
 		send_response_code(cSSL, 200);
 		return;
 	}
-	else if (strstr(route, "/blob-storage/bronze/CTA/ctabustracker/predictions?rt")!= NULL){
-		char* rt = get_query_parameter(route, "rt");
-		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/bronze_CTA_ctabustracker_%s_predictions.json", rt);
-		snprintf(path, sizeof(path)," ");
-	}
-	else if (strstr(route, "/blob-storage/bronze/etl/pipeline?")!= NULL){
-		char* userId = get_query_parameter(route, "userId");
-		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/bronze_etl_%s_pipelines.json", userId);
-		snprintf(path, sizeof(path),"../blob-storage/bronze_etl_%s_pipelines.json", userId);
-		overwrite =1;
+	else if (strstr(route, "/blob-storage/raw/")!= NULL){
+		const char *raw_start = strstr(route, "/blob-storage/raw/");
+		if (!raw_start){
+			send_response_code(cSSL, 400);
+			return;
+		}
+		const char *home = getenv("HOME");
+		if (!home || !home[0]) {
+			send_response_code(cSSL, 500);
+			return;
+		}
+		char full_path[2048];
+		snprintf(full_path, sizeof(full_path), "%s/home-server%s", home, raw_start);
+		char *query = strchr(full_path, '?');
+		if (query){
+			*query = '\0';
+		}
+		char dir_path[2048];
+		snprintf(dir_path, sizeof(dir_path), "%s", full_path);
+		char *last_slash = strrchr(dir_path, '/');
+		if (!last_slash){
+			send_response_code(cSSL, 400);
+			return;
+		}
+		*last_slash = '\0';
+		for (char *p = dir_path + 1; *p; p++){
+			if (*p == '/'){
+				*p = '\0';
+				if (mkdir(dir_path, 0755) != 0 && errno != EEXIST){
+					send_response_code(cSSL, 500);
+					return;
+				}
+				*p = '/';
+			}
+		}
+		if (mkdir(dir_path, 0755) != 0 && errno != EEXIST){
+			send_response_code(cSSL, 500);
+			return;
+		}
+		FILE *file = fopen(full_path, "w");
+		if (!file) {
+			send_response_code(cSSL, 500);
+			return;
+		}
+		if (fputs(body, file) == EOF) {
+			fclose(file);
+			send_response_code(cSSL, 500);
+			return;
+		}
+		fclose(file);
+		send_response_code(cSSL, 200);
+		return;
 	}
 
-	else if (strstr(route, "/blob-storage/silver/CTA/ctabustracker/predictions")){
-		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/silver_CTA_ctabustracker_predictions.json");
-		snprintf(path, sizeof(path),"../blob-storage/silver_CTA_ctabustracker_predictions.json");
-	}
-	else if (strstr(route, "/blob-storage/gold/CTA/ctabustracker/delays")){
-		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/gold_CTA_ctabustracker_delays.json");
-		snprintf(path, sizeof(path),"../blob-storage/gold_CTA_ctabustracker_delays.json");
-	}
-	else if (strstr(route, "/blob-storage/gold/CTA/ctabustracker/route_delays")){
-		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/gold_CTA_ctabustracker_route_delays.json");
-		snprintf(path, sizeof(path)," ");
-	}
-	else if (strstr(route, "/blob-storage/gold/CTA/ctabustracker/direction_delays")){
-		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/gold_CTA_ctabustracker_direction_delays.json");
-		snprintf(path, sizeof(path)," ");
-	}
-	else if (strstr(route, "/blob-storage/gold/CTA/ctabustracker/stop_delays")){
-		snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/gold_CTA_ctabustracker_stop_delays.json");
-		snprintf(path, sizeof(path)," ");
-	}
+
+
+	// else if (strstr(route, "/blob-storage/bronze/CTA/ctabustracker/predictions?rt")!= NULL){
+	// 	char* rt = get_query_parameter(route, "rt");
+	// 	snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/bronze_CTA_ctabustracker_%s_predictions.json", rt);
+	// 	snprintf(path, sizeof(path)," ");
+	// }
+	// else if (strstr(route, "/blob-storage/bronze/etl/pipeline?")!= NULL){
+	// 	char* userId = get_query_parameter(route, "userId");
+	// 	snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/bronze_etl_%s_pipelines.json", userId);
+	// 	snprintf(path, sizeof(path),"../blob-storage/bronze_etl_%s_pipelines.json", userId);
+	// 	overwrite =1;
+	// }
+	// else if (strstr(route, "/blob-storage/silver/CTA/ctabustracker/predictions")){
+	// 	snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/silver_CTA_ctabustracker_predictions.json");
+	// 	snprintf(path, sizeof(path),"../blob-storage/silver_CTA_ctabustracker_predictions.json");
+	// }
+	// else if (strstr(route, "/blob-storage/gold/CTA/ctabustracker/delays")){
+	// 	snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/gold_CTA_ctabustracker_delays.json");
+	// 	snprintf(path, sizeof(path),"../blob-storage/gold_CTA_ctabustracker_delays.json");
+	// }
+	// else if (strstr(route, "/blob-storage/gold/CTA/ctabustracker/route_delays")){
+	// 	snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/gold_CTA_ctabustracker_route_delays.json");
+	// 	snprintf(path, sizeof(path)," ");
+	// }
+	// else if (strstr(route, "/blob-storage/gold/CTA/ctabustracker/direction_delays")){
+	// 	snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/gold_CTA_ctabustracker_direction_delays.json");
+	// 	snprintf(path, sizeof(path)," ");
+	// }
+	// else if (strstr(route, "/blob-storage/gold/CTA/ctabustracker/stop_delays")){
+	// 	snprintf(write_path, sizeof(write_path),"/home/dpalacios/home-server/blob-storage/gold_CTA_ctabustracker_stop_delays.json");
+	// 	snprintf(path, sizeof(path)," ");
+	// }
 	
 	printf("GETTING FILE...\n");
 	char* frame_json = get_file_buffer(path);

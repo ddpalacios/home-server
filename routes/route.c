@@ -253,8 +253,6 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		if (websocket_session_exists(sessionId)){
 			get_live_html(cSSL, http_header, "/game-of-life/home.html");
 		}
-	
-
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/connect")==0){
 		start_websocket_session(socket,http_header,body, route);
 
@@ -338,6 +336,14 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		post_run_activity(socket,http_header,body, route);
 	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/google/login")==0){
 		post_to_local(socket,http_header,body, route);
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/trigger/cron")==0){
+		post_to_local(socket,http_header,body, route);
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/trigger/cron/delete")==0){
+		post_to_local(socket,http_header,body, route);
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/etl/trigger/runs")!=NULL){
+		get_from_local(socket,http_header,body, route);
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/etl/pipeline/runs")!=NULL){
+		get_from_local(socket,http_header,body, route);
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/google/status")==0){
 		get_from_local(socket,http_header,body, route);
 

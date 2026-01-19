@@ -2155,11 +2155,23 @@ CMakeFiles/home-server.dir/routes/blob-storage/POST/post_blob.c.o: ../routes/blo
   /usr/include/arpa/inet.h \
   /usr/include/netinet/in.h \
   /usr/include/x86_64-linux-gnu/bits/in.h \
+  /usr/include/dirent.h \
+  /usr/include/x86_64-linux-gnu/bits/dirent.h \
+  /usr/include/x86_64-linux-gnu/bits/dirent_ext.h \
   ../utilities/http_utilities.h \
   ../models/session.h \
   /usr/include/netdb.h \
   /usr/include/rpc/netdb.h \
-  /usr/include/x86_64-linux-gnu/bits/netdb.h
+  /usr/include/x86_64-linux-gnu/bits/netdb.h \
+  /usr/include/x86_64-linux-gnu/sys/stat.h \
+  /usr/include/x86_64-linux-gnu/bits/stat.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_stat.h \
+  /usr/include/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/linux/errno.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/asm-generic/errno-base.h
 
 CMakeFiles/home-server.dir/routes/chicago-transits/GET/get_template.c.o: ../routes/chicago-transits/GET/get_template.c \
   /usr/include/stdc-predef.h \
@@ -7277,10 +7289,6 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/fcntl.h:
 
-/usr/include/x86_64-linux-gnu/bits/struct_stat.h:
-
-/usr/include/x86_64-linux-gnu/sys/stat.h:
-
 ../utilities/os_utilities.c:
 
 ../utilities/json_utilities.c:
@@ -7300,16 +7308,6 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 ../server/server.c:
 
 ../server/send_message.c:
-
-/usr/include/asm-generic/errno-base.h:
-
-/usr/include/x86_64-linux-gnu/asm/errno.h:
-
-/usr/include/linux/errno.h:
-
-/usr/include/x86_64-linux-gnu/bits/errno.h:
-
-/usr/include/errno.h:
 
 ../routes/life-of-sounds/GET/login.h:
 
@@ -7363,6 +7361,22 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/x86_64-linux-gnu/bits/getopt_core.h:
 
+/usr/include/x86_64-linux-gnu/bits/environments.h:
+
+/usr/include/x86_64-linux-gnu/bits/posix_opt.h:
+
+/usr/include/openssl/randerr.h:
+
+/usr/include/unistd.h:
+
+../routes/life-of-sounds/PATCH/patch_websocket_client.h:
+
+../routes/life-of-sounds/POST/post_websocket_client.c:
+
+../routes/life-of-sounds/POST/post_user.c:
+
+../routes/life-of-sounds/POST/post_browser_session.c:
+
 /usr/include/openssl/symhacks.h:
 
 /usr/include/openssl/crypto.h:
@@ -7370,6 +7384,8 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 /usr/include/openssl/e_os2.h:
 
 /usr/include/x86_64-linux-gnu/openssl/opensslconf.h:
+
+/usr/include/x86_64-linux-gnu/bits/errno.h:
 
 /usr/include/x86_64-linux-gnu/bits/fcntl.h:
 
@@ -7392,6 +7408,12 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 ../server/server.h:
 
 /usr/include/openssl/pem.h:
+
+/usr/include/x86_64-linux-gnu/bits/confname.h:
+
+../models/websocket.c:
+
+/usr/include/asm-generic/errno-base.h:
 
 /usr/include/linux/stddef.h:
 
@@ -7521,9 +7543,7 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/x86_64-linux-gnu/bits/uintn-identity.h:
 
-/usr/include/openssl/randerr.h:
-
-/usr/include/unistd.h:
+/usr/include/x86_64-linux-gnu/sys/stat.h:
 
 /usr/include/openssl/types.h:
 
@@ -7534,6 +7554,12 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 /usr/include/inttypes.h:
 
 /usr/include/mysql/mysql.h:
+
+../routes/life-of-sounds/POST/post_websocket_session.c:
+
+/usr/include/x86_64-linux-gnu/asm/sockios.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/__FILE.h:
 
 /usr/include/asm-generic/bitsperlong.h:
 
@@ -7561,13 +7587,9 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h:
 
+/usr/include/linux/errno.h:
+
 /usr/include/openssl/macros.h:
-
-/usr/include/asm-generic/errno.h:
-
-/usr/include/mysql/mysql_version.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h:
 
 /usr/include/rpc/netdb.h:
 
@@ -7580,6 +7602,10 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 /usr/include/x86_64-linux-gnu/bits/floatn.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h:
+
+../routes/local-server/POST/post_local_server.c:
+
+/usr/include/asm-generic/socket.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h:
 
@@ -7596,6 +7622,8 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 /usr/include/x86_64-linux-gnu/bits/wordsize.h:
 
 /usr/include/openssl/cryptoerr_legacy.h:
+
+/usr/include/x86_64-linux-gnu/bits/struct_stat.h:
 
 ../routes/life-of-sounds/GET/get_user.h:
 
@@ -7614,6 +7642,8 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 /usr/include/openssl/objects.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h:
+
+/usr/include/x86_64-linux-gnu/asm/errno.h:
 
 /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h:
 
@@ -7676,10 +7706,6 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 ../database/SQL.h:
 
 ../routes/life-of-sounds/GET/get_web_audio_api_script.c:
-
-../models/websocket.c:
-
-/usr/include/x86_64-linux-gnu/bits/confname.h:
 
 /usr/include/mysql/my_list.h:
 
@@ -7765,6 +7791,8 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/openssl/ocsp.h:
 
+/usr/include/errno.h:
+
 /usr/include/openssl/sha.h:
 
 /usr/include/openssl/x509err.h:
@@ -7774,8 +7802,6 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 ../routes/life-of-sounds/GET/data_page.h:
 
 /usr/include/openssl/conf.h:
-
-../routes/life-of-sounds/POST/post_user.c:
 
 /usr/include/openssl/conferr.h:
 
@@ -7814,10 +7840,6 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 /usr/include/openssl/sslerr_legacy.h:
 
 /usr/include/openssl/prov_ssl.h:
-
-/usr/include/x86_64-linux-gnu/bits/stat.h:
-
-/usr/include/openssl/ssl3.h:
 
 /usr/include/openssl/ssl.h:
 
@@ -7867,8 +7889,6 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 ../routes/blob-storage/GET/get_blob_storage_files.c:
 
-/usr/include/x86_64-linux-gnu/bits/posix_opt.h:
-
 /usr/include/dirent.h:
 
 ../models/session.h:
@@ -7881,9 +7901,19 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/x86_64-linux-gnu/bits/dirent_ext.h:
 
-../routes/database-server/POST/post_frame.c:
+/usr/include/openssl/ssl3.h:
+
+/usr/include/x86_64-linux-gnu/bits/stat.h:
 
 ../routes/life-of-sounds/GET/get_html_utilities_script.c:
+
+/usr/include/mysql/mysql_version.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h:
+
+/usr/include/asm-generic/errno.h:
+
+../routes/database-server/POST/post_frame.c:
 
 /usr/include/x86_64-linux-gnu/bits/waitstatus.h:
 
@@ -7910,21 +7940,3 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 /usr/include/openssl/cterr.h:
 
 ../routes/life-of-sounds/PATCH/patch_websocket_client.c:
-
-../routes/life-of-sounds/POST/post_browser_session.c:
-
-../routes/life-of-sounds/PATCH/patch_websocket_client.h:
-
-../routes/life-of-sounds/POST/post_websocket_client.c:
-
-/usr/include/x86_64-linux-gnu/asm/sockios.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/__FILE.h:
-
-../routes/life-of-sounds/POST/post_websocket_session.c:
-
-/usr/include/asm-generic/socket.h:
-
-../routes/local-server/POST/post_local_server.c:
-
-/usr/include/x86_64-linux-gnu/bits/environments.h:

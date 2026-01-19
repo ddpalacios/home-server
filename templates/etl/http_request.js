@@ -179,3 +179,196 @@ class Http_Request_Activity extends Activity {
         this.get_operation_settings()
     }
 }
+
+class Http_Sink_Activity extends Activity {
+    constructor(flowchart, activity) {
+        super(flowchart, activity)
+        this.operation_type = "call"
+        this.settings = this.get_settings_element()
+    }
+
+    get_settings_element() {
+        let div = document.createElement('div')
+        div.id = this.activityId
+
+        let columns_div = document.createElement('div')
+        columns_div.id = this.activityId + "_column_edit"
+        columns_div.className = "column-settings"
+
+        const actions = document.createElement('div')
+        actions.className = "column-settings-actions"
+        let add_button = document.createElement("button")
+        add_button.innerHTML = "+ Add Header"
+        add_button.className = 'buttons add-button'
+        add_button.addEventListener("click", (event) => this._add_column(event, this.flowchart, this))
+        actions.appendChild(add_button)
+
+        const base_wrapper = document.createElement("div")
+        base_wrapper.className = "select-column-row"
+        const base_row = document.createElement("div")
+        base_row.className = "rename_settings"
+        base_row.style.gridTemplateColumns = "minmax(240px, 1.4fr) minmax(120px, 0.6fr)"
+
+        const url_input = document.createElement('input')
+        url_input.type = 'text'
+        url_input.name = 'url'
+        url_input.placeholder = 'https://api.example.com'
+        url_input.addEventListener("change", (event) => this._on_input_change(event, this.flowchart, this))
+        base_row.appendChild(url_input)
+
+        const method_select = document.createElement('select')
+        method_select.name = 'request_type'
+        let option = document.createElement('option')
+        option.value = "POST"
+        option.textContent = "POST"
+        method_select.appendChild(option)
+        method_select.value = "POST"
+        method_select.disabled = true
+        base_row.appendChild(method_select)
+        base_wrapper.appendChild(base_row)
+        columns_div.appendChild(base_wrapper)
+
+        const body_wrapper = document.createElement("div")
+        body_wrapper.className = "select-column-row"
+        const body_row = document.createElement("div")
+        body_row.className = "rename_settings"
+        body_row.style.gridTemplateColumns = "minmax(320px, 1fr)"
+
+        const body_input = document.createElement('textarea')
+        body_input.name = 'body_preview'
+        body_input.placeholder = 'Uses input data as request body'
+        body_input.rows = 6
+        body_input.readOnly = true
+        body_input.style.resize = "vertical"
+        body_input.style.fontFamily = "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace"
+        body_row.appendChild(body_input)
+        const body_note = document.createElement("div")
+        body_note.textContent = "Body is taken from the input to this activity."
+        body_note.style.fontSize = "12px"
+        body_note.style.color = "#7a7f87"
+        body_note.style.paddingTop = "6px"
+        body_row.appendChild(body_note)
+        body_wrapper.appendChild(body_row)
+        columns_div.appendChild(body_wrapper)
+        columns_div.appendChild(actions)
+
+        div.appendChild(columns_div)
+        this.body_preview = body_input
+        const saved_settings = this.activity.settings?.call
+        if (Array.isArray(saved_settings) && saved_settings.length > 0) {
+            const base = saved_settings[0] || {}
+            if (base.url) {
+                url_input.value = base.url
+            }
+            if (base.headers && typeof base.headers === "object") {
+                Object.keys(base.headers).forEach(header_key => {
+                    this._add_column(null, this.flowchart, this)
+                    const rows = columns_div.querySelectorAll(".select-column-row")
+                    const row = rows[rows.length - 1]
+                    if (!row) {
+                        return
+                    }
+                    const key_input = row.querySelector("input[name='header_key']")
+                    const value_input = row.querySelector("input[name='header_value']")
+                    if (key_input) {
+                        key_input.value = header_key
+                    }
+                    if (value_input) {
+                        value_input.value = base.headers[header_key]
+                    }
+                })
+            }
+        }
+        return div
+    }
+
+    get_operation_settings() {
+        let settings = super.get_operation_settings('call')
+        let base = { url: "", request_type: "POST", body: "", headers: {} }
+        let headers = {}
+        if (settings && Array.isArray(settings.call)) {
+            settings.call.forEach(entry => {
+                if (entry.url) {
+                    base.url = entry.url
+                }
+                if (entry.header_key) {
+                    headers[entry.header_key] = entry.header_value || ""
+                }
+            })
+        }
+        base.headers = headers
+        settings = { call: [base] }
+        this.flowchart.flowchart('setSettings', this.activityId, settings)
+        return settings
+    }
+
+    update_body_preview(data) {
+        if (!this.body_preview) {
+            return
+        }
+        if (data === undefined || data === null) {
+            this.body_preview.value = ""
+            this.body_preview.placeholder = "No input data yet"
+            return
+        }
+        try {
+            this.body_preview.value = JSON.stringify(data, null, 2)
+        } catch (error) {
+            this.body_preview.value = String(data)
+        }
+    }
+
+    _on_selector_change(event, widget, activity) {
+        this.get_operation_settings()
+    }
+
+    _on_input_change(event, widget, activity) {
+        this.get_operation_settings()
+    }
+
+    _on_button_click(event, widget, activity) {
+        const wrapper = event.target.closest(".select-column-row")
+        if (wrapper) {
+            wrapper.remove()
+            this.get_operation_settings()
+            return
+        }
+    }
+
+    _add_column(e, widget, activity) {
+        let columns_div = document.getElementById(activity.activityId + "_column_edit");
+        if (!columns_div) {
+            return
+        }
+        let settings = [
+            {
+                'type': 'input',
+                'placeholder': 'Header name',
+                'value': '',
+                'name': 'header_key'
+            },
+            {
+                'type': 'input',
+                'placeholder': 'Header value',
+                'value': '',
+                'name': 'header_value'
+            },
+            {
+                'type': 'button',
+                'label': 'DROP',
+                'color': 'red'
+            }
+        ]
+        let header_element = this.get_column_selection_element(widget, settings)
+        header_element.style.gridTemplateColumns = "minmax(180px, 0.8fr) minmax(220px, 1.2fr) 90px"
+        const row_wrapper = document.createElement("div")
+        row_wrapper.className = "select-column-row"
+        const drag_handle = document.createElement("span")
+        drag_handle.className = "drag-handle"
+        drag_handle.title = "Drag to reorder"
+        row_wrapper.appendChild(drag_handle)
+        row_wrapper.appendChild(header_element)
+        columns_div.appendChild(row_wrapper)
+        this.get_operation_settings()
+    }
+}

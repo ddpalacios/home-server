@@ -568,7 +568,8 @@ jQuery(function ($) {
                     select: "#c7f9cc",
                     sort: "#ffd36b",
                     append: "#7dd9c7",
-                    http_request: "#9ad0ff"
+                    http_request: "#9ad0ff",
+                    http_sink: "#6ec2ff"
                 };
                 infos.headerColor = headerColors[infos.activityType] || "#dbe7ff";
             }
