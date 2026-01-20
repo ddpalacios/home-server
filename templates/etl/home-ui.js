@@ -1762,6 +1762,24 @@ function createTable(jsonArray, tableContainer, activityId) {
   const tbody = document.createElement("tbody");
   const sortState = { key: null, direction: "asc" };
 
+  const resolveValue = (item, key) => {
+    if (!key) {
+      return undefined;
+    }
+    if (key.indexOf(".") === -1) {
+      return item ? item[key] : undefined;
+    }
+    const parts = key.split(".");
+    let value = item;
+    for (let i = 0; i < parts.length; i++) {
+      if (value == null) {
+        return undefined;
+      }
+      value = value[parts[i]];
+    }
+    return value;
+  };
+
   const updateSortIndicators = () => {
     const headers = thead.querySelectorAll("th");
     headers.forEach((header) => {
@@ -1783,17 +1801,7 @@ function createTable(jsonArray, tableContainer, activityId) {
       const row = document.createElement("tr");
       columns.forEach(key => {
         const td = document.createElement("td");
-        let value = item[key];
-        if (key.indexOf(".") !== -1) {
-          const parts = key.split(".");
-          value = item;
-          for (let i = 0; i < parts.length; i++) {
-            if (value == null) {
-              break;
-            }
-            value = value[parts[i]];
-          }
-        }
+        let value = resolveValue(item, key);
         if (prettyJson && value && typeof value === "object") {
           td.textContent = JSON.stringify(value, null, 2);
           td.style.whiteSpace = "pre-wrap";
@@ -1816,16 +1824,20 @@ function createTable(jsonArray, tableContainer, activityId) {
 
   const headerRow = document.createElement("tr");
   const columns = [];
-  Object.keys(jsonArray[0]).forEach(key => {
-    const value = jsonArray[0][key];
-    if (value && typeof value === "object" && !Array.isArray(value)) {
-      Object.keys(value).forEach(child => {
-        columns.push(key + "." + child);
-      });
-    } else {
-      columns.push(key);
-    }
+  const columnSet = new Set();
+  jsonArray.forEach(item => {
+    Object.keys(item || {}).forEach(key => {
+      const value = item[key];
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        Object.keys(value).forEach(child => {
+          columnSet.add(key + "." + child);
+        });
+      } else {
+        columnSet.add(key);
+      }
+    });
   });
+  columnSet.forEach(key => columns.push(key));
   columns.forEach((key, index) => {
     const th = document.createElement("th");
     const labelSpan = document.createElement("span");
@@ -1840,8 +1852,8 @@ function createTable(jsonArray, tableContainer, activityId) {
       sortState.direction = nextDirection;
 
       const sorted = [...jsonArray].sort((a, b) => {
-        const aVal = a[key];
-        const bVal = b[key];
+        const aVal = resolveValue(a, key);
+        const bVal = resolveValue(b, key);
         if (aVal == null && bVal == null) return 0;
         if (aVal == null) return nextDirection === "asc" ? -1 : 1;
         if (bVal == null) return nextDirection === "asc" ? 1 : -1;
@@ -1929,9 +1941,10 @@ function createTable(jsonArray, tableContainer, activityId) {
         const column = columnSelect.value;
         const filterText = filterInput.value.toLowerCase();
 
-        const filteredData = jsonArray.filter(item =>
-          String(item[column]).toLowerCase().includes(filterText)
-        );
+        const filteredData = jsonArray.filter(item => {
+          const value = resolveValue(item, column);
+          return String(value).toLowerCase().includes(filterText);
+        });
 
         createTable(filteredData, tableContainer, activityId);
       });
@@ -3373,12 +3386,23 @@ $(document).ready(function() {
     if (!body) {
       return null;
     }
+    body.style.position = "relative";
     let description = body.querySelector(".flowchart-operator-description");
     if (!description) {
       description = document.createElement("div");
       description.className = "flowchart-operator-description";
       body.prepend(description);
     }
+    description.style.position = "absolute";
+    description.style.left = "0";
+    description.style.right = "0";
+    description.style.top = "0";
+    description.style.pointerEvents = "none";
+    description.style.whiteSpace = "pre-wrap";
+    description.style.background = "rgba(255, 255, 255, 0.9)";
+    description.style.padding = "2px 6px";
+    description.style.borderRadius = "6px";
+    description.style.zIndex = "1";
     let content = body.querySelector(".flowchart-operator-body-content");
     if (!content) {
       content = document.createElement("div");
@@ -3406,7 +3430,6 @@ $(document).ready(function() {
         flowchartData.operators[operatorId].internal.properties.activity_description = descriptionText;
       }
     }
-    schedulePipelineSave();
   }
 
   function setActivityTabsVisible(isVisible) {
@@ -3498,6 +3521,34 @@ $(document).ready(function() {
       return;
     }
 
+    if (activity.activityType === "join" && activityInstance) {
+      container.innerHTML = "";
+      var joinOps = Array.isArray(activityInstance.join_operators)
+        ? activityInstance.join_operators
+        : ["Left Join (all from first, matching from second)",
+          "Right Join (all from second, matching from first)",
+          "Inner Join (only matching rows)",
+          "Full Outer Join (all rows from both)"];
+      rows.forEach(function(statement) {
+        var col1 = statement.columnName_1 || statement.column_name_1 || "";
+        var col2 = statement.columnName_2 || statement.column_name_2 || "";
+        var op = statement.operation || joinOps[0];
+        var settingsRow = [
+          { type: "span", label: "Table 1", color: "black" },
+          { type: "selector", options: col1 ? [col1] : [""], default_value: col1, name: "column_name_1" },
+          { type: "span", label: "Table 2", color: "black" },
+          { type: "selector", options: col2 ? [col2] : [""], default_value: col2, name: "column_name_2" },
+          { type: "selector", options: joinOps, default_value: op, name: "operation" }
+        ];
+        var column_edit_element = activityInstance.get_column_selection_element($flowchart, settingsRow);
+        container.appendChild(column_edit_element);
+      });
+      if (activityInstance && typeof activityInstance.get_operation_settings === "function") {
+        activityInstance.get_operation_settings();
+      }
+      return;
+    }
+
     if (activityInstance && typeof activityInstance._setup_column_container === "function") {
       var hasActions = container.querySelector(".column-settings-actions");
       if (!hasActions && activityInstance.add_button_label && typeof activityInstance._add_column === "function") {
@@ -3528,6 +3579,119 @@ $(document).ready(function() {
       return collected;
     }
 
+    function buildFallbackRow(statement) {
+      if (!activityInstance || typeof activityInstance.get_column_selection_element !== "function") {
+        return null;
+      }
+      const rowsSpec = [];
+      const addSelect = (name, value, multiple) => {
+        const opts = Array.isArray(value) ? value : (value ? [value] : [""]);
+        rowsSpec.push({
+          type: "selector",
+          options: opts,
+          default_value: Array.isArray(value) ? value : (value || ""),
+          name: name,
+          multiple: !!multiple
+        });
+      };
+      const addInput = (name, value) => {
+        rowsSpec.push({
+          type: "input",
+          placeholder: "",
+          value: value || "",
+          name: name
+        });
+      };
+
+      if (statement.columnName_1 || statement.column_name_1) {
+        addSelect("column_name_1", statement.columnName_1 || statement.column_name_1);
+      }
+      if (statement.columnName_2 || statement.column_name_2) {
+        addSelect("column_name_2", statement.columnName_2 || statement.column_name_2);
+      }
+      if (statement.columnName || statement.column_name) {
+        if (Array.isArray(statement.columnName)) {
+          addSelect("multiple_column_names", statement.columnName, true);
+        } else {
+          addSelect("column_name", statement.columnName || statement.column_name);
+        }
+      }
+      if (statement.new_column_name || statement.renamed_name) {
+        addInput("new_column_name", statement.new_column_name || statement.renamed_name);
+      }
+      if (statement.new_column_name_1) {
+        addInput("new_column_name_1", statement.new_column_name_1);
+      }
+      if (statement.new_column_name_2) {
+        addInput("new_column_name_2", statement.new_column_name_2);
+      }
+      if (statement.data_type) {
+        addSelect("data_type", statement.data_type);
+      }
+      if (statement.orderby) {
+        addSelect("orderby", statement.orderby);
+      }
+      if (statement.operation) {
+        addSelect("operation", statement.operation);
+      }
+      if (statement.condition_value) {
+        addInput("condition_value", statement.condition_value);
+      }
+      if (statement.find_value) {
+        addInput("find_value", statement.find_value);
+      }
+      if (statement.value) {
+        addInput("value", statement.value);
+      }
+      if (statement.then_value) {
+        addInput("then_value", statement.then_value);
+      }
+      if (statement.else_value) {
+        addInput("else_value", statement.else_value);
+      }
+      if (statement.logical) {
+        addSelect("logical", statement.logical);
+      }
+      if (statement.case) {
+        addSelect("case", statement.case);
+      }
+      if (statement.unroll_by) {
+        addInput("unroll_by", statement.unroll_by);
+      }
+      if (statement.header_key) {
+        addInput("header_key", statement.header_key);
+      }
+      if (statement.header_value) {
+        addInput("header_value", statement.header_value);
+      }
+      if (statement.url) {
+        addInput("url", statement.url);
+      }
+      if (statement.request_type) {
+        addSelect("request_type", statement.request_type);
+      }
+      if (statement.body) {
+        addInput("body", statement.body);
+      }
+      if (statement.pagination_mode) {
+        addSelect("pagination_mode", statement.pagination_mode);
+      }
+      if (statement.next_page_property) {
+        addInput("next_page_property", statement.next_page_property);
+      }
+      if (statement.continuation_property) {
+        addInput("continuation_property", statement.continuation_property);
+      }
+      if (statement.continuation_query_param) {
+        addInput("continuation_query_param", statement.continuation_query_param);
+      }
+
+      if (rowsSpec.length === 0) {
+        return null;
+      }
+      return activityInstance.get_column_selection_element($flowchart, rowsSpec);
+    }
+
     var rowElements = collectRows();
     while (rowElements.length < rows.length && activityInstance && typeof activityInstance._add_column === "function") {
       var beforeLength = rowElements.length;
@@ -3536,6 +3700,15 @@ $(document).ready(function() {
       if (rowElements.length <= beforeLength) {
         break;
       }
+    }
+    if (rowElements.length === 0 && rows.length > 0) {
+      rows.forEach(function(statement) {
+        var fallbackRow = buildFallbackRow(statement);
+        if (fallbackRow) {
+          container.appendChild(fallbackRow);
+        }
+      });
+      rowElements = collectRows();
     }
     rows.forEach(function(statement, index) {
       var row = rowElements[index];
@@ -4219,9 +4392,16 @@ $(document).ready(function() {
         if (target_activity && typeof target_activity.get_operation_settings === "function") {
           target_activity.get_operation_settings();
         }
-        schedulePipelineSave();
       };
       settings_div.onchange = settings_div.oninput;
+      settings_div.onfocusout = function(event) {
+        if (!event || !event.target) {
+          return;
+        }
+        if (settings_div.contains(event.target)) {
+          schedulePipelineSave();
+        }
+      };
       // update_missing_columns_message(operatorId, settings_div);
       return true;
     },
@@ -4452,6 +4632,9 @@ $(document).ready(function() {
     if (selectedOperatorId != null) {
       updateOperatorDescription(selectedOperatorId, $operatorDescription.val());
     }
+  });
+  $operatorDescription.on("blur", function() {
+    schedulePipelineSave();
   });
 
   $linkColor.change(function() {
@@ -6157,9 +6340,7 @@ function build_ordered_activities_payload(flowchart, data, targetId){
         activity_data = { table_1: table_1, table_2: table_2 }
       }
     }
-    const dependencies = Array.isArray(activity?.dependencies)
-      ? activity.dependencies.map(dep => dep.toString())
-      : []
+    const dependencies = get_dependency_ids(activity)
     return {
       operatorId: operatorId,
       activityType: activity.activityType,
@@ -6168,6 +6349,63 @@ function build_ordered_activities_payload(flowchart, data, targetId){
       dependencies: dependencies
     }
   })
+}
+
+function getHttpRequestSettingsFromActivity(activity) {
+  if (!activity) {
+    return null;
+  }
+  const settings = activity.settings || activity.operations || {};
+  if (Array.isArray(settings.call) && settings.call.length) {
+    return settings.call[0];
+  }
+  if (settings.call && typeof settings.call === "object") {
+    return settings.call;
+  }
+  return settings || null;
+}
+
+function isBlobStorageUrl(url) {
+  return typeof url === "string" && url.indexOf("/blob-storage/") !== -1;
+}
+
+window.getHttpRequestSettingsFromActivity = getHttpRequestSettingsFromActivity;
+window.isBlobStorageUrl = isBlobStorageUrl;
+
+function get_dependency_ids(activity){
+  const raw = Array.isArray(activity?.dependencies) ? activity.dependencies : []
+  let slot1 = null
+  let slot2 = null
+  const rest = []
+  raw.forEach(dep => {
+    if (dep === null || dep === undefined) {
+      return
+    }
+    const dep_id = dep && dep.operatorId !== undefined ? dep.operatorId : dep
+    const connector = dep && dep.connector ? dep.connector : null
+    if (connector === "input_1") {
+      slot1 = dep_id
+      return
+    }
+    if (connector === "input_2") {
+      slot2 = dep_id
+      return
+    }
+    rest.push(dep_id)
+  })
+  const ordered = []
+  if (slot1 !== null) {
+    ordered.push(slot1)
+  }
+  if (slot2 !== null) {
+    ordered.push(slot2)
+  }
+  rest.forEach(dep_id => {
+    if (!ordered.includes(dep_id)) {
+      ordered.push(dep_id)
+    }
+  })
+  return ordered.map(dep => dep.toString())
 }
 
 function get_input_columns(values){

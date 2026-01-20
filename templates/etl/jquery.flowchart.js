@@ -683,15 +683,38 @@ jQuery(function ($) {
                 let n = this.data.operators[parent_node_id]
                 let d = []
                 let raw_dependencies = (n.internal?.properties?.dependencies ?? n.properties?.dependencies ?? [])
+                let slot1 = null
+                let slot2 = null
                 raw_dependencies.forEach(element => {
                     let dep_id = element && element.operatorId !== undefined ? element.operatorId : element
                     if (dep_id === null || dep_id === undefined) {
                         return
                     }
+                    let connector = element && element.connector ? element.connector : null
+                    if (connector === "input_1") {
+                        slot1 = dep_id
+                        return
+                    }
+                    if (connector === "input_2") {
+                        slot2 = dep_id
+                        return
+                    }
                     d.push(dep_id)
                 });
+                let ordered = []
+                if (slot1 !== null) {
+                    ordered.push(slot1)
+                }
+                if (slot2 !== null) {
+                    ordered.push(slot2)
+                }
+                d.forEach(dep_id => {
+                    if (!ordered.includes(dep_id)) {
+                        ordered.push(dep_id)
+                    }
+                })
 
-                dependencies[parent_node_id] = {"dependencies":d, 'query': n.properties?.settings, 'activityType': n.properties.activityType}
+                dependencies[parent_node_id] = {"dependencies":ordered, 'query': n.properties?.settings, 'activityType': n.properties.activityType}
             });
             return dependencies
          
@@ -709,14 +732,25 @@ jQuery(function ($) {
                 this.data.operators[parentNodeId].internal.properties.dependencies = []
                 this.data.operators[parentNodeId].internal.properties.dependencies.push(value)
             }else{
-                if (this.data.operators[parentNodeId].internal.properties.dependencies.length > 2){
-                    this.data.operators[parentNodeId].internal.properties.dependencies = []
-                    this.data.operators[parentNodeId].internal.properties.dependencies.push(value)
-
-                }else{
-                    this.data.operators[parentNodeId].internal.properties.dependencies.push(value)
+                let deps = this.data.operators[parentNodeId].internal.properties.dependencies
+                if (!Array.isArray(deps)) {
+                    deps = []
                 }
-
+                if (value && value.operatorId !== undefined && value.connector) {
+                    let index = value.connector === "input_1" ? 0 : value.connector === "input_2" ? 1 : null
+                    if (index !== null) {
+                        deps[index] = value
+                    } else {
+                        deps.push(value)
+                    }
+                }else{
+                    deps.push(value)
+                }
+                deps = deps.filter(entry => entry !== undefined && entry !== null)
+                if (deps.length > 2){
+                    deps = deps.slice(0, 2)
+                }
+                this.data.operators[parentNodeId].internal.properties.dependencies = deps
             }
 
         },

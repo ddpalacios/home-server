@@ -62,6 +62,134 @@ class Http_Request_Activity extends Activity {
         body_row.appendChild(body_input)
         body_wrapper.appendChild(body_row)
         columns_div.appendChild(body_wrapper)
+
+        const pagination_header = document.createElement("div")
+        pagination_header.textContent = "Pagination"
+        pagination_header.style.fontSize = "12px"
+        pagination_header.style.fontWeight = "600"
+        pagination_header.style.color = "#6b7280"
+        pagination_header.style.padding = "6px 2px 2px"
+        columns_div.appendChild(pagination_header)
+
+        const pagination_wrapper = document.createElement("div")
+        pagination_wrapper.className = "select-column-row"
+        const pagination_row = document.createElement("div")
+        pagination_row.className = "rename_settings"
+        pagination_row.style.gridTemplateColumns = "minmax(200px, 1fr)"
+        const pagination_select = document.createElement("select")
+        pagination_select.name = "pagination_mode"
+        ;[
+            { value: "none", label: "None" },
+            { value: "next_url", label: "Next page URL property" },
+            { value: "continuation", label: "Continuation token" }
+        ].forEach(item => {
+            const option = document.createElement("option")
+            option.value = item.value
+            option.textContent = item.label
+            pagination_select.appendChild(option)
+        })
+        pagination_select.addEventListener("change", (event) => {
+            update_pagination_visibility()
+            this._on_selector_change(event, this.flowchart, this)
+        })
+        pagination_row.appendChild(pagination_select)
+        pagination_wrapper.appendChild(pagination_row)
+        columns_div.appendChild(pagination_wrapper)
+        const pagination_help = document.createElement("div")
+        pagination_help.innerHTML = "<strong>Required:</strong> choose how to fetch additional pages. <strong>Optional:</strong> leave as None for single-page requests."
+        pagination_help.style.fontSize = "12px"
+        pagination_help.style.color = "#6b7280"
+        pagination_help.style.margin = "-4px 0 6px 2px"
+        columns_div.appendChild(pagination_help)
+
+        const unroll_wrapper = document.createElement("div")
+        unroll_wrapper.className = "select-column-row"
+        const unroll_row = document.createElement("div")
+        unroll_row.className = "rename_settings"
+        unroll_row.style.gridTemplateColumns = "minmax(280px, 1fr)"
+        const unroll_input = document.createElement("input")
+        unroll_input.type = "text"
+        unroll_input.name = "unroll_by"
+        unroll_input.placeholder = "Records property (e.g. attendees)"
+        unroll_input.addEventListener("change", (event) => this._on_input_change(event, this.flowchart, this))
+        unroll_row.appendChild(unroll_input)
+        unroll_wrapper.appendChild(unroll_row)
+        columns_div.appendChild(unroll_wrapper)
+        const unroll_help = document.createElement("div")
+        unroll_help.innerHTML = "<strong>Required:</strong> list property holding records, e.g. <strong>attendees</strong>."
+        unroll_help.style.fontSize = "12px"
+        unroll_help.style.color = "#6b7280"
+        unroll_help.style.margin = "-4px 0 6px 2px"
+        columns_div.appendChild(unroll_help)
+
+        const next_url_wrapper = document.createElement("div")
+        next_url_wrapper.className = "select-column-row"
+        const next_url_row = document.createElement("div")
+        next_url_row.className = "rename_settings"
+        next_url_row.style.gridTemplateColumns = "minmax(280px, 1fr)"
+        const next_url_input = document.createElement("input")
+        next_url_input.type = "text"
+        next_url_input.name = "next_page_property"
+        next_url_input.placeholder = "Next page URL property (e.g. paging.next)"
+        next_url_input.addEventListener("change", (event) => this._on_input_change(event, this.flowchart, this))
+        next_url_row.appendChild(next_url_input)
+        next_url_wrapper.appendChild(next_url_row)
+        columns_div.appendChild(next_url_wrapper)
+        const next_url_help = document.createElement("div")
+        next_url_help.innerHTML = "<strong>Required for Next URL:</strong> property path with the next page URL, e.g. <strong>paging.next</strong>. <strong>Optional:</strong> leave empty for Continuation mode."
+        next_url_help.style.fontSize = "12px"
+        next_url_help.style.color = "#6b7280"
+        next_url_help.style.margin = "-4px 0 6px 2px"
+        columns_div.appendChild(next_url_help)
+
+        const continuation_prop_wrapper = document.createElement("div")
+        continuation_prop_wrapper.className = "select-column-row"
+        const continuation_prop_row = document.createElement("div")
+        continuation_prop_row.className = "rename_settings"
+        continuation_prop_row.style.gridTemplateColumns = "minmax(280px, 1fr)"
+        const continuation_prop_input = document.createElement("input")
+        continuation_prop_input.type = "text"
+        continuation_prop_input.name = "continuation_property"
+        continuation_prop_input.placeholder = "Continuation token path (e.g. $.pagination.continuation)"
+        continuation_prop_input.addEventListener("change", (event) => this._on_input_change(event, this.flowchart, this))
+        continuation_prop_row.appendChild(continuation_prop_input)
+        continuation_prop_wrapper.appendChild(continuation_prop_row)
+        columns_div.appendChild(continuation_prop_wrapper)
+        const continuation_prop_help = document.createElement("div")
+        continuation_prop_help.innerHTML = "<strong>Required for Continuation:</strong> JSON path to the token, e.g. <strong>$.pagination.continuation</strong>."
+        continuation_prop_help.style.fontSize = "12px"
+        continuation_prop_help.style.color = "#6b7280"
+        continuation_prop_help.style.margin = "-4px 0 6px 2px"
+        columns_div.appendChild(continuation_prop_help)
+
+        const continuation_param_wrapper = document.createElement("div")
+        continuation_param_wrapper.className = "select-column-row"
+        const continuation_param_row = document.createElement("div")
+        continuation_param_row.className = "rename_settings"
+        continuation_param_row.style.gridTemplateColumns = "minmax(280px, 1fr)"
+        const continuation_param_input = document.createElement("input")
+        continuation_param_input.type = "text"
+        continuation_param_input.name = "continuation_query_param"
+        continuation_param_input.placeholder = "Continuation query param (e.g. continuation)"
+        continuation_param_input.addEventListener("change", (event) => this._on_input_change(event, this.flowchart, this))
+        continuation_param_row.appendChild(continuation_param_input)
+        continuation_param_wrapper.appendChild(continuation_param_row)
+        columns_div.appendChild(continuation_param_wrapper)
+        const continuation_param_help = document.createElement("div")
+        continuation_param_help.innerHTML = "<strong>Optional:</strong> query param name to append, e.g. <strong>continuation</strong> (defaults to continuation)."
+        continuation_param_help.style.fontSize = "12px"
+        continuation_param_help.style.color = "#6b7280"
+        continuation_param_help.style.margin = "-4px 0 6px 2px"
+        columns_div.appendChild(continuation_param_help)
+
+        const update_pagination_visibility = () => {
+            const mode = pagination_select.value || "none"
+            unroll_wrapper.style.display = mode === "none" ? "none" : ""
+            next_url_wrapper.style.display = mode === "next_url" ? "" : "none"
+            continuation_prop_wrapper.style.display = mode === "continuation" ? "" : "none"
+            continuation_param_wrapper.style.display = mode === "continuation" ? "" : "none"
+        }
+        update_pagination_visibility()
         columns_div.appendChild(actions)
 
         div.appendChild(columns_div)
@@ -77,6 +205,22 @@ class Http_Request_Activity extends Activity {
             if (base.body) {
                 body_input.value = base.body
             }
+            if (base.pagination_mode) {
+                pagination_select.value = base.pagination_mode
+            }
+            if (base.unroll_by) {
+                unroll_input.value = base.unroll_by
+            }
+            if (base.next_page_property) {
+                next_url_input.value = base.next_page_property
+            }
+            if (base.continuation_property) {
+                continuation_prop_input.value = base.continuation_property
+            }
+            if (base.continuation_query_param) {
+                continuation_param_input.value = base.continuation_query_param
+            }
+            update_pagination_visibility()
             if (base.headers && typeof base.headers === "object") {
                 Object.keys(base.headers).forEach(header_key => {
                     this._add_column(null, this.flowchart, this)
@@ -101,7 +245,17 @@ class Http_Request_Activity extends Activity {
 
     get_operation_settings() {
         let settings = super.get_operation_settings('call')
-        let base = { url: "", request_type: "GET", body: "", headers: {} }
+        let base = {
+            url: "",
+            request_type: "GET",
+            body: "",
+            headers: {},
+            pagination_mode: "none",
+            unroll_by: "",
+            next_page_property: "",
+            continuation_property: "",
+            continuation_query_param: ""
+        }
         let headers = {}
         if (settings && Array.isArray(settings.call)) {
             settings.call.forEach(entry => {
@@ -113,6 +267,21 @@ class Http_Request_Activity extends Activity {
                 }
                 if (entry.body) {
                     base.body = entry.body
+                }
+                if (entry.pagination_mode) {
+                    base.pagination_mode = entry.pagination_mode
+                }
+                if (entry.unroll_by) {
+                    base.unroll_by = entry.unroll_by
+                }
+                if (entry.next_page_property) {
+                    base.next_page_property = entry.next_page_property
+                }
+                if (entry.continuation_property) {
+                    base.continuation_property = entry.continuation_property
+                }
+                if (entry.continuation_query_param) {
+                    base.continuation_query_param = entry.continuation_query_param
                 }
                 if (entry.header_key) {
                     headers[entry.header_key] = entry.header_value || ""

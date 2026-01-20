@@ -61,6 +61,82 @@ function extractHttpCallSettings(settings) {
     return settings;
 }
 
+function resolveHttpRequestSettings(activity) {
+    if (window.getHttpRequestSettingsFromActivity) {
+        return window.getHttpRequestSettingsFromActivity(activity) || {};
+    }
+    return extractHttpCallSettings(activity && (activity.settings || activity.operations) || {});
+}
+
+function isBlobStorageUrl(url) {
+    if (window.isBlobStorageUrl) {
+        return window.isBlobStorageUrl(url);
+    }
+    return typeof url === "string" && url.indexOf("/blob-storage/") !== -1;
+}
+
+async function fetchBlobStoragePayload(settings) {
+    const url = settings.url || "";
+    if (!url) {
+        return null;
+    }
+    const method = (settings.request_type || "GET").toUpperCase();
+    const headers = new Headers({ "Accept": "application/json" });
+    if (settings.headers && typeof settings.headers === "object") {
+        Object.keys(settings.headers).forEach(key => {
+            headers.set(key, settings.headers[key]);
+        });
+    }
+    const init = { method: method, headers: headers };
+    if (method !== "GET" && settings.body) {
+        init.body = settings.body;
+    }
+    const response = await fetch(url, init);
+    if (!response.ok) {
+        return null;
+    }
+    try {
+        return await response.json();
+    } catch (error) {
+        return await response.text();
+    }
+}
+
+function normalizeBlobStoragePayload(payload) {
+    if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+        if (payload.filetype === "csv" && Array.isArray(payload.values)) {
+            return payload.values;
+        }
+    }
+    return payload;
+}
+
+async function hydrateBlobStorageActivities(activities) {
+    const prepared = [];
+    for (const activity of activities) {
+        if (activity && activity.activityType === "http_request") {
+            const settings = resolveHttpRequestSettings(activity);
+            const url = settings && settings.url ? settings.url : "";
+            if (isBlobStorageUrl(url)) {
+                const payload = await fetchBlobStoragePayload(settings);
+                if (payload !== null && payload !== undefined) {
+                    const data = normalizeBlobStoragePayload(payload);
+                    prepared.push(Object.assign({}, activity, {
+                        activityType: "import",
+                        activity_type: "import",
+                        data: data,
+                        settings: null,
+                        operations: null
+                    }));
+                    continue;
+                }
+            }
+        }
+        prepared.push(activity);
+    }
+    return prepared;
+}
+
 async function postHttpSinkActivity(activity, data) {
     const settings = extractHttpCallSettings(activity.settings || {});
     const url = settings.url || "";
@@ -113,6 +189,16 @@ async function run_activity_flow(activity, widget, data){
 
     }
     if (body == undefined){return}
+    if (activity_type === "http_request") {
+        const httpSettings = resolveHttpRequestSettings(activity);
+        const url = httpSettings && httpSettings.url ? httpSettings.url : "";
+        if (isBlobStorageUrl(url)) {
+            const payload = await fetchBlobStoragePayload(httpSettings);
+            if (payload !== null && payload !== undefined) {
+                return { values: normalizeBlobStoragePayload(payload) };
+            }
+        }
+    }
     if (activity_type === 'http_sink') {
         const response = await postHttpSinkActivity(activity, body.data);
         return response && response.ok ? { ok: true } : null;
@@ -186,8 +272,9 @@ async function post_ordered_activities(activities, preview = false, meta){
     if (!Array.isArray(activities) || activities.length === 0) {
         return null
     }
-    const httpSinkActivities = activities.filter(activity => activity.activityType === "http_sink");
-    const body = { activities: activities, preview: !!preview, skip_http_sink: true }
+    const preparedActivities = await hydrateBlobStorageActivities(activities);
+    const httpSinkActivities = preparedActivities.filter(activity => activity.activityType === "http_sink");
+    const body = { activities: preparedActivities, preview: !!preview, skip_http_sink: true }
     if (meta && typeof meta === "object") {
         body.test_run_meta = meta
     }

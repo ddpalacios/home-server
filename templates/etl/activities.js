@@ -497,6 +497,26 @@ class Settings{
                     statement.unroll_by = element.value;
                     statement.row_id = row.id
                     continue
+                case 'pagination_mode':
+                    // Pagination mode for HTTP requests.
+                    statement.pagination_mode = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'next_page_property':
+                    // Next page URL property path.
+                    statement.next_page_property = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'continuation_property':
+                    // Continuation token JSON path.
+                    statement.continuation_property = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'continuation_query_param':
+                    // Continuation token query param name.
+                    statement.continuation_query_param = element.value;
+                    statement.row_id = row.id
+                    continue
                 case 'header_key':
                     // HTTP header key.
                     statement.header_key = element.value;
@@ -1057,7 +1077,7 @@ function onLinkCreation(widget,linkData){
 
     if (toOperator.activityType == 'join' || toOperator.activityType == 'append'){
         // console.log("ADDING dependency")
-        widget.setDependency(linkData['toOperator'],fromOperator.operatorId)
+        widget.setDependency(linkData['toOperator'], { operatorId: fromOperator.operatorId, connector: linkData.toConnector })
 
         if (linkData.toConnector == 'input_1'){
             widget.setinputVal(linkData['toOperator'],'input_1', fromOperator)

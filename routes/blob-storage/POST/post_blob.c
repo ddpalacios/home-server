@@ -15,6 +15,27 @@
 #include <sys/stat.h>
 #include <errno.h>
 #define IPSTRLEN INET6_ADDRSTRLEN
+
+static int ensure_dir(const char *dir_path){
+	char tmp[2048];
+	if (!dir_path || !dir_path[0]){
+		return -1;
+	}
+	snprintf(tmp, sizeof(tmp), "%s", dir_path);
+	for (char *p = tmp + 1; *p; p++){
+		if (*p == '/'){
+			*p = '\0';
+			if (mkdir(tmp, 0755) != 0 && errno != EEXIST){
+				return -1;
+			}
+			*p = '/';
+		}
+	}
+	if (mkdir(tmp, 0755) != 0 && errno != EEXIST){
+		return -1;
+	}
+	return 0;
+}
 void connect_to_server(const char* host, const char* port, char*body){
 	struct addrinfo hints;
  	struct addrinfo *addrs_res;
@@ -99,6 +120,16 @@ void connect_to_server(const char* host, const char* port, char*body){
 			send_response_code(cSSL, 500);
 			return;
 		}
+		if (!body){
+			send_response_code(cSSL, 400);
+			return;
+		}
+		char dir_path[2048];
+		snprintf(dir_path, sizeof(dir_path), "%s/home-server/blob-storage/raw/etl/pipeline", home);
+		if (ensure_dir(dir_path) != 0){
+			send_response_code(cSSL, 500);
+			return;
+		}
 		snprintf(write_path, sizeof(write_path),"%s/home-server/blob-storage/raw/etl/pipeline/%s.json", home, pipelineId);
 		FILE *file = fopen(write_path, "w");
 		if (!file) {
@@ -124,6 +155,16 @@ void connect_to_server(const char* host, const char* port, char*body){
 		}
 		const char *home = getenv("HOME");
 		if (!home || !home[0]){
+			send_response_code(cSSL, 500);
+			return;
+		}
+		if (!body){
+			send_response_code(cSSL, 400);
+			return;
+		}
+		char dir_path[2048];
+		snprintf(dir_path, sizeof(dir_path), "%s/home-server/blob-storage/raw/etl/trigger", home);
+		if (ensure_dir(dir_path) != 0){
 			send_response_code(cSSL, 500);
 			return;
 		}
@@ -212,9 +253,16 @@ void connect_to_server(const char* host, const char* port, char*body){
 		send_response_code(cSSL, 200);
 		return;
 	}
-	else if (strstr(route, "/blob-storage/raw/")!= NULL){
+	else if (strstr(route, "/blob-storage/raw/")!= NULL || strstr(route, "/blob-storage/processed/")!= NULL){
 		const char *raw_start = strstr(route, "/blob-storage/raw/");
 		if (!raw_start){
+			raw_start = strstr(route, "/blob-storage/processed/");
+		}
+		if (!raw_start){
+			send_response_code(cSSL, 400);
+			return;
+		}
+		if (!body){
 			send_response_code(cSSL, 400);
 			return;
 		}

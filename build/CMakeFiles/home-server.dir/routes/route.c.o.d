@@ -1,85 +1,85 @@
 CMakeFiles/home-server.dir/routes/route.c.o: \
- /home/dpalacios/home-server/routes/route.c /usr/include/stdc-predef.h \
+ /home/dario/home-server/routes/route.c /usr/include/stdc-predef.h \
  /usr/include/stdio.h \
- /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+ /usr/include/aarch64-linux-gnu/bits/libc-header-start.h \
  /usr/include/features.h /usr/include/features-time64.h \
- /usr/include/x86_64-linux-gnu/bits/wordsize.h \
- /usr/include/x86_64-linux-gnu/bits/timesize.h \
- /usr/include/x86_64-linux-gnu/sys/cdefs.h \
- /usr/include/x86_64-linux-gnu/bits/long-double.h \
- /usr/include/x86_64-linux-gnu/gnu/stubs.h \
- /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
- /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
- /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
- /usr/include/x86_64-linux-gnu/bits/types.h \
- /usr/include/x86_64-linux-gnu/bits/typesizes.h \
- /usr/include/x86_64-linux-gnu/bits/time64.h \
- /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
- /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
- /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
- /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
- /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
- /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
- /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
- /usr/include/x86_64-linux-gnu/bits/floatn.h \
- /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+ /usr/include/aarch64-linux-gnu/bits/wordsize.h \
+ /usr/include/aarch64-linux-gnu/bits/timesize.h \
+ /usr/include/aarch64-linux-gnu/sys/cdefs.h \
+ /usr/include/aarch64-linux-gnu/bits/long-double.h \
+ /usr/include/aarch64-linux-gnu/gnu/stubs.h \
+ /usr/include/aarch64-linux-gnu/gnu/stubs-lp64.h \
+ /usr/lib/gcc/aarch64-linux-gnu/11/include/stddef.h \
+ /usr/lib/gcc/aarch64-linux-gnu/11/include/stdarg.h \
+ /usr/include/aarch64-linux-gnu/bits/types.h \
+ /usr/include/aarch64-linux-gnu/bits/typesizes.h \
+ /usr/include/aarch64-linux-gnu/bits/time64.h \
+ /usr/include/aarch64-linux-gnu/bits/types/__fpos_t.h \
+ /usr/include/aarch64-linux-gnu/bits/types/__mbstate_t.h \
+ /usr/include/aarch64-linux-gnu/bits/types/__fpos64_t.h \
+ /usr/include/aarch64-linux-gnu/bits/types/__FILE.h \
+ /usr/include/aarch64-linux-gnu/bits/types/FILE.h \
+ /usr/include/aarch64-linux-gnu/bits/types/struct_FILE.h \
+ /usr/include/aarch64-linux-gnu/bits/stdio_lim.h \
+ /usr/include/aarch64-linux-gnu/bits/floatn.h \
+ /usr/include/aarch64-linux-gnu/bits/floatn-common.h \
  /usr/include/openssl/ssl.h /usr/include/openssl/macros.h \
- /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
- /usr/include/x86_64-linux-gnu/openssl/configuration.h \
+ /usr/include/aarch64-linux-gnu/openssl/opensslconf.h \
+ /usr/include/aarch64-linux-gnu/openssl/configuration.h \
  /usr/include/openssl/opensslv.h /usr/include/openssl/e_os2.h \
  /usr/include/inttypes.h \
- /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h /usr/include/stdint.h \
- /usr/include/x86_64-linux-gnu/bits/wchar.h \
- /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
- /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+ /usr/lib/gcc/aarch64-linux-gnu/11/include/stdint.h /usr/include/stdint.h \
+ /usr/include/aarch64-linux-gnu/bits/wchar.h \
+ /usr/include/aarch64-linux-gnu/bits/stdint-intn.h \
+ /usr/include/aarch64-linux-gnu/bits/stdint-uintn.h \
  /usr/include/openssl/comp.h /usr/include/openssl/crypto.h \
- /usr/include/stdlib.h /usr/include/x86_64-linux-gnu/bits/waitflags.h \
- /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
- /usr/include/x86_64-linux-gnu/sys/types.h \
- /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
- /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
- /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
- /usr/include/x86_64-linux-gnu/bits/types/timer_t.h /usr/include/endian.h \
- /usr/include/x86_64-linux-gnu/bits/endian.h \
- /usr/include/x86_64-linux-gnu/bits/endianness.h \
- /usr/include/x86_64-linux-gnu/bits/byteswap.h \
- /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
- /usr/include/x86_64-linux-gnu/sys/select.h \
- /usr/include/x86_64-linux-gnu/bits/select.h \
- /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
- /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
- /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
- /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
- /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
- /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
- /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
- /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
- /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
- /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h /usr/include/alloca.h \
- /usr/include/x86_64-linux-gnu/bits/stdlib-float.h /usr/include/time.h \
- /usr/include/x86_64-linux-gnu/bits/time.h \
- /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
- /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
- /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
- /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+ /usr/include/stdlib.h /usr/include/aarch64-linux-gnu/bits/waitflags.h \
+ /usr/include/aarch64-linux-gnu/bits/waitstatus.h \
+ /usr/include/aarch64-linux-gnu/sys/types.h \
+ /usr/include/aarch64-linux-gnu/bits/types/clock_t.h \
+ /usr/include/aarch64-linux-gnu/bits/types/clockid_t.h \
+ /usr/include/aarch64-linux-gnu/bits/types/time_t.h \
+ /usr/include/aarch64-linux-gnu/bits/types/timer_t.h \
+ /usr/include/endian.h /usr/include/aarch64-linux-gnu/bits/endian.h \
+ /usr/include/aarch64-linux-gnu/bits/endianness.h \
+ /usr/include/aarch64-linux-gnu/bits/byteswap.h \
+ /usr/include/aarch64-linux-gnu/bits/uintn-identity.h \
+ /usr/include/aarch64-linux-gnu/sys/select.h \
+ /usr/include/aarch64-linux-gnu/bits/select.h \
+ /usr/include/aarch64-linux-gnu/bits/types/sigset_t.h \
+ /usr/include/aarch64-linux-gnu/bits/types/__sigset_t.h \
+ /usr/include/aarch64-linux-gnu/bits/types/struct_timeval.h \
+ /usr/include/aarch64-linux-gnu/bits/types/struct_timespec.h \
+ /usr/include/aarch64-linux-gnu/bits/pthreadtypes.h \
+ /usr/include/aarch64-linux-gnu/bits/thread-shared-types.h \
+ /usr/include/aarch64-linux-gnu/bits/pthreadtypes-arch.h \
+ /usr/include/aarch64-linux-gnu/bits/atomic_wide_counter.h \
+ /usr/include/aarch64-linux-gnu/bits/struct_mutex.h \
+ /usr/include/aarch64-linux-gnu/bits/struct_rwlock.h \
+ /usr/include/alloca.h /usr/include/aarch64-linux-gnu/bits/stdlib-float.h \
+ /usr/include/time.h /usr/include/aarch64-linux-gnu/bits/time.h \
+ /usr/include/aarch64-linux-gnu/bits/types/struct_tm.h \
+ /usr/include/aarch64-linux-gnu/bits/types/struct_itimerspec.h \
+ /usr/include/aarch64-linux-gnu/bits/types/locale_t.h \
+ /usr/include/aarch64-linux-gnu/bits/types/__locale_t.h \
  /usr/include/openssl/safestack.h /usr/include/openssl/stack.h \
  /usr/include/openssl/types.h \
- /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
- /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
- /usr/include/limits.h /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
- /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+ /usr/lib/gcc/aarch64-linux-gnu/11/include/limits.h \
+ /usr/lib/gcc/aarch64-linux-gnu/11/include/syslimits.h \
+ /usr/include/limits.h /usr/include/aarch64-linux-gnu/bits/posix1_lim.h \
+ /usr/include/aarch64-linux-gnu/bits/local_lim.h \
  /usr/include/linux/limits.h \
- /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
- /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
- /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+ /usr/include/aarch64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+ /usr/include/aarch64-linux-gnu/bits/pthread_stack_min.h \
+ /usr/include/aarch64-linux-gnu/bits/posix2_lim.h \
  /usr/include/openssl/cryptoerr.h /usr/include/openssl/symhacks.h \
  /usr/include/openssl/cryptoerr_legacy.h /usr/include/openssl/core.h \
  /usr/include/pthread.h /usr/include/sched.h \
- /usr/include/x86_64-linux-gnu/bits/sched.h \
- /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
- /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
- /usr/include/x86_64-linux-gnu/bits/setjmp.h \
- /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
+ /usr/include/aarch64-linux-gnu/bits/sched.h \
+ /usr/include/aarch64-linux-gnu/bits/types/struct_sched_param.h \
+ /usr/include/aarch64-linux-gnu/bits/cpu-set.h \
+ /usr/include/aarch64-linux-gnu/bits/setjmp.h \
+ /usr/include/aarch64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
  /usr/include/openssl/comperr.h /usr/include/openssl/bio.h \
  /usr/include/openssl/bioerr.h /usr/include/openssl/x509.h \
  /usr/include/openssl/buffer.h /usr/include/openssl/buffererr.h \
@@ -108,63 +108,62 @@ CMakeFiles/home-server.dir/routes/route.c.o: \
  /usr/include/openssl/prov_ssl.h /usr/include/openssl/ssl2.h \
  /usr/include/openssl/ssl3.h /usr/include/openssl/tls1.h \
  /usr/include/openssl/dtls1.h /usr/include/openssl/srtp.h \
- /home/dpalacios/home-server/models/Socket.h \
- /usr/include/x86_64-linux-gnu/sys/socket.h \
- /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
- /usr/include/x86_64-linux-gnu/bits/socket.h \
- /usr/include/x86_64-linux-gnu/bits/socket_type.h \
- /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
- /usr/include/x86_64-linux-gnu/asm/socket.h \
+ /home/dario/home-server/models/Socket.h \
+ /usr/include/aarch64-linux-gnu/sys/socket.h \
+ /usr/include/aarch64-linux-gnu/bits/types/struct_iovec.h \
+ /usr/include/aarch64-linux-gnu/bits/socket.h \
+ /usr/include/aarch64-linux-gnu/bits/socket_type.h \
+ /usr/include/aarch64-linux-gnu/bits/sockaddr.h \
+ /usr/include/aarch64-linux-gnu/asm/socket.h \
  /usr/include/asm-generic/socket.h /usr/include/linux/posix_types.h \
  /usr/include/linux/stddef.h \
- /usr/include/x86_64-linux-gnu/asm/posix_types.h \
- /usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
+ /usr/include/aarch64-linux-gnu/asm/posix_types.h \
  /usr/include/asm-generic/posix_types.h \
- /usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
+ /usr/include/aarch64-linux-gnu/asm/bitsperlong.h \
  /usr/include/asm-generic/bitsperlong.h \
- /usr/include/x86_64-linux-gnu/asm/sockios.h \
+ /usr/include/aarch64-linux-gnu/asm/sockios.h \
  /usr/include/asm-generic/sockios.h \
- /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
- /home/dpalacios/home-server/models/websocket.h \
- /home/dpalacios/home-server/routes/route.h \
- /home/dpalacios/home-server/models/Invitation.h \
- /home/dpalacios/home-server/utilities/http_utilities.h \
- /home/dpalacios/home-server/routes/database-server/POST/post_frame.h \
- /home/dpalacios/home-server/models/FrameField.h \
- /home/dpalacios/home-server/routes/Websocket/GET/start_websocket_session.h \
- /home/dpalacios/home-server/routes/life-of-sounds/POST/post_user.h \
- /home/dpalacios/home-server/routes/life-of-sounds/POST/login.h \
- /home/dpalacios/home-server/routes/life-of-sounds/POST/post_websocket_session.h \
- /home/dpalacios/home-server/routes/life-of-sounds/POST/post_websocket_client.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_websocket_client.h \
- /home/dpalacios/home-server/routes/life-of-sounds/POST/post_audio.h \
- /home/dpalacios/home-server/routes/life-of-sounds/POST/post_browser_session.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/new_login.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/studio.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_live_page.h \
- /home/dpalacios/home-server/routes/chicago-transits/GET/get_template.h \
- /home/dpalacios/home-server/routes/blob-storage/GET/get_blob_storage_files.h \
- /home/dpalacios/home-server/routes/blob-storage/POST/post_blob.h \
- /home/dpalacios/home-server/routes/local-server/POST/post_local_server.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_web_audio_api_script.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_game_of_life_script.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/data_page.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_recordings_page.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_data_table.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_session_messages.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_websocket_script.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_html_utilities_script.h \
- /home/dpalacios/home-server/routes/life-of-sounds/PATCH/patch_websocket_client.h \
- /home/dpalacios/home-server/routes/life-of-sounds/PATCH/patch_browser_session.h \
- /home/dpalacios/home-server/routes/life-of-sounds/PATCH/patch_websocket_session.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_audio.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_audio_blob.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/sessioninfo.h \
- /home/dpalacios/home-server/routes/life-of-sounds/DELETE/sessioninfo.h \
- /home/dpalacios/home-server/routes/life-of-sounds/DELETE/delete_websocket_session.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/home.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/websocket_protocol.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_user.h \
- /home/dpalacios/home-server/utilities/json_utilities.h \
- /usr/include/cjson/cJSON.h /home/dpalacios/home-server/models/User.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/login.h
+ /usr/include/aarch64-linux-gnu/bits/types/struct_osockaddr.h \
+ /home/dario/home-server/models/websocket.h \
+ /home/dario/home-server/routes/route.h \
+ /home/dario/home-server/models/Invitation.h \
+ /home/dario/home-server/utilities/http_utilities.h \
+ /home/dario/home-server/routes/database-server/POST/post_frame.h \
+ /home/dario/home-server/models/FrameField.h \
+ /home/dario/home-server/routes/Websocket/GET/start_websocket_session.h \
+ /home/dario/home-server/routes/life-of-sounds/POST/post_user.h \
+ /home/dario/home-server/routes/life-of-sounds/POST/login.h \
+ /home/dario/home-server/routes/life-of-sounds/POST/post_websocket_session.h \
+ /home/dario/home-server/routes/life-of-sounds/POST/post_websocket_client.h \
+ /home/dario/home-server/routes/life-of-sounds/GET/get_websocket_client.h \
+ /home/dario/home-server/routes/life-of-sounds/POST/post_audio.h \
+ /home/dario/home-server/routes/life-of-sounds/POST/post_browser_session.h \
+ /home/dario/home-server/routes/life-of-sounds/GET/new_login.h \
+ /home/dario/home-server/routes/life-of-sounds/GET/studio.h \
+ /home/dario/home-server/routes/life-of-sounds/GET/get_live_page.h \
+ /home/dario/home-server/routes/chicago-transits/GET/get_template.h \
+ /home/dario/home-server/routes/blob-storage/GET/get_blob_storage_files.h \
+ /home/dario/home-server/routes/blob-storage/POST/post_blob.h \
+ /home/dario/home-server/routes/local-server/POST/post_local_server.h \
+ /home/dario/home-server/routes/life-of-sounds/GET/get_web_audio_api_script.h \
+ /home/dario/home-server/routes/life-of-sounds/GET/get_game_of_life_script.h \
+ /home/dario/home-server/routes/life-of-sounds/GET/data_page.h \
+ /home/dario/home-server/routes/life-of-sounds/GET/get_recordings_page.h \
+ /home/dario/home-server/routes/life-of-sounds/GET/get_data_table.h \
+ /home/dario/home-server/routes/life-of-sounds/GET/get_session_messages.h \
+ /home/dario/home-server/routes/life-of-sounds/GET/get_websocket_script.h \
+ /home/dario/home-server/routes/life-of-sounds/GET/get_html_utilities_script.h \
+ /home/dario/home-server/routes/life-of-sounds/PATCH/patch_websocket_client.h \
+ /home/dario/home-server/routes/life-of-sounds/PATCH/patch_browser_session.h \
+ /home/dario/home-server/routes/life-of-sounds/PATCH/patch_websocket_session.h \
+ /home/dario/home-server/routes/life-of-sounds/GET/get_audio.h \
+ /home/dario/home-server/routes/life-of-sounds/GET/get_audio_blob.h \
+ /home/dario/home-server/routes/life-of-sounds/GET/sessioninfo.h \
+ /home/dario/home-server/routes/life-of-sounds/DELETE/sessioninfo.h \
+ /home/dario/home-server/routes/life-of-sounds/DELETE/delete_websocket_session.h \
+ /home/dario/home-server/routes/life-of-sounds/GET/home.h \
+ /home/dario/home-server/routes/life-of-sounds/GET/websocket_protocol.h \
+ /home/dario/home-server/routes/life-of-sounds/GET/get_user.h \
+ /home/dario/home-server/utilities/json_utilities.h \
+ /usr/include/cjson/cJSON.h /home/dario/home-server/models/User.h \
+ /home/dario/home-server/routes/life-of-sounds/GET/login.h

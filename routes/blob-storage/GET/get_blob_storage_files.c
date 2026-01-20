@@ -8,6 +8,197 @@
 #include "User.h"
 #include "Socket.h"
 #include <dirent.h>
+#include <sys/stat.h>
+
+static int ends_with(const char *value, const char *suffix) {
+  size_t value_len = strlen(value);
+  size_t suffix_len = strlen(suffix);
+  if (value_len < suffix_len) {
+    return 0;
+  }
+  return strcmp(value + value_len - suffix_len, suffix) == 0;
+}
+
+static int csv_push_field(char ***fields, size_t *count, size_t *cap, const char *value) {
+  if (*count >= *cap) {
+    size_t next_cap = (*cap == 0) ? 8 : (*cap * 2);
+    char **next = realloc(*fields, next_cap * sizeof(char *));
+    if (!next) {
+      return -1;
+    }
+    *fields = next;
+    *cap = next_cap;
+  }
+  (*fields)[*count] = strdup(value ? value : "");
+  if (!(*fields)[*count]) {
+    return -1;
+  }
+  (*count)++;
+  return 0;
+}
+
+static void csv_free_fields(char **fields, size_t count) {
+  if (!fields) {
+    return;
+  }
+  for (size_t i = 0; i < count; i++) {
+    free(fields[i]);
+  }
+  free(fields);
+}
+
+static int csv_commit_row(cJSON *values, char **headers, size_t header_count, char **fields, size_t field_count) {
+  if (!values || !headers || header_count == 0) {
+    return -1;
+  }
+  cJSON *row = cJSON_CreateObject();
+  for (size_t i = 0; i < header_count; i++) {
+    const char *header = headers[i] ? headers[i] : "";
+    const char *value = (i < field_count && fields[i]) ? fields[i] : "";
+    cJSON_AddStringToObject(row, header, value);
+  }
+  cJSON_AddItemToArray(values, row);
+  return 0;
+}
+
+static char *csv_to_json_string(const char *csv_text) {
+  if (!csv_text) {
+    return NULL;
+  }
+  cJSON *root = create_json_object();
+  cJSON_AddStringToObject(root, "filetype", "csv");
+  cJSON *values = cJSON_AddArrayToObject(root, "values");
+
+  char **headers = NULL;
+  size_t header_count = 0;
+  int has_headers = 0;
+
+  char **fields = NULL;
+  size_t field_count = 0;
+  size_t field_cap = 0;
+
+  size_t buf_cap = 128;
+  size_t buf_len = 0;
+  char *buffer = malloc(buf_cap);
+  int in_quotes = 0;
+  if (!buffer) {
+    cJSON_Delete(root);
+    return NULL;
+  }
+
+  const char *p = csv_text;
+  while (p && *p) {
+    char c = *p;
+    if (in_quotes) {
+      if (c == '"') {
+        if (*(p + 1) == '"') {
+          if (buf_len + 1 >= buf_cap) {
+            buf_cap *= 2;
+            char *next = realloc(buffer, buf_cap);
+            if (!next) {
+              break;
+            }
+            buffer = next;
+          }
+          buffer[buf_len++] = '"';
+          p += 2;
+          continue;
+        }
+        in_quotes = 0;
+        p++;
+        continue;
+      }
+      if (buf_len + 1 >= buf_cap) {
+        buf_cap *= 2;
+        char *next = realloc(buffer, buf_cap);
+        if (!next) {
+          break;
+        }
+        buffer = next;
+      }
+      buffer[buf_len++] = c;
+      p++;
+      continue;
+    }
+    if (c == '"') {
+      in_quotes = 1;
+      p++;
+      continue;
+    }
+    if (c == ',' || c == '\n' || c == '\r' || c == '\0') {
+      buffer[buf_len] = '\0';
+      if (csv_push_field(&fields, &field_count, &field_cap, buffer) != 0) {
+        break;
+      }
+      buf_len = 0;
+      if (c == '\r' && *(p + 1) == '\n') {
+        p++;
+      }
+      if (c == '\n' || c == '\r' || c == '\0') {
+        if (!has_headers) {
+          headers = fields;
+          header_count = field_count;
+          fields = NULL;
+          field_count = 0;
+          field_cap = 0;
+          has_headers = 1;
+        } else if (field_count > 0 || (header_count == 1 && (fields && fields[0] && fields[0][0] != '\0'))) {
+          csv_commit_row(values, headers, header_count, fields, field_count);
+          csv_free_fields(fields, field_count);
+          fields = NULL;
+          field_count = 0;
+          field_cap = 0;
+        } else {
+          csv_free_fields(fields, field_count);
+          fields = NULL;
+          field_count = 0;
+          field_cap = 0;
+        }
+      }
+      if (c == '\0') {
+        break;
+      }
+      p++;
+      continue;
+    }
+    if (buf_len + 1 >= buf_cap) {
+      buf_cap *= 2;
+      char *next = realloc(buffer, buf_cap);
+      if (!next) {
+        break;
+      }
+      buffer = next;
+    }
+    buffer[buf_len++] = c;
+    p++;
+  }
+  if (buf_len > 0 || (p && *p == '\0')) {
+    buffer[buf_len] = '\0';
+    csv_push_field(&fields, &field_count, &field_cap, buffer);
+  }
+  if (!has_headers && fields) {
+    headers = fields;
+    header_count = field_count;
+          fields = NULL;
+    field_count = 0;
+    field_cap = 0;
+    has_headers = 1;
+  } else if (has_headers && fields && field_count > 0) {
+    csv_commit_row(values, headers, header_count, fields, field_count);
+    csv_free_fields(fields, field_count);
+    fields = NULL;
+    field_count = 0;
+    field_cap = 0;
+  }
+
+  free(buffer);
+  csv_free_fields(fields, field_count);
+  csv_free_fields(headers, header_count);
+
+  char *json_string = cJSON_Print(root);
+  cJSON_Delete(root);
+  return json_string;
+}
 
 void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, char* route){
     SSL* cSSL = socket->cSSL;
@@ -203,6 +394,100 @@ void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, 
       send_JSON_response_code(cSSL, 200, json_string);
       free(json_string);
       cJSON_Delete(root);
+      return;
+    }
+    if (strstr(route, "/blob-storage/raw/") != NULL || strstr(route, "/blob-storage/processed/") != NULL){
+      const char *home = getenv("HOME");
+      if (!home || !home[0]){
+        send_response_code(cSSL, 500);
+        return;
+      }
+      const char *needle = NULL;
+      const char *prefix = NULL;
+      if (strstr(route, "/blob-storage/raw/") != NULL) {
+        needle = "/blob-storage/raw/";
+        prefix = "/home-server/blob-storage/raw/";
+      } else {
+        needle = "/blob-storage/processed/";
+        prefix = "/home-server/blob-storage/processed/";
+      }
+      char *start = strstr(route, needle);
+      if (start == NULL){
+        send_response_code(cSSL, 404);
+        return;
+      }
+      start += strlen(needle);
+      char rel_path[2048];
+      size_t idx = 0;
+      while (start[idx] && start[idx] != '?' && idx < sizeof(rel_path) - 1){
+        rel_path[idx] = start[idx];
+        idx++;
+      }
+      rel_path[idx] = '\0';
+      if (rel_path[0] == '\0' || rel_path[0] == '/' || strstr(rel_path, "..") != NULL || strchr(rel_path, '\\') != NULL){
+        send_response_code(cSSL, 400);
+        return;
+      }
+      char full_path[2048];
+      size_t needed = strlen(home) + strlen(prefix) + strlen(rel_path) + 1;
+      if (needed >= sizeof(full_path)){
+        send_response_code(cSSL, 414);
+        return;
+      }
+      snprintf(full_path, sizeof(full_path), "%s%s%s", home, prefix, rel_path);
+      struct stat st;
+      if (stat(full_path, &st) != 0){
+        send_response_code(cSSL, 404);
+        return;
+      }
+      if (S_ISDIR(st.st_mode)){
+        DIR *dir = opendir(full_path);
+        if (dir == NULL){
+          send_response_code(cSSL, 500);
+          return;
+        }
+        cJSON* root = create_json_object();
+        cJSON_AddStringToObject(root, "path", rel_path);
+        cJSON* entries = cJSON_AddArrayToObject(root, "entries");
+        struct dirent *entry;
+        while ((entry = readdir(dir)) != NULL){
+          if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0){
+            continue;
+          }
+          cJSON* item = cJSON_CreateObject();
+          cJSON_AddStringToObject(item, "name", entry->d_name);
+          if (entry->d_type == DT_DIR){
+            cJSON_AddStringToObject(item, "type", "dir");
+          } else {
+            cJSON_AddStringToObject(item, "type", "file");
+          }
+          cJSON_AddItemToArray(entries, item);
+        }
+        closedir(dir);
+        char* json_string = cJSON_Print(root);
+        send_JSON_response_code(cSSL, 200, json_string);
+        free(json_string);
+        cJSON_Delete(root);
+        return;
+      }
+      char* result = get_file_buffer(full_path);
+      if (result == NULL){
+        send_response_code(cSSL, 404);
+        return;
+      }
+      if (ends_with(rel_path, ".csv")) {
+        char *json_string = csv_to_json_string(result);
+        free(result);
+        if (json_string == NULL) {
+          send_response_code(cSSL, 500);
+          return;
+        }
+        send_JSON_response_code(cSSL, 200, json_string);
+        free(json_string);
+        return;
+      }
+      send_JSON_response_code(cSSL, 200, result);
+      free(result);
       return;
     }
     
