@@ -1410,6 +1410,7 @@ function LoadFromBlobStorage(pipeline) {
   if (!$flowchart || !pipeline || !pipeline.activities) {
     return;
   }
+  suspendPipelineSave = true;
   var existing = $flowchart.flowchart("getOperators") || {};
   Object.keys(existing).forEach(function(operatorId) {
     $flowchart.flowchart("deleteOperator", operatorId);
@@ -1537,6 +1538,9 @@ function LoadFromBlobStorage(pipeline) {
     if (activity) {
       activity.activity = $flowchart.flowchart("getOperatorActivity", operatorId);
       activity.activityId = operatorId;
+      if (typeof activity._restore_saved_settings === "function") {
+        activity._restore_saved_settings();
+      }
     }
   });
   setOperatorIndexFromActivities(activities);
@@ -1571,6 +1575,7 @@ function LoadFromBlobStorage(pipeline) {
       window.scheduleLinkAddRefresh();
     }
   }, 0);
+  suspendPipelineSave = false;
 }
 
 function openTriggerModalWithData(trigger) {
@@ -3431,6 +3436,7 @@ $(document).ready(function() {
       }
     }
   }
+  window.flowchartApplyActivityDescription = updateOperatorDescription;
 
   function setActivityTabsVisible(isVisible) {
     if (isVisible) {
@@ -3465,6 +3471,38 @@ $(document).ready(function() {
         }
         return false;
       });
+    }
+    if (activity.activityType === "replace" && Array.isArray(rows)) {
+      var filterFn = null;
+      if (activityInstance && typeof activityInstance._is_meaningful_setting === "function") {
+        filterFn = activityInstance._is_meaningful_setting.bind(activityInstance);
+      } else {
+        filterFn = function(statement) {
+          if (!statement || typeof statement !== "object") {
+            return false;
+          }
+          var hasValue = function(value) {
+            return value != null && String(value).trim() !== "";
+          };
+          return (
+            hasValue(statement.find_value) ||
+            hasValue(statement.value) ||
+            hasValue(statement.new_column_name) ||
+            hasValue(statement.renamed_name) ||
+            hasValue(statement.columnName_2 || statement.column_name_2) ||
+            hasValue(statement.operation) ||
+            hasValue(statement.condition_value) ||
+            hasValue(statement.else_value)
+          );
+        };
+      }
+      rows = rows.filter(filterFn);
+      if (activity.settings && Array.isArray(activity.settings.replace)) {
+        activity.settings.replace = rows;
+      }
+      if ($flowchart) {
+        $flowchart.flowchart("setSettings", operatorId, { replace: rows });
+      }
     }
     if (!rows || rows.length === 0) {
       return;
@@ -4028,6 +4066,12 @@ $(document).ready(function() {
             }
           }
         }
+        if (target_activity && typeof target_activity._ensure_add_button === "function") {
+          target_activity._ensure_add_button();
+        }
+        if (target_activity && typeof target_activity._prune_empty_rows === "function") {
+          target_activity._prune_empty_rows();
+        }
       }
       if (activity.activityType == "flatten") {
         let target_activity = main_activities[operatorId];
@@ -4085,6 +4129,9 @@ $(document).ready(function() {
               break;
             }
           }
+        }
+        if (target_activity && typeof target_activity._restore_saved_settings === "function") {
+          target_activity._restore_saved_settings();
         }
         if (activity.activityType == "http_sink") {
           updateHttpSinkBodyPreview(operatorId);
@@ -4387,13 +4434,17 @@ $(document).ready(function() {
       }
 
       applySavedSettingsToActivity(operatorId);
-      settings_div.oninput = function() {
+      function syncActivitySettings() {
         var target_activity = main_activities[operatorId];
         if (target_activity && typeof target_activity.get_operation_settings === "function") {
           target_activity.get_operation_settings();
         }
+      }
+      settings_div.oninput = syncActivitySettings;
+      settings_div.onchange = function() {
+        syncActivitySettings();
+        schedulePipelineSave();
       };
-      settings_div.onchange = settings_div.oninput;
       settings_div.onfocusout = function(event) {
         if (!event || !event.target) {
           return;

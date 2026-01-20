@@ -3,6 +3,99 @@ class Http_Request_Activity extends Activity {
         super(flowchart, activity)
         this.operation_type = "call"
         this.settings = this.get_settings_element()
+        this._allow_header_fallback = false
+    }
+
+    _get_saved_call_settings() {
+        const live_activity = this.flowchart && typeof this.flowchart.flowchart === "function"
+            ? this.flowchart.flowchart("getOperatorActivity", this.activityId)
+            : this.activity
+        const candidates = [
+            this.activity?.settings?.call,
+            this.activity?.properties?.settings?.call,
+            live_activity?.settings?.call,
+            live_activity?.properties?.settings?.call
+        ]
+        if (this.flowchart && typeof this.flowchart.flowchart === "function") {
+            const data_ref = this.flowchart.flowchart("getDataRef")
+            const ref_call = data_ref?.operators?.[this.activityId]?.properties?.settings?.call
+            if (Array.isArray(ref_call)) {
+                candidates.push(ref_call)
+            }
+        }
+        for (const entry of candidates) {
+            if (Array.isArray(entry) && entry.length) {
+                return entry
+            }
+        }
+        return null
+    }
+
+    _get_saved_headers_fallback() {
+        const live_activity = this.flowchart && typeof this.flowchart.flowchart === "function"
+            ? this.flowchart.flowchart("getOperatorActivity", this.activityId)
+            : this.activity
+        const candidates = [
+            this.activity?.settings?.call,
+            this.activity?.properties?.settings?.call,
+            live_activity?.settings?.call,
+            live_activity?.properties?.settings?.call
+        ]
+        if (this.flowchart && typeof this.flowchart.flowchart === "function") {
+            const data_ref = this.flowchart.flowchart("getDataRef")
+            const ref_call = data_ref?.operators?.[this.activityId]?.properties?.settings?.call
+            if (Array.isArray(ref_call)) {
+                candidates.push(ref_call)
+            }
+        }
+        for (const entry of candidates) {
+            if (Array.isArray(entry) && entry[0] && typeof entry[0].headers === "object") {
+                return entry[0].headers
+            }
+        }
+        return null
+    }
+
+    _append_header_rows(headers, columns_div) {
+        if (!headers || typeof headers !== "object") {
+            return 0
+        }
+        let count = 0
+        Object.keys(headers).forEach(header_key => {
+            this._add_column(null, this.flowchart, this, { suppress_save: true })
+            const rows = columns_div.querySelectorAll(".select-column-row")
+            const row = rows[rows.length - 1]
+            if (!row) {
+                return
+            }
+            const key_input = row.querySelector("input[name='header_key']")
+            const value_input = row.querySelector("input[name='header_value']")
+            if (key_input) {
+                key_input.value = header_key
+            }
+            if (value_input) {
+                value_input.value = headers[header_key]
+            }
+            count++
+        })
+        return count
+    }
+
+    _restore_saved_settings() {
+        const columns_div = document.getElementById(this.activityId + "_column_edit")
+        if (!columns_div) {
+            return
+        }
+        const existing = columns_div.querySelector("input[name='header_key']")
+        if (existing) {
+            return
+        }
+        const saved_settings = this._get_saved_call_settings()
+        const base = Array.isArray(saved_settings) ? (saved_settings[0] || {}) : {}
+        if (base.headers && typeof base.headers === "object" && Object.keys(base.headers).length > 0) {
+            this._append_header_rows(base.headers, columns_div)
+        }
+        this._allow_header_fallback = false
     }
 
     get_settings_element() {
@@ -193,7 +286,8 @@ class Http_Request_Activity extends Activity {
         columns_div.appendChild(actions)
 
         div.appendChild(columns_div)
-        const saved_settings = this.activity.settings?.call
+        const saved_settings = this._get_saved_call_settings()
+        let header_row_count = 0
         if (Array.isArray(saved_settings) && saved_settings.length > 0) {
             const base = saved_settings[0] || {}
             if (base.url) {
@@ -222,23 +316,11 @@ class Http_Request_Activity extends Activity {
             }
             update_pagination_visibility()
             if (base.headers && typeof base.headers === "object") {
-                Object.keys(base.headers).forEach(header_key => {
-                    this._add_column(null, this.flowchart, this)
-                    const rows = columns_div.querySelectorAll(".select-column-row")
-                    const row = rows[rows.length - 1]
-                    if (!row) {
-                        return
-                    }
-                    const key_input = row.querySelector("input[name='header_key']")
-                    const value_input = row.querySelector("input[name='header_value']")
-                    if (key_input) {
-                        key_input.value = header_key
-                    }
-                    if (value_input) {
-                        value_input.value = base.headers[header_key]
-                    }
-                })
+                header_row_count += this._append_header_rows(base.headers, columns_div)
             }
+        }
+        if (header_row_count > 0) {
+            this._allow_header_fallback = false
         }
         return div
     }
@@ -307,15 +389,19 @@ class Http_Request_Activity extends Activity {
         if (wrapper) {
             wrapper.remove()
             this.get_operation_settings()
+            if (typeof window.flowchartSchedulePipelineSave === "function") {
+                window.flowchartSchedulePipelineSave()
+            }
             return
         }
     }
 
-    _add_column(e, widget, activity) {
+    _add_column(e, widget, activity, options) {
         let columns_div = document.getElementById(activity.activityId + "_column_edit");
         if (!columns_div) {
             return
         }
+        const suppress_save = options && options.suppress_save
         let settings = [
             {
                 'type': 'input',
@@ -345,7 +431,9 @@ class Http_Request_Activity extends Activity {
         row_wrapper.appendChild(drag_handle)
         row_wrapper.appendChild(header_element)
         columns_div.appendChild(row_wrapper)
-        this.get_operation_settings()
+        if (!suppress_save) {
+            this.get_operation_settings()
+        }
     }
 }
 
@@ -354,6 +442,99 @@ class Http_Sink_Activity extends Activity {
         super(flowchart, activity)
         this.operation_type = "call"
         this.settings = this.get_settings_element()
+        this._allow_header_fallback = false
+    }
+
+    _get_saved_call_settings() {
+        const live_activity = this.flowchart && typeof this.flowchart.flowchart === "function"
+            ? this.flowchart.flowchart("getOperatorActivity", this.activityId)
+            : this.activity
+        const candidates = [
+            this.activity?.settings?.call,
+            this.activity?.properties?.settings?.call,
+            live_activity?.settings?.call,
+            live_activity?.properties?.settings?.call
+        ]
+        if (this.flowchart && typeof this.flowchart.flowchart === "function") {
+            const data_ref = this.flowchart.flowchart("getDataRef")
+            const ref_call = data_ref?.operators?.[this.activityId]?.properties?.settings?.call
+            if (Array.isArray(ref_call)) {
+                candidates.push(ref_call)
+            }
+        }
+        for (const entry of candidates) {
+            if (Array.isArray(entry) && entry.length) {
+                return entry
+            }
+        }
+        return null
+    }
+
+    _get_saved_headers_fallback() {
+        const live_activity = this.flowchart && typeof this.flowchart.flowchart === "function"
+            ? this.flowchart.flowchart("getOperatorActivity", this.activityId)
+            : this.activity
+        const candidates = [
+            this.activity?.settings?.call,
+            this.activity?.properties?.settings?.call,
+            live_activity?.settings?.call,
+            live_activity?.properties?.settings?.call
+        ]
+        if (this.flowchart && typeof this.flowchart.flowchart === "function") {
+            const data_ref = this.flowchart.flowchart("getDataRef")
+            const ref_call = data_ref?.operators?.[this.activityId]?.properties?.settings?.call
+            if (Array.isArray(ref_call)) {
+                candidates.push(ref_call)
+            }
+        }
+        for (const entry of candidates) {
+            if (Array.isArray(entry) && entry[0] && typeof entry[0].headers === "object") {
+                return entry[0].headers
+            }
+        }
+        return null
+    }
+
+    _append_header_rows(headers, columns_div) {
+        if (!headers || typeof headers !== "object") {
+            return 0
+        }
+        let count = 0
+        Object.keys(headers).forEach(header_key => {
+            this._add_column(null, this.flowchart, this, { suppress_save: true })
+            const rows = columns_div.querySelectorAll(".select-column-row")
+            const row = rows[rows.length - 1]
+            if (!row) {
+                return
+            }
+            const key_input = row.querySelector("input[name='header_key']")
+            const value_input = row.querySelector("input[name='header_value']")
+            if (key_input) {
+                key_input.value = header_key
+            }
+            if (value_input) {
+                value_input.value = headers[header_key]
+            }
+            count++
+        })
+        return count
+    }
+
+    _restore_saved_settings() {
+        const columns_div = document.getElementById(this.activityId + "_column_edit")
+        if (!columns_div) {
+            return
+        }
+        const existing = columns_div.querySelector("input[name='header_key']")
+        if (existing) {
+            return
+        }
+        const saved_settings = this._get_saved_call_settings()
+        const base = Array.isArray(saved_settings) ? (saved_settings[0] || {}) : {}
+        if (base.headers && typeof base.headers === "object" && Object.keys(base.headers).length > 0) {
+            this._append_header_rows(base.headers, columns_div)
+        }
+        this._allow_header_fallback = false
     }
 
     get_settings_element() {
@@ -423,30 +604,19 @@ class Http_Sink_Activity extends Activity {
 
         div.appendChild(columns_div)
         this.body_preview = body_input
-        const saved_settings = this.activity.settings?.call
+        const saved_settings = this._get_saved_call_settings()
+        let header_row_count = 0
         if (Array.isArray(saved_settings) && saved_settings.length > 0) {
             const base = saved_settings[0] || {}
             if (base.url) {
                 url_input.value = base.url
             }
             if (base.headers && typeof base.headers === "object") {
-                Object.keys(base.headers).forEach(header_key => {
-                    this._add_column(null, this.flowchart, this)
-                    const rows = columns_div.querySelectorAll(".select-column-row")
-                    const row = rows[rows.length - 1]
-                    if (!row) {
-                        return
-                    }
-                    const key_input = row.querySelector("input[name='header_key']")
-                    const value_input = row.querySelector("input[name='header_value']")
-                    if (key_input) {
-                        key_input.value = header_key
-                    }
-                    if (value_input) {
-                        value_input.value = base.headers[header_key]
-                    }
-                })
+                header_row_count += this._append_header_rows(base.headers, columns_div)
             }
+        }
+        if (header_row_count > 0) {
+            this._allow_header_fallback = false
         }
         return div
     }
@@ -460,11 +630,11 @@ class Http_Sink_Activity extends Activity {
                 if (entry.url) {
                     base.url = entry.url
                 }
-                if (entry.header_key) {
-                    headers[entry.header_key] = entry.header_value || ""
-                }
-            })
-        }
+            if (entry.header_key) {
+                headers[entry.header_key] = entry.header_value || ""
+            }
+        })
+      }
         base.headers = headers
         settings = { call: [base] }
         this.flowchart.flowchart('setSettings', this.activityId, settings)
@@ -500,15 +670,19 @@ class Http_Sink_Activity extends Activity {
         if (wrapper) {
             wrapper.remove()
             this.get_operation_settings()
+            if (typeof window.flowchartSchedulePipelineSave === "function") {
+                window.flowchartSchedulePipelineSave()
+            }
             return
         }
     }
 
-    _add_column(e, widget, activity) {
+    _add_column(e, widget, activity, options) {
         let columns_div = document.getElementById(activity.activityId + "_column_edit");
         if (!columns_div) {
             return
         }
+        const suppress_save = options && options.suppress_save
         let settings = [
             {
                 'type': 'input',
@@ -538,6 +712,8 @@ class Http_Sink_Activity extends Activity {
         row_wrapper.appendChild(drag_handle)
         row_wrapper.appendChild(header_element)
         columns_div.appendChild(row_wrapper)
-        this.get_operation_settings()
+        if (!suppress_save) {
+            this.get_operation_settings()
+        }
     }
 }

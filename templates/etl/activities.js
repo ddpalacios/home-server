@@ -222,6 +222,7 @@ class Settings{
                     input.value = element?.value
                 }
                 input.addEventListener("change", (event) => this._on_input_change(event, widget, this));
+                input.addEventListener("input", (event) => this._on_input_change(event, widget, this));
                 div.appendChild(input)
             }
             if (elem_type == 'button'){
