@@ -320,7 +320,6 @@ jQuery(function ($) {
             this._drawLink(linkId);
 
             this.callbackEvent('afterChange', ['link_create']);
-            console.log("Created link", linkId, linkData)
         },
 
         _autoCreateSubConnector: function (operator, connector, connectorType, subConnector) {
@@ -1789,7 +1788,6 @@ jQuery(function ($) {
             }
             this.data.operators[operatorId].internal.properties['link_to'] = all_to_links
             this.data.operators[operatorId].internal.properties['link_from'] = all_from_links
-            console.log("SETTING LINKS OUT AND IN", all_to_links, all_from_links)
 
             
             return  this.data.operators[operatorId].internal.properties

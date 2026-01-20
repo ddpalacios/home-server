@@ -632,7 +632,7 @@ document.addEventListener("DOMContentLoaded", function() {
     pipelineDetails.className = "pipeline-collapsible";
     pipelineDetails.open = true;
     var pipelineSummary = document.createElement("summary");
-    pipelineSummary.textContent = "Saved Pipelines";
+    pipelineSummary.textContent = "Saved Dataflows";
     pipelineSummary.setAttribute("aria-controls", "pipelinePanelBody");
     var pipelineBody = document.createElement("div");
     pipelineBody.className = "pipeline-collapsible-body";

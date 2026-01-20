@@ -66,7 +66,6 @@ class Replace_Activity extends Activity{
     }
 
     _ensure_add_button(){
-        console.log("Replace_Activity: ensure add button");
         if (!this.settings) {
             return
         }
