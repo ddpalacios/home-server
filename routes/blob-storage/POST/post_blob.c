@@ -147,6 +147,44 @@ void connect_to_server(const char* host, const char* port, char*body){
 		send_response_code(cSSL, 200);
 		return;
 	}
+	else if (strstr(route, "/blob-storage/etl/dataflow/save")!= NULL){
+		char* pipelineId = get_query_parameter(route, "pipelineId");
+		if (pipelineId == NULL){
+			send_response_code(cSSL, 400);
+			return;
+		}
+		const char *home = getenv("HOME");
+		if (!home || !home[0]){
+			send_response_code(cSSL, 500);
+			return;
+		}
+		if (!body){
+			send_response_code(cSSL, 400);
+			return;
+		}
+		char dir_path[2048];
+		snprintf(dir_path, sizeof(dir_path), "%s/home-server/blob-storage/raw/etl/dataflows", home);
+		if (ensure_dir(dir_path) != 0){
+			send_response_code(cSSL, 500);
+			return;
+		}
+		snprintf(write_path, sizeof(write_path),"%s/home-server/blob-storage/raw/etl/dataflows/%s.json", home, pipelineId);
+		FILE *file = fopen(write_path, "w");
+		if (!file) {
+			perror("Failed to open file");
+			send_response_code(cSSL, 500);
+			return;
+		}
+		if (fputs(body, file) == EOF) {
+			perror("Failed to write to file");
+			fclose(file);
+			send_response_code(cSSL, 500);
+			return;
+		}
+		fclose(file);
+		send_response_code(cSSL, 200);
+		return;
+	}
 	else if (strstr(route, "/blob-storage/etl/trigger/save")!= NULL){
 		char* triggerId = get_query_parameter(route, "triggerId");
 		if (triggerId == NULL){
@@ -195,6 +233,57 @@ void connect_to_server(const char* host, const char* port, char*body){
 			return;
 		}
 		snprintf(write_path, sizeof(write_path),"%s/home-server/blob-storage/raw/etl/pipeline/%s.json", home, pipelineId);
+		if (remove(write_path) != 0){
+			send_response_code(cSSL, 404);
+			return;
+		}
+		char trigger_dir[2048];
+		snprintf(trigger_dir, sizeof(trigger_dir), "%s/home-server/blob-storage/raw/etl/trigger", home);
+		DIR *dir = opendir(trigger_dir);
+		if (dir != NULL){
+			struct dirent *entry;
+			while ((entry = readdir(dir)) != NULL){
+				if (entry->d_type != DT_REG){
+					continue;
+				}
+				if (strncmp(entry->d_name, "triggers_", 9) != 0){
+					continue;
+				}
+				char trigger_path[2048];
+				snprintf(trigger_path, sizeof(trigger_path), "%s/home-server/blob-storage/raw/etl/trigger/%s", home, entry->d_name);
+				char* content = get_file_buffer(trigger_path);
+				if (content == NULL){
+					continue;
+				}
+				cJSON* parsed = cJSON_Parse(content);
+				free(content);
+				if (parsed == NULL){
+					continue;
+				}
+				cJSON* stored_pipeline = cJSON_GetObjectItem(parsed, "pipeline_id");
+				if (cJSON_IsString(stored_pipeline) && stored_pipeline->valuestring != NULL &&
+					strcmp(stored_pipeline->valuestring, pipelineId) == 0) {
+					remove(trigger_path);
+				}
+				cJSON_Delete(parsed);
+			}
+			closedir(dir);
+		}
+		send_response_code(cSSL, 200);
+		return;
+	}
+	else if (strstr(route, "/blob-storage/etl/dataflow/delete")!= NULL){
+		char* pipelineId = get_query_parameter(route, "pipelineId");
+		if (pipelineId == NULL){
+			send_response_code(cSSL, 400);
+			return;
+		}
+		const char *home = getenv("HOME");
+		if (!home || !home[0]){
+			send_response_code(cSSL, 500);
+			return;
+		}
+		snprintf(write_path, sizeof(write_path),"%s/home-server/blob-storage/raw/etl/dataflows/%s.json", home, pipelineId);
 		if (remove(write_path) != 0){
 			send_response_code(cSSL, 404);
 			return;

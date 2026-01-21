@@ -283,10 +283,17 @@ void send_response_code(SSL *cSSL,int code ){
 	}
 
 }
-int get_http_header(char* request, char*header_result){
+int get_http_header(char* request, char*header_result, size_t header_result_size){
 		char*header_end = strstr(request, "\r\n\r\n");
+		if (!header_end) {
+			return 0;
+		}
 		size_t header_length= header_end - request;
+		if (header_length == 0 || header_length + 1 > header_result_size) {
+			return 0;
+		}
 		strncpy(header_result, request, header_length);
+		header_result[header_length] = '\0';
 		return header_length;
 }
 char* generate_websocket_accptKey(char* websocket_sec_key ){

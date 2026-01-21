@@ -219,6 +219,23 @@ void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, 
       free(result);
       return;
     }
+    if (strstr(route, "/blob-storage/etl/dataflow/load") != NULL){
+      char* pipelineId = get_query_parameter(route, "pipelineId");
+      if (pipelineId == NULL){
+        send_response_code(cSSL, 400);
+        return;
+      }
+      char path[2048];
+      snprintf(path, sizeof(path), "../blob-storage/raw/etl/dataflows/%s.json", pipelineId);
+      char* result = get_file_buffer(path);
+      if (result == NULL){
+        send_response_code(cSSL, 404);
+        return;
+      }
+      send_JSON_response_code(cSSL, 200, result);
+      free(result);
+      return;
+    }
     if (strstr(route, "/blob-storage/etl/trigger/load") != NULL){
       char* triggerId = get_query_parameter(route, "triggerId");
       if (triggerId == NULL){
@@ -269,6 +286,89 @@ void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, 
         }
         char path[2048];
         snprintf(path, sizeof(path), "%s/home-server/blob-storage/raw/etl/pipeline/%s", home, entry->d_name);
+        char* content = get_file_buffer(path);
+        if (content == NULL){
+          continue;
+        }
+        cJSON* parsed = cJSON_Parse(content);
+        free(content);
+        if (parsed == NULL){
+          continue;
+        }
+        cJSON* stored_google = cJSON_GetObjectItem(parsed, "google_id");
+        if (!cJSON_IsString(stored_google) || strcmp(stored_google->valuestring, googleId) != 0){
+          cJSON_Delete(parsed);
+          continue;
+        }
+        cJSON* item = cJSON_CreateObject();
+        char pipeline_id[256];
+        snprintf(pipeline_id, sizeof(pipeline_id), "%s", entry->d_name);
+        char* dot = strstr(pipeline_id, ".json");
+        if (dot){
+          *dot = '\0';
+        }
+        cJSON_AddStringToObject(item, "pipeline_id", pipeline_id);
+        cJSON* pipeline_name = cJSON_GetObjectItem(parsed, "pipeline_name");
+        if (cJSON_IsString(pipeline_name)) {
+          cJSON_AddStringToObject(item, "pipeline_name", pipeline_name->valuestring);
+        } else {
+          cJSON_AddStringToObject(item, "pipeline_name", "Untitled Pipeline");
+        }
+        cJSON* description = cJSON_GetObjectItem(parsed, "description");
+        if (cJSON_IsString(description)) {
+          cJSON_AddStringToObject(item, "description", description->valuestring);
+        } else {
+          cJSON_AddStringToObject(item, "description", "");
+        }
+        cJSON* stored_pipeline = cJSON_GetObjectItem(parsed, "pipeline_id");
+        if (cJSON_IsString(stored_pipeline)) {
+          cJSON_AddStringToObject(item, "pipeline_id", stored_pipeline->valuestring);
+        } else {
+          cJSON_AddStringToObject(item, "pipeline_id", "");
+        }
+        cJSON_AddItemToArray(values, item);
+        cJSON_Delete(parsed);
+      }
+      closedir(dir);
+      char* json_string = cJSON_Print(root);
+      send_JSON_response_code(cSSL, 200, json_string);
+      free(json_string);
+      cJSON_Delete(root);
+      return;
+    }
+    if (strstr(route, "/blob-storage/etl/dataflow/list") != NULL){
+      char* googleId = get_query_parameter(route, "googleId");
+      if (googleId == NULL){
+        send_response_code(cSSL, 400);
+        return;
+      }
+      const char *home = getenv("HOME");
+      if (!home || !home[0]){
+        send_response_code(cSSL, 500);
+        return;
+      }
+      char pipeline_dir[2048];
+      snprintf(pipeline_dir, sizeof(pipeline_dir), "%s/home-server/blob-storage/raw/etl/dataflows", home);
+      DIR *dir = opendir(pipeline_dir);
+      if (dir == NULL){
+        send_response_code(cSSL, 500);
+        return;
+      }
+      cJSON* root = create_json_object();
+      cJSON* values = cJSON_AddArrayToObject(root, "values");
+      struct dirent *entry;
+      while ((entry = readdir(dir)) != NULL){
+        if (entry->d_type != DT_REG){
+          continue;
+        }
+        if (!strstr(entry->d_name, ".json")){
+          continue;
+        }
+        if (strncmp(entry->d_name, "triggers_", 9) == 0){
+          continue;
+        }
+        char path[2048];
+        snprintf(path, sizeof(path), "%s/home-server/blob-storage/raw/etl/dataflows/%s", home, entry->d_name);
         char* content = get_file_buffer(path);
         if (content == NULL){
           continue;

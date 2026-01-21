@@ -1734,7 +1734,6 @@ jQuery(function ($) {
             //     }
             // }
             // data.operatorTypes = this.data.operatorTypes;
-            console.log("PIPELINE DATA",pipeline)
             return pipeline;
         },
 

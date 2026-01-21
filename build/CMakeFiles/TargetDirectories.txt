@@ -1,3 +1,3 @@
-/home/dario/home-server/build/CMakeFiles/home-server.dir
-/home/dario/home-server/build/CMakeFiles/edit_cache.dir
-/home/dario/home-server/build/CMakeFiles/rebuild_cache.dir
+/home/dpalacios/home-server/build/CMakeFiles/home-server.dir
+/home/dpalacios/home-server/build/CMakeFiles/edit_cache.dir
+/home/dpalacios/home-server/build/CMakeFiles/rebuild_cache.dir

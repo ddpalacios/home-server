@@ -439,6 +439,7 @@ function updateGoogleLoginButtonStatus() {
       window.googleLoginProfile = data;
       loadPipelineFromBlobStorage();
       fetchPipelineList();
+      fetchSavedPipelineList();
       fetchTriggerList();
       var icon = button.querySelector(".google-login-icon");
       var label = button.querySelector("span:last-child");
@@ -474,8 +475,10 @@ document.addEventListener("DOMContentLoaded", function() {
   );
   var groupToggle = document.getElementById("groupToggle");
   var newPipelineButton = document.getElementById("newPipelineButton");
+  var newSavedPipelineButton = document.getElementById("newSavedPipelineButton");
   var newTriggerButton = document.getElementById("newTriggerButton");
   var pipelinePanel = document.querySelector(".pipeline-panel");
+  var savedPipelinePanel = document.querySelector(".pipeline-panel--pipelines");
   var triggerGroup = document.getElementById("savedTriggersGroup");
   var sidebarButtons = document.querySelector(".sidebar-buttons");
   var scheduledTriggerSelect = document.getElementById("scheduled_trigger_select");
@@ -485,6 +488,7 @@ document.addEventListener("DOMContentLoaded", function() {
   var testRunsRefresh = document.getElementById("test_runs_refresh");
   var testRunsExport = document.getElementById("test_runs_export");
   var pipelineGroup = null;
+  var savedPipelineGroup = null;
   var ingestGroup = null;
   Array.prototype.slice.call(document.querySelectorAll(".activity-group summary")).some(function(summary) {
     if ((summary.textContent || "").trim().toLowerCase() === "ingest") {
@@ -527,6 +531,9 @@ document.addEventListener("DOMContentLoaded", function() {
     if (pipelineGroup) {
       allOpen = allOpen && pipelineGroup.open;
     }
+    if (savedPipelineGroup) {
+      allOpen = allOpen && savedPipelineGroup.open;
+    }
     if (triggerGroup) {
       allOpen = allOpen && triggerGroup.open;
     }
@@ -545,6 +552,9 @@ document.addEventListener("DOMContentLoaded", function() {
       if (pipelineGroup && !pipelineGroup.open) {
         shouldOpenAll = true;
       }
+      if (savedPipelineGroup && !savedPipelineGroup.open) {
+        shouldOpenAll = true;
+      }
       if (triggerGroup && !triggerGroup.open) {
         shouldOpenAll = true;
       }
@@ -553,6 +563,9 @@ document.addEventListener("DOMContentLoaded", function() {
       });
       if (pipelineGroup) {
         pipelineGroup.open = shouldOpenAll;
+      }
+      if (savedPipelineGroup) {
+        savedPipelineGroup.open = shouldOpenAll;
       }
       if (triggerGroup) {
         triggerGroup.open = shouldOpenAll;
@@ -614,6 +627,15 @@ document.addEventListener("DOMContentLoaded", function() {
 
   if (newPipelineButton) {
     newPipelineButton.addEventListener("click", function() {
+      setActivePipelineType("dataflow");
+      if (typeof window.flowchartClearWorkspace === "function") {
+        window.flowchartClearWorkspace();
+      }
+    });
+  }
+  if (newSavedPipelineButton) {
+    newSavedPipelineButton.addEventListener("click", function() {
+      setActivePipelineType("pipeline");
       if (typeof window.flowchartClearWorkspace === "function") {
         window.flowchartClearWorkspace();
       }
@@ -646,12 +668,31 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     pipelineGroup = pipelineDetails;
   }
+  if (savedPipelinePanel && pipelineGroup && sidebarButtons) {
+    var savedPipelineDetails = document.createElement("details");
+    savedPipelineDetails.className = "pipeline-collapsible";
+    savedPipelineDetails.open = true;
+    var savedPipelineSummary = document.createElement("summary");
+    savedPipelineSummary.textContent = "Saved Pipelines";
+    savedPipelineSummary.setAttribute("aria-controls", "savedPipelinePanelBody");
+    var savedPipelineBody = document.createElement("div");
+    savedPipelineBody.className = "pipeline-collapsible-body";
+    savedPipelineBody.id = "savedPipelinePanelBody";
+    savedPipelineBody.appendChild(savedPipelinePanel);
+    savedPipelineDetails.appendChild(savedPipelineSummary);
+    savedPipelineDetails.appendChild(savedPipelineBody);
+    sidebarButtons.insertBefore(savedPipelineDetails, pipelineGroup.nextSibling);
+    savedPipelineGroup = savedPipelineDetails;
+  }
 
   activityGroups.forEach(function(group) {
     group.addEventListener("toggle", syncGroupToggle);
   });
   if (triggerGroup) {
     triggerGroup.addEventListener("toggle", syncGroupToggle);
+  }
+  if (savedPipelineGroup) {
+    savedPipelineGroup.addEventListener("toggle", syncGroupToggle);
   }
 
   toggleButtons.forEach(function(button) {
@@ -694,6 +735,16 @@ document.addEventListener("DOMContentLoaded", function() {
           row.style.display = matches ? "" : "none";
         });
       }
+      var savedPipelineList = document.getElementById("savedPipelineList");
+      if (savedPipelineList) {
+        var savedRows = savedPipelineList.querySelectorAll(".pipeline-list-row");
+        savedRows.forEach(function(row) {
+          var labelEl = row.querySelector(".pipeline-list-label");
+          var name = (labelEl && labelEl.textContent ? labelEl.textContent : "").toLowerCase();
+          var matches = query.length === 0 || name.indexOf(query) !== -1;
+          row.style.display = matches ? "" : "none";
+        });
+      }
     });
   }
 
@@ -707,12 +758,14 @@ document.addEventListener("mousemove", function(event) {
 });
 
 let pipeline_id;
+var activePipelineType = "dataflow";
 var pipelineNameCounter = 1;
 var suspendPipelineSave = false;
 var emptyPipelineSeeded = false;
 var suppressEmptyPipelineSeed = false;
 var disableEmptyPipelineSeed = false;
 var cachedPipelines = [];
+var cachedSavedPipelines = [];
 var operatorI = 0;
 
 function setOperatorIndexFromActivities(activities) {
@@ -760,6 +813,94 @@ function setCurrentPipelineId(value) {
   }
 }
 
+function setActivePipelineType(type) {
+  if (type !== "dataflow" && type !== "pipeline") {
+    return;
+  }
+  activePipelineType = type;
+  try {
+    localStorage.setItem("etl_pipeline_type", type);
+  } catch (error) {
+    // ignore storage errors
+  }
+  renderPipelineListSelection(type === "dataflow" ? pipeline_id : "");
+  renderSavedPipelineListSelection(type === "pipeline" ? pipeline_id : "");
+  var importPlaceholderEl = document.getElementById("importPlaceholder");
+  var selectPlaceholdersEl = document.getElementById("selectPlaceholders");
+  var linkAddLayerEl = document.getElementById("linkAddLayer");
+  if (type === "pipeline") {
+    if (importPlaceholderEl) {
+      importPlaceholderEl.style.visibility = "hidden";
+    }
+    if (selectPlaceholdersEl) {
+      selectPlaceholdersEl.innerHTML = "";
+    }
+    if (linkAddLayerEl) {
+      linkAddLayerEl.innerHTML = "";
+    }
+    if (typeof window.setOperatorDraggingEnabled === "function") {
+      window.setOperatorDraggingEnabled(true);
+    }
+  } else {
+    if (importPlaceholderEl) {
+      importPlaceholderEl.style.visibility = "";
+    }
+    if (typeof window.repositionImportPlaceholder === "function") {
+      window.repositionImportPlaceholder();
+    }
+    if (typeof window.repositionSelectPlaceholders === "function") {
+      window.repositionSelectPlaceholders();
+    }
+    if (typeof window.scheduleLinkAddRefresh === "function") {
+      window.scheduleLinkAddRefresh();
+    }
+    if (typeof window.setOperatorDraggingEnabled === "function") {
+      window.setOperatorDraggingEnabled(false);
+    }
+  }
+  if (typeof window.updatePipelineActivitiesTab === "function") {
+    window.updatePipelineActivitiesTab();
+  }
+  updateTriggerVisibility();
+}
+window.setActivePipelineType = setActivePipelineType;
+
+function updateTriggerVisibility() {
+  const triggerButton = document.getElementById("createTrigger");
+  const triggerGroup = document.getElementById("savedTriggersGroup");
+  const triggerTab = document.getElementById("tabScheduledTriggers");
+  const isPipeline = activePipelineType === "pipeline";
+  if (triggerButton) {
+    triggerButton.disabled = !isPipeline;
+    triggerButton.classList.toggle("is-disabled", !isPipeline);
+    triggerButton.setAttribute("aria-disabled", isPipeline ? "false" : "true");
+  }
+  if (triggerGroup) {
+    triggerGroup.style.display = isPipeline ? "" : "none";
+  }
+  if (triggerTab) {
+    triggerTab.style.display = isPipeline ? "" : "none";
+  }
+}
+
+function placeholdersEnabled() {
+  return activePipelineType === "dataflow";
+}
+
+function getPipelineStorageBase(type) {
+  return type === "pipeline" ? "pipeline" : "dataflow";
+}
+
+function getAvailableDataflows() {
+  return Array.isArray(cachedPipelines) ? cachedPipelines : [];
+}
+window.getAvailableDataflows = getAvailableDataflows;
+
+function getAvailablePipelines() {
+  return Array.isArray(cachedSavedPipelines) ? cachedSavedPipelines : [];
+}
+window.getAvailablePipelines = getAvailablePipelines;
+
 function generatePipelineId() {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
     return crypto.randomUUID();
@@ -793,7 +934,8 @@ function getNextPipelineName() {
 }
 
 async function post_pipeline(googleId, pipelineId, body) {
-  var request = new Request("/blob-storage/etl/pipeline/save?googleId=" + googleId + "&pipelineId=" + pipelineId, {
+  var base = getPipelineStorageBase(activePipelineType);
+  var request = new Request("/blob-storage/etl/" + base + "/save?googleId=" + googleId + "&pipelineId=" + pipelineId, {
     method: "POST",
     headers: new Headers({
       "Accept": "application/json"
@@ -856,8 +998,28 @@ function renderPipelineListSelection(activeId) {
   });
 }
 
+function renderSavedPipelineListSelection(activeId) {
+  var list = document.getElementById("savedPipelineList");
+  if (!list) {
+    return;
+  }
+  var entries = list.querySelectorAll("[data-pipeline-id]");
+  entries.forEach(function(entry) {
+    var id = entry.getAttribute("data-pipeline-id");
+    if (id && id === activeId) {
+      entry.classList.add("is-active");
+    } else {
+      entry.classList.remove("is-active");
+    }
+  });
+}
+
 function renderPipelineList(pipelines) {
   cachedPipelines = Array.isArray(pipelines) ? pipelines.slice() : [];
+  window.cachedDataflows = cachedPipelines.slice();
+  if (typeof window.refreshDataflowActivityOptions === "function") {
+    window.refreshDataflowActivityOptions(window.cachedDataflows);
+  }
   var list = document.getElementById("pipelineList");
   if (!list) {
     return;
@@ -898,7 +1060,7 @@ function renderPipelineList(pipelines) {
       if (!nextName) {
         return;
       }
-      var request = new Request("/blob-storage/etl/pipeline/load?pipelineId=" + pipelineId, {
+      var request = new Request("/blob-storage/etl/dataflow/load?pipelineId=" + pipelineId, {
         method: "GET",
         headers: new Headers({
           "Accept": "application/json"
@@ -927,6 +1089,7 @@ function renderPipelineList(pipelines) {
           if (!safeGoogleId) {
             safeGoogleId = "unknown";
           }
+          setActivePipelineType("dataflow");
           post_pipeline(safeGoogleId, pipeline.pipeline_id, pipeline);
           fetchPipelineList();
           if (pipeline_id === pipelineId) {
@@ -946,7 +1109,7 @@ function renderPipelineList(pipelines) {
         return;
       }
       closePipelineMenus();
-      var request = new Request("/blob-storage/etl/pipeline/load?pipelineId=" + pipelineId, {
+      var request = new Request("/blob-storage/etl/dataflow/load?pipelineId=" + pipelineId, {
         method: "GET",
         headers: new Headers({
           "Accept": "application/json"
@@ -975,6 +1138,7 @@ function renderPipelineList(pipelines) {
           if (!safeGoogleId) {
             safeGoogleId = "unknown";
           }
+          setActivePipelineType("dataflow");
           post_pipeline(safeGoogleId, pipeline.pipeline_id, pipeline);
           fetchPipelineList();
         })
@@ -1063,12 +1227,14 @@ function renderPipelineList(pipelines) {
       }
     });
     card.addEventListener("click", function() {
+      setActivePipelineType("dataflow");
       setSelectedTestRunPipeline(item.pipeline_id);
       loadPipelineById(item.pipeline_id);
     });
     card.addEventListener("keydown", function(event) {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
+        setActivePipelineType("dataflow");
         setSelectedTestRunPipeline(item.pipeline_id);
         loadPipelineById(item.pipeline_id);
       }
@@ -1079,21 +1245,256 @@ function renderPipelineList(pipelines) {
     row.appendChild(card);
     list.appendChild(row);
   });
-  renderPipelineListSelection(pipeline_id);
+  renderPipelineListSelection(activePipelineType === "dataflow" ? pipeline_id : "");
   updateTestRunOptions(cachedPipelines);
+}
+
+function renderSavedPipelineList(pipelines) {
+  cachedSavedPipelines = Array.isArray(pipelines) ? pipelines.slice() : [];
+  if (typeof window.refreshPipelineActivityOptions === "function") {
+    window.refreshPipelineActivityOptions(cachedSavedPipelines);
+  }
+  var list = document.getElementById("savedPipelineList");
+  if (!list) {
+    return;
+  }
+  list.innerHTML = "";
+  function getDuplicateName(baseName) {
+    var normalized = (baseName || "pipeline").replace(/_duplicate_\d+$/i, "");
+    var maxIndex = 0;
+    var sourceList = (floatingMenu && Array.isArray(floatingMenu._pipelines)) ? floatingMenu._pipelines : pipelines;
+    sourceList.forEach(function(item) {
+      var name = (item && item.pipeline_name) || "";
+      var match = name.match(new RegExp("^" + normalized.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&") + "_duplicate_(\\d+)$", "i"));
+      if (match && match[1]) {
+        var idx = parseInt(match[1], 10);
+        if (!isNaN(idx)) {
+          maxIndex = Math.max(maxIndex, idx);
+        }
+      }
+    });
+    return normalized + "_duplicate_" + (maxIndex + 1);
+  }
+  var floatingMenu = document.getElementById("savedPipelineOptionsMenu");
+  if (!floatingMenu) {
+    floatingMenu = document.createElement("div");
+    floatingMenu.id = "savedPipelineOptionsMenu";
+    floatingMenu.className = "pipeline-options-menu pipeline-options-menu--floating";
+    var renameBtn = document.createElement("button");
+    renameBtn.type = "button";
+    renameBtn.textContent = "Rename Pipeline";
+    renameBtn.addEventListener("click", function() {
+      var pipelineId = floatingMenu.dataset.pipelineId;
+      var pipelineName = floatingMenu.dataset.pipelineName || "Untitled Pipeline";
+      closePipelineMenus();
+      if (!pipelineId) {
+        return;
+      }
+      var nextName = prompt("Rename pipeline", pipelineName);
+      if (!nextName) {
+        return;
+      }
+      var request = new Request("/blob-storage/etl/pipeline/load?pipelineId=" + pipelineId, {
+        method: "GET",
+        headers: new Headers({
+          "Accept": "application/json"
+        })
+      });
+      fetch(request)
+        .then(function(response) {
+          if (!response.ok) {
+            return null;
+          }
+          return response.json();
+        })
+        .then(function(pipeline) {
+          if (!pipeline) {
+            return;
+          }
+          pipeline.pipeline_name = nextName.trim() || "pipeline";
+          if (!pipeline.pipeline_id) {
+            pipeline.pipeline_id = pipelineId;
+          }
+          var googleId = "unknown";
+          if (window.googleLoginProfile && (window.googleLoginProfile.google_id || window.googleLoginProfile.email)) {
+            googleId = window.googleLoginProfile.google_id || window.googleLoginProfile.email;
+          }
+          var safeGoogleId = googleId.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_-]/g, "");
+          if (!safeGoogleId) {
+            safeGoogleId = "unknown";
+          }
+          setActivePipelineType("pipeline");
+          post_pipeline(safeGoogleId, pipeline.pipeline_id, pipeline);
+          fetchSavedPipelineList();
+          if (pipeline_id === pipelineId) {
+            $("#pipeline_title").val(pipeline.pipeline_name);
+          }
+        })
+        .catch(function(error) {
+          console.error(error);
+        });
+    });
+    var duplicateBtn = document.createElement("button");
+    duplicateBtn.type = "button";
+    duplicateBtn.textContent = "Duplicate Pipeline";
+    duplicateBtn.addEventListener("click", function() {
+      var pipelineId = floatingMenu.dataset.pipelineId;
+      if (!pipelineId) {
+        return;
+      }
+      closePipelineMenus();
+      var request = new Request("/blob-storage/etl/pipeline/load?pipelineId=" + pipelineId, {
+        method: "GET",
+        headers: new Headers({
+          "Accept": "application/json"
+        })
+      });
+      fetch(request)
+        .then(function(response) {
+          if (!response.ok) {
+            return null;
+          }
+          return response.json();
+        })
+        .then(function(pipeline) {
+          if (!pipeline) {
+            return;
+          }
+          var newId = generatePipelineId();
+          var nextName = getDuplicateName(pipeline.pipeline_name || "pipeline");
+          pipeline.pipeline_id = newId;
+          pipeline.pipeline_name = nextName;
+          var googleId = "unknown";
+          if (window.googleLoginProfile && (window.googleLoginProfile.google_id || window.googleLoginProfile.email)) {
+            googleId = window.googleLoginProfile.google_id || window.googleLoginProfile.email;
+          }
+          var safeGoogleId = googleId.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_-]/g, "");
+          if (!safeGoogleId) {
+            safeGoogleId = "unknown";
+          }
+          setActivePipelineType("pipeline");
+          post_pipeline(safeGoogleId, pipeline.pipeline_id, pipeline);
+          fetchSavedPipelineList();
+        })
+        .catch(function(error) {
+          console.error(error);
+        });
+    });
+    var deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "is-destructive";
+    deleteBtn.textContent = "Delete Pipeline";
+    deleteBtn.addEventListener("click", function() {
+      var pipelineId = floatingMenu.dataset.pipelineId;
+      closePipelineMenus();
+      if (!pipelineId) {
+        return;
+      }
+      deleteSavedPipeline(pipelineId);
+    });
+    floatingMenu.appendChild(renameBtn);
+    floatingMenu.appendChild(duplicateBtn);
+    floatingMenu.appendChild(deleteBtn);
+    document.body.appendChild(floatingMenu);
+  }
+  floatingMenu._pipelines = pipelines;
+  function closePipelineMenus() {
+    if (floatingMenu) {
+      floatingMenu.classList.remove("is-open");
+      floatingMenu.dataset.pipelineId = "";
+      floatingMenu.dataset.pipelineName = "";
+    }
+    var openTriggers = list.querySelectorAll(".pipeline-options-trigger[aria-expanded=\"true\"]");
+    openTriggers.forEach(function(trigger) {
+      trigger.setAttribute("aria-expanded", "false");
+      var card = trigger.closest(".pipeline-list-item");
+      if (card) {
+        card.classList.remove("menu-open");
+      }
+    });
+  }
+  if (!list.dataset.menuBound) {
+    document.addEventListener("click", function() {
+      closePipelineMenus();
+    });
+    list.dataset.menuBound = "true";
+  }
+  pipelines.forEach(function(item) {
+    var row = document.createElement("div");
+    row.className = "pipeline-list-row";
+    var card = document.createElement("div");
+    card.className = "pipeline-list-item buttons";
+    card.setAttribute("data-pipeline-id", item.pipeline_id);
+    card.setAttribute("role", "button");
+    card.setAttribute("tabindex", "0");
+    var icon = document.createElement("span");
+    icon.className = "activity-icon";
+    icon.setAttribute("aria-hidden", "true");
+    icon.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 6h6v6H6z"/><path d="M12 12h6v6h-6z"/><path d="M12 9l3 3"/></svg>';
+    var label = document.createElement("span");
+    label.className = "pipeline-list-label";
+    label.textContent = item.pipeline_name || "Untitled Pipeline";
+    var menuTrigger = document.createElement("button");
+    menuTrigger.type = "button";
+    menuTrigger.className = "pipeline-options-trigger";
+    menuTrigger.setAttribute("aria-label", "Pipeline options");
+    menuTrigger.setAttribute("aria-haspopup", "true");
+    menuTrigger.setAttribute("aria-expanded", "false");
+    menuTrigger.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="18" cy="12" r="1.8"/></svg>';
+    menuTrigger.addEventListener("click", function(event) {
+      event.stopPropagation();
+      var isOpen = floatingMenu.classList.contains("is-open");
+      closePipelineMenus();
+      if (!isOpen) {
+        var rect = menuTrigger.getBoundingClientRect();
+        floatingMenu.style.left = (rect.right - 180) + "px";
+        floatingMenu.style.top = (rect.bottom + 6) + "px";
+        floatingMenu.dataset.pipelineId = item.pipeline_id;
+        floatingMenu.dataset.pipelineName = item.pipeline_name || "Untitled Pipeline";
+        floatingMenu.classList.add("is-open");
+      }
+      menuTrigger.setAttribute("aria-expanded", (!isOpen).toString());
+      if (!isOpen) {
+        card.classList.add("menu-open");
+      } else {
+        card.classList.remove("menu-open");
+      }
+    });
+    card.addEventListener("click", function() {
+      setActivePipelineType("pipeline");
+      loadSavedPipelineById(item.pipeline_id);
+    });
+    card.addEventListener("keydown", function(event) {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        setActivePipelineType("pipeline");
+        loadSavedPipelineById(item.pipeline_id);
+      }
+    });
+    card.appendChild(icon);
+    card.appendChild(label);
+    card.appendChild(menuTrigger);
+    row.appendChild(card);
+    list.appendChild(row);
+  });
+  renderSavedPipelineListSelection(activePipelineType === "pipeline" ? pipeline_id : "");
 }
 
 function getPipelineNameById(pipelineId) {
   if (!pipelineId) {
     return "";
   }
-  var match = cachedPipelines.find(function(item) {
+  var list = activePipelineType === "pipeline" ? cachedSavedPipelines : cachedPipelines;
+  var match = list.find(function(item) {
     return item && item.pipeline_id === pipelineId;
   });
   return match ? (match.pipeline_name || "") : "";
 }
 
 function renderTriggerList(triggers, pipelineId) {
+  if (activePipelineType !== "pipeline") {
+    return;
+  }
   var list = document.getElementById("triggerList");
   if (!list) {
     return;
@@ -1277,6 +1678,7 @@ function seedEmptyPipelineIfNeeded(pipelines) {
   data.description = "";
   data.pipeline_id = pipeline_id;
   data.google_id = safeGoogleId;
+  setActivePipelineType("dataflow");
   post_pipeline(safeGoogleId, pipeline_id, data);
   fetchPipelineList();
 }
@@ -1287,7 +1689,7 @@ function fetchPipelineList() {
     googleId = window.googleLoginProfile.google_id || window.googleLoginProfile.email;
   }
   var safeGoogleId = googleId.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_-]/g, "");
-  var request = new Request("/blob-storage/etl/pipeline/list?googleId=" + safeGoogleId, {
+  var request = new Request("/blob-storage/etl/dataflow/list?googleId=" + safeGoogleId, {
     method: "GET",
     headers: new Headers({
       "Accept": "application/json"
@@ -1315,7 +1717,41 @@ function fetchPipelineList() {
     });
 }
 
+function fetchSavedPipelineList() {
+  var googleId = "unknown";
+  if (window.googleLoginProfile && (window.googleLoginProfile.google_id || window.googleLoginProfile.email)) {
+    googleId = window.googleLoginProfile.google_id || window.googleLoginProfile.email;
+  }
+  var safeGoogleId = googleId.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_-]/g, "");
+  var request = new Request("/blob-storage/etl/pipeline/list?googleId=" + safeGoogleId, {
+    method: "GET",
+    headers: new Headers({
+      "Accept": "application/json"
+    })
+  });
+  fetch(request)
+    .then(function(response) {
+      if (!response.ok) {
+        return { values: [] };
+      }
+      return response.json();
+    })
+    .then(function(result) {
+      if (!result || !Array.isArray(result.values)) {
+        return;
+      }
+      renderSavedPipelineList(result.values);
+    })
+    .catch(function(error) {
+      console.error(error);
+    });
+}
+window.fetchSavedPipelineList = fetchSavedPipelineList;
+
 function fetchTriggerList(activePipelineId) {
+  if (activePipelineType !== "pipeline") {
+    return;
+  }
   var googleId = "unknown";
   if (window.googleLoginProfile && (window.googleLoginProfile.google_id || window.googleLoginProfile.email)) {
     googleId = window.googleLoginProfile.google_id || window.googleLoginProfile.email;
@@ -1349,7 +1785,8 @@ function loadPipelineById(pipelineId) {
   if (!pipelineId) {
     return;
   }
-  var request = new Request("/blob-storage/etl/pipeline/load?pipelineId=" + pipelineId, {
+  setActivePipelineType("dataflow");
+  var request = new Request("/blob-storage/etl/dataflow/load?pipelineId=" + pipelineId, {
     method: "GET",
     headers: new Headers({
       "Accept": "application/json"
@@ -1380,6 +1817,7 @@ function loadPipelineById(pipelineId) {
       }
       LoadFromBlobStorage(pipeline);
       renderPipelineListSelection(pipelineId);
+      renderSavedPipelineListSelection("");
       fetchTriggerList(pipelineId);
     })
     .catch(function(error) {
@@ -1387,11 +1825,63 @@ function loadPipelineById(pipelineId) {
     });
 }
 
+function loadSavedPipelineById(pipelineId) {
+  if (!pipelineId) {
+    return;
+  }
+  setActivePipelineType("pipeline");
+  fetchPipelineList();
+  var request = new Request("/blob-storage/etl/pipeline/load?pipelineId=" + pipelineId, {
+    method: "GET",
+    headers: new Headers({
+      "Accept": "application/json"
+    })
+  });
+  fetch(request)
+    .then(function(response) {
+      if (!response.ok) {
+        if (pipeline_id === pipelineId) {
+          setCurrentPipelineId("");
+          try {
+            localStorage.removeItem("etl_pipeline_id");
+          } catch (error) {
+            // ignore
+          }
+        }
+        fetchSavedPipelineList();
+        return null;
+      }
+      return response.json();
+    })
+    .then(function(pipeline) {
+      if (!pipeline) {
+        return;
+      }
+      if (!pipeline.pipeline_id) {
+        pipeline.pipeline_id = pipelineId;
+      }
+      LoadFromBlobStorage(pipeline);
+      renderSavedPipelineListSelection(pipelineId);
+      renderPipelineListSelection("");
+      fetchTriggerList(pipelineId);
+    })
+    .catch(function(error) {
+      console.error(error);
+    });
+}
+window.loadSavedPipelineById = loadSavedPipelineById;
+
 function loadPipelineFromBlobStorage() {
   if (!$flowchart) {
     return;
   }
   var storedPipelineId = pipeline_id;
+  var storedPipelineType = "dataflow";
+  try {
+    storedPipelineType = localStorage.getItem("etl_pipeline_type") || "dataflow";
+  } catch (error) {
+    storedPipelineType = "dataflow";
+  }
   if (!storedPipelineId) {
     try {
       storedPipelineId = localStorage.getItem("etl_pipeline_id") || "";
@@ -1401,9 +1891,14 @@ function loadPipelineFromBlobStorage() {
   }
   if (!storedPipelineId) {
     fetchPipelineList();
+    fetchSavedPipelineList();
     return;
   }
-  loadPipelineById(storedPipelineId);
+  if (storedPipelineType === "pipeline") {
+    loadSavedPipelineById(storedPipelineId);
+  } else {
+    loadPipelineById(storedPipelineId);
+  }
 }
 
 function LoadFromBlobStorage(pipeline) {
@@ -1507,6 +2002,9 @@ function LoadFromBlobStorage(pipeline) {
     if (operatorData.properties.activityType == "append") {
       a = new Append_Activity($flowchart, new_activity);
     }
+    if (operatorData.properties.activityType == "dataflow") {
+      a = new DataFlow_Activity($flowchart, new_activity);
+    }
     main_activities[operatorId] = a;
     activites = $flowchart.flowchart("getOperators");
   });
@@ -1544,25 +2042,10 @@ function LoadFromBlobStorage(pipeline) {
     }
   });
   setOperatorIndexFromActivities(activities);
-  var flowchartInstance = $flowchart.flowchart("instance");
-  if (flowchartInstance && flowchartInstance.options) {
-    flowchartInstance.options.canUserMoveOperators = false;
-  }
-  $flowchart.find(".flowchart-operator").each(function() {
-    try {
-      $(this).draggable("disable");
-    } catch (error) {
-      // ignore
-    }
-  });
-  var refData = $flowchart.flowchart("getDataRef");
-  if (refData && refData.operators) {
-    Object.keys(refData.operators).forEach(function(operatorId) {
-      var op = refData.operators[operatorId];
-      if (op && op.internal && op.internal.properties) {
-        op.internal.properties.locked = true;
-      }
-    });
+  if (activePipelineType === "pipeline") {
+    setOperatorDraggingEnabled(true);
+  } else {
+    setOperatorDraggingEnabled(false);
   }
   setTimeout(function() {
     if (typeof window.repositionImportPlaceholder === "function") {
@@ -1661,11 +2144,12 @@ function deletePipeline(pipelineId) {
     return;
   }
   disableEmptyPipelineSeed = true;
-  var pipelineRow = document.querySelector(".pipeline-list-item[data-pipeline-id=\"" + pipelineId + "\"]");
+  var pipelineList = document.getElementById("pipelineList");
+  var pipelineRow = pipelineList ? pipelineList.querySelector(".pipeline-list-item[data-pipeline-id=\"" + pipelineId + "\"]") : null;
   if (pipelineRow && pipelineRow.parentElement) {
     pipelineRow.parentElement.remove();
   }
-  var request = new Request("/blob-storage/etl/pipeline/delete?pipelineId=" + pipelineId, {
+  var request = new Request("/blob-storage/etl/dataflow/delete?pipelineId=" + pipelineId, {
     method: "POST",
     headers: new Headers({
       "Accept": "application/json"
@@ -1684,6 +2168,37 @@ function deletePipeline(pipelineId) {
     .finally(function() {
       fetchPipelineList();
       fetchTriggerList(pipeline_id);
+    });
+}
+
+function deleteSavedPipeline(pipelineId) {
+  if (!pipelineId) {
+    return;
+  }
+  var pipelineList = document.getElementById("savedPipelineList");
+  var pipelineRow = pipelineList ? pipelineList.querySelector(".pipeline-list-item[data-pipeline-id=\"" + pipelineId + "\"]") : null;
+  if (pipelineRow && pipelineRow.parentElement) {
+    pipelineRow.parentElement.remove();
+  }
+  var request = new Request("/blob-storage/etl/pipeline/delete?pipelineId=" + pipelineId, {
+    method: "POST",
+    headers: new Headers({
+      "Accept": "application/json"
+    })
+  });
+  fetch(request)
+    .then(function(response) {
+      if (response.ok && pipeline_id === pipelineId && typeof window.flowchartClearWorkspace === "function") {
+        window.flowchartClearWorkspace();
+        setCurrentPipelineId("");
+        renderSavedPipelineListSelection("");
+      }
+    })
+    .catch(function(error) {
+      console.error(error);
+    })
+    .finally(function() {
+      fetchSavedPipelineList();
     });
 }
 
@@ -2071,6 +2586,8 @@ $(document).ready(function() {
   var $tabGeneral = $("#tabGeneral");
   var $tabSettings = $("#tabSettings");
   var $tabDataPreview = $("#tabDataPreview");
+  var $tabActivities = $("#tabActivities");
+  $tabActivities.hide();
   var zoomLevel = 1;
   var panOffset = { x: 0, y: 0 };
   var isPanning = false;
@@ -2098,6 +2615,46 @@ $(document).ready(function() {
   var selectionBox = null;
   var linkAddRefreshTimer = null;
 
+  function setOperatorDraggingEnabled(enabled) {
+    if (!$flowchart || !$flowchart.length) {
+      return;
+    }
+    var flowchartInstance = $flowchart.flowchart("instance");
+    if (flowchartInstance && flowchartInstance.options) {
+      flowchartInstance.options.canUserMoveOperators = !!enabled;
+    }
+    $flowchart.find(".flowchart-operator").each(function() {
+      try {
+        $(this).draggable(enabled ? "enable" : "disable");
+      } catch (error) {
+        // ignore
+      }
+    });
+    var refData = $flowchart.flowchart("getDataRef");
+    if (refData && refData.operators) {
+      Object.keys(refData.operators).forEach(function(operatorId) {
+        var op = refData.operators[operatorId];
+        if (op && op.internal && op.internal.properties) {
+          op.internal.properties.locked = !enabled;
+        }
+      });
+    }
+  }
+  window.setOperatorDraggingEnabled = setOperatorDraggingEnabled;
+
+  function updatePipelineActivitiesTab() {
+    var showActivities = activePipelineType === "pipeline";
+    if (showActivities) {
+      $tabActivities.show();
+    } else {
+      $tabActivities.hide();
+      if ($("#tab_activities").is(":visible")) {
+        $tabGeneral.trigger("click");
+      }
+    }
+  }
+  window.updatePipelineActivitiesTab = updatePipelineActivitiesTab;
+
   function clearFlowchartWorkspace(options) {
     var opts = options || {};
     suspendPipelineSave = true;
@@ -2113,9 +2670,13 @@ $(document).ready(function() {
       selectPlaceholders.innerHTML = "";
     }
     if (importPlaceholder) {
-      importPlaceholder.style.visibility = "";
-      importPlaceholder.style.left = importBaseLeft + "px";
-      importPlaceholder.style.top = importBaseTop + "px";
+      if (placeholdersEnabled()) {
+        importPlaceholder.style.visibility = "";
+        importPlaceholder.style.left = importBaseLeft + "px";
+        importPlaceholder.style.top = importBaseTop + "px";
+      } else {
+        importPlaceholder.style.visibility = "hidden";
+      }
     }
     if (typeof window.flowchartSetOperatorIndex === "function") {
       window.flowchartSetOperatorIndex(0);
@@ -2204,6 +2765,10 @@ $(document).ready(function() {
     if (!linkAddLayer) {
       return;
     }
+    if (!placeholdersEnabled()) {
+      linkAddLayer.innerHTML = "";
+      return;
+    }
     if (linkAddRefreshTimer) {
       clearTimeout(linkAddRefreshTimer);
     }
@@ -2248,6 +2813,10 @@ $(document).ready(function() {
     if (!linkAddLayer) {
       return;
     }
+    if (!placeholdersEnabled()) {
+      linkAddLayer.innerHTML = "";
+      return;
+    }
     linkAddLayer.innerHTML = "";
     var data = $flowchart.flowchart("getDataRef");
     if (!data || !data.links) {
@@ -2278,6 +2847,9 @@ $(document).ready(function() {
 
   function openChooseMenuAt(left, top) {
     if (!chooseMenu) {
+      return;
+    }
+    if (!placeholdersEnabled()) {
       return;
     }
     chooseMenu.style.display = "flex";
@@ -2382,6 +2954,12 @@ $(document).ready(function() {
   }
 
   function repositionImportPlaceholder() {
+    if (!placeholdersEnabled()) {
+      if (importPlaceholder) {
+        importPlaceholder.style.visibility = "hidden";
+      }
+      return;
+    }
     if (!importPlaceholder) {
       return;
     }
@@ -2398,6 +2976,9 @@ $(document).ready(function() {
   }
 
   function ensureSelectPlaceholder(ingestId) {
+    if (!placeholdersEnabled()) {
+      return null;
+    }
     if (!selectPlaceholders) {
       return null;
     }
@@ -2415,6 +2996,9 @@ $(document).ready(function() {
   }
 
   function updateSelectPlaceholderPosition(ingestId) {
+    if (!placeholdersEnabled()) {
+      return;
+    }
     if (!selectPlaceholders) {
       return;
     }
@@ -2442,6 +3026,12 @@ $(document).ready(function() {
   }
 
   function repositionSelectPlaceholders() {
+    if (!placeholdersEnabled()) {
+      if (selectPlaceholders) {
+        selectPlaceholders.innerHTML = "";
+      }
+      return;
+    }
     if (!selectPlaceholders) {
       return;
     }
@@ -2996,6 +3586,9 @@ $(document).ready(function() {
   }
 
   function shiftImportPlaceholderDown(delta) {
+    if (!placeholdersEnabled()) {
+      return;
+    }
     if (!importPlaceholder || !delta) {
       return;
     }
@@ -3004,6 +3597,9 @@ $(document).ready(function() {
   }
 
   function createBranchPlaceholder(linkContext) {
+    if (!placeholdersEnabled()) {
+      return;
+    }
     if (!selectPlaceholders || !linkContext) {
       return;
     }
@@ -3058,6 +3654,9 @@ $(document).ready(function() {
   }
 
   function createBranchNextPlaceholder(fromId, branchColor) {
+    if (!placeholdersEnabled()) {
+      return;
+    }
     if (!selectPlaceholders || fromId == null) {
       return;
     }
@@ -3110,7 +3709,7 @@ $(document).ready(function() {
       operator.left = left;
       el.css({ left: left, top: nextTop });
     });
-    if (selectPlaceholders) {
+    if (selectPlaceholders && placeholdersEnabled()) {
       var placeholders = Array.from(selectPlaceholders.querySelectorAll(".select-placeholder"));
       placeholders.forEach(function(placeholder) {
         var top = parseInt(placeholder.style.top || "0", 10) || 0;
@@ -3442,11 +4041,18 @@ $(document).ready(function() {
     if (isVisible) {
       $tabSettings.show();
       $tabDataPreview.show();
+      if (activePipelineType === "pipeline") {
+        $tabActivities.show();
+      } else {
+        $tabActivities.hide();
+      }
     } else {
       $tabSettings.hide();
       $tabDataPreview.hide();
+      $tabActivities.hide();
       $tabGeneral.trigger("click");
     }
+    updatePipelineActivitiesTab();
   }
 
   function applySavedSettingsToActivity(operatorId) {
@@ -3893,6 +4499,76 @@ $(document).ready(function() {
         let target_activity = main_activities[operatorId];
         let elem = target_activity.settings;
         if (elem == null || elem == undefined) { return; }
+        let found = false;
+        for (let i = 0; i < settings_div.children.length; i++) {
+          if (settings_div.children[i].id == elem.id) {
+            found = true;
+            settings_div.children[i].style.display = "block";
+          }
+          if (settings_div.children[i].id == elem.id + "_column_edit") {
+            found = true;
+            settings_div.children[i].style.display = "flex";
+            settings_div.children[i].style.flexDirection = "column";
+            settings_div.children[i].style.gap = "15px";
+          }
+        }
+        if (!found) {
+          settings_div.insertBefore(elem, settings_div.firstChild);
+        }
+        if (found) {
+          for (let i = 0; i < settings_div.children.length; i++) {
+            if (settings_div.children[i].id == elem.id && settings_div.children[i] !== elem) {
+              settings_div.children[i].replaceWith(elem);
+              break;
+            }
+          }
+        }
+      }
+
+      if (activity.activityType == "dataflow") {
+        let target_activity = main_activities[operatorId];
+        let elem = target_activity.settings;
+        if (elem == null || elem == undefined) { return; }
+        if (typeof window.refreshDataflowActivityOptions === "function") {
+          window.refreshDataflowActivityOptions(getAvailableDataflows());
+        }
+        let found = false;
+        for (let i = 0; i < settings_div.children.length; i++) {
+          if (settings_div.children[i].id == elem.id) {
+            found = true;
+            settings_div.children[i].style.display = "block";
+          }
+          if (settings_div.children[i].id == elem.id + "_column_edit") {
+            found = true;
+            settings_div.children[i].style.display = "flex";
+            settings_div.children[i].style.flexDirection = "column";
+            settings_div.children[i].style.gap = "15px";
+          }
+        }
+        if (!found) {
+          settings_div.insertBefore(elem, settings_div.firstChild);
+        }
+        if (found) {
+          for (let i = 0; i < settings_div.children.length; i++) {
+            if (settings_div.children[i].id == elem.id && settings_div.children[i] !== elem) {
+              settings_div.children[i].replaceWith(elem);
+              break;
+            }
+          }
+        }
+      }
+
+      if (activity.activityType == "pipeline") {
+        let target_activity = main_activities[operatorId];
+        if (!target_activity) {
+          target_activity = new Pipeline_Activity($flowchart, activity);
+          main_activities[operatorId] = target_activity;
+        }
+        let elem = target_activity.settings;
+        if (elem == null || elem == undefined) { return; }
+        if (typeof window.refreshPipelineActivityOptions === "function") {
+          window.refreshPipelineActivityOptions(getAvailablePipelines());
+        }
         let found = false;
         for (let i = 0; i < settings_div.children.length; i++) {
           if (settings_div.children[i].id == elem.id) {
@@ -4872,6 +5548,7 @@ $(document).ready(function() {
     const icon = button.querySelector(".run-icon");
     const label = button.querySelector("span");
     const triggerButton = document.getElementById("createTrigger");
+    let monitorStarted = false;
     if (button.classList.contains("is-running")) {
       return;
     }
@@ -4903,19 +5580,77 @@ $(document).ready(function() {
         pipeline_id: pipeline_id || "",
         pipeline_name: pipelineName || "Untitled Pipeline"
       })
+      if (pipeline_id) {
+        monitorStarted = true;
+        startPipelineRunMonitor(pipeline_id, button, label, icon, triggerButton);
+      }
     } catch (error) {
       console.error("Pipeline run failed:", error);
     } finally {
-      button.classList.remove("is-running");
-      button.setAttribute("aria-label", "Run pipeline");
-      if (label) label.textContent = "Run Flow";
-      icon.innerHTML = '<path d="M8 5l11 7-11 7V5z"></path>';
-      if (triggerButton) {
-        triggerButton.disabled = false;
-        triggerButton.removeAttribute("aria-disabled");
+      if (!monitorStarted) {
+        button.classList.remove("is-running");
+        button.setAttribute("aria-label", "Run pipeline");
+        if (label) label.textContent = "Run Flow";
+        icon.innerHTML = '<path d="M8 5l11 7-11 7V5z"></path>';
+        if (triggerButton) {
+          triggerButton.disabled = false;
+          triggerButton.removeAttribute("aria-disabled");
+        }
       }
     }
   });
+
+  let pipelineRunMonitor = null;
+  async function fetchLatestPipelineRun(pipelineId) {
+    if (!pipelineId) {
+      return null;
+    }
+    const request = new Request("/etl/pipeline/runs?pipelineId=" + encodeURIComponent(pipelineId), {
+      method: "GET",
+      headers: new Headers({
+        "Accept": "application/json"
+      })
+    });
+    try {
+      const response = await fetch(request);
+      if (!response.ok) {
+        return null;
+      }
+      const payload = await response.json();
+      if (!payload || !Array.isArray(payload.runs) || !payload.runs.length) {
+        return null;
+      }
+      return payload.runs[payload.runs.length - 1];
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function resetRunButton(button, label, icon, triggerButton) {
+    button.classList.remove("is-running");
+    button.setAttribute("aria-label", "Run pipeline");
+    if (label) label.textContent = "Run Flow";
+    icon.innerHTML = '<path d="M8 5l11 7-11 7V5z"></path>';
+    if (triggerButton) {
+      triggerButton.disabled = false;
+      triggerButton.removeAttribute("aria-disabled");
+    }
+  }
+
+  function startPipelineRunMonitor(pipelineId, button, label, icon, triggerButton) {
+    if (pipelineRunMonitor) {
+      clearInterval(pipelineRunMonitor);
+    }
+    pipelineRunMonitor = setInterval(async () => {
+      const latest = await fetchLatestPipelineRun(pipelineId);
+      if (!latest || latest.status === "in progress") {
+        return;
+      }
+      clearInterval(pipelineRunMonitor);
+      pipelineRunMonitor = null;
+      resetRunButton(button, label, icon, triggerButton);
+    }, 3000);
+  }
 
   (function initTriggerModal() {
     const triggerButton = document.getElementById("createTrigger");
@@ -4929,7 +5664,7 @@ $(document).ready(function() {
     const hours = document.getElementById("trigger_hours");
     const okButton = document.getElementById("triggerModalOk");
 
-    function setPipelineField(mode) {
+  function setPipelineField(mode) {
       var pipelineNameField = document.getElementById("trigger_pipeline_name");
       var pipelineSelect = document.getElementById("trigger_pipeline_select");
       var currentName = (modal.dataset.pipelineName || "").trim();
@@ -4946,7 +5681,7 @@ $(document).ready(function() {
         pipelineNameField.classList.add("trigger-field-hidden");
         pipelineSelect.classList.remove("trigger-field-hidden");
         pipelineSelect.innerHTML = "";
-        cachedPipelines.forEach(function(item) {
+        cachedSavedPipelines.forEach(function(item) {
           var opt = document.createElement("option");
           opt.value = item.pipeline_id || "";
           opt.textContent = item.pipeline_name || "Untitled Pipeline";
@@ -5025,6 +5760,10 @@ $(document).ready(function() {
     window.updateTriggerWeekdays = updateWeekdays;
 
     triggerButton.addEventListener("click", function() {
+      if (activePipelineType !== "pipeline") {
+        alert("Triggers are only available in the pipeline workspace.");
+        return;
+      }
       openModal("current");
     });
     closeTargets.forEach(function(target) {
@@ -5180,6 +5919,9 @@ $(document).ready(function() {
 
   if (selectPlaceholders) {
     selectPlaceholders.addEventListener("click", function(event) {
+      if (!placeholdersEnabled()) {
+        return;
+      }
       var target = event.target.closest(".select-placeholder");
       if (!target) {
         return;
@@ -6148,6 +6890,74 @@ $(document).ready(function() {
     activites = $flowchart.flowchart("getOperators");
   });
 
+  $("#dataflow_activity").on("click", function() {
+    var operatorId = operatorI;
+    const footer = document.getElementById("footer");
+    startHeight = parseInt(window.getComputedStyle(footer).height, 10);
+    var operatorData = {
+      top: ($flowchart.height() / 2) - (startHeight / 2),
+      left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+      properties: {
+        title: "Dataflow",
+        activityType: "dataflow",
+        dependencies: [],
+        settings: {},
+        inputs: {
+          input: {
+            label: "Input",
+            value: { "datatypes": null, "values": null }
+          }
+        },
+        outputs: {
+          output: {
+            label: "Output",
+            value: { "datatypes": null, "values": null }
+          }
+        }
+      }
+    };
+    operatorI++;
+    $flowchart.flowchart("createOperator", operatorId, operatorData);
+    let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
+    let dataflow_activity = new DataFlow_Activity($flowchart, new_activity);
+    main_activities[operatorId] = dataflow_activity;
+    activites = $flowchart.flowchart("getOperators");
+  });
+
+  $("#pipeline_activity").on("click", function() {
+    var operatorId = operatorI;
+    const footer = document.getElementById("footer");
+    startHeight = parseInt(window.getComputedStyle(footer).height, 10);
+    var operatorData = {
+      top: ($flowchart.height() / 2) - (startHeight / 2),
+      left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+      properties: {
+        title: "Pipeline",
+        activityType: "pipeline",
+        dependencies: [],
+        settings: {},
+        inputs: {
+          input: {
+            label: "Input",
+            value: { "datatypes": null, "values": null }
+          }
+        },
+        outputs: {
+          output: {
+            label: "Output",
+            value: { "datatypes": null, "values": null }
+          }
+        }
+      }
+    };
+    operatorI++;
+    $flowchart.flowchart("createOperator", operatorId, operatorData);
+    let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
+    let pipeline_activity = new Pipeline_Activity($flowchart, new_activity);
+    main_activities[operatorId] = pipeline_activity;
+    activites = $flowchart.flowchart("getOperators");
+  });
+
   var $draggableOperators = $(".draggable_operator");
   $draggableOperators.draggable({
     cursor: "move",
@@ -6250,7 +7060,11 @@ $(document).ready(function() {
     data.pipeline_id = pipeline_id;
     data.google_id = safeGoogleId;
     post_pipeline(safeGoogleId, pipeline_id, data);
-    fetchPipelineList();
+    if (activePipelineType === "pipeline") {
+      fetchSavedPipelineList();
+    } else {
+      fetchPipelineList();
+    }
   }
   $("#get_data").click(Flow2Text);
 
@@ -6346,6 +7160,9 @@ $(document).ready(function() {
       }
       if (operatorData.properties.activityType == "append") {
         a = new Append_Activity($flowchart, new_activity);
+      }
+      if (operatorData.properties.activityType == "dataflow") {
+        a = new DataFlow_Activity($flowchart, new_activity);
       }
 
       main_activities[operatorId] = a;

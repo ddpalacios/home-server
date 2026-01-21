@@ -47,15 +47,35 @@
 
 void process_route(struct Socket *socket,char* http_header, char* body){
 	SSL *cSSL =  socket->cSSL;
-	char* route_start = strchr(http_header, ' ');	
+	if (!http_header) {
+		return;
+	}
+	char* route_start = strchr(http_header, ' ');
+	if (!route_start) {
+		return;
+	}
 	route_start++;
-	char* route_end = strchr(route_start, ' '); 
+	char* route_end = strchr(route_start, ' ');
+	if (!route_end) {
+		return;
+	}
 	size_t route_len = route_end - route_start;
+	if (route_len == 0 || route_len > 8192) {
+		return;
+	}
 	char* route = malloc(route_len+1);
 	strncpy(route, route_start, route_len);
 	route[route_len] = '\0';
 	char* request_type_end = strchr(http_header, ' ');
+	if (!request_type_end) {
+		free(route);
+		return;
+	}
 	size_t request_type_len = request_type_end - http_header;
+	if (request_type_len == 0 || request_type_len > 16) {
+		free(route);
+		return;
+	}
 	char* request_type = malloc(request_type_len+1);
 	strncpy(request_type, http_header, request_type_len);
 	request_type[request_type_len] = '\0';
@@ -321,6 +341,10 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_gol_script(cSSL, http_header, "/etl/append.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/google_sheets.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/google_sheets.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/dataflow.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/dataflow.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/pipeline.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/pipeline.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/http_request.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/http_request.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/jquery.flowchart.js")==0){
@@ -345,6 +369,8 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/etl/pipeline/runs")!=NULL){
 		get_from_local(socket,http_header,body, route);
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/google/status")==0){
+		get_from_local(socket,http_header,body, route);
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/etl/google/callback")!=NULL){
 		get_from_local(socket,http_header,body, route);
 
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/phrase-matching")==0){

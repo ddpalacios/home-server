@@ -47,6 +47,12 @@
             </button>
             <div id="pipelineList" class="pipeline-list"></div>
         </div>
+        <div class="pipeline-panel pipeline-panel--pipelines">
+            <button id="newSavedPipelineButton" class="pipeline-new-button" type="button">
+              + New Pipeline
+            </button>
+            <div id="savedPipelineList" class="pipeline-list"></div>
+        </div>
         <details id="savedTriggersGroup" class="activity-group saved-triggers-group" open>
             <summary>Saved Triggers</summary>
             <div class="activity-group-content">
@@ -163,6 +169,7 @@
 				<button class="tablinks" id="tabGeneral" onclick="switchTabPanel(event, 'tab_general')">General</button>
 				<button class="tablinks" id="tabSettings" onclick="switchTabPanel(event, 'tab_settings')">Settings</button>
 				<button class="tablinks" id="tabDataPreview" onclick="switchTabPanel(event, 'data_preview')">Data Preview</button>
+				<button class="tablinks" id="tabActivities" onclick="switchTabPanel(event, 'tab_activities')">Activities</button>
 				<button class="tablinks" id="tabScheduledTriggers" onclick="switchTabPanel(event, 'scheduled_triggers')">Scheduled Triggers</button>
 				<button class="tablinks" id="tabTestRuns" onclick="switchTabPanel(event, 'test_runs')">Test Runs</button>
 				</div>
@@ -190,13 +197,30 @@
 				<div id="selected_activity_settings" style="display: flex; flex-direction: column; gap: 10px;"></div>
 				
 			</div>
-					<div id="data_preview" class="tabcontent">
+				<div id="data_preview" class="tabcontent">
 						<div id="preview_button_stash" style="display: none;">
 							<button id="refresh_preview" class="buttons" type="button">Refresh</button>
 							<button id="export_preview" class="buttons" type="button">Export</button>
 						</div>
 						<div id="activity_previews"></div>
 				</div>
+					<div id="tab_activities" class="tabcontent">
+						<div class="activity-group-content">
+							<div class="activity-group-label">Add an activity block to the flowchart.</div>
+							<button id="dataflow_activity" class="create_operator buttons">
+								<span class="activity-icon" aria-hidden="true">
+									<svg viewBox="0 0 24 24"><path d="M4 4h7v7H4z"/><path d="M13 13h7v7h-7z"/><path d="M11 7l6 6"/></svg>
+								</span>
+								Dataflow
+							</button>
+							<button id="pipeline_activity" class="create_operator buttons">
+								<span class="activity-icon" aria-hidden="true">
+									<svg viewBox="0 0 24 24"><path d="M4 4h7v7H4z"/><path d="M13 13h7v7h-7z"/><path d="M11 7l6 6"/></svg>
+								</span>
+								Pipeline
+							</button>
+						</div>
+					</div>
 				<div id="scheduled_triggers" class="tabcontent">
 					<div class="scheduled-triggers__toolbar">
 						<div class="scheduled-triggers__controls">
@@ -337,10 +361,12 @@
   <script src="etl/flatten.js" defer></script>
   <script src="etl/select.js" defer></script>
   <script src="etl/sort.js" defer></script>
+  <script src="etl/dataflow.js" defer></script>
+  <script src="etl/pipeline.js" defer></script>
   <script>
     window.GOOGLE_OAUTH_CONFIG = {
       client_id: "639323802562-f5i8qpon5o6umajc5bvvqcgqjudpnhf6.apps.googleusercontent.com",
-      redirect_uri: "https://infallibly-nonbrutal-soila.ngrok-free.dev/etl/google/callback",
+      redirect_uri: "http://127.0.0.1:5000/etl/google/callback",
       scopes: "openid email profile https://www.googleapis.com/auth/spreadsheets",
       state: ""
     };

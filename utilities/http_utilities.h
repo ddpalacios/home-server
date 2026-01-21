@@ -27,4 +27,4 @@ char* generate_websocket_accptKey(char* websocket_sec_key );
 char* get_code_message(int code);
 int is_connection_keep_alive(char*http_header);
 int get_content_length(char*http_header);
-int get_http_header(char* request, char*header_result);
+int get_http_header(char* request, char*header_result, size_t header_result_size);

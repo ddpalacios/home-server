@@ -22,7 +22,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <netdb.h>
-#define BUFFER_SIZE 4096
+#define BUFFER_SIZE 16384
 
 int peek_exact_bytes(SSL *cSSL, int nbytes, char* buf){
     int total_bytes_retrieved = 0;
@@ -428,11 +428,21 @@ void process_bytes(struct Socket *sockets, struct Socket *socket, char* buf, int
 			}
 		}
 		if (buf != NULL && strstr(buf, "HTTP/1.1")!=NULL){
-			char* peeked_http_header = malloc(1024);
-			memset(peeked_http_header, 0, 1024);
-			int header_length = get_http_header(buf, peeked_http_header);
+			size_t header_buf_size = 32768;
+			char* peeked_http_header = malloc(header_buf_size);
+			memset(peeked_http_header, 0, header_buf_size);
+			int header_length = get_http_header(buf, peeked_http_header, header_buf_size);
+			if (header_length <= 0) {
+				free(peeked_http_header);
+				return;
+			}
 			char* http_header = malloc(header_length+4+1);
 			int nbytes = read_exact_bytes(socket->cSSL, header_length+4, http_header);
+			if (nbytes <= 0) {
+				free(peeked_http_header);
+				free(http_header);
+				return;
+			}
 			http_header[nbytes] = '\0';
 			int content_length = 0;
 			char* value_start = strstr(peeked_http_header,"Content-Length: ");

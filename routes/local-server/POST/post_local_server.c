@@ -92,7 +92,8 @@ void post_generate_phrase(struct Socket* socket,char* http_header, char*body, ch
  
  void post_to_local(struct Socket* socket,char* http_header, char*body, char* route){
 	int sfd  = connect_to_local_server("127.0.0.1", "5000");
-	size_t req_size = strlen(body) + 2048;
+	const char *safe_body = body ? body : "";
+	size_t req_size = strlen(safe_body) + 2048;
 	char *request = malloc(req_size);
 	if (!request) {
 		perror("malloc failed");
@@ -108,7 +109,7 @@ void post_generate_phrase(struct Socket* socket,char* http_header, char*body, ch
 		"\r\n"
 		"%s",
 		route,
-		"127.0.0.1", "5001", strlen(body), body);
+		"127.0.0.1", "5001", strlen(safe_body), safe_body);
 	
 	send(sfd, request, strlen(request), 0);
 	free(request);
@@ -200,13 +201,46 @@ void post_generate_phrase(struct Socket* socket,char* http_header, char*body, ch
 
 		response[total] = '\0'; 
 
-		char *res_body = strstr(response, "\r\n\r\n");
-		if (res_body) {
-			res_body += 4;
-			size_t body_len = strlen(res_body);
-			send_JSON_response_code(socket->cSSL, 200, res_body);
+		char *header_end = strstr(response, "\r\n\r\n");
+		if (!header_end) {
+			printf("No HTTP header end found\n");
 		} else {
-			printf("No HTTP body found\n");
+			char *status_line_end = strstr(response, "\r\n");
+			int is_redirect = 0;
+			if (status_line_end) {
+				if (strstr(response, "HTTP/1.1 302") || strstr(response, "HTTP/1.0 302")) {
+					is_redirect = 1;
+				}
+			}
+			if (is_redirect) {
+				char *location = strstr(response, "Location: ");
+				if (location) {
+					location += strlen("Location: ");
+					char *location_end = strstr(location, "\r\n");
+					if (location_end) {
+						size_t location_len = location_end - location;
+						char location_value[2048];
+						if (location_len >= sizeof(location_value)) {
+							location_len = sizeof(location_value) - 1;
+						}
+						strncpy(location_value, location, location_len);
+						location_value[location_len] = '\0';
+
+						char redirect_header[4096];
+						snprintf(redirect_header, sizeof(redirect_header),
+							"HTTP/1.1 302 Found\r\n"
+							"Location: %s\r\n"
+							"Connection: close\r\n"
+							"Content-Length: 0\r\n"
+							"\r\n",
+							location_value);
+						SSL_write(socket->cSSL, redirect_header, strlen(redirect_header));
+					}
+				}
+			} else {
+				char *res_body = header_end + 4;
+				send_JSON_response_code(socket->cSSL, 200, res_body);
+			}
 		}
 
     free(response);
@@ -298,6 +332,14 @@ void post_run_activity(struct Socket* socket,char* http_header, char*body, char*
 	
 	send(sfd, request, strlen(request), 0);
 	free(request);
+
+	/* If this is a non-preview /etl/run call, return immediately to avoid blocking the UI. */
+	if (strstr(route, "/etl/run") != NULL && strstr(body, "\"preview\":true") == NULL) {
+		char response_body[] = "{\"status\":\"accepted\"}";
+		send_JSON_response_code(socket->cSSL, 200, response_body);
+		close(sfd);
+		return;
+	}
 
     char buf[8192]; 
     char *response = NULL;

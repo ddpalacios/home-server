@@ -111,7 +111,7 @@ function normalizeBlobStoragePayload(payload) {
     return payload;
 }
 
-async function hydrateBlobStorageActivities(activities) {
+async function hydrateBlobStorageActivities(activities, preview = false) {
     const prepared = [];
     for (const activity of activities) {
         if (activity && activity.activityType === "http_request") {
@@ -135,6 +135,261 @@ async function hydrateBlobStorageActivities(activities) {
         prepared.push(activity);
     }
     return prepared;
+}
+
+function getActivityDependencies(activity) {
+    const raw = Array.isArray(activity?.dependencies) ? activity.dependencies : [];
+    let slot1 = null;
+    let slot2 = null;
+    const rest = [];
+    raw.forEach(dep => {
+        if (dep === null || dep === undefined) {
+            return;
+        }
+        const depId = dep && dep.operatorId !== undefined ? dep.operatorId : dep;
+        const connector = dep && dep.connector ? dep.connector : null;
+        if (connector === "input_1") {
+            slot1 = depId;
+            return;
+        }
+        if (connector === "input_2") {
+            slot2 = depId;
+            return;
+        }
+        rest.push(depId);
+    });
+    const ordered = [];
+    if (slot1 !== null) {
+        ordered.push(slot1);
+    }
+    if (slot2 !== null) {
+        ordered.push(slot2);
+    }
+    rest.forEach(depId => {
+        if (!ordered.includes(depId)) {
+            ordered.push(depId);
+        }
+    });
+    return ordered.map(dep => dep.toString());
+}
+
+async function orderStoredDataflow(dataflow) {
+    if (!dataflow || !dataflow.activities) {
+        return null;
+    }
+    const dependencies = {};
+    const target_ids = [];
+    Object.keys(dataflow.activities).forEach(key => {
+        const activity = dataflow.activities[key]?.properties || {};
+        const deps = getActivityDependencies(activity);
+        dependencies[key] = {
+            tableName: key,
+            dependencies: deps,
+            query: "",
+            activityType: activity.activityType || ""
+        };
+        target_ids.push(key);
+    });
+    if (!target_ids.length) {
+        return null;
+    }
+    const body = { dependencies: JSON.stringify(dependencies), target_ids: target_ids };
+    const request = new Request("/etl/pipeline/order", {
+        method: "POST",
+        headers: new Headers({
+            "Accept": "application/json"
+        }),
+        body: JSON.stringify(body)
+    });
+    const response = await fetch(request);
+    if (!response.ok) {
+        return null;
+    }
+    try {
+        return await response.json();
+    } catch (error) {
+        return null;
+    }
+}
+
+function buildStoredDataflowActivities(dataflow, ordered) {
+    if (!dataflow || !dataflow.activities || !ordered || !Array.isArray(ordered.ordered_nodes)) {
+        return [];
+    }
+    return ordered.ordered_nodes.map(node => {
+        const operatorId = node.tableName;
+        const entry = dataflow.activities[operatorId];
+        const activity = entry ? entry.properties : null;
+        if (!activity) {
+            return null;
+        }
+        let activity_data = null;
+        if (activity.activityType === "import" || activity.activityType === "sheets_read" || activity.activityType === "http_request") {
+            activity_data = activity?.inputs?.input?.value?.values ?? activity?.outputs?.output?.value?.values ?? null;
+        } else if (activity.activityType === "join" || activity.activityType === "append") {
+            const table_1 = activity?.inputs?.input_1?.value?.outputs?.output?.value?.values ?? null;
+            const table_2 = activity?.inputs?.input_2?.value?.outputs?.output?.value?.values ?? null;
+            if (table_1 && table_2) {
+                activity_data = { table_1: table_1, table_2: table_2 };
+            }
+        }
+        return {
+            operatorId: operatorId,
+            activityType: activity.activityType,
+            settings: activity.settings || null,
+            data: activity_data,
+            dependencies: getActivityDependencies(activity)
+        };
+    }).filter(Boolean);
+}
+
+async function runStoredDataflow(activity, preview) {
+    const settings = activity && activity.settings ? activity.settings : {};
+    const dataflowSettings = settings.dataflow || {};
+    const pipelineId = dataflowSettings.pipeline_id || settings.pipeline_id;
+    if (!pipelineId) {
+        return null;
+    }
+    const loadResponse = await fetch("/blob-storage/etl/dataflow/load?pipelineId=" + encodeURIComponent(pipelineId), {
+        method: "GET",
+        headers: new Headers({
+            "Accept": "application/json"
+        })
+    });
+    if (!loadResponse.ok) {
+        return null;
+    }
+    const dataflow = await loadResponse.json();
+    const ordered = await orderStoredDataflow(dataflow);
+    const activities = buildStoredDataflowActivities(dataflow, ordered);
+    if (!activities.length) {
+        return null;
+    }
+    const httpSinkActivities = activities.filter(activity => activity.activityType === "http_sink");
+    const body = { activities: activities, preview: !!preview, skip_http_sink: true };
+    const request = new Request("/etl/run/", {
+        method: "POST",
+        headers: new Headers({
+            "Accept": "application/json"
+        }),
+        body: JSON.stringify(body)
+    });
+    const response = await fetch(request);
+    if (!response.ok) {
+        return null;
+    }
+    try {
+        const payload = await response.json();
+        if (!preview && httpSinkActivities.length && payload && Array.isArray(payload.results)) {
+            const resultsById = {};
+            payload.results.forEach(entry => {
+                if (entry && entry.operatorId != null && entry.result) {
+                    resultsById[String(entry.operatorId)] = entry.result;
+                }
+            });
+            for (const sink of httpSinkActivities) {
+                let sinkData = sink.data;
+                if ((sinkData == null || sinkData === []) && Array.isArray(sink.dependencies) && sink.dependencies.length) {
+                    const depId = sink.dependencies[sink.dependencies.length - 1];
+                    const depResult = resultsById[String(depId)];
+                    if (depResult && depResult.values !== undefined) {
+                        sinkData = depResult.values;
+                    } else if (depResult) {
+                        sinkData = depResult;
+                    }
+                }
+                await postHttpSinkActivity(sink, sinkData);
+            }
+        }
+        if (payload && Array.isArray(payload.results) && ordered && Array.isArray(ordered.ordered_nodes)) {
+            const lastNode = ordered.ordered_nodes[ordered.ordered_nodes.length - 1];
+            const lastId = lastNode ? String(lastNode.tableName) : null;
+            if (lastId) {
+                const match = payload.results.find(entry => entry && String(entry.operatorId) === lastId);
+                if (match && match.result) {
+                    return match.result.values !== undefined ? match.result.values : match.result;
+                }
+            }
+        }
+        return null;
+    } catch (error) {
+        return null;
+    }
+}
+
+async function runStoredPipeline(activity, preview) {
+    const settings = activity && activity.settings ? activity.settings : {};
+    const pipelineSettings = settings.pipeline || {};
+    const pipelineId = pipelineSettings.pipeline_id || settings.pipeline_id;
+    if (!pipelineId) {
+        return null;
+    }
+    const loadResponse = await fetch("/blob-storage/etl/pipeline/load?pipelineId=" + encodeURIComponent(pipelineId), {
+        method: "GET",
+        headers: new Headers({
+            "Accept": "application/json"
+        })
+    });
+    if (!loadResponse.ok) {
+        return null;
+    }
+    const pipeline = await loadResponse.json();
+    const ordered = await orderStoredDataflow(pipeline);
+    const activities = buildStoredDataflowActivities(pipeline, ordered);
+    if (!activities.length) {
+        return null;
+    }
+    const hydrated = await hydrateBlobStorageActivities(activities, preview);
+    const httpSinkActivities = hydrated.filter(activity => activity.activityType === "http_sink");
+    const body = { activities: hydrated, preview: !!preview, skip_http_sink: true };
+    const request = new Request("/etl/run/", {
+        method: "POST",
+        headers: new Headers({
+            "Accept": "application/json"
+        }),
+        body: JSON.stringify(body)
+    });
+    const response = await fetch(request);
+    if (!response.ok) {
+        return null;
+    }
+    try {
+        const payload = await response.json();
+        if (!preview && httpSinkActivities.length && payload && Array.isArray(payload.results)) {
+            const resultsById = {};
+            payload.results.forEach(entry => {
+                if (entry && entry.operatorId != null && entry.result) {
+                    resultsById[String(entry.operatorId)] = entry.result;
+                }
+            });
+            for (const sink of httpSinkActivities) {
+                let sinkData = sink.data;
+                if ((sinkData == null || sinkData === []) && Array.isArray(sink.dependencies) && sink.dependencies.length) {
+                    const depId = sink.dependencies[sink.dependencies.length - 1];
+                    const depResult = resultsById[String(depId)];
+                    if (depResult && depResult.values !== undefined) {
+                        sinkData = depResult.values;
+                    } else if (depResult) {
+                        sinkData = depResult;
+                    }
+                }
+                await postHttpSinkActivity(sink, sinkData);
+            }
+        }
+        if (payload && Array.isArray(payload.results) && ordered && Array.isArray(ordered.ordered_nodes)) {
+            const lastNode = ordered.ordered_nodes[ordered.ordered_nodes.length - 1];
+            const lastId = lastNode ? String(lastNode.tableName) : null;
+            if (lastId) {
+                const match = payload.results.find(entry => entry && String(entry.operatorId) === lastId);
+                if (match && match.result) {
+                    return match.result.values !== undefined ? match.result.values : match.result;
+                }
+            }
+        }
+        return null;
+    } catch (error) {
+        return null;
+    }
 }
 
 async function postHttpSinkActivity(activity, data) {
@@ -243,6 +498,9 @@ async function get_ordered_nodes(widget, targetIds){
         }
     
     });
+    if (target_ids.length === 0) {
+        target_ids = Object.keys(dependencies);
+    }
     if (Array.isArray(targetIds) && targetIds.length > 0) {
         target_ids = targetIds.map(id => id.toString())
     }
@@ -272,9 +530,9 @@ async function post_ordered_activities(activities, preview = false, meta){
     if (!Array.isArray(activities) || activities.length === 0) {
         return null
     }
-    const preparedActivities = await hydrateBlobStorageActivities(activities);
+    const preparedActivities = await hydrateBlobStorageActivities(activities, preview);
     const httpSinkActivities = preparedActivities.filter(activity => activity.activityType === "http_sink");
-    const body = { activities: preparedActivities, preview: !!preview, skip_http_sink: true }
+    const body = { activities: preparedActivities, preview: !!preview, skip_http_sink: !!preview }
     if (meta && typeof meta === "object") {
         body.test_run_meta = meta
     }
@@ -290,6 +548,9 @@ async function post_ordered_activities(activities, preview = false, meta){
     if (response.ok){ 
         try{
             const data = await response.json()
+            if (data && data.status === "accepted") {
+                return data;
+            }
             if (!preview && httpSinkActivities.length && data && Array.isArray(data.results)) {
                 const resultsById = {}
                 data.results.forEach(entry => {

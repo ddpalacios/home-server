@@ -159,6 +159,10 @@ void* process_thread(void* arg){
 	// printf("PEEKED BYTES: %d\n", bytes_peeked);
 
     if (bytes_peeked > 0 && peek_buf != NULL) {
+		if (bytes_peeked > BUFFER_SIZE) {
+			bytes_peeked = BUFFER_SIZE;
+		}
+		peek_buf[bytes_peeked] = '\0';
         process_bytes(sockets,new_client, peek_buf, fd_count);
         free(peek_buf);
     }else{
