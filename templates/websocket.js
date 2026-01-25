@@ -66,8 +66,11 @@ class Websocket_Session{
 		this.#protocol['is_notification'] = is_notification;
 		this.session.send(JSON.stringify(this.#protocol))
 	}
-	initialize(){
-		this.session = new WebSocket('wss://' + window.location.host  +'/connect');
+	initialize(url){
+		const endpoint = (typeof url === "string" && url.length > 0)
+			? url
+			: ('wss://' + window.location.host  +'/connect');
+		this.session = new WebSocket(endpoint);
 		this.session.onopen = async () => {
 			console.log("Websocket connection established");
         }

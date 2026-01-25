@@ -498,6 +498,8 @@ table th, table td {
 </body>
 <script>
     let ws = null;
+    let socketId = null;
+    let isPaused = false;
     let canvas = document.querySelector("#visualizer");
     let ctx = canvas.getContext("2d");
 
@@ -615,6 +617,7 @@ document.addEventListener("mouseup", () => {
 
 <script src="/game_of_life.js"></script>
 <script src="/websocket.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.min.js"></script>
 
 <script>
 
@@ -743,41 +746,41 @@ let count = 0
           ws.session.onmessage = async (event) => {
               let data = JSON.parse(event.data)
                if (data['request'] == 'neat'){
-            /* -----------------
-            Added code block:
-            Description: Update cached bodies and rebuild radius offsets only when radius changes.
-              ----------------- */
-              bodies = data.bodies || [];
-              if (Array.isArray(bodies) && bodies.length > 0) {
-                const sortedBodies = bodies
-                  .slice()
-                  .filter(body => body.fitness != null)
-                  .sort((a, b) => b.fitness - a.fitness);
-                const topCount = Math.min(10, sortedBodies.length);
-                const topIds = new Set(
-                  sortedBodies.slice(0, topCount).map(body => body.body_id)
-                );
-                bodies.forEach(body => {
-                  body.isTopFitness = topIds.has(body.body_id);
-                });
-              }
-              if (data.body_radius_size !== currentRadius) {
-                currentRadius = data.body_radius_size;
-                radiusOffsets = buildRadiusOffsets(currentRadius);
-              }
-              if (typeof renderFrame === "function") {
-                renderFrame();
-              }
-        
-               }
-              if (data['request'] == 'new_connection'){
-                  socketId = data['value']
-                  console.log("Socket ID", socketId)
-                  initalize_neat(socketId,body)
-                  // const myInterval = setInterval(sendmouseCords, 50);
-
-
-
+                    if (isPaused) {
+                        return;
+                    }
+                    /* -----------------
+                    Added code block:
+                    Description: Update cached bodies and rebuild radius offsets only when radius changes.
+                      ----------------- */
+                      bodies = data.bodies || [];
+                      if (Array.isArray(bodies) && bodies.length > 0) {
+                        const sortedBodies = bodies
+                          .slice()
+                          .filter(body => body.fitness != null)
+                          .sort((a, b) => b.fitness - a.fitness);
+                        const topCount = Math.min(10, sortedBodies.length);
+                        const topIds = new Set(
+                          sortedBodies.slice(0, topCount).map(body => body.body_id)
+                        );
+                        bodies.forEach(body => {
+                          body.isTopFitness = topIds.has(body.body_id);
+                        });
+                      }
+                      if (data.body_radius_size !== currentRadius) {
+                        currentRadius = data.body_radius_size;
+                        radiusOffsets = buildRadiusOffsets(currentRadius);
+                      }
+                      if (typeof renderFrame === "function") {
+                        renderFrame();
+                      }
+                
+                      }
+                      if (data['request'] == 'new_connection'){
+                          socketId = data['value']
+                          console.log("Socket ID", socketId)
+                          initalize_neat(socketId,body)
+                          // const myInterval = setInterval(sendmouseCords, 50);
               }
           }
         }
@@ -785,8 +788,11 @@ let count = 0
 </script>
 <script>
     let pixel_size = 10
-    var numRows =  Math.floor(canvas.height / pixel_size);
-    var numCols =Math.floor(canvas.width / pixel_size);
+    const baseRows = Math.floor(canvas.height / pixel_size);
+    const baseCols = Math.floor(canvas.width / pixel_size);
+    const worldScale = 2;
+    var numRows = baseRows * worldScale;
+    var numCols = baseCols * worldScale;
     var big_canvas_grid = []
     var color = 'white'
     const connected_clients = new Map()
@@ -796,13 +802,13 @@ let count = 0
     var mouse_y = 0;
     var gol = new GameOfLife(big_canvas_grid, numRows,numCols, pixel_size);
     let grid = Array(numRows).fill(0).map(() => Array(numCols).fill(0));
-    let pop_size = 20
+    let pop_size = 100
     let body = {
           'pop_size': pop_size
           ,'rows': gol.numRows
           ,'cols': gol.numCols
-          ,'min_time_alive': 50
-          ,'ineligibility_rate': 0.5
+          ,'min_time_alive': 10
+          ,'ineligibility_rate': 0.2
           ,'forget_rate': 2
           ,'total_ins': 4
           ,'total_outs': 8
@@ -811,6 +817,63 @@ let count = 0
 </script>
 <script src="/neat/simulation.js"></script>
 <script>
+window.addEventListener("beforeunload", () => {
+  if (ws && ws.session) {
+    try {
+      if (typeof ws.close_all_connections === "function") {
+        ws.close_all_connections();
+      }
+    } catch (err) {}
+    try {
+      ws.session.close();
+    } catch (err) {}
+  }
+});
+
+function setPausedState(nextPaused) {
+  isPaused = nextPaused;
+  const btn = document.getElementById("pauseToggle");
+  if (btn) {
+    btn.textContent = isPaused ? "Play" : "Pause";
+  }
+  if (!socketId) {
+    return;
+  }
+  fetch(isPaused ? "/rtneat/pause" : "/rtneat/resume", {
+    method: "POST",
+    headers: new Headers({
+      "Accept": "application/json",
+      "Content-Type": "application/json"
+    }),
+    body: JSON.stringify({ socketId: socketId })
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.createElement("button");
+  btn.id = "pauseToggle";
+  btn.type = "button";
+  btn.textContent = "Pause";
+  btn.style.position = "fixed";
+  btn.style.right = "90px";
+  btn.style.bottom = "24px";
+  btn.style.zIndex = "6";
+  btn.style.border = "none";
+  btn.style.borderRadius = "999px";
+  btn.style.padding = "10px 18px";
+  btn.style.background = "rgba(15, 23, 42, 0.8)";
+  btn.style.color = "#e2e8f0";
+  btn.style.cursor = "pointer";
+  btn.addEventListener("click", () => setPausedState(!isPaused));
+  document.body.appendChild(btn);
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key.toLowerCase() === "p") {
+    setPausedState(!isPaused);
+  }
+});
+
 function openCity(evt, cityName) {
   var i, tabcontent, tablinks;
   tabcontent = document.getElementsByClassName("tabcontent");

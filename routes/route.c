@@ -275,6 +275,8 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		}
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/connect")==0){
 		start_websocket_session(socket,http_header,body, route);
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/rtneat/initialize")!=NULL){
+		start_websocket_session(socket,http_header,body, route);
 
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/etl/images/")!=NULL){
 			if (strcmp(route,"/etl/images/drag.png") ==0){
@@ -290,6 +292,10 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		post_to_local(socket,http_header,body, route);
 	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/rtneat/initialize")==0){
 		post_to_local(socket,http_header,body, route);
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/rtneat/pause")==0){
+		post_to_local(socket,http_header,body, route);
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/rtneat/resume")==0){
+		post_to_local(socket,http_header,body, route);
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl")==0){
 		get_live_html(cSSL, http_header, "/etl/home.html");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/activities.js")==0){
@@ -304,6 +310,8 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_gol_script(cSSL, http_header, "/etl/select.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/sort.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/sort.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/stream.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/stream.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/home-ui.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/home-ui.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/home.css")==0){
@@ -358,6 +366,14 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		post_run_activity(socket,http_header,body, route);
 	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/call")==0){
 		post_run_activity(socket,http_header,body, route);
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/sparkclient/stream")==0){
+		post_to_local(socket,http_header,body, route);
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/sparkclient/stream/execute")==0){
+		post_to_local(socket,http_header,body, route);
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/sparkclient/stream/start")==0){
+		post_to_local(socket,http_header,body, route);
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/etl/sparkclient/stream/execute/result")!=NULL){
+		get_from_local(socket,http_header,body, route);
 	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/google/login")==0){
 		post_to_local(socket,http_header,body, route);
 	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/trigger/cron")==0){

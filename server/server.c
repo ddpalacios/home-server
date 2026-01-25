@@ -21,6 +21,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <sys/time.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/bio.h>
@@ -126,11 +127,15 @@ struct Socket* insert_file_descriptor(struct Socket *sockets[],struct pollfd *pf
  	}
  }
 
- struct Socket* accept_new_client(int listener_fd, struct Socket **sockets,struct pollfd *pfds[],int *fd_count, int *max_fd_size){
+struct Socket* accept_new_client(int listener_fd, struct Socket **sockets,struct pollfd *pfds[],int *fd_count, int *max_fd_size){
        struct sockaddr_storage remoteaddr;
        socklen_t addrlen;
        addrlen = sizeof(remoteaddr);
        int newfd = accept(listener_fd,(struct sockaddr *)&remoteaddr,  &addrlen);
+       struct timeval send_timeout;
+       send_timeout.tv_sec = 0;
+       send_timeout.tv_usec = 200000;
+       setsockopt(newfd, SOL_SOCKET, SO_SNDTIMEO, &send_timeout, sizeof(send_timeout));
        SSL* cSSL = encrypt_socket(newfd);
        char host[NI_MAXHOST];
        char service[NI_MAXSERV];

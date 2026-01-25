@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "http_utilities.h"
+#include "local-server/POST/post_local_server.h"
+#include <fcntl.h>
 #include "session.h"
 #include "User.h"
 #include "Socket.h"
@@ -43,6 +45,12 @@ void start_websocket_session(struct Socket* socket,char* http_header, char*body,
 						free(frame);
 						frame = NULL;
 					}
+					int flags = fcntl(socket->fd, F_GETFL, 0);
+					if (flags != -1) {
+						fcntl(socket->fd, F_SETFL, flags | O_NONBLOCK);
+					}
+					SSL_set_mode(cSSL, SSL_MODE_ENABLE_PARTIAL_WRITE | SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
+
 				}
 			}else{
 				send_response_code(cSSL, 400);

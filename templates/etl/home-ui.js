@@ -1929,6 +1929,9 @@ function LoadFromBlobStorage(pipeline) {
   Object.keys(activities).forEach(operatorId => {
     let operatorData = activities[operatorId];
     $flowchart.flowchart("createOperator", operatorId, operatorData);
+    if (operatorData.properties && operatorData.properties.settings) {
+      $flowchart.flowchart("setSettings", operatorId, operatorData.properties.settings);
+    }
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
     if (operatorData.properties && operatorData.properties.activity_description) {
       if (typeof window.flowchartApplyActivityDescription === "function") {
@@ -2004,6 +2007,12 @@ function LoadFromBlobStorage(pipeline) {
     }
     if (operatorData.properties.activityType == "dataflow") {
       a = new DataFlow_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "stream") {
+      a = new Stream_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "combine") {
+      a = new Combine_Activity($flowchart, new_activity);
     }
     main_activities[operatorId] = a;
     activites = $flowchart.flowchart("getOperators");
@@ -3344,6 +3353,13 @@ $(document).ready(function() {
     if (fromId == null || toId == null) {
       return;
     }
+    var dataRef = $flowchart.flowchart("getDataRef");
+    if (!dataRef || !dataRef.operators || !dataRef.operators[fromId] || !dataRef.operators[toId]) {
+      return;
+    }
+    if (!dataRef.operators[fromId].internal || !dataRef.operators[toId].internal) {
+      return;
+    }
     if (linkExists(fromId, toId, toConnector)) {
       return;
     }
@@ -4166,26 +4182,16 @@ $(document).ready(function() {
     }
 
     if (activity.activityType === "join" && activityInstance) {
+      if (typeof activityInstance._restore_saved_settings === "function") {
+        activityInstance._restore_saved_settings();
+        return;
+      }
+    }
+
+    if (activity.activityType === "custom" && activityInstance) {
       container.innerHTML = "";
-      var joinOps = Array.isArray(activityInstance.join_operators)
-        ? activityInstance.join_operators
-        : ["Left Join (all from first, matching from second)",
-          "Right Join (all from second, matching from first)",
-          "Inner Join (only matching rows)",
-          "Full Outer Join (all rows from both)"];
       rows.forEach(function(statement) {
-        var col1 = statement.columnName_1 || statement.column_name_1 || "";
-        var col2 = statement.columnName_2 || statement.column_name_2 || "";
-        var op = statement.operation || joinOps[0];
-        var settingsRow = [
-          { type: "span", label: "Table 1", color: "black" },
-          { type: "selector", options: col1 ? [col1] : [""], default_value: col1, name: "column_name_1" },
-          { type: "span", label: "Table 2", color: "black" },
-          { type: "selector", options: col2 ? [col2] : [""], default_value: col2, name: "column_name_2" },
-          { type: "selector", options: joinOps, default_value: op, name: "operation" }
-        ];
-        var column_edit_element = activityInstance.get_column_selection_element($flowchart, settingsRow);
-        container.appendChild(column_edit_element);
+        activityInstance._add_column(null, $flowchart, activityInstance, statement);
       });
       if (activityInstance && typeof activityInstance.get_operation_settings === "function") {
         activityInstance.get_operation_settings();
@@ -4287,6 +4293,39 @@ $(document).ready(function() {
       if (statement.value) {
         addInput("value", statement.value);
       }
+      if (statement.replace_value_source) {
+        addSelect("replace_value_source", statement.replace_value_source);
+      }
+      if (statement.replace_value_column) {
+        addSelect("replace_value_column", statement.replace_value_column);
+      }
+      if (statement.value_source) {
+        addSelect("value_source", statement.value_source);
+      }
+      if (statement.value_offset_direction) {
+        addSelect("value_offset_direction", statement.value_offset_direction);
+      }
+      if (statement.value_offset_amount) {
+        addInput("value_offset_amount", statement.value_offset_amount);
+      }
+      if (statement.value_offset_unit) {
+        addSelect("value_offset_unit", statement.value_offset_unit);
+      }
+      if (statement.date_start_column) {
+        addSelect("date_start_column", statement.date_start_column);
+      }
+      if (statement.date_end_column) {
+        addSelect("date_end_column", statement.date_end_column);
+      }
+      if (statement.date_base_column) {
+        addSelect("date_base_column", statement.date_base_column);
+      }
+      if (statement.date_days_column) {
+        addSelect("date_days_column", statement.date_days_column);
+      }
+      if (statement.date_compare_column) {
+        addSelect("date_compare_column", statement.date_compare_column);
+      }
       if (statement.then_value) {
         addInput("then_value", statement.then_value);
       }
@@ -4387,15 +4426,37 @@ $(document).ready(function() {
           value = statement.condition_value;
         } else if (name === "find_value") {
           value = statement.find_value;
-        } else if (name === "value") {
-          value = statement.value;
-        } else if (name === "then_value") {
-          value = statement.then_value;
-        } else if (name === "else_value") {
+      } else if (name === "value") {
+        value = statement.value;
+      } else if (name === "replace_value_source") {
+        value = statement.replace_value_source;
+      } else if (name === "replace_value_column") {
+        value = statement.replace_value_column;
+      } else if (name === "value_source") {
+        value = statement.value_source;
+      } else if (name === "value_offset_direction") {
+        value = statement.value_offset_direction;
+      } else if (name === "value_offset_amount") {
+        value = statement.value_offset_amount;
+      } else if (name === "value_offset_unit") {
+        value = statement.value_offset_unit;
+      } else if (name === "date_start_column") {
+        value = statement.date_start_column;
+      } else if (name === "date_end_column") {
+        value = statement.date_end_column;
+      } else if (name === "date_base_column") {
+        value = statement.date_base_column;
+      } else if (name === "date_days_column") {
+        value = statement.date_days_column;
+      } else if (name === "date_compare_column") {
+        value = statement.date_compare_column;
+      } else if (name === "then_value") {
+        value = statement.then_value;
+      } else if (name === "else_value") {
           value = statement.else_value;
-        } else if (name === "logical") {
-          value = statement.logical;
-        } else if (name === "case") {
+      } else if (name === "logical") {
+        value = statement.logical;
+      } else if (name === "case") {
           value = statement.case;
         } else if (name === "unroll_by") {
           value = statement.unroll_by;
@@ -4435,6 +4496,9 @@ $(document).ready(function() {
               element.appendChild(option);
             }
             element.value = value;
+          }
+          if (name === "value_source") {
+            element.dispatchEvent(new Event("change"));
           }
         } else {
           element.value = value;
@@ -4569,6 +4633,40 @@ $(document).ready(function() {
         if (typeof window.refreshPipelineActivityOptions === "function") {
           window.refreshPipelineActivityOptions(getAvailablePipelines());
         }
+        let found = false;
+        for (let i = 0; i < settings_div.children.length; i++) {
+          if (settings_div.children[i].id == elem.id) {
+            found = true;
+            settings_div.children[i].style.display = "block";
+          }
+          if (settings_div.children[i].id == elem.id + "_column_edit") {
+            found = true;
+            settings_div.children[i].style.display = "flex";
+            settings_div.children[i].style.flexDirection = "column";
+            settings_div.children[i].style.gap = "15px";
+          }
+        }
+        if (!found) {
+          settings_div.insertBefore(elem, settings_div.firstChild);
+        }
+        if (found) {
+          for (let i = 0; i < settings_div.children.length; i++) {
+            if (settings_div.children[i].id == elem.id && settings_div.children[i] !== elem) {
+              settings_div.children[i].replaceWith(elem);
+              break;
+            }
+          }
+        }
+      }
+
+      if (activity.activityType == "stream") {
+        let target_activity = main_activities[operatorId];
+        if (!target_activity) {
+          target_activity = new Stream_Activity($flowchart, activity);
+          main_activities[operatorId] = target_activity;
+        }
+        let elem = target_activity.settings;
+        if (elem == null || elem == undefined) { return; }
         let found = false;
         for (let i = 0; i < settings_div.children.length; i++) {
           if (settings_div.children[i].id == elem.id) {
@@ -5023,9 +5121,12 @@ $(document).ready(function() {
 
       if (activity.activityType == "combine") {
         let target_activity = main_activities[operatorId];
-        if (!target_activity) { return; }
+        if (!target_activity) {
+          target_activity = new Combine_Activity($flowchart, activity);
+          main_activities[operatorId] = target_activity;
+        }
         let elem = target_activity.settings;
-        if (elem == null || elem == undefined) { return; }
+        if (elem == null || elem == undefined) { return true; }
         let found = false;
         for (let i = 0; i < settings_div.children.length; i++) {
           if (settings_div.children[i].id == elem.id) {
@@ -5510,6 +5611,31 @@ $(document).ready(function() {
             $flowchart.flowchart("setoutputVal", entry.operatorId, "output", entry.result);
           }
         });
+        response.results.forEach(entry => {
+          if (!entry || entry.operatorId == null || !entry.result) {
+            return;
+          }
+          const links = $flowchart.flowchart("getLinksFrom", entry.operatorId) || [];
+          links.forEach(link => {
+            if (!link || link.toOperator == null) {
+              return;
+            }
+            const toOperator = $flowchart.flowchart("getOperatorActivity", link.toOperator);
+            if (!toOperator) {
+              return;
+            }
+            if (toOperator.activityType === "join" || toOperator.activityType === "append") {
+              const fromOperator = $flowchart.flowchart("getOperatorActivity", entry.operatorId);
+              if (link.toConnector === "input_1") {
+                $flowchart.flowchart("setinputVal", link.toOperator, "input_1", fromOperator);
+              } else if (link.toConnector === "input_2") {
+                $flowchart.flowchart("setinputVal", link.toOperator, "input_2", fromOperator);
+              }
+            } else {
+              $flowchart.flowchart("setinputVal", link.toOperator, "input", entry.result);
+            }
+          });
+        });
         if (typeof main_activities === "object" && main_activities !== null) {
           Object.keys(main_activities).forEach(function(operatorId) {
             var activity = main_activities[operatorId];
@@ -5552,6 +5678,7 @@ $(document).ready(function() {
     if (button.classList.contains("is-running")) {
       return;
     }
+
     button.classList.add("is-running");
     button.setAttribute("aria-label", "Stop pipeline");
     if (label) label.textContent = "Running...";
@@ -6958,6 +7085,40 @@ $(document).ready(function() {
     activites = $flowchart.flowchart("getOperators");
   });
 
+  $("#stream_activity").on("click", function() {
+    var operatorId = operatorI;
+    const footer = document.getElementById("footer");
+    startHeight = parseInt(window.getComputedStyle(footer).height, 10);
+    var operatorData = {
+      top: ($flowchart.height() / 2) - (startHeight / 2),
+      left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+      properties: {
+        title: "Stream",
+        activityType: "stream",
+        dependencies: [],
+        settings: {},
+        inputs: {
+          input: {
+            label: "Input",
+            value: { "datatypes": null, "values": null }
+          }
+        },
+        outputs: {
+          output: {
+            label: "Output",
+            value: { "datatypes": null, "values": null }
+          }
+        }
+      }
+    };
+    operatorI++;
+    $flowchart.flowchart("createOperator", operatorId, operatorData);
+    let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
+    let stream_activity = new Stream_Activity($flowchart, new_activity);
+    main_activities[operatorId] = stream_activity;
+    activites = $flowchart.flowchart("getOperators");
+  });
+
   var $draggableOperators = $(".draggable_operator");
   $draggableOperators.draggable({
     cursor: "move",
@@ -6999,6 +7160,9 @@ $(document).ready(function() {
 
   var pipelineSaveTimer = null;
   function schedulePipelineSave() {
+    if (window.streamAutoFetchActive) {
+      return;
+    }
     if (suspendPipelineSave) {
       return;
     }
@@ -7010,6 +7174,66 @@ $(document).ready(function() {
     }, 50);
   }
   window.flowchartSchedulePipelineSave = schedulePipelineSave;
+
+  function sanitizePipelinePayload(data) {
+    if (!data || typeof data !== "object") {
+      return data;
+    }
+    var payload = JSON.parse(JSON.stringify(data));
+
+    function wipePortValues(portGroup) {
+      if (!portGroup || typeof portGroup !== "object") {
+        return;
+      }
+      Object.keys(portGroup).forEach(function(key) {
+        var port = portGroup[key];
+        if (port && typeof port === "object" && Object.prototype.hasOwnProperty.call(port, "value")) {
+          port.value = null;
+        }
+      });
+    }
+
+    function wipePorts(container) {
+      if (!container || typeof container !== "object") {
+        return;
+      }
+      wipePortValues(container.inputs);
+      wipePortValues(container.outputs);
+    }
+
+    function wipeLinkDetails(details) {
+      if (!Array.isArray(details)) {
+        return;
+      }
+      details.forEach(function(detail) {
+        if (!detail || typeof detail !== "object") {
+          return;
+        }
+        wipePortValues(detail.inputs);
+        wipePortValues(detail.outputs);
+      });
+    }
+
+    var activities = payload.activities || payload.operators;
+    if (activities && typeof activities === "object") {
+      Object.keys(activities).forEach(function(operatorId) {
+        var operator = activities[operatorId];
+        if (!operator || typeof operator !== "object") {
+          return;
+        }
+        wipePorts(operator);
+        if (operator.properties) {
+          wipePorts(operator.properties);
+          wipeLinkDetails(operator.properties.link_to_details);
+          wipeLinkDetails(operator.properties.link_from_details);
+        }
+        wipeLinkDetails(operator.link_to_details);
+        wipeLinkDetails(operator.link_from_details);
+      });
+    }
+
+    return payload;
+  }
 
   function Flow2Text(retryCount) {
     var data = null;
@@ -7055,11 +7279,12 @@ $(document).ready(function() {
     if (!pipelineName) {
       pipelineName = "pipeline";
     }
-    data.pipeline_name = pipelineName;
-    data.description = ($("#pipeline_description").val() || "").trim();
-    data.pipeline_id = pipeline_id;
-    data.google_id = safeGoogleId;
-    post_pipeline(safeGoogleId, pipeline_id, data);
+    var payload = sanitizePipelinePayload(data || {});
+    payload.pipeline_name = pipelineName;
+    payload.description = ($("#pipeline_description").val() || "").trim();
+    payload.pipeline_id = pipeline_id;
+    payload.google_id = safeGoogleId;
+    post_pipeline(safeGoogleId, pipeline_id, payload);
     if (activePipelineType === "pipeline") {
       fetchSavedPipelineList();
     } else {
@@ -7164,6 +7389,9 @@ $(document).ready(function() {
       if (operatorData.properties.activityType == "dataflow") {
         a = new DataFlow_Activity($flowchart, new_activity);
       }
+      if (operatorData.properties.activityType == "stream") {
+        a = new Stream_Activity($flowchart, new_activity);
+      }
 
       main_activities[operatorId] = a;
       activites = $flowchart.flowchart("getOperators");
@@ -7208,7 +7436,9 @@ function build_ordered_activities_payload(flowchart, data, targetId){
         activity_data = { table_1: table_1, table_2: table_2 }
       }
     }
-    const dependencies = get_dependency_ids(activity)
+    let dependencies = Array.isArray(node.dependencies)
+      ? node.dependencies.map(dep => dep.toString())
+      : get_dependency_ids(activity)
     return {
       operatorId: operatorId,
       activityType: activity.activityType,

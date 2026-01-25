@@ -90,7 +90,7 @@ void post_generate_phrase(struct Socket* socket,char* http_header, char*body, ch
  }
 
  
- void post_to_local(struct Socket* socket,char* http_header, char*body, char* route){
+void post_to_local(struct Socket* socket,char* http_header, char*body, char* route){
 	int sfd  = connect_to_local_server("127.0.0.1", "5000");
 	const char *safe_body = body ? body : "";
 	size_t req_size = strlen(safe_body) + 2048;
@@ -156,6 +156,35 @@ void post_generate_phrase(struct Socket* socket,char* http_header, char*body, ch
 
 
  }
+
+void post_to_local_no_reply(const char* route, const char* body){
+	int sfd  = connect_to_local_server("127.0.0.1", "5000");
+	if (sfd < 0) {
+		return;
+	}
+	const char *safe_body = body ? body : "";
+	size_t req_size = strlen(safe_body) + 2048;
+	char *request = malloc(req_size);
+	if (!request) {
+		perror("malloc failed");
+		close(sfd);
+		return;
+	}
+
+	snprintf(request, req_size,
+		"POST %s HTTP/1.1\r\n"
+		"Host: %s:%s\r\n"
+		"Content-Type: application/json\r\n"
+		"Content-Length: %zu\r\n"
+		"Connection: close\r\n"
+		"\r\n"
+		"%s",
+		route,
+		"127.0.0.1", "5000", strlen(safe_body), safe_body);
+	send(sfd, request, strlen(request), 0);
+	free(request);
+	close(sfd);
+}
 
  void get_from_local(struct Socket* socket,char* http_header, char*body, char* route){
 	int sfd  = connect_to_local_server("127.0.0.1", "5000");

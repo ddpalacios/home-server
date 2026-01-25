@@ -13,6 +13,7 @@
 #include <netinet/in.h>
 #include "Websocket_Message.h"
 #include "websocket.h"
+#include "local-server/POST/post_local_server.h"
 #include <unistd.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -259,6 +260,17 @@ int get_int_value(cJSON *json, char* key){
     printf("COULD NOT FIND %s\n", key); 
     return 0;
 }
+
+char* get_optional_value(cJSON *json, char* key){
+    if (!json || !key) {
+        return NULL;
+    }
+    cJSON *value = cJSON_GetObjectItem(json, key);
+    if (value && cJSON_IsString(value) && value->valuestring) {
+        return value->valuestring;
+    }
+    return NULL;
+}
 void free_message(struct Websocket_Message* msg) {
     free(msg->sessionId);
     free(msg->content);
@@ -272,8 +284,8 @@ void process_websocket_message(struct Socket* sockets,struct Socket* socket,int 
 	if (json) {
 		char* operation = get_value(json,"operation");
 		char* request = get_value(json,"request");
-		char* send_to = get_value(json,"send_to");
-		char* socketId = get_value(json,"socketId");
+		char* send_to = get_optional_value(json,"send_to");
+		char* socketId = get_optional_value(json,"socketId");
 		// printf("WEBSOCKET %s %s %s\n", operation, request, send_to);
 
 		if (request && operation) {
@@ -290,9 +302,22 @@ void process_websocket_message(struct Socket* sockets,struct Socket* socket,int 
 				insert_message(ws_message);
 				free_message(&ws_message);
 
+			}else if (strcmp(request, "initialize")==0 && strcmp(operation, "rtneat")==0){
+				cJSON *content = cJSON_GetObjectItem(json, "content");
+				if (content) {
+					cJSON *payload = cJSON_CreateObject();
+					cJSON_AddStringToObject(payload, "socketId", socket->Id);
+					cJSON_AddItemToObject(payload, "data", cJSON_Duplicate(content, 1));
+					char *payload_text = cJSON_PrintUnformatted(payload);
+					if (payload_text) {
+						post_to_local_no_reply("/rtneat/initialize", payload_text);
+						free(payload_text);
+					}
+					cJSON_Delete(payload);
+				}
 			}
 
-			if (strcmp(send_to, "tcp")==0){
+			if (send_to && strcmp(send_to, "tcp")==0){
 				for (int i=0; i<fd_count;i++){
 					struct Socket* s = &sockets[i];
 					if (s->is_tcp){
@@ -388,12 +413,27 @@ void process_bytes(struct Socket *sockets, struct Socket *socket, char* buf, int
 
 			cJSON *json = cJSON_Parse(tcp_buf);
 			if (json) {
-
-					char* socketId = get_value(json,"socketId");
-					for (int i=0; i<fd_count; i++){
-						struct Socket* s = &sockets[i];
-						if (strcmp(s->Id, socketId)==0){
-							send_message_to_socket(s, fd_count,payload_length ,nbytes, tcp_buf); 
+			char* socketId = get_optional_value(json,"socketId");
+					int broadcast = 0;
+					cJSON *broadcast_item = cJSON_GetObjectItem(json, "broadcast");
+					if (cJSON_IsNumber(broadcast_item)) {
+						broadcast = broadcast_item->valueint;
+					} else if (cJSON_IsBool(broadcast_item)) {
+						broadcast = cJSON_IsTrue(broadcast_item) ? 1 : 0;
+					}
+					if (broadcast || !socketId) {
+						for (int i=0; i<fd_count; i++){
+							struct Socket* s = &sockets[i];
+							if (!s->is_listener && !s->is_tcp) {
+								send_message_to_socket(s, fd_count,payload_length ,nbytes, tcp_buf);
+							}
+						}
+					} else {
+						for (int i=0; i<fd_count; i++){
+							struct Socket* s = &sockets[i];
+							if (strcmp(s->Id, socketId)==0){
+								send_message_to_socket(s, fd_count,payload_length ,nbytes, tcp_buf); 
+							}
 						}
 					}
 					cJSON_Delete(json);

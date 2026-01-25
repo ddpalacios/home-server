@@ -174,7 +174,8 @@ class Http_Request_Activity extends Activity {
         ;[
             { value: "none", label: "None" },
             { value: "next_url", label: "Next page URL property" },
-            { value: "continuation", label: "Continuation token" }
+            { value: "continuation", label: "Continuation token" },
+            { value: "offset", label: "Offset (total rows + limit)" }
         ].forEach(item => {
             const option = document.createElement("option")
             option.value = item.value
@@ -275,12 +276,79 @@ class Http_Request_Activity extends Activity {
         continuation_param_help.style.margin = "-4px 0 6px 2px"
         columns_div.appendChild(continuation_param_help)
 
+        const offset_param_wrapper = document.createElement("div")
+        offset_param_wrapper.className = "select-column-row"
+        const offset_param_row = document.createElement("div")
+        offset_param_row.className = "rename_settings"
+        offset_param_row.style.gridTemplateColumns = "minmax(280px, 1fr)"
+        const offset_param_input = document.createElement("input")
+        offset_param_input.type = "text"
+        offset_param_input.name = "offset_param"
+        offset_param_input.placeholder = "Offset query param (e.g. offset)"
+        offset_param_input.addEventListener("change", (event) => this._on_input_change(event, this.flowchart, this))
+        offset_param_row.appendChild(offset_param_input)
+        offset_param_wrapper.appendChild(offset_param_row)
+        columns_div.appendChild(offset_param_wrapper)
+
+        const limit_param_wrapper = document.createElement("div")
+        limit_param_wrapper.className = "select-column-row"
+        const limit_param_row = document.createElement("div")
+        limit_param_row.className = "rename_settings"
+        limit_param_row.style.gridTemplateColumns = "minmax(280px, 1fr)"
+        const limit_param_input = document.createElement("input")
+        limit_param_input.type = "text"
+        limit_param_input.name = "limit_param"
+        limit_param_input.placeholder = "Limit query param (e.g. limit)"
+        limit_param_input.addEventListener("change", (event) => this._on_input_change(event, this.flowchart, this))
+        limit_param_row.appendChild(limit_param_input)
+        limit_param_wrapper.appendChild(limit_param_row)
+        columns_div.appendChild(limit_param_wrapper)
+
+        const limit_value_wrapper = document.createElement("div")
+        limit_value_wrapper.className = "select-column-row"
+        const limit_value_row = document.createElement("div")
+        limit_value_row.className = "rename_settings"
+        limit_value_row.style.gridTemplateColumns = "minmax(280px, 1fr)"
+        const limit_value_input = document.createElement("input")
+        limit_value_input.type = "number"
+        limit_value_input.name = "limit_value"
+        limit_value_input.placeholder = "Limit value (e.g. 50)"
+        limit_value_input.addEventListener("change", (event) => this._on_input_change(event, this.flowchart, this))
+        limit_value_row.appendChild(limit_value_input)
+        limit_value_wrapper.appendChild(limit_value_row)
+        columns_div.appendChild(limit_value_wrapper)
+
+        const total_rows_wrapper = document.createElement("div")
+        total_rows_wrapper.className = "select-column-row"
+        const total_rows_row = document.createElement("div")
+        total_rows_row.className = "rename_settings"
+        total_rows_row.style.gridTemplateColumns = "minmax(280px, 1fr)"
+        const total_rows_input = document.createElement("input")
+        total_rows_input.type = "text"
+        total_rows_input.name = "total_rows_property"
+        total_rows_input.placeholder = "Total rows JSON path (e.g. $.response.pagination.total_rows)"
+        total_rows_input.addEventListener("change", (event) => this._on_input_change(event, this.flowchart, this))
+        total_rows_row.appendChild(total_rows_input)
+        total_rows_wrapper.appendChild(total_rows_row)
+        columns_div.appendChild(total_rows_wrapper)
+
+        const offset_help = document.createElement("div")
+        offset_help.innerHTML = "<strong>Required for Offset:</strong> offset param, limit param/value, total rows JSON path, and records property."
+        offset_help.style.fontSize = "12px"
+        offset_help.style.color = "#6b7280"
+        offset_help.style.margin = "-4px 0 6px 2px"
+        columns_div.appendChild(offset_help)
+
         const update_pagination_visibility = () => {
             const mode = pagination_select.value || "none"
             unroll_wrapper.style.display = mode === "none" ? "none" : ""
             next_url_wrapper.style.display = mode === "next_url" ? "" : "none"
             continuation_prop_wrapper.style.display = mode === "continuation" ? "" : "none"
             continuation_param_wrapper.style.display = mode === "continuation" ? "" : "none"
+            offset_param_wrapper.style.display = mode === "offset" ? "" : "none"
+            limit_param_wrapper.style.display = mode === "offset" ? "" : "none"
+            limit_value_wrapper.style.display = mode === "offset" ? "" : "none"
+            total_rows_wrapper.style.display = mode === "offset" ? "" : "none"
         }
         update_pagination_visibility()
         columns_div.appendChild(actions)
@@ -314,6 +382,18 @@ class Http_Request_Activity extends Activity {
             if (base.continuation_query_param) {
                 continuation_param_input.value = base.continuation_query_param
             }
+            if (base.offset_param) {
+                offset_param_input.value = base.offset_param
+            }
+            if (base.limit_param) {
+                limit_param_input.value = base.limit_param
+            }
+            if (base.limit_value) {
+                limit_value_input.value = base.limit_value
+            }
+            if (base.total_rows_property) {
+                total_rows_input.value = base.total_rows_property
+            }
             update_pagination_visibility()
             if (base.headers && typeof base.headers === "object") {
                 header_row_count += this._append_header_rows(base.headers, columns_div)
@@ -336,7 +416,11 @@ class Http_Request_Activity extends Activity {
             unroll_by: "",
             next_page_property: "",
             continuation_property: "",
-            continuation_query_param: ""
+            continuation_query_param: "",
+            offset_param: "",
+            limit_param: "",
+            limit_value: "",
+            total_rows_property: ""
         }
         let headers = {}
         if (settings && Array.isArray(settings.call)) {
@@ -364,6 +448,18 @@ class Http_Request_Activity extends Activity {
                 }
                 if (entry.continuation_query_param) {
                     base.continuation_query_param = entry.continuation_query_param
+                }
+                if (entry.offset_param) {
+                    base.offset_param = entry.offset_param
+                }
+                if (entry.limit_param) {
+                    base.limit_param = entry.limit_param
+                }
+                if (entry.limit_value) {
+                    base.limit_value = entry.limit_value
+                }
+                if (entry.total_rows_property) {
+                    base.total_rows_property = entry.total_rows_property
                 }
                 if (entry.header_key) {
                     headers[entry.header_key] = entry.header_value || ""

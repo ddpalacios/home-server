@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/eclipse.min.css">
 <link rel="stylesheet" href="/etl/home.css">
 <meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -17,6 +19,10 @@
 	<link rel="stylesheet" href="/etl/jquery.flowchart.css">
 
 	<script src="/etl/jquery.flowchart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
 	</head>
 <body>
 
@@ -219,6 +225,12 @@
 								</span>
 								Pipeline
 							</button>
+							<button id="stream_activity" class="create_operator buttons">
+								<span class="activity-icon" aria-hidden="true">
+									<svg viewBox="0 0 24 24"><path d="M4 4h7v7H4z"/><path d="M13 13h7v7h-7z"/><path d="M11 7l6 6"/></svg>
+								</span>
+								Stream
+							</button>
 						</div>
 					</div>
 				<div id="scheduled_triggers" class="tabcontent">
@@ -337,32 +349,34 @@
       </div>
     </div>
   </div>
+  <script > let ws = null;</script>
   <script src="/websocket.js" defer></script>
-  <script src="etl/activities.js" defer></script>
-  <script src="etl/run.js" defer></script>
-  <script src="etl/import.js" defer></script>
-  <script src="etl/http_request.js" defer></script>
-  <script src="etl/join.js" defer></script>
-  <script src="etl/group.js" defer></script>
-  <script src="etl/custom_column.js" defer></script>
-  <script src="etl/split.js"defer></script>
-  <script src="etl/combine.js" defer></script>
-  <script src="etl/append.js" defer></script>
-  <script src="etl/google_sheets.js" defer></script>
-  <script src="etl/filter.js" defer></script>
-  <script src="etl/replace.js" defer></script>
-  <script src="etl/fill.js" defer></script>
-  <script src="etl/clean.js" defer></script>
-  <script src="etl/dedupe.js" defer></script>
-  <script src="etl/cast.js" defer></script>
-  <script src="etl/regex.js" defer></script>
-  <script src="etl/pivot.js" defer></script>
-  <script src="etl/window.js" defer></script>
-  <script src="etl/flatten.js" defer></script>
-  <script src="etl/select.js" defer></script>
-  <script src="etl/sort.js" defer></script>
-  <script src="etl/dataflow.js" defer></script>
-  <script src="etl/pipeline.js" defer></script>
+  <script src="/etl/activities.js" defer></script>
+  <script src="/etl/run.js" defer></script>
+  <script src="/etl/import.js" defer></script>
+  <script src="/etl/http_request.js" defer></script>
+  <script src="/etl/join.js" defer></script>
+  <script src="/etl/group.js" defer></script>
+  <script src="/etl/custom_column.js" defer></script>
+  <script src="/etl/split.js"defer></script>
+  <script src="/etl/combine.js" defer></script>
+  <script src="/etl/append.js" defer></script>
+  <script src="/etl/google_sheets.js" defer></script>
+  <script src="/etl/filter.js" defer></script>
+  <script src="/etl/replace.js" defer></script>
+  <script src="/etl/fill.js" defer></script>
+  <script src="/etl/clean.js" defer></script>
+  <script src="/etl/dedupe.js" defer></script>
+  <script src="/etl/cast.js" defer></script>
+  <script src="/etl/regex.js" defer></script>
+  <script src="/etl/pivot.js" defer></script>
+  <script src="/etl/window.js" defer></script>
+  <script src="/etl/flatten.js" defer></script>
+  <script src="/etl/select.js" defer></script>
+  <script src="/etl/sort.js" defer></script>
+  <script src="/etl/stream.js" defer></script>
+  <script src="/etl/dataflow.js" defer></script>
+  <script src="/etl/pipeline.js" defer></script>
   <script>
     window.GOOGLE_OAUTH_CONFIG = {
       client_id: "639323802562-f5i8qpon5o6umajc5bvvqcgqjudpnhf6.apps.googleusercontent.com",
@@ -371,6 +385,6 @@
       state: ""
     };
   </script>
-  <script src="etl/home-ui.js" defer></script>
+  <script src="/etl/home-ui.js" defer></script>
   </body>
 </html>

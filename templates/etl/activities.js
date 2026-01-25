@@ -458,6 +458,61 @@ class Settings{
                     statement.value = element.value;
                     statement.row_id = row.id
                     continue
+                case 'replace_value_source':
+                    // Replace: source for replacement value (manual/column).
+                    statement.replace_value_source = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'replace_value_column':
+                    // Replace: column used when replacement source is column.
+                    statement.replace_value_column = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'value_source':
+                    // Source for default value (manual/current date/current datetime).
+                    statement.value_source = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'value_offset_direction':
+                    // Date offset direction for filter value.
+                    statement.value_offset_direction = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'value_offset_amount':
+                    // Date offset amount for filter value.
+                    statement.value_offset_amount = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'value_offset_unit':
+                    // Date offset unit for filter value.
+                    statement.value_offset_unit = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'date_start_column':
+                    // Start column for date diff.
+                    statement.date_start_column = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'date_end_column':
+                    // End column for date diff.
+                    statement.date_end_column = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'date_base_column':
+                    // Base date column for date math.
+                    statement.date_base_column = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'date_days_column':
+                    // Days offset column for date math.
+                    statement.date_days_column = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'date_compare_column':
+                    // Date column for current datetime comparison.
+                    statement.date_compare_column = element.value;
+                    statement.row_id = row.id
+                    continue
                 case 'then_value':
                     // Then-branch value (custom/replace).
                     statement.then_value = element.value;
@@ -501,6 +556,26 @@ class Settings{
                 case 'pagination_mode':
                     // Pagination mode for HTTP requests.
                     statement.pagination_mode = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'offset_param':
+                    // Offset pagination query param name.
+                    statement.offset_param = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'limit_param':
+                    // Offset pagination limit param name.
+                    statement.limit_param = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'limit_value':
+                    // Offset pagination limit value.
+                    statement.limit_value = element.value;
+                    statement.row_id = row.id
+                    continue
+                case 'total_rows_property':
+                    // Offset pagination total rows json path.
+                    statement.total_rows_property = element.value;
                     statement.row_id = row.id
                     continue
                 case 'next_page_property':

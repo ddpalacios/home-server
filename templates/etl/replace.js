@@ -18,6 +18,7 @@ class Replace_Activity extends Activity{
         const hasReplaceValues = (
             hasValue(statement.find_value) ||
             hasValue(statement.value) ||
+            hasValue(statement.replace_value_column) ||
             hasValue(statement.new_column_name) ||
             hasValue(statement.renamed_name)
         )
@@ -36,7 +37,13 @@ class Replace_Activity extends Activity{
     }
 
     _prune_empty_rows() {
-        const columns_div = document.getElementById(this.activityId + "_column_edit")
+        let columns_div = null
+        if (this.settings && this.settings.querySelector) {
+            columns_div = this.settings.querySelector(`[id="${this.activityId}_column_edit"]`)
+        }
+        if (!columns_div) {
+            columns_div = document.getElementById(this.activityId + "_column_edit")
+        }
         if (!columns_div) {
             return
         }
@@ -53,6 +60,7 @@ class Replace_Activity extends Activity{
             const hasReplaceValues = (
                 hasValue(getValue("find_value")) ||
                 hasValue(getValue("value")) ||
+                hasValue(getValue("replace_value_column")) ||
                 hasValue(getValue("new_column_name"))
             )
             const hasConditionValues = (
@@ -119,7 +127,13 @@ class Replace_Activity extends Activity{
     _add_column(e, widget, activity){
         let all_columns = []
         let activityId = activity.activityId
-        let columns_div = document.getElementById(activity.activityId + "_column_edit");
+        let columns_div = null
+        if (this.settings && this.settings.querySelector) {
+            columns_div = this.settings.querySelector(`[id="${activity.activityId}_column_edit"]`)
+        }
+        if (!columns_div) {
+            columns_div = document.getElementById(activity.activityId + "_column_edit");
+        }
 
         if (columns_div == null || columns_div == undefined){
             columns_div = document.createElement('div')
@@ -138,6 +152,19 @@ class Replace_Activity extends Activity{
             all_columns = Object.keys(input_values[0] || {})
         }else if (input_values){
             all_columns = Object.keys(input_values)
+        }
+        if (all_columns.length === 0) {
+            const saved_replace = activity?.activity?.settings?.replace
+            if (Array.isArray(saved_replace)) {
+                saved_replace.forEach(item => {
+                    const columns = [
+                        item?.columnName_1, item?.column_name_1,
+                        item?.columnName_2, item?.column_name_2,
+                        item?.replace_value_column
+                    ].filter(Boolean)
+                    columns.forEach(col => all_columns.push(col))
+                })
+            }
         }
         if (all_columns.length === 0) {
             all_columns = [""]
@@ -171,10 +198,22 @@ class Replace_Activity extends Activity{
                 ,'color': 'black'
             }
             ,{
+                'type': 'selector'
+                ,'options': ['manual', 'column']
+                ,'default_value': 'manual'
+                ,'name': 'replace_value_source'
+            }
+            ,{
                 'type': 'input'
                 ,'placeholder' : 'New character(s)'
                 ,'name': 'value'
 
+            }
+            ,{
+                'type': 'selector'
+                ,'options': all_columns
+                ,'default_value': all_columns[0]
+                ,'name': 'replace_value_column'
             }
             , {
                 'type': 'span'
@@ -221,8 +260,9 @@ class Replace_Activity extends Activity{
                 ,'color': 'black'
             }
             ,{
-                'type': 'input'
-                ,'placeholder' : 'Fallback value (optional)'
+                'type': 'selector'
+                ,'options': all_columns
+                ,'default_value': all_columns[0]
                 ,'name': 'else_value'
 
             }
@@ -366,6 +406,84 @@ class Replace_Activity extends Activity{
                 condition_column.value = replace_column.value
             }
 
+            const replace_source = column_edit_element.querySelector('select[name="replace_value_source"]')
+            const replace_value_input = column_edit_element.querySelector('input[name="value"]')
+            const replace_value_column = column_edit_element.querySelector('select[name="replace_value_column"]')
+            const replace_with_label = Array.from(column_edit_element.children).find(child =>
+                child.tagName === "SPAN" && child.textContent.trim() === "Replace With"
+            )
+            const find_value_input = column_edit_element.querySelector('input[name="find_value"]')
+            const find_value_label = Array.from(column_edit_element.children).find(child =>
+                child.tagName === "SPAN" && child.textContent.trim() === "Find"
+            )
+            const find_value_hint = find_value_input
+
+            const else_value_input = column_edit_element.querySelector('select[name="else_value"]')
+            const else_value_label = Array.from(column_edit_element.children).find(child =>
+                child.tagName === "SPAN" && child.textContent.trim() === "Otherwise"
+            )
+
+            const setReplaceVisibility = () => {
+                const source = replace_source ? replace_source.value : "manual"
+                if (replace_value_input) {
+                    replace_value_input.style.display = source === "manual" ? "" : "none"
+                }
+                if (replace_value_column) {
+                    replace_value_column.style.display = source === "column" ? "" : "none"
+                }
+                if (find_value_input) {
+                    find_value_input.style.display = source === "manual" ? "" : "none"
+                }
+                if (find_value_label) {
+                    find_value_label.style.display = source === "manual" ? "" : "none"
+                }
+                if (else_value_input) {
+                    else_value_input.style.display = source === "column" ? "" : "none"
+                }
+                if (else_value_label) {
+                    else_value_label.style.display = source === "column" ? "" : "none"
+                }
+            }
+            if (replace_source) {
+                replace_source.addEventListener("change", () => {
+                    setReplaceVisibility()
+                    this.get_operation_settings()
+                })
+                setReplaceVisibility()
+            }
+
+            const toggle_button = column_edit_element.querySelector(".replace-condition-toggle")
+            if (toggle_button && replace_source && replace_value_column) {
+                const original_handler = toggle_button.onclick
+                toggle_button.addEventListener("click", () => {
+                    if (replace_source.value === "column") {
+                        const condition_wrapper = column_edit_element.querySelector(".replace-condition-wrapper")
+                        if (condition_wrapper) {
+                            condition_wrapper.style.display = "grid"
+                        }
+                        const condition_column = column_edit_element.querySelector('select[name="column_name_2"]')
+                        const operation_select = column_edit_element.querySelector('select[name="operation"]')
+                        const condition_value = column_edit_element.querySelector('input[name="condition_value"]')
+                        if (condition_column) {
+                            condition_column.value = replace_value_column.value || condition_column.value
+                        }
+                        if (operation_select) {
+                            operation_select.innerHTML = ""
+                            const option = document.createElement("option")
+                            option.value = "DOES NOT EQUAL"
+                            option.textContent = "DOES NOT EQUAL"
+                            operation_select.appendChild(option)
+                            operation_select.value = "DOES NOT EQUAL"
+                        }
+                        if (condition_value) {
+                            condition_value.value = ""
+                        }
+                        toggle_button.textContent = "Remove Condition"
+                        this.get_operation_settings()
+                    }
+                })
+            }
+
             columns_div.appendChild(column_edit_element)
     }
 
@@ -381,7 +499,13 @@ class Replace_Activity extends Activity{
             return
         }
         const meaningful_settings = this._filter_settings(saved_settings)
-        let columns_div = document.getElementById(this.activityId + "_column_edit")
+        let columns_div = null
+        if (this.settings && this.settings.querySelector) {
+            columns_div = this.settings.querySelector(`[id="${this.activityId}_column_edit"]`)
+        }
+        if (!columns_div) {
+            columns_div = document.getElementById(this.activityId + "_column_edit")
+        }
         if (!columns_div) {
             columns_div = document.createElement('div')
             columns_div.id = this.activityId + "_column_edit"
@@ -421,6 +545,8 @@ class Replace_Activity extends Activity{
             setValue("column_name_1", statement.columnName_1 || statement.column_name_1)
             setValue("find_value", statement.find_value)
             setValue("value", statement.value)
+            setValue("replace_value_source", statement.replace_value_source || "manual")
+            setValue("replace_value_column", statement.replace_value_column)
             setValue("new_column_name", statement.new_column_name || statement.renamed_name)
             setValue("column_name_2", statement.columnName_2 || statement.column_name_2)
             setValue("operation", statement.operation)
@@ -436,6 +562,16 @@ class Replace_Activity extends Activity{
                 }
                 if (toggle_button) {
                     toggle_button.textContent = "Remove Condition"
+                }
+            }
+            const replace_source = row.querySelector('select[name="replace_value_source"]')
+            if (replace_source) {
+                replace_source.dispatchEvent(new Event("change"))
+            }
+            if ((statement.replace_value_source || "manual") === "column") {
+                const toggle_button = row.querySelector(".replace-condition-toggle")
+                if (toggle_button) {
+                    toggle_button.click()
                 }
             }
         })

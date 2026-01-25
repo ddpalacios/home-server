@@ -2,8 +2,8 @@
 #include <sys/types.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
- #include <sys/socket.h>
- #include <netdb.h>
+#include <sys/socket.h>
+#include <netdb.h>
 #include "Socket.h"
 //#define CLIENT_CERT "../../../../etc/letsencrypt/live/palacios-solutions.com/fullchain.pem"
 //#define CLIENT_KEY "../../../../etc/letsencrypt/live/palacios-solutions.com/privkey.pem"

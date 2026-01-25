@@ -189,7 +189,12 @@ int send_tcp_message(SSL *cSSL,int fin, int opcode, int payload_length, char* pa
         }
     }
     cJSON_Delete(root);
-    if (!SSL_write(cSSL, frame, bytes_added)){
+    int write_result = SSL_write(cSSL, frame, bytes_added);
+    if (write_result <= 0){
+        int err = SSL_get_error(cSSL, write_result);
+        if (err == SSL_ERROR_WANT_WRITE || err == SSL_ERROR_WANT_READ) {
+            return 0;
+        }
         printf("Error sending message.\n");
         return 0;
     }
@@ -211,9 +216,18 @@ void send_message_to_socket(struct Socket* socket,int fd_count,int protocol_leng
 		memcpy(frame + 2, payload,actual_payload_length);
 		SSL* cSSL = socket->cSSL;
 		printf("Sending %s\n", payload);
-		if (!SSL_write(cSSL, frame, total_bytes)){
-			printf("Error sending message.\n");
-			}
+        int write_result = SSL_write(cSSL, frame, total_bytes);
+        if (write_result <= 0){
+            int err = SSL_get_error(cSSL, write_result);
+            if (err == SSL_ERROR_WANT_WRITE || err == SSL_ERROR_WANT_READ) {
+                if (frame != NULL){
+                    free(frame);
+                    frame = NULL;
+                }
+                return;
+            }
+            printf("Error sending message.\n");
+            }
 		
 		if (frame != NULL){
 			free(frame);
@@ -229,9 +243,18 @@ void send_message_to_socket(struct Socket* socket,int fd_count,int protocol_leng
 		frame[3] = actual_payload_length & 0xFF;
 		memcpy(frame + 4, payload,actual_payload_length);
 		SSL* cSSL = socket->cSSL;
-		if (!SSL_write(cSSL, frame, total_bytes)){
-			printf("Error sending message.\n");
-			}
+        int write_result = SSL_write(cSSL, frame, total_bytes);
+        if (write_result <= 0){
+            int err = SSL_get_error(cSSL, write_result);
+            if (err == SSL_ERROR_WANT_WRITE || err == SSL_ERROR_WANT_READ) {
+                if (frame != NULL){
+                    free(frame);
+                    frame = NULL;
+                }
+                return;
+            }
+            printf("Error sending message.\n");
+            }
 		if (frame != NULL){
 			free(frame);
 			frame = NULL;

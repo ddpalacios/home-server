@@ -1,2 +1,3 @@
-blob-storage/*_predictions.json
-blob-storage/
+blob-storage/*
+!blob-storage/etl/
+!blob-storage/etl/**

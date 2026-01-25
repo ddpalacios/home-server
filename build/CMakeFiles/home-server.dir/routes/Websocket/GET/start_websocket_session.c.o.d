@@ -114,8 +114,7 @@ CMakeFiles/home-server.dir/routes/Websocket/GET/start_websocket_session.c.o: \
  /home/dpalacios/home-server/models/Websocket_Message.h \
  /home/dpalacios/home-server/utilities/json_utilities.h \
  /home/dpalacios/home-server/utilities/http_utilities.h \
- /home/dpalacios/home-server/models/session.h \
- /home/dpalacios/home-server/models/User.h \
+ /home/dpalacios/home-server/routes/local-server/POST/post_local_server.h \
  /home/dpalacios/home-server/models/Socket.h \
  /usr/include/x86_64-linux-gnu/sys/socket.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
@@ -133,4 +132,10 @@ CMakeFiles/home-server.dir/routes/Websocket/GET/start_websocket_session.c.o: \
  /usr/include/x86_64-linux-gnu/asm/sockios.h \
  /usr/include/asm-generic/sockios.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
+ /usr/include/fcntl.h /usr/include/x86_64-linux-gnu/bits/fcntl.h \
+ /usr/include/x86_64-linux-gnu/bits/fcntl-linux.h \
+ /usr/include/x86_64-linux-gnu/bits/stat.h \
+ /usr/include/x86_64-linux-gnu/bits/struct_stat.h \
+ /home/dpalacios/home-server/models/session.h \
+ /home/dpalacios/home-server/models/User.h \
  /home/dpalacios/home-server/models/websocket.h

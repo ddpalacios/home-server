@@ -34,10 +34,23 @@ class Split_Activity extends Activity{
             columns_div.id = this.activityId+ "_column_edit"
             settings_div.appendChild(columns_div)
         }
-        if (Array.isArray(activity.activity.inputs.input.value.values)){
-            all_columns = Object.keys(activity.activity.inputs.input.value.values[0])
-        }else if (activity.activity.inputs.input.value.values){
-            all_columns = Object.keys(activity.activity.inputs.input.value.values)
+        const input_value = activity.activity &&
+            activity.activity.inputs &&
+            activity.activity.inputs.input &&
+            activity.activity.inputs.input.value
+            ? activity.activity.inputs.input.value.values
+            : null
+        if (Array.isArray(input_value)){
+            all_columns = input_value.length ? Object.keys(input_value[0]) : []
+        }else if (input_value){
+            all_columns = Object.keys(input_value)
+        } else {
+            const saved_split = activity?.activity?.settings?.split
+            if (Array.isArray(saved_split)) {
+                all_columns = saved_split
+                    .map(item => item?.columnName || item?.column_name)
+                    .filter(Boolean)
+            }
         }
         if (all_columns.length === 0) {
             all_columns = [""]
