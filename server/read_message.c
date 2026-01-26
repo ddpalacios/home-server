@@ -279,6 +279,40 @@ void free_message(struct Websocket_Message* msg) {
     free(msg->userid);
 }
 
+static int get_broadcast_flag(cJSON *json) {
+    int broadcast = 0;
+    cJSON *broadcast_item = cJSON_GetObjectItem(json, "broadcast");
+    if (cJSON_IsNumber(broadcast_item)) {
+        broadcast = broadcast_item->valueint;
+    } else if (cJSON_IsBool(broadcast_item)) {
+        broadcast = cJSON_IsTrue(broadcast_item) ? 1 : 0;
+    }
+    return broadcast;
+}
+
+static void send_tcp_to_websocket_clients(struct Socket *sockets, int fd_count,
+                                          int payload_length, int nbytes,
+                                          char *tcp_buf) {
+    for (int i = 0; i < fd_count; i++) {
+        struct Socket *s = &sockets[i];
+        if (!s->is_listener && !s->is_tcp) {
+            send_message_as_websocket(s, fd_count, payload_length, nbytes, tcp_buf);
+        }
+    }
+}
+
+static void send_tcp_to_socket_id(struct Socket *sockets, int fd_count,
+                                  const char *socket_id, int payload_length,
+                                  int nbytes, char *tcp_buf) {
+    for (int i = 0; i < fd_count; i++) {
+        struct Socket *s = &sockets[i];
+        if (strcmp(s->Id, socket_id) == 0) {
+            send_message_as_websocket(s, fd_count, payload_length, nbytes, tcp_buf);
+            return;
+        }
+    }
+}
+
 void process_websocket_message(struct Socket* sockets,struct Socket* socket,int fd_count, char* message,int payload_length,int nbytes ){
 	cJSON *json = cJSON_Parse(message);
 	if (json) {
@@ -413,31 +447,18 @@ void process_bytes(struct Socket *sockets, struct Socket *socket, char* buf, int
 
 			cJSON *json = cJSON_Parse(tcp_buf);
 			if (json) {
-			char* socketId = get_optional_value(json,"socketId");
-					int broadcast = 0;
-					cJSON *broadcast_item = cJSON_GetObjectItem(json, "broadcast");
-					if (cJSON_IsNumber(broadcast_item)) {
-						broadcast = broadcast_item->valueint;
-					} else if (cJSON_IsBool(broadcast_item)) {
-						broadcast = cJSON_IsTrue(broadcast_item) ? 1 : 0;
-					}
-					if (broadcast || !socketId) {
-						for (int i=0; i<fd_count; i++){
-							struct Socket* s = &sockets[i];
-							if (!s->is_listener && !s->is_tcp) {
-								send_message_to_socket(s, fd_count,payload_length ,nbytes, tcp_buf);
-							}
-						}
-					} else {
-						for (int i=0; i<fd_count; i++){
-							struct Socket* s = &sockets[i];
-							if (strcmp(s->Id, socketId)==0){
-								send_message_to_socket(s, fd_count,payload_length ,nbytes, tcp_buf); 
-							}
-						}
-					}
-					cJSON_Delete(json);
+				char* socketId = get_optional_value(json, "socketId");
+				int broadcast = get_broadcast_flag(json);
+				if (broadcast || !socketId) {
+					send_tcp_to_websocket_clients(sockets, fd_count, payload_length, nbytes, tcp_buf);
+				} else {
+					send_tcp_to_socket_id(sockets, fd_count, socketId, payload_length, nbytes, tcp_buf);
 				}
+				cJSON_Delete(json);
+			}else{
+				send_tcp_message(socket->cSSL, 0x1, 0x1, nbytes, tcp_buf);
+				// send_message_as_websocket(socket, fd_count, payload_length, nbytes, tcp_buf);
+			}
 			if (tcp_buf != NULL){
 				free(tcp_buf);
 				tcp_buf = NULL;

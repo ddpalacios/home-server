@@ -205,7 +205,7 @@ int send_tcp_message(SSL *cSSL,int fin, int opcode, int payload_length, char* pa
     return 1;
 }
 
-void send_message_to_socket(struct Socket* socket,int fd_count,int protocol_length ,int actual_payload_length, char* payload){
+void send_message_as_websocket(struct Socket* socket,int fd_count,int protocol_length ,int actual_payload_length, char* payload){
 	printf("Protocol Length %d | Actual Length: %d\n", protocol_length, actual_payload_length);
 
 	if (protocol_length < 126){
@@ -258,6 +258,32 @@ void send_message_to_socket(struct Socket* socket,int fd_count,int protocol_leng
 		if (frame != NULL){
 			free(frame);
 			frame = NULL;
+		}
+	}else if (protocol_length == 127){
+		size_t total_bytes = actual_payload_length + 10;
+		char* frame = malloc(total_bytes);
+		frame[0] = 0x81;
+		frame[1] = 0x7F & 0x7f;
+		for (int i = 0; i < 8; i++) {
+			frame[i + 2] = (actual_payload_length >> (56 - 8 * i)) & 0xFF;
+		}
+		memcpy(frame + 10, payload, actual_payload_length);
+		SSL* cSSL = socket->cSSL;
+		int write_result = SSL_write(cSSL, frame, total_bytes);
+		if (write_result <= 0){
+			int err = SSL_get_error(cSSL, write_result);
+			if (err == SSL_ERROR_WANT_WRITE || err == SSL_ERROR_WANT_READ) {
+				if (frame != NULL){
+					free(frame);
+					frame = NULL;
+				}
+				return;
 			}
+			printf("Error sending message.\n");
+		}
+		if (frame != NULL){
+			free(frame);
+			frame = NULL;
 		}
 	}
+}
