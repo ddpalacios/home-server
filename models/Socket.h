@@ -7,6 +7,7 @@ typedef struct Socket{
 	int fd;
 	char* ip_addr;
 	char* hostname;
+	char* jobId;
 	SSL* cSSL;
 	int is_tcp;
 	int keep_alive;

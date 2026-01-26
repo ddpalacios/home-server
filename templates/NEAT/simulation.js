@@ -308,6 +308,15 @@ function initThreeLayer() {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setPixelRatio(window.devicePixelRatio || 1);
     renderer.setClearColor(0x172554, 1);
+    const gl = renderer.getContext();
+    let gpuInfo = "WebGL renderer info unavailable";
+    const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
+    if (debugInfo) {
+        const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+        const rendererName = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+        gpuInfo = `${vendor} - ${rendererName}`;
+    }
+    alert(`WebGL GPU: ${gpuInfo}`);
 
     const scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0xb7c7d6, 60, 1200);
@@ -771,7 +780,14 @@ function startThreeLoop() {
         }
         updateAvatarBlockTouch();
         if (moved) {
-            renderFrame();
+            if (threeState) {
+                updateThreeCamera();
+                threeState.renderer.render(threeState.scene, threeState.camera);
+                draw_host_cursor();
+                updateNavHud();
+            } else {
+                renderFrame();
+            }
         }
         requestAnimationFrame(tick);
     }
@@ -1167,6 +1183,9 @@ function updateAvatarLabelSprite(sprite, body) {
 
 function renderFrame() {
  ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!threeState) {
+        initThreeLayer();
+    }
     const threeActive = renderThree();
     if (threeActive) {
         draw_host_cursor();
@@ -1178,170 +1197,20 @@ function renderFrame() {
     ctx.scale(zoomScale, zoomScale);
 
 
-    /* -----------------
-    Added code block:
-    Description: Render only bodies and radius offsets to avoid scanning the entire grid every frame.
-    drawFoods();
-    if (Array.isArray(bodies)) {
-        consumeFoods(bodies);
-        consumeFoods(bodies);
-        bodies.forEach(body => {
-            const centerX = body.pos_x * pixel_size + pixel_size / 2;
-            const centerY = body.pos_y * pixel_size + pixel_size / 2;
-            const radius = pixel_size * 1.6;
-            if (Array.isArray(radiusOffsets)) {
-                const ringRadius = (Math.max(0, currentRadius || 0) + 1.6) * pixel_size;
-                ctx.save();
-                ctx.strokeStyle = "rgba(148, 197, 255, 0.9)";
-                ctx.lineWidth = Math.max(1.5, pixel_size * 0.22);
-                ctx.shadowColor = "rgba(99, 179, 237, 0.75)";
-                ctx.shadowBlur = pixel_size * 2.2;
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, ringRadius, 0, Math.PI * 2);
-                ctx.stroke();
-                ctx.restore();
-
-                const ringGradient = ctx.createRadialGradient(
-                    centerX,
-                    centerY,
-                    Math.max(1, ringRadius * 0.6),
-                    centerX,
-                    centerY,
-                    ringRadius
-                );
-                ringGradient.addColorStop(0, "rgba(56, 189, 248, 0.0)");
-                ringGradient.addColorStop(0.6, "rgba(56, 189, 248, 0.12)");
-                ringGradient.addColorStop(1, "rgba(56, 189, 248, 0.0)");
-                ctx.fillStyle = ringGradient;
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, ringRadius, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            ctx.save();
-            ctx.shadowColor = "rgba(56, 189, 248, 0.65)";
-            ctx.shadowBlur = pixel_size * 1.9;
-            const coreGradient = ctx.createRadialGradient(
-                centerX - radius * 0.3,
-                centerY - radius * 0.3,
-                radius * 0.2,
-                centerX,
-                centerY,
-                radius
-            );
-            coreGradient.addColorStop(0, "rgba(255, 255, 255, 0.95)");
-            coreGradient.addColorStop(0.35, "rgba(56, 189, 248, 0.95)");
-            coreGradient.addColorStop(1, "rgba(14, 116, 144, 0.95)");
-            ctx.fillStyle = coreGradient;
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-        });
-    }
-    ----------------- */
     if (Array.isArray(bodies)) {
         bodies.forEach(body => {
             const baseX = body.pos_x * pixel_size + pixel_size / 2;
             const baseY = body.pos_y * pixel_size + pixel_size / 2;
             const radius = pixel_size * 3.2;
-            const bodyId = body.body_id != null ? body.body_id : `${body.pos_x}:${body.pos_y}`;
-            const style = bodyStyleForId(bodyId);
             const centerX = baseX - cameraX;
             const centerY = baseY - cameraY;
-
             if (!isOnScreen(centerX, centerY, radius)) {
                 return;
             }
-
-            ctx.save();
-            ctx.shadowColor = "rgba(56, 189, 248, 0.35)";
-            ctx.shadowBlur = pixel_size * 1.8;
-            const membrane = ctx.createRadialGradient(
-                centerX - radius * 0.25,
-                centerY - radius * 0.25,
-                radius * 0.15,
-                centerX,
-                centerY,
-                radius
-            );
-            membrane.addColorStop(0, "rgba(255, 255, 255, 0.9)");
-            membrane.addColorStop(0.3, "rgba(255, 255, 255, 0.5)");
-            membrane.addColorStop(0.6, `hsla(${style.hue}, 55%, 70%, 0.35)`);
-            membrane.addColorStop(1, `hsla(${style.hue}, 60%, 50%, 0.28)`);
-            ctx.fillStyle = membrane;
             ctx.beginPath();
+            ctx.fillStyle = body.isTopFitness ? "#22d3ee" : "#60a5fa";
             ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
             ctx.fill();
-            ctx.lineWidth = Math.max(1, pixel_size * 0.2);
-            ctx.strokeStyle = "rgba(241, 245, 249, 0.55)";
-            ctx.stroke();
-
-            const rimGradient = ctx.createRadialGradient(
-                centerX,
-                centerY,
-                radius * 0.6,
-                centerX,
-                centerY,
-                radius * 1.02
-            );
-            rimGradient.addColorStop(0, "rgba(255, 255, 255, 0.0)");
-            rimGradient.addColorStop(1, "rgba(148, 163, 184, 0.65)");
-            ctx.strokeStyle = rimGradient;
-            ctx.lineWidth = Math.max(1, pixel_size * 0.16);
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius * 0.98, 0, Math.PI * 2);
-            ctx.stroke();
-
-            const nucleusRadius = radius * 0.26;
-            const nucleusGradient = ctx.createRadialGradient(
-                centerX - nucleusRadius * 0.25,
-                centerY - nucleusRadius * 0.25,
-                nucleusRadius * 0.2,
-                centerX,
-                centerY,
-                nucleusRadius
-            );
-            nucleusGradient.addColorStop(0, "rgba(255, 255, 255, 0.95)");
-            nucleusGradient.addColorStop(0.6, `hsla(${style.hue}, 40%, 45%, 0.55)`);
-            nucleusGradient.addColorStop(1, `hsla(${style.hue}, 35%, 28%, 0.75)`);
-            ctx.fillStyle = nucleusGradient;
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, nucleusRadius, 0, Math.PI * 2);
-            ctx.fill();
-
-            const organelleCount = 6 + (bodyId.toString().length % 4);
-            for (let i = 0; i < organelleCount; i++) {
-                const rand = seededRandom(style.hue * 100 + i * 31);
-                const angle = rand * Math.PI * 2;
-                const dist = radius * (0.25 + seededRandom(style.hue * 200 + i * 17) * 0.45);
-                const ox = centerX + Math.cos(angle) * dist;
-                const oy = centerY + Math.sin(angle) * dist;
-                const orgRadius = radius * (0.06 + seededRandom(style.hue * 300 + i * 13) * 0.05);
-                ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
-                ctx.beginPath();
-                ctx.arc(ox, oy, orgRadius, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = "rgba(148, 163, 184, 0.35)";
-                ctx.lineWidth = Math.max(0.6, pixel_size * 0.05);
-                ctx.stroke();
-            }
-
-            const highlight = ctx.createRadialGradient(
-                centerX - radius * 0.35,
-                centerY - radius * 0.35,
-                radius * 0.1,
-                centerX - radius * 0.35,
-                centerY - radius * 0.35,
-                radius * 0.5
-            );
-            highlight.addColorStop(0, "rgba(255, 255, 255, 0.75)");
-            highlight.addColorStop(1, "rgba(255, 255, 255, 0)");
-            ctx.fillStyle = highlight;
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius * 0.95, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
         });
     }
     ctx.restore();

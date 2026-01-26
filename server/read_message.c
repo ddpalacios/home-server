@@ -92,7 +92,7 @@ int read_tcp_message(SSL *cSSL, char** payload){
 
 			unsigned char* buf = malloc(byte_length+1);
 			int fbytes = read_exact_bytes(cSSL,byte_length, buf);
-			printf("READ BYTES: %d\n", fbytes);
+			// printf("READ BYTES: %d\n", fbytes);
 			if (is_length_prefix->valueint){
 				prefix_length = (buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + (buf[3]);
 			}else if (strcmp(name->valuestring , "PAYLOAD")==0){
@@ -316,60 +316,76 @@ static void send_tcp_to_socket_id(struct Socket *sockets, int fd_count,
 void process_websocket_message(struct Socket* sockets,struct Socket* socket,int fd_count, char* message,int payload_length,int nbytes ){
 	cJSON *json = cJSON_Parse(message);
 	if (json) {
-		char* operation = get_value(json,"operation");
-		char* request = get_value(json,"request");
-		char* send_to = get_optional_value(json,"send_to");
-		char* socketId = get_optional_value(json,"socketId");
-		// printf("WEBSOCKET %s %s %s\n", operation, request, send_to);
+		char* jobId = get_optional_value(json, "jobId");
+		if (jobId  != NULL) {
 
-		if (request && operation) {
-			if (strcmp(request, "POST")==0 &&strcmp(operation, "client")==0){
-				post_websocket_client(socket,NULL, message, NULL, 0);
-			}else if (strcmp(request, "POST")==0 &&strcmp(operation, "message")==0){
-				char* content = get_value(json,"content");
-				char* userid = get_value(json,"userid");
-				char* username = get_value(json,"username");
-				char* sessionId = get_value(json,"sessionId");
-				char* timestamp = get_value(json,"timestamp");
-				int is_notification = get_int_value(json,"is_notification");
-				struct Websocket_Message ws_message = create_message(sessionId,content, timestamp,username,userid, is_notification);
-				insert_message(ws_message);
-				free_message(&ws_message);
-
-			}else if (strcmp(request, "initialize")==0 && strcmp(operation, "rtneat")==0){
-				cJSON *content = cJSON_GetObjectItem(json, "content");
-				if (content) {
-					cJSON *payload = cJSON_CreateObject();
-					cJSON_AddStringToObject(payload, "socketId", socket->Id);
-					cJSON_AddItemToObject(payload, "data", cJSON_Duplicate(content, 1));
-					char *payload_text = cJSON_PrintUnformatted(payload);
-					if (payload_text) {
-						post_to_local_no_reply("/rtneat/initialize", payload_text);
-						free(payload_text);
-					}
-					cJSON_Delete(payload);
+			for (int i=0; i<fd_count;i++){
+				struct Socket* s = &sockets[i];
+				if (!s->jobId) {
+					continue;
 				}
-			}
-
-			if (send_to && strcmp(send_to, "tcp")==0){
-				for (int i=0; i<fd_count;i++){
-					struct Socket* s = &sockets[i];
-					if (s->is_tcp){
-					printf("FOUND TCP SOCKET\n");
+				if (strcmp(s->jobId, jobId) == 0){
 					send_tcp_message(s->cSSL, 0x1, 0x1, nbytes, message);
 				}
 			}
 		}
-			// }else{
-			// 	send_websocket_message(sockets,socket,fd_count, payload_length, nbytes, message);
-			// }
-		}
+
+
+
 		cJSON_Delete(json);
 		if (message != NULL){
 	  		free(message);
 			message = NULL;
 		}
 	}
+		// char* request = get_value(json,"request");
+		// char* send_to = get_optional_value(json,"send_to");
+		// char* socketId = get_optional_value(json,"socketId");
+		// printf("WEBSOCKET %s %s %s\n", operation, request, send_to);
+
+		// if (request && operation) {
+		// 	if (strcmp(request, "POST")==0 &&strcmp(operation, "client")==0){
+		// 		post_websocket_client(socket,NULL, message, NULL, 0);
+		// 	}else if (strcmp(request, "POST")==0 &&strcmp(operation, "message")==0){
+		// 		char* content = get_value(json,"content");
+		// 		char* userid = get_value(json,"userid");
+		// 		char* username = get_value(json,"username");
+		// 		char* sessionId = get_value(json,"sessionId");
+		// 		char* timestamp = get_value(json,"timestamp");
+		// 		int is_notification = get_int_value(json,"is_notification");
+		// 		struct Websocket_Message ws_message = create_message(sessionId,content, timestamp,username,userid, is_notification);
+		// 		insert_message(ws_message);
+		// 		free_message(&ws_message);
+
+		// 	}else if (strcmp(request, "initialize")==0 && strcmp(operation, "rtneat")==0){
+		// 		cJSON *content = cJSON_GetObjectItem(json, "content");
+		// 		if (content) {
+		// 			cJSON *payload = cJSON_CreateObject();
+		// 			cJSON_AddStringToObject(payload, "socketId", socket->Id);
+		// 			cJSON_AddItemToObject(payload, "data", cJSON_Duplicate(content, 1));
+		// 			char *payload_text = cJSON_PrintUnformatted(payload);
+		// 			if (payload_text) {
+		// 				post_to_local_no_reply("/rtneat/initialize", payload_text);
+		// 				free(payload_text);
+		// 			}
+		// 			cJSON_Delete(payload);
+		// 		}
+		// 	}
+
+		// 	if (send_to && strcmp(send_to, "tcp")==0){
+				// for (int i=0; i<fd_count;i++){
+				// 	struct Socket* s = &sockets[i];
+		// 			if (s->is_tcp){
+		// 			printf("FOUND TCP SOCKET\n");
+		// 			send_tcp_message(s->cSSL, 0x1, 0x1, nbytes, message);
+		// 		}
+		// 	}
+		// }
+		// 	// }else{
+		// 	// 	send_websocket_message(sockets,socket,fd_count, payload_length, nbytes, message);
+		// 	// }
+		// }
+	
 }
 			
 			/*
@@ -433,6 +449,7 @@ void process_websocket_message(struct Socket* sockets,struct Socket* socket,int 
 				*/
 void process_bytes(struct Socket *sockets, struct Socket *socket, char* buf, int fd_count){
 		if (is_tcp_buffer(buf)){
+
 			char* tcp_buf = malloc(BUFFER_SIZE);
 			int nbytes =  read_tcp_message(socket->cSSL, &tcp_buf);
 			// printf("TCP Buf %s\n", tcp_buf);
@@ -440,16 +457,25 @@ void process_bytes(struct Socket *sockets, struct Socket *socket, char* buf, int
 			socket->keep_alive = 0x1;
 			int payload_length = 0;
 			if (nbytes <= 125){
-				payload_length = 125;
-			}else{
+				payload_length = nbytes;
+			}else if (nbytes <= 65535){
 				payload_length = 126;
+			}else{
+				payload_length = 127;
 			}
 
 			cJSON *json = cJSON_Parse(tcp_buf);
+			
 			if (json) {
 				char* socketId = get_optional_value(json, "socketId");
 				int broadcast = get_broadcast_flag(json);
+				char* jobId = get_optional_value(json, "jobId");
+				if (jobId) {
+					printf("Message %s\n", tcp_buf);
+					socket->jobId = strdup(jobId);
+				}
 				if (broadcast || !socketId) {
+					// printf("Sending Websocket Message %s\n",tcp_buf);
 					send_tcp_to_websocket_clients(sockets, fd_count, payload_length, nbytes, tcp_buf);
 				} else {
 					send_tcp_to_socket_id(sockets, fd_count, socketId, payload_length, nbytes, tcp_buf);
@@ -479,7 +505,7 @@ void process_bytes(struct Socket *sockets, struct Socket *socket, char* buf, int
 				nbytes = read_websocket_message(socket->cSSL, payload_length, &message);
 				int message_length = nbytes;
 				message[nbytes] = '\0';
-				// printf("WEBSOCKET MESSAGE %s\n", message);
+				printf("WEBSOCKET MESSAGE %s\n", message);
 				process_websocket_message(sockets,socket, fd_count, message,payload_length, nbytes);
 				if (websocket_buf != NULL) {
 					free(websocket_buf);

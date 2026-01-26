@@ -721,76 +721,130 @@ let count = 0
 }
 
 
-    async function initalize_neat(socketId, body){
-    if (socketId == null || socketId == undefined){
-        alert("No Socket Found")
-        return
+     function start_job(ws, body){
+      let protocol = {
+          "type": "start_job",
+          "jobId": "gpu-spark",
+          'app':'neat',
+          "payload": body
+      }  
+      console.log("Starting NEAT Job")
+      ws.send_message(protocol)
     }
-          var request = new Request('/rtneat/initialize', {
-                                method: 'POST',
-                                headers: new Headers({
-                                            'Accept': 'application/json'
-                                        })
-			       ,body: JSON.stringify({
-                           'socketId': socketId,
-                           'data': body
-				       })
-                    });
-           fetch(request);
+    let pendingRenderData = null;
+    let renderScheduled = false;
+    function scheduleRender(data){
+        pendingRenderData = data;
+        if (renderScheduled){
+            return;
+        }
+        renderScheduled = true;
+        requestAnimationFrame(() => {
+            renderScheduled = false;
+            if (!pendingRenderData){
+                return;
+            }
+            const latest = pendingRenderData;
+            pendingRenderData = null;
+            bodies = latest.bodies || [];
+            if (Array.isArray(bodies) && bodies.length > 0) {
+              const hasServerTop = bodies[0].isTopFitness !== undefined;
+              if (!hasServerTop) {
+                const sortedBodies = bodies
+                  .slice()
+                  .filter(body => body.fitness != null)
+                  .sort((a, b) => b.fitness - a.fitness);
+                const topCount = Math.min(10, sortedBodies.length);
+                const topIds = new Set(
+                  sortedBodies.slice(0, topCount).map(body => body.body_id)
+                );
+                bodies.forEach(body => {
+                  body.isTopFitness = topIds.has(body.body_id);
+                });
+              }
+            }
+            if (latest.body_radius_size !== currentRadius) {
+              currentRadius = latest.body_radius_size;
+              radiusOffsets = buildRadiusOffsets(currentRadius);
+            }
+            if (typeof renderFrame === "function") {
+              renderFrame();
+            }
+        });
     }
     function connect(body){
         if (ws ==null){
             ws = new Websocket_Session(app='neat')
             ws.initialize()
           }
-          ws.session.onmessage = async (event) => {
-              let data = JSON.parse(event.data)
-               if (data['request'] == 'neat'){
-                    if (isPaused) {
-                        return;
-                    }
-                    /* -----------------
-                    Added code block:
-                    Description: Update cached bodies and rebuild radius offsets only when radius changes.
-                      ----------------- */
-                      bodies = data.bodies || [];
-                      if (Array.isArray(bodies) && bodies.length > 0) {
-                        const sortedBodies = bodies
-                          .slice()
-                          .filter(body => body.fitness != null)
-                          .sort((a, b) => b.fitness - a.fitness);
-                        const topCount = Math.min(10, sortedBodies.length);
-                        const topIds = new Set(
-                          sortedBodies.slice(0, topCount).map(body => body.body_id)
-                        );
-                        bodies.forEach(body => {
-                          body.isTopFitness = topIds.has(body.body_id);
-                        });
-                      }
-                      if (data.body_radius_size !== currentRadius) {
-                        currentRadius = data.body_radius_size;
-                        radiusOffsets = buildRadiusOffsets(currentRadius);
-                      }
-                      if (typeof renderFrame === "function") {
-                        renderFrame();
-                      }
-                
-                      }
-                      if (data['request'] == 'new_connection'){
-                          socketId = data['value']
-                          console.log("Socket ID", socketId)
-                          initalize_neat(socketId,body)
-                          // const myInterval = setInterval(sendmouseCords, 50);
-              }
-          }
+          const maxAttempts = 20;
+          const retryDelayMs = 250;
+          let attempts = 0;
+          const tryStartJob = () => {
+            if (ws && ws.session && ws.session.readyState === WebSocket.OPEN) {
+              start_job(ws, body);
+              return;
+            }
+            attempts += 1;
+            if (attempts < maxAttempts) {
+              setTimeout(tryStartJob, retryDelayMs);
+            }
+          };
+          tryStartJob();
+         
+
+          // ws.send_message({'request': 'new_connection'})
+            ws.session.onmessage = async (event) => {
+                let data = JSON.parse(event.data)
+                // console.log("Received data:", data);
+                scheduleRender(data);
+                }
         }
+          //      if (data['request'] == 'neat'){
+          //           if (isPaused) {
+          //               return;
+          //           }
+          //           /* -----------------
+          //           Added code block:
+          //           Description: Update cached bodies and rebuild radius offsets only when radius changes.
+          //             ----------------- */
+                      // bodies = data.bodies || [];
+                      // if (Array.isArray(bodies) && bodies.length > 0) {
+                      //   const sortedBodies = bodies
+                      //     .slice()
+                      //     .filter(body => body.fitness != null)
+                      //     .sort((a, b) => b.fitness - a.fitness);
+                      //   const topCount = Math.min(10, sortedBodies.length);
+                      //   const topIds = new Set(
+                      //     sortedBodies.slice(0, topCount).map(body => body.body_id)
+                      //   );
+                      //   bodies.forEach(body => {
+                      //     body.isTopFitness = topIds.has(body.body_id);
+                      //   });
+                      // }
+                      // if (data.body_radius_size !== currentRadius) {
+                      //   currentRadius = data.body_radius_size;
+                      //   radiusOffsets = buildRadiusOffsets(currentRadius);
+                      // }
+                      // if (typeof renderFrame === "function") {
+                      //   renderFrame();
+                      // }
+                
+          //             }
+          //             if (data['request'] == 'new_connection'){
+          //                 socketId = data['value']
+          //                 console.log("Socket ID", socketId)
+          //                 initalize_neat(socketId,body)
+          //                 // const myInterval = setInterval(sendmouseCords, 50);
+          //     }
+      
 
 </script>
 <script>
     let pixel_size = 10
     const baseRows = Math.floor(canvas.height / pixel_size);
     const baseCols = Math.floor(canvas.width / pixel_size);
-    const worldScale = 2;
+    const worldScale = 3;
     var numRows = baseRows * worldScale;
     var numCols = baseCols * worldScale;
     var big_canvas_grid = []
@@ -802,7 +856,7 @@ let count = 0
     var mouse_y = 0;
     var gol = new GameOfLife(big_canvas_grid, numRows,numCols, pixel_size);
     let grid = Array(numRows).fill(0).map(() => Array(numCols).fill(0));
-    let pop_size = 100
+    let pop_size = 1000
     let body = {
           'pop_size': pop_size
           ,'rows': gol.numRows

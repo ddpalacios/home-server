@@ -14,7 +14,7 @@ class Websocket_Session{
 		let request = "DELETE";
 		this.#protocol['operation'] = operation;
 		this.#protocol['request'] = request;
-		this.session.send(JSON.stringify(this.#protocol))
+		// this.session.send(JSON.stringify(this.#protocol))
 	}
 	send_coordinates(x, y){
 		let operation = "coordinates";
@@ -23,7 +23,7 @@ class Websocket_Session{
 		this.#protocol['request'] = request;
 		this.#protocol['content'] = {"x": x, 'y': y};
 
-		this.session.send(JSON.stringify(this.#protocol))
+		// this.session.send(JSON.stringify(this.#protocol))
 
 		
 
@@ -56,15 +56,8 @@ class Websocket_Session{
 		this.session.send(JSON.stringify(prot))
 	}
 
-	send_message(username,message, is_notification){
-		let operation = "message";
-		let request = "POST";
-		this.#protocol['operation'] = operation;
-		this.#protocol['request'] = request;
-		this.#protocol['username'] = username;
-		this.#protocol['content'] = message;
-		this.#protocol['is_notification'] = is_notification;
-		this.session.send(JSON.stringify(this.#protocol))
+	send_message(message){
+		this.session.send(JSON.stringify(message))
 	}
 	initialize(url){
 		const endpoint = (typeof url === "string" && url.length > 0)
