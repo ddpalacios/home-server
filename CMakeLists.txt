@@ -23,33 +23,8 @@ file(GLOB MAIN
     "models/Socket.c"
     "utilities/*.c"
     "routes/route.c"
-    "routes/chicago-transits/GET/*.c"
-    "routes/Websocket/GET/*.c"
-    "routes/blob-storage/POST/*.c"
-    "routes/local-server/POST/*.c"
-    "routes/blob-storage/GET/*.c"
-    "routes/database-server/POST/*.c"
-    "routes/life-of-sounds/GET/login.c"
-    
-    "routes/life-of-sounds/GET/home.c"
-    "routes/life-of-sounds/GET/get_session_messages.c"
-    "routes/life-of-sounds/GET/get_live_page.c"
-    "routes/life-of-sounds/GET/get_web_audio_api_script.c"
-    "routes/life-of-sounds/GET/websocket_protocol.c"
-    "routes/life-of-sounds/GET/get_html_utilities_script.c"
-    "routes/life-of-sounds/GET/get_game_of_life_script.c"
-    "routes/life-of-sounds/GET/new_login.c"
-    "routes/life-of-sounds/GET/get_user.c"
-    "routes/life-of-sounds/POST/login.c"
-    "routes/life-of-sounds/POST/post_user.c"
-    "routes/life-of-sounds/POST/post_websocket_session.c"
-    "routes/life-of-sounds/POST/post_browser_session.c"
-    "routes/life-of-sounds/POST/post_websocket_client.c"
-    "routes/life-of-sounds/GET/get_websocket_client.c"
-    "routes/life-of-sounds/DELETE/delete_websocket_session.c"
-    "routes/life-of-sounds/PATCH/patch_websocket_client.c"
-    "routes/life-of-sounds/PATCH/patch_browser_session.c"
-    "routes/life-of-sounds/PATCH/patch_websocket_session.c"
+    "routes/local-server/POST/post_local_server.c"
+    "routes/local-server/GET/get_local_server.c"
 )
 
 
@@ -63,16 +38,7 @@ target_include_directories(home-server PRIVATE
     ${PROJECT_SOURCE_DIR}/routes
     ${PROJECT_SOURCE_DIR}/database
     ${PROJECT_SOURCE_DIR}/models
-
-    ${PROJECT_SOURCE_DIR}/routes/database-server/POST
-    ${PROJECT_SOURCE_DIR}/routes/life-of-sounds/GET
-    ${PROJECT_SOURCE_DIR}/routes/chicago-transits/GET
-    ${PROJECT_SOURCE_DIR}/routes/Websocket/GET
-    ${PROJECT_SOURCE_DIR}/routes/blob-storage/GET
-    ${PROJECT_SOURCE_DIR}/routes/local-server/POST
-    ${PROJECT_SOURCE_DIR}/routes/blob-storage/POST
-    ${PROJECT_SOURCE_DIR}/routes/life-of-sounds/POST
-
+    ${PROJECT_SOURCE_DIR}/routes/local-server/GET
 )
 
 
@@ -83,4 +49,3 @@ find_library(MYSQLCLIENT_LIB mysqlclient)
 target_link_libraries(home-server ${MYSQLCLIENT_LIB})
 
 target_link_libraries(home-server uuid cjson)
-

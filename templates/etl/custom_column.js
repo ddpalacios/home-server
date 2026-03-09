@@ -28,6 +28,8 @@ class Custom_Activity extends Activity{
             statement.date_end_column = getValue("date_end_column")
             statement.date_base_column = getValue("date_base_column")
             statement.date_days_column = getValue("date_days_column")
+            statement.date_sub_mode = getValue("date_sub_mode")
+            statement.guid_source_column = getValue("guid_source_column")
             statement.date_compare_column = getValue("date_compare_column")
             const conditions = []
             const condition_rows = row.querySelectorAll(".custom-condition-row")
@@ -215,6 +217,29 @@ class Custom_Activity extends Activity{
                 })
             }
         }
+        if (preset) {
+            [
+                preset.columnName,
+                preset.column_name,
+                preset.date_start_column,
+                preset.date_end_column,
+                preset.date_base_column,
+                preset.date_days_column,
+                preset.date_compare_column,
+                preset.guid_source_column
+            ].forEach((col) => {
+                if (col) {
+                    all_columns.push(col)
+                }
+            })
+            if (Array.isArray(preset.conditions)) {
+                preset.conditions.forEach((cond) => {
+                    if (cond && cond.then_value_column) {
+                        all_columns.push(cond.then_value_column)
+                    }
+                })
+            }
+        }
         if (all_columns.length === 0) {
             all_columns = [""]
         } else {
@@ -261,9 +286,20 @@ class Custom_Activity extends Activity{
             }
             , {
                 'type': 'selector'
-                ,'options': ['manual', 'current_date', 'current_datetime', 'unique_id', 'date_diff_days', 'date_sub_days', 'date_gt_now', 'date_lt_now']
+                ,'options': ['manual', 'current_date', 'current_datetime', 'unique_id', 'guid_from_column', 'date_diff_days', 'date_sub_days', 'date_gt_now', 'date_lt_now']
                 ,'default_value': "manual"
                 ,'name':'value_source'
+            }
+            , {
+                'type': 'span'
+                ,'label':"GUID Source Column"
+                ,'color': 'black'
+            }
+            ,{
+                'type': 'selector'
+                ,'options': all_columns
+                ,'default_value': all_columns[0]
+                ,'name': 'guid_source_column'
             }
             , {
                 'type': 'span'
@@ -297,6 +333,17 @@ class Custom_Activity extends Activity{
                 ,'options': all_columns
                 ,'default_value': all_columns[0]
                 ,'name': 'date_days_column'
+            }
+            , {
+                'type': 'span'
+                ,'label':"Day Count Type"
+                ,'color': 'black'
+            }
+            ,{
+                'type': 'selector'
+                ,'options': ['calendar', 'business']
+                ,'default_value': 'calendar'
+                ,'name': 'date_sub_mode'
             }
             , {
                 'type': 'span'
@@ -465,7 +512,11 @@ class Custom_Activity extends Activity{
             const date_end_select = column_edit_element.querySelector('select[name="date_end_column"]')
             const date_base_select = column_edit_element.querySelector('select[name="date_base_column"]')
             const date_days_select = column_edit_element.querySelector('select[name="date_days_column"]')
+            const guid_source_select = column_edit_element.querySelector('select[name="guid_source_column"]')
             const date_compare_select = column_edit_element.querySelector('select[name="date_compare_column"]')
+            const guid_source_label = Array.from(column_edit_element.children).find(child =>
+                child.tagName === "SPAN" && child.textContent.trim() === "GUID Source Column"
+            )
             const date_compare_label = Array.from(column_edit_element.children).find(child =>
                 child.tagName === "SPAN" && child.textContent.trim() === "Date Compare Column"
             )
@@ -481,6 +532,10 @@ class Custom_Activity extends Activity{
             const date_days_label = Array.from(column_edit_element.children).find(child =>
                 child.tagName === "SPAN" && child.textContent.trim() === "Days Column"
             )
+            const date_sub_mode_select = column_edit_element.querySelector('select[name="date_sub_mode"]')
+            const date_sub_mode_label = Array.from(column_edit_element.children).find(child =>
+                child.tagName === "SPAN" && child.textContent.trim() === "Day Count Type"
+            )
             const condition_wrapper = column_edit_element.querySelector('.custom-condition-wrapper')
             const toggle_button_control = Array.from(column_edit_element.querySelectorAll('button'))
                 .find(button => button.textContent.trim().toLowerCase().includes("condition")) || null
@@ -492,12 +547,15 @@ class Custom_Activity extends Activity{
             const update_visibility = () => {
                 const source = value_source_select ? value_source_select.value : "manual"
                 const show_manual = source === "manual"
+                const show_guid = source === "guid_from_column"
                 const show_date_diff = source === "date_diff_days"
                 const show_date_sub = source === "date_sub_days"
                 const show_date_gt_now = source === "date_gt_now" || source === "date_lt_now"
                 const show_default_value = show_manual || show_date_gt_now
                 setVisible(default_value_label, show_default_value)
                 setVisible(default_value_input, show_default_value)
+                setVisible(guid_source_label, show_guid)
+                setVisible(guid_source_select, show_guid)
                 setVisible(date_start_label, show_date_diff)
                 setVisible(date_start_select, show_date_diff)
                 setVisible(date_end_label, show_date_diff)
@@ -506,6 +564,8 @@ class Custom_Activity extends Activity{
                 setVisible(date_base_select, show_date_sub)
                 setVisible(date_days_label, show_date_sub)
                 setVisible(date_days_select, show_date_sub)
+                setVisible(date_sub_mode_label, show_date_sub)
+                setVisible(date_sub_mode_select, show_date_sub)
                 setVisible(date_compare_label, show_date_gt_now)
                 setVisible(date_compare_select, show_date_gt_now)
                 if (toggle_button_control) {
@@ -548,9 +608,17 @@ class Custom_Activity extends Activity{
                 const setField = (name, value) => {
                     if (!value) return
                     const el = column_edit_element.querySelector(`[name="${name}"]`)
-                    if (el) {
-                        el.value = value
+                    if (!el) return
+                    if (el.tagName === "SELECT") {
+                        const hasOption = Array.from(el.options).some(option => option.value === value)
+                        if (!hasOption) {
+                            const option = document.createElement("option")
+                            option.value = value
+                            option.textContent = value
+                            el.appendChild(option)
+                        }
                     }
+                    el.value = value
                 }
                 const firstCondition = conditions.length ? conditions[0] : null
                 setField("new_column_name", preset.new_column_name)
@@ -561,6 +629,8 @@ class Custom_Activity extends Activity{
                 setField("date_end_column", preset.date_end_column)
                 setField("date_base_column", preset.date_base_column)
                 setField("date_days_column", preset.date_days_column)
+                setField("date_sub_mode", preset.date_sub_mode)
+                setField("guid_source_column", preset.guid_source_column)
                 setField("date_compare_column", preset.date_compare_column)
                 if (value_source_select) {
                     value_source_select.dispatchEvent(new Event("change"))

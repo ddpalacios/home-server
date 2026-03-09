@@ -1671,7 +1671,7 @@ jQuery(function ($) {
                     
                 });
 
-                if (operator.activityType == 'join'){
+                if (operator.activityType == 'join' || operator.activityType == 'append'){
                         operator_copy['properties']['inputs'] =  {
                                                     input_1: { value: null
                                                     ,label: operator.inputs.input_1.label

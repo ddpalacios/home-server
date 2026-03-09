@@ -21,6 +21,7 @@ const DRAG_THRESHOLD = 4;
 let threeState = null;
 let objectMode = null;
 let blockCounter = 0;
+let foods = [];
 let avatarTouchedBlockId = null;
 let followTargetId = null;
 let followReturnCamera = null;
@@ -487,6 +488,7 @@ function initThreeLayer() {
         terrainMesh: null,
         gridLines: null,
         blockMeshes: [],
+        foodMeshes: new Map(),
         reticle,
         avatar,
         sky,
@@ -710,7 +712,7 @@ function startThreeLoop() {
             moved = true;
         }
         if (keyState.w || keyState.W) {
-            cameraHeight = Math.min(40, cameraHeight + dt * 12);
+            cameraHeight = Math.min(40, cameraHeight + dt * 64)*3;
             moved = true;
         }
         if (keyState.s || keyState.S) {
@@ -845,6 +847,8 @@ function syncThreeBodies() {
     });
 
     updateFollowMenu(bodies);
+    window.followTargetId = followTargetId;
+    window.followMode = followMode;
 
     Array.from(threeState.bodyMeshes.entries()).forEach(([bodyId, mesh]) => {
         if (!used.has(bodyId)) {
@@ -868,8 +872,128 @@ function renderThree() {
     }
     updateThreeCamera();
     syncThreeBodies();
+    syncFoodMeshes();
+    removeBodyCollidingBlocks();
     threeState.renderer.render(threeState.scene, threeState.camera);
     return true;
+}
+
+function syncFoodMeshes() {
+    if (!threeState || !Array.isArray(foods)) {
+        return;
+    }
+    const used = new Set();
+    foods.forEach(food => {
+        const foodId = food.id != null ? String(food.id) : `${food.pos_x}:${food.pos_y}`;
+        let mesh = threeState.foodMeshes.get(foodId);
+        if (!mesh) {
+            const size = 1.2;
+            const geom = new THREE.BoxGeometry(size, size, size);
+            const mat = new THREE.MeshStandardMaterial({
+                color: 0xb45309,
+                roughness: 0.7,
+                metalness: 0.05
+            });
+            mesh = new THREE.Mesh(geom, mat);
+            mesh.userData.size = size;
+            mesh.castShadow = false;
+            mesh.receiveShadow = false;
+            threeState.scene.add(mesh);
+            threeState.foodMeshes.set(foodId, mesh);
+        }
+        const terrainY = getTerrainHeight(food.pos_x, food.pos_y);
+        mesh.position.set(food.pos_x, terrainY + 0.6, food.pos_y);
+        used.add(foodId);
+    });
+
+    Array.from(threeState.foodMeshes.entries()).forEach(([foodId, mesh]) => {
+        if (!used.has(foodId)) {
+            threeState.scene.remove(mesh);
+            if (mesh.geometry) mesh.geometry.dispose();
+            if (mesh.material) mesh.material.dispose();
+            threeState.foodMeshes.delete(foodId);
+        }
+    });
+}
+
+function removeBodyCollidingBlocks() {
+    if (!threeState || !threeState.bodyMeshes) {
+        return;
+    }
+    const bodyEntries = Array.from(threeState.bodyMeshes.entries());
+    if (!bodyEntries.length) {
+        return;
+    }
+    const bodyRadius = 0.6;
+    const sendCollected = (bodyId, pos) => {
+        if (ws && typeof ws.send_message === "function") {
+            ws.send_message({
+                type: "food_collected",
+                jobId: "gpu-spark",
+                body_id: bodyId,
+                pos_x: Math.round(pos.x),
+                pos_y: Math.round(pos.z)
+            });
+        }
+    };
+    if (threeState.blockMeshes && threeState.blockMeshes.length) {
+        for (let i = threeState.blockMeshes.length - 1; i >= 0; i--) {
+            const mesh = threeState.blockMeshes[i];
+            const size = mesh.userData.size || 1.2;
+            const threshold = bodyRadius + size * 0.5;
+            const thresholdSq = threshold * threshold;
+            let collidedBodyId = null;
+            for (let j = 0; j < bodyEntries.length; j++) {
+                const bodyId = bodyEntries[j][0];
+                const pos = bodyEntries[j][1].position;
+                const dx = mesh.position.x - pos.x;
+                const dy = mesh.position.y - pos.y;
+                const dz = mesh.position.z - pos.z;
+                if (dx * dx + dy * dy + dz * dz <= thresholdSq) {
+                    collidedBodyId = bodyId;
+                    break;
+                }
+            }
+            if (collidedBodyId !== null) {
+                sendCollected(collidedBodyId, mesh.position);
+                threeState.scene.remove(mesh);
+                if (mesh.geometry) mesh.geometry.dispose();
+                if (mesh.material) mesh.material.dispose();
+                threeState.blockMeshes.splice(i, 1);
+            }
+        }
+    }
+
+    if (threeState.foodMeshes && threeState.foodMeshes.size) {
+        const foodsToRemove = [];
+        threeState.foodMeshes.forEach((mesh, foodId) => {
+            const size = mesh.userData.size || 1.2;
+            const threshold = bodyRadius + size * 0.5;
+            const thresholdSq = threshold * threshold;
+            let collidedBodyId = null;
+            for (let j = 0; j < bodyEntries.length; j++) {
+                const bodyId = bodyEntries[j][0];
+                const pos = bodyEntries[j][1].position;
+                const dx = mesh.position.x - pos.x;
+                const dy = mesh.position.y - pos.y;
+                const dz = mesh.position.z - pos.z;
+                if (dx * dx + dy * dy + dz * dz <= thresholdSq) {
+                    collidedBodyId = bodyId;
+                    break;
+                }
+            }
+            if (collidedBodyId !== null) {
+                sendCollected(collidedBodyId, mesh.position);
+                foodsToRemove.push(foodId);
+                threeState.scene.remove(mesh);
+                if (mesh.geometry) mesh.geometry.dispose();
+                if (mesh.material) mesh.material.dispose();
+            }
+        });
+        foodsToRemove.forEach((foodId) => {
+            threeState.foodMeshes.delete(foodId);
+        });
+    }
 }
 
 
@@ -1140,7 +1264,8 @@ function createAvatarLabelSprite() {
 function updateAvatarLabelSprite(sprite, body) {
     const bodyId = body.body_id != null ? body.body_id : "n/a";
     const fitnessText = formatFitnessValue(body.fitness);
-    const labelText = `Body ${bodyId}\nFitness ${fitnessText}`;
+    const foodCount = Number.isFinite(body.total_food_collected) ? body.total_food_collected : 0;
+    const labelText = `Body ${bodyId}\nFitness ${fitnessText}\nFood ${foodCount}`;
     if (sprite.userData.labelText === labelText) {
         return;
     }
@@ -1174,10 +1299,11 @@ function updateAvatarLabelSprite(sprite, body) {
     ctx.font = "600 20px \"Space Grotesk\", \"Segoe UI\", sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(`Body ${bodyId}`, canvas.width / 2, canvas.height * 0.38);
+    ctx.fillText(`Body ${bodyId}`, canvas.width / 2, canvas.height * 0.30);
     ctx.font = "500 18px \"Space Grotesk\", \"Segoe UI\", sans-serif";
     ctx.fillStyle = "#cbd5f5";
-    ctx.fillText(`Fitness ${fitnessText}`, canvas.width / 2, canvas.height * 0.68);
+    ctx.fillText(`Fitness ${fitnessText}`, canvas.width / 2, canvas.height * 0.56);
+    ctx.fillText(`Food ${foodCount}`, canvas.width / 2, canvas.height * 0.78);
     sprite.userData.texture.needsUpdate = true;
 }
 
@@ -1295,6 +1421,7 @@ function createBlock(position, size = 1.2) {
     blockMesh.position.set(position.x, position.y, position.z);
     blockMesh.castShadow = false;
     blockMesh.receiveShadow = false;
+    blockMesh.userData.isFood = true;
     threeState.scene.add(blockMesh);
     threeState.blockMeshes.push(blockMesh);
 
@@ -1302,8 +1429,47 @@ function createBlock(position, size = 1.2) {
     blockMesh.userData.id = `block-${blockCounter++}`;
 }
 
+function sendFoodPosition(x, z) {
+    if (!ws || typeof ws.send_message !== "function") {
+        return;
+    }
+    const gridX = Math.round(x);
+    const gridY = Math.round(z);
+    ws.send_message({
+        type: "food_pos",
+        jobId: "gpu-spark",
+        pos_x: gridX,
+        pos_y: gridY
+    });
+}
+
+function addLocalFood(x, z) {
+    const gridX = Math.round(x);
+    const gridY = Math.round(z);
+    if (!Array.isArray(foods)) {
+        foods = [];
+    }
+    const key = `${gridX}:${gridY}`;
+    const exists = foods.some(f => String(f.id) === key || (`${f.pos_x}:${f.pos_y}` === key));
+    if (!exists) {
+        foods.push({ id: key, pos_x: gridX, pos_y: gridY });
+    }
+    syncFoodMeshes();
+}
+
 function placeBlockFromClick(e) {
-    if (!threeState || !threeState.terrainMesh) {
+    if (!threeState) {
+        return;
+    }
+    if (!threeState.terrainMesh) {
+        if (threeState.avatar) {
+            const x = threeState.avatar.position.x;
+            const z = threeState.avatar.position.z;
+            const terrainY = getTerrainHeight(x, z);
+            createBlock({ x, y: terrainY + 0.6, z });
+            addLocalFood(x, z);
+            sendFoodPosition(x, z);
+        }
         return;
     }
     const rect = canvas.getBoundingClientRect();
@@ -1321,6 +1487,8 @@ function placeBlockFromClick(e) {
     const hit = hits[0];
     const pos = hit.point;
     createBlock({ x: pos.x, y: pos.y + 0.6, z: pos.z });
+    addLocalFood(pos.x, pos.z);
+    sendFoodPosition(pos.x, pos.z);
 }
 
 
@@ -1328,6 +1496,18 @@ document.addEventListener("keydown", (event) => {
     if (event.key in keyState) {
         keyState[event.key] = true;
         event.preventDefault();
+    }
+    if (event.code === "Space") {
+        event.preventDefault();
+        if (!threeState || !threeState.avatar) {
+            return;
+        }
+        const x = threeState.avatar.position.x;
+        const z = threeState.avatar.position.z;
+        const terrainY = getTerrainHeight(x, z);
+        createBlock({ x, y: terrainY + 0.6, z });
+        addLocalFood(x, z);
+        sendFoodPosition(x, z);
     }
 });
 
@@ -1770,4 +1950,3 @@ if (document.readyState === "loading") {
 } else {
     setupModernUI();
 }
-

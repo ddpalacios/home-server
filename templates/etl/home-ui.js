@@ -1785,6 +1785,7 @@ function loadPipelineById(pipelineId) {
   if (!pipelineId) {
     return;
   }
+  console.log("Loading dataflow pipeline id:", pipelineId);
   setActivePipelineType("dataflow");
   var request = new Request("/blob-storage/etl/dataflow/load?pipelineId=" + pipelineId, {
     method: "GET",
@@ -1829,6 +1830,7 @@ function loadSavedPipelineById(pipelineId) {
   if (!pipelineId) {
     return;
   }
+  console.log("Loading saved pipeline id:", pipelineId);
   setActivePipelineType("pipeline");
   fetchPipelineList();
   var request = new Request("/blob-storage/etl/pipeline/load?pipelineId=" + pipelineId, {
@@ -4513,7 +4515,6 @@ $(document).ready(function() {
   setActivityTabsVisible(false);
 
   $flowchart.flowchart({
-
     onOperatorSelect: function(operatorId) {
       $operatorProperties.show();
       $pipelineProperties.hide();
@@ -5204,9 +5205,23 @@ $(document).ready(function() {
             found = true;
             settings_div.children[i].style.display = "block";
           }
+          if (settings_div.children[i].id == elem.id + "_column_edit") {
+            found = true;
+            settings_div.children[i].style.display = "flex";
+            settings_div.children[i].style.flexDirection = "column";
+            settings_div.children[i].style.gap = "15px";
+          }
         }
         if (!found) {
           settings_div.insertBefore(elem, settings_div.firstChild);
+        }
+        if (found) {
+          for (let i = 0; i < settings_div.children.length; i++) {
+            if (settings_div.children[i].id == elem.id && settings_div.children[i] !== elem) {
+              settings_div.children[i].replaceWith(elem);
+              break;
+            }
+          }
         }
       }
 
@@ -5474,13 +5489,23 @@ $(document).ready(function() {
 
   $("html").keyup(function(e) {
     if (e.keyCode == 46) {
-      $flowchart.flowchart("deleteSelected");
+      allowLockedLinkDelete = true;
+      try {
+        $flowchart.flowchart("deleteSelected");
+      } finally {
+        allowLockedLinkDelete = false;
+      }
       schedulePipelineSave();
     }
   });
 
   $(".delete_selected_button").on("click", function() {
-    $flowchart.flowchart("deleteSelected");
+    allowLockedLinkDelete = true;
+    try {
+      $flowchart.flowchart("deleteSelected");
+    } finally {
+      allowLockedLinkDelete = false;
+    }
     schedulePipelineSave();
   });
 
@@ -5601,13 +5626,12 @@ $(document).ready(function() {
     let pipeline_data = await get_ordered_nodes($flowchart, [targetId.toString()]);
     let outputs = null;
     if (pipeline_data && Array.isArray(pipeline_data.ordered_nodes)) {
-      const activities = build_ordered_activities_payload($flowchart, pipeline_data, targetId);
+      const activities = build_ordered_activities_payload($flowchart, pipeline_data, targetId, true);
       const response = await post_ordered_activities(activities, true);
 
       if (response && Array.isArray(response.results)) {
         response.results.forEach(entry => {
           if (entry && entry.operatorId != null && entry.result) {
-            console.log("Storing output for operator:", entry.operatorId, entry.result);
             $flowchart.flowchart("setoutputVal", entry.operatorId, "output", entry.result);
           }
         });
@@ -5626,10 +5650,15 @@ $(document).ready(function() {
             }
             if (toOperator.activityType === "join" || toOperator.activityType === "append") {
               const fromOperator = $flowchart.flowchart("getOperatorActivity", entry.operatorId);
+              const payload = {
+                values: entry.result && entry.result.values !== undefined ? entry.result.values : entry.result,
+                datatypes: entry.result && entry.result.datatypes !== undefined ? entry.result.datatypes : null,
+                activityType: fromOperator ? fromOperator.activityType : undefined
+              };
               if (link.toConnector === "input_1") {
-                $flowchart.flowchart("setinputVal", link.toOperator, "input_1", fromOperator);
+                $flowchart.flowchart("setinputVal", link.toOperator, "input_1", payload);
               } else if (link.toConnector === "input_2") {
-                $flowchart.flowchart("setinputVal", link.toOperator, "input_2", fromOperator);
+                $flowchart.flowchart("setinputVal", link.toOperator, "input_2", payload);
               }
             } else {
               $flowchart.flowchart("setinputVal", link.toOperator, "input", entry.result);
@@ -5664,7 +5693,6 @@ $(document).ready(function() {
     }
     // Render preview table for the selected activity output.
     if (outputs && outputs.values) {
-      console.log("Using cached outputs for preview:", outputs);
       createTable(outputs.values, document.getElementById(targetId + "_data_table"), targetId);
     }
   });
@@ -7245,18 +7273,35 @@ $(document).ready(function() {
       if (typeof main_activities === "object" && main_activities !== null) {
         Object.keys(main_activities).forEach(function(key) {
           var activity = main_activities[key];
+
           if (!activity || typeof activity.get_operation_settings !== "function") {
             return;
           }
+
           var element = document.getElementById(activity.activityId);
+          console.log("Fetching settings for activity:", element, activity.activityId);
+
           if (!element) {
+            if (activity.activityType === "append") {
+              try {
+                activity.get_operation_settings();
+              } catch (err) {
+                console.error("Flow2Text append get_operation_settings failed:", activity.activityId, err);
+              }
+            }
             return;
           }
-          activity.get_operation_settings();
+          try {
+            activity.get_operation_settings();
+          } catch (err) {
+            console.error("Flow2Text get_operation_settings failed:", activity.activityId, err);
+          }
         });
       }
       data = $flowchart.flowchart("getData", pipeline_id || "local");
+      console.log("Flow2Text data:", data);
     } catch (error) {
+      console.error("Flow2Text failed before getData:", error);
       if (retryCount && retryCount < 3) {
         setTimeout(function() {
           Flow2Text(retryCount + 1);
@@ -7284,6 +7329,8 @@ $(document).ready(function() {
     payload.description = ($("#pipeline_description").val() || "").trim();
     payload.pipeline_id = pipeline_id;
     payload.google_id = safeGoogleId;
+    console.log("Fetching settings for activity:", payload);
+
     post_pipeline(safeGoogleId, pipeline_id, payload);
     if (activePipelineType === "pipeline") {
       fetchSavedPipelineList();
@@ -7411,7 +7458,7 @@ $(document).ready(function() {
 
 });
 
-function build_ordered_activities_payload(flowchart, data, targetId){
+function build_ordered_activities_payload(flowchart, data, targetId, preview){
   if (!data || !Array.isArray(data.ordered_nodes)) {
     return []
   }
@@ -7430,10 +7477,18 @@ function build_ordered_activities_payload(flowchart, data, targetId){
     if (activity.activityType == "import" || activity.activityType == "sheets_read" || activity.activityType == "http_request") {
       activity_data = activity?.inputs?.input?.value?.values ?? activity?.outputs?.output?.value?.values ?? null
     } else if (activity.activityType == "join" || activity.activityType == "append") {
-      const table_1 = activity?.inputs?.input_1?.value?.outputs?.output?.value?.values ?? null
-      const table_2 = activity?.inputs?.input_2?.value?.outputs?.output?.value?.values ?? null
+      if (preview) {
+        activity_data = null
+      } else {
+      let table_1 = activity?.inputs?.input_1?.value?.values
+        ?? activity?.inputs?.input_1?.value?.outputs?.output?.value?.values
+        ?? null
+      let table_2 = activity?.inputs?.input_2?.value?.values
+        ?? activity?.inputs?.input_2?.value?.outputs?.output?.value?.values
+        ?? null
       if (table_1 && table_2) {
         activity_data = { table_1: table_1, table_2: table_2 }
+      }
       }
     }
     let dependencies = Array.isArray(node.dependencies)

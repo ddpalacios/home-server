@@ -1,41 +1,464 @@
-<div class="scroll-container">
-  <div class="scroll-content">
-    <img src="https://via.placeholder.com/150x100?text=1" />
-    <img src="https://via.placeholder.com/150x100?text=2" />
-    <img src="https://via.placeholder.com/150x100?text=3" />
-    <img src="https://via.placeholder.com/150x100?text=4" />
-    <img src="https://via.placeholder.com/150x100?text=5" />
-    <!-- duplicate for smooth loop -->
-    <img src="https://via.placeholder.com/150x100?text=1" />
-    <img src="https://via.placeholder.com/150x100?text=2" />
-    <img src="https://via.placeholder.com/150x100?text=3" />
-    <img src="https://via.placeholder.com/150x100?text=4" />
-    <img src="https://via.placeholder.com/150x100?text=5" />
-  </div>
-</div>
+<script>
+(() => {
+  "use strict";
 
-<style>
-.scroll-container {
-  width: 100%;
-  overflow: hidden;
-  background: #111;
-  padding: 1rem 0;
-}
+  /** =========================
+   *  Too Late Jump (single-file)
+   *  - Runner auto-moves
+   *  - Obstacles approach
+   *  - You can ONLY jump after an obstacle passes the player (within a short window)
+   *  ========================= */
 
-.scroll-content {
-  display: flex;
-  width: max-content;
-  animation: scroll 20s linear infinite;
-}
+  const canvas = document.getElementById("c");
+  const ctx = canvas.getContext("2d", { alpha: false });
 
-.scroll-content img {
-  margin: 0 1rem;
-  border-radius: 10px;
-}
+  // HiDPI handling
+  function fitHiDPI() {
+    const cssW = canvas.getBoundingClientRect().width;
+    const cssH = canvas.getBoundingClientRect().height;
+    const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+    // Keep aspect ratio based on internal canvas size
+    // We only scale the backing store; layout is handled by CSS.
+    const w = Math.round(cssW * dpr);
+    const h = Math.round((cssW * (720/420)) * dpr); // keep internal aspect
+    canvas.width = w;
+    canvas.height = h;
+  }
+  // First render uses CSS width; ensure canvas has a rect
+  requestAnimationFrame(() => {
+    fitHiDPI();
+    reset();
+  });
+  window.addEventListener("resize", () => { fitHiDPI(); });
 
-/* Keyframes for continuous horizontal scroll */
-@keyframes scroll {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-</style>
+  // Game constants (tuned for "fail fast, retry fast")
+  const WORLD = {
+    gravity: 2600,          // px/s^2
+    jumpVel: -980,          // px/s
+    groundFriction: 0.0,
+    baseSpeed: 520,         // obstacle speed px/s
+    speedRamp: 32,          // additional px/s per 10 score
+    spawnMin: 0.80,         // sec
+    spawnMax: 1.30,         // sec
+    obstacleW: 70,          // px (scaled by DPR automatically since we draw in backing pixels)
+    obstacleHMin: 48,
+    obstacleHMax: 120,
+    lateWindow: 0.35,       // seconds AFTER obstacle passes you in which jump is allowed
+    forgiveness: 0.03,      // seconds: small input buffer
+  };
+
+  // Derived sizes based on canvas
+  const state = {
+    running: false,
+    gameOver: false,
+    score: 0,
+    best: 0,
+    t: 0,
+    lastTime: 0,
+    spawnTimer: 0,
+    nextSpawn: 1.0,
+    shake: 0,
+    msg: "",
+    msgTimer: 0,
+    inputBuffered: 0,
+  };
+
+  const player = {
+    x: 0,
+    y: 0,
+    w: 42,
+    h: 42,
+    vy: 0,
+    onGround: true,
+    color: "#e9f2ff",
+  };
+
+  /** Obstacles:
+   *  - Each obstacle has:
+   *    x, w, h
+   *    passedAt: time when its right edge passed player.x (in game time seconds)
+   *    canTriggerLateJumpUntil: passedAt + lateWindow
+   */
+  let obstacles = [];
+
+  function rnd(min, max) { return min + Math.random() * (max - min); }
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+  function reset() {
+    const W = canvas.width, H = canvas.height;
+    const pad = Math.round(W * 0.08);
+
+    state.running = false;
+    state.gameOver = false;
+    state.score = 0;
+    state.t = 0;
+    state.lastTime = performance.now();
+    state.spawnTimer = 0;
+    state.nextSpawn = rnd(WORLD.spawnMin, WORLD.spawnMax);
+    state.shake = 0;
+    state.msg = "Tap to Start";
+    state.msgTimer = 999;
+    state.inputBuffered = 0;
+
+    // Scale player/obstacles relative to canvas size (so it feels similar on all screens)
+    const scale = W / 420; // based on original design width
+    player.w = Math.round(42 * scale);
+    player.h = Math.round(42 * scale);
+    player.x = pad + Math.round(player.w * 0.5);
+    const groundY = getGroundY();
+    player.y = groundY - player.h;
+    player.vy = 0;
+    player.onGround = true;
+
+    obstacles = [];
+    draw(0);
+  }
+
+  function start() {
+    if (state.gameOver) return reset();
+    state.running = true;
+    state.msg = "";
+    state.msgTimer = 0;
+  }
+
+  function gameOver(reason = "Game Over") {
+    state.running = false;
+    state.gameOver = true;
+    state.msg = reason + " — Tap to Retry";
+    state.msgTimer = 999;
+    state.shake = 10;
+    state.best = Math.max(state.best, state.score);
+  }
+
+  function getGroundY() {
+    return Math.round(canvas.height * 0.86);
+  }
+
+  function currentSpeed() {
+    // Speed ramps with score
+    const ramp = (state.score / 10) * WORLD.speedRamp;
+    return WORLD.baseSpeed + ramp;
+  }
+
+  function spawnObstacle() {
+    const W = canvas.width;
+    const groundY = getGroundY();
+
+    const scale = W / 420;
+    const w = Math.round(WORLD.obstacleW * scale);
+    const h = Math.round(rnd(WORLD.obstacleHMin, WORLD.obstacleHMax) * scale);
+    const x = W + w + Math.round(W * 0.05);
+
+    obstacles.push({
+      x,
+      w,
+      h,
+      y: groundY - h,
+      passedAt: null,
+      lateUntil: null,
+      scored: false,
+    });
+  }
+
+  // Input rule: Jump is only allowed if there exists an obstacle that has "passed"
+  // and we are within lateWindow seconds after that passing moment.
+  function canLateJumpNow() {
+    // Find the most recent obstacle that has passed
+    let best = null;
+    for (let i = 0; i < obstacles.length; i++) {
+      const ob = obstacles[i];
+      if (ob.passedAt !== null) {
+        if (!best || ob.passedAt > best.passedAt) best = ob;
+      }
+    }
+    if (!best) return false;
+    const now = state.t;
+    return now >= best.passedAt - WORLD.forgiveness && now <= best.lateUntil + WORLD.forgiveness;
+  }
+
+  function doJump() {
+    // Start if not running
+    if (!state.running) return start();
+
+    if (state.gameOver) return reset();
+
+    // Only jump if "late jump window" is active
+    if (!canLateJumpNow()) {
+      // Tiny feedback: "too early"
+      state.msg = "Too Early!";
+      state.msgTimer = 0.45;
+      state.shake = Math.max(state.shake, 3);
+      return;
+    }
+
+    // Execute jump (even if midair; feels better + more skill)
+    player.vy = WORLD.jumpVel * (canvas.width / 420);
+    player.onGround = false;
+
+    // Feedback message
+    state.msg = "Nice!";
+    state.msgTimer = 0.25;
+  }
+
+  function bufferJump() {
+    // Input buffering makes mobile feel responsive
+    state.inputBuffered = 0.10; // seconds
+  }
+
+  // Event listeners
+  canvas.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    bufferJump();
+  }, { passive: false });
+
+  window.addEventListener("keydown", (e) => {
+    if (e.code === "Space" || e.code === "Enter") {
+      e.preventDefault();
+      bufferJump();
+    }
+  });
+
+  // Main loop
+  function tick(now) {
+    const dt = clamp((now - state.lastTime) / 1000, 0, 0.033);
+    state.lastTime = now;
+
+    update(dt);
+    draw(dt);
+
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  function update(dt) {
+    // Screen shake decay
+    state.shake = Math.max(0, state.shake - dt * 18);
+
+    // Message timer
+    if (state.msgTimer > 0) state.msgTimer -= dt;
+    if (state.msgTimer <= 0 && state.msg && state.running) state.msg = "";
+
+    // Handle buffered input
+    if (state.inputBuffered > 0) {
+      state.inputBuffered -= dt;
+      // Trigger jump if in window, or if game not running (start)
+      // We attempt immediately each frame while buffered
+      doJump();
+      // If the jump succeeded, doJump will set "Nice!" (and vy).
+      // We can clear buffer if we actually jumped:
+      // Heuristic: if player.vy is negative (jump impulse) and game running.
+      if (state.running && player.vy < 0) state.inputBuffered = 0;
+    }
+
+    if (!state.running) return;
+
+    state.t += dt;
+
+    // Spawn obstacles
+    state.spawnTimer += dt;
+    if (state.spawnTimer >= state.nextSpawn) {
+      state.spawnTimer = 0;
+      state.nextSpawn = rnd(WORLD.spawnMin, WORLD.spawnMax) * (1 / (1 + state.score / 60)); // slightly more frequent over time
+      state.nextSpawn = clamp(state.nextSpawn, 0.55, 1.30);
+      spawnObstacle();
+    }
+
+    const groundY = getGroundY();
+    const speed = currentSpeed() * (canvas.width / 420);
+
+    // Move obstacles
+    for (let i = 0; i < obstacles.length; i++) {
+      const ob = obstacles[i];
+      ob.x -= speed * dt;
+
+      // Mark passed moment when obstacle right edge crosses player.x
+      if (ob.passedAt === null) {
+        const rightEdge = ob.x + ob.w;
+        if (rightEdge < player.x) {
+          ob.passedAt = state.t;
+          ob.lateUntil = state.t + WORLD.lateWindow;
+        }
+      }
+
+      // Score when player safely passes obstacle (once)
+      if (!ob.scored && ob.x + ob.w < player.x) {
+        ob.scored = true;
+        state.score += 1;
+      }
+    }
+
+    // Remove offscreen obstacles
+    obstacles = obstacles.filter(ob => ob.x + ob.w > -canvas.width * 0.15);
+
+    // Physics
+    const g = WORLD.gravity * (canvas.width / 420);
+    player.vy += g * dt;
+    player.y += player.vy * dt;
+
+    // Ground collision
+    if (player.y + player.h >= groundY) {
+      player.y = groundY - player.h;
+      player.vy = 0;
+      player.onGround = true;
+    }
+
+    // Ceiling clamp
+    if (player.y < canvas.height * 0.10) {
+      player.y = canvas.height * 0.10;
+      player.vy = Math.max(player.vy, 0);
+    }
+
+    // Collision with obstacles
+    for (let i = 0; i < obstacles.length; i++) {
+      const ob = obstacles[i];
+      if (rectsIntersect(player.x, player.y, player.w, player.h, ob.x, ob.y, ob.w, ob.h)) {
+        gameOver("You hit it");
+        return;
+      }
+    }
+
+    // Optional: if player somehow falls below (shouldn't), end
+    if (player.y > canvas.height) {
+      gameOver("Fell out");
+    }
+  }
+
+  function rectsIntersect(ax, ay, aw, ah, bx, by, bw, bh) {
+    return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+  }
+
+  function draw(dt) {
+    // Camera shake
+    let sx = 0, sy = 0;
+    if (state.shake > 0) {
+      const mag = state.shake;
+      sx = (Math.random() * 2 - 1) * mag;
+      sy = (Math.random() * 2 - 1) * mag;
+    }
+
+    ctx.save();
+    ctx.translate(sx, sy);
+
+    const W = canvas.width, H = canvas.height;
+    const groundY = getGroundY();
+
+    // Background
+    ctx.fillStyle = "#0f1620";
+    ctx.fillRect(-sx, -sy, W, H);
+
+    // Subtle stars
+    drawNoiseStars(W, H);
+
+    // Ground
+    ctx.fillStyle = "#0b0f14";
+    ctx.fillRect(0, groundY, W, H - groundY);
+
+    // Guide line showing player x
+    ctx.globalAlpha = 0.10;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(player.x, 0, 2, groundY);
+    ctx.globalAlpha = 1.0;
+
+    // Obstacles
+    for (const ob of obstacles) {
+      // Color changes based on "late jump" window status
+      const inWindow = ob.passedAt !== null && state.t <= ob.lateUntil;
+      ctx.fillStyle = inWindow ? "#7cf7b5" : "#ff6b6b"; // green when jump is allowed (recently passed), red otherwise
+      roundRect(ctx, ob.x, ob.y, ob.w, ob.h, Math.max(8, ob.w * 0.18), true);
+
+      // Add a little highlight strip
+      ctx.globalAlpha = 0.22;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(ob.x + ob.w * 0.15, ob.y + ob.h * 0.10, ob.w * 0.12, ob.h * 0.80);
+      ctx.globalAlpha = 1.0;
+    }
+
+    // Player
+    ctx.fillStyle = player.color;
+    roundRect(ctx, player.x, player.y, player.w, player.h, Math.max(10, player.w * 0.22), true);
+
+    // Eye
+    ctx.fillStyle = "#0b0f14";
+    ctx.beginPath();
+    ctx.arc(player.x + player.w * 0.68, player.y + player.h * 0.42, player.w * 0.08, 0, Math.PI * 2);
+    ctx.fill();
+
+    // UI: score / best
+    ctx.fillStyle = "rgba(233,242,255,0.92)";
+    ctx.font = `${Math.round(W * 0.08)}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.fillText(`${state.score}`, Math.round(W * 0.06), Math.round(H * 0.05));
+
+    ctx.globalAlpha = 0.70;
+    ctx.font = `${Math.round(W * 0.038)}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+    ctx.fillText(`best ${state.best}`, Math.round(W * 0.06), Math.round(H * 0.05) + Math.round(W * 0.085));
+    ctx.globalAlpha = 1.0;
+
+    // Instruction: show whether a late jump is currently available
+    const lateOk = canLateJumpNow();
+    const statusText = lateOk ? "JUMP NOW!" : "Wait…";
+    ctx.textAlign = "right";
+    ctx.globalAlpha = lateOk ? 0.95 : 0.45;
+    ctx.font = `${Math.round(W * 0.046)}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+    ctx.fillText(statusText, Math.round(W * 0.94), Math.round(H * 0.06));
+    ctx.globalAlpha = 1.0;
+
+    // Center message (start/gameover/feedback)
+    if (state.msg) {
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.globalAlpha = state.gameOver ? 0.95 : 0.80;
+      ctx.font = `700 ${Math.round(W * 0.055)}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+      ctx.fillText(state.msg, Math.round(W * 0.50), Math.round(H * 0.42));
+      ctx.globalAlpha = 1.0;
+
+      if (!state.running && !state.gameOver) {
+        ctx.globalAlpha = 0.65;
+        ctx.font = `${Math.round(W * 0.040)}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+        ctx.fillText("Rule: you can only jump AFTER an obstacle passes you", Math.round(W * 0.50), Math.round(H * 0.49));
+        ctx.globalAlpha = 1.0;
+      }
+    }
+
+    ctx.restore();
+  }
+
+  // Rounded rectangle helper
+  function roundRect(ctx, x, y, w, h, r, fill) {
+    r = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+    if (fill) ctx.fill();
+  }
+
+  // Light star noise (deterministic per frame: simple)
+  let starSeed = 1337;
+  function rand01() {
+    // xorshift-ish
+    starSeed ^= (starSeed << 13);
+    starSeed ^= (starSeed >> 17);
+    starSeed ^= (starSeed << 5);
+    return ((starSeed >>> 0) % 1000) / 1000;
+  }
+  function drawNoiseStars(W, H) {
+    // draw a few faint points; keep cheap
+    ctx.save();
+    ctx.globalAlpha = 0.12;
+    ctx.fillStyle = "#ffffff";
+    const count = Math.round(W * 0.09);
+    for (let i = 0; i < count; i++) {
+      const x = rand01() * W;
+      const y = rand01() * (H * 0.80);
+      const s = 1 + rand01() * 1.2;
+      ctx.fillRect(x, y, s, s);
+    }
+    ctx.restore();
+  }
+})();
+</script>

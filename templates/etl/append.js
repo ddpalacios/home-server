@@ -19,6 +19,116 @@ class Append_Activity extends Activity{
         }
     }
 
+    _get_table_columns(input_key){
+        const current = this.flowchart.flowchart("getOperatorActivity", this.activityId);
+        const input_data = current?.inputs?.[input_key]?.value;
+        const legacy_outputs = input_data?.outputs?.output?.value || null;
+        const input_types = input_data?.datatypes || legacy_outputs?.datatypes;
+        if (input_types && typeof input_types === "object") {
+            return Object.keys(input_types);
+        }
+        const input_values = input_data?.values || legacy_outputs?.values;
+        if (Array.isArray(input_values) && input_values.length > 0){
+            return Object.keys(input_values[0]);
+        }
+        if (input_values && typeof input_values === "object") {
+            return Object.keys(input_values);
+        }
+        return [];
+    }
+
+    _get_all_columns(){
+        const table1 = this._get_table_columns("input_1");
+        const table2 = this._get_table_columns("input_2");
+        return Array.from(new Set([...(table1 || []), ...(table2 || [])]));
+    }
+
+    _ensure_columns_container(){
+        if (this.columns_div) {
+            return this.columns_div;
+        }
+        let columns_div = document.getElementById(this.activityId + "_column_edit");
+        if (!columns_div && this.settings && this.settings.querySelector) {
+            columns_div = this.settings.querySelector("[id='" + this.activityId + "_column_edit']");
+        }
+        if (!columns_div) {
+            columns_div = document.createElement('div');
+            columns_div.id = this.activityId + "_column_edit";
+        }
+        this.columns_div = columns_div;
+        return columns_div;
+    }
+
+    _restore_saved_settings(){
+        const activity = this.flowchart.flowchart("getOperatorActivity", this.activityId);
+        const saved = Array.isArray(activity?.settings?.append) ? activity.settings.append : [];
+        const columns_div = this._ensure_columns_container();
+        columns_div.innerHTML = "";
+
+        let column_list = this._get_all_columns();
+        const add_if_missing = (value) => {
+            if (value && !column_list.includes(value)) {
+                column_list.push(value);
+            }
+        };
+        saved.forEach(entry => {
+            if (!entry || typeof entry !== "object") {
+                return;
+            }
+            const col = entry.columnName || entry.column_name || "";
+            add_if_missing(col);
+        });
+        if (column_list.length === 0) {
+            column_list = [""];
+        }
+
+        const add_button = document.createElement("button");
+        add_button.innerHTML = "+ Add";
+        add_button.className = 'buttons add-button';
+        add_button.addEventListener("click", (event) => this._add_column(event, this.flowchart, this));
+        this._setup_column_container(columns_div, add_button);
+        this._enable_column_sorting(columns_div);
+
+        const entries = saved.length
+            ? saved
+            : column_list.map(col => ({ columnName: col, new_column_name: col }));
+
+        entries.forEach(entry => {
+            const column = entry?.columnName || entry?.column_name || "";
+            const name = entry?.new_column_name || entry?.renamed_name || column;
+            const settings = [
+                {
+                    'type': 'selector'
+                    ,'options': column_list
+                    ,'default_value': column
+                    ,'name': 'column_name'
+                },
+                {
+                    'type': 'input'
+                    ,'placeholder' : 'Column name'
+                    ,'value': name
+                    ,'name': 'new_column_name'
+                },
+                {
+                    'type': 'button'
+                    ,'label': 'DROP'
+                    ,'color': 'red'
+                }
+            ];
+            const column_edit_element = this.get_column_selection_element(this.flowchart, settings);
+            const column_wrapper = document.createElement("div");
+            column_wrapper.className = "select-column-row";
+            const drag_handle = document.createElement("span");
+            drag_handle.className = "drag-handle";
+            drag_handle.title = "Drag to reorder";
+            column_wrapper.appendChild(drag_handle);
+            column_wrapper.appendChild(column_edit_element);
+            columns_div.appendChild(column_wrapper);
+        });
+
+        this.get_operation_settings();
+    }
+
     get_settings_element(){
         const div = document.createElement('div')
         div.id = this.activityId
@@ -72,21 +182,55 @@ class Append_Activity extends Activity{
         refresh_button.addEventListener("click", (event) => this._sync_inputs(event, this.flowchart, this));
         section.appendChild(refresh_button)
 
-        const columns_div = document.createElement('div')
-        columns_div.id = this.activityId + "_column_edit"
+        const columns_div = this._ensure_columns_container()
         columns_div.style.display = "flex"
         columns_div.style.flexDirection = "column"
         columns_div.style.gap = "12px"
         section.appendChild(columns_div)
 
         div.appendChild(section)
+        this._restore_saved_settings()
         return div
     }
 
+    _collect_append_settings(){
+        const columns_div = this._ensure_columns_container();
+        const statements = [];
+        const rows = columns_div ? Array.from(columns_div.children) : [];
+        rows.forEach((row) => {
+            let target = row;
+            if (row && row.classList && row.classList.contains("select-column-row")) {
+                const inner = row.querySelector(".rename_settings");
+                if (inner) {
+                    target = inner;
+                }
+            }
+            if (!target || !target.querySelectorAll) {
+                return;
+            }
+            const statement = {};
+            const named_elements = target.querySelectorAll("[name]");
+            named_elements.forEach((element) => {
+                if (!element || !element.name) {
+                    return;
+                }
+                if (element.name === "column_name") {
+                    statement.columnName = element.value;
+                } else if (element.name === "new_column_name") {
+                    statement.new_column_name = element.value;
+                }
+            });
+            if (Object.keys(statement).length > 0) {
+                statements.push(statement);
+            }
+        });
+        return { append: statements };
+    }
+
     get_operation_settings(){
-        let settings = super.get_operation_settings('append')
-        this.flowchart.flowchart('setSettings', this.activityId, settings)
-        return settings
+        const settings = this._collect_append_settings();
+        this.flowchart.flowchart('setSettings', this.activityId, settings);
+        return settings;
     }
 
     _sync_inputs(e, widget, activity){
@@ -179,6 +323,9 @@ class Append_Activity extends Activity{
             })
         }
         this.get_operation_settings()
+        if (typeof window.flowchartSchedulePipelineSave === "function") {
+            window.flowchartSchedulePipelineSave()
+        }
     }
 
     _on_selector_change(e, widget, activity){
@@ -205,10 +352,16 @@ class Append_Activity extends Activity{
         }
         e.target.parentElement.children[1].value =  name
         this.get_operation_settings()
+        if (typeof window.flowchartSchedulePipelineSave === "function") {
+            window.flowchartSchedulePipelineSave()
+        }
     }
 
     _on_input_change(e, widget, activity){
         this.get_operation_settings()
+        if (typeof window.flowchartSchedulePipelineSave === "function") {
+            window.flowchartSchedulePipelineSave()
+        }
     }
 
     _on_button_click(e, widget, activity){
@@ -220,6 +373,9 @@ class Append_Activity extends Activity{
             row.remove();
         }
         this.get_operation_settings()
+        if (typeof window.flowchartSchedulePipelineSave === "function") {
+            window.flowchartSchedulePipelineSave()
+        }
     }
 
     _enable_column_sorting(columns_div){
@@ -294,5 +450,9 @@ class Append_Activity extends Activity{
         column_wrapper.appendChild(drag_handle);
         column_wrapper.appendChild(column_edit_element);
         columns_div.appendChild(column_wrapper)
+        this.get_operation_settings()
+        if (typeof window.flowchartSchedulePipelineSave === "function") {
+            window.flowchartSchedulePipelineSave()
+        }
     }
 }

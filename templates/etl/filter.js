@@ -59,7 +59,7 @@ class Filter_Activity extends Activity{
         parent_element.remove()
         this.get_operation_settings()
     }
-    _add_column(e, widget, activity){
+    _add_column(e, widget, activity, preset){
         let activityId = activity.activityId
         let columns_div = document.getElementById(activityId + "_column_edit");
         if (columns_div == null || columns_div == undefined){
@@ -77,6 +77,10 @@ class Filter_Activity extends Activity{
         if (all_columns.length === 0) {
             all_columns = [""]
         }
+        if (preset && preset.columnName) {
+            all_columns.push(preset.columnName)
+        }
+        all_columns = Array.from(new Set(all_columns))
         const datatype_map = widget.flowchart("getOperatorActivity", activity.activityId).inputs?.input?.value?.datatypes || {};
         let s = new Set(Object.values(datatype_map));
         let datatypes = [...s]
@@ -87,6 +91,9 @@ class Filter_Activity extends Activity{
                     .map(item => item?.data_type)
                     .filter(Boolean)
             }
+        }
+        if (preset && preset.data_type && !datatypes.includes(preset.data_type)) {
+            datatypes.push(preset.data_type)
         }
 
         let settings = [
@@ -167,8 +174,36 @@ class Filter_Activity extends Activity{
          
             let column_edit_element = this.get_column_selection_element(widget,settings)
             columns_div.appendChild(column_edit_element)
+            const operation_select = column_edit_element.querySelector('[name="operation"]')
+            const value_field = column_edit_element.querySelector('[name="value"]')
             const value_source = column_edit_element.querySelector('[name="value_source"]')
-            if (value_source) {
+            const offset_direction = column_edit_element.querySelector('[name="value_offset_direction"]')
+            const offset_amount = column_edit_element.querySelector('[name="value_offset_amount"]')
+            const offset_unit = column_edit_element.querySelector('[name="value_offset_unit"]')
+            const logical_field = column_edit_element.querySelector('[name="logical"]')
+            const column_select = column_edit_element.querySelector('[name="column_name"]')
+            const data_type_select = column_edit_element.querySelector('[name="data_type"]')
+
+            if (preset) {
+                if (column_select) column_select.value = preset.columnName || preset.column_name || ""
+                if (data_type_select && preset.data_type) data_type_select.value = preset.data_type
+                if (operation_select && preset.operation) operation_select.value = preset.operation
+                if (value_source && preset.value_source) value_source.value = preset.value_source
+                if (offset_direction && preset.value_offset_direction) offset_direction.value = preset.value_offset_direction
+                if (offset_amount && preset.value_offset_amount != null) offset_amount.value = preset.value_offset_amount
+                if (offset_unit && preset.value_offset_unit) offset_unit.value = preset.value_offset_unit
+                if (logical_field && preset.logical) logical_field.value = preset.logical
+                if (operation_select) {
+                    operation_select.dispatchEvent(new Event("change"))
+                }
+                if (value_source) {
+                    value_source.dispatchEvent(new Event("change"))
+                }
+                const updated_value_field = column_edit_element.querySelector('[name="value"]')
+                if (updated_value_field && preset.value != null) {
+                    updated_value_field.value = preset.value
+                }
+            } else if (value_source) {
                 value_source.dispatchEvent(new Event("change"))
             }
     }
@@ -218,6 +253,16 @@ class Filter_Activity extends Activity{
                 directionValue === 'Last Week (Mon-Sun)' ||
                 directionValue === 'Next Week (Mon-Sun)'
             const showOffsetDetails = showOffsets && directionValue && !isWeekPreset
+            const operationValue = operationSelect ? operationSelect.value : ''
+            if (operationValue === 'IN' && valueField && valueField.tagName !== 'TEXTAREA') {
+                const textarea = document.createElement('textarea')
+                textarea.name = 'value'
+                textarea.placeholder = 'Enter one value per line'
+                textarea.className = valueField.className
+                textarea.value = valueField.value
+                textarea.addEventListener("input", (event) => this._on_input_change(event, widget, this))
+                valueField.replaceWith(textarea)
+            }
             if (offsetDirection) {
                 offsetDirection.style.display = showOffsets ? "" : "none"
             }
@@ -260,7 +305,15 @@ class Filter_Activity extends Activity{
         section.appendChild(columns_div)
 
         div.appendChild(section)
-        this._add_column(null, this.flowchart, this)
+        const saved_where = this.activity?.settings?.where
+        if (Array.isArray(saved_where) && saved_where.length > 0) {
+            columns_div.innerHTML = ""
+            saved_where.forEach((statement) => {
+                this._add_column(null, this.flowchart, this, statement)
+            })
+        } else {
+            this._add_column(null, this.flowchart, this)
+        }
 
         return div
     }

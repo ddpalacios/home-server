@@ -90,13 +90,18 @@ void post_generate_phrase(struct Socket* socket,char* http_header, char*body, ch
  }
 
  
-void post_to_local(struct Socket* socket,char* http_header, char*body, char* route){
-	int sfd  = connect_to_local_server("127.0.0.1", "5000");
+void post_to_local(struct Socket* socket,char* http_header, char*body, char* route, const char* port){
+	int sfd  = connect_to_local_server("127.0.0.1", port);
+	if (sfd < 0) {
+		send_response_code(socket->cSSL, 502);
+		return;
+	}
 	const char *safe_body = body ? body : "";
 	size_t req_size = strlen(safe_body) + 2048;
 	char *request = malloc(req_size);
 	if (!request) {
 		perror("malloc failed");
+		close(sfd);
 		return;
 	}
 
@@ -109,7 +114,7 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, char* rou
 		"\r\n"
 		"%s",
 		route,
-		"127.0.0.1", "5001", strlen(safe_body), safe_body);
+		"127.0.0.1", port, strlen(safe_body), safe_body);
 	
 	send(sfd, request, strlen(request), 0);
 	free(request);
@@ -157,187 +162,7 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, char* rou
 
  }
 
-void post_to_local_no_reply(const char* route, const char* body){
-	int sfd  = connect_to_local_server("127.0.0.1", "5000");
-	if (sfd < 0) {
-		return;
-	}
-	const char *safe_body = body ? body : "";
-	size_t req_size = strlen(safe_body) + 2048;
-	char *request = malloc(req_size);
-	if (!request) {
-		perror("malloc failed");
-		close(sfd);
-		return;
-	}
 
-	snprintf(request, req_size,
-		"POST %s HTTP/1.1\r\n"
-		"Host: %s:%s\r\n"
-		"Content-Type: application/json\r\n"
-		"Content-Length: %zu\r\n"
-		"Connection: close\r\n"
-		"\r\n"
-		"%s",
-		route,
-		"127.0.0.1", "5000", strlen(safe_body), safe_body);
-	send(sfd, request, strlen(request), 0);
-	free(request);
-	close(sfd);
-}
-
- void get_from_local(struct Socket* socket,char* http_header, char*body, char* route){
-	int sfd  = connect_to_local_server("127.0.0.1", "5000");
-	size_t req_size = strlen(route) + 512;
-	char *request = malloc(req_size);
-	if (!request) {
-		perror("malloc failed");
-		return;
-	}
-
-	snprintf(request, req_size,
-		"GET %s HTTP/1.1\r\n"
-		"Host: %s:%s\r\n"
-		"Connection: close\r\n"
-		"\r\n",
-		route,
-		"127.0.0.1", "5000");
-	
-	send(sfd, request, strlen(request), 0);
-	free(request);
-	char buf[8192]; 
-    char *response = NULL;
-    size_t total = 0;
-
-    for (;;) {
-        int bytes_recved = recv(sfd, buf, sizeof(buf), 0);
-        if (bytes_recved <= 0)
-            break;
-        char *tmp = realloc(response, total + bytes_recved + 1);
-        if (!tmp) {
-            perror("realloc");
-            free(response);
-            return;
-        }
-			response = tmp;
-			memcpy(response + total, buf, bytes_recved);
-			total += bytes_recved;
-		}
-		if (!response) {
-			printf("No data received\n");
-			return;
-		}
-
-		response[total] = '\0'; 
-
-		char *header_end = strstr(response, "\r\n\r\n");
-		if (!header_end) {
-			printf("No HTTP header end found\n");
-		} else {
-			char *status_line_end = strstr(response, "\r\n");
-			int is_redirect = 0;
-			if (status_line_end) {
-				if (strstr(response, "HTTP/1.1 302") || strstr(response, "HTTP/1.0 302")) {
-					is_redirect = 1;
-				}
-			}
-			if (is_redirect) {
-				char *location = strstr(response, "Location: ");
-				if (location) {
-					location += strlen("Location: ");
-					char *location_end = strstr(location, "\r\n");
-					if (location_end) {
-						size_t location_len = location_end - location;
-						char location_value[2048];
-						if (location_len >= sizeof(location_value)) {
-							location_len = sizeof(location_value) - 1;
-						}
-						strncpy(location_value, location, location_len);
-						location_value[location_len] = '\0';
-
-						char redirect_header[4096];
-						snprintf(redirect_header, sizeof(redirect_header),
-							"HTTP/1.1 302 Found\r\n"
-							"Location: %s\r\n"
-							"Connection: close\r\n"
-							"Content-Length: 0\r\n"
-							"\r\n",
-							location_value);
-						SSL_write(socket->cSSL, redirect_header, strlen(redirect_header));
-					}
-				}
-			} else {
-				char *res_body = header_end + 4;
-				send_JSON_response_code(socket->cSSL, 200, res_body);
-			}
-		}
-
-    free(response);
-    close(sfd);
- }
-
-
-//  void post_run_pipeline(struct Socket* socket,char* http_header, char*body, char* route){
-// 	int sfd  = connect_to_local_server("127.0.0.1", "5001");
-// 	size_t req_size = strlen(body) + 2048;
-// 	char *request = malloc(req_size);
-// 	if (!request) {
-// 		perror("malloc failed");
-// 		return;
-// 	}
-
-// 	snprintf(request, req_size,
-// 		"POST /etl/run/pipeline HTTP/1.1\r\n"
-// 		"Host: %s:%s\r\n"
-// 		"Content-Type: application/json\r\n"
-// 		"Content-Length: %zu\r\n"
-// 		"Connection: close\r\n"
-// 		"\r\n"
-// 		"%s",
-// 		"127.0.0.1", "5001", strlen(body), body);
-
-// 	send(sfd, request, strlen(request), 0);
-// 	free(request);
-
-//     char buf[8192]; 
-//     char *response = NULL;
-//     size_t total = 0;
-
-//     for (;;) {
-//         int bytes_recved = recv(sfd, buf, sizeof(buf), 0);
-//         if (bytes_recved <= 0)
-//             break;
-//         char *tmp = realloc(response, total + bytes_recved + 1);
-//         if (!tmp) {
-//             perror("realloc");
-//             free(response);
-//             return;
-//         }
-// 			response = tmp;
-// 			memcpy(response + total, buf, bytes_recved);
-// 			total += bytes_recved;
-// 		}
-// 		if (!response) {
-// 			printf("No data received\n");
-// 			return;
-// 		}
-
-// 		response[total] = '\0'; 
-// 		printf("Total bytes received: %zu\n", total);
-
-// 		char *res_body = strstr(response, "\r\n\r\n");
-// 		if (res_body) {
-// 			res_body += 4;
-// 			size_t body_len = strlen(res_body);
-// 			send_html_response_code(socket->cSSL, 200, body_len);
-// 			SSL_write(socket->cSSL, res_body, body_len);
-// 		} else {
-// 			printf("No HTTP body found\n");
-// 		}
-
-//     free(response);
-//     close(sfd);
-//  }
 
 void post_run_activity(struct Socket* socket,char* http_header, char*body, char* route){
 	int sfd  = connect_to_local_server("127.0.0.1", "5000");

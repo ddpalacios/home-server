@@ -84,7 +84,7 @@ class GoogleSheets_Activity extends Activity{
             mode_select = document.createElement('select')
             mode_select.id = this.activityId + "_sheet_mode"
             mode_select.className = "text_input_value"
-            ;["append", "overwrite"].forEach(mode => {
+            ;["append", "overwrite", "replace"].forEach(mode => {
                 const option = document.createElement('option')
                 option.value = mode
                 option.textContent = mode.toUpperCase()

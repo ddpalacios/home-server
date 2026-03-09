@@ -2,7 +2,7 @@ class Cast_Activity extends Activity{
     constructor(flowchart,activity){
         super(flowchart, activity)
         this.add_button_label = "+ Add Cast"
-        this.data_types = ['string', 'int', 'float', 'boolean', 'date', 'timestamp']
+        this.data_types = ['string', 'int', 'float', 'boolean', 'date', 'timestamp', 'datetime']
         this.settings = this.get_settings_element()
     }
     get_operation_settings(){
@@ -68,6 +68,17 @@ class Cast_Activity extends Activity{
             },
             {
                 'type': 'span'
+                ,'label':"Timezone"
+                ,'color': 'black'
+            },
+            {
+                'type': 'selector'
+                ,'options': ['UTC', 'CST']
+                ,'default_value': 'UTC'
+                ,'name': 'timezone'
+            },
+            {
+                'type': 'span'
                 ,'label':"Set"
                 ,'color': 'black'
             },
@@ -109,9 +120,16 @@ class Cast_Activity extends Activity{
                 child.style.color = "rgba(15, 23, 42, 0.6)"
             }
         })
+        this._toggle_timezone_visibility(column_edit_element)
         columns_div.appendChild(column_edit_element)
     }
     _on_selector_change(e, widget,activity){
+        if (e.target && e.target.name === 'data_type') {
+            const row = e.target.closest(".rename_settings") || e.target.parentElement
+            if (row) {
+                this._toggle_timezone_visibility(row)
+            }
+        }
         this.get_operation_settings()
     }
     _on_input_change(e, widget,activity){
@@ -144,5 +162,18 @@ class Cast_Activity extends Activity{
         this._add_column(null, this.flowchart, this)
 
         return div
+    }
+
+    _toggle_timezone_visibility(row){
+        const dataType = row.querySelector('select[name="data_type"]')
+        const timezone = row.querySelector('select[name="timezone"]')
+        const timezoneLabel = timezone ? timezone.previousElementSibling : null
+        const showTimezone = dataType && (dataType.value === 'date' || dataType.value === 'timestamp' || dataType.value === 'datetime')
+        if (timezone) {
+            timezone.style.display = showTimezone ? "" : "none"
+        }
+        if (timezoneLabel && timezoneLabel.tagName === 'SPAN') {
+            timezoneLabel.style.display = showTimezone ? "" : "none"
+        }
     }
 }

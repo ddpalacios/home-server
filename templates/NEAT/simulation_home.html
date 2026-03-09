@@ -103,6 +103,80 @@
 
 }
 </style>
+<style>
+#ioPanelToggle {
+  position: fixed;
+  right: 200px;
+  bottom: 24px;
+  z-index: 7;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 18px;
+  background: rgba(15, 23, 42, 0.8);
+  color: #e2e8f0;
+  cursor: pointer;
+}
+#ioPanel {
+  position: fixed;
+  right: 24px;
+  bottom: 80px;
+  width: 360px;
+  max-height: 60vh;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 18px;
+  padding: 14px;
+  z-index: 7;
+  display: none;
+  overflow: auto;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+}
+#ioPanel h3 {
+  margin: 4px 0 10px 0;
+  font-size: 15px;
+  color: #e2e8f0;
+}
+.ioRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.ioRow select,
+.ioRow input {
+  background: rgba(2, 6, 23, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  color: #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 12px;
+}
+.ioGraph {
+  width: 100%;
+  height: 220px;
+  background: rgba(2, 6, 23, 0.35);
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+.ioList {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  font-size: 12px;
+  color: #cbd5f5;
+}
+.ioItem {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 6px;
+  background: rgba(15, 23, 42, 0.55);
+  border-radius: 8px;
+}
+.ioItem span:last-child {
+  color: #22d3ee;
+}
+</style>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -507,6 +581,7 @@ table th, table td {
     Added code block:
     Description: Cache bodies and radius offsets once per tick so we avoid rebuilding the full grid.
     let bodies = [];
+    let foods = [];
     let radiusOffsets = null;
     let currentRadius = null;
 
@@ -747,6 +822,7 @@ let count = 0
             const latest = pendingRenderData;
             pendingRenderData = null;
             bodies = latest.bodies || [];
+            foods = latest.foods || [];
             if (Array.isArray(bodies) && bodies.length > 0) {
               const hasServerTop = bodies[0].isTopFitness !== undefined;
               if (!hasServerTop) {
@@ -770,6 +846,7 @@ let count = 0
             if (typeof renderFrame === "function") {
               renderFrame();
             }
+            updateIOPanel(latest);
         });
     }
     function connect(body){
@@ -800,51 +877,15 @@ let count = 0
                 scheduleRender(data);
                 }
         }
-          //      if (data['request'] == 'neat'){
-          //           if (isPaused) {
-          //               return;
-          //           }
-          //           /* -----------------
-          //           Added code block:
-          //           Description: Update cached bodies and rebuild radius offsets only when radius changes.
-          //             ----------------- */
-                      // bodies = data.bodies || [];
-                      // if (Array.isArray(bodies) && bodies.length > 0) {
-                      //   const sortedBodies = bodies
-                      //     .slice()
-                      //     .filter(body => body.fitness != null)
-                      //     .sort((a, b) => b.fitness - a.fitness);
-                      //   const topCount = Math.min(10, sortedBodies.length);
-                      //   const topIds = new Set(
-                      //     sortedBodies.slice(0, topCount).map(body => body.body_id)
-                      //   );
-                      //   bodies.forEach(body => {
-                      //     body.isTopFitness = topIds.has(body.body_id);
-                      //   });
-                      // }
-                      // if (data.body_radius_size !== currentRadius) {
-                      //   currentRadius = data.body_radius_size;
-                      //   radiusOffsets = buildRadiusOffsets(currentRadius);
-                      // }
-                      // if (typeof renderFrame === "function") {
-                      //   renderFrame();
-                      // }
-                
-          //             }
-          //             if (data['request'] == 'new_connection'){
-          //                 socketId = data['value']
-          //                 console.log("Socket ID", socketId)
-          //                 initalize_neat(socketId,body)
-          //                 // const myInterval = setInterval(sendmouseCords, 50);
-          //     }
+        
       
 
 </script>
 <script>
-    let pixel_size = 10
+    let pixel_size = 14
     const baseRows = Math.floor(canvas.height / pixel_size);
     const baseCols = Math.floor(canvas.width / pixel_size);
-    const worldScale = 3;
+    const worldScale = 2;
     var numRows = baseRows * worldScale;
     var numCols = baseCols * worldScale;
     var big_canvas_grid = []
@@ -856,16 +897,16 @@ let count = 0
     var mouse_y = 0;
     var gol = new GameOfLife(big_canvas_grid, numRows,numCols, pixel_size);
     let grid = Array(numRows).fill(0).map(() => Array(numCols).fill(0));
-    let pop_size = 1000
-    let body = {
+    let pop_size = 100
+      let body = {
           'pop_size': pop_size
           ,'rows': gol.numRows
           ,'cols': gol.numCols
-          ,'min_time_alive': 10
+          ,'min_time_alive': 100
           ,'ineligibility_rate': 0.2
           ,'forget_rate': 2
-          ,'total_ins': 4
-          ,'total_outs': 8
+          ,'total_ins': 12
+          ,'total_outs': 5
       }
       connect(body)
 </script>
@@ -921,6 +962,174 @@ document.addEventListener("DOMContentLoaded", () => {
   btn.addEventListener("click", () => setPausedState(!isPaused));
   document.body.appendChild(btn);
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.createElement("button");
+  btn.id = "ioPanelToggle";
+  btn.type = "button";
+  btn.textContent = "Inputs/Outputs";
+  btn.addEventListener("click", () => {
+    const panel = document.getElementById("ioPanel");
+    if (panel) {
+      panel.style.display = panel.style.display === "block" ? "none" : "block";
+    }
+  });
+  document.body.appendChild(btn);
+
+  const panel = document.createElement("div");
+  panel.id = "ioPanel";
+  panel.innerHTML = `
+    <h3>Network Inputs (Current)</h3>
+    <div class="ioRow">
+      <select id="ioMode">
+        <option value="best">Best</option>
+        <option value="followed">Followed</option>
+        <option value="specific">Specific</option>
+      </select>
+      <input id="ioBodyId" type="text" placeholder="Body ID" />
+    </div>
+    <svg class="ioGraph" viewBox="0 0 360 220">
+      <g id="ioInputs"></g>
+      <g id="ioOutputs"></g>
+      <g id="ioLinks"></g>
+    </svg>
+    <h3>Inputs</h3>
+    <div id="ioInputsList" class="ioList"></div>
+    <h3>Hidden</h3>
+    <div id="ioHiddenSummary" class="ioList"></div>
+    <h3>Outputs</h3>
+    <div id="ioOutputsList" class="ioList"></div>
+    <h3>Best Output</h3>
+    <div id="ioBestOutput" class="ioList"></div>
+  `;
+  document.body.appendChild(panel);
+});
+
+function updateIOPanel(latest) {
+  const panel = document.getElementById("ioPanel");
+  if (!panel || panel.style.display !== "block") {
+    return;
+  }
+  const listEl = document.getElementById("ioInputsList");
+  const outEl = document.getElementById("ioOutputsList");
+  const hiddenEl = document.getElementById("ioHiddenSummary");
+  const bestEl = document.getElementById("ioBestOutput");
+  const modeEl = document.getElementById("ioMode");
+  const bodyEl = document.getElementById("ioBodyId");
+  if (!listEl || !outEl || !hiddenEl || !bestEl || !modeEl || !bodyEl) return;
+
+  const bodiesList = latest?.bodies || [];
+  let currentBody = null;
+  const mode = modeEl.value;
+  if (mode === "specific") {
+    const targetId = bodyEl.value;
+    currentBody = bodiesList.find(b => String(b.body_id) === String(targetId));
+  } else if (mode === "followed") {
+    const followId = window.followTargetId;
+    currentBody = bodiesList.find(b => String(b.body_id) === String(followId));
+    if (!currentBody) {
+      currentBody = bodiesList.find(b => b.isTopFitness);
+    }
+  } else {
+    currentBody = bodiesList.find(b => b.isTopFitness);
+  }
+  if (!currentBody) {
+    currentBody = bodiesList[0];
+  }
+  const inputs = Array.isArray(currentBody?.inputs) ? currentBody.inputs : [];
+
+  listEl.innerHTML = "";
+  inputs.forEach((inp) => {
+    const item = document.createElement("div");
+    item.className = "ioItem";
+    const name = inp.name || "input";
+    const val = (typeof inp.value === "number") ? inp.value.toFixed(3) : "n/a";
+    item.innerHTML = `<span>${name}</span><span>${val}</span>`;
+    listEl.appendChild(item);
+  });
+
+  const outputs = [
+    "no movement", "up", "down", "left", "right"
+  ];
+  outEl.innerHTML = "";
+  outputs.forEach((name, i) => {
+    const item = document.createElement("div");
+    item.className = "ioItem";
+    item.innerHTML = `<span>out_${i}</span><span>${name}</span>`;
+    outEl.appendChild(item);
+  });
+
+  bestEl.innerHTML = "";
+  const bestOutput = latest?.best_output;
+  if (bestOutput !== undefined && bestOutput !== null) {
+    const label = outputs[bestOutput] ?? String(bestOutput);
+    const item = document.createElement("div");
+    item.className = "ioItem";
+    item.innerHTML = `<span>best_output</span><span>${label}</span>`;
+    bestEl.appendChild(item);
+  }
+
+  hiddenEl.innerHTML = "";
+  const hiddenCount = currentBody?.hidden_node_count ?? 0;
+  const hiddenSample = Array.isArray(currentBody?.hidden_node_sample) ? currentBody.hidden_node_sample : [];
+  const countItem = document.createElement("div");
+  countItem.className = "ioItem";
+  countItem.innerHTML = `<span>hidden_count</span><span>${hiddenCount}</span>`;
+  hiddenEl.appendChild(countItem);
+  if (hiddenSample.length > 0) {
+    hiddenSample.slice(0, 5).forEach((val, i) => {
+      const item = document.createElement("div");
+      item.className = "ioItem";
+      const v = (typeof val === "number") ? val.toFixed(4) : "n/a";
+      item.innerHTML = `<span>hidden_${i}</span><span>${v}</span>`;
+      hiddenEl.appendChild(item);
+    });
+  } else {
+    const item = document.createElement("div");
+    item.className = "ioItem";
+    item.innerHTML = `<span>hidden_sample</span><span>n/a</span>`;
+    hiddenEl.appendChild(item);
+  }
+
+  const inputGroup = document.getElementById("ioInputs");
+  const outputGroup = document.getElementById("ioOutputs");
+  const linkGroup = document.getElementById("ioLinks");
+  if (!inputGroup || !outputGroup || !linkGroup) return;
+  inputGroup.innerHTML = "";
+  outputGroup.innerHTML = "";
+  linkGroup.innerHTML = "";
+
+  const inCount = Math.max(1, inputs.length);
+  const outCount = outputs.length;
+  const inX = 40;
+  const outX = 320;
+  const inputVals = inputs.map(inp => {
+    const v = typeof inp.value === "number" ? inp.value : 0;
+    return Math.max(0, Math.min(1, v));
+  });
+  for (let i = 0; i < inCount; i++) {
+    const y = 20 + (180 * i) / Math.max(1, inCount - 1);
+    const v = inputVals[i] ?? 0;
+    const r = 5 + v * 7;
+    const color = `hsl(195, 80%, ${45 + v * 25}%)`;
+    inputGroup.innerHTML += `<circle cx="${inX}" cy="${y}" r="${r.toFixed(2)}" fill="${color}" />`;
+    inputGroup.innerHTML += `<text x="${inX + 12}" y="${y + 4}" font-size="10" fill="#94a3b8">${i}</text>`;
+  }
+  for (let i = 0; i < outCount; i++) {
+    const y = 20 + (180 * i) / Math.max(1, outCount - 1);
+    outputGroup.innerHTML += `<circle cx="${outX}" cy="${y}" r="7" fill="#f59e0b" />`;
+    outputGroup.innerHTML += `<text x="${outX - 18}" y="${y + 4}" font-size="10" fill="#94a3b8">${i}</text>`;
+  }
+  for (let i = 0; i < inCount; i++) {
+    const y1 = 20 + (180 * i) / Math.max(1, inCount - 1);
+    for (let j = 0; j < outCount; j++) {
+      const y2 = 20 + (180 * j) / Math.max(1, outCount - 1);
+      const v = inputVals[i] ?? 0;
+      const opacity = 0.08 + v * 0.35;
+      linkGroup.innerHTML += `<line x1="${inX + 8}" y1="${y1}" x2="${outX - 8}" y2="${y2}" stroke="rgba(148,163,184,${opacity.toFixed(2)})" stroke-width="1" />`;
+    }
+  }
+}
 
 document.addEventListener("keydown", (event) => {
   if (event.key.toLowerCase() === "p") {

@@ -1,0 +1,4164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Dashboard</title>
+  <style>
+    :root {
+      --accent: #2563eb;
+      --accent-2: #38bdf8;
+      --bg: #f7f9fc;
+      --panel: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      --radius: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", "Segoe UI", Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #f9fbff 0%, #f2f5fb 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    .layout {
+      min-height: 100vh;
+    }
+
+    .desktop-nav {
+      display: flex;
+      width: 100%;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .mobile-nav {
+      display: none;
+      width: 100%;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      padding: 1em;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1em 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      width: 100%;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2em;
+      font-size: 1.05rem;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 600;
+      padding: 0;
+      border-radius: 999px;
+      background: transparent;
+      transition: transform 160ms ease, box-shadow 160ms ease, color 160ms ease;
+    }
+
+    .nav-links a:hover {
+      color: #1b3f7a;
+      transform: translateY(-1px);
+      text-shadow: 0 6px 12px rgba(37, 99, 235, 0.18);
+    }
+
+    .nav-links a:active {
+      transform: translateY(0);
+      text-shadow: none;
+    }
+
+    .nav-links a:focus-visible {
+      outline: 2px solid rgba(37, 99, 235, 0.25);
+      outline-offset: 2px;
+    }
+
+    .nav-links a.cta {
+      color: #2b6cb0;
+      font-weight: 700;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: auto;
+    }
+
+    .nav-container {
+      justify-content: space-between;
+    }
+
+    .btn.shiny {
+      background: linear-gradient(135deg, #16a34a, #22c55e, #4ade80);
+      color: #fff;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      box-shadow: 0 12px 24px rgba(34, 197, 94, 0.3);
+    }
+
+    .btn.shiny:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+      filter: none;
+    }
+
+    #mobile-menu {
+      display: none;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      position: sticky;
+      top: 60px;
+      z-index: 999;
+      padding: 1.2em 28px;
+    }
+
+    #mobile-menu a {
+      display: block;
+      padding: 0.8em 0;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--text);
+    }
+
+    .brand span {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+
+    .page {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 28px 28px 72px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .welcome {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .welcome h1 {
+      font-size: 2.1rem;
+      letter-spacing: 0.6px;
+      color: #0f172a;
+      background: linear-gradient(90deg, #0f172a 0%, #2563eb 40%, #22d3ee 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 18px rgba(37, 99, 235, 0.18);
+    }
+
+    .welcome p {
+      color: #1f2937;
+      font-size: 1.02rem;
+      letter-spacing: 0.2px;
+      text-shadow: 0 6px 16px rgba(37, 99, 235, 0.12);
+    }
+
+    .futuristic-text {
+      background: linear-gradient(90deg, #0f172a 0%, #1d4ed8 45%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 14px rgba(37, 99, 235, 0.18);
+      letter-spacing: 0.4px;
+    }
+
+    .typewriter {
+      position: relative;
+    }
+
+    .typewriter::after {
+      content: "";
+    }
+
+    .badge {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      box-shadow: 0 10px 22px rgba(37, 99, 235, 0.25);
+      align-self: flex-start;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 22px;
+    }
+
+    .card {
+      background: var(--panel);
+      border-radius: var(--radius);
+      padding: 24px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .card h2 {
+      font-size: 1.25rem;
+      margin-bottom: 6px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+
+    .toggle-group {
+      display: inline-flex;
+      gap: 8px;
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px;
+    }
+
+    .toggle-btn {
+      border: none;
+      background: transparent;
+      color: #334155;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 150ms ease, color 150ms ease;
+    }
+
+    .toggle-btn.is-active {
+      background: #0f172a;
+      color: #ffffff;
+    }
+
+    .kb-card.is-active {
+      border: 1px solid rgba(37, 99, 235, 0.45);
+      box-shadow: 0 22px 40px rgba(37, 99, 235, 0.24);
+      background: #f4f8ff;
+    }
+
+    .kb-card.is-inactive {
+      opacity: 0.85;
+      border-style: dashed;
+      background: #f8fafc;
+    }
+
+    .kb-hidden {
+      display: none;
+    }
+
+
+    .filter-select {
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      background: #ffffff;
+      color: var(--text);
+    }
+
+    .card p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 18px;
+    }
+
+    .chart-card {
+      grid-column: span 8;
+      padding-bottom: 12px;
+    }
+
+    .summary-card {
+      grid-column: span 4;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .summary-tile {
+      background: #f6f8ff;
+      border-radius: 14px;
+      padding: 14px;
+      border: 1px solid #e3e8f4;
+    }
+
+    .summary-tile h3 {
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+    }
+
+    .summary-tile span {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    .settings-card {
+      grid-column: span 7;
+    }
+
+    .settings-card.is-locked {
+      border: 1px dashed rgba(148, 163, 184, 0.9);
+      background: #f8fafc;
+    }
+
+    .settings-card.is-editing {
+      border: 1px solid rgba(37, 99, 235, 0.65);
+      box-shadow: 0 16px 30px rgba(37, 99, 235, 0.18);
+      background: #f0f6ff;
+    }
+
+    .settings-card .edit-banner {
+      display: none;
+      margin: 8px 0 18px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #1e293b;
+      color: #f8fafc;
+      font-size: 0.9rem;
+    }
+
+    .settings-card.is-editing .edit-banner {
+      display: block;
+    }
+
+    .kb-card.is-locked {
+      border: 1px dashed rgba(148, 163, 184, 0.9);
+      background: #f8fafc;
+    }
+
+    .kb-card.is-editing {
+      border: 1px solid rgba(37, 99, 235, 0.65);
+      box-shadow: 0 16px 30px rgba(37, 99, 235, 0.18);
+      background: #f0f6ff;
+    }
+
+    .preview-card {
+      grid-column: span 5;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .section-title {
+      font-size: 1.4rem;
+      margin-bottom: 8px;
+    }
+
+    .section-note {
+      color: var(--muted);
+      margin-bottom: 18px;
+      font-size: 0.95rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    input[type="text"],
+    input[type="color"],
+    select,
+    textarea {
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 12px 14px;
+      font-size: 0.98rem;
+      font-family: inherit;
+      background: #fdfefe;
+    }
+
+    input[type="color"] {
+      padding: 0;
+      height: 44px;
+      width: 100%;
+      background: transparent;
+      border-radius: 12px;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 6px;
+      border-radius: 12px;
+    }
+
+    input[type="color"]::-webkit-color-swatch {
+      border: none;
+      border-radius: 10px;
+    }
+
+    input[type="color"]::-moz-color-swatch {
+      border: none;
+      border-radius: 10px;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #f9fbff;
+      margin-top: 14px;
+    }
+
+    .toggle-row input {
+      width: 18px;
+      height: 18px;
+    }
+
+    .embed-box {
+      background: #f7faff;
+      border: 1px dashed #c9d9f2;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 0.85rem;
+      color: #334155;
+      min-height: 90px;
+      font-family: "Courier New", monospace;
+      transition: box-shadow 200ms ease, border-color 200ms ease, background 200ms ease;
+    }
+
+    .embed-box.is-highlighted {
+      background: #e0f2fe;
+      border-color: #38bdf8;
+      box-shadow: 0 8px 18px rgba(56, 189, 248, 0.28);
+    }
+
+    .embed-section {
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+      background: #f8fbff;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      margin-top: 18px;
+    }
+
+    .embed-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .kb-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .kb-actions-right {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .kb-actions-left {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn.publish {
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+      box-shadow: 0 10px 20px rgba(34, 197, 94, 0.28);
+      color: #ffffff;
+    }
+
+    .btn.ghost {
+      background: #eef2f7;
+      color: #1f2937;
+      border: 1px solid var(--border);
+      box-shadow: none;
+    }
+
+    .btn.ghost.is-danger {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid rgba(248, 113, 113, 0.7);
+      box-shadow: 0 6px 12px rgba(248, 113, 113, 0.18);
+    }
+
+    .btn.ghost.is-success {
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid rgba(34, 197, 94, 0.7);
+      box-shadow: 0 6px 12px rgba(34, 197, 94, 0.18);
+    }
+
+    .btn.ghost.is-success.no-glow {
+      box-shadow: none;
+    }
+
+    .btn.warm {
+      background: linear-gradient(135deg, #fb923c, #f59e0b);
+      color: #ffffff;
+      border: none;
+      box-shadow: 0 6px 12px rgba(249, 115, 22, 0.16);
+    }
+
+    .kb-list.kb-edit-mode .kb-preview-only {
+      display: none;
+    }
+
+    .kb-list:not(.kb-edit-mode) .kb-edit-only {
+      display: none;
+    }
+
+    .kb-list.kb-edit-mode {
+      border: 1px solid rgba(37, 99, 235, 0.65);
+      border-radius: 16px;
+      padding: 12px;
+      background: #f0f6ff;
+      box-shadow: 0 16px 30px rgba(37, 99, 235, 0.18);
+    }
+
+    .kb-list.kb-edit-mode .kb-item {
+      background: #ffffff;
+      border-color: rgba(37, 99, 235, 0.22);
+    }
+
+    .kb-edit-banner {
+      display: none;
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #1e293b;
+      color: #f8fafc;
+      font-size: 0.9rem;
+    }
+
+    .kb-edit-banner.is-visible {
+      display: block;
+    }
+
+    .settings-card.is-locked input,
+    .settings-card.is-locked select,
+    .settings-card.is-locked textarea,
+    .settings-card.is-locked .chip,
+    .settings-card.is-locked button:not(#settingsEditToggle) {
+      pointer-events: none;
+      opacity: 0.55;
+      filter: grayscale(0.1);
+    }
+
+    .settings-card.is-locked .chip button {
+      display: none;
+    }
+
+    .kb-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .kb-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #f4f7ff;
+    }
+
+    .kb-item span {
+      font-size: 0.9rem;
+      color: #4b5563;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 2000;
+    }
+
+    .modal.is-open {
+      display: flex;
+    }
+
+    .modal-card {
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 22px;
+      width: min(860px, 92vw);
+      max-height: 85vh;
+      overflow: auto;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .confirm-card {
+      max-width: 520px;
+    }
+
+    .confirm-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-10px);
+      background: #ffffff;
+      color: #14532d;
+      padding: 28px 60px;
+      border-radius: 18px;
+      font-weight: 700;
+      border: 1px solid rgba(22, 163, 74, 0.75);
+      box-shadow: 0 20px 44px rgba(6, 95, 70, 0.65);
+      min-width: 360px;
+      font-size: 1.05rem;
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 200ms ease, transform 200ms ease;
+      z-index: 3000;
+    }
+
+    .toast.is-visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .page-footer {
+      margin-top: 36px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .modal-close {
+      border: none;
+      background: #f1f5f9;
+      border-radius: 999px;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .modal-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      border: 3px solid rgba(148, 163, 184, 0.4);
+      border-top-color: #2563eb;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .save-loading {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+      color: #475569;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .save-loading.is-visible {
+      display: inline-flex;
+    }
+
+    .faq-list {
+      display: grid;
+      gap: 5px;
+    }
+
+    .modal-grid.two-col {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .faq-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .faq-row input {
+      width: 100%;
+    }
+
+    .icon-btn {
+      border: none;
+      background: #eaf1ff;
+      color: #1b3f7a;
+      border-radius: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .faq-add {
+      align-self: flex-start;
+      width: 25%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      padding: 10px 18px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+      transition: transform 160ms ease, box-shadow 160ms ease;
+    }
+
+    .faq-add:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 26px rgba(37, 99, 235, 0.24);
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .table th,
+    .table td {
+      text-align: left;
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .table th {
+      font-size: 0.85rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .insights-box {
+      display: grid;
+      gap: 12px;
+      background: rgba(15, 23, 42, 0.03);
+      padding: 12px;
+      border-radius: 14px;
+    }
+
+    .insights-input {
+      display: flex;
+      gap: 10px;
+    }
+
+    .chip-input {
+      flex: 1 1 360px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 16px 20px;
+      font-size: 0.98rem;
+      background: #ffffff;
+    }
+
+    .insights-input input {
+      flex: 1;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 12px 16px;
+      font-size: 0.98rem;
+    }
+
+    input[type="file"] {
+      flex: 1;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      background: #ffffff;
+    }
+
+    .chip-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      background: linear-gradient(135deg, #eef4ff, #dbe9ff);
+      border: 1px solid rgba(37, 99, 235, 0.25);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 6px 14px rgba(20, 36, 67, 0.08);
+    }
+
+    .chip:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(20, 36, 67, 0.12);
+      border-color: rgba(37, 99, 235, 0.45);
+    }
+
+    .chip:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 10px rgba(20, 36, 67, 0.1);
+    }
+
+    .chip:focus-visible {
+      outline: 2px solid rgba(47, 128, 237, 0.25);
+      outline-offset: 2px;
+    }
+
+    .chip button {
+      border: none;
+      background: #ffffff;
+      color: #1e3a8a;
+      border-radius: 999px;
+      width: 20px;
+      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    .chip button:hover {
+      background: #dbe5f4;
+      color: #1e3a8a;
+    }
+
+    .insight-response {
+      background: #f5faff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      color: #000000;
+      line-height: 1.6;
+      white-space: normal;
+    }
+
+    .insights-chart {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 10px;
+      position: relative;
+    }
+
+    .insights-bar {
+      display: grid;
+      grid-template-columns: 140px 1fr 60px;
+      gap: 10px;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+
+    .insights-bar-axis {
+      display: grid;
+      grid-template-columns: 140px 1fr 60px;
+      gap: 10px;
+      align-items: center;
+      font-size: 0.75rem;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+    }
+
+    .insights-chart-svg {
+      width: 100%;
+      height: 220px;
+      display: block;
+    }
+
+    .insights-xlabels {
+      position: relative;
+      height: 18px;
+      font-size: 0.78rem;
+      color: #64748b;
+      margin-top: 6px;
+    }
+
+    .insights-xlabels span {
+      position: absolute;
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+
+    .insights-tooltip {
+      position: absolute;
+      padding: 10px 14px;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #f8fafc;
+      font-size: 0.88rem;
+      font-weight: 600;
+      border-radius: 12px;
+      pointer-events: none;
+      opacity: 0;
+      transform: translate(-50%, -10px);
+      transition: opacity 0.14s ease, transform 0.14s ease;
+      z-index: 5;
+      white-space: nowrap;
+      box-shadow: 0 16px 30px rgba(15, 23, 42, 0.32);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      letter-spacing: 0.01em;
+    }
+
+    .insights-bar-track {
+      background: #e2e8f0;
+      border-radius: 999px;
+      height: 10px;
+      overflow: hidden;
+    }
+
+    .insights-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #2563eb, #60a5fa);
+      border-radius: 999px;
+    }
+
+    .insights-bar-value {
+      text-align: right;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .insights-answer {
+      margin-top: 0;
+    }
+
+    .insights-answer.with-chart {
+      margin-top: 8px;
+    }
+
+    .insights-section-title {
+      font-weight: 800;
+      margin: 10px 0 4px;
+      font-size: 0.98rem;
+      color: #0f172a;
+    }
+
+
+    .insights-export {
+      margin: 8px 0 6px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .kb-insights-wrap {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 18px;
+      background: rgba(30, 64, 175, 0.12);
+      border: 1px solid rgba(59, 130, 246, 0.18);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .thinking {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      color: #0f172a;
+    }
+
+    .thinking-dots {
+      display: inline-flex;
+      gap: 6px;
+    }
+
+    .thinking-dots span {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #0f172a;
+      opacity: 0.35;
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    .thinking-dots span:nth-child(2) {
+      animation-delay: 0.15s;
+    }
+
+    .thinking-dots span:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+
+    @keyframes pulse {
+      0%,
+      100% {
+        transform: scale(0.8);
+        opacity: 0.35;
+      }
+      50% {
+        transform: scale(1.1);
+        opacity: 0.9;
+      }
+    }
+
+    .form-actions {
+      margin-top: 10px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(37, 99, 235, 0.25);
+      transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+    }
+
+    .btn.secondary {
+      background: linear-gradient(135deg, #eef4ff, #dbe9ff);
+      color: var(--text);
+      box-shadow: none;
+      border: 1px solid var(--border);
+    }
+
+    .btn.secondary.embed {
+      background: linear-gradient(135deg, #0f766e, #14b8a6);
+      color: #ffffff;
+      border: none;
+      box-shadow: 0 10px 20px rgba(20, 184, 166, 0.25);
+    }
+
+    .btn:hover,
+    .btn.secondary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px rgba(47, 128, 237, 0.22);
+      filter: brightness(1.02);
+    }
+
+    .btn:active,
+    .btn.secondary:active {
+      transform: translateY(0);
+      box-shadow: 0 6px 16px rgba(47, 128, 237, 0.18);
+    }
+
+    .btn:focus-visible,
+    .btn.secondary:focus-visible {
+      outline: 3px solid rgba(47, 128, 237, 0.25);
+      outline-offset: 2px;
+    }
+
+    .widget-preview {
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 16px;
+      background: #f5faff;
+    }
+
+    .widget-preview {
+      --forest: #2f80ed;
+      --leaf: #56ccf2;
+      --earth: #2d9cdb;
+      --cream: #f2f7ff;
+      --dark: #1b1b1b;
+      font-family: "Arial", sans-serif;
+      color: var(--dark);
+    }
+
+    .widget-preview * {
+      box-sizing: border-box;
+    }
+
+    .widget-preview .chatbot {
+      position: relative;
+      right: auto;
+      bottom: auto;
+      z-index: 1;
+      font-family: "Arial", sans-serif;
+    }
+
+    .widget-preview .chatbot-toggle {
+      background: #2f80ed;
+      background: linear-gradient(135deg, var(--forest), var(--leaf));
+      color: #ffffff;
+      border: none;
+      padding: 14px;
+      border-radius: 999px;
+      font-weight: 600;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+
+    .widget-preview .chatbot-toggle svg {
+      width: 26px;
+      height: 26px;
+      display: block;
+    }
+
+    .widget-preview .chatbot-panel {
+      position: relative;
+      right: auto;
+      bottom: auto;
+      left: auto;
+      top: auto;
+      width: 100%;
+      max-height: none;
+      background: #eaf4ff;
+      border-radius: 18px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.16);
+      overflow: hidden;
+      display: block;
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
+    }
+
+    .widget-preview .chatbot-header {
+      background: #d9edff;
+      color: #0b1f33;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .widget-preview .chatbot-title,
+    .widget-preview .chatbot-subtitle {
+      color: #0b1f33;
+      font-weight: 700;
+    }
+
+    .widget-preview .chatbot-header-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .widget-preview .chatbot-fullscreen {
+      background: #ffffff;
+      color: var(--dark);
+      border: none;
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .widget-preview .chatbot-title {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .widget-preview .chatbot-subtitle {
+      font-size: 0.8rem;
+      opacity: 0.9;
+    }
+
+    .widget-preview .chatbot-messages {
+      padding: 18px;
+      background: var(--cream);
+      height: 250px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .widget-preview .chatbot-message {
+      display: inline-flex;
+      align-items: stretch;
+      gap: 2px;
+      font-size: 0.92rem;
+      line-height: 1.5;
+      max-width: 92%;
+    }
+
+    .widget-preview .chatbot-message.bot {
+      color: #1d3557;
+      padding-top: 12px;
+      padding-left: 14px;
+      padding-right: 14px;
+    }
+
+    .widget-preview .chatbot-message.user {
+      margin-left: auto;
+    }
+
+    .widget-preview .chatbot-bubble {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 12px 14px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+      border: 1px solid rgba(0, 0, 0, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 0;
+    }
+
+    .widget-preview .chatbot-agent-square {
+      width: 75px;
+      height: 75px;
+      background: transparent;
+      border-radius: 6px;
+      flex: 0 0 75px;
+      align-self: flex-start;
+      overflow: hidden;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .widget-preview .chatbot-agent-square img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .widget-preview .chatbot-timestamp {
+      font-size: 0.72rem;
+      color: #7a8a7f;
+    }
+
+    .widget-preview .chatbot-suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 8px 0 4px;
+    }
+
+    .widget-preview .chatbot-chip {
+      background: linear-gradient(180deg, #ffffff 0%, #f6fbf7 100%);
+      border: 1px solid rgba(31, 77, 43, 0.2);
+      color: #1e4a2a;
+      border-radius: 999px;
+      padding: 7px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(31, 77, 43, 0.12);
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    .widget-preview .chatbot-chip:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px rgba(31, 77, 43, 0.16);
+      background: linear-gradient(180deg, #f7fff8 0%, #eef8f0 100%);
+    }
+
+    .widget-preview .chatbot-chip:active {
+      transform: translateY(0);
+      box-shadow: 0 6px 16px rgba(31, 77, 43, 0.12);
+    }
+
+    .widget-preview .chatbot-chip:focus-visible {
+      outline: 2px solid rgba(36, 121, 66, 0.35);
+      outline-offset: 2px;
+    }
+
+    .widget-preview .chatbot-input {
+      display: flex;
+      gap: 10px;
+      padding: 14px;
+      border-top: 1px solid #efe9e1;
+      background: white;
+    }
+
+    .widget-preview .chatbot-input input {
+      flex: 1;
+      border: 1px solid #e2ded7;
+      border-radius: 999px;
+      padding: 12px 16px;
+      font-size: 0.95rem;
+      outline: none;
+      background: #faf9f6;
+    }
+
+    .widget-preview .chatbot-input button {
+      background: linear-gradient(135deg, var(--earth), var(--leaf));
+      border: none;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+    }
+
+    .widget-preview .chatbot-input button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(47, 128, 237, 0.22);
+      filter: brightness(1.05);
+    }
+
+    .widget-preview .chatbot-input button:active {
+      transform: translateY(0);
+      box-shadow: 0 6px 14px rgba(47, 128, 237, 0.18);
+    }
+
+    .widget-preview .chatbot-input button:focus-visible {
+      outline: 2px solid rgba(47, 128, 237, 0.3);
+      outline-offset: 2px;
+    }
+
+    .chart {
+      width: 100%;
+      height: 220px;
+      margin-top: 12px;
+      position: relative;
+    }
+
+    .chart svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .chart-grid line {
+      stroke: #d7e3f5;
+      stroke-dasharray: 6 6;
+    }
+
+    .chart-axis text {
+      fill: var(--muted);
+      font-size: 0.75rem;
+    }
+
+    .chart-area {
+      fill: rgba(37, 99, 235, 0.15);
+    }
+
+    .chart-line {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 3;
+    }
+
+    #chartSeries {
+      transition: opacity 200ms ease;
+    }
+
+    .chart-dot {
+      fill: var(--accent-2);
+      stroke: #ffffff;
+      stroke-width: 2;
+      cursor: pointer;
+      transition: fill 140ms ease, stroke-width 140ms ease;
+    }
+
+    .chart-dot:hover {
+      fill: var(--accent);
+      stroke-width: 3;
+    }
+
+    .chart-tooltip {
+      position: absolute;
+      padding: 6px 10px;
+      background: #111827;
+      color: #ffffff;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      pointer-events: none;
+      transform: translate(-50%, -120%);
+      opacity: 0;
+      transition: opacity 120ms ease;
+      white-space: nowrap;
+    }
+
+    .chart-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+    }
+
+    .table {
+      min-width: 620px;
+    }
+
+    @media (max-width: 980px) {
+      .chart-card,
+      .summary-card,
+      .settings-card,
+      .preview-card {
+        grid-column: span 12;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .page {
+        padding: 20px 16px 48px;
+      }
+
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .nav-links {
+        gap: 1em;
+        font-size: 0.95rem;
+      }
+
+      .chart {
+        height: 180px;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .desktop-nav {
+        display: none !important;
+      }
+      .mobile-nav {
+        display: flex !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="desktop-nav">
+      <div class="nav-container">
+        <div style="font-size:1.5rem; font-weight:800; color:#2b6cb0;">
+          Palacios AI
+        </div>
+        <div class="nav-actions">
+          <div class="nav-links">
+            <a href="#overview">Dashboard</a>
+            <a href="#leads">Recent Leads</a>
+            <a href="#insights">AI Insights</a>
+            <a href="#knowledge">Knowledge Base</a>
+            <a href="#settings" class="cta">AI Assistant Settings</a>
+          </div>
+          <button class="btn shiny" type="button" id="publishAppButton" disabled>Publish App</button>
+        </div>
+      </div>
+    </nav>
+    <nav class="mobile-nav">
+      <div style="font-size:1.4rem; font-weight:800; color:#2b6cb0;">
+        Palacios AI
+      </div>
+      <div id="mobile-menu-button" style="font-size:2rem; cursor:pointer; user-select:none;">☰</div>
+    </nav>
+    <div id="mobile-menu">
+      <a href="#overview">Dashboard</a>
+      <a href="#settings">AI Assistant Settings</a>
+      <a href="#knowledge">Knowledge Base</a>
+      <a href="#activity">Activity / Usage</a>
+      <a href="#leads">Recent Leads</a>
+      <a href="#insights" style="color:#2b6cb0; font-weight:700;">AI Insights</a>
+    </div>
+
+    <main class="page">
+
+      <header id="overview">
+        <div class="welcome">
+          <h1 data-typewriter="true" data-no-cursor="true" data-text="Welcome, Daniel!"></h1>
+          <p data-typewriter="true" data-no-cursor="true" data-text="Your AI assistant is live. Track leads and fine-tune the experience below."></p>
+        </div>
+        <div class="badge">AI Agent Dashboard</div>
+      </header>
+
+      
+
+
+      
+
+      
+
+      
+      <section class="grid" id="activity">
+        <div class="card chart-card">
+        <div class="card-header">
+          <h2>Booked Leads Trend</h2>
+          <select class="filter-select" aria-label="Date range">
+            <option>Last 7 days</option>
+            <option>Last 30 days</option>
+            <option>This quarter</option>
+            <option>Year to date</option>
+          </select>
+        </div>
+        <p>Weekly bookings from your AI assistant.</p>
+        <div class="chart">
+          <svg viewBox="0 0 600 220" preserveAspectRatio="none" aria-hidden="true">
+            <g class="chart-grid">
+              <line x1="40" y1="40" x2="580" y2="40"></line>
+              <line x1="40" y1="80" x2="580" y2="80"></line>
+              <line x1="40" y1="120" x2="580" y2="120"></line>
+              <line x1="40" y1="160" x2="580" y2="160"></line>
+              <line x1="40" y1="200" x2="580" y2="200"></line>
+            </g>
+            <g class="chart-axis">
+              <text x="10" y="44">20</text>
+              <text x="10" y="84">16</text>
+              <text x="10" y="124">12</text>
+              <text x="10" y="164">8</text>
+              <text x="10" y="204">4</text>
+            </g>
+            <g id="chartSeries">
+              <path class="chart-area" id="chartArea" d="M 40 160 L 120 140 L 200 150 L 280 110 L 360 120 L 440 80 L 520 90 L 560 40 L 560 220 L 40 220 Z" />
+              <path class="chart-line" id="chartLine" d="M 40 160 L 120 140 L 200 150 L 280 110 L 360 120 L 440 80 L 520 90 L 560 40" />
+              <g id="chartDots">
+                <circle class="chart-dot" data-label="Mon · 8 leads" cx="40" cy="160" r="6" />
+                <circle class="chart-dot" data-label="Tue · 10 leads" cx="120" cy="140" r="6" />
+                <circle class="chart-dot" data-label="Wed · 9 leads" cx="200" cy="150" r="6" />
+                <circle class="chart-dot" data-label="Thu · 13 leads" cx="280" cy="110" r="6" />
+                <circle class="chart-dot" data-label="Fri · 12 leads" cx="360" cy="120" r="6" />
+                <circle class="chart-dot" data-label="Sat · 16 leads" cx="440" cy="80" r="6" />
+                <circle class="chart-dot" data-label="Sun · 18 leads" cx="520" cy="90" r="6" />
+                <circle class="chart-dot" data-label="This week · 22 leads" cx="560" cy="40" r="6" />
+              </g>
+            </g>
+          </svg>
+          <div class="chart-tooltip" id="chartTooltip"></div>
+        </div>
+        <div class="chart-labels" id="chartLabels">
+          <span>Mon</span>
+          <span>Tue</span>
+          <span>Wed</span>
+          <span>Thu</span>
+          <span>Fri</span>
+          <span>Sat</span>
+          <span>Sun</span>
+        </div>
+        </div>
+        <div class="card summary-card">
+          <h2 class="futuristic-text" data-typewriter="true" data-no-cursor="true" data-text="Activity Overview"></h2>
+          <p class="futuristic-text" data-typewriter="true" data-no-cursor="true" data-text="Simple metrics from your AI assistant."></p>
+          <div class="summary-tile">
+            <h3 data-typewriter="true" data-no-cursor="true" data-text="Leads Captured"></h3>
+            <span id="leadsCapturedValue" data-typewriter="true" data-no-cursor="true" data-type-speed="26" data-text="0">0</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid" id="leads">
+        <div class="card" style="grid-column: span 12;">
+          <div class="card-header">
+            <h2 class="section-title" style="margin:0;">Recent Leads</h2>
+            <button class="btn secondary embed" type="button" id="leadsSyncButton">Sync Leads</button>
+          </div>
+          <p class="section-note">For visibility only. Full lead management stays in your CRM.</p>
+          <div class="table-wrapper">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Phone</th>
+                  <th>Service Requested</th>
+                  <th>Address</th>
+                  <th>Date Submitted</th>
+                </tr>
+              </thead>
+              <tbody id="leadsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <div class="kb-insights-wrap">
+      <section class="grid" id="insights">
+        <div class="card" style="grid-column: span 12;">
+          <div class="card-header">
+            <h2 class="section-title" style="margin:0;">AI Insights</h2>
+            <div class="toggle-group" role="tablist" aria-label="Knowledge base mode">
+              <button class="toggle-btn is-active" type="button" id="insightsClientBtn">Client Facing</button>
+              <button class="toggle-btn" type="button" id="insightsInternalBtn">Internal</button>
+            </div>
+          </div>
+          <p class="section-note">Ask questions about your business data. Insights are based on CRM summaries.</p>
+          <div class="insights-box">
+            <form class="insights-input" id="insightsForm">
+              <input type="text" id="insightsInput" placeholder="Ask a question about your leads or revenue..." />
+              <button class="btn" type="submit" id="insightsAskButton">Ask</button>
+            </form>
+            <div class="insight-response" id="insightsResponse">
+              Insights will appear here. Example: “You received 24 leads this week, with Outdoor Kitchens leading requests.”
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid" id="knowledge">
+        <div class="card kb-card is-locked" id="kbCardClient" data-kb-type="client" style="grid-column: span 12;">
+          <div class="card-header">
+            <h2 class="section-title" style="margin:0;">Client Knowledge Base</h2>
+          </div>
+          <p class="section-note">Customer‑facing content used for website answers and estimate requests.</p>
+          <div class="kb-actions">
+            <div class="kb-actions-left">
+              <button class="btn" type="button" id="openArticleModalClient">New Article</button>
+              <button class="btn warm" type="button" id="openFaqModalClient">New FAQ</button>
+              <button class="btn publish" type="button" id="kbSaveSettingsClient" style="display:none;">Save Settings</button>
+            </div>
+            <div class="kb-actions-right">
+              <button class="btn ghost" type="button" id="kbEditToggleClient">Edit</button>
+            </div>
+          </div>
+          <div class="kb-edit-banner" id="kbEditBannerClient">Edit mode is on. Changes won’t apply until you save.</div>
+          <div class="kb-list" id="kbListClient"></div>
+        </div>
+
+        <div class="card kb-card is-locked kb-hidden" id="kbCardInternal" data-kb-type="internal" style="grid-column: span 12;">
+          <div class="card-header">
+            <h2 class="section-title" style="margin:0;">Internal Knowledge Base</h2>
+          </div>
+          <p class="section-note">Team‑only references used for internal insights and operations.</p>
+          <div class="kb-actions">
+            <div class="kb-actions-left">
+              <button class="btn" type="button" id="openArticleModalInternal">New Article</button>
+              <button class="btn warm" type="button" id="openFaqModalInternal">New FAQ</button>
+              <button class="btn publish" type="button" id="kbSaveSettingsInternal" style="display:none;">Save Settings</button>
+            </div>
+            <div class="kb-actions-right">
+              <button class="btn ghost" type="button" id="kbEditToggleInternal">Edit</button>
+            </div>
+          </div>
+          <div class="kb-edit-banner" id="kbEditBannerInternal">Edit mode is on. Changes won’t apply until you save.</div>
+          <div class="kb-list" id="kbListInternal"></div>
+        </div>
+      </section>
+      </div>
+
+      <div class="modal" id="articleModal" aria-hidden="true">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h3>New Knowledge Article</h3>
+            <button class="modal-close" type="button" data-close="articleModal">×</button>
+          </div>
+          <div class="modal-grid">
+            <label>
+              Article Title
+              <input type="text" id="articleTitle" placeholder="Enter article title" />
+            </label>
+            <label>
+              Optional Notes
+              <input type="text" id="articleNotes" placeholder="Internal notes (optional)" />
+            </label>
+            <label>
+              Article Input Method
+              <select id="articleInputMode">
+                <option value="manual" selected>Manual Entry</option>
+                <option value="upload">Upload Document</option>
+              </select>
+            </label>
+          </div>
+          <div class="modal-grid" id="articleManualSection">
+            <label>
+              Article Content
+              <textarea id="articleContent" style="min-height:260px;" placeholder="Write or paste the full article content..."></textarea>
+            </label>
+          </div>
+          <div class="modal-grid" id="articleUploadSection" style="display:none;">
+            <label>
+              Upload Document (DOCX, XLSX, CSV, TXT)
+              <input type="file" id="articleUploadFile" accept=".docx,.xlsx,.csv,.txt" />
+            </label>
+            <div class="section-note" id="articleFileHint" style="margin:0;">No file selected.</div>
+          </div>
+          <div class="form-actions">
+            <button class="btn" type="button">Save Article</button>
+            <button class="btn secondary" type="button" data-close="articleModal">Cancel</button>
+          </div>
+          <div class="save-loading" id="articleSaveLoading">
+            <div class="spinner" aria-hidden="true"></div>
+            <span>Saving article...</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal" id="faqModal" aria-hidden="true">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h3 id="faqModalTitle">New FAQ</h3>
+            <button class="modal-close" type="button" data-close="faqModal">×</button>
+          </div>
+          <div class="modal-grid">
+            <label>
+              FAQ Title
+              <input type="text" id="faqTitle" placeholder="Enter FAQ title" />
+            </label>
+            <label>
+              Optional Notes
+              <input type="text" id="faqNotes" placeholder="Internal notes (optional)" />
+            </label>
+            <label>
+              FAQ Input Method
+              <select id="faqInputMode">
+                <option value="manual" selected>Manual Entry</option>
+                <option value="upload">Upload CSV/XLSX</option>
+              </select>
+            </label>
+          </div>
+          <div class="modal-grid" id="faqManualSection">
+            <button class="faq-add" type="button" id="addFaqRow">Add FAQ</button>
+            <div class="faq-list" id="faqRows">
+              <div class="faq-row">
+                <input type="text" placeholder="Question" />
+                <input type="text" placeholder="Answer" />
+                <button class="icon-btn" type="button">×</button>
+              </div>
+            </div>
+          </div>
+          <div class="modal-grid" id="faqUploadSection" style="display:none;">
+            <label>
+              Upload FAQ File (CSV, XLSX)
+              <input type="file" id="faqUploadFile" accept=".csv,.xlsx" />
+            </label>
+            <div class="section-note" id="faqFileHint" style="margin:0;">No file selected.</div>
+          </div>
+          <div class="form-actions">
+            <button class="btn" type="button">Save FAQ</button>
+            <button class="btn secondary" type="button" data-close="faqModal">Cancel</button>
+          </div>
+          <div class="save-loading" id="faqSaveLoading">
+            <div class="spinner" aria-hidden="true"></div>
+            <span>Saving FAQ...</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal" id="previewModal" aria-hidden="true">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h3 id="previewTitle">Document Preview</h3>
+            <button class="modal-close" type="button" data-close="previewModal">×</button>
+          </div>
+          <div class="section-note" id="previewNotes"></div>
+          <div id="previewBody" style="line-height:1.6; color:#334155;"></div>
+        </div>
+      </div>
+
+
+      
+
+      
+    
+
+      <section class="grid" id="settings">
+        <div class="card settings-card is-locked" id="settingsCard">
+          <div class="card-header">
+            <h2 class="section-title">AI Assistant Settings</h2>
+            <button class="btn ghost" type="button" id="settingsEditToggle">Edit Settings</button>
+          </div>
+          <div class="edit-banner">Edit mode is on. Changes won’t apply until you save.</div>
+          <p class="section-note">These settings control the assistant that appears on your website.</p>
+        <div class="form-grid">
+          <label>
+            Assistant Name
+            <input type="text" id="agentName" value="Morlock Assistant" />
+          </label>
+          <label>
+            Greeting Message
+            <input type="text" id="greetingMessage" value="Hi! How can I help you today?" />
+          </label>
+          <label style="grid-column: span 2;">
+            Subtitle Header
+            <input type="text" id="subtitleMessage" value="Ask about services, pricing, or scheduling" />
+          </label>
+          <label>
+            Primary Color
+            <input type="color" id="primaryColor" value="#2f80ed" />
+          </label>
+          <label>
+            Accent Color
+            <input type="color" id="accentColor" value="#56ccf2" />
+          </label>
+          <label>
+            Widget Icon
+            <select id="iconSelect">
+              <option value="chat">Chat Bubble</option>
+              <option value="spark">Spark</option>
+              <option value="bolt">Bolt</option>
+            </select>
+          </label>
+        </div>
+        <div class="toggle-row" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+            <div>
+              <strong>Default Start Questions</strong>
+              <div class="section-note" style="margin:4px 0 0;">These appear as the first chips on your website widget.</div>
+            </div>
+            <div class="chip-row" id="chipEditor">
+              <span class="chip">Book an Estimate <button type="button" aria-label="Remove">×</button></span>
+              <span class="chip">What services are provided? <button type="button" aria-label="Remove">×</button></span>
+            </div>
+            <div class="insights-input" style="width:100%;">
+              <input type="text" style="height: 50%;" id="newChipInput" class="chip-input" placeholder="Add a question (e.g., Do you offer free estimates?)" />
+              <button class="btn ghost is-success no-glow" type="button" id="addChipButton">Add</button>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn publish" type="button" id="publishBotConfig" style="display:none;">Save Settings</button>
+          </div>
+        </div>
+
+        <div class="card preview-card">
+          <h2 class="section-title">Live Preview</h2>
+          <p class="section-note">This is how your assistant appears to customers.</p>
+          <div class="widget-preview" id="previewPanel">
+            <div class="chatbot" data-state="open">
+            <button class="chatbot-toggle" type="button" aria-label="Open chat">
+                <span id="previewIcon">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M7 18l-3 3V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H7z" fill="currentColor"></path>
+                    <circle cx="9" cy="10" r="1.3" fill="#ffffff"></circle>
+                    <circle cx="12" cy="10" r="1.3" fill="#ffffff"></circle>
+                    <circle cx="15" cy="10" r="1.3" fill="#ffffff"></circle>
+                  </svg>
+                </span>
+            </button>
+              <div class="chatbot-panel" aria-live="polite">
+                <div class="chatbot-header">
+                  <div class="chatbot-header-text">
+                    <div class="chatbot-title" id="previewName">Morlock Assistant</div>
+                  <div class="chatbot-subtitle" id="previewSubtitle">Ask about services, pricing, or scheduling</div>
+                  </div>
+                  <button class="chatbot-fullscreen" type="button">Full</button>
+                </div>
+                <div class="chatbot-messages">
+                <div class="chatbot-message bot">
+                  <div class="chatbot-agent-square" aria-hidden="true">
+                    <img src="/robot_icon.png" alt="" />
+                  </div>
+                  <div class="chatbot-bubble">
+                    <span id="previewGreeting">Hi! How can I help you today?</span>
+                    <div class="chatbot-timestamp">11:58 AM</div>
+                  </div>
+                </div>
+                <div class="chatbot-suggestions" id="previewChips">
+                  <button type="button" class="chatbot-chip">Book an Estimate</button>
+                  <button type="button" class="chatbot-chip">What services are provided?</button>
+                </div>
+                </div>
+                <form class="chatbot-input">
+                  <input type="text" placeholder="Type your message..." />
+                  <button type="button">Send</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid" id="embed">
+        <div class="card" style="grid-column: span 12;">
+          <div class="embed-section">
+            <div>
+              <strong>Widget Embed Script</strong>
+              <div class="section-note" style="margin-top:4px;">Paste this on your website to enable the assistant.</div>
+            </div>
+            <div class="embed-box">&lt;script src=&quot;https://palacios-solutions.com/cust_1/widget.js&quot;&gt;&lt;/script&gt;</div>
+            <div class="embed-actions">
+              <button class="btn secondary embed" type="button" id="copyEmbedButton">Copy Embed Code</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <div class="modal" id="confirmPublishModal" aria-hidden="true">
+        <div class="modal-card confirm-card">
+          <div class="modal-header">
+            <h3>Publish All Settings?</h3>
+            <button class="modal-close" type="button" data-close="confirmPublishModal">×</button>
+          </div>
+          <div class="section-note">This will save your AI assistant settings and knowledge base changes. Are you sure you want to continue?</div>
+          <div class="save-loading" id="publishSaveLoading">
+            <div class="spinner" aria-hidden="true"></div>
+            <span>Publishing your app...</span>
+          </div>
+          <div class="confirm-actions">
+            <button class="btn secondary" type="button" data-close="confirmPublishModal">Cancel</button>
+            <button class="btn publish" type="button" id="confirmPublishButton">Yes, Publish</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal" id="confirmKbSaveModal" aria-hidden="true">
+        <div class="modal-card confirm-card">
+          <div class="modal-header">
+            <h3>Save Knowledge Base?</h3>
+            <button class="modal-close" type="button" data-close="confirmKbSaveModal">×</button>
+          </div>
+          <div class="section-note">This will save your knowledge base changes to the cloud. Continue?</div>
+          <div class="save-loading" id="kbSaveLoading">
+            <div class="spinner" aria-hidden="true"></div>
+            <span>Saving knowledge base...</span>
+          </div>
+          <div class="confirm-actions">
+            <button class="btn secondary" type="button" data-close="confirmKbSaveModal">Cancel</button>
+            <button class="btn publish" type="button" id="confirmKbSaveButton">Yes, Save</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal" id="confirmSettingsSaveModal" aria-hidden="true">
+        <div class="modal-card confirm-card">
+          <div class="modal-header">
+            <h3>Save Assistant Settings?</h3>
+            <button class="modal-close" type="button" data-close="confirmSettingsSaveModal">×</button>
+          </div>
+          <div class="section-note">This will save your AI assistant settings. Continue?</div>
+          <div class="save-loading" id="settingsSaveLoading">
+            <div class="spinner" aria-hidden="true"></div>
+            <span>Saving settings...</span>
+          </div>
+          <div class="confirm-actions">
+            <button class="btn secondary" type="button" data-close="confirmSettingsSaveModal">Cancel</button>
+            <button class="btn publish" type="button" id="confirmSettingsSaveButton">Yes, Save</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal" id="confirmStopEditingModal" aria-hidden="true">
+        <div class="modal-card confirm-card">
+          <div class="modal-header">
+            <h3>Discard Changes?</h3>
+            <button class="modal-close" type="button" data-close="confirmStopEditingModal">×</button>
+          </div>
+          <div class="section-note">Changes made will be discarded. Are you sure you want to stop editing?</div>
+          <div class="confirm-actions">
+            <button class="btn secondary" type="button" data-close="confirmStopEditingModal">Cancel</button>
+            <button class="btn ghost is-danger" type="button" id="confirmStopEditingButton">Yes, Discard</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="toast" id="saveToast">Saved!</div>
+</main>
+  </div>
+
+
+      
+
+      
+
+      
+
+      <script>
+    const nameInput = document.getElementById("agentName");
+    const greetingMessage = document.getElementById("greetingMessage");
+    const subtitleMessage = document.getElementById("subtitleMessage");
+    const primaryColor = document.getElementById("primaryColor");
+    const accentColor = document.getElementById("accentColor");
+    const chipEditor = document.getElementById("chipEditor");
+    const newChipInput = document.getElementById("newChipInput");
+    const addChipButton = document.getElementById("addChipButton");
+
+    const previewName = document.getElementById("previewName");
+    const previewGreeting = document.getElementById("previewGreeting");
+    const previewSubtitle = document.getElementById("previewSubtitle");
+    const previewPanel = document.getElementById("previewPanel");
+    const previewChips = document.getElementById("previewChips");
+    const insightsForm = document.getElementById("insightsForm");
+    const insightsInput = document.getElementById("insightsInput");
+    const insightsAskButton = document.getElementById("insightsAskButton");
+    const insightsResponse = document.getElementById("insightsResponse");
+    const insightsClientBtn = document.getElementById("insightsClientBtn");
+    const insightsInternalBtn = document.getElementById("insightsInternalBtn");
+    const chartTooltip = document.getElementById("chartTooltip");
+    const chartDotsContainer = document.getElementById("chartDots");
+    const chartLine = document.getElementById("chartLine");
+    const chartArea = document.getElementById("chartArea");
+    const chartSeries = document.getElementById("chartSeries");
+    const chartFilter = document.querySelector(".filter-select");
+    const chartLabels = document.getElementById("chartLabels");
+    const leadsCapturedValue = document.getElementById("leadsCapturedValue");
+    const leadsSyncButton = document.getElementById("leadsSyncButton");
+    const leadsTableBody = document.getElementById("leadsTableBody");
+    const iconSelect = document.getElementById("iconSelect");
+    const previewIcon = document.getElementById("previewIcon");
+    const publishBotConfig = document.getElementById("publishBotConfig");
+    const copyEmbedButton = document.getElementById("copyEmbedButton");
+    const settingsCard = document.getElementById("settingsCard");
+    const settingsEditToggle = document.getElementById("settingsEditToggle");
+    const kbEditToggleClient = document.getElementById("kbEditToggleClient");
+    const kbEditToggleInternal = document.getElementById("kbEditToggleInternal");
+    const kbSaveSettingsClient = document.getElementById("kbSaveSettingsClient");
+    const kbSaveSettingsInternal = document.getElementById("kbSaveSettingsInternal");
+    const previewModal = document.getElementById("previewModal");
+    const previewTitle = document.getElementById("previewTitle");
+    const previewNotes = document.getElementById("previewNotes");
+    const previewBody = document.getElementById("previewBody");
+    const kbEditBannerClient = document.getElementById("kbEditBannerClient");
+    const kbEditBannerInternal = document.getElementById("kbEditBannerInternal");
+    const publishAppButton = document.getElementById("publishAppButton");
+    const confirmPublishModal = document.getElementById("confirmPublishModal");
+    const confirmPublishButton = document.getElementById("confirmPublishButton");
+    const publishSaveLoading = document.getElementById("publishSaveLoading");
+    const confirmKbSaveModal = document.getElementById("confirmKbSaveModal");
+    const confirmKbSaveButton = document.getElementById("confirmKbSaveButton");
+    const kbSaveLoading = document.getElementById("kbSaveLoading");
+    const confirmSettingsSaveModal = document.getElementById("confirmSettingsSaveModal");
+    const confirmSettingsSaveButton = document.getElementById("confirmSettingsSaveButton");
+    const settingsSaveLoading = document.getElementById("settingsSaveLoading");
+    const confirmStopEditingModal = document.getElementById("confirmStopEditingModal");
+    const confirmStopEditingButton = document.getElementById("confirmStopEditingButton");
+    const saveToast = document.getElementById("saveToast");
+    let hasUnsavedChanges = false;
+    let settingsDirty = false;
+    let kbDirty = false;
+    let hasPendingPublish = false;
+    let lockSettings = null;
+    let settingsSnapshot = null;
+    let kbSnapshot = [];
+    const pendingDeletes = new Set();
+    const pendingUpserts = new Map();
+
+    const iconSvgs = {
+      chat: `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 18l-3 3V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H7z" fill="currentColor"></path>
+          <circle cx="9" cy="10" r="1.3" fill="#ffffff"></circle>
+          <circle cx="12" cy="10" r="1.3" fill="#ffffff"></circle>
+          <circle cx="15" cy="10" r="1.3" fill="#ffffff"></circle>
+        </svg>
+      `,
+      spark: `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 2l2.2 5.6L20 10l-5.8 2.4L12 18l-2.2-5.6L4 10l5.8-2.4L12 2z" fill="currentColor"></path>
+          <circle cx="12" cy="10" r="2.2" fill="#ffffff"></circle>
+        </svg>
+      `,
+      bolt: `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" fill="currentColor"></path>
+        </svg>
+      `,
+    };
+
+    const leadRecords = [];
+    const startDate = new Date("2019-01-01T00:00:00");
+    const endDate = new Date("2026-12-31T00:00:00");
+    let cursor = new Date(startDate);
+    let seed = 7;
+    const names = ["Emily Turner", "Marcus Hill", "Sara Green", "Daniel Smith", "Ava Brooks", "Liam Carter", "Noah Reed", "Mia Patel", "Olivia Chen", "Ethan Ross"];
+    const streets = ["Oak Street", "Willow Lane", "Pine Court", "Maple Ave", "Cedar Road", "Birch Blvd", "Spruce Dr", "Elm Street"];
+    const services = ["Paver Patio", "Outdoor Kitchen", "Drainage", "Lighting", "Pergola", "Pavilion"];
+    const notes = [
+      "Requested estimate window next week.",
+      "Interested in multiple options and pricing.",
+      "Needs site visit for measurements.",
+      "Asked about timeline and permits.",
+      "Wants a low-maintenance solution.",
+    ];
+    while (cursor <= endDate) {
+      seed = (seed * 9301 + 49297) % 233280;
+      const dailyCount = seed % 31;
+      for (let i = 0; i < dailyCount; i++) {
+        seed = (seed * 9301 + 49297) % 233280;
+        const name = names[seed % names.length];
+        const address = `${100 + (seed % 900)} ${streets[seed % streets.length]}`;
+        const service = services[seed % services.length];
+        const note = notes[seed % notes.length];
+        leadRecords.push({
+          name,
+          address,
+          service,
+          note,
+          created_at: cursor.toISOString(),
+        });
+      }
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    const ytdData = leadRecords.reduce((acc, lead) => {
+      const date = lead.created_at.slice(0, 10);
+      acc[date] = (acc[date] || 0) + 1;
+      return acc;
+    }, {});
+    const ytdSeries = Object.entries(ytdData)
+      .map(([date, leads]) => ({ date, leads }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    function formatShortDate(iso) {
+      const date = new Date(iso + "T00:00:00");
+      return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    }
+
+    function groupByWeek(data) {
+      const groups = [];
+      for (let i = 0; i < data.length; i += 4) {
+        const slice = data.slice(i, i + 4);
+        const label = `${formatShortDate(slice[0].date)}–${formatShortDate(slice[slice.length - 1].date)}`;
+        const total = slice.reduce((sum, item) => sum + item.leads, 0);
+        groups.push({ label, total });
+      }
+      return groups;
+    }
+
+    function groupByMonth(data) {
+      const map = new Map();
+      data.forEach((item) => {
+        const month = item.date.slice(0, 7);
+        map.set(month, (map.get(month) || 0) + item.leads);
+      });
+      return Array.from(map.entries()).map(([month, total]) => ({
+        label: new Date(month + "-01T00:00:00").toLocaleDateString("en-US", { month: "short" }),
+        total,
+      }));
+    }
+
+    function getRangeData(rangeLabel) {
+      if (rangeLabel === "Last 7 days") {
+        const slice = ytdSeries.slice(-7);
+        return {
+          labels: slice.map((item) => formatShortDate(item.date)),
+          values: slice.map((item) => item.leads),
+        };
+      }
+      if (rangeLabel === "Last 30 days") {
+        const slice = ytdSeries.slice(-30);
+        const grouped = groupByWeek(slice);
+        return {
+          labels: grouped.map((item) => item.label),
+          values: grouped.map((item) => item.total),
+        };
+      }
+      if (rangeLabel === "This quarter") {
+        const grouped = groupByMonth(ytdSeries);
+        return {
+          labels: grouped.map((item) => item.label),
+          values: grouped.map((item) => item.total),
+        };
+      }
+      const grouped = groupByMonth(ytdSeries);
+      return {
+        labels: grouped.map((item) => item.label),
+        values: grouped.map((item) => item.total),
+      };
+    }
+
+    function buildPath(values) {
+      const left = 40;
+      const right = 560;
+      const top = 40;
+      const bottom = 200;
+      const max = Math.max(...values, 1);
+      const step = (right - left) / (values.length - 1);
+      return values.map((val, idx) => {
+        const x = left + step * idx;
+        const y = bottom - (val / max) * (bottom - top);
+        return `${idx === 0 ? "M" : "L"} ${x} ${y}`;
+      }).join(" ");
+    }
+
+    function buildArea(values) {
+      const left = 40;
+      const right = 560;
+      const bottom = 220;
+      const line = buildPath(values);
+      return `${line} L ${right} ${bottom} L ${left} ${bottom} Z`;
+    }
+
+    function renderDots(labels, values) {
+      if (!chartDotsContainer) return;
+      chartDotsContainer.innerHTML = "";
+      const left = 40;
+      const right = 560;
+      const top = 40;
+      const bottom = 200;
+      const max = Math.max(...values, 1);
+      const step = (right - left) / (values.length - 1);
+      values.forEach((val, idx) => {
+        const x = left + step * idx;
+        const y = bottom - (val / max) * (bottom - top);
+        const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        dot.setAttribute("class", "chart-dot");
+        dot.setAttribute("cx", x);
+        dot.setAttribute("cy", y);
+        dot.setAttribute("r", "6");
+        dot.setAttribute("data-label", `${labels[idx]} · ${val} leads`);
+        chartDotsContainer.appendChild(dot);
+      });
+      attachDotHandlers();
+    }
+
+    function attachDotHandlers() {
+      const dots = chartDotsContainer ? chartDotsContainer.querySelectorAll(".chart-dot") : [];
+      if (!chartTooltip) return;
+      dots.forEach((dot) => {
+        dot.addEventListener("mouseenter", (event) => {
+          const label = event.currentTarget.getAttribute("data-label") || "";
+          chartTooltip.textContent = label;
+          chartTooltip.style.opacity = "1";
+          const rect = event.currentTarget.getBoundingClientRect();
+          const chartRect = event.currentTarget.closest(".chart").getBoundingClientRect();
+          chartTooltip.style.left = `${rect.left - chartRect.left + rect.width / 2}px`;
+          chartTooltip.style.top = `${rect.top - chartRect.top}px`;
+        });
+        dot.addEventListener("mouseleave", () => {
+          chartTooltip.style.opacity = "0";
+        });
+      });
+    }
+
+    function updatePreview() {
+      previewName.textContent = nameInput.value || "AI Assistant";
+      previewGreeting.textContent = greetingMessage.value || "Hi! How can I help you today?";
+      previewSubtitle.textContent = subtitleMessage.value || "Ask about services, pricing, or scheduling";
+      previewPanel.style.setProperty("--forest", primaryColor.value);
+      previewPanel.style.setProperty("--earth", primaryColor.value);
+      previewPanel.style.setProperty("--leaf", accentColor.value);
+      const header = previewPanel.querySelector(".chatbot-header");
+      if (header) {
+        header.style.background = `${accentColor.value}33`;
+      }
+      previewPanel.querySelectorAll(".chatbot-chip").forEach((chip) => {
+        chip.style.borderColor = `${accentColor.value}55`;
+      });
+      updateIcon();
+    }
+
+    function updateIcon() {
+      if (!previewIcon || !iconSelect) return;
+      const value = iconSelect.value;
+      previewIcon.innerHTML = iconSvgs[value] || iconSvgs.chat;
+    }
+
+    [nameInput, greetingMessage, subtitleMessage, primaryColor, accentColor, iconSelect].forEach((el) => {
+      el.addEventListener("input", () => {
+        updatePreview();
+        setDirty("settings");
+      });
+    });
+    updatePreview();
+    updateIcon();
+
+    function getSettingsPayload() {
+      const questions = [];
+      if (chipEditor) {
+        chipEditor.querySelectorAll(".chip").forEach((chip) => {
+          const text = chip.childNodes[0] ? chip.childNodes[0].textContent.trim() : chip.textContent.trim();
+          if (text) questions.push(text);
+        });
+      }
+      return {
+        name: nameInput ? nameInput.value.trim() : "",
+        greeting_message: greetingMessage ? greetingMessage.value.trim() : "",
+        subtitle_header: subtitleMessage ? subtitleMessage.value.trim() : "",
+        primary_color: primaryColor ? primaryColor.value : "",
+        accent_color: accentColor ? accentColor.value : "",
+        widget_icon: iconSelect ? iconSelect.value : "",
+        default_start_questions: questions,
+      };
+    }
+
+    function applySettingsPayload(cfg) {
+      if (!cfg) return;
+      if (nameInput) nameInput.value = cfg.name || "";
+      if (greetingMessage) greetingMessage.value = cfg.greeting_message || "";
+      if (subtitleMessage) subtitleMessage.value = cfg.subtitle_header || "";
+      if (primaryColor) primaryColor.value = cfg.primary_color || "";
+      if (accentColor) accentColor.value = cfg.accent_color || "";
+      if (iconSelect) iconSelect.value = cfg.widget_icon || "chat";
+      if (chipEditor) {
+        chipEditor.innerHTML = "";
+        const chips = Array.isArray(cfg.default_start_questions) ? cfg.default_start_questions : [];
+        chips.forEach((q) => {
+          const chip = document.createElement("span");
+          chip.className = "chip";
+          chip.innerHTML = `${q} <button type="button" aria-label="Remove">×</button>`;
+          chipEditor.appendChild(chip);
+        });
+        chipEditor.querySelectorAll(".chip button").forEach((btn) => {
+          btn.addEventListener("click", () => btn.closest(".chip").remove());
+        });
+        syncPreviewChips();
+      }
+      updateIcon();
+      updatePreview();
+    }
+
+    async function saveBotConfig() {
+      const payload = getSettingsPayload();
+      try {
+        await fetch("http://127.0.0.1:5000/bot-config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        settingsSnapshot = { ...payload };
+        clearDirty("settings");
+        hasPendingPublish = true;
+        updatePublishState();
+      } catch (err) {
+        console.error("Bot config save failed", err);
+      }
+    }
+
+    if (publishBotConfig) {
+      publishBotConfig.addEventListener("click", () => {
+        if (confirmSettingsSaveModal) {
+          openModal(confirmSettingsSaveModal);
+          return;
+        }
+        saveBotConfig();
+      });
+    }
+
+    async function loadBotConfig() {
+      try {
+        const res = await fetch("http://127.0.0.1:5000/bot-config");
+        const data = await res.json();
+        if (!data || !data.config) return;
+        const cfg = data.config;
+        applySettingsPayload(cfg);
+        settingsSnapshot = { ...cfg };
+        clearDirty("settings");
+        hasPendingPublish = false;
+        updatePublishState();
+      } catch (err) {
+        console.error("Failed to load bot config", err);
+      }
+    }
+
+    const articleModal = document.getElementById("articleModal");
+    const faqModal = document.getElementById("faqModal");
+    const openArticleModalClient = document.getElementById("openArticleModalClient");
+    const openFaqModalClient = document.getElementById("openFaqModalClient");
+    const openArticleModalInternal = document.getElementById("openArticleModalInternal");
+    const openFaqModalInternal = document.getElementById("openFaqModalInternal");
+    const addFaqRow = document.getElementById("addFaqRow");
+    const faqRows = document.getElementById("faqRows");
+    const faqInputMode = document.getElementById("faqInputMode");
+    const faqManualSection = document.getElementById("faqManualSection");
+    const faqUploadSection = document.getElementById("faqUploadSection");
+    const faqModalTitle = document.getElementById("faqModalTitle");
+    const articleInputMode = document.getElementById("articleInputMode");
+    const articleManualSection = document.getElementById("articleManualSection");
+    const articleUploadSection = document.getElementById("articleUploadSection");
+    const kbCardClient = document.getElementById("kbCardClient");
+    const kbCardInternal = document.getElementById("kbCardInternal");
+    const kbListClient = document.getElementById("kbListClient");
+    const kbListInternal = document.getElementById("kbListInternal");
+    const articleTitle = document.getElementById("articleTitle");
+    const articleNotes = document.getElementById("articleNotes");
+    const articleContent = document.getElementById("articleContent");
+    const articleUploadFile = document.getElementById("articleUploadFile");
+    const articleSaveLoading = document.getElementById("articleSaveLoading");
+    const faqTitle = document.getElementById("faqTitle");
+    const faqNotes = document.getElementById("faqNotes");
+    const faqUploadFile = document.getElementById("faqUploadFile");
+    const faqSaveLoading = document.getElementById("faqSaveLoading");
+    const articleFileHint = document.getElementById("articleFileHint");
+    const faqFileHint = document.getElementById("faqFileHint");
+    let editTarget = null;
+    let activeKbType = "client";
+    let currentKbType = "client";
+    let currentSaveContext = "client";
+    const kbContexts = {
+      client: {
+        type: "client",
+        card: kbCardClient,
+        list: kbListClient,
+        editToggle: kbEditToggleClient,
+        saveButton: kbSaveSettingsClient,
+        editBanner: kbEditBannerClient,
+        snapshot: [],
+        pendingDeletes: new Set(),
+        pendingUpserts: new Map(),
+        editTarget: null,
+      },
+      internal: {
+        type: "internal",
+        card: kbCardInternal,
+        list: kbListInternal,
+        editToggle: kbEditToggleInternal,
+        saveButton: kbSaveSettingsInternal,
+        editBanner: kbEditBannerInternal,
+        snapshot: [],
+        pendingDeletes: new Set(),
+        pendingUpserts: new Map(),
+        editTarget: null,
+      },
+    };
+
+    function openModal(modal) {
+      if (!modal) return;
+      modal.classList.add("is-open");
+      modal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeModal(modal) {
+      if (!modal) return;
+      modal.classList.remove("is-open");
+      modal.setAttribute("aria-hidden", "true");
+    }
+
+    const openArticleModalFor = (type) => {
+      currentKbType = type;
+      kbContexts[type].editTarget = null;
+      if (articleTitle) articleTitle.value = "";
+      if (articleNotes) articleNotes.value = "";
+      if (articleContent) articleContent.value = "";
+      if (articleUploadFile) articleUploadFile.value = "";
+      if (articleFileHint) articleFileHint.textContent = "No file selected.";
+      if (articleInputMode) articleInputMode.value = "manual";
+      if (articleInputMode) articleInputMode.dispatchEvent(new Event("change"));
+      openModal(articleModal);
+    };
+    const openFaqModalFor = (type) => {
+      currentKbType = type;
+      kbContexts[type].editTarget = null;
+      if (faqModalTitle) faqModalTitle.textContent = "New FAQ";
+      if (faqTitle) faqTitle.value = "";
+      if (faqNotes) faqNotes.value = "";
+      if (faqUploadFile) faqUploadFile.value = "";
+      if (faqFileHint) faqFileHint.textContent = "No file selected.";
+      if (faqInputMode) faqInputMode.value = "manual";
+      if (faqInputMode) faqInputMode.dispatchEvent(new Event("change"));
+      if (faqRows) {
+        faqRows.innerHTML = `
+          <div class="faq-row">
+            <input type="text" placeholder="Question" />
+            <input type="text" placeholder="Answer" />
+            <button class="icon-btn" type="button">×</button>
+          </div>
+        `;
+        faqRows.querySelectorAll(".faq-row .icon-btn").forEach((btn) => {
+          btn.addEventListener("click", () => btn.closest(".faq-row").remove());
+        });
+      }
+      openModal(faqModal);
+    };
+    if (openArticleModalClient) {
+      openArticleModalClient.addEventListener("click", () => openArticleModalFor("client"));
+    }
+    if (openFaqModalClient) {
+      openFaqModalClient.addEventListener("click", () => openFaqModalFor("client"));
+    }
+    if (openArticleModalInternal) {
+      openArticleModalInternal.addEventListener("click", () => openArticleModalFor("internal"));
+    }
+    if (openFaqModalInternal) {
+      openFaqModalInternal.addEventListener("click", () => openFaqModalFor("internal"));
+    }
+
+    document.querySelectorAll("[data-close]").forEach((btn) => {
+      btn.addEventListener("click", (event) => {
+        const id = event.currentTarget.getAttribute("data-close");
+        closeModal(document.getElementById(id));
+        editTarget = null;
+      });
+    });
+
+    if (addFaqRow && faqRows) {
+      addFaqRow.addEventListener("click", () => {
+        const row = document.createElement("div");
+        row.className = "faq-row";
+        row.innerHTML = `
+          <input type="text" placeholder="Question" />
+          <input type="text" placeholder="Answer" />
+          <button class="icon-btn" type="button">×</button>
+        `;
+        row.querySelector("button").addEventListener("click", () => row.remove());
+        faqRows.appendChild(row);
+      });
+    }
+
+    if (faqRows) {
+      faqRows.querySelectorAll(".faq-row .icon-btn").forEach((btn) => {
+        btn.addEventListener("click", () => btn.closest(".faq-row").remove());
+      });
+    }
+
+    if (faqInputMode && faqManualSection && faqUploadSection) {
+      const updateFaqMode = () => {
+        const isUpload = faqInputMode.value === "upload";
+        faqManualSection.style.display = isUpload ? "none" : "grid";
+        faqUploadSection.style.display = isUpload ? "grid" : "none";
+      };
+      faqInputMode.addEventListener("change", updateFaqMode);
+      updateFaqMode();
+    }
+
+    if (articleInputMode && articleManualSection && articleUploadSection) {
+      const updateArticleMode = () => {
+        const isUpload = articleInputMode.value === "upload";
+        articleManualSection.style.display = isUpload ? "none" : "grid";
+        articleUploadSection.style.display = isUpload ? "grid" : "none";
+      };
+      articleInputMode.addEventListener("change", updateArticleMode);
+      updateArticleMode();
+    }
+
+    if (settingsEditToggle && settingsCard) {
+      settingsEditToggle.classList.add("is-success");
+      const toggleSettingsLock = () => {
+        const locked = settingsCard.classList.contains("is-locked");
+        settingsCard.querySelectorAll("input, select, textarea, button").forEach((el) => {
+          if (el.id === "settingsEditToggle") return;
+          el.disabled = locked;
+        });
+        settingsCard.classList.toggle("is-editing", !locked);
+        if (publishBotConfig) {
+          publishBotConfig.style.display = locked ? "none" : "inline-flex";
+        }
+        if (settingsEditToggle) {
+          settingsEditToggle.classList.toggle("is-success", locked);
+          settingsEditToggle.classList.toggle("is-danger", !locked);
+        }
+        settingsEditToggle.textContent = locked ? "Edit" : "Stop Editing";
+      };
+      lockSettings = () => {
+        if (!settingsCard.classList.contains("is-locked")) {
+          settingsCard.classList.add("is-locked");
+        }
+        toggleSettingsLock();
+      };
+      settingsEditToggle.addEventListener("click", () => {
+        const wasLocked = settingsCard.classList.contains("is-locked");
+        if (wasLocked) {
+          settingsSnapshot = getSettingsPayload();
+          settingsCard.classList.remove("is-locked");
+          toggleSettingsLock();
+          updatePublishState();
+          return;
+        }
+        if (confirmStopEditingModal && confirmStopEditingButton) {
+          confirmStopEditingButton.onclick = () => {
+            closeModal(confirmStopEditingModal);
+            if (settingsSnapshot) {
+              applySettingsPayload(settingsSnapshot);
+            }
+            clearDirty("settings");
+            settingsCard.classList.add("is-locked");
+            toggleSettingsLock();
+            updatePublishState();
+          };
+          openModal(confirmStopEditingModal);
+          return;
+        }
+        if (settingsSnapshot) {
+          applySettingsPayload(settingsSnapshot);
+        }
+        clearDirty("settings");
+        settingsCard.classList.add("is-locked");
+        toggleSettingsLock();
+        updatePublishState();
+      });
+      toggleSettingsLock();
+    }
+
+    const setupKbToggle = (ctx) => {
+      if (!ctx.editToggle || !ctx.list) return;
+      ctx.editToggle.classList.add("is-success");
+      ctx.editToggle.addEventListener("click", () => {
+        const isEditing = ctx.list.classList.contains("kb-edit-mode");
+        if (!isEditing) {
+          ctx.list.classList.add("kb-edit-mode");
+          captureKbSnapshot(ctx);
+          ctx.editToggle.textContent = "Stop Editing";
+          ctx.editToggle.classList.add("is-danger");
+          ctx.editToggle.classList.remove("is-success");
+          if (ctx.saveButton) {
+            ctx.saveButton.style.display = "inline-flex";
+          }
+          if (ctx.editBanner) {
+            ctx.editBanner.classList.add("is-visible");
+          }
+          if (ctx.card) {
+            ctx.card.classList.add("is-editing");
+            ctx.card.classList.remove("is-locked");
+          }
+          updatePublishState();
+          return;
+        }
+        if (confirmStopEditingModal && confirmStopEditingButton) {
+          confirmStopEditingButton.onclick = () => {
+            closeModal(confirmStopEditingModal);
+            restoreKbSnapshot(ctx);
+            if (ctx.editToggle) {
+              ctx.editToggle.textContent = "Edit";
+              ctx.editToggle.classList.remove("is-danger");
+              ctx.editToggle.classList.add("is-success");
+            }
+            if (ctx.saveButton) {
+              ctx.saveButton.style.display = "none";
+            }
+            if (ctx.editBanner) {
+              ctx.editBanner.classList.remove("is-visible");
+            }
+            if (ctx.list) {
+              ctx.list.classList.remove("kb-edit-mode");
+            }
+            updatePublishState();
+          };
+          openModal(confirmStopEditingModal);
+          return;
+        }
+        restoreKbSnapshot(ctx);
+        updatePublishState();
+      });
+    };
+    setupKbToggle(kbContexts.client);
+    setupKbToggle(kbContexts.internal);
+
+    const openKbSaveModal = (type) => {
+      currentSaveContext = type;
+      openModal(confirmKbSaveModal);
+    };
+    if (kbSaveSettingsClient && confirmKbSaveModal) {
+      kbSaveSettingsClient.addEventListener("click", () => openKbSaveModal("client"));
+    }
+    if (kbSaveSettingsInternal && confirmKbSaveModal) {
+      kbSaveSettingsInternal.addEventListener("click", () => openKbSaveModal("internal"));
+    }
+
+    if (confirmKbSaveButton) {
+      confirmKbSaveButton.addEventListener("click", () => {
+        if (kbSaveLoading) {
+          kbSaveLoading.classList.add("is-visible");
+        }
+        confirmKbSaveButton.disabled = true;
+        const ctx = kbContexts[currentSaveContext];
+        const deletes = Array.from(ctx.pendingDeletes);
+        const deletePromises = deletes.map((entryId) =>
+          fetch("http://127.0.0.1:5000/knowledege", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: entryId }),
+          }).then((res) => {
+            if (!res.ok) {
+              throw new Error("Failed to delete entry.");
+            }
+          })
+        );
+        const upserts = Array.from(ctx.pendingUpserts.entries());
+        const upsertPromises = upserts.map(([row, item]) =>
+          fetch("http://127.0.0.1:5000/knowledege", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title: item.title,
+              notes: item.notes,
+              content: item.content,
+              id: item.id || "",
+              kb_type: currentSaveContext,
+              entry_type: item.type === "FAQ" ? "faq" : "article",
+            }),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (data && data.path && row) {
+                row.dataset.id = data.path;
+              }
+            })
+        );
+        Promise.allSettled([...deletePromises, ...upsertPromises]).finally(() => {
+          if (kbSaveLoading) {
+            kbSaveLoading.classList.remove("is-visible");
+          }
+          confirmKbSaveButton.disabled = false;
+          closeModal(confirmKbSaveModal);
+          ctx.pendingDeletes.clear();
+          ctx.pendingUpserts.clear();
+          fetch("http://127.0.0.1:5000/knowledege-embed", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ accountid: "cust_1", kb_type: currentSaveContext }),
+          }).catch((err) => console.error("Embed build failed", err));
+          if (ctx.list) {
+            ctx.list.classList.remove("kb-edit-mode");
+          }
+          if (ctx.editToggle) {
+            ctx.editToggle.textContent = "Edit";
+            ctx.editToggle.classList.remove("is-danger");
+            ctx.editToggle.classList.add("is-success");
+          }
+          if (ctx.card) {
+            ctx.card.classList.remove("is-editing");
+            ctx.card.classList.add("is-locked");
+          }
+          if (ctx.saveButton) {
+            ctx.saveButton.style.display = "none";
+          }
+          if (ctx.editBanner) {
+            ctx.editBanner.classList.remove("is-visible");
+          }
+          clearDirty("kb");
+          hasPendingPublish = true;
+          updatePublishState();
+          if (saveToast) {
+            saveToast.classList.add("is-visible");
+            setTimeout(() => saveToast.classList.remove("is-visible"), 1800);
+          }
+        });
+      });
+    }
+
+    if (confirmSettingsSaveButton) {
+      confirmSettingsSaveButton.addEventListener("click", async () => {
+        if (settingsSaveLoading) {
+          settingsSaveLoading.classList.add("is-visible");
+        }
+        confirmSettingsSaveButton.disabled = true;
+        await new Promise((resolve) => setTimeout(resolve, 350));
+        await saveBotConfig();
+        if (settingsSaveLoading) {
+          settingsSaveLoading.classList.remove("is-visible");
+        }
+        confirmSettingsSaveButton.disabled = false;
+        closeModal(confirmSettingsSaveModal);
+        if (settingsCard) {
+          settingsCard.classList.add("is-locked");
+        }
+        if (typeof lockSettings === "function") {
+          lockSettings();
+        }
+        updatePublishState();
+        if (saveToast) {
+          saveToast.classList.add("is-visible");
+          setTimeout(() => saveToast.classList.remove("is-visible"), 1800);
+        }
+      });
+    }
+
+    function updatePublishState() {
+      const settingsEditing = settingsCard ? !settingsCard.classList.contains("is-locked") : false;
+      const kbEditing = Object.values(kbContexts).some((ctx) =>
+        ctx.list ? ctx.list.classList.contains("kb-edit-mode") : false
+      );
+      const canPublish = !settingsEditing && !kbEditing;
+      if (publishAppButton) publishAppButton.disabled = !canPublish;
+    }
+
+    function markPendingPublish() {
+      hasPendingPublish = true;
+      updatePublishState();
+    }
+
+    function setDirty(source) {
+      if (source === "settings") settingsDirty = true;
+      if (source === "kb") kbDirty = true;
+      if (!source) {
+        settingsDirty = true;
+        kbDirty = true;
+      }
+      hasUnsavedChanges = settingsDirty || kbDirty;
+      updatePublishState();
+    }
+
+    function clearDirty(source) {
+      if (source === "settings") settingsDirty = false;
+      if (source === "kb") kbDirty = false;
+      if (!source) {
+        settingsDirty = false;
+        kbDirty = false;
+      }
+      hasUnsavedChanges = settingsDirty || kbDirty;
+      updatePublishState();
+    }
+
+    if (publishAppButton && confirmPublishModal) {
+      publishAppButton.addEventListener("click", () => {
+        openModal(confirmPublishModal);
+      });
+    }
+
+    if (confirmPublishButton) {
+      confirmPublishButton.addEventListener("click", async () => {
+        closeModal(confirmPublishModal);
+        if (publishSaveLoading) publishSaveLoading.classList.add("is-visible");
+        try {
+          await fetch("http://127.0.0.1:5000/publish-app", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ accountid: "cust_1" }),
+          });
+        } catch (err) {
+          console.error("Publish App failed", err);
+        } finally {
+          if (publishSaveLoading) publishSaveLoading.classList.remove("is-visible");
+        }
+        clearDirty("settings");
+        hasPendingPublish = false;
+        if (typeof lockSettings === "function") {
+          lockSettings();
+        }
+        updatePublishState();
+      });
+    }
+
+    function renderKbItem(item) {
+      const row = document.createElement("div");
+      row.className = "kb-item";
+      row.dataset.id = item.id || "";
+      row.dataset.kbType = item.kbType || "client";
+      row.dataset.type = item.type;
+      row.dataset.title = item.title;
+      row.dataset.notes = item.notes || "";
+      row.dataset.mode = item.mode || "manual";
+      row.dataset.content = typeof item.content === "string" ? item.content : JSON.stringify(item.content || []);
+      row.dataset.file = item.file || "";
+      row.innerHTML = `
+        <div>
+          <strong>${item.title}</strong>
+          <span>${item.type}${item.notes ? " · " + item.notes : ""}${item.file ? " · " + item.file : ""}</span>
+        </div>
+        <div class="form-actions">
+          <button class="btn secondary kb-preview-only" type="button" data-action="preview">Preview Document</button>
+          <button class="btn ghost is-success kb-edit-only" type="button" data-action="edit">Edit</button>
+          <button class="btn ghost is-danger kb-edit-only" type="button" data-action="delete">Delete</button>
+        </div>
+      `;
+      return row;
+    }
+
+    function upsertKbItem(ctx, item, target) {
+      if (!ctx || !ctx.list) return null;
+      const row = renderKbItem(item);
+      if (target) {
+        target.replaceWith(row);
+      } else {
+        ctx.list.prepend(row);
+      }
+      return row;
+    }
+
+    function captureKbSnapshot(ctx) {
+      if (!ctx || !ctx.list) return;
+      ctx.snapshot = Array.from(ctx.list.querySelectorAll(".kb-item")).map((row) => ({
+        id: row.dataset.id || "",
+        kbType: row.dataset.kbType || "client",
+        type: row.dataset.type || "",
+        title: row.dataset.title || "",
+        notes: row.dataset.notes || "",
+        mode: row.dataset.mode || "manual",
+        content: row.dataset.content || "",
+        file: row.dataset.file || "",
+      }));
+    }
+
+    function restoreKbSnapshot(ctx) {
+      if (!ctx || !ctx.list) return;
+      ctx.list.innerHTML = "";
+      ctx.snapshot.forEach((entry) => {
+        ctx.list.appendChild(
+          renderKbItem({
+            id: entry.id,
+            kbType: entry.kbType,
+            type: entry.type,
+            title: entry.title,
+            notes: entry.notes,
+            mode: entry.mode,
+            content: entry.content,
+            file: entry.file,
+          })
+        );
+      });
+      ctx.pendingDeletes.clear();
+      ctx.pendingUpserts.clear();
+      ctx.editTarget = null;
+      if (ctx.card) {
+        ctx.card.classList.remove("is-editing");
+        ctx.card.classList.add("is-locked");
+      }
+      clearDirty("kb");
+      updatePublishState();
+    }
+
+    Object.values(kbContexts).forEach((ctx) => {
+      if (!ctx.list) return;
+      ctx.list.addEventListener("click", (event) => {
+        const action = event.target.getAttribute("data-action");
+        const item = event.target.closest(".kb-item");
+        if (!action || !item) return;
+        currentKbType = ctx.type;
+        if (action === "preview") {
+          if (previewTitle) previewTitle.textContent = item.dataset.title || "Document Preview";
+          if (previewNotes) previewNotes.textContent = item.dataset.notes || "";
+          if (previewBody) {
+            previewBody.innerHTML = "";
+            if (item.dataset.type === "FAQ") {
+              let pairs = [];
+              try {
+                pairs = JSON.parse(item.dataset.content || "[]");
+              } catch (err) {
+                pairs = [];
+              }
+              const list = document.createElement("div");
+              pairs.forEach((pair) => {
+                const block = document.createElement("div");
+                block.style.marginBottom = "12px";
+                block.innerHTML = `<strong>${pair.question || ""}</strong><div>${pair.answer || ""}</div>`;
+                list.appendChild(block);
+              });
+              previewBody.appendChild(list);
+            } else {
+              const para = document.createElement("div");
+              para.style.whiteSpace = "pre-wrap";
+              para.textContent = item.dataset.content || "No content available.";
+              previewBody.appendChild(para);
+            }
+          }
+          openModal(previewModal);
+          return;
+        }
+        if (action === "delete") {
+          const entryId = item.dataset.id || "";
+          if (ctx.pendingUpserts.has(item)) {
+            ctx.pendingUpserts.delete(item);
+          }
+          if (entryId) {
+            ctx.pendingDeletes.add(entryId);
+          }
+          item.remove();
+          setDirty("kb");
+          return;
+        }
+        if (action === "edit") {
+          ctx.editTarget = item;
+          if (item.dataset.type === "Article") {
+            if (articleTitle) articleTitle.value = item.dataset.title || "";
+            if (articleNotes) articleNotes.value = item.dataset.notes || "";
+            if (articleInputMode) articleInputMode.value = item.dataset.mode || "manual";
+            if (articleContent) articleContent.value = item.dataset.content || "";
+            if (articleUploadFile) articleUploadFile.value = "";
+            if (articleFileHint) {
+              articleFileHint.textContent = item.dataset.file ? `Current file: ${item.dataset.file}` : "No file selected.";
+            }
+            if (articleInputMode) articleInputMode.dispatchEvent(new Event("change"));
+            openModal(articleModal);
+          } else {
+            if (faqModalTitle) faqModalTitle.textContent = "Edit FAQ";
+            if (faqTitle) faqTitle.value = item.dataset.title || "";
+            if (faqNotes) faqNotes.value = item.dataset.notes || "";
+            if (faqInputMode) faqInputMode.value = item.dataset.mode || "manual";
+            if (faqUploadFile) faqUploadFile.value = "";
+            if (faqFileHint) {
+              faqFileHint.textContent = item.dataset.file ? `Current file: ${item.dataset.file}` : "No file selected.";
+            }
+            if (faqInputMode) faqInputMode.dispatchEvent(new Event("change"));
+            if (faqRows) {
+              faqRows.innerHTML = "";
+              let pairs = [];
+              if (item.dataset.content) {
+                try {
+                  pairs = JSON.parse(item.dataset.content);
+                } catch (err) {
+                  pairs = [];
+                }
+              }
+              if (!Array.isArray(pairs) || pairs.length === 0) {
+                pairs = [{ question: "", answer: "" }];
+              }
+              pairs.forEach((pair) => {
+                const row = document.createElement("div");
+                row.className = "faq-row";
+                row.innerHTML = `
+                  <input type="text" placeholder="Question" value="${(pair.question || "").replace(/\"/g, "&quot;")}" />
+                  <input type="text" placeholder="Answer" value="${(pair.answer || "").replace(/\"/g, "&quot;")}" />
+                  <button class="icon-btn" type="button">×</button>
+                `;
+                row.querySelector("button").addEventListener("click", () => row.remove());
+                faqRows.appendChild(row);
+              });
+            }
+            openModal(faqModal);
+          }
+        }
+      });
+    });
+
+    const saveArticleBtn = articleModal ? articleModal.querySelector(".btn") : null;
+    if (saveArticleBtn) {
+      saveArticleBtn.addEventListener("click", async () => {
+        if (articleSaveLoading) {
+          articleSaveLoading.classList.add("is-visible");
+        }
+        saveArticleBtn.disabled = true;
+        const ctx = kbContexts[currentKbType];
+        const mode = articleInputMode ? articleInputMode.value : "manual";
+        const fileName = articleUploadFile && articleUploadFile.files[0] ? articleUploadFile.files[0].name : "";
+        const item = {
+          type: "Article",
+          title: articleTitle ? articleTitle.value.trim() || "Untitled Article" : "Untitled Article",
+          notes: articleNotes ? articleNotes.value.trim() : "",
+          mode,
+          content: articleContent ? articleContent.value.trim() : "",
+          file: fileName,
+          id: ctx.editTarget ? ctx.editTarget.dataset.id : "",
+          kbType: currentKbType,
+        };
+        let row = upsertKbItem(ctx, item, ctx.editTarget);
+        if (ctx.editTarget) {
+          ctx.pendingUpserts.delete(ctx.editTarget);
+          ctx.pendingUpserts.set(row, item);
+          setDirty("kb");
+        } else {
+          try {
+            const res = await fetch("http://127.0.0.1:5000/knowledege", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                title: item.title,
+                notes: item.notes,
+                content: item.content,
+                kb_type: currentKbType,
+                entry_type: "article",
+              }),
+            });
+            const data = await res.json();
+            if (data && data.path) {
+              row.dataset.id = data.path;
+            }
+            fetch("http://127.0.0.1:5000/knowledege-embed", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ accountid: "cust_1", kb_type: currentKbType }),
+            }).catch((err) => console.error("Embed build failed", err));
+          } catch (err) {
+            console.error("Knowledge save failed", err);
+          }
+          setDirty("kb");
+        }
+        markPendingPublish();
+        if (articleSaveLoading) {
+          articleSaveLoading.classList.remove("is-visible");
+        }
+        saveArticleBtn.disabled = false;
+        closeModal(articleModal);
+        ctx.editTarget = null;
+      });
+    }
+
+    const saveFaqBtn = faqModal ? faqModal.querySelector(".btn") : null;
+    if (saveFaqBtn) {
+      saveFaqBtn.addEventListener("click", async () => {
+        if (faqSaveLoading) {
+          faqSaveLoading.classList.add("is-visible");
+        }
+        saveFaqBtn.disabled = true;
+        const ctx = kbContexts[currentKbType];
+        const mode = faqInputMode ? faqInputMode.value : "manual";
+        const fileName = faqUploadFile && faqUploadFile.files[0] ? faqUploadFile.files[0].name : "";
+        const faqPairs = [];
+        if (mode === "manual" && faqRows) {
+          faqRows.querySelectorAll(".faq-row").forEach((row) => {
+            const inputs = row.querySelectorAll("input");
+            const question = inputs[0] ? inputs[0].value.trim() : "";
+            const answer = inputs[1] ? inputs[1].value.trim() : "";
+            if (question || answer) {
+              faqPairs.push({ question, answer });
+            }
+          });
+        }
+        const item = {
+          type: "FAQ",
+          title: faqTitle ? faqTitle.value.trim() || "Untitled FAQ" : "Untitled FAQ",
+          notes: faqNotes ? faqNotes.value.trim() : "",
+          mode,
+          file: fileName,
+          content: mode === "manual" ? faqPairs : "",
+          id: ctx.editTarget ? ctx.editTarget.dataset.id : "",
+          kbType: currentKbType,
+        };
+        let row = upsertKbItem(ctx, item, ctx.editTarget);
+        if (ctx.editTarget) {
+          ctx.pendingUpserts.delete(ctx.editTarget);
+          ctx.pendingUpserts.set(row, item);
+          setDirty("kb");
+        } else {
+          try {
+            const res = await fetch("http://127.0.0.1:5000/knowledege", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                title: item.title,
+                notes: item.notes,
+                content: mode === "manual" ? faqPairs : "",
+                kb_type: currentKbType,
+                entry_type: "faq",
+              }),
+            });
+            const data = await res.json();
+            if (data && data.path) {
+              row.dataset.id = data.path;
+            }
+            fetch("http://127.0.0.1:5000/knowledege-embed", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ accountid: "cust_1", kb_type: currentKbType }),
+            }).catch((err) => console.error("Embed build failed", err));
+          } catch (err) {
+            console.error("Knowledge save failed", err);
+          }
+          setDirty("kb");
+        }
+        markPendingPublish();
+        if (faqSaveLoading) {
+          faqSaveLoading.classList.remove("is-visible");
+        }
+        saveFaqBtn.disabled = false;
+        closeModal(faqModal);
+        ctx.editTarget = null;
+      });
+    }
+
+    function syncPreviewChips() {
+      if (!previewChips || !chipEditor) return;
+      previewChips.innerHTML = "";
+      const chips = chipEditor.querySelectorAll(".chip");
+      chips.forEach((chip) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "chatbot-chip";
+        const text = chip.childNodes[0] ? chip.childNodes[0].textContent.trim() : chip.textContent.trim();
+        btn.textContent = text;
+        previewChips.appendChild(btn);
+      });
+      updatePreview();
+    }
+
+    function addChip(text) {
+      if (!chipEditor) return;
+      const trimmed = text.trim();
+      if (!trimmed) return;
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      chip.innerHTML = `${trimmed} <button type="button" aria-label="Remove">×</button>`;
+      chipEditor.appendChild(chip);
+      syncPreviewChips();
+      setDirty("settings");
+    }
+
+    if (chipEditor) {
+      chipEditor.addEventListener("click", (event) => {
+        const target = event.target;
+        if (target.tagName === "BUTTON") {
+          target.closest(".chip").remove();
+          syncPreviewChips();
+          setDirty("settings");
+        }
+      });
+    }
+
+    if (addChipButton && newChipInput) {
+      addChipButton.addEventListener("click", () => {
+        addChip(newChipInput.value);
+        newChipInput.value = "";
+      });
+      newChipInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          addChip(newChipInput.value);
+          newChipInput.value = "";
+        }
+      });
+    }
+
+    syncPreviewChips();
+
+    const mobileMenuButton = document.getElementById("mobile-menu-button");
+    const mobileMenu = document.getElementById("mobile-menu");
+    if (mobileMenuButton && mobileMenu) {
+      mobileMenuButton.addEventListener("click", () => {
+        mobileMenu.style.display = mobileMenu.style.display === "block" ? "none" : "block";
+      });
+    }
+
+    function updateChart(rangeLabel) {
+      const dataset = getRangeData(rangeLabel);
+      if (!dataset || !chartLine || !chartArea) return;
+      if (leadsCapturedValue) {
+        const sum = dataset.values.reduce((total, value) => total + value, 0);
+        const formatted = sum.toLocaleString();
+        leadsCapturedValue.setAttribute("data-text", formatted);
+        runTypewriter(leadsCapturedValue, formatted, 26);
+      }
+      if (chartSeries) {
+        chartSeries.style.opacity = "0";
+      }
+      window.requestAnimationFrame(() => {
+        chartLine.setAttribute("d", buildPath(dataset.values));
+        chartArea.setAttribute("d", buildArea(dataset.values));
+        renderDots(dataset.labels, dataset.values);
+        if (chartLabels) {
+          chartLabels.innerHTML = "";
+          dataset.labels.forEach((label) => {
+            const span = document.createElement("span");
+            span.textContent = label;
+            chartLabels.appendChild(span);
+          });
+        }
+        if (chartSeries) {
+          window.requestAnimationFrame(() => {
+            chartSeries.style.opacity = "1";
+          });
+        }
+      });
+    }
+
+    if (chartFilter) {
+      chartFilter.addEventListener("change", (e) => {
+        updateChart(e.target.value);
+      });
+    }
+
+    updateChart(chartFilter ? chartFilter.value : "Last 7 days");
+
+    if (leadsCapturedValue) {
+      const totalLeads = ytdSeries.reduce((sum, item) => sum + item.leads, 0);
+      const formatted = totalLeads.toLocaleString();
+      leadsCapturedValue.setAttribute("data-text", formatted);
+      runTypewriter(leadsCapturedValue, formatted, 26);
+    }
+
+    if (copyEmbedButton) {
+      const originalText = copyEmbedButton.textContent;
+      const embedBox = document.querySelector(".embed-box");
+      copyEmbedButton.addEventListener("click", async () => {
+        const embedText = embedBox ? embedBox.textContent : "";
+        try {
+          await navigator.clipboard.writeText(embedText);
+        } catch (err) {
+          const textarea = document.createElement("textarea");
+          textarea.value = embedText;
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand("copy");
+          textarea.remove();
+        }
+        copyEmbedButton.textContent = "Copied!";
+        copyEmbedButton.disabled = true;
+        if (embedBox) {
+          embedBox.classList.add("is-highlighted");
+          setTimeout(() => embedBox.classList.remove("is-highlighted"), 1600);
+        }
+        setTimeout(() => {
+          copyEmbedButton.textContent = originalText;
+          copyEmbedButton.disabled = false;
+        }, 2000);
+      });
+    }
+
+    if (leadsSyncButton) {
+      const originalLabel = leadsSyncButton.textContent;
+      leadsSyncButton.addEventListener("click", async () => {
+        leadsSyncButton.disabled = true;
+        leadsSyncButton.textContent = "Syncing...";
+        try {
+          await fetch("http://127.0.0.1:5000/leads-sync", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ accountid: "cust_1", series: leadRecords }),
+          });
+        } catch (err) {
+          console.error("Lead sync failed", err);
+        } finally {
+          leadsSyncButton.textContent = originalLabel;
+          leadsSyncButton.disabled = false;
+        }
+      });
+    }
+
+    if (leadsTableBody) {
+      const rows = leadRecords.slice(-12).reverse();
+      leadsTableBody.innerHTML = rows
+        .map((lead) => {
+          const date = new Date(lead.created_at).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          });
+          return `
+            <tr>
+              <td>${lead.name}</td>
+              <td>—</td>
+              <td>${lead.service}</td>
+              <td>${lead.address}</td>
+              <td>${date}</td>
+            </tr>
+          `;
+        })
+        .join("");
+    }
+
+    function parseBoldSegments(text) {
+      const segments = [];
+      const regex = /\*\*(.+?)\*\*/g;
+      let lastIndex = 0;
+      let match;
+      while ((match = regex.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+          segments.push({ text: text.slice(lastIndex, match.index), bold: false });
+        }
+        segments.push({ text: match[1], bold: true });
+        lastIndex = match.index + match[0].length;
+      }
+      if (lastIndex < text.length) {
+        segments.push({ text: text.slice(lastIndex), bold: false });
+      }
+      return segments;
+    }
+
+    function renderBarChart(rows) {
+      const container = document.createElement("div");
+      container.className = "insights-chart";
+      if (!rows || rows.length === 0) {
+        container.textContent = "No chart data available.";
+        return container;
+      }
+      const tooltip = document.createElement("div");
+      tooltip.className = "insights-tooltip";
+      container.appendChild(tooltip);
+      const sample = rows[0];
+      const keys = Object.keys(sample || {});
+      const labelHint = keys.find((k) => /month|date|service|name|type/i.test(k));
+      const valueHint = keys.find((k) => /count|total|lead|value|amount/i.test(k));
+      let valueKey = valueHint || keys.find((k) => typeof sample[k] === "number") || keys[1] || keys[0];
+      let labelKey =
+        labelHint ||
+        keys.find((k) => typeof sample[k] === "string") ||
+        keys.find((k) => k !== valueKey) ||
+        keys[0];
+      const barColors = [
+        "#2563eb",
+        "#f97316",
+        "#10b981",
+        "#8b5cf6",
+        "#ef4444",
+        "#14b8a6",
+        "#f59e0b",
+        "#22c55e",
+      ];
+      const values = rows.map((r) => Number(r[valueKey]) || 0);
+      const max = Math.max(...values, 1);
+      const axis = document.createElement("div");
+      axis.className = "insights-bar-axis";
+      axis.innerHTML = `<span>${labelKey}</span><span></span><span>${valueKey}</span>`;
+      container.appendChild(axis);
+      rows.forEach((row, idx) => {
+        const bar = document.createElement("div");
+        bar.className = "insights-bar";
+        bar.addEventListener("mouseenter", (event) => {
+          const labelText = row[labelKey] ?? `Item ${idx + 1}`;
+          const valueText = values[idx].toLocaleString();
+          tooltip.textContent = `${labelText}: ${valueText}`;
+          const rect = event.currentTarget.getBoundingClientRect();
+          const parentRect = container.getBoundingClientRect();
+          tooltip.style.left = `${rect.left - parentRect.left + rect.width / 2}px`;
+          tooltip.style.top = `${rect.top - parentRect.top - 6}px`;
+          tooltip.style.opacity = "1";
+        });
+        bar.addEventListener("mouseleave", () => {
+          tooltip.style.opacity = "0";
+        });
+        const label = document.createElement("span");
+        label.textContent = row[labelKey] ?? `Item ${idx + 1}`;
+        const track = document.createElement("div");
+        track.className = "insights-bar-track";
+        const fill = document.createElement("div");
+        fill.className = "insights-bar-fill";
+        fill.style.background = barColors[idx % barColors.length];
+        fill.style.width = `${(values[idx] / max) * 100}%`;
+        const value = document.createElement("span");
+        value.className = "insights-bar-value";
+        value.textContent = values[idx].toLocaleString();
+        track.appendChild(fill);
+        bar.appendChild(label);
+        bar.appendChild(track);
+        bar.appendChild(value);
+        container.appendChild(bar);
+      });
+      return container;
+    }
+
+    function renderLineChart(rows, fillArea) {
+      const container = document.createElement("div");
+      container.className = "insights-chart";
+      if (!rows || rows.length === 0) {
+        container.textContent = "No chart data available.";
+        return container;
+      }
+      const tooltip = document.createElement("div");
+      tooltip.className = "insights-tooltip";
+      container.appendChild(tooltip);
+      const sample = rows[0];
+      const keys = Object.keys(sample || {});
+      const labelHint = keys.find((k) => /year|month|date|service|name|type/i.test(k));
+      const valueHint = keys.find((k) => /count|total|lead|value|amount/i.test(k));
+      const numericKeys = keys.filter((k) => typeof sample[k] === "number");
+      let valueKey = valueHint || numericKeys[0] || keys[0];
+      const labelKey =
+        labelHint ||
+        keys.find((k) => typeof sample[k] === "string") ||
+        keys.find((k) => k !== valueKey) ||
+        keys[0];
+      if (labelHint && numericKeys.length > 1 && valueKey === labelHint) {
+        valueKey = numericKeys.find((k) => k !== labelHint) || valueKey;
+      }
+      const values = rows.map((r) => Number(r[valueKey]) || 0);
+      const labels = rows.map((r) => String(r[labelKey] ?? ""));
+      const max = Math.max(...values, 1);
+      const min = Math.min(...values, 0);
+      const width = 640;
+      const height = 220;
+      const pad = 24;
+      const leftPad = 40;
+      const step = (width - leftPad - pad) / Math.max(values.length - 1, 1);
+      const points = values.map((v, i) => {
+        const x = leftPad + step * i;
+        const y = height - pad - ((v - min) / (max - min || 1)) * (height - pad * 2);
+        return { x, y };
+      });
+      const d = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
+      const area = `${d} L ${leftPad + step * (points.length - 1)} ${height - pad} L ${leftPad} ${height - pad} Z`;
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      svg.setAttribute("class", "insights-chart-svg");
+
+      const grid = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const gridSteps = 4;
+      for (let i = 0; i <= gridSteps; i++) {
+        const y = pad + ((height - pad * 2) / gridSteps) * i;
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", leftPad);
+        line.setAttribute("x2", width - pad);
+        line.setAttribute("y1", y);
+        line.setAttribute("y2", y);
+        line.setAttribute("stroke", "#e2e8f0");
+        line.setAttribute("stroke-dasharray", "4 6");
+        grid.appendChild(line);
+      }
+      svg.appendChild(grid);
+
+      const axis = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const axisLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      axisLine.setAttribute("x1", leftPad);
+      axisLine.setAttribute("x2", leftPad);
+      axisLine.setAttribute("y1", pad);
+      axisLine.setAttribute("y2", height - pad);
+      axisLine.setAttribute("stroke", "#cbd5f5");
+      axis.appendChild(axisLine);
+      const axisBottom = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      axisBottom.setAttribute("x1", leftPad);
+      axisBottom.setAttribute("x2", width - pad);
+      axisBottom.setAttribute("y1", height - pad);
+      axisBottom.setAttribute("y2", height - pad);
+      axisBottom.setAttribute("stroke", "#cbd5f5");
+      axis.appendChild(axisBottom);
+      svg.appendChild(axis);
+
+      const yLabels = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      for (let i = 0; i <= gridSteps; i++) {
+        const value = Math.round(max - ((max - min) / gridSteps) * i);
+        const y = pad + ((height - pad * 2) / gridSteps) * i + 4;
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", 2);
+        text.setAttribute("y", y);
+        text.setAttribute("fill", "#64748b");
+        text.setAttribute("font-size", "10");
+        text.textContent = String(value);
+        yLabels.appendChild(text);
+      }
+      svg.appendChild(yLabels);
+
+      const xLabels = document.createElement("div");
+      xLabels.className = "insights-xlabels";
+      labels.forEach((label, i) => {
+        const span = document.createElement("span");
+        span.textContent = label;
+        span.style.left = `${(points[i].x / width) * 100}%`;
+        xLabels.appendChild(span);
+      });
+      if (fillArea) {
+        const pathArea = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        pathArea.setAttribute("d", area);
+        pathArea.setAttribute("fill", "rgba(37, 99, 235, 0.18)");
+        svg.appendChild(pathArea);
+      }
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", d);
+      path.setAttribute("fill", "none");
+      path.setAttribute("stroke", "#2563eb");
+      path.setAttribute("stroke-width", "3");
+      svg.appendChild(path);
+      points.forEach((pt, i) => {
+        const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        dot.setAttribute("cx", pt.x);
+        dot.setAttribute("cy", pt.y);
+        dot.setAttribute("r", "5");
+        dot.setAttribute("fill", "#ffffff");
+        dot.setAttribute("stroke", "#2563eb");
+        dot.setAttribute("stroke-width", "2");
+        dot.addEventListener("mouseenter", (event) => {
+          const labelText = labels[i] ? `${labels[i]}: ` : "";
+          tooltip.textContent = `${labelText}${values[i].toLocaleString()}`;
+          const svgRect = svg.getBoundingClientRect();
+          const parentRect = container.getBoundingClientRect();
+          tooltip.style.left = `${event.clientX - parentRect.left}px`;
+          tooltip.style.top = `${svgRect.top - parentRect.top + pt.y - 12}px`;
+          tooltip.style.opacity = "1";
+        });
+        dot.addEventListener("mouseleave", () => {
+          tooltip.style.opacity = "0";
+        });
+        svg.appendChild(dot);
+        const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        label.setAttribute("x", pt.x);
+        label.setAttribute("y", pt.y - 8);
+        label.setAttribute("text-anchor", "middle");
+        label.setAttribute("font-size", "10");
+        label.setAttribute("fill", "#0f172a");
+        label.textContent = values[i];
+        svg.appendChild(label);
+      });
+      container.appendChild(svg);
+      container.appendChild(xLabels);
+      return container;
+    }
+
+    function renderPieChart(rows) {
+      const container = document.createElement("div");
+      container.className = "insights-chart";
+      if (!rows || rows.length === 0) {
+        container.textContent = "No chart data available.";
+        return container;
+      }
+      const tooltip = document.createElement("div");
+      tooltip.className = "insights-tooltip";
+      container.appendChild(tooltip);
+      const sample = rows[0];
+      const keys = Object.keys(sample || {});
+      const labelHint = keys.find((k) => /year|month|date|service|name|type/i.test(k));
+      const valueHint = keys.find((k) => /count|total|lead|value|amount/i.test(k));
+      const numericKeys = keys.filter((k) => typeof sample[k] === "number");
+      let valueKey = valueHint || numericKeys[0] || keys[0];
+      const labelKey =
+        labelHint ||
+        keys.find((k) => typeof sample[k] === "string") ||
+        keys.find((k) => k !== valueKey) ||
+        keys[0];
+      if (labelHint && numericKeys.length > 1 && valueKey === labelHint) {
+        valueKey = numericKeys.find((k) => k !== labelHint) || valueKey;
+      }
+      const values = rows.map((r) => Number(r[valueKey]) || 0);
+      const total = values.reduce((a, b) => a + b, 0) || 1;
+      const colors = ["#2563eb", "#f97316", "#10b981", "#8b5cf6", "#ef4444", "#f59e0b", "#14b8a6", "#e11d48"];
+      const size = 220;
+      const r = 90;
+      const cx = size / 2;
+      const cy = size / 2;
+      let angle = -Math.PI / 2;
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
+      svg.setAttribute("class", "insights-chart-svg");
+      rows.forEach((row, i) => {
+        const value = values[i];
+        const slice = (value / total) * Math.PI * 2;
+        const x1 = cx + r * Math.cos(angle);
+        const y1 = cy + r * Math.sin(angle);
+        angle += slice;
+        const x2 = cx + r * Math.cos(angle);
+        const y2 = cy + r * Math.sin(angle);
+        const largeArc = slice > Math.PI ? 1 : 0;
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute(
+          "d",
+          `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`
+        );
+        path.setAttribute("fill", colors[i % colors.length]);
+        path.addEventListener("mouseenter", (event) => {
+          const labelText = row[labelKey] ?? `Item ${i + 1}`;
+          const valueText = values[i].toLocaleString();
+          tooltip.textContent = `${labelText}: ${valueText}`;
+          const parentRect = container.getBoundingClientRect();
+          tooltip.style.left = `${event.clientX - parentRect.left}px`;
+          tooltip.style.top = `${event.clientY - parentRect.top - 10}px`;
+          tooltip.style.opacity = "1";
+        });
+        path.addEventListener("mouseleave", () => {
+          tooltip.style.opacity = "0";
+        });
+        svg.appendChild(path);
+        const midAngle = angle - slice / 2;
+        const ix = cx + (r * 0.9) * Math.cos(midAngle);
+        const iy = cy + (r * 0.9) * Math.sin(midAngle);
+        const ox = cx + (r * 1.2) * Math.cos(midAngle);
+        const oy = cy + (r * 1.2) * Math.sin(midAngle);
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", ix);
+        line.setAttribute("y1", iy);
+        line.setAttribute("x2", ox);
+        line.setAttribute("y2", oy);
+        line.setAttribute("stroke", "#64748b");
+        line.setAttribute("stroke-width", "1");
+        svg.appendChild(line);
+        const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        label.setAttribute("x", ox + (ox > cx ? 6 : -6));
+        label.setAttribute("y", oy + 4);
+        label.setAttribute("text-anchor", ox > cx ? "start" : "end");
+        label.setAttribute("font-size", "12");
+        label.setAttribute("font-weight", "700");
+        label.setAttribute("fill", "#0f172a");
+        const percent = Math.round((value / total) * 100);
+        label.textContent = `${percent}%`;
+        svg.appendChild(label);
+      });
+      const wrapper = document.createElement("div");
+      wrapper.style.display = "grid";
+      wrapper.style.gridTemplateColumns = "160px 1fr";
+      wrapper.style.alignItems = "center";
+      wrapper.style.gap = "12px";
+      const legend = document.createElement("div");
+      legend.style.display = "grid";
+      legend.style.gap = "8px";
+      rows.forEach((row, i) => {
+        const item = document.createElement("div");
+        item.style.display = "flex";
+        item.style.gap = "8px";
+        item.style.alignItems = "center";
+        const swatch = document.createElement("span");
+        swatch.style.width = "10px";
+        swatch.style.height = "10px";
+        swatch.style.borderRadius = "999px";
+        swatch.style.background = colors[i % colors.length];
+        const label = document.createElement("span");
+        label.textContent = `${row[labelKey]} (${values[i].toLocaleString()})`;
+        item.appendChild(swatch);
+        item.appendChild(label);
+        legend.appendChild(item);
+      });
+      wrapper.appendChild(legend);
+      wrapper.appendChild(svg);
+      container.appendChild(wrapper);
+      return container;
+    }
+
+    function renderInsightsResponse(rawAnswer, showChart, chartType, rows, animate = true, chartOrientation = "") {
+      if (!insightsResponse) return;
+      insightsResponse.innerHTML = "";
+      const normalizedChart = (chartType || "").toLowerCase();
+      if (rows && rows.length > 0) {
+        const exportWrap = document.createElement("div");
+        exportWrap.className = "insights-export";
+        const exportBtn = document.createElement("button");
+        exportBtn.className = "btn secondary";
+        exportBtn.type = "button";
+        exportBtn.textContent = "Export CSV";
+        exportBtn.addEventListener("click", () => {
+          const headers = Object.keys(rows[0] || {});
+          const csv = [
+            headers.join(","),
+            ...rows.map((row) =>
+              headers
+                .map((h) => {
+                  const val = row[h] ?? "";
+                  const safe = String(val).replace(/"/g, '""');
+                  return `"${safe}"`;
+                })
+                .join(",")
+            ),
+          ].join("\n");
+          const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "insights-export.csv";
+          link.click();
+          URL.revokeObjectURL(url);
+        });
+        exportWrap.appendChild(exportBtn);
+        insightsResponse.appendChild(exportWrap);
+      }
+      if (showChart) {
+        if (normalizedChart.includes("bar")) {
+          insightsResponse.appendChild(renderBarChart(rows));
+        } else if (normalizedChart.includes("line")) {
+          insightsResponse.appendChild(renderLineChart(rows, false));
+        } else if (normalizedChart.includes("area")) {
+          insightsResponse.appendChild(renderLineChart(rows, true));
+        } else if (normalizedChart.includes("pie")) {
+          insightsResponse.appendChild(renderPieChart(rows));
+        } else {
+          insightsResponse.appendChild(renderBarChart(rows));
+        }
+      }
+      const answerBlock = document.createElement("div");
+      answerBlock.className = `insights-answer${showChart ? " with-chart" : ""}`;
+      insightsResponse.appendChild(answerBlock);
+      if (animate) {
+        typeResponse(answerBlock, rawAnswer, 10);
+      } else {
+        answerBlock.innerHTML = rawAnswer.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br>");
+      }
+    }
+
+    function formatMarkdownToHtml(text) {
+      const rawLines = text.split(/\r?\n/).map((l) => l.trim());
+      const lines = rawLines.filter((l) => l.length > 0);
+      if (lines.length === 0) return "";
+
+      const isHeaderish = (line) => {
+        if (/^#{1,6}\s+/.test(line)) return true;
+        if (line.length > 40) return false;
+        if (/[.:]$/.test(line)) return false;
+        if (line.split(" ").length > 4) return false;
+        return /^[A-Z][A-Za-z\s&]+$/.test(line);
+      };
+
+      let html = "";
+      let inList = false;
+      lines.forEach((line) => {
+        if (/^#{1,6}\s+/.test(line) || isHeaderish(line)) {
+          const title = line.replace(/^#{1,6}\s+/, "").trim();
+          if (inList) {
+            html += "</ul>";
+            inList = false;
+          }
+          if (title) {
+            html += `<div class="insights-section-title">${title}</div>`;
+          }
+          return;
+        }
+        if (line.startsWith("- ")) {
+          if (!inList) {
+            html += '<ul style="margin:6px 0 0 18px;padding:0">';
+            inList = true;
+          }
+          const li = line.slice(2).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+          html += `<li>${li}</li>`;
+          return;
+        }
+        if (inList) {
+          html += "</ul>";
+          inList = false;
+        }
+        const p = line.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+        html += `<div style="margin-top:6px">${p}</div>`;
+      });
+      if (inList) html += "</ul>";
+      return html;
+    }
+
+    function renderSimpleMarkdown(container, text, animate = false) {
+      const rawLines = text.split(/\r?\n/).map((l) => l.trim());
+      const lines = rawLines.filter((l) => l.length > 0);
+      if (lines.length === 0) return false;
+
+      const isHeaderish = (line) => {
+        if (/^#{1,6}\s+/.test(line)) return true;
+        if (line.length > 40) return false;
+        if (/[.:]$/.test(line)) return false;
+        if (line.split(" ").length > 4) return false;
+        return /^[A-Z][A-Za-z\s&]+$/.test(line);
+      };
+
+      let currentList = null;
+      const queue = [];
+      const pushNode = (node) => {
+        if (!animate) {
+          container.appendChild(node);
+        } else {
+          queue.push(node);
+        }
+      };
+
+      lines.forEach((line) => {
+        if (/^#{1,6}\s+/.test(line) || isHeaderish(line)) {
+          const title = line.replace(/^#{1,6}\s+/, "").trim();
+          if (title) {
+            const h = document.createElement("div");
+            h.className = "insights-section-title";
+            h.textContent = title;
+            pushNode(h);
+          }
+          currentList = null;
+          return;
+        }
+        if (line.startsWith("- ")) {
+          if (!currentList) {
+            currentList = document.createElement("ul");
+            currentList.style.margin = "6px 0 0 18px";
+            currentList.style.padding = "0";
+            pushNode(currentList);
+          }
+          const li = document.createElement("li");
+          li.innerHTML = line.slice(2).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+          if (!animate) {
+            currentList.appendChild(li);
+          } else {
+            queue.push({ list: currentList, node: li });
+          }
+          return;
+        }
+        const p = document.createElement("div");
+        p.style.marginTop = "6px";
+        p.innerHTML = line.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+        pushNode(p);
+        currentList = null;
+      });
+
+      return true;
+    }
+
+    function typeResponse(element, rawText, speed = 12) {
+      if (!element) return;
+      element.innerHTML = "";
+      if (element.dataset.thinking === "true") {
+        element.dataset.thinking = "false";
+      }
+      let idx = 0;
+      const typer = () => {
+        if (idx > rawText.length) return;
+        const slice = rawText.slice(0, idx);
+        element.innerHTML = formatMarkdownToHtml(slice) || slice.replace(/\n/g, "<br>");
+        idx += 1;
+        if (idx <= rawText.length) {
+          setTimeout(typer, speed);
+        }
+      };
+      typer();
+      return;
+      const headerMatch = rawText.match(/^\s*#{1,6}\s+/m);
+      if (headerMatch) {
+        const parts = rawText.split(/\n/);
+        const frag = document.createElement("div");
+        parts.forEach((line) => {
+          const header = line.match(/^\s*#{1,6}\s+(.*)/);
+          if (header) {
+            const h = document.createElement("div");
+            h.style.fontWeight = "800";
+            h.style.margin = "8px 0 4px";
+            h.textContent = header[1].trim();
+            frag.appendChild(h);
+          } else if (line.trim()) {
+            const p = document.createElement("div");
+            p.textContent = line.trim();
+            frag.appendChild(p);
+          }
+        });
+        element.appendChild(frag);
+        return;
+      }
+      const segments = parseBoldSegments(rawText);
+      let segIndex = 0;
+      let charIndex = 0;
+
+      const step = () => {
+        if (segIndex >= segments.length) return;
+        const seg = segments[segIndex];
+        const char = seg.text[charIndex] || "";
+        if (char === "\n") {
+          element.appendChild(document.createElement("br"));
+          charIndex += 1;
+        } else if (char) {
+          const span = document.createElement(seg.bold ? "strong" : "span");
+          span.textContent = char;
+          element.appendChild(span);
+          charIndex += 1;
+        }
+        if (charIndex >= seg.text.length) {
+          segIndex += 1;
+          charIndex = 0;
+        }
+        if (segIndex < segments.length) {
+          setTimeout(step, speed);
+        }
+      };
+      step();
+    }
+
+    let insightsRequestId = 0;
+    if (insightsForm && insightsInput && insightsResponse && insightsAskButton) {
+      const originalResponse = insightsResponse.textContent;
+      insightsForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const question = insightsInput.value.trim();
+        if (!question) return;
+        const requestId = ++insightsRequestId;
+        const requestMode = activeKbType;
+        insightsAskButton.disabled = true;
+        insightsResponse.dataset.thinking = "true";
+        insightsResponse.innerHTML =
+          '<span class="thinking">Thinking<span class="thinking-dots"><span></span><span></span><span></span></span></span>';
+        try {
+          const res = await fetch("https://127.0.0.1:9030/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: question, kb_type: requestMode, use_silver: false }),
+          });
+          const data = await res.json();
+          if (requestId !== insightsRequestId || requestMode !== activeKbType) {
+            return;
+          }
+          if (data && data.answer) {
+            insightsResponse.dataset.rawAnswer = data.answer;
+            insightsResponse.dataset.showChart = data.show_chart ? "true" : "false";
+            insightsResponse.dataset.chartType = data.chart_type || "";
+            insightsResponse.dataset.chartOrientation = data.chart_orientation || "";
+            insightsResponse.dataset.rows = JSON.stringify(data.rows || []);
+            renderInsightsResponse(
+              data.answer,
+              !!data.show_chart,
+              data.chart_type || "",
+              data.rows || [],
+              true,
+              data.chart_orientation || ""
+            );
+          } else if (data && data.error) {
+            insightsResponse.textContent = data.error;
+            insightsResponse.dataset.rawAnswer = "";
+          } else {
+            insightsResponse.textContent = originalResponse;
+            insightsResponse.dataset.rawAnswer = "";
+          }
+        } catch (err) {
+          if (requestId !== insightsRequestId || requestMode !== activeKbType) {
+            return;
+          }
+          insightsResponse.textContent = "Sorry, something went wrong.";
+        } finally {
+          if (requestId === insightsRequestId) {
+            insightsAskButton.disabled = false;
+          }
+        }
+      });
+    }
+
+    let insightsMemory = {
+      client: { question: "", answer: "", raw: "", showChart: false, chartType: "", chartOrientation: "", rows: [] },
+      internal: { question: "", answer: "", raw: "", showChart: false, chartType: "", chartOrientation: "", rows: [] },
+    };
+
+    function runTypewriter(el, text, speed = 28, showCursor = true) {
+      if (!el || !text) return;
+      el.textContent = "";
+      el.classList.add("typewriter");
+      let i = 0;
+      const tick = () => {
+        el.textContent = text.slice(0, i++);
+        if (i <= text.length) {
+          setTimeout(tick, speed);
+        }
+      };
+      tick();
+    }
+
+    const typewriterEls = document.querySelectorAll("[data-typewriter='true']");
+    typewriterEls.forEach((el) => {
+      const text = el.getAttribute("data-text") || "";
+      const speedAttr = el.getAttribute("data-type-speed");
+      const speed = speedAttr ? Number(speedAttr) : 38;
+      runTypewriter(el, text, Number.isFinite(speed) ? speed : 38, false);
+    });
+
+    if (insightsClientBtn && insightsInternalBtn && kbCardClient && kbCardInternal) {
+      const setMode = (mode) => {
+        const isClient = mode === "client";
+        const previousMode = activeKbType;
+        if (insightsInput && insightsResponse) {
+          insightsMemory[previousMode] = {
+            question: insightsInput.value,
+            answer: insightsResponse.textContent || "",
+            raw: insightsResponse.dataset.rawAnswer || "",
+            showChart: insightsResponse.dataset.showChart === "true",
+            chartType: insightsResponse.dataset.chartType || "",
+            chartOrientation: insightsResponse.dataset.chartOrientation || "",
+            rows: insightsResponse.dataset.rows ? JSON.parse(insightsResponse.dataset.rows) : [],
+          };
+        }
+        activeKbType = mode;
+        insightsClientBtn.classList.toggle("is-active", isClient);
+        insightsInternalBtn.classList.toggle("is-active", !isClient);
+        kbCardClient.classList.toggle("kb-hidden", !isClient);
+        kbCardInternal.classList.toggle("kb-hidden", isClient);
+        if (insightsInput && insightsResponse) {
+          const cached = insightsMemory[mode] || { question: "", answer: "", raw: "", showChart: false, chartType: "", chartOrientation: "", rows: [] };
+          insightsInput.value = cached.question || "";
+          if (cached.raw) {
+            insightsResponse.dataset.rawAnswer = cached.raw;
+            insightsResponse.dataset.showChart = cached.showChart ? "true" : "false";
+            insightsResponse.dataset.chartType = cached.chartType || "";
+            insightsResponse.dataset.chartOrientation = cached.chartOrientation || "";
+            insightsResponse.dataset.rows = JSON.stringify(cached.rows || []);
+            renderInsightsResponse(cached.raw, cached.showChart, cached.chartType, cached.rows || [], false, cached.chartOrientation || "");
+          } else {
+            insightsResponse.dataset.rawAnswer = "";
+            insightsResponse.dataset.showChart = "false";
+            insightsResponse.dataset.chartType = "";
+            insightsResponse.dataset.chartOrientation = "";
+            insightsResponse.dataset.rows = "[]";
+            insightsResponse.textContent =
+              cached.answer ||
+              "Insights will appear here. Example: “You received 24 leads this week, with Outdoor Kitchens leading requests.”";
+          }
+        }
+        if (kbCardClient) {
+          kbCardClient.classList.toggle("is-active", isClient);
+          kbCardClient.classList.toggle("is-inactive", !isClient);
+        }
+        if (kbCardInternal) {
+          kbCardInternal.classList.toggle("is-active", !isClient);
+          kbCardInternal.classList.toggle("is-inactive", isClient);
+        }
+        loadKnowledgeBase("client");
+        loadKnowledgeBase("internal");
+      };
+      insightsClientBtn.addEventListener("click", () => setMode("client"));
+      insightsInternalBtn.addEventListener("click", () => setMode("internal"));
+      setMode("client");
+    }
+
+    async function loadKnowledgeBase(type) {
+      const ctx = kbContexts[type];
+      if (!ctx || !ctx.list) return;
+      try {
+        const res = await fetch(`http://127.0.0.1:5000/knowledege?accountid=cust_1&kb_type=${type}`);
+        const data = await res.json();
+        if (!data.entries) return;
+        ctx.list.innerHTML = "";
+        data.entries.forEach((entry) => {
+          const item = {
+            id: entry.id || "",
+            kbType: type,
+            type: entry.entry_type === "faq" ? "FAQ" : "Article",
+            title: entry.title || "Untitled",
+            notes: entry.notes || "",
+            mode: entry.entry_type === "faq" ? "manual" : "manual",
+            content: entry.content || "",
+            file: entry.file || "",
+          };
+          ctx.list.appendChild(renderKbItem(item));
+        });
+        captureKbSnapshot(ctx);
+        clearDirty("kb");
+        hasPendingPublish = false;
+        updatePublishState();
+      } catch (err) {
+        console.error("Failed to load knowledge base", err);
+      }
+    }
+
+    updatePublishState();
+    loadBotConfig();
+    loadKnowledgeBase("client");
+    loadKnowledgeBase("internal");
+  </script>
+</body>
+</html>
