@@ -2759,6 +2759,22 @@ CMakeFiles/home-server.dir/server/server.c.o: ../server/server.c \
   /usr/include/poll.h \
   /usr/include/x86_64-linux-gnu/sys/poll.h \
   /usr/include/x86_64-linux-gnu/bits/poll.h \
+  /usr/include/signal.h \
+  /usr/include/x86_64-linux-gnu/bits/signum-generic.h \
+  /usr/include/x86_64-linux-gnu/bits/signum-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sig_atomic_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/siginfo_t.h \
+  /usr/include/x86_64-linux-gnu/bits/siginfo-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/siginfo-consts.h \
+  /usr/include/x86_64-linux-gnu/bits/siginfo-consts-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigval_t.h \
+  /usr/include/x86_64-linux-gnu/bits/sigevent-consts.h \
+  /usr/include/x86_64-linux-gnu/bits/sigaction.h \
+  /usr/include/x86_64-linux-gnu/bits/sigcontext.h \
+  /usr/include/x86_64-linux-gnu/bits/types/stack_t.h \
+  /usr/include/x86_64-linux-gnu/sys/ucontext.h \
+  /usr/include/x86_64-linux-gnu/bits/sigstack.h \
+  /usr/include/x86_64-linux-gnu/bits/sigstksz.h \
   /usr/include/unistd.h \
   /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
   /usr/include/x86_64-linux-gnu/bits/environments.h \
@@ -2767,6 +2783,10 @@ CMakeFiles/home-server.dir/server/server.c.o: ../server/server.c \
   /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
   /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
   /usr/include/linux/close_range.h \
+  /usr/include/x86_64-linux-gnu/bits/ss_flags.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h \
+  /usr/include/x86_64-linux-gnu/bits/sigthread.h \
+  /usr/include/x86_64-linux-gnu/bits/signal_ext.h \
   ../models/Socket.h \
   ../utilities/http_utilities.h \
   ../server/read_message.h \
@@ -3195,6 +3215,26 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 ../utilities/http_utilities.c:
 
+../server/read_message.h:
+
+/usr/include/x86_64-linux-gnu/bits/sigthread.h:
+
+/usr/include/linux/close_range.h:
+
+/usr/include/x86_64-linux-gnu/sys/ucontext.h:
+
+/usr/include/x86_64-linux-gnu/bits/sigcontext.h:
+
+/usr/include/x86_64-linux-gnu/bits/sigaction.h:
+
+/usr/include/x86_64-linux-gnu/bits/sigevent-consts.h:
+
+/usr/include/x86_64-linux-gnu/bits/siginfo-consts-arch.h:
+
+/usr/include/x86_64-linux-gnu/bits/siginfo-consts.h:
+
+/usr/include/x86_64-linux-gnu/bits/siginfo-arch.h:
+
 /usr/include/openssl/symhacks.h:
 
 /usr/include/openssl/crypto.h:
@@ -3202,6 +3242,8 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 /usr/include/openssl/e_os2.h:
 
 /usr/include/x86_64-linux-gnu/openssl/opensslconf.h:
+
+/usr/include/x86_64-linux-gnu/bits/signum-arch.h:
 
 /usr/include/x86_64-linux-gnu/bits/errno.h:
 
@@ -3241,8 +3283,6 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/openssl/conftypes.h:
 
-../server/read_message.h:
-
 /usr/include/netdb.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/clock_t.h:
@@ -3271,6 +3311,8 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 ../models/User_Token.c:
 
+/usr/include/signal.h:
+
 /usr/include/strings.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h:
@@ -3281,7 +3323,11 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/stdio.h:
 
+/usr/include/x86_64-linux-gnu/bits/sigstack.h:
+
 /usr/include/openssl/ct.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h:
 
@@ -3292,6 +3338,8 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 ../server/send_message.h:
 
 /usr/include/linux/limits.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/sigval_t.h:
 
 /usr/include/mysql/errmsg.h:
 
@@ -3324,6 +3372,8 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 /usr/include/x86_64-linux-gnu/bits/types/timer_t.h:
 
 /usr/include/openssl/ssl2.h:
+
+/usr/include/x86_64-linux-gnu/bits/signum-generic.h:
 
 /usr/include/mysql/client_plugin.h:
 
@@ -3551,6 +3601,10 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/openssl/obj_mac.h:
 
+/usr/include/x86_64-linux-gnu/bits/ss_flags.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/sig_atomic_t.h:
+
 /usr/include/openssl/asn1err.h:
 
 /usr/include/openssl/ec.h:
@@ -3566,6 +3620,8 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 /usr/include/errno.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/__sigval_t.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/siginfo_t.h:
 
 /usr/include/openssl/sha.h:
 
@@ -3607,6 +3663,8 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/openssl/asyncerr.h:
 
+/usr/include/x86_64-linux-gnu/bits/types/stack_t.h:
+
 /usr/include/x86_64-linux-gnu/openssl/configuration.h:
 
 /usr/include/openssl/sslerr_legacy.h:
@@ -3614,6 +3672,8 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 /usr/include/openssl/prov_ssl.h:
 
 /usr/include/x86_64-linux-gnu/bits/stat.h:
+
+/usr/include/x86_64-linux-gnu/bits/sigstksz.h:
 
 /usr/include/openssl/ssl3.h:
 
@@ -3630,6 +3690,8 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 /usr/include/openssl/dtls1.h:
 
 /usr/include/x86_64-linux-gnu/bits/poll.h:
+
+/usr/include/x86_64-linux-gnu/bits/signal_ext.h:
 
 /usr/include/openssl/pemerr.h:
 
@@ -3712,5 +3774,3 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 /usr/include/x86_64-linux-gnu/bits/timex.h:
 
 /usr/include/x86_64-linux-gnu/bits/uio_lim.h:
-
-/usr/include/linux/close_range.h:
