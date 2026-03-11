@@ -1,1350 +1,2467 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Palacios Solutions – Data Automation & Reporting</title>
-
-<style>
-  @media (max-width: 700px) {
-  #who-we-help {
-    text-align: center;
-  }
-
-  #who-we-help > div:first-child {
-    flex: 1 1 100%;
-    min-width: 0 !important;
-    display: flex;
-    justify-content: center;
-  }
-
-  #who-we-help img {
-    width: 90%;
-    max-width: 360px;
-    height: auto;
-    object-fit: cover;
-  }
-}
-
-  /* Desktop: show table, hide mobile cards */
-.pricing-table-mobile {
-  display: none;
-}
-
-/* Mobile view */
-@media (max-width: 650px) {
-  .pricing-table-desktop {
-    display: none;
-  }
-
-  .pricing-table-mobile {
-    display: block;
-  }
-
-  .pricing-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    padding: 1.2em 1.4em;
-    margin-bottom: 1.2em;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.05);
-  }
-
-  .pricing-card h4 {
-    margin: 0 0 0.5em 0;
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #14233b;
-  }
-
-  .pricing-card p {
-    font-size: 1.05rem;
-    color: #4a5568;
-    margin-bottom: 0.6em;
-    line-height: 1.5;
-  }
-
-  .pricing-card strong {
-    font-size: 1.15rem;
-    color: #2b6cb0;
-    font-weight: 700;
-  }
-}
-
-
-  /* Hide floating button on mobile */
-@media (max-width: 768px) {
-  .sticky-contact {
-    display: none !important;
-  }
-}
-
-
-  
-/* -------------------------------------------------------
-   GLOBAL STYLE RESET & THEME
-------------------------------------------------------- */
-*, *::before, *::after {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  font-family: "Inter", "Segoe UI", Arial, Helvetica, sans-serif;
-  background: #f3f4f7;
-  color: #1a1a1a;
-  line-height: 1.65;
-}
-
-a {
-  text-decoration: none;
-  color: inherit;
-}
-
-.container {
-  width: 92%;
-  max-width: 1280px;
-  margin: 0 auto;
-}
-
-/* -------------------------------------------------------
-   COLOR SYSTEM
-------------------------------------------------------- */
-:root {
-  --primary: #2b6cb0;
-  --primary-dark: #1e4f86;
-  --primary-light: #dbe8f7;
-
-  --card-bg: #ffffff;
-  --border: #e2e8f0;
-
-  --text-main: #1a202c;
-  --text-muted: #4a5568;
-
-  --radius: 16px;
-  --shadow: 0 10px 35px rgba(0,0,0,0.08);
-}
-
-/* -------------------------------------------------------
-   HERO
-------------------------------------------------------- */
-.hero {
-  background: linear-gradient(135deg, #edf2f7, #ffffff);
-  border-radius: var(--radius);
-  padding: 4em 3em;
-  margin: 3em auto;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 3em;
-  box-shadow: var(--shadow);
-}
-
-.hero-text {
-  flex: 1;
-  min-width: 300px;
-}
-
-.hero-text h1 {
-  font-size: 3.2rem;
-  font-weight: 800;
-  color: var(--text-main);
-  margin-bottom: 0.3em;
-}
-
-.hero-text h2 {
-  font-size: 1.9rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  margin-bottom: 1em;
-}
-
-.hero-text p {
-  font-size: 1.25rem;
-  color: var(--text-muted);
-  max-width: 600px;
-}
-
-.hero-image {
-  flex: 1;
-  text-align: center;
-}
-
-.hero-image img {
-  width: 95%;
-  max-width: 550px;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  opacity: 0.9;
-}
-
-/* -------------------------------------------------------
-   SECTIONS
-------------------------------------------------------- */
-.section {
-  background: var(--card-bg);
-  padding: 3em 2.5em;
-  border-radius: var(--radius);
-  margin-bottom: 3em;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border);
-}
-
-.section h3 {
-  font-size: 2.2rem;
-  font-weight: 800;
-  margin-bottom: 0.5em;
-  color: var(--text-main);
-}
-
-.section ul {
-  margin-top: 1em;
-  padding-left: 1.2em;
-  font-size: 1.2rem;
-  color: var(--text-muted);
-}
-
-/* -------------------------------------------------------
-   CASE STUDIES
-------------------------------------------------------- */
-.case-studies {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2em;
-}
-
-.case-study {
-  flex: 1;
-  min-width: 280px;
-  background: #ffffff;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.8em;
-  box-shadow: var(--shadow);
-  transition: transform 0.25s ease;
-}
-
-.case-study:hover {
-  transform: translateY(-6px);
-}
-
-.case-study img {
-  width: 100%;
-  border-radius: 12px;
-  margin-bottom: 1em;
-}
-
-.case-study h4 {
-  font-size: 1.45rem;
-  font-weight: 700;
-  margin-bottom: 0.5em;
-}
-
-.case-study p {
-  color: #4a5568;
-  font-size: 1.05rem;
-}
-
-/* -------------------------------------------------------
-   PRICING TABLE
-------------------------------------------------------- */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1.2em;
-  font-size: 1.15rem;
-}
-
-th, td {
-  padding: 1em;
-  border: 1px solid var(--border);
-}
-
-th {
-  background: var(--primary-light);
-  color: var(--primary-dark);
-  font-weight: 700;
-}
-
-/* -------------------------------------------------------
-   CTA BUTTON
-------------------------------------------------------- */
-.cta-button {
-  display: inline-block;
-  background: var(--primary);
-  color: #fff;
-  padding: 0.9em 2em;
-  font-size: 1.25rem;
-  border-radius: 12px;
-  margin-top: 1.8em;
-  box-shadow: 0 5px 18px rgba(43,108,176,0.25);
-  transition: background 0.25s ease, transform 0.25s ease;
-}
-
-.cta-button:hover {
-  background: var(--primary-dark);
-  transform: translateY(-3px);
-}
-
-/* -------------------------------------------------------
-   CONTACT FORM
-------------------------------------------------------- */
-#my-form input,
-#my-form textarea {
-  padding: 14px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  font-size: 1.1rem;
-}
-
-#send_button {
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  padding: 1em 2em;
-  border-radius: 12px;
-  font-size: 1.25rem;
-  font-weight: 700;
-  cursor: pointer;
-  width: 240px;
-  transition: background 0.25s ease;
-}
-
-#send_button:hover {
-  background: var(--primary-dark);
-}
-
-/* -------------------------------------------------------
-   STICKY CONTACT BUTTON
-------------------------------------------------------- */
-.sticky-contact {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: #38a169;
-  color: #fff;
-  padding: 0.9em 1.5em;
-  border-radius: 40px;
-  font-weight: 700;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-  z-index: 999;
-  transition: transform 0.25s ease, background 0.25s ease;
-}
-
-.sticky-contact:hover {
-  transform: translateY(-3px);
-  background: #2f855a;
-}
-
-/* -------------------------------------------------------
-   RESPONSIVE
-------------------------------------------------------- */
-@media (max-width: 900px) {
-  .hero {
-    flex-direction: column-reverse;
-    text-align: center;
-    padding: 3em 2em;
-  }
-
-  .hero-text h1 {
-    font-size: 2.6rem;
-  }
-
-  .hero-text h2 {
-    font-size: 1.6rem;
-  }
-
-  .case-study {
-    min-width: 100%;
-  }
-}
-
-@media (max-width: 500px) {
-  .hero-text h1 {
-    font-size: 2.1rem;
-  }
-
-  .hero-text h2 {
-    font-size: 1.35rem;
-  }
-
-  table {
-    font-size: 1rem;
-  }
-}
-
-/* Desktop nav shows only on screens above 900px */
-.desktop-nav {
-  display: flex;
-}
-
-.mobile-nav {
-  display: none;
-}
-
-/* Mobile nav activates below 900px */
-@media (max-width: 900px) {
-  .desktop-nav {
-    display: none !important;
-  }
-  .mobile-nav {
-    display: flex !important;
-  }
-}
-
-</style>
-</head>
-<body>
-<!-- ========================= NAVBAR ========================= -->
-<nav class="desktop-nav" style="
-  width:100%;
-  background:#ffffff;
-  border-bottom:1px solid #e2e8f0;
-  box-shadow:0 4px 15px rgba(0,0,0,0.05);
-  position:sticky;
-  top:0;
-  z-index:1000;
-">
-  <div class="container" style="
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:1em 0;
-  ">
-    <div style="font-size:1.5rem; font-weight:800; color:#2b6cb0;">
-      Palacios Solutions
-    </div>
-
-    <div style="display:flex; gap:2em; font-size:1.15rem;">
-      <a href="#who-we-help">Who We Help</a>
-      <a href="#automation">Automation</a>
-      <a href="#value">Value</a>
-      <a href="#case-studies">Case Studies</a>
-      <a href="#pricing">Pricing</a>
-      <a href="#contact-form" style="color:#2b6cb0; font-weight:700;">Contact</a>
-    </div>
-  </div>
-</nav>
-<nav class="mobile-nav" style="
-  width:100%;
-  background:#ffffff;
-  border-bottom:1px solid #e2e8f0;
-  box-shadow:0 4px 12px rgba(0,0,0,0.05);
-  position:sticky;
-  top:0;
-  z-index:1000;
-  padding:1em;
-  justify-content:space-between;
-  align-items:center;
-">
-
-  <!-- Brand -->
-  <div style="font-size:1.4rem; font-weight:800; color:#2b6cb0;">
-    Palacios Solutions
-  </div>
-
-  <!-- Hamburger icon -->
-  <div id="mobile-menu-button" style="
-    font-size:2rem;
-    cursor:pointer;
-    user-select:none;
-  ">☰</div>
-</nav>
-
-<!-- Mobile dropdown menu -->
-<div id="mobile-menu" style="
-  display:none;
-  background:#ffffff;
-  border-bottom:1px solid #e2e8f0;
-  box-shadow:0 4px 15px rgba(0,0,0,0.08);
-  position:sticky;
-  top:60px;
-  z-index:999;
-  padding:1.2em;
-">
-  <a href="#who-we-help" style="display:block; padding:0.8em 0;">Who We Help</a>
-  <a href="#automation" style="display:block; padding:0.8em 0;">Automation</a>
-  <a href="#value" style="display:block; padding:0.8em 0;">Value</a>
-  <a href="#case-studies" style="display:block; padding:0.8em 0;">Case Studies</a>
-  <a href="#pricing" style="display:block; padding:0.8em 0;">Pricing</a>
-  <a href="#contact-form" style="display:block; padding:0.8em 0; color:#2b6cb0; font-weight:700;">Contact</a>
-</div>
-
-
-<!-- ========================= HERO ========================= -->
-<section class="hero container" style="padding:5em 3em; border-radius:20px;">
-
-  <div class="hero-text">
-
-    <!-- Modern Accent Badge -->
-    <div style="
-      display:inline-block;
-      background:linear-gradient(135deg, #2b6cb0, #4f9de8);
-      color:#fff;
-      padding:0.45em 1em;
-      border-radius:50px;
-      font-size:0.95rem;
-      font-weight:600;
-      margin-bottom:1.5em;
-      letter-spacing:0.5px;">
-      Automated Reporting • Zero Manual Work
-    </div>
-
-    <!-- Gradient Headline -->
-    <h1 style="
-      font-size:3.1rem;
-      font-weight:900;
-      line-height:1.30;
-      margin:0;
-      background:linear-gradient(135deg, #1a2b4e 0%, #3a7bd5 100%);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;">
-      Automate Your Reporting & Unlock Real-Time Insights
-    </h1>
-
-    <!-- Modern Subheadline -->
-    <h2 style="
-      margin-top:1em;
-      font-size:1.55rem;
-      font-weight:500;
-      color:#4a5d73;">
-      Replace hours of spreadsheets with fully automated, refresh-ready data systems.
-    </h2>
-
-    <!-- Supporting Paragraph -->
-    <p style="
-      margin-top:1.2em;
-      font-size:1.2rem;
-      max-width:580px;
-      color:#5d6f85;">
-      We build end-to-end automation workflows that clean, refresh, transform, and deliver your reporting on a schedule —
-      giving you instant visibility into performance without any manual effort.
-    </p>
-
-    <!-- CTA Buttons -->
-    <div style="margin-top:2em; display:flex; gap:1em; flex-wrap:wrap;">
-      <a href="#contact-form" 
-         style="
-           background:#2b6cb0;
-           color:#fff;
-           padding:0.9em 1.8em;
-           border-radius:12px;
-           font-size:1.15rem;
-           font-weight:600;
-           box-shadow:0 8px 22px rgba(43,108,176,0.25);
-           transition:0.25s ease;">
-        Get a Free Assessment
-      </a>
-
-      <a href="#case-studies"
-         style="
-           padding:0.9em 1.8em;
-           border-radius:12px;
-           font-size:1.15rem;
-           font-weight:600;
-           background:#fff;
-           border:2px solid #d0d7e2;
-           color:#2b6cb0;
-           transition:0.25s ease;">
-        View Case Studies
-      </a>
-    </div>
-
-  </div>
-
-  <div class="hero-image">
-    <img src="/portfolio/images/main.png" alt="Data automation team" />
-  </div>
-
-</section>
-
-
-<!-- ========================= WHO WE HELP ========================= -->
-<section id="who-we-help" class="section container"
-         style="display:flex; flex-wrap:wrap; align-items:stretch; gap:3em; padding:3em; border-radius:20px;">
-
-  <!-- IMAGE -->
-  <div style="flex:1.2; min-width:330px; overflow:hidden; border-radius:16px;">
-    <img src="/portfolio/images/sales.png"
-         alt="Collaboration team"
-         style="width:100%; height:100%; object-fit:cover; display:block;">
-  </div>
-
-  <!-- TEXT -->
-  <div style="flex:1; min-width:280px; display:flex; flex-direction:column; justify-content:center;">
-
-    <!-- Accent Tag -->
-    <div style="
-      display:inline-block;
-      background:linear-gradient(135deg,#2b6cb0,#3f8de1);
-      color:#fff;
-      padding:0.45em 1em;
-      border-radius:40px;
-      font-size:0.9rem;
-      font-weight:600;
-      letter-spacing:0.4px;
-      margin-bottom:1.2em;">
-      Our Clients
-    </div>
-
-    <!-- Gradient Header -->
-    <h3 style="
-      margin:0 0 0.4em 0;
-      font-size:2rem;
-      font-weight:800;
-      background:linear-gradient(135deg,#1a2b4e,#3a7bd5);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;">
-      Who We Help
-    </h3>
-
-    <!-- Short Intro -->
-    <p style="color:#5d6f85; font-size:1.15rem; margin:0.5em 0 1.2em;">
-      We partner with teams that need clearer visibility, faster reporting, and automated systems they can rely on.
-    </p>
-
-    <!-- List -->
-    <ul style="color:#4a5568; font-size:1.2rem; line-height:1.7; padding-left:1.2em;">
-      <li>Business managers needing real performance visibility</li>
-      <li>Small business owners overwhelmed by manual reporting</li>
-      <li>Department leads responsible for KPIs, forecasting, and planning</li>
-      <li>Teams stuck in spreadsheet-heavy reporting cycles</li>
-    </ul>
-  </div>
-
-</section>
-
-
-<section id="automation" class="section container"
-         style="display:flex; flex-wrap:wrap; align-items:center; gap:3em; padding:3em; border-radius:20px;">
-
-  <!-- TEXT BLOCK -->
-  <div style="flex:1; min-width:300px;">
-
-    <!-- Accent Tag -->
-    <div style="
-      display:inline-block;
-      background:linear-gradient(135deg,#2b6cb0,#3f8de1);
-      color:#fff;
-      padding:0.45em 1em;
-      border-radius:40px;
-      font-size:0.9rem;
-      font-weight:600;
-      letter-spacing:0.4px;
-      margin-bottom:1.2em;">
-      Automation First
-    </div>
-
-    <!-- Gradient Header -->
-    <h3 style="
-      margin:0 0 0.4em 0;
-      font-size:2rem;
-      font-weight:800;
-      background:linear-gradient(135deg,#1a2b4e,#3a7bd5);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;">
-      How We Deliver Automation
-    </h3>
-
-    <!-- Intro Copy -->
-    <p style="font-size:1.15rem; color:#5d6f85; line-height:1.75; margin-top:1em;">
-      We design automated data workflows that eliminate manual reporting forever. Power Query and Power BI
-      act as the transformation engines — but the core service is automation, not licensing.
-    </p>
-
-    <p style="font-size:1.15rem; color:#5d6f85; margin-top:1em;">
-      If you prefer not to use Power BI licenses, we can still deliver fully automated outputs:
-    </p>
-
-    <!-- Bullet List -->
-    <ul style="font-size:1.15rem; color:#4a5568; line-height:1.75; padding-left:1.2em; margin-top:0.5em;">
-      <li>Static reports exported automatically</li>
-      <li>Automated Excel or CSV output files</li>
-      <li>PDF dashboards refreshed on schedule</li>
-      <li>Internal workflow automations (no BI viewer required)</li>
-    </ul>
-
-    <!-- Licensing Clarification -->
-    <p style="font-size:1.15rem; color:#5d6f85; margin-top:1.2em;">
-      For interactive dashboards, Power BI Pro is the most affordable and scalable option at $14/user/month.
-    </p>
-
-    <!-- Power BI Link -->
-    <p style="font-size:1rem; margin-top:0.6em;">
-      <a href="https://powerbi.microsoft.com" target="_blank" 
-         style="color:#1a73e8; text-decoration:none; font-weight:600;">
-        Learn more about Microsoft Power BI →
-      </a>
-    </p>
-  </div>
-
-  <!-- IMAGE BLOCK -->
-  <div style="flex:1; min-width:300px; overflow:hidden; border-radius:16px;">
-    <img src="/portfolio/images/auto.png"
-         alt="Automation workflow illustration"
-         style="width:100%; height:100%; object-fit:cover;">
-  </div>
-
-</section>
-
-<!-- ========================= VALUE DELIVERED ========================= -->
-<section id="value" class="section container"
-         style="display:flex; flex-wrap:wrap; align-items:stretch; gap:3em; padding:3em; border-radius:20px;">
-
-  <!-- IMAGE -->
-  <div style="flex:1; min-width:300px; overflow:hidden; border-radius:18px;">
-    <img src="/portfolio/images/team.png"
-         alt="Data value illustration"
-         style="width:100%; height:100%; object-fit:cover; display:block;">
-  </div>
-
-  <!-- TEXT CONTENT -->
-  <div style="flex:1; min-width:300px; display:flex; flex-direction:column; justify-content:center;">
-
-    <!-- Accent Tag -->
-    <div style="
-      display:inline-block;
-      background:linear-gradient(135deg,#3182ce,#63b3ed);
-      color:#fff;
-      padding:0.45em 1em;
-      border-radius:40px;
-      font-size:0.85rem;
-      font-weight:600;
-      letter-spacing:0.4px;
-      margin-bottom:1.2em;">
-      Impact
-    </div>
-
-    <!-- Gradient Title -->
-    <h3 style="
-      margin:0;
-      font-size:2rem;
-      font-weight:800;
-      background:linear-gradient(135deg,#1a2b4e,#3a7bd5);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-      margin-bottom:1em;">
-      The Value We Deliver
-    </h3>
-
-    <!-- Bullet List -->
-    <ul style="color:#5b6b7f; font-size:1.2rem; line-height:1.75; padding-left:1.2em;">
-      <li><strong>Save Time:</strong> Automate the workflows that steal hours every week.</li>
-      <li><strong>Increase Clarity:</strong> Replace messy spreadsheets with a single source of truth.</li>
-      <li><strong>Make Faster Decisions:</strong> Real-time reporting means your team never waits for answers.</li>
-      <li><strong>Build Trust:</strong> Reliable data systems reduce errors, uncertainty, and rework.</li>
-    </ul>
-
-  </div>
-
-</section>
-
-
-
-
-
-
-<!-- ========================= CASE STUDIES ========================= -->
-<section id="case-studies" class="section container" style="padding:3.5em; border-radius:20px;">
-
-  <!-- Title -->
-  <div style="text-align:center; margin-bottom:2em; max-width:800px; margin-left:auto; margin-right:auto;">
-
-    <!-- Accent Tag -->
-    <div style="
-      display:inline-block;
-      background:linear-gradient(135deg,#2b6cb0,#63b3ed);
-      color:#fff;
-      padding:0.45em 1em;
-      border-radius:40px;
-      font-size:0.85rem;
-      font-weight:600;
-      letter-spacing:0.4px;
-      margin-bottom:1.2em;">
-      Real Results
-    </div>
-
-    <!-- Gradient Header -->
-    <h3 style="
-      margin:0;
-      font-size:2.3rem;
-      font-weight:800;
-      background:linear-gradient(135deg,#1a2b4e,#3a7bd5);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;">
-      Case Studies
-    </h3>
-
-    <p style="font-size:1.2rem; color:#5d6f85; margin-top:0.8em;">
-      A few examples of how automated reporting pipelines transformed operations, clarified decision-making, 
-      and eliminated hours of manual reporting.
-    </p>
-  </div>
-
-  <!-- ====================== CASE STUDY 1 ====================== -->
-<!-- EMPLOYEE UTILIZATION CASE STUDY -->
-<section class="section container"
-         style="
-           border-radius:20px; 
-           padding:2.5em;
-           box-shadow:0 8px 28px rgba(0,0,0,0.08);
-           margin-bottom:3em;
-           background:#ffffff;
-         ">
-
-  <h4 style="
-      font-size:1.9rem; 
-      font-weight:800; 
-      margin-bottom:1em; 
-      color:#14233b;
-      letter-spacing:-0.5px;
-      text-align:center;
-  ">
-    Employee Utilization Dashboard
-  </h4>
-
-  <!-- IMAGE TOP -->
-   <div style="
-  text-align:center;
-  font-size:0.95rem;
-  color:#6b7a90;
-  margin-top:0.6em;
-  font-style:italic;
-">
-  Click to enlarge image
-</div>
-
-  <div style="
-      width:100%;
-      border-radius:16px;
-      overflow:hidden;
-      background:#f9fbfe;
-      padding:1em;
-      margin-bottom:2em;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-  ">
-<img src="/portfolio/images/utilization.png"
-     alt="Employee Utilization Dashboard"
-     onclick="openImageModal(this.src)"
-     style="
-        width:100%;
-        height:auto;
-        max-height:700px;
-        object-fit:contain;
-        border-radius:14px;
-        cursor:pointer;
-        box-shadow:0 6px 20px rgba(0,0,0,0.06);
-     ">
-     
-
-  </div>
-
-  <!-- TEXT -->
-<div style="max-width:900px; margin:0 auto;">
-
-  <p style="color:#5a6b82; font-size:1.15rem; line-height:1.75; margin-bottom:1.1em;">
-    <strong style="color:#1f3c88;">Problem:</strong>
-    All employee time data came from <em>multiple unrelated software systems</em> — PTO, labor hours,
-    internal project time, and billable work — each using different structures, naming conventions,
-    and reporting rules.  
-    Managers could not reliably calculate utilization because nothing tied together cleanly,
-    and every report required heavy manual cleanup just to get a monthly snapshot.
-  </p>
-
-<p style="color:#5a6b82; font-size:1.15rem; line-height:1.75; margin-bottom:1.1em;">
-  <strong style="color:#1f3c88;">Solution:</strong>
-  Built a unified utilization model by:
-  <br>• integrating PTO systems, labor-hour exports, and internal project logs  
-  <br>• transforming inconsistent fields, timestamps, and employee identifiers  
-  <br>• engineering logic to classify all hours as <strong>billable vs. internal</strong>  
-  <br>• creating utilization, billable ratios, and capacity KPIs  
-  <br><br>
-  Power Query handled the semantic modeling, but the heavy ETL was automated through 
-  <strong>Azure Pipelines</strong>, which pulled, cleaned, merged, and delivered refreshed datasets 
-  on a daily schedule.
-</p>
-
-
-  <p style="color:#5a6b82; font-size:1.15rem; line-height:1.75;">
-    <strong style="color:#1f3c88;">Result:</strong>
-    Leadership finally has a reliable, real-time view of employee utilization — not just total hours,
-    but how much time is spent on <strong>billable work vs. internal or non-revenue activities</strong>.  
-    Managers can spot under-utilization earlier, adjust staffing proactively, and eliminate the hours
-    previously spent reconciling inconsistent time systems.
-  </p>
-
-</div>
-
-
-</section>
-
-<!-- NPS SURVEYS CASE STUDY -->
-<section class="section container"
-         style="
-           border-radius:20px; 
-           padding:2.5em;
-           box-shadow:0 8px 28px rgba(0,0,0,0.08);
-           margin-bottom:3em;
-           background:#ffffff;
-         ">
-
-  <h4 style="
-      font-size:1.9rem; 
-      font-weight:800; 
-      margin-bottom:1em; 
-      color:#14233b;
-      letter-spacing:-0.5px;
-      text-align:center;
-  ">
-    NPS Survey Analytics Automation
-  </h4>
-
-  <!-- IMAGE TOP -->
-   <div style="
-  text-align:center;
-  font-size:0.95rem;
-  color:#6b7a90;
-  margin-top:0.6em;
-  font-style:italic;
-">
-  Click to enlarge image
-</div>
-
-  <div style="
-      width:100%;
-      border-radius:16px;
-      overflow:hidden;
-      background:#f9fbfe;
-      padding:1em;
-      margin-bottom:2em;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-  ">
-    <img src="/portfolio/images/surveys.png"
-         alt="NPS Survey Dashboard"
-         onclick="openImageModal(this.src)"
-         style="
-            width:100%;
-            height:auto;
-            max-height:700px;
-            object-fit:contain;
-             cursor:pointer;
-            border-radius:14px;
-            box-shadow:0 6px 20px rgba(0,0,0,0.06);
-         ">
-  </div>
-
-  <!-- TEXT -->
-  <div style="max-width:900px; margin:0 auto;">
-
-    <p style="color:#5a6b82; font-size:1.15rem; line-height:1.75; margin-bottom:1.1em;">
-      <strong style="color:#1f3c88;">Problem:</strong>
-      The company collected customer feedback across multiple systems, including SQL and Cosmos DB.  
-      The data structure was inconsistent, messy, and difficult to interpret.  
-      Leaders had no unified view of customer sentiment and no reliable way to identify trends or drivers behind score changes.
-    </p>
-
-    <p style="color:#5a6b82; font-size:1.15rem; line-height:1.75; margin-bottom:1.1em;">
-      <strong style="color:#1f3c88;">Solution:</strong>
-      Built a complete automated ingestion pipeline that:
-      <br>• pulled survey responses from SQL and Cosmos  
-      <br>• cleaned and normalized the structures  
-      <br>• filtered the correct survey types  
-      <br>• transformed free-text answers into analyzable fields  
-      <br>• engineered NPS scores, sentiment, and segmentation  
-      All processed into a clean model ready for reporting.
-    </p>
-
-    <p style="color:#5a6b82; font-size:1.15rem; line-height:1.75;">
-      <strong style="color:#1f3c88;">Result:</strong>
-      The company gained a real-time, organization-wide NPS dashboard.  
-      Customer sentiment insights became visible daily, and leadership distributed the report to the entire company — improving transparency and accelerating responses to customer issues.  
-      Manual processing dropped by more than 90%.
-    </p>
-
-  </div>
-
-</section>
-
-
-<!-- SALES QUOTA TRACKER CASE STUDY -->
-<section class="section container"
-         style="
-           border-radius:20px; 
-           padding:2.5em;
-           box-shadow:0 8px 28px rgba(0,0,0,0.08);
-           margin-bottom:3em;
-           background:#ffffff;
-         ">
-
-  <h4 style="
-      font-size:1.9rem; 
-      font-weight:800; 
-      margin-bottom:1em; 
-      color:#14233b;
-      letter-spacing:-0.5px;
-      text-align:center;
-  ">
-    Sales Quota Performance Tracker
-  </h4>
-<div style="
-  text-align:center;
-  font-size:0.95rem;
-  color:#6b7a90;
-  margin-top:0.6em;
-  font-style:italic;
-">
-  Click to enlarge image
-</div>
-
-  <!-- IMAGE TOP -->
-  <div style="
-      width:100%;
-      border-radius:16px;
-      overflow:hidden;
-      background:#f9fbfe;
-      padding:1em;
-      margin-bottom:2em;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-  ">
-    <img src="/portfolio/images/salesdash.png"
-         alt="Sales Quota Tracker Dashboard"
-          onclick="openImageModal(this.src)"
-         style="
-            width:100%;
-            height:auto;
-            max-height:700px;
-            object-fit:contain;
-            border-radius:14px;
-             cursor:pointer;
-            box-shadow:0 6px 20px rgba(0,0,0,0.06);
-         ">
-  </div>
-
-  <!-- TEXT -->
-  <div style="max-width:900px; margin:0 auto;">
-
-<p style="color:#5a6b82; font-size:1.15rem; line-height:1.75; margin-bottom:1.1em;">
-  <strong style="color:#1f3c88;">Problem:</strong>
-  Sales performance data was scattered across multiple systems — phone activity logs, CRM exports, 
-  quota files, and pipeline tracking tools. None of these systems talked to each other.  
-  Managers were relying on manual spreadsheets without a reliable way to see how daily activity 
-  connected to quota attainment or pacing.
-</p>
-
-<p style="color:#5a6b82; font-size:1.15rem; line-height:1.75; margin-bottom:1.1em;">
-  <strong style="color:#1f3c88;">Solution:</strong>
-  Consolidated all sales activity sources into a unified dataset by:
-  <br>• integrating phone-call data, CRM opportunity stages, quota assignments, and rep activity logs  
-  <br>• normalizing inconsistent identifiers across systems  
-  <br>• aggregating daily activity into rep-level performance metrics  
-  <br>• engineering pacing logic, attainment calculations, and forecasting KPIs  
-  <br><br>
-  Azure Pipelines automated the ETL process, ensuring all sources refreshed together and fed a single 
-  clean model for quota tracking.
-</p>
-
-<p style="color:#5a6b82; font-size:1.15rem; line-height:1.75;">
-  <strong style="color:#1f3c88;">Result:</strong>
-  Sales leadership gained a real-time, unified view of performance, enabling earlier detection of 
-  underperformance and more accurate coaching. Manual reporting was eliminated entirely, and quota 
-  pacing became reliable for the first time.
-</p>
-
-
-  </div>
-
-</section>
-
-
-
-
-<!-- 
-  CASE STUDIES GRID
-  <div class="case-studies" style="margin-top:3em; gap:2.5em;">
-
-    <div class="case-study" style="border-radius:18px; padding:2em; border:1px solid #e2e8f0;">
-      <img src="/portfolio/images/utilization.png" alt="Employee Utilization Dashboard"
-           style="border-radius:14px; margin-bottom:1.2em;">
-      <h4 style="font-size:1.5rem; font-weight:700; margin-bottom:0.5em;">Employee Utilization Dashboard</h4>
-      <p style="color:#4a5568;"><strong>Problem:</strong> Managers were manually merging data from hundreds of small tables across different software systems to understand employee utilization. This process was time-consuming and prone to errors, making it difficult to get a real-time view of resource allocation.</p>
-      <p style="color:#4a5568;"><strong>Solution:</strong> We created an automated pipeline that pulled data from all these disparate sources, applied the necessary transformations, and built a unified utilization model in Power BI. We integrated data from multiple software platforms, ensuring that all the necessary relationships and metrics were in place.</p>
-      <p style="color:#4a5568;"><strong>Result:</strong> Better staffing decisions, reduced burnout risk, and improved team productivity.</p>
-    </div>
-
-    <div class="case-study" style="border-radius:18px; padding:2em; border:1px solid #e2e8f0;">
-      <img src="/portfolio/images/salesdash.png" alt="Sales Quota Tracker Dashboard"
-           style="border-radius:14px; margin-bottom:1.2em;">
-      <h4 style="font-size:1.5rem; font-weight:700; margin-bottom:0.5em;">Sales Quota Tracker</h4>
-      <p style="color:#4a5568;"><strong>Problem:</strong> Sales managers lacked real-time visibility into quota performance and relied heavily on manual reports.</p>
-      <p style="color:#4a5568;"><strong>Solution:</strong> Automated a live quota tracker with pacing, variance analysis, rep-level performance, and forecasting.</p>
-      <p style="color:#4a5568;"><strong>Result:</strong> Faster interventions, stronger coaching insights, and earlier identification of performance gaps.</p>
-    </div>
-
-    <div class="case-study" style="border-radius:18px; padding:2em; border:1px solid #e2e8f0;">
-      <img src="/portfolio/images/surveys.png" alt="Company NPS Dashboard"
-           style="border-radius:14px; margin-bottom:1.2em;">
-      <h4 style="font-size:1.5rem; font-weight:700; margin-bottom:0.5em;">Company NPS Survey Insights</h4>
-      <p style="color:#4a5568;"><strong>Problem:</strong> Feedback was scattered across tools, making it difficult to identify trends or root causes behind customer sentiment changes.</p>
-      <p style="color:#4a5568;"><strong>Solution:</strong> Automated NPS ingestion, sentiment tagging, segmentation, and driver analysis.</p>
-      <p style="color:#4a5568;"><strong>Result:</strong> 90% reduction in manual processing and clearer insights that guided actions improving customer satisfaction.</p>
-    </div>
-
-  </div> -->
-</section>
-
-
-<!-- ========================= PRICING ========================= -->
-<section id="pricing" class="section container" style="padding:3em; border-radius:20px;">
-
-  <!-- Accent Tag -->
-  <div style="
-    display:inline-block;
-    background:linear-gradient(135deg,#2b6cb0,#63b3ed);
-    color:#fff;
-    padding:0.45em 1em;
-    border-radius:40px;
-    font-size:0.85rem;
-    font-weight:600;
-    letter-spacing:0.4px;
-    margin-bottom:1.2em;">
-    Simple & Transparent Pricing
-  </div>
-
-  <!-- Gradient Header -->
-  <h3 style="
-    margin-top:0;
-    font-size:2.3rem;
-    font-weight:800;
-    background:linear-gradient(135deg,#1a2b4e,#3a7bd5);
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
-    margin-bottom:0.8em;">
-    Pricing
-  </h3>
-
-  <!-- Intro Copy -->
-<p style="font-size:1.2rem; color:#5d6f85; line-height:1.75; max-width:800px;">
-  Every project is scoped based on the complexity of the work required—data preparation,
-  modeling, automation logic, visual design, and integration across multiple systems.
-  Instead of hourly billing, each deliverable is classified as low, medium, or high complexity
-  depending on the effort involved.
-</p>
-
-<p style="font-size:1.2rem; color:#5d6f85; margin-top:1em; max-width:800px;">
-  This ensures transparent, predictable pricing and allows you to know exactly what you're paying for
-  before any work begins—no surprises, no hourly overages, and full clarity into how your solution is built.
-</p>
-
-
-  <!-- Pricing Table -->
-   <div class="pricing-table-desktop">
-    <table style="margin-top:2em;">
-      <thead>
-        <tr>
-          <th>Complexity</th>
-          <th>Description</th>
-          <th>Estimated Price Range</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Low</td>
-          <td>Basic transformations, simple data prep, or individual visual updates</td>
-          <td>$75 – $225</td>
-        </tr>
-        <tr>
-          <td>Medium</td>
-          <td>Multi-source preparation, modeling, automated outputs, or full-page visuals</td>
-          <td>$225 – $375</td>
-        </tr>
-        <tr>
-          <td>High</td>
-          <td>Complex integrations, heavy automation logic, advanced calculations, or full dashboards</td>
-          <td>$600+</td>
-        </tr>
-      </tbody>
-    </table>
-</div>
-<div class="pricing-table-mobile">
-  
-  <div class="pricing-card">
-    <h4>Low</h4>
-    <p>Basic transformations, simple data prep, or individual visual updates</p>
-    <strong>$75 – $225</strong>
-  </div>
-
-  <div class="pricing-card">
-    <h4>Medium</h4>
-    <p>Multi-source preparation, modeling, automated outputs, or full-page visuals</p>
-    <strong>$225 – $375</strong>
-  </div>
-
-  <div class="pricing-card">
-    <h4>High</h4>
-    <p>Complex integrations, heavy automation logic, advanced calculations, or full dashboards</p>
-    <strong>$600+</strong>
-  </div>
-
-</div>
-
-<!-- Example Block -->
-<div style="
-    background:#f7fafc;
-    padding:1.5em 2em;
-    border-radius:16px;
-    margin-top:2em;
-    border-left:6px solid #2b6cb0;">
-  <p style="font-size:1.15rem; color:#4a5568; margin:0;">
-    <strong>Example:</strong>  
-    A typical dashboard consists of a mix of low, medium, and high-complexity tasks.
-    Your quote includes a clear breakdown of each task category and an estimated
-    price range for the project 
-    <strong>before any work begins.</strong>
-  </p>
-</div>
-
-
-  <a href="#contact-form" class="cta-button" style="margin-top:2em; display:inline-block;">
-    Get Your Fixed Quote
-  </a>
-</section>
-
-
-<!-- ========================= CONTACT FORM ========================= -->
-<section id="contact-form" class="section container" style="padding:3em; border-radius:20px;">
-
-  <!-- Accent Tag -->
-  <div style="
-    display:inline-block;
-    background:linear-gradient(135deg,#2b6cb0,#63b3ed);
-    color:#fff;
-    padding:0.45em 1em;
-    border-radius:40px;
-    font-size:0.85rem;
-    font-weight:600;
-    letter-spacing:0.4px;
-    margin-bottom:1.2em;">
-    Get in Touch
-  </div>
-
-  <!-- Gradient Header -->
-  <h3 style="
-    margin-top:0;
-    font-size:2.3rem;
-    font-weight:800;
-    background:linear-gradient(135deg,#1a2b4e,#3a7bd5);
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
-    margin-bottom:0.5em;">
-    Contact Us
-  </h3>
-
-  <p style="font-size:1.2rem; color:#5d6f85; max-width:700px; margin-bottom:1.8em;">
-    Tell us about your reporting challenges or automation goals.  
-    We’ll reply within <strong>24 hours</strong> with next steps.
-  </p>
-
-  <form id="my-form" style="display:flex; flex-direction:column; gap:1.4em;">
-
-    <!-- Row 1: Name -->
-    <div style="display:flex; flex-wrap:wrap; gap:1em;">
-      <input type="text" name="first_name" placeholder="First Name" required
-             style="flex:1; min-width:200px; padding:14px; border-radius:12px; border:1px solid #d0d7e0; font-size:1.05rem;">
-      <input type="text" name="last_name" placeholder="Last Name" required
-             style="flex:1; min-width:200px; padding:14px; border-radius:12px; border:1px solid #d0d7e0; font-size:1.05rem;">
-    </div>
-
-    <!-- Row 2: Email & Phone -->
-    <div style="display:flex; flex-wrap:wrap; gap:1em;">
-      <input type="email" name="company_email" placeholder="Email" required
-             style="flex:1; min-width:200px; padding:14px; border-radius:12px; border:1px solid #d0d7e0; font-size:1.05rem;">
-      <input type="text" name="phone" placeholder="Phone (Optional)"
-             style="flex:1; min-width:200px; padding:14px; border-radius:12px; border:1px solid #d0d7e0; font-size:1.05rem;">
-    </div>
-
-    <!-- Company Name -->
-    <input type="text" name="company_name" placeholder="Company Name (Optional)"
-           style="padding:14px; border-radius:12px; border:1px solid #d0d7e0; font-size:1.05rem;">
-
-    <!-- Project Details -->
-    <textarea 
-      name="project_details"
-      placeholder="Describe the reporting problems you're facing or what you'd like to automate."
-      rows="6"
-      required
-      style="padding:14px; border-radius:12px; border:1px solid #d0d7e0; font-size:1.05rem; resize:vertical;">
-    </textarea>
-
-    <!-- Submit Button -->
-    <button id="send_button" type="submit"
-            style="
-              background:linear-gradient(135deg,#2b6cb0,#3f8de1);
-              color:#fff;
-              border:none;
-              padding:1em 2em;
-              border-radius:14px;
-              font-size:1.25rem;
-              font-weight:700;
-              cursor:pointer;
-              width:260px;
-              transition:0.25s ease;">
-      Send Message
-    </button>
-  </form>
-</section>
-
-<!-- STICKY BUTTON -->
-<!-- <a href="#contact-form" class="sticky-contact">Contact Us</a> -->
- <script src="https://127.0.0.1:9030/cust_1/widget.js"></script>
- 
-
-
-<!-- FORM JS -->
-<script>
-document.getElementById("mobile-menu-button").onclick = function () {
-  const menu = document.getElementById("mobile-menu");
-  menu.style.display = menu.style.display === "block" ? "none" : "block";
-};
-</script>
-<!-- Image Modal -->
-<div id="imageModal" style="
-    display:none;
-    position:fixed;
-    z-index:9999;
-    left:0; top:0;
-    width:100%; height:100%;
-    background:rgba(0,0,0,0.85);
-    backdrop-filter:blur(3px);
-    justify-content:center;
-    align-items:center;
-">
-  <img id="modalImg" src="" style="
-      max-width:90%;
-      max-height:90%;
-      border-radius:12px;
-      box-shadow:0 8px 30px rgba(0,0,0,0.5);
-      object-fit:contain;
-  ">
-</div>
-
-<script>
-function openImageModal(src) {
-  const modal = document.getElementById("imageModal");
-  const modalImg = document.getElementById("modalImg");
-  modal.style.display = "flex";
-  modalImg.src = src;
-}
-
-document.getElementById("imageModal").onclick = function () {
-  this.style.display = "none";
-};
-</script>
-
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Just got a lead – Client Communication + Lead Capture</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #f5f7fb;
+        --surface: #ffffff;
+        --surface-2: #f1f5f9;
+        --card: #ffffff;
+        --card-border: #e2e8f0;
+        --text: #0f172a;
+        --muted: #475569;
+        --accent: #2b6cb0;
+        --accent-2: #2563eb;
+        --success: #16a34a;
+        --shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+        --radius: 18px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Manrope", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .container {
+        width: min(1200px, 92%);
+        margin: 0 auto;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        backdrop-filter: blur(10px);
+        background: rgba(247, 250, 255, 0.92);
+        border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 0;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-family: "Space Grotesk", sans-serif;
+        font-weight: 700;
+        font-size: 1.1rem;
+      }
+
+      .logo-text {
+        font-weight: 800;
+        letter-spacing: 0.3px;
+        font-size: 1.24rem;
+        text-transform: none;
+        background: linear-gradient(90deg, #0f172a, #1e3a8a, #2563eb);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        text-shadow: 0 4px 10px rgba(15, 23, 42, 0.18);
+      }
+
+      .logo-text span:nth-child(1) {
+        color: inherit;
+        margin-left: 0;
+      }
+
+      .logo-text span:nth-child(2) {
+        color: inherit;
+        margin-left: 0;
+      }
+
+      .logo-mark {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        object-fit: contain;
+        background: transparent;
+        transform: scale(1);
+        transform-origin: center;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 20px;
+        font-size: 0.95rem;
+        color: var(--muted);
+      }
+
+      .nav-links a {
+        font-weight: 600;
+        padding: 6px 10px;
+        border-radius: 999px;
+        transition: color 0.2s ease, background 0.2s ease;
+      }
+
+      .nav-links a:hover {
+        color: var(--text);
+        background: rgba(59, 130, 246, 0.08);
+      }
+
+      .nav-cta {
+        padding: 10px 18px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #1d4ed8, #38bdf8);
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 0.9rem;
+        box-shadow: 0 12px 24px rgba(59, 130, 246, 0.25);
+      }
+
+      .hero {
+        padding: 90px 0 70px;
+        background: linear-gradient(180deg, rgba(219, 234, 254, 0.7), rgba(255, 255, 255, 0) 70%);
+      }
+
+      .hero-wrap {
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        border-radius: 28px;
+        padding: 32px;
+        box-shadow: 0 32px 60px rgba(15, 23, 42, 0.12);
+        backdrop-filter: blur(8px);
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: 1.45fr 0.55fr;
+        gap: 50px;
+        align-items: center;
+      }
+
+      .hero h1 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: clamp(2.4rem, 4vw, 3.5rem);
+        line-height: 1.15;
+        margin-bottom: 16px;
+        color: #1e3a8a;
+      }
+
+      .hero p {
+        color: #334155;
+        font-size: 1.05rem;
+        font-weight: 600;
+        margin-bottom: 24px;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+      }
+
+      .hero-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 999px;
+        background: rgba(59, 130, 246, 0.12);
+        color: #1e3a8a;
+        font-weight: 800;
+        font-size: 1.02rem;
+        margin: 8px 0 12px;
+      }
+
+      .hero-pill svg {
+        width: 26px;
+        height: 26px;
+        fill: #facc15;
+      }
+
+      .hero-card {
+        background: linear-gradient(160deg, rgba(255, 255, 255, 0.95), rgba(226, 232, 255, 0.4));
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        border-radius: 22px;
+        padding: 28px;
+        box-shadow: 0 24px 45px rgba(15, 23, 42, 0.12);
+      }
+
+      .btn-primary {
+        padding: 14px 22px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #1d4ed8, #38bdf8);
+        color: #ffffff;
+        font-weight: 600;
+        box-shadow: 0 14px 28px rgba(59, 130, 246, 0.25);
+      }
+
+      .btn-ghost {
+        padding: 14px 22px;
+        border-radius: 12px;
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        color: var(--text);
+        font-weight: 600;
+        background: #ffffff;
+        box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+      }
+
+      .hero-panel {
+        background: transparent;
+        border: none;
+        border-radius: 22px;
+        padding: 18px;
+        box-shadow: none;
+      }
+
+      .hero-panel img {
+        width: 88%;
+        border-radius: 16px;
+        border: none;
+        background: transparent;
+        margin: 0 auto;
+        display: block;
+      }
+
+      section {
+        padding: 70px 0;
+      }
+
+      .section-title {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 2.4rem;
+        margin-bottom: 12px;
+        color: #1e3a8a;
+        text-shadow: 0 14px 28px rgba(59, 130, 246, 0.15);
+      }
+
+      .section-subtitle {
+        color: #1f2a44;
+        max-width: 760px;
+        font-size: 1.08rem;
+        font-weight: 600;
+      }
+
+      .accent-text {
+        color: #1d4ed8;
+      }
+
+      .story-card {
+        margin-top: 12px;
+        padding: 18px 20px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(226, 232, 255, 0.28));
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        border-right: 6px solid #1d4ed8;
+        box-shadow: 0 18px 35px rgba(15, 23, 42, 0.08);
+      }
+
+      .problem-solution {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+        margin-top: 28px;
+      }
+
+      .section-transition {
+        margin: 28px 0 8px;
+        padding: 18px 30px;
+        border-radius: 999px;
+        background: rgba(30, 64, 175, 0.08);
+        border: 1px solid rgba(30, 64, 175, 0.18);
+        color: #1e3a8a;
+        font-weight: 600;
+        font-size: 1.18rem;
+        width: fit-content;
+      }
+
+      .pain-panel {
+        margin-top: 22px;
+        padding: 26px;
+        border-radius: var(--radius);
+        background: linear-gradient(135deg, #fff5f5, #ffffff 60%);
+        border: 1px solid #fca5a5;
+        display: grid;
+        gap: 16px;
+        box-shadow: none;
+      }
+
+      .outcome-panel {
+        margin-top: 22px;
+        padding: 26px;
+        border-radius: var(--radius);
+        background: transparent;
+        border: none;
+        display: grid;
+        gap: 16px;
+        box-shadow: none;
+      }
+
+      .pain-title {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.7rem;
+        color: #7f1d1d;
+        letter-spacing: 0.2px;
+        font-weight: 700;
+      }
+
+      .pain-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+      }
+
+      .pain-card {
+        background: #ffffff;
+        border: 1px solid #fca5a5;
+        border-radius: 14px;
+        padding: 14px 16px;
+        display: grid;
+        gap: 8px;
+        box-shadow: 0 10px 20px rgba(220, 38, 38, 0.08);
+      }
+
+      .pain-card h5 {
+        font-size: 0.95rem;
+        color: #7f1d1d;
+      }
+
+      .pain-card p {
+        color: #7f1d1d;
+        font-weight: 600;
+      }
+
+      .pain-x {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #dc2626;
+        font-weight: 700;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+      }
+
+      .pain-chart {
+        background: #ffffff;
+        border: 1px solid #fecaca;
+        border-radius: 14px;
+        padding: 16px;
+      }
+
+      .delay-panel {
+        margin-top: 18px;
+        background: #ffffff;
+        border: 1px solid #fecaca;
+        border-radius: 14px;
+        padding: 16px;
+      }
+
+
+      .delay-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .delay-card {
+        border: 1px solid rgba(15, 23, 42, 0.35);
+        border-radius: 12px;
+        padding: 16px 18px 16px 52px;
+        background: #ffffff;
+        font-weight: 700;
+        color: #7f1d1d;
+        font-size: 1.05rem;
+        position: relative;
+        box-shadow: none;
+      }
+
+      .delay-card::before {
+        content: "✓";
+        position: absolute;
+        left: 14px;
+        top: 14px;
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        display: grid;
+        place-items: center;
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #86efac;
+        background: transparent;
+      }
+
+      .delay-card.green {
+        border-color: rgba(22, 163, 74, 0.5);
+        color: #166534;
+      }
+
+      .delay-card.green::before {
+        color: #16a34a;
+        background: none;
+      }
+
+      .delay-card.orange {
+        border-color: rgba(234, 88, 12, 0.5);
+        color: #9a3412;
+      }
+
+      .delay-card.orange::before {
+        content: "!";
+        color: #f97316;
+        background: none;
+      }
+
+      .delay-card.red {
+        border-color: rgba(220, 38, 38, 0.5);
+        color: #991b1b;
+      }
+
+      .delay-card.red::before {
+        content: "✖";
+        color: #dc2626;
+        background: none;
+      }
+
+      .delay-card span {
+        display: block;
+        font-weight: 500;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+
+      .delay-panel .chart-title {
+        margin-bottom: 8px;
+      }
+
+      .financial-section {
+        margin-top: 30px;
+        background: var(--surface);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius);
+        padding: 28px;
+        box-shadow: var(--shadow);
+      }
+
+      .financial-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+      }
+
+      .chart-card {
+        background: var(--surface-2);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 22px;
+      }
+
+      .chart-title {
+        font-weight: 600;
+        margin-bottom: 14px;
+        font-size: 1.25rem;
+        font-weight: 700;
+      }
+
+      .chart-caption {
+        margin-top: 12px;
+        color: var(--muted);
+        font-size: 1rem;
+        font-weight: 600;
+      }
+
+      .financial-highlights {
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+      }
+
+      .highlight-card {
+        padding: 18px 20px;
+        border-radius: 14px;
+        border: 1px solid rgba(22, 163, 74, 0.35);
+        background: transparent;
+        font-weight: 700;
+        font-size: 0.92rem;
+        color: #1f3a2e;
+        position: relative;
+        padding-left: 44px;
+      }
+
+      .highlight-card::before {
+        content: "✓";
+        position: absolute;
+        left: 16px;
+        top: 18px;
+        width: 18px;
+        height: 18px;
+        border-radius: 6px;
+        display: grid;
+        place-items: center;
+        color: #2f6f4e;
+        font-weight: 800;
+      }
+
+      .info-card {
+        padding: 24px;
+        border-radius: var(--radius);
+        background: linear-gradient(160deg, rgba(255, 255, 255, 0.72), rgba(219, 234, 254, 0.22));
+        border: 1px solid rgba(59, 130, 246, 0.25);
+        box-shadow: none;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .info-card h4 {
+        margin-bottom: 12px;
+        font-size: 1.35rem;
+        color: #1e3a8a;
+      }
+
+      .info-card ul {
+        list-style: none;
+        display: grid;
+        gap: 8px;
+        color: #1f2a44;
+        font-size: 1.08rem;
+      }
+
+      .info-card ul li::before {
+        content: "✕";
+        color: #dc2626;
+        margin-right: 10px;
+        font-weight: 700;
+      }
+
+      .info-card-dark {
+        background: linear-gradient(160deg, rgba(226, 232, 255, 0.14), rgba(191, 219, 254, 0.08));
+        border-color: rgba(30, 64, 175, 0.3);
+      }
+
+      .info-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        border: 1px solid rgba(59, 130, 246, 0.12);
+        pointer-events: none;
+      }
+
+      .feature-section {
+        margin-top: 24px;
+        padding: 28px;
+        border-radius: var(--radius);
+        background: linear-gradient(160deg, rgba(255, 255, 255, 0.98), rgba(241, 245, 249, 0.6));
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        display: grid;
+        gap: 16px;
+        grid-template-columns: 1.1fr 0.9fr;
+        align-items: center;
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity 0.6s ease, transform 0.6s ease;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .feature-section::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        border: 1px solid rgba(59, 130, 246, 0.04);
+        pointer-events: none;
+      }
+
+      .feature-section.alt {
+        grid-template-columns: 0.9fr 1.1fr;
+      }
+
+      .feature-section.alt .feature-media {
+        order: -1;
+      }
+
+      .feature-section.in-view {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .feature-section h4 {
+        font-size: 1.6rem;
+        font-family: "Space Grotesk", sans-serif;
+        color: #0f172a;
+        letter-spacing: 0.2px;
+        margin-bottom: 4px;
+      }
+
+      .feature-subtitle {
+        font-weight: 700;
+        color: #1e3a8a;
+        margin: 8px 0 6px;
+        font-size: 1.24rem;
+      }
+
+      .feature-desc {
+        color: #1f2a44;
+        font-size: 1.24rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+
+      .feature-value {
+        margin-top: 12px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: rgba(30, 64, 175, 0.06);
+        border: 1px solid rgba(30, 64, 175, 0.15);
+        color: #1f2a44;
+        font-weight: 600;
+        font-size: 1.12rem;
+      }
+
+      .feature-section p {
+        color: var(--muted);
+      }
+
+      .feature-outcome {
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: rgba(22, 163, 74, 0.1);
+        border: 1px solid rgba(22, 163, 74, 0.25);
+        color: #166534;
+        font-weight: 700;
+        font-size: 1.14rem;
+        margin-top: 14px;
+        padding-left: 44px;
+        position: relative;
+      }
+
+      .feature-outcome::before {
+        content: "✓";
+        position: absolute;
+        left: 16px;
+        top: 12px;
+        width: 18px;
+        height: 18px;
+        border-radius: 6px;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        color: #16a34a;
+      }
+
+
+      .feature-media {
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        background: #f8fafc;
+        min-height: 180px;
+        display: grid;
+        place-items: center;
+        padding-top: 8px;
+      }
+
+      .feature-media img {
+        width: 92%;
+        height: auto;
+        object-fit: contain;
+        display: block;
+      }
+
+      .feature-media.fill-img {
+        padding: 0;
+        place-items: stretch;
+        align-self: stretch;
+        height: 100%;
+      }
+
+      .feature-media.fill-img img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        object-position: center;
+      }
+
+      .benefit-wrap {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+        margin-top: 30px;
+      }
+
+      .benefit-card {
+        padding: 22px;
+        border-radius: var(--radius);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        background: linear-gradient(160deg, rgba(255, 255, 255, 0.98), rgba(241, 245, 249, 0.6));
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+      }
+
+      .benefit-card ul {
+        list-style: none;
+        display: grid;
+        gap: 8px;
+        color: var(--muted);
+      }
+
+      .benefit-card ul li::before {
+        content: "•";
+        color: var(--accent);
+        margin-right: 8px;
+      }
+
+      .outcome-grid {
+        margin-top: 28px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 28px;
+      }
+
+      .outcome-card {
+        padding: 25px;
+        border-radius: 18px;
+        border: 1px solid rgba(59, 130, 246, 0.25);
+        background: #ffffff;
+        box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
+        display: grid;
+        gap: 4px;
+        text-align: center;
+        align-content: start;
+        border-top: 4px solid rgba(59, 130, 246, 0.6);
+        opacity: 0;
+        transform: translateY(24px);
+        transition: opacity 0.6s ease, transform 0.6s ease;
+      }
+
+      .outcome-card.outcome-show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .outcome-grid-bottom {
+        margin-top: 28px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 28px;
+        align-items: stretch;
+      }
+
+      .outcome-card h4 {
+        font-size: 2rem;
+        font-family: "Space Grotesk", sans-serif;
+        color: #0f172a;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        justify-content: center;
+        letter-spacing: 0.4px;
+        text-transform: none;
+      }
+
+      .outcome-card.race h4 {
+        color: #0f172a;
+      }
+
+      .outcome-card.owner-top h4 {
+        color: #0f172a;
+      }
+
+      .outcome-card p {
+        color: #1f2a44;
+        font-weight: 600;
+        font-size: 1.02rem;
+        line-height: 1.45;
+        margin: 0;
+        padding: 12px 12px;
+      }
+
+      .outcome-note {
+        color: #334155;
+        font-weight: 600;
+        font-size: 0.98rem;
+        margin: 0;
+      }
+
+      .outcome-note.strong {
+        color: #1e3a8a;
+        font-weight: 700;
+        margin-top: 8px;
+      }
+
+      .leak-bars {
+        display: grid;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .leak-row {
+        display: grid;
+        gap: 4px;
+      }
+
+      .leak-meta {
+        display: grid;
+        justify-items: center;
+        gap: 2px;
+        font-weight: 600;
+        color: #1f2a44;
+      }
+
+      .leak-meta span {
+        color: #0f172a;
+        font-weight: 700;
+      }
+
+      .leak-bar {
+        height: 12px;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.3);
+        overflow: hidden;
+      }
+
+      .leak-fill {
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #16a34a, #22c55e);
+      }
+
+      .leak-fill.leak-red {
+        background: linear-gradient(90deg, #dc2626, #ef4444);
+      }
+
+      .leak-fill.leak-green {
+        background: linear-gradient(90deg, #16a34a, #22c55e);
+      }
+
+      .lead-race {
+        display: grid;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .race-step {
+        font-weight: 700;
+        color: #0f172a;
+        text-align: center;
+      }
+
+      .race-line {
+        height: 1px;
+        background: rgba(148, 163, 184, 0.4);
+      }
+
+      .race-branch {
+        display: grid;
+        gap: 8px;
+        border-left: 2px solid rgba(148, 163, 184, 0.5);
+        padding-left: 14px;
+        align-items: center;
+      }
+
+      .race-item {
+        padding: 14px 16px;
+        border-radius: 10px;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        background: #ffffff;
+        font-weight: 600;
+        color: #1f2a44;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        position: relative;
+      }
+
+      .race-item::before {
+        content: "";
+        position: absolute;
+        left: -20px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #94a3b8;
+      }
+
+      .race-item.winner::before {
+        background: #16a34a;
+      }
+
+      .race-item.warn::before {
+        background: #f97316;
+      }
+
+      .race-item.lose::before {
+        background: #dc2626;
+      }
+
+      .race-item span {
+        font-weight: 700;
+      }
+
+      .race-item.winner {
+        border-color: rgba(22, 163, 74, 0.4);
+        color: #166534;
+      }
+
+      .race-item.warn {
+        border-color: rgba(249, 115, 22, 0.45);
+        color: #9a3412;
+      }
+
+      .race-item.lose {
+        border-color: rgba(220, 38, 38, 0.45);
+        color: #991b1b;
+      }
+
+      .time-breakdown {
+        display: grid;
+        gap: 8px;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        border-radius: 12px;
+        padding: 12px;
+        background: rgba(248, 250, 252, 0.9);
+      }
+
+      .time-row {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 600;
+        color: #1f2a44;
+      }
+
+      .time-total {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 700;
+        color: #0f172a;
+        border-top: 1px dashed rgba(148, 163, 184, 0.6);
+        margin-top: 8px;
+        padding-top: 8px;
+      }
+
+      .automation-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .time-halves {
+        display: grid;
+        gap: 12px;
+      }
+
+      .auto-item {
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid #b6e3c6;
+        background: #e8f7ee;
+        color: #166534;
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .impact-card {
+        margin-top: 0;
+        padding: 25px;
+        border-radius: 18px;
+        border: 1px solid rgba(59, 130, 246, 0.25);
+        background: #ffffff;
+        box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
+        display: grid;
+        gap: 16px;
+        height: 100%;
+        align-content: center;
+        text-align: center;
+        border-top: 4px solid rgba(59, 130, 246, 0.6);
+        opacity: 0;
+        transform: translateY(24px);
+        transition: opacity 0.6s ease, transform 0.6s ease;
+      }
+
+      .impact-card.outcome-show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .impact-title {
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        color: #0f172a;
+      }
+
+      .impact-line {
+        display: grid;
+        gap: 4px;
+        font-weight: 600;
+        color: #1f2a44;
+        justify-items: center;
+      }
+
+      .impact-line strong {
+        color: #0f172a;
+        font-size: 2rem;
+        font-weight: 700;
+        background: #fef9c3;
+        padding: 2px 6px;
+        border-radius: 6px;
+      }
+
+      .impact-line span {
+        font-size: 1rem;
+        color: #475569;
+        font-weight: 600;
+      }
+
+      .pricing-grid {
+        margin-top: 32px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 24px;
+      }
+
+      .price-card {
+        padding: 28px;
+        border-radius: var(--radius);
+        background: #ffffff;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        box-shadow: 0 18px 35px rgba(15, 23, 42, 0.1);
+        display: flex;
+        flex-direction: column;
+        min-height: 560px;
+      }
+
+      .price-card h4 {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #0f172a;
+        text-align: center;
+      }
+
+      .price-card .price {
+        font-size: 2.4rem;
+        margin: 12px 0 6px;
+        font-weight: 800;
+        text-align: center;
+        color: #0f172a;
+      }
+
+      .price-pill {
+        align-self: center;
+        padding: 6px 14px;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.2);
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 16px;
+      }
+
+      .price-desc {
+        color: #334155;
+        font-weight: 700;
+        text-align: center;
+        margin: 8px 0 16px;
+        line-height: 1.5;
+      }
+
+      .price-subtitle {
+        margin-top: 6px;
+        font-size: 0.95rem;
+        color: #16a34a;
+        font-weight: 800;
+        text-align: center;
+        text-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+      }
+
+      .price-subtitle .highlight {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 6px;
+        background: rgba(34, 197, 94, 0.18);
+        color: #16a34a;
+        font-weight: 900;
+        border: none;
+        box-shadow: none;
+      }
+
+      .price-card ul {
+        list-style: none;
+        display: grid;
+        gap: 10px;
+        color: #1f2a44;
+        font-weight: 600;
+        font-size: 0.92rem;
+        line-height: 1.3;
+        margin-top: 6px;
+        margin-bottom: 26px;
+      }
+
+      .price-card .price-desc + ul {
+        margin-top: 18px;
+      }
+
+      .price-card ul + .price-desc {
+        margin-top: 10px;
+      }
+
+      .timeline-note {
+        text-align: left;
+        width: 100%;
+      }
+
+      .price-card ul li::before {
+        content: "✓";
+        color: #22c55e;
+        margin-right: 8px;
+        font-weight: 700;
+      }
+
+      .price-card button {
+        margin-top: 18px;
+        width: 100%;
+        padding: 14px 0;
+        border-radius: 12px;
+        border: none;
+        font-weight: 600;
+        background: linear-gradient(135deg, #1d4ed8, #38bdf8);
+        color: #ffffff;
+        cursor: pointer;
+        box-shadow: 0 12px 24px rgba(59, 130, 246, 0.25);
+        margin-top: auto;
+      }
+
+      .cta-trial {
+        padding: 16px 0;
+        border-radius: 14px;
+        display: grid;
+        gap: 4px;
+        font-weight: 700;
+        font-size: 1.05rem;
+        text-align: center;
+        background: linear-gradient(135deg, #2563eb, #60a5fa);
+        color: #ffffff;
+      }
+
+      .cta-trial span {
+        font-size: 1.15rem;
+        font-weight: 800;
+      }
+
+      .cta-trial small {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.85);
+      }
+
+      .price-card.advanced .cta-trial {
+        background: linear-gradient(135deg, #1e40af, #2563eb);
+      }
+
+      .price-card.pro .cta-trial {
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        color: #1f2937;
+      }
+
+      .price-card.starter .cta-trial {
+        background: linear-gradient(135deg, #16a34a, #22c55e);
+        color: #ffffff;
+        box-shadow: 0 12px 24px rgba(34, 197, 94, 0.35);
+      }
+
+      .price-card.pro .cta-trial small {
+        color: rgba(31, 41, 55, 0.75);
+      }
+
+      .price-card.starter {
+        background: #e7eefb;
+        border-color: #c7d7f5;
+      }
+
+      .price-card.starter .price-pill {
+        background: rgba(15, 23, 42, 0.1);
+      }
+
+      .price-card.advanced {
+        background: #f1f5ff;
+      }
+
+      .price-card.pro {
+        background: #0b1b34;
+        color: #e2e8f0;
+      }
+
+      .price-card.pro h4,
+      .price-card.pro .price,
+      .price-card.pro .price-desc,
+      .price-card.pro ul {
+        color: #e2e8f0;
+      }
+
+      .price-card.pro .price-pill {
+        background: #38bdf8;
+        color: #0f172a;
+      }
+
+      .price-card.pro ul li::before {
+        color: #38bdf8;
+      }
+
+      .price-card.pro button {
+        background: #38bdf8;
+        color: #0f172a;
+        box-shadow: 0 12px 24px rgba(56, 189, 248, 0.3);
+      }
+
+      .contact-grid {
+        margin-top: 28px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 24px;
+      }
+
+      .contact-card {
+        padding: 24px;
+        border-radius: var(--radius);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        background: linear-gradient(160deg, rgba(255, 255, 255, 0.98), rgba(241, 245, 249, 0.6));
+        box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+      }
+
+      .contact-form {
+        margin-top: 28px;
+        padding: 28px;
+        border-radius: 18px;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        background: #ffffff;
+        display: grid;
+        gap: 14px;
+        box-shadow: 0 18px 35px rgba(15, 23, 42, 0.1);
+      }
+
+      .contact-form input,
+      .contact-form textarea {
+        width: 100%;
+        padding: 14px 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        font-size: 1rem;
+        background: #f8fafc;
+      }
+
+      .contact-form button {
+        padding: 14px 18px;
+        border-radius: 12px;
+        border: none;
+        background: var(--accent);
+        color: #ffffff;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .roi-card {
+        margin-top: 24px;
+        padding: 28px;
+        border-radius: 18px;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        background: #ffffff;
+        box-shadow: 0 18px 35px rgba(15, 23, 42, 0.08);
+        display: grid;
+        gap: 20px;
+      }
+
+      .roi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+      }
+
+      .roi-plan {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        background: #f8fafc;
+      }
+
+      .roi-plan-options {
+        display: flex;
+        gap: 16px;
+        font-weight: 600;
+        color: #1f2a44;
+      }
+
+      .roi-plan-options label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+      }
+
+      .roi-field label {
+        display: block;
+        font-weight: 700;
+        color: #1f2a44;
+        margin-bottom: 8px;
+      }
+
+      .roi-field input {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        background: #f8fafc;
+        font-size: 1rem;
+      }
+
+      .roi-result {
+        display: grid;
+        gap: 8px;
+        padding: 18px;
+        border-radius: 14px;
+        border: 1px solid rgba(59, 130, 246, 0.25);
+        background: rgba(59, 130, 246, 0.06);
+      }
+
+      .roi-label {
+        font-weight: 700;
+        color: #1e3a8a;
+      }
+
+      .roi-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #0f172a;
+      }
+      .roi-divider {
+        height: 1px;
+        background: rgba(148, 163, 184, 0.6);
+        margin: 10px 0 6px;
+      }
+
+      .roi-note {
+        color: #475569;
+        font-weight: 600;
+      }
+
+      .roi-breakdown {
+        margin-top: 8px;
+        display: grid;
+        gap: 6px;
+        font-size: 0.95rem;
+      }
+      .roi-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        font-weight: 700;
+      }
+      .roi-line small {
+        font-weight: 500;
+        color: #6b7280;
+      }
+      .roi-gain {
+        color: #0f8a3c;
+      }
+      .roi-loss {
+        color: #c2410c;
+      }
+      .roi-neutral {
+        color: #64748b;
+      }
+
+      .industry-tabs {
+        margin-top: 26px;
+        padding: 24px;
+        border-radius: var(--radius);
+        border: 1px solid var(--card-border);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .tab-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+        align-items: center;
+      }
+
+      .tab-label {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1e3a8a;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 10px;
+      }
+
+      .tab-description {
+        color: #334155;
+        font-size: 1.02rem;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+
+      .tab-btn {
+        border: 1px solid rgba(59, 130, 246, 0.35);
+        background: rgba(255, 255, 255, 0.9);
+        color: #1f2a44;
+        padding: 12px 20px;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 0.98rem;
+        cursor: pointer;
+        box-shadow: none;
+        transition: transform 0.2s ease, background 0.2s ease;
+      }
+
+      .tab-btn.active {
+        background: linear-gradient(135deg, #1d4ed8, #38bdf8);
+        color: #ffffff;
+        border-color: transparent;
+      }
+
+      .tab-btn:hover {
+        transform: translateY(-1px);
+      }
+
+      .tab-panel {
+        display: none;
+      }
+
+      .tab-panel.active {
+        display: grid;
+        gap: 18px;
+      }
+
+      .tab-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+      }
+
+      .stat-card {
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid #fecaca;
+        background: #ffffff;
+        font-weight: 700;
+        color: #7f1d1d;
+        position: relative;
+        padding-left: 52px;
+      }
+
+      .stat-card span {
+        display: block;
+        color: var(--muted);
+        font-weight: 500;
+        margin-top: 6px;
+      }
+
+      .stat-card::before {
+        content: "✖";
+        position: absolute;
+        left: 14px;
+        top: 14px;
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        background: transparent;
+        color: #dc2626;
+        display: grid;
+        place-items: center;
+        font-size: 1.15rem;
+        font-weight: 800;
+      }
+
+      .stat-card.positive {
+        border-color: #86efac;
+        color: #166534;
+      }
+
+      .stat-card.positive::before {
+        content: "✓";
+        color: #16a34a;
+      }
+
+      .tab-chart {
+        background: #ffffff;
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 22px;
+      }
+
+      .tab-note {
+        color: var(--muted);
+        font-size: 0.98rem;
+        font-weight: 600;
+      }
+
+      footer {
+        padding: 40px 0 60px;
+        border-top: 1px solid var(--card-border);
+        color: var(--muted);
+        background: #ffffff;
+      }
+
+      @media (max-width: 960px) {
+        .hero-grid,
+        .problem-solution,
+        .benefit-wrap {
+          grid-template-columns: 1fr;
+        }
+
+        .nav-links {
+          display: none;
+        }
+      }
+
+      @media (max-width: 1100px) {
+        .feature-section {
+          grid-template-columns: 1fr;
+        }
+        .feature-section .feature-media {
+          order: -1;
+          width: 100%;
+        }
+        .feature-section > div {
+          width: 100%;
+        }
+        .feature-section.alt .feature-media {
+          order: -1;
+        }
+        .financial-grid {
+          grid-template-columns: 1fr;
+        }
+        .outcome-grid,
+        .outcome-grid-bottom,
+        .pricing-grid {
+          grid-template-columns: 1fr;
+        }
+        .hero-grid {
+          grid-template-columns: 1fr;
+        }
+        .hero-panel img {
+          width: 100%;
+        }
+      }
+
+      @media (max-width: 700px) {
+        .hero-panel {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="container nav">
+        <a class="logo" href="#intro">
+          <img class="logo-mark" src="/portfolio/images/justgotalead.png" alt="Just got a lead logo" />
+          <span class="logo-text">Just<span>Got</span><span>ALead</span></span>
+        </a>
+        <nav class="nav-links">
+          <a href="#intro">Value</a>
+          <a href="#problem">Problem</a>
+          <a href="#features">Features</a>
+          <a href="#benefits">Outcomes</a>
+          <a href="#pricing">Plans</a>
+          <a href="#contact">Contact</a>
+        </nav>
+        <a class="nav-cta" href="#contact">Request Demo</a>
+      </div>
+    </header>
+
+    <section class="hero" id="intro">
+      <div class="container hero-wrap">
+        <div class="hero-grid">
+          <div class="hero-card">
+          <h1>Never miss a call, question, or lead again.</h1>
+          <div class="hero-pill">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2l1.6 5h5.2l-4.2 3 1.6 5-4.2-3-4.2 3 1.6-5-4.2-3h5.2L12 2z" />
+            </svg>
+            Power your time and business with AI
+          </div>
+          <p>
+            Your AI assistant answers customer questions instantly, captures lead details, and schedules
+            estimates across web chat, phone, SMS, and email—so you never miss a response window.
+            It uses owner‑approved knowledge and routes every lead and appointment into your CRM automatically.
+          </p>
+          <div class="hero-actions">
+            <a class="btn-primary" href="#pricing">See Plans</a>
+            <a class="btn-ghost" href="#contact">Talk to Sales</a>
+          </div>
+          </div>
+          <div class="hero-panel">
+                  <img src="/portfolio/images/7376481.png" alt="Customer response dashboard" />
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="problem">
+      <div class="container">
+        <h2 class="section-title">The problem, in a real day</h2>
+        <div class="story-card">
+          <p class="section-subtitle">
+            The rush hits. Phones ring, inboxes fill, and customers need answers now. If no one replies quickly,
+            they move on to the next company.
+          </p>
+        </div>
+        <div class="problem-solution">
+          <div class="info-card info-card-dark">
+            <h4>What your customers experience</h4>
+            <ul>
+              <li>They call after hours and get no answer.</li>
+              <li>They wait for a reply and feel uncertain.</li>
+              <li>They choose a competitor who responds faster.</li>
+            </ul>
+          </div>
+          <div class="info-card">
+            <h4>What the delay really costs</h4>
+            <ul>
+              <li>Leads choose a faster competitor, shrinking revenue.</li>
+              <li>Every missed response compounds into higher marketing spend.</li>
+              <li>Lost calls often mean $1k–$3k in job value per lead.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="section-transition">Revenue Risk by Industry</div>
+        <div class="pain-panel">
+          <div class="pain-title">Missed calls cost real money</div>
+          <div class="tab-label">Industries</div>
+          <div class="tab-row">
+            <button class="tab-btn active" data-tab="landscaping">Landscaping</button>
+            <button class="tab-btn" data-tab="cleaning">Cleaning</button>
+            <button class="tab-btn" data-tab="roofing">Roofing</button>
+          </div>
+          <div class="tab-panel active" id="tab-landscaping">
+            <div class="tab-description">High-ticket seasonal jobs with urgent inquiries and fast competition.</div>
+            <div class="tab-stats">
+              <div class="stat-card positive" style="font-size: 1.05rem;">
+                Avg job value
+                <span>$3,647 per job</span>
+              </div>
+              <div class="stat-card positive" style="font-size: 1.05rem;">
+                Peak call volume
+                <span>20–80 calls/month (seasonal)</span>
+              </div>
+              <div class="stat-card" style="font-size: 1.05rem;">
+                Lost revenue per missed call
+                <span>$600–$1,800 per missed call</span>
+              </div>
+            </div>
+            <div class="tab-chart">
+              <div class="chart-title">Estimated monthly revenue at risk</div>
+              <svg viewBox="0 0 360 180" width="100%" height="230" aria-hidden="true">
+                <line x1="40" y1="20" x2="40" y2="150" stroke="#cbd5f5" stroke-width="1" />
+                <line x1="40" y1="150" x2="320" y2="150" stroke="#cbd5f5" stroke-width="1" />
+                <rect x="70" y="90" width="60" height="60" fill="#ef4444" rx="6" />
+                <rect x="150" y="60" width="60" height="90" fill="#dc2626" rx="6" />
+                <rect x="230" y="30" width="60" height="120" fill="#b91c1c" rx="6" />
+                <text x="70" y="170" font-size="11" fill="#475569">1 missed</text>
+                <text x="148" y="170" font-size="11" fill="#475569">3 missed</text>
+                <text x="228" y="170" font-size="11" fill="#475569">5 missed</text>
+                <text x="74" y="82" font-size="13" font-weight="700" fill="#7f1d1d">$1.2k</text>
+                <text x="152" y="52" font-size="13" font-weight="700" fill="#7f1d1d">$3.6k</text>
+                <text x="232" y="22" font-size="13" font-weight="700" fill="#7f1d1d">$6k</text>
+              </svg>
+              <div class="tab-note">Assumes $1,200 lost per missed call.</div>
+            </div>
+            <div class="pain-title">Delayed answers cost real money</div>
+            <div class="delay-cards">
+              <div class="delay-card green">Minutes response<span>~35% close rate</span></div>
+              <div class="delay-card orange">Hours response<span>~18% close rate</span></div>
+              <div class="delay-card red">Next day response<span>~8% close rate</span></div>
+            </div>
+            <div class="delay-panel">
+              <svg viewBox="0 0 360 170" width="100%" height="230" aria-hidden="true">
+                <line x1="40" y1="20" x2="40" y2="140" stroke="#fecaca" stroke-width="1" />
+                <line x1="40" y1="140" x2="320" y2="140" stroke="#fecaca" stroke-width="1" />
+                <rect x="70" y="50" width="60" height="90" fill="#16a34a" rx="6" />
+                <rect x="150" y="85" width="60" height="55" fill="#f97316" rx="6" />
+                <rect x="230" y="110" width="60" height="30" fill="#dc2626" rx="6" />
+                <text x="62" y="158" font-size="11" fill="#7f1d1d">Minutes</text>
+                <text x="150" y="158" font-size="11" fill="#7f1d1d">Hours</text>
+                <text x="236" y="158" font-size="11" fill="#7f1d1d">Next day</text>
+                <text x="74" y="45" font-size="11" fill="#166534">35% close</text>
+                <text x="154" y="80" font-size="11" fill="#9a3412">18% close</text>
+                <text x="236" y="106" font-size="11" fill="#7f1d1d">8% close</text>
+              </svg>
+              <div class="tab-note">Delays after hours can cut conversion by 50–75%, lowering revenue from every lead.</div>
+            </div>
+          </div>
+
+          <div class="tab-panel" id="tab-cleaning">
+            <div class="tab-description">Recurring service leads that choose the first business to answer.</div>
+            <div class="tab-stats">
+              <div class="stat-card positive" style="font-size: 1.05rem;">
+                Avg job value
+                <span>$118–$237 per visit</span>
+              </div>
+              <div class="stat-card positive" style="font-size: 1.05rem;">
+                Peak call volume
+                <span>50–80 calls/month</span>
+              </div>
+              <div class="stat-card" style="font-size: 1.05rem;">
+                Lost revenue per missed call
+                <span>$250–$900 per missed call</span>
+              </div>
+            </div>
+            <div class="tab-chart">
+              <div class="chart-title">Estimated missed revenue (monthly)</div>
+              <svg viewBox="0 0 360 180" width="100%" height="230" aria-hidden="true">
+                <line x1="40" y1="20" x2="40" y2="150" stroke="#cbd5f5" stroke-width="1" />
+                <line x1="40" y1="150" x2="320" y2="150" stroke="#cbd5f5" stroke-width="1" />
+                <rect x="70" y="100" width="60" height="50" fill="#ef4444" rx="6" />
+                <rect x="150" y="70" width="60" height="80" fill="#dc2626" rx="6" />
+                <rect x="230" y="40" width="60" height="110" fill="#b91c1c" rx="6" />
+                <text x="70" y="170" font-size="11" fill="#475569">1 missed</text>
+                <text x="148" y="170" font-size="11" fill="#475569">3 missed</text>
+                <text x="228" y="170" font-size="11" fill="#475569">5 missed</text>
+                <text x="74" y="92" font-size="13" font-weight="700" fill="#7f1d1d">$1.2k</text>
+                <text x="152" y="62" font-size="13" font-weight="700" fill="#7f1d1d">$3.6k</text>
+                <text x="232" y="32" font-size="13" font-weight="700" fill="#7f1d1d">$6k</text>
+              </svg>
+              <div class="tab-note">Missed calls reduce recurring schedules and long‑term value.</div>
+            </div>
+            <div class="pain-title">Delayed answers cost real money</div>
+            <div class="delay-cards">
+              <div class="delay-card green">Minutes response<span>~32% close rate</span></div>
+              <div class="delay-card orange">Hours response<span>~15% close rate</span></div>
+              <div class="delay-card red">Next day response<span>~6% close rate</span></div>
+            </div>
+            <div class="delay-panel">
+              <svg viewBox="0 0 360 170" width="100%" height="230" aria-hidden="true">
+                <line x1="40" y1="20" x2="40" y2="140" stroke="#fecaca" stroke-width="1" />
+                <line x1="40" y1="140" x2="320" y2="140" stroke="#fecaca" stroke-width="1" />
+                <rect x="70" y="55" width="60" height="85" fill="#16a34a" rx="6" />
+                <rect x="150" y="90" width="60" height="50" fill="#f97316" rx="6" />
+                <rect x="230" y="114" width="60" height="26" fill="#dc2626" rx="6" />
+                <text x="62" y="158" font-size="11" fill="#7f1d1d">Minutes</text>
+                <text x="150" y="158" font-size="11" fill="#7f1d1d">Hours</text>
+                <text x="236" y="158" font-size="11" fill="#7f1d1d">Next day</text>
+                <text x="74" y="50" font-size="11" fill="#166534">32% close</text>
+                <text x="154" y="85" font-size="11" fill="#9a3412">15% close</text>
+                <text x="236" y="110" font-size="11" fill="#7f1d1d">6% close</text>
+              </svg>
+              <div class="tab-note">Waiting overnight can cut conversions by ~80% for cleaning inquiries.</div>
+            </div>
+          </div>
+
+          <div class="tab-panel" id="tab-roofing">
+            <div class="tab-description">Emergency-driven calls where speed decides the winner.</div>
+            <div class="tab-stats">
+              <div class="stat-card positive" style="font-size: 1.05rem;">
+                Avg job value
+                <span>$9,500–$11,500 per replacement</span>
+              </div>
+              <div class="stat-card positive" style="font-size: 1.05rem;">
+                Peak call volume
+                <span>30–100 calls/month (seasonal)</span>
+              </div>
+              <div class="stat-card" style="font-size: 1.05rem;">
+                Lost revenue per missed call
+                <span>$1,500–$3,500 per missed call</span>
+              </div>
+            </div>
+            <div class="tab-chart">
+              <div class="chart-title">Revenue at risk during peak weeks</div>
+              <svg viewBox="0 0 360 180" width="100%" height="230" aria-hidden="true">
+                <line x1="40" y1="20" x2="40" y2="150" stroke="#cbd5f5" stroke-width="1" />
+                <line x1="40" y1="150" x2="320" y2="150" stroke="#cbd5f5" stroke-width="1" />
+                <rect x="70" y="80" width="60" height="70" fill="#ef4444" rx="6" />
+                <rect x="150" y="50" width="60" height="100" fill="#dc2626" rx="6" />
+                <rect x="230" y="20" width="60" height="130" fill="#b91c1c" rx="6" />
+                <text x="64" y="170" font-size="11" fill="#475569">10 missed</text>
+                <text x="148" y="170" font-size="11" fill="#475569">20 missed</text>
+                <text x="228" y="170" font-size="11" fill="#475569">30 missed</text>
+                <text x="70" y="72" font-size="11" fill="#7f1d1d">$95k</text>
+                <text x="150" y="42" font-size="11" fill="#7f1d1d">$190k</text>
+                <text x="230" y="12" font-size="11" fill="#7f1d1d">$285k</text>
+              </svg>
+              <div class="tab-note">Roofing calls spike in storms. Lost calls can mean six‑figure losses.</div>
+            </div>
+            <div class="pain-title">Delayed answers cost real money — by industry</div>
+            <div class="delay-cards">
+              <div class="delay-card green">Minutes response<span>~40% close rate</span></div>
+              <div class="delay-card orange">Hours response<span>~16% close rate</span></div>
+              <div class="delay-card red">Next day response<span>~5% close rate</span></div>
+            </div>
+            <div class="delay-panel">
+              <svg viewBox="0 0 360 170" width="100%" height="230" aria-hidden="true">
+                <line x1="40" y1="20" x2="40" y2="140" stroke="#fecaca" stroke-width="1" />
+                <line x1="40" y1="140" x2="320" y2="140" stroke="#fecaca" stroke-width="1" />
+                <rect x="70" y="45" width="60" height="95" fill="#16a34a" rx="6" />
+                <rect x="150" y="90" width="60" height="50" fill="#f97316" rx="6" />
+                <rect x="230" y="118" width="60" height="22" fill="#dc2626" rx="6" />
+                <text x="62" y="158" font-size="11" fill="#7f1d1d">Minutes</text>
+                <text x="150" y="158" font-size="11" fill="#7f1d1d">Hours</text>
+                <text x="236" y="158" font-size="11" fill="#7f1d1d">Next day</text>
+                <text x="74" y="40" font-size="11" fill="#166534">40% close</text>
+                <text x="154" y="85" font-size="11" fill="#9a3412">16% close</text>
+                <text x="236" y="114" font-size="11" fill="#7f1d1d">5% close</text>
+              </svg>
+              <div class="tab-note">After‑hours delays can cut roofing conversions by ~80%.</div>
+            </div>
+          </div>
+        </div>
+        <div class="financial-section">
+          <h3 style="font-family: 'Space Grotesk', sans-serif; font-size: 1.7rem; margin-bottom: 6px;">
+            <span class="accent-text">Inquiries</span> drain time
+          </h3>
+          <p class="section-subtitle">
+            Calls, texts, and questions add up fast. Most owners lose 10–20 hours every week.
+          </p>
+          <div class="financial-grid">
+            <div class="chart-card">
+              <div class="chart-title">Annual time spent handling customer inquiries</div>
+              <svg viewBox="0 0 360 240" width="100%" height="260" aria-hidden="true">
+                <line x1="40" y1="20" x2="40" y2="200" stroke="#cbd5f5" stroke-width="1" />
+                <line x1="40" y1="200" x2="330" y2="200" stroke="#cbd5f5" stroke-width="1" />
+                <text x="8" y="55" font-size="13" font-weight="700" fill="#1f2a44">$52k</text>
+                <text x="8" y="95" font-size="13" font-weight="700" fill="#1f2a44">$39k</text>
+                <text x="8" y="135" font-size="13" font-weight="700" fill="#1f2a44">$26k</text>
+                <text x="8" y="175" font-size="13" font-weight="700" fill="#1f2a44">$13k</text>
+                <path d="M40 170 L130 130 L220 90 L330 50 L330 200 L40 200 Z" fill="rgba(220, 38, 38, 0.18)" />
+                <polyline points="40,170 130,130 220,90 330,50" fill="none" stroke="#dc2626" stroke-width="3" />
+                <circle cx="40" cy="170" r="4" fill="#dc2626" />
+                <circle cx="130" cy="130" r="4" fill="#dc2626" />
+                <circle cx="220" cy="90" r="4" fill="#dc2626" />
+                <circle cx="330" cy="50" r="4" fill="#dc2626" />
+                <text x="118" y="120" font-size="13" font-weight="700" fill="#dc2626">$26k</text>
+                <text x="208" y="80" font-size="13" font-weight="700" fill="#dc2626">$39k</text>
+                <text x="318" y="40" font-size="13" font-weight="700" fill="#dc2626">$52k</text>
+                <text x="30" y="222" font-size="13" font-weight="700" fill="#1f2a44">6h</text>
+                <text x="120" y="222" font-size="13" font-weight="700" fill="#1f2a44">10h</text>
+                <text x="210" y="222" font-size="13" font-weight="700" fill="#1f2a44">15h</text>
+                <text x="320" y="222" font-size="13" font-weight="700" fill="#1f2a44">20h</text>
+              </svg>
+              <div  style="font-weight: bold; text-align: center;" class="chart-caption">At $50/hour, 15h/week costs about $39k/year in owner time.</div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">Manual responses vs automated responses</div>
+              <svg viewBox="0 0 360 240" width="100%" height="260" aria-hidden="true">
+                <line x1="40" y1="20" x2="40" y2="200" stroke="#cbd5f5" stroke-width="1" />
+                <line x1="320" y1="20" x2="320" y2="200" stroke="#cbd5f5" stroke-width="1" />
+                <line x1="40" y1="200" x2="320" y2="200" stroke="#cbd5f5" stroke-width="1" />
+                <text x="10" y="55" font-size="12.5" font-weight="700" fill="#1f2a44">$40k</text>
+                <text x="10" y="95" font-size="12.5" font-weight="700" fill="#1f2a44">$30k</text>
+                <text x="10" y="135" font-size="12.5" font-weight="700" fill="#1f2a44">$20k</text>
+                <text x="10" y="175" font-size="12.5" font-weight="700" fill="#1f2a44">$10k</text>
+                <text x="326" y="60" font-size="12.5" font-weight="700" fill="#1f2a44">14h</text>
+                <text x="326" y="95" font-size="12.5" font-weight="700" fill="#1f2a44">10h</text>
+                <text x="326" y="130" font-size="12.5" font-weight="700" fill="#1f2a44">6h</text>
+                <text x="326" y="165" font-size="12.5" font-weight="700" fill="#1f2a44">2h</text>
+                <rect x="70" y="40" width="80" height="150" fill="#dc2626" rx="8" />
+                <rect x="200" y="160" width="80" height="30" fill="#16a34a" rx="8" />
+                <text x="66" y="32" font-size="13" font-weight="700" fill="#dc2626">$39k</text>
+                <text x="196" y="154" font-size="13" font-weight="700" fill="#16a34a">$2.6k</text>
+                <text x="60" y="215" font-size="14" font-weight="700" fill="#1f2a44">Manual (Before)</text>
+                <text x="190" y="215" font-size="14" font-weight="700" fill="#1f2a44">Automated (After)</text>
+              </svg>
+              <div style="font-weight: bold; text-align: center;" class="chart-caption">Cut response time from ~15h/week to ~1h/week.</div>
+            </div>
+          </div>
+          <div class="financial-highlights">
+            <div class="highlight-card">Reclaim ~$36,400 in owner time annually.</div>
+            <div class="highlight-card">Recover 780–1,040 hours for growth.</div>
+            <div class="highlight-card">Shift time from questions to booked jobs.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features">
+      <div class="container">
+        <h2 class="section-title">How it works</h2>
+        <p class="section-subtitle">
+          Our platform combines conversational support with business‑data aggregation and follow‑up automation.
+        </p>
+        <div class="feature-section">
+          <div>
+            <h4>Customer‑facing assistant</h4>
+            <div class="feature-subtitle">Instant answers, owner‑approved</div>
+            <p class="feature-desc">
+              Visitors can ask questions directly on your website instead of calling or waiting for a response.
+            </p>
+            <div class="feature-value">
+              <strong>Value</strong>
+              <br />• Customers get answers immediately
+              <br />• Fewer repetitive phone calls for your team
+              <br />• More visitors convert into estimates
+              <br />• Tailored responses using your business knowledge
+              <br />• 24/7 customer service without hiring more staff
+            </div>
+            <div class="feature-outcome">Outcome: Faster responses that convert more visitors into paying customers.</div>
+          </div>
+          <div class="feature-media">
+            <img src="/portfolio/images/chatbot.png" alt="Chat assistant experience" />
+          </div>
+        </div>
+
+        <div class="feature-section">
+          <div>
+            <h4>Automated CRM Integration</h4>
+            <div class="feature-subtitle">Remove manual lead entry</div>
+            <p class="feature-desc">
+              Every lead captured by the AI assistant is automatically synced to your CRM, eliminating the need to manually enter lead information.
+            </p>
+            <div class="feature-value">
+              <strong>Value</strong>
+              <br />• Leads automatically synced to CRM
+              <br />• No manual lead entry
+              <br />• AI handles incoming inquiries
+              <br />• Focus on delivering great service
+            </div>
+            <div class="feature-outcome">Outcome: Always up-to-date CRM, more appointments booked.</div>
+          </div>
+          <div class="feature-media">
+            <img src="/portfolio/images/booking.png" alt="ETL reporting" />
+          </div>
+        </div>
+
+        <div class="feature-section">
+          <div class="feature-media">
+            <img src="/portfolio/images/calendar.png" alt="Multi-channel response" />
+          </div>
+          <div>
+            <h4>Calendar Integration</h4>
+            <div class="feature-subtitle">Always up‑to‑date availability</div>
+            <p class="feature-desc">
+              Leads can schedule instantly using your real calendar availability, ensuring appointments fit both the customer and your schedule.
+            </p>
+            <div class="feature-value">
+              <strong>Value</strong>
+              <br />• Real‑time calendar availability
+              <br />• Accurate booking for both parties
+              <br />• No scheduling conflicts
+              <br />• Less back‑and‑forth with customers
+            </div>
+            <div class="feature-outcome">Outcome: Always‑accurate scheduling and more confirmed appointments.</div>
+          </div>
+        </div>
+
+        <div class="feature-section">
+          <div class="feature-media">
+            <img src="/portfolio/images/sms.png" alt="Multi-channel response" />
+          </div>
+          <div>
+            <h4>Phone, SMS, and email coverage</h4>
+            <div class="feature-subtitle">Always‑on coverage for every channel</div>
+            <p class="feature-desc">
+              Our system ensures every inquiry receives a response — whether it comes from a phone call, text message, website chat, or email.
+            </p>
+            <div class="feature-value">
+              <strong>Value</strong>
+              <br />• Tailored responses
+              <br />• No missed inquiries during busy hours
+              <br />• After‑hours questions still get answered
+              <br />• Leads stay engaged with you
+              <br />• Automated text messages
+            </div>
+            <div class="feature-outcome">Outcome: No missed calls or messages.</div>
+          </div>
+        </div>
+
+        <div class="feature-section">
+          <div class="feature-media">
+            <img src="/portfolio/images/text.png" alt="Automated follow ups" />
+          </div>
+          <div>
+            <h4>Automated follow‑ups</h4>
+            <div class="feature-subtitle">Follow‑ups that close the loop</div>
+            <p class="feature-desc">
+              Our system automatically sends confirmations, reminders, and follow‑up messages after a lead contacts you or books an estimate.
+            </p>
+            <div class="feature-value">
+              <strong>Value</strong>
+              <br />• Faster follow‑ups after inquiries
+              <br />• More estimates turn into scheduled jobs
+              <br />• Improved customer experience
+            </div>
+            <div class="feature-outcome">Outcome: Higher show‑up rates and more booked work.</div>
+          </div>
+        </div>
+
+        <div class="feature-section">
+          <div>
+            <h4>Insights you can ask for</h4>
+            <div class="feature-subtitle">Ask the business, get the answer</div>
+            <p class="feature-desc">
+              Instead of building reports manually, you can ask simple questions about your business.
+            </p>
+            <div class="feature-value">
+              <strong>Examples</strong>
+              <br />• Which services generate the most revenue?
+              <br />• When are lead volumes highest?
+              <br />• How many estimates convert into jobs?
+            </div>
+            <div class="feature-value" style="margin-top: 10px;">
+              <strong>Value</strong>
+              <br />• Faster visibility into business performance
+              <br />• Less time building reports
+              <br />• Better decisions using real data
+            </div>
+            <div class="feature-outcome">Outcome: Clearer insights with less operational effort.</div>
+          </div>
+          <div class="feature-media fill-img">
+            <img src="/portfolio/images/insights.png" alt="Insights" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <section id="benefits">
+      <div class="container">
+        <h2 class="section-title">Business outcomes</h2>
+        <p class="section-subtitle">
+          Faster responses and automation capture more leads, reduce missed opportunities, and recover owner time.
+        </p>
+          <div class="outcome-panel">
+          <div class="outcome-grid">
+            <div class="outcome-card revenue">
+              <h4>Capture more revenue</h4>
+              <p>Instant responses increase conversion rates.</p>
+              <div class="leak-bars">
+                <div class="leak-row">
+                  <div class="leak-meta">
+                    <strong>Immediate response</strong>
+                    <span>$51,000 captured</span>
+                  </div>
+                  <div class="leak-bar">
+                    <div class="leak-fill" style="width: 100%"></div>
+                  </div>
+                </div>
+                <div class="leak-row">
+                  <div class="leak-meta">
+                    <strong>1 hour delay</strong>
+                    <span>$29,000 captured</span>
+                  </div>
+                  <div class="leak-bar">
+                    <div class="leak-fill" style="width: 57%"></div>
+                  </div>
+                </div>
+                <div class="leak-row">
+                  <div class="leak-meta">
+                    <strong>Next day</strong>
+                    <span>$11,000 captured</span>
+                  </div>
+                  <div class="leak-bar">
+                    <div class="leak-fill" style="width: 22%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="outcome-card race">
+              <h4>Fast responses win the job</h4>
+              <p>The first reply often decides the customer’s choice.</p>
+              <div class="lead-race">
+                <div class="race-step">Lead arrives</div>
+                <div class="race-line"></div>
+                <div class="race-branch">
+                  <div class="race-item winner">
+                    Company A — responds < 2 minutes
+                    <span>✓ booked</span>
+                  </div>
+                  <div class="race-item warn">
+                    Company B — responds in 2 hours
+                    <span>Estimate requested</span>
+                  </div>
+                  <div class="race-item lose">
+                    Company C — responds next day
+                    <span>Customer already hired someone</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="outcome-grid outcome-grid-bottom">
+            <div class="outcome-card owner-top">
+              <h4>Regain time</h4>
+              <p>Allocate your time to where it matters most.</p>
+              <div class="leak-bars">
+                <div class="leak-row">
+                  <div class="leak-meta">
+                    <strong>15 hours / week</strong>
+                  </div>
+                  <div class="leak-bar">
+                    <div class="leak-fill leak-red" style="width: 100%"></div>
+                  </div>
+                </div>
+                <div class="leak-row">
+                  <div class="leak-meta">
+                    <strong>1–2 hours / week</strong>
+                  </div>
+                  <div class="leak-bar">
+                    <div class="leak-fill leak-green" style="width: 12%"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="outcome-note strong" style="margin-top: 10px;">~90% reduction in inquiry handling time</div>
+            </div>
+            <div class="impact-card">
+              <div class="impact-title">Annual Business Impact</div>
+              <div class="impact-line">
+                <strong>$20k–$60k</strong>
+                <span>Revenue captured</span>
+              </div>
+              <div class="impact-line">
+                <strong>780–1,040 hours</strong>
+                <span>Owner time recovered</span>
+              </div>
+              <div class="impact-line">
+                <strong>+20–40%</strong>
+                <span>More jobs captured</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="pricing">
+      <div class="container">
+        <h2 class="section-title">Pricing</h2>
+        <div class="pricing-grid">
+          <div class="price-card starter">
+            <h4>Basic</h4>
+            <div class="price">$90<span style="font-size:1rem;">/mo</span></div>
+            <p class="price-desc">
+              Start with an instant AI assistant for your website. Answer questions and capture leads automatically.
+            </p>
+            <ul>
+              <li>Instant AI chatbot on your website</li>
+              <li>Owner‑controlled knowledge base</li>
+              <li>Automated customer Q&A</li>
+              <li>Lead capture form included</li>
+              <li>Instant lead email notifications</li>
+              <li>Capture every after‑hours lead</li>
+            </ul>
+            <button class="cta-trial" onclick="document.querySelector('#contact').scrollIntoView({behavior:'smooth'})">
+              <span>30 Day Free Trial</span>
+              <small>Cancel anytime — no risk</small>
+            </button>
+          </div>
+          <div class="price-card advanced">
+            <h4>Advanced</h4>
+            <div class="price">$199–$299+<span style="font-size:1rem;">/mo</span></div>
+            <p class="price-desc" style="margin-top: 6px;">Everything in Basic plan, PLUS:</p>
+            <ul>
+<li>CRM + calendar integration</li>
+<li>Automatic appointment creation</li>
+<li>Leads synced to CRM</li>
+
+              <li>AI Agent Integration with existing CRM</li>
+              <li>Custom CRM analytics</li>
+            </ul>
+            <p class="price-desc timeline-note">Timeline: typically 1–3 weeks (depending on systems and complexity).</p>
+            <button class="cta-trial" onclick="document.querySelector('#contact').scrollIntoView({behavior:'smooth'})">
+              <span>Choose Advanced</span>
+              <small>Request a setup consult</small>
+            </button>
+          </div>
+          <div class="price-card pro">
+            <h4>Custom</h4>
+            <div class="price">$399+<span style="font-size:1rem;">/mo</span></div>
+            <div class="price-subtitle">or <span class="highlight">$3,840 annually</span> (20% discount)</div>
+            <p class="price-desc" style="margin-top: 6px;">Everything in Advanced plan, PLUS:</p>
+            <ul>
+            <li>AI phone call answering</li>
+            <li>Missed call text-back</li>
+            <li>SMS lead conversations</li>
+            <li>Email follow-up automation</li>
+            <li>Multi-channel AI conversations</li>
+            <li>Persistent lead follow-ups</li>
+            </ul>
+            <p class="price-desc timeline-note">Timeline and scope defined together after consultation.</p>
+            <button class="cta-trial" onclick="document.querySelector('#contact').scrollIntoView({behavior:'smooth'})">
+              <span>Choose Custom</span>
+              <small>Custom scope & timeline</small>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="roi">
+      <div class="container">
+        <h2 class="section-title">ROI Calculator</h2>
+        <p class="section-subtitle">Estimate the monthly revenue you can recover by responding faster.</p>
+        <div class="roi-card">
+          <div class="roi-plan">
+            <div class="roi-label">Select plan</div>
+            <div class="roi-plan-options">
+              <label><input type="radio" name="roiPlan" value="basic" checked /> Basic</label>
+              <label><input type="radio" name="roiPlan" value="advanced" /> Advanced</label>
+              <label><input type="radio" name="roiPlan" value="custom" /> Custom</label>
+            </div>
+          </div>
+          <div class="roi-grid">
+            <div class="roi-field">
+              <label>Average Job Value</label>
+              <input id="roiJobValue" type="number" value="2500" min="0" step="100" />
+            </div>
+            <div class="roi-field">
+              <label>Monthly Inquiries (Leads)</label>
+              <input id="roiLeads" type="number" value="120" min="0" step="5" />
+            </div>
+            <div class="roi-field">
+              <label>Current Close Rate (%)</label>
+              <input id="roiCloseRate" type="number" value="15" min="0" step="1" />
+            </div>
+            <div class="roi-field" id="roiMissedField">
+              <label>Missed Calls per Month</label>
+              <input id="roiMissed" type="number" value="20" min="0" step="1" />
+            </div>
+            <div class="roi-field" id="roiHoursField">
+              <label>Hours Spent Responding Weekly</label>
+              <input id="roiHoursSpent" type="number" value="15" min="0" step="1" />
+            </div>
+          </div>
+          <div class="roi-result">
+            <div>
+              <div class="roi-label">Estimated monthly net impact</div>
+              <div class="roi-divider"></div>
+              <div id="roiValue" class="roi-value">$0</div>
+            </div>
+            <div class="roi-note">
+              This estimate combines revenue from recovered missed calls and faster response conversions.
+            </div>
+            <div id="roiBreakdown" class="roi-breakdown"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact">
+      <div class="container">
+        <h2 class="section-title">Contact</h2>
+        <p class="section-subtitle">
+          Tell us about your service business and we’ll show you the right setup.
+        </p>
+        <form class="contact-form">
+          <input type="text" placeholder="Full Name" />
+          <input type="email" placeholder="Email" />
+          <input type="tel" placeholder="Phone Number" />
+          <input type="text" placeholder="Company" />
+          <textarea rows="4" placeholder="Tell us what you need help with..."></textarea>
+          <button type="submit">Submit Request</button>
+        </form>
+      </div>
+    </section>
+
+    <footer>
+      <div class="container">
+        <p>© 2026 Just got a lead. All rights reserved.</p>
+      </div>
+    </footer>
+
+    <script src="https://127.0.0.1:9030/cust_1/widget.js"></script>
+    <script>
+      const featureSections = document.querySelectorAll(".feature-section");
+      if (featureSections.length) {
+        const featureObserver = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("in-view");
+              } else {
+                entry.target.classList.remove("in-view");
+              }
+            });
+          },
+          { threshold: 0.2 }
+        );
+        featureSections.forEach((section) => featureObserver.observe(section));
+      }
+
+      const outcomeCards = document.querySelectorAll(".outcome-card, .impact-card");
+      if (outcomeCards.length) {
+        const outcomeObserver = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("outcome-show");
+              } else {
+                entry.target.classList.remove("outcome-show");
+              }
+            });
+          },
+          { threshold: 0.2 }
+        );
+        outcomeCards.forEach((card, idx) => {
+          card.style.transitionDelay = `${idx * 0.12}s`;
+          outcomeObserver.observe(card);
+        });
+      }
+
+      const tabButtons = document.querySelectorAll(".tab-btn");
+      const tabPanels = document.querySelectorAll(".tab-panel");
+      tabButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const target = btn.getAttribute("data-tab");
+          tabButtons.forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          tabPanels.forEach((panel) => {
+            panel.classList.toggle("active", panel.id === `tab-${target}`);
+          });
+        });
+      });
+
+      const roiInputs = [
+        "roiJobValue",
+        "roiLeads",
+        "roiCloseRate",
+        "roiMissed",
+        "roiHoursSpent",
+      ].map((id) => document.getElementById(id));
+      const roiValue = document.getElementById("roiValue");
+      const roiBreakdown = document.getElementById("roiBreakdown");
+      const roiPlanRadios = document.querySelectorAll("input[name='roiPlan']");
+      const roiMissedField = document.getElementById("roiMissedField");
+      const roiMissedInput = document.getElementById("roiMissed");
+      const roiHoursField = document.getElementById("roiHoursField");
+      const roiHoursInput = document.getElementById("roiHoursSpent");
+
+      const roiPlanAssumptions = {
+        basic: { recover: 0.0, lift: 0.03, hoursSaved: 2, cost: 90 },
+        advanced: { recover: 0.0, lift: 0.08, hoursSaved: 8, cost: 199 },
+        custom: { recover: 0.9, lift: 0.15, hoursSaved: 12, cost: 399 },
+      };
+
+      function calcROI() {
+        if (!roiValue) return;
+        const [job, leads, closeRateRaw, missedCallsRaw, hoursSpentRaw] = roiInputs.map((el) =>
+          el ? Number(el.value || 0) : 0
+        );
+        const selected = Array.from(roiPlanRadios).find((r) => r.checked)?.value || "basic";
+        const plan = roiPlanAssumptions[selected];
+        const missedCalls = selected !== "custom" ? 0 : missedCallsRaw;
+        const hoursSpent = selected !== "custom" ? 0 : hoursSpentRaw;
+        const closeRate = Math.max(0, Math.min(100, closeRateRaw));
+        const afterClose = Math.max(0, Math.min(100, closeRate + plan.lift * 100));
+        const rc = missedCalls * job * plan.recover;
+        const rf = leads * job * plan.lift;
+        const hoursSavedWeekly = Math.min(hoursSpent, plan.hoursSaved);
+        const hoursSavedMonthly = Math.round(hoursSavedWeekly * 4);
+        const recovered = rc + rf - plan.cost;
+        const formatted = recovered.toLocaleString(undefined, {
+          maximumFractionDigits: 0,
+        });
+        roiValue.textContent = `$${formatted}`;
+        if (roiBreakdown) {
+          const rcFmt = rc.toLocaleString(undefined, { maximumFractionDigits: 0 });
+          const rfFmt = rf.toLocaleString(undefined, { maximumFractionDigits: 0 });
+          const costFmt = plan.cost.toLocaleString(undefined, { maximumFractionDigits: 0 });
+          const missedLine =
+            plan.recover > 0
+              ? `<div class="roi-line roi-gain">
+                   <span>Recovered missed calls</span>
+                   <span>+$${rcFmt}</span>
+                 </div>
+                 <small>Missed calls × job value × ${Math.round(plan.recover * 100)}%</small>`
+              : "";
+          const responseLabel =
+            selected === "basic"
+              ? "24/7 customer responses"
+              : selected === "advanced"
+              ? "Faster responses + CRM flow"
+              : "Faster responses";
+          const responseNote =
+            selected === "basic"
+              ? `Close rate: ${closeRate}% → ${afterClose}% (+${Math.round(plan.lift * 100)}%)`
+              : selected === "advanced"
+              ? `Close rate: ${closeRate}% → ${afterClose}% (+${Math.round(plan.lift * 100)}%)`
+              : `Close rate: ${closeRate}% → ${afterClose}% (+${Math.round(plan.lift * 100)}%)`;
+          const baseRevenue = leads * job * (closeRate / 100);
+          const afterRevenue = leads * job * (afterClose / 100);
+          const baseFmt = baseRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 });
+          const afterFmt = afterRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 });
+          roiBreakdown.innerHTML = `
+            ${missedLine}
+            <div class="roi-line roi-neutral">
+              <span>Baseline from inquiries</span>
+              <span>$${baseFmt}</span>
+            </div>
+            <div class="roi-line roi-gain">
+              <span>${responseLabel}</span>
+              <span>+$${rfFmt}</span>
+            </div>
+            <small>${responseNote}</small>
+            <div class="roi-line roi-neutral">
+              <span>After faster responses</span>
+              <span>$${afterFmt}</span>
+            </div>
+            <div class="roi-line roi-loss">
+              <span>Plan cost</span>
+              <span>-$${costFmt}</span>
+            </div>
+            <div class="roi-divider"></div>
+            <div class="roi-line">
+              <span>Net impact</span>
+              <span>$${formatted}</span>
+            </div>
+          `;
+        }
+      }
+
+      roiInputs.forEach((input) => {
+        if (input) {
+          input.addEventListener("input", calcROI);
+        }
+      });
+      roiPlanRadios.forEach((radio) => {
+        radio.addEventListener("change", () => {
+          if (roiMissedField && roiMissedInput) {
+            const hideMissed = radio.value !== "custom";
+            roiMissedField.style.display = hideMissed ? "none" : "block";
+            if (hideMissed) roiMissedInput.value = 0;
+          }
+          if (roiHoursField && roiHoursInput) {
+            const hideHours = radio.value !== "custom";
+            roiHoursField.style.display = hideHours ? "none" : "block";
+            if (hideHours) roiHoursInput.value = 0;
+          }
+          calcROI();
+        });
+      });
+      if (roiMissedField && roiMissedInput) {
+        roiMissedField.style.display = "none";
+        roiMissedInput.value = 0;
+      }
+      if (roiHoursField && roiHoursInput) {
+        roiHoursField.style.display = "none";
+        roiHoursInput.value = 0;
+      }
+      calcROI();
+    </script>
+  </body>
 </html>

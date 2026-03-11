@@ -74,11 +74,20 @@
       width: 100%;
     }
 
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex: 1;
+    }
+
     .nav-links {
       display: flex;
       gap: 2em;
       font-size: 1.05rem;
       flex-wrap: wrap;
+      flex: 1;
+      justify-content: center;
     }
 
     .nav-links a {
@@ -136,6 +145,20 @@
       cursor: not-allowed;
       box-shadow: none;
       filter: none;
+    }
+
+    .btn.publish:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      filter: grayscale(0.2);
+      box-shadow: none;
+    }
+
+    .publish-disabled {
+      opacity: 0.55 !important;
+      cursor: not-allowed !important;
+      filter: grayscale(0.2) !important;
+      box-shadow: none !important;
     }
 
     #mobile-menu {
@@ -389,7 +412,19 @@
       background: #f8fafc;
     }
 
+    .prompt-card {
+      border: 1px dashed rgba(148, 163, 184, 0.9);
+      background: #f8fafc;
+      box-shadow: none;
+    }
+
     .kb-card.is-editing {
+      border: 1px solid rgba(37, 99, 235, 0.65);
+      box-shadow: 0 16px 30px rgba(37, 99, 235, 0.18);
+      background: #f0f6ff;
+    }
+
+    .prompt-card.is-editing {
       border: 1px solid rgba(37, 99, 235, 0.65);
       box-shadow: 0 16px 30px rgba(37, 99, 235, 0.18);
       background: #f0f6ff;
@@ -692,12 +727,12 @@
       left: 50%;
       transform: translateX(-50%) translateY(-10px);
       background: #ffffff;
-      color: #14532d;
+      color: #0f172a;
       padding: 28px 60px;
       border-radius: 18px;
       font-weight: 700;
-      border: 1px solid rgba(22, 163, 74, 0.75);
-      box-shadow: 0 20px 44px rgba(6, 95, 70, 0.65);
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 16px 30px rgba(15, 23, 42, 0.18);
       min-width: 360px;
       font-size: 1.05rem;
       text-align: center;
@@ -822,20 +857,188 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 0.9rem;
+      table-layout: fixed;
     }
 
     .table th,
     .table td {
       text-align: left;
       padding: 12px 10px;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid #e5e7eb;
+      position: relative;
+      white-space: normal;
+      word-break: break-word;
+      border-right: 1px solid #f1f5f9;
+    }
+
+    .table th:last-child,
+    .table td:last-child {
+      border-right: none;
     }
 
     .table th {
       font-size: 0.85rem;
-      color: var(--muted);
+      color: #475569;
       text-transform: uppercase;
       letter-spacing: 0.03em;
+      cursor: pointer;
+      background: #f8fafc;
+    }
+
+    .table th.is-sorted {
+      color: #0f172a;
+    }
+
+    .table th .sort-indicator {
+      margin-left: 6px;
+      font-size: 0.75rem;
+      color: #2563eb;
+    }
+
+    .col-resizer {
+      position: absolute;
+      right: -2px;
+      top: 8px;
+      width: 6px;
+      height: calc(100% - 16px);
+      cursor: col-resize;
+      border-radius: 6px;
+    }
+
+    .col-resizer:hover {
+      background: rgba(37, 99, 235, 0.2);
+    }
+
+    .table-wrapper {
+      overflow-x: hidden;
+      overflow-y: visible;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #ffffff;
+    }
+
+    .prompt-block {
+      background: #f8fbff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px 12px;
+      margin-bottom: 12px;
+    }
+
+    .prompt-block h4 {
+      margin: 0 0 6px;
+      font-size: 0.95rem;
+      color: #0f172a;
+      text-align: left;
+    }
+
+    .prompt-block-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .prompt-block p {
+      margin: 6px 0;
+      color: #0f172a;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      padding-left: 0;
+      text-indent: 0;
+      text-align: left;
+    }
+
+    .prompt-block ul {
+      margin: 6px 0 0 18px;
+      color: #0f172a;
+    }
+
+    .prompt-block-header {
+      margin-top: 5px;
+    }
+
+    
+
+    .prompt-personality p {
+      margin: 0 0 25px;
+      padding: 0;
+    }
+
+    .prompt-custom {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .prompt-custom-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      background: #ffffff;
+      color: #0f172a;
+      font-size: 0.9rem;
+    }
+
+
+    .prompt-custom-item button {
+      border: none;
+      background: transparent;
+      color: #ef4444;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .prompt-custom-item .prompt-edit {
+      color: #2563eb;
+      margin-right: 6px;
+    }
+
+    .table th,
+    .table td {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .leads-toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .leads-filter {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .leads-filter select,
+    .leads-filter input {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      background: #ffffff;
+    }
+
+    .leads-pagination {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .leads-page-info {
+      color: var(--muted);
+      font-size: 0.9rem;
     }
 
     .insights-box {
@@ -1128,6 +1331,13 @@
       border: 1px solid var(--border);
     }
 
+    .btn.secondary:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      box-shadow: none;
+      filter: grayscale(0.2);
+    }
+
     .btn.secondary.embed {
       background: linear-gradient(135deg, #0f766e, #14b8a6);
       color: #ffffff;
@@ -1141,6 +1351,7 @@
       box-shadow: 0 12px 24px rgba(47, 128, 237, 0.22);
       filter: brightness(1.02);
     }
+
 
     .btn:active,
     .btn.secondary:active {
@@ -1307,16 +1518,17 @@
     }
 
     .widget-preview .chatbot-agent-square {
-      width: 75px;
-      height: 75px;
+      width: 28px;
+      height: 28px;
       background: transparent;
-      border-radius: 6px;
-      flex: 0 0 75px;
+      border-radius: 50%;
+      flex: 0 0 28px;
       align-self: flex-start;
-      overflow: hidden;
+      overflow: visible;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      position: relative;
     }
 
     .widget-preview .chatbot-agent-square img {
@@ -1324,6 +1536,20 @@
       height: 100%;
       object-fit: cover;
       display: block;
+      border-radius: 50%;
+      background: #eef2f6;
+    }
+
+    .widget-preview .chatbot-agent-square::after {
+      content: "";
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #22c55e;
+      border: 2px solid #ffffff;
+      right: -2px;
+      bottom: -2px;
     }
 
     .widget-preview .chatbot-timestamp {
@@ -1658,18 +1884,39 @@
         <div class="card" style="grid-column: span 12;">
           <div class="card-header">
             <h2 class="section-title" style="margin:0;">Recent Leads</h2>
-            <button class="btn secondary embed" type="button" id="leadsSyncButton">Sync Leads</button>
+            <button class="btn secondary embed" type="button" id="leadsExportButton">Export CSV</button>
           </div>
           <p class="section-note">For visibility only. Full lead management stays in your CRM.</p>
+          <div class="leads-toolbar">
+            <div class="leads-filter">
+              <select id="leadsFilterColumn" aria-label="Filter column">
+                <option value="name">Name</option>
+                <option value="phone">Phone</option>
+                <option value="service">Service Requested</option>
+                <option value="address">Address</option>
+                <option value="created_at">Date Submitted</option>
+                <option value="note">Note</option>
+              </select>
+              <input type="text" id="leadsFilterValue" placeholder="Filter value..." />
+              <button class="btn secondary" type="button" id="leadsFilterClear">Clear</button>
+              <button class="btn secondary embed" type="button" id="leadsSyncButton">Sync Leads</button>
+            </div>
+            <div class="leads-pagination">
+              <button class="btn secondary" type="button" id="leadsPrevPage">←</button>
+              <div class="leads-page-info" id="leadsPageInfo">Page 1 of 1</div>
+              <button class="btn secondary" type="button" id="leadsNextPage">→</button>
+            </div>
+          </div>
           <div class="table-wrapper">
             <table class="table">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Phone</th>
-                  <th>Service Requested</th>
-                  <th>Address</th>
-                  <th>Date Submitted</th>
+                  <th data-key="name">Name<span class="col-resizer"></span></th>
+                  <th data-key="phone">Phone<span class="col-resizer"></span></th>
+                  <th data-key="service">Service Requested<span class="col-resizer"></span></th>
+                  <th data-key="address">Address<span class="col-resizer"></span></th>
+                  <th data-key="note">Note<span class="col-resizer"></span></th>
+                  <th data-key="created_at">Date Submitted<span class="col-resizer"></span></th>
                 </tr>
               </thead>
               <tbody id="leadsTableBody"></tbody>
@@ -1738,6 +1985,43 @@
           </div>
           <div class="kb-edit-banner" id="kbEditBannerInternal">Edit mode is on. Changes won’t apply until you save.</div>
           <div class="kb-list" id="kbListInternal"></div>
+        </div>
+
+        <div class="card prompt-card" id="promptCard" style="grid-column: span 12;" data-client-only="true">
+          <div class="card-header">
+            <h2 class="section-title" style="margin:0;">Prompt</h2>
+            <div>
+              <button class="btn publish" type="button" id="promptSyncButton" style="display:none;">Sync Prompt</button>
+            </div>
+          </div>
+          <p class="section-note">This prompt guides your customer-facing AI assistant. Base text is locked, but you can add custom values.</p>
+          <div class="prompt-block prompt-personality">
+            <div class="prompt-block-header">
+              <h4>Personality:</h4>
+              <button class="btn secondary" type="button" id="promptAddPersonality" style="display:none;">+ Add Custom Value</button>
+            </div>
+            <p id="promptPersonalityMain"></p>
+            <p id="promptPersonalityRestriction"></p>
+            <div class="prompt-custom" id="promptCustomPersonality"></div>
+          </div>
+          <div class="prompt-block">
+            <div class="prompt-block-header">
+              <h4>Intent:</h4>
+              <button class="btn secondary" type="button" id="promptAddIntent" style="display:none;">+ Add Custom Value</button>
+            </div>
+            <p id="promptIntentText"></p>
+            <div class="prompt-custom" id="promptCustomIntent"></div>
+          </div>
+          <div class="prompt-block">
+            <div class="prompt-block-header">
+              <h4>Additional Information:</h4>
+              <button class="btn secondary" type="button" id="promptAddAdditional" style="display:none;">+ Add Custom Value</button>
+            </div>
+            <p id="promptAdditionalIntro"></p>
+            <ul id="promptAdditionalList">
+            </ul>
+            <div class="prompt-custom" id="promptCustomAdditional"></div>
+          </div>
         </div>
       </section>
       </div>
@@ -1996,6 +2280,19 @@
         </div>
       </div>
 
+      <div class="modal" id="publishDoneModal" aria-hidden="true">
+        <div class="modal-card confirm-card">
+          <div class="modal-header">
+            <h3>Published!</h3>
+            <button class="modal-close" type="button" data-close="publishDoneModal">×</button>
+          </div>
+          <div class="section-note">Your app settings and knowledge base have been published.</div>
+          <div class="confirm-actions">
+            <button class="btn publish" type="button" data-close="publishDoneModal">Close</button>
+          </div>
+        </div>
+      </div>
+
       <div class="modal" id="confirmKbSaveModal" aria-hidden="true">
         <div class="modal-card confirm-card">
           <div class="modal-header">
@@ -2046,6 +2343,25 @@
         </div>
       </div>
 
+      <div class="modal" id="promptCustomModal" aria-hidden="true">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h3>Add Custom Value</h3>
+            <button class="modal-close" type="button" data-close="promptCustomModal">×</button>
+          </div>
+          <div class="modal-grid">
+            <label>
+              Custom Value
+              <textarea id="promptCustomInput" rows="4" placeholder="Add a custom instruction or value..."></textarea>
+            </label>
+          </div>
+          <div class="confirm-actions">
+            <button class="btn secondary" type="button" data-close="promptCustomModal">Cancel</button>
+            <button class="btn publish" type="button" id="promptCustomSave">Add</button>
+          </div>
+        </div>
+      </div>
+
       <div class="toast" id="saveToast">Saved!</div>
 </main>
   </div>
@@ -2088,6 +2404,13 @@
     const leadsCapturedValue = document.getElementById("leadsCapturedValue");
     const leadsSyncButton = document.getElementById("leadsSyncButton");
     const leadsTableBody = document.getElementById("leadsTableBody");
+    const leadsFilterColumn = document.getElementById("leadsFilterColumn");
+    const leadsFilterValue = document.getElementById("leadsFilterValue");
+    const leadsFilterClear = document.getElementById("leadsFilterClear");
+    const leadsPrevPage = document.getElementById("leadsPrevPage");
+    const leadsNextPage = document.getElementById("leadsNextPage");
+    const leadsPageInfo = document.getElementById("leadsPageInfo");
+    const leadsExportButton = document.getElementById("leadsExportButton");
     const iconSelect = document.getElementById("iconSelect");
     const previewIcon = document.getElementById("previewIcon");
     const publishBotConfig = document.getElementById("publishBotConfig");
@@ -2107,6 +2430,7 @@
     const publishAppButton = document.getElementById("publishAppButton");
     const confirmPublishModal = document.getElementById("confirmPublishModal");
     const confirmPublishButton = document.getElementById("confirmPublishButton");
+    const publishDoneModal = document.getElementById("publishDoneModal");
     const publishSaveLoading = document.getElementById("publishSaveLoading");
     const confirmKbSaveModal = document.getElementById("confirmKbSaveModal");
     const confirmKbSaveButton = document.getElementById("confirmKbSaveButton");
@@ -2117,12 +2441,49 @@
     const confirmStopEditingModal = document.getElementById("confirmStopEditingModal");
     const confirmStopEditingButton = document.getElementById("confirmStopEditingButton");
     const saveToast = document.getElementById("saveToast");
+    const promptCustomPersonality = document.getElementById("promptCustomPersonality");
+    const promptCustomIntent = document.getElementById("promptCustomIntent");
+    const promptCustomAdditional = document.getElementById("promptCustomAdditional");
+    const promptAddPersonality = document.getElementById("promptAddPersonality");
+    const promptAddIntent = document.getElementById("promptAddIntent");
+    const promptAddAdditional = document.getElementById("promptAddAdditional");
+    const promptSyncButton = document.getElementById("promptSyncButton");
+    const promptCard = document.getElementById("promptCard");
+    const promptCustomModal = document.getElementById("promptCustomModal");
+    const promptCustomInput = document.getElementById("promptCustomInput");
+    const promptCustomSave = document.getElementById("promptCustomSave");
+    let promptCustomTarget = "personality";
+    const promptPersonalityMain = document.getElementById("promptPersonalityMain");
+    const promptPersonalityRestriction = document.getElementById("promptPersonalityRestriction");
+    const promptIntentText = document.getElementById("promptIntentText");
+    const promptAdditionalIntro = document.getElementById("promptAdditionalIntro");
+    const promptAdditionalList = document.getElementById("promptAdditionalList");
     let hasUnsavedChanges = false;
     let settingsDirty = false;
     let kbDirty = false;
     let hasPendingPublish = false;
     let lockSettings = null;
     let settingsSnapshot = null;
+    const togglePromptEditing = (enabled) => {
+      if (promptAddPersonality) {
+        promptAddPersonality.style.display = enabled ? "inline-flex" : "none";
+      }
+      if (promptAddIntent) {
+        promptAddIntent.style.display = enabled ? "inline-flex" : "none";
+      }
+      if (promptAddAdditional) {
+        promptAddAdditional.style.display = enabled ? "inline-flex" : "none";
+      }
+      if (promptSyncButton) {
+        promptSyncButton.style.display = enabled ? "inline-flex" : "none";
+      }
+      document.querySelectorAll(".prompt-custom-item button").forEach((btn) => {
+        btn.style.display = enabled ? "inline-flex" : "none";
+      });
+      if (promptCard) {
+        promptCard.classList.toggle("is-editing", enabled);
+      }
+    };
     let kbSnapshot = [];
     const pendingDeletes = new Set();
     const pendingUpserts = new Map();
@@ -2173,8 +2534,10 @@
         const address = `${100 + (seed % 900)} ${streets[seed % streets.length]}`;
         const service = services[seed % services.length];
         const note = notes[seed % notes.length];
+        const phone = `(312) ${100 + (seed % 900)}-${(1000 + (seed % 9000)).toString().slice(-4)}`;
         leadRecords.push({
           name,
+          phone,
           address,
           service,
           note,
@@ -2355,6 +2718,59 @@
           if (text) questions.push(text);
         });
       }
+      const personalityValues = [];
+      const intentValues = [];
+      const additionalValues = [];
+      if (promptCustomPersonality) {
+        promptCustomPersonality.querySelectorAll(".prompt-custom-item").forEach((item) => {
+          const text = item.dataset.value || item.textContent.replace("×", "").trim();
+          if (text) personalityValues.push(text);
+        });
+      }
+      if (promptCustomAdditional) {
+        promptCustomAdditional.querySelectorAll(".prompt-custom-item").forEach((item) => {
+          const text = item.dataset.value || item.textContent.replace("×", "").trim();
+          if (text) additionalValues.push(text);
+        });
+      }
+      if (promptCustomIntent) {
+        promptCustomIntent.querySelectorAll(".prompt-custom-item").forEach((item) => {
+          const text = item.dataset.value || item.textContent.replace("×", "").trim();
+          if (text) intentValues.push(text);
+        });
+      }
+      const promptCustomValues = [
+        ...personalityValues.map((value) => ({ section: "personality", value })),
+        ...intentValues.map((value) => ({ section: "intent", value })),
+        ...additionalValues.map((value) => ({ section: "additional", value })),
+      ];
+      const personalityText = [
+        "Personality:",
+        `${promptPersonalityMain ? promptPersonalityMain.textContent.trim() : ""}`,
+        `${promptPersonalityRestriction ? promptPersonalityRestriction.textContent.trim() : ""}`,
+        ...(personalityValues.length ? personalityValues.map((v) => `- ${v}`) : []),
+      ].join("\n");
+      const intentText = [
+        "Intent:",
+        `${promptIntentText ? promptIntentText.textContent.trim() : ""}`,
+        'If the customer agrees to book a meeting, return ONLY {"booking_confirmed": true} with no other text so the UI can show the booking form.',
+        ...(intentValues.length ? intentValues.map((v) => `- ${v}`) : []),
+      ].join("\n");
+      const additionalText = [
+        "Additional Information:",
+        `${promptAdditionalIntro ? promptAdditionalIntro.textContent.trim() : ""}`,
+        `${
+          promptAdditionalList
+            ? Array.from(promptAdditionalList.querySelectorAll("li"))
+                .map((li) => `- ${li.textContent.trim()}`)
+                .join("\n")
+            : ""
+        }`,
+        ...(additionalValues.length ? additionalValues.map((v) => `- ${v}`) : []),
+      ]
+        .filter((line) => line && line.trim() !== "")
+        .join("\n");
+      const promptText = [personalityText, intentText, additionalText].join("\n\n");
       return {
         name: nameInput ? nameInput.value.trim() : "",
         greeting_message: greetingMessage ? greetingMessage.value.trim() : "",
@@ -2363,6 +2779,8 @@
         accent_color: accentColor ? accentColor.value : "",
         widget_icon: iconSelect ? iconSelect.value : "",
         default_start_questions: questions,
+        prompt: promptText,
+        prompt_custom_values: promptCustomValues,
       };
     }
 
@@ -2374,6 +2792,125 @@
       if (primaryColor) primaryColor.value = cfg.primary_color || "";
       if (accentColor) accentColor.value = cfg.accent_color || "";
       if (iconSelect) iconSelect.value = cfg.widget_icon || "chat";
+      const promptText = typeof cfg.prompt === "string" ? cfg.prompt.trim() : "";
+      const parsePromptSections = (text) => {
+        const sections = { personality: [], intent: [], additional: [] };
+        if (!text) return sections;
+        const lines = text
+          .split(/\r?\n/)
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0);
+        let current = null;
+        lines.forEach((line) => {
+          if (/^Personality:/i.test(line)) {
+            current = "personality";
+            return;
+          }
+          if (/^Intent:/i.test(line)) {
+            current = "intent";
+            return;
+          }
+          if (/^Additional Information:/i.test(line)) {
+            current = "additional";
+            return;
+          }
+          if (current) sections[current].push(line);
+        });
+        return sections;
+      };
+      if (promptText) {
+        const sections = parsePromptSections(promptText);
+        if (promptPersonalityMain && sections.personality[0]) {
+          promptPersonalityMain.textContent = sections.personality[0];
+        }
+        if (promptPersonalityRestriction && sections.personality[1]) {
+          promptPersonalityRestriction.textContent = sections.personality[1];
+        }
+        if (promptIntentText && sections.intent[0]) {
+          promptIntentText.textContent = sections.intent[0];
+        }
+        if (promptAdditionalIntro && sections.additional.length) {
+          const intro = sections.additional.find((line) => !line.startsWith("-")) || sections.additional[0];
+          if (intro) {
+            promptAdditionalIntro.textContent = intro.replace(/^-+\s*/, "");
+          }
+        }
+        if (promptAdditionalList && sections.additional.length) {
+          const customAdditionalSet = new Set(
+            (Array.isArray(cfg.prompt_custom_values) ? cfg.prompt_custom_values : [])
+              .filter((entry) => entry && entry.section === "additional" && entry.value)
+              .map((entry) => entry.value.trim())
+          );
+          const listItems = sections.additional
+            .filter((line) => line.startsWith("-"))
+            .map((line) => line.replace(/^-+\s*/, ""))
+            .filter((item) => !customAdditionalSet.has(item));
+          if (listItems.length) {
+            promptAdditionalList.innerHTML = "";
+            listItems.forEach((item) => {
+              const li = document.createElement("li");
+              li.textContent = item;
+              promptAdditionalList.appendChild(li);
+            });
+          } else {
+            promptAdditionalList.innerHTML = "";
+          }
+        }
+      }
+      if (promptCustomPersonality) promptCustomPersonality.innerHTML = "";
+      if (promptCustomIntent) promptCustomIntent.innerHTML = "";
+      if (promptCustomAdditional) promptCustomAdditional.innerHTML = "";
+      const savedCustom = Array.isArray(cfg.prompt_custom_values) ? cfg.prompt_custom_values : [];
+      const promptEditing = promptCard ? promptCard.classList.contains("is-editing") : false;
+      savedCustom.forEach((entry) => {
+        if (!entry || !entry.value) return;
+        const row = document.createElement("div");
+        row.className = "prompt-custom-item";
+        row.dataset.value = entry.value;
+        row.innerHTML = `<span>${entry.value}</span><div><button type="button" class="prompt-edit" aria-label="Edit">Edit</button><button type="button" aria-label="Remove">×</button></div>`;
+        const editBtn = row.querySelector(".prompt-edit");
+        const removeBtn = row.querySelector("button[aria-label='Remove']");
+        if (editBtn) {
+          editBtn.style.display = promptEditing ? "inline-flex" : "none";
+        }
+        if (removeBtn) {
+          removeBtn.style.display = promptEditing ? "inline-flex" : "none";
+        }
+        if (editBtn) {
+          editBtn.addEventListener("click", () => {
+            promptCustomInput.value = row.dataset.value || "";
+            promptCustomTarget =
+              entry.section === "additional" ? "additional" : entry.section === "intent" ? "intent" : "personality";
+            row.dataset.editing = "true";
+            openModal(promptCustomModal);
+          });
+        }
+        if (removeBtn) {
+          removeBtn.addEventListener("click", () => {
+            row.remove();
+            setDirty("settings");
+          });
+        }
+        if (entry.section === "additional") {
+          if (promptCustomAdditional) promptCustomAdditional.appendChild(row);
+        } else if (entry.section === "intent") {
+          if (promptCustomIntent) promptCustomIntent.appendChild(row);
+        } else {
+          if (promptCustomPersonality) promptCustomPersonality.appendChild(row);
+        }
+      });
+      if (promptAddPersonality) {
+        promptAddPersonality.style.display = promptEditing ? "inline-flex" : "none";
+      }
+      if (promptAddIntent) {
+        promptAddIntent.style.display = promptEditing ? "inline-flex" : "none";
+      }
+      if (promptAddAdditional) {
+        promptAddAdditional.style.display = promptEditing ? "inline-flex" : "none";
+      }
+      if (promptSyncButton) {
+        promptSyncButton.style.display = promptEditing ? "inline-flex" : "none";
+      }
       if (chipEditor) {
         chipEditor.innerHTML = "";
         const chips = Array.isArray(cfg.default_start_questions) ? cfg.default_start_questions : [];
@@ -2416,6 +2953,16 @@
           return;
         }
         saveBotConfig();
+      });
+    }
+
+    if (promptSyncButton) {
+      promptSyncButton.addEventListener("click", async () => {
+        await saveBotConfig();
+        if (saveToast) {
+          saveToast.classList.add("is-visible");
+          setTimeout(() => saveToast.classList.remove("is-visible"), 1800);
+        }
       });
     }
 
@@ -2559,6 +3106,7 @@
 
     document.querySelectorAll("[data-close]").forEach((btn) => {
       btn.addEventListener("click", (event) => {
+        if (event.currentTarget.disabled) return;
         const id = event.currentTarget.getAttribute("data-close");
         closeModal(document.getElementById(id));
         editTarget = null;
@@ -2674,6 +3222,7 @@
           ctx.editToggle.textContent = "Stop Editing";
           ctx.editToggle.classList.add("is-danger");
           ctx.editToggle.classList.remove("is-success");
+          togglePromptEditing(true);
           if (ctx.saveButton) {
             ctx.saveButton.style.display = "inline-flex";
           }
@@ -2691,6 +3240,7 @@
           confirmStopEditingButton.onclick = () => {
             closeModal(confirmStopEditingModal);
             restoreKbSnapshot(ctx);
+            togglePromptEditing(false);
             if (ctx.editToggle) {
               ctx.editToggle.textContent = "Edit";
               ctx.editToggle.classList.remove("is-danger");
@@ -2711,6 +3261,7 @@
           return;
         }
         restoreKbSnapshot(ctx);
+        togglePromptEditing(false);
         updatePublishState();
       });
     };
@@ -2768,7 +3319,7 @@
               }
             })
         );
-        Promise.allSettled([...deletePromises, ...upsertPromises]).finally(() => {
+        Promise.allSettled([...deletePromises, ...upsertPromises]).finally(async () => {
           if (kbSaveLoading) {
             kbSaveLoading.classList.remove("is-visible");
           }
@@ -2776,6 +3327,11 @@
           closeModal(confirmKbSaveModal);
           ctx.pendingDeletes.clear();
           ctx.pendingUpserts.clear();
+          try {
+            await saveBotConfig();
+          } catch (err) {
+            console.error("Prompt save failed", err);
+          }
           fetch("http://127.0.0.1:5000/knowledege-embed", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -2793,6 +3349,7 @@
             ctx.card.classList.remove("is-editing");
             ctx.card.classList.add("is-locked");
           }
+          togglePromptEditing(false);
           if (ctx.saveButton) {
             ctx.saveButton.style.display = "none";
           }
@@ -2881,8 +3438,15 @@
 
     if (confirmPublishButton) {
       confirmPublishButton.addEventListener("click", async () => {
-        closeModal(confirmPublishModal);
         if (publishSaveLoading) publishSaveLoading.classList.add("is-visible");
+        confirmPublishButton.disabled = true;
+        const confirmPublishModalCancel = confirmPublishModal
+          ? confirmPublishModal.querySelector('[data-close="confirmPublishModal"]')
+          : null;
+        if (confirmPublishModalCancel) {
+          confirmPublishModalCancel.disabled = true;
+          confirmPublishModalCancel.classList.add("publish-disabled");
+        }
         try {
           await fetch("http://127.0.0.1:5000/publish-app", {
             method: "POST",
@@ -2893,6 +3457,11 @@
           console.error("Publish App failed", err);
         } finally {
           if (publishSaveLoading) publishSaveLoading.classList.remove("is-visible");
+          confirmPublishButton.disabled = false;
+          if (confirmPublishModalCancel) {
+            confirmPublishModalCancel.disabled = false;
+            confirmPublishModalCancel.classList.remove("publish-disabled");
+          }
         }
         clearDirty("settings");
         hasPendingPublish = false;
@@ -2900,6 +3469,10 @@
           lockSettings();
         }
         updatePublishState();
+        closeModal(confirmPublishModal);
+        if (publishDoneModal) {
+          openModal(publishDoneModal);
+        }
       });
     }
 
@@ -3271,6 +3844,73 @@
       });
     }
 
+    if (promptAddPersonality && promptCustomModal) {
+      promptAddPersonality.addEventListener("click", () => {
+        promptCustomTarget = "personality";
+        openModal(promptCustomModal);
+      });
+    }
+    if (promptAddIntent && promptCustomModal) {
+      promptAddIntent.addEventListener("click", () => {
+        promptCustomTarget = "intent";
+        openModal(promptCustomModal);
+      });
+    }
+    if (promptAddAdditional && promptCustomModal) {
+      promptAddAdditional.addEventListener("click", () => {
+        promptCustomTarget = "additional";
+        openModal(promptCustomModal);
+      });
+    }
+    if (promptCustomSave && promptCustomInput) {
+      promptCustomSave.addEventListener("click", () => {
+        const value = promptCustomInput.value.trim();
+        if (!value) return;
+        const existing = document.querySelector(".prompt-custom-item[data-editing='true']");
+        if (existing) {
+          existing.dataset.value = value;
+          const textSpan = existing.querySelector("span");
+          if (textSpan) textSpan.textContent = value;
+          existing.dataset.editing = "";
+        } else {
+          const row = document.createElement("div");
+          row.className = "prompt-custom-item";
+          row.dataset.value = value;
+          row.innerHTML = `<span>${value}</span><div><button type="button" class="prompt-edit" aria-label="Edit">Edit</button><button type="button" aria-label="Remove">×</button></div>`;
+          const editBtn = row.querySelector(".prompt-edit");
+          const removeBtn = row.querySelector("button[aria-label='Remove']");
+          if (editBtn) {
+            editBtn.addEventListener("click", () => {
+              promptCustomInput.value = row.dataset.value || "";
+              promptCustomTarget = promptCustomAdditional && promptCustomAdditional.contains(row)
+                ? "additional"
+                : promptCustomIntent && promptCustomIntent.contains(row)
+                ? "intent"
+                : "personality";
+              row.dataset.editing = "true";
+              openModal(promptCustomModal);
+            });
+          }
+          if (removeBtn) {
+            removeBtn.addEventListener("click", () => {
+              row.remove();
+              setDirty("settings");
+            });
+          }
+          if (promptCustomTarget === "additional") {
+            if (promptCustomAdditional) promptCustomAdditional.appendChild(row);
+          } else if (promptCustomTarget === "intent") {
+            if (promptCustomIntent) promptCustomIntent.appendChild(row);
+          } else {
+            if (promptCustomPersonality) promptCustomPersonality.appendChild(row);
+          }
+        }
+        promptCustomInput.value = "";
+        setDirty("settings");
+        closeModal(promptCustomModal);
+      });
+    }
+
     syncPreviewChips();
 
     const mobileMenuButton = document.getElementById("mobile-menu-button");
@@ -3376,27 +4016,196 @@
       });
     }
 
-    if (leadsTableBody) {
-      const rows = leadRecords.slice(-12).reverse();
+    let leadsPage = 1;
+    const leadsPageSize = 5;
+    let leadsSortKey = "created_at";
+    let leadsSortDir = "desc";
+    let leadsFilterKey = "name";
+    let leadsFilterText = "";
+
+    function formatLeadDate(iso) {
+      return new Date(iso).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    }
+
+    function getFilteredLeads() {
+      let data = [...leadRecords];
+      if (leadsFilterKey && leadsFilterText) {
+        const needle = leadsFilterText.toLowerCase();
+        data = data.filter((lead) => {
+          const value = String(lead[leadsFilterKey] ?? "").toLowerCase();
+          return value.includes(needle);
+        });
+      }
+      data.sort((a, b) => {
+        const av = a[leadsSortKey];
+        const bv = b[leadsSortKey];
+        if (av === bv) return 0;
+        if (leadsSortKey === "created_at") {
+          return leadsSortDir === "asc"
+            ? new Date(av).getTime() - new Date(bv).getTime()
+            : new Date(bv).getTime() - new Date(av).getTime();
+        }
+        return leadsSortDir === "asc"
+          ? String(av).localeCompare(String(bv))
+          : String(bv).localeCompare(String(av));
+      });
+      return data;
+    }
+
+    function renderLeadTable() {
+      if (!leadsTableBody) return;
+      const data = getFilteredLeads();
+      const totalPages = Math.max(1, Math.ceil(data.length / leadsPageSize));
+      if (leadsPage > totalPages) leadsPage = totalPages;
+      const start = (leadsPage - 1) * leadsPageSize;
+      const rows = data.slice(start, start + leadsPageSize);
       leadsTableBody.innerHTML = rows
         .map((lead) => {
-          const date = new Date(lead.created_at).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          });
           return `
             <tr>
               <td>${lead.name}</td>
-              <td>—</td>
+              <td>${lead.phone || "—"}</td>
               <td>${lead.service}</td>
               <td>${lead.address}</td>
-              <td>${date}</td>
+              <td>${lead.note || "—"}</td>
+              <td>${formatLeadDate(lead.created_at)}</td>
             </tr>
           `;
         })
         .join("");
+      if (leadsPageInfo) {
+        leadsPageInfo.textContent = `Page ${leadsPage} of ${totalPages}`;
+      }
+      if (leadsPrevPage) leadsPrevPage.disabled = leadsPage <= 1;
+      if (leadsNextPage) leadsNextPage.disabled = leadsPage >= totalPages;
     }
+
+    function updateSortIndicators() {
+      document.querySelectorAll(".table th").forEach((th) => {
+        th.classList.remove("is-sorted");
+        const indicator = th.querySelector(".sort-indicator");
+        if (indicator) indicator.remove();
+        if (th.dataset.key === leadsSortKey) {
+          th.classList.add("is-sorted");
+          const span = document.createElement("span");
+          span.className = "sort-indicator";
+          span.textContent = leadsSortDir === "asc" ? "▲" : "▼";
+          th.appendChild(span);
+        }
+      });
+    }
+
+    if (leadsFilterColumn) {
+      leadsFilterColumn.addEventListener("change", (e) => {
+        leadsFilterKey = e.target.value;
+        leadsPage = 1;
+        renderLeadTable();
+      });
+    }
+    if (leadsFilterValue) {
+      leadsFilterValue.addEventListener("input", (e) => {
+        leadsFilterText = e.target.value.trim();
+        leadsPage = 1;
+        renderLeadTable();
+      });
+    }
+    if (leadsFilterClear) {
+      leadsFilterClear.addEventListener("click", () => {
+        if (leadsFilterValue) leadsFilterValue.value = "";
+        leadsFilterText = "";
+        leadsPage = 1;
+        renderLeadTable();
+      });
+    }
+    if (leadsPrevPage) {
+      leadsPrevPage.addEventListener("click", () => {
+        leadsPage = Math.max(1, leadsPage - 1);
+        renderLeadTable();
+      });
+    }
+    if (leadsNextPage) {
+      leadsNextPage.addEventListener("click", () => {
+        leadsPage += 1;
+        renderLeadTable();
+      });
+    }
+
+    document.querySelectorAll(".table th").forEach((th) => {
+      th.addEventListener("click", (event) => {
+        if (event.target && event.target.classList.contains("col-resizer")) return;
+        const key = th.dataset.key;
+        if (!key) return;
+        if (leadsSortKey === key) {
+          leadsSortDir = leadsSortDir === "asc" ? "desc" : "asc";
+        } else {
+          leadsSortKey = key;
+          leadsSortDir = "asc";
+        }
+        leadsPage = 1;
+        updateSortIndicators();
+        renderLeadTable();
+      });
+    });
+
+    if (leadsExportButton) {
+      leadsExportButton.addEventListener("click", () => {
+        const header = ["Name", "Phone", "Service Requested", "Address", "Date Submitted", "Note"];
+        const rows = leadRecords.map((lead) => [
+          lead.name,
+          lead.phone || "",
+          lead.service,
+          lead.address,
+          formatLeadDate(lead.created_at),
+          lead.note || "",
+        ]);
+        const csv = [header, ...rows]
+          .map((row) => row.map((cell) => `"${String(cell).replace(/\"/g, '""')}"`).join(","))
+          .join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "leads.csv";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+      });
+    }
+
+    let resizing = null;
+    document.querySelectorAll(".table th .col-resizer").forEach((resizer) => {
+      resizer.addEventListener("pointerdown", (event) => {
+        const th = resizer.parentElement;
+        if (!th) return;
+        resizing = {
+          th,
+          startX: event.clientX,
+          startWidth: th.offsetWidth,
+        };
+        document.body.style.cursor = "col-resize";
+        event.preventDefault();
+      });
+    });
+
+    document.addEventListener("pointermove", (event) => {
+      if (!resizing) return;
+      const delta = event.clientX - resizing.startX;
+      const width = Math.max(120, resizing.startWidth + delta);
+      resizing.th.style.width = `${width}px`;
+    });
+    document.addEventListener("pointerup", () => {
+      if (!resizing) return;
+      resizing = null;
+      document.body.style.cursor = "";
+    });
+
+    updateSortIndicators();
+    renderLeadTable();
 
     function parseBoldSegments(text) {
       const segments = [];
@@ -3987,6 +4796,52 @@
     let insightsRequestId = 0;
     if (insightsForm && insightsInput && insightsResponse && insightsAskButton) {
       const originalResponse = insightsResponse.textContent;
+      const addInsightsBookingForm = () => {
+        insightsResponse.innerHTML = `
+          <div class="chatbot-form-card">
+            <div class="chatbot-form-title">Book Your Free Estimate</div>
+            <div class="chatbot-form-subtitle">Please share your details and preferred time. We'll confirm your appointment.</div>
+            <form class="chatbot-booking-form">
+              <label class="chatbot-field">
+                <span>Full Name</span>
+                <input type="text" name="name" required />
+              </label>
+              <label class="chatbot-field">
+                <span>Phone</span>
+                <input type="tel" name="phone" required />
+              </label>
+              <label class="chatbot-field">
+                <span>Email</span>
+                <input type="email" name="email" />
+              </label>
+              <label class="chatbot-field">
+                <span>Project Address</span>
+                <input type="text" name="address" required />
+              </label>
+              <label class="chatbot-field">
+                <span>Preferred Date</span>
+                <input type="date" name="date" required />
+              </label>
+              <label class="chatbot-field">
+                <span>Preferred Time</span>
+                <input type="time" name="time" required />
+              </label>
+              <label class="chatbot-field">
+                <span>Project Details</span>
+                <textarea name="details" rows="3" placeholder="Tell us what you're looking for"></textarea>
+              </label>
+              <label class="chatbot-field">
+                <span>Project Photos (optional)</span>
+                <input type="file" name="photos" accept="image/*" multiple />
+              </label>
+              <div class="chatbot-form-actions">
+                <button type="button" class="chatbot-form-cancel">Cancel</button>
+                <button type="submit" class="chatbot-form-submit">Submit Request</button>
+              </div>
+            </form>
+          </div>
+        `;
+      };
       insightsForm.addEventListener("submit", async (event) => {
         event.preventDefault();
         const question = insightsInput.value.trim();
@@ -4007,14 +4862,44 @@
           if (requestId !== insightsRequestId || requestMode !== activeKbType) {
             return;
           }
+          if (data && (data.type === "booking_form" || data.booking_confirmed === true)) {
+            addInsightsBookingForm();
+            return;
+          }
           if (data && data.answer) {
-            insightsResponse.dataset.rawAnswer = data.answer;
+            let answerText = data.answer;
+            if (typeof answerText === "string" && answerText.trim().startsWith("{")) {
+              const raw = answerText.trim();
+              const tryParse = (text) => {
+                try {
+                  return JSON.parse(text);
+                } catch (e) {
+                  return null;
+                }
+              };
+              let parsed = tryParse(raw);
+              if (!parsed) {
+                const start = raw.indexOf("{");
+                const end = raw.lastIndexOf("}");
+                if (start !== -1 && end !== -1 && end > start) {
+                  parsed = tryParse(raw.slice(start, end + 1));
+                }
+              }
+              if (parsed && (parsed.type === "booking_form" || parsed.booking_confirmed === true)) {
+                addInsightsBookingForm();
+                return;
+              }
+              if (parsed && parsed.answer) {
+                answerText = parsed.answer;
+              }
+            }
+            insightsResponse.dataset.rawAnswer = answerText;
             insightsResponse.dataset.showChart = data.show_chart ? "true" : "false";
             insightsResponse.dataset.chartType = data.chart_type || "";
             insightsResponse.dataset.chartOrientation = data.chart_orientation || "";
             insightsResponse.dataset.rows = JSON.stringify(data.rows || []);
             renderInsightsResponse(
-              data.answer,
+              answerText,
               !!data.show_chart,
               data.chart_type || "",
               data.rows || [],
@@ -4038,6 +4923,74 @@
             insightsAskButton.disabled = false;
           }
         }
+      });
+    }
+
+    if (insightsResponse) {
+      insightsResponse.addEventListener("submit", (event) => {
+        const bookingForm = event.target.closest(".chatbot-booking-form");
+        if (!bookingForm) return;
+        event.preventDefault();
+        const formData = new FormData(bookingForm);
+        const name = (formData.get("name") || "").toString().trim();
+        const date = (formData.get("date") || "").toString().trim();
+        const time = (formData.get("time") || "").toString().trim();
+        const durationMinutes = 60;
+        const buildICS = () => {
+          if (!date || !time) return "";
+          const safeName = name ? name : "Customer";
+          const startLocal = new Date(`${date}T${time}`);
+          const endLocal = new Date(startLocal.getTime() + durationMinutes * 60000);
+          const toICS = (d) => d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+          const uid = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+          return [
+            "BEGIN:VCALENDAR",
+            "VERSION:2.0",
+            "PRODID:-//Palacios Solutions//Booking//EN",
+            "BEGIN:VEVENT",
+            `UID:${uid}`,
+            `DTSTAMP:${toICS(new Date())}`,
+            `DTSTART:${toICS(startLocal)}`,
+            `DTEND:${toICS(endLocal)}`,
+            "SUMMARY:Free Estimate Appointment",
+            `DESCRIPTION:Estimate request for ${safeName}.`,
+            "END:VEVENT",
+            "END:VCALENDAR",
+          ].join("\r\n");
+        };
+        const getCalendarLink = () => {
+          const ics = buildICS();
+          if (!ics) return "";
+          const blob = new Blob([ics], { type: "text/calendar" });
+          return URL.createObjectURL(blob);
+        };
+
+        fetch("https://127.0.0.1:9030/book-estimate", {
+          method: "POST",
+          body: formData,
+        })
+          .then(async (res) => {
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+              throw new Error(data.error || "Failed to submit estimate request.");
+            }
+            return data;
+        })
+          .then(() => {
+            const calendarUrl = getCalendarLink();
+            const calendarLink = calendarUrl
+              ? `<div class="calendar-link"><a href="${calendarUrl}" download="estimate.ics">Add to Calendar</a></div>`
+              : "";
+            insightsResponse.innerHTML = `Thanks${name ? `, ${name}` : ""}! We received your request for ${date} at ${time}. We'll confirm your free estimate shortly.${calendarLink}`;
+          })
+          .catch((err) => {
+            insightsResponse.textContent = err.message || "Something went wrong while submitting your request.";
+          });
+      });
+      insightsResponse.addEventListener("click", (event) => {
+        const cancelBtn = event.target.closest(".chatbot-form-cancel");
+        if (!cancelBtn) return;
+        insightsResponse.textContent = "No problem. If you want to book later, just let me know.";
       });
     }
 
@@ -4088,6 +5041,11 @@
         insightsInternalBtn.classList.toggle("is-active", !isClient);
         kbCardClient.classList.toggle("kb-hidden", !isClient);
         kbCardInternal.classList.toggle("kb-hidden", isClient);
+        document.querySelectorAll("[data-client-only='true']").forEach((el) => {
+          if (el && el.style) {
+            el.style.display = isClient ? "" : "none";
+          }
+        });
         if (insightsInput && insightsResponse) {
           const cached = insightsMemory[mode] || { question: "", answer: "", raw: "", showChart: false, chartType: "", chartOrientation: "", rows: [] };
           insightsInput.value = cached.question || "";
