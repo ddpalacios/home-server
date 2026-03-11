@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <poll.h>
+#include <pthread.h>
+#include <signal.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -18,6 +20,51 @@
 #include "server.h"
 
 #define BUFFER_SIZE 1024
+#define WORKER_COUNT 16
+#define QUEUE_CAPACITY 1024
+
+struct fd_queue {
+    int fds[QUEUE_CAPACITY];
+    int head;
+    int tail;
+    int count;
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
+};
+
+static struct fd_queue g_queue;
+
+static void queue_init(struct fd_queue *q) {
+    memset(q, 0, sizeof(*q));
+    pthread_mutex_init(&q->mutex, NULL);
+    pthread_cond_init(&q->cond, NULL);
+}
+
+static int queue_push(struct fd_queue *q, int fd) {
+    pthread_mutex_lock(&q->mutex);
+    if (q->count >= QUEUE_CAPACITY) {
+        pthread_mutex_unlock(&q->mutex);
+        return -1;
+    }
+    q->fds[q->tail] = fd;
+    q->tail = (q->tail + 1) % QUEUE_CAPACITY;
+    q->count++;
+    pthread_cond_signal(&q->cond);
+    pthread_mutex_unlock(&q->mutex);
+    return 0;
+}
+
+static int queue_pop(struct fd_queue *q) {
+    pthread_mutex_lock(&q->mutex);
+    while (q->count == 0) {
+        pthread_cond_wait(&q->cond, &q->mutex);
+    }
+    int fd = q->fds[q->head];
+    q->head = (q->head + 1) % QUEUE_CAPACITY;
+    q->count--;
+    pthread_mutex_unlock(&q->mutex);
+    return fd;
+}
 
 int bind_address_to_port(char *port, struct addrinfo hints) {
     struct addrinfo *res = NULL;
@@ -133,13 +180,33 @@ static void handle_client(int fd) {
     close(fd);
 }
 
+static void *worker_thread_main(void *arg) {
+    (void)arg;
+    while (1) {
+        int fd = queue_pop(&g_queue);
+        if (fd >= 0) {
+            handle_client(fd);
+        }
+    }
+    return NULL;
+}
+
 void start_listening_for_clients(char *port) {
     SSL_library_init();
     SSL_load_error_strings();
+    signal(SIGPIPE, SIG_IGN);
 
     struct addrinfo hints;
     fill_address_info(&hints);
     int listener_fd = bind_address_to_port(port, hints);
+
+    queue_init(&g_queue);
+    for (int i = 0; i < WORKER_COUNT; i++) {
+        pthread_t tid;
+        if (pthread_create(&tid, NULL, worker_thread_main, NULL) == 0) {
+            pthread_detach(tid);
+        }
+    }
 
     int fd_capacity = 16;
     int fd_count = 1;
@@ -174,7 +241,10 @@ void start_listening_for_clients(char *port) {
                 pfds[fd_count].events = POLLIN;
                 fd_count++;
             } else {
-                handle_client(pfds[i].fd);
+                int fd = pfds[i].fd;
+                if (queue_push(&g_queue, fd) != 0) {
+                    handle_client(fd);
+                }
                 pfds[i] = pfds[fd_count - 1];
                 fd_count--;
                 i--;

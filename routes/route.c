@@ -55,6 +55,8 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         get_image_file(cSSL, http_header, "/portfolio/images/favicon.ico");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/dashboard") == 0) {
         get_live_html(cSSL, http_header, "AIdashboard/index.html");
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/login") == 0) {
+        get_live_html(cSSL, http_header, "AIdashboard/login.html");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/widget.js") == 0) {
         get_to_local(socket, http_header, body, route, "9000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/widget.css") == 0) {
