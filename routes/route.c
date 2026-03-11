@@ -1,120 +1,88 @@
 #include <stdio.h>
-#include <openssl/ssl.h>
+#include <stdlib.h>
 #include <string.h>
+#include <openssl/ssl.h>
 #include "Socket.h"
-#include "websocket.h"
 #include "route.h"
-#include "Invitation.h"
 #include "http_utilities.h"
-#include "database-server/POST/post_frame.h"
-#include "life-of-sounds/POST/post_user.h"
-#include "life-of-sounds/POST/login.h"
-#include "life-of-sounds/POST/post_websocket_session.h"
-#include "life-of-sounds/POST/post_websocket_client.h"
-#include "life-of-sounds/GET/get_websocket_client.h"
-#include "life-of-sounds/POST/post_audio.h"
-#include "life-of-sounds/POST/post_browser_session.h"
-#include "life-of-sounds/GET/new_login.h"
-#include "life-of-sounds/GET/studio.h"
-#include "life-of-sounds/GET/get_live_page.h"
-#include "life-of-sounds/GET/get_web_audio_api_script.h"
-#include "life-of-sounds/GET/get_game_of_life_script.h"
-#include "life-of-sounds/GET/data_page.h"
-#include "life-of-sounds/GET/get_recordings_page.h"
-#include "life-of-sounds/GET/get_data_table.h"
-#include "life-of-sounds/GET/get_session_messages.h"
-#include "life-of-sounds/GET/get_websocket_script.h"
-#include "life-of-sounds/GET/get_html_utilities_script.h"
-#include "life-of-sounds/PATCH/patch_websocket_client.h"
-#include "life-of-sounds/PATCH/patch_browser_session.h"
-#include "life-of-sounds/PATCH/patch_websocket_session.h"
-#include "life-of-sounds/GET/get_audio.h"
-#include "life-of-sounds/GET/get_audio_blob.h"
-#include "life-of-sounds/GET/sessioninfo.h"
-#include "life-of-sounds/DELETE/sessioninfo.h"
-#include "life-of-sounds/DELETE/delete_websocket_session.h"
-#include "life-of-sounds/GET/home.h"
-#include "life-of-sounds/GET/websocket_protocol.h"
-#include "life-of-sounds/GET/get_user.h"
-#include "life-of-sounds/GET/login.h"
+#include "local-server/GET/get_local_server.h"
+#include "local-server/POST/post_local_server.h"
 
-void process_route(struct Socket *socket,char* http_header, char* body){
-	SSL *cSSL =  socket->cSSL;
-	char* route_start = strchr(http_header, ' ');	
-	route_start++;
-	char* route_end = strchr(route_start, ' '); 
-	size_t route_len = route_end - route_start;
-	char* route = malloc(route_len+1);
-	strncpy(route, route_start, route_len);
-	route[route_len] = '\0';
-	char* request_type_end = strchr(http_header, ' ');
-	size_t request_type_len = request_type_end - http_header;
-	char* request_type = malloc(request_type_len+1);
-	strncpy(request_type, http_header, request_type_len);
-	request_type[request_type_len] = '\0';
-	printf("Route: '%s %s'\n",request_type,route);
-	if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/login")==0){
-		get_login_page(cSSL, http_header, "index.html");
-	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/life-of-sounds/live_studio/user")==0){
-		post_user(socket,http_header,body, route);
-	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/home")==0){
-		get_live_html(cSSL, http_header, "home.html");
-	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/live_studio")==0){
-		get_live_html(cSSL, http_header, "live_studio.html");
-	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/canvas_style.css")==0){
-		get_gol_script(cSSL, http_header, "canvas_style.css");
-	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/chatbox_style.css")==0){
-		get_gol_script(cSSL, http_header, "chatbox_style.css");
-	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/handle_messages.js")==0){
-		get_gol_script(cSSL, http_header, "handle_messages.js");
-	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/onload_session.js")==0){
-		get_gol_script(cSSL, http_header, "onload_session.js");
-	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/chatbox.js")==0){
-		get_gol_script(cSSL, http_header, "chatbox.js");
-	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/websocket.js")==0){
-		get_gol_script(cSSL, http_header, "websocket.js");
-	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/game_of_life.js")==0){
-		get_gol_script(cSSL, http_header, "game_of_life.js");
-	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/web_audio_api.js")==0){
-		get_web_audio_script(cSSL, http_header, "web_audio_api.js");
-	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/html_utilities.js")==0){
-		get_utilities_script(cSSL, http_header, "html_utilities.js");
-	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/life-of-sounds/live_studio/user")==0){
-		get_user(socket,http_header,body, route);
-	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/life-of-sounds/login")==0){
-		login(cSSL, http_header, body);
-	}else if (strcmp(request_type, "PATCH")==0 && strstr(route, "/life-of-sounds/live_studio/session")!=NULL){
-		patch_websocket_session(socket,http_header,body, route);
-	}else if (strcmp(request_type, "PATCH")==0 && strstr(route, "/life-of-sounds/live_studio/client_session")!=NULL){
-		patch_browser_session(socket,http_header,body, route);
-	}else if (strcmp(request_type, "PATCH")==0 && strstr(route, "/life-of-sounds/live_studio/client")!=NULL){
-		patch_websocket_client(socket,http_header,body, route);
-	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/life-of-sounds/live_studio/client")!=NULL){
-		 get_websocket_client(socket,http_header,body, route);
-	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/life-of-sounds/live_studio/client_session")==0){
-		post_browser_session(socket, http_header, body, route);
-	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/life-of-sounds/live_studio/client")==0){
-		post_websocket_client(socket,http_header,body, route,1);
-	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/life-of-sounds/live_studio/session/messages")!=NULL){
-		get_session_messages(socket, http_header, body, route);
-	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/life-of-sounds/live_studio/session")==0){
-		post_websocket_session(socket,http_header,body, route);
-	}else if (strcmp(request_type, "DELETE")==0 && strstr(route, "/life-of-sounds/live_studio/session?Id=") != NULL){
-		delete_websocket_session(socket,http_header,body, route);
-	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/life-of-sounds/live_studio/session?") != NULL){
-		get_websocket_protocol(socket,http_header,body, route);
-	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/life-of-sounds/live_studio/session/join?Id=") != NULL){
-		char* sessionId = get_query_parameter(route, "Id");
-		if (websocket_session_exists(sessionId)){
-			get_live_html(cSSL, http_header, "live_studio.html");
-		}
-	}
-	if (route != NULL){
-		free(route);
-		route = NULL;
-	}
-	if (request_type != NULL){
-		free(request_type);
-		request_type = NULL;
-	}
+void process_route(struct Socket *socket, char *http_header, char *body) {
+    SSL *cSSL = socket->cSSL;
+    if (!http_header) {
+        return;
+    }
+
+    char *route_start = strchr(http_header, ' ');
+    if (!route_start) {
+        return;
+    }
+    route_start++;
+    char *route_end = strchr(route_start, ' ');
+    if (!route_end) {
+        return;
+    }
+    size_t route_len = route_end - route_start;
+    if (route_len == 0 || route_len > 8192) {
+        return;
+    }
+
+    char *route = malloc(route_len + 1);
+    strncpy(route, route_start, route_len);
+    route[route_len] = '\0';
+
+    char *request_type_end = strchr(http_header, ' ');
+    if (!request_type_end) {
+        free(route);
+        return;
+    }
+    size_t request_type_len = request_type_end - http_header;
+    if (request_type_len == 0 || request_type_len > 16) {
+        free(route);
+        return;
+    }
+
+    char *request_type = malloc(request_type_len + 1);
+    strncpy(request_type, http_header, request_type_len);
+    request_type[request_type_len] = '\0';
+
+    printf("Route: '%s %s'\n", request_type, route);
+
+    if (strcmp(request_type, "GET") == 0 && strcmp(route, "/") == 0) {
+        get_live_html(cSSL, http_header, "portfolio/home.html");
+    } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/favicon.ico") != NULL) {
+        get_image_file(cSSL, http_header, "/portfolio/images/favicon.ico");
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/dashboard") == 0) {
+        get_live_html(cSSL, http_header, "AIdashboard/index.html");
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/widget.js") == 0) {
+        get_to_local(socket, http_header, body, route, "9000");
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/widget.css") == 0) {
+        get_to_local(socket, http_header, body, route, "9000");
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/widget.html") == 0) {
+        get_to_local(socket, http_header, body, route, "9000");
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/robot_icon.png") == 0) {
+        get_to_local(socket, http_header, body, route, "9000");
+    } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/widget.js") != NULL) {
+        get_to_local(socket, http_header, body, route, "9000");
+    } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/widget.css") != NULL) {
+        get_to_local(socket, http_header, body, route, "9000");
+    } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/widget.html") != NULL) {
+        get_to_local(socket, http_header, body, route, "9000");
+    } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/robot_icon.png") != NULL) {
+        get_to_local(socket, http_header, body, route, "9000");
+    } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/bot-config") != NULL) {
+        get_to_local(socket, http_header, body, route, "9000");
+    } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/validate-domain") != NULL) {
+        get_to_local(socket, http_header, body, route, "9000");
+    } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/chat") == 0) {
+        post_to_local(socket, http_header, body, route, "9000");
+    } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/book-estimate") == 0) {
+        post_to_local(socket, http_header, body, route, "9000");
+    } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/portfolio/images/") != NULL) {
+        get_image_file(cSSL, http_header, route);
+    }
+
+    free(route);
+    free(request_type);
 }

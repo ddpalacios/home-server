@@ -49,7 +49,6 @@ void add_int_to_byte(unsigned char**frame, int data,int byte_length, int*bytes_a
 		int total_bits = (8 * byte_length) - 8;
 		for (int i=0; i<byte_length; i++){
 			if (total_bits == 0){
-				// printf("Sending %d as last byte\n", data & 0xFF);
 				(*frame)[*bytes_added + i] = (data & 0xFF);
 
 			}else{
@@ -67,25 +66,19 @@ void add_int_to_byte(unsigned char**frame, int data,int byte_length, int*bytes_a
 
 }
 
-void send_to_clients(char* frame, struct Socket *sockets, struct Socket socket, int total_bytes, int fd_count){
-		//printf("Socket ID TO send %s\n", socket.Id);
-		struct WebsocketClient wsc =  get_websocketclientBySocketId(socket.Id);
+void send_to_clients(char* frame, struct Socket *sockets, struct Socket *socket, int total_bytes, int fd_count){
+		struct WebsocketClient wsc =  get_websocketclientBySocketId(socket->Id);
 		char* sessionId = wsc.sessionId;
 		size_t total_clients;
-		// printf("Session ID TO SEND %s\n", sessionId);
 		struct WebsocketClient *ws_clients = get_websocketclientsBySessionId(sessionId, &total_clients);
-		// printf("%s | Total Clients %ld\n", ws_clients[0].socketId, total_clients);
 		int count = 0;
 		for (int i=0; i<total_clients; i++){
-			if (strcmp(ws_clients[i].socketId,socket.Id) == 0){
+			if (strcmp(ws_clients[i].socketId,socket->Id) == 0){ // TODO MAKE SURE TO NOT SEND TO SELF.  UNCOMMENT THIS TO ENSURE REGULAR FUNCTIONALITY
 				continue;
 			}
-		// 	printf("Sending...");
 			for (int j=0; j<fd_count; j++){
 				struct Socket client_socket = sockets[j];
 				if (strcmp(client_socket.Id,ws_clients[i].socketId)==0){
-					// printf("SENDING TO Socket ID %s\n", ws_clients[i].socketId);
-
 				   SSL* cSSL = client_socket.cSSL;
 				   if (!SSL_write(cSSL, frame, total_bytes)){
 					printf("Error sending message.\n");
@@ -95,28 +88,32 @@ void send_to_clients(char* frame, struct Socket *sockets, struct Socket socket, 
 				   break;
 				}
 			}
-			// printf("Done Sending\n");
 		}
-	
 }
 
-int send_websocket_message(struct Socket *sockets,struct Socket socket,int fd_count,int protocol_length ,int actual_payload_length, char* payload){
+int send_websocket_message(struct Socket* sockets, struct Socket* socket,int fd_count, int protocol_length ,int actual_payload_length, char* payload){
+	SSL* cSSL = socket->cSSL;
 	if (protocol_length < 126){
 		size_t total_bytes = actual_payload_length + 2;
 		char* frame = malloc(total_bytes); 
 		frame[0] = 0x81;
 		frame[1] = actual_payload_length & 0x7f;
 		memcpy(frame + 2, payload,actual_payload_length);
+
 		send_to_clients(frame, sockets, socket,total_bytes,fd_count);
 		
+		/*
+		if (!SSL_write(cSSL, frame, total_bytes)){
+			printf("Error sending message.\n");
+			return 0;
+		}
+		*/
 		if (frame != NULL){
 			free(frame);
 			frame = NULL;
 		}
-		
 		return total_bytes;
 	}else if (protocol_length == 126){
-		// printf("PROTOCOL LENGTH %d\n", protocol_length);
 		size_t total_bytes = actual_payload_length + 4;
 		char* frame = malloc(total_bytes); 
 		frame[0] = 0x81;
@@ -126,53 +123,36 @@ int send_websocket_message(struct Socket *sockets,struct Socket socket,int fd_co
 		memcpy(frame + 4, payload,actual_payload_length);
 		send_to_clients(frame, sockets, socket,total_bytes,fd_count);
 
-
+		/*
+		if (!SSL_write(cSSL, frame, total_bytes)){
+			printf("Error sending message.\n");
+			return 0;
+		}
+		*/
 	
-		// for (int i=0; i<fd_count; i++){
-		// 	struct Socket client_socket = sockets[i];
-		// 	if (client_socket.fd == socket.fd || client_socket.is_listener){
-		// 		continue;
-		// 	}
-		//     SSL* cSSL = client_socket.cSSL;
-		//     printf("Sending %d\n",actual_payload_length);
-		//     if (!SSL_write(cSSL, frame, total_bytes)){
-		// 	printf("Error sending message.\n");
-		// 	return 0;
-		//     }
-		//     printf("Done sending.\n");
-		// }
 		if (frame != NULL){
 			free(frame);
 			frame = NULL;
 		}
 		return total_bytes;
 	}else if (protocol_length == 127){
-		// printf("PROTOCOL LENGTH %d\n", protocol_length);
 		size_t total_bytes = actual_payload_length + 10;
 		char* frame = malloc(total_bytes); 
 		frame[0] = 0x81;
 		frame[1] = 0x7F & 0x7f;
+		uint64_t payload_len = (uint64_t)actual_payload_length;
 		 for (int i = 0; i < 8; i++) {
-			frame[i+2] = (actual_payload_length >> (56 - 8 * i)) & 0xFF;
+			frame[i+2] = (payload_len >> (56 - 8 * i)) & 0xFF;
 		    }
 		memcpy(frame + 10, payload,actual_payload_length);
 		send_to_clients(frame, sockets, socket,total_bytes,fd_count);
-
-
+		/*
+		if (!SSL_write(cSSL, frame, total_bytes)){
+			printf("Error sending message.\n");
+			return 0;
+		}
+		*/
 	
-		// for (int i=0; i<fd_count; i++){
-		// 	struct Socket client_socket = sockets[i];
-		// 	if (client_socket.fd == socket.fd || client_socket.is_listener){
-		// 		continue;
-		// 	}
-		//     SSL* cSSL = client_socket.cSSL;
-		//     printf("Sending %d\n",actual_payload_length);
-		//     if (!SSL_write(cSSL, frame, total_bytes)){
-		// 	printf("Error sending message.\n");
-		// 	return 0;
-		//     }
-		//     printf("Done sending.\n");
-		// }
 		if (frame != NULL){
 			free(frame);
 			frame = NULL;
@@ -180,8 +160,6 @@ int send_websocket_message(struct Socket *sockets,struct Socket socket,int fd_co
 		return total_bytes;
 	}
 }
-
-
 int send_tcp_message(SSL *cSSL,int fin, int opcode, int payload_length, char* payload){
     char* frame_json = get_file_buffer("../frame.json");
     cJSON* root = cJSON_Parse(frame_json);
@@ -212,26 +190,100 @@ int send_tcp_message(SSL *cSSL,int fin, int opcode, int payload_length, char* pa
         }
     }
     cJSON_Delete(root);
-
-    printf("Sending %d\n",payload_length);
-    if (!SSL_write(cSSL, frame, bytes_added)){
+    int write_result = SSL_write(cSSL, frame, bytes_added);
+    if (write_result <= 0){
+        int err = SSL_get_error(cSSL, write_result);
+        if (err == SSL_ERROR_WANT_WRITE || err == SSL_ERROR_WANT_READ) {
+            return 0;
+        }
         printf("Error sending message.\n");
         return 0;
     }
-    printf("Done sending.\n");
-    	if (frame != NULL){
+	if (frame != NULL){
 		free(frame);
 		frame = NULL;
 	}
     return 1;
 }
 
-void send_to_all_clients(struct Socket *sockets, struct Socket socket,int fin, int opcode, char* payload,int payload_length, int fd_count){
-	for (int i=0; i<fd_count; i++){
-		struct Socket client_socket = sockets[i];
-		if (client_socket.fd == socket.fd || client_socket.is_listener){
-			continue;
+void send_message_as_websocket(struct Socket* socket,int fd_count,int protocol_length ,int actual_payload_length, char* payload){
+	printf("Protocol Length %d | Actual Length: %d\n", protocol_length, actual_payload_length);
+	SSL* cSSL = socket->cSSL;
+	if (protocol_length < 126){
+		size_t total_bytes = actual_payload_length + 2;
+		char* frame = malloc(total_bytes);
+		frame[0] = 0x81;
+		frame[1] = actual_payload_length & 0x7f;
+		memcpy(frame + 2, payload, actual_payload_length);
+		printf("Sending %s", payload);
+		size_t total_written = 0;
+		while (total_written < total_bytes) {
+			int write_result = SSL_write(cSSL, frame + total_written, total_bytes - total_written);
+			if (write_result <= 0){
+				int err = SSL_get_error(cSSL, write_result);
+				if (err == SSL_ERROR_WANT_WRITE || err == SSL_ERROR_WANT_READ) {
+					continue;
+				}
+				printf("Error sending message.\n");
+				break;
+			}
+			total_written += (size_t)write_result;
 		}
-		send_tcp_message(client_socket.cSSL,fin, opcode, payload_length, payload);
+		if (frame != NULL){
+			free(frame);
+			frame = NULL;
+		}
+	}else if (protocol_length == 126){
+		size_t total_bytes = actual_payload_length + 4;
+		char* frame = malloc(total_bytes);
+		frame[0] = 0x81;
+		frame[1] = 0x7E & 0x7f;
+		frame[2] = (actual_payload_length >> 8) & 0xFF;
+		frame[3] = actual_payload_length & 0xFF;
+		memcpy(frame + 4, payload, actual_payload_length);
+		size_t total_written = 0;
+		while (total_written < total_bytes) {
+			int write_result = SSL_write(cSSL, frame + total_written, total_bytes - total_written);
+			if (write_result <= 0){
+				int err = SSL_get_error(cSSL, write_result);
+				if (err == SSL_ERROR_WANT_WRITE || err == SSL_ERROR_WANT_READ) {
+					continue;
+				}
+				printf("Error sending message.");
+				break;
+			}
+			total_written += (size_t)write_result;
+		}
+		if (frame != NULL){
+			free(frame);
+			frame = NULL;
+		}
+	}else if (protocol_length == 127){
+		size_t total_bytes = actual_payload_length + 10;
+		char* frame = malloc(total_bytes);
+		frame[0] = 0x81;
+		frame[1] = 0x7F & 0x7f;
+		uint64_t payload_len = (uint64_t)actual_payload_length;
+		for (int i = 0; i < 8; i++) {
+			frame[i + 2] = (payload_len >> (56 - 8 * i)) & 0xFF;
+		}
+		memcpy(frame + 10, payload, actual_payload_length);
+		size_t total_written = 0;
+		while (total_written < total_bytes) {
+			int write_result = SSL_write(cSSL, frame + total_written, total_bytes - total_written);
+			if (write_result <= 0){
+				int err = SSL_get_error(cSSL, write_result);
+				if (err == SSL_ERROR_WANT_WRITE || err == SSL_ERROR_WANT_READ) {
+					continue;
+				}
+				printf("Error sending message.\n");
+				break;
+			}
+			total_written += (size_t)write_result;
+		}
+		if (frame != NULL){
+			free(frame);
+			frame = NULL;
+		}
 	}
 }

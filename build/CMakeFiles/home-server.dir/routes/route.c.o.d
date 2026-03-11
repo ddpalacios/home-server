@@ -22,24 +22,15 @@ CMakeFiles/home-server.dir/routes/route.c.o: \
  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
  /usr/include/x86_64-linux-gnu/bits/floatn.h \
- /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
- /usr/include/openssl/ssl.h /usr/include/openssl/macros.h \
- /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
- /usr/include/x86_64-linux-gnu/openssl/configuration.h \
- /usr/include/openssl/opensslv.h /usr/include/openssl/e_os2.h \
- /usr/include/inttypes.h \
- /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h /usr/include/stdint.h \
- /usr/include/x86_64-linux-gnu/bits/wchar.h \
- /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
- /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
- /usr/include/openssl/comp.h /usr/include/openssl/crypto.h \
- /usr/include/stdlib.h /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+ /usr/include/x86_64-linux-gnu/bits/floatn-common.h /usr/include/stdlib.h \
+ /usr/include/x86_64-linux-gnu/bits/waitflags.h \
  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
  /usr/include/x86_64-linux-gnu/sys/types.h \
  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
- /usr/include/x86_64-linux-gnu/bits/types/timer_t.h /usr/include/endian.h \
+ /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+ /usr/include/x86_64-linux-gnu/bits/stdint-intn.h /usr/include/endian.h \
  /usr/include/x86_64-linux-gnu/bits/endian.h \
  /usr/include/x86_64-linux-gnu/bits/endianness.h \
  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
@@ -56,12 +47,22 @@ CMakeFiles/home-server.dir/routes/route.c.o: \
  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h /usr/include/alloca.h \
- /usr/include/x86_64-linux-gnu/bits/stdlib-float.h /usr/include/time.h \
- /usr/include/x86_64-linux-gnu/bits/time.h \
- /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
- /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+ /usr/include/x86_64-linux-gnu/bits/stdlib-float.h /usr/include/string.h \
  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+ /usr/include/strings.h /usr/include/openssl/ssl.h \
+ /usr/include/openssl/macros.h \
+ /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
+ /usr/include/x86_64-linux-gnu/openssl/configuration.h \
+ /usr/include/openssl/opensslv.h /usr/include/openssl/e_os2.h \
+ /usr/include/inttypes.h \
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h /usr/include/stdint.h \
+ /usr/include/x86_64-linux-gnu/bits/wchar.h \
+ /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+ /usr/include/openssl/comp.h /usr/include/openssl/crypto.h \
+ /usr/include/time.h /usr/include/x86_64-linux-gnu/bits/time.h \
+ /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+ /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
  /usr/include/openssl/safestack.h /usr/include/openssl/stack.h \
  /usr/include/openssl/types.h \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
@@ -89,7 +90,6 @@ CMakeFiles/home-server.dir/routes/route.c.o: \
  /usr/include/openssl/objects.h /usr/include/openssl/obj_mac.h \
  /usr/include/openssl/asn1.h /usr/include/openssl/asn1err.h \
  /usr/include/openssl/objectserr.h /usr/include/openssl/ec.h \
- /usr/include/string.h /usr/include/strings.h \
  /usr/include/openssl/ecerr.h /usr/include/openssl/rsa.h \
  /usr/include/openssl/rsaerr.h /usr/include/openssl/dsa.h \
  /usr/include/openssl/dh.h /usr/include/openssl/dherr.h \
@@ -125,41 +125,7 @@ CMakeFiles/home-server.dir/routes/route.c.o: \
  /usr/include/x86_64-linux-gnu/asm/sockios.h \
  /usr/include/asm-generic/sockios.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
- /home/dpalacios/home-server/models/websocket.h \
  /home/dpalacios/home-server/routes/route.h \
- /home/dpalacios/home-server/models/Invitation.h \
  /home/dpalacios/home-server/utilities/http_utilities.h \
- /home/dpalacios/home-server/routes/database-server/POST/post_frame.h \
- /home/dpalacios/home-server/models/FrameField.h \
- /home/dpalacios/home-server/routes/life-of-sounds/POST/post_user.h \
- /home/dpalacios/home-server/routes/life-of-sounds/POST/login.h \
- /home/dpalacios/home-server/routes/life-of-sounds/POST/post_websocket_session.h \
- /home/dpalacios/home-server/routes/life-of-sounds/POST/post_websocket_client.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_websocket_client.h \
- /home/dpalacios/home-server/routes/life-of-sounds/POST/post_audio.h \
- /home/dpalacios/home-server/routes/life-of-sounds/POST/post_browser_session.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/new_login.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/studio.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_live_page.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_web_audio_api_script.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_game_of_life_script.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/data_page.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_recordings_page.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_data_table.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_session_messages.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_websocket_script.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_html_utilities_script.h \
- /home/dpalacios/home-server/routes/life-of-sounds/PATCH/patch_websocket_client.h \
- /home/dpalacios/home-server/routes/life-of-sounds/PATCH/patch_browser_session.h \
- /home/dpalacios/home-server/routes/life-of-sounds/PATCH/patch_websocket_session.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_audio.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_audio_blob.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/sessioninfo.h \
- /home/dpalacios/home-server/routes/life-of-sounds/DELETE/sessioninfo.h \
- /home/dpalacios/home-server/routes/life-of-sounds/DELETE/delete_websocket_session.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/home.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/websocket_protocol.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_user.h \
- /home/dpalacios/home-server/utilities/json_utilities.h \
- /usr/include/cjson/cJSON.h /home/dpalacios/home-server/models/User.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/login.h
+ /home/dpalacios/home-server/routes/local-server/GET/get_local_server.h \
+ /home/dpalacios/home-server/routes/local-server/POST/post_local_server.h

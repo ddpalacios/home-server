@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Objections Report — Timeline</title>
+  <style>
+    :root {
+      --bg: #0f1216;
+      --panel: #141a20;
+      --panel-2: #11161b;
+      --text: #e8edf2;
+      --muted: #93a1b2;
+      --accent: #38d979;
+      --accent-2: #2bbf67;
+      --border: rgba(255,255,255,0.08);
+      --shadow: 0 20px 60px rgba(0,0,0,0.45);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Manrope", "Segoe UI", Tahoma, Arial, sans-serif;
+      background: radial-gradient(1200px 700px at 10% 10%, #1b2430 0%, var(--bg) 60%),
+                  radial-gradient(900px 600px at 90% 20%, #0e1c16 0%, #0b1116 50%);
+      color: var(--text);
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+    }
+
+    .wrap {
+      width: min(1100px, 92vw);
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      padding: 28px 28px 24px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .title {
+      display: grid;
+      gap: 6px;
+    }
+
+    .title h1 {
+      font-size: 26px;
+      margin: 0;
+      letter-spacing: 0.2px;
+    }
+
+    .title p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .btn {
+      background: linear-gradient(180deg, #1f2a35, #18212a);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+      font-weight: 600;
+    }
+
+    .btn:hover { transform: translateY(-1px); border-color: rgba(255,255,255,0.2); }
+
+    .button-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .chart-card {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .chart-title {
+      font-size: 18px;
+      margin: 0 0 12px 0;
+      color: var(--text);
+    }
+
+    .chart-meta {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    svg { width: 100%; height: 360px; display: block; }
+
+    .axis text { fill: var(--muted); font-size: 12px; }
+    .grid line { stroke: rgba(255,255,255,0.06); }
+
+    .line {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 3.5;
+      filter: drop-shadow(0 4px 10px rgba(56,217,121,0.25));
+    }
+
+    .dot {
+      fill: var(--accent);
+      stroke: #0b1116;
+      stroke-width: 2;
+    }
+
+    .legend {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .legend .swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 12px rgba(56,217,121,0.35);
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(6, 9, 12, 0.6);
+      backdrop-filter: blur(6px);
+      z-index: 50;
+      padding: 24px;
+    }
+
+    .modal.open { display: flex; }
+
+    .modal-card {
+      width: min(960px, 92vw);
+      max-height: 84vh;
+      overflow: hidden;
+      background: linear-gradient(180deg, #151c24, #10161b);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .modal-body {
+      padding: 18px 20px 22px;
+      overflow: auto;
+    }
+
+    .md h1, .md h2, .md h3 { margin: 16px 0 8px; }
+    .md h1 { font-size: 22px; }
+    .md h2 { font-size: 18px; color: #dbe6f3; }
+    .md h3 { font-size: 15px; color: #c7d3e3; }
+    .md p { margin: 8px 0; color: #d2dbe7; }
+    .md ul { margin: 6px 0 10px 16px; padding: 0; color: #d2dbe7; }
+    .md li { margin: 6px 0; }
+    .md code { background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 6px; }
+
+    @media (max-width: 720px) {
+      .header { flex-direction: column; align-items: flex-start; }
+      svg { height: 280px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div class="title">
+        <h1>Objection Timeline</h1>
+        <p>Meeting 0 · Range: Jan 1, 2025 to Jun 30, 2026 · Total objections: 4</p>
+      </div>
+      <div class="button-row">
+        <button class="btn" id="openModal">View Full Report</button>
+        <button class="btn" id="viewTranscript">View Full Transcript</button>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Objections Over Time (Cumulative)</div>
+      <div class="chart-meta">Green line shows cumulative objections at the moment they occurred.</div>
+      <svg viewBox="0 0 900 360" role="img" aria-label="Line chart of objections over time">
+        <defs>
+          <linearGradient id="lineGlow" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%" stop-color="#38d979" stop-opacity="0.65" />
+            <stop offset="100%" stop-color="#2bbf67" stop-opacity="0.9" />
+          </linearGradient>
+        </defs>
+        <g class="grid">
+          <line x1="70" y1="40" x2="70" y2="320" />
+          <line x1="70" y1="320" x2="860" y2="320" />
+          <line x1="70" y1="248" x2="860" y2="248" />
+          <line x1="70" y1="176" x2="860" y2="176" />
+          <line x1="70" y1="104" x2="860" y2="104" />
+        </g>
+        <g class="axis">
+          <text x="36" y="324">0</text>
+          <text x="36" y="252">1</text>
+          <text x="36" y="180">2</text>
+          <text x="36" y="108">3</text>
+          <text x="36" y="36">4</text>
+          <text x="70" y="346">0s</text>
+          <text x="260" y="346">800s</text>
+          <text x="470" y="346">1600s</text>
+          <text x="660" y="346">2400s</text>
+          <text x="830" y="346">2600s</text>
+        </g>
+        <path class="line" stroke="url(#lineGlow)" d="M70 320 L295 248 L430 176 L510 104 L820 40" />
+        <circle class="dot" cx="295" cy="248" r="6" />
+        <circle class="dot" cx="430" cy="176" r="6" />
+        <circle class="dot" cx="510" cy="104" r="6" />
+        <circle class="dot" cx="820" cy="40" r="6" />
+      </svg>
+      <div class="legend">
+        <span class="swatch"></span>
+        <span>Cumulative objections (Timing / Urgency + Fit / Need)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modal">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <h2 id="modalTitle">Objections Report</h2>
+        <button class="btn" id="closeModal">Close</button>
+      </div>
+      <div class="modal-body">
+        <div class="md" id="mdContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <script id="mdSource" type="text/plain">
+## Section: Metadata
+- Range start: 2025-01-01
+- Range end: 2026-06-30
+- Total conversations: 1
+- Total objections: 4
+
+## Section: Objection Trends
+### Timing / Urgency
+- Count: 2
+- Evidence: [meeting_0:846s-862s], [meeting_0:2476s-2486s]
+- Percentage of total: 50%
+- Trend direction: Stable
+- Trend explanation: This objection appeared consistently at the beginning and end of the conversation, both times related to deferring the review of the partnership agreement.
+
+### Fit / Need
+- Count: 2
+- Evidence: [meeting_0:1282s-1295s], [meeting_0:1574s-1589s]
+- Percentage of total: 50%
+- Trend direction: Stable
+- Trend explanation: These objections were raised during the product demo, focusing on how the platform compares to existing tools and the potential for end-user adoption challenges.
+
+## Section: Top Objection Categories
+### Timing / Urgency
+- impact_level: blocking
+- Impact rationale: The prospect repeatedly deferred the review of the partnership agreement, which is the primary action required to formalize the partnership and move the deal forward.
+- Evidence anchors: [meeting_0:846s], [meeting_0:2476s]
+
+## Section: Root Cause Insights
+- Target objection category: Timing / Urgency
+- Root cause explanation: The prospect is delaying commitment on the partnership agreement, citing general busyness and the upcoming holiday, which suggests the value proposition for immediate action has not been sufficiently established to make it a priority.
+- Primary driver: timing
+- Misalignment or missing element: A compelling reason for the prospect to prioritize the agreement review over other tasks is missing from the conversation.
+- Business consequence: deal velocity
+- Evidence anchors: [meeting_0:846s], [meeting_0:2476s]
+
+## Section: Next Best Actions
+- Target objection category: Timing / Urgency
+- Action description: Develop and integrate a standardized "urgency framework" into the sales process that clearly articulates the cost of inaction or the immediate, tangible benefits of partnership for prospects.
+- Expected business impact: Increased deal velocity by compelling prospects to prioritize contract review and signing.
+- Time to value: short
+- Measurement signal: A reduction in the time between sending a partnership agreement and receiving feedback or a signature.
+- Dependency or owner: Sales Leadership
+- Evidence anchors: [meeting_0:846s], [meeting_0:2476s]
+
+## Section: Objection Handling Analysis
+- Overall handling summary: The representative handled objections calmly and effectively by pivoting or providing clear context. When faced with a delay on the contract review, the rep smoothly transitioned to the demo to build value. When faced with questions about product fit or user adoption, the rep provided confident, detailed answers that satisfied the prospect.
+- Strengths:
+  - Behavior: Pivoting. Description: When the prospect delayed the contract review, the rep immediately pivoted to the product demo to build value instead of pressing the issue, keeping the conversation productive. Frequency: Consistently. Evidence: [meeting_0:863s-885s]
+  - Behavior: Proactive Objection Handling. Description: The rep anticipated the objection about senior rep adoption for the coaching feature and asked about it directly, allowing him to control the narrative and demonstrate awareness of the client's environment. Frequency: Once (notable). Evidence: [meeting_0:1565s-1578s]
+- Weaknesses:
+  - Behavior: Accepting delays without probing. Description: While the rep handled the timing objection gracefully, there was no attempt to create urgency or explore the underlying reasons for the delay, allowing the prospect to defer commitment twice without consequence. Frequency: Consistently. Evidence: [meeting_0:846s], [meeting_0:2476s]
+
+## Section: Objection Handling Effectiveness
+- Overall effectiveness rating: medium
+- The rep was highly effective at handling in-the-moment product and fit objections, building credibility and value. However, effectiveness was lower for the primary business objection (timing of the contract), which was deferred twice, leaving the deal stalled.
+- Effectiveness by category:
+  - Timing / Urgency: Effectiveness score 2/5. Outcome summary: The rep acknowledged the delay but did not probe for the underlying reason or create urgency, resulting in the objection recurring and the deal's next step being postponed. Evidence: [meeting_0:846s], [meeting_0:2476s]
+  - Fit / Need: Effectiveness score 4/5. Outcome summary: The rep effectively addressed questions about user adoption and product comparisons by providing context and highlighting the product's flexibility, which appeared to satisfy the prospect's concerns. Evidence: [meeting_0:1299s-1321s], [meeting_0:1592s-1603s]
+
+## Section: Actionable Coaching Suggestions
+- Top priorities:
+  - Priority: Creating Urgency. Why it matters: The primary blocker in this deal is the prospect's lack of urgency to review the agreement. Without addressing this, deals will stall and forecasts will be unreliable. Expected impact: Shortened sales cycles and improved deal velocity.
+- Recommended actions:
+  - Focus area: Overcoming Timing Objections
+  - Coaching guidance: When a prospect delays a key step like a contract review, don't just accept it. Use probing questions to understand the real reason and then tie the value of acting now to a specific business outcome for them.
+  - Practice suggestion:
+    - Role-play scenarios for handling timing objections like "I'm too busy" or "I'll get to it after the holiday."
+    - Practice asking discovery questions to uncover the real barrier behind the delay.
+      - "I understand you're busy. To make the review easier, are there any specific sections of the agreement you're most concerned about?"
+      - "What's on your plate that's taking priority right now? I want to understand how this fits in."
+    - Develop and practice statements that create a clear reason to act now.
+      - "If we can get this finalized this week, I can ensure we have you set up to connect with [Target Client] in early January. If we wait, that opportunity might get pushed to Q2."
+  </script>
+
+  <script>
+    const modal = document.getElementById("modal");
+    const openModal = document.getElementById("openModal");
+    const closeModal = document.getElementById("closeModal");
+    const mdContainer = document.getElementById("mdContainer");
+    const mdSource = document.getElementById("mdSource").textContent.trim();
+
+    function escapeHtml(text) {
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function renderMarkdown(md) {
+      const lines = md.split(/\n/);
+      let html = "";
+      let inList = false;
+
+      for (const line of lines) {
+        if (line.startsWith("### ")) {
+          if (inList) { html += "</ul>"; inList = false; }
+          html += `<h3>${escapeHtml(line.slice(4))}</h3>`;
+          continue;
+        }
+        if (line.startsWith("## ")) {
+          if (inList) { html += "</ul>"; inList = false; }
+          html += `<h2>${escapeHtml(line.slice(3))}</h2>`;
+          continue;
+        }
+        if (line.startsWith("# ")) {
+          if (inList) { html += "</ul>"; inList = false; }
+          html += `<h1>${escapeHtml(line.slice(2))}</h1>`;
+          continue;
+        }
+        if (line.startsWith("- ")) {
+          if (!inList) { html += "<ul>"; inList = true; }
+          html += `<li>${escapeHtml(line.slice(2))}</li>`;
+          continue;
+        }
+        if (line.trim() === "") {
+          if (inList) { html += "</ul>"; inList = false; }
+          html += "<p></p>";
+          continue;
+        }
+        if (inList) { html += "</ul>"; inList = false; }
+        html += `<p>${escapeHtml(line)}</p>`;
+      }
+      if (inList) html += "</ul>";
+      return html;
+    }
+
+    mdContainer.innerHTML = renderMarkdown(mdSource);
+
+    openModal.addEventListener("click", () => modal.classList.add("open"));
+    closeModal.addEventListener("click", () => modal.classList.remove("open"));
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) modal.classList.remove("open");
+    });
+  </script>
+</body>
+</html>

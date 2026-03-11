@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/eclipse.min.css">
+<link rel="stylesheet" href="/etl/home.css">
+<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+	<link rel="stylesheet" href="/etl/jquery.flowchart.css">
+
+	<script src="/etl/jquery.flowchart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+	</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-header-row">
+            <h3>Activities</h3>
+            <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Collapse activities panel">
+              Hide
+            </button>
+            <button id="groupToggle" class="sidebar-toggle sidebar-toggle--group" type="button" aria-label="Collapse all activity groups">
+              Collapse All
+            </button>
+        </div>
+        <p class="sidebar-subtitle">Design Your Automations.</p>
+        <div class="sidebar-search" role="search">
+            <span class="sidebar-search-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M10 4a6 6 0 1 0 3.7 10.7l4.6 4.6 1.4-1.4-4.6-4.6A6 6 0 0 0 10 4zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8z"/></svg>
+            </span>
+            <input id="activitySearch" type="search" placeholder="Search for an activity" aria-label="Search for an activity">
+        </div>
+    </div>
+    <div class="sidebar-scroll">
+    <div class="sidebar-buttons">
+        <div class="pipeline-panel">
+            <button id="newPipelineButton" class="pipeline-new-button" type="button">
+              + New Dataflow
+            </button>
+            <div id="pipelineList" class="pipeline-list"></div>
+        </div>
+        <div class="pipeline-panel pipeline-panel--pipelines">
+            <button id="newSavedPipelineButton" class="pipeline-new-button" type="button">
+              + New Pipeline
+            </button>
+            <div id="savedPipelineList" class="pipeline-list"></div>
+        </div>
+        <details id="savedTriggersGroup" class="activity-group saved-triggers-group" open>
+            <summary>Saved Triggers</summary>
+            <div class="activity-group-content">
+                <button id="newTriggerButton" class="pipeline-new-button" type="button">
+                  + New Trigger
+                </button>
+                <div id="triggerList" class="pipeline-list"></div>
+            </div>
+        </details>
+        <details class="activity-group" open>
+            <summary>Ingest</summary>
+            <div class="activity-group-content">
+                <button id="import_activity" class="create_operator buttons">
+                    <span class="activity-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M12 4v12"/><path d="M7 9l5 5 5-5"/><path d="M5 20h14"/></svg>
+                    </span>
+                    Create Import
+                </button>
+                <button id="sheets_read_activity" class="create_operator buttons">
+                    <span class="activity-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h6"/></svg>
+                    </span>
+                    Google Sheets (Read)
+                </button>
+                <button id="http_request_activity" class="create_operator buttons">
+                    <span class="activity-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M4 7h10M4 12h16M4 17h12"/><path d="M18 7l2 2-2 2"/></svg>
+                    </span>
+                    HTTP Request
+                </button>
+            </div>
+        </details>
+    </div>
+    </div>
+</div>
+
+<div class="activity-buttons-hidden" aria-hidden="true">
+    <button id="select_activity" type="button"></button>
+    <button id="filter_activity" type="button"></button>
+    <button id="sort_activity" type="button"></button>
+    <button id="join_activity" type="button"></button>
+    <button id="aggregate_activity" type="button"></button>
+    <button id="custom_activity" type="button"></button>
+    <button id="replace_activity" type="button"></button>
+    <button id="fill_activity" type="button"></button>
+    <button id="clean_activity" type="button"></button>
+    <button id="dedupe_activity" type="button"></button>
+    <button id="cast_activity" type="button"></button>
+    <button id="regex_activity" type="button"></button>
+    <button id="pivot_activity" type="button"></button>
+    <button id="window_activity" type="button"></button>
+    <button id="split_activity" type="button"></button>
+    <button id="combine_activity" type="button"></button>
+    <button id="append_activity" type="button"></button>
+    <button id="flatten_activity" type="button"></button>
+    <button id="sheets_write_activity" type="button"></button>
+    <button id="http_sink_activity" type="button"></button>
+</div>
+
+<button id="sidebarToggleFloating" class="sidebar-toggle sidebar-toggle--floating" type="button" aria-label="Show activities panel">
+  Activities
+</button>
+
+  <div class="content-wrapper">
+    <div class="content">
+      <div class="pipeline-run">
+        <button id="run_pipeline" type="button" aria-label="Run pipeline">
+          <svg class="run-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7V5z"/></svg>
+          <span>Run Flow</span>
+        </button>
+        <button id="createTrigger" class="create-trigger-button" type="button">
+          <svg class="create-trigger-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M13 2L4 14h6l-1 8 11-14h-6l1-6z"/>
+          </svg>
+          <!-- <span>+ Create Trigger</span> -->
+        </button>
+      </div>
+      	 <div id="chart_container">
+				 <div class="drag-boundary-outline" aria-hidden="true"></div>
+				
+					<div class="flowchart-example-container" id="flowchartworkspace">
+           <button id="importPlaceholder" class="import-placeholder" type="button" aria-label="Place import activity">
+             + Import
+           </button>
+           <div id="selectPlaceholders" class="select-placeholders" aria-hidden="true"></div>
+           <div id="linkAddLayer" class="link-add-layer" aria-hidden="true"></div>
+           <div id="chooseMenu" class="choose-menu" role="menu" aria-hidden="true">
+             <div class="choose-menu-search">
+               <span class="choose-menu-icon" aria-hidden="true">🔍</span>
+               <input id="chooseMenuSearch" type="search" placeholder="Search activities">
+             </div>
+             <div id="chooseMenuList" class="choose-menu-list"></div>
+           </div>
+           <div id="ingestMenu" class="ingest-menu" role="menu" aria-hidden="true">
+             <button type="button" data-ingest="import" role="menuitem">Import Data</button>
+             <button type="button" data-ingest="sheets_read" role="menuitem">Google Sheets (Read)</button>
+             <button type="button" data-ingest="http_request" role="menuitem">HTTP Request</button>
+           </div>
+
+					</div>
+	      </div> 
+    </div>
+
+    <div class="zoom-controls">
+      <button id="zoomIn" type="button" aria-label="Zoom in">+</button>
+      <button id="zoomOut" type="button" aria-label="Zoom out">−</button>
+      <button id="zoomReset" type="button" aria-label="Recenter view">⟳</button>
+    </div>
+
+    <div class="footer" id="footer" style="overflow-x: hidden; overflow-y: hidden;">
+      <div class="resize-handle" id="resizeHandle"> <img src="/etl/images/drag.png" width="50" height="50"></div>
+	  		<div class="navbar" style=" padding: 16px 20px; z-index: 1000; background: linear-gradient(135deg, #cfd7e2 0%, #bcc6d4 100%); border: 1px solid rgba(15, 23, 42, 0.08); width: 100%; display: flex; flex-direction: row; gap: 50px; transition: background 0.3s ease;">
+				<div class="tab">
+				<button class="tablinks" id="tabGeneral" onclick="switchTabPanel(event, 'tab_general')">General</button>
+				<button class="tablinks" id="tabSettings" onclick="switchTabPanel(event, 'tab_settings')">Settings</button>
+				<button class="tablinks" id="tabDataPreview" onclick="switchTabPanel(event, 'data_preview')">Data Preview</button>
+				<button class="tablinks" id="tabActivities" onclick="switchTabPanel(event, 'tab_activities')">Activities</button>
+				<button class="tablinks" id="tabScheduledTriggers" onclick="switchTabPanel(event, 'scheduled_triggers')">Scheduled Triggers</button>
+				<button class="tablinks" id="tabTestRuns" onclick="switchTabPanel(event, 'test_runs')">Test Runs</button>
+				</div>
+				
+
+			</div>
+			<div id="tab_general" class="tabcontent" style="display: flex; flex-direction: column; gap: 30px;">
+				<div id="pipeline_properties" class="general-panel" style="display: flex; flex-direction: column; gap: 10px;">
+					<label for="pipeline_title">Pipeline Name</label>
+					<input id="pipeline_title" type="text" placeholder="Untitled pipeline">
+					<label for="pipeline_description">Description</label>
+					<textarea rows="5" cols="10" id="pipeline_description" type="text" placeholder="Describe the pipeline purpose"></textarea>
+				</div>
+				<div id="operator_properties" class="general-panel" style="display: flex; flex-direction: column; gap: 10px;">
+					<label for="operator_title">Name</label>
+					<input id="operator_title" type="text">
+					<label for="operator_description">Description</label>
+					<textarea rows="5" cols="10" id="operator_description" type="text" placeholder="Describe what this activity does"></textarea>
+				</div>
+				
+			</div>
+				<div id="tab_settings" class="tabcontent">
+				<div id="link_properties" style="display: block;">
+					<label for="link_color">Link's color: </label><input id="link_color" type="color"></div>
+				<div id="selected_activity_settings" style="display: flex; flex-direction: column; gap: 10px;"></div>
+				
+			</div>
+				<div id="data_preview" class="tabcontent">
+						<div id="preview_button_stash" style="display: none;">
+							<button id="refresh_preview" class="buttons" type="button">Refresh</button>
+							<button id="export_preview" class="buttons" type="button">Export</button>
+						</div>
+						<div id="activity_previews"></div>
+				</div>
+					<div id="tab_activities" class="tabcontent">
+						<div class="activity-group-content">
+							<div class="activity-group-label">Add an activity block to the flowchart.</div>
+							<button id="dataflow_activity" class="create_operator buttons">
+								<span class="activity-icon" aria-hidden="true">
+									<svg viewBox="0 0 24 24"><path d="M4 4h7v7H4z"/><path d="M13 13h7v7h-7z"/><path d="M11 7l6 6"/></svg>
+								</span>
+								Dataflow
+							</button>
+							<button id="pipeline_activity" class="create_operator buttons">
+								<span class="activity-icon" aria-hidden="true">
+									<svg viewBox="0 0 24 24"><path d="M4 4h7v7H4z"/><path d="M13 13h7v7h-7z"/><path d="M11 7l6 6"/></svg>
+								</span>
+								Pipeline
+							</button>
+							<button id="stream_activity" class="create_operator buttons">
+								<span class="activity-icon" aria-hidden="true">
+									<svg viewBox="0 0 24 24"><path d="M4 4h7v7H4z"/><path d="M13 13h7v7h-7z"/><path d="M11 7l6 6"/></svg>
+								</span>
+								Stream
+							</button>
+						</div>
+					</div>
+				<div id="scheduled_triggers" class="tabcontent">
+					<div class="scheduled-triggers__toolbar">
+						<div class="scheduled-triggers__controls">
+							<label for="scheduled_trigger_select">Trigger</label>
+							<select id="scheduled_trigger_select"></select>
+						</div>
+						<div class="scheduled-triggers__actions">
+							<button id="scheduled_trigger_refresh" type="button" class="buttons">Refresh</button>
+							<button id="scheduled_trigger_export" type="button" class="buttons">Export</button>
+						</div>
+					</div>
+					<div id="scheduled_trigger_empty" class="scheduled-triggers__empty">Select a trigger to see run history.</div>
+					<div class="table-responsive">
+						<div id="scheduled_trigger_table"></div>
+					</div>
+				</div>
+				<div id="test_runs" class="tabcontent">
+					<div class="scheduled-triggers__toolbar">
+						<div class="scheduled-triggers__controls">
+							<label for="test_runs_pipeline_select">Pipeline</label>
+							<select id="test_runs_pipeline_select"></select>
+						</div>
+						<div class="scheduled-triggers__actions">
+							<button id="test_runs_refresh" type="button" class="buttons">Refresh</button>
+							<button id="test_runs_export" type="button" class="buttons">Export</button>
+						</div>
+					</div>
+					<div id="test_runs_empty" class="scheduled-triggers__empty">Select a pipeline to see run history.</div>
+					<div class="table-responsive">
+						<div id="test_runs_table"></div>
+					</div>
+				</div>
+    </div>
+  </div>
+  <div id="triggerModal" class="trigger-modal" role="dialog" aria-modal="true" aria-labelledby="triggerModalTitle" aria-hidden="true">
+    <div class="trigger-modal__backdrop" data-trigger-close></div>
+    <div class="trigger-modal__panel" role="document">
+      <div class="trigger-modal__header">
+        <h2 id="triggerModalTitle">New trigger</h2>
+        <button type="button" class="trigger-modal__close" data-trigger-close aria-label="Close">x</button>
+      </div>
+      <div class="trigger-modal__body">
+        <label for="trigger_pipeline_name">Pipeline</label>
+        <input id="trigger_pipeline_name" type="text" disabled>
+        <select id="trigger_pipeline_select" class="trigger-field-hidden"></select>
+
+        <label for="trigger_name">Name *</label>
+        <input id="trigger_name" type="text" placeholder="trigger_schedule">
+
+        <label for="trigger_description">Description</label>
+        <textarea id="trigger_description" rows="3" placeholder="Describe this trigger"></textarea>
+
+        <label for="trigger_start_date">Start date *</label>
+        <input id="trigger_start_date" type="datetime-local">
+
+        <label for="trigger_time_of_day" class="trigger-time-label trigger-field-hidden">Time of day *</label>
+        <input id="trigger_time_of_day" type="time" class="trigger-time-input trigger-field-hidden">
+
+        <label for="trigger_recurrence_unit">Recurrence *</label>
+        <div class="trigger-recurrence">
+          <input id="trigger_recurrence_value" type="number" min="1" value="1">
+          <select id="trigger_recurrence_unit">
+            <option value="minutes">Minutes</option>
+            <option value="hours">Hours</option>
+            <option value="days">Days</option>
+            <option value="weekly">Weekly</option>
+          </select>
+        </div>
+
+        <div id="trigger_weekdays" class="trigger-weekdays" aria-hidden="true">
+          <span>Select days</span>
+          <label><input type="checkbox" value="mon"><span>Mon</span></label>
+          <label><input type="checkbox" value="tue"><span>Tue</span></label>
+          <label><input type="checkbox" value="wed"><span>Wed</span></label>
+          <label><input type="checkbox" value="thu"><span>Thu</span></label>
+          <label><input type="checkbox" value="fri"><span>Fri</span></label>
+          <label><input type="checkbox" value="sat"><span>Sat</span></label>
+          <label><input type="checkbox" value="sun"><span>Sun</span></label>
+        </div>
+
+        <div id="trigger_hours" class="trigger-weekdays trigger-hours trigger-field-hidden" aria-hidden="true">
+          <span class="trigger-hours__title">Select hours and minutes</span>
+          <span class="trigger-hours__hint">Check an hour to enable its minute picker.</span>
+          <label><input type="checkbox" value="00"><span class="trigger-hour-value">00</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="01"><span class="trigger-hour-value">01</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="02"><span class="trigger-hour-value">02</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="03"><span class="trigger-hour-value">03</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="04"><span class="trigger-hour-value">04</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="05"><span class="trigger-hour-value">05</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="06"><span class="trigger-hour-value">06</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="07"><span class="trigger-hour-value">07</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="08"><span class="trigger-hour-value">08</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="09"><span class="trigger-hour-value">09</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="10"><span class="trigger-hour-value">10</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="11"><span class="trigger-hour-value">11</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="12"><span class="trigger-hour-value">12</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="13"><span class="trigger-hour-value">13</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="14"><span class="trigger-hour-value">14</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="15"><span class="trigger-hour-value">15</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="16"><span class="trigger-hour-value">16</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="17"><span class="trigger-hour-value">17</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="18"><span class="trigger-hour-value">18</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="19"><span class="trigger-hour-value">19</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="20"><span class="trigger-hour-value">20</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="21"><span class="trigger-hour-value">21</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="22"><span class="trigger-hour-value">22</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+          <label><input type="checkbox" value="23"><span class="trigger-hour-value">23</span><span class="trigger-hour-sep">:</span><select class="trigger-hour-minutes" aria-label="Minutes"></select></label>
+        </div>
+      </div>
+      <div class="trigger-modal__footer">
+        <button type="button" cl
+        ass="trigger-modal__btn trigger-modal__btn--ghost" data-trigger-close>Cancel</button>
+        <button id="triggerModalOk" type="button" class="trigger-modal__btn trigger-modal__btn--primary">OK</button>
+      </div>
+    </div>
+  </div>
+  <script > let ws = null;</script>
+  <script src="/websocket.js" defer></script>
+  <script src="/etl/activities.js" defer></script>
+  <script src="/etl/run.js" defer></script>
+  <script src="/etl/import.js" defer></script>
+  <script src="/etl/http_request.js" defer></script>
+  <script src="/etl/join.js" defer></script>
+  <script src="/etl/group.js" defer></script>
+  <script src="/etl/custom_column.js" defer></script>
+  <script src="/etl/split.js"defer></script>
+  <script src="/etl/combine.js" defer></script>
+  <script src="/etl/append.js" defer></script>
+  <script src="/etl/google_sheets.js" defer></script>
+  <script src="/etl/filter.js" defer></script>
+  <script src="/etl/replace.js" defer></script>
+  <script src="/etl/fill.js" defer></script>
+  <script src="/etl/clean.js" defer></script>
+  <script src="/etl/dedupe.js" defer></script>
+  <script src="/etl/cast.js" defer></script>
+  <script src="/etl/regex.js" defer></script>
+  <script src="/etl/pivot.js" defer></script>
+  <script src="/etl/window.js" defer></script>
+  <script src="/etl/flatten.js" defer></script>
+  <script src="/etl/select.js" defer></script>
+  <script src="/etl/sort.js" defer></script>
+  <script src="/etl/stream.js" defer></script>
+  <script src="/etl/dataflow.js" defer></script>
+  <script src="/etl/pipeline.js" defer></script>
+  <script>
+    window.GOOGLE_OAUTH_CONFIG = {
+      client_id: "639323802562-f5i8qpon5o6umajc5bvvqcgqjudpnhf6.apps.googleusercontent.com",
+      redirect_uri: "http://127.0.0.1:5000/etl/google/callback",
+      scopes: "openid email profile https://www.googleapis.com/auth/spreadsheets",
+      state: ""
+    };
+  </script>
+  <script src="/etl/home-ui.js" defer></script>
+  </body>
+</html>

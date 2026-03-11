@@ -60,7 +60,6 @@ char* get_messages_by_sessionid_json(char* sessionid){
 		MYSQL* conn = connect_to_sql("testUser",  "testpwd","localhost", "Users");
 		char sql[255];
 		snprintf(sql, sizeof(sql),"SELECT * FROM Websocket_Message WHERE sessionId = '%s'", sessionid);
-		printf("%s\n", sql);
 		MYSQL_RES* res = query(conn, sql);
 		MYSQL_ROW row;
 		size_t count = 0;

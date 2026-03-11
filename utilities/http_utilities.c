@@ -10,6 +10,11 @@
 #include "json_utilities.h"
 #define SESSION_COOKIE_NAME "session_token"
 #define SESSION_COOKIE_MAX_AGE 10
+
+void send_html_response_code(SSL* cSSL,int code, int content_length);
+void send_image_response_code(SSL* cSSL,int code, int content_length);
+void send_pdf_response_code(SSL* cSSL,int code, int content_length);
+void send_favicon_response_code(SSL* cSSL,int code, int content_length);
 #define REFRESH_COOKIE_MAX_AGE 2628000
 #define REFRESH_COOKIE_NAME "refresh_token"
 
@@ -272,6 +277,7 @@ void send_response_code(SSL *cSSL,int code ){
 				"\r\n");
 
 	SSL_write(cSSL, http_header, strlen(http_header));
+
 	
 	}else if (code == 405) {
 		snprintf(http_header, sizeof(http_header),
@@ -282,11 +288,110 @@ void send_response_code(SSL *cSSL,int code ){
 	}
 
 }
-int get_http_header(char* request, char*header_result){
+int get_http_header(char* request, char*header_result, size_t header_result_size){
 		char*header_end = strstr(request, "\r\n\r\n");
+		if (!header_end) {
+			return 0;
+		}
 		size_t header_length= header_end - request;
+		if (header_length == 0 || header_length + 1 > header_result_size) {
+			return 0;
+		}
 		strncpy(header_result, request, header_length);
+		header_result[header_length] = '\0';
 		return header_length;
+}
+
+static unsigned char *read_binary_file(const char *filename, size_t *out_size) {
+    FILE *fp = fopen(filename, "rb");
+    if (!fp) {
+        perror(filename);
+        return NULL;
+    }
+
+    if (fseek(fp, 0L, SEEK_END) != 0) {
+        perror("fseek");
+        fclose(fp);
+        return NULL;
+    }
+
+    long size = ftell(fp);
+    if (size < 0) {
+        perror("ftell");
+        fclose(fp);
+        return NULL;
+    }
+    rewind(fp);
+
+    unsigned char *buffer = malloc(size);
+    if (!buffer) {
+        perror("malloc");
+        fclose(fp);
+        return NULL;
+    }
+
+    size_t bytes_read = fread(buffer, 1, size, fp);
+    fclose(fp);
+
+    if (bytes_read != (size_t)size) {
+        perror("fread");
+        free(buffer);
+        return NULL;
+    }
+
+    *out_size = size;
+    return buffer;
+}
+
+void get_live_html(SSL* cSSL, char* request, char* template_name){
+    char *html_buffer = open_html_template_page(template_name, request);
+    if (html_buffer != NULL){
+        int html_length = strlen(html_buffer);
+        send_html_response_code(cSSL, 200, html_length);
+        SSL_write(cSSL, html_buffer, html_length);
+        free(html_buffer);
+    }else{
+        printf("COULD NOT FIND %s\n", template_name);
+    }
+}
+
+void get_image_file(SSL* cSSL, char* request, char* route){
+    const char *prefix = "/portfolio/images/";
+    const char *filename = NULL;
+
+    if (route && strstr(route, prefix) == route) {
+        filename = route + strlen(prefix);
+    }
+
+    if (!filename || filename[0] == '\0') {
+        send_response_code(cSSL, 404);
+        return;
+    }
+
+    char template_dir[256] = "../templates/portfolio/images/";
+    strncat(template_dir, filename, sizeof(template_dir) - strlen(template_dir) - 1);
+    size_t image_size = 0;
+
+    unsigned char *image_data = read_binary_file(template_dir, &image_size);
+    if (!image_data) {
+        send_response_code(cSSL, 404);
+        return;
+    }
+
+    if (strstr(filename, ".ico") != NULL ){
+        send_favicon_response_code(cSSL, 200, (int)image_size);
+    } else if (strstr(filename, ".png") != NULL ){
+        send_image_response_code(cSSL, 200, (int)image_size);
+    } else if (strstr(filename, ".pdf") != NULL ){
+        send_pdf_response_code(cSSL, 200, (int)image_size);
+    } else {
+        send_response_code(cSSL, 415);
+        free(image_data);
+        return;
+    }
+
+    SSL_write(cSSL, image_data, image_size);
+    free(image_data);
 }
 char* generate_websocket_accptKey(char* websocket_sec_key ){
 	char websocket_key[32];
@@ -316,7 +421,6 @@ void send_websocket_buffer(SSL* cSSL, char* buf){
  
 
 int switch_to_websocket_protocol(SSL *cSSL, char* websocket_sec_acceptKey){
-	printf("Switching Protocols...\n");
 	char http_header[1024];
 	snprintf(http_header, sizeof(http_header),
 			"HTTP/1.1 101 Switching Protocols\r\n"
@@ -363,6 +467,97 @@ void send_css_response_code(SSL* cSSL,int code, int content_length){
 		snprintf(http_header, sizeof(http_header),
 				 "HTTP/1.1 %s\r\n"
 				  "Content-Type: text/css\r\n"
+				   "Connection: close\r\n"
+				   "\r\n", code_text);
+	 SSL_write(cSSL, http_header, strlen(http_header));
+	}
+}
+void send_image_response_code(SSL* cSSL,int code, int content_length){
+	char http_header[2048];
+	char* code_text = malloc(50);
+	if (code == 200) {
+		code_text = "200 OK";
+		snprintf(http_header, sizeof(http_header),
+				 "HTTP/1.1 %s\r\n"
+				  "Content-Type: image/png\r\n"
+				   "Connection: close\r\n"
+				   "Content-Length: %d\r\n"
+				   "\r\n", code_text,content_length);
+	 SSL_write(cSSL, http_header, strlen(http_header));
+	}else if (code == 404){
+		code_text = "404 Not Found";
+		snprintf(http_header, sizeof(http_header),
+				 "HTTP/1.1 %s\r\n"
+				  "Content-Type: image/png\r\n"
+				   "Connection: close\r\n"
+				   "\r\n", code_text);
+	 SSL_write(cSSL, http_header, strlen(http_header));
+	}
+}
+
+
+void send_pdf_response_code(SSL* cSSL,int code, int content_length){
+	char http_header[2048];
+	char* code_text = malloc(50);
+	if (code == 200) {
+		code_text = "200 OK";
+		snprintf(http_header, sizeof(http_header),
+				 "HTTP/1.1 %s\r\n"
+				  "Content-Type: application/pdf\r\n"
+				   "Connection: close\r\n"
+				   "Content-Length: %d\r\n"
+				   "\r\n", code_text,content_length);
+	 SSL_write(cSSL, http_header, strlen(http_header));
+	}else if (code == 404){
+		code_text = "404 Not Found";
+		snprintf(http_header, sizeof(http_header),
+				 "HTTP/1.1 %s\r\n"
+				  "Content-Type: application/pdf\r\n"
+				   "Connection: close\r\n"
+				   "\r\n", code_text);
+	 SSL_write(cSSL, http_header, strlen(http_header));
+	}
+}
+void send_favicon_response_code(SSL* cSSL,int code, int content_length){
+	char http_header[2048];
+	char* code_text = malloc(50);
+	if (code == 200) {
+		code_text = "200 OK";
+		snprintf(http_header, sizeof(http_header),
+				 "HTTP/1.1 %s\r\n"
+				  "Content-Type: image/x-icon\r\n"
+				   "Connection: close\r\n"
+				   "Content-Length: %d\r\n"
+				   "\r\n", code_text,content_length);
+	 SSL_write(cSSL, http_header, strlen(http_header));
+	}else if (code == 404){
+		code_text = "404 Not Found";
+		snprintf(http_header, sizeof(http_header),
+				 "HTTP/1.1 %s\r\n"
+				  "Content-Type: image/x-icon\r\n"
+				   "Connection: close\r\n"
+				   "\r\n", code_text);
+	 SSL_write(cSSL, http_header, strlen(http_header));
+	}
+}
+
+void send_video_response_code(SSL* cSSL,int code, int content_length){
+	char http_header[2048];
+	char* code_text = malloc(50);
+	if (code == 200) {
+		code_text = "200 OK";
+		snprintf(http_header, sizeof(http_header),
+				 "HTTP/1.1 %s\r\n"
+				  "Content-Type: video/mp4\r\n"
+				   "Connection: close\r\n"
+				   "Content-Length: %d\r\n"
+				   "\r\n", code_text,content_length);
+	 SSL_write(cSSL, http_header, strlen(http_header));
+	}else if (code == 404){
+		code_text = "404 Not Found";
+		snprintf(http_header, sizeof(http_header),
+				 "HTTP/1.1 %s\r\n"
+				  "Content-Type: video/mp4\r\n"
 				   "Connection: close\r\n"
 				   "\r\n", code_text);
 	 SSL_write(cSSL, http_header, strlen(http_header));

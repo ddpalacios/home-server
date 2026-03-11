@@ -67,12 +67,10 @@ void delete_session(char* sessionId){
 
 char* convert_sessions_to_json(struct Session* session, int count){
 	cJSON *root = cJSON_CreateObject();
-	printf("count %d\n",count);
 	cJSON_AddNumberToObject(root,"total_count",count);
 	cJSON* sessions = cJSON_AddArrayToObject(root, "values");
 	if (count == 0){
 		char *json_string = cJSON_Print(root);
-		printf("JSON %s\n", json_string);
 		cJSON_Delete(root);
 		return json_string;
 	}
@@ -87,7 +85,6 @@ char* convert_sessions_to_json(struct Session* session, int count){
 
 	}
 	char *json_string = cJSON_Print(root);
-	printf("JSON %s\n", json_string);
 	cJSON_Delete(root);
 
 	

@@ -260,6 +260,179 @@ CMakeFiles/home-server.dir/main.c.o: ../main.c \
   ../server/send_message.h \
   ../models/Socket.h
 
+CMakeFiles/home-server.dir/models/Blob.c.o: ../models/Blob.c \
+  /usr/include/stdc-predef.h \
+  ../models/Blob.h \
+  /usr/include/cjson/cJSON.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
+  /usr/include/stdlib.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/features.h \
+  /usr/include/features-time64.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/alloca.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/stdio.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  ../utilities/http_utilities.h \
+  /usr/include/openssl/ssl.h \
+  /usr/include/openssl/macros.h \
+  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
+  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
+  /usr/include/openssl/opensslv.h \
+  /usr/include/openssl/e_os2.h \
+  /usr/include/inttypes.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
+  /usr/include/stdint.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/openssl/comp.h \
+  /usr/include/openssl/crypto.h \
+  /usr/include/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/openssl/safestack.h \
+  /usr/include/openssl/stack.h \
+  /usr/include/openssl/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
+  /usr/include/limits.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/linux/limits.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/openssl/cryptoerr.h \
+  /usr/include/openssl/symhacks.h \
+  /usr/include/openssl/cryptoerr_legacy.h \
+  /usr/include/openssl/core.h \
+  /usr/include/pthread.h \
+  /usr/include/sched.h \
+  /usr/include/x86_64-linux-gnu/bits/sched.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
+  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
+  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
+  /usr/include/openssl/comperr.h \
+  /usr/include/openssl/bio.h \
+  /usr/include/openssl/bioerr.h \
+  /usr/include/openssl/x509.h \
+  /usr/include/openssl/buffer.h \
+  /usr/include/openssl/buffererr.h \
+  /usr/include/openssl/evp.h \
+  /usr/include/openssl/core_dispatch.h \
+  /usr/include/openssl/evperr.h \
+  /usr/include/openssl/params.h \
+  /usr/include/openssl/bn.h \
+  /usr/include/openssl/bnerr.h \
+  /usr/include/openssl/objects.h \
+  /usr/include/openssl/obj_mac.h \
+  /usr/include/openssl/asn1.h \
+  /usr/include/openssl/asn1err.h \
+  /usr/include/openssl/objectserr.h \
+  /usr/include/openssl/ec.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
+  /usr/include/openssl/ecerr.h \
+  /usr/include/openssl/rsa.h \
+  /usr/include/openssl/rsaerr.h \
+  /usr/include/openssl/dsa.h \
+  /usr/include/openssl/dh.h \
+  /usr/include/openssl/dherr.h \
+  /usr/include/openssl/dsaerr.h \
+  /usr/include/openssl/sha.h \
+  /usr/include/openssl/x509err.h \
+  /usr/include/openssl/x509_vfy.h \
+  /usr/include/openssl/lhash.h \
+  /usr/include/openssl/pkcs7.h \
+  /usr/include/openssl/pkcs7err.h \
+  /usr/include/openssl/ocsp.h \
+  /usr/include/openssl/http.h \
+  /usr/include/openssl/conf.h \
+  /usr/include/openssl/conferr.h \
+  /usr/include/openssl/conftypes.h \
+  /usr/include/openssl/x509v3.h \
+  /usr/include/openssl/x509v3err.h \
+  /usr/include/openssl/ocsperr.h \
+  /usr/include/openssl/pem.h \
+  /usr/include/openssl/pemerr.h \
+  /usr/include/openssl/hmac.h \
+  /usr/include/openssl/async.h \
+  /usr/include/openssl/asyncerr.h \
+  /usr/include/openssl/ct.h \
+  /usr/include/openssl/cterr.h \
+  /usr/include/openssl/sslerr.h \
+  /usr/include/openssl/sslerr_legacy.h \
+  /usr/include/openssl/prov_ssl.h \
+  /usr/include/openssl/ssl2.h \
+  /usr/include/openssl/ssl3.h \
+  /usr/include/openssl/tls1.h \
+  /usr/include/openssl/dtls1.h \
+  /usr/include/openssl/srtp.h \
+  /usr/include/x86_64-linux-gnu/sys/socket.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
+  /usr/include/x86_64-linux-gnu/bits/socket.h \
+  /usr/include/x86_64-linux-gnu/bits/socket_type.h \
+  /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
+  /usr/include/x86_64-linux-gnu/asm/socket.h \
+  /usr/include/asm-generic/socket.h \
+  /usr/include/linux/posix_types.h \
+  /usr/include/linux/stddef.h \
+  /usr/include/x86_64-linux-gnu/asm/posix_types.h \
+  /usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
+  /usr/include/asm-generic/posix_types.h \
+  /usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
+  /usr/include/asm-generic/bitsperlong.h \
+  /usr/include/x86_64-linux-gnu/asm/sockios.h \
+  /usr/include/asm-generic/sockios.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h
+
 CMakeFiles/home-server.dir/models/Frame.c.o: ../models/Frame.c \
   /usr/include/stdc-predef.h \
   ../models/Frame.h \
@@ -744,14 +917,116 @@ CMakeFiles/home-server.dir/models/User.c.o: ../models/User.c \
   /usr/include/mysql/mysql_version.h \
   /usr/include/mysql/mysql_time.h \
   /usr/include/mysql/errmsg.h \
-  ../utilities/string_utilities.h \
-  /usr/include/openssl/sha.h \
+  ../models/Blob.h \
+  ../utilities/http_utilities.h \
+  /usr/include/openssl/ssl.h \
   /usr/include/openssl/macros.h \
   /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
   /usr/include/x86_64-linux-gnu/openssl/configuration.h \
   /usr/include/openssl/opensslv.h \
   /usr/include/openssl/e_os2.h \
-  /usr/include/inttypes.h
+  /usr/include/inttypes.h \
+  /usr/include/openssl/comp.h \
+  /usr/include/openssl/crypto.h \
+  /usr/include/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/openssl/safestack.h \
+  /usr/include/openssl/stack.h \
+  /usr/include/openssl/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
+  /usr/include/limits.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/linux/limits.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/openssl/cryptoerr.h \
+  /usr/include/openssl/symhacks.h \
+  /usr/include/openssl/cryptoerr_legacy.h \
+  /usr/include/openssl/core.h \
+  /usr/include/pthread.h \
+  /usr/include/sched.h \
+  /usr/include/x86_64-linux-gnu/bits/sched.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
+  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
+  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
+  /usr/include/openssl/comperr.h \
+  /usr/include/openssl/bio.h \
+  /usr/include/openssl/bioerr.h \
+  /usr/include/openssl/x509.h \
+  /usr/include/openssl/buffer.h \
+  /usr/include/openssl/buffererr.h \
+  /usr/include/openssl/evp.h \
+  /usr/include/openssl/core_dispatch.h \
+  /usr/include/openssl/evperr.h \
+  /usr/include/openssl/params.h \
+  /usr/include/openssl/bn.h \
+  /usr/include/openssl/bnerr.h \
+  /usr/include/openssl/objects.h \
+  /usr/include/openssl/obj_mac.h \
+  /usr/include/openssl/asn1.h \
+  /usr/include/openssl/asn1err.h \
+  /usr/include/openssl/objectserr.h \
+  /usr/include/openssl/ec.h \
+  /usr/include/openssl/ecerr.h \
+  /usr/include/openssl/rsa.h \
+  /usr/include/openssl/rsaerr.h \
+  /usr/include/openssl/dsa.h \
+  /usr/include/openssl/dh.h \
+  /usr/include/openssl/dherr.h \
+  /usr/include/openssl/dsaerr.h \
+  /usr/include/openssl/sha.h \
+  /usr/include/openssl/x509err.h \
+  /usr/include/openssl/x509_vfy.h \
+  /usr/include/openssl/lhash.h \
+  /usr/include/openssl/pkcs7.h \
+  /usr/include/openssl/pkcs7err.h \
+  /usr/include/openssl/ocsp.h \
+  /usr/include/openssl/http.h \
+  /usr/include/openssl/conf.h \
+  /usr/include/openssl/conferr.h \
+  /usr/include/openssl/conftypes.h \
+  /usr/include/openssl/x509v3.h \
+  /usr/include/openssl/x509v3err.h \
+  /usr/include/openssl/ocsperr.h \
+  /usr/include/openssl/pem.h \
+  /usr/include/openssl/pemerr.h \
+  /usr/include/openssl/hmac.h \
+  /usr/include/openssl/async.h \
+  /usr/include/openssl/asyncerr.h \
+  /usr/include/openssl/ct.h \
+  /usr/include/openssl/cterr.h \
+  /usr/include/openssl/sslerr.h \
+  /usr/include/openssl/sslerr_legacy.h \
+  /usr/include/openssl/prov_ssl.h \
+  /usr/include/openssl/ssl2.h \
+  /usr/include/openssl/ssl3.h \
+  /usr/include/openssl/tls1.h \
+  /usr/include/openssl/dtls1.h \
+  /usr/include/openssl/srtp.h \
+  /usr/include/x86_64-linux-gnu/sys/socket.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
+  /usr/include/x86_64-linux-gnu/bits/socket.h \
+  /usr/include/x86_64-linux-gnu/bits/socket_type.h \
+  /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
+  /usr/include/x86_64-linux-gnu/asm/socket.h \
+  /usr/include/asm-generic/socket.h \
+  /usr/include/linux/posix_types.h \
+  /usr/include/linux/stddef.h \
+  /usr/include/x86_64-linux-gnu/asm/posix_types.h \
+  /usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
+  /usr/include/asm-generic/posix_types.h \
+  /usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
+  /usr/include/asm-generic/bitsperlong.h \
+  /usr/include/x86_64-linux-gnu/asm/sockios.h \
+  /usr/include/asm-generic/sockios.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
+  ../utilities/string_utilities.h
 
 CMakeFiles/home-server.dir/models/User_Token.c.o: ../models/User_Token.c \
   /usr/include/stdc-predef.h \
@@ -1345,10 +1620,9 @@ CMakeFiles/home-server.dir/models/websocket.c.o: ../models/websocket.c \
   /usr/include/mysql/errmsg.h \
   ../models/websocket.h
 
-CMakeFiles/home-server.dir/routes/database-server/POST/post_frame.c.o: ../routes/database-server/POST/post_frame.c \
+CMakeFiles/home-server.dir/routes/local-server/GET/get_local_server.c.o: ../routes/local-server/GET/get_local_server.c \
   /usr/include/stdc-predef.h \
-  /usr/include/stdio.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/arpa/inet.h \
   /usr/include/features.h \
   /usr/include/features-time64.h \
   /usr/include/x86_64-linux-gnu/bits/wordsize.h \
@@ -1357,11 +1631,77 @@ CMakeFiles/home-server.dir/routes/database-server/POST/post_frame.c.o: ../routes
   /usr/include/x86_64-linux-gnu/bits/long-double.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
+  /usr/include/netinet/in.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
   /usr/include/x86_64-linux-gnu/bits/types.h \
   /usr/include/x86_64-linux-gnu/bits/typesizes.h \
   /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/sys/socket.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
+  /usr/include/x86_64-linux-gnu/bits/socket.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endian.h \
+  /usr/include/x86_64-linux-gnu/bits/endianness.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  /usr/include/x86_64-linux-gnu/bits/socket_type.h \
+  /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
+  /usr/include/x86_64-linux-gnu/asm/socket.h \
+  /usr/include/asm-generic/socket.h \
+  /usr/include/linux/posix_types.h \
+  /usr/include/linux/stddef.h \
+  /usr/include/x86_64-linux-gnu/asm/posix_types.h \
+  /usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
+  /usr/include/asm-generic/posix_types.h \
+  /usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
+  /usr/include/asm-generic/bitsperlong.h \
+  /usr/include/x86_64-linux-gnu/asm/sockios.h \
+  /usr/include/asm-generic/sockios.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
+  /usr/include/x86_64-linux-gnu/bits/in.h \
+  /usr/include/netdb.h \
+  /usr/include/rpc/netdb.h \
+  /usr/include/x86_64-linux-gnu/bits/netdb.h \
+  /usr/include/stdlib.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/alloca.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/string.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/strings.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
+  /usr/include/stdio.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
   /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
@@ -1369,8 +1709,7 @@ CMakeFiles/home-server.dir/routes/database-server/POST/post_frame.c.o: ../routes
   /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
   /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  ../utilities/http_utilities.h \
   /usr/include/openssl/ssl.h \
   /usr/include/openssl/macros.h \
   /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
@@ -1381,13 +1720,125 @@ CMakeFiles/home-server.dir/routes/database-server/POST/post_frame.c.o: ../routes
   /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
   /usr/include/stdint.h \
   /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/openssl/comp.h \
+  /usr/include/openssl/crypto.h \
+  /usr/include/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/openssl/safestack.h \
+  /usr/include/openssl/stack.h \
+  /usr/include/openssl/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
+  /usr/include/limits.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/linux/limits.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/openssl/cryptoerr.h \
+  /usr/include/openssl/symhacks.h \
+  /usr/include/openssl/cryptoerr_legacy.h \
+  /usr/include/openssl/core.h \
+  /usr/include/pthread.h \
+  /usr/include/sched.h \
+  /usr/include/x86_64-linux-gnu/bits/sched.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
+  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
+  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
+  /usr/include/openssl/comperr.h \
+  /usr/include/openssl/bio.h \
+  /usr/include/openssl/bioerr.h \
+  /usr/include/openssl/x509.h \
+  /usr/include/openssl/buffer.h \
+  /usr/include/openssl/buffererr.h \
+  /usr/include/openssl/evp.h \
+  /usr/include/openssl/core_dispatch.h \
+  /usr/include/openssl/evperr.h \
+  /usr/include/openssl/params.h \
+  /usr/include/openssl/bn.h \
+  /usr/include/openssl/bnerr.h \
+  /usr/include/openssl/objects.h \
+  /usr/include/openssl/obj_mac.h \
+  /usr/include/openssl/asn1.h \
+  /usr/include/openssl/asn1err.h \
+  /usr/include/openssl/objectserr.h \
+  /usr/include/openssl/ec.h \
+  /usr/include/openssl/ecerr.h \
+  /usr/include/openssl/rsa.h \
+  /usr/include/openssl/rsaerr.h \
+  /usr/include/openssl/dsa.h \
+  /usr/include/openssl/dh.h \
+  /usr/include/openssl/dherr.h \
+  /usr/include/openssl/dsaerr.h \
+  /usr/include/openssl/sha.h \
+  /usr/include/openssl/x509err.h \
+  /usr/include/openssl/x509_vfy.h \
+  /usr/include/openssl/lhash.h \
+  /usr/include/openssl/pkcs7.h \
+  /usr/include/openssl/pkcs7err.h \
+  /usr/include/openssl/ocsp.h \
+  /usr/include/openssl/http.h \
+  /usr/include/openssl/conf.h \
+  /usr/include/openssl/conferr.h \
+  /usr/include/openssl/conftypes.h \
+  /usr/include/openssl/x509v3.h \
+  /usr/include/openssl/x509v3err.h \
+  /usr/include/openssl/ocsperr.h \
+  /usr/include/openssl/pem.h \
+  /usr/include/openssl/pemerr.h \
+  /usr/include/openssl/hmac.h \
+  /usr/include/openssl/async.h \
+  /usr/include/openssl/asyncerr.h \
+  /usr/include/openssl/ct.h \
+  /usr/include/openssl/cterr.h \
+  /usr/include/openssl/sslerr.h \
+  /usr/include/openssl/sslerr_legacy.h \
+  /usr/include/openssl/prov_ssl.h \
+  /usr/include/openssl/ssl2.h \
+  /usr/include/openssl/ssl3.h \
+  /usr/include/openssl/tls1.h \
+  /usr/include/openssl/dtls1.h \
+  /usr/include/openssl/srtp.h \
+  ../models/Socket.h
+
+CMakeFiles/home-server.dir/routes/local-server/POST/post_local_server.c.o: ../routes/local-server/POST/post_local_server.c \
+  /usr/include/stdc-predef.h \
+  /usr/include/openssl/ssl.h \
+  /usr/include/openssl/macros.h \
+  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
+  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
+  /usr/include/openssl/opensslv.h \
+  /usr/include/openssl/e_os2.h \
+  /usr/include/inttypes.h \
+  /usr/include/features.h \
+  /usr/include/features-time64.h \
+  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+  /usr/include/x86_64-linux-gnu/bits/timesize.h \
+  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+  /usr/include/x86_64-linux-gnu/bits/long-double.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
+  /usr/include/stdint.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+  /usr/include/x86_64-linux-gnu/bits/types.h \
+  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+  /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
   /usr/include/openssl/comp.h \
   /usr/include/openssl/crypto.h \
   /usr/include/stdlib.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
   /usr/include/x86_64-linux-gnu/bits/waitflags.h \
   /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
   /usr/include/x86_64-linux-gnu/sys/types.h \
   /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
@@ -1418,6 +1869,15 @@ CMakeFiles/home-server.dir/routes/database-server/POST/post_frame.c.o: ../routes
   /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
   /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/stdio.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
   /usr/include/openssl/safestack.h \
   /usr/include/openssl/stack.h \
   /usr/include/openssl/types.h \
@@ -1497,7 +1957,9 @@ CMakeFiles/home-server.dir/routes/database-server/POST/post_frame.c.o: ../routes
   /usr/include/openssl/tls1.h \
   /usr/include/openssl/dtls1.h \
   /usr/include/openssl/srtp.h \
+  ../utilities/json_utilities.h \
   /usr/include/cjson/cJSON.h \
+  ../server/send_message.h \
   ../models/Socket.h \
   /usr/include/x86_64-linux-gnu/sys/socket.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
@@ -1516,3369 +1978,21 @@ CMakeFiles/home-server.dir/routes/database-server/POST/post_frame.c.o: ../routes
   /usr/include/x86_64-linux-gnu/asm/sockios.h \
   /usr/include/asm-generic/sockios.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
-  ../utilities/http_utilities.h \
-  ../utilities/json_utilities.h \
-  ../models/FrameField.h \
-  ../models/Frame.h
-
-CMakeFiles/home-server.dir/routes/life-of-sounds/DELETE/delete_websocket_session.c.o: ../routes/life-of-sounds/DELETE/delete_websocket_session.c \
-  /usr/include/stdc-predef.h \
-  /usr/include/openssl/ssl.h \
-  /usr/include/openssl/macros.h \
-  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
-  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
-  /usr/include/openssl/opensslv.h \
-  /usr/include/openssl/e_os2.h \
-  /usr/include/inttypes.h \
-  /usr/include/features.h \
-  /usr/include/features-time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
-  /usr/include/x86_64-linux-gnu/bits/timesize.h \
-  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
-  /usr/include/x86_64-linux-gnu/bits/long-double.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
-  /usr/include/stdint.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/openssl/comp.h \
-  /usr/include/openssl/crypto.h \
-  /usr/include/stdlib.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
-  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/alloca.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/stdio.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/openssl/safestack.h \
-  /usr/include/openssl/stack.h \
-  /usr/include/openssl/types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
-  /usr/include/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/linux/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/openssl/cryptoerr.h \
-  /usr/include/openssl/symhacks.h \
-  /usr/include/openssl/cryptoerr_legacy.h \
-  /usr/include/openssl/core.h \
-  /usr/include/pthread.h \
-  /usr/include/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
-  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
-  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
-  /usr/include/openssl/comperr.h \
-  /usr/include/openssl/bio.h \
-  /usr/include/openssl/bioerr.h \
-  /usr/include/openssl/x509.h \
-  /usr/include/openssl/buffer.h \
-  /usr/include/openssl/buffererr.h \
-  /usr/include/openssl/evp.h \
-  /usr/include/openssl/core_dispatch.h \
-  /usr/include/openssl/evperr.h \
-  /usr/include/openssl/params.h \
-  /usr/include/openssl/bn.h \
-  /usr/include/openssl/bnerr.h \
-  /usr/include/openssl/objects.h \
-  /usr/include/openssl/obj_mac.h \
-  /usr/include/openssl/asn1.h \
-  /usr/include/openssl/asn1err.h \
-  /usr/include/openssl/objectserr.h \
-  /usr/include/openssl/ec.h \
-  /usr/include/string.h \
-  /usr/include/strings.h \
-  /usr/include/openssl/ecerr.h \
-  /usr/include/openssl/rsa.h \
-  /usr/include/openssl/rsaerr.h \
-  /usr/include/openssl/dsa.h \
-  /usr/include/openssl/dh.h \
-  /usr/include/openssl/dherr.h \
-  /usr/include/openssl/dsaerr.h \
-  /usr/include/openssl/sha.h \
-  /usr/include/openssl/x509err.h \
-  /usr/include/openssl/x509_vfy.h \
-  /usr/include/openssl/lhash.h \
-  /usr/include/openssl/pkcs7.h \
-  /usr/include/openssl/pkcs7err.h \
-  /usr/include/openssl/ocsp.h \
-  /usr/include/openssl/http.h \
-  /usr/include/openssl/conf.h \
-  /usr/include/openssl/conferr.h \
-  /usr/include/openssl/conftypes.h \
-  /usr/include/openssl/x509v3.h \
-  /usr/include/openssl/x509v3err.h \
-  /usr/include/openssl/ocsperr.h \
-  /usr/include/openssl/pem.h \
-  /usr/include/openssl/pemerr.h \
-  /usr/include/openssl/hmac.h \
-  /usr/include/openssl/async.h \
-  /usr/include/openssl/asyncerr.h \
-  /usr/include/openssl/ct.h \
-  /usr/include/openssl/cterr.h \
-  /usr/include/openssl/sslerr.h \
-  /usr/include/openssl/sslerr_legacy.h \
-  /usr/include/openssl/prov_ssl.h \
-  /usr/include/openssl/ssl2.h \
-  /usr/include/openssl/ssl3.h \
-  /usr/include/openssl/tls1.h \
-  /usr/include/openssl/dtls1.h \
-  /usr/include/openssl/srtp.h \
-  ../utilities/http_utilities.h \
-  ../models/websocket.h \
-  ../models/WebsocketClient.h \
-  ../models/Socket.h \
-  /usr/include/x86_64-linux-gnu/sys/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
-  /usr/include/x86_64-linux-gnu/bits/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/socket_type.h \
-  /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
-  /usr/include/x86_64-linux-gnu/asm/socket.h \
-  /usr/include/asm-generic/socket.h \
-  /usr/include/linux/posix_types.h \
-  /usr/include/linux/stddef.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
-  /usr/include/asm-generic/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
-  /usr/include/asm-generic/bitsperlong.h \
-  /usr/include/x86_64-linux-gnu/asm/sockios.h \
-  /usr/include/asm-generic/sockios.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h
-
-CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_game_of_life_script.c.o: ../routes/life-of-sounds/GET/get_game_of_life_script.c \
-  /usr/include/stdc-predef.h \
-  /usr/include/openssl/ssl.h \
-  /usr/include/openssl/macros.h \
-  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
-  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
-  /usr/include/openssl/opensslv.h \
-  /usr/include/openssl/e_os2.h \
-  /usr/include/inttypes.h \
-  /usr/include/features.h \
-  /usr/include/features-time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
-  /usr/include/x86_64-linux-gnu/bits/timesize.h \
-  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
-  /usr/include/x86_64-linux-gnu/bits/long-double.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
-  /usr/include/stdint.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/openssl/comp.h \
-  /usr/include/openssl/crypto.h \
-  /usr/include/stdlib.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
-  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/alloca.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/stdio.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/openssl/safestack.h \
-  /usr/include/openssl/stack.h \
-  /usr/include/openssl/types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
-  /usr/include/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/linux/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/openssl/cryptoerr.h \
-  /usr/include/openssl/symhacks.h \
-  /usr/include/openssl/cryptoerr_legacy.h \
-  /usr/include/openssl/core.h \
-  /usr/include/pthread.h \
-  /usr/include/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
-  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
-  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
-  /usr/include/openssl/comperr.h \
-  /usr/include/openssl/bio.h \
-  /usr/include/openssl/bioerr.h \
-  /usr/include/openssl/x509.h \
-  /usr/include/openssl/buffer.h \
-  /usr/include/openssl/buffererr.h \
-  /usr/include/openssl/evp.h \
-  /usr/include/openssl/core_dispatch.h \
-  /usr/include/openssl/evperr.h \
-  /usr/include/openssl/params.h \
-  /usr/include/openssl/bn.h \
-  /usr/include/openssl/bnerr.h \
-  /usr/include/openssl/objects.h \
-  /usr/include/openssl/obj_mac.h \
-  /usr/include/openssl/asn1.h \
-  /usr/include/openssl/asn1err.h \
-  /usr/include/openssl/objectserr.h \
-  /usr/include/openssl/ec.h \
-  /usr/include/string.h \
-  /usr/include/strings.h \
-  /usr/include/openssl/ecerr.h \
-  /usr/include/openssl/rsa.h \
-  /usr/include/openssl/rsaerr.h \
-  /usr/include/openssl/dsa.h \
-  /usr/include/openssl/dh.h \
-  /usr/include/openssl/dherr.h \
-  /usr/include/openssl/dsaerr.h \
-  /usr/include/openssl/sha.h \
-  /usr/include/openssl/x509err.h \
-  /usr/include/openssl/x509_vfy.h \
-  /usr/include/openssl/lhash.h \
-  /usr/include/openssl/pkcs7.h \
-  /usr/include/openssl/pkcs7err.h \
-  /usr/include/openssl/ocsp.h \
-  /usr/include/openssl/http.h \
-  /usr/include/openssl/conf.h \
-  /usr/include/openssl/conferr.h \
-  /usr/include/openssl/conftypes.h \
-  /usr/include/openssl/x509v3.h \
-  /usr/include/openssl/x509v3err.h \
-  /usr/include/openssl/ocsperr.h \
-  /usr/include/openssl/pem.h \
-  /usr/include/openssl/pemerr.h \
-  /usr/include/openssl/hmac.h \
-  /usr/include/openssl/async.h \
-  /usr/include/openssl/asyncerr.h \
-  /usr/include/openssl/ct.h \
-  /usr/include/openssl/cterr.h \
-  /usr/include/openssl/sslerr.h \
-  /usr/include/openssl/sslerr_legacy.h \
-  /usr/include/openssl/prov_ssl.h \
-  /usr/include/openssl/ssl2.h \
-  /usr/include/openssl/ssl3.h \
-  /usr/include/openssl/tls1.h \
-  /usr/include/openssl/dtls1.h \
-  /usr/include/openssl/srtp.h \
-  ../utilities/http_utilities.h
-
-CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_html_utilities_script.c.o: ../routes/life-of-sounds/GET/get_html_utilities_script.c \
-  /usr/include/stdc-predef.h \
-  /usr/include/openssl/ssl.h \
-  /usr/include/openssl/macros.h \
-  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
-  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
-  /usr/include/openssl/opensslv.h \
-  /usr/include/openssl/e_os2.h \
-  /usr/include/inttypes.h \
-  /usr/include/features.h \
-  /usr/include/features-time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
-  /usr/include/x86_64-linux-gnu/bits/timesize.h \
-  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
-  /usr/include/x86_64-linux-gnu/bits/long-double.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
-  /usr/include/stdint.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/openssl/comp.h \
-  /usr/include/openssl/crypto.h \
-  /usr/include/stdlib.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
-  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/alloca.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/stdio.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/openssl/safestack.h \
-  /usr/include/openssl/stack.h \
-  /usr/include/openssl/types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
-  /usr/include/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/linux/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/openssl/cryptoerr.h \
-  /usr/include/openssl/symhacks.h \
-  /usr/include/openssl/cryptoerr_legacy.h \
-  /usr/include/openssl/core.h \
-  /usr/include/pthread.h \
-  /usr/include/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
-  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
-  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
-  /usr/include/openssl/comperr.h \
-  /usr/include/openssl/bio.h \
-  /usr/include/openssl/bioerr.h \
-  /usr/include/openssl/x509.h \
-  /usr/include/openssl/buffer.h \
-  /usr/include/openssl/buffererr.h \
-  /usr/include/openssl/evp.h \
-  /usr/include/openssl/core_dispatch.h \
-  /usr/include/openssl/evperr.h \
-  /usr/include/openssl/params.h \
-  /usr/include/openssl/bn.h \
-  /usr/include/openssl/bnerr.h \
-  /usr/include/openssl/objects.h \
-  /usr/include/openssl/obj_mac.h \
-  /usr/include/openssl/asn1.h \
-  /usr/include/openssl/asn1err.h \
-  /usr/include/openssl/objectserr.h \
-  /usr/include/openssl/ec.h \
-  /usr/include/string.h \
-  /usr/include/strings.h \
-  /usr/include/openssl/ecerr.h \
-  /usr/include/openssl/rsa.h \
-  /usr/include/openssl/rsaerr.h \
-  /usr/include/openssl/dsa.h \
-  /usr/include/openssl/dh.h \
-  /usr/include/openssl/dherr.h \
-  /usr/include/openssl/dsaerr.h \
-  /usr/include/openssl/sha.h \
-  /usr/include/openssl/x509err.h \
-  /usr/include/openssl/x509_vfy.h \
-  /usr/include/openssl/lhash.h \
-  /usr/include/openssl/pkcs7.h \
-  /usr/include/openssl/pkcs7err.h \
-  /usr/include/openssl/ocsp.h \
-  /usr/include/openssl/http.h \
-  /usr/include/openssl/conf.h \
-  /usr/include/openssl/conferr.h \
-  /usr/include/openssl/conftypes.h \
-  /usr/include/openssl/x509v3.h \
-  /usr/include/openssl/x509v3err.h \
-  /usr/include/openssl/ocsperr.h \
-  /usr/include/openssl/pem.h \
-  /usr/include/openssl/pemerr.h \
-  /usr/include/openssl/hmac.h \
-  /usr/include/openssl/async.h \
-  /usr/include/openssl/asyncerr.h \
-  /usr/include/openssl/ct.h \
-  /usr/include/openssl/cterr.h \
-  /usr/include/openssl/sslerr.h \
-  /usr/include/openssl/sslerr_legacy.h \
-  /usr/include/openssl/prov_ssl.h \
-  /usr/include/openssl/ssl2.h \
-  /usr/include/openssl/ssl3.h \
-  /usr/include/openssl/tls1.h \
-  /usr/include/openssl/dtls1.h \
-  /usr/include/openssl/srtp.h \
-  ../utilities/http_utilities.h
-
-CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_live_page.c.o: ../routes/life-of-sounds/GET/get_live_page.c \
-  /usr/include/stdc-predef.h \
-  /usr/include/openssl/ssl.h \
-  /usr/include/openssl/macros.h \
-  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
-  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
-  /usr/include/openssl/opensslv.h \
-  /usr/include/openssl/e_os2.h \
-  /usr/include/inttypes.h \
-  /usr/include/features.h \
-  /usr/include/features-time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
-  /usr/include/x86_64-linux-gnu/bits/timesize.h \
-  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
-  /usr/include/x86_64-linux-gnu/bits/long-double.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
-  /usr/include/stdint.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/openssl/comp.h \
-  /usr/include/openssl/crypto.h \
-  /usr/include/stdlib.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
-  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/alloca.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/stdio.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/openssl/safestack.h \
-  /usr/include/openssl/stack.h \
-  /usr/include/openssl/types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
-  /usr/include/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/linux/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/openssl/cryptoerr.h \
-  /usr/include/openssl/symhacks.h \
-  /usr/include/openssl/cryptoerr_legacy.h \
-  /usr/include/openssl/core.h \
-  /usr/include/pthread.h \
-  /usr/include/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
-  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
-  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
-  /usr/include/openssl/comperr.h \
-  /usr/include/openssl/bio.h \
-  /usr/include/openssl/bioerr.h \
-  /usr/include/openssl/x509.h \
-  /usr/include/openssl/buffer.h \
-  /usr/include/openssl/buffererr.h \
-  /usr/include/openssl/evp.h \
-  /usr/include/openssl/core_dispatch.h \
-  /usr/include/openssl/evperr.h \
-  /usr/include/openssl/params.h \
-  /usr/include/openssl/bn.h \
-  /usr/include/openssl/bnerr.h \
-  /usr/include/openssl/objects.h \
-  /usr/include/openssl/obj_mac.h \
-  /usr/include/openssl/asn1.h \
-  /usr/include/openssl/asn1err.h \
-  /usr/include/openssl/objectserr.h \
-  /usr/include/openssl/ec.h \
-  /usr/include/string.h \
-  /usr/include/strings.h \
-  /usr/include/openssl/ecerr.h \
-  /usr/include/openssl/rsa.h \
-  /usr/include/openssl/rsaerr.h \
-  /usr/include/openssl/dsa.h \
-  /usr/include/openssl/dh.h \
-  /usr/include/openssl/dherr.h \
-  /usr/include/openssl/dsaerr.h \
-  /usr/include/openssl/sha.h \
-  /usr/include/openssl/x509err.h \
-  /usr/include/openssl/x509_vfy.h \
-  /usr/include/openssl/lhash.h \
-  /usr/include/openssl/pkcs7.h \
-  /usr/include/openssl/pkcs7err.h \
-  /usr/include/openssl/ocsp.h \
-  /usr/include/openssl/http.h \
-  /usr/include/openssl/conf.h \
-  /usr/include/openssl/conferr.h \
-  /usr/include/openssl/conftypes.h \
-  /usr/include/openssl/x509v3.h \
-  /usr/include/openssl/x509v3err.h \
-  /usr/include/openssl/ocsperr.h \
-  /usr/include/openssl/pem.h \
-  /usr/include/openssl/pemerr.h \
-  /usr/include/openssl/hmac.h \
-  /usr/include/openssl/async.h \
-  /usr/include/openssl/asyncerr.h \
-  /usr/include/openssl/ct.h \
-  /usr/include/openssl/cterr.h \
-  /usr/include/openssl/sslerr.h \
-  /usr/include/openssl/sslerr_legacy.h \
-  /usr/include/openssl/prov_ssl.h \
-  /usr/include/openssl/ssl2.h \
-  /usr/include/openssl/ssl3.h \
-  /usr/include/openssl/tls1.h \
-  /usr/include/openssl/dtls1.h \
-  /usr/include/openssl/srtp.h \
-  ../utilities/http_utilities.h
-
-CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_session_messages.c.o: ../routes/life-of-sounds/GET/get_session_messages.c \
-  /usr/include/stdc-predef.h \
-  /usr/include/openssl/ssl.h \
-  /usr/include/openssl/macros.h \
-  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
-  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
-  /usr/include/openssl/opensslv.h \
-  /usr/include/openssl/e_os2.h \
-  /usr/include/inttypes.h \
-  /usr/include/features.h \
-  /usr/include/features-time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
-  /usr/include/x86_64-linux-gnu/bits/timesize.h \
-  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
-  /usr/include/x86_64-linux-gnu/bits/long-double.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
-  /usr/include/stdint.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/openssl/comp.h \
-  /usr/include/openssl/crypto.h \
-  /usr/include/stdlib.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
-  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/alloca.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/stdio.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/openssl/safestack.h \
-  /usr/include/openssl/stack.h \
-  /usr/include/openssl/types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
-  /usr/include/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/linux/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/openssl/cryptoerr.h \
-  /usr/include/openssl/symhacks.h \
-  /usr/include/openssl/cryptoerr_legacy.h \
-  /usr/include/openssl/core.h \
-  /usr/include/pthread.h \
-  /usr/include/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
-  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
-  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
-  /usr/include/openssl/comperr.h \
-  /usr/include/openssl/bio.h \
-  /usr/include/openssl/bioerr.h \
-  /usr/include/openssl/x509.h \
-  /usr/include/openssl/buffer.h \
-  /usr/include/openssl/buffererr.h \
-  /usr/include/openssl/evp.h \
-  /usr/include/openssl/core_dispatch.h \
-  /usr/include/openssl/evperr.h \
-  /usr/include/openssl/params.h \
-  /usr/include/openssl/bn.h \
-  /usr/include/openssl/bnerr.h \
-  /usr/include/openssl/objects.h \
-  /usr/include/openssl/obj_mac.h \
-  /usr/include/openssl/asn1.h \
-  /usr/include/openssl/asn1err.h \
-  /usr/include/openssl/objectserr.h \
-  /usr/include/openssl/ec.h \
-  /usr/include/string.h \
-  /usr/include/strings.h \
-  /usr/include/openssl/ecerr.h \
-  /usr/include/openssl/rsa.h \
-  /usr/include/openssl/rsaerr.h \
-  /usr/include/openssl/dsa.h \
-  /usr/include/openssl/dh.h \
-  /usr/include/openssl/dherr.h \
-  /usr/include/openssl/dsaerr.h \
-  /usr/include/openssl/sha.h \
-  /usr/include/openssl/x509err.h \
-  /usr/include/openssl/x509_vfy.h \
-  /usr/include/openssl/lhash.h \
-  /usr/include/openssl/pkcs7.h \
-  /usr/include/openssl/pkcs7err.h \
-  /usr/include/openssl/ocsp.h \
-  /usr/include/openssl/http.h \
-  /usr/include/openssl/conf.h \
-  /usr/include/openssl/conferr.h \
-  /usr/include/openssl/conftypes.h \
-  /usr/include/openssl/x509v3.h \
-  /usr/include/openssl/x509v3err.h \
-  /usr/include/openssl/ocsperr.h \
-  /usr/include/openssl/pem.h \
-  /usr/include/openssl/pemerr.h \
-  /usr/include/openssl/hmac.h \
-  /usr/include/openssl/async.h \
-  /usr/include/openssl/asyncerr.h \
-  /usr/include/openssl/ct.h \
-  /usr/include/openssl/cterr.h \
-  /usr/include/openssl/sslerr.h \
-  /usr/include/openssl/sslerr_legacy.h \
-  /usr/include/openssl/prov_ssl.h \
-  /usr/include/openssl/ssl2.h \
-  /usr/include/openssl/ssl3.h \
-  /usr/include/openssl/tls1.h \
-  /usr/include/openssl/dtls1.h \
-  /usr/include/openssl/srtp.h \
-  ../models/Socket.h \
-  /usr/include/x86_64-linux-gnu/sys/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
-  /usr/include/x86_64-linux-gnu/bits/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/socket_type.h \
-  /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
-  /usr/include/x86_64-linux-gnu/asm/socket.h \
-  /usr/include/asm-generic/socket.h \
-  /usr/include/linux/posix_types.h \
-  /usr/include/linux/stddef.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
-  /usr/include/asm-generic/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
-  /usr/include/asm-generic/bitsperlong.h \
-  /usr/include/x86_64-linux-gnu/asm/sockios.h \
-  /usr/include/asm-generic/sockios.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
-  ../models/Websocket_Message.h \
-  ../utilities/http_utilities.h
-
-CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_user.c.o: ../routes/life-of-sounds/GET/get_user.c \
-  /usr/include/stdc-predef.h \
-  /usr/include/openssl/ssl.h \
-  /usr/include/openssl/macros.h \
-  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
-  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
-  /usr/include/openssl/opensslv.h \
-  /usr/include/openssl/e_os2.h \
-  /usr/include/inttypes.h \
-  /usr/include/features.h \
-  /usr/include/features-time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
-  /usr/include/x86_64-linux-gnu/bits/timesize.h \
-  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
-  /usr/include/x86_64-linux-gnu/bits/long-double.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
-  /usr/include/stdint.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/openssl/comp.h \
-  /usr/include/openssl/crypto.h \
-  /usr/include/stdlib.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
-  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/alloca.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/stdio.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/openssl/safestack.h \
-  /usr/include/openssl/stack.h \
-  /usr/include/openssl/types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
-  /usr/include/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/linux/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/openssl/cryptoerr.h \
-  /usr/include/openssl/symhacks.h \
-  /usr/include/openssl/cryptoerr_legacy.h \
-  /usr/include/openssl/core.h \
-  /usr/include/pthread.h \
-  /usr/include/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
-  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
-  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
-  /usr/include/openssl/comperr.h \
-  /usr/include/openssl/bio.h \
-  /usr/include/openssl/bioerr.h \
-  /usr/include/openssl/x509.h \
-  /usr/include/openssl/buffer.h \
-  /usr/include/openssl/buffererr.h \
-  /usr/include/openssl/evp.h \
-  /usr/include/openssl/core_dispatch.h \
-  /usr/include/openssl/evperr.h \
-  /usr/include/openssl/params.h \
-  /usr/include/openssl/bn.h \
-  /usr/include/openssl/bnerr.h \
-  /usr/include/openssl/objects.h \
-  /usr/include/openssl/obj_mac.h \
-  /usr/include/openssl/asn1.h \
-  /usr/include/openssl/asn1err.h \
-  /usr/include/openssl/objectserr.h \
-  /usr/include/openssl/ec.h \
-  /usr/include/string.h \
-  /usr/include/strings.h \
-  /usr/include/openssl/ecerr.h \
-  /usr/include/openssl/rsa.h \
-  /usr/include/openssl/rsaerr.h \
-  /usr/include/openssl/dsa.h \
-  /usr/include/openssl/dh.h \
-  /usr/include/openssl/dherr.h \
-  /usr/include/openssl/dsaerr.h \
-  /usr/include/openssl/sha.h \
-  /usr/include/openssl/x509err.h \
-  /usr/include/openssl/x509_vfy.h \
-  /usr/include/openssl/lhash.h \
-  /usr/include/openssl/pkcs7.h \
-  /usr/include/openssl/pkcs7err.h \
-  /usr/include/openssl/ocsp.h \
-  /usr/include/openssl/http.h \
-  /usr/include/openssl/conf.h \
-  /usr/include/openssl/conferr.h \
-  /usr/include/openssl/conftypes.h \
-  /usr/include/openssl/x509v3.h \
-  /usr/include/openssl/x509v3err.h \
-  /usr/include/openssl/ocsperr.h \
-  /usr/include/openssl/pem.h \
-  /usr/include/openssl/pemerr.h \
-  /usr/include/openssl/hmac.h \
-  /usr/include/openssl/async.h \
-  /usr/include/openssl/asyncerr.h \
-  /usr/include/openssl/ct.h \
-  /usr/include/openssl/cterr.h \
-  /usr/include/openssl/sslerr.h \
-  /usr/include/openssl/sslerr_legacy.h \
-  /usr/include/openssl/prov_ssl.h \
-  /usr/include/openssl/ssl2.h \
-  /usr/include/openssl/ssl3.h \
-  /usr/include/openssl/tls1.h \
-  /usr/include/openssl/dtls1.h \
-  /usr/include/openssl/srtp.h \
-  ../utilities/json_utilities.h \
-  /usr/include/cjson/cJSON.h \
-  ../utilities/http_utilities.h \
-  ../models/User.h \
-  ../models/User_Token.h \
-  ../models/session.h \
-  ../models/Socket.h \
-  /usr/include/x86_64-linux-gnu/sys/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
-  /usr/include/x86_64-linux-gnu/bits/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/socket_type.h \
-  /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
-  /usr/include/x86_64-linux-gnu/asm/socket.h \
-  /usr/include/asm-generic/socket.h \
-  /usr/include/linux/posix_types.h \
-  /usr/include/linux/stddef.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
-  /usr/include/asm-generic/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
-  /usr/include/asm-generic/bitsperlong.h \
-  /usr/include/x86_64-linux-gnu/asm/sockios.h \
-  /usr/include/asm-generic/sockios.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h
-
-CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_web_audio_api_script.c.o: ../routes/life-of-sounds/GET/get_web_audio_api_script.c \
-  /usr/include/stdc-predef.h \
-  /usr/include/openssl/ssl.h \
-  /usr/include/openssl/macros.h \
-  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
-  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
-  /usr/include/openssl/opensslv.h \
-  /usr/include/openssl/e_os2.h \
-  /usr/include/inttypes.h \
-  /usr/include/features.h \
-  /usr/include/features-time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
-  /usr/include/x86_64-linux-gnu/bits/timesize.h \
-  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
-  /usr/include/x86_64-linux-gnu/bits/long-double.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
-  /usr/include/stdint.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/openssl/comp.h \
-  /usr/include/openssl/crypto.h \
-  /usr/include/stdlib.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
-  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/alloca.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/stdio.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/openssl/safestack.h \
-  /usr/include/openssl/stack.h \
-  /usr/include/openssl/types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
-  /usr/include/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/linux/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/openssl/cryptoerr.h \
-  /usr/include/openssl/symhacks.h \
-  /usr/include/openssl/cryptoerr_legacy.h \
-  /usr/include/openssl/core.h \
-  /usr/include/pthread.h \
-  /usr/include/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
-  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
-  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
-  /usr/include/openssl/comperr.h \
-  /usr/include/openssl/bio.h \
-  /usr/include/openssl/bioerr.h \
-  /usr/include/openssl/x509.h \
-  /usr/include/openssl/buffer.h \
-  /usr/include/openssl/buffererr.h \
-  /usr/include/openssl/evp.h \
-  /usr/include/openssl/core_dispatch.h \
-  /usr/include/openssl/evperr.h \
-  /usr/include/openssl/params.h \
-  /usr/include/openssl/bn.h \
-  /usr/include/openssl/bnerr.h \
-  /usr/include/openssl/objects.h \
-  /usr/include/openssl/obj_mac.h \
-  /usr/include/openssl/asn1.h \
-  /usr/include/openssl/asn1err.h \
-  /usr/include/openssl/objectserr.h \
-  /usr/include/openssl/ec.h \
-  /usr/include/string.h \
-  /usr/include/strings.h \
-  /usr/include/openssl/ecerr.h \
-  /usr/include/openssl/rsa.h \
-  /usr/include/openssl/rsaerr.h \
-  /usr/include/openssl/dsa.h \
-  /usr/include/openssl/dh.h \
-  /usr/include/openssl/dherr.h \
-  /usr/include/openssl/dsaerr.h \
-  /usr/include/openssl/sha.h \
-  /usr/include/openssl/x509err.h \
-  /usr/include/openssl/x509_vfy.h \
-  /usr/include/openssl/lhash.h \
-  /usr/include/openssl/pkcs7.h \
-  /usr/include/openssl/pkcs7err.h \
-  /usr/include/openssl/ocsp.h \
-  /usr/include/openssl/http.h \
-  /usr/include/openssl/conf.h \
-  /usr/include/openssl/conferr.h \
-  /usr/include/openssl/conftypes.h \
-  /usr/include/openssl/x509v3.h \
-  /usr/include/openssl/x509v3err.h \
-  /usr/include/openssl/ocsperr.h \
-  /usr/include/openssl/pem.h \
-  /usr/include/openssl/pemerr.h \
-  /usr/include/openssl/hmac.h \
-  /usr/include/openssl/async.h \
-  /usr/include/openssl/asyncerr.h \
-  /usr/include/openssl/ct.h \
-  /usr/include/openssl/cterr.h \
-  /usr/include/openssl/sslerr.h \
-  /usr/include/openssl/sslerr_legacy.h \
-  /usr/include/openssl/prov_ssl.h \
-  /usr/include/openssl/ssl2.h \
-  /usr/include/openssl/ssl3.h \
-  /usr/include/openssl/tls1.h \
-  /usr/include/openssl/dtls1.h \
-  /usr/include/openssl/srtp.h \
-  ../utilities/http_utilities.h
-
-CMakeFiles/home-server.dir/routes/life-of-sounds/GET/get_websocket_client.c.o: ../routes/life-of-sounds/GET/get_websocket_client.c \
-  /usr/include/stdc-predef.h \
-  /usr/include/openssl/ssl.h \
-  /usr/include/openssl/macros.h \
-  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
-  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
-  /usr/include/openssl/opensslv.h \
-  /usr/include/openssl/e_os2.h \
-  /usr/include/inttypes.h \
-  /usr/include/features.h \
-  /usr/include/features-time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
-  /usr/include/x86_64-linux-gnu/bits/timesize.h \
-  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
-  /usr/include/x86_64-linux-gnu/bits/long-double.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
-  /usr/include/stdint.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/openssl/comp.h \
-  /usr/include/openssl/crypto.h \
-  /usr/include/stdlib.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
-  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/alloca.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/stdio.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/openssl/safestack.h \
-  /usr/include/openssl/stack.h \
-  /usr/include/openssl/types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
-  /usr/include/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/linux/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/openssl/cryptoerr.h \
-  /usr/include/openssl/symhacks.h \
-  /usr/include/openssl/cryptoerr_legacy.h \
-  /usr/include/openssl/core.h \
-  /usr/include/pthread.h \
-  /usr/include/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
-  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
-  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
-  /usr/include/openssl/comperr.h \
-  /usr/include/openssl/bio.h \
-  /usr/include/openssl/bioerr.h \
-  /usr/include/openssl/x509.h \
-  /usr/include/openssl/buffer.h \
-  /usr/include/openssl/buffererr.h \
-  /usr/include/openssl/evp.h \
-  /usr/include/openssl/core_dispatch.h \
-  /usr/include/openssl/evperr.h \
-  /usr/include/openssl/params.h \
-  /usr/include/openssl/bn.h \
-  /usr/include/openssl/bnerr.h \
-  /usr/include/openssl/objects.h \
-  /usr/include/openssl/obj_mac.h \
-  /usr/include/openssl/asn1.h \
-  /usr/include/openssl/asn1err.h \
-  /usr/include/openssl/objectserr.h \
-  /usr/include/openssl/ec.h \
-  /usr/include/string.h \
-  /usr/include/strings.h \
-  /usr/include/openssl/ecerr.h \
-  /usr/include/openssl/rsa.h \
-  /usr/include/openssl/rsaerr.h \
-  /usr/include/openssl/dsa.h \
-  /usr/include/openssl/dh.h \
-  /usr/include/openssl/dherr.h \
-  /usr/include/openssl/dsaerr.h \
-  /usr/include/openssl/sha.h \
-  /usr/include/openssl/x509err.h \
-  /usr/include/openssl/x509_vfy.h \
-  /usr/include/openssl/lhash.h \
-  /usr/include/openssl/pkcs7.h \
-  /usr/include/openssl/pkcs7err.h \
-  /usr/include/openssl/ocsp.h \
-  /usr/include/openssl/http.h \
-  /usr/include/openssl/conf.h \
-  /usr/include/openssl/conferr.h \
-  /usr/include/openssl/conftypes.h \
-  /usr/include/openssl/x509v3.h \
-  /usr/include/openssl/x509v3err.h \
-  /usr/include/openssl/ocsperr.h \
-  /usr/include/openssl/pem.h \
-  /usr/include/openssl/pemerr.h \
-  /usr/include/openssl/hmac.h \
-  /usr/include/openssl/async.h \
-  /usr/include/openssl/asyncerr.h \
-  /usr/include/openssl/ct.h \
-  /usr/include/openssl/cterr.h \
-  /usr/include/openssl/sslerr.h \
-  /usr/include/openssl/sslerr_legacy.h \
-  /usr/include/openssl/prov_ssl.h \
-  /usr/include/openssl/ssl2.h \
-  /usr/include/openssl/ssl3.h \
-  /usr/include/openssl/tls1.h \
-  /usr/include/openssl/dtls1.h \
-  /usr/include/openssl/srtp.h \
-  ../models/WebsocketClient.h \
-  ../utilities/json_utilities.h \
-  /usr/include/cjson/cJSON.h \
+  /usr/include/arpa/inet.h \
+  /usr/include/netinet/in.h \
+  /usr/include/x86_64-linux-gnu/bits/in.h \
   ../utilities/http_utilities.h \
   ../models/session.h \
-  ../models/Socket.h \
-  /usr/include/x86_64-linux-gnu/sys/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
-  /usr/include/x86_64-linux-gnu/bits/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/socket_type.h \
-  /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
-  /usr/include/x86_64-linux-gnu/asm/socket.h \
-  /usr/include/asm-generic/socket.h \
-  /usr/include/linux/posix_types.h \
-  /usr/include/linux/stddef.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
-  /usr/include/asm-generic/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
-  /usr/include/asm-generic/bitsperlong.h \
-  /usr/include/x86_64-linux-gnu/asm/sockios.h \
-  /usr/include/asm-generic/sockios.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
-  ../models/websocket.h
-
-CMakeFiles/home-server.dir/routes/life-of-sounds/GET/home.c.o: ../routes/life-of-sounds/GET/home.c \
-  /usr/include/stdc-predef.h \
-  /usr/include/openssl/ssl.h \
-  /usr/include/openssl/macros.h \
-  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
-  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
-  /usr/include/openssl/opensslv.h \
-  /usr/include/openssl/e_os2.h \
-  /usr/include/inttypes.h \
-  /usr/include/features.h \
-  /usr/include/features-time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
-  /usr/include/x86_64-linux-gnu/bits/timesize.h \
-  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
-  /usr/include/x86_64-linux-gnu/bits/long-double.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
-  /usr/include/stdint.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/openssl/comp.h \
-  /usr/include/openssl/crypto.h \
-  /usr/include/stdlib.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
-  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/alloca.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/stdio.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/openssl/safestack.h \
-  /usr/include/openssl/stack.h \
-  /usr/include/openssl/types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
-  /usr/include/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/linux/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/openssl/cryptoerr.h \
-  /usr/include/openssl/symhacks.h \
-  /usr/include/openssl/cryptoerr_legacy.h \
-  /usr/include/openssl/core.h \
-  /usr/include/pthread.h \
-  /usr/include/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
-  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
-  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
-  /usr/include/openssl/comperr.h \
-  /usr/include/openssl/bio.h \
-  /usr/include/openssl/bioerr.h \
-  /usr/include/openssl/x509.h \
-  /usr/include/openssl/buffer.h \
-  /usr/include/openssl/buffererr.h \
-  /usr/include/openssl/evp.h \
-  /usr/include/openssl/core_dispatch.h \
-  /usr/include/openssl/evperr.h \
-  /usr/include/openssl/params.h \
-  /usr/include/openssl/bn.h \
-  /usr/include/openssl/bnerr.h \
-  /usr/include/openssl/objects.h \
-  /usr/include/openssl/obj_mac.h \
-  /usr/include/openssl/asn1.h \
-  /usr/include/openssl/asn1err.h \
-  /usr/include/openssl/objectserr.h \
-  /usr/include/openssl/ec.h \
-  /usr/include/string.h \
-  /usr/include/strings.h \
-  /usr/include/openssl/ecerr.h \
-  /usr/include/openssl/rsa.h \
-  /usr/include/openssl/rsaerr.h \
-  /usr/include/openssl/dsa.h \
-  /usr/include/openssl/dh.h \
-  /usr/include/openssl/dherr.h \
-  /usr/include/openssl/dsaerr.h \
-  /usr/include/openssl/sha.h \
-  /usr/include/openssl/x509err.h \
-  /usr/include/openssl/x509_vfy.h \
-  /usr/include/openssl/lhash.h \
-  /usr/include/openssl/pkcs7.h \
-  /usr/include/openssl/pkcs7err.h \
-  /usr/include/openssl/ocsp.h \
-  /usr/include/openssl/http.h \
-  /usr/include/openssl/conf.h \
-  /usr/include/openssl/conferr.h \
-  /usr/include/openssl/conftypes.h \
-  /usr/include/openssl/x509v3.h \
-  /usr/include/openssl/x509v3err.h \
-  /usr/include/openssl/ocsperr.h \
-  /usr/include/openssl/pem.h \
-  /usr/include/openssl/pemerr.h \
-  /usr/include/openssl/hmac.h \
-  /usr/include/openssl/async.h \
-  /usr/include/openssl/asyncerr.h \
-  /usr/include/openssl/ct.h \
-  /usr/include/openssl/cterr.h \
-  /usr/include/openssl/sslerr.h \
-  /usr/include/openssl/sslerr_legacy.h \
-  /usr/include/openssl/prov_ssl.h \
-  /usr/include/openssl/ssl2.h \
-  /usr/include/openssl/ssl3.h \
-  /usr/include/openssl/tls1.h \
-  /usr/include/openssl/dtls1.h \
-  /usr/include/openssl/srtp.h \
-  ../utilities/http_utilities.h
-
-CMakeFiles/home-server.dir/routes/life-of-sounds/GET/login.c.o: ../routes/life-of-sounds/GET/login.c \
-  /usr/include/stdc-predef.h \
-  /usr/include/openssl/ssl.h \
-  /usr/include/openssl/macros.h \
-  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
-  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
-  /usr/include/openssl/opensslv.h \
-  /usr/include/openssl/e_os2.h \
-  /usr/include/inttypes.h \
-  /usr/include/features.h \
-  /usr/include/features-time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
-  /usr/include/x86_64-linux-gnu/bits/timesize.h \
-  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
-  /usr/include/x86_64-linux-gnu/bits/long-double.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
-  /usr/include/stdint.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/openssl/comp.h \
-  /usr/include/openssl/crypto.h \
-  /usr/include/stdlib.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
-  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/alloca.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/stdio.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/openssl/safestack.h \
-  /usr/include/openssl/stack.h \
-  /usr/include/openssl/types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
-  /usr/include/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/linux/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/openssl/cryptoerr.h \
-  /usr/include/openssl/symhacks.h \
-  /usr/include/openssl/cryptoerr_legacy.h \
-  /usr/include/openssl/core.h \
-  /usr/include/pthread.h \
-  /usr/include/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
-  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
-  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
-  /usr/include/openssl/comperr.h \
-  /usr/include/openssl/bio.h \
-  /usr/include/openssl/bioerr.h \
-  /usr/include/openssl/x509.h \
-  /usr/include/openssl/buffer.h \
-  /usr/include/openssl/buffererr.h \
-  /usr/include/openssl/evp.h \
-  /usr/include/openssl/core_dispatch.h \
-  /usr/include/openssl/evperr.h \
-  /usr/include/openssl/params.h \
-  /usr/include/openssl/bn.h \
-  /usr/include/openssl/bnerr.h \
-  /usr/include/openssl/objects.h \
-  /usr/include/openssl/obj_mac.h \
-  /usr/include/openssl/asn1.h \
-  /usr/include/openssl/asn1err.h \
-  /usr/include/openssl/objectserr.h \
-  /usr/include/openssl/ec.h \
-  /usr/include/string.h \
-  /usr/include/strings.h \
-  /usr/include/openssl/ecerr.h \
-  /usr/include/openssl/rsa.h \
-  /usr/include/openssl/rsaerr.h \
-  /usr/include/openssl/dsa.h \
-  /usr/include/openssl/dh.h \
-  /usr/include/openssl/dherr.h \
-  /usr/include/openssl/dsaerr.h \
-  /usr/include/openssl/sha.h \
-  /usr/include/openssl/x509err.h \
-  /usr/include/openssl/x509_vfy.h \
-  /usr/include/openssl/lhash.h \
-  /usr/include/openssl/pkcs7.h \
-  /usr/include/openssl/pkcs7err.h \
-  /usr/include/openssl/ocsp.h \
-  /usr/include/openssl/http.h \
-  /usr/include/openssl/conf.h \
-  /usr/include/openssl/conferr.h \
-  /usr/include/openssl/conftypes.h \
-  /usr/include/openssl/x509v3.h \
-  /usr/include/openssl/x509v3err.h \
-  /usr/include/openssl/ocsperr.h \
-  /usr/include/openssl/pem.h \
-  /usr/include/openssl/pemerr.h \
-  /usr/include/openssl/hmac.h \
-  /usr/include/openssl/async.h \
-  /usr/include/openssl/asyncerr.h \
-  /usr/include/openssl/ct.h \
-  /usr/include/openssl/cterr.h \
-  /usr/include/openssl/sslerr.h \
-  /usr/include/openssl/sslerr_legacy.h \
-  /usr/include/openssl/prov_ssl.h \
-  /usr/include/openssl/ssl2.h \
-  /usr/include/openssl/ssl3.h \
-  /usr/include/openssl/tls1.h \
-  /usr/include/openssl/dtls1.h \
-  /usr/include/openssl/srtp.h \
-  ../utilities/http_utilities.h
-
-CMakeFiles/home-server.dir/routes/life-of-sounds/GET/new_login.c.o: ../routes/life-of-sounds/GET/new_login.c \
-  /usr/include/stdc-predef.h \
-  /usr/include/openssl/ssl.h \
-  /usr/include/openssl/macros.h \
-  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
-  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
-  /usr/include/openssl/opensslv.h \
-  /usr/include/openssl/e_os2.h \
-  /usr/include/inttypes.h \
-  /usr/include/features.h \
-  /usr/include/features-time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
-  /usr/include/x86_64-linux-gnu/bits/timesize.h \
-  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
-  /usr/include/x86_64-linux-gnu/bits/long-double.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
-  /usr/include/stdint.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/openssl/comp.h \
-  /usr/include/openssl/crypto.h \
-  /usr/include/stdlib.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
-  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/alloca.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/stdio.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/openssl/safestack.h \
-  /usr/include/openssl/stack.h \
-  /usr/include/openssl/types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
-  /usr/include/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/linux/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/openssl/cryptoerr.h \
-  /usr/include/openssl/symhacks.h \
-  /usr/include/openssl/cryptoerr_legacy.h \
-  /usr/include/openssl/core.h \
-  /usr/include/pthread.h \
-  /usr/include/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
-  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
-  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
-  /usr/include/openssl/comperr.h \
-  /usr/include/openssl/bio.h \
-  /usr/include/openssl/bioerr.h \
-  /usr/include/openssl/x509.h \
-  /usr/include/openssl/buffer.h \
-  /usr/include/openssl/buffererr.h \
-  /usr/include/openssl/evp.h \
-  /usr/include/openssl/core_dispatch.h \
-  /usr/include/openssl/evperr.h \
-  /usr/include/openssl/params.h \
-  /usr/include/openssl/bn.h \
-  /usr/include/openssl/bnerr.h \
-  /usr/include/openssl/objects.h \
-  /usr/include/openssl/obj_mac.h \
-  /usr/include/openssl/asn1.h \
-  /usr/include/openssl/asn1err.h \
-  /usr/include/openssl/objectserr.h \
-  /usr/include/openssl/ec.h \
-  /usr/include/string.h \
-  /usr/include/strings.h \
-  /usr/include/openssl/ecerr.h \
-  /usr/include/openssl/rsa.h \
-  /usr/include/openssl/rsaerr.h \
-  /usr/include/openssl/dsa.h \
-  /usr/include/openssl/dh.h \
-  /usr/include/openssl/dherr.h \
-  /usr/include/openssl/dsaerr.h \
-  /usr/include/openssl/sha.h \
-  /usr/include/openssl/x509err.h \
-  /usr/include/openssl/x509_vfy.h \
-  /usr/include/openssl/lhash.h \
-  /usr/include/openssl/pkcs7.h \
-  /usr/include/openssl/pkcs7err.h \
-  /usr/include/openssl/ocsp.h \
-  /usr/include/openssl/http.h \
-  /usr/include/openssl/conf.h \
-  /usr/include/openssl/conferr.h \
-  /usr/include/openssl/conftypes.h \
-  /usr/include/openssl/x509v3.h \
-  /usr/include/openssl/x509v3err.h \
-  /usr/include/openssl/ocsperr.h \
-  /usr/include/openssl/pem.h \
-  /usr/include/openssl/pemerr.h \
-  /usr/include/openssl/hmac.h \
-  /usr/include/openssl/async.h \
-  /usr/include/openssl/asyncerr.h \
-  /usr/include/openssl/ct.h \
-  /usr/include/openssl/cterr.h \
-  /usr/include/openssl/sslerr.h \
-  /usr/include/openssl/sslerr_legacy.h \
-  /usr/include/openssl/prov_ssl.h \
-  /usr/include/openssl/ssl2.h \
-  /usr/include/openssl/ssl3.h \
-  /usr/include/openssl/tls1.h \
-  /usr/include/openssl/dtls1.h \
-  /usr/include/openssl/srtp.h \
-  ../utilities/http_utilities.h
-
-CMakeFiles/home-server.dir/routes/life-of-sounds/GET/websocket_protocol.c.o: ../routes/life-of-sounds/GET/websocket_protocol.c \
-  /usr/include/stdc-predef.h \
-  /usr/include/openssl/ssl.h \
-  /usr/include/openssl/macros.h \
-  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
-  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
-  /usr/include/openssl/opensslv.h \
-  /usr/include/openssl/e_os2.h \
-  /usr/include/inttypes.h \
-  /usr/include/features.h \
-  /usr/include/features-time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
-  /usr/include/x86_64-linux-gnu/bits/timesize.h \
-  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
-  /usr/include/x86_64-linux-gnu/bits/long-double.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
-  /usr/include/stdint.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/openssl/comp.h \
-  /usr/include/openssl/crypto.h \
-  /usr/include/stdlib.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
-  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/alloca.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/stdio.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/openssl/safestack.h \
-  /usr/include/openssl/stack.h \
-  /usr/include/openssl/types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
-  /usr/include/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/linux/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/openssl/cryptoerr.h \
-  /usr/include/openssl/symhacks.h \
-  /usr/include/openssl/cryptoerr_legacy.h \
-  /usr/include/openssl/core.h \
-  /usr/include/pthread.h \
-  /usr/include/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
-  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
-  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
-  /usr/include/openssl/comperr.h \
-  /usr/include/openssl/bio.h \
-  /usr/include/openssl/bioerr.h \
-  /usr/include/openssl/x509.h \
-  /usr/include/openssl/buffer.h \
-  /usr/include/openssl/buffererr.h \
-  /usr/include/openssl/evp.h \
-  /usr/include/openssl/core_dispatch.h \
-  /usr/include/openssl/evperr.h \
-  /usr/include/openssl/params.h \
-  /usr/include/openssl/bn.h \
-  /usr/include/openssl/bnerr.h \
-  /usr/include/openssl/objects.h \
-  /usr/include/openssl/obj_mac.h \
-  /usr/include/openssl/asn1.h \
-  /usr/include/openssl/asn1err.h \
-  /usr/include/openssl/objectserr.h \
-  /usr/include/openssl/ec.h \
-  /usr/include/string.h \
-  /usr/include/strings.h \
-  /usr/include/openssl/ecerr.h \
-  /usr/include/openssl/rsa.h \
-  /usr/include/openssl/rsaerr.h \
-  /usr/include/openssl/dsa.h \
-  /usr/include/openssl/dh.h \
-  /usr/include/openssl/dherr.h \
-  /usr/include/openssl/dsaerr.h \
-  /usr/include/openssl/sha.h \
-  /usr/include/openssl/x509err.h \
-  /usr/include/openssl/x509_vfy.h \
-  /usr/include/openssl/lhash.h \
-  /usr/include/openssl/pkcs7.h \
-  /usr/include/openssl/pkcs7err.h \
-  /usr/include/openssl/ocsp.h \
-  /usr/include/openssl/http.h \
-  /usr/include/openssl/conf.h \
-  /usr/include/openssl/conferr.h \
-  /usr/include/openssl/conftypes.h \
-  /usr/include/openssl/x509v3.h \
-  /usr/include/openssl/x509v3err.h \
-  /usr/include/openssl/ocsperr.h \
-  /usr/include/openssl/pem.h \
-  /usr/include/openssl/pemerr.h \
-  /usr/include/openssl/hmac.h \
-  /usr/include/openssl/async.h \
-  /usr/include/openssl/asyncerr.h \
-  /usr/include/openssl/ct.h \
-  /usr/include/openssl/cterr.h \
-  /usr/include/openssl/sslerr.h \
-  /usr/include/openssl/sslerr_legacy.h \
-  /usr/include/openssl/prov_ssl.h \
-  /usr/include/openssl/ssl2.h \
-  /usr/include/openssl/ssl3.h \
-  /usr/include/openssl/tls1.h \
-  /usr/include/openssl/dtls1.h \
-  /usr/include/openssl/srtp.h \
-  ../models/Invitation.h \
-  ../models/WebsocketClient.h \
-  ../models/Websocket_Message.h \
-  ../utilities/json_utilities.h \
-  /usr/include/cjson/cJSON.h \
-  ../utilities/http_utilities.h \
-  ../models/session.h \
-  ../models/User.h \
-  ../models/Socket.h \
-  /usr/include/x86_64-linux-gnu/sys/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
-  /usr/include/x86_64-linux-gnu/bits/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/socket_type.h \
-  /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
-  /usr/include/x86_64-linux-gnu/asm/socket.h \
-  /usr/include/asm-generic/socket.h \
-  /usr/include/linux/posix_types.h \
-  /usr/include/linux/stddef.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
-  /usr/include/asm-generic/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
-  /usr/include/asm-generic/bitsperlong.h \
-  /usr/include/x86_64-linux-gnu/asm/sockios.h \
-  /usr/include/asm-generic/sockios.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
-  ../models/websocket.h
-
-CMakeFiles/home-server.dir/routes/life-of-sounds/PATCH/patch_browser_session.c.o: ../routes/life-of-sounds/PATCH/patch_browser_session.c \
-  /usr/include/stdc-predef.h \
-  /usr/include/openssl/ssl.h \
-  /usr/include/openssl/macros.h \
-  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
-  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
-  /usr/include/openssl/opensslv.h \
-  /usr/include/openssl/e_os2.h \
-  /usr/include/inttypes.h \
-  /usr/include/features.h \
-  /usr/include/features-time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
-  /usr/include/x86_64-linux-gnu/bits/timesize.h \
-  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
-  /usr/include/x86_64-linux-gnu/bits/long-double.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
-  /usr/include/stdint.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/openssl/comp.h \
-  /usr/include/openssl/crypto.h \
-  /usr/include/stdlib.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
-  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/alloca.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/stdio.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/openssl/safestack.h \
-  /usr/include/openssl/stack.h \
-  /usr/include/openssl/types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
-  /usr/include/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/linux/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/openssl/cryptoerr.h \
-  /usr/include/openssl/symhacks.h \
-  /usr/include/openssl/cryptoerr_legacy.h \
-  /usr/include/openssl/core.h \
-  /usr/include/pthread.h \
-  /usr/include/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
-  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
-  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
-  /usr/include/openssl/comperr.h \
-  /usr/include/openssl/bio.h \
-  /usr/include/openssl/bioerr.h \
-  /usr/include/openssl/x509.h \
-  /usr/include/openssl/buffer.h \
-  /usr/include/openssl/buffererr.h \
-  /usr/include/openssl/evp.h \
-  /usr/include/openssl/core_dispatch.h \
-  /usr/include/openssl/evperr.h \
-  /usr/include/openssl/params.h \
-  /usr/include/openssl/bn.h \
-  /usr/include/openssl/bnerr.h \
-  /usr/include/openssl/objects.h \
-  /usr/include/openssl/obj_mac.h \
-  /usr/include/openssl/asn1.h \
-  /usr/include/openssl/asn1err.h \
-  /usr/include/openssl/objectserr.h \
-  /usr/include/openssl/ec.h \
-  /usr/include/string.h \
-  /usr/include/strings.h \
-  /usr/include/openssl/ecerr.h \
-  /usr/include/openssl/rsa.h \
-  /usr/include/openssl/rsaerr.h \
-  /usr/include/openssl/dsa.h \
-  /usr/include/openssl/dh.h \
-  /usr/include/openssl/dherr.h \
-  /usr/include/openssl/dsaerr.h \
-  /usr/include/openssl/sha.h \
-  /usr/include/openssl/x509err.h \
-  /usr/include/openssl/x509_vfy.h \
-  /usr/include/openssl/lhash.h \
-  /usr/include/openssl/pkcs7.h \
-  /usr/include/openssl/pkcs7err.h \
-  /usr/include/openssl/ocsp.h \
-  /usr/include/openssl/http.h \
-  /usr/include/openssl/conf.h \
-  /usr/include/openssl/conferr.h \
-  /usr/include/openssl/conftypes.h \
-  /usr/include/openssl/x509v3.h \
-  /usr/include/openssl/x509v3err.h \
-  /usr/include/openssl/ocsperr.h \
-  /usr/include/openssl/pem.h \
-  /usr/include/openssl/pemerr.h \
-  /usr/include/openssl/hmac.h \
-  /usr/include/openssl/async.h \
-  /usr/include/openssl/asyncerr.h \
-  /usr/include/openssl/ct.h \
-  /usr/include/openssl/cterr.h \
-  /usr/include/openssl/sslerr.h \
-  /usr/include/openssl/sslerr_legacy.h \
-  /usr/include/openssl/prov_ssl.h \
-  /usr/include/openssl/ssl2.h \
-  /usr/include/openssl/ssl3.h \
-  /usr/include/openssl/tls1.h \
-  /usr/include/openssl/dtls1.h \
-  /usr/include/openssl/srtp.h \
-  ../utilities/json_utilities.h \
-  /usr/include/cjson/cJSON.h \
-  ../utilities/string_utilities.h \
-  ../utilities/http_utilities.h \
-  ../models/session.h \
-  ../models/User.h \
-  ../models/Socket.h \
-  /usr/include/x86_64-linux-gnu/sys/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
-  /usr/include/x86_64-linux-gnu/bits/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/socket_type.h \
-  /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
-  /usr/include/x86_64-linux-gnu/asm/socket.h \
-  /usr/include/asm-generic/socket.h \
-  /usr/include/linux/posix_types.h \
-  /usr/include/linux/stddef.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
-  /usr/include/asm-generic/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
-  /usr/include/asm-generic/bitsperlong.h \
-  /usr/include/x86_64-linux-gnu/asm/sockios.h \
-  /usr/include/asm-generic/sockios.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
-  ../models/websocket.h
-
-CMakeFiles/home-server.dir/routes/life-of-sounds/PATCH/patch_websocket_client.c.o: ../routes/life-of-sounds/PATCH/patch_websocket_client.c \
-  /usr/include/stdc-predef.h \
-  /usr/include/openssl/ssl.h \
-  /usr/include/openssl/macros.h \
-  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
-  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
-  /usr/include/openssl/opensslv.h \
-  /usr/include/openssl/e_os2.h \
-  /usr/include/inttypes.h \
-  /usr/include/features.h \
-  /usr/include/features-time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
-  /usr/include/x86_64-linux-gnu/bits/timesize.h \
-  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
-  /usr/include/x86_64-linux-gnu/bits/long-double.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
-  /usr/include/stdint.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/openssl/comp.h \
-  /usr/include/openssl/crypto.h \
-  /usr/include/stdlib.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
-  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/alloca.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/stdio.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/openssl/safestack.h \
-  /usr/include/openssl/stack.h \
-  /usr/include/openssl/types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
-  /usr/include/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/linux/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/openssl/cryptoerr.h \
-  /usr/include/openssl/symhacks.h \
-  /usr/include/openssl/cryptoerr_legacy.h \
-  /usr/include/openssl/core.h \
-  /usr/include/pthread.h \
-  /usr/include/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
-  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
-  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
-  /usr/include/openssl/comperr.h \
-  /usr/include/openssl/bio.h \
-  /usr/include/openssl/bioerr.h \
-  /usr/include/openssl/x509.h \
-  /usr/include/openssl/buffer.h \
-  /usr/include/openssl/buffererr.h \
-  /usr/include/openssl/evp.h \
-  /usr/include/openssl/core_dispatch.h \
-  /usr/include/openssl/evperr.h \
-  /usr/include/openssl/params.h \
-  /usr/include/openssl/bn.h \
-  /usr/include/openssl/bnerr.h \
-  /usr/include/openssl/objects.h \
-  /usr/include/openssl/obj_mac.h \
-  /usr/include/openssl/asn1.h \
-  /usr/include/openssl/asn1err.h \
-  /usr/include/openssl/objectserr.h \
-  /usr/include/openssl/ec.h \
-  /usr/include/string.h \
-  /usr/include/strings.h \
-  /usr/include/openssl/ecerr.h \
-  /usr/include/openssl/rsa.h \
-  /usr/include/openssl/rsaerr.h \
-  /usr/include/openssl/dsa.h \
-  /usr/include/openssl/dh.h \
-  /usr/include/openssl/dherr.h \
-  /usr/include/openssl/dsaerr.h \
-  /usr/include/openssl/sha.h \
-  /usr/include/openssl/x509err.h \
-  /usr/include/openssl/x509_vfy.h \
-  /usr/include/openssl/lhash.h \
-  /usr/include/openssl/pkcs7.h \
-  /usr/include/openssl/pkcs7err.h \
-  /usr/include/openssl/ocsp.h \
-  /usr/include/openssl/http.h \
-  /usr/include/openssl/conf.h \
-  /usr/include/openssl/conferr.h \
-  /usr/include/openssl/conftypes.h \
-  /usr/include/openssl/x509v3.h \
-  /usr/include/openssl/x509v3err.h \
-  /usr/include/openssl/ocsperr.h \
-  /usr/include/openssl/pem.h \
-  /usr/include/openssl/pemerr.h \
-  /usr/include/openssl/hmac.h \
-  /usr/include/openssl/async.h \
-  /usr/include/openssl/asyncerr.h \
-  /usr/include/openssl/ct.h \
-  /usr/include/openssl/cterr.h \
-  /usr/include/openssl/sslerr.h \
-  /usr/include/openssl/sslerr_legacy.h \
-  /usr/include/openssl/prov_ssl.h \
-  /usr/include/openssl/ssl2.h \
-  /usr/include/openssl/ssl3.h \
-  /usr/include/openssl/tls1.h \
-  /usr/include/openssl/dtls1.h \
-  /usr/include/openssl/srtp.h \
-  ../utilities/json_utilities.h \
-  /usr/include/cjson/cJSON.h \
-  ../utilities/string_utilities.h \
-  ../models/WebsocketClient.h \
-  ../utilities/http_utilities.h \
-  ../models/User.h \
-  ../models/Socket.h \
-  /usr/include/x86_64-linux-gnu/sys/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
-  /usr/include/x86_64-linux-gnu/bits/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/socket_type.h \
-  /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
-  /usr/include/x86_64-linux-gnu/asm/socket.h \
-  /usr/include/asm-generic/socket.h \
-  /usr/include/linux/posix_types.h \
-  /usr/include/linux/stddef.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
-  /usr/include/asm-generic/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
-  /usr/include/asm-generic/bitsperlong.h \
-  /usr/include/x86_64-linux-gnu/asm/sockios.h \
-  /usr/include/asm-generic/sockios.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h
-
-CMakeFiles/home-server.dir/routes/life-of-sounds/PATCH/patch_websocket_session.c.o: ../routes/life-of-sounds/PATCH/patch_websocket_session.c \
-  /usr/include/stdc-predef.h \
-  /usr/include/openssl/ssl.h \
-  /usr/include/openssl/macros.h \
-  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
-  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
-  /usr/include/openssl/opensslv.h \
-  /usr/include/openssl/e_os2.h \
-  /usr/include/inttypes.h \
-  /usr/include/features.h \
-  /usr/include/features-time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
-  /usr/include/x86_64-linux-gnu/bits/timesize.h \
-  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
-  /usr/include/x86_64-linux-gnu/bits/long-double.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
-  /usr/include/stdint.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/openssl/comp.h \
-  /usr/include/openssl/crypto.h \
-  /usr/include/stdlib.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
-  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/alloca.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/stdio.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/openssl/safestack.h \
-  /usr/include/openssl/stack.h \
-  /usr/include/openssl/types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
-  /usr/include/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/linux/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/openssl/cryptoerr.h \
-  /usr/include/openssl/symhacks.h \
-  /usr/include/openssl/cryptoerr_legacy.h \
-  /usr/include/openssl/core.h \
-  /usr/include/pthread.h \
-  /usr/include/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
-  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
-  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
-  /usr/include/openssl/comperr.h \
-  /usr/include/openssl/bio.h \
-  /usr/include/openssl/bioerr.h \
-  /usr/include/openssl/x509.h \
-  /usr/include/openssl/buffer.h \
-  /usr/include/openssl/buffererr.h \
-  /usr/include/openssl/evp.h \
-  /usr/include/openssl/core_dispatch.h \
-  /usr/include/openssl/evperr.h \
-  /usr/include/openssl/params.h \
-  /usr/include/openssl/bn.h \
-  /usr/include/openssl/bnerr.h \
-  /usr/include/openssl/objects.h \
-  /usr/include/openssl/obj_mac.h \
-  /usr/include/openssl/asn1.h \
-  /usr/include/openssl/asn1err.h \
-  /usr/include/openssl/objectserr.h \
-  /usr/include/openssl/ec.h \
-  /usr/include/string.h \
-  /usr/include/strings.h \
-  /usr/include/openssl/ecerr.h \
-  /usr/include/openssl/rsa.h \
-  /usr/include/openssl/rsaerr.h \
-  /usr/include/openssl/dsa.h \
-  /usr/include/openssl/dh.h \
-  /usr/include/openssl/dherr.h \
-  /usr/include/openssl/dsaerr.h \
-  /usr/include/openssl/sha.h \
-  /usr/include/openssl/x509err.h \
-  /usr/include/openssl/x509_vfy.h \
-  /usr/include/openssl/lhash.h \
-  /usr/include/openssl/pkcs7.h \
-  /usr/include/openssl/pkcs7err.h \
-  /usr/include/openssl/ocsp.h \
-  /usr/include/openssl/http.h \
-  /usr/include/openssl/conf.h \
-  /usr/include/openssl/conferr.h \
-  /usr/include/openssl/conftypes.h \
-  /usr/include/openssl/x509v3.h \
-  /usr/include/openssl/x509v3err.h \
-  /usr/include/openssl/ocsperr.h \
-  /usr/include/openssl/pem.h \
-  /usr/include/openssl/pemerr.h \
-  /usr/include/openssl/hmac.h \
-  /usr/include/openssl/async.h \
-  /usr/include/openssl/asyncerr.h \
-  /usr/include/openssl/ct.h \
-  /usr/include/openssl/cterr.h \
-  /usr/include/openssl/sslerr.h \
-  /usr/include/openssl/sslerr_legacy.h \
-  /usr/include/openssl/prov_ssl.h \
-  /usr/include/openssl/ssl2.h \
-  /usr/include/openssl/ssl3.h \
-  /usr/include/openssl/tls1.h \
-  /usr/include/openssl/dtls1.h \
-  /usr/include/openssl/srtp.h \
-  ../utilities/json_utilities.h \
-  /usr/include/cjson/cJSON.h \
-  ../utilities/string_utilities.h \
-  ../utilities/http_utilities.h \
-  ../models/websocket.h \
-  ../models/Socket.h \
-  /usr/include/x86_64-linux-gnu/sys/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
-  /usr/include/x86_64-linux-gnu/bits/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/socket_type.h \
-  /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
-  /usr/include/x86_64-linux-gnu/asm/socket.h \
-  /usr/include/asm-generic/socket.h \
-  /usr/include/linux/posix_types.h \
-  /usr/include/linux/stddef.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
-  /usr/include/asm-generic/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
-  /usr/include/asm-generic/bitsperlong.h \
-  /usr/include/x86_64-linux-gnu/asm/sockios.h \
-  /usr/include/asm-generic/sockios.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h
-
-CMakeFiles/home-server.dir/routes/life-of-sounds/POST/login.c.o: ../routes/life-of-sounds/POST/login.c \
-  /usr/include/stdc-predef.h \
-  /usr/include/stdlib.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/features.h \
-  /usr/include/features-time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
-  /usr/include/x86_64-linux-gnu/bits/timesize.h \
-  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
-  /usr/include/x86_64-linux-gnu/bits/long-double.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
-  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/alloca.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/stdio.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/string.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/strings.h \
-  /usr/include/openssl/ssl.h \
-  /usr/include/openssl/macros.h \
-  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
-  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
-  /usr/include/openssl/opensslv.h \
-  /usr/include/openssl/e_os2.h \
-  /usr/include/inttypes.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
-  /usr/include/stdint.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/openssl/comp.h \
-  /usr/include/openssl/crypto.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/openssl/safestack.h \
-  /usr/include/openssl/stack.h \
-  /usr/include/openssl/types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
-  /usr/include/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/linux/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/openssl/cryptoerr.h \
-  /usr/include/openssl/symhacks.h \
-  /usr/include/openssl/cryptoerr_legacy.h \
-  /usr/include/openssl/core.h \
-  /usr/include/pthread.h \
-  /usr/include/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
-  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
-  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
-  /usr/include/openssl/comperr.h \
-  /usr/include/openssl/bio.h \
-  /usr/include/openssl/bioerr.h \
-  /usr/include/openssl/x509.h \
-  /usr/include/openssl/buffer.h \
-  /usr/include/openssl/buffererr.h \
-  /usr/include/openssl/evp.h \
-  /usr/include/openssl/core_dispatch.h \
-  /usr/include/openssl/evperr.h \
-  /usr/include/openssl/params.h \
-  /usr/include/openssl/bn.h \
-  /usr/include/openssl/bnerr.h \
-  /usr/include/openssl/objects.h \
-  /usr/include/openssl/obj_mac.h \
-  /usr/include/openssl/asn1.h \
-  /usr/include/openssl/asn1err.h \
-  /usr/include/openssl/objectserr.h \
-  /usr/include/openssl/ec.h \
-  /usr/include/openssl/ecerr.h \
-  /usr/include/openssl/rsa.h \
-  /usr/include/openssl/rsaerr.h \
-  /usr/include/openssl/dsa.h \
-  /usr/include/openssl/dh.h \
-  /usr/include/openssl/dherr.h \
-  /usr/include/openssl/dsaerr.h \
-  /usr/include/openssl/sha.h \
-  /usr/include/openssl/x509err.h \
-  /usr/include/openssl/x509_vfy.h \
-  /usr/include/openssl/lhash.h \
-  /usr/include/openssl/pkcs7.h \
-  /usr/include/openssl/pkcs7err.h \
-  /usr/include/openssl/ocsp.h \
-  /usr/include/openssl/http.h \
-  /usr/include/openssl/conf.h \
-  /usr/include/openssl/conferr.h \
-  /usr/include/openssl/conftypes.h \
-  /usr/include/openssl/x509v3.h \
-  /usr/include/openssl/x509v3err.h \
-  /usr/include/openssl/ocsperr.h \
-  /usr/include/openssl/pem.h \
-  /usr/include/openssl/pemerr.h \
-  /usr/include/openssl/hmac.h \
-  /usr/include/openssl/async.h \
-  /usr/include/openssl/asyncerr.h \
-  /usr/include/openssl/ct.h \
-  /usr/include/openssl/cterr.h \
-  /usr/include/openssl/sslerr.h \
-  /usr/include/openssl/sslerr_legacy.h \
-  /usr/include/openssl/prov_ssl.h \
-  /usr/include/openssl/ssl2.h \
-  /usr/include/openssl/ssl3.h \
-  /usr/include/openssl/tls1.h \
-  /usr/include/openssl/dtls1.h \
-  /usr/include/openssl/srtp.h \
-  ../utilities/http_utilities.h \
-  ../utilities/json_utilities.h \
-  /usr/include/cjson/cJSON.h \
-  ../models/User.h \
-  ../models/session.h
-
-CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_browser_session.c.o: ../routes/life-of-sounds/POST/post_browser_session.c \
-  /usr/include/stdc-predef.h \
-  /usr/include/openssl/ssl.h \
-  /usr/include/openssl/macros.h \
-  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
-  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
-  /usr/include/openssl/opensslv.h \
-  /usr/include/openssl/e_os2.h \
-  /usr/include/inttypes.h \
-  /usr/include/features.h \
-  /usr/include/features-time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
-  /usr/include/x86_64-linux-gnu/bits/timesize.h \
-  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
-  /usr/include/x86_64-linux-gnu/bits/long-double.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
-  /usr/include/stdint.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/openssl/comp.h \
-  /usr/include/openssl/crypto.h \
-  /usr/include/stdlib.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
-  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/alloca.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/stdio.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/openssl/safestack.h \
-  /usr/include/openssl/stack.h \
-  /usr/include/openssl/types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
-  /usr/include/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/linux/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/openssl/cryptoerr.h \
-  /usr/include/openssl/symhacks.h \
-  /usr/include/openssl/cryptoerr_legacy.h \
-  /usr/include/openssl/core.h \
-  /usr/include/pthread.h \
-  /usr/include/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
-  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
-  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
-  /usr/include/openssl/comperr.h \
-  /usr/include/openssl/bio.h \
-  /usr/include/openssl/bioerr.h \
-  /usr/include/openssl/x509.h \
-  /usr/include/openssl/buffer.h \
-  /usr/include/openssl/buffererr.h \
-  /usr/include/openssl/evp.h \
-  /usr/include/openssl/core_dispatch.h \
-  /usr/include/openssl/evperr.h \
-  /usr/include/openssl/params.h \
-  /usr/include/openssl/bn.h \
-  /usr/include/openssl/bnerr.h \
-  /usr/include/openssl/objects.h \
-  /usr/include/openssl/obj_mac.h \
-  /usr/include/openssl/asn1.h \
-  /usr/include/openssl/asn1err.h \
-  /usr/include/openssl/objectserr.h \
-  /usr/include/openssl/ec.h \
-  /usr/include/string.h \
-  /usr/include/strings.h \
-  /usr/include/openssl/ecerr.h \
-  /usr/include/openssl/rsa.h \
-  /usr/include/openssl/rsaerr.h \
-  /usr/include/openssl/dsa.h \
-  /usr/include/openssl/dh.h \
-  /usr/include/openssl/dherr.h \
-  /usr/include/openssl/dsaerr.h \
-  /usr/include/openssl/sha.h \
-  /usr/include/openssl/x509err.h \
-  /usr/include/openssl/x509_vfy.h \
-  /usr/include/openssl/lhash.h \
-  /usr/include/openssl/pkcs7.h \
-  /usr/include/openssl/pkcs7err.h \
-  /usr/include/openssl/ocsp.h \
-  /usr/include/openssl/http.h \
-  /usr/include/openssl/conf.h \
-  /usr/include/openssl/conferr.h \
-  /usr/include/openssl/conftypes.h \
-  /usr/include/openssl/x509v3.h \
-  /usr/include/openssl/x509v3err.h \
-  /usr/include/openssl/ocsperr.h \
-  /usr/include/openssl/pem.h \
-  /usr/include/openssl/pemerr.h \
-  /usr/include/openssl/hmac.h \
-  /usr/include/openssl/async.h \
-  /usr/include/openssl/asyncerr.h \
-  /usr/include/openssl/ct.h \
-  /usr/include/openssl/cterr.h \
-  /usr/include/openssl/sslerr.h \
-  /usr/include/openssl/sslerr_legacy.h \
-  /usr/include/openssl/prov_ssl.h \
-  /usr/include/openssl/ssl2.h \
-  /usr/include/openssl/ssl3.h \
-  /usr/include/openssl/tls1.h \
-  /usr/include/openssl/dtls1.h \
-  /usr/include/openssl/srtp.h \
-  ../utilities/json_utilities.h \
-  /usr/include/cjson/cJSON.h \
-  ../utilities/string_utilities.h \
-  ../utilities/http_utilities.h \
-  ../models/session.h \
-  ../models/User.h \
-  ../models/Socket.h \
-  /usr/include/x86_64-linux-gnu/sys/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
-  /usr/include/x86_64-linux-gnu/bits/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/socket_type.h \
-  /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
-  /usr/include/x86_64-linux-gnu/asm/socket.h \
-  /usr/include/asm-generic/socket.h \
-  /usr/include/linux/posix_types.h \
-  /usr/include/linux/stddef.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
-  /usr/include/asm-generic/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
-  /usr/include/asm-generic/bitsperlong.h \
-  /usr/include/x86_64-linux-gnu/asm/sockios.h \
-  /usr/include/asm-generic/sockios.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
-  ../models/websocket.h
-
-CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_user.c.o: ../routes/life-of-sounds/POST/post_user.c \
-  /usr/include/stdc-predef.h \
-  /usr/include/string.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/features.h \
-  /usr/include/features-time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
-  /usr/include/x86_64-linux-gnu/bits/timesize.h \
-  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
-  /usr/include/x86_64-linux-gnu/bits/long-double.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/strings.h \
-  /usr/include/stdio.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  ../utilities/json_utilities.h \
-  /usr/include/cjson/cJSON.h \
-  ../models/Socket.h \
-  /usr/include/openssl/ssl.h \
-  /usr/include/openssl/macros.h \
-  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
-  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
-  /usr/include/openssl/opensslv.h \
-  /usr/include/openssl/e_os2.h \
-  /usr/include/inttypes.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
-  /usr/include/stdint.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/openssl/comp.h \
-  /usr/include/openssl/crypto.h \
-  /usr/include/stdlib.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
-  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/alloca.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/openssl/safestack.h \
-  /usr/include/openssl/stack.h \
-  /usr/include/openssl/types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
-  /usr/include/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/linux/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/openssl/cryptoerr.h \
-  /usr/include/openssl/symhacks.h \
-  /usr/include/openssl/cryptoerr_legacy.h \
-  /usr/include/openssl/core.h \
-  /usr/include/pthread.h \
-  /usr/include/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
-  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
-  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
-  /usr/include/openssl/comperr.h \
-  /usr/include/openssl/bio.h \
-  /usr/include/openssl/bioerr.h \
-  /usr/include/openssl/x509.h \
-  /usr/include/openssl/buffer.h \
-  /usr/include/openssl/buffererr.h \
-  /usr/include/openssl/evp.h \
-  /usr/include/openssl/core_dispatch.h \
-  /usr/include/openssl/evperr.h \
-  /usr/include/openssl/params.h \
-  /usr/include/openssl/bn.h \
-  /usr/include/openssl/bnerr.h \
-  /usr/include/openssl/objects.h \
-  /usr/include/openssl/obj_mac.h \
-  /usr/include/openssl/asn1.h \
-  /usr/include/openssl/asn1err.h \
-  /usr/include/openssl/objectserr.h \
-  /usr/include/openssl/ec.h \
-  /usr/include/openssl/ecerr.h \
-  /usr/include/openssl/rsa.h \
-  /usr/include/openssl/rsaerr.h \
-  /usr/include/openssl/dsa.h \
-  /usr/include/openssl/dh.h \
-  /usr/include/openssl/dherr.h \
-  /usr/include/openssl/dsaerr.h \
-  /usr/include/openssl/sha.h \
-  /usr/include/openssl/x509err.h \
-  /usr/include/openssl/x509_vfy.h \
-  /usr/include/openssl/lhash.h \
-  /usr/include/openssl/pkcs7.h \
-  /usr/include/openssl/pkcs7err.h \
-  /usr/include/openssl/ocsp.h \
-  /usr/include/openssl/http.h \
-  /usr/include/openssl/conf.h \
-  /usr/include/openssl/conferr.h \
-  /usr/include/openssl/conftypes.h \
-  /usr/include/openssl/x509v3.h \
-  /usr/include/openssl/x509v3err.h \
-  /usr/include/openssl/ocsperr.h \
-  /usr/include/openssl/pem.h \
-  /usr/include/openssl/pemerr.h \
-  /usr/include/openssl/hmac.h \
-  /usr/include/openssl/async.h \
-  /usr/include/openssl/asyncerr.h \
-  /usr/include/openssl/ct.h \
-  /usr/include/openssl/cterr.h \
-  /usr/include/openssl/sslerr.h \
-  /usr/include/openssl/sslerr_legacy.h \
-  /usr/include/openssl/prov_ssl.h \
-  /usr/include/openssl/ssl2.h \
-  /usr/include/openssl/ssl3.h \
-  /usr/include/openssl/tls1.h \
-  /usr/include/openssl/dtls1.h \
-  /usr/include/openssl/srtp.h \
-  /usr/include/x86_64-linux-gnu/sys/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
-  /usr/include/x86_64-linux-gnu/bits/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/socket_type.h \
-  /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
-  /usr/include/x86_64-linux-gnu/asm/socket.h \
-  /usr/include/asm-generic/socket.h \
-  /usr/include/linux/posix_types.h \
-  /usr/include/linux/stddef.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
-  /usr/include/asm-generic/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
-  /usr/include/asm-generic/bitsperlong.h \
-  /usr/include/x86_64-linux-gnu/asm/sockios.h \
-  /usr/include/asm-generic/sockios.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
-  ../utilities/http_utilities.h \
-  ../models/User_Token.h \
-  ../models/User.h
-
-CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_client.c.o: ../routes/life-of-sounds/POST/post_websocket_client.c \
-  /usr/include/stdc-predef.h \
-  /usr/include/openssl/ssl.h \
-  /usr/include/openssl/macros.h \
-  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
-  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
-  /usr/include/openssl/opensslv.h \
-  /usr/include/openssl/e_os2.h \
-  /usr/include/inttypes.h \
-  /usr/include/features.h \
-  /usr/include/features-time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
-  /usr/include/x86_64-linux-gnu/bits/timesize.h \
-  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
-  /usr/include/x86_64-linux-gnu/bits/long-double.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
-  /usr/include/stdint.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/openssl/comp.h \
-  /usr/include/openssl/crypto.h \
-  /usr/include/stdlib.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
-  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/alloca.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/stdio.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/openssl/safestack.h \
-  /usr/include/openssl/stack.h \
-  /usr/include/openssl/types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
-  /usr/include/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/linux/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/openssl/cryptoerr.h \
-  /usr/include/openssl/symhacks.h \
-  /usr/include/openssl/cryptoerr_legacy.h \
-  /usr/include/openssl/core.h \
-  /usr/include/pthread.h \
-  /usr/include/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
-  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
-  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
-  /usr/include/openssl/comperr.h \
-  /usr/include/openssl/bio.h \
-  /usr/include/openssl/bioerr.h \
-  /usr/include/openssl/x509.h \
-  /usr/include/openssl/buffer.h \
-  /usr/include/openssl/buffererr.h \
-  /usr/include/openssl/evp.h \
-  /usr/include/openssl/core_dispatch.h \
-  /usr/include/openssl/evperr.h \
-  /usr/include/openssl/params.h \
-  /usr/include/openssl/bn.h \
-  /usr/include/openssl/bnerr.h \
-  /usr/include/openssl/objects.h \
-  /usr/include/openssl/obj_mac.h \
-  /usr/include/openssl/asn1.h \
-  /usr/include/openssl/asn1err.h \
-  /usr/include/openssl/objectserr.h \
-  /usr/include/openssl/ec.h \
-  /usr/include/string.h \
-  /usr/include/strings.h \
-  /usr/include/openssl/ecerr.h \
-  /usr/include/openssl/rsa.h \
-  /usr/include/openssl/rsaerr.h \
-  /usr/include/openssl/dsa.h \
-  /usr/include/openssl/dh.h \
-  /usr/include/openssl/dherr.h \
-  /usr/include/openssl/dsaerr.h \
-  /usr/include/openssl/sha.h \
-  /usr/include/openssl/x509err.h \
-  /usr/include/openssl/x509_vfy.h \
-  /usr/include/openssl/lhash.h \
-  /usr/include/openssl/pkcs7.h \
-  /usr/include/openssl/pkcs7err.h \
-  /usr/include/openssl/ocsp.h \
-  /usr/include/openssl/http.h \
-  /usr/include/openssl/conf.h \
-  /usr/include/openssl/conferr.h \
-  /usr/include/openssl/conftypes.h \
-  /usr/include/openssl/x509v3.h \
-  /usr/include/openssl/x509v3err.h \
-  /usr/include/openssl/ocsperr.h \
-  /usr/include/openssl/pem.h \
-  /usr/include/openssl/pemerr.h \
-  /usr/include/openssl/hmac.h \
-  /usr/include/openssl/async.h \
-  /usr/include/openssl/asyncerr.h \
-  /usr/include/openssl/ct.h \
-  /usr/include/openssl/cterr.h \
-  /usr/include/openssl/sslerr.h \
-  /usr/include/openssl/sslerr_legacy.h \
-  /usr/include/openssl/prov_ssl.h \
-  /usr/include/openssl/ssl2.h \
-  /usr/include/openssl/ssl3.h \
-  /usr/include/openssl/tls1.h \
-  /usr/include/openssl/dtls1.h \
-  /usr/include/openssl/srtp.h \
-  ../models/WebsocketClient.h \
-  ../utilities/json_utilities.h \
-  /usr/include/cjson/cJSON.h \
-  ../utilities/http_utilities.h \
-  ../models/session.h \
-  ../models/User.h \
-  ../models/Socket.h \
-  /usr/include/x86_64-linux-gnu/sys/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
-  /usr/include/x86_64-linux-gnu/bits/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/socket_type.h \
-  /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
-  /usr/include/x86_64-linux-gnu/asm/socket.h \
-  /usr/include/asm-generic/socket.h \
-  /usr/include/linux/posix_types.h \
-  /usr/include/linux/stddef.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
-  /usr/include/asm-generic/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
-  /usr/include/asm-generic/bitsperlong.h \
-  /usr/include/x86_64-linux-gnu/asm/sockios.h \
-  /usr/include/asm-generic/sockios.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
-  ../models/websocket.h
-
-CMakeFiles/home-server.dir/routes/life-of-sounds/POST/post_websocket_session.c.o: ../routes/life-of-sounds/POST/post_websocket_session.c \
-  /usr/include/stdc-predef.h \
-  /usr/include/openssl/ssl.h \
-  /usr/include/openssl/macros.h \
-  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
-  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
-  /usr/include/openssl/opensslv.h \
-  /usr/include/openssl/e_os2.h \
-  /usr/include/inttypes.h \
-  /usr/include/features.h \
-  /usr/include/features-time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
-  /usr/include/x86_64-linux-gnu/bits/timesize.h \
-  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
-  /usr/include/x86_64-linux-gnu/bits/long-double.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
-  /usr/include/stdint.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/openssl/comp.h \
-  /usr/include/openssl/crypto.h \
-  /usr/include/stdlib.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
-  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/alloca.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/stdio.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/openssl/safestack.h \
-  /usr/include/openssl/stack.h \
-  /usr/include/openssl/types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
-  /usr/include/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/linux/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/openssl/cryptoerr.h \
-  /usr/include/openssl/symhacks.h \
-  /usr/include/openssl/cryptoerr_legacy.h \
-  /usr/include/openssl/core.h \
-  /usr/include/pthread.h \
-  /usr/include/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
-  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
-  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
-  /usr/include/openssl/comperr.h \
-  /usr/include/openssl/bio.h \
-  /usr/include/openssl/bioerr.h \
-  /usr/include/openssl/x509.h \
-  /usr/include/openssl/buffer.h \
-  /usr/include/openssl/buffererr.h \
-  /usr/include/openssl/evp.h \
-  /usr/include/openssl/core_dispatch.h \
-  /usr/include/openssl/evperr.h \
-  /usr/include/openssl/params.h \
-  /usr/include/openssl/bn.h \
-  /usr/include/openssl/bnerr.h \
-  /usr/include/openssl/objects.h \
-  /usr/include/openssl/obj_mac.h \
-  /usr/include/openssl/asn1.h \
-  /usr/include/openssl/asn1err.h \
-  /usr/include/openssl/objectserr.h \
-  /usr/include/openssl/ec.h \
-  /usr/include/string.h \
-  /usr/include/strings.h \
-  /usr/include/openssl/ecerr.h \
-  /usr/include/openssl/rsa.h \
-  /usr/include/openssl/rsaerr.h \
-  /usr/include/openssl/dsa.h \
-  /usr/include/openssl/dh.h \
-  /usr/include/openssl/dherr.h \
-  /usr/include/openssl/dsaerr.h \
-  /usr/include/openssl/sha.h \
-  /usr/include/openssl/x509err.h \
-  /usr/include/openssl/x509_vfy.h \
-  /usr/include/openssl/lhash.h \
-  /usr/include/openssl/pkcs7.h \
-  /usr/include/openssl/pkcs7err.h \
-  /usr/include/openssl/ocsp.h \
-  /usr/include/openssl/http.h \
-  /usr/include/openssl/conf.h \
-  /usr/include/openssl/conferr.h \
-  /usr/include/openssl/conftypes.h \
-  /usr/include/openssl/x509v3.h \
-  /usr/include/openssl/x509v3err.h \
-  /usr/include/openssl/ocsperr.h \
-  /usr/include/openssl/pem.h \
-  /usr/include/openssl/pemerr.h \
-  /usr/include/openssl/hmac.h \
-  /usr/include/openssl/async.h \
-  /usr/include/openssl/asyncerr.h \
-  /usr/include/openssl/ct.h \
-  /usr/include/openssl/cterr.h \
-  /usr/include/openssl/sslerr.h \
-  /usr/include/openssl/sslerr_legacy.h \
-  /usr/include/openssl/prov_ssl.h \
-  /usr/include/openssl/ssl2.h \
-  /usr/include/openssl/ssl3.h \
-  /usr/include/openssl/tls1.h \
-  /usr/include/openssl/dtls1.h \
-  /usr/include/openssl/srtp.h \
-  ../models/Invitation.h \
-  ../models/WebsocketClient.h \
-  ../utilities/json_utilities.h \
-  /usr/include/cjson/cJSON.h \
-  ../utilities/http_utilities.h \
-  ../models/session.h \
-  ../models/User.h \
-  ../models/Socket.h \
-  /usr/include/x86_64-linux-gnu/sys/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
-  /usr/include/x86_64-linux-gnu/bits/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/socket_type.h \
-  /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
-  /usr/include/x86_64-linux-gnu/asm/socket.h \
-  /usr/include/asm-generic/socket.h \
-  /usr/include/linux/posix_types.h \
-  /usr/include/linux/stddef.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
-  /usr/include/asm-generic/posix_types.h \
-  /usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
-  /usr/include/asm-generic/bitsperlong.h \
-  /usr/include/x86_64-linux-gnu/asm/sockios.h \
-  /usr/include/asm-generic/sockios.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
-  ../models/websocket.h
+  /usr/include/netdb.h \
+  /usr/include/rpc/netdb.h \
+  /usr/include/x86_64-linux-gnu/bits/netdb.h \
+  /usr/include/unistd.h \
+  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
+  /usr/include/x86_64-linux-gnu/bits/environments.h \
+  /usr/include/x86_64-linux-gnu/bits/confname.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
+  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
+  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h
 
 CMakeFiles/home-server.dir/routes/route.c.o: ../routes/route.c \
   /usr/include/stdc-predef.h \
@@ -4906,20 +2020,6 @@ CMakeFiles/home-server.dir/routes/route.c.o: ../routes/route.c \
   /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
   /usr/include/x86_64-linux-gnu/bits/floatn.h \
   /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/openssl/ssl.h \
-  /usr/include/openssl/macros.h \
-  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
-  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
-  /usr/include/openssl/opensslv.h \
-  /usr/include/openssl/e_os2.h \
-  /usr/include/inttypes.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
-  /usr/include/stdint.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/openssl/comp.h \
-  /usr/include/openssl/crypto.h \
   /usr/include/stdlib.h \
   /usr/include/x86_64-linux-gnu/bits/waitflags.h \
   /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
@@ -4928,6 +2028,7 @@ CMakeFiles/home-server.dir/routes/route.c.o: ../routes/route.c \
   /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
   /usr/include/endian.h \
   /usr/include/x86_64-linux-gnu/bits/endian.h \
   /usr/include/x86_64-linux-gnu/bits/endianness.h \
@@ -4947,12 +2048,27 @@ CMakeFiles/home-server.dir/routes/route.c.o: ../routes/route.c \
   /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
   /usr/include/alloca.h \
   /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/string.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/strings.h \
+  /usr/include/openssl/ssl.h \
+  /usr/include/openssl/macros.h \
+  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
+  /usr/include/x86_64-linux-gnu/openssl/configuration.h \
+  /usr/include/openssl/opensslv.h \
+  /usr/include/openssl/e_os2.h \
+  /usr/include/inttypes.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
+  /usr/include/stdint.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/openssl/comp.h \
+  /usr/include/openssl/crypto.h \
   /usr/include/time.h \
   /usr/include/x86_64-linux-gnu/bits/time.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
   /usr/include/openssl/safestack.h \
   /usr/include/openssl/stack.h \
   /usr/include/openssl/types.h \
@@ -4994,8 +2110,6 @@ CMakeFiles/home-server.dir/routes/route.c.o: ../routes/route.c \
   /usr/include/openssl/asn1err.h \
   /usr/include/openssl/objectserr.h \
   /usr/include/openssl/ec.h \
-  /usr/include/string.h \
-  /usr/include/strings.h \
   /usr/include/openssl/ecerr.h \
   /usr/include/openssl/rsa.h \
   /usr/include/openssl/rsaerr.h \
@@ -5050,45 +2164,10 @@ CMakeFiles/home-server.dir/routes/route.c.o: ../routes/route.c \
   /usr/include/x86_64-linux-gnu/asm/sockios.h \
   /usr/include/asm-generic/sockios.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
-  ../models/websocket.h \
   ../routes/route.h \
-  ../models/Invitation.h \
   ../utilities/http_utilities.h \
-  ../routes/database-server/POST/post_frame.h \
-  ../models/FrameField.h \
-  ../routes/life-of-sounds/POST/post_user.h \
-  ../routes/life-of-sounds/POST/login.h \
-  ../routes/life-of-sounds/POST/post_websocket_session.h \
-  ../routes/life-of-sounds/POST/post_websocket_client.h \
-  ../routes/life-of-sounds/GET/get_websocket_client.h \
-  ../routes/life-of-sounds/POST/post_audio.h \
-  ../routes/life-of-sounds/POST/post_browser_session.h \
-  ../routes/life-of-sounds/GET/new_login.h \
-  ../routes/life-of-sounds/GET/studio.h \
-  ../routes/life-of-sounds/GET/get_live_page.h \
-  ../routes/life-of-sounds/GET/get_web_audio_api_script.h \
-  ../routes/life-of-sounds/GET/get_game_of_life_script.h \
-  ../routes/life-of-sounds/GET/data_page.h \
-  ../routes/life-of-sounds/GET/get_recordings_page.h \
-  ../routes/life-of-sounds/GET/get_data_table.h \
-  ../routes/life-of-sounds/GET/get_session_messages.h \
-  ../routes/life-of-sounds/GET/get_websocket_script.h \
-  ../routes/life-of-sounds/GET/get_html_utilities_script.h \
-  ../routes/life-of-sounds/PATCH/patch_websocket_client.h \
-  ../routes/life-of-sounds/PATCH/patch_browser_session.h \
-  ../routes/life-of-sounds/PATCH/patch_websocket_session.h \
-  ../routes/life-of-sounds/GET/get_audio.h \
-  ../routes/life-of-sounds/GET/get_audio_blob.h \
-  ../routes/life-of-sounds/GET/sessioninfo.h \
-  ../routes/life-of-sounds/DELETE/sessioninfo.h \
-  ../routes/life-of-sounds/DELETE/delete_websocket_session.h \
-  ../routes/life-of-sounds/GET/home.h \
-  ../routes/life-of-sounds/GET/websocket_protocol.h \
-  ../routes/life-of-sounds/GET/get_user.h \
-  ../utilities/json_utilities.h \
-  /usr/include/cjson/cJSON.h \
-  ../models/User.h \
-  ../routes/life-of-sounds/GET/login.h
+  ../routes/local-server/GET/get_local_server.h \
+  ../routes/local-server/POST/post_local_server.h
 
 CMakeFiles/home-server.dir/server/read_message.c.o: ../server/read_message.c \
   /usr/include/stdc-predef.h \
@@ -5272,6 +2351,8 @@ CMakeFiles/home-server.dir/server/read_message.c.o: ../server/read_message.c \
   /usr/include/netinet/in.h \
   /usr/include/x86_64-linux-gnu/bits/in.h \
   ../models/Websocket_Message.h \
+  ../models/websocket.h \
+  ../routes/local-server/POST/post_local_server.h \
   /usr/include/unistd.h \
   /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
   /usr/include/x86_64-linux-gnu/bits/environments.h \
@@ -5490,9 +2571,7 @@ CMakeFiles/home-server.dir/server/send_message.c.o: ../server/send_message.c \
 
 CMakeFiles/home-server.dir/server/server.c.o: ../server/server.c \
   /usr/include/stdc-predef.h \
-  /usr/include/cjson/cJSON.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
-  /usr/include/pthread.h \
+  /usr/include/arpa/inet.h \
   /usr/include/features.h \
   /usr/include/features-time64.h \
   /usr/include/x86_64-linux-gnu/bits/wordsize.h \
@@ -5501,49 +2580,38 @@ CMakeFiles/home-server.dir/server/server.c.o: ../server/server.c \
   /usr/include/x86_64-linux-gnu/bits/long-double.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/include/sched.h \
+  /usr/include/netinet/in.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
   /usr/include/x86_64-linux-gnu/bits/types.h \
   /usr/include/x86_64-linux-gnu/bits/typesizes.h \
   /usr/include/x86_64-linux-gnu/bits/time64.h \
+  /usr/include/x86_64-linux-gnu/sys/socket.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
+  /usr/include/x86_64-linux-gnu/bits/socket.h \
+  /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
+  /usr/include/endian.h \
   /usr/include/x86_64-linux-gnu/bits/endian.h \
   /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/sched.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
-  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+  /usr/include/x86_64-linux-gnu/sys/select.h \
+  /usr/include/x86_64-linux-gnu/bits/select.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
   /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
   /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
   /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
   /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
-  /usr/include/x86_64-linux-gnu/sys/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
-  /usr/include/x86_64-linux-gnu/bits/socket.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
   /usr/include/x86_64-linux-gnu/bits/socket_type.h \
   /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
   /usr/include/x86_64-linux-gnu/asm/socket.h \
@@ -5558,24 +2626,19 @@ CMakeFiles/home-server.dir/server/server.c.o: ../server/server.c \
   /usr/include/x86_64-linux-gnu/asm/sockios.h \
   /usr/include/asm-generic/sockios.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
-  /usr/include/stdlib.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/alloca.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/stdio.h \
-  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  ../models/Socket.h \
+  /usr/include/x86_64-linux-gnu/bits/in.h \
+  /usr/include/errno.h \
+  /usr/include/x86_64-linux-gnu/bits/errno.h \
+  /usr/include/linux/errno.h \
+  /usr/include/x86_64-linux-gnu/asm/errno.h \
+  /usr/include/asm-generic/errno.h \
+  /usr/include/asm-generic/errno-base.h \
+  /usr/include/x86_64-linux-gnu/bits/types/error_t.h \
+  /usr/include/netdb.h \
+  /usr/include/rpc/netdb.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigevent_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__sigval_t.h \
+  /usr/include/x86_64-linux-gnu/bits/netdb.h \
   /usr/include/openssl/ssl.h \
   /usr/include/openssl/macros.h \
   /usr/include/x86_64-linux-gnu/openssl/opensslconf.h \
@@ -5585,10 +2648,34 @@ CMakeFiles/home-server.dir/server/server.c.o: ../server/server.c \
   /usr/include/inttypes.h \
   /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h \
   /usr/include/stdint.h \
+  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
   /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
   /usr/include/openssl/comp.h \
   /usr/include/openssl/crypto.h \
+  /usr/include/stdlib.h \
+  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn.h \
+  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+  /usr/include/alloca.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+  /usr/include/time.h \
+  /usr/include/x86_64-linux-gnu/bits/time.h \
+  /usr/include/x86_64-linux-gnu/bits/timex.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+  /usr/include/stdio.h \
+  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
+  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
   /usr/include/openssl/safestack.h \
   /usr/include/openssl/stack.h \
   /usr/include/openssl/types.h \
@@ -5598,11 +2685,21 @@ CMakeFiles/home-server.dir/server/server.c.o: ../server/server.c \
   /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
   /usr/include/x86_64-linux-gnu/bits/local_lim.h \
   /usr/include/linux/limits.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
   /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
   /usr/include/openssl/cryptoerr.h \
   /usr/include/openssl/symhacks.h \
   /usr/include/openssl/cryptoerr_legacy.h \
   /usr/include/openssl/core.h \
+  /usr/include/pthread.h \
+  /usr/include/sched.h \
+  /usr/include/x86_64-linux-gnu/bits/sched.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
+  /usr/include/x86_64-linux-gnu/bits/cpu-set.h \
+  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
   /usr/include/openssl/comperr.h \
   /usr/include/openssl/bio.h \
   /usr/include/openssl/bioerr.h \
@@ -5659,25 +2756,25 @@ CMakeFiles/home-server.dir/server/server.c.o: ../server/server.c \
   /usr/include/openssl/tls1.h \
   /usr/include/openssl/dtls1.h \
   /usr/include/openssl/srtp.h \
-  ../routes/route.h \
-  ../server/server.h \
   /usr/include/poll.h \
   /usr/include/x86_64-linux-gnu/sys/poll.h \
   /usr/include/x86_64-linux-gnu/bits/poll.h \
-  /usr/include/netdb.h \
-  /usr/include/netinet/in.h \
-  /usr/include/x86_64-linux-gnu/bits/in.h \
-  /usr/include/rpc/netdb.h \
-  /usr/include/x86_64-linux-gnu/bits/netdb.h \
-  ../models/FrameField.h \
-  ../utilities/http_utilities.h \
-  ../utilities/json_utilities.h \
-  ../utilities/string_utilities.h \
-  ../models/User_Token.h \
-  ../server/send_message.h \
-  ../models/WebsocketClient.h \
-  ../server/read_message.h \
-  /usr/include/arpa/inet.h \
+  /usr/include/signal.h \
+  /usr/include/x86_64-linux-gnu/bits/signum-generic.h \
+  /usr/include/x86_64-linux-gnu/bits/signum-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sig_atomic_t.h \
+  /usr/include/x86_64-linux-gnu/bits/types/siginfo_t.h \
+  /usr/include/x86_64-linux-gnu/bits/siginfo-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/siginfo-consts.h \
+  /usr/include/x86_64-linux-gnu/bits/siginfo-consts-arch.h \
+  /usr/include/x86_64-linux-gnu/bits/types/sigval_t.h \
+  /usr/include/x86_64-linux-gnu/bits/sigevent-consts.h \
+  /usr/include/x86_64-linux-gnu/bits/sigaction.h \
+  /usr/include/x86_64-linux-gnu/bits/sigcontext.h \
+  /usr/include/x86_64-linux-gnu/bits/types/stack_t.h \
+  /usr/include/x86_64-linux-gnu/sys/ucontext.h \
+  /usr/include/x86_64-linux-gnu/bits/sigstack.h \
+  /usr/include/x86_64-linux-gnu/bits/sigstksz.h \
   /usr/include/unistd.h \
   /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
   /usr/include/x86_64-linux-gnu/bits/environments.h \
@@ -5685,13 +2782,16 @@ CMakeFiles/home-server.dir/server/server.c.o: ../server/server.c \
   /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
   /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
   /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
-  /usr/include/openssl/err.h \
-  /usr/include/errno.h \
-  /usr/include/x86_64-linux-gnu/bits/errno.h \
-  /usr/include/linux/errno.h \
-  /usr/include/x86_64-linux-gnu/asm/errno.h \
-  /usr/include/asm-generic/errno.h \
-  /usr/include/asm-generic/errno-base.h
+  /usr/include/linux/close_range.h \
+  /usr/include/x86_64-linux-gnu/bits/ss_flags.h \
+  /usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h \
+  /usr/include/x86_64-linux-gnu/bits/sigthread.h \
+  /usr/include/x86_64-linux-gnu/bits/signal_ext.h \
+  ../models/Socket.h \
+  ../utilities/http_utilities.h \
+  ../server/read_message.h \
+  ../routes/route.h \
+  ../server/server.h
 
 CMakeFiles/home-server.dir/utilities/http_utilities.c.o: ../utilities/http_utilities.c \
   /usr/include/stdc-predef.h \
@@ -6115,49 +3215,25 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 ../utilities/http_utilities.c:
 
-../server/server.c:
+../server/read_message.h:
 
-../server/send_message.c:
+/usr/include/x86_64-linux-gnu/bits/sigthread.h:
 
-/usr/include/asm-generic/errno-base.h:
+/usr/include/linux/close_range.h:
 
-/usr/include/x86_64-linux-gnu/asm/errno.h:
+/usr/include/x86_64-linux-gnu/sys/ucontext.h:
 
-/usr/include/linux/errno.h:
+/usr/include/x86_64-linux-gnu/bits/sigcontext.h:
 
-/usr/include/x86_64-linux-gnu/bits/errno.h:
+/usr/include/x86_64-linux-gnu/bits/sigaction.h:
 
-/usr/include/errno.h:
+/usr/include/x86_64-linux-gnu/bits/sigevent-consts.h:
 
-/usr/include/x86_64-linux-gnu/bits/unistd_ext.h:
+/usr/include/x86_64-linux-gnu/bits/siginfo-consts-arch.h:
 
-/usr/include/x86_64-linux-gnu/bits/getopt_core.h:
+/usr/include/x86_64-linux-gnu/bits/siginfo-consts.h:
 
-/usr/include/x86_64-linux-gnu/bits/environments.h:
-
-/usr/include/x86_64-linux-gnu/bits/posix_opt.h:
-
-/usr/include/openssl/randerr.h:
-
-/usr/include/unistd.h:
-
-../routes/life-of-sounds/GET/login.h:
-
-../routes/life-of-sounds/GET/home.h:
-
-../routes/life-of-sounds/DELETE/delete_websocket_session.h:
-
-../routes/life-of-sounds/DELETE/sessioninfo.h:
-
-../routes/life-of-sounds/GET/get_audio_blob.h:
-
-../routes/life-of-sounds/GET/get_audio.h:
-
-../routes/life-of-sounds/GET/get_session_messages.h:
-
-../routes/life-of-sounds/GET/get_recordings_page.h:
-
-../routes/life-of-sounds/GET/get_game_of_life_script.h:
+/usr/include/x86_64-linux-gnu/bits/siginfo-arch.h:
 
 /usr/include/openssl/symhacks.h:
 
@@ -6167,39 +3243,33 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/x86_64-linux-gnu/openssl/opensslconf.h:
 
+/usr/include/x86_64-linux-gnu/bits/signum-arch.h:
+
+/usr/include/x86_64-linux-gnu/bits/errno.h:
+
 /usr/include/x86_64-linux-gnu/bits/fcntl.h:
 
 /usr/include/openssl/asn1.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h:
 
-../routes/life-of-sounds/GET/sessioninfo.h:
-
 /usr/include/x86_64-linux-gnu/bits/in.h:
 
-/usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h:
-
 ../models/Socket.c:
+
+../routes/local-server/GET/get_local_server.h:
 
 ../server/server.h:
 
 /usr/include/openssl/pem.h:
 
-/usr/include/x86_64-linux-gnu/bits/confname.h:
-
-../models/websocket.c:
+/usr/include/asm-generic/errno-base.h:
 
 /usr/include/linux/stddef.h:
-
-../routes/life-of-sounds/GET/get_websocket_script.h:
 
 /usr/include/linux/posix_types.h:
 
 /usr/include/x86_64-linux-gnu/asm/bitsperlong.h:
-
-/usr/include/openssl/err.h:
-
-/usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h:
 
 /usr/include/x86_64-linux-gnu/bits/sockaddr.h:
 
@@ -6219,7 +3289,9 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/netinet/in.h:
 
-../routes/life-of-sounds/GET/get_user.c:
+/usr/include/x86_64-linux-gnu/bits/posix1_lim.h:
+
+../main.c:
 
 /usr/include/x86_64-linux-gnu/bits/stdint-intn.h:
 
@@ -6229,19 +3301,17 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/openssl/comp.h:
 
-../routes/database-server/POST/post_frame.h:
-
 /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h:
 
 /usr/include/openssl/x509_vfy.h:
-
-/usr/include/x86_64-linux-gnu/bits/stdio_lim.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h:
 
 ../models/User_Token.c:
+
+/usr/include/signal.h:
 
 /usr/include/strings.h:
 
@@ -6253,7 +3323,11 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/stdio.h:
 
+/usr/include/x86_64-linux-gnu/bits/sigstack.h:
+
 /usr/include/openssl/ct.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h:
 
@@ -6265,7 +3339,7 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/linux/limits.h:
 
-../routes/life-of-sounds/GET/websocket_protocol.c:
+/usr/include/x86_64-linux-gnu/bits/types/sigval_t.h:
 
 /usr/include/mysql/errmsg.h:
 
@@ -6281,15 +3355,13 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/stdc-predef.h:
 
-../routes/life-of-sounds/POST/login.h:
-
 /usr/include/x86_64-linux-gnu/bits/typesizes.h:
 
 /usr/include/x86_64-linux-gnu/sys/types.h:
 
 /usr/include/openssl/dherr.h:
 
-../routes/life-of-sounds/POST/post_audio.h:
+/usr/include/x86_64-linux-gnu/sys/cdefs.h:
 
 /usr/include/stdint.h:
 
@@ -6301,23 +3373,37 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/openssl/ssl2.h:
 
+/usr/include/x86_64-linux-gnu/bits/signum-generic.h:
+
 /usr/include/mysql/client_plugin.h:
 
 /usr/include/openssl/opensslv.h:
 
 /usr/include/x86_64-linux-gnu/bits/stdlib-float.h:
 
-../routes/life-of-sounds/PATCH/patch_websocket_session.h:
-
 /usr/include/x86_64-linux-gnu/bits/uintn-identity.h:
+
+/usr/include/openssl/randerr.h:
+
+/usr/include/unistd.h:
+
+../routes/local-server/GET/get_local_server.c:
 
 /usr/include/openssl/types.h:
 
 /usr/include/x86_64-linux-gnu/bits/wchar.h:
 
+/usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h:
+
+../models/Blob.h:
+
 /usr/include/inttypes.h:
 
 /usr/include/mysql/mysql.h:
+
+/usr/include/x86_64-linux-gnu/asm/sockios.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/__FILE.h:
 
 /usr/include/asm-generic/bitsperlong.h:
 
@@ -6345,39 +3431,23 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h:
 
-../routes/life-of-sounds/GET/get_web_audio_api_script.h:
+/usr/include/linux/errno.h:
+
+/usr/include/x86_64-linux-gnu/bits/timesize.h:
 
 /usr/include/openssl/macros.h:
-
-/usr/include/asm-generic/errno.h:
-
-/usr/include/mysql/mysql_version.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h:
 
 ../routes/route.h:
 
 /usr/include/rpc/netdb.h:
 
-../routes/life-of-sounds/GET/new_login.c:
-
 /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h:
-
-../routes/life-of-sounds/GET/websocket_protocol.h:
 
 /usr/include/x86_64-linux-gnu/bits/floatn.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h:
 
-/usr/include/asm-generic/socket.h:
-
 /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h:
-
-/usr/include/x86_64-linux-gnu/bits/getopt_posix.h:
-
-/usr/include/time.h:
-
-/usr/include/x86_64-linux-gnu/bits/setjmp.h:
 
 /usr/include/x86_64-linux-gnu/bits/local_lim.h:
 
@@ -6392,8 +3462,6 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 /usr/include/x86_64-linux-gnu/bits/select.h:
 
 /usr/include/openssl/cryptoerr_legacy.h:
-
-../routes/life-of-sounds/GET/get_user.h:
 
 /usr/include/x86_64-linux-gnu/bits/long-double.h:
 
@@ -6411,6 +3479,8 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h:
 
+/usr/include/x86_64-linux-gnu/asm/errno.h:
+
 /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h:
 
 /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h:
@@ -6420,10 +3490,6 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 /usr/include/x86_64-linux-gnu/asm/posix_types.h:
 
 /usr/include/openssl/cryptoerr.h:
-
-/usr/include/x86_64-linux-gnu/bits/timesize.h:
-
-../routes/life-of-sounds/GET/get_session_messages.c:
 
 /usr/include/uuid/uuid.h:
 
@@ -6439,11 +3505,13 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/openssl/bnerr.h:
 
+/usr/include/x86_64-linux-gnu/bits/struct_mutex.h:
+
+/usr/include/openssl/cterr.h:
+
 /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h:
 
 /usr/include/x86_64-linux-gnu/bits/socket_type.h:
-
-../routes/life-of-sounds/DELETE/delete_websocket_session.c:
 
 /usr/include/mysql/field_types.h:
 
@@ -6455,11 +3523,15 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/openssl/buffererr.h:
 
+/usr/include/mysql/my_compress.h:
+
 /usr/include/mysql/udf_registration_types.h:
 
 ../database/SQL.h:
 
-../routes/life-of-sounds/GET/get_web_audio_api_script.c:
+../models/websocket.c:
+
+/usr/include/x86_64-linux-gnu/bits/confname.h:
 
 /usr/include/mysql/my_list.h:
 
@@ -6467,19 +3539,19 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/openssl/srtp.h:
 
-../routes/life-of-sounds/PATCH/patch_websocket_session.c:
-
 /usr/include/x86_64-linux-gnu/bits/endian.h:
 
 ../models/User_Token.h:
 
+/usr/include/x86_64-linux-gnu/bits/waitstatus.h:
+
 /usr/include/x86_64-linux-gnu/bits/floatn-common.h:
+
+/usr/include/x86_64-linux-gnu/bits/getopt_core.h:
 
 /usr/include/pthread.h:
 
 /usr/include/sched.h:
-
-../routes/life-of-sounds/GET/get_game_of_life_script.c:
 
 ../utilities/string_utilities.h:
 
@@ -6499,8 +3571,6 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/openssl/comperr.h:
 
-../routes/life-of-sounds/GET/new_login.h:
-
 ../models/Frame.h:
 
 /usr/include/openssl/bio.h:
@@ -6509,8 +3579,6 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/openssl/bioerr.h:
 
-../routes/life-of-sounds/PATCH/patch_browser_session.h:
-
 /usr/include/openssl/lhash.h:
 
 /usr/include/openssl/evp.h:
@@ -6518,8 +3586,6 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 ../models/User.c:
 
 /usr/include/openssl/evperr.h:
-
-../routes/life-of-sounds/GET/get_data_table.h:
 
 /usr/include/alloca.h:
 
@@ -6535,6 +3601,10 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/openssl/obj_mac.h:
 
+/usr/include/x86_64-linux-gnu/bits/ss_flags.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/sig_atomic_t.h:
+
 /usr/include/openssl/asn1err.h:
 
 /usr/include/openssl/ec.h:
@@ -6547,17 +3617,25 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/openssl/ocsp.h:
 
+/usr/include/errno.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/__sigval_t.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/siginfo_t.h:
+
 /usr/include/openssl/sha.h:
 
 /usr/include/openssl/x509err.h:
 
+/usr/include/time.h:
+
+/usr/include/x86_64-linux-gnu/bits/setjmp.h:
+
+/usr/include/x86_64-linux-gnu/bits/getopt_posix.h:
+
 /usr/include/openssl/pkcs7.h:
 
-../routes/life-of-sounds/GET/data_page.h:
-
 /usr/include/openssl/conf.h:
-
-../routes/life-of-sounds/POST/post_user.c:
 
 /usr/include/openssl/conferr.h:
 
@@ -6575,8 +3653,6 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/openssl/ocsperr.h:
 
-../routes/life-of-sounds/GET/get_html_utilities_script.h:
-
 /usr/include/openssl/hmac.h:
 
 /usr/include/openssl/async.h:
@@ -6587,17 +3663,17 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/openssl/asyncerr.h:
 
+/usr/include/x86_64-linux-gnu/bits/types/stack_t.h:
+
 /usr/include/x86_64-linux-gnu/openssl/configuration.h:
 
 /usr/include/openssl/sslerr_legacy.h:
 
-/usr/include/mysql/my_compress.h:
-
-../routes/life-of-sounds/GET/studio.h:
-
 /usr/include/openssl/prov_ssl.h:
 
 /usr/include/x86_64-linux-gnu/bits/stat.h:
+
+/usr/include/x86_64-linux-gnu/bits/sigstksz.h:
 
 /usr/include/openssl/ssl3.h:
 
@@ -6605,11 +3681,9 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/openssl/tls1.h:
 
-/usr/include/x86_64-linux-gnu/bits/posix1_lim.h:
+/usr/include/x86_64-linux-gnu/sys/poll.h:
 
-../main.c:
-
-../routes/life-of-sounds/POST/post_browser_session.h:
+../server/read_message.c:
 
 /usr/include/asm-generic/posix_types.h:
 
@@ -6617,9 +3691,21 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 /usr/include/x86_64-linux-gnu/bits/poll.h:
 
+/usr/include/x86_64-linux-gnu/bits/signal_ext.h:
+
 /usr/include/openssl/pemerr.h:
 
 ../models/Socket.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/sigevent_t.h:
+
+../models/Blob.c:
+
+../models/User.h:
+
+/usr/include/x86_64-linux-gnu/sys/time.h:
 
 /usr/include/openssl/params.h:
 
@@ -6631,13 +3717,9 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 ../models/Invitation.c:
 
-../routes/life-of-sounds/POST/login.c:
-
 /usr/include/x86_64-linux-gnu/bits/netdb.h:
 
 ../models/Invitation.h:
-
-../models/User.h:
 
 ../models/WebsocketClient.h:
 
@@ -6653,58 +3735,42 @@ CMakeFiles/home-server.dir/utilities/string_utilities.c.o: ../utilities/string_u
 
 ../models/websocket.h:
 
-../routes/database-server/POST/post_frame.c:
+/usr/include/x86_64-linux-gnu/bits/posix_opt.h:
 
-../routes/life-of-sounds/GET/get_html_utilities_script.c:
+/usr/include/x86_64-linux-gnu/bits/environments.h:
 
-/usr/include/x86_64-linux-gnu/bits/waitstatus.h:
+/usr/include/x86_64-linux-gnu/bits/unistd_ext.h:
 
-../routes/life-of-sounds/GET/get_live_page.c:
+/usr/include/asm-generic/socket.h:
 
-../server/read_message.c:
-
-/usr/include/x86_64-linux-gnu/sys/poll.h:
-
-../routes/life-of-sounds/GET/get_websocket_client.c:
-
-../server/read_message.h:
-
-../routes/life-of-sounds/GET/home.c:
-
-../routes/life-of-sounds/GET/login.c:
-
-/usr/include/x86_64-linux-gnu/sys/time.h:
-
-../routes/life-of-sounds/PATCH/patch_browser_session.c:
-
-/usr/include/x86_64-linux-gnu/bits/struct_mutex.h:
-
-/usr/include/openssl/cterr.h:
-
-../routes/life-of-sounds/PATCH/patch_websocket_client.c:
-
-../routes/life-of-sounds/POST/post_browser_session.c:
-
-../routes/life-of-sounds/PATCH/patch_websocket_client.h:
-
-../routes/life-of-sounds/POST/post_websocket_client.c:
-
-/usr/include/x86_64-linux-gnu/asm/sockios.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/__FILE.h:
-
-../routes/life-of-sounds/POST/post_websocket_session.c:
+../routes/local-server/POST/post_local_server.c:
 
 ../routes/route.c:
 
-../routes/life-of-sounds/POST/post_user.h:
+../routes/local-server/POST/post_local_server.h:
 
-/usr/include/x86_64-linux-gnu/sys/cdefs.h:
-
-../routes/life-of-sounds/POST/post_websocket_session.h:
+/usr/include/x86_64-linux-gnu/bits/xopen_lim.h:
 
 ../routes/life-of-sounds/POST/post_websocket_client.h:
 
-../routes/life-of-sounds/GET/get_websocket_client.h:
+/usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h:
 
-../routes/life-of-sounds/GET/get_live_page.h:
+/usr/include/openssl/err.h:
+
+/usr/include/mysql/mysql_version.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h:
+
+/usr/include/asm-generic/errno.h:
+
+../server/send_message.c:
+
+../server/server.c:
+
+/usr/include/x86_64-linux-gnu/bits/types/error_t.h:
+
+/usr/include/x86_64-linux-gnu/bits/stdio_lim.h:
+
+/usr/include/x86_64-linux-gnu/bits/timex.h:
+
+/usr/include/x86_64-linux-gnu/bits/uio_lim.h:

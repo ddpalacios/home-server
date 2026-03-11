@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: sans-serif;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100%;
+    background: #34495e;
+    color: white;
+    padding: 10px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+    overflow-y: auto;
+    z-index: 1000;
+  }
+
+  /* Wrapper pushes content to the right of the sidebar */
+  .content-wrapper {
+    margin-left: 250px; /* changed from margin-right */
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  .content {
+    flex: 1;
+    background: #f0f0f0;
+    padding: 20px;
+    overflow: auto;
+  }
+
+  .footer {
+    position: relative;
+    background: #2c3e50;
+    color: white;
+    height: 100px;
+    overflow: auto;
+  }
+
+  .resize-handle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 8px;
+    width: 100%;
+    cursor: ns-resize;
+    background: rgba(255, 255, 255, 0.2);
+  }
+</style>
+</head>
+<body>
+
+  <div class="sidebar" id="sidebar">
+    <h3>Sidebar</h3>
+    <button>Example Button</button>
+  </div>
+
+  <div class="content-wrapper">
+    <div class="content">
+      <h2>Main Content</h2>
+    </div>
+
+    <div class="footer" id="footer">
+      <div class="resize-handle" id="resizeHandle"></div>
+      <p>Resizable footer content here.</p>
+    </div>
+  </div>
+
+<script>
+  const footer = document.getElementById('footer');
+  const handle = document.getElementById('resizeHandle');
+
+  let isResizing = false;
+  let startY, startHeight;
+
+  handle.addEventListener('mousedown', e => {
+    isResizing = true;
+    startY = e.clientY;
+    startHeight = parseInt(window.getComputedStyle(footer).height, 10);
+    document.body.style.userSelect = 'none';
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!isResizing) return;
+    const dy = startY - e.clientY;
+    footer.style.height = `${startHeight + dy}px`;
+  });
+
+  document.addEventListener('mouseup', () => {
+    isResizing = false;
+    document.body.style.userSelect = '';
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,3 @@
+blob-storage/*
+!blob-storage/etl/
+!blob-storage/etl/**

@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Palacios Solutions – Data Automation & Reporting</title>
+
+<style>
+  @media (max-width: 700px) {
+  #who-we-help {
+    text-align: center;
+  }
+
+  #who-we-help > div:first-child {
+    flex: 1 1 100%;
+    min-width: 0 !important;
+    display: flex;
+    justify-content: center;
+  }
+
+  #who-we-help img {
+    width: 90%;
+    max-width: 360px;
+    height: auto;
+    object-fit: cover;
+  }
+}
+
+  /* Desktop: show table, hide mobile cards */
+.pricing-table-mobile {
+  display: none;
+}
+
+/* Mobile view */
+@media (max-width: 650px) {
+  .pricing-table-desktop {
+    display: none;
+  }
+
+  .pricing-table-mobile {
+    display: block;
+  }
+
+  .pricing-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 1.2em 1.4em;
+    margin-bottom: 1.2em;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+  }
+
+  .pricing-card h4 {
+    margin: 0 0 0.5em 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #14233b;
+  }
+
+  .pricing-card p {
+    font-size: 1.05rem;
+    color: #4a5568;
+    margin-bottom: 0.6em;
+    line-height: 1.5;
+  }
+
+  .pricing-card strong {
+    font-size: 1.15rem;
+    color: #2b6cb0;
+    font-weight: 700;
+  }
+}
+
+
+  /* Hide floating button on mobile */
+@media (max-width: 768px) {
+  .sticky-contact {
+    display: none !important;
+  }
+}
+
+
+  
+/* -------------------------------------------------------
+   GLOBAL STYLE RESET & THEME
+------------------------------------------------------- */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", "Segoe UI", Arial, Helvetica, sans-serif;
+  background: #f3f4f7;
+  color: #1a1a1a;
+  line-height: 1.65;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.container {
+  width: 92%;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* -------------------------------------------------------
+   COLOR SYSTEM
+------------------------------------------------------- */
+:root {
+  --primary: #2b6cb0;
+  --primary-dark: #1e4f86;
+  --primary-light: #dbe8f7;
+
+  --card-bg: #ffffff;
+  --border: #e2e8f0;
+
+  --text-main: #1a202c;
+  --text-muted: #4a5568;
+
+  --radius: 16px;
+  --shadow: 0 10px 35px rgba(0,0,0,0.08);
+}
+
+/* -------------------------------------------------------
+   HERO
+------------------------------------------------------- */
+.hero {
+  background: linear-gradient(135deg, #edf2f7, #ffffff);
+  border-radius: var(--radius);
+  padding: 4em 3em;
+  margin: 3em auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3em;
+  box-shadow: var(--shadow);
+}
+
+.hero-text {
+  flex: 1;
+  min-width: 300px;
+}
+
+.hero-text h1 {
+  font-size: 3.2rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 0.3em;
+}
+
+.hero-text h2 {
+  font-size: 1.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 1em;
+}
+
+.hero-text p {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  max-width: 600px;
+}
+
+.hero-image {
+  flex: 1;
+  text-align: center;
+}
+
+.hero-image img {
+  width: 95%;
+  max-width: 550px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  opacity: 0.9;
+}
+
+/* -------------------------------------------------------
+   SECTIONS
+------------------------------------------------------- */
+.section {
+  background: var(--card-bg);
+  padding: 3em 2.5em;
+  border-radius: var(--radius);
+  margin-bottom: 3em;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.section h3 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin-bottom: 0.5em;
+  color: var(--text-main);
+}
+
+.section ul {
+  margin-top: 1em;
+  padding-left: 1.2em;
+  font-size: 1.2rem;
+  color: var(--text-muted);
+}
+
+/* -------------------------------------------------------
+   CASE STUDIES
+------------------------------------------------------- */
+.case-studies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2em;
+}
+
+.case-study {
+  flex: 1;
+  min-width: 280px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.8em;
+  box-shadow: var(--shadow);
+  transition: transform 0.25s ease;
+}
+
+.case-study:hover {
+  transform: translateY(-6px);
+}
+
+.case-study img {
+  width: 100%;
+  border-radius: 12px;
+  margin-bottom: 1em;
+}
+
+.case-study h4 {
+  font-size: 1.45rem;
+  font-weight: 700;
+  margin-bottom: 0.5em;
+}
+
+.case-study p {
+  color: #4a5568;
+  font-size: 1.05rem;
+}
+
+/* -------------------------------------------------------
+   PRICING TABLE
+------------------------------------------------------- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.2em;
+  font-size: 1.15rem;
+}
+
+th, td {
+  padding: 1em;
+  border: 1px solid var(--border);
+}
+
+th {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  font-weight: 700;
+}
+
+/* -------------------------------------------------------
+   CTA BUTTON
+------------------------------------------------------- */
+.cta-button {
+  display: inline-block;
+  background: var(--primary);
+  color: #fff;
+  padding: 0.9em 2em;
+  font-size: 1.25rem;
+  border-radius: 12px;
+  margin-top: 1.8em;
+  box-shadow: 0 5px 18px rgba(43,108,176,0.25);
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.cta-button:hover {
+  background: var(--primary-dark);
+  transform: translateY(-3px);
+}
+
+/* -------------------------------------------------------
+   CONTACT FORM
+------------------------------------------------------- */
+#my-form input,
+#my-form textarea {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 1.1rem;
+}
+
+#send_button {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 1em 2em;
+  border-radius: 12px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  cursor: pointer;
+  width: 240px;
+  transition: background 0.25s ease;
+}
+
+#send_button:hover {
+  background: var(--primary-dark);
+}
+
+/* -------------------------------------------------------
+   STICKY CONTACT BUTTON
+------------------------------------------------------- */
+.sticky-contact {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #38a169;
+  color: #fff;
+  padding: 0.9em 1.5em;
+  border-radius: 40px;
+  font-weight: 700;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  z-index: 999;
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+
+.sticky-contact:hover {
+  transform: translateY(-3px);
+  background: #2f855a;
+}
+
+/* -------------------------------------------------------
+   RESPONSIVE
+------------------------------------------------------- */
+@media (max-width: 900px) {
+  .hero {
+    flex-direction: column-reverse;
+    text-align: center;
+    padding: 3em 2em;
+  }
+
+  .hero-text h1 {
+    font-size: 2.6rem;
+  }
+
+  .hero-text h2 {
+    font-size: 1.6rem;
+  }
+
+  .case-study {
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 500px) {
+  .hero-text h1 {
+    font-size: 2.1rem;
+  }
+
+  .hero-text h2 {
+    font-size: 1.35rem;
+  }
+
+  table {
+    font-size: 1rem;
+  }
+}
+
+/* Desktop nav shows only on screens above 900px */
+.desktop-nav {
+  display: flex;
+}
+
+.mobile-nav {
+  display: none;
+}
+
+/* Mobile nav activates below 900px */
+@media (max-width: 900px) {
+  .desktop-nav {
+    display: none !important;
+  }
+  .mobile-nav {
+    display: flex !important;
+  }
+}
+
+</style>
+</head>
+<body>
+<!-- ========================= NAVBAR ========================= -->
+<nav class="desktop-nav" style="
+  width:100%;
+  background:#ffffff;
+  border-bottom:1px solid #e2e8f0;
+  box-shadow:0 4px 15px rgba(0,0,0,0.05);
+  position:sticky;
+  top:0;
+  z-index:1000;
+">
+  <div class="container" style="
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:1em 0;
+  ">
+    <div style="font-size:1.5rem; font-weight:800; color:#2b6cb0;">
+      Palacios Solutions
+    </div>
+
+    <div style="display:flex; gap:2em; font-size:1.15rem;">
+      <a href="#who-we-help">Who We Help</a>
+      <a href="#automation">Automation</a>
+      <a href="#value">Value</a>
+      <a href="#case-studies">Case Studies</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#contact-form" style="color:#2b6cb0; font-weight:700;">Contact</a>
+    </div>
+  </div>
+</nav>
+<nav class="mobile-nav" style="
+  width:100%;
+  background:#ffffff;
+  border-bottom:1px solid #e2e8f0;
+  box-shadow:0 4px 12px rgba(0,0,0,0.05);
+  position:sticky;
+  top:0;
+  z-index:1000;
+  padding:1em;
+  justify-content:space-between;
+  align-items:center;
+">
+
+  <!-- Brand -->
+  <div style="font-size:1.4rem; font-weight:800; color:#2b6cb0;">
+    Palacios Solutions
+  </div>
+
+  <!-- Hamburger icon -->
+  <div id="mobile-menu-button" style="
+    font-size:2rem;
+    cursor:pointer;
+    user-select:none;
+  ">☰</div>
+</nav>
+
+<!-- Mobile dropdown menu -->
+<div id="mobile-menu" style="
+  display:none;
+  background:#ffffff;
+  border-bottom:1px solid #e2e8f0;
+  box-shadow:0 4px 15px rgba(0,0,0,0.08);
+  position:sticky;
+  top:60px;
+  z-index:999;
+  padding:1.2em;
+">
+  <a href="#who-we-help" style="display:block; padding:0.8em 0;">Who We Help</a>
+  <a href="#automation" style="display:block; padding:0.8em 0;">Automation</a>
+  <a href="#value" style="display:block; padding:0.8em 0;">Value</a>
+  <a href="#case-studies" style="display:block; padding:0.8em 0;">Case Studies</a>
+  <a href="#pricing" style="display:block; padding:0.8em 0;">Pricing</a>
+  <a href="#contact-form" style="display:block; padding:0.8em 0; color:#2b6cb0; font-weight:700;">Contact</a>
+</div>
+
+
+<!-- ========================= HERO ========================= -->
+<section class="hero container" style="padding:5em 3em; border-radius:20px;">
+
+  <div class="hero-text">
+
+    <!-- Modern Accent Badge -->
+    <div style="
+      display:inline-block;
+      background:linear-gradient(135deg, #2b6cb0, #4f9de8);
+      color:#fff;
+      padding:0.45em 1em;
+      border-radius:50px;
+      font-size:0.95rem;
+      font-weight:600;
+      margin-bottom:1.5em;
+      letter-spacing:0.5px;">
+      Automated Reporting • Zero Manual Work
+    </div>
+
+    <!-- Gradient Headline -->
+    <h1 style="
+      font-size:3.1rem;
+      font-weight:900;
+      line-height:1.30;
+      margin:0;
+      background:linear-gradient(135deg, #1a2b4e 0%, #3a7bd5 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;">
+      Automate Your Reporting & Unlock Real-Time Insights
+    </h1>
+
+    <!-- Modern Subheadline -->
+    <h2 style="
+      margin-top:1em;
+      font-size:1.55rem;
+      font-weight:500;
+      color:#4a5d73;">
+      Replace hours of spreadsheets with fully automated, refresh-ready data systems.
+    </h2>
+
+    <!-- Supporting Paragraph -->
+    <p style="
+      margin-top:1.2em;
+      font-size:1.2rem;
+      max-width:580px;
+      color:#5d6f85;">
+      We build end-to-end automation workflows that clean, refresh, transform, and deliver your reporting on a schedule —
+      giving you instant visibility into performance without any manual effort.
+    </p>
+
+    <!-- CTA Buttons -->
+    <div style="margin-top:2em; display:flex; gap:1em; flex-wrap:wrap;">
+      <a href="#contact-form" 
+         style="
+           background:#2b6cb0;
+           color:#fff;
+           padding:0.9em 1.8em;
+           border-radius:12px;
+           font-size:1.15rem;
+           font-weight:600;
+           box-shadow:0 8px 22px rgba(43,108,176,0.25);
+           transition:0.25s ease;">
+        Get a Free Assessment
+      </a>
+
+      <a href="#case-studies"
+         style="
+           padding:0.9em 1.8em;
+           border-radius:12px;
+           font-size:1.15rem;
+           font-weight:600;
+           background:#fff;
+           border:2px solid #d0d7e2;
+           color:#2b6cb0;
+           transition:0.25s ease;">
+        View Case Studies
+      </a>
+    </div>
+
+  </div>
+
+  <div class="hero-image">
+    <img src="/portfolio/images/main.png" alt="Data automation team" />
+  </div>
+
+</section>
+
+
+<!-- ========================= WHO WE HELP ========================= -->
+<section id="who-we-help" class="section container"
+         style="display:flex; flex-wrap:wrap; align-items:stretch; gap:3em; padding:3em; border-radius:20px;">
+
+  <!-- IMAGE -->
+  <div style="flex:1.2; min-width:330px; overflow:hidden; border-radius:16px;">
+    <img src="/portfolio/images/sales.png"
+         alt="Collaboration team"
+         style="width:100%; height:100%; object-fit:cover; display:block;">
+  </div>
+
+  <!-- TEXT -->
+  <div style="flex:1; min-width:280px; display:flex; flex-direction:column; justify-content:center;">
+
+    <!-- Accent Tag -->
+    <div style="
+      display:inline-block;
+      background:linear-gradient(135deg,#2b6cb0,#3f8de1);
+      color:#fff;
+      padding:0.45em 1em;
+      border-radius:40px;
+      font-size:0.9rem;
+      font-weight:600;
+      letter-spacing:0.4px;
+      margin-bottom:1.2em;">
+      Our Clients
+    </div>
+
+    <!-- Gradient Header -->
+    <h3 style="
+      margin:0 0 0.4em 0;
+      font-size:2rem;
+      font-weight:800;
+      background:linear-gradient(135deg,#1a2b4e,#3a7bd5);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;">
+      Who We Help
+    </h3>
+
+    <!-- Short Intro -->
+    <p style="color:#5d6f85; font-size:1.15rem; margin:0.5em 0 1.2em;">
+      We partner with teams that need clearer visibility, faster reporting, and automated systems they can rely on.
+    </p>
+
+    <!-- List -->
+    <ul style="color:#4a5568; font-size:1.2rem; line-height:1.7; padding-left:1.2em;">
+      <li>Business managers needing real performance visibility</li>
+      <li>Small business owners overwhelmed by manual reporting</li>
+      <li>Department leads responsible for KPIs, forecasting, and planning</li>
+      <li>Teams stuck in spreadsheet-heavy reporting cycles</li>
+    </ul>
+  </div>
+
+</section>
+
+
+<section id="automation" class="section container"
+         style="display:flex; flex-wrap:wrap; align-items:center; gap:3em; padding:3em; border-radius:20px;">
+
+  <!-- TEXT BLOCK -->
+  <div style="flex:1; min-width:300px;">
+
+    <!-- Accent Tag -->
+    <div style="
+      display:inline-block;
+      background:linear-gradient(135deg,#2b6cb0,#3f8de1);
+      color:#fff;
+      padding:0.45em 1em;
+      border-radius:40px;
+      font-size:0.9rem;
+      font-weight:600;
+      letter-spacing:0.4px;
+      margin-bottom:1.2em;">
+      Automation First
+    </div>
+
+    <!-- Gradient Header -->
+    <h3 style="
+      margin:0 0 0.4em 0;
+      font-size:2rem;
+      font-weight:800;
+      background:linear-gradient(135deg,#1a2b4e,#3a7bd5);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;">
+      How We Deliver Automation
+    </h3>
+
+    <!-- Intro Copy -->
+    <p style="font-size:1.15rem; color:#5d6f85; line-height:1.75; margin-top:1em;">
+      We design automated data workflows that eliminate manual reporting forever. Power Query and Power BI
+      act as the transformation engines — but the core service is automation, not licensing.
+    </p>
+
+    <p style="font-size:1.15rem; color:#5d6f85; margin-top:1em;">
+      If you prefer not to use Power BI licenses, we can still deliver fully automated outputs:
+    </p>
+
+    <!-- Bullet List -->
+    <ul style="font-size:1.15rem; color:#4a5568; line-height:1.75; padding-left:1.2em; margin-top:0.5em;">
+      <li>Static reports exported automatically</li>
+      <li>Automated Excel or CSV output files</li>
+      <li>PDF dashboards refreshed on schedule</li>
+      <li>Internal workflow automations (no BI viewer required)</li>
+    </ul>
+
+    <!-- Licensing Clarification -->
+    <p style="font-size:1.15rem; color:#5d6f85; margin-top:1.2em;">
+      For interactive dashboards, Power BI Pro is the most affordable and scalable option at $14/user/month.
+    </p>
+
+    <!-- Power BI Link -->
+    <p style="font-size:1rem; margin-top:0.6em;">
+      <a href="https://powerbi.microsoft.com" target="_blank" 
+         style="color:#1a73e8; text-decoration:none; font-weight:600;">
+        Learn more about Microsoft Power BI →
+      </a>
+    </p>
+  </div>
+
+  <!-- IMAGE BLOCK -->
+  <div style="flex:1; min-width:300px; overflow:hidden; border-radius:16px;">
+    <img src="/portfolio/images/auto.png"
+         alt="Automation workflow illustration"
+         style="width:100%; height:100%; object-fit:cover;">
+  </div>
+
+</section>
+
+<!-- ========================= VALUE DELIVERED ========================= -->
+<section id="value" class="section container"
+         style="display:flex; flex-wrap:wrap; align-items:stretch; gap:3em; padding:3em; border-radius:20px;">
+
+  <!-- IMAGE -->
+  <div style="flex:1; min-width:300px; overflow:hidden; border-radius:18px;">
+    <img src="/portfolio/images/team.png"
+         alt="Data value illustration"
+         style="width:100%; height:100%; object-fit:cover; display:block;">
+  </div>
+
+  <!-- TEXT CONTENT -->
+  <div style="flex:1; min-width:300px; display:flex; flex-direction:column; justify-content:center;">
+
+    <!-- Accent Tag -->
+    <div style="
+      display:inline-block;
+      background:linear-gradient(135deg,#3182ce,#63b3ed);
+      color:#fff;
+      padding:0.45em 1em;
+      border-radius:40px;
+      font-size:0.85rem;
+      font-weight:600;
+      letter-spacing:0.4px;
+      margin-bottom:1.2em;">
+      Impact
+    </div>
+
+    <!-- Gradient Title -->
+    <h3 style="
+      margin:0;
+      font-size:2rem;
+      font-weight:800;
+      background:linear-gradient(135deg,#1a2b4e,#3a7bd5);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      margin-bottom:1em;">
+      The Value We Deliver
+    </h3>
+
+    <!-- Bullet List -->
+    <ul style="color:#5b6b7f; font-size:1.2rem; line-height:1.75; padding-left:1.2em;">
+      <li><strong>Save Time:</strong> Automate the workflows that steal hours every week.</li>
+      <li><strong>Increase Clarity:</strong> Replace messy spreadsheets with a single source of truth.</li>
+      <li><strong>Make Faster Decisions:</strong> Real-time reporting means your team never waits for answers.</li>
+      <li><strong>Build Trust:</strong> Reliable data systems reduce errors, uncertainty, and rework.</li>
+    </ul>
+
+  </div>
+
+</section>
+
+
+
+
+
+
+<!-- ========================= CASE STUDIES ========================= -->
+<section id="case-studies" class="section container" style="padding:3.5em; border-radius:20px;">
+
+  <!-- Title -->
+  <div style="text-align:center; margin-bottom:2em; max-width:800px; margin-left:auto; margin-right:auto;">
+
+    <!-- Accent Tag -->
+    <div style="
+      display:inline-block;
+      background:linear-gradient(135deg,#2b6cb0,#63b3ed);
+      color:#fff;
+      padding:0.45em 1em;
+      border-radius:40px;
+      font-size:0.85rem;
+      font-weight:600;
+      letter-spacing:0.4px;
+      margin-bottom:1.2em;">
+      Real Results
+    </div>
+
+    <!-- Gradient Header -->
+    <h3 style="
+      margin:0;
+      font-size:2.3rem;
+      font-weight:800;
+      background:linear-gradient(135deg,#1a2b4e,#3a7bd5);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;">
+      Case Studies
+    </h3>
+
+    <p style="font-size:1.2rem; color:#5d6f85; margin-top:0.8em;">
+      A few examples of how automated reporting pipelines transformed operations, clarified decision-making, 
+      and eliminated hours of manual reporting.
+    </p>
+  </div>
+
+  <!-- ====================== CASE STUDY 1 ====================== -->
+<!-- EMPLOYEE UTILIZATION CASE STUDY -->
+<section class="section container"
+         style="
+           border-radius:20px; 
+           padding:2.5em;
+           box-shadow:0 8px 28px rgba(0,0,0,0.08);
+           margin-bottom:3em;
+           background:#ffffff;
+         ">
+
+  <h4 style="
+      font-size:1.9rem; 
+      font-weight:800; 
+      margin-bottom:1em; 
+      color:#14233b;
+      letter-spacing:-0.5px;
+      text-align:center;
+  ">
+    Employee Utilization Dashboard
+  </h4>
+
+  <!-- IMAGE TOP -->
+   <div style="
+  text-align:center;
+  font-size:0.95rem;
+  color:#6b7a90;
+  margin-top:0.6em;
+  font-style:italic;
+">
+  Click to enlarge image
+</div>
+
+  <div style="
+      width:100%;
+      border-radius:16px;
+      overflow:hidden;
+      background:#f9fbfe;
+      padding:1em;
+      margin-bottom:2em;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+  ">
+<img src="/portfolio/images/utilization.png"
+     alt="Employee Utilization Dashboard"
+     onclick="openImageModal(this.src)"
+     style="
+        width:100%;
+        height:auto;
+        max-height:700px;
+        object-fit:contain;
+        border-radius:14px;
+        cursor:pointer;
+        box-shadow:0 6px 20px rgba(0,0,0,0.06);
+     ">
+     
+
+  </div>
+
+  <!-- TEXT -->
+<div style="max-width:900px; margin:0 auto;">
+
+  <p style="color:#5a6b82; font-size:1.15rem; line-height:1.75; margin-bottom:1.1em;">
+    <strong style="color:#1f3c88;">Problem:</strong>
+    All employee time data came from <em>multiple unrelated software systems</em> — PTO, labor hours,
+    internal project time, and billable work — each using different structures, naming conventions,
+    and reporting rules.  
+    Managers could not reliably calculate utilization because nothing tied together cleanly,
+    and every report required heavy manual cleanup just to get a monthly snapshot.
+  </p>
+
+<p style="color:#5a6b82; font-size:1.15rem; line-height:1.75; margin-bottom:1.1em;">
+  <strong style="color:#1f3c88;">Solution:</strong>
+  Built a unified utilization model by:
+  <br>• integrating PTO systems, labor-hour exports, and internal project logs  
+  <br>• transforming inconsistent fields, timestamps, and employee identifiers  
+  <br>• engineering logic to classify all hours as <strong>billable vs. internal</strong>  
+  <br>• creating utilization, billable ratios, and capacity KPIs  
+  <br><br>
+  Power Query handled the semantic modeling, but the heavy ETL was automated through 
+  <strong>Azure Pipelines</strong>, which pulled, cleaned, merged, and delivered refreshed datasets 
+  on a daily schedule.
+</p>
+
+
+  <p style="color:#5a6b82; font-size:1.15rem; line-height:1.75;">
+    <strong style="color:#1f3c88;">Result:</strong>
+    Leadership finally has a reliable, real-time view of employee utilization — not just total hours,
+    but how much time is spent on <strong>billable work vs. internal or non-revenue activities</strong>.  
+    Managers can spot under-utilization earlier, adjust staffing proactively, and eliminate the hours
+    previously spent reconciling inconsistent time systems.
+  </p>
+
+</div>
+
+
+</section>
+
+<!-- NPS SURVEYS CASE STUDY -->
+<section class="section container"
+         style="
+           border-radius:20px; 
+           padding:2.5em;
+           box-shadow:0 8px 28px rgba(0,0,0,0.08);
+           margin-bottom:3em;
+           background:#ffffff;
+         ">
+
+  <h4 style="
+      font-size:1.9rem; 
+      font-weight:800; 
+      margin-bottom:1em; 
+      color:#14233b;
+      letter-spacing:-0.5px;
+      text-align:center;
+  ">
+    NPS Survey Analytics Automation
+  </h4>
+
+  <!-- IMAGE TOP -->
+   <div style="
+  text-align:center;
+  font-size:0.95rem;
+  color:#6b7a90;
+  margin-top:0.6em;
+  font-style:italic;
+">
+  Click to enlarge image
+</div>
+
+  <div style="
+      width:100%;
+      border-radius:16px;
+      overflow:hidden;
+      background:#f9fbfe;
+      padding:1em;
+      margin-bottom:2em;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+  ">
+    <img src="/portfolio/images/surveys.png"
+         alt="NPS Survey Dashboard"
+         onclick="openImageModal(this.src)"
+         style="
+            width:100%;
+            height:auto;
+            max-height:700px;
+            object-fit:contain;
+             cursor:pointer;
+            border-radius:14px;
+            box-shadow:0 6px 20px rgba(0,0,0,0.06);
+         ">
+  </div>
+
+  <!-- TEXT -->
+  <div style="max-width:900px; margin:0 auto;">
+
+    <p style="color:#5a6b82; font-size:1.15rem; line-height:1.75; margin-bottom:1.1em;">
+      <strong style="color:#1f3c88;">Problem:</strong>
+      The company collected customer feedback across multiple systems, including SQL and Cosmos DB.  
+      The data structure was inconsistent, messy, and difficult to interpret.  
+      Leaders had no unified view of customer sentiment and no reliable way to identify trends or drivers behind score changes.
+    </p>
+
+    <p style="color:#5a6b82; font-size:1.15rem; line-height:1.75; margin-bottom:1.1em;">
+      <strong style="color:#1f3c88;">Solution:</strong>
+      Built a complete automated ingestion pipeline that:
+      <br>• pulled survey responses from SQL and Cosmos  
+      <br>• cleaned and normalized the structures  
+      <br>• filtered the correct survey types  
+      <br>• transformed free-text answers into analyzable fields  
+      <br>• engineered NPS scores, sentiment, and segmentation  
+      All processed into a clean model ready for reporting.
+    </p>
+
+    <p style="color:#5a6b82; font-size:1.15rem; line-height:1.75;">
+      <strong style="color:#1f3c88;">Result:</strong>
+      The company gained a real-time, organization-wide NPS dashboard.  
+      Customer sentiment insights became visible daily, and leadership distributed the report to the entire company — improving transparency and accelerating responses to customer issues.  
+      Manual processing dropped by more than 90%.
+    </p>
+
+  </div>
+
+</section>
+
+
+<!-- SALES QUOTA TRACKER CASE STUDY -->
+<section class="section container"
+         style="
+           border-radius:20px; 
+           padding:2.5em;
+           box-shadow:0 8px 28px rgba(0,0,0,0.08);
+           margin-bottom:3em;
+           background:#ffffff;
+         ">
+
+  <h4 style="
+      font-size:1.9rem; 
+      font-weight:800; 
+      margin-bottom:1em; 
+      color:#14233b;
+      letter-spacing:-0.5px;
+      text-align:center;
+  ">
+    Sales Quota Performance Tracker
+  </h4>
+<div style="
+  text-align:center;
+  font-size:0.95rem;
+  color:#6b7a90;
+  margin-top:0.6em;
+  font-style:italic;
+">
+  Click to enlarge image
+</div>
+
+  <!-- IMAGE TOP -->
+  <div style="
+      width:100%;
+      border-radius:16px;
+      overflow:hidden;
+      background:#f9fbfe;
+      padding:1em;
+      margin-bottom:2em;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+  ">
+    <img src="/portfolio/images/salesdash.png"
+         alt="Sales Quota Tracker Dashboard"
+          onclick="openImageModal(this.src)"
+         style="
+            width:100%;
+            height:auto;
+            max-height:700px;
+            object-fit:contain;
+            border-radius:14px;
+             cursor:pointer;
+            box-shadow:0 6px 20px rgba(0,0,0,0.06);
+         ">
+  </div>
+
+  <!-- TEXT -->
+  <div style="max-width:900px; margin:0 auto;">
+
+<p style="color:#5a6b82; font-size:1.15rem; line-height:1.75; margin-bottom:1.1em;">
+  <strong style="color:#1f3c88;">Problem:</strong>
+  Sales performance data was scattered across multiple systems — phone activity logs, CRM exports, 
+  quota files, and pipeline tracking tools. None of these systems talked to each other.  
+  Managers were relying on manual spreadsheets without a reliable way to see how daily activity 
+  connected to quota attainment or pacing.
+</p>
+
+<p style="color:#5a6b82; font-size:1.15rem; line-height:1.75; margin-bottom:1.1em;">
+  <strong style="color:#1f3c88;">Solution:</strong>
+  Consolidated all sales activity sources into a unified dataset by:
+  <br>• integrating phone-call data, CRM opportunity stages, quota assignments, and rep activity logs  
+  <br>• normalizing inconsistent identifiers across systems  
+  <br>• aggregating daily activity into rep-level performance metrics  
+  <br>• engineering pacing logic, attainment calculations, and forecasting KPIs  
+  <br><br>
+  Azure Pipelines automated the ETL process, ensuring all sources refreshed together and fed a single 
+  clean model for quota tracking.
+</p>
+
+<p style="color:#5a6b82; font-size:1.15rem; line-height:1.75;">
+  <strong style="color:#1f3c88;">Result:</strong>
+  Sales leadership gained a real-time, unified view of performance, enabling earlier detection of 
+  underperformance and more accurate coaching. Manual reporting was eliminated entirely, and quota 
+  pacing became reliable for the first time.
+</p>
+
+
+  </div>
+
+</section>
+
+
+
+
+<!-- 
+  CASE STUDIES GRID
+  <div class="case-studies" style="margin-top:3em; gap:2.5em;">
+
+    <div class="case-study" style="border-radius:18px; padding:2em; border:1px solid #e2e8f0;">
+      <img src="/portfolio/images/utilization.png" alt="Employee Utilization Dashboard"
+           style="border-radius:14px; margin-bottom:1.2em;">
+      <h4 style="font-size:1.5rem; font-weight:700; margin-bottom:0.5em;">Employee Utilization Dashboard</h4>
+      <p style="color:#4a5568;"><strong>Problem:</strong> Managers were manually merging data from hundreds of small tables across different software systems to understand employee utilization. This process was time-consuming and prone to errors, making it difficult to get a real-time view of resource allocation.</p>
+      <p style="color:#4a5568;"><strong>Solution:</strong> We created an automated pipeline that pulled data from all these disparate sources, applied the necessary transformations, and built a unified utilization model in Power BI. We integrated data from multiple software platforms, ensuring that all the necessary relationships and metrics were in place.</p>
+      <p style="color:#4a5568;"><strong>Result:</strong> Better staffing decisions, reduced burnout risk, and improved team productivity.</p>
+    </div>
+
+    <div class="case-study" style="border-radius:18px; padding:2em; border:1px solid #e2e8f0;">
+      <img src="/portfolio/images/salesdash.png" alt="Sales Quota Tracker Dashboard"
+           style="border-radius:14px; margin-bottom:1.2em;">
+      <h4 style="font-size:1.5rem; font-weight:700; margin-bottom:0.5em;">Sales Quota Tracker</h4>
+      <p style="color:#4a5568;"><strong>Problem:</strong> Sales managers lacked real-time visibility into quota performance and relied heavily on manual reports.</p>
+      <p style="color:#4a5568;"><strong>Solution:</strong> Automated a live quota tracker with pacing, variance analysis, rep-level performance, and forecasting.</p>
+      <p style="color:#4a5568;"><strong>Result:</strong> Faster interventions, stronger coaching insights, and earlier identification of performance gaps.</p>
+    </div>
+
+    <div class="case-study" style="border-radius:18px; padding:2em; border:1px solid #e2e8f0;">
+      <img src="/portfolio/images/surveys.png" alt="Company NPS Dashboard"
+           style="border-radius:14px; margin-bottom:1.2em;">
+      <h4 style="font-size:1.5rem; font-weight:700; margin-bottom:0.5em;">Company NPS Survey Insights</h4>
+      <p style="color:#4a5568;"><strong>Problem:</strong> Feedback was scattered across tools, making it difficult to identify trends or root causes behind customer sentiment changes.</p>
+      <p style="color:#4a5568;"><strong>Solution:</strong> Automated NPS ingestion, sentiment tagging, segmentation, and driver analysis.</p>
+      <p style="color:#4a5568;"><strong>Result:</strong> 90% reduction in manual processing and clearer insights that guided actions improving customer satisfaction.</p>
+    </div>
+
+  </div> -->
+</section>
+
+
+<!-- ========================= PRICING ========================= -->
+<section id="pricing" class="section container" style="padding:3em; border-radius:20px;">
+
+  <!-- Accent Tag -->
+  <div style="
+    display:inline-block;
+    background:linear-gradient(135deg,#2b6cb0,#63b3ed);
+    color:#fff;
+    padding:0.45em 1em;
+    border-radius:40px;
+    font-size:0.85rem;
+    font-weight:600;
+    letter-spacing:0.4px;
+    margin-bottom:1.2em;">
+    Simple & Transparent Pricing
+  </div>
+
+  <!-- Gradient Header -->
+  <h3 style="
+    margin-top:0;
+    font-size:2.3rem;
+    font-weight:800;
+    background:linear-gradient(135deg,#1a2b4e,#3a7bd5);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    margin-bottom:0.8em;">
+    Pricing
+  </h3>
+
+  <!-- Intro Copy -->
+<p style="font-size:1.2rem; color:#5d6f85; line-height:1.75; max-width:800px;">
+  Every project is scoped based on the complexity of the work required—data preparation,
+  modeling, automation logic, visual design, and integration across multiple systems.
+  Instead of hourly billing, each deliverable is classified as low, medium, or high complexity
+  depending on the effort involved.
+</p>
+
+<p style="font-size:1.2rem; color:#5d6f85; margin-top:1em; max-width:800px;">
+  This ensures transparent, predictable pricing and allows you to know exactly what you're paying for
+  before any work begins—no surprises, no hourly overages, and full clarity into how your solution is built.
+</p>
+
+
+  <!-- Pricing Table -->
+   <div class="pricing-table-desktop">
+    <table style="margin-top:2em;">
+      <thead>
+        <tr>
+          <th>Complexity</th>
+          <th>Description</th>
+          <th>Estimated Price Range</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Low</td>
+          <td>Basic transformations, simple data prep, or individual visual updates</td>
+          <td>$75 – $225</td>
+        </tr>
+        <tr>
+          <td>Medium</td>
+          <td>Multi-source preparation, modeling, automated outputs, or full-page visuals</td>
+          <td>$225 – $375</td>
+        </tr>
+        <tr>
+          <td>High</td>
+          <td>Complex integrations, heavy automation logic, advanced calculations, or full dashboards</td>
+          <td>$600+</td>
+        </tr>
+      </tbody>
+    </table>
+</div>
+<div class="pricing-table-mobile">
+  
+  <div class="pricing-card">
+    <h4>Low</h4>
+    <p>Basic transformations, simple data prep, or individual visual updates</p>
+    <strong>$75 – $225</strong>
+  </div>
+
+  <div class="pricing-card">
+    <h4>Medium</h4>
+    <p>Multi-source preparation, modeling, automated outputs, or full-page visuals</p>
+    <strong>$225 – $375</strong>
+  </div>
+
+  <div class="pricing-card">
+    <h4>High</h4>
+    <p>Complex integrations, heavy automation logic, advanced calculations, or full dashboards</p>
+    <strong>$600+</strong>
+  </div>
+
+</div>
+
+<!-- Example Block -->
+<div style="
+    background:#f7fafc;
+    padding:1.5em 2em;
+    border-radius:16px;
+    margin-top:2em;
+    border-left:6px solid #2b6cb0;">
+  <p style="font-size:1.15rem; color:#4a5568; margin:0;">
+    <strong>Example:</strong>  
+    A typical dashboard consists of a mix of low, medium, and high-complexity tasks.
+    Your quote includes a clear breakdown of each task category and an estimated
+    price range for the project 
+    <strong>before any work begins.</strong>
+  </p>
+</div>
+
+
+  <a href="#contact-form" class="cta-button" style="margin-top:2em; display:inline-block;">
+    Get Your Fixed Quote
+  </a>
+</section>
+
+
+<!-- ========================= CONTACT FORM ========================= -->
+<section id="contact-form" class="section container" style="padding:3em; border-radius:20px;">
+
+  <!-- Accent Tag -->
+  <div style="
+    display:inline-block;
+    background:linear-gradient(135deg,#2b6cb0,#63b3ed);
+    color:#fff;
+    padding:0.45em 1em;
+    border-radius:40px;
+    font-size:0.85rem;
+    font-weight:600;
+    letter-spacing:0.4px;
+    margin-bottom:1.2em;">
+    Get in Touch
+  </div>
+
+  <!-- Gradient Header -->
+  <h3 style="
+    margin-top:0;
+    font-size:2.3rem;
+    font-weight:800;
+    background:linear-gradient(135deg,#1a2b4e,#3a7bd5);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    margin-bottom:0.5em;">
+    Contact Us
+  </h3>
+
+  <p style="font-size:1.2rem; color:#5d6f85; max-width:700px; margin-bottom:1.8em;">
+    Tell us about your reporting challenges or automation goals.  
+    We’ll reply within <strong>24 hours</strong> with next steps.
+  </p>
+
+  <form id="my-form" style="display:flex; flex-direction:column; gap:1.4em;">
+
+    <!-- Row 1: Name -->
+    <div style="display:flex; flex-wrap:wrap; gap:1em;">
+      <input type="text" name="first_name" placeholder="First Name" required
+             style="flex:1; min-width:200px; padding:14px; border-radius:12px; border:1px solid #d0d7e0; font-size:1.05rem;">
+      <input type="text" name="last_name" placeholder="Last Name" required
+             style="flex:1; min-width:200px; padding:14px; border-radius:12px; border:1px solid #d0d7e0; font-size:1.05rem;">
+    </div>
+
+    <!-- Row 2: Email & Phone -->
+    <div style="display:flex; flex-wrap:wrap; gap:1em;">
+      <input type="email" name="company_email" placeholder="Email" required
+             style="flex:1; min-width:200px; padding:14px; border-radius:12px; border:1px solid #d0d7e0; font-size:1.05rem;">
+      <input type="text" name="phone" placeholder="Phone (Optional)"
+             style="flex:1; min-width:200px; padding:14px; border-radius:12px; border:1px solid #d0d7e0; font-size:1.05rem;">
+    </div>
+
+    <!-- Company Name -->
+    <input type="text" name="company_name" placeholder="Company Name (Optional)"
+           style="padding:14px; border-radius:12px; border:1px solid #d0d7e0; font-size:1.05rem;">
+
+    <!-- Project Details -->
+    <textarea 
+      name="project_details"
+      placeholder="Describe the reporting problems you're facing or what you'd like to automate."
+      rows="6"
+      required
+      style="padding:14px; border-radius:12px; border:1px solid #d0d7e0; font-size:1.05rem; resize:vertical;">
+    </textarea>
+
+    <!-- Submit Button -->
+    <button id="send_button" type="submit"
+            style="
+              background:linear-gradient(135deg,#2b6cb0,#3f8de1);
+              color:#fff;
+              border:none;
+              padding:1em 2em;
+              border-radius:14px;
+              font-size:1.25rem;
+              font-weight:700;
+              cursor:pointer;
+              width:260px;
+              transition:0.25s ease;">
+      Send Message
+    </button>
+  </form>
+</section>
+
+<!-- STICKY BUTTON -->
+<!-- <a href="#contact-form" class="sticky-contact">Contact Us</a> -->
+ <script src="https://127.0.0.1:9030/cust_1/widget.js"></script>
+ 
+
+
+<!-- FORM JS -->
+<script>
+document.getElementById("mobile-menu-button").onclick = function () {
+  const menu = document.getElementById("mobile-menu");
+  menu.style.display = menu.style.display === "block" ? "none" : "block";
+};
+</script>
+<!-- Image Modal -->
+<div id="imageModal" style="
+    display:none;
+    position:fixed;
+    z-index:9999;
+    left:0; top:0;
+    width:100%; height:100%;
+    background:rgba(0,0,0,0.85);
+    backdrop-filter:blur(3px);
+    justify-content:center;
+    align-items:center;
+">
+  <img id="modalImg" src="" style="
+      max-width:90%;
+      max-height:90%;
+      border-radius:12px;
+      box-shadow:0 8px 30px rgba(0,0,0,0.5);
+      object-fit:contain;
+  ">
+</div>
+
+<script>
+function openImageModal(src) {
+  const modal = document.getElementById("imageModal");
+  const modalImg = document.getElementById("modalImg");
+  modal.style.display = "flex";
+  modalImg.src = src;
+}
+
+document.getElementById("imageModal").onclick = function () {
+  this.style.display = "none";
+};
+</script>
+
+</body>
+</html>

@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Case Study — [Project / Client Name]</title>
+  <meta name="description" content="Case study: [Client] — Problem, approach, solution, and business impact." />
+  <!-- Optional: change or remove Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f7f8fa;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --accent:#0f62fe;
+      --radius:12px;
+      --max-width:1100px;
+      --container-padding:24px;
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color: #111827;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:var(--bg);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      line-height:1.45;
+      font-size:16px;
+      padding:40px 16px;
+      display:flex;
+      justify-content:center;
+    }
+    .wrap{
+      width:100%;
+      max-width:var(--max-width);
+      background:transparent;
+    }
+    header.cs-hero{
+      display:flex;
+      gap:24px;
+      align-items:flex-start;
+      margin-bottom:18px;
+    }
+    .logo{
+      flex:0 0 84px;
+      height:84px;
+      background:linear-gradient(135deg,#eef2ff,#fff);
+      border-radius:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:0 2px 6px rgba(16,24,40,0.04);
+      font-weight:700;
+      color:var(--accent);
+      font-size:20px;
+    }
+    .hero-content{
+      background:var(--card);
+      padding:20px;
+      border-radius:var(--radius);
+      box-shadow:0 6px 20px rgba(15,23,42,0.06);
+      width:100%;
+    }
+    .hero-title{
+      margin:0 0 8px 0;
+      font-size:20px;
+      font-weight:700;
+    }
+    .hero-sub{
+      margin:0;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    /* Summary row */
+    .summary{
+      display:flex;
+      gap:12px;
+      margin-top:16px;
+      flex-wrap:wrap;
+    }
+    .summary .kpi{
+      background:linear-gradient(180deg,#ffffff,#fbfdff);
+      border-radius:10px;
+      padding:12px 14px;
+      min-width:120px;
+      box-shadow:0 6px 18px rgba(2,6,23,0.04);
+    }
+    .kpi strong{display:block;font-size:18px}
+    .kpi span{font-size:13px;color:var(--muted)}
+
+    main{
+      margin-top:18px;
+      display:grid;
+      grid-template-columns: 1fr 320px;
+      gap:20px;
+      align-items:start;
+    }
+
+    /* Primary content */
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:20px;
+      box-shadow:0 6px 20px rgba(15,23,42,0.04);
+    }
+    .section{
+      margin-bottom:18px;
+    }
+    .section h2{
+      margin:0 0 12px 0;
+      font-size:16px;
+    }
+    .lead{
+      color:var(--muted);
+      margin:0 0 12px 0;
+    }
+    .two-col{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    .process-steps{
+      list-style:none;
+      padding:0;
+      margin:0;
+      display:grid;
+      gap:10px;
+    }
+    .process-steps li{
+      padding:12px;
+      border-radius:10px;
+      background:#f8fafc;
+      border:1px solid #eef2f7;
+    }
+    .quote{
+      padding:14px;
+      border-left:4px solid var(--accent);
+      background:#fbfdff;
+      border-radius:8px;
+      color:#0b1220;
+      font-weight:600;
+    }
+
+    /* Sidebar */
+    aside{
+      position:relative;
+      top:0;
+    }
+    .sidebar .card{
+      padding:16px;
+    }
+    .tech-list{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{background:#f3f4f6;padding:6px 10px;border-radius:999px;font-size:13px;color:#111827;border:1px solid #eef2f7}
+
+    /* Visual gallery */
+    .gallery{
+      display:grid;
+      gap:10px;
+      grid-template-columns: repeat(2,1fr);
+    }
+    .thumb{
+      background:#eef2ff;
+      height:120px;
+      border-radius:8px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--muted);
+      font-weight:600;
+    }
+
+    /* Footer / CTA */
+    .cta{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      margin-top:18px;
+    }
+    .btn{
+      background:var(--accent);
+      color:white;
+      padding:10px 14px;
+      border-radius:10px;
+      text-decoration:none;
+      font-weight:600;
+      border:none;
+      cursor:pointer;
+    }
+    .btn.secondary{
+      background:transparent;
+      color:var(--accent);
+      border:1px solid rgba(15,98,254,0.12);
+    }
+
+    /* Small screens */
+    @media (max-width:880px){
+      main{grid-template-columns:1fr; }
+      .two-col{grid-template-columns:1fr;}
+      .summary .kpi{min-width:100px}
+      .gallery{grid-template-columns:1fr 1fr}
+    }
+
+    /* Print-friendly */
+    @media print{
+      body{padding:0}
+      .wrap{max-width:100%}
+      header.cs-hero > .logo{display:none}
+      .btn{display:none}
+      .card{box-shadow:none;border:1px solid #e6e8eb}
+      main{grid-template-columns:1fr;}
+    }
+  </style>
+
+  <!-- Structured data: case study -->
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"CaseStudy",
+    "name":"[Project / Client Name] Case Study",
+    "url":"[insert canonical url here]",
+    "description":"Short 1–2 sentence summary of the case study and outcome.",
+    "datePublished":"2025-12-07",
+    "about": {
+      "@type":"Thing",
+      "name":"[Industry / Topic]"
+    },
+    "author": {
+      "@type":"Organization",
+      "name":"[Your Company]"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div class="wrap" role="main">
+    <header class="cs-hero" aria-labelledby="hero-title">
+      <div class="logo" aria-hidden="true">CS</div>
+      <div class="hero-content card" >
+        <h1 id="hero-title" class="hero-title">[Client — Project Name]</h1>
+        <p class="hero-sub">
+          One-line summary: helped [client] achieve [primary benefit] by [high-level approach].
+        </p>
+
+        <div class="summary" aria-hidden="false">
+          <div class="kpi"><strong>[+45%]</strong><span>Conversion rate uplift</span></div>
+          <div class="kpi"><strong>$1.2M</strong><span>Annualized savings</span></div>
+          <div class="kpi"><strong>8 weeks</strong><span>Time to delivery</span></div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <!-- Primary column -->
+      <div>
+        <section class="card section" aria-labelledby="problem">
+          <h2 id="problem">Problem</h2>
+          <p class="lead">
+            Describe the customer's pain clearly and concisely. Include scope, impact and constraints.
+          </p>
+          <ul>
+            <li><strong>Context:</strong> [context and environment]</li>
+            <li><strong>Challenge:</strong> [what was failing or missing]</li>
+            <li><strong>Stakeholders:</strong> [roles, teams impacted]</li>
+          </ul>
+        </section>
+
+        <section class="card section" aria-labelledby="approach">
+          <h2 id="approach">Approach</h2>
+          <p class="lead">High-level strategy and why this approach was chosen over alternatives.</p>
+
+          <div class="two-col" role="list">
+            <div>
+              <h3 style="margin-top:0;margin-bottom:8px;font-size:14px">Steps taken</h3>
+              <ol class="process-steps">
+                <li><strong>Discovery</strong> — interviews, data audit, KPIs definition.</li>
+                <li><strong>Design</strong> — prototypes, architecture, data model.</li>
+                <li><strong>Build</strong> — implement, test, iterate.</li>
+                <li><strong>Deliver</strong> — training, handover, monitoring.</li>
+              </ol>
+            </div>
+            <div>
+              <h3 style="margin-top:0;margin-bottom:8px;font-size:14px">Key decisions</h3>
+              <ul>
+                <li>Choose [tech/tool] because [reason].</li>
+                <li>Prioritized [metric] to maximize [outcome].</li>
+                <li>Minimum viable scope: [list].</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="card section" aria-labelledby="solution">
+          <h2 id="solution">Solution</h2>
+          <p class="lead">Concise summary of the implemented solution.</p>
+
+          <div style="margin-top:12px;">
+            <!-- Example components: replace with real assets and numbers -->
+            <h4 style="margin-bottom:8px">What we delivered</h4>
+            <ul>
+              <li>End-to-end reporting stack: data ingestion → transformation → semantic layer → dashboards.</li>
+              <li>3 interactive dashboards (Executive, Ops, Support) with row-level security.</li>
+              <li>Automated ETL jobs, data quality checks, and monitoring alerts.</li>
+            </ul>
+
+            <h4 style="margin-top:14px;margin-bottom:8px">Screenshots & artifacts</h4>
+            <div class="gallery" aria-hidden="false">
+              <div class="thumb">Screenshot 1</div>
+              <div class="thumb">Screenshot 2</div>
+              <div class="thumb">Screenshot 3</div>
+              <div class="thumb">Screenshot 4</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card section" aria-labelledby="results">
+          <h2 id="results">Results</h2>
+          <p class="lead">Quantified outcomes and qualitative impacts.</p>
+          <ul>
+            <li><strong>Business metric:</strong> +45% [conversion / throughput] vs baseline (measured over X months).</li>
+            <li><strong>Efficiency:</strong> reduced manual reporting time from 3 days to 2 hours / week.</li>
+            <li><strong>Adoption:</strong> 90% of target users actively using dashboards within 30 days.</li>
+          </ul>
+
+          <div style="margin-top:12px;">
+            <h4 style="margin-bottom:8px">Measurement & methodology</h4>
+            <p class="lead" style="margin-bottom:0">
+              Describe how results were measured: data sources, comparison windows, A/B test details or attribution caveats.
+            </p>
+          </div>
+        </section>
+
+        <section class="card section" aria-labelledby="testimonial">
+          <h2 id="testimonial">Client testimonial</h2>
+          <div class="quote">
+            “[Insert a short client quote praising the outcome — include name, title and company if allowed.]”
+          </div>
+        </section>
+
+        <section class="card section" aria-labelledby="lessons">
+          <h2 id="lessons">Lessons & next steps</h2>
+          <p class="lead">What you learned, what you'd change, recommended follow-ups.</p>
+          <ul>
+            <li>Lesson 1: [e.g., prioritize data contracts early]</li>
+            <li>Next step: roll out phased governance and self-serve analytics.</li>
+          </ul>
+        </section>
+
+        <div class="cta card" aria-hidden="false">
+          <div>
+            <strong>Ready to replicate this outcome?</strong>
+            <div style="font-size:13px;color:var(--muted)">Custom engagements: discovery → delivery → operate</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <a class="btn" href="#contact">Contact us</a>
+            <a class="btn secondary" href="#" onclick="window.print();return false;">Print / PDF</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="card">
+          <h3 style="margin-top:0">Project snapshot</h3>
+          <p style="margin:8px 0;color:var(--muted)">Client: <strong>[Client Name]</strong></p>
+          <p style="margin:8px 0;color:var(--muted)">Industry: <strong>[Industry]</strong></p>
+          <p style="margin:8px 0;color:var(--muted)">Timeline: <strong>[8 weeks]</strong></p>
+          <p style="margin:8px 0;color:var(--muted)">Team size: <strong>[X]</strong></p>
+
+          <hr style="border:none;border-top:1px solid #eef2f7;margin:12px 0">
+
+          <h4 style="margin:0 0 8px 0">Tech & tools</h4>
+          <div class="tech-list" style="margin-bottom:12px">
+            <span class="chip">Power BI</span>
+            <span class="chip">Azure Data Factory</span>
+            <span class="chip">Databricks</span>
+            <span class="chip">SQL</span>
+          </div>
+
+          <h4 style="margin:0 0 8px 0">Contact</h4>
+          <p style="margin:0;color:var(--muted)">Lead: <strong>[Your name]</strong></p>
+          <p style="margin:6px 0 0 0"><a href="mailto:you@company.com">you@company.com</a></p>
+        </div>
+      </aside>
+    </main>
+  </div>
+</body>
+</html>
