@@ -1538,6 +1538,16 @@
         .nav-links {
           display: none;
         }
+
+        .roi-plan {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .roi-plan-options {
+          flex-wrap: wrap;
+          gap: 12px;
+        }
       }
 
       @media (max-width: 1100px) {
@@ -1573,6 +1583,18 @@
       @media (max-width: 700px) {
         .hero-panel {
           display: none;
+        }
+
+        .roi-card {
+          padding: 18px;
+        }
+
+        .roi-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .roi-result {
+          padding: 16px;
         }
       }
     </style>
