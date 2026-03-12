@@ -6,3 +6,4 @@ void post_generate_phrase(struct Socket* socket,char* http_header, char*body, ch
 void post_run_activity(struct Socket* socket,char* http_header, char*body, char* route);
 void post_run_pipeline(struct Socket* socket,char* http_header, char*body, char* route);
 void post_to_local(struct Socket* socket,char* http_header, char*body, char* route, const char* port);
+void delete_to_local(struct Socket* socket,char* http_header, char*body, char* route, const char* port);

@@ -66,23 +66,59 @@ void get_to_local(struct Socket* socket, char* http_header, char* body, char* ro
         return;
     }
 
-    size_t req_size = strlen(route) + 512;
+    const char *cookie_header = NULL;
+    if (http_header) {
+        const char *cookie_start = strstr(http_header, "\r\nCookie:");
+        if (!cookie_start && strncmp(http_header, "Cookie:", 7) == 0) {
+            cookie_start = http_header;
+        }
+        if (cookie_start) {
+            cookie_start += (cookie_start == http_header) ? 7 : 9;
+            while (*cookie_start == ' ') cookie_start++;
+            const char *cookie_end = strstr(cookie_start, "\r\n");
+            if (cookie_end && cookie_end > cookie_start) {
+                size_t len = (size_t)(cookie_end - cookie_start);
+                char *cookie_val = malloc(len + 1);
+                if (cookie_val) {
+                    memcpy(cookie_val, cookie_start, len);
+                    cookie_val[len] = '\0';
+                    cookie_header = cookie_val;
+                }
+            }
+        }
+    }
+
+    size_t req_size = strlen(route) + 1024 + (cookie_header ? strlen(cookie_header) : 0);
     char *request = malloc(req_size);
     if (!request) {
+        if (cookie_header) free((void *)cookie_header);
         close(sfd);
         return;
     }
 
-    snprintf(request, req_size,
-        "GET %s HTTP/1.1\r\n"
-        "Host: %s:%s\r\n"
-        "Connection: close\r\n"
-        "\r\n",
-        route,
-        "127.0.0.1", port);
+    if (cookie_header) {
+        snprintf(request, req_size,
+            "GET %s HTTP/1.1\r\n"
+            "Host: %s:%s\r\n"
+            "Connection: close\r\n"
+            "Cookie: %s\r\n"
+            "\r\n",
+            route,
+            "127.0.0.1", port,
+            cookie_header);
+    } else {
+        snprintf(request, req_size,
+            "GET %s HTTP/1.1\r\n"
+            "Host: %s:%s\r\n"
+            "Connection: close\r\n"
+            "\r\n",
+            route,
+            "127.0.0.1", port);
+    }
 
     send(sfd, request, strlen(request), 0);
     free(request);
+    if (cookie_header) free((void *)cookie_header);
 
     char buf[8192];
     char *response = NULL;
@@ -119,10 +155,89 @@ void get_to_local(struct Socket* socket, char* http_header, char* body, char* ro
         return;
     }
 
+    if (strstr(route, "/auth/") != NULL) {
+        SSL_write(socket->cSSL, response, total);
+        free(response);
+        return;
+    }
+
     char *res_body = header_end + 4;
     size_t body_len = total - (size_t)(res_body - response);
 
-    if (strstr(route, ".css") != NULL) {
+    int status_code = 200;
+    if (sscanf(response, "HTTP/%*s %d", &status_code) != 1) {
+        status_code = 200;
+    }
+
+    size_t header_len = (size_t)(header_end - response);
+    char *header_block = malloc(header_len + 1);
+    if (header_block) {
+        memcpy(header_block, response, header_len);
+        header_block[header_len] = '\0';
+    }
+
+    char *location = NULL;
+    char *content_type = NULL;
+    char **cookies = NULL;
+    size_t cookie_count = 0;
+
+    if (header_block) {
+        char *line = strtok(header_block, "\r\n");
+        while (line) {
+            if (strncasecmp(line, "Location:", 9) == 0) {
+                char *val = line + 9;
+                while (*val == ' ') val++;
+                location = strdup(val);
+            } else if (strncasecmp(line, "Content-Type:", 13) == 0) {
+                char *val = line + 13;
+                while (*val == ' ') val++;
+                content_type = strdup(val);
+            } else if (strncasecmp(line, "Set-Cookie:", 11) == 0) {
+                char *val = line + 11;
+                while (*val == ' ') val++;
+                char **tmp = realloc(cookies, sizeof(char*) * (cookie_count + 1));
+                if (tmp) {
+                    cookies = tmp;
+                    cookies[cookie_count++] = strdup(val);
+                }
+            }
+            line = strtok(NULL, "\r\n");
+        }
+    }
+
+    if ((status_code >= 300 && status_code < 400) || cookie_count > 0 || location) {
+        char header_out[4096];
+        int offset = 0;
+        offset = snprintf(header_out, sizeof(header_out), "HTTP/1.1 %d\r\n", status_code);
+        if (location) {
+            offset += snprintf(header_out + offset, sizeof(header_out) - offset, "Location: %s\r\n", location);
+        }
+        for (size_t i = 0; i < cookie_count; i++) {
+            offset += snprintf(header_out + offset, sizeof(header_out) - offset, "Set-Cookie: %s\r\n", cookies[i]);
+        }
+        if (content_type) {
+            offset += snprintf(header_out + offset, sizeof(header_out) - offset, "Content-Type: %s\r\n", content_type);
+        }
+        offset += snprintf(header_out + offset, sizeof(header_out) - offset, "Content-Length: %zu\r\n\r\n", body_len);
+        SSL_write(socket->cSSL, header_out, offset);
+        if (body_len > 0) {
+            SSL_write(socket->cSSL, res_body, body_len);
+        }
+        if (location) free(location);
+        if (content_type) free(content_type);
+        for (size_t i = 0; i < cookie_count; i++) {
+            free(cookies[i]);
+        }
+        free(cookies);
+        free(header_block);
+        free(response);
+        return;
+    }
+
+    if (strstr(route, "/dashboard") != NULL) {
+        send_html_response_code(socket->cSSL, 200, (int)body_len);
+        SSL_write(socket->cSSL, res_body, body_len);
+    } else if (strstr(route, ".css") != NULL) {
         send_css_response_code(socket->cSSL, 200, (int)body_len);
         SSL_write(socket->cSSL, res_body, body_len);
     } else if (strstr(route, ".js") != NULL) {
@@ -139,5 +254,12 @@ void get_to_local(struct Socket* socket, char* http_header, char* body, char* ro
     } else {
         send_buffer_response_code(socket->cSSL, 200, res_body, body_len);
     }
+    if (location) free(location);
+    if (content_type) free(content_type);
+    for (size_t i = 0; i < cookie_count; i++) {
+        free(cookies[i]);
+    }
+    free(cookies);
+    free(header_block);
     free(response);
 }

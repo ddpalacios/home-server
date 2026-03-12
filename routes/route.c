@@ -7,6 +7,7 @@
 #include "http_utilities.h"
 #include "local-server/GET/get_local_server.h"
 #include "local-server/POST/post_local_server.h"
+#include "read_message.h"
 
 void process_route(struct Socket *socket, char *http_header, char *body) {
     SSL *cSSL = socket->cSSL;
@@ -24,7 +25,11 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         return;
     }
     size_t route_len = route_end - route_start;
-    if (route_len == 0 || route_len > 8192) {
+    if (route_len == 0) {
+        return;
+    }
+    if (route_len > 65535) {
+        send_response_code(cSSL, 400);
         return;
     }
 
@@ -54,9 +59,11 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/favicon.ico") != NULL) {
         get_image_file(cSSL, http_header, "/portfolio/images/favicon.ico");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/dashboard") == 0) {
-        get_live_html(cSSL, http_header, "AIdashboard/index.html");
+        get_to_local(socket, http_header, body, route, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/login") == 0) {
         get_live_html(cSSL, http_header, "AIdashboard/login.html");
+    } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/auth/") != NULL) {
+        get_to_local(socket, http_header, body, route, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/widget.js") == 0) {
         get_to_local(socket, http_header, body, route, "9000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/widget.css") == 0) {
@@ -74,13 +81,43 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/robot_icon.png") != NULL) {
         get_to_local(socket, http_header, body, route, "9000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/bot-config") != NULL) {
-        get_to_local(socket, http_header, body, route, "9000");
+        get_to_local(socket, http_header, body, route, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/knowledege") != NULL) {
+        get_to_local(socket, http_header, body, route, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/lead-sample") != NULL) {
+        get_to_local(socket, http_header, body, route, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/leads") != NULL) {
+        get_to_local(socket, http_header, body, route, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/domains") != NULL) {
+        get_to_local(socket, http_header, body, route, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/validate-domain") != NULL) {
         get_to_local(socket, http_header, body, route, "9000");
     } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/chat") == 0) {
         post_to_local(socket, http_header, body, route, "9000");
     } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/book-estimate") == 0) {
         post_to_local(socket, http_header, body, route, "9000");
+    } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/bot-config") != NULL) {
+        post_to_local(socket, http_header, body, route, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/knowledege") != NULL) {
+        post_to_local(socket, http_header, body, route, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/prompt-save") != NULL) {
+        post_to_local(socket, http_header, body, route, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/knowledege-embed") != NULL) {
+        post_to_local(socket, http_header, body, route, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/publish-app") != NULL) {
+        post_to_local(socket, http_header, body, route, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/leads-sync") != NULL) {
+        post_to_local(socket, http_header, body, route, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/lead-sql") != NULL) {
+        post_to_local(socket, http_header, body, route, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/domains") != NULL) {
+        post_to_local(socket, http_header, body, route, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/auth/") != NULL) {
+        post_to_local(socket, http_header, body, route, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/chat-reset") == 0) {
+        post_to_local(socket, http_header, body, route, "9000");
+    } else if (strcmp(request_type, "DELETE") == 0 && strstr(route, "/knowledege") != NULL) {
+        delete_to_local(socket, http_header, body, route, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/portfolio/images/") != NULL) {
         get_image_file(cSSL, http_header, route);
     }
