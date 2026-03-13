@@ -19,7 +19,7 @@
 #include "route.h"
 #include "server.h"
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 8192
 #define WORKER_COUNT 16
 #define QUEUE_CAPACITY 1024
 
@@ -120,7 +120,7 @@ static void handle_client(int fd) {
     }
     peek_buf[bytes_peeked] = '\0';
 
-    size_t header_buf_size = 32768;
+    size_t header_buf_size = 65536;
     char *peeked_http_header = malloc(header_buf_size);
     memset(peeked_http_header, 0, header_buf_size);
     int header_length = get_http_header(peek_buf, peeked_http_header, header_buf_size);

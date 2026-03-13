@@ -128,4 +128,5 @@ CMakeFiles/home-server.dir/routes/route.c.o: \
  /home/dpalacios/home-server/routes/route.h \
  /home/dpalacios/home-server/utilities/http_utilities.h \
  /home/dpalacios/home-server/routes/local-server/GET/get_local_server.h \
- /home/dpalacios/home-server/routes/local-server/POST/post_local_server.h
+ /home/dpalacios/home-server/routes/local-server/POST/post_local_server.h \
+ /home/dpalacios/home-server/server/read_message.h

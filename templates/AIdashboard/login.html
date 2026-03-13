@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Palacios AI Login</title>
+    <title>JustGotALead</title>
     <style>
       :root {
         --bg: #f5f7fb;
@@ -48,9 +48,9 @@
       .login-visual {
         position: relative;
         background:
-          radial-gradient(circle at 20% 20%, rgba(45, 212, 255, 0.35), transparent 45%),
-          radial-gradient(circle at 80% 30%, rgba(99, 102, 241, 0.4), transparent 50%),
-          linear-gradient(135deg, #050914 0%, #0b1b4d 40%, #1f4fd1 70%, #2dd4ff 100%);
+          radial-gradient(circle at 18% 22%, rgba(125, 217, 255, 0.28), transparent 46%),
+          radial-gradient(circle at 75% 28%, rgba(60, 120, 220, 0.18), transparent 52%),
+          linear-gradient(135deg, #16264b 0%, #2b5fb9 45%, #4f8ed8 78%, #8fc9f2 100%);
         color: #ffffff;
         padding: 56px;
         display: flex;
@@ -149,18 +149,44 @@
         animation: fadeIn 0.9s ease-out both;
       }
 
-      .logo-mark {
-        width: 48px;
-        height: 48px;
-        border-radius: 16px;
-        background: linear-gradient(135deg, #111827, #2563eb);
+      .logo {
         display: flex;
         align-items: center;
-        justify-content: center;
-        color: #fff;
+        gap: 12px;
+        font-family: "Space Grotesk", sans-serif;
         font-weight: 700;
-        letter-spacing: 0.5px;
-        box-shadow: 0 14px 30px rgba(37, 99, 235, 0.35);
+        font-size: 1.1rem;
+        text-decoration: none;
+        color: var(--text);
+      }
+
+      .logo-text {
+        font-weight: 800;
+        letter-spacing: 0.3px;
+        font-size: 1.24rem;
+        text-transform: none;
+        background: linear-gradient(90deg, #0f1b3a, #1f4fd1, #3aa0ff);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        text-shadow: 0 4px 10px rgba(15, 23, 42, 0.18);
+      }
+
+      .logo-text span:nth-child(1),
+      .logo-text span:nth-child(2) {
+        color: inherit;
+        margin-left: 0;
+      }
+
+      .logo-mark {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        object-fit: contain;
+        background: transparent;
+        transform: scale(1);
+        transform-origin: center;
+        box-shadow: none;
       }
 
       .login-heading h2 {
@@ -265,6 +291,10 @@
         <div class="visual-content"></div>
       </section>
       <section class="login-panel">
+        <div class="logo">
+          <img class="logo-mark" src="/portfolio/images/justgotalead.png" alt="Just got a lead logo" />
+          <span class="logo-text">Just<span>Got</span><span>ALead</span></span>
+        </div>
         <div class="login-heading">
           <h2>Sign in to your dashboard</h2>
           <p>
@@ -289,7 +319,7 @@
       const button = document.getElementById("googleLogin");
       if (button) {
         button.addEventListener("click", () => {
-          window.location.href = "http://127.0.0.1:5000/auth/google";
+          window.location.href = "/auth/google";
         });
       }
     </script>
