@@ -90,6 +90,8 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         get_to_local(socket, http_header, body, route, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/domains") != NULL) {
         get_to_local(socket, http_header, body, route, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/prompt") != NULL) {
+        get_to_local(socket, http_header, body, route, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/validate-domain") != NULL) {
         get_to_local(socket, http_header, body, route, "9000");
     } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/chat") == 0) {

@@ -446,6 +446,95 @@
       background: #f0f6ff;
     }
 
+    .prompt-header-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .prompt-header-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .prompt-select {
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      background: #ffffff;
+      color: var(--text);
+      min-width: 220px;
+    }
+
+    .insights-booking-form {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(248, 250, 252, 0.92);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .booking-form-title {
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .booking-form-subtitle {
+      font-size: 0.9rem;
+      color: rgba(71, 85, 105, 0.85);
+    }
+
+    .booking-form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .booking-form-grid label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.82rem;
+      color: rgba(30, 41, 59, 0.9);
+    }
+
+    .booking-form-grid input,
+    .booking-form-grid textarea {
+      border-radius: 10px;
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      padding: 8px 10px;
+      font-size: 0.85rem;
+      background: #fff;
+    }
+
+    .booking-form-notes {
+      grid-column: span 2;
+    }
+
+    .booking-form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .booking-form-confirm {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.35);
+      color: #166534;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
     .preview-card {
       grid-column: span 5;
       display: flex;
@@ -2314,49 +2403,6 @@
           <div class="kb-list" id="kbListInternal"></div>
         </div>
 
-        <div class="card prompt-card" id="promptCard" style="grid-column: span 12;">
-          <div class="card-header">
-            <h2 class="section-title" style="margin:0;">Prompt</h2>
-            <div></div>
-          </div>
-          <p class="section-note">This prompt guides your customer-facing AI assistant. Base text is locked, but you can add custom values.</p>
-          <div class="prompt-block prompt-personality">
-            <div class="prompt-block-header">
-              <h4>Personality:</h4>
-              <div class="prompt-actions">
-                <button class="btn secondary" type="button" id="promptEditPersonality" style="display:none;">Edit</button>
-                <button class="btn secondary" type="button" id="promptAddPersonality" style="display:none;">+ Add Custom Value</button>
-              </div>
-            </div>
-            <p id="promptPersonalityMain"></p>
-            <p id="promptPersonalityRestriction"></p>
-            <div class="prompt-custom" id="promptCustomPersonality"></div>
-          </div>
-          <div class="prompt-block">
-            <div class="prompt-block-header">
-              <h4>Intent:</h4>
-              <div class="prompt-actions">
-                <button class="btn secondary" type="button" id="promptEditIntent" style="display:none;">Edit</button>
-                <button class="btn secondary" type="button" id="promptAddIntent" style="display:none;">+ Add Custom Value</button>
-              </div>
-            </div>
-            <p id="promptIntentText"></p>
-            <div class="prompt-custom" id="promptCustomIntent"></div>
-          </div>
-          <div class="prompt-block">
-            <div class="prompt-block-header">
-              <h4>Additional Information:</h4>
-              <div class="prompt-actions">
-                <button class="btn secondary" type="button" id="promptEditAdditional" style="display:none;">Edit</button>
-                <button class="btn secondary" type="button" id="promptAddAdditional" style="display:none;">+ Add Custom Value</button>
-              </div>
-            </div>
-            <p id="promptAdditionalIntro"></p>
-            <ul id="promptAdditionalList">
-            </ul>
-            <div class="prompt-custom" id="promptCustomAdditional"></div>
-          </div>
-        </div>
       </section>
       </div>
 
@@ -2519,7 +2565,6 @@
               <div class="section-note" style="margin:4px 0 0;">These appear as the first chips on your website widget.</div>
             </div>
             <div class="chip-row" id="chipEditor">
-              <span class="chip"><button type="button" aria-label="Remove">×</button></span>
             </div>
             <div class="insights-input" style="width:100%;">
               <input type="text" style="height: 50%;" id="newChipInput" class="chip-input" placeholder="Add a question (e.g., Do you offer free estimates?)" />
@@ -2692,44 +2737,6 @@
         </div>
       </div>
 
-      <div class="modal" id="promptEditModal" aria-hidden="true">
-        <div class="modal-card">
-          <div class="modal-header">
-            <h3 id="promptEditTitle">Edit Prompt Section</h3>
-            <button class="modal-close" type="button" data-close="promptEditModal">×</button>
-          </div>
-          <div class="modal-grid">
-            <label>
-              Section Text
-              <textarea id="promptEditInput" rows="6" placeholder="Update the base instructions for this section..."></textarea>
-            </label>
-          </div>
-          <div class="confirm-actions">
-            <button class="btn secondary" type="button" data-close="promptEditModal">Cancel</button>
-            <button class="btn publish" type="button" id="promptEditSave">Save</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="modal" id="promptCustomModal" aria-hidden="true">
-        <div class="modal-card">
-          <div class="modal-header">
-            <h3>Add Custom Value</h3>
-            <button class="modal-close" type="button" data-close="promptCustomModal">×</button>
-          </div>
-          <div class="modal-grid">
-            <label>
-              Custom Value
-              <textarea id="promptCustomInput" rows="4" placeholder="Add a custom instruction or value..."></textarea>
-            </label>
-          </div>
-          <div class="confirm-actions">
-            <button class="btn secondary" type="button" data-close="promptCustomModal">Cancel</button>
-            <button class="btn publish" type="button" id="promptCustomSave">Add</button>
-          </div>
-        </div>
-      </div>
-
       <div class="toast" id="saveToast">Saved!</div>
 </main>
   </div>
@@ -2845,6 +2852,10 @@
     const promptEditInput = document.getElementById("promptEditInput");
     const promptEditSave = document.getElementById("promptEditSave");
     const promptEditTitle = document.getElementById("promptEditTitle");
+    const promptSelect = document.getElementById("promptSelect");
+    const promptRenameButton = document.getElementById("promptRenameButton");
+    const promptCreateButton = document.getElementById("promptCreateButton");
+    const promptDeleteButton = document.getElementById("promptDeleteButton");
     let promptCustomTarget = "personality";
     let promptEditTarget = null;
     const promptPersonalityMain = document.getElementById("promptPersonalityMain");
@@ -2856,6 +2867,8 @@
     let promptInternalRawText = "";
     let promptDraftText = { client: "", internal: "" };
     let promptCustomValuesByMode = { client: [], internal: [] };
+    let promptEntries = { client: [], internal: [] };
+    let activePromptId = { client: "", internal: "" };
     let hasUnsavedChanges = false;
     let settingsDirty = false;
     let kbDirty = false;
@@ -3180,7 +3193,6 @@
           },
         });
         leadsChart.update();
-        console.log("Chart canvas rect:", leadsChartCanvas.getBoundingClientRect());
       } catch (err) {
         console.error("Chart render failed", err);
       }
@@ -3290,11 +3302,6 @@
           if (text) questions.push(text);
         });
       }
-      const promptCustomValues = collectPromptCustomValuesFromDom();
-      const promptText =
-        promptCard && !promptCard.classList.contains("is-editing") && promptDraftText.client
-          ? promptDraftText.client
-          : buildPromptTextFromDom();
       return {
         name: nameInput ? nameInput.value.trim() : "",
         greeting_message: greetingMessage ? greetingMessage.value.trim() : "",
@@ -3303,8 +3310,6 @@
         accent_color: accentColor ? accentColor.value : "",
         widget_icon: iconSelect ? iconSelect.value : "",
         default_start_questions: questions,
-        prompt: promptText,
-        prompt_custom_values: promptCustomValues,
       };
     }
 
@@ -3350,30 +3355,51 @@
       return [];
     }
 
+    function normalizeStartQuestions(value) {
+      if (!value) return [];
+      if (Array.isArray(value)) return value.map((v) => String(v).trim()).filter(Boolean);
+      if (typeof value === "string") {
+        try {
+          const parsed = JSON.parse(value);
+          if (Array.isArray(parsed)) {
+            return parsed.map((v) => String(v).trim()).filter(Boolean);
+          }
+        } catch (err) {}
+      }
+      return [];
+    }
+
+    function normalizeBotConfig(payload) {
+      const raw = payload && typeof payload === "object" ? payload : {};
+      const cfg = raw.config && typeof raw.config === "object" ? raw.config : raw;
+      return {
+        name: cfg.name || "",
+        greeting_message: cfg.greeting_message || "",
+        subtitle_header: cfg.subtitle_header || "",
+        primary_color: /^#[0-9a-fA-F]{6}$/.test(cfg.primary_color || "") ? cfg.primary_color : "#2f80ed",
+        accent_color: /^#[0-9a-fA-F]{6}$/.test(cfg.accent_color || "") ? cfg.accent_color : "#56ccf2",
+        widget_icon: cfg.widget_icon || "chat",
+        default_start_questions: normalizeStartQuestions(
+          cfg.default_start_questions || raw.default_start_questions
+        ),
+      };
+    }
+
     function applySettingsPayload(cfg) {
       if (!cfg) return;
-      if (nameInput) nameInput.value = cfg.name || "";
-      if (greetingMessage) greetingMessage.value = cfg.greeting_message || "";
-      if (subtitleMessage) subtitleMessage.value = cfg.subtitle_header || "";
-      if (primaryColor) primaryColor.value = cfg.primary_color || "";
-      if (accentColor) accentColor.value = cfg.accent_color || "";
-      if (iconSelect) iconSelect.value = cfg.widget_icon || "chat";
-      let promptText = typeof cfg.prompt === "string" ? cfg.prompt.trim() : "";
-      promptRawText = promptText;
-      promptInternalRawText = typeof cfg.prompt_internal === "string" ? cfg.prompt_internal.trim() : "";
-      promptDraftText.client = promptRawText || "";
-      promptDraftText.internal = promptInternalRawText || "";
-      promptCustomValuesByMode.client = Array.isArray(cfg.prompt_custom_values) ? cfg.prompt_custom_values : [];
-      promptCustomValuesByMode.internal = Array.isArray(cfg.prompt_internal_custom_values)
-        ? cfg.prompt_internal_custom_values
-        : [];
-      renderPromptForMode(activeKbType || "client");
+      if (nameInput) nameInput.value = cfg.name;
+      if (greetingMessage) greetingMessage.value = cfg.greeting_message;
+      if (subtitleMessage) subtitleMessage.value = cfg.subtitle_header;
+      if (primaryColor) primaryColor.value = cfg.primary_color;
+      if (accentColor) accentColor.value = cfg.accent_color;
+      if (iconSelect) iconSelect.value = cfg.widget_icon;
       if (chipEditor) {
         chipEditor.innerHTML = "";
-        const chips = Array.isArray(cfg.default_start_questions) ? cfg.default_start_questions : [];
+        const chips = cfg.default_start_questions || [];
         chips.forEach((q) => {
           const chip = document.createElement("span");
           chip.className = "chip";
+          chip.dataset.value = q;
           chip.innerHTML = `${q} <button type="button" aria-label="Remove">×</button>`;
           chipEditor.appendChild(chip);
         });
@@ -3589,23 +3615,19 @@
       if (promptAddAdditional) {
         promptAddAdditional.style.display = promptEditing ? "inline-flex" : "none";
       }
-      if (promptEditPersonality) {
-        promptEditPersonality.style.display = promptEditing ? "inline-flex" : "none";
-      }
-      if (promptEditIntent) {
-        promptEditIntent.style.display = promptEditing ? "inline-flex" : "none";
-      }
-      if (promptEditAdditional) {
-        promptEditAdditional.style.display = promptEditing ? "inline-flex" : "none";
-      }
     }
 
     function renderPromptSectionsFromText(promptText, customValues) {
       const sections = parsePromptSections(promptText || "");
+      const hasContent =
+        sections.personality.length ||
+        sections.intent.length ||
+        sections.additional.length ||
+        (Array.isArray(customValues) && customValues.length);
       if (promptPersonalityMain) {
         const personaText = sections.personality.join("\n");
         promptPersonalityMain.dataset.raw = personaText;
-        promptPersonalityMain.innerHTML = renderPromptLine(personaText);
+        promptPersonalityMain.innerHTML = personaText ? renderPromptLine(personaText) : "";
       }
       if (promptPersonalityRestriction) {
         promptPersonalityRestriction.dataset.raw = "";
@@ -3614,14 +3636,14 @@
       if (promptIntentText) {
         const intentText = sections.intent.join("\n");
         promptIntentText.dataset.raw = intentText;
-        promptIntentText.innerHTML = renderPromptLine(intentText);
+        promptIntentText.innerHTML = intentText ? renderPromptLine(intentText) : "";
       }
       if (promptAdditionalIntro) {
         const introLines = sections.additional.filter((line) => !line.trim().startsWith("-"));
         const intro = introLines.length ? introLines.join("\n") : sections.additional[0] || "";
         const cleanIntro = intro.replace(/^\s*-\s*/, "");
         promptAdditionalIntro.dataset.raw = cleanIntro;
-        promptAdditionalIntro.innerHTML = renderPromptLine(cleanIntro);
+        promptAdditionalIntro.innerHTML = cleanIntro ? renderPromptLine(cleanIntro) : "";
       }
       if (promptAdditionalList) {
         const customAdditionalSet = new Set(
@@ -3640,6 +3662,12 @@
           promptAdditionalList.appendChild(li);
         });
       }
+      if (!hasContent) {
+        if (promptPersonalityMain) promptPersonalityMain.innerHTML = "";
+        if (promptIntentText) promptIntentText.innerHTML = "";
+        if (promptAdditionalIntro) promptAdditionalIntro.innerHTML = "";
+        if (promptAdditionalList) promptAdditionalList.innerHTML = "";
+      }
       renderPromptCustomValues(customValues);
     }
 
@@ -3647,6 +3675,57 @@
       const text = (promptDraftText[mode] || "").trim();
       const customValues = promptCustomValuesByMode[mode] || [];
       renderPromptSectionsFromText(text, customValues);
+    }
+
+    function getActivePromptEntry(mode) {
+      const list = promptEntries[mode] || [];
+      const id = activePromptId[mode];
+      if (id) {
+        const found = list.find((entry) => entry && entry.id === id);
+        if (found) return found;
+      }
+      return list[0] || null;
+    }
+
+    function syncPromptStateFromEntry(mode) {
+      const entry = getActivePromptEntry(mode);
+      const content = entry && typeof entry.content === "string" ? entry.content : "";
+      const customValues = entry && Array.isArray(entry.prompt_custom_values) ? entry.prompt_custom_values : [];
+      promptDraftText[mode] = content;
+      promptCustomValuesByMode[mode] = customValues;
+      if (mode === "internal") {
+        promptInternalRawText = content;
+      } else {
+        promptRawText = content;
+      }
+      renderPromptForMode(mode);
+    }
+
+    function updatePromptEntryFromDom(mode) {
+      const entry = getActivePromptEntry(mode);
+      if (!entry) return;
+      if (mode === activeKbType) {
+        entry.content = buildPromptTextFromDom();
+        entry.prompt_custom_values = collectPromptCustomValuesFromDom();
+      }
+      promptDraftText[mode] = entry.content || "";
+      promptCustomValuesByMode[mode] = entry.prompt_custom_values || [];
+    }
+
+    function renderPromptSelect(mode) {
+      if (!promptSelect) return;
+      const entries = promptEntries[mode] || [];
+      promptSelect.innerHTML = entries
+        .map((entry, idx) => {
+          const title = entry && entry.title ? entry.title : `Prompt ${idx + 1}`;
+          const value = entry && entry.id ? entry.id : String(idx);
+          return `<option value="${escapeHtml(value)}">${escapeHtml(title)}</option>`;
+        })
+        .join("");
+      const active = activePromptId[mode];
+      if (entries.length) {
+        promptSelect.value = active || (entries[0] && entries[0].id) || "0";
+      }
     }
 
     function getPromptCustomValuesForMode(mode) {
@@ -3671,12 +3750,19 @@
           prompt: promptText,
           prompt_custom_values: promptCustomValues || [],
           kb_type: mode,
+          action: "update",
+          prompt_id: (activePromptId[mode] || ""),
         }),
       });
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
         const message = data && data.error ? data.error : "Failed to save prompt.";
         throw new Error(message);
+      }
+      const entry = getActivePromptEntry(mode);
+      if (entry) {
+        entry.content = promptText;
+        entry.prompt_custom_values = promptCustomValues || [];
       }
       return response.json().catch(() => ({}));
     }
@@ -3777,10 +3863,10 @@
 
     async function loadBotConfig() {
       try {
-        const res = await fetch(`/bot-config?accountid=${encodeURIComponent(accountId)}`);
+        const res = await fetch(`/bot-config?accountid=${encodeURIComponent(accountId)}&ts=${Date.now()}`);
         const data = await res.json();
-        if (!data || !data.config) return;
-        const cfg = data.config;
+        if (!data) return;
+        const cfg = normalizeBotConfig(data);
         applySettingsPayload(cfg);
         settingsSnapshot = { ...cfg };
         clearDirty("settings");
@@ -3788,6 +3874,57 @@
         updatePublishState();
       } catch (err) {
         console.error("Failed to load bot config", err);
+      }
+    }
+
+    function buildDefaultPromptEntry(mode) {
+      return {
+        id: `prompt_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`,
+        title: "Prompt",
+        accountid: accountId,
+        kb_type: mode,
+        notes: "",
+        content: "",
+        source: "dashboard",
+        entry_type: "article",
+        updated_at: new Date().toISOString(),
+        prompt_custom_values: [],
+      };
+    }
+
+    async function loadPromptEntries(mode) {
+      if (!accountId) return;
+      try {
+        const res = await fetch(
+          `/prompt?accountid=${encodeURIComponent(accountId)}&kb_type=${encodeURIComponent(mode)}`
+        );
+        const data = await res.json();
+        const entries = Array.isArray(data?.value) ? data.value : [];
+        entries.forEach((entry) => {
+          if (entry && !entry.id) {
+            entry.id = `prompt_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`;
+          }
+        });
+        promptEntries[mode] = entries;
+        if (!entries.length) {
+          promptEntries[mode] = [buildDefaultPromptEntry(mode)];
+        }
+        if (!activePromptId[mode]) {
+          activePromptId[mode] = promptEntries[mode][0] && promptEntries[mode][0].id ? promptEntries[mode][0].id : "";
+        }
+        if (activePromptId[mode]) {
+          const exists = promptEntries[mode].some((entry) => entry && entry.id === activePromptId[mode]);
+          if (!exists) {
+            activePromptId[mode] = promptEntries[mode][0] && promptEntries[mode][0].id ? promptEntries[mode][0].id : "";
+          }
+        }
+        renderPromptSelect(mode);
+        if (promptDeleteButton) {
+          promptDeleteButton.disabled = promptEntries[mode].length <= 1;
+        }
+        syncPromptStateFromEntry(mode);
+      } catch (err) {
+        console.error("Failed to load prompt entries", err);
       }
     }
 
@@ -3808,7 +3945,7 @@
           const embedBox = document.getElementById("embedScriptBox");
           if (embedBox) {
             embedBox.textContent =
-              `<script src="https://palacios-solutions.com/${accountId}/widget.js"></` +
+              `<script src="https://justgotalead.com/${accountId}/widget.js"></` +
               `script>`;
           }
         }
@@ -4077,12 +4214,12 @@
           confirmStopEditingButton.onclick = () => {
             closeModal(confirmStopEditingModal);
             restoreKbSnapshot(ctx);
-            togglePromptEditing(false);
             if (ctx.editToggle) {
               ctx.editToggle.textContent = "Edit";
               ctx.editToggle.classList.remove("is-danger");
               ctx.editToggle.classList.add("is-success");
             }
+            togglePromptEditing(false);
             if (ctx.saveButton) {
               ctx.saveButton.style.display = "none";
             }
@@ -4709,7 +4846,11 @@
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = "chatbot-chip";
-        const text = chip.childNodes[0] ? chip.childNodes[0].textContent.trim() : chip.textContent.trim();
+        let text = (chip.dataset && chip.dataset.value) || "";
+        if (!text) {
+          text = chip.textContent.replace("×", "").trim();
+        }
+        if (!text) return;
         btn.textContent = text;
         previewChips.appendChild(btn);
       });
@@ -4722,6 +4863,7 @@
       if (!trimmed) return;
       const chip = document.createElement("span");
       chip.className = "chip";
+      chip.dataset.value = trimmed;
       chip.innerHTML = `${trimmed} <button type="button" aria-label="Remove">×</button>`;
       chipEditor.appendChild(chip);
       syncPreviewChips();
@@ -4777,8 +4919,10 @@
       let value = "";
       if (target === "personality") {
         const lines = [];
-        if (promptPersonalityMain) lines.push((promptPersonalityMain.dataset.raw || promptPersonalityMain.textContent || "").trim());
-        if (promptPersonalityRestriction) lines.push((promptPersonalityRestriction.dataset.raw || promptPersonalityRestriction.textContent || "").trim());
+        if (promptPersonalityMain)
+          lines.push((promptPersonalityMain.dataset.raw || promptPersonalityMain.textContent || "").trim());
+        if (promptPersonalityRestriction)
+          lines.push((promptPersonalityRestriction.dataset.raw || promptPersonalityRestriction.textContent || "").trim());
         value = lines.filter(Boolean).join("\n");
         if (promptEditTitle) promptEditTitle.textContent = "Edit Personality";
       } else if (target === "intent") {
@@ -4786,7 +4930,8 @@
         if (promptEditTitle) promptEditTitle.textContent = "Edit Intent";
       } else if (target === "additional") {
         const lines = [];
-        if (promptAdditionalIntro) lines.push((promptAdditionalIntro.dataset.raw || promptAdditionalIntro.textContent || "").trim());
+        if (promptAdditionalIntro)
+          lines.push((promptAdditionalIntro.dataset.raw || promptAdditionalIntro.textContent || "").trim());
         if (promptAdditionalList) {
           promptAdditionalList.querySelectorAll("li").forEach((li) => {
             const text = li.textContent.trim();
@@ -4807,6 +4952,55 @@
     }
     if (promptEditAdditional) {
       promptEditAdditional.addEventListener("click", () => openPromptEdit("additional"));
+    }
+    // Prompt section edit modal removed.
+    if (promptCustomSave && promptCustomInput) {
+      promptCustomSave.addEventListener("click", () => {
+        const value = promptCustomInput.value.trim();
+        if (!value) return;
+        const existing = document.querySelector(".prompt-custom-item[data-editing='true']");
+        if (existing) {
+          existing.dataset.value = value;
+          const textSpan = existing.querySelector("span");
+          if (textSpan) textSpan.textContent = value;
+          existing.dataset.editing = "";
+        } else {
+          const row = document.createElement("div");
+          row.className = "prompt-custom-item";
+          row.dataset.value = value;
+          row.innerHTML = `<span>${value}</span><div><button type="button" class="prompt-edit" aria-label="Edit">Edit</button><button type="button" aria-label="Remove">×</button></div>`;
+          const editBtn = row.querySelector(".prompt-edit");
+          const removeBtn = row.querySelector("button[aria-label='Remove']");
+          if (editBtn) {
+            editBtn.addEventListener("click", () => {
+              promptCustomInput.value = row.dataset.value || "";
+              promptCustomTarget = promptCustomAdditional && promptCustomAdditional.contains(row)
+                ? "additional"
+                : promptCustomIntent && promptCustomIntent.contains(row)
+                ? "intent"
+                : "personality";
+              row.dataset.editing = "true";
+              openModal(promptCustomModal);
+            });
+          }
+          if (removeBtn) {
+            removeBtn.addEventListener("click", () => {
+              row.remove();
+              setDirty("settings");
+            });
+          }
+          if (promptCustomTarget === "additional") {
+            if (promptCustomAdditional) promptCustomAdditional.appendChild(row);
+          } else if (promptCustomTarget === "intent") {
+            if (promptCustomIntent) promptCustomIntent.appendChild(row);
+          } else {
+            if (promptCustomPersonality) promptCustomPersonality.appendChild(row);
+          }
+        }
+        promptCustomInput.value = "";
+        setDirty("settings");
+        closeModal(promptCustomModal);
+      });
     }
     if (promptEditSave && promptEditInput) {
       promptEditSave.addEventListener("click", () => {
@@ -4863,52 +5057,106 @@
         closeModal(promptEditModal);
       });
     }
-    if (promptCustomSave && promptCustomInput) {
-      promptCustomSave.addEventListener("click", () => {
-        const value = promptCustomInput.value.trim();
-        if (!value) return;
-        const existing = document.querySelector(".prompt-custom-item[data-editing='true']");
-        if (existing) {
-          existing.dataset.value = value;
-          const textSpan = existing.querySelector("span");
-          if (textSpan) textSpan.textContent = value;
-          existing.dataset.editing = "";
-        } else {
-          const row = document.createElement("div");
-          row.className = "prompt-custom-item";
-          row.dataset.value = value;
-          row.innerHTML = `<span>${value}</span><div><button type="button" class="prompt-edit" aria-label="Edit">Edit</button><button type="button" aria-label="Remove">×</button></div>`;
-          const editBtn = row.querySelector(".prompt-edit");
-          const removeBtn = row.querySelector("button[aria-label='Remove']");
-          if (editBtn) {
-            editBtn.addEventListener("click", () => {
-              promptCustomInput.value = row.dataset.value || "";
-              promptCustomTarget = promptCustomAdditional && promptCustomAdditional.contains(row)
-                ? "additional"
-                : promptCustomIntent && promptCustomIntent.contains(row)
-                ? "intent"
-                : "personality";
-              row.dataset.editing = "true";
-              openModal(promptCustomModal);
+
+    if (promptSelect) {
+      promptSelect.addEventListener("change", () => {
+        updatePromptEntryFromDom(activeKbType);
+        const id = String(promptSelect.value || "");
+        activePromptId[activeKbType] = id;
+        syncPromptStateFromEntry(activeKbType);
+      });
+    }
+    if (promptCreateButton) {
+      promptCreateButton.addEventListener("click", async () => {
+        if (!accountId) return;
+        if (promptPersonalityMain) promptPersonalityMain.innerHTML = "";
+        if (promptPersonalityRestriction) promptPersonalityRestriction.innerHTML = "";
+        if (promptIntentText) promptIntentText.innerHTML = "";
+        if (promptAdditionalIntro) promptAdditionalIntro.innerHTML = "";
+        if (promptAdditionalList) promptAdditionalList.innerHTML = "";
+        if (promptCustomPersonality) promptCustomPersonality.innerHTML = "";
+        if (promptCustomIntent) promptCustomIntent.innerHTML = "";
+        if (promptCustomAdditional) promptCustomAdditional.innerHTML = "";
+        const entry = buildDefaultPromptEntry(activeKbType);
+        try {
+            const res = await fetch("/prompt-save", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                accountid: accountId,
+                kb_type: activeKbType,
+                action: "create",
+                prompt_entry: entry,
+              }),
             });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || "Failed to create prompt.");
           }
-          if (removeBtn) {
-            removeBtn.addEventListener("click", () => {
-              row.remove();
-              setDirty("settings");
-            });
+          const payload = await res.json().catch(() => ({}));
+          await loadPromptEntries(activeKbType);
+          if (payload && payload.id) {
+            activePromptId[activeKbType] = payload.id;
           }
-          if (promptCustomTarget === "additional") {
-            if (promptCustomAdditional) promptCustomAdditional.appendChild(row);
-          } else if (promptCustomTarget === "intent") {
-            if (promptCustomIntent) promptCustomIntent.appendChild(row);
-          } else {
-            if (promptCustomPersonality) promptCustomPersonality.appendChild(row);
-          }
+          renderPromptSelect(activeKbType);
+          syncPromptStateFromEntry(activeKbType);
+        } catch (err) {
+          console.error(err);
         }
-        promptCustomInput.value = "";
-        setDirty("settings");
-        closeModal(promptCustomModal);
+      });
+    }
+    if (promptRenameButton) {
+      promptRenameButton.addEventListener("click", async () => {
+        const entry = getActivePromptEntry(activeKbType);
+        if (!entry || !accountId) return;
+        const currentTitle = entry.title || "Prompt";
+        const nextTitle = window.prompt("Rename prompt", currentTitle);
+        if (!nextTitle) return;
+        entry.title = nextTitle.trim() || currentTitle;
+        try {
+          await fetch("/prompt-save", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              accountid: accountId,
+              kb_type: activeKbType,
+              action: "update",
+              prompt_id: entry.id || "",
+              prompt: entry.content || "",
+              prompt_custom_values: entry.prompt_custom_values || [],
+              prompt_entry: entry,
+            }),
+          });
+          renderPromptSelect(activeKbType);
+        } catch (err) {
+          console.error(err);
+        }
+      });
+    }
+    if (promptDeleteButton) {
+      promptDeleteButton.addEventListener("click", async () => {
+        if (!accountId) return;
+        const prompt_id = activePromptId[activeKbType] || "";
+        try {
+          const res = await fetch("/prompt-save", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              accountid: accountId,
+              kb_type: activeKbType,
+              action: "delete",
+              prompt_id,
+            }),
+          });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || "Failed to delete prompt.");
+          }
+          activePromptId[activeKbType] = "";
+          await loadPromptEntries(activeKbType);
+        } catch (err) {
+          console.error(err);
+        }
       });
     }
 
@@ -4929,7 +5177,6 @@
       }
       const dataset = getRangeData(rangeLabel);
       if (!dataset || !leadsChartCanvas) return;
-      console.log("Chart dataset:", dataset);
       const sum = dataset.values.reduce((total, value) => total + value, 0);
       const formatted = sum.toLocaleString();
       if (leadsCapturedValue) {
@@ -4948,7 +5195,6 @@
       }
       ensureChartReady()
         .then(() => {
-          console.log("Chart.js ready:", !!window.Chart);
           renderLeadsChart(dataset.labels, dataset.values);
           const serviceData = buildServiceSeries(leadRecords);
           renderServiceChart(serviceData.labels, serviceData.values);
@@ -4959,7 +5205,9 @@
     function buildServiceSeries(leads) {
       const map = new Map();
       leads.forEach((lead) => {
-        const key = (lead.service || "Other").trim() || "Other";
+        const raw =
+          lead.service || lead.service_requested || lead.serviceRequested || lead.type || lead.category || "Other";
+        const key = String(raw || "Other").trim() || "Other";
         map.set(key, (map.get(key) || 0) + 1);
       });
       const entries = Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
@@ -5004,7 +5252,7 @@
 
     if (copyEmbedButton) {
       const originalText = copyEmbedButton.textContent;
-      const embedBox = document.querySelector(".embed-box");
+      const embedBox = document.getElementById("embedScriptBox");
       copyEmbedButton.addEventListener("click", async () => {
         const embedText = embedBox ? embedBox.textContent : "";
         try {
@@ -5059,14 +5307,11 @@
           console.error("Leads fetch failed", res.status);
         }
         const data = await res.json();
-        console.log("Leads response:", data);
         const series = Array.isArray(data?.series) ? data.series : Array.isArray(data) ? data : [];
         leadRecords.length = 0;
         series.forEach((lead) => leadRecords.push(lead));
-        console.log("Leads normalized:", leadRecords);
         ytdSeries.length = 0;
         buildYtdSeriesFromLeads(leadRecords).forEach((row) => ytdSeries.push(row));
-        console.log("YTD series:", ytdSeries);
         leadsTableColumns = buildLeadColumns(leadRecords);
         rebuildLeadTableHeader(leadsTableColumns);
         renderLeadTable();
@@ -5735,6 +5980,55 @@
             bubble.appendChild(dots);
           } else {
             bubble.appendChild(buildInsightsContent(msg.text, msg.showChart, msg.chartType, msg.rows || []));
+            if (msg.bookingForm) {
+              const form = document.createElement("form");
+              form.className = "insights-booking-form";
+              form.innerHTML = `
+                <div class="booking-form-title">Book Your Free Estimate</div>
+                <div class="booking-form-subtitle">Share your details and we'll confirm the appointment.</div>
+                <div class="booking-form-grid">
+                  <label><span>Full Name</span><input type="text" name="name" placeholder="Full name" required></label>
+                  <label><span>Email</span><input type="email" name="email" placeholder="Email"></label>
+                  <label><span>Phone</span><input type="tel" name="phone" placeholder="Phone" required></label>
+                  <label><span>Service</span><input type="text" name="service" placeholder="Service requested"></label>
+                  <label><span>Date</span><input type="date" name="date" required></label>
+                  <label><span>Time</span><input type="time" name="time" required></label>
+                  <label class="booking-form-notes"><span>Notes</span><textarea name="note" rows="3" placeholder="Anything else?"></textarea></label>
+                </div>
+                <div class="booking-form-actions">
+                  <button type="button" class="btn secondary booking-form-cancel">Cancel</button>
+                  <button type="submit" class="btn publish">Submit</button>
+                </div>
+              `;
+              form.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                const payload = Object.fromEntries(new FormData(form).entries());
+                payload.accountid = accountId;
+                try {
+                  const res = await fetch(`${window.location.origin}/book-estimate`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                  });
+                  if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    throw new Error(data.error || "Failed to submit booking form.");
+                  }
+                  form.remove();
+                  const confirmation = document.createElement("div");
+                  confirmation.className = "booking-form-confirm";
+                  confirmation.textContent = "Thanks! Your booking request has been submitted.";
+                  bubble.appendChild(confirmation);
+                  loadLeads();
+                } catch (err) {
+                  console.error(err);
+                }
+              });
+              form.querySelector(".booking-form-cancel")?.addEventListener("click", () => {
+                form.remove();
+              });
+              bubble.appendChild(form);
+            }
           }
         } else {
           bubble.textContent = msg.text;
@@ -5947,7 +6241,6 @@
         const requestMode = activeKbType;
         insightsAskButton.disabled = true;
         try {
-          const promptPayload = getPromptForMode(requestMode);
           const res = await fetch(`${window.location.origin}/chat`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -5956,17 +6249,16 @@
               kb_type: requestMode,
               use_silver: false,
               accountid: accountId,
-              prompt: promptPayload,
             }),
           });
           const data = await res.json();
-          console.log("Insights raw response:", data);
           if (requestId !== insightsRequestId || requestMode !== activeKbType) {
             return;
           }
           if (data && data.answer) {
             let answerText = data.answer;
             let nextQuestions = normalizeNextQuestions(data.next_questions || data.nextQuestions);
+            let bookingForm = !!data.booking_form;
             if (typeof answerText === "string" && answerText.trim().startsWith("{")) {
               const raw = answerText.trim();
               const tryParse = (text) => {
@@ -5984,8 +6276,9 @@
                   parsed = tryParse(raw.slice(start, end + 1));
                 }
               }
-              if (parsed && parsed.type === "booking_form") {
+              if (parsed && (parsed.type === "booking_form" || parsed.booking_form)) {
                 answerText = "Thanks! Please provide your booking details to continue.";
+                bookingForm = true;
               } else if (parsed && parsed.answer) {
                 answerText = parsed.answer;
                 if (!nextQuestions.length) {
@@ -6012,6 +6305,7 @@
                 chartType: data.chart_type || "",
                 rows: data.rows || [],
                 nextQuestions,
+                bookingForm,
               };
             } else {
               thread.push({
@@ -6021,6 +6315,7 @@
                 chartType: data.chart_type || "",
                 rows: data.rows || [],
                 nextQuestions,
+                bookingForm,
               });
             }
             renderInsightsChat(requestMode);
@@ -6034,7 +6329,6 @@
             }
             renderInsightsChat(requestMode);
             if (data && data.appointment_scheduled) {
-              console.log("New lead (appointment_scheduled):", data);
               const nowIso = new Date().toISOString();
               const lead = {
                 name: data.name || "",
@@ -6154,11 +6448,8 @@
     if (insightsClientBtn && insightsInternalBtn && kbCardClient && kbCardInternal) {
       setMode = (mode) => {
         const isClient = mode === "client";
-        const previousMode = activeKbType;
-        promptDraftText[previousMode] = buildPromptTextFromDom();
-        promptCustomValuesByMode[previousMode] = collectPromptCustomValuesFromDom();
         if (insightsInput) {
-          insightsMemory[previousMode] = {
+          insightsMemory[activeKbType] = {
             question: insightsInput.value,
           };
         }
@@ -6177,7 +6468,6 @@
           insightsInput.value = cached.question || "";
           renderInsightsChat(mode);
         }
-        renderPromptForMode(mode);
         if (kbCardClient) {
           kbCardClient.classList.toggle("is-active", isClient);
           kbCardClient.classList.toggle("is-inactive", !isClient);
