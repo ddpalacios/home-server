@@ -6226,9 +6226,11 @@
     }
 
     let insightsRequestId = 0;
+    let insightsInFlight = false;
     if (insightsForm && insightsInput && insightsAskButton) {
       insightsForm.addEventListener("submit", async (event) => {
         event.preventDefault();
+        if (insightsInFlight) return;
         const question = insightsInput.value.trim();
         if (!question) return;
         const existingSuggestions = insightsChat ? insightsChat.querySelectorAll(".insights-suggestions") : [];
@@ -6237,9 +6239,9 @@
         insightsMessages[activeKbType].push({ role: "user", text: question });
         insightsMessages[activeKbType].push({ role: "bot", text: "typing", thinking: true });
         renderInsightsChat(activeKbType);
-        const requestId = ++insightsRequestId;
         const requestMode = activeKbType;
         insightsAskButton.disabled = true;
+        insightsInFlight = true;
         try {
           const res = await fetch(`${window.location.origin}/chat`, {
             method: "POST",
@@ -6252,143 +6254,18 @@
             }),
           });
           const data = await res.json();
-          if (requestId !== insightsRequestId || requestMode !== activeKbType) {
-            return;
-          }
-          if (data && data.answer) {
-            let answerText = data.answer;
-            let nextQuestions = normalizeNextQuestions(data.next_questions || data.nextQuestions);
-            let bookingForm = !!data.booking_form;
-            if (typeof answerText === "string" && answerText.trim().startsWith("{")) {
-              const raw = answerText.trim();
-              const tryParse = (text) => {
-                try {
-                  return JSON.parse(text);
-                } catch (e) {
-                  return null;
-                }
-              };
-              let parsed = tryParse(raw);
-              if (!parsed) {
-                const start = raw.indexOf("{");
-                const end = raw.lastIndexOf("}");
-                if (start !== -1 && end !== -1 && end > start) {
-                  parsed = tryParse(raw.slice(start, end + 1));
-                }
-              }
-              if (parsed && (parsed.type === "booking_form" || parsed.booking_form)) {
-                answerText = "Thanks! Please provide your booking details to continue.";
-                bookingForm = true;
-              } else if (parsed && parsed.answer) {
-                answerText = parsed.answer;
-                if (!nextQuestions.length) {
-                  nextQuestions = normalizeNextQuestions(parsed.next_questions || parsed.nextQuestions);
-                }
-              }
-            }
-            if (typeof answerText === "string") {
-              answerText = stripNextQuestionsFromAnswer(answerText);
-            }
-            if (!Array.isArray(nextQuestions)) nextQuestions = [];
-            const thread = insightsMessages[requestMode];
-            thread.forEach((msg) => {
-              if (msg && msg.role === "bot" && msg.nextQuestions) {
-                delete msg.nextQuestions;
-              }
-            });
-            const lastIndex = thread.length - 1;
-            if (lastIndex >= 0 && thread[lastIndex].role === "bot") {
-              thread[lastIndex] = {
-                role: "bot",
-                text: answerText,
-                showChart: !!data.show_chart,
-                chartType: data.chart_type || "",
-                rows: data.rows || [],
-                nextQuestions,
-                bookingForm,
-              };
-            } else {
-              thread.push({
-                role: "bot",
-                text: answerText,
-                showChart: !!data.show_chart,
-                chartType: data.chart_type || "",
-                rows: data.rows || [],
-                nextQuestions,
-                bookingForm,
-              });
-            }
-            renderInsightsChat(requestMode);
-          } else if (data && data.error) {
-            const thread = insightsMessages[requestMode];
-            const lastIndex = thread.length - 1;
-            if (lastIndex >= 0 && thread[lastIndex].role === "bot") {
-              thread[lastIndex] = { role: "bot", text: data.error, animate: false };
-            } else {
-              thread.push({ role: "bot", text: data.error, animate: false });
-            }
-            renderInsightsChat(requestMode);
-            if (data && data.appointment_scheduled) {
-              const nowIso = new Date().toISOString();
-              const lead = {
-                name: data.name || "",
-                address: data.address || "",
-                email: data.email || "",
-                phone: data.phonenumber || data.phone || "",
-                scheduled_at: data.scheduled_at || "",
-                service: data.service || "",
-                note: data.note || "",
-                created_at: nowIso,
-              };
-              leadRecords.unshift(lead);
-              ytdSeries.length = 0;
-              buildYtdSeriesFromLeads(leadRecords).forEach((row) => ytdSeries.push(row));
-              leadsTableColumns = buildLeadColumns(leadRecords);
-              rebuildLeadTableHeader(leadsTableColumns);
-              renderLeadTable();
-              updateChart(chartFilter ? chartFilter.value : "Last 7 days");
-              if (leadsCapturedValue) {
-                const totalLeads = ytdSeries.reduce((sum, item) => sum + item.leads, 0);
-                const formatted = totalLeads.toLocaleString();
-                leadsCapturedValue.setAttribute("data-text", formatted);
-                leadsCapturedValue.textContent = formatted;
-              }
-              setTimeout(loadLeads, 600);
-            }
-          } else {
-            const thread = insightsMessages[requestMode];
-            const lastIndex = thread.length - 1;
-            if (lastIndex >= 0 && thread[lastIndex].role === "bot") {
-              thread[lastIndex] = {
-                role: "bot",
-                text:
-                  "Insights will appear here. Example: “You received 24 leads this week, with Outdoor Kitchens leading requests.”",
-              };
-            } else {
-              thread.push({
-                role: "bot",
-                text:
-                  "Insights will appear here. Example: “You received 24 leads this week, with Outdoor Kitchens leading requests.”",
-              });
-            }
-            renderInsightsChat(requestMode);
-          }
-        } catch (err) {
-          if (requestId !== insightsRequestId || requestMode !== activeKbType) {
-            return;
-          }
+          const responseText = data && (data.response || data.answer) ? String(data.response || data.answer).trim() : "";
           const thread = insightsMessages[requestMode];
           const lastIndex = thread.length - 1;
           if (lastIndex >= 0 && thread[lastIndex].role === "bot") {
-            thread[lastIndex] = { role: "bot", text: "Sorry, something went wrong." };
+            thread[lastIndex] = { role: "bot", text: responseText || "" };
           } else {
-            thread.push({ role: "bot", text: "Sorry, something went wrong." });
+            thread.push({ role: "bot", text: responseText || "" });
           }
           renderInsightsChat(requestMode);
         } finally {
-          if (requestId === insightsRequestId) {
-            insightsAskButton.disabled = false;
-          }
+          insightsAskButton.disabled = false;
+          insightsInFlight = false;
         }
       });
       if (insightsClearButton) {
@@ -6396,15 +6273,11 @@
           insightsMessages[activeKbType] = [];
           renderInsightsChat(activeKbType);
           insightsInput.value = "";
-          try {
-            await fetch(`${window.location.origin}/chat-reset`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ accountid: accountId, kb_type: activeKbType }),
-            });
-          } catch (err) {
-            console.error("Failed to clear chat history", err);
-          }
+          await fetch(`${window.location.origin}/chat-reset`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ accountid: accountId, kb_type: activeKbType }),
+          });
         });
       }
     }
