@@ -1124,6 +1124,33 @@
       flex-wrap: wrap;
       margin-bottom: 12px;
     }
+    .leads-refresh {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border-radius: 999px;
+      border: 1px solid #dbe3f0;
+      background: #ffffff;
+      color: #1f2a44;
+      cursor: pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+    }
+    .leads-refresh:hover {
+      border-color: #9bb7ff;
+      box-shadow: 0 8px 20px rgba(30, 64, 175, 0.12);
+      transform: translateY(-1px);
+    }
+    .leads-refresh:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+    .leads-refresh svg {
+      width: 18px;
+      height: 18px;
+    }
 
     .leads-filter {
       display: flex;
@@ -2320,6 +2347,12 @@
               <input type="text" id="leadsFilterValue" placeholder="Filter value..." />
               <button class="btn secondary" type="button" id="leadsFilterClear">Clear</button>
               <button class="btn secondary embed" type="button" id="leadsSyncButton">Sync Leads</button>
+              <button class="leads-refresh" type="button" id="leadsRefreshButton" aria-label="Refresh leads">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M20 4v6h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
             </div>
             <div class="leads-pagination">
               <button class="btn secondary" type="button" id="leadsPrevPage">←</button>
@@ -2799,6 +2832,7 @@
     const leadsNextPage = document.getElementById("leadsNextPage");
     const leadsPageInfo = document.getElementById("leadsPageInfo");
     const leadsExportButton = document.getElementById("leadsExportButton");
+    const leadsRefreshButton = document.getElementById("leadsRefreshButton");
 
     let accountId = "";
     const domainList = document.getElementById("domainList");
@@ -5297,6 +5331,11 @@
         }
       });
     }
+    if (leadsRefreshButton) {
+      leadsRefreshButton.addEventListener("click", async () => {
+        await loadLeads();
+      });
+    }
 
     async function loadLeads() {
       if (!accountId) return;
@@ -5307,8 +5346,9 @@
           console.error("Leads fetch failed", res.status);
         }
         const data = await res.json();
-        const series = Array.isArray(data?.series) ? data.series : Array.isArray(data) ? data : [];
+        const series = Array.isArray(data?.values) ? data.values : [];
         leadRecords.length = 0;
+        console.log(data);
         series.forEach((lead) => leadRecords.push(lead));
         ytdSeries.length = 0;
         buildYtdSeriesFromLeads(leadRecords).forEach((row) => ytdSeries.push(row));
@@ -5980,55 +6020,6 @@
             bubble.appendChild(dots);
           } else {
             bubble.appendChild(buildInsightsContent(msg.text, msg.showChart, msg.chartType, msg.rows || []));
-            if (msg.bookingForm) {
-              const form = document.createElement("form");
-              form.className = "insights-booking-form";
-              form.innerHTML = `
-                <div class="booking-form-title">Book Your Free Estimate</div>
-                <div class="booking-form-subtitle">Share your details and we'll confirm the appointment.</div>
-                <div class="booking-form-grid">
-                  <label><span>Full Name</span><input type="text" name="name" placeholder="Full name" required></label>
-                  <label><span>Email</span><input type="email" name="email" placeholder="Email"></label>
-                  <label><span>Phone</span><input type="tel" name="phone" placeholder="Phone" required></label>
-                  <label><span>Service</span><input type="text" name="service" placeholder="Service requested"></label>
-                  <label><span>Date</span><input type="date" name="date" required></label>
-                  <label><span>Time</span><input type="time" name="time" required></label>
-                  <label class="booking-form-notes"><span>Notes</span><textarea name="note" rows="3" placeholder="Anything else?"></textarea></label>
-                </div>
-                <div class="booking-form-actions">
-                  <button type="button" class="btn secondary booking-form-cancel">Cancel</button>
-                  <button type="submit" class="btn publish">Submit</button>
-                </div>
-              `;
-              form.addEventListener("submit", async (event) => {
-                event.preventDefault();
-                const payload = Object.fromEntries(new FormData(form).entries());
-                payload.accountid = accountId;
-                try {
-                  const res = await fetch(`${window.location.origin}/book-estimate`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload),
-                  });
-                  if (!res.ok) {
-                    const data = await res.json().catch(() => ({}));
-                    throw new Error(data.error || "Failed to submit booking form.");
-                  }
-                  form.remove();
-                  const confirmation = document.createElement("div");
-                  confirmation.className = "booking-form-confirm";
-                  confirmation.textContent = "Thanks! Your booking request has been submitted.";
-                  bubble.appendChild(confirmation);
-                  loadLeads();
-                } catch (err) {
-                  console.error(err);
-                }
-              });
-              form.querySelector(".booking-form-cancel")?.addEventListener("click", () => {
-                form.remove();
-              });
-              bubble.appendChild(form);
-            }
           }
         } else {
           bubble.textContent = msg.text;
@@ -6227,6 +6218,16 @@
 
     let insightsRequestId = 0;
     let insightsInFlight = false;
+    async function save_lead(lead) {
+      const payload = { ...(lead || {}) };
+      payload.accountid = payload.accountid || payload.account_id || accountId;
+      delete payload.account_id;
+      return fetch(`${window.location.origin}/book-estimate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    }
     if (insightsForm && insightsInput && insightsAskButton) {
       insightsForm.addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -6254,7 +6255,14 @@
             }),
           });
           const data = await res.json();
-          const responseText = data && (data.response || data.answer) ? String(data.response || data.answer).trim() : "";
+          let responseText = String(data.response).trim();
+
+          if (data.booking_complete) {
+            alert("Booking confirmed! We look forward to serving you.");
+            console.log(data)
+            save_lead(data);
+
+          } 
           const thread = insightsMessages[requestMode];
           const lastIndex = thread.length - 1;
           if (lastIndex >= 0 && thread[lastIndex].role === "bot") {

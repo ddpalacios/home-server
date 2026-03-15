@@ -441,6 +441,9 @@ void send_buffer_response_code(SSL* cSSL, int code, char* buffer, size_t buffer_
 				snprintf(http_header, sizeof(http_header),
 						"HTTP/1.1 %s\r\n"
 						"Content-Type:  application/octet-stream\r\n"
+						"Access-Control-Allow-Origin: *\r\n"
+						"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+						"Access-Control-Allow-Headers: Content-Type\r\n"
 						"Connection: close\r\n"
 						"Content-Length: %zu\r\n"
 						"\r\n", code_text,buffer_length);
@@ -458,6 +461,9 @@ void send_css_response_code(SSL* cSSL,int code, int content_length){
 		snprintf(http_header, sizeof(http_header),
 				 "HTTP/1.1 %s\r\n"
 				  "Content-Type: text/css\r\n"
+				  "Access-Control-Allow-Origin: *\r\n"
+				  "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+				  "Access-Control-Allow-Headers: Content-Type\r\n"
 				   "Connection: close\r\n"
 				   "Content-Length: %d\r\n"
 				   "\r\n", code_text,content_length);
@@ -467,6 +473,9 @@ void send_css_response_code(SSL* cSSL,int code, int content_length){
 		snprintf(http_header, sizeof(http_header),
 				 "HTTP/1.1 %s\r\n"
 				  "Content-Type: text/css\r\n"
+				  "Access-Control-Allow-Origin: *\r\n"
+				  "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+				  "Access-Control-Allow-Headers: Content-Type\r\n"
 				   "Connection: close\r\n"
 				   "\r\n", code_text);
 	 SSL_write(cSSL, http_header, strlen(http_header));
@@ -480,6 +489,9 @@ void send_image_response_code(SSL* cSSL,int code, int content_length){
 		snprintf(http_header, sizeof(http_header),
 				 "HTTP/1.1 %s\r\n"
 				  "Content-Type: image/png\r\n"
+				  "Access-Control-Allow-Origin: *\r\n"
+				  "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+				  "Access-Control-Allow-Headers: Content-Type\r\n"
 				   "Connection: close\r\n"
 				   "Content-Length: %d\r\n"
 				   "\r\n", code_text,content_length);
@@ -489,6 +501,9 @@ void send_image_response_code(SSL* cSSL,int code, int content_length){
 		snprintf(http_header, sizeof(http_header),
 				 "HTTP/1.1 %s\r\n"
 				  "Content-Type: image/png\r\n"
+				  "Access-Control-Allow-Origin: *\r\n"
+				  "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+				  "Access-Control-Allow-Headers: Content-Type\r\n"
 				   "Connection: close\r\n"
 				   "\r\n", code_text);
 	 SSL_write(cSSL, http_header, strlen(http_header));
@@ -573,6 +588,9 @@ void send_html_response_code(SSL* cSSL,int code, int content_length){
 		snprintf(http_header, sizeof(http_header),
 				 "HTTP/1.1 %s\r\n"
 				  "Content-Type: text/html\r\n"
+				  "Access-Control-Allow-Origin: *\r\n"
+				  "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+				  "Access-Control-Allow-Headers: Content-Type\r\n"
 				   "Connection: close\r\n"
 				   "Content-Length: %d\r\n"
 				   "\r\n", code_text,content_length);
@@ -582,6 +600,9 @@ void send_html_response_code(SSL* cSSL,int code, int content_length){
 		snprintf(http_header, sizeof(http_header),
 				 "HTTP/1.1 %s\r\n"
 				  "Content-Type: text/html\r\n"
+				  "Access-Control-Allow-Origin: *\r\n"
+				  "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+				  "Access-Control-Allow-Headers: Content-Type\r\n"
 				   "Connection: close\r\n"
 				   "\r\n", code_text);
 	 SSL_write(cSSL, http_header, strlen(http_header));
@@ -659,6 +680,9 @@ void send_JSON_response_code( SSL *cSSL,int code, char* json){
 				snprintf(http_header, sizeof(http_header),
 						"HTTP/1.1 200 OK\r\n"
 					"Content-Type: application/json\r\n"
+					"Access-Control-Allow-Origin: *\r\n"
+					"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+					"Access-Control-Allow-Headers: Content-Type\r\n"
 					"Connection: close\r\n"
 					"Content-Length: %d\r\n"
 					"\r\n", json_length);
@@ -668,6 +692,9 @@ void send_JSON_response_code( SSL *cSSL,int code, char* json){
 				snprintf(http_header, sizeof(http_header),
 						"HTTP/1.1 201 Created\r\n"
 					"Content-Type: application/json\r\n"
+					"Access-Control-Allow-Origin: *\r\n"
+					"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+					"Access-Control-Allow-Headers: Content-Type\r\n"
 					"Connection: close\r\n"
 					"Content-Length: %d\r\n"
 					"\r\n", json_length);
@@ -678,6 +705,9 @@ void send_JSON_response_code( SSL *cSSL,int code, char* json){
 			snprintf(http_header, sizeof(http_header),
 					"HTTP/1.1 401 Unauthorized\r\n"
 					"Content-Type: application/json\r\n"
+					"Access-Control-Allow-Origin: *\r\n"
+					"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+					"Access-Control-Allow-Headers: Content-Type\r\n"
 					"Connection: close\r\n"
 					"Content-Length: %d\r\n"
 					"\r\n", json_length);
@@ -687,6 +717,9 @@ void send_JSON_response_code( SSL *cSSL,int code, char* json){
 			snprintf(http_header, sizeof(http_header),
 					"HTTP/1.1 400 Bad Request\r\n"
 					"Content-Type: application/json\r\n"
+					"Access-Control-Allow-Origin: *\r\n"
+					"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+					"Access-Control-Allow-Headers: Content-Type\r\n"
 					"Connection: close\r\n"
 					"Content-Length: %d\r\n"
 					"\r\n", json_length);
@@ -696,6 +729,9 @@ void send_JSON_response_code( SSL *cSSL,int code, char* json){
 			snprintf(http_header, sizeof(http_header),
 					"HTTP/1.1 409 Conflict\r\n"
 					"Content-Type: application/json\r\n"
+					"Access-Control-Allow-Origin: *\r\n"
+					"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+					"Access-Control-Allow-Headers: Content-Type\r\n"
 					"Connection: close\r\n"
 					"Content-Length: %d\r\n"
 					"\r\n", json_length);
@@ -706,6 +742,9 @@ void send_JSON_response_code( SSL *cSSL,int code, char* json){
 			snprintf(http_header, sizeof(http_header),
 					"HTTP/1.1 404 Not Found\r\n"
 					"Content-Type: application/json\r\n"
+					"Access-Control-Allow-Origin: *\r\n"
+					"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+					"Access-Control-Allow-Headers: Content-Type\r\n"
 					"Connection: close\r\n"
 					"Content-Length: %d\r\n"
 					"\r\n", json_length);
@@ -716,6 +755,9 @@ void send_JSON_response_code( SSL *cSSL,int code, char* json){
 			snprintf(http_header, sizeof(http_header),
 					"HTTP/1.1 405 Not Allowed\r\n"
 					"Content-Type: application/json\r\n"
+					"Access-Control-Allow-Origin: *\r\n"
+					"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+					"Access-Control-Allow-Headers: Content-Type\r\n"
 					"Connection: close\r\n"
 					"Content-Length: %d\r\n"
 					"\r\n", json_length);

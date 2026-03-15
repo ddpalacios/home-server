@@ -54,6 +54,21 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
 
     printf("Route: '%s %s'\n", request_type, route);
 
+    if (strcmp(request_type, "OPTIONS") == 0) {
+        char http_header[512];
+        snprintf(http_header, sizeof(http_header),
+                 "HTTP/1.1 204 No Content\r\n"
+                 "Access-Control-Allow-Origin: *\r\n"
+                 "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+                 "Access-Control-Allow-Headers: Content-Type\r\n"
+                 "Connection: close\r\n"
+                 "\r\n");
+        SSL_write(cSSL, http_header, strlen(http_header));
+        free(route);
+        free(request_type);
+        return;
+    }
+
     if (strcmp(request_type, "GET") == 0 && strcmp(route, "/") == 0) {
         get_live_html(cSSL, http_header, "portfolio/home.html");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/favicon.ico") != NULL) {
