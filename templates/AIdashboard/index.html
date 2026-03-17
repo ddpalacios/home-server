@@ -1802,12 +1802,20 @@
     }
 
     .widget-preview .chatbot-header {
-      background: #d9edff;
-      color: #0b1f33;
-      padding: 14px 16px;
+      background: linear-gradient(135deg, var(--header-color, #0f172a) 0%, rgba(15, 23, 42, 0.7) 100%);
+      color: #f8fafc;
+      padding: 16px 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.25);
+      backdrop-filter: blur(10px);
+    }
+    .widget-preview .chatbot-header-profile {
+      display: flex;
+      align-items: center;
       gap: 12px;
     }
 
@@ -1870,21 +1878,33 @@
       padding-left: 14px;
       padding-right: 14px;
     }
+    .widget-preview .chatbot-message.bot .chatbot-bubble {
+      border-bottom-left-radius: 6px;
+    }
 
     .widget-preview .chatbot-message.user {
       margin-left: auto;
     }
 
     .widget-preview .chatbot-bubble {
-      background: #ffffff;
-      border-radius: 14px;
+      background: #f8fbff;
+      border-radius: 16px;
       padding: 12px 14px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
-      border: 1px solid rgba(0, 0, 0, 0.04);
+      box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
+      border: 1px solid #e2e8f0;
+      color: #0f172a;
       display: flex;
       flex-direction: column;
       gap: 6px;
       min-height: 0;
+    }
+
+    .widget-preview .chatbot-message.user .chatbot-bubble {
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 10px 18px rgba(37, 99, 235, 0.2);
+      border-bottom-right-radius: 6px;
     }
 
     .widget-preview .chatbot-agent-square {
@@ -1924,7 +1944,7 @@
 
     .widget-preview .chatbot-timestamp {
       font-size: 0.72rem;
-      color: #7a8a7f;
+      color: #ffffff;
     }
 
     .widget-preview .chatbot-suggestions {
@@ -2584,6 +2604,14 @@
             <input type="color" id="accentColor" value="#56ccf2" />
           </label>
           <label>
+            Header Gradient Start
+            <input type="color" id="headerGradientStart" value="#eef2f7" />
+          </label>
+          <label>
+            Header Gradient End
+            <input type="color" id="headerGradientEnd" value="#d9e1ec" />
+          </label>
+          <label>
             Widget Icon
             <select id="iconSelect">
               <option value="chat">Chat Bubble</option>
@@ -2627,9 +2655,11 @@
             </button>
               <div class="chatbot-panel" aria-live="polite">
                 <div class="chatbot-header">
-                  <div class="chatbot-header-text">
-                    <div class="chatbot-title" id="previewName"></div>
-                  <div class="chatbot-subtitle" id="previewSubtitle"></div>
+                  <div class="chatbot-header-profile">
+                    <div class="chatbot-header-text">
+                      <div class="chatbot-title" id="previewName"></div>
+                      <div class="chatbot-subtitle" id="previewSubtitle"></div>
+                    </div>
                   </div>
                   <button class="chatbot-fullscreen" type="button">Full</button>
                 </div>
@@ -2866,6 +2896,8 @@
     const confirmSettingsSaveModal = document.getElementById("confirmSettingsSaveModal");
     const confirmSettingsSaveButton = document.getElementById("confirmSettingsSaveButton");
     const settingsSaveLoading = document.getElementById("settingsSaveLoading");
+    const headerGradientStart = document.getElementById("headerGradientStart");
+    const headerGradientEnd = document.getElementById("headerGradientEnd");
     const confirmStopEditingModal = document.getElementById("confirmStopEditingModal");
     const confirmStopEditingButton = document.getElementById("confirmStopEditingButton");
     const saveToast = document.getElementById("saveToast");
@@ -3297,15 +3329,37 @@
     }
 
     function updatePreview() {
+      const toRgb = (hex) => {
+        const clean = String(hex || "").replace("#", "");
+        if (clean.length !== 6) return null;
+        const r = parseInt(clean.slice(0, 2), 16);
+        const g = parseInt(clean.slice(2, 4), 16);
+        const b = parseInt(clean.slice(4, 6), 16);
+        if ([r, g, b].some((v) => Number.isNaN(v))) return null;
+        return { r, g, b };
+      };
+      const toHex = (v) => v.toString(16).padStart(2, "0");
+      const lightenHex = (hex, amount) => {
+        const rgb = toRgb(hex);
+        if (!rgb) return "#ffffff";
+        const r = Math.min(255, Math.round(rgb.r + (255 - rgb.r) * amount));
+        const g = Math.min(255, Math.round(rgb.g + (255 - rgb.g) * amount));
+        const b = Math.min(255, Math.round(rgb.b + (255 - rgb.b) * amount));
+        return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+      };
       previewName.textContent = nameInput.value || "AI Assistant";
       previewGreeting.textContent = greetingMessage.value || "Hi! How can I help you today?";
       previewSubtitle.textContent = subtitleMessage.value || "Ask about services, pricing, or scheduling";
       previewPanel.style.setProperty("--forest", primaryColor.value);
       previewPanel.style.setProperty("--earth", primaryColor.value);
       previewPanel.style.setProperty("--leaf", accentColor.value);
+      previewPanel.style.setProperty("--header-gradient-start", headerGradientStart.value || "#eef2f7");
+      previewPanel.style.setProperty("--header-gradient-end", headerGradientEnd.value || "#d9e1ec");
       const header = previewPanel.querySelector(".chatbot-header");
       if (header) {
-        header.style.background = `${accentColor.value}33`;
+        const start = headerGradientStart.value || "#eef2f7";
+        const end = headerGradientEnd.value || "#d9e1ec";
+        header.style.background = `linear-gradient(135deg, ${start} 0%, ${end} 100%)`;
       }
       previewPanel.querySelectorAll(".chatbot-chip").forEach((chip) => {
         chip.style.borderColor = `${accentColor.value}55`;
@@ -3319,7 +3373,7 @@
       previewIcon.innerHTML = iconSvgs[value] || iconSvgs.chat;
     }
 
-    [nameInput, greetingMessage, subtitleMessage, primaryColor, accentColor, iconSelect].forEach((el) => {
+    [nameInput, greetingMessage, subtitleMessage, primaryColor, accentColor, headerGradientStart, headerGradientEnd, iconSelect].forEach((el) => {
       el.addEventListener("input", () => {
         updatePreview();
         setDirty("settings");
@@ -3342,6 +3396,8 @@
         subtitle_header: subtitleMessage ? subtitleMessage.value.trim() : "",
         primary_color: primaryColor ? primaryColor.value : "",
         accent_color: accentColor ? accentColor.value : "",
+        header_gradient_start: headerGradientStart ? headerGradientStart.value : "",
+        header_gradient_end: headerGradientEnd ? headerGradientEnd.value : "",
         widget_icon: iconSelect ? iconSelect.value : "",
         default_start_questions: questions,
       };
@@ -3412,6 +3468,12 @@
         subtitle_header: cfg.subtitle_header || "",
         primary_color: /^#[0-9a-fA-F]{6}$/.test(cfg.primary_color || "") ? cfg.primary_color : "#2f80ed",
         accent_color: /^#[0-9a-fA-F]{6}$/.test(cfg.accent_color || "") ? cfg.accent_color : "#56ccf2",
+        header_gradient_start: /^#[0-9a-fA-F]{6}$/.test(cfg.header_gradient_start || "")
+          ? cfg.header_gradient_start
+          : "#eef2f7",
+        header_gradient_end: /^#[0-9a-fA-F]{6}$/.test(cfg.header_gradient_end || "")
+          ? cfg.header_gradient_end
+          : "#d9e1ec",
         widget_icon: cfg.widget_icon || "chat",
         default_start_questions: normalizeStartQuestions(
           cfg.default_start_questions || raw.default_start_questions
@@ -3426,6 +3488,8 @@
       if (subtitleMessage) subtitleMessage.value = cfg.subtitle_header;
       if (primaryColor) primaryColor.value = cfg.primary_color;
       if (accentColor) accentColor.value = cfg.accent_color;
+      if (headerGradientStart) headerGradientStart.value = cfg.header_gradient_start;
+      if (headerGradientEnd) headerGradientEnd.value = cfg.header_gradient_end;
       if (iconSelect) iconSelect.value = cfg.widget_icon;
       if (chipEditor) {
         chipEditor.innerHTML = "";

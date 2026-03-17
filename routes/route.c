@@ -52,7 +52,32 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
     strncpy(request_type, http_header, request_type_len);
     request_type[request_type_len] = '\0';
 
-    printf("Route: '%s %s'\n", request_type, route);
+    // Print a decoded route for cleaner logs (do not affect routing).
+    char *decoded_route = NULL;
+    {
+        decoded_route = malloc(route_len + 1);
+        if (decoded_route) {
+            size_t di = 0;
+            for (size_t i = 0; i < route_len; i++) {
+                if (route[i] == '%' && i + 2 < route_len) {
+                    char hex[3] = { route[i + 1], route[i + 2], '\0' };
+                    char *endptr = NULL;
+                    long val = strtol(hex, &endptr, 16);
+                    if (endptr && *endptr == '\0') {
+                        decoded_route[di++] = (char)val;
+                        i += 2;
+                        continue;
+                    }
+                }
+                decoded_route[di++] = route[i];
+            }
+            decoded_route[di] = '\0';
+        }
+    }
+    printf("Route: '%s %s'\n", request_type, decoded_route ? decoded_route : route);
+    if (decoded_route) {
+        free(decoded_route);
+    }
 
     if (strcmp(request_type, "OPTIONS") == 0) {
         char http_header[512];
@@ -86,6 +111,7 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/widget.html") == 0) {
         get_to_local(socket, http_header, body, route, "9000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/robot_icon.png") == 0) {
+        printf("Serving robot_icon.png\n");
         get_to_local(socket, http_header, body, route, "9000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/widget.js") != NULL) {
         get_to_local(socket, http_header, body, route, "9000");
