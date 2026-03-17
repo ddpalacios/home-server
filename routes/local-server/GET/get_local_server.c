@@ -218,6 +218,10 @@ void get_to_local(struct Socket* socket, char* http_header, char* body, char* ro
         if (content_type) {
             offset += snprintf(header_out + offset, sizeof(header_out) - offset, "Content-Type: %s\r\n", content_type);
         }
+        offset += snprintf(header_out + offset, sizeof(header_out) - offset,
+                           "Access-Control-Allow-Origin: *\r\n"
+                           "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+                           "Access-Control-Allow-Headers: Content-Type\r\n");
         offset += snprintf(header_out + offset, sizeof(header_out) - offset, "Content-Length: %zu\r\n\r\n", body_len);
         SSL_write(socket->cSSL, header_out, offset);
         if (body_len > 0) {

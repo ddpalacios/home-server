@@ -1124,6 +1124,33 @@
       flex-wrap: wrap;
       margin-bottom: 12px;
     }
+    .leads-refresh {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border-radius: 999px;
+      border: 1px solid #dbe3f0;
+      background: #ffffff;
+      color: #1f2a44;
+      cursor: pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+    }
+    .leads-refresh:hover {
+      border-color: #9bb7ff;
+      box-shadow: 0 8px 20px rgba(30, 64, 175, 0.12);
+      transform: translateY(-1px);
+    }
+    .leads-refresh:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+    .leads-refresh svg {
+      width: 18px;
+      height: 18px;
+    }
 
     .leads-filter {
       display: flex;
@@ -1775,12 +1802,20 @@
     }
 
     .widget-preview .chatbot-header {
-      background: #d9edff;
-      color: #0b1f33;
-      padding: 14px 16px;
+      background: linear-gradient(135deg, var(--header-color, #0f172a) 0%, rgba(15, 23, 42, 0.7) 100%);
+      color: #f8fafc;
+      padding: 16px 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.25);
+      backdrop-filter: blur(10px);
+    }
+    .widget-preview .chatbot-header-profile {
+      display: flex;
+      align-items: center;
       gap: 12px;
     }
 
@@ -1843,21 +1878,33 @@
       padding-left: 14px;
       padding-right: 14px;
     }
+    .widget-preview .chatbot-message.bot .chatbot-bubble {
+      border-bottom-left-radius: 6px;
+    }
 
     .widget-preview .chatbot-message.user {
       margin-left: auto;
     }
 
     .widget-preview .chatbot-bubble {
-      background: #ffffff;
-      border-radius: 14px;
+      background: #f8fbff;
+      border-radius: 16px;
       padding: 12px 14px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
-      border: 1px solid rgba(0, 0, 0, 0.04);
+      box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
+      border: 1px solid #e2e8f0;
+      color: #0f172a;
       display: flex;
       flex-direction: column;
       gap: 6px;
       min-height: 0;
+    }
+
+    .widget-preview .chatbot-message.user .chatbot-bubble {
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 10px 18px rgba(37, 99, 235, 0.2);
+      border-bottom-right-radius: 6px;
     }
 
     .widget-preview .chatbot-agent-square {
@@ -1897,7 +1944,7 @@
 
     .widget-preview .chatbot-timestamp {
       font-size: 0.72rem;
-      color: #7a8a7f;
+      color: #ffffff;
     }
 
     .widget-preview .chatbot-suggestions {
@@ -2320,6 +2367,12 @@
               <input type="text" id="leadsFilterValue" placeholder="Filter value..." />
               <button class="btn secondary" type="button" id="leadsFilterClear">Clear</button>
               <button class="btn secondary embed" type="button" id="leadsSyncButton">Sync Leads</button>
+              <button class="leads-refresh" type="button" id="leadsRefreshButton" aria-label="Refresh leads">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M20 4v6h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
             </div>
             <div class="leads-pagination">
               <button class="btn secondary" type="button" id="leadsPrevPage">←</button>
@@ -2551,6 +2604,14 @@
             <input type="color" id="accentColor" value="#56ccf2" />
           </label>
           <label>
+            Header Gradient Start
+            <input type="color" id="headerGradientStart" value="#eef2f7" />
+          </label>
+          <label>
+            Header Gradient End
+            <input type="color" id="headerGradientEnd" value="#d9e1ec" />
+          </label>
+          <label>
             Widget Icon
             <select id="iconSelect">
               <option value="chat">Chat Bubble</option>
@@ -2594,9 +2655,11 @@
             </button>
               <div class="chatbot-panel" aria-live="polite">
                 <div class="chatbot-header">
-                  <div class="chatbot-header-text">
-                    <div class="chatbot-title" id="previewName"></div>
-                  <div class="chatbot-subtitle" id="previewSubtitle"></div>
+                  <div class="chatbot-header-profile">
+                    <div class="chatbot-header-text">
+                      <div class="chatbot-title" id="previewName"></div>
+                      <div class="chatbot-subtitle" id="previewSubtitle"></div>
+                    </div>
                   </div>
                   <button class="chatbot-fullscreen" type="button">Full</button>
                 </div>
@@ -2799,6 +2862,7 @@
     const leadsNextPage = document.getElementById("leadsNextPage");
     const leadsPageInfo = document.getElementById("leadsPageInfo");
     const leadsExportButton = document.getElementById("leadsExportButton");
+    const leadsRefreshButton = document.getElementById("leadsRefreshButton");
 
     let accountId = "";
     const domainList = document.getElementById("domainList");
@@ -2832,6 +2896,8 @@
     const confirmSettingsSaveModal = document.getElementById("confirmSettingsSaveModal");
     const confirmSettingsSaveButton = document.getElementById("confirmSettingsSaveButton");
     const settingsSaveLoading = document.getElementById("settingsSaveLoading");
+    const headerGradientStart = document.getElementById("headerGradientStart");
+    const headerGradientEnd = document.getElementById("headerGradientEnd");
     const confirmStopEditingModal = document.getElementById("confirmStopEditingModal");
     const confirmStopEditingButton = document.getElementById("confirmStopEditingButton");
     const saveToast = document.getElementById("saveToast");
@@ -3263,15 +3329,37 @@
     }
 
     function updatePreview() {
+      const toRgb = (hex) => {
+        const clean = String(hex || "").replace("#", "");
+        if (clean.length !== 6) return null;
+        const r = parseInt(clean.slice(0, 2), 16);
+        const g = parseInt(clean.slice(2, 4), 16);
+        const b = parseInt(clean.slice(4, 6), 16);
+        if ([r, g, b].some((v) => Number.isNaN(v))) return null;
+        return { r, g, b };
+      };
+      const toHex = (v) => v.toString(16).padStart(2, "0");
+      const lightenHex = (hex, amount) => {
+        const rgb = toRgb(hex);
+        if (!rgb) return "#ffffff";
+        const r = Math.min(255, Math.round(rgb.r + (255 - rgb.r) * amount));
+        const g = Math.min(255, Math.round(rgb.g + (255 - rgb.g) * amount));
+        const b = Math.min(255, Math.round(rgb.b + (255 - rgb.b) * amount));
+        return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+      };
       previewName.textContent = nameInput.value || "AI Assistant";
       previewGreeting.textContent = greetingMessage.value || "Hi! How can I help you today?";
       previewSubtitle.textContent = subtitleMessage.value || "Ask about services, pricing, or scheduling";
       previewPanel.style.setProperty("--forest", primaryColor.value);
       previewPanel.style.setProperty("--earth", primaryColor.value);
       previewPanel.style.setProperty("--leaf", accentColor.value);
+      previewPanel.style.setProperty("--header-gradient-start", headerGradientStart.value || "#eef2f7");
+      previewPanel.style.setProperty("--header-gradient-end", headerGradientEnd.value || "#d9e1ec");
       const header = previewPanel.querySelector(".chatbot-header");
       if (header) {
-        header.style.background = `${accentColor.value}33`;
+        const start = headerGradientStart.value || "#eef2f7";
+        const end = headerGradientEnd.value || "#d9e1ec";
+        header.style.background = `linear-gradient(135deg, ${start} 0%, ${end} 100%)`;
       }
       previewPanel.querySelectorAll(".chatbot-chip").forEach((chip) => {
         chip.style.borderColor = `${accentColor.value}55`;
@@ -3285,7 +3373,7 @@
       previewIcon.innerHTML = iconSvgs[value] || iconSvgs.chat;
     }
 
-    [nameInput, greetingMessage, subtitleMessage, primaryColor, accentColor, iconSelect].forEach((el) => {
+    [nameInput, greetingMessage, subtitleMessage, primaryColor, accentColor, headerGradientStart, headerGradientEnd, iconSelect].forEach((el) => {
       el.addEventListener("input", () => {
         updatePreview();
         setDirty("settings");
@@ -3308,6 +3396,8 @@
         subtitle_header: subtitleMessage ? subtitleMessage.value.trim() : "",
         primary_color: primaryColor ? primaryColor.value : "",
         accent_color: accentColor ? accentColor.value : "",
+        header_gradient_start: headerGradientStart ? headerGradientStart.value : "",
+        header_gradient_end: headerGradientEnd ? headerGradientEnd.value : "",
         widget_icon: iconSelect ? iconSelect.value : "",
         default_start_questions: questions,
       };
@@ -3378,6 +3468,12 @@
         subtitle_header: cfg.subtitle_header || "",
         primary_color: /^#[0-9a-fA-F]{6}$/.test(cfg.primary_color || "") ? cfg.primary_color : "#2f80ed",
         accent_color: /^#[0-9a-fA-F]{6}$/.test(cfg.accent_color || "") ? cfg.accent_color : "#56ccf2",
+        header_gradient_start: /^#[0-9a-fA-F]{6}$/.test(cfg.header_gradient_start || "")
+          ? cfg.header_gradient_start
+          : "#eef2f7",
+        header_gradient_end: /^#[0-9a-fA-F]{6}$/.test(cfg.header_gradient_end || "")
+          ? cfg.header_gradient_end
+          : "#d9e1ec",
         widget_icon: cfg.widget_icon || "chat",
         default_start_questions: normalizeStartQuestions(
           cfg.default_start_questions || raw.default_start_questions
@@ -3392,6 +3488,8 @@
       if (subtitleMessage) subtitleMessage.value = cfg.subtitle_header;
       if (primaryColor) primaryColor.value = cfg.primary_color;
       if (accentColor) accentColor.value = cfg.accent_color;
+      if (headerGradientStart) headerGradientStart.value = cfg.header_gradient_start;
+      if (headerGradientEnd) headerGradientEnd.value = cfg.header_gradient_end;
       if (iconSelect) iconSelect.value = cfg.widget_icon;
       if (chipEditor) {
         chipEditor.innerHTML = "";
@@ -5297,6 +5395,11 @@
         }
       });
     }
+    if (leadsRefreshButton) {
+      leadsRefreshButton.addEventListener("click", async () => {
+        await loadLeads();
+      });
+    }
 
     async function loadLeads() {
       if (!accountId) return;
@@ -5307,8 +5410,9 @@
           console.error("Leads fetch failed", res.status);
         }
         const data = await res.json();
-        const series = Array.isArray(data?.series) ? data.series : Array.isArray(data) ? data : [];
+        const series = Array.isArray(data?.values) ? data.values : [];
         leadRecords.length = 0;
+        console.log(data);
         series.forEach((lead) => leadRecords.push(lead));
         ytdSeries.length = 0;
         buildYtdSeriesFromLeads(leadRecords).forEach((row) => ytdSeries.push(row));
@@ -5980,55 +6084,6 @@
             bubble.appendChild(dots);
           } else {
             bubble.appendChild(buildInsightsContent(msg.text, msg.showChart, msg.chartType, msg.rows || []));
-            if (msg.bookingForm) {
-              const form = document.createElement("form");
-              form.className = "insights-booking-form";
-              form.innerHTML = `
-                <div class="booking-form-title">Book Your Free Estimate</div>
-                <div class="booking-form-subtitle">Share your details and we'll confirm the appointment.</div>
-                <div class="booking-form-grid">
-                  <label><span>Full Name</span><input type="text" name="name" placeholder="Full name" required></label>
-                  <label><span>Email</span><input type="email" name="email" placeholder="Email"></label>
-                  <label><span>Phone</span><input type="tel" name="phone" placeholder="Phone" required></label>
-                  <label><span>Service</span><input type="text" name="service" placeholder="Service requested"></label>
-                  <label><span>Date</span><input type="date" name="date" required></label>
-                  <label><span>Time</span><input type="time" name="time" required></label>
-                  <label class="booking-form-notes"><span>Notes</span><textarea name="note" rows="3" placeholder="Anything else?"></textarea></label>
-                </div>
-                <div class="booking-form-actions">
-                  <button type="button" class="btn secondary booking-form-cancel">Cancel</button>
-                  <button type="submit" class="btn publish">Submit</button>
-                </div>
-              `;
-              form.addEventListener("submit", async (event) => {
-                event.preventDefault();
-                const payload = Object.fromEntries(new FormData(form).entries());
-                payload.accountid = accountId;
-                try {
-                  const res = await fetch(`${window.location.origin}/book-estimate`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload),
-                  });
-                  if (!res.ok) {
-                    const data = await res.json().catch(() => ({}));
-                    throw new Error(data.error || "Failed to submit booking form.");
-                  }
-                  form.remove();
-                  const confirmation = document.createElement("div");
-                  confirmation.className = "booking-form-confirm";
-                  confirmation.textContent = "Thanks! Your booking request has been submitted.";
-                  bubble.appendChild(confirmation);
-                  loadLeads();
-                } catch (err) {
-                  console.error(err);
-                }
-              });
-              form.querySelector(".booking-form-cancel")?.addEventListener("click", () => {
-                form.remove();
-              });
-              bubble.appendChild(form);
-            }
           }
         } else {
           bubble.textContent = msg.text;
@@ -6226,9 +6281,21 @@
     }
 
     let insightsRequestId = 0;
+    let insightsInFlight = false;
+    async function save_lead(lead) {
+      const payload = { ...(lead || {}) };
+      payload.accountid = payload.accountid || payload.account_id || accountId;
+      delete payload.account_id;
+      return fetch(`${window.location.origin}/book-estimate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    }
     if (insightsForm && insightsInput && insightsAskButton) {
       insightsForm.addEventListener("submit", async (event) => {
         event.preventDefault();
+        if (insightsInFlight) return;
         const question = insightsInput.value.trim();
         if (!question) return;
         const existingSuggestions = insightsChat ? insightsChat.querySelectorAll(".insights-suggestions") : [];
@@ -6237,9 +6304,9 @@
         insightsMessages[activeKbType].push({ role: "user", text: question });
         insightsMessages[activeKbType].push({ role: "bot", text: "typing", thinking: true });
         renderInsightsChat(activeKbType);
-        const requestId = ++insightsRequestId;
         const requestMode = activeKbType;
         insightsAskButton.disabled = true;
+        insightsInFlight = true;
         try {
           const res = await fetch(`${window.location.origin}/chat`, {
             method: "POST",
@@ -6252,143 +6319,25 @@
             }),
           });
           const data = await res.json();
-          if (requestId !== insightsRequestId || requestMode !== activeKbType) {
-            return;
-          }
-          if (data && data.answer) {
-            let answerText = data.answer;
-            let nextQuestions = normalizeNextQuestions(data.next_questions || data.nextQuestions);
-            let bookingForm = !!data.booking_form;
-            if (typeof answerText === "string" && answerText.trim().startsWith("{")) {
-              const raw = answerText.trim();
-              const tryParse = (text) => {
-                try {
-                  return JSON.parse(text);
-                } catch (e) {
-                  return null;
-                }
-              };
-              let parsed = tryParse(raw);
-              if (!parsed) {
-                const start = raw.indexOf("{");
-                const end = raw.lastIndexOf("}");
-                if (start !== -1 && end !== -1 && end > start) {
-                  parsed = tryParse(raw.slice(start, end + 1));
-                }
-              }
-              if (parsed && (parsed.type === "booking_form" || parsed.booking_form)) {
-                answerText = "Thanks! Please provide your booking details to continue.";
-                bookingForm = true;
-              } else if (parsed && parsed.answer) {
-                answerText = parsed.answer;
-                if (!nextQuestions.length) {
-                  nextQuestions = normalizeNextQuestions(parsed.next_questions || parsed.nextQuestions);
-                }
-              }
-            }
-            if (typeof answerText === "string") {
-              answerText = stripNextQuestionsFromAnswer(answerText);
-            }
-            if (!Array.isArray(nextQuestions)) nextQuestions = [];
-            const thread = insightsMessages[requestMode];
-            thread.forEach((msg) => {
-              if (msg && msg.role === "bot" && msg.nextQuestions) {
-                delete msg.nextQuestions;
-              }
-            });
-            const lastIndex = thread.length - 1;
-            if (lastIndex >= 0 && thread[lastIndex].role === "bot") {
-              thread[lastIndex] = {
-                role: "bot",
-                text: answerText,
-                showChart: !!data.show_chart,
-                chartType: data.chart_type || "",
-                rows: data.rows || [],
-                nextQuestions,
-                bookingForm,
-              };
-            } else {
-              thread.push({
-                role: "bot",
-                text: answerText,
-                showChart: !!data.show_chart,
-                chartType: data.chart_type || "",
-                rows: data.rows || [],
-                nextQuestions,
-                bookingForm,
-              });
-            }
-            renderInsightsChat(requestMode);
-          } else if (data && data.error) {
-            const thread = insightsMessages[requestMode];
-            const lastIndex = thread.length - 1;
-            if (lastIndex >= 0 && thread[lastIndex].role === "bot") {
-              thread[lastIndex] = { role: "bot", text: data.error, animate: false };
-            } else {
-              thread.push({ role: "bot", text: data.error, animate: false });
-            }
-            renderInsightsChat(requestMode);
-            if (data && data.appointment_scheduled) {
-              const nowIso = new Date().toISOString();
-              const lead = {
-                name: data.name || "",
-                address: data.address || "",
-                email: data.email || "",
-                phone: data.phonenumber || data.phone || "",
-                scheduled_at: data.scheduled_at || "",
-                service: data.service || "",
-                note: data.note || "",
-                created_at: nowIso,
-              };
-              leadRecords.unshift(lead);
-              ytdSeries.length = 0;
-              buildYtdSeriesFromLeads(leadRecords).forEach((row) => ytdSeries.push(row));
-              leadsTableColumns = buildLeadColumns(leadRecords);
-              rebuildLeadTableHeader(leadsTableColumns);
-              renderLeadTable();
-              updateChart(chartFilter ? chartFilter.value : "Last 7 days");
-              if (leadsCapturedValue) {
-                const totalLeads = ytdSeries.reduce((sum, item) => sum + item.leads, 0);
-                const formatted = totalLeads.toLocaleString();
-                leadsCapturedValue.setAttribute("data-text", formatted);
-                leadsCapturedValue.textContent = formatted;
-              }
-              setTimeout(loadLeads, 600);
-            }
-          } else {
-            const thread = insightsMessages[requestMode];
-            const lastIndex = thread.length - 1;
-            if (lastIndex >= 0 && thread[lastIndex].role === "bot") {
-              thread[lastIndex] = {
-                role: "bot",
-                text:
-                  "Insights will appear here. Example: “You received 24 leads this week, with Outdoor Kitchens leading requests.”",
-              };
-            } else {
-              thread.push({
-                role: "bot",
-                text:
-                  "Insights will appear here. Example: “You received 24 leads this week, with Outdoor Kitchens leading requests.”",
-              });
-            }
-            renderInsightsChat(requestMode);
-          }
-        } catch (err) {
-          if (requestId !== insightsRequestId || requestMode !== activeKbType) {
-            return;
-          }
+          let responseText = String(data.response).trim();
+
+          if (data.booking_complete) {
+            alert("Booking confirmed! We look forward to serving you.");
+            console.log(data)
+            save_lead(data);
+
+          } 
           const thread = insightsMessages[requestMode];
           const lastIndex = thread.length - 1;
           if (lastIndex >= 0 && thread[lastIndex].role === "bot") {
-            thread[lastIndex] = { role: "bot", text: "Sorry, something went wrong." };
+            thread[lastIndex] = { role: "bot", text: responseText || "" };
           } else {
-            thread.push({ role: "bot", text: "Sorry, something went wrong." });
+            thread.push({ role: "bot", text: responseText || "" });
           }
           renderInsightsChat(requestMode);
         } finally {
-          if (requestId === insightsRequestId) {
-            insightsAskButton.disabled = false;
-          }
+          insightsAskButton.disabled = false;
+          insightsInFlight = false;
         }
       });
       if (insightsClearButton) {
@@ -6396,15 +6345,11 @@
           insightsMessages[activeKbType] = [];
           renderInsightsChat(activeKbType);
           insightsInput.value = "";
-          try {
-            await fetch(`${window.location.origin}/chat-reset`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ accountid: accountId, kb_type: activeKbType }),
-            });
-          } catch (err) {
-            console.error("Failed to clear chat history", err);
-          }
+          await fetch(`${window.location.origin}/chat-reset`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ accountid: accountId, kb_type: activeKbType }),
+          });
         });
       }
     }

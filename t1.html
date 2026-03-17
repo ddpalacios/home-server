@@ -1,391 +1,459 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Case Study — [Project / Client Name]</title>
-  <meta name="description" content="Case study: [Client] — Problem, approach, solution, and business impact." />
-  <!-- Optional: change or remove Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Landscaping Company Demo</title>
   <style>
-    :root{
-      --bg:#f7f8fa;
-      --card:#ffffff;
-      --muted:#6b7280;
-      --accent:#0f62fe;
-      --radius:12px;
-      --max-width:1100px;
-      --container-padding:24px;
-      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #1f2937;
+      background: #ffffff;
+      line-height: 1.5;
+    }
+    a { color: inherit; text-decoration: none; }
+    .container {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(255,255,255,0.96);
+      border-bottom: 1px solid #e5e7eb;
+      backdrop-filter: blur(8px);
+    }
+    .topbar-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      padding: 18px 0;
+    }
+    .brand h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.1;
+    }
+    .brand p {
+      margin: 4px 0 0;
+      color: #6b7280;
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      font-size: 14px;
+    }
+    .nav a:hover { color: #166534; }
+    .hero {
+      background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 36px;
+      padding: 72px 0;
+      align-items: center;
+    }
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 14px;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      color: #166534;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .hero h2 {
+      margin: 0 0 16px;
+      font-size: 46px;
+      line-height: 1.05;
+    }
+    .hero p {
+      margin: 0 0 22px;
+      font-size: 18px;
+      color: #4b5563;
+      max-width: 760px;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 13px 20px;
+      border-radius: 10px;
+      border: 1px solid #166534;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: #166534;
+      color: white;
+    }
+    .btn-secondary {
+      background: white;
+      color: #166534;
+    }
+    .hero-card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 18px;
+      padding: 26px;
+      box-shadow: 0 14px 38px rgba(0,0,0,0.06);
+    }
+    .hero-card h3 {
+      margin: 0 0 14px;
+      font-size: 20px;
+    }
+    .hero-card ul {
+      margin: 0;
+      padding-left: 18px;
+      color: #4b5563;
+    }
+    section {
+      padding: 68px 0;
+    }
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 34px;
+      line-height: 1.1;
+    }
+    .section-subtitle {
+      margin: 0 0 28px;
+      color: #6b7280;
+      max-width: 760px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+    }
+    .card h3 {
+      margin: 0 0 10px;
+      font-size: 22px;
+    }
+    .card p {
+      margin: 0;
+      color: #4b5563;
+    }
+    .about-grid,
+    .contact-grid,
+    .payment-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+    }
+    .work-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+    .work-item {
+      min-height: 210px;
+      border-radius: 18px;
+      border: 1px solid #d1d5db;
+      background: linear-gradient(135deg, #dbeafe, #dcfce7);
+      display: flex;
+      align-items: end;
+      padding: 18px;
+      font-weight: 700;
+      color: #1f2937;
+    }
+    .testimonial {
+      border-left: 4px solid #166534;
+      padding-left: 18px;
+    }
+    .testimonial p {
+      color: #374151;
+      margin: 0 0 12px;
+    }
+    .testimonial strong {
       color: #111827;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      background:var(--bg);
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-      line-height:1.45;
-      font-size:16px;
-      padding:40px 16px;
-      display:flex;
-      justify-content:center;
+    .faq-list {
+      display: grid;
+      gap: 14px;
     }
-    .wrap{
-      width:100%;
-      max-width:var(--max-width);
-      background:transparent;
+    .faq-item {
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #fff;
     }
-    header.cs-hero{
-      display:flex;
-      gap:24px;
-      align-items:flex-start;
-      margin-bottom:18px;
+    .faq-question {
+      width: 100%;
+      text-align: left;
+      border: 0;
+      background: #fff;
+      padding: 18px 20px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
     }
-    .logo{
-      flex:0 0 84px;
-      height:84px;
-      background:linear-gradient(135deg,#eef2ff,#fff);
-      border-radius:12px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      box-shadow:0 2px 6px rgba(16,24,40,0.04);
-      font-weight:700;
-      color:var(--accent);
-      font-size:20px;
+    .faq-answer {
+      display: none;
+      padding: 0 20px 18px;
+      color: #4b5563;
     }
-    .hero-content{
-      background:var(--card);
-      padding:20px;
-      border-radius:var(--radius);
-      box-shadow:0 6px 20px rgba(15,23,42,0.06);
-      width:100%;
+    .faq-item.active .faq-answer {
+      display: block;
     }
-    .hero-title{
-      margin:0 0 8px 0;
-      font-size:20px;
-      font-weight:700;
+    .info-box {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 24px;
     }
-    .hero-sub{
-      margin:0;
-      color:var(--muted);
-      font-size:14px;
+    .phone {
+      font-size: 34px;
+      font-weight: 800;
+      color: #166534;
+      line-height: 1.1;
     }
-
-    /* Summary row */
-    .summary{
-      display:flex;
-      gap:12px;
-      margin-top:16px;
-      flex-wrap:wrap;
+    .footer {
+      border-top: 1px solid #e5e7eb;
+      padding: 22px 0 36px;
+      color: #6b7280;
+      font-size: 14px;
     }
-    .summary .kpi{
-      background:linear-gradient(180deg,#ffffff,#fbfdff);
-      border-radius:10px;
-      padding:12px 14px;
-      min-width:120px;
-      box-shadow:0 6px 18px rgba(2,6,23,0.04);
-    }
-    .kpi strong{display:block;font-size:18px}
-    .kpi span{font-size:13px;color:var(--muted)}
-
-    main{
-      margin-top:18px;
-      display:grid;
-      grid-template-columns: 1fr 320px;
-      gap:20px;
-      align-items:start;
-    }
-
-    /* Primary content */
-    .card{
-      background:var(--card);
-      border-radius:var(--radius);
-      padding:20px;
-      box-shadow:0 6px 20px rgba(15,23,42,0.04);
-    }
-    .section{
-      margin-bottom:18px;
-    }
-    .section h2{
-      margin:0 0 12px 0;
-      font-size:16px;
-    }
-    .lead{
-      color:var(--muted);
-      margin:0 0 12px 0;
-    }
-    .two-col{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:12px;
-    }
-    .process-steps{
-      list-style:none;
-      padding:0;
-      margin:0;
-      display:grid;
-      gap:10px;
-    }
-    .process-steps li{
-      padding:12px;
-      border-radius:10px;
-      background:#f8fafc;
-      border:1px solid #eef2f7;
-    }
-    .quote{
-      padding:14px;
-      border-left:4px solid var(--accent);
-      background:#fbfdff;
-      border-radius:8px;
-      color:#0b1220;
-      font-weight:600;
-    }
-
-    /* Sidebar */
-    aside{
-      position:relative;
-      top:0;
-    }
-    .sidebar .card{
-      padding:16px;
-    }
-    .tech-list{display:flex;flex-wrap:wrap;gap:8px}
-    .chip{background:#f3f4f6;padding:6px 10px;border-radius:999px;font-size:13px;color:#111827;border:1px solid #eef2f7}
-
-    /* Visual gallery */
-    .gallery{
-      display:grid;
-      gap:10px;
-      grid-template-columns: repeat(2,1fr);
-    }
-    .thumb{
-      background:#eef2ff;
-      height:120px;
-      border-radius:8px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:var(--muted);
-      font-weight:600;
-    }
-
-    /* Footer / CTA */
-    .cta{
-      display:flex;
-      gap:12px;
-      align-items:center;
-      justify-content:space-between;
-      margin-top:18px;
-    }
-    .btn{
-      background:var(--accent);
-      color:white;
-      padding:10px 14px;
-      border-radius:10px;
-      text-decoration:none;
-      font-weight:600;
-      border:none;
-      cursor:pointer;
-    }
-    .btn.secondary{
-      background:transparent;
-      color:var(--accent);
-      border:1px solid rgba(15,98,254,0.12);
-    }
-
-    /* Small screens */
-    @media (max-width:880px){
-      main{grid-template-columns:1fr; }
-      .two-col{grid-template-columns:1fr;}
-      .summary .kpi{min-width:100px}
-      .gallery{grid-template-columns:1fr 1fr}
-    }
-
-    /* Print-friendly */
-    @media print{
-      body{padding:0}
-      .wrap{max-width:100%}
-      header.cs-hero > .logo{display:none}
-      .btn{display:none}
-      .card{box-shadow:none;border:1px solid #e6e8eb}
-      main{grid-template-columns:1fr;}
+    @media (max-width: 980px) {
+      .hero-grid,
+      .about-grid,
+      .contact-grid,
+      .payment-grid,
+      .cards,
+      .work-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero h2 { font-size: 36px; }
+      .topbar-inner { align-items: flex-start; flex-direction: column; }
+      .nav { gap: 12px; }
     }
   </style>
-
-  <!-- Structured data: case study -->
-  <script type="application/ld+json">
-  {
-    "@context":"https://schema.org",
-    "@type":"CaseStudy",
-    "name":"[Project / Client Name] Case Study",
-    "url":"[insert canonical url here]",
-    "description":"Short 1–2 sentence summary of the case study and outcome.",
-    "datePublished":"2025-12-07",
-    "about": {
-      "@type":"Thing",
-      "name":"[Industry / Topic]"
-    },
-    "author": {
-      "@type":"Organization",
-      "name":"[Your Company]"
-    }
-  }
-  </script>
 </head>
 <body>
-  <div class="wrap" role="main">
-    <header class="cs-hero" aria-labelledby="hero-title">
-      <div class="logo" aria-hidden="true">CS</div>
-      <div class="hero-content card" >
-        <h1 id="hero-title" class="hero-title">[Client — Project Name]</h1>
-        <p class="hero-sub">
-          One-line summary: helped [client] achieve [primary benefit] by [high-level approach].
-        </p>
-
-        <div class="summary" aria-hidden="false">
-          <div class="kpi"><strong>[+45%]</strong><span>Conversion rate uplift</span></div>
-          <div class="kpi"><strong>$1.2M</strong><span>Annualized savings</span></div>
-          <div class="kpi"><strong>8 weeks</strong><span>Time to delivery</span></div>
-        </div>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <h1>Landscaping Company</h1>
+        <p>McHenry County Based Landscaping Company</p>
       </div>
-    </header>
+      <nav class="nav">
+        <a href="#home">Home</a>
+        <a href="#about">About</a>
+        <a href="#services">Services</a>
+        <a href="#work">Our Work</a>
+        <a href="#testimonials">Testimonials</a>
+        <a href="#faq">FAQ</a>
+        <a href="#contact">Contact</a>
+        <a href="#payments">Payments</a>
+      </nav>
+    </div>
+  </header>
 
-    <main>
-      <!-- Primary column -->
-      <div>
-        <section class="card section" aria-labelledby="problem">
-          <h2 id="problem">Problem</h2>
-          <p class="lead">
-            Describe the customer's pain clearly and concisely. Include scope, impact and constraints.
+  <main>
+    <section class="hero" id="home">
+      <div class="container hero-grid">
+        <div>
+          <span class="eyebrow">Family-Owned Landscaping Company</span>
+          <h2>Your Local Full-Service Landscaping Team</h2>
+          <p>
+            This is a clean-room local-use rebuild in plain HTML, CSS, and JavaScript,
+            structured to closely match the page flow of the reference site without copying
+            branded assets or creating a verbatim clone.
           </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#contact">Contact Us</a>
+            <a class="btn btn-secondary" href="#services">View Services</a>
+          </div>
+        </div>
+        <div class="hero-card">
+          <h3>Included Sections</h3>
           <ul>
-            <li><strong>Context:</strong> [context and environment]</li>
-            <li><strong>Challenge:</strong> [what was failing or missing]</li>
-            <li><strong>Stakeholders:</strong> [roles, teams impacted]</li>
+            <li>Sticky top navigation</li>
+            <li>Hero and company intro</li>
+            <li>Services grid</li>
+            <li>Work gallery section</li>
+            <li>Testimonials and FAQ</li>
+            <li>Contact and payments areas</li>
           </ul>
-        </section>
+        </div>
+      </div>
+    </section>
 
-        <section class="card section" aria-labelledby="approach">
-          <h2 id="approach">Approach</h2>
-          <p class="lead">High-level strategy and why this approach was chosen over alternatives.</p>
+    <section id="services">
+      <div class="container">
+        <h2 class="section-title">Core Services</h2>
+        <p class="section-subtitle">
+          Replace the text below with your own final copy. The structure mirrors the original site’s main service blocks.
+        </p>
+        <div class="cards">
+          <article class="card">
+            <h3>Hardscaping Projects</h3>
+            <p>Custom patios, retaining walls, driveway ribbons, and outdoor living upgrades designed around the property.</p>
+          </article>
+          <article class="card">
+            <h3>General Landscaping</h3>
+            <p>Mulching, garden bed maintenance, lawn restoration, and routine landscaping support for homes and businesses.</p>
+          </article>
+          <article class="card">
+            <h3>Spring &amp; Fall Cleanups</h3>
+            <p>Seasonal cleanup services to restore appearance in spring and prepare the property for colder weather in fall.</p>
+          </article>
+        </div>
+      </div>
+    </section>
 
-          <div class="two-col" role="list">
-            <div>
-              <h3 style="margin-top:0;margin-bottom:8px;font-size:14px">Steps taken</h3>
-              <ol class="process-steps">
-                <li><strong>Discovery</strong> — interviews, data audit, KPIs definition.</li>
-                <li><strong>Design</strong> — prototypes, architecture, data model.</li>
-                <li><strong>Build</strong> — implement, test, iterate.</li>
-                <li><strong>Deliver</strong> — training, handover, monitoring.</li>
-              </ol>
-            </div>
-            <div>
-              <h3 style="margin-top:0;margin-bottom:8px;font-size:14px">Key decisions</h3>
-              <ul>
-                <li>Choose [tech/tool] because [reason].</li>
-                <li>Prioritized [metric] to maximize [outcome].</li>
-                <li>Minimum viable scope: [list].</li>
-              </ul>
-            </div>
+    <section id="about" style="background:#f9fafb; border-top:1px solid #e5e7eb; border-bottom:1px solid #e5e7eb;">
+      <div class="container about-grid">
+        <div>
+          <h2 class="section-title">About the Company</h2>
+          <p class="section-subtitle">
+            This section is intended to hold the company overview and service area summary.
+            Keep this original rather than copying the source site text word-for-word.
+          </p>
+          <p>
+            Use this block for your company history, service radius, insurance status, and estimate process.
+            It is positioned to emulate the informational introduction on the reference homepage.
+          </p>
+        </div>
+        <div class="info-box">
+          <h3 style="margin-top:0;">Free On-Site Estimates</h3>
+          <p>Promote estimate availability, turnaround expectations, and the types of projects you handle.</p>
+          <div class="phone">815-000-0000</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="work">
+      <div class="container">
+        <h2 class="section-title">Our Work</h2>
+        <p class="section-subtitle">Use your own project images here. The current blocks are placeholders for a local mockup.</p>
+        <div class="work-grid">
+          <div class="work-item">Patio Installation</div>
+          <div class="work-item">Landscape Bed Refresh</div>
+          <div class="work-item">Retaining Wall Project</div>
+          <div class="work-item">Seasonal Cleanup</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="testimonials" style="background:#f9fafb; border-top:1px solid #e5e7eb; border-bottom:1px solid #e5e7eb;">
+      <div class="container">
+        <h2 class="section-title">Testimonials</h2>
+        <p class="section-subtitle">Add your own customer reviews here.</p>
+        <div class="cards">
+          <article class="card testimonial">
+            <p>Professional, dependable, and easy to work with. The project moved smoothly from quote to completion.</p>
+            <strong>— Homeowner</strong>
+          </article>
+          <article class="card testimonial">
+            <p>Great communication and strong workmanship. We would use them again for future landscaping projects.</p>
+            <strong>— Property Manager</strong>
+          </article>
+          <article class="card testimonial">
+            <p>The crew showed up on time, explained the process clearly, and delivered exactly what was discussed.</p>
+            <strong>— Residential Client</strong>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq">
+      <div class="container">
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        <p class="section-subtitle">Accordion behavior is handled with a small JavaScript snippet below.</p>
+        <div class="faq-list">
+          <div class="faq-item active">
+            <button class="faq-question">Do you provide free estimates?</button>
+            <div class="faq-answer">Yes. This demo includes a section where you can describe your estimate process and service coverage.</div>
           </div>
-        </section>
-
-        <section class="card section" aria-labelledby="solution">
-          <h2 id="solution">Solution</h2>
-          <p class="lead">Concise summary of the implemented solution.</p>
-
-          <div style="margin-top:12px;">
-            <!-- Example components: replace with real assets and numbers -->
-            <h4 style="margin-bottom:8px">What we delivered</h4>
-            <ul>
-              <li>End-to-end reporting stack: data ingestion → transformation → semantic layer → dashboards.</li>
-              <li>3 interactive dashboards (Executive, Ops, Support) with row-level security.</li>
-              <li>Automated ETL jobs, data quality checks, and monitoring alerts.</li>
-            </ul>
-
-            <h4 style="margin-top:14px;margin-bottom:8px">Screenshots & artifacts</h4>
-            <div class="gallery" aria-hidden="false">
-              <div class="thumb">Screenshot 1</div>
-              <div class="thumb">Screenshot 2</div>
-              <div class="thumb">Screenshot 3</div>
-              <div class="thumb">Screenshot 4</div>
-            </div>
+          <div class="faq-item">
+            <button class="faq-question">What services do you offer?</button>
+            <div class="faq-answer">Landscaping, hardscaping, seasonal cleanup, lawn restoration, mulching, and related exterior services.</div>
           </div>
-        </section>
-
-        <section class="card section" aria-labelledby="results">
-          <h2 id="results">Results</h2>
-          <p class="lead">Quantified outcomes and qualitative impacts.</p>
-          <ul>
-            <li><strong>Business metric:</strong> +45% [conversion / throughput] vs baseline (measured over X months).</li>
-            <li><strong>Efficiency:</strong> reduced manual reporting time from 3 days to 2 hours / week.</li>
-            <li><strong>Adoption:</strong> 90% of target users actively using dashboards within 30 days.</li>
-          </ul>
-
-          <div style="margin-top:12px;">
-            <h4 style="margin-bottom:8px">Measurement & methodology</h4>
-            <p class="lead" style="margin-bottom:0">
-              Describe how results were measured: data sources, comparison windows, A/B test details or attribution caveats.
-            </p>
-          </div>
-        </section>
-
-        <section class="card section" aria-labelledby="testimonial">
-          <h2 id="testimonial">Client testimonial</h2>
-          <div class="quote">
-            “[Insert a short client quote praising the outcome — include name, title and company if allowed.]”
-          </div>
-        </section>
-
-        <section class="card section" aria-labelledby="lessons">
-          <h2 id="lessons">Lessons & next steps</h2>
-          <p class="lead">What you learned, what you'd change, recommended follow-ups.</p>
-          <ul>
-            <li>Lesson 1: [e.g., prioritize data contracts early]</li>
-            <li>Next step: roll out phased governance and self-serve analytics.</li>
-          </ul>
-        </section>
-
-        <div class="cta card" aria-hidden="false">
-          <div>
-            <strong>Ready to replicate this outcome?</strong>
-            <div style="font-size:13px;color:var(--muted)">Custom engagements: discovery → delivery → operate</div>
-          </div>
-          <div style="display:flex;gap:8px">
-            <a class="btn" href="#contact">Contact us</a>
-            <a class="btn secondary" href="#" onclick="window.print();return false;">Print / PDF</a>
+          <div class="faq-item">
+            <button class="faq-question">What payment methods do you accept?</button>
+            <div class="faq-answer">You can list checks, cards, PayPal, ACH, or any payment processors your business supports.</div>
           </div>
         </div>
       </div>
+    </section>
 
-      <!-- Sidebar -->
-      <aside class="sidebar">
-        <div class="card">
-          <h3 style="margin-top:0">Project snapshot</h3>
-          <p style="margin:8px 0;color:var(--muted)">Client: <strong>[Client Name]</strong></p>
-          <p style="margin:8px 0;color:var(--muted)">Industry: <strong>[Industry]</strong></p>
-          <p style="margin:8px 0;color:var(--muted)">Timeline: <strong>[8 weeks]</strong></p>
-          <p style="margin:8px 0;color:var(--muted)">Team size: <strong>[X]</strong></p>
-
-          <hr style="border:none;border-top:1px solid #eef2f7;margin:12px 0">
-
-          <h4 style="margin:0 0 8px 0">Tech & tools</h4>
-          <div class="tech-list" style="margin-bottom:12px">
-            <span class="chip">Power BI</span>
-            <span class="chip">Azure Data Factory</span>
-            <span class="chip">Databricks</span>
-            <span class="chip">SQL</span>
-          </div>
-
-          <h4 style="margin:0 0 8px 0">Contact</h4>
-          <p style="margin:0;color:var(--muted)">Lead: <strong>[Your name]</strong></p>
-          <p style="margin:6px 0 0 0"><a href="mailto:you@company.com">you@company.com</a></p>
+    <section id="contact" style="background:#f9fafb; border-top:1px solid #e5e7eb; border-bottom:1px solid #e5e7eb;">
+      <div class="container contact-grid">
+        <div class="info-box">
+          <h2 class="section-title" style="font-size:30px; margin-top:0;">Contact Info</h2>
+          <p><strong>Mailing Address</strong><br />PO Box 631, Crystal Lake, IL 60039</p>
+          <p><strong>Office</strong><br />815-477-0134</p>
+          <p><strong>Email</strong><br />info@example.com</p>
         </div>
-      </aside>
-    </main>
-  </div>
+        <div class="info-box">
+          <h2 class="section-title" style="font-size:30px; margin-top:0;">Request an Estimate</h2>
+          <p>This can be wired to a local form handler later if needed.</p>
+          <form>
+            <div style="display:grid; gap:12px;">
+              <input type="text" placeholder="Full Name" style="padding:12px 14px; border:1px solid #d1d5db; border-radius:10px; font:inherit;" />
+              <input type="email" placeholder="Email Address" style="padding:12px 14px; border:1px solid #d1d5db; border-radius:10px; font:inherit;" />
+              <textarea placeholder="Project Details" rows="5" style="padding:12px 14px; border:1px solid #d1d5db; border-radius:10px; font:inherit; resize:vertical;"></textarea>
+              <button type="button" class="btn btn-primary">Submit</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section id="payments">
+      <div class="container payment-grid">
+        <div>
+          <h2 class="section-title">Forms of Payment</h2>
+          <p class="section-subtitle">
+            List your accepted payment methods here, such as personal checks, PayPal, Visa, MasterCard, Discover, and American Express.
+          </p>
+        </div>
+        <div class="info-box">
+          <h3 style="margin-top:0;">Online Payment CTA</h3>
+          <p>Add a payment button or external link here for local testing.</p>
+          <a class="btn btn-secondary" href="#">Pay Online</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      © 2026 Landscaping Company. Local-use demo build.
+    </div>
+  </footer>
+
+  <script>
+    document.querySelectorAll('.faq-question').forEach((button) => {
+      button.addEventListener('click', () => {
+        const item = button.parentElement;
+        item.classList.toggle('active');
+      });
+    });
+  </script>
 </body>
-</html>
+</html
