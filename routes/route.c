@@ -96,6 +96,10 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
 
     if (strcmp(request_type, "GET") == 0 && strcmp(route, "/") == 0) {
         get_live_html(cSSL, http_header, "portfolio/home.html");
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/home") == 0) {
+        get_live_html(cSSL, http_header, "portfolio/palacios.html");
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/test") == 0) {
+        get_live_html(cSSL, http_header, "portfolio/tst.html");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/favicon.ico") != NULL) {
         get_image_file(cSSL, http_header, "/portfolio/images/favicon.ico");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/dashboard") == 0) {
