@@ -92,10 +92,10 @@ void connect_to_server(const char* host, const char* port, char*body){
 
 
 
- void post_blob(struct Socket* socket,char* http_header, char*body, char* route){
+void post_blob(struct Socket* socket,char* http_header, char*body, char* route){
 	SSL* cSSL = socket->cSSL;
-	char path[2048];
-	char write_path[2048];
+	char path[2048] = {0};
+	char write_path[2048] = {0};
 	int overwrite = 0;
 
 	if (strstr(route, "/blob-storage/email")){
@@ -110,8 +110,9 @@ void connect_to_server(const char* host, const char* port, char*body){
 
 	}
 	else if (strstr(route, "/blob-storage/etl/pipeline/save")!= NULL){
+		char* googleId = get_query_parameter(route, "googleId");
 		char* pipelineId = get_query_parameter(route, "pipelineId");
-		if (pipelineId == NULL){
+		if (pipelineId == NULL || googleId == NULL || strcmp(googleId, "unknown") == 0){
 			send_response_code(cSSL, 400);
 			return;
 		}
@@ -148,8 +149,9 @@ void connect_to_server(const char* host, const char* port, char*body){
 		return;
 	}
 	else if (strstr(route, "/blob-storage/etl/dataflow/save")!= NULL){
+		char* googleId = get_query_parameter(route, "googleId");
 		char* pipelineId = get_query_parameter(route, "pipelineId");
-		if (pipelineId == NULL){
+		if (pipelineId == NULL || googleId == NULL || strcmp(googleId, "unknown") == 0){
 			send_response_code(cSSL, 400);
 			return;
 		}
@@ -342,10 +344,23 @@ void connect_to_server(const char* host, const char* port, char*body){
 		send_response_code(cSSL, 200);
 		return;
 	}
-	else if (strstr(route, "/blob-storage/raw/")!= NULL || strstr(route, "/blob-storage/processed/")!= NULL){
+	else if (strstr(route, "/blob-storage/raw/")!= NULL
+		|| strstr(route, "/blob-storage/processed/")!= NULL
+		|| strstr(route, "/blob-storage/bronze/")!= NULL
+		|| strstr(route, "/blob-storage/silver/")!= NULL
+		|| strstr(route, "/blob-storage/gold/")!= NULL){
 		const char *raw_start = strstr(route, "/blob-storage/raw/");
 		if (!raw_start){
 			raw_start = strstr(route, "/blob-storage/processed/");
+		}
+		if (!raw_start){
+			raw_start = strstr(route, "/blob-storage/bronze/");
+		}
+		if (!raw_start){
+			raw_start = strstr(route, "/blob-storage/silver/");
+		}
+		if (!raw_start){
+			raw_start = strstr(route, "/blob-storage/gold/");
 		}
 		if (!raw_start){
 			send_response_code(cSSL, 400);
@@ -437,6 +452,10 @@ void connect_to_server(const char* host, const char* port, char*body){
 	// 	snprintf(path, sizeof(path)," ");
 	// }
 	
+	if (path[0] == '\0' || write_path[0] == '\0'){
+		send_response_code(cSSL, 400);
+		return;
+	}
 	printf("GETTING FILE...\n");
 	char* frame_json = get_file_buffer(path);
 	if (frame_json == NULL){

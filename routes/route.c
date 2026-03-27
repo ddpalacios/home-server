@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <openssl/ssl.h>
 #include <string.h>
+#include <cjson/cJSON.h>
 #include "Socket.h"
 #include "websocket.h"
 #include "route.h"
@@ -45,6 +46,69 @@
 
 
 
+static char* url_decode(const char *src) {
+	if (!src) {
+		return NULL;
+	}
+	size_t len = strlen(src);
+	char *out = malloc(len + 1);
+	if (!out) {
+		return NULL;
+	}
+	char *dst = out;
+	for (size_t i = 0; i < len; i++) {
+		if (src[i] == '+') {
+			*dst++ = ' ';
+		} else if (src[i] == '%' && i + 2 < len) {
+			char hex[3] = {src[i + 1], src[i + 2], '\0'};
+			char *end = NULL;
+			long val = strtol(hex, &end, 16);
+			if (end != hex) {
+				*dst++ = (char)val;
+				i += 2;
+			} else {
+				*dst++ = src[i];
+			}
+		} else {
+			*dst++ = src[i];
+		}
+	}
+	*dst = '\0';
+	return out;
+}
+
+static cJSON* parse_form_urlencoded(const char *body) {
+	if (!body) {
+		return NULL;
+	}
+	cJSON *root = cJSON_CreateObject();
+	if (!root) {
+		return NULL;
+	}
+	char *copy = strdup(body);
+	if (!copy) {
+		cJSON_Delete(root);
+		return NULL;
+	}
+	char *saveptr = NULL;
+	for (char *pair = strtok_r(copy, "&", &saveptr); pair; pair = strtok_r(NULL, "&", &saveptr)) {
+		char *eq = strchr(pair, '=');
+		if (!eq) {
+			continue;
+		}
+		*eq = '\0';
+		char *key = url_decode(pair);
+		char *val = url_decode(eq + 1);
+		if (key && val) {
+			cJSON_AddStringToObject(root, key, val);
+		}
+		if (key) free(key);
+		if (val) free(val);
+	}
+	free(copy);
+	return root;
+}
+
 void process_route(struct Socket *socket,char* http_header, char* body){
 	SSL *cSSL =  socket->cSSL;
 	if (!http_header) {
@@ -81,8 +145,54 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 	request_type[request_type_len] = '\0';
 	printf("Route: '%s %s'\n",request_type,route);
 
-	if (strcmp(request_type, "GET")==0 && strcmp(route, "/") == 0){
+	if (strcmp(route, "/twilio/sms") == 0){
+		printf("==== TWILIO REQUEST ====\n");
+		if (http_header) {
+			printf("%s\n", http_header);
+		}
+		if (body && strlen(body) > 0) {
+			const char *p = body;
+			while (*p == ' ' || *p == '\n' || *p == '\r' || *p == '\t') {
+				p++;
+			}
+			if (*p == '{' || *p == '[') {
+				cJSON *json = cJSON_Parse(p);
+				if (json) {
+					char *pretty = cJSON_Print(json);
+					if (pretty) {
+						printf("\n-- Body (json) --\n%s\n", pretty);
+						free(pretty);
+					} else {
+						printf("\n-- Body (json) --\n%s\n", body);
+					}
+					cJSON_Delete(json);
+				} else {
+					printf("\n-- Body --\n%s\n", body);
+				}
+			} else if (strchr(p, '=')) {
+				cJSON *form = parse_form_urlencoded(p);
+				if (form) {
+					char *pretty = cJSON_Print(form);
+					if (pretty) {
+						printf("\n-- Body (form) --\n%s\n", pretty);
+						free(pretty);
+					} else {
+						printf("\n-- Body --\n%s\n", body);
+					}
+					cJSON_Delete(form);
+				} else {
+					printf("\n-- Body --\n%s\n", body);
+				}
+			} else {
+				printf("\n-- Body --\n%s\n", body);
+			}
+		}
+		printf("==== END TWILIO REQUEST ====\n");
+		send_response_code(cSSL, 200);
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/") == 0){
 		get_live_html(cSSL, http_header, "portfolio/home.html");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/prospect-database") == 0){
+		get_live_html(cSSL, http_header, "portfolio/prospect_database.html");
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/favicon.ico")!=NULL){
 		get_image_file(cSSL, http_header, "/portfolio/images/favicon.ico");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/definitions.js")==0){

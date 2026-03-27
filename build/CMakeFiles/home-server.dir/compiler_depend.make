@@ -6214,6 +6214,7 @@ CMakeFiles/home-server.dir/routes/route.c.o: ../routes/route.c \
   /usr/include/openssl/tls1.h \
   /usr/include/openssl/dtls1.h \
   /usr/include/openssl/srtp.h \
+  /usr/include/cjson/cJSON.h \
   ../models/Socket.h \
   /usr/include/x86_64-linux-gnu/sys/socket.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
@@ -6273,7 +6274,6 @@ CMakeFiles/home-server.dir/routes/route.c.o: ../routes/route.c \
   ../routes/life-of-sounds/GET/websocket_protocol.h \
   ../routes/life-of-sounds/GET/get_user.h \
   ../utilities/json_utilities.h \
-  /usr/include/cjson/cJSON.h \
   ../models/User.h \
   ../routes/life-of-sounds/GET/login.h
 
