@@ -26,24 +26,17 @@
 #define BUFFER_SIZE 16384
 
 int peek_exact_bytes(SSL *cSSL, int nbytes, char* buf){
-    int total_bytes_retrieved = 0;
-    while (total_bytes_retrieved < nbytes) {
-        int to_read = nbytes - total_bytes_retrieved;
-        int bytes_read = SSL_peek(cSSL, buf, to_read);
-        if (bytes_read <= 0) {
-            if (bytes_read == 0) {
-                printf("SSL connection closed\n");
-                return 0;
-            } else {
-                printf("SSL read error\n");
-                return 0;
-            }
+    int bytes_read = SSL_peek(cSSL, buf, nbytes);
+    if (bytes_read <= 0) {
+        if (bytes_read == 0) {
+            printf("SSL connection closed\n");
+        } else {
+            printf("SSL read error\n");
         }
-
-        total_bytes_retrieved += bytes_read;
+        return 0;
     }
 
-    return total_bytes_retrieved;
+    return bytes_read;
 }
 
 

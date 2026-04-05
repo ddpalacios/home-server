@@ -49,7 +49,7 @@ char* retrieve_request_body(char* buf){
 
 }
 
- char* get_cookie(unsigned char* buf){
+char* get_cookie(unsigned char* buf){
 	char *cookie_header = strstr(buf, "Cookie: ");
 	if (cookie_header != NULL){
 		const char *end = strchr(cookie_header, '=');
@@ -62,7 +62,6 @@ char* retrieve_request_body(char* buf){
 	}
 	return NULL;
 }
-
 /*
 char *get_file_buffer(char* filename){
 	FILE *html_pcontent;

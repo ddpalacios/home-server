@@ -10,6 +10,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -100,6 +101,9 @@ static void fill_address_info(struct addrinfo *hints) {
 }
 
 static void handle_client(int fd) {
+    struct timeval recv_timeout = { .tv_sec = 5, .tv_usec = 0 };
+    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &recv_timeout, sizeof(recv_timeout));
+
     SSL *cSSL = encrypt_socket(fd);
     if (!cSSL) {
         close(fd);

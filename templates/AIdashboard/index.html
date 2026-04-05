@@ -5404,7 +5404,7 @@
     async function loadLeads() {
       if (!accountId) return;
       try {
-        const apiBase = window.location.origin || "https://127.0.0.1:9030";
+        const apiBase = window.location.origin || "https://justgotalead.com";
         const res = await fetch(`${apiBase}/leads?accountid=${encodeURIComponent(accountId)}`);
         if (!res.ok) {
           console.error("Leads fetch failed", res.status);
