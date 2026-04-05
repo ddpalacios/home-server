@@ -2,12 +2,110 @@
 #include <stdlib.h>
 #include <string.h>
 #include <openssl/ssl.h>
+#include <cjson/cJSON.h>
 #include "Socket.h"
 #include "route.h"
 #include "http_utilities.h"
 #include "local-server/GET/get_local_server.h"
 #include "local-server/POST/post_local_server.h"
 #include "read_message.h"
+
+static char from_hex(char c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return 0;
+}
+
+static char *url_decode(const char *src) {
+    if (!src) return NULL;
+    size_t len = strlen(src);
+    char *out = malloc(len + 1);
+    if (!out) return NULL;
+    char *dst = out;
+    for (size_t i = 0; i < len; i++) {
+        if (src[i] == '%' && i + 2 < len) {
+            char hi = from_hex(src[i + 1]);
+            char lo = from_hex(src[i + 2]);
+            *dst++ = (char)((hi << 4) | lo);
+            i += 2;
+        } else if (src[i] == '+') {
+            *dst++ = ' ';
+        } else {
+            *dst++ = src[i];
+        }
+    }
+    *dst = '\0';
+    return out;
+}
+
+static cJSON *parse_form_urlencoded(const char *body) {
+    if (!body) return NULL;
+    cJSON *root = cJSON_CreateObject();
+    const char *cursor = body;
+    while (*cursor) {
+        const char *amp = strchr(cursor, '&');
+        size_t chunk_len = amp ? (size_t)(amp - cursor) : strlen(cursor);
+        const char *eq = memchr(cursor, '=', chunk_len);
+        size_t key_len = eq ? (size_t)(eq - cursor) : chunk_len;
+        size_t val_len = eq ? (size_t)((cursor + chunk_len) - (eq + 1)) : 0;
+
+        char *raw_key = malloc(key_len + 1);
+        char *raw_val = malloc(val_len + 1);
+        if (!raw_key || !raw_val) {
+            free(raw_key);
+            free(raw_val);
+            break;
+        }
+        memcpy(raw_key, cursor, key_len);
+        raw_key[key_len] = '\0';
+        if (eq && val_len > 0) {
+            memcpy(raw_val, eq + 1, val_len);
+        }
+        raw_val[val_len] = '\0';
+
+        char *key = url_decode(raw_key);
+        char *val = url_decode(raw_val);
+        free(raw_key);
+        free(raw_val);
+        if (key) {
+            cJSON_DeleteItemFromObjectCaseSensitive(root, key);
+            cJSON_AddStringToObject(root, key, val ? val : "");
+        }
+        free(key);
+        free(val);
+
+        if (!amp) break;
+        cursor = amp + 1;
+    }
+    return root;
+}
+
+static char *get_query_param(const char *route, const char *key) {
+    if (!route || !key) return NULL;
+    const char *q = strchr(route, '?');
+    if (!q) return NULL;
+    q++;
+    size_t key_len = strlen(key);
+    while (*q) {
+        const char *amp = strchr(q, '&');
+        size_t chunk_len = amp ? (size_t)(amp - q) : strlen(q);
+        if (chunk_len > key_len + 1 && strncmp(q, key, key_len) == 0 && q[key_len] == '=') {
+            const char *val_start = q + key_len + 1;
+            size_t val_len = chunk_len - key_len - 1;
+            char *raw = malloc(val_len + 1);
+            if (!raw) return NULL;
+            memcpy(raw, val_start, val_len);
+            raw[val_len] = '\0';
+            char *decoded = url_decode(raw);
+            free(raw);
+            return decoded;
+        }
+        if (!amp) break;
+        q = amp + 1;
+    }
+    return NULL;
+}
 
 void process_route(struct Socket *socket, char *http_header, char *body) {
     SSL *cSSL = socket->cSSL;
@@ -94,7 +192,142 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         return;
     }
 
-    if (strcmp(request_type, "GET") == 0 && strcmp(route, "/") == 0) {
+    if (strcmp(request_type, "POST") == 0 && strcmp(route, "/voice") == 0) {
+        printf("Twilio Voice webhook received.\n");
+        printf("Raw Headers:\n%s\n", http_header);
+        if (body) {
+            printf("Raw Body:\n%s\n", body);
+        }
+        char *content_type = get_header_value(http_header, "Content-Type");
+        cJSON *parsed = NULL;
+        if (body && *body) {
+            if (content_type && strstr(content_type, "application/json")) {
+                parsed = cJSON_Parse(body);
+            } else if (content_type && strstr(content_type, "application/x-www-form-urlencoded")) {
+                parsed = parse_form_urlencoded(body);
+            } else {
+                parsed = parse_form_urlencoded(body);
+            }
+        }
+        if (parsed) {
+            char *pretty = cJSON_Print(parsed);
+            if (pretty) {
+                printf("Parsed Body (cJSON):\n%s\n", pretty);
+                free(pretty);
+            }
+        }
+
+        const char *from = NULL;
+        const char *to = NULL;
+        const char *account_sid = NULL;
+        if (parsed) {
+            cJSON *item = NULL;
+            item = cJSON_GetObjectItemCaseSensitive(parsed, "From");
+            if (cJSON_IsString(item)) from = item->valuestring;
+            item = cJSON_GetObjectItemCaseSensitive(parsed, "To");
+            if (cJSON_IsString(item)) to = item->valuestring;
+            item = cJSON_GetObjectItemCaseSensitive(parsed, "AccountSid");
+            if (cJSON_IsString(item)) account_sid = item->valuestring;
+        }
+
+        char *accountid = strdup("cust_0b0df4b8");
+
+        cJSON *out = cJSON_CreateObject();
+        cJSON_AddStringToObject(out, "message", "Sorry I missed your call. How can I help you?");
+        cJSON_AddStringToObject(out, "accountid", accountid ? accountid : "");
+        if (from) cJSON_AddStringToObject(out, "from", from);
+        if (to) cJSON_AddStringToObject(out, "to", to);
+        if (account_sid) cJSON_AddStringToObject(out, "twilio_account_sid", account_sid);
+        cJSON_AddStringToObject(out, "source", "twilio_sms");
+        cJSON_AddStringToObject(out, "event_type", "voice");
+        cJSON_AddBoolToObject(out, "skip_model", 1);
+        char *payload = cJSON_PrintUnformatted(out);
+        cJSON_Delete(out);
+
+        if (!payload) {
+            send_response_code(cSSL, 500);
+        } else {
+            post_to_local(socket, http_header, payload, "/chat", "9000");
+            free(payload);
+        }
+
+        free(accountid);
+        if (parsed) cJSON_Delete(parsed);
+    } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/twilio/sms", 11) == 0) {
+        printf("Twilio SMS webhook received.\n");
+        printf("Raw Headers:\n%s\n", http_header);
+        if (body) {
+            printf("Raw Body:\n%s\n", body);
+        }
+        char *content_type = get_header_value(http_header, "Content-Type");
+        cJSON *parsed = NULL;
+        if (body && *body) {
+            if (content_type && strstr(content_type, "application/json")) {
+                parsed = cJSON_Parse(body);
+            } else if (content_type && strstr(content_type, "application/x-www-form-urlencoded")) {
+                parsed = parse_form_urlencoded(body);
+            } else {
+                parsed = parse_form_urlencoded(body);
+            }
+        }
+        if (parsed) {
+            char *pretty = cJSON_Print(parsed);
+            if (pretty) {
+                printf("Parsed Body (cJSON):\n%s\n", pretty);
+                free(pretty);
+            }
+        }
+
+        const char *msg = NULL;
+        const char *from = NULL;
+        const char *to = NULL;
+        const char *account_sid = NULL;
+        const char *event_type = NULL;
+        const char *skip_model = NULL;
+        if (parsed) {
+            cJSON *item = NULL;
+            item = cJSON_GetObjectItemCaseSensitive(parsed, "Body");
+            if (cJSON_IsString(item)) msg = item->valuestring;
+            item = cJSON_GetObjectItemCaseSensitive(parsed, "From");
+            if (cJSON_IsString(item)) from = item->valuestring;
+            item = cJSON_GetObjectItemCaseSensitive(parsed, "To");
+            if (cJSON_IsString(item)) to = item->valuestring;
+            item = cJSON_GetObjectItemCaseSensitive(parsed, "AccountSid");
+            if (cJSON_IsString(item)) account_sid = item->valuestring;
+            item = cJSON_GetObjectItemCaseSensitive(parsed, "EventType");
+            if (cJSON_IsString(item)) event_type = item->valuestring;
+            item = cJSON_GetObjectItemCaseSensitive(parsed, "SkipModel");
+            if (cJSON_IsString(item)) skip_model = item->valuestring;
+        }
+
+        char *accountid = strdup("cust_0b0df4b8");
+
+        cJSON *out = cJSON_CreateObject();
+        cJSON_AddStringToObject(out, "message", msg ? msg : "");
+        cJSON_AddStringToObject(out, "accountid", accountid ? accountid : "");
+        if (from) cJSON_AddStringToObject(out, "from", from);
+        if (to) cJSON_AddStringToObject(out, "to", to);
+        if (account_sid) cJSON_AddStringToObject(out, "twilio_account_sid", account_sid);
+        cJSON_AddStringToObject(out, "source", "twilio_sms");
+        cJSON_AddStringToObject(out, "event_type", event_type ? event_type : "sms");
+        if (skip_model && (strcmp(skip_model, "1") == 0 || strcasecmp(skip_model, "true") == 0)) {
+            cJSON_AddBoolToObject(out, "skip_model", 1);
+        }
+        char *payload = cJSON_PrintUnformatted(out);
+        cJSON_Delete(out);
+
+        if (!payload) {
+            send_response_code(cSSL, 500);
+        } else {
+            post_to_local(socket, http_header, payload, "/chat", "9000");
+            free(payload);
+        }
+
+        free(accountid);
+        if (parsed) cJSON_Delete(parsed);
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/twiliobot") == 0) {
+        get_live_html(cSSL, http_header, "portfolio/twiliobot.html");
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/") == 0) {
         get_live_html(cSSL, http_header, "portfolio/home.html");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/home") == 0) {
         get_live_html(cSSL, http_header, "portfolio/palacios.html");
@@ -103,6 +336,10 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/favicon.ico") != NULL) {
         get_image_file(cSSL, http_header, "/portfolio/images/favicon.ico");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/dashboard") == 0) {
+        get_to_local(socket, http_header, body, route, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/messages") == 0) {
+        get_to_local(socket, http_header, body, route, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/messages/data") == 0) {
         get_to_local(socket, http_header, body, route, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/login") == 0) {
         get_live_html(cSSL, http_header, "AIdashboard/login.html");

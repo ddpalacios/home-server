@@ -238,7 +238,7 @@ void get_to_local(struct Socket* socket, char* http_header, char* body, char* ro
         return;
     }
 
-    if (strstr(route, "/dashboard") != NULL) {
+    if (strstr(route, "/dashboard") != NULL || strstr(route, "/messages") != NULL) {
         send_html_response_code(socket->cSSL, 200, (int)body_len);
         SSL_write(socket->cSSL, res_body, body_len);
     } else if (strstr(route, ".css") != NULL) {
