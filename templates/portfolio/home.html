@@ -378,6 +378,7 @@
           <div class="note">11. Because: Immediate response increases close rates.</div>
         </div>
       </div>
+<<<<<<< HEAD
     </section>
 
     <section class="section" id="proof">
@@ -390,6 +391,135 @@
               <div class="review">13. Testimonial: “We stopped losing late-night leads.”</div>
               <div class="review">16. Review: “Response time dropped from hours to minutes.”</div>
               <div class="review">12. Evidential: “Captured 31% more estimates in 30 days.”</div>
+=======
+    </footer>
+   <script src="https://justgotalead.com/cust_0b0df4b8/widget.js"></script>
+    <script>
+      const featureSections = document.querySelectorAll(".feature-section");
+      if (featureSections.length) {
+        const featureObserver = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("in-view");
+              } else {
+                entry.target.classList.remove("in-view");
+              }
+            });
+          },
+          { threshold: 0.2 }
+        );
+        featureSections.forEach((section) => featureObserver.observe(section));
+      }
+
+      const outcomeCards = document.querySelectorAll(".outcome-card, .impact-card");
+      if (outcomeCards.length) {
+        const outcomeObserver = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("outcome-show");
+              } else {
+                entry.target.classList.remove("outcome-show");
+              }
+            });
+          },
+          { threshold: 0.2 }
+        );
+        outcomeCards.forEach((card, idx) => {
+          card.style.transitionDelay = `${idx * 0.12}s`;
+          outcomeObserver.observe(card);
+        });
+      }
+
+      const tabButtons = document.querySelectorAll(".tab-btn");
+      const tabPanels = document.querySelectorAll(".tab-panel");
+      tabButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const target = btn.getAttribute("data-tab");
+          tabButtons.forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          tabPanels.forEach((panel) => {
+            panel.classList.toggle("active", panel.id === `tab-${target}`);
+          });
+        });
+      });
+
+      const roiInputs = [
+        "roiJobValue",
+        "roiLeads",
+        "roiCloseRate",
+        "roiMissed",
+        "roiHoursSpent",
+      ].map((id) => document.getElementById(id));
+      const roiValue = document.getElementById("roiValue");
+      const roiBreakdown = document.getElementById("roiBreakdown");
+      const roiPlanRadios = document.querySelectorAll("input[name='roiPlan']");
+      const roiMissedField = document.getElementById("roiMissedField");
+      const roiMissedInput = document.getElementById("roiMissed");
+      const roiHoursField = document.getElementById("roiHoursField");
+      const roiHoursInput = document.getElementById("roiHoursSpent");
+
+      const roiPlanAssumptions = {
+        basic: { recover: 0.0, lift: 0.03, hoursSaved: 2, cost: 90 },
+        advanced: { recover: 0.0, lift: 0.08, hoursSaved: 8, cost: 199 },
+        custom: { recover: 0.9, lift: 0.15, hoursSaved: 12, cost: 399 },
+      };
+
+      function calcROI() {
+        if (!roiValue) return;
+        const [job, leads, closeRateRaw, missedCallsRaw, hoursSpentRaw] = roiInputs.map((el) =>
+          el ? Number(el.value || 0) : 0
+        );
+        const selected = Array.from(roiPlanRadios).find((r) => r.checked)?.value || "basic";
+        const plan = roiPlanAssumptions[selected];
+        const missedCalls = selected !== "custom" ? 0 : missedCallsRaw;
+        const hoursSpent = selected !== "custom" ? 0 : hoursSpentRaw;
+        const closeRate = Math.max(0, Math.min(100, closeRateRaw));
+        const afterClose = Math.max(0, Math.min(100, closeRate + plan.lift * 100));
+        const rc = missedCalls * job * plan.recover;
+        const rf = leads * job * plan.lift;
+        const hoursSavedWeekly = Math.min(hoursSpent, plan.hoursSaved);
+        const hoursSavedMonthly = Math.round(hoursSavedWeekly * 4);
+        const recovered = rc + rf - plan.cost;
+        const formatted = recovered.toLocaleString(undefined, {
+          maximumFractionDigits: 0,
+        });
+        roiValue.textContent = `$${formatted}`;
+        if (roiBreakdown) {
+          const rcFmt = rc.toLocaleString(undefined, { maximumFractionDigits: 0 });
+          const rfFmt = rf.toLocaleString(undefined, { maximumFractionDigits: 0 });
+          const costFmt = plan.cost.toLocaleString(undefined, { maximumFractionDigits: 0 });
+          const missedLine =
+            plan.recover > 0
+              ? `<div class="roi-line roi-gain">
+                   <span>Recovered missed calls</span>
+                   <span>+$${rcFmt}</span>
+                 </div>
+                 <small>Missed calls × job value × ${Math.round(plan.recover * 100)}%</small>`
+              : "";
+          const responseLabel =
+            selected === "basic"
+              ? "24/7 customer responses"
+              : selected === "advanced"
+              ? "Faster responses + CRM flow"
+              : "Faster responses";
+          const responseNote =
+            selected === "basic"
+              ? `Close rate: ${closeRate}% → ${afterClose}% (+${Math.round(plan.lift * 100)}%)`
+              : selected === "advanced"
+              ? `Close rate: ${closeRate}% → ${afterClose}% (+${Math.round(plan.lift * 100)}%)`
+              : `Close rate: ${closeRate}% → ${afterClose}% (+${Math.round(plan.lift * 100)}%)`;
+          const baseRevenue = leads * job * (closeRate / 100);
+          const afterRevenue = leads * job * (afterClose / 100);
+          const baseFmt = baseRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 });
+          const afterFmt = afterRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 });
+          roiBreakdown.innerHTML = `
+            ${missedLine}
+            <div class="roi-line roi-neutral">
+              <span>Baseline from inquiries</span>
+              <span>$${baseFmt}</span>
+>>>>>>> 6559692 (Changes)
             </div>
           </div>
           <div class="note">
