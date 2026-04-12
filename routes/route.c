@@ -404,6 +404,8 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         delete_to_local(socket, http_header, body, route, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/portfolio/images/") != NULL) {
         get_image_file(cSSL, http_header, route);
+    } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/videos/") != NULL) {
+        get_video_file(cSSL, http_header, route);
     }
 
     free(route);

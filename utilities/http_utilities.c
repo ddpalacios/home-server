@@ -13,6 +13,7 @@
 
 void send_html_response_code(SSL* cSSL,int code, int content_length);
 void send_image_response_code(SSL* cSSL,int code, int content_length);
+void send_video_response_code(SSL* cSSL,int code, int content_length);
 void send_pdf_response_code(SSL* cSSL,int code, int content_length);
 void send_favicon_response_code(SSL* cSSL,int code, int content_length);
 #define REFRESH_COOKIE_MAX_AGE 2628000
@@ -392,6 +393,81 @@ void get_image_file(SSL* cSSL, char* request, char* route){
 
     SSL_write(cSSL, image_data, image_size);
     free(image_data);
+}
+
+static char from_hex(char c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return 0;
+}
+
+static char *url_decode_path(const char *src) {
+    if (!src) return NULL;
+    size_t len = strlen(src);
+    char *out = malloc(len + 1);
+    if (!out) return NULL;
+    char *dst = out;
+    for (size_t i = 0; i < len; i++) {
+        if (src[i] == '%' && i + 2 < len) {
+            char hi = from_hex(src[i + 1]);
+            char lo = from_hex(src[i + 2]);
+            *dst++ = (char)((hi << 4) | lo);
+            i += 2;
+        } else if (src[i] == '+') {
+            *dst++ = ' ';
+        } else {
+            *dst++ = src[i];
+        }
+    }
+    *dst = '\0';
+    return out;
+}
+
+void get_video_file(SSL* cSSL, char* request, char* route){
+    const char *prefix = "/videos/";
+    const char *filename = NULL;
+
+    if (route && strstr(route, prefix) == route) {
+        filename = route + strlen(prefix);
+    }
+
+    if (!filename || filename[0] == '\0') {
+        send_response_code(cSSL, 404);
+        return;
+    }
+    if (strstr(filename, "..") != NULL) {
+        send_response_code(cSSL, 400);
+        return;
+    }
+
+    char *decoded = url_decode_path(filename);
+    if (!decoded || decoded[0] == '\0') {
+        free(decoded);
+        send_response_code(cSSL, 404);
+        return;
+    }
+
+    if (strstr(decoded, ".mp4") == NULL) {
+        free(decoded);
+        send_response_code(cSSL, 415);
+        return;
+    }
+
+    char template_dir[256] = "../templates/portfolio/videos/";
+    strncat(template_dir, decoded, sizeof(template_dir) - strlen(template_dir) - 1);
+    size_t video_size = 0;
+    unsigned char *video_data = read_binary_file(template_dir, &video_size);
+    free(decoded);
+
+    if (!video_data) {
+        send_response_code(cSSL, 404);
+        return;
+    }
+
+    send_video_response_code(cSSL, 200, (int)video_size);
+    SSL_write(cSSL, video_data, video_size);
+    free(video_data);
 }
 char* generate_websocket_accptKey(char* websocket_sec_key ){
 	char websocket_key[32];
