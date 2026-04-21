@@ -331,6 +331,7 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         const char *account_sid = NULL;
         const char *event_type = NULL;
         const char *skip_model = NULL;
+        const char *demo_role = NULL;
         if (parsed) {
             cJSON *item = NULL;
             item = cJSON_GetObjectItemCaseSensitive(parsed, "Body");
@@ -345,6 +346,8 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
             if (cJSON_IsString(item)) event_type = item->valuestring;
             item = cJSON_GetObjectItemCaseSensitive(parsed, "SkipModel");
             if (cJSON_IsString(item)) skip_model = item->valuestring;
+            item = cJSON_GetObjectItemCaseSensitive(parsed, "DemoRole");
+            if (cJSON_IsString(item)) demo_role = item->valuestring;
         }
 
         char *accountid = strdup("cust_0b0df4b8");
@@ -357,6 +360,7 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         if (account_sid) cJSON_AddStringToObject(out, "twilio_account_sid", account_sid);
         cJSON_AddStringToObject(out, "source", "twilio_sms");
         cJSON_AddStringToObject(out, "event_type", event_type ? event_type : "sms");
+        if (demo_role) cJSON_AddStringToObject(out, "demo_role", demo_role);
         if (skip_model && (strcmp(skip_model, "1") == 0 || strcasecmp(skip_model, "true") == 0)) {
             cJSON_AddBoolToObject(out, "skip_model", 1);
         }
