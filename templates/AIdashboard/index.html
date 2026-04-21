@@ -1180,6 +1180,180 @@
       font-size: 0.9rem;
     }
 
+    .transcript-button {
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #0f172a;
+      cursor: pointer;
+      font-weight: 700;
+      padding: 8px 10px;
+      white-space: nowrap;
+    }
+
+    .transcript-button:hover:not(:disabled) {
+      border-color: #2563eb;
+      color: #1d4ed8;
+      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.14);
+    }
+
+    .transcript-button:disabled {
+      color: #94a3b8;
+      cursor: not-allowed;
+      background: #f8fafc;
+    }
+
+    .transcript-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(15, 23, 42, 0.55);
+    }
+
+    .transcript-modal.is-open {
+      display: flex;
+    }
+
+    .transcript-dialog {
+      width: min(900px, 100%);
+      height: min(86vh, 820px);
+      max-height: 86vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: 0 24px 70px rgba(15, 23, 42, 0.32);
+      border: 1px solid rgba(226, 232, 240, 0.95);
+    }
+
+    .transcript-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 20px;
+      border-bottom: 1px solid #e2e8f0;
+      background: #f8fafc;
+      flex: 0 0 auto;
+    }
+
+    .transcript-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .transcript-summary-button {
+      border: 1px solid #2563eb;
+      border-radius: 8px;
+      background: #2563eb;
+      color: #ffffff;
+      cursor: pointer;
+      font-weight: 800;
+      padding: 9px 12px;
+      white-space: nowrap;
+    }
+
+    .transcript-summary-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .transcript-summary {
+      display: none;
+      margin: 14px 20px 0;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      color: #0f172a;
+      line-height: 1.45;
+      min-height: 46px;
+      max-height: 150px;
+      overflow-y: auto;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+      flex: 0 0 auto;
+    }
+
+    .transcript-summary.is-visible {
+      display: block;
+    }
+
+    .transcript-title {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .transcript-title h3 {
+      font-size: 1.1rem;
+      color: #0f172a;
+    }
+
+    .transcript-meta {
+      color: #64748b;
+      font-size: 0.88rem;
+      overflow-wrap: anywhere;
+    }
+
+    .transcript-close {
+      width: 36px;
+      height: 36px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #ffffff;
+      cursor: pointer;
+      font-size: 1.2rem;
+      line-height: 1;
+    }
+
+    .transcript-content {
+      padding: 18px 20px;
+      overflow: auto;
+      display: grid;
+      gap: 14px;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    .transcript-message {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px;
+      background: #ffffff;
+      min-width: 0;
+    }
+
+    .transcript-message.caller {
+      background: #f8fafc;
+    }
+
+    .transcript-message.assistant {
+      background: #eff6ff;
+      border-color: #bfdbfe;
+    }
+
+    .transcript-role {
+      color: #334155;
+      font-weight: 800;
+      font-size: 0.82rem;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .transcript-text {
+      white-space: pre-wrap;
+      line-height: 1.5;
+      color: #111827;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
     .insights-box {
       display: grid;
       gap: 12px;
@@ -2206,6 +2380,31 @@
         grid-column: span 1 !important;
       }
 
+      .transcript-modal {
+        padding: 12px;
+      }
+
+      .transcript-dialog {
+        width: 100%;
+        height: 92vh;
+        max-height: 92vh;
+      }
+
+      .transcript-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .transcript-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .transcript-summary-button {
+        white-space: normal;
+        text-align: left;
+      }
+
       .table-wrapper {
         overflow-x: visible;
       }
@@ -2387,6 +2586,22 @@
               <thead id="leadsTableHead"></thead>
               <tbody id="leadsTableBody"></tbody>
             </table>
+          </div>
+          <div class="transcript-modal" id="transcriptModal" aria-hidden="true">
+            <div class="transcript-dialog" role="dialog" aria-modal="true" aria-labelledby="transcriptTitle">
+              <div class="transcript-header">
+                <div class="transcript-title">
+                  <h3 id="transcriptTitle">Call Transcript</h3>
+                  <div class="transcript-meta" id="transcriptMeta">Loading...</div>
+                </div>
+                <div class="transcript-actions">
+                  <button class="transcript-summary-button" type="button" id="transcriptSummaryButton">Generate AI Summary</button>
+                  <button class="transcript-close" type="button" id="transcriptClose" aria-label="Close transcript">×</button>
+                </div>
+              </div>
+              <div class="transcript-summary" id="transcriptSummary"></div>
+              <div class="transcript-content" id="transcriptContent"></div>
+            </div>
           </div>
         </div>
       </section>
@@ -2865,6 +3080,14 @@
     const leadsPageInfo = document.getElementById("leadsPageInfo");
     const leadsExportButton = document.getElementById("leadsExportButton");
     const leadsRefreshButton = document.getElementById("leadsRefreshButton");
+    const transcriptModal = document.getElementById("transcriptModal");
+    const transcriptMeta = document.getElementById("transcriptMeta");
+    const transcriptContent = document.getElementById("transcriptContent");
+    const transcriptClose = document.getElementById("transcriptClose");
+    const transcriptSummaryButton = document.getElementById("transcriptSummaryButton");
+    const transcriptSummary = document.getElementById("transcriptSummary");
+    let activeTranscriptCallSid = "";
+    let summaryTypingTimer = null;
 
     let accountId = "";
     const domainList = document.getElementById("domainList");
@@ -3079,11 +3302,17 @@
         .replace(/\b\w/g, (char) => char.toUpperCase());
     }
 
+    function getLeadCallSid(lead) {
+      return lead?.callSid || lead?.call_sid || lead?.twilio_call_sid || "";
+    }
+
     function buildLeadColumns(data) {
       const keys = new Set();
+      const hiddenKeys = new Set(["callSid", "call_sid", "streamSid", "stream_sid", "twilio_call_sid"]);
       data.forEach((lead) => {
         Object.keys(lead || {}).forEach((key) => keys.add(key));
       });
+      hiddenKeys.forEach((key) => keys.delete(key));
       const preferred = [
         "name",
         "phone",
@@ -3118,6 +3347,7 @@
                 `<th data-key="${key}">${formatLeadKey(key)}<span class="col-resizer"></span></th>`
             )
             .join("")}
+          <th>Transcript</th>
         </tr>
       `;
       if (leadsFilterColumn) {
@@ -5492,6 +5722,11 @@
       const rows = data.slice(start, start + leadsPageSize);
       leadsTableBody.innerHTML = rows
         .map((raw) => {
+          const recordIndex = leadRecords.indexOf(raw);
+          const callSid = getLeadCallSid(raw);
+          const transcriptButton = callSid
+            ? `<button class="transcript-button" type="button" data-transcript-index="${recordIndex}">View transcript</button>`
+            : `<button class="transcript-button" type="button" disabled>No transcript</button>`;
           return `
             <tr>
               ${leadsTableColumns
@@ -5500,10 +5735,19 @@
                     `<td data-label="${formatLeadKey(key)}">${formatLeadValue(key, raw[key])}</td>`
                 )
                 .join("")}
+              <td data-label="Transcript">${transcriptButton}</td>
             </tr>
           `;
         })
         .join("");
+      leadsTableBody.querySelectorAll("[data-transcript-index]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const index = Number(button.dataset.transcriptIndex);
+          if (!Number.isNaN(index) && leadRecords[index]) {
+            openTranscriptModal(leadRecords[index]);
+          }
+        });
+      });
       if (leadsPageInfo) {
         leadsPageInfo.textContent = `Page ${leadsPage} of ${totalPages}`;
       }
@@ -5525,6 +5769,164 @@
         }
       });
     }
+
+    function closeTranscriptModal() {
+      if (!transcriptModal) return;
+      transcriptModal.classList.remove("is-open");
+      transcriptModal.setAttribute("aria-hidden", "true");
+      activeTranscriptCallSid = "";
+      if (summaryTypingTimer) {
+        clearTimeout(summaryTypingTimer);
+        summaryTypingTimer = null;
+      }
+    }
+
+    function typeTranscriptSummary(text) {
+      if (!transcriptSummary) return;
+      if (summaryTypingTimer) {
+        clearTimeout(summaryTypingTimer);
+        summaryTypingTimer = null;
+      }
+      const value = String(text || "");
+      transcriptSummary.classList.add("is-visible");
+      transcriptSummary.textContent = "";
+      let index = 0;
+      const step = () => {
+        transcriptSummary.textContent = value.slice(0, index);
+        index += 1;
+        if (index <= value.length) {
+          summaryTypingTimer = setTimeout(step, 18);
+        } else {
+          summaryTypingTimer = null;
+        }
+      };
+      step();
+    }
+
+    function renderTranscriptPayload(data, path) {
+      if (!transcriptContent || !transcriptMeta) return;
+      const payload = data?.transcript || data || {};
+      const transcript = Array.isArray(payload.transcript) ? payload.transcript : [];
+      const callSid = payload.callSid || "";
+      const status = payload.status || "unknown";
+      const datetime = payload.datetime_utc || "";
+      transcriptMeta.textContent = [
+        callSid ? `Call ${callSid}` : "",
+        status ? `Status: ${status}` : "",
+        datetime ? new Date(datetime).toLocaleString() : "",
+      ].filter(Boolean).join(" · ");
+
+      const messages = transcript.length
+        ? transcript
+            .map((item) => {
+              const role = item.role || "unknown";
+              const text = item.text || "";
+              const when = item.datetime_utc ? new Date(item.datetime_utc).toLocaleString() : "";
+              return `
+                <div class="transcript-message ${escapeHtml(role)}">
+                  <div class="transcript-role">${escapeHtml(role)}${when ? ` · ${escapeHtml(when)}` : ""}</div>
+                  <div class="transcript-text">${escapeHtml(text)}</div>
+                </div>
+              `;
+            })
+            .join("")
+        : `<div class="transcript-message"><div class="transcript-text">No transcript messages were found for this call.</div></div>`;
+
+      transcriptContent.innerHTML = messages;
+
+      const savedSummary = typeof payload.ai_summary === "string"
+        ? payload.ai_summary
+        : payload.ai_summary?.text;
+      if (savedSummary && transcriptSummary) {
+        typeTranscriptSummary(savedSummary);
+        if (transcriptSummaryButton) transcriptSummaryButton.textContent = "Regenerate AI Summary";
+      }
+    }
+
+    async function generateTranscriptSummary() {
+      if (!activeTranscriptCallSid || !transcriptSummary || !transcriptSummaryButton) return;
+      if (summaryTypingTimer) {
+        clearTimeout(summaryTypingTimer);
+        summaryTypingTimer = null;
+      }
+      transcriptSummary.classList.add("is-visible");
+      transcriptSummary.textContent = "Generating summary...";
+      transcriptSummaryButton.disabled = true;
+      try {
+        const apiBase = window.location.origin || "https://127.0.0.1:9030";
+        const res = await fetch(`${apiBase}/voice-transcript-summary`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ accountid: accountId, callSid: activeTranscriptCallSid }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data?.error || `Summary failed (${res.status})`);
+        }
+        typeTranscriptSummary(data.summary || "No summary was generated.");
+        transcriptSummaryButton.textContent = "Regenerate AI Summary";
+      } catch (err) {
+        transcriptSummary.textContent = err.message || "Unable to generate summary.";
+      } finally {
+        transcriptSummaryButton.disabled = false;
+      }
+    }
+
+    async function openTranscriptModal(lead) {
+      const callSid = getLeadCallSid(lead);
+      if (!callSid || !transcriptModal || !transcriptContent || !transcriptMeta) return;
+      transcriptModal.classList.add("is-open");
+      transcriptModal.setAttribute("aria-hidden", "false");
+      activeTranscriptCallSid = callSid;
+      if (transcriptSummary) {
+        if (summaryTypingTimer) {
+          clearTimeout(summaryTypingTimer);
+          summaryTypingTimer = null;
+        }
+        transcriptSummary.classList.remove("is-visible");
+        transcriptSummary.textContent = "";
+      }
+      if (transcriptSummaryButton) {
+        transcriptSummaryButton.disabled = false;
+        transcriptSummaryButton.textContent = "Generate AI Summary";
+      }
+      transcriptMeta.textContent = `Loading call ${callSid}...`;
+      transcriptContent.innerHTML = `<div class="transcript-message"><div class="transcript-text">Loading transcript...</div></div>`;
+      try {
+        const apiBase = window.location.origin || "https://127.0.0.1:9030";
+        const res = await fetch(
+          `${apiBase}/voice-transcript?accountid=${encodeURIComponent(accountId)}&callSid=${encodeURIComponent(callSid)}`
+        );
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data?.error || `Transcript fetch failed (${res.status})`);
+        }
+        renderTranscriptPayload(data, data?.path || "");
+      } catch (err) {
+        transcriptMeta.textContent = `Call ${callSid}`;
+        transcriptContent.innerHTML = `
+          <div class="transcript-message">
+            <div class="transcript-role">Transcript unavailable</div>
+            <div class="transcript-text">${escapeHtml(err.message || "Unable to load transcript.")}</div>
+          </div>
+        `;
+      }
+    }
+
+    if (transcriptClose) {
+      transcriptClose.addEventListener("click", closeTranscriptModal);
+    }
+    if (transcriptSummaryButton) {
+      transcriptSummaryButton.addEventListener("click", generateTranscriptSummary);
+    }
+    if (transcriptModal) {
+      transcriptModal.addEventListener("click", (event) => {
+        if (event.target === transcriptModal) closeTranscriptModal();
+      });
+    }
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeTranscriptModal();
+    });
 
     if (leadsFilterColumn) {
       leadsFilterColumn.addEventListener("change", (e) => {

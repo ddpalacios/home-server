@@ -107,6 +107,49 @@ static char *get_query_param(const char *route, const char *key) {
     return NULL;
 }
 
+static void send_twilio_voice_stream_response(SSL *ssl, const char *http_header) {
+    char host[128];
+    char *header_host = get_header_value(http_header, "Host");
+    if (header_host && header_host[0] != '\0') {
+        snprintf(host, sizeof(host), "%s", header_host);
+    } else {
+        snprintf(host, sizeof(host), "localhost:9030");
+    }
+
+    char twiml[1024];
+    int twiml_len = snprintf(twiml, sizeof(twiml),
+                             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                             "<Response>"
+                             "<Connect>"
+                             "<Stream url=\"wss://%s/twilio/media-stream\">"
+                             "<Parameter name=\"accountid\" value=\"cust_0b0df4b8\" />"
+                             "<Parameter name=\"kb_type\" value=\"client\" />"
+                             "</Stream>"
+                             "</Connect>"
+                             "</Response>",
+                             host);
+    if (twiml_len <= 0 || twiml_len >= (int)sizeof(twiml)) {
+        send_response_code(ssl, 500);
+        return;
+    }
+
+    char response_header[512];
+    int header_len = snprintf(response_header, sizeof(response_header),
+                              "HTTP/1.1 200 OK\r\n"
+                              "Content-Type: text/xml; charset=utf-8\r\n"
+                              "Content-Length: %d\r\n"
+                              "Connection: close\r\n"
+                              "\r\n",
+                              twiml_len);
+    if (header_len <= 0 || header_len >= (int)sizeof(response_header)) {
+        send_response_code(ssl, 500);
+        return;
+    }
+
+    SSL_write(ssl, response_header, header_len);
+    SSL_write(ssl, twiml, twiml_len);
+}
+
 void process_route(struct Socket *socket, char *http_header, char *body) {
     SSL *cSSL = socket->cSSL;
     if (!http_header) {
@@ -192,7 +235,11 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         return;
     }
 
-    if (strcmp(request_type, "POST") == 0 && strcmp(route, "/voice") == 0) {
+    if (strcmp(request_type, "POST") == 0 &&
+        (strcmp(route, "/twilio/voice") == 0 || strcmp(route, "/voice") == 0)) {
+        printf("Twilio live voice webhook received.\n");
+        send_twilio_voice_stream_response(cSSL, http_header);
+    } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/voice-legacy") == 0) {
         printf("Twilio Voice webhook received.\n");
         printf("Raw Headers:\n%s\n", http_header);
         if (body) {
@@ -370,6 +417,8 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         get_to_local(socket, http_header, body, route, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/leads") != NULL) {
         get_to_local(socket, http_header, body, route, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/voice-transcript") != NULL) {
+        get_to_local(socket, http_header, body, route, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/domains") != NULL) {
         get_to_local(socket, http_header, body, route, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/prompt") != NULL) {
@@ -393,6 +442,8 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/leads-sync") != NULL) {
         post_to_local(socket, http_header, body, route, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/lead-sql") != NULL) {
+        post_to_local(socket, http_header, body, route, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/voice-transcript-summary") != NULL) {
         post_to_local(socket, http_header, body, route, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/domains") != NULL) {
         post_to_local(socket, http_header, body, route, "5000");

@@ -3,12 +3,14 @@
 #include <errno.h>
 #include <netdb.h>
 #include <openssl/ssl.h>
+#include <cjson/cJSON.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <poll.h>
 #include <pthread.h>
 #include <signal.h>
+#include <stdint.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -22,6 +24,10 @@
 #define BUFFER_SIZE 8192
 #define WORKER_COUNT 16
 #define QUEUE_CAPACITY 1024
+#define MAX_WEBSOCKET_PAYLOAD (64 * 1024 * 1024)
+#define VOICE_BRIDGE_HOST "127.0.0.1"
+#define VOICE_BRIDGE_PORT "7001"
+#define VOICE_LOG_EVERY_MEDIA 100
 
 struct fd_queue {
     int fds[QUEUE_CAPACITY];
@@ -33,6 +39,13 @@ struct fd_queue {
 };
 
 static struct fd_queue g_queue;
+
+struct websocket_frame {
+    int fin;
+    int opcode;
+    uint64_t payload_length;
+    unsigned char *payload;
+};
 
 static void queue_init(struct fd_queue *q) {
     memset(q, 0, sizeof(*q));
@@ -64,6 +77,463 @@ static int queue_pop(struct fd_queue *q) {
     q->count--;
     pthread_mutex_unlock(&q->mutex);
     return fd;
+}
+
+static int header_has_token(const char *http_header, const char *header_name, const char *token) {
+    char pattern[128];
+    snprintf(pattern, sizeof(pattern), "\r\n%s:", header_name);
+
+    const char *line = strcasestr(http_header, pattern);
+    if (!line) {
+        if (strncasecmp(http_header, header_name, strlen(header_name)) == 0 &&
+            http_header[strlen(header_name)] == ':') {
+            line = http_header;
+        } else {
+            return 0;
+        }
+    } else {
+        line += 2;
+    }
+
+    const char *value = strchr(line, ':');
+    if (!value) {
+        return 0;
+    }
+    value++;
+
+    const char *line_end = strstr(value, "\r\n");
+    size_t value_len = line_end ? (size_t)(line_end - value) : strlen(value);
+    size_t token_len = strlen(token);
+
+    for (size_t i = 0; i + token_len <= value_len; i++) {
+        if (strncasecmp(value + i, token, token_len) != 0) {
+            continue;
+        }
+        int before_ok = (i == 0 || value[i - 1] == ' ' || value[i - 1] == '\t' || value[i - 1] == ',');
+        int after_ok = (i + token_len == value_len ||
+                        value[i + token_len] == ' ' ||
+                        value[i + token_len] == '\t' ||
+                        value[i + token_len] == ',');
+        if (before_ok && after_ok) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int get_header_value_case(const char *http_header, const char *header_name,
+                                 char *value, size_t value_size) {
+    if (!http_header || !header_name || !value || value_size == 0) {
+        return 0;
+    }
+    value[0] = '\0';
+
+    const char *line = http_header;
+    size_t header_name_len = strlen(header_name);
+    while (line && *line) {
+        const char *line_end = strstr(line, "\r\n");
+        size_t line_len = line_end ? (size_t)(line_end - line) : strlen(line);
+        if (line_len > header_name_len &&
+            strncasecmp(line, header_name, header_name_len) == 0 &&
+            line[header_name_len] == ':') {
+            const char *start = line + header_name_len + 1;
+            while (*start == ' ' || *start == '\t') {
+                start++;
+            }
+            size_t len = line_len - (size_t)(start - line);
+            while (len > 0 && (start[len - 1] == ' ' || start[len - 1] == '\t')) {
+                len--;
+            }
+            if (len >= value_size) {
+                len = value_size - 1;
+            }
+            memcpy(value, start, len);
+            value[len] = '\0';
+            return 1;
+        }
+        if (!line_end) {
+            break;
+        }
+        line = line_end + 2;
+    }
+    return 0;
+}
+
+static int is_websocket_request(const char *http_header) {
+    if (!http_header || strncmp(http_header, "GET ", 4) != 0) {
+        return 0;
+    }
+    if (!strstr(http_header, "HTTP/1.1")) {
+        return 0;
+    }
+    if (!header_has_token(http_header, "Upgrade", "websocket")) {
+        return 0;
+    }
+    if (!header_has_token(http_header, "Connection", "Upgrade")) {
+        return 0;
+    }
+    if (!strcasestr(http_header, "\r\nSec-WebSocket-Key:") &&
+        strncasecmp(http_header, "Sec-WebSocket-Key:", 18) != 0) {
+        return 0;
+    }
+    if (!strcasestr(http_header, "\r\nSec-WebSocket-Version: 13") &&
+        !strcasestr(http_header, "\r\nSec-WebSocket-Version:13")) {
+        return 0;
+    }
+    return 1;
+}
+
+static int ssl_write_all(SSL *ssl, const unsigned char *buf, size_t len) {
+    size_t written = 0;
+    while (written < len) {
+        size_t chunk = len - written;
+        if (chunk > INT32_MAX) {
+            chunk = INT32_MAX;
+        }
+        int n = SSL_write(ssl, buf + written, (int)chunk);
+        if (n <= 0) {
+            return 0;
+        }
+        written += (size_t)n;
+    }
+    return 1;
+}
+
+static int send_websocket_frame(SSL *ssl, int opcode, const unsigned char *payload, uint64_t payload_length) {
+    unsigned char header[10];
+    size_t header_len = 2;
+
+    header[0] = 0x80 | (opcode & 0x0f);
+    if (payload_length <= 125) {
+        header[1] = (unsigned char)payload_length;
+    } else if (payload_length <= 0xffff) {
+        header[1] = 126;
+        header[2] = (unsigned char)((payload_length >> 8) & 0xff);
+        header[3] = (unsigned char)(payload_length & 0xff);
+        header_len = 4;
+    } else {
+        header[1] = 127;
+        for (int i = 0; i < 8; i++) {
+            header[2 + i] = (unsigned char)((payload_length >> (56 - (i * 8))) & 0xff);
+        }
+        header_len = 10;
+    }
+
+    if (!ssl_write_all(ssl, header, header_len)) {
+        return 0;
+    }
+    if (payload_length > 0 && payload) {
+        return ssl_write_all(ssl, payload, (size_t)payload_length);
+    }
+    return 1;
+}
+
+static int connect_voice_bridge(void) {
+    struct addrinfo hints;
+    struct addrinfo *res = NULL;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+
+    if (getaddrinfo(VOICE_BRIDGE_HOST, VOICE_BRIDGE_PORT, &hints, &res) != 0) {
+        return -1;
+    }
+
+    int fd = -1;
+    for (struct addrinfo *addr = res; addr; addr = addr->ai_next) {
+        fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
+        if (fd < 0) {
+            continue;
+        }
+        if (connect(fd, addr->ai_addr, addr->ai_addrlen) == 0) {
+            break;
+        }
+        close(fd);
+        fd = -1;
+    }
+
+    freeaddrinfo(res);
+    if (fd >= 0) {
+        printf("Voice bridge connected to %s:%s\n", VOICE_BRIDGE_HOST, VOICE_BRIDGE_PORT);
+    } else {
+        printf("Voice bridge connection failed to %s:%s\n", VOICE_BRIDGE_HOST, VOICE_BRIDGE_PORT);
+    }
+    return fd;
+}
+
+static int send_all_fd(int fd, const unsigned char *buf, size_t len) {
+    size_t sent = 0;
+    while (sent < len) {
+        ssize_t n = send(fd, buf + sent, len - sent, 0);
+        if (n <= 0) {
+            return 0;
+        }
+        sent += (size_t)n;
+    }
+    return 1;
+}
+
+static int send_voice_bridge_json(int fd, const unsigned char *payload, uint64_t payload_length) {
+    if (fd < 0 || !payload) {
+        return 0;
+    }
+    if (!send_all_fd(fd, payload, (size_t)payload_length)) {
+        return 0;
+    }
+    return send_all_fd(fd, (const unsigned char *)"\n", 1);
+}
+
+static int read_voice_bridge_lines(int fd, SSL *twilio_ssl, char *buffer, size_t *buffer_len,
+                                   size_t buffer_size) {
+    char chunk[8192];
+    ssize_t n = recv(fd, chunk, sizeof(chunk), 0);
+    if (n <= 0) {
+        return 0;
+    }
+    if (*buffer_len + (size_t)n >= buffer_size) {
+        *buffer_len = 0;
+        printf("Voice bridge receive buffer overflow; clearing buffer\n");
+        return 1;
+    }
+
+    memcpy(buffer + *buffer_len, chunk, (size_t)n);
+    *buffer_len += (size_t)n;
+    buffer[*buffer_len] = '\0';
+
+    char *start = buffer;
+    char *newline = NULL;
+    while ((newline = memchr(start, '\n', buffer + *buffer_len - start)) != NULL) {
+        size_t line_len = (size_t)(newline - start);
+        while (line_len > 0 && start[line_len - 1] == '\r') {
+            line_len--;
+        }
+        if (line_len > 0) {
+            send_websocket_frame(twilio_ssl, 0x1, (const unsigned char *)start, line_len);
+        }
+        start = newline + 1;
+    }
+
+    size_t remaining = (size_t)(buffer + *buffer_len - start);
+    if (remaining > 0 && start != buffer) {
+        memmove(buffer, start, remaining);
+    }
+    *buffer_len = remaining;
+    buffer[*buffer_len] = '\0';
+    return 1;
+}
+
+static int read_websocket_frame(SSL *ssl, struct websocket_frame *frame) {
+    unsigned char header[2];
+    memset(frame, 0, sizeof(*frame));
+
+    if (read_exact_bytes(ssl, 2, (char *)header) != 2) {
+        return 0;
+    }
+
+    frame->fin = (header[0] & 0x80) != 0;
+    frame->opcode = header[0] & 0x0f;
+    int masked = (header[1] & 0x80) != 0;
+    uint64_t payload_length = header[1] & 0x7f;
+
+    if (payload_length == 126) {
+        unsigned char extended[2];
+        if (read_exact_bytes(ssl, 2, (char *)extended) != 2) {
+            return 0;
+        }
+        payload_length = ((uint64_t)extended[0] << 8) | extended[1];
+    } else if (payload_length == 127) {
+        unsigned char extended[8];
+        if (read_exact_bytes(ssl, 8, (char *)extended) != 8) {
+            return 0;
+        }
+        payload_length = 0;
+        for (int i = 0; i < 8; i++) {
+            payload_length = (payload_length << 8) | extended[i];
+        }
+        if (payload_length & (1ULL << 63)) {
+            return 0;
+        }
+    }
+
+    if (!masked) {
+        return 0;
+    }
+    if (payload_length > MAX_WEBSOCKET_PAYLOAD) {
+        return 0;
+    }
+
+    unsigned char mask[4];
+    if (read_exact_bytes(ssl, 4, (char *)mask) != 4) {
+        return 0;
+    }
+
+    frame->payload_length = payload_length;
+    frame->payload = malloc((size_t)payload_length + 1);
+    if (!frame->payload) {
+        return 0;
+    }
+
+    if (payload_length > 0 &&
+        read_exact_bytes(ssl, (int)payload_length, (char *)frame->payload) != (int)payload_length) {
+        free(frame->payload);
+        frame->payload = NULL;
+        return 0;
+    }
+
+    for (uint64_t i = 0; i < payload_length; i++) {
+        frame->payload[i] ^= mask[i % 4];
+    }
+    frame->payload[payload_length] = '\0';
+    return 1;
+}
+
+static void log_twilio_websocket_event(const unsigned char *payload, uint64_t payload_length,
+                                       int *voice_bridge_fd, int *media_count) {
+    if (!payload || payload_length == 0) {
+        return;
+    }
+
+    cJSON *root = cJSON_Parse((const char *)payload);
+    if (!root) {
+        printf("WebSocket text length=%llu\n", (unsigned long long)payload_length);
+        return;
+    }
+
+    cJSON *event_item = cJSON_GetObjectItemCaseSensitive(root, "event");
+    const char *event = cJSON_IsString(event_item) ? event_item->valuestring : "";
+
+    if (strcmp(event, "connected") == 0) {
+        printf("Twilio event=connected\n");
+    } else if (strcmp(event, "start") == 0) {
+        cJSON *start = cJSON_GetObjectItemCaseSensitive(root, "start");
+        cJSON *stream_sid = start ? cJSON_GetObjectItemCaseSensitive(start, "streamSid") : NULL;
+        cJSON *call_sid = start ? cJSON_GetObjectItemCaseSensitive(start, "callSid") : NULL;
+        printf("Twilio event=start streamSid=%s callSid=%s\n",
+               cJSON_IsString(stream_sid) ? stream_sid->valuestring : "",
+               cJSON_IsString(call_sid) ? call_sid->valuestring : "");
+        if (voice_bridge_fd && *voice_bridge_fd < 0) {
+            *voice_bridge_fd = connect_voice_bridge();
+        }
+    } else if (strcmp(event, "media") == 0) {
+        cJSON *media = cJSON_GetObjectItemCaseSensitive(root, "media");
+        cJSON *media_payload = media ? cJSON_GetObjectItemCaseSensitive(media, "payload") : NULL;
+        const char *audio = cJSON_IsString(media_payload) ? media_payload->valuestring : "";
+        if (media_count) {
+            (*media_count)++;
+            if (*media_count == 1 || *media_count % VOICE_LOG_EVERY_MEDIA == 0) {
+                printf("Twilio media frames=%d payload_length=%zu\n", *media_count, strlen(audio));
+            }
+        }
+    } else if (strcmp(event, "stop") == 0) {
+        printf("Twilio event=stop\n");
+    } else {
+        printf("Twilio event=%s length=%llu\n", event, (unsigned long long)payload_length);
+    }
+
+    if (voice_bridge_fd && *voice_bridge_fd >= 0) {
+        if (!send_voice_bridge_json(*voice_bridge_fd, payload, payload_length)) {
+            close(*voice_bridge_fd);
+            *voice_bridge_fd = -1;
+            printf("Voice bridge disconnected while sending\n");
+        }
+    }
+
+    cJSON_Delete(root);
+}
+
+static int peek_http_header(SSL *ssl, char *buf, int buf_size) {
+    while (1) {
+        int nbytes = SSL_peek(ssl, buf, buf_size);
+        if (nbytes <= 0) {
+            return 0;
+        }
+        if (nbytes >= buf_size) {
+            return nbytes;
+        }
+        buf[nbytes] = '\0';
+        if (strstr(buf, "\r\n\r\n")) {
+            return nbytes;
+        }
+    }
+}
+
+static void handle_websocket_connection(struct Socket *socket, char *http_header) {
+    SSL *ssl = socket->cSSL;
+    char websocket_key[128];
+    if (!get_header_value_case(http_header, "Sec-WebSocket-Key", websocket_key, sizeof(websocket_key))) {
+        send_response_code(ssl, 400);
+        return;
+    }
+
+    char *accept_key = generate_websocket_accptKey(websocket_key);
+    if (!accept_key || switch_to_websocket_protocol(ssl, accept_key) <= 0) {
+        send_response_code(ssl, 400);
+        return;
+    }
+
+    socket->keep_alive = 1;
+    int voice_bridge_fd = -1;
+    int media_count = 0;
+    char voice_bridge_buffer[262144];
+    size_t voice_bridge_buffer_len = 0;
+    printf("WebSocket connection established on fd %d\n", socket->fd);
+
+    while (socket->keep_alive) {
+        struct pollfd pfds[2];
+        int poll_count = 1;
+        pfds[0].fd = socket->fd;
+        pfds[0].events = POLLIN;
+        pfds[0].revents = 0;
+        if (voice_bridge_fd >= 0) {
+            pfds[1].fd = voice_bridge_fd;
+            pfds[1].events = POLLIN;
+            pfds[1].revents = 0;
+            poll_count = 2;
+        }
+
+        int ready = poll(pfds, poll_count, -1);
+        if (ready <= 0) {
+            continue;
+        }
+
+        if (voice_bridge_fd >= 0 && (pfds[1].revents & (POLLIN | POLLHUP | POLLERR))) {
+            if (!read_voice_bridge_lines(voice_bridge_fd, ssl, voice_bridge_buffer,
+                                         &voice_bridge_buffer_len, sizeof(voice_bridge_buffer))) {
+                close(voice_bridge_fd);
+                voice_bridge_fd = -1;
+                voice_bridge_buffer_len = 0;
+                printf("Voice bridge disconnected\n");
+            }
+        }
+
+        if (!(pfds[0].revents & (POLLIN | POLLHUP | POLLERR))) {
+            continue;
+        }
+
+        struct websocket_frame frame;
+        if (!read_websocket_frame(ssl, &frame)) {
+            break;
+        }
+
+        if (frame.opcode == 0x8) {
+            send_websocket_frame(ssl, 0x8, frame.payload, frame.payload_length);
+            socket->keep_alive = 0;
+        } else if (frame.opcode == 0x9) {
+            send_websocket_frame(ssl, 0xA, frame.payload, frame.payload_length);
+        } else if (frame.opcode == 0x1) {
+            log_twilio_websocket_event(frame.payload, frame.payload_length, &voice_bridge_fd, &media_count);
+        } else if (frame.opcode == 0x2 || frame.opcode == 0x0) {
+            printf("WebSocket frame opcode=%d length=%llu\n",
+                   frame.opcode,
+                   (unsigned long long)frame.payload_length);
+        }
+
+        free(frame.payload);
+    }
+
+    if (voice_bridge_fd >= 0) {
+        close(voice_bridge_fd);
+    }
 }
 
 int bind_address_to_port(char *port, struct addrinfo hints) {
@@ -107,7 +577,7 @@ static void handle_client(int fd) {
     }
 
     char *peek_buf = malloc(BUFFER_SIZE + 1);
-    int bytes_peeked = peek_exact_bytes(cSSL, BUFFER_SIZE, peek_buf);
+    int bytes_peeked = peek_http_header(cSSL, peek_buf, BUFFER_SIZE);
     if (bytes_peeked <= 0) {
         free(peek_buf);
         SSL_shutdown(cSSL);
@@ -146,6 +616,21 @@ static void handle_client(int fd) {
     }
     http_header[nbytes] = '\0';
 
+    struct Socket socket = {0};
+    socket.fd = fd;
+    socket.cSSL = cSSL;
+
+    if (is_websocket_request(http_header)) {
+        handle_websocket_connection(&socket, http_header);
+        free(peek_buf);
+        free(peeked_http_header);
+        free(http_header);
+        SSL_shutdown(cSSL);
+        SSL_free(cSSL);
+        close(fd);
+        return;
+    }
+
     int content_length = 0;
     char *value_start = strstr(peeked_http_header, "Content-Length: ");
     if (value_start != NULL) {
@@ -163,9 +648,6 @@ static void handle_client(int fd) {
         body[content_length] = '\0';
     }
 
-    struct Socket socket = {0};
-    socket.fd = fd;
-    socket.cSSL = cSSL;
     process_route(&socket, http_header, body);
 
     free(peek_buf);
