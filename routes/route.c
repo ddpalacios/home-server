@@ -406,6 +406,8 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
 >>>>>>> 6559692 (Changes)
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/login") == 0) {
         get_live_html(cSSL, http_header, "AIdashboard/login.html");
+    } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/auth/oura/callback") != NULL) {
+        get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/auth/") != NULL) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/widget.js") == 0) {
@@ -445,6 +447,8 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         get_to_local(socket, http_header, body, route, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/validate-domain") != NULL) {
         get_to_local(socket, http_header, body, route_with_query, "9000");
+    } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/instagram/images/") != NULL) {
+        get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/chat") == 0) {
         post_to_local(socket, http_header, body, route_with_query, "9000");
     } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/book-estimate") == 0) {

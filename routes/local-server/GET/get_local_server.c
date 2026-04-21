@@ -238,7 +238,39 @@ void get_to_local(struct Socket* socket, char* http_header, char* body, char* ro
         return;
     }
 
+<<<<<<< HEAD
     if (strstr(route, "/dashboard") != NULL || strstr(route, "/messages") != NULL) {
+=======
+    if (content_type && strstr(route, "/instagram/images/") != NULL) {
+        char header_out[2048];
+        const char *status_text = (status_code == 200) ? "OK" : get_code_message(status_code);
+        int header_len = snprintf(header_out, sizeof(header_out),
+                                  "HTTP/1.1 %d %s\r\n"
+                                  "Content-Type: %s\r\n"
+                                  "Access-Control-Allow-Origin: *\r\n"
+                                  "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+                                  "Access-Control-Allow-Headers: Content-Type\r\n"
+                                  "Connection: close\r\n"
+                                  "Content-Length: %zu\r\n"
+                                  "\r\n",
+                                  status_code, status_text, content_type, body_len);
+        SSL_write(socket->cSSL, header_out, header_len);
+        if (body_len > 0) {
+            SSL_write(socket->cSSL, res_body, body_len);
+        }
+        if (location) free(location);
+        if (content_type) free(content_type);
+        for (size_t i = 0; i < cookie_count; i++) {
+            free(cookies[i]);
+        }
+        free(cookies);
+        free(header_block);
+        free(response);
+        return;
+    }
+
+    if (strstr(route, "/dashboard") != NULL) {
+>>>>>>> 3b5cc57 (Cservices changfes)
         send_html_response_code(socket->cSSL, 200, (int)body_len);
         SSL_write(socket->cSSL, res_body, body_len);
     } else if (strstr(route, ".css") != NULL) {

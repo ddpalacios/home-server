@@ -202,6 +202,7 @@ void delete_to_local(struct Socket* socket,char* http_header, char*body, char* r
         if (!tmp) {
             perror("realloc");
             free(response);
+			close(sfd);
             return;
         }
 			response = tmp;
@@ -216,17 +217,91 @@ void delete_to_local(struct Socket* socket,char* http_header, char*body, char* r
 		response[total] = '\0'; 
 		printf("Total bytes received: %zu\n", total);
 
-		char *res_body = strstr(response, "\r\n\r\n");
-		if (res_body) {
-			res_body += 4;
-			size_t body_len = strlen(res_body);
-
-			send_html_response_code(socket->cSSL, 200, body_len);
-			
-			SSL_write(socket->cSSL, res_body, body_len);
-		} else {
-			printf("No HTTP body found\n");
+		char *header_end = NULL;
+		for (size_t i = 0; i + 3 < total; i++) {
+			if (response[i] == '\r' && response[i + 1] == '\n'
+				&& response[i + 2] == '\r' && response[i + 3] == '\n') {
+				header_end = response + i + 4;
+				break;
+			}
 		}
+		if (!header_end) {
+			printf("No HTTP header terminator found\n");
+			free(response);
+			close(sfd);
+			return;
+		}
+
+		size_t header_len = (size_t)(header_end - response);
+		size_t body_len = total - header_len;
+
+		char *header_str = malloc(header_len + 1);
+		if (!header_str) {
+			perror("malloc");
+			free(response);
+			close(sfd);
+			return;
+		}
+		memcpy(header_str, response, header_len);
+		header_str[header_len] = '\0';
+
+		int status_code = 200;
+		if (sscanf(header_str, "HTTP/%*s %d", &status_code) != 1) {
+			status_code = 200;
+		}
+
+		long content_length = -1;
+		char *cl_start = strstr(header_str, "Content-Length:");
+		if (cl_start) {
+			cl_start += strlen("Content-Length:");
+			while (*cl_start == ' ') {
+				cl_start++;
+			}
+			content_length = strtol(cl_start, NULL, 10);
+		}
+
+		char content_type[128];
+		snprintf(content_type, sizeof(content_type), "application/octet-stream");
+		char *ct_start = strstr(header_str, "Content-Type:");
+		if (ct_start) {
+			ct_start += strlen("Content-Type:");
+			while (*ct_start == ' ') {
+				ct_start++;
+			}
+			char *ct_end = strstr(ct_start, "\r\n");
+			if (ct_end && ct_end > ct_start) {
+				size_t ct_len = (size_t)(ct_end - ct_start);
+				if (ct_len >= sizeof(content_type)) {
+					ct_len = sizeof(content_type) - 1;
+				}
+				memcpy(content_type, ct_start, ct_len);
+				content_type[ct_len] = '\0';
+			}
+		}
+
+		size_t send_len = body_len;
+		if (content_length >= 0 && (size_t)content_length <= body_len) {
+			send_len = (size_t)content_length;
+		}
+
+		const char *status_text = (status_code == 200) ? "OK" : get_code_message(status_code);
+		char out_header[2048];
+		snprintf(out_header, sizeof(out_header),
+			"HTTP/1.1 %d %s\r\n"
+			"Content-Type: %s\r\n"
+			"Access-Control-Allow-Origin: *\r\n"
+			"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+			"Access-Control-Allow-Headers: Content-Type\r\n"
+			"Connection: close\r\n"
+			"Content-Length: %zu\r\n"
+			"\r\n",
+			status_code, status_text, content_type, send_len);
+		SSL_write(socket->cSSL, out_header, strlen(out_header));
+		if (send_len > 0) {
+			SSL_write(socket->cSSL, header_end, send_len);
+		}
+
+		free(header_str);
 
     free(response);
     close(sfd);
