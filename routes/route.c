@@ -275,6 +275,7 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         const char *from = NULL;
         const char *to = NULL;
         const char *account_sid = NULL;
+        const char *accountid_value = NULL;
         if (parsed) {
             cJSON *item = NULL;
             item = cJSON_GetObjectItemCaseSensitive(parsed, "From");
@@ -283,9 +284,13 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
             if (cJSON_IsString(item)) to = item->valuestring;
             item = cJSON_GetObjectItemCaseSensitive(parsed, "AccountSid");
             if (cJSON_IsString(item)) account_sid = item->valuestring;
+            item = cJSON_GetObjectItemCaseSensitive(parsed, "accountid");
+            if (cJSON_IsString(item)) accountid_value = item->valuestring;
         }
 
-        char *accountid = strdup("cust_0b0df4b8");
+        char *accountid = strdup(
+            (accountid_value && *accountid_value) ? accountid_value : "cust_0b0df4b8"
+        );
 
         cJSON *out = cJSON_CreateObject();
         cJSON_AddStringToObject(out, "message", "Sorry I missed your call. How can I help you?");
@@ -340,6 +345,7 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         const char *event_type = NULL;
         const char *skip_model = NULL;
         const char *demo_role = NULL;
+        const char *accountid_value = NULL;
         if (parsed) {
             cJSON *item = NULL;
             item = cJSON_GetObjectItemCaseSensitive(parsed, "Body");
@@ -356,9 +362,13 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
             if (cJSON_IsString(item)) skip_model = item->valuestring;
             item = cJSON_GetObjectItemCaseSensitive(parsed, "DemoRole");
             if (cJSON_IsString(item)) demo_role = item->valuestring;
+            item = cJSON_GetObjectItemCaseSensitive(parsed, "accountid");
+            if (cJSON_IsString(item)) accountid_value = item->valuestring;
         }
 
-        char *accountid = strdup("cust_0b0df4b8");
+        char *accountid = strdup(
+            (accountid_value && *accountid_value) ? accountid_value : "cust_0b0df4b8"
+        );
 
         cJSON *out = cJSON_CreateObject();
         cJSON_AddStringToObject(out, "message", msg ? msg : "");
@@ -395,15 +405,11 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/favicon.ico") != NULL) {
         get_image_file(cSSL, http_header, "/portfolio/images/favicon.ico");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/dashboard") == 0) {
-<<<<<<< HEAD
-        get_to_local(socket, http_header, body, route, "5000");
-    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/messages") == 0) {
-        get_to_local(socket, http_header, body, route, "5000");
-    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/messages/data") == 0) {
-        get_to_local(socket, http_header, body, route, "5000");
-=======
         get_to_local(socket, http_header, body, route_with_query, "5000");
->>>>>>> 6559692 (Changes)
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/messages") == 0) {
+        get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/messages/data") == 0) {
+        get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/login") == 0) {
         get_live_html(cSSL, http_header, "AIdashboard/login.html");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/auth/oura/callback") != NULL) {
@@ -434,14 +440,12 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/lead-sample") != NULL) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/leads") != NULL) {
-<<<<<<< HEAD
-        get_to_local(socket, http_header, body, route, "5000");
-    } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/voice-transcript") != NULL) {
-        get_to_local(socket, http_header, body, route, "5000");
-=======
         get_to_local(socket, http_header, body, route_with_query, "5000");
->>>>>>> 6559692 (Changes)
+    } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/voice-transcript") != NULL) {
+        get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/domains") != NULL) {
+        get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/demo-kb-profile") == 0) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/prompt") != NULL) {
         get_to_local(socket, http_header, body, route, "5000");
@@ -466,13 +470,15 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/leads-sync") != NULL) {
         post_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/lead-sql") != NULL) {
-<<<<<<< HEAD
-        post_to_local(socket, http_header, body, route, "5000");
-    } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/voice-transcript-summary") != NULL) {
-        post_to_local(socket, http_header, body, route, "5000");
-=======
         post_to_local(socket, http_header, body, route_with_query, "5000");
->>>>>>> 6559692 (Changes)
+    } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/demo-kb-ingest") == 0) {
+        post_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/demo-kb-save") == 0) {
+        post_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/demo-kb-share") == 0) {
+        post_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/voice-transcript-summary") != NULL) {
+        post_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/domains") != NULL) {
         post_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/auth/") != NULL) {
@@ -483,13 +489,10 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         delete_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/portfolio/images/") != NULL) {
         get_image_file(cSSL, http_header, route);
-<<<<<<< HEAD
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/videos/") != NULL) {
         get_video_file(cSSL, http_header, route);
-=======
     } else {
         send_response_code(cSSL, 404);
->>>>>>> 6559692 (Changes)
     }
 
     free(route);

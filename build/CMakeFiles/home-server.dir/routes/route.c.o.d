@@ -102,18 +102,6 @@ CMakeFiles/home-server.dir/routes/route.c.o: \
  /usr/include/openssl/pkcs7.h /usr/include/openssl/pkcs7err.h \
  /usr/include/openssl/http.h /usr/include/openssl/conf.h \
  /usr/include/openssl/conferr.h /usr/include/openssl/conftypes.h \
-<<<<<<< HEAD
- /usr/include/openssl/x509v3.h /usr/include/openssl/x509v3err.h \
- /usr/include/openssl/ocsperr.h /usr/include/openssl/pem.h \
- /usr/include/openssl/pemerr.h /usr/include/openssl/hmac.h \
- /usr/include/openssl/async.h /usr/include/openssl/asyncerr.h \
- /usr/include/openssl/ct.h /usr/include/openssl/cterr.h \
- /usr/include/openssl/sslerr.h /usr/include/openssl/sslerr_legacy.h \
- /usr/include/openssl/prov_ssl.h /usr/include/openssl/ssl2.h \
- /usr/include/openssl/ssl3.h /usr/include/openssl/tls1.h \
- /usr/include/openssl/dtls1.h /usr/include/openssl/srtp.h \
- /usr/include/cjson/cJSON.h /home/dpalacios/home-server/models/Socket.h \
-=======
  /usr/include/openssl/pem.h /usr/include/openssl/pemerr.h \
  /usr/include/openssl/hmac.h /usr/include/openssl/async.h \
  /usr/include/openssl/asyncerr.h /usr/include/openssl/ct.h \
@@ -122,8 +110,7 @@ CMakeFiles/home-server.dir/routes/route.c.o: \
  /usr/include/openssl/ssl2.h /usr/include/openssl/ssl3.h \
  /usr/include/openssl/tls1.h /usr/include/openssl/dtls1.h \
  /usr/include/openssl/srtp.h /usr/include/openssl/quic.h \
- /home/dpalacios/home-server/models/Socket.h \
->>>>>>> 6559692 (Changes)
+ /usr/include/cjson/cJSON.h /home/dpalacios/home-server/models/Socket.h \
  /usr/include/x86_64-linux-gnu/sys/socket.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
  /usr/include/x86_64-linux-gnu/bits/socket.h \

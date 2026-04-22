@@ -238,9 +238,6 @@ void get_to_local(struct Socket* socket, char* http_header, char* body, char* ro
         return;
     }
 
-<<<<<<< HEAD
-    if (strstr(route, "/dashboard") != NULL || strstr(route, "/messages") != NULL) {
-=======
     if (content_type && strstr(route, "/instagram/images/") != NULL) {
         char header_out[2048];
         const char *status_text = (status_code == 200) ? "OK" : get_code_message(status_code);
@@ -269,8 +266,7 @@ void get_to_local(struct Socket* socket, char* http_header, char* body, char* ro
         return;
     }
 
-    if (strstr(route, "/dashboard") != NULL) {
->>>>>>> 3b5cc57 (Cservices changfes)
+    if (strstr(route, "/dashboard") != NULL || strstr(route, "/messages") != NULL) {
         send_html_response_code(socket->cSSL, 200, (int)body_len);
         SSL_write(socket->cSSL, res_body, body_len);
     } else if (strstr(route, ".css") != NULL) {
