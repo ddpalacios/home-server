@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Messages</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f4f6fb;
+        --panel: #ffffff;
+        --border: #e2e8f0;
+        --ink: #0f172a;
+        --muted: #64748b;
+        --accent: #2563eb;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Manrope", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        min-height: 100vh;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        background: #0b1b34;
+        color: #e2e8f0;
+        padding: 22px;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        gap: 18px;
+      }
+
+      .sidebar h2 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.3rem;
+      }
+
+      .thread-list {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        overflow-y: auto;
+      }
+
+      .thread {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 12px;
+        padding: 10px 12px;
+        cursor: pointer;
+        transition: background 0.2s ease, border 0.2s ease;
+        height: auto;
+        align-self: flex-start;
+        width: 100%;
+      }
+
+      .thread.active,
+      .thread:hover {
+        background: rgba(37, 99, 235, 0.18);
+        border-color: rgba(96, 165, 250, 0.5);
+      }
+
+      .thread-title {
+        font-weight: 700;
+        margin-bottom: 4px;
+        font-size: 0.95rem;
+      }
+
+      .thread-preview {
+        font-size: 0.82rem;
+        color: #cbd5f5;
+      }
+
+      .main {
+        padding: 18px;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        gap: 8px;
+      }
+
+      .main-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .main-header h1 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.4rem;
+      }
+
+      .messages-panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 10px 12px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-height: 0;
+      }
+
+      .composer {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        padding: 8px 10px;
+        border-radius: 12px;
+        background: #ffffff;
+        border: 1px solid var(--border);
+      }
+
+      .composer input {
+        flex: 1;
+        border: none;
+        outline: none;
+        font-size: 0.86rem;
+        background: transparent;
+      }
+
+      .composer button {
+        border: none;
+        background: var(--accent);
+        color: #ffffff;
+        font-weight: 700;
+        padding: 6px 12px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+
+      .bubble {
+        max-width: 60%;
+        padding: 10px 14px;
+        border-radius: 18px;
+        font-size: 0.9rem;
+        line-height: 1.35;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+        width: fit-content;
+        display: inline-block;
+        align-self: flex-start;
+      }
+
+      .bubble.in {
+        background: #f1f3f6;
+        border: 1px solid rgba(203, 213, 225, 0.45);
+        color: #0b1320;
+      }
+
+      .bubble.out {
+        background: #2f6bff;
+        color: #ffffff;
+        align-self: flex-end;
+      }
+
+      .meta {
+        font-size: 0.64rem;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+
+      .bubble.out .meta {
+        color: rgba(255, 255, 255, 0.85);
+      }
+
+      .empty {
+        color: var(--muted);
+        font-weight: 600;
+      }
+
+      @media (max-width: 900px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        .sidebar {
+          grid-template-rows: auto auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <h2>Conversations</h2>
+        <div class="thread-list" id="threadList"></div>
+      </aside>
+      <main class="main">
+        <div class="main-header">
+          <h1 id="threadTitle">Messages</h1>
+          <a href="/dashboard" style="color: var(--accent); font-weight: 700; text-decoration: none;">Back to Dashboard</a>
+        </div>
+        <section class="messages-panel" id="messagesPanel">
+          <div class="empty">Select a conversation to view messages.</div>
+        </section>
+        <form class="composer" id="composer">
+          <input id="messageInput" type="text" placeholder="Type a reply..." />
+          <button type="submit">Send</button>
+        </form>
+      </main>
+    </div>
+
+    <script>
+      const threadList = document.getElementById("threadList");
+      const messagesPanel = document.getElementById("messagesPanel");
+      const threadTitle = document.getElementById("threadTitle");
+      const composer = document.getElementById("composer");
+      const messageInput = document.getElementById("messageInput");
+      let activeThread = null;
+
+      function formatDate(value) {
+        if (!value) return "";
+        const dt = new Date(value);
+        if (Number.isNaN(dt.getTime())) return value;
+        return dt.toLocaleString();
+      }
+
+      function renderThreads(threads) {
+        threadList.innerHTML = "";
+        if (!threads.length) {
+          threadList.innerHTML = "<div class='empty'>No conversations yet.</div>";
+          return;
+        }
+        threads.forEach((thread, idx) => {
+          const item = document.createElement("div");
+          item.className = "thread";
+          item.dataset.index = idx;
+          const values = Array.isArray(thread.values) ? thread.values : [];
+          const last = values[values.length - 1];
+          item.innerHTML = `
+            <div class="thread-title">${thread.from || "Unknown"}</div>
+            <div class="thread-preview">${last ? last.message : "No messages yet."}</div>
+          `;
+          item.addEventListener("click", () => selectThread(idx, threads));
+          threadList.appendChild(item);
+        });
+      }
+
+      function selectThread(index, threads) {
+        const nodes = threadList.querySelectorAll(".thread");
+        nodes.forEach((n) => n.classList.remove("active"));
+        const active = nodes[index];
+        if (active) active.classList.add("active");
+
+        const thread = threads[index];
+        activeThread = thread;
+        threadTitle.textContent = thread.from || "Messages";
+        messagesPanel.innerHTML = "";
+        const values = Array.isArray(thread.values) ? thread.values : [];
+        if (!values.length) {
+          messagesPanel.innerHTML = "<div class='empty'>No messages yet.</div>";
+          return;
+        }
+        values.forEach((msg) => {
+          const bubble = document.createElement("div");
+          const isOutbound = msg.from && thread.from && msg.from !== thread.from;
+          bubble.className = `bubble ${isOutbound ? "out" : "in"}`;
+          bubble.innerHTML = `
+            <div>${msg.message || ""}</div>
+            <div class="meta">${formatDate(msg.datetime)}</div>
+          `;
+          messagesPanel.appendChild(bubble);
+        });
+        messagesPanel.scrollTop = messagesPanel.scrollHeight;
+      }
+
+      async function loadMessages() {
+        const res = await fetch("/messages/data");
+        const data = await res.json();
+        const threads = Array.isArray(data.messages) ? data.messages : [];
+        renderThreads(threads);
+        if (threads.length) {
+          selectThread(0, threads);
+        }
+      }
+
+      if (composer) {
+        composer.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const text = (messageInput.value || "").trim();
+          if (!text || !activeThread) return;
+
+          const bubble = document.createElement("div");
+          bubble.className = "bubble out";
+          bubble.innerHTML = `<div>${text}</div><div class="meta">${new Date().toLocaleString()}</div>`;
+          messagesPanel.appendChild(bubble);
+          messagesPanel.scrollTop = messagesPanel.scrollHeight;
+          messageInput.value = "";
+
+          const params = new URLSearchParams({
+            Body: text,
+            From: activeThread.from || "+12247356291",
+            To: "+12244123795",
+            AccountSid: "PLACEHOLDER_ACCOUNT_SID",
+            SkipModel: "1",
+            EventType: "dashboard",
+          });
+
+          try {
+            const res = await fetch("/twilio/sms", {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: params.toString(),
+            });
+            const data = await res.json();
+            if (data && data.response) {
+              const reply = document.createElement("div");
+              reply.className = "bubble in";
+              reply.innerHTML = `<div>${data.response}</div><div class="meta">${new Date().toLocaleString()}</div>`;
+              messagesPanel.appendChild(reply);
+              messagesPanel.scrollTop = messagesPanel.scrollHeight;
+            }
+          } catch (err) {
+            // ignore send failures for now
+          }
+        });
+      }
+
+      loadMessages();
+    </script>
+  </body>
+</html>

@@ -402,6 +402,15 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         get_live_html(cSSL, http_header, "portfolio/palacios.html");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/test") == 0) {
         get_live_html(cSSL, http_header, "portfolio/tst.html");
+    } else if (strcmp(request_type, "GET") == 0 &&
+               (strcmp(route, "/landscaping") == 0 || strcmp(route, "/landscaping/") == 0)) {
+        get_live_html(cSSL, http_header, "landscaping/index.html");
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/landscaping/landscaping.js") == 0) {
+        get_live_js(cSSL, http_header, "landscaping/landscaping.js");
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/sitemap.xml") == 0) {
+        get_live_file_typed(cSSL, "landscaping/sitemap.xml", "application/xml; charset=utf-8");
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/robots.txt") == 0) {
+        get_live_file_typed(cSSL, "landscaping/robots.txt", "text/plain; charset=utf-8");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/favicon.ico") != NULL) {
         get_image_file(cSSL, http_header, "/portfolio/images/favicon.ico");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/dashboard") == 0) {
@@ -476,6 +485,8 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
     } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/demo-kb-save") == 0) {
         post_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/demo-kb-share") == 0) {
+        post_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/demo-opened") == 0) {
         post_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/voice-transcript-summary") != NULL) {
         post_to_local(socket, http_header, body, route_with_query, "5000");

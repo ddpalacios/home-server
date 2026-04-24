@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Palacios Solutions – Custom Automation + AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #f4f7fb;
+        --surface: #ffffff;
+        --surface-2: #eef3ff;
+        --card: #ffffff;
+        --card-border: rgba(148, 163, 184, 0.28);
+        --text: #0f172a;
+        --muted: #475569;
+        --accent: #2563eb;
+        --accent-2: #38bdf8;
+        --success: #16a34a;
+        --shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+        --radius: 22px;
+        --max: 1200px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Manrope", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+      }
+
+      a { color: inherit; text-decoration: none; }
+
+      .container {
+        width: min(1260px, 92%);
+        margin: 0 auto;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        backdrop-filter: blur(12px);
+        background: rgba(245, 248, 255, 0.92);
+        border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 0;
+        gap: 16px;
+      }
+
+      .brand {
+        font-family: "Space Grotesk", sans-serif;
+        font-weight: 700;
+        font-size: 1.2rem;
+        letter-spacing: 0.4px;
+        color: #0f172a;
+      }
+
+      .brand span {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--muted);
+        letter-spacing: 0.2px;
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        color: var(--muted);
+        font-weight: 600;
+      }
+
+      .nav-links a {
+        padding: 6px 10px;
+        border-radius: 999px;
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+
+      .nav-links a:hover {
+        background: rgba(37, 99, 235, 0.1);
+        color: var(--text);
+      }
+
+      .cta {
+        padding: 10px 18px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: #ffffff;
+        font-weight: 700;
+        box-shadow: 0 14px 28px rgba(37, 99, 235, 0.25);
+      }
+
+      .hero {
+        padding: 140px 0 110px;
+        background:
+          radial-gradient(circle at 15% 20%, rgba(37, 99, 235, 0.28), transparent 45%),
+          radial-gradient(circle at 80% 0%, rgba(56, 189, 248, 0.32), transparent 40%),
+          linear-gradient(180deg, rgba(219, 234, 254, 0.7), rgba(255, 255, 255, 0));
+      }
+
+      .hero-shell {
+        display: grid;
+        grid-template-columns: 1fr 1.1fr;
+        gap: 48px;
+        align-items: center;
+      }
+
+      .hero-left {
+        display: grid;
+        gap: 18px;
+      }
+
+      .hero-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 18px;
+        border-radius: 999px;
+        background: rgba(37, 99, 235, 0.12);
+        color: #1e3a8a;
+        font-weight: 700;
+        font-size: 1.05rem;
+        width: fit-content;
+      }
+
+      .hero h1 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: clamp(3.8rem, 5.8vw, 5.2rem);
+        line-height: 1.08;
+        color: #0f172a;
+      }
+
+      .hero p {
+        font-size: 1.7rem;
+        font-weight: 600;
+        color: #334155;
+      }
+
+      .hero-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .hero-right {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        border-radius: 28px;
+        padding: 32px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+        display: grid;
+        gap: 18px;
+      }
+
+      .signal-card {
+        border-radius: 18px;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        padding: 22px;
+        background: linear-gradient(160deg, rgba(255, 255, 255, 0.9), rgba(226, 232, 255, 0.5));
+      }
+
+      .signal-title {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.3rem;
+        margin-bottom: 12px;
+        color: #0f172a;
+      }
+
+      .signal-list {
+        list-style: none;
+        display: grid;
+        gap: 10px;
+      }
+
+      .signal-list li {
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: rgba(37, 99, 235, 0.08);
+        font-weight: 600;
+        color: #1e3a8a;
+      }
+      .story-steps {
+        display: grid;
+        gap: 12px;
+      }
+      .story-step {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 12px;
+        align-items: center;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        background: #ffffff;
+      }
+      .story-badge {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        color: #1e3a8a;
+        background: rgba(37, 99, 235, 0.12);
+      }
+      .story-text strong {
+        display: block;
+        font-size: 1.05rem;
+        color: #0f172a;
+      }
+      .story-text span {
+        color: var(--muted);
+        font-weight: 600;
+      }
+
+      .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+
+      .metric {
+        padding: 18px;
+        border-radius: 16px;
+        background: #ffffff;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+      }
+
+      .metric strong {
+        display: block;
+        font-size: 1.6rem;
+        font-family: "Space Grotesk", sans-serif;
+        color: #0f172a;
+      }
+
+      .metric span {
+        color: var(--muted);
+        font-weight: 600;
+        font-size: 1rem;
+      }
+
+      .cta.alt {
+        background: #ffffff;
+        color: #1e3a8a;
+        border: 1px solid rgba(37, 99, 235, 0.2);
+        box-shadow: none;
+      }
+
+      .pulse-line {
+        height: 6px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(37, 99, 235, 0.2), rgba(37, 99, 235, 0.8), rgba(56, 189, 248, 0.2));
+        animation: pulse 3.5s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0% { opacity: 0.5; transform: scaleX(0.85); }
+        50% { opacity: 1; transform: scaleX(1); }
+        100% { opacity: 0.6; transform: scaleX(0.9); }
+      }
+
+      section {
+        padding: 110px 0;
+      }
+
+      .section-head {
+        margin-bottom: 34px;
+      }
+
+      .section-head h2 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: clamp(2.9rem, 3.9vw, 3.6rem);
+        color: #1e3a8a;
+        margin-bottom: 8px;
+      }
+
+      .section-head p {
+        color: var(--muted);
+        font-size: 1.35rem;
+      }
+
+      .grid-2,
+      .grid-3 {
+        display: grid;
+        gap: 22px;
+      }
+
+      .grid-2 { grid-template-columns: repeat(2, 1fr); }
+      .grid-3 { grid-template-columns: repeat(2, 1fr); }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius);
+        padding: 34px;
+        box-shadow: var(--shadow);
+        opacity: 0;
+        transform: translateY(18px);
+        transition: opacity 0.4s ease, transform 0.4s ease;
+      }
+
+      .card.in-view {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .card h3 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.35rem;
+        margin-bottom: 10px;
+      }
+      .card.story {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 14px;
+        align-items: center;
+        padding: 28px;
+      }
+      .card.story .story-text strong {
+        font-size: 1.1rem;
+      }
+      .card.story .story-text span {
+        font-size: 0.98rem;
+      }
+      .section-grid {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 28px;
+      }
+      .detail-card {
+        background: var(--card);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius);
+        padding: 34px;
+        box-shadow: var(--shadow);
+        opacity: 0;
+        transform: translateY(18px);
+        transition: opacity 0.4s ease, transform 0.4s ease;
+      }
+      .detail-card.in-view {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .detail-card h3 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.4rem;
+        margin-bottom: 12px;
+      }
+      .detail-card p {
+        color: var(--muted);
+        font-size: 1.05rem;
+        margin-bottom: 14px;
+      }
+      .detail-list {
+        list-style: none;
+        display: grid;
+        gap: 10px;
+        color: #1e3a8a;
+        font-weight: 600;
+      }
+      .detail-list li {
+        background: rgba(37, 99, 235, 0.08);
+        border-radius: 12px;
+        padding: 10px 12px;
+      }
+      .timeline {
+        display: grid;
+        gap: 14px;
+      }
+      .timeline-step {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 14px;
+        align-items: start;
+        padding: 18px;
+        border-radius: 18px;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        background: #ffffff;
+      }
+      .timeline-step strong {
+        font-size: 1.05rem;
+      }
+      .timeline-step span {
+        display: block;
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .callout {
+        padding: 18px;
+        border-radius: 16px;
+        background: rgba(22, 163, 74, 0.1);
+        border: 1px solid rgba(22, 163, 74, 0.25);
+        color: #166534;
+        font-weight: 700;
+        margin-top: 14px;
+      }
+
+      .band {
+        background: var(--surface-2);
+      }
+
+      .media-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+      }
+
+      .media {
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        box-shadow: var(--shadow);
+        background: #ffffff;
+        opacity: 0;
+        transform: translateY(18px);
+        transition: opacity 0.4s ease, transform 0.4s ease;
+      }
+
+      .media.in-view {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .pill-note {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 999px;
+        padding: 8px 16px;
+        background: rgba(37, 99, 235, 0.12);
+        color: #1e3a8a;
+        font-weight: 700;
+        margin-top: 18px;
+      }
+
+      .list {
+        margin-top: 12px;
+        padding-left: 18px;
+        color: var(--muted);
+      }
+
+      .list li { margin-bottom: 8px; }
+
+      footer {
+        background: #0f172a;
+        color: rgba(255, 255, 255, 0.85);
+        padding: 28px 0;
+      }
+
+      .footer-inner {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      @media (max-width: 980px) {
+        .hero-shell,
+        .grid-2,
+        .grid-3,
+        .media-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .nav {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+        }
+        .nav-links {
+          flex-wrap: wrap;
+          row-gap: 10px;
+        }
+        .hero {
+          padding: 70px 0 50px;
+        }
+        .hero-shell { gap: 24px; }
+        .hero-right { padding: 20px; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="container nav">
+        <div class="brand">
+          Palacios Solutions
+          <span>Custom systems. Real outcomes.</span>
+        </div>
+        <nav class="nav-links">
+          <a href="#mission">Mission</a>
+          <a href="#solutions">Solutions</a>
+          <a href="#how">How It Works</a>
+          <a href="#case-study">Case Study</a>
+          <a class="cta" href="#contact">Talk to Us</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container hero-shell">
+          <div class="hero-left">
+            <div class="hero-tag">Built for growth teams</div>
+            <h1>Automation and AI that drive real growth.</h1>
+            <p>We build custom systems like JustGotALead to capture better leads and cut response time.</p>
+            <div class="hero-actions">
+              <a class="cta" href="#contact">Start a Project</a>
+              <a class="cta alt" href="#solutions">Explore Solutions</a>
+            </div>
+            <div class="pulse-line"></div>
+          </div>
+          <div class="hero-right">
+            <div class="signal-card">
+              <div class="signal-title">How it works</div>
+              <div class="story-steps">
+                <div class="story-step">
+                  <div class="story-badge">1</div>
+                  <div class="story-text">
+                    <strong>Listen</strong>
+                    <span>Map your workflow</span>
+                  </div>
+                </div>
+                <div class="story-step">
+                  <div class="story-badge">2</div>
+                  <div class="story-text">
+                    <strong>Build</strong>
+                    <span>Automation + AI</span>
+                  </div>
+                </div>
+                <div class="story-step">
+                  <div class="story-badge">3</div>
+                  <div class="story-text">
+                    <strong>Scale</strong>
+                    <span>More leads, less work</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="metric-grid">
+              <div class="metric">
+                <strong>Save Hours</strong>
+                <span>Less manual work</span>
+              </div>
+              <div class="metric">
+                <strong>Grow Leads</strong>
+                <span>Better inquiries</span>
+              </div>
+              <div class="metric">
+                <strong>Close Faster</strong>
+                <span>Follow-ups automated</span>
+              </div>
+              <div class="metric">
+                <strong>Scale</strong>
+                <span>Systems built to grow</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="mission">
+        <div class="container">
+          <div class="section-head">
+            <h2>Our mission</h2>
+            <p>Build systems that move the business forward — faster, clearer, and with less manual work.</p>
+          </div>
+          <div class="section-grid">
+            <article class="detail-card">
+              <h3>Why we exist</h3>
+              <p>Most businesses lose time to manual work, missed leads, and disconnected tools. We build custom systems that remove friction and make growth repeatable.</p>
+              <ul class="detail-list">
+                <li>Faster response = more customers</li>
+                <li>Clean data = better decisions</li>
+                <li>Automation = scalable operations</li>
+              </ul>
+            </article>
+            <article class="detail-card">
+              <h3>What changes</h3>
+              <p>We replace patchwork workflows with a single, focused system tailored to your exact process.</p>
+              <ul class="detail-list">
+                <li>Leads captured and routed automatically</li>
+                <li>Follow-ups run without manual effort</li>
+                <li>Clear reporting across every channel</li>
+              </ul>
+              <div class="callout">Outcome: less work, more qualified customers.</div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="solutions" class="band">
+        <div class="container">
+          <div class="section-head">
+            <h2>Solutions we provide</h2>
+            <p>Automation, reporting, and AI that connect your tools and turn traffic into customers.</p>
+          </div>
+          <div class="grid-2">
+            <article class="detail-card">
+              <h3>Custom automation</h3>
+              <p>We automate the steps that slow your team down — lead qualification, scheduling, follow-ups, and CRM updates.</p>
+              <ul class="detail-list">
+                <li>Lead capture and routing</li>
+                <li>Estimate booking and confirmations</li>
+                <li>CRM sync and pipeline updates</li>
+              </ul>
+            </article>
+            <article class="detail-card">
+              <h3>Reporting & dashboards</h3>
+              <p>We combine your data into one live view so you can track performance without guessing.</p>
+              <ul class="detail-list">
+                <li>Unified KPI dashboards</li>
+                <li>Self-service reporting</li>
+                <li>Cross-channel performance insights</li>
+              </ul>
+            </article>
+            <article class="detail-card">
+              <h3>AI services</h3>
+              <p>AI chat, SMS, and voice systems that engage customers 24/7 and qualify leads automatically.</p>
+              <ul class="detail-list">
+                <li>Instant Q&A and objections handling</li>
+                <li>After-hours lead capture</li>
+                <li>Automated estimate intake</li>
+              </ul>
+            </article>
+            <article class="detail-card">
+              <h3>Custom integrations</h3>
+              <p>We connect the tools you already use so your entire process runs as one system.</p>
+              <ul class="detail-list">
+                <li>CRM + scheduling + messaging</li>
+                <li>Data warehouse and analytics</li>
+                <li>Custom API workflows</li>
+              </ul>
+            </article>
+          </div>
+          <div class="media-grid" style="margin-top:24px;">
+            <div class="media">
+              <img src="/portfolio/images/auto.png" alt="Automation preview" />
+            </div>
+            <div class="media">
+              <img src="/portfolio/images/salesdash.png" alt="Reporting dashboard preview" />
+            </div>
+            <div class="media">
+              <img src="/portfolio/images/chatbot.png" alt="AI assistant preview" />
+            </div>
+          </div>
+          <span class="pill-note">If it saves time or wins leads, we build it.</span>
+        </div>
+      </section>
+
+      <section id="how">
+        <div class="container">
+          <div class="section-head">
+            <h2>How it works</h2>
+            <p>Simple steps. Fast delivery. Real results.</p>
+          </div>
+          <div class="timeline">
+            <div class="timeline-step">
+              <div class="story-badge">1</div>
+              <div>
+                <strong>Discover</strong>
+                <span>We map your workflow, lead flow, and customer journey.</span>
+              </div>
+            </div>
+            <div class="timeline-step">
+              <div class="story-badge">2</div>
+              <div>
+                <strong>Design</strong>
+                <span>We build a tailored system plan that solves the biggest bottlenecks.</span>
+              </div>
+            </div>
+            <div class="timeline-step">
+              <div class="story-badge">3</div>
+              <div>
+                <strong>Build</strong>
+                <span>Automation and AI are implemented fast, with minimal disruption.</span>
+              </div>
+            </div>
+            <div class="timeline-step">
+              <div class="story-badge">4</div>
+              <div>
+                <strong>Optimize</strong>
+                <span>We track outcomes and improve results over time.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="case-study" class="band">
+        <div class="container">
+          <div class="section-head">
+            <h2>Case study: JustGotALead</h2>
+            <p>Built to engage customers, answer fast, and track every lead.</p>
+          </div>
+          <div class="section-grid">
+            <article class="detail-card">
+              <h3>The challenge</h3>
+              <p>The client needed a way to keep customers engaged, respond instantly, and capture every lead without manual follow-up.</p>
+              <ul class="detail-list">
+                <li>Missed leads after hours</li>
+                <li>Slow response time</li>
+                <li>No centralized lead tracking</li>
+              </ul>
+            </article>
+            <article class="detail-card">
+              <h3>The solution</h3>
+              <p>We built JustGotALead: an AI system that captures, qualifies, and routes leads automatically.</p>
+              <ul class="detail-list">
+                <li>24/7 AI chat + SMS response</li>
+                <li>Estimate scheduling automation</li>
+                <li>CRM sync for every lead</li>
+              </ul>
+              <div class="callout">Result: higher-quality leads with less manual work.</div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="contact">
+        <div class="container">
+          <div class="section-head">
+            <h2>Let’s build your solution</h2>
+            <p>Tell us the outcome you want. We build the system.</p>
+          </div>
+          <div class="section-grid">
+            <article class="detail-card">
+              <h3>Start here</h3>
+              <p>Tell us what you want to improve — lead quality, response time, or operational efficiency.</p>
+              <ul class="detail-list">
+                <li>Email: info@palaciossolutions.com</li>
+                <li>Phone: (224) 770-0340</li>
+                <li>Nationwide support</li>
+              </ul>
+            </article>
+            <article class="detail-card">
+              <h3>What you get</h3>
+              <p>A tailored system that makes your business run smoother and grow faster.</p>
+              <ul class="detail-list">
+                <li>Automation + AI + reporting</li>
+                <li>Lead capture and CRM sync</li>
+                <li>Clear performance dashboards</li>
+              </ul>
+              <div class="callout">We build the system. You get the results.</div>
+            </article>
+          </div>
+          <div style="margin-top:18px;">
+            <a class="cta" href="mailto:info@palaciossolutions.com">Request a Consultation</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container footer-inner">
+        <div>
+          <strong>Palacios Solutions</strong><br />
+          <span>Custom systems. Real outcomes.</span>
+        </div>
+        <div>© All rights reserved</div>
+      </div>
+    </footer>
+
+    <script>
+      const targets = document.querySelectorAll(".card, .media, .detail-card");
+      if (targets.length) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("in-view");
+              } else {
+                entry.target.classList.remove("in-view");
+              }
+            });
+          },
+          { threshold: 0.2 }
+        );
+        targets.forEach((el, idx) => {
+          el.style.transitionDelay = `${idx * 0.06}s`;
+          observer.observe(el);
+        });
+      }
+    </script>
+  </body>
+</html>

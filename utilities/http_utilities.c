@@ -502,7 +502,10 @@ int switch_to_websocket_protocol(SSL *cSSL, char* websocket_sec_acceptKey){
 			"Upgrade: websocket\r\n"
 			"Connection: Upgrade\r\n"
 			"Sec-WebSocket-Accept: %s\r\n"
-			"Access-Control-Allow-Origin: *\r\n"
+			"Cache-Control: no-cache, no-store, must-revalidate\r\n"
+				  "Pragma: no-cache\r\n"
+				  "Expires: 0\r\n"
+				  "Access-Control-Allow-Origin: *\r\n"
 			"\r\n", websocket_sec_acceptKey);
 	int res = SSL_write(cSSL, http_header, strlen(http_header));
 	return res;
@@ -516,7 +519,10 @@ void send_buffer_response_code(SSL* cSSL, int code, char* buffer, size_t buffer_
 				snprintf(http_header, sizeof(http_header),
 						"HTTP/1.1 %s\r\n"
 						"Content-Type:  application/octet-stream\r\n"
-						"Access-Control-Allow-Origin: *\r\n"
+						"Cache-Control: no-cache, no-store, must-revalidate\r\n"
+				  "Pragma: no-cache\r\n"
+				  "Expires: 0\r\n"
+				  "Access-Control-Allow-Origin: *\r\n"
 						"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
 						"Access-Control-Allow-Headers: Content-Type\r\n"
 						"Connection: close\r\n"
@@ -536,6 +542,9 @@ void send_css_response_code(SSL* cSSL,int code, int content_length){
 		snprintf(http_header, sizeof(http_header),
 				 "HTTP/1.1 %s\r\n"
 				  "Content-Type: text/css\r\n"
+				  "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+				  "Pragma: no-cache\r\n"
+				  "Expires: 0\r\n"
 				  "Access-Control-Allow-Origin: *\r\n"
 				  "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
 				  "Access-Control-Allow-Headers: Content-Type\r\n"
@@ -548,6 +557,9 @@ void send_css_response_code(SSL* cSSL,int code, int content_length){
 		snprintf(http_header, sizeof(http_header),
 				 "HTTP/1.1 %s\r\n"
 				  "Content-Type: text/css\r\n"
+				  "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+				  "Pragma: no-cache\r\n"
+				  "Expires: 0\r\n"
 				  "Access-Control-Allow-Origin: *\r\n"
 				  "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
 				  "Access-Control-Allow-Headers: Content-Type\r\n"
@@ -564,6 +576,9 @@ void send_image_response_code(SSL* cSSL,int code, int content_length){
 		snprintf(http_header, sizeof(http_header),
 				 "HTTP/1.1 %s\r\n"
 				  "Content-Type: image/png\r\n"
+				  "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+				  "Pragma: no-cache\r\n"
+				  "Expires: 0\r\n"
 				  "Access-Control-Allow-Origin: *\r\n"
 				  "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
 				  "Access-Control-Allow-Headers: Content-Type\r\n"
@@ -576,6 +591,9 @@ void send_image_response_code(SSL* cSSL,int code, int content_length){
 		snprintf(http_header, sizeof(http_header),
 				 "HTTP/1.1 %s\r\n"
 				  "Content-Type: image/png\r\n"
+				  "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+				  "Pragma: no-cache\r\n"
+				  "Expires: 0\r\n"
 				  "Access-Control-Allow-Origin: *\r\n"
 				  "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
 				  "Access-Control-Allow-Headers: Content-Type\r\n"
@@ -663,6 +681,9 @@ void send_html_response_code(SSL* cSSL,int code, int content_length){
 		snprintf(http_header, sizeof(http_header),
 				 "HTTP/1.1 %s\r\n"
 				  "Content-Type: text/html\r\n"
+				  "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+				  "Pragma: no-cache\r\n"
+				  "Expires: 0\r\n"
 				  "Access-Control-Allow-Origin: *\r\n"
 				  "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
 				  "Access-Control-Allow-Headers: Content-Type\r\n"
@@ -675,6 +696,9 @@ void send_html_response_code(SSL* cSSL,int code, int content_length){
 		snprintf(http_header, sizeof(http_header),
 				 "HTTP/1.1 %s\r\n"
 				  "Content-Type: text/html\r\n"
+				  "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+				  "Pragma: no-cache\r\n"
+				  "Expires: 0\r\n"
 				  "Access-Control-Allow-Origin: *\r\n"
 				  "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
 				  "Access-Control-Allow-Headers: Content-Type\r\n"
@@ -755,7 +779,10 @@ void send_JSON_response_code( SSL *cSSL,int code, char* json){
 				snprintf(http_header, sizeof(http_header),
 						"HTTP/1.1 200 OK\r\n"
 					"Content-Type: application/json\r\n"
-					"Access-Control-Allow-Origin: *\r\n"
+					"Cache-Control: no-cache, no-store, must-revalidate\r\n"
+				  "Pragma: no-cache\r\n"
+				  "Expires: 0\r\n"
+				  "Access-Control-Allow-Origin: *\r\n"
 					"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
 					"Access-Control-Allow-Headers: Content-Type\r\n"
 					"Connection: close\r\n"
@@ -767,7 +794,10 @@ void send_JSON_response_code( SSL *cSSL,int code, char* json){
 				snprintf(http_header, sizeof(http_header),
 						"HTTP/1.1 201 Created\r\n"
 					"Content-Type: application/json\r\n"
-					"Access-Control-Allow-Origin: *\r\n"
+					"Cache-Control: no-cache, no-store, must-revalidate\r\n"
+				  "Pragma: no-cache\r\n"
+				  "Expires: 0\r\n"
+				  "Access-Control-Allow-Origin: *\r\n"
 					"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
 					"Access-Control-Allow-Headers: Content-Type\r\n"
 					"Connection: close\r\n"
@@ -780,7 +810,10 @@ void send_JSON_response_code( SSL *cSSL,int code, char* json){
 			snprintf(http_header, sizeof(http_header),
 					"HTTP/1.1 401 Unauthorized\r\n"
 					"Content-Type: application/json\r\n"
-					"Access-Control-Allow-Origin: *\r\n"
+					"Cache-Control: no-cache, no-store, must-revalidate\r\n"
+				  "Pragma: no-cache\r\n"
+				  "Expires: 0\r\n"
+				  "Access-Control-Allow-Origin: *\r\n"
 					"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
 					"Access-Control-Allow-Headers: Content-Type\r\n"
 					"Connection: close\r\n"
@@ -792,7 +825,10 @@ void send_JSON_response_code( SSL *cSSL,int code, char* json){
 			snprintf(http_header, sizeof(http_header),
 					"HTTP/1.1 400 Bad Request\r\n"
 					"Content-Type: application/json\r\n"
-					"Access-Control-Allow-Origin: *\r\n"
+					"Cache-Control: no-cache, no-store, must-revalidate\r\n"
+				  "Pragma: no-cache\r\n"
+				  "Expires: 0\r\n"
+				  "Access-Control-Allow-Origin: *\r\n"
 					"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
 					"Access-Control-Allow-Headers: Content-Type\r\n"
 					"Connection: close\r\n"
@@ -804,7 +840,10 @@ void send_JSON_response_code( SSL *cSSL,int code, char* json){
 			snprintf(http_header, sizeof(http_header),
 					"HTTP/1.1 409 Conflict\r\n"
 					"Content-Type: application/json\r\n"
-					"Access-Control-Allow-Origin: *\r\n"
+					"Cache-Control: no-cache, no-store, must-revalidate\r\n"
+				  "Pragma: no-cache\r\n"
+				  "Expires: 0\r\n"
+				  "Access-Control-Allow-Origin: *\r\n"
 					"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
 					"Access-Control-Allow-Headers: Content-Type\r\n"
 					"Connection: close\r\n"
@@ -817,7 +856,10 @@ void send_JSON_response_code( SSL *cSSL,int code, char* json){
 			snprintf(http_header, sizeof(http_header),
 					"HTTP/1.1 404 Not Found\r\n"
 					"Content-Type: application/json\r\n"
-					"Access-Control-Allow-Origin: *\r\n"
+					"Cache-Control: no-cache, no-store, must-revalidate\r\n"
+				  "Pragma: no-cache\r\n"
+				  "Expires: 0\r\n"
+				  "Access-Control-Allow-Origin: *\r\n"
 					"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
 					"Access-Control-Allow-Headers: Content-Type\r\n"
 					"Connection: close\r\n"
@@ -830,7 +872,10 @@ void send_JSON_response_code( SSL *cSSL,int code, char* json){
 			snprintf(http_header, sizeof(http_header),
 					"HTTP/1.1 405 Not Allowed\r\n"
 					"Content-Type: application/json\r\n"
-					"Access-Control-Allow-Origin: *\r\n"
+					"Cache-Control: no-cache, no-store, must-revalidate\r\n"
+				  "Pragma: no-cache\r\n"
+				  "Expires: 0\r\n"
+				  "Access-Control-Allow-Origin: *\r\n"
 					"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
 					"Access-Control-Allow-Headers: Content-Type\r\n"
 					"Connection: close\r\n"
@@ -894,4 +939,71 @@ int is_connection_keep_alive(char*http_header){
 		}else{
 			return 0;
 		}
+}
+
+void send_javascript_response_code(SSL* cSSL, int code, int content_length){
+	char http_header[1024];
+	if (code == 200){
+		snprintf(http_header, sizeof(http_header),
+				 "HTTP/1.1 200 OK\r\n"
+				 "Content-Type: application/javascript; charset=utf-8\r\n"
+				 "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+				 "Pragma: no-cache\r\n"
+				 "Expires: 0\r\n"
+				 "Access-Control-Allow-Origin: *\r\n"
+				 "Connection: close\r\n"
+				 "Content-Length: %d\r\n"
+				 "\r\n", content_length);
+		SSL_write(cSSL, http_header, strlen(http_header));
+	} else {
+		snprintf(http_header, sizeof(http_header),
+				 "HTTP/1.1 404 Not Found\r\n"
+				 "Content-Type: application/javascript; charset=utf-8\r\n"
+				 "Connection: close\r\n"
+				 "\r\n");
+		SSL_write(cSSL, http_header, strlen(http_header));
+	}
+}
+
+void get_live_js(SSL* cSSL, char* request, char* template_name){
+	char template_dir[256] = "../templates/";
+	strncat(template_dir, template_name, sizeof(template_dir) - strlen(template_dir) - 1);
+	char *js_buffer = get_file_buffer(template_dir);
+	if (js_buffer != NULL){
+		int js_length = strlen(js_buffer);
+		send_javascript_response_code(cSSL, 200, js_length);
+		SSL_write(cSSL, js_buffer, js_length);
+		free(js_buffer);
+	} else {
+		printf("COULD NOT FIND %s\n", template_name);
+		send_response_code(cSSL, 404);
+	}
+}
+
+static void send_simple_typed_response(SSL* cSSL, const char* content_type, int content_length){
+	char http_header[512];
+	snprintf(http_header, sizeof(http_header),
+			 "HTTP/1.1 200 OK\r\n"
+			 "Content-Type: %s\r\n"
+			 "Cache-Control: public, max-age=3600\r\n"
+			 "Access-Control-Allow-Origin: *\r\n"
+			 "Connection: close\r\n"
+			 "Content-Length: %d\r\n"
+			 "\r\n", content_type, content_length);
+	SSL_write(cSSL, http_header, strlen(http_header));
+}
+
+void get_live_file_typed(SSL* cSSL, char* template_name, const char* content_type){
+	char template_dir[256] = "../templates/";
+	strncat(template_dir, template_name, sizeof(template_dir) - strlen(template_dir) - 1);
+	char *buf = get_file_buffer(template_dir);
+	if (buf != NULL){
+		int len = strlen(buf);
+		send_simple_typed_response(cSSL, content_type, len);
+		SSL_write(cSSL, buf, len);
+		free(buf);
+	} else {
+		printf("COULD NOT FIND %s\n", template_name);
+		send_response_code(cSSL, 404);
+	}
 }

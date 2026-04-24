@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /landscaping
+Allow: /landscaping/
+Disallow:
+
+Sitemap: https://crystal-lake-landscapers.local/sitemap.xml

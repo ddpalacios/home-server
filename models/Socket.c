@@ -7,8 +7,10 @@
 #include "Socket.h"
 //#define CLIENT_CERT "../../../../etc/letsencrypt/live/palacios-solutions.com/fullchain.pem"
 //#define CLIENT_KEY "../../../../etc/letsencrypt/live/palacios-solutions.com/privkey.pem"
-#define CLIENT_CERT "/etc/letsencrypt/live/justgotalead.com/fullchain.pem"
-#define CLIENT_KEY "/etc/letsencrypt/live/justgotalead.com/privkey.pem"
+//#define CLIENT_CERT "/etc/letsencrypt/live/justgotalead.com/fullchain.pem"
+//#define CLIENT_KEY "/etc/letsencrypt/live/justgotalead.com/privkey.pem"
+#define CLIENT_CERT "/home/dpalacios/home-server/server/self_signed_cert.crt"
+#define CLIENT_KEY "/home/dpalacios/home-server/server/privateKey.key"
 void sink_socket_info(struct Socket *socket,struct sockaddr_storage remoteaddr ){    
     char host[NI_MAXHOST];	
     char service[NI_MAXSERV];	

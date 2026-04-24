@@ -30,5 +30,8 @@ int get_content_length(char*http_header);
 int get_http_header(char* request, char*header_result, size_t header_result_size);
 
 void get_live_html(SSL* cSSL, char* request, char* template_name);
+void get_live_js(SSL* cSSL, char* request, char* template_name);
+void get_live_file_typed(SSL* cSSL, char* template_name, const char* content_type);
 void get_image_file(SSL* cSSL, char* request, char* route);
 void get_video_file(SSL* cSSL, char* request, char* route);
+void send_javascript_response_code(SSL* cSSL, int code, int content_length);

@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SAR Landscaping Contractors INC</title>
+  <style>
+    :root {
+      --green-900: #16351f;
+      --green-800: #214b2d;
+      --green-700: #2d643b;
+      --green-600: #3d7f4d;
+      --green-100: #eef7f0;
+      --gold-500: #caa35f;
+      --gray-900: #1d1d1d;
+      --gray-700: #4b4b4b;
+      --gray-500: #767676;
+      --gray-200: #e8e8e8;
+      --white: #ffffff;
+      --shadow: 0 18px 40px rgba(0,0,0,.12);
+      --radius: 18px;
+      --max: 1180px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--gray-900);
+      background: #f7f7f5;
+      line-height: 1.5;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .container {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      background: var(--green-900);
+      color: var(--white);
+      font-size: 14px;
+    }
+
+    .topbar-inner {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 24px;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+    }
+
+    .topbar .left,
+    .topbar .right {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 18px;
+      align-items: center;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: rgba(255,255,255,.09);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 999px;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,.9);
+      border-bottom: 1px solid rgba(0,0,0,.06);
+    }
+
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 0;
+      gap: 18px;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .brand strong {
+      font-size: 20px;
+      letter-spacing: .2px;
+      color: var(--green-900);
+    }
+
+    .brand span {
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 22px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      color: var(--gray-700);
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 46px;
+      padding: 0 18px;
+      border-radius: 12px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      transition: .2s ease;
+      cursor: pointer;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary {
+      background: var(--green-700);
+      color: var(--white);
+      box-shadow: var(--shadow);
+    }
+    .btn-secondary {
+      background: var(--white);
+      color: var(--green-900);
+      border-color: rgba(0,0,0,.1);
+    }
+
+    .hero {
+      padding: 72px 0 42px;
+      background:
+        linear-gradient(135deg, rgba(22,53,31,.95), rgba(45,100,59,.86)),
+        radial-gradient(circle at top left, rgba(202,163,95,.25), transparent 35%);
+      color: var(--white);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 14px;
+      padding: 8px 12px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 999px;
+      font-size: 13px;
+      letter-spacing: .3px;
+      background: rgba(255,255,255,.08);
+    }
+
+    h1 {
+      margin: 0 0 14px;
+      font-size: clamp(34px, 5vw, 60px);
+      line-height: 1.05;
+      letter-spacing: -.8px;
+    }
+
+    .hero p {
+      max-width: 760px;
+      margin: 0 0 24px;
+      font-size: 18px;
+      color: rgba(255,255,255,.9);
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 26px;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .stat {
+      padding: 18px;
+      background: rgba(255,255,255,.09);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 16px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .hero-card {
+      color: var(--gray-900);
+      align-self: stretch;
+    }
+
+    .hero-card-head {
+      padding: 22px 22px 14px;
+      background: linear-gradient(180deg, #f7fbf8, #ffffff);
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .hero-card-body {
+      padding: 22px;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .checklist li {
+      padding: 12px 14px;
+      background: var(--green-100);
+      border-radius: 12px;
+      color: var(--green-900);
+      font-weight: 600;
+    }
+
+    section {
+      padding: 74px 0;
+    }
+
+    .section-head {
+      max-width: 760px;
+      margin-bottom: 28px;
+    }
+
+    .section-head h2 {
+      margin: 0 0 10px;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.1;
+      color: var(--green-900);
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--gray-700);
+      font-size: 17px;
+    }
+
+    .services-grid,
+    .feature-grid,
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .service-card,
+    .feature-card,
+    .pricing-card,
+    .slot-card,
+    .contact-card {
+      background: var(--white);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(0,0,0,.04);
+    }
+
+    .service-card h3,
+    .feature-card h3,
+    .pricing-card h3,
+    .slot-card h3,
+    .contact-card h3 {
+      margin: 0 0 10px;
+      font-size: 22px;
+      color: var(--green-900);
+    }
+
+    .service-card p,
+    .feature-card p,
+    .pricing-card p,
+    .slot-card p,
+    .contact-card p {
+      margin: 0;
+      color: var(--gray-700);
+    }
+
+    .service-list,
+    .mini-list {
+      margin: 14px 0 0;
+      padding-left: 18px;
+      color: var(--gray-700);
+    }
+
+    .service-list li,
+    .mini-list li { margin-bottom: 8px; }
+
+    .highlight {
+      display: inline-block;
+      margin-top: 14px;
+      padding: 8px 12px;
+      background: #f6efe2;
+      color: #7b5a1c;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .band {
+      background: linear-gradient(180deg, #f1f6f2, #edf3ee);
+      border-top: 1px solid rgba(0,0,0,.05);
+      border-bottom: 1px solid rgba(0,0,0,.05);
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+    }
+
+    .pricing-card .price {
+      display: block;
+      margin: 8px 0 12px;
+      font-size: 30px;
+      font-weight: 800;
+      color: var(--green-700);
+    }
+
+    .schedule-wrap {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 20px;
+    }
+
+    .slots {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .slot-time {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: var(--green-100);
+      color: var(--green-900);
+      font-weight: 700;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: .95fr 1.05fr;
+      gap: 22px;
+    }
+
+    .contact-stack {
+      display: grid;
+      gap: 16px;
+    }
+
+    form {
+      display: grid;
+      gap: 14px;
+    }
+
+    label {
+      font-weight: 700;
+      color: var(--green-900);
+      font-size: 14px;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 14px 14px;
+      border-radius: 12px;
+      border: 1px solid #d8d8d8;
+      font: inherit;
+      background: #fff;
+    }
+
+    textarea { min-height: 130px; resize: vertical; }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    footer {
+      background: var(--green-900);
+      color: rgba(255,255,255,.9);
+      padding: 28px 0;
+      margin-top: 28px;
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .small { font-size: 14px; color: var(--gray-500); }
+
+    @media (max-width: 980px) {
+      .hero-grid,
+      .services-grid,
+      .feature-grid,
+      .pricing-grid,
+      .two-col,
+      .schedule-wrap,
+      .contact-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-stats,
+      .slots,
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .nav { align-items: flex-start; flex-direction: column; }
+      .nav-links { width: 100%; }
+      .topbar-inner { align-items: flex-start; }
+      .hero { padding-top: 48px; }
+      section { padding: 56px 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div class="left">
+        <span class="pill">Call: <a href="tel:2247700340">(224) 770-0340</a></span>
+        <span class="pill">Email: <a href="mailto:info@SARlandscaping.com">info@SARlandscaping.com</a></span>
+      </div>
+      <div class="right">
+        <span>Serving Elgin &amp; surroundings</span>
+        <span>* Please no email marketing *</span>
+      </div>
+    </div>
+  </div>
+
+  <header>
+    <div class="container nav">
+      <div class="brand">
+        <strong>SAR Landscaping Contractors INC</strong>
+        <span>Landscape Design, Install, Maintain</span>
+      </div>
+      <nav class="nav-links">
+        <a href="#services">Services</a>
+        <a href="#lawn">Lawn Service</a>
+        <a href="#paving">Brick Paving</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#availability">Availability</a>
+        <a href="#contact">Contact</a>
+        <a class="btn btn-primary" href="#contact">Call for an Estimate</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <span class="eyebrow">Free Estimates • Commercially Insured &amp; Registered • Owner Operated</span>
+          <h1>Professional landscaping, hardscaping, and lawn maintenance for Elgin and surrounding areas.</h1>
+          <p>SAR Landscaping Contractors INC brings more than 40 years of experience, with over 30 years providing landscaping, hardscaping, lawn maintenance, grading, and drainage services for residential and commercial properties.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="tel:2247700340">Call (224) 770-0340</a>
+            <a class="btn btn-secondary" href="#services">View Services</a>
+          </div>
+          <div class="hero-stats">
+            <div class="stat">
+              <strong>40+ Years</strong>
+              <span>Owner experience in the field</span>
+            </div>
+            <div class="stat">
+              <strong>30+ Years</strong>
+              <span>Providing professional service</span>
+            </div>
+            <div class="stat">
+              <strong>Free Estimates</strong>
+              <span>For 2025 season needs</span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="card hero-card">
+          <div class="hero-card-head">
+            <strong>Why homeowners and property managers call SAR</strong>
+          </div>
+          <div class="hero-card-body">
+            <ul class="checklist">
+              <li>Landscape design, installation, and maintenance</li>
+              <li>Grading and drainage solutions</li>
+              <li>Lawn service with seasonal contracts</li>
+              <li>Brick paving and natural stone work</li>
+              <li>Retaining walls, patios, driveways, firepits, and outdoor kitchens</li>
+              <li>3D design program with room for changes</li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="services">
+      <div class="container">
+        <div class="section-head">
+          <h2>Core services</h2>
+          <p>Built from the provided knowledge base, this site highlights SAR Landscaping Contractors INC’s primary service lines and operating position.</p>
+        </div>
+        <div class="services-grid">
+          <article class="service-card">
+            <h3>Landscape Design, Install &amp; Maintain</h3>
+            <p>Professional landscaping services for ongoing property improvement and upkeep.</p>
+            <ul class="service-list">
+              <li>Landscape design support</li>
+              <li>Installation planning and execution</li>
+              <li>Routine maintenance services</li>
+            </ul>
+          </article>
+          <article class="service-card">
+            <h3>Grading &amp; Drainage</h3>
+            <p>Site grading and drainage work to help address property layout and water flow issues.</p>
+            <ul class="service-list">
+              <li>General grading work</li>
+              <li>Drainage-oriented site corrections</li>
+              <li>Integrated with broader landscape planning</li>
+            </ul>
+          </article>
+          <article class="service-card">
+            <h3>Lawn Service &amp; Maintenance</h3>
+            <p>Residential and commercial lawn care delivered through contract-based seasonal service.</p>
+            <ul class="service-list">
+              <li>Striped-pattern mowing</li>
+              <li>Trimming alongside walks, drives, and beds</li>
+              <li>Debris blowing and fall leaf mulching</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="lawn" class="band">
+      <div class="container two-col">
+        <div class="feature-card">
+          <h3>Lawn service details</h3>
+          <p>SAR services residential and commercial properties with a full lawn care package under a one year or seasonal agreement.</p>
+          <ul class="mini-list">
+            <li>Mowing in striped pattern</li>
+            <li>Trimming along sidewalks, driveways, beds, and edges</li>
+            <li>Blowing debris from sidewalks, driveway, and garden beds</li>
+            <li>Fall leaf mulching to leave lawn areas leaf free</li>
+            <li>Aeration available</li>
+            <li>Dethatching available</li>
+          </ul>
+          <span class="highlight">Contract only — no one-time service offered</span>
+        </div>
+        <div class="pricing-card">
+          <h3>Seasonal lawn pricing</h3>
+          <span class="price">From $35/week</span>
+          <p>Discounted monthly pricing is available with a one year or seasonal agreement contract.</p>
+          <ul class="mini-list">
+            <li>Starting price: <strong>$35.00 per week</strong></li>
+            <li>Full season: <strong>$980.00</strong></li>
+            <li>Service model: contract only</li>
+            <li>Call to get an estimate</li>
+          </ul>
+          <a class="btn btn-primary" style="margin-top:16px;" href="tel:2247700340">Request Lawn Estimate</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="paving">
+      <div class="container">
+        <div class="section-head">
+          <h2>Brick paving and hardscape work</h2>
+          <p>SAR also provides custom paving and stonework backed by proper equipment, 3D design support, and decades of paving experience.</p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card">
+            <h3>Design-first planning</h3>
+            <p>3D designing program available, with custom designs and room for changes before install work proceeds.</p>
+          </article>
+          <article class="feature-card">
+            <h3>Build, install, maintain</h3>
+            <p>SAR offers build, install, and maintain services for paving and hardscape-related projects.</p>
+          </article>
+          <article class="feature-card">
+            <h3>Materials and structures</h3>
+            <p>Work includes brick pavers and natural stone, plus retaining walls, patios, driveways, firepits, outdoor kitchens, and more.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="pricing" class="band">
+      <div class="container">
+        <div class="section-head">
+          <h2>Sample pricing ranges</h2>
+          <p>The following pricing block uses the internal sample ranges included in the knowledge base you supplied.</p>
+        </div>
+        <div class="pricing-grid">
+          <article class="pricing-card">
+            <h3>Tree Removal</h3>
+            <span class="price">$450–$5,500</span>
+            <ul class="mini-list">
+              <li>Small: $450–$950</li>
+              <li>Medium: $950–$2,200</li>
+              <li>Large: $2,200–$5,500</li>
+            </ul>
+          </article>
+          <article class="pricing-card">
+            <h3>Tree Trimming &amp; Cleanup</h3>
+            <span class="price">$150–$2,800</span>
+            <ul class="mini-list">
+              <li>Stump grinding: $150–$450</li>
+              <li>Tree trimming/pruning: $250–$1,200</li>
+              <li>Emergency storm cleanup: $650–$2,800</li>
+            </ul>
+          </article>
+          <article class="pricing-card">
+            <h3>Lot Clearing</h3>
+            <span class="price">$1,500–$7,500</span>
+            <ul class="mini-list">
+              <li>Range depends on lot size and complexity</li>
+              <li>Estimate required for final scope</li>
+              <li>Limited weekly openings remain</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="availability">
+      <div class="container schedule-wrap">
+        <div>
+          <div class="section-head">
+            <h2>Current availability</h2>
+            <p>Most weeks are nearly full. The slots below reflect the openings included in your internal scheduling notes.</p>
+          </div>
+          <div class="slots">
+            <article class="slot-card">
+              <h3>Tuesday</h3>
+              <p>Limited opening</p>
+              <span class="slot-time">9:30 AM</span>
+            </article>
+            <article class="slot-card">
+              <h3>Thursday</h3>
+              <p>Limited opening</p>
+              <span class="slot-time">2:00 PM</span>
+            </article>
+            <article class="slot-card">
+              <h3>Friday</h3>
+              <p>Limited opening</p>
+              <span class="slot-time">11:00 AM</span>
+            </article>
+            <article class="slot-card">
+              <h3>Saturday</h3>
+              <p>Morning opening</p>
+              <span class="slot-time">8:30 AM</span>
+            </article>
+            <article class="slot-card">
+              <h3>Saturday</h3>
+              <p>Afternoon opening</p>
+              <span class="slot-time">1:30 PM</span>
+            </article>
+          </div>
+        </div>
+
+        <aside class="contact-card">
+          <h3>Booking note</h3>
+          <p>All other times are currently booked or on hold. For the fastest scheduling response, call directly and reference the service you need.</p>
+          <ul class="mini-list">
+            <li>Free estimates available</li>
+            <li>Owner operated</li>
+            <li>Commercially insured and registered</li>
+            <li>Serving Elgin and surrounding areas</li>
+          </ul>
+          <a class="btn btn-primary" style="margin-top:16px;" href="tel:2247700340">Call for Availability</a>
+        </aside>
+      </div>
+    </section>
+
+    <section id="contact" class="band">
+      <div class="container contact-grid">
+        <div class="contact-stack">
+          <article class="contact-card">
+            <h3>Contact SAR Landscaping</h3>
+            <p>For any 2025 season needs, call or send a message. Free estimates are available.</p>
+            <ul class="mini-list">
+              <li>Phone: <a href="tel:2247700340">(224) 770-0340</a></li>
+              <li>Email: <a href="mailto:info@SARlandscaping.com">info@SARlandscaping.com</a></li>
+              <li>Area served: Elgin &amp; surroundings</li>
+              <li>* Please no email marketing *</li>
+            </ul>
+          </article>
+          <article class="contact-card">
+            <h3>Operating profile</h3>
+            <p>Commercially insured and registered. Owner operated. Built around long-term field experience and practical project execution.</p>
+          </article>
+        </div>
+
+        <article class="contact-card">
+          <h3>Request an estimate</h3>
+          <form id="estimateForm">
+            <div class="form-row">
+              <div>
+                <label for="name">Full Name</label>
+                <input id="name" name="name" type="text" placeholder="Your full name" required />
+              </div>
+              <div>
+                <label for="phone">Phone</label>
+                <input id="phone" name="phone" type="tel" placeholder="Best contact number" required />
+              </div>
+            </div>
+            <div class="form-row">
+              <div>
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" placeholder="you@example.com" />
+              </div>
+              <div>
+                <label for="service">Service Needed</label>
+                <select id="service" name="service">
+                  <option>Landscape Design / Install / Maintain</option>
+                  <option>Lawn Service</option>
+                  <option>Grading & Drainage</option>
+                  <option>Brick Paving / Natural Stone</option>
+                  <option>Patio / Driveway / Retaining Wall</option>
+                  <option>Other</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label for="message">Project Details</label>
+              <textarea id="message" name="message" placeholder="Tell us about your property, service needs, and preferred timing."></textarea>
+            </div>
+            <button class="btn btn-primary" type="submit">Submit Estimate Request</button>
+            <p class="small" id="formMsg">This demo form does not submit to a live backend. It shows the site structure and user flow.</p>
+          </form>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-inner">
+      <div>
+        <strong>SAR Landscaping Contractors INC</strong><br />
+        <span>Landscape Design, Install, Maintain</span>
+      </div>
+      <div>© All rights reserved</div>
+    </div>
+  </footer>
+
+  <script>
+    const form = document.getElementById('estimateForm');
+    const msg = document.getElementById('formMsg');
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const data = new FormData(form);
+      const name = data.get('name') || 'there';
+      msg.textContent = `Thanks, ${name}. Your request has been captured in this demo experience. Connect this form to email, a CRM, or your ETL pipeline for production use.`;
+      form.reset();
+    });
+  </script>
+</body>
+</html>

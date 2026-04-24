@@ -1,3 +1,6 @@
 blob-storage/*
 !blob-storage/etl/
 !blob-storage/etl/**
+
+# Large video assets exceeding GitHub's 100 MB limit
+templates/portfolio/videos/Freeman AI Chatbot.mp4
