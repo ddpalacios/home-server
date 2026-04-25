@@ -23,19 +23,6 @@
     return prefix + "_" + Math.random().toString(36).slice(2, 10);
   }
 
-  // Fetch wrapper that redirects to /etl/login on 401 (session expired/missing).
-  function authedFetch(url, opts) {
-    const merged = Object.assign({ credentials: "same-origin" }, opts || {});
-    return fetch(url, merged).then(function (r) {
-      if (r.status === 401) {
-        window.location.replace("/etl/login");
-        // Surface a never-resolving promise so subsequent .then handlers don't run.
-        return new Promise(function () {});
-      }
-      return r;
-    });
-  }
-
   function el(tag, attrs, children) {
     const node = document.createElement(tag);
     if (attrs) {
@@ -123,7 +110,7 @@
   // ---- sidebar list --------------------------------------------------------
 
   function refreshList() {
-    return authedFetch("/etl/notebook/list")
+    return fetch("/etl/notebook/list")
       .then(function (r) { return r.json(); })
       .then(function (data) {
         NB.list = (data && data.notebooks) || [];
@@ -193,7 +180,7 @@
   }
 
   function openNotebook(notebook_id) {
-    return authedFetch("/etl/notebook/load?notebook_id=" + encodeURIComponent(notebook_id))
+    return fetch("/etl/notebook/load?notebook_id=" + encodeURIComponent(notebook_id))
       .then(function (r) {
         if (!r.ok) throw new Error("not found");
         return r.json();
@@ -241,7 +228,7 @@
         };
       }),
     };
-    return authedFetch("/etl/notebook/save", {
+    return fetch("/etl/notebook/save", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -256,7 +243,7 @@
 
   function deleteNotebook(notebook_id) {
     if (!confirm("Delete this notebook?")) return;
-    authedFetch("/etl/notebook/delete", {
+    fetch("/etl/notebook/delete", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ notebook_id: notebook_id }),
@@ -551,7 +538,7 @@
     NB.sparkStatusNode = widget;
 
     function poll() {
-      authedFetch("/etl/notebook/spark/status")
+      fetch("/etl/notebook/spark/status")
         .then(function (r) { return r.json(); })
         .then(function (data) {
           if (!NB.sparkStatusNode) return;
@@ -676,7 +663,7 @@
     const ctrl = new AbortController();
     NB.inFlight = ctrl;
 
-    return authedFetch("/etl/notebook/execute", {
+    return fetch("/etl/notebook/execute", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -1196,7 +1183,7 @@
 
   function refreshVars() {
     if (!NB.current) return;
-    authedFetch("/etl/notebook/variables?notebook_id=" + encodeURIComponent(NB.current.notebook_id))
+    fetch("/etl/notebook/variables?notebook_id=" + encodeURIComponent(NB.current.notebook_id))
       .then(function (r) { return r.json(); })
       .then(function (data) { renderVars(data.variables || []); })
       .catch(function () { /* ignore */ });
@@ -1224,7 +1211,7 @@
 
   function restartKernel() {
     if (!NB.current) return;
-    authedFetch("/etl/notebook/restart", {
+    fetch("/etl/notebook/restart", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ notebook_id: NB.current.notebook_id }),
@@ -1242,7 +1229,7 @@
 
   function killCell() {
     if (!NB.current) return;
-    authedFetch("/etl/notebook/cancel", {
+    fetch("/etl/notebook/cancel", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ notebook_id: NB.current.notebook_id }),

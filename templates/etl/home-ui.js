@@ -338,15 +338,6 @@ function createGoogleLoginButton() {
   ].join("");
 
   button.addEventListener("click", function() {
-    if (button.classList.contains("is-signed-in")) {
-      if (!confirm("Sign out?")) return;
-      fetch("/etl/google/logout", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Accept": "application/json" },
-      }).finally(function () { window.location.replace("/etl/login"); });
-      return;
-    }
     startGoogleLogin(button);
   });
 
@@ -443,8 +434,6 @@ function updateGoogleLoginButtonStatus() {
     })
     .then(function(data) {
       if (!data || !data.logged_in) {
-        // Hard-gate: send anonymous visitors to the login page.
-        window.location.replace("/etl/login");
         return;
       }
       window.googleLoginProfile = data;
