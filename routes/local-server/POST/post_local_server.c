@@ -16,18 +16,78 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <ctype.h>
 #define IPSTRLEN INET6_ADDRSTRLEN
+#define ETL_BACKEND_HOST "127.0.0.1"
+#define ETL_BACKEND_PORT "5000"
+
+/* Parse the status line "HTTP/1.x NNN Reason\r\n" at the start of `response`.
+   Writes status_text (caller-owned buffer of size `st_size`) and returns the
+   numeric code, or -1 if parsing fails. */
+static int parse_upstream_status(const char *response, char *status_text, size_t st_size) {
+    if (!response) return -1;
+    const char *sp = strchr(response, ' ');
+    if (!sp) return -1;
+    int code = atoi(sp + 1);
+    if (code <= 0) return -1;
+    const char *reason = strchr(sp + 1, ' ');
+    const char *eol = strstr(response, "\r\n");
+    if (status_text && st_size > 0) {
+        if (reason && eol && reason < eol) {
+            size_t n = (size_t)(eol - (reason + 1));
+            if (n >= st_size) n = st_size - 1;
+            memcpy(status_text, reason + 1, n);
+            status_text[n] = '\0';
+        } else {
+            status_text[0] = '\0';
+        }
+    }
+    return code;
+}
+
+/* Extract the value of `header_name` (case-insensitive, NUL-terminated lower
+   prefix like "set-cookie:") from the response header block; copies into
+   `out` (size `out_size`). Returns 1 on found, 0 otherwise. */
+static int extract_header(const char *response, const char *header_name,
+                          char *out, size_t out_size) {
+    if (!response || !header_name || !out || out_size == 0) return 0;
+    const char *eoh = strstr(response, "\r\n\r\n");
+    size_t hlen = eoh ? (size_t)(eoh - response) : strlen(response);
+    size_t name_len = strlen(header_name);
+    const char *p = response;
+    while (p < response + hlen) {
+        const char *eol = strstr(p, "\r\n");
+        if (!eol || eol > response + hlen) break;
+        if ((size_t)(eol - p) > name_len &&
+            strncasecmp(p, header_name, name_len) == 0) {
+            const char *v = p + name_len;
+            while (v < eol && (*v == ' ' || *v == '\t')) v++;
+            size_t n = (size_t)(eol - v);
+            if (n >= out_size) n = out_size - 1;
+            memcpy(out, v, n);
+            out[n] = '\0';
+            return 1;
+        }
+        p = eol + 2;
+    }
+    return 0;
+}
 int connect_to_local_server(const char* host, const char* port){
 	struct addrinfo hints;
- 	struct addrinfo *addrs_res;
- 	memset(&hints, 0, sizeof(hints));
- 	char ipstr[IPSTRLEN];
- 	hints.ai_family = AF_INET;
- 	hints.ai_socktype = SOCK_STREAM;
- 	hints.ai_protocol = IPPROTO_TCP;
- 	const int status = getaddrinfo(host, port, &hints, &addrs_res);
- 	int sfd, connected;
- 	for (struct addrinfo *addr = addrs_res; addr != NULL; addr = addr->ai_next){
+	struct addrinfo *addrs_res = NULL;
+	memset(&hints, 0, sizeof(hints));
+	char ipstr[IPSTRLEN];
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
+	const int status = getaddrinfo(host, port, &hints, &addrs_res);
+	if (status != 0 || addrs_res == NULL){
+		fprintf(stderr, "getaddrinfo(%s:%s) failed: %s\n", host, port, gai_strerror(status));
+		return -1;
+	}
+	int sfd = -1;
+	int connected = -1;
+	for (struct addrinfo *addr = addrs_res; addr != NULL; addr = addr->ai_next){
 		if (addr->ai_family == AF_INET) {
 			struct sockaddr_in *ipv4 = (struct sockaddr_in *)addr->ai_addr;
 			void *addr4 = &(ipv4->sin_addr);
@@ -39,33 +99,38 @@ int connect_to_local_server(const char* host, const char* port){
 		}
 		sfd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
 		if (sfd < 0){
-			printf("Error connecting to socket with host: '%s' at '%s'\n", host, ipstr);
-			break;
+			printf("Error creating socket for host: '%s' at '%s'\n", host, ipstr);
+			continue;
 		}
 		connected = connect(sfd, addr->ai_addr, addr->ai_addrlen);
 		if (connected == 0){
 			printf("Successfully connected to '%s'\n", host);
 			break;
-		}else{
-			printf("Error connecting to host: '%s' at '%s'\n",host, ipstr);
-			break;
 		}
+		printf("Error connecting to host: '%s' at '%s'\n", host, ipstr);
+		close(sfd);
+		sfd = -1;
 	}
-	freeaddrinfo(addrs_res); 
- 	if (sfd>=0 && connected==0){
-        return sfd;
- 	}
- }
+	freeaddrinfo(addrs_res);
+	if (sfd >= 0 && connected == 0){
+		return sfd;
+	}
+	return -1;
+}
 
 void post_ctabustracker_getpredictions(struct Socket* socket,char* http_header, char*body, char* route){
-    int sfd  = connect_to_local_server("127.0.0.1", "5000");
+    int sfd  = connect_to_local_server(ETL_BACKEND_HOST, ETL_BACKEND_PORT);
+    if (sfd < 0) {
+        send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"backend unavailable\"}");
+        return;
+    }
     char request[2048];
-    snprintf(request, sizeof(request), 
+    snprintf(request, sizeof(request),
             "POST /CTA/ctabustracker/getpredictions/run HTTP/1.1\r\n"
             "Host: %s:%s\r\n"
             "Connection: close\r\n"
             "\r\n",
-            "127.0.0.1","5000");
+            ETL_BACKEND_HOST, ETL_BACKEND_PORT);
     send(sfd,request, strlen(request),0);
     close(sfd);
 
@@ -73,7 +138,11 @@ void post_ctabustracker_getpredictions(struct Socket* socket,char* http_header, 
  }
 
 void post_generate_phrase(struct Socket* socket,char* http_header, char*body, char* route){
-    int sfd  = connect_to_local_server("127.0.0.1", "5000");
+    int sfd  = connect_to_local_server(ETL_BACKEND_HOST, ETL_BACKEND_PORT);
+    if (sfd < 0) {
+        send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"backend unavailable\"}");
+        return;
+    }
     char request[2048];
 	snprintf(request, sizeof(request),
 		"POST /phrase-matching/generate HTTP/1.1\r\n"
@@ -83,7 +152,7 @@ void post_generate_phrase(struct Socket* socket,char* http_header, char*body, ch
 		"Connection: close\r\n"
 		"\r\n"
 		"%s",
-		"127.0.0.1", "5000", strlen(body), body);
+		ETL_BACKEND_HOST, ETL_BACKEND_PORT, strlen(body), body);
 	printf("Request %s\n", request);
     send(sfd,request, strlen(request),0);
     close(sfd);
@@ -91,12 +160,18 @@ void post_generate_phrase(struct Socket* socket,char* http_header, char*body, ch
 
  
 void post_to_local(struct Socket* socket,char* http_header, char*body, char* route){
-	int sfd  = connect_to_local_server("127.0.0.1", "5000");
+	int sfd  = connect_to_local_server(ETL_BACKEND_HOST, ETL_BACKEND_PORT);
+	if (sfd < 0) {
+		send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"backend unavailable\"}");
+		return;
+	}
 	const char *safe_body = body ? body : "";
 	size_t req_size = strlen(safe_body) + 2048;
 	char *request = malloc(req_size);
 	if (!request) {
 		perror("malloc failed");
+		close(sfd);
+		send_JSON_response_code(socket->cSSL, 500, "{\"error\":\"out of memory\"}");
 		return;
 	}
 
@@ -109,46 +184,61 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, char* rou
 		"\r\n"
 		"%s",
 		route,
-		"127.0.0.1", "5001", strlen(safe_body), safe_body);
-	
+		ETL_BACKEND_HOST, ETL_BACKEND_PORT, strlen(safe_body), safe_body);
+
 	send(sfd, request, strlen(request), 0);
 	free(request);
-	char buf[8192]; 
+	char buf[8192];
     char *response = NULL;
     size_t total = 0;
+    int recv_error = 0;
 
     for (;;) {
         int bytes_recved = recv(sfd, buf, sizeof(buf), 0);
-        if (bytes_recved <= 0)
-            break;
+        if (bytes_recved == 0) break;
+        if (bytes_recved < 0) { perror("recv"); recv_error = 1; break; }
         char *tmp = realloc(response, total + bytes_recved + 1);
         if (!tmp) {
             perror("realloc");
             free(response);
+            close(sfd);
+            send_JSON_response_code(socket->cSSL, 500, "{\"error\":\"out of memory\"}");
             return;
         }
 			response = tmp;
 			memcpy(response + total, buf, bytes_recved);
 			total += bytes_recved;
 		}
-		if (!response) {
-			printf("No data received\n");
+		if (!response || recv_error) {
+			free(response);
+			close(sfd);
+			send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"upstream read failure\"}");
 			return;
 		}
 
-		response[total] = '\0'; 
+		response[total] = '\0';
 		printf("Total bytes received: %zu\n", total);
 
 		char *res_body = strstr(response, "\r\n\r\n");
 		if (res_body) {
 			res_body += 4;
-			size_t body_len = strlen(res_body);
+			size_t body_len = total - (size_t)(res_body - response);
 
-			send_html_response_code(socket->cSSL, 200, body_len);
-			
-			SSL_write(socket->cSSL, res_body, body_len);
+			char status_text[64] = {0};
+			char content_type[128] = {0};
+			char set_cookie[1024] = {0};
+			int code = parse_upstream_status(response, status_text, sizeof(status_text));
+			extract_header(response, "Content-Type:", content_type, sizeof(content_type));
+			int has_cookie = extract_header(response, "Set-Cookie:", set_cookie, sizeof(set_cookie));
+			send_proxy_response(socket->cSSL,
+				code > 0 ? code : 200,
+				status_text[0] ? status_text : "OK",
+				content_type[0] ? content_type : "application/json",
+				has_cookie ? set_cookie : NULL,
+				res_body, body_len);
 		} else {
 			printf("No HTTP body found\n");
+			send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"malformed upstream response\"}");
 		}
 
     free(response);
@@ -158,7 +248,7 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, char* rou
  }
 
 void post_to_local_no_reply(const char* route, const char* body){
-	int sfd  = connect_to_local_server("127.0.0.1", "5000");
+	int sfd  = connect_to_local_server(ETL_BACKEND_HOST, ETL_BACKEND_PORT);
 	if (sfd < 0) {
 		return;
 	}
@@ -180,18 +270,24 @@ void post_to_local_no_reply(const char* route, const char* body){
 		"\r\n"
 		"%s",
 		route,
-		"127.0.0.1", "5000", strlen(safe_body), safe_body);
+		ETL_BACKEND_HOST, ETL_BACKEND_PORT, strlen(safe_body), safe_body);
 	send(sfd, request, strlen(request), 0);
 	free(request);
 	close(sfd);
 }
 
  void get_from_local(struct Socket* socket,char* http_header, char*body, char* route){
-	int sfd  = connect_to_local_server("127.0.0.1", "5000");
+	int sfd  = connect_to_local_server(ETL_BACKEND_HOST, ETL_BACKEND_PORT);
+	if (sfd < 0) {
+		send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"backend unavailable\"}");
+		return;
+	}
 	size_t req_size = strlen(route) + 512;
 	char *request = malloc(req_size);
 	if (!request) {
 		perror("malloc failed");
+		close(sfd);
+		send_JSON_response_code(socket->cSSL, 500, "{\"error\":\"out of memory\"}");
 		return;
 	}
 
@@ -201,74 +297,92 @@ void post_to_local_no_reply(const char* route, const char* body){
 		"Connection: close\r\n"
 		"\r\n",
 		route,
-		"127.0.0.1", "5000");
-	
+		ETL_BACKEND_HOST, ETL_BACKEND_PORT);
+
 	send(sfd, request, strlen(request), 0);
 	free(request);
-	char buf[8192]; 
+	char buf[8192];
     char *response = NULL;
     size_t total = 0;
+    int recv_error = 0;
 
     for (;;) {
         int bytes_recved = recv(sfd, buf, sizeof(buf), 0);
-        if (bytes_recved <= 0)
-            break;
+        if (bytes_recved == 0) break;
+        if (bytes_recved < 0) { perror("recv"); recv_error = 1; break; }
         char *tmp = realloc(response, total + bytes_recved + 1);
         if (!tmp) {
             perror("realloc");
             free(response);
+            close(sfd);
+            send_JSON_response_code(socket->cSSL, 500, "{\"error\":\"out of memory\"}");
             return;
         }
 			response = tmp;
 			memcpy(response + total, buf, bytes_recved);
 			total += bytes_recved;
 		}
-		if (!response) {
-			printf("No data received\n");
+		if (!response || recv_error) {
+			free(response);
+			close(sfd);
+			send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"upstream read failure\"}");
 			return;
 		}
 
-		response[total] = '\0'; 
+		response[total] = '\0';
 
 		char *header_end = strstr(response, "\r\n\r\n");
 		if (!header_end) {
 			printf("No HTTP header end found\n");
+			send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"malformed upstream response\"}");
 		} else {
-			char *status_line_end = strstr(response, "\r\n");
-			int is_redirect = 0;
-			if (status_line_end) {
-				if (strstr(response, "HTTP/1.1 302") || strstr(response, "HTTP/1.0 302")) {
-					is_redirect = 1;
-				}
-			}
-			if (is_redirect) {
-				char *location = strstr(response, "Location: ");
-				if (location) {
-					location += strlen("Location: ");
-					char *location_end = strstr(location, "\r\n");
-					if (location_end) {
-						size_t location_len = location_end - location;
-						char location_value[2048];
-						if (location_len >= sizeof(location_value)) {
-							location_len = sizeof(location_value) - 1;
-						}
-						strncpy(location_value, location, location_len);
-						location_value[location_len] = '\0';
+			char status_text[64] = {0};
+			int code = parse_upstream_status(response, status_text, sizeof(status_text));
+			int is_redirect = (code == 301 || code == 302 || code == 303 || code == 307 || code == 308);
 
-						char redirect_header[4096];
+			if (is_redirect) {
+				char location_value[2048] = {0};
+				if (extract_header(response, "Location:", location_value, sizeof(location_value))) {
+					char set_cookie[1024] = {0};
+					int has_cookie = extract_header(response, "Set-Cookie:", set_cookie, sizeof(set_cookie));
+					char redirect_header[4096];
+					if (has_cookie) {
 						snprintf(redirect_header, sizeof(redirect_header),
-							"HTTP/1.1 302 Found\r\n"
+							"HTTP/1.1 %d %s\r\n"
+							"Location: %s\r\n"
+							"Set-Cookie: %s\r\n"
+							"Connection: close\r\n"
+							"Content-Length: 0\r\n"
+							"\r\n",
+							code, status_text[0] ? status_text : "Found",
+							location_value, set_cookie);
+					} else {
+						snprintf(redirect_header, sizeof(redirect_header),
+							"HTTP/1.1 %d %s\r\n"
 							"Location: %s\r\n"
 							"Connection: close\r\n"
 							"Content-Length: 0\r\n"
 							"\r\n",
+							code, status_text[0] ? status_text : "Found",
 							location_value);
-						SSL_write(socket->cSSL, redirect_header, strlen(redirect_header));
 					}
+					SSL_write(socket->cSSL, redirect_header, strlen(redirect_header));
+				} else {
+					send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"redirect without Location\"}");
 				}
 			} else {
 				char *res_body = header_end + 4;
-				send_JSON_response_code(socket->cSSL, 200, res_body);
+				size_t body_len = total - (size_t)(res_body - response);
+				char content_type[128] = {0};
+				char set_cookie[1024] = {0};
+				extract_header(response, "Content-Type:", content_type, sizeof(content_type));
+				int has_cookie = extract_header(response, "Set-Cookie:", set_cookie, sizeof(set_cookie));
+				send_proxy_response(socket->cSSL,
+					code > 0 ? code : 200,
+					status_text[0] ? status_text : "OK",
+					content_type[0] ? content_type : "application/json",
+					has_cookie ? set_cookie : NULL,
+					res_body, body_len);
 			}
 		}
 
@@ -340,11 +454,18 @@ void post_to_local_no_reply(const char* route, const char* body){
 //  }
 
 void post_run_activity(struct Socket* socket,char* http_header, char*body, char* route){
-	int sfd  = connect_to_local_server("127.0.0.1", "5000");
-	size_t req_size = strlen(body) + 2048;
+	int sfd  = connect_to_local_server(ETL_BACKEND_HOST, ETL_BACKEND_PORT);
+	if (sfd < 0) {
+		send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"backend unavailable\"}");
+		return;
+	}
+	const char *safe_body = body ? body : "";
+	size_t req_size = strlen(safe_body) + 2048;
 	char *request = malloc(req_size);
 	if (!request) {
 		perror("malloc failed");
+		close(sfd);
+		send_JSON_response_code(socket->cSSL, 500, "{\"error\":\"out of memory\"}");
 		return;
 	}
 
@@ -357,53 +478,75 @@ void post_run_activity(struct Socket* socket,char* http_header, char*body, char*
 		"\r\n"
 		"%s",
 		route,
-		"127.0.0.1", "5000", strlen(body), body);
-	
+		ETL_BACKEND_HOST, ETL_BACKEND_PORT, strlen(safe_body), safe_body);
+
 	send(sfd, request, strlen(request), 0);
 	free(request);
 
-	/* If this is a non-preview /etl/run call, return immediately to avoid blocking the UI. */
-	if (strstr(route, "/etl/run") != NULL && strstr(body, "\"preview\":true") == NULL) {
-		char response_body[] = "{\"status\":\"accepted\"}";
-		send_JSON_response_code(socket->cSSL, 200, response_body);
-		close(sfd);
-		return;
-	}
+	/* Non-preview /etl/run posts trigger long-running pipelines. The Python
+	   backend now returns the run_id eagerly (see L1 /etl/run/ handler), but
+	   we still don't want to keep this connection open for the entire job;
+	   read the headers + first body chunk so we capture the run_id, then
+	   forward what we have and let Python finish in a background thread. */
+	int short_circuit = (strstr(route, "/etl/run") != NULL
+		&& strstr(safe_body, "\"preview\":true") == NULL);
 
-    char buf[8192]; 
+    char buf[8192];
     char *response = NULL;
     size_t total = 0;
+    int recv_error = 0;
 
     for (;;) {
         int bytes_recved = recv(sfd, buf, sizeof(buf), 0);
-        if (bytes_recved <= 0)
-            break;
+        if (bytes_recved == 0) break;
+        if (bytes_recved < 0) { perror("recv"); recv_error = 1; break; }
         char *tmp = realloc(response, total + bytes_recved + 1);
         if (!tmp) {
             perror("realloc");
             free(response);
+            close(sfd);
+            send_JSON_response_code(socket->cSSL, 500, "{\"error\":\"out of memory\"}");
             return;
         }
 			response = tmp;
 			memcpy(response + total, buf, bytes_recved);
 			total += bytes_recved;
+
+			if (short_circuit && total > 0) {
+				char *eoh = strstr(response, "\r\n\r\n");
+				if (eoh && strchr(eoh + 4, '}')) {
+					/* full body fits in one chunk; Python emitted run_id and closed */
+					break;
+				}
+			}
 		}
-		if (!response) {
-			printf("No data received\n");
+		if (!response || recv_error) {
+			free(response);
+			close(sfd);
+			send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"upstream read failure\"}");
 			return;
 		}
 
-		response[total] = '\0'; 
+		response[total] = '\0';
 		printf("Total bytes received: %zu\n", total);
 
 		char *res_body = strstr(response, "\r\n\r\n");
 		if (res_body) {
 			res_body += 4;
-			size_t body_len = strlen(res_body);
-			send_html_response_code(socket->cSSL, 200, body_len);
-			SSL_write(socket->cSSL, res_body, body_len);
+			size_t body_len = total - (size_t)(res_body - response);
+			char status_text[64] = {0};
+			char content_type[128] = {0};
+			int code = parse_upstream_status(response, status_text, sizeof(status_text));
+			extract_header(response, "Content-Type:", content_type, sizeof(content_type));
+			send_proxy_response(socket->cSSL,
+				code > 0 ? code : 200,
+				status_text[0] ? status_text : "OK",
+				content_type[0] ? content_type : "application/json",
+				NULL,
+				res_body, body_len);
 		} else {
 			printf("No HTTP body found\n");
+			send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"malformed upstream response\"}");
 		}
 
     free(response);

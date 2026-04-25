@@ -20,6 +20,9 @@ char* create_cookie(char*path,char* key, char* value);
 char* get_query_parameter(char*route, char*param);
 void send_buffer_response_code(SSL* cSSL, int code, char* buffer, size_t buffer_length );
 void send_JSON_response_code( SSL *cSSL,int code, char* json);
+void send_proxy_response(SSL *cSSL, int code, const char *status_text,
+                         const char *content_type, const char *set_cookie,
+                         const char *body, size_t body_len);
 void send_websocket_buffer(SSL* cSSL, char* buf);
 int switch_to_websocket_protocol(SSL *cSSL, char* websocket_sec_acceptKey);
 char*  get_header_value(const char* buf, const char* key);
