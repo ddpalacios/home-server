@@ -94,15 +94,17 @@ void get_gol_script(SSL* cSSL, char* request, char* template_name){
 		 int html_length = strlen(html_buffer);
 		if (strstr(template_name, ".css") != NULL){
 			send_css_response_code(cSSL,200, html_length);
+		}else if (strstr(template_name, ".js") != NULL){
+			send_javascript_response_code(cSSL,200, html_length);
 		}else{
 			send_html_response_code(cSSL,200, html_length);
 		}
-		SSL_write(cSSL, html_buffer, html_length);	 
+		SSL_write(cSSL, html_buffer, html_length);
 		free(html_buffer);
 	 }else{
 	 	int code = 404;
 		printf("COULD NOT FIND %s\n", template_name);
-	 
+
 	 }
 
 }
