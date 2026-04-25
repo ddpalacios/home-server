@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in · ETL Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/etl/login.css">
+</head>
+<body class="login-body">
+
+  <div class="login-shell">
+    <div class="login-card" role="main">
+      <div class="login-brand">
+        <div class="login-logo" aria-hidden="true">
+          <svg viewBox="0 0 64 64">
+            <defs>
+              <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#1f4fd6"/>
+                <stop offset="1" stop-color="#10b981"/>
+              </linearGradient>
+            </defs>
+            <rect x="6" y="6" width="52" height="52" rx="14" fill="url(#g1)"/>
+            <path d="M18 22h12a8 8 0 0 1 8 8v0a8 8 0 0 1-8 8H18z" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M18 32h20" stroke="white" stroke-width="3" stroke-linecap="round"/>
+            <path d="M30 38l8 8" stroke="white" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h1 class="login-title">ETL Studio</h1>
+        <p class="login-tagline">Design Your Automations.</p>
+      </div>
+
+      <div class="login-body-text">
+        <h2>Welcome</h2>
+        <p>Sign in with Google to access your notebooks, dataflows, and pipelines. Your work is private to your Google account.</p>
+      </div>
+
+      <button id="loginButton" class="google-signin" type="button">
+        <span class="google-signin-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18">
+            <path fill="#4285F4" d="M21.6 12.227c0-.81-.073-1.587-.21-2.337H12v4.42h5.387a4.605 4.605 0 0 1-2 3.022v2.51h3.235c1.892-1.74 2.978-4.305 2.978-7.615z"/>
+            <path fill="#34A853" d="M12 22c2.7 0 4.964-.895 6.622-2.428l-3.235-2.509c-.897.6-2.043.957-3.387.957-2.605 0-4.81-1.76-5.598-4.124H3.057v2.59A9.998 9.998 0 0 0 12 22z"/>
+            <path fill="#FBBC05" d="M6.402 13.896A6.005 6.005 0 0 1 6.083 12c0-.658.114-1.298.319-1.896V7.514H3.057a10 10 0 0 0 0 8.972l3.345-2.59z"/>
+            <path fill="#EA4335" d="M12 5.98c1.47 0 2.787.506 3.823 1.498l2.866-2.866C16.96 2.99 14.696 2 12 2A9.998 9.998 0 0 0 3.057 7.514l3.345 2.59C7.19 7.74 9.395 5.98 12 5.98z"/>
+          </svg>
+        </span>
+        <span class="google-signin-label">Sign in with Google</span>
+        <span class="google-signin-spinner" aria-hidden="true"></span>
+      </button>
+
+      <p id="loginError" class="login-error" hidden></p>
+
+      <p class="login-footnote">By signing in you agree to use this tool for authorized work only.</p>
+    </div>
+
+    <div class="login-features">
+      <div class="login-feature">
+        <span class="login-feature-icon">📒</span>
+        <div>
+          <strong>Persistent notebooks</strong>
+          <p>Cell state, outputs, and saved sessions — all scoped to your account.</p>
+        </div>
+      </div>
+      <div class="login-feature">
+        <span class="login-feature-icon">⚡</span>
+        <div>
+          <strong>Spark · live</strong>
+          <p>Run PySpark with a shared session and watch jobs progress in real time.</p>
+        </div>
+      </div>
+      <div class="login-feature">
+        <span class="login-feature-icon">📊</span>
+        <div>
+          <strong>SQL · charts</strong>
+          <p><code>%sparksql</code> with built-in chart builder for instant visualization.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.GOOGLE_OAUTH_CONFIG = {
+      client_id: "639323802562-f5i8qpon5o6umajc5bvvqcgqjudpnhf6.apps.googleusercontent.com",
+      redirect_uri: "http://127.0.0.1:5000/etl/google/callback",
+      scopes: "openid email profile https://www.googleapis.com/auth/spreadsheets",
+      state: ""
+    };
+  </script>
+  <script src="/etl/login.js" defer></script>
+</body>
+</html>

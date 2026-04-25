@@ -408,6 +408,14 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		post_to_local(socket,http_header,body, route);
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl")==0){
 		get_live_html(cSSL, http_header, "/etl/home.html");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/login")==0){
+		get_live_html(cSSL, http_header, "/etl/login.html");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/login.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/login.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/login.css")==0){
+		get_gol_script(cSSL, http_header, "/etl/login.css");
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/google/logout")==0){
+		post_to_local(socket,http_header,body, route);
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/activities.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/activities.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/import.js")==0){
