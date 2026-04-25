@@ -11,6 +11,7 @@
     runningCellId: null,
     autosaveTimer: null,
     varsVisible: false,
+    selectedCellId: null,
   };
 
   const AUTOSAVE_DEBOUNCE_MS = 5000;
@@ -381,6 +382,9 @@
     cell._statusLabel = pillLabel;
     cell._execBadge = execBadge;
 
+    wrapper.addEventListener("mousedown", function () { selectCell(cell.id); }, true);
+
+    if (NB.selectedCellId === cell.id) wrapper.classList.add("nb-selected");
     if (cell.output && (cell.type || "code") === "code") renderOutput(cell._outputNode, cell.output);
     return wrapper;
   }
@@ -403,8 +407,10 @@
         extraKeys: {
           "Shift-Enter": function () { runCell(cell.id, { advance: true }); },
           "Ctrl-Enter":  function () { runCell(cell.id, { advance: false }); },
+          "Esc":         function (cmInstance) { cmInstance.getInputField().blur(); },
         },
       });
+      cm.on("focus", function () { selectCell(cell.id); });
       cm.on("change", function () {
         cell.source = cm.getValue();
         markDirty();
@@ -638,20 +644,64 @@
     }
   }
 
-  // ---- modern dataframe table ---------------------------------------------
+  // ---- modern dataframe table + chart builder -----------------------------
 
   function renderDataFrame(v, allowDownload) {
     const columns = (v.columns || []).map(String);
     const rows = (v.rows || []).map(function (r) { return r.slice(); });
     const total = v.total_rows;
     const truncated = !!v.truncated;
+    const chartable = !!v.chartable;
 
-    // State for sort + filter, scoped to this table instance.
+    const card = el("div", { class: "nb-df-card" }, []);
+
+    // Tabs (Table | Chart) — chart only available for sparksql results.
+    let tablePanel = null, chartPanel = null;
+    if (chartable) {
+      const tabs = el("div", { class: "nb-df-tabs" }, []);
+      const tabTable = el("button", { class: "nb-df-tab nb-df-tab-active", type: "button", text: "Table" }, []);
+      const tabChart = el("button", { class: "nb-df-tab", type: "button", text: "Chart" }, []);
+      tabTable.addEventListener("click", function () {
+        tabTable.classList.add("nb-df-tab-active");
+        tabChart.classList.remove("nb-df-tab-active");
+        tablePanel.hidden = false;
+        chartPanel.hidden = true;
+      });
+      tabChart.addEventListener("click", function () {
+        tabChart.classList.add("nb-df-tab-active");
+        tabTable.classList.remove("nb-df-tab-active");
+        tablePanel.hidden = true;
+        chartPanel.hidden = false;
+        ensureChartRendered();
+      });
+      tabs.appendChild(tabTable);
+      tabs.appendChild(tabChart);
+      card.appendChild(tabs);
+    }
+
+    tablePanel = renderDataFrameTable(columns, rows, total, truncated, allowDownload);
+    card.appendChild(tablePanel);
+
+    let chartReady = false;
+    if (chartable) {
+      chartPanel = renderChartBuilder(columns, rows);
+      chartPanel.hidden = true;
+      card.appendChild(chartPanel);
+    }
+
+    function ensureChartRendered() {
+      if (chartReady || !chartPanel) return;
+      chartReady = true;
+      if (chartPanel._draw) chartPanel._draw();
+    }
+
+    return card;
+  }
+
+  function renderDataFrameTable(columns, rows, total, truncated, allowDownload) {
     const state = { sortCol: -1, sortDir: 1, filter: "" };
+    const panel = el("div", { class: "nb-df-table-panel" }, []);
 
-    const wrap = el("div", { class: "nb-df-card" }, []);
-
-    // Toolbar (filter + count + optional CSV button)
     const toolbar = el("div", { class: "nb-df-toolbar" }, []);
     const filterInput = el("input", {
       class: "nb-df-filter",
@@ -666,24 +716,21 @@
     toolbar.appendChild(filterInput);
     toolbar.appendChild(countLabel);
     if (allowDownload && truncated) {
-      const dlBtn = el("button", {
+      toolbar.appendChild(el("button", {
         class: "nb-df-download",
         type: "button",
         title: "Download all " + total + " rows as CSV",
         text: "Download CSV (" + total + " rows)",
         onclick: function () {
           if (!NB.current) return;
-          const url = "/etl/notebook/dataframe/csv?notebook_id="
+          window.location.href = "/etl/notebook/dataframe/csv?notebook_id="
             + encodeURIComponent(NB.current.notebook_id)
             + "&var=_nb_last_df";
-          window.location.href = url;
         },
-      }, []);
-      toolbar.appendChild(dlBtn);
+      }, []));
     }
-    wrap.appendChild(toolbar);
+    panel.appendChild(toolbar);
 
-    // Table
     const scroll = el("div", { class: "nb-df-scroll" }, []);
     const table = el("table", { class: "nb-df" }, []);
     const thead = el("thead", {}, []);
@@ -693,16 +740,11 @@
         text: c,
         title: "Click to sort",
         onclick: function () {
-          if (state.sortCol === i) {
-            state.sortDir = -state.sortDir;
-          } else {
-            state.sortCol = i;
-            state.sortDir = 1;
-          }
+          if (state.sortCol === i) state.sortDir = -state.sortDir;
+          else { state.sortCol = i; state.sortDir = 1; }
           repaint();
         },
       }, []);
-      th.dataset.col = String(i);
       headRow.appendChild(th);
     });
     thead.appendChild(headRow);
@@ -710,7 +752,7 @@
     table.appendChild(thead);
     table.appendChild(tbody);
     scroll.appendChild(table);
-    wrap.appendChild(scroll);
+    panel.appendChild(scroll);
 
     function compareCells(a, b) {
       if (a == null && b == null) return 0;
@@ -722,55 +764,281 @@
     }
 
     function repaint() {
-      // Update sort indicators
       Array.prototype.forEach.call(thead.querySelectorAll("th"), function (th, i) {
         th.classList.remove("nb-sort-asc", "nb-sort-desc");
-        if (i === state.sortCol) {
-          th.classList.add(state.sortDir > 0 ? "nb-sort-asc" : "nb-sort-desc");
-        }
+        if (i === state.sortCol) th.classList.add(state.sortDir > 0 ? "nb-sort-asc" : "nb-sort-desc");
       });
 
-      // Filter
-      const f = state.filter;
       let filtered = rows;
-      if (f) {
+      if (state.filter) {
+        const f = state.filter;
         filtered = rows.filter(function (r) {
-          return r.some(function (cellVal) {
-            return cellVal != null && String(cellVal).toLowerCase().indexOf(f) >= 0;
-          });
+          return r.some(function (v) { return v != null && String(v).toLowerCase().indexOf(f) >= 0; });
         });
       }
-
-      // Sort
       if (state.sortCol >= 0) {
-        const dir = state.sortDir;
-        const col = state.sortCol;
-        filtered = filtered.slice().sort(function (a, b) {
-          return dir * compareCells(a[col], b[col]);
-        });
+        const dir = state.sortDir, col = state.sortCol;
+        filtered = filtered.slice().sort(function (a, b) { return dir * compareCells(a[col], b[col]); });
       }
 
-      // Render rows
       tbody.innerHTML = "";
       filtered.forEach(function (r) {
-        tbody.appendChild(el("tr", {}, r.map(function (cellVal) {
-          return el("td", { text: cellVal == null ? "" : String(cellVal) }, []);
+        tbody.appendChild(el("tr", {}, r.map(function (v) {
+          return el("td", { text: v == null ? "" : String(v) }, []);
         })));
       });
 
-      // Count label
       const shown = filtered.length;
-      let label;
-      if (truncated) {
-        label = "Showing " + shown + " of " + (rows.length) + " loaded (" + total + " total)";
-      } else {
-        label = shown + " of " + total + (total === 1 ? " row" : " rows");
-      }
-      countLabel.textContent = label;
+      countLabel.textContent = truncated
+        ? "Showing " + shown + " of " + rows.length + " loaded (" + total + " total)"
+        : shown + " of " + total + (total === 1 ? " row" : " rows");
     }
 
     repaint();
-    return wrap;
+    return panel;
+  }
+
+  // ---------- Chart builder ----------
+
+  const CHART_TYPES = [
+    { value: "bar",     label: "Bar" },
+    { value: "line",    label: "Line" },
+    { value: "area",    label: "Area" },
+    { value: "pie",     label: "Pie" },
+    { value: "doughnut",label: "Doughnut" },
+    { value: "scatter", label: "Scatter" },
+  ];
+  const AGGREGATIONS = [
+    { value: "none",  label: "None (raw rows)" },
+    { value: "sum",   label: "Sum by X" },
+    { value: "avg",   label: "Average by X" },
+    { value: "count", label: "Count by X" },
+    { value: "min",   label: "Min by X" },
+    { value: "max",   label: "Max by X" },
+  ];
+
+  // Pleasant qualitative palette (Tableau-ish) for slices/series.
+  const CHART_COLORS = [
+    "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6",
+    "#06b6d4", "#ec4899", "#84cc16", "#f97316", "#6366f1",
+    "#14b8a6", "#eab308",
+  ];
+
+  function detectNumericColumns(columns, rows) {
+    return columns.map(function (_, i) {
+      let numericCount = 0, total = 0;
+      for (let r = 0; r < Math.min(rows.length, 100); r++) {
+        const v = rows[r][i];
+        if (v == null || v === "") continue;
+        total++;
+        if (!isNaN(Number(v))) numericCount++;
+      }
+      return total > 0 && (numericCount / total) > 0.7;
+    });
+  }
+
+  function renderChartBuilder(columns, rows) {
+    const panel = el("div", { class: "nb-chart-panel" }, []);
+    const numericMask = detectNumericColumns(columns, rows);
+
+    // Default selections.
+    const defaultX = 0;
+    let defaultY = numericMask.findIndex(Boolean);
+    if (defaultY < 0) defaultY = columns.length > 1 ? 1 : 0;
+
+    const state = {
+      type: "bar",
+      xCol: defaultX,
+      yCol: defaultY,
+      agg: "none",
+    };
+
+    const controls = el("div", { class: "nb-chart-controls" }, []);
+
+    function field(labelText, sel) {
+      const wrap = el("label", { class: "nb-chart-field" }, [
+        el("span", { class: "nb-chart-field-label", text: labelText }, []),
+        sel,
+      ]);
+      return wrap;
+    }
+
+    function makeSelect(options, selected, onchange) {
+      const sel = el("select", { class: "nb-chart-select", onchange: function (ev) { onchange(ev.target.value); } }, []);
+      options.forEach(function (opt) {
+        const o = document.createElement("option");
+        if (typeof opt === "string") {
+          o.value = opt; o.textContent = opt;
+        } else {
+          o.value = opt.value; o.textContent = opt.label;
+        }
+        if (String(opt.value !== undefined ? opt.value : opt) === String(selected)) o.selected = true;
+        sel.appendChild(o);
+      });
+      return sel;
+    }
+
+    const colOptions = columns.map(function (c, i) { return { value: String(i), label: c }; });
+
+    const typeSel = makeSelect(CHART_TYPES, state.type, function (v) { state.type = v; redraw(); });
+    const xSel    = makeSelect(colOptions, String(state.xCol), function (v) { state.xCol = parseInt(v, 10); redraw(); });
+    const ySel    = makeSelect(colOptions, String(state.yCol), function (v) { state.yCol = parseInt(v, 10); redraw(); });
+    const aggSel  = makeSelect(AGGREGATIONS, state.agg, function (v) { state.agg = v; redraw(); });
+
+    controls.appendChild(field("Type", typeSel));
+    controls.appendChild(field("X / label", xSel));
+    controls.appendChild(field("Y / value", ySel));
+    controls.appendChild(field("Aggregate", aggSel));
+
+    const refreshBtn = el("button", {
+      class: "nb-chart-refresh", type: "button", text: "Refresh", onclick: redraw,
+    }, []);
+    controls.appendChild(refreshBtn);
+
+    panel.appendChild(controls);
+
+    const canvasWrap = el("div", { class: "nb-chart-canvas-wrap" }, []);
+    const canvas = el("canvas", { class: "nb-chart-canvas" }, []);
+    canvasWrap.appendChild(canvas);
+    panel.appendChild(canvasWrap);
+
+    const message = el("div", { class: "nb-chart-message" }, []);
+    panel.appendChild(message);
+
+    function buildSeries() {
+      const xi = state.xCol, yi = state.yCol;
+      const labels = [];
+      const values = [];
+      if (state.agg === "none") {
+        rows.forEach(function (r) {
+          labels.push(String(r[xi] == null ? "" : r[xi]));
+          const num = Number(r[yi]);
+          values.push(isNaN(num) ? 0 : num);
+        });
+      } else {
+        const groups = new Map();
+        rows.forEach(function (r) {
+          const key = String(r[xi] == null ? "" : r[xi]);
+          if (!groups.has(key)) groups.set(key, { sum: 0, count: 0, min: Infinity, max: -Infinity });
+          const g = groups.get(key);
+          if (state.agg === "count") {
+            g.count += 1;
+          } else {
+            const num = Number(r[yi]);
+            if (!isNaN(num)) {
+              g.sum += num;
+              g.count += 1;
+              if (num < g.min) g.min = num;
+              if (num > g.max) g.max = num;
+            }
+          }
+        });
+        groups.forEach(function (g, key) {
+          labels.push(key);
+          let v;
+          if (state.agg === "sum")        v = g.sum;
+          else if (state.agg === "avg")   v = g.count ? g.sum / g.count : 0;
+          else if (state.agg === "count") v = g.count;
+          else if (state.agg === "min")   v = isFinite(g.min) ? g.min : 0;
+          else if (state.agg === "max")   v = isFinite(g.max) ? g.max : 0;
+          else                            v = g.sum;
+          values.push(v);
+        });
+      }
+      return { labels: labels, values: values };
+    }
+
+    function redraw() {
+      message.textContent = "";
+      if (typeof Chart === "undefined") {
+        message.textContent = "Chart.js not loaded.";
+        return;
+      }
+      if (rows.length === 0) {
+        message.textContent = "No rows to chart.";
+        if (canvas._chart) { canvas._chart.destroy(); canvas._chart = null; }
+        return;
+      }
+      const series = buildSeries();
+      if (!series.labels.length) {
+        message.textContent = "No data points after grouping.";
+        return;
+      }
+
+      let chartType = state.type;
+      let dataset = { label: columns[state.yCol] || "value", data: series.values };
+
+      if (chartType === "scatter") {
+        const xi = state.xCol, yi = state.yCol;
+        const points = rows.map(function (r) {
+          return { x: Number(r[xi]), y: Number(r[yi]) };
+        }).filter(function (p) { return !isNaN(p.x) && !isNaN(p.y); });
+        if (!points.length) {
+          message.textContent = "Scatter requires both columns to be numeric.";
+          if (canvas._chart) { canvas._chart.destroy(); canvas._chart = null; }
+          return;
+        }
+        dataset = {
+          label: columns[state.yCol] + " vs " + columns[state.xCol],
+          data: points,
+          backgroundColor: CHART_COLORS[0],
+        };
+      } else if (chartType === "area") {
+        chartType = "line";
+        dataset.fill = true;
+        dataset.tension = 0.25;
+        dataset.borderColor = CHART_COLORS[0];
+        dataset.backgroundColor = CHART_COLORS[0] + "40";
+      } else if (chartType === "line") {
+        dataset.tension = 0.25;
+        dataset.borderColor = CHART_COLORS[0];
+        dataset.backgroundColor = CHART_COLORS[0] + "30";
+        dataset.pointRadius = 2;
+      } else if (chartType === "pie" || chartType === "doughnut") {
+        dataset.backgroundColor = series.labels.map(function (_, i) {
+          return CHART_COLORS[i % CHART_COLORS.length];
+        });
+        dataset.borderColor = "#fff";
+        dataset.borderWidth = 2;
+      } else if (chartType === "bar") {
+        dataset.backgroundColor = CHART_COLORS[0];
+        dataset.borderRadius = 4;
+      }
+
+      const data = chartType === "scatter"
+        ? { datasets: [dataset] }
+        : { labels: series.labels, datasets: [dataset] };
+
+      if (canvas._chart) { canvas._chart.destroy(); canvas._chart = null; }
+      canvas._chart = new Chart(canvas, {
+        type: chartType,
+        data: data,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: (chartType === "pie" || chartType === "doughnut") ? "right" : "top",
+              labels: { font: { family: "Space Grotesk, system-ui, sans-serif", size: 12 } },
+            },
+            tooltip: {
+              backgroundColor: "rgba(15, 23, 42, 0.95)",
+              titleFont: { family: "Space Grotesk, system-ui, sans-serif" },
+              bodyFont:  { family: "Space Grotesk, system-ui, sans-serif" },
+              padding: 10,
+              cornerRadius: 8,
+            },
+          },
+          scales: (chartType === "pie" || chartType === "doughnut") ? {} : {
+            x: { ticks: { font: { family: "Space Grotesk, system-ui, sans-serif", size: 11 } } },
+            y: { ticks: { font: { family: "Space Grotesk, system-ui, sans-serif", size: 11 } }, beginAtZero: true },
+          },
+        },
+      });
+    }
+
+    panel._draw = redraw;
+    return panel;
   }
 
   // ---- variables panel -----------------------------------------------------
@@ -838,6 +1106,47 @@
     }).then(function () { setKernelStatus("Cancelled"); });
   }
 
+  // ---- selection + command-mode keyboard ----------------------------------
+
+  function selectCell(cellId) {
+    if (NB.selectedCellId === cellId) return;
+    NB.selectedCellId = cellId;
+    NB.current.cells.forEach(function (c) {
+      if (c._wrapper) c._wrapper.classList.toggle("nb-selected", c.id === cellId);
+    });
+  }
+
+  function isEditingText() {
+    const ae = document.activeElement;
+    if (!ae || ae === document.body) return false;
+    const tag = ae.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
+    if (ae.isContentEditable) return true;
+    if (ae.closest && ae.closest(".CodeMirror")) return true;
+    return false;
+  }
+
+  function addAtRelative(position) {
+    if (!NB.current) return;
+    let idx;
+    if (NB.selectedCellId) {
+      const i = NB.current.cells.findIndex(function (c) { return c.id === NB.selectedCellId; });
+      idx = i < 0 ? NB.current.cells.length : (position === "above" ? i : i + 1);
+    } else {
+      idx = NB.current.cells.length;
+    }
+    const newCell = makeBlankCell("code");
+    NB.current.cells.splice(idx, 0, newCell);
+    markDirty();
+    renderCells();
+    NB.selectedCellId = newCell.id;
+    setTimeout(function () {
+      const created = NB.current.cells.find(function (c) { return c.id === newCell.id; });
+      if (created && created._wrapper) created._wrapper.classList.add("nb-selected");
+      if (created && created._cm) created._cm.focus();
+    }, 0);
+  }
+
   // ---- boot ----------------------------------------------------------------
 
   function bind(id, evt, fn) {
@@ -871,10 +1180,26 @@
 
     document.addEventListener("keydown", function (ev) {
       if (!document.body.classList.contains("notebook-mode")) return;
-      const isSave = (ev.ctrlKey || ev.metaKey) && (ev.key === "s" || ev.key === "S");
-      if (!isSave) return;
-      ev.preventDefault();
-      saveCurrent().then(function () { setKernelStatus("Saved"); });
+      if (!NB.current) return;
+
+      // Ctrl/Cmd+S works in any mode.
+      if ((ev.ctrlKey || ev.metaKey) && (ev.key === "s" || ev.key === "S")) {
+        ev.preventDefault();
+        saveCurrent().then(function () { setKernelStatus("Saved"); });
+        return;
+      }
+
+      // Command-mode shortcuts (only when not focused inside a cell editor or input).
+      if (isEditingText()) return;
+      if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+
+      if (ev.key === "a" || ev.key === "A") {
+        ev.preventDefault();
+        addAtRelative("above");
+      } else if (ev.key === "b" || ev.key === "B") {
+        ev.preventDefault();
+        addAtRelative("below");
+      }
     });
 
     refreshList();
