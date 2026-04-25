@@ -23,6 +23,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
 	</head>
@@ -172,11 +173,23 @@
         <div class="nb-toolbar">
           <input id="nb_name" type="text" placeholder="Untitled notebook" class="nb-name-input">
           <button id="nb_save" class="buttons" type="button">Save</button>
+          <button id="nb_run_all" class="buttons" type="button">Run All</button>
           <button id="nb_restart" class="buttons" type="button">Restart Kernel</button>
           <button id="nb_kill" class="buttons" type="button">Kill Cell</button>
+          <button id="nb_export" class="buttons" type="button" title="Download as .ipynb">Export</button>
+          <button id="nb_toggle_vars" class="buttons" type="button" title="Show/hide variables panel">Vars</button>
           <span id="nb_kernel_status" class="nb-kernel-status">Idle</span>
         </div>
-        <div class="nb-cells" id="nb_cells"></div>
+        <div class="nb-body">
+          <div class="nb-cells" id="nb_cells"></div>
+          <aside id="nb_vars_panel" class="nb-vars-panel" hidden>
+            <div class="nb-vars-header">
+              <span>Variables</span>
+              <button id="nb_vars_refresh" class="nb-vars-refresh" type="button" title="Refresh">↻</button>
+            </div>
+            <div id="nb_vars_list" class="nb-vars-list"></div>
+          </aside>
+        </div>
       </div>
     </div>
 
