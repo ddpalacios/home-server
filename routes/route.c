@@ -498,6 +498,24 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_from_local(socket,http_header,body, route);
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/etl/google/callback")!=NULL){
 		get_from_local(socket,http_header,body, route);
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/notebook.js")==0){
+		get_gol_script(cSSL, http_header, "/etl/notebook.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/notebook.css")==0){
+		get_gol_script(cSSL, http_header, "/etl/notebook.css");
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/notebook/execute")==0){
+		post_to_local(socket,http_header,body, route);
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/notebook/cancel")==0){
+		post_to_local(socket,http_header,body, route);
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/notebook/restart")==0){
+		post_to_local(socket,http_header,body, route);
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/notebook/save")==0){
+		post_to_local(socket,http_header,body, route);
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/notebook/delete")==0){
+		post_to_local(socket,http_header,body, route);
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/etl/notebook/load")!=NULL){
+		get_from_local(socket,http_header,body, route);
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/notebook/list")==0){
+		get_from_local(socket,http_header,body, route);
 
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/phrase-matching")==0){
 		get_live_html(cSSL, http_header, "/phrase-matching/home.html");
