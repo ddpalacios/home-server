@@ -1,84 +1,93 @@
-/* Notebook tab — all selectors scoped under #tab_notebook (.nb-root) to avoid leaking styles. */
+/* Notebook view — main-canvas takeover, scoped under .nb-workspace and body.notebook-mode. */
 
-.nb-root {
+/* Layout toggle: hide the flowchart UI when notebook mode is active. */
+body.notebook-mode .pipeline-run,
+body.notebook-mode #chart_container,
+body.notebook-mode .footer,
+body.notebook-mode .zoom-controls { display: none !important; }
+body.notebook-mode .content { padding: 0; }
+
+/* Notebook list rows in the sidebar (parity with .pipeline-list-row entries). */
+.pipeline-panel--notebooks .pipeline-list-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.pipeline-panel--notebooks .pipeline-list-row.is-active .pipeline-list-label {
+  font-weight: 600;
+  background: #cbd5e1;
+}
+.pipeline-panel--notebooks .pipeline-list-label {
+  flex: 1;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: inherit;
+  font-family: inherit;
+}
+.pipeline-panel--notebooks .pipeline-list-label:hover { background: #e2e8f0; }
+.pipeline-panel--notebooks .pipeline-list-delete {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: #94a3b8;
+  font-size: 14px;
+  padding: 0 6px;
+}
+.pipeline-panel--notebooks .pipeline-list-delete:hover { color: #dc2626; }
+
+/* Notebook workspace — fills the main canvas area. */
+.nb-workspace {
   font-family: "Space Grotesk", system-ui, sans-serif;
-  display: flex !important;
+  display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 16px 24px;
+  height: 100%;
+  box-sizing: border-box;
+  overflow-y: auto;
 }
+.nb-workspace[hidden] { display: none; }
 
-.nb-root .nb-toolbar {
+.nb-workspace .nb-toolbar {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 6px 0;
+  z-index: 5;
 }
 
-.nb-root .nb-name-input {
-  flex: 0 1 280px;
+.nb-workspace .nb-name-input {
+  flex: 0 1 320px;
   padding: 6px 10px;
   border: 1px solid rgba(15, 23, 42, 0.15);
   border-radius: 6px;
   font-size: 14px;
 }
 
-.nb-root .nb-kernel-status {
+.nb-workspace .nb-kernel-status {
   margin-left: auto;
   font-size: 13px;
   color: #475569;
 }
+.nb-workspace .nb-kernel-status.nb-busy { color: #2563eb; }
+.nb-workspace .nb-kernel-status.nb-error { color: #dc2626; }
 
-.nb-root .nb-kernel-status.nb-busy { color: #2563eb; }
-.nb-root .nb-kernel-status.nb-error { color: #dc2626; }
-
-.nb-root .nb-body {
-  display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: 16px;
-  align-items: start;
-}
-
-.nb-root .nb-list {
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 8px;
-  background: #f8fafc;
-  padding: 8px;
-  max-height: 540px;
-  overflow-y: auto;
-}
-
-.nb-root .nb-list-item {
-  padding: 6px 10px;
-  cursor: pointer;
-  border-radius: 6px;
-  font-size: 13px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 6px;
-}
-
-.nb-root .nb-list-item:hover { background: #e2e8f0; }
-.nb-root .nb-list-item.nb-selected { background: #cbd5e1; font-weight: 600; }
-
-.nb-root .nb-list-item .nb-list-delete {
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  color: #94a3b8;
-  font-size: 14px;
-  padding: 0 4px;
-}
-.nb-root .nb-list-item .nb-list-delete:hover { color: #dc2626; }
-
-.nb-root .nb-cells {
+.nb-workspace .nb-cells {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.nb-root .nb-cell {
+.nb-workspace .nb-cell {
   border: 1px solid rgba(15, 23, 42, 0.12);
   border-radius: 8px;
   background: #ffffff;
@@ -87,7 +96,7 @@
   overflow: hidden;
 }
 
-.nb-root .nb-cell-header {
+.nb-workspace .nb-cell-header {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -97,7 +106,7 @@
   font-size: 12px;
 }
 
-.nb-root .nb-status-pill {
+.nb-workspace .nb-status-pill {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -108,12 +117,12 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-.nb-root .nb-cell.nb-idle    .nb-status-pill { background: #e2e8f0; color: #475569; }
-.nb-root .nb-cell.nb-running .nb-status-pill { background: #dbeafe; color: #1d4ed8; }
-.nb-root .nb-cell.nb-success .nb-status-pill { background: #dcfce7; color: #166534; }
-.nb-root .nb-cell.nb-error   .nb-status-pill { background: #fee2e2; color: #991b1b; }
+.nb-workspace .nb-cell.nb-idle    .nb-status-pill { background: #e2e8f0; color: #475569; }
+.nb-workspace .nb-cell.nb-running .nb-status-pill { background: #dbeafe; color: #1d4ed8; }
+.nb-workspace .nb-cell.nb-success .nb-status-pill { background: #dcfce7; color: #166534; }
+.nb-workspace .nb-cell.nb-error   .nb-status-pill { background: #fee2e2; color: #991b1b; }
 
-.nb-root .nb-spinner {
+.nb-workspace .nb-spinner {
   width: 10px; height: 10px;
   border: 2px solid currentColor;
   border-right-color: transparent;
@@ -121,22 +130,22 @@
   animation: nb-spin 0.7s linear infinite;
   display: none;
 }
-.nb-root .nb-cell.nb-running .nb-spinner { display: inline-block; }
+.nb-workspace .nb-cell.nb-running .nb-spinner { display: inline-block; }
 @keyframes nb-spin { to { transform: rotate(360deg); } }
 
-.nb-root .nb-drag-handle {
+.nb-workspace .nb-drag-handle {
   cursor: grab;
   color: #94a3b8;
   font-weight: 700;
   user-select: none;
 }
 
-.nb-root .nb-cell-actions {
+.nb-workspace .nb-cell-actions {
   margin-left: auto;
   display: flex;
   gap: 6px;
 }
-.nb-root .nb-cell-actions button {
+.nb-workspace .nb-cell-actions button {
   background: #e2e8f0;
   border: 0;
   border-radius: 4px;
@@ -144,62 +153,62 @@
   cursor: pointer;
   font-size: 12px;
 }
-.nb-root .nb-cell-actions button:hover { background: #cbd5e1; }
-.nb-root .nb-cell-actions .nb-run { background: #2563eb; color: white; }
-.nb-root .nb-cell-actions .nb-run:hover { background: #1d4ed8; }
+.nb-workspace .nb-cell-actions button:hover { background: #cbd5e1; }
+.nb-workspace .nb-cell-actions .nb-run { background: #2563eb; color: white; }
+.nb-workspace .nb-cell-actions .nb-run:hover { background: #1d4ed8; }
 
-.nb-root .nb-cell-editor { padding: 4px 0; }
-.nb-root .nb-cell-editor .CodeMirror {
+.nb-workspace .nb-cell-editor { padding: 4px 0; }
+.nb-workspace .nb-cell-editor .CodeMirror {
   height: auto;
   font-family: ui-monospace, "JetBrains Mono", "Fira Code", monospace;
   font-size: 13px;
 }
 
-.nb-root .nb-cell-output {
+.nb-workspace .nb-cell-output {
   border-top: 1px solid rgba(15, 23, 42, 0.08);
   padding: 8px 12px;
   font-size: 13px;
   background: #fafafa;
 }
-.nb-root .nb-cell-output:empty { display: none; }
-.nb-root .nb-cell-output pre {
+.nb-workspace .nb-cell-output:empty { display: none; }
+.nb-workspace .nb-cell-output pre {
   margin: 0;
   white-space: pre-wrap;
   font-family: ui-monospace, "JetBrains Mono", monospace;
   font-size: 12px;
   line-height: 1.45;
 }
-.nb-root .nb-cell-output pre.nb-stderr { color: #b91c1c; background: #fef2f2; padding: 6px 8px; border-radius: 4px; }
+.nb-workspace .nb-cell-output pre.nb-stderr { color: #b91c1c; background: #fef2f2; padding: 6px 8px; border-radius: 4px; }
 
-.nb-root .nb-df {
+.nb-workspace .nb-df {
   width: 100%;
   border-collapse: collapse;
   font-size: 12px;
   margin-top: 4px;
 }
-.nb-root .nb-df th, .nb-root .nb-df td {
+.nb-workspace .nb-df th, .nb-workspace .nb-df td {
   border: 1px solid rgba(15, 23, 42, 0.1);
   padding: 4px 8px;
   text-align: left;
 }
-.nb-root .nb-df th {
+.nb-workspace .nb-df th {
   background: #f1f5f9;
   position: sticky;
   top: 0;
 }
-.nb-root .nb-df-wrap {
+.nb-workspace .nb-df-wrap {
   max-height: 360px;
   overflow: auto;
   border: 1px solid rgba(15, 23, 42, 0.08);
   border-radius: 4px;
 }
-.nb-root .nb-df-footer {
+.nb-workspace .nb-df-footer {
   font-size: 11px;
   color: #64748b;
   padding-top: 4px;
 }
 
-.nb-root .nb-add-cell {
+.nb-workspace .nb-add-cell {
   align-self: center;
   background: transparent;
   border: 1px dashed rgba(15, 23, 42, 0.25);
@@ -209,4 +218,4 @@
   cursor: pointer;
   font-size: 13px;
 }
-.nb-root .nb-add-cell:hover { background: #f1f5f9; }
+.nb-workspace .nb-add-cell:hover { background: #f1f5f9; }

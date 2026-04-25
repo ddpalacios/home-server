@@ -1,11 +1,11 @@
-/* Notebook tab — single NB namespace, no globals beyond `window.NB`. */
+/* Notebook view — sidebar-driven activity that takes over the main canvas. */
 
 (function () {
   "use strict";
 
   const NB = {
-    initialized: false,
-    current: null,
+    booted: false,
+    current: null,        // { notebook_id, name, cells, dirty }
     list: [],
     inFlight: null,
     runningCellId: null,
@@ -56,46 +56,96 @@
     };
   }
 
-  // ---- list panel ----------------------------------------------------------
+  // ---- layout toggle -------------------------------------------------------
+
+  function showNotebookView() {
+    document.body.classList.add("notebook-mode");
+    const ws = document.getElementById("notebook_workspace");
+    if (ws) ws.hidden = false;
+  }
+
+  function hideNotebookView() {
+    document.body.classList.remove("notebook-mode");
+    const ws = document.getElementById("notebook_workspace");
+    if (ws) ws.hidden = true;
+  }
+
+  // ---- sidebar list --------------------------------------------------------
 
   function refreshList() {
     return fetch("/etl/notebook/list")
       .then(function (r) { return r.json(); })
       .then(function (data) {
         NB.list = (data && data.notebooks) || [];
-        renderList();
+        renderSidebarList();
       })
       .catch(function () { /* ignore */ });
   }
 
-  function renderList() {
-    const root = document.getElementById("nb_list");
+  function renderSidebarList() {
+    const root = document.getElementById("notebookList");
     if (!root) return;
     root.innerHTML = "";
     NB.list.forEach(function (item) {
       const isCurrent = NB.current && NB.current.notebook_id === item.notebook_id;
       const row = el("div", {
-        class: "nb-list-item" + (isCurrent ? " nb-selected" : ""),
-        onclick: function () { loadNotebook(item.notebook_id); },
+        class: "pipeline-list-row" + (isCurrent ? " is-active" : ""),
+        "data-notebook-id": item.notebook_id,
       }, [
-        el("span", { text: item.name || item.notebook_id }),
         el("button", {
-          class: "nb-list-delete",
+          class: "pipeline-list-label",
+          type: "button",
+          onclick: function () { openNotebook(item.notebook_id); },
+        }, [item.name || item.notebook_id]),
+        el("button", {
+          class: "pipeline-list-delete",
+          type: "button",
           title: "Delete",
-          onclick: function (ev) { ev.stopPropagation(); deleteNotebook(item.notebook_id); },
+          onclick: function (ev) {
+            ev.stopPropagation();
+            deleteNotebook(item.notebook_id);
+          },
         }, ["×"]),
       ]);
       root.appendChild(row);
     });
   }
 
-  // ---- save / load ---------------------------------------------------------
+  // ---- save / load / new ---------------------------------------------------
+
+  function newNotebook() {
+    NB.current = newEmptyNotebook();
+    document.getElementById("nb_name").value = NB.current.name;
+    showNotebookView();
+    renderCells();
+    renderSidebarList();
+  }
+
+  function openNotebook(notebook_id) {
+    return fetch("/etl/notebook/load?notebook_id=" + encodeURIComponent(notebook_id))
+      .then(function (r) {
+        if (!r.ok) throw new Error("not found");
+        return r.json();
+      })
+      .then(function (doc) {
+        NB.current = {
+          notebook_id: doc.notebook_id,
+          name: doc.name || "",
+          cells: (doc.cells && doc.cells.length) ? doc.cells : [makeBlankCell()],
+          dirty: false,
+        };
+        document.getElementById("nb_name").value = NB.current.name;
+        showNotebookView();
+        renderCells();
+        renderSidebarList();
+      });
+  }
 
   function saveCurrent() {
     if (!NB.current) return Promise.resolve();
     const payload = {
       notebook_id: NB.current.notebook_id,
-      name: NB.current.name,
+      name: NB.current.name || "Untitled notebook",
       cells: NB.current.cells.map(function (c) {
         return { id: c.id, source: c.source, output: c.output, status: c.status };
       }),
@@ -112,25 +162,6 @@
       });
   }
 
-  function loadNotebook(notebook_id) {
-    return fetch("/etl/notebook/load?notebook_id=" + encodeURIComponent(notebook_id))
-      .then(function (r) {
-        if (!r.ok) throw new Error("not found");
-        return r.json();
-      })
-      .then(function (doc) {
-        NB.current = {
-          notebook_id: doc.notebook_id,
-          name: doc.name || "",
-          cells: (doc.cells && doc.cells.length) ? doc.cells : [makeBlankCell()],
-          dirty: false,
-        };
-        document.getElementById("nb_name").value = NB.current.name;
-        renderCells();
-        renderList();
-      });
-  }
-
   function deleteNotebook(notebook_id) {
     if (!confirm("Delete this notebook?")) return;
     fetch("/etl/notebook/delete", {
@@ -139,9 +170,8 @@
       body: JSON.stringify({ notebook_id: notebook_id }),
     }).then(function () {
       if (NB.current && NB.current.notebook_id === notebook_id) {
-        NB.current = newEmptyNotebook();
-        document.getElementById("nb_name").value = NB.current.name;
-        renderCells();
+        NB.current = null;
+        hideNotebookView();
       }
       return refreshList();
     });
@@ -153,15 +183,14 @@
     const root = document.getElementById("nb_cells");
     if (!root) return;
     root.innerHTML = "";
-    NB.current.cells.forEach(function (cell, idx) {
-      root.appendChild(renderCell(cell, idx));
+    NB.current.cells.forEach(function (cell) {
+      root.appendChild(renderCell(cell));
     });
-    const addBtn = el("button", {
+    root.appendChild(el("button", {
       class: "nb-add-cell",
       type: "button",
       onclick: function () { addCell(NB.current.cells.length); },
-    }, ["+ Add cell"]);
-    root.appendChild(addBtn);
+    }, ["+ Add cell"]));
 
     if (window.jQuery && jQuery.fn.sortable) {
       jQuery(root).sortable({
@@ -181,16 +210,17 @@
     }
   }
 
-  function renderCell(cell, idx) {
+  function renderCell(cell) {
     const wrapper = el("div", {
       class: "nb-cell nb-" + (cell.status || "idle"),
       "data-cell-id": cell.id,
     }, []);
 
     const handle = el("span", { class: "nb-drag-handle", title: "Drag to reorder" }, ["⋮⋮"]);
+    const pillLabel = el("span", { class: "nb-status-label", text: cell.status || "idle" }, []);
     const pill = el("span", { class: "nb-status-pill" }, [
       el("span", { class: "nb-spinner" }, []),
-      el("span", { class: "nb-status-label", text: cell.status || "idle" }, []),
+      pillLabel,
     ]);
     const runBtn = el("button", {
       class: "nb-run", type: "button",
@@ -214,6 +244,11 @@
     wrapper.appendChild(editorHost);
     wrapper.appendChild(output);
 
+    // Store live DOM references on the cell so updates don't depend on querySelector.
+    cell._wrapper = wrapper;
+    cell._outputNode = output;
+    cell._statusLabel = pillLabel;
+
     setTimeout(function () {
       if (typeof CodeMirror === "undefined") return;
       const cm = CodeMirror.fromTextArea(textarea, {
@@ -234,25 +269,21 @@
       cell._cm = cm;
     }, 0);
 
-    if (cell.output) renderOutput(output, cell.output);
+    if (cell.output) renderOutput(cell._outputNode, cell.output);
     return wrapper;
   }
 
-  function setCellStatus(cellId, status) {
-    const cell = NB.current.cells.find(function (c) { return c.id === cellId; });
-    if (!cell) return;
+  function setCellStatus(cell, status) {
     cell.status = status;
-    const node = document.querySelector('[data-cell-id="' + cellId + '"]');
-    if (!node) return;
-    node.classList.remove("nb-idle", "nb-running", "nb-success", "nb-error");
-    node.classList.add("nb-" + status);
-    const label = node.querySelector(".nb-status-label");
-    if (label) label.textContent = status;
+    if (cell._wrapper) {
+      cell._wrapper.classList.remove("nb-idle", "nb-running", "nb-success", "nb-error");
+      cell._wrapper.classList.add("nb-" + status);
+    }
+    if (cell._statusLabel) cell._statusLabel.textContent = status;
   }
 
   function addCell(idx) {
-    const cell = makeBlankCell();
-    NB.current.cells.splice(idx, 0, cell);
+    NB.current.cells.splice(idx, 0, makeBlankCell());
     NB.current.dirty = true;
     renderCells();
   }
@@ -269,9 +300,7 @@
   function focusCell(idx) {
     const target = NB.current.cells[idx];
     if (!target) return;
-    setTimeout(function () {
-      if (target._cm) target._cm.focus();
-    }, 0);
+    setTimeout(function () { if (target._cm) target._cm.focus(); }, 0);
   }
 
   // ---- run + output --------------------------------------------------------
@@ -283,7 +312,7 @@
     if (!code.trim()) return;
     cell.source = code;
 
-    setCellStatus(cellId, "running");
+    setCellStatus(cell, "running");
     setKernelStatus("Running…", "nb-busy");
     NB.runningCellId = cellId;
 
@@ -301,14 +330,15 @@
       signal: ctrl.signal,
     })
       .then(function (r) {
-        if (r.status === 409) return { status: "error", stderr: "Kernel busy", stdout: "", result: { type: "none", value: null } };
+        if (r.status === 409) {
+          return { status: "error", stderr: "Kernel busy", stdout: "", result: { type: "none", value: null } };
+        }
         return r.json();
       })
       .then(function (data) {
         cell.output = data;
-        setCellStatus(cellId, data.status === "success" ? "success" : "error");
-        const node = document.querySelector('[data-cell-id="' + cellId + '"] .nb-cell-output');
-        if (node) renderOutput(node, data);
+        setCellStatus(cell, data.status === "success" ? "success" : "error");
+        if (cell._outputNode) renderOutput(cell._outputNode, data);
         setKernelStatus("Idle");
         NB.inFlight = null;
         NB.runningCellId = null;
@@ -321,10 +351,10 @@
       })
       .catch(function (err) {
         if (err.name === "AbortError") {
-          setCellStatus(cellId, "error");
+          setCellStatus(cell, "error");
           setKernelStatus("Cancelled");
         } else {
-          setCellStatus(cellId, "error");
+          setCellStatus(cell, "error");
           setKernelStatus("Error", "nb-error");
         }
         NB.inFlight = null;
@@ -339,11 +369,11 @@
       node.appendChild(el("pre", { class: "nb-stderr", text: data.stderr }, []));
     }
     if (data.stdout) {
-      node.appendChild(el("pre", { text: data.stdout }, []));
+      node.appendChild(el("pre", { class: "nb-stdout", text: data.stdout }, []));
     }
     const result = data.result || { type: "none" };
     if (result.type === "text" && result.value != null) {
-      node.appendChild(el("pre", { text: result.value }, []));
+      node.appendChild(el("pre", { class: "nb-result", text: result.value }, []));
     } else if (result.type === "dataframe" && result.value) {
       node.appendChild(renderDataFrame(result.value));
     }
@@ -352,20 +382,18 @@
   function renderDataFrame(v) {
     const wrap = el("div", { class: "nb-df-wrap" }, []);
     const table = el("table", { class: "nb-df" }, []);
-    const thead = el("thead", {}, []);
-    const headRow = el("tr", {}, (v.columns || []).map(function (c) {
-      return el("th", { text: String(c) }, []);
-    }));
-    thead.appendChild(headRow);
-    table.appendChild(thead);
-
+    const thead = el("thead", {}, [
+      el("tr", {}, (v.columns || []).map(function (c) {
+        return el("th", { text: String(c) }, []);
+      })),
+    ]);
     const tbody = el("tbody", {}, []);
     (v.rows || []).forEach(function (row) {
-      const tr = el("tr", {}, row.map(function (cell) {
+      tbody.appendChild(el("tr", {}, row.map(function (cell) {
         return el("td", { text: cell == null ? "" : String(cell) }, []);
-      }));
-      tbody.appendChild(tr);
+      })));
     });
+    table.appendChild(thead);
     table.appendChild(tbody);
     wrap.appendChild(table);
 
@@ -374,7 +402,7 @@
     const footer = el("div", { class: "nb-df-footer" }, [
       v.truncated
         ? "Showing " + shown + " of " + total + " rows"
-        : (total + " row" + (total === 1 ? "" : "s"))
+        : (total + " row" + (total === 1 ? "" : "s")),
     ]);
 
     return el("div", {}, [wrap, footer]);
@@ -400,44 +428,54 @@
     }).then(function () { setKernelStatus("Cancelled"); });
   }
 
-  // ---- init ----------------------------------------------------------------
+  // ---- boot ----------------------------------------------------------------
 
-  function init() {
-    if (NB.initialized) return;
-    NB.initialized = true;
+  function boot() {
+    if (NB.booted) return;
+    NB.booted = true;
 
-    NB.current = newEmptyNotebook();
-    document.getElementById("nb_name").value = NB.current.name;
-    document.getElementById("nb_name").addEventListener("input", function (ev) {
-      NB.current.name = ev.target.value;
-      NB.current.dirty = true;
-    });
+    const newBtn = document.getElementById("newNotebookButton");
+    if (newBtn) newBtn.addEventListener("click", newNotebook);
 
-    document.getElementById("nb_new").addEventListener("click", function () {
-      NB.current = newEmptyNotebook();
-      document.getElementById("nb_name").value = NB.current.name;
-      renderCells();
-      renderList();
-    });
+    const nameInput = document.getElementById("nb_name");
+    if (nameInput) {
+      nameInput.addEventListener("input", function (ev) {
+        if (NB.current) {
+          NB.current.name = ev.target.value;
+          NB.current.dirty = true;
+        }
+      });
+    }
 
-    document.getElementById("nb_save").addEventListener("click", function () {
+    const saveBtn = document.getElementById("nb_save");
+    if (saveBtn) saveBtn.addEventListener("click", function () {
       saveCurrent().then(function () { setKernelStatus("Saved"); });
     });
 
-    document.getElementById("nb_restart").addEventListener("click", restartKernel);
-    document.getElementById("nb_kill").addEventListener("click", killCell);
+    const restartBtn = document.getElementById("nb_restart");
+    if (restartBtn) restartBtn.addEventListener("click", restartKernel);
 
-    renderCells();
+    const killBtn = document.getElementById("nb_kill");
+    if (killBtn) killBtn.addEventListener("click", killCell);
+
     refreshList();
   }
 
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+
   window.NB = {
-    init: init,
+    newNotebook: newNotebook,
+    openNotebook: openNotebook,
+    saveCurrent: saveCurrent,
+    deleteNotebook: deleteNotebook,
+    showNotebookView: showNotebookView,
+    hideNotebookView: hideNotebookView,
     runCell: runCell,
     addCell: addCell,
-    deleteCell: deleteCell,
-    saveCurrent: saveCurrent,
-    loadNotebook: loadNotebook,
     restartKernel: restartKernel,
     killCell: killCell,
     _internal: { NB: NB },

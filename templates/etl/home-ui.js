@@ -21,9 +21,6 @@ function switchTabPanel(evt, cityName) {
   if (cityName === "test_runs") {
     refreshTestRuns();
   }
-  if (cityName === "tab_notebook" && window.NB && typeof window.NB.init === "function") {
-    window.NB.init();
-  }
 }
 
 var cachedTriggers = [];
@@ -819,6 +816,9 @@ function setCurrentPipelineId(value) {
 function setActivePipelineType(type) {
   if (type !== "dataflow" && type !== "pipeline") {
     return;
+  }
+  if (window.NB && typeof window.NB.hideNotebookView === "function") {
+    window.NB.hideNotebookView();
   }
   activePipelineType = type;
   try {

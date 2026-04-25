@@ -61,6 +61,12 @@
             </button>
             <div id="savedPipelineList" class="pipeline-list"></div>
         </div>
+        <div class="pipeline-panel pipeline-panel--notebooks">
+            <button id="newNotebookButton" class="pipeline-new-button" type="button">
+              + New Notebook
+            </button>
+            <div id="notebookList" class="pipeline-list"></div>
+        </div>
         <details id="savedTriggersGroup" class="activity-group saved-triggers-group" open>
             <summary>Saved Triggers</summary>
             <div class="activity-group-content">
@@ -162,6 +168,16 @@
 
 					</div>
 	      </div> 
+      <div id="notebook_workspace" class="nb-workspace" hidden>
+        <div class="nb-toolbar">
+          <input id="nb_name" type="text" placeholder="Untitled notebook" class="nb-name-input">
+          <button id="nb_save" class="buttons" type="button">Save</button>
+          <button id="nb_restart" class="buttons" type="button">Restart Kernel</button>
+          <button id="nb_kill" class="buttons" type="button">Kill Cell</button>
+          <span id="nb_kernel_status" class="nb-kernel-status">Idle</span>
+        </div>
+        <div class="nb-cells" id="nb_cells"></div>
+      </div>
     </div>
 
     <div class="zoom-controls">
@@ -180,7 +196,6 @@
 				<button class="tablinks" id="tabActivities" onclick="switchTabPanel(event, 'tab_activities')">Activities</button>
 				<button class="tablinks" id="tabScheduledTriggers" onclick="switchTabPanel(event, 'scheduled_triggers')">Scheduled Triggers</button>
 				<button class="tablinks" id="tabTestRuns" onclick="switchTabPanel(event, 'test_runs')">Test Runs</button>
-				<button class="tablinks" id="tabNotebook" onclick="switchTabPanel(event, 'tab_notebook')">Notebook</button>
 				</div>
 				
 
@@ -266,20 +281,6 @@
 					<div id="test_runs_empty" class="scheduled-triggers__empty">Select a pipeline to see run history.</div>
 					<div class="table-responsive">
 						<div id="test_runs_table"></div>
-					</div>
-				</div>
-				<div id="tab_notebook" class="tabcontent nb-root">
-					<div class="nb-toolbar">
-						<button id="nb_new" class="buttons" type="button">+ New</button>
-						<input id="nb_name" type="text" placeholder="Untitled notebook" class="nb-name-input">
-						<button id="nb_save" class="buttons" type="button">Save</button>
-						<button id="nb_restart" class="buttons" type="button">Restart Kernel</button>
-						<button id="nb_kill" class="buttons" type="button">Kill Cell</button>
-						<span id="nb_kernel_status" class="nb-kernel-status">Idle</span>
-					</div>
-					<div class="nb-body">
-						<div class="nb-list" id="nb_list"></div>
-						<div class="nb-cells" id="nb_cells"></div>
 					</div>
 				</div>
     </div>
