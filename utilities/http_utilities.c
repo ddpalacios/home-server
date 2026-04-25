@@ -646,8 +646,68 @@ void send_JSON_response_code( SSL *cSSL,int code, char* json){
 					"\r\n", json_length);
 			SSL_write(cSSL, http_header, strlen(http_header));
 			SSL_write(cSSL,json,json_length);
+		}else if (code == 500) {
+			snprintf(http_header, sizeof(http_header),
+					"HTTP/1.1 500 Internal Server Error\r\n"
+					"Content-Type: application/json\r\n"
+					"Connection: close\r\n"
+					"Content-Length: %d\r\n"
+					"\r\n", json_length);
+			SSL_write(cSSL, http_header, strlen(http_header));
+			SSL_write(cSSL,json,json_length);
+		}else if (code == 502) {
+			snprintf(http_header, sizeof(http_header),
+					"HTTP/1.1 502 Bad Gateway\r\n"
+					"Content-Type: application/json\r\n"
+					"Connection: close\r\n"
+					"Content-Length: %d\r\n"
+					"\r\n", json_length);
+			SSL_write(cSSL, http_header, strlen(http_header));
+			SSL_write(cSSL,json,json_length);
+		}else if (code == 503) {
+			snprintf(http_header, sizeof(http_header),
+					"HTTP/1.1 503 Service Unavailable\r\n"
+					"Content-Type: application/json\r\n"
+					"Connection: close\r\n"
+					"Content-Length: %d\r\n"
+					"\r\n", json_length);
+			SSL_write(cSSL, http_header, strlen(http_header));
+			SSL_write(cSSL,json,json_length);
 		}
 
+}
+
+/* send_proxy_response — write an upstream HTTP response straight to the client,
+   preserving the upstream status code, content-type, and Set-Cookie headers.
+   `set_cookie` may be NULL. `body` may be NULL/empty. */
+void send_proxy_response(SSL *cSSL, int code, const char *status_text,
+                         const char *content_type, const char *set_cookie,
+                         const char *body, size_t body_len) {
+    char http_header[4096];
+    int n;
+    const char *st = status_text ? status_text : "OK";
+    const char *ct = content_type ? content_type : "application/json";
+    if (set_cookie && *set_cookie) {
+        n = snprintf(http_header, sizeof(http_header),
+                     "HTTP/1.1 %d %s\r\n"
+                     "Content-Type: %s\r\n"
+                     "Set-Cookie: %s\r\n"
+                     "Connection: close\r\n"
+                     "Content-Length: %zu\r\n"
+                     "\r\n", code, st, ct, set_cookie, body_len);
+    } else {
+        n = snprintf(http_header, sizeof(http_header),
+                     "HTTP/1.1 %d %s\r\n"
+                     "Content-Type: %s\r\n"
+                     "Connection: close\r\n"
+                     "Content-Length: %zu\r\n"
+                     "\r\n", code, st, ct, body_len);
+    }
+    if (n <= 0) return;
+    SSL_write(cSSL, http_header, strlen(http_header));
+    if (body && body_len > 0) {
+        SSL_write(cSSL, body, body_len);
+    }
 }
 
 

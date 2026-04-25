@@ -30,7 +30,6 @@ class Filter_Activity extends Activity{
         return settings
     }
     _on_input_change(e, widget,activity){
-        console.log(e.target.value)
         this.get_operation_settings()
 
     }
@@ -173,7 +172,6 @@ class Filter_Activity extends Activity{
             }
     }
     _on_selector_change(e, widget,activity){
-        console.log(e.target.value)
         let value = e.target.value
         let parent_element = e.target.parentElement
         let target_element = e.target

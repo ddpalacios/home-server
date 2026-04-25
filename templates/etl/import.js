@@ -303,7 +303,6 @@ class Import_Activity extends Activity{
             name  = selected_column + "_" + total_dupes.toString()
             total_dupes += 1
         }
-        console.log(name);
         event.target.parentElement.children[1].value =  name
         this.get_operation_settings()
     }

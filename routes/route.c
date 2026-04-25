@@ -482,6 +482,10 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		post_to_local(socket,http_header,body, route);
 	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/sparkclient/stream/start")==0){
 		post_to_local(socket,http_header,body, route);
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/sparkclient/stream/restart")==0){
+		post_to_local(socket,http_header,body, route);
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/sparkclient/process")==0){
+		post_to_local(socket,http_header,body, route);
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/etl/sparkclient/stream/execute/result")!=NULL){
 		get_from_local(socket,http_header,body, route);
 	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/google/login")==0){

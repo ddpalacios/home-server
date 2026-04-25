@@ -25,7 +25,6 @@ class Group_Activity extends Activity{
             columns_div.id = this.activityId+ "_column_edit"
             settings_div.appendChild(columns_div)
         }
-        console.log("GROUPNG", activity)
         if (Array.isArray( activity.activity.inputs.input.value.values)){
             all_columns = Object.keys(activity.activity.inputs.input.value.values[0])
         }else{
