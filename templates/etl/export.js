@@ -38,7 +38,6 @@ jsonToCsv(jsonData) {
 
 
      export_data(data){
-        console.log(data)
         data = this.jsonToCsv(data)
         const blob = new Blob([data], { type: 'text/csv' });
         // Create a URL for the Blob

@@ -66,7 +66,6 @@ export const panzoom = (selector, options={}) => {
 		
 		/* Incomplete conditionals
 		if(bound=="inner" && (elem.offsetX<0 || elem.offsetX+width>elem.parentNode.offsetWidth )) { //|| y<py || y>py-bheight)) {
-			console.log(x,px, px-bwidth, y, py, bheight);
 			console.error("panzoom() id:"+elem.id+" error: In the 'inner' mode, element positioning must not be out of its container");
 			return false;
 		}		

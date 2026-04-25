@@ -27,7 +27,6 @@ class DataFlow_Activity extends Activity {
         option.value = item.pipeline_id || "";
         option.textContent = item.pipeline_name || item.pipeline_id || "Untitled Dataflow";
         if (selectedId && item.pipeline_id === selectedId) {
-            console.log("Selecting dataflow:", item.pipeline_id);
             option.selected = true;
         }
         return option;

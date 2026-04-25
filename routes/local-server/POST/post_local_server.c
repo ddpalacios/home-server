@@ -104,6 +104,10 @@ int connect_to_local_server(const char* host, const char* port){
 		}
 		connected = connect(sfd, addr->ai_addr, addr->ai_addrlen);
 		if (connected == 0){
+			struct timeval rto = {120, 0}; /* 120s recv timeout for long previews/runs */
+			struct timeval sto = {10, 0};  /* 10s send timeout */
+			setsockopt(sfd, SOL_SOCKET, SO_RCVTIMEO, &rto, sizeof(rto));
+			setsockopt(sfd, SOL_SOCKET, SO_SNDTIMEO, &sto, sizeof(sto));
 			printf("Successfully connected to '%s'\n", host);
 			break;
 		}

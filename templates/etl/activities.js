@@ -32,7 +32,6 @@ class Settings{
     }
     _add_custom_value(e, widget, activity){
         let parent_element = e.target.parentElement;
-        console.log(e.target.value)
         widget.flowchart('addCustomValue', activity.activityId, parent_element.id, e.target.value)
 
     }
@@ -98,12 +97,10 @@ class Settings{
     }
     _on_selector_change(e, widget,activity){
         let parent_element = e.target.parentElement;
-        console.log(e.target.value)
         // widget.flowchart('changeDataTypeSelectColumn', activity.activityId, parent_element.id, e.target.value)
     }
     _on_input_change(e, widget,activity){
         let parent_element = e.target.parentElement;
-        console.log(e.target.value)
         // widget.flowchart('renameSelectColumn', activity.activityId, parent_element.id, e.target.value)
     }
     _on_column_select(e, widget, activity){
@@ -126,7 +123,6 @@ class Settings{
         }
 
         let datatypes = widget.flowchart('getOperatorActivity', activity.activityId).settings.datatypes;
-        console.log("Looking for", selected_column, 'in', datatypes)
         let datatype = datatypes[selected_column]
 
 
@@ -134,7 +130,6 @@ class Settings{
           e.target.parentElement.children[1].value =  datatype
           let select_val = {'select': selected_column, 'as': name, 'datatype': datatype, 'id':e.target.parentElement.id }
           widget.flowchart('addSelectColumn', activity.activityId, select_val)
-          console.log(widget.flowchart('getOperatorActivity', activity.activityId))
     }
     _update_activity(e, widget, activity){
         // console.log("UPDATIN INPUTS", activity)
@@ -611,7 +606,6 @@ class Settings{
         }
 
     }
-    console.log("STATEMENTS", statements)
     let normalized_statements = statements
     if (type == 'select') {
         normalized_statements = statements.map(statement => {
@@ -936,16 +930,13 @@ function add_import_activity_settings(widget, activity, outputVal){
             if (activity.inputs.input.value == null){return}
             let expanded_input_values = expand_struct(activity.inputs.input.value)
             let all_available_columns = Object.keys(expanded_input_values)
-            console.log("All columns", all_available_columns)
             let expanded_output_values = expand_struct(activity.outputs.output.value)
             let all_visible_columns = Object.keys(expanded_output_values)
-            console.log("Visible columns",all_visible_columns )
             for (let i =0; i<all_available_columns.length; i++){
                 let original_column = all_available_columns[i]
                 if (!all_visible_columns.includes(original_column)){
                     let data_type = typeof expanded_input_values[original_column]
                     let record = {'operatorId':activity.operatorId,'columnName': original_column, 'dataType': data_type,'updatedName': original_column}
-                    console.log("Adding New column", record)
                     settings_create_column_edit_record(widget,all_available_columns,record)
                     activity.outputs.output.value[original_column] = expanded_input_values[original_column]
                     widget.flowchart('setoutputVal', operatorId,'output',JSON.parse(JSON.stringify(activity.outputs.output.value)))
@@ -991,7 +982,6 @@ function add_import_activity_settings(widget, activity, outputVal){
             }
 
             settings_json['fileName'] =  file.name
-            console.log("Object", obj)
             settings_div.setAttribute('settings_json', JSON.stringify(settings_json))
             document.querySelectorAll('.rename_settings').forEach(el => el.remove());
             document.querySelectorAll('p').forEach(el => el.remove());
@@ -999,10 +989,8 @@ function add_import_activity_settings(widget, activity, outputVal){
             file_name_element.innerHTML = settings_json['fileName']
             settings_div.appendChild(file_name_element)
             let expanded_obj = expand_struct(obj)
-            console.log("Expanded Object", expanded_obj)
 
             Object.keys(expanded_obj).forEach(key => {
-                console.log(key)
                 let record = {'operatorId':operatorId,'columnName': key, 'dataType': typeof expanded_obj[key],'updatedName': key}
                 settings_create_column_edit_record(widget,Object.keys(expanded_obj),record)
                 settings_div.setAttribute('settings_json', JSON.stringify(settings_json))
@@ -1062,7 +1050,6 @@ function add_import_activity_settings(widget, activity, outputVal){
 function settings_create_column_edit_record(widget,original_columns,new_record){
 
         if (Object.keys(new_record).length <=1){
-                console.log("Returning..")
                 return;
             }
         let operatorId = new_record.operatorId
@@ -1103,14 +1090,12 @@ function settings_create_column_edit_record(widget,original_columns,new_record){
                 const operatorId = this.getAttribute('operatorId')
                 let target_column = this.getAttribute('target_columnName');
                 const parent = this.parentElement;
-                console.log('Parent element:', parent, target_column, operatorId);
                 parent.remove();
 
 
 
                 let activity = widget.flowchart('getOperatorActivity', operatorId)
                 let outputVal = activity.outputs.output.value
-                console.log("Deleting", outputVal, target_column)
                 delete outputVal[target_column];
                 widget.flowchart('setoutputVal', operatorId,'output',JSON.parse(JSON.stringify(expand_struct(outputVal))))
                 // widget.flowchart('update_activity_inputs', operatorId)
@@ -1170,7 +1155,6 @@ function onLinkCreation(widget,linkData){
             }
 
 
-        console.log("Setting input and output", outputVal)
         widget.setinputVal(linkData['toOperator'],'input', outputVal)
         widget.setoutputVal(linkData['toOperator'],'output', outputVal)
     }

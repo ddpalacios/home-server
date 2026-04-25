@@ -433,14 +433,12 @@ async function run_activity_flow(activity, widget, data){
         ,'operations': activity.settings
             ,'data':data
         }
-        console.log("SENDING BODY", body)
     }else{
         body = {
             'activity_type' : activity_type
             ,'operations': activity.settings
             ,'data': activity.inputs.input.value.values
         }
-        console.log("SENDING BODY", body)
 
     }
     if (body == undefined){return}
@@ -484,7 +482,6 @@ async function run_activity_flow(activity, widget, data){
 
 async function get_ordered_nodes(widget, targetIds){
     let all_dependecies = widget.flowchart("getDependencies");
-    console.log("dependencies", all_dependecies);
     let dependencies = {}
     let target_ids = []
     // let operators = widget.flowchart('getOperators')
@@ -536,7 +533,6 @@ async function post_ordered_activities(activities, preview = false, meta){
     if (meta && typeof meta === "object") {
         body.test_run_meta = meta
     }
-    console.log("Posting activities:", body)
     var request = new Request('/etl/run/', {
                                 method: 'POST',
                                 headers: new Headers({
@@ -593,7 +589,6 @@ async function execute_activity(widget,activityid){
                 dependencies[key] = {'tableName':key,"dependencies":d, 'query': {}, 'activityType':activity.activityType}
             });
         let data = await get_ordered_nodes(widget, [activityid])
-        console.log("ORDERED", data)
 
 
         // for (const node of data['ordered_nodes']) {
