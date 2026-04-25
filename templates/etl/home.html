@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/eclipse.min.css">
 <link rel="stylesheet" href="/etl/home.css">
+<link rel="stylesheet" href="/etl/notebook.css">
 <meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -21,6 +22,7 @@
 	<script src="/etl/jquery.flowchart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
 	</head>
@@ -178,6 +180,7 @@
 				<button class="tablinks" id="tabActivities" onclick="switchTabPanel(event, 'tab_activities')">Activities</button>
 				<button class="tablinks" id="tabScheduledTriggers" onclick="switchTabPanel(event, 'scheduled_triggers')">Scheduled Triggers</button>
 				<button class="tablinks" id="tabTestRuns" onclick="switchTabPanel(event, 'test_runs')">Test Runs</button>
+				<button class="tablinks" id="tabNotebook" onclick="switchTabPanel(event, 'tab_notebook')">Notebook</button>
 				</div>
 				
 
@@ -263,6 +266,20 @@
 					<div id="test_runs_empty" class="scheduled-triggers__empty">Select a pipeline to see run history.</div>
 					<div class="table-responsive">
 						<div id="test_runs_table"></div>
+					</div>
+				</div>
+				<div id="tab_notebook" class="tabcontent nb-root">
+					<div class="nb-toolbar">
+						<button id="nb_new" class="buttons" type="button">+ New</button>
+						<input id="nb_name" type="text" placeholder="Untitled notebook" class="nb-name-input">
+						<button id="nb_save" class="buttons" type="button">Save</button>
+						<button id="nb_restart" class="buttons" type="button">Restart Kernel</button>
+						<button id="nb_kill" class="buttons" type="button">Kill Cell</button>
+						<span id="nb_kernel_status" class="nb-kernel-status">Idle</span>
+					</div>
+					<div class="nb-body">
+						<div class="nb-list" id="nb_list"></div>
+						<div class="nb-cells" id="nb_cells"></div>
 					</div>
 				</div>
     </div>
@@ -386,5 +403,6 @@
     };
   </script>
   <script src="/etl/home-ui.js" defer></script>
+  <script src="/etl/notebook.js" defer></script>
   </body>
 </html>

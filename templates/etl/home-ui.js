@@ -21,6 +21,9 @@ function switchTabPanel(evt, cityName) {
   if (cityName === "test_runs") {
     refreshTestRuns();
   }
+  if (cityName === "tab_notebook" && window.NB && typeof window.NB.init === "function") {
+    window.NB.init();
+  }
 }
 
 var cachedTriggers = [];
