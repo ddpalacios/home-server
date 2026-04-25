@@ -7,6 +7,7 @@ int get_session_token_max_age_in_seconds();
 int get_refresh_token_max_age_in_seconds();
 void send_html_response_code(SSL* cSSL,int code, int content_length);
 void send_css_response_code(SSL* cSSL,int code, int content_length);
+void send_javascript_response_code(SSL* cSSL,int code, int content_length);
 void send_video_response_code(SSL* cSSL,int code, int content_length);
 void send_image_response_code(SSL* cSSL,int code, int content_length);
 void send_pdf_response_code(SSL* cSSL,int code, int content_length);

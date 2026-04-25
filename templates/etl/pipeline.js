@@ -6,7 +6,7 @@ class Pipeline_Activity extends Activity {
         this.settings = this.get_settings_element();
     }
 
-    _get_dataflows() {
+    _get_pipelines() {
         if (typeof window.getAvailablePipelines === "function") {
             return window.getAvailablePipelines() || [];
         }
@@ -41,7 +41,7 @@ class Pipeline_Activity extends Activity {
     }
 
     _populate_select(select) {
-        const pipelines = this._get_dataflows();
+        const pipelines = this._get_pipelines();
         const selectedId = this._get_saved_id();
         select.innerHTML = "";
 
@@ -163,7 +163,7 @@ class Pipeline_Activity extends Activity {
 
     get_operation_settings() {
         const select = document.getElementById(this.activityId + "_pipeline_select");
-        const pipelines = this._get_dataflows();
+        const pipelines = this._get_pipelines();
         const selectedId = select ? select.value : "";
         let selectedName = "";
         pipelines.some(function(item) {
