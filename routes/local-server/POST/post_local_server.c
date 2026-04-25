@@ -1,5 +1,6 @@
 
 #include <openssl/ssl.h>
+#include <cjson/cJSON.h>
 #include "json_utilities.h"
 #include <string.h>
 #include "send_message.h"
@@ -9,25 +10,31 @@
 #include "http_utilities.h"
 #include "session.h"
 #include "Socket.h"
-#include "json_utilities.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
-#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <unistd.h>
 #define IPSTRLEN INET6_ADDRSTRLEN
+
+#define LOCAL_SERVER_HOST "127.0.0.1"
+#define LOCAL_SERVER_PORT "5000"
+
 int connect_to_local_server(const char* host, const char* port){
 	struct addrinfo hints;
- 	struct addrinfo *addrs_res;
- 	memset(&hints, 0, sizeof(hints));
- 	char ipstr[IPSTRLEN];
- 	hints.ai_family = AF_INET;
- 	hints.ai_socktype = SOCK_STREAM;
- 	hints.ai_protocol = IPPROTO_TCP;
- 	const int status = getaddrinfo(host, port, &hints, &addrs_res);
- 	int sfd, connected;
- 	for (struct addrinfo *addr = addrs_res; addr != NULL; addr = addr->ai_next){
+	struct addrinfo *addrs_res = NULL;
+	memset(&hints, 0, sizeof(hints));
+	char ipstr[IPSTRLEN];
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
+	const int status = getaddrinfo(host, port, &hints, &addrs_res);
+	if (status != 0 || addrs_res == NULL){
+		printf("getaddrinfo failed for host '%s': %s\n", host, gai_strerror(status));
+		return -1;
+	}
+	int sfd = -1;
+	for (struct addrinfo *addr = addrs_res; addr != NULL; addr = addr->ai_next){
 		if (addr->ai_family == AF_INET) {
 			struct sockaddr_in *ipv4 = (struct sockaddr_in *)addr->ai_addr;
 			void *addr4 = &(ipv4->sin_addr);
@@ -39,33 +46,46 @@ int connect_to_local_server(const char* host, const char* port){
 		}
 		sfd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
 		if (sfd < 0){
-			printf("Error connecting to socket with host: '%s' at '%s'\n", host, ipstr);
-			break;
+			printf("Error opening socket for host: '%s' at '%s'\n", host, ipstr);
+			continue;
 		}
-		connected = connect(sfd, addr->ai_addr, addr->ai_addrlen);
-		if (connected == 0){
+		if (connect(sfd, addr->ai_addr, addr->ai_addrlen) == 0){
 			printf("Successfully connected to '%s'\n", host);
-			break;
-		}else{
-			printf("Error connecting to host: '%s' at '%s'\n",host, ipstr);
-			break;
+			freeaddrinfo(addrs_res);
+			return sfd;
 		}
+		printf("Error connecting to host: '%s' at '%s'\n", host, ipstr);
+		close(sfd);
+		sfd = -1;
 	}
-	freeaddrinfo(addrs_res); 
- 	if (sfd>=0 && connected==0){
-        return sfd;
- 	}
- }
+	freeaddrinfo(addrs_res);
+	return -1;
+}
+
+/* Returns 1 if the JSON body has "preview": true, 0 otherwise. Tolerates parse errors. */
+static int body_has_preview_true(const char* body){
+	if (!body || !*body) return 0;
+	cJSON *root = cJSON_Parse(body);
+	if (!root) return 0;
+	cJSON *preview = cJSON_GetObjectItem(root, "preview");
+	int is_preview = (preview && cJSON_IsTrue(preview)) ? 1 : 0;
+	cJSON_Delete(root);
+	return is_preview;
+}
 
 void post_ctabustracker_getpredictions(struct Socket* socket,char* http_header, char*body, char* route){
-    int sfd  = connect_to_local_server("127.0.0.1", "5000");
+    int sfd  = connect_to_local_server(LOCAL_SERVER_HOST, LOCAL_SERVER_PORT);
+    if (sfd < 0) {
+        printf("post_ctabustracker_getpredictions: failed to connect to local server\n");
+        return;
+    }
     char request[2048];
-    snprintf(request, sizeof(request), 
+    snprintf(request, sizeof(request),
             "POST /CTA/ctabustracker/getpredictions/run HTTP/1.1\r\n"
             "Host: %s:%s\r\n"
             "Connection: close\r\n"
             "\r\n",
-            "127.0.0.1","5000");
+            LOCAL_SERVER_HOST, LOCAL_SERVER_PORT);
     send(sfd,request, strlen(request),0);
     close(sfd);
 
@@ -73,30 +93,46 @@ void post_ctabustracker_getpredictions(struct Socket* socket,char* http_header, 
  }
 
 void post_generate_phrase(struct Socket* socket,char* http_header, char*body, char* route){
-    int sfd  = connect_to_local_server("127.0.0.1", "5000");
-    char request[2048];
-	snprintf(request, sizeof(request),
-		"POST /phrase-matching/generate HTTP/1.1\r\n"
-		"Host: %s:%s\r\n"
-		"Content-Type: application/json\r\n"
-		"Content-Length: %zu\r\n"
-		"Connection: close\r\n"
-		"\r\n"
-		"%s",
-		"127.0.0.1", "5000", strlen(body), body);
-	printf("Request %s\n", request);
+    int sfd  = connect_to_local_server(LOCAL_SERVER_HOST, LOCAL_SERVER_PORT);
+    if (sfd < 0) {
+        printf("post_generate_phrase: failed to connect to local server\n");
+        return;
+    }
+    const char *safe_body = body ? body : "";
+    size_t req_size = strlen(safe_body) + 2048;
+    char *request = malloc(req_size);
+    if (!request) {
+        perror("malloc failed");
+        close(sfd);
+        return;
+    }
+    snprintf(request, req_size,
+        "POST /phrase-matching/generate HTTP/1.1\r\n"
+        "Host: %s:%s\r\n"
+        "Content-Type: application/json\r\n"
+        "Content-Length: %zu\r\n"
+        "Connection: close\r\n"
+        "\r\n"
+        "%s",
+        LOCAL_SERVER_HOST, LOCAL_SERVER_PORT, strlen(safe_body), safe_body);
     send(sfd,request, strlen(request),0);
+    free(request);
     close(sfd);
  }
 
  
 void post_to_local(struct Socket* socket,char* http_header, char*body, char* route){
-	int sfd  = connect_to_local_server("127.0.0.1", "5000");
+	int sfd  = connect_to_local_server(LOCAL_SERVER_HOST, LOCAL_SERVER_PORT);
+	if (sfd < 0) {
+		printf("post_to_local: failed to connect to local server\n");
+		return;
+	}
 	const char *safe_body = body ? body : "";
 	size_t req_size = strlen(safe_body) + 2048;
 	char *request = malloc(req_size);
 	if (!request) {
 		perror("malloc failed");
+		close(sfd);
 		return;
 	}
 
@@ -109,8 +145,8 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, char* rou
 		"\r\n"
 		"%s",
 		route,
-		"127.0.0.1", "5001", strlen(safe_body), safe_body);
-	
+		LOCAL_SERVER_HOST, LOCAL_SERVER_PORT, strlen(safe_body), safe_body);
+
 	send(sfd, request, strlen(request), 0);
 	free(request);
 	char buf[8192]; 
@@ -158,7 +194,7 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, char* rou
  }
 
 void post_to_local_no_reply(const char* route, const char* body){
-	int sfd  = connect_to_local_server("127.0.0.1", "5000");
+	int sfd  = connect_to_local_server(LOCAL_SERVER_HOST, LOCAL_SERVER_PORT);
 	if (sfd < 0) {
 		return;
 	}
@@ -180,18 +216,23 @@ void post_to_local_no_reply(const char* route, const char* body){
 		"\r\n"
 		"%s",
 		route,
-		"127.0.0.1", "5000", strlen(safe_body), safe_body);
+		LOCAL_SERVER_HOST, LOCAL_SERVER_PORT, strlen(safe_body), safe_body);
 	send(sfd, request, strlen(request), 0);
 	free(request);
 	close(sfd);
 }
 
  void get_from_local(struct Socket* socket,char* http_header, char*body, char* route){
-	int sfd  = connect_to_local_server("127.0.0.1", "5000");
+	int sfd  = connect_to_local_server(LOCAL_SERVER_HOST, LOCAL_SERVER_PORT);
+	if (sfd < 0) {
+		printf("get_from_local: failed to connect to local server\n");
+		return;
+	}
 	size_t req_size = strlen(route) + 512;
 	char *request = malloc(req_size);
 	if (!request) {
 		perror("malloc failed");
+		close(sfd);
 		return;
 	}
 
@@ -201,7 +242,7 @@ void post_to_local_no_reply(const char* route, const char* body){
 		"Connection: close\r\n"
 		"\r\n",
 		route,
-		"127.0.0.1", "5000");
+		LOCAL_SERVER_HOST, LOCAL_SERVER_PORT);
 	
 	send(sfd, request, strlen(request), 0);
 	free(request);
@@ -340,11 +381,17 @@ void post_to_local_no_reply(const char* route, const char* body){
 //  }
 
 void post_run_activity(struct Socket* socket,char* http_header, char*body, char* route){
-	int sfd  = connect_to_local_server("127.0.0.1", "5000");
-	size_t req_size = strlen(body) + 2048;
+	int sfd  = connect_to_local_server(LOCAL_SERVER_HOST, LOCAL_SERVER_PORT);
+	if (sfd < 0) {
+		printf("post_run_activity: failed to connect to local server\n");
+		return;
+	}
+	const char *safe_body = body ? body : "";
+	size_t req_size = strlen(safe_body) + 2048;
 	char *request = malloc(req_size);
 	if (!request) {
 		perror("malloc failed");
+		close(sfd);
 		return;
 	}
 
@@ -357,13 +404,15 @@ void post_run_activity(struct Socket* socket,char* http_header, char*body, char*
 		"\r\n"
 		"%s",
 		route,
-		"127.0.0.1", "5000", strlen(body), body);
-	
+		LOCAL_SERVER_HOST, LOCAL_SERVER_PORT, strlen(safe_body), safe_body);
+
 	send(sfd, request, strlen(request), 0);
 	free(request);
 
-	/* If this is a non-preview /etl/run call, return immediately to avoid blocking the UI. */
-	if (strstr(route, "/etl/run") != NULL && strstr(body, "\"preview\":true") == NULL) {
+	/* For non-preview /etl/run/ calls, return 200 immediately so the UI doesn't block on
+	 * long Spark jobs. The client polls /etl/pipeline/runs for status. */
+	int is_etl_run = (strcmp(route, "/etl/run/") == 0) || (strcmp(route, "/etl/run") == 0);
+	if (is_etl_run && !body_has_preview_true(safe_body)) {
 		char response_body[] = "{\"status\":\"accepted\"}";
 		send_JSON_response_code(socket->cSSL, 200, response_body);
 		close(sfd);
