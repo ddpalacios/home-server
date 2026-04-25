@@ -5681,6 +5681,11 @@ $(document).ready(function() {
     if (button.classList.contains("is-running")) {
       return;
     }
+    let activites = $flowchart.flowchart("getOperators");
+    if (!activites || Object.keys(activites).length === 0) {
+      alert("Add at least one activity to the canvas before running.");
+      return;
+    }
 
     button.classList.add("is-running");
     button.setAttribute("aria-label", "Stop pipeline");
@@ -5691,12 +5696,8 @@ $(document).ready(function() {
       triggerButton.setAttribute("aria-disabled", "true");
     }
     try {
-      let activites = $flowchart.flowchart("getOperators");
-      console.log(activites)
       let data = await get_ordered_nodes($flowchart);
-      console.log("ORDERED", data)
       const activities = build_ordered_activities_payload($flowchart, data);
-      console.log("ACTIVITIES", activities)
       const validation_errors = validate_pipeline_activities(activities);
       if (validation_errors.length > 0) {
         alert("Pipeline has an error. Check activity settings.")
@@ -5898,6 +5899,11 @@ $(document).ready(function() {
     });
     closeTargets.forEach(function(target) {
       target.addEventListener("click", closeModal);
+    });
+    document.addEventListener("keydown", function(event) {
+      if (event.key === "Escape" && modal.classList.contains("is-open")) {
+        closeModal();
+      }
     });
     if (recurrenceUnit) {
       recurrenceUnit.addEventListener("change", updateWeekdays);
@@ -7297,7 +7303,13 @@ $(document).ready(function() {
   $("#get_data").click(Flow2Text);
 
   function Text2Flow() {
-    var data = JSON.parse($("#flowchart_data").val());
+    var raw = $("#flowchart_data").val();
+    if (!raw) return;
+    var data;
+    try { data = JSON.parse(raw); } catch (e) {
+      console.warn("Text2Flow: invalid JSON", e);
+      return;
+    }
     $flowchart.flowchart("setData", data);
   }
   $("#set_data").click(Text2Flow);
@@ -7308,14 +7320,19 @@ $(document).ready(function() {
       return;
     }
     Flow2Text();
-    localStorage.setItem("stgLocalFlowChart", $("#flowchart_data").val());
+    var raw = $("#flowchart_data").val();
+    if (raw) localStorage.setItem("stgLocalFlowChart", raw);
   }
   $("#save_local").click(SaveToLocalStorage);
 
   function LoadFromLocalStorage() {
-    let user = sessionStorage.getItem("user_json");
-    user = JSON.parse(user);
+    let raw = sessionStorage.getItem("user_json");
+    if (!raw) return;
+    let user;
+    try { user = JSON.parse(raw); } catch (e) { return; }
+    if (!user || !user.pipelines || !user.pipelines.values) return;
     let pipelines = user["pipelines"]["values"];
+    if (!pipelines.length) return;
     let activities = pipelines[0]["activities"];
     let links = normalizeLinkOperatorIds(pipelines[0]["links"]);
     Object.keys(activities).forEach(operatorId => {
