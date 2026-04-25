@@ -411,7 +411,11 @@
   <script>
     window.GOOGLE_OAUTH_CONFIG = {
       client_id: "639323802562-f5i8qpon5o6umajc5bvvqcgqjudpnhf6.apps.googleusercontent.com",
-      redirect_uri: "http://127.0.0.1:5000/etl/google/callback",
+      // Same-origin callback (C server proxies /etl/google/callback to Flask).
+      // Each origin you sign in from must be listed in the Google OAuth client's
+      // "Authorized redirect URIs" — e.g. http://127.0.0.1:5000/etl/google/callback
+      // and/or https://127.0.0.1:9030/etl/google/callback.
+      redirect_uri: window.location.origin + "/etl/google/callback",
       scopes: "openid email profile https://www.googleapis.com/auth/spreadsheets",
       state: ""
     };
