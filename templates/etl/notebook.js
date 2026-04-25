@@ -43,6 +43,24 @@
     node.className = "nb-kernel-status" + (klass ? " " + klass : "");
   }
 
+  function setDirtyBadge(dirty) {
+    const node = document.getElementById("nb_save");
+    if (!node) return;
+    if (dirty) {
+      node.classList.add("nb-save-dirty");
+      node.textContent = "Save *";
+    } else {
+      node.classList.remove("nb-save-dirty");
+      node.textContent = "Save";
+    }
+  }
+
+  function markDirty() {
+    if (!NB.current) return;
+    NB.current.dirty = true;
+    setDirtyBadge(true);
+  }
+
   function makeBlankCell() {
     return { id: uid("c"), source: "", output: null, status: "idle" };
   }
@@ -52,7 +70,7 @@
       notebook_id: uid("nb"),
       name: "Untitled notebook",
       cells: [makeBlankCell()],
-      dirty: true,
+      dirty: false,
     };
   }
 
@@ -82,31 +100,59 @@
       .catch(function () { /* ignore */ });
   }
 
+  const NOTEBOOK_ICON_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+    '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z" fill="none" stroke="currentColor" stroke-width="1.6"/>' +
+    '<path d="M5 4v13" fill="none" stroke="currentColor" stroke-width="1.6"/>' +
+    '<path d="M9 9h6M9 12h6M9 15h4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>' +
+    '</svg>';
+
   function renderSidebarList() {
     const root = document.getElementById("notebookList");
     if (!root) return;
     root.innerHTML = "";
     NB.list.forEach(function (item) {
       const isCurrent = NB.current && NB.current.notebook_id === item.notebook_id;
-      const row = el("div", {
-        class: "pipeline-list-row" + (isCurrent ? " is-active" : ""),
+      const card = el("div", {
+        class: "pipeline-list-item buttons" + (isCurrent ? " is-active" : ""),
         "data-notebook-id": item.notebook_id,
-      }, [
-        el("button", {
-          class: "pipeline-list-label",
-          type: "button",
-          onclick: function () { openNotebook(item.notebook_id); },
-        }, [item.name || item.notebook_id]),
-        el("button", {
-          class: "pipeline-list-delete",
-          type: "button",
-          title: "Delete",
-          onclick: function (ev) {
-            ev.stopPropagation();
-            deleteNotebook(item.notebook_id);
-          },
-        }, ["×"]),
-      ]);
+        role: "button",
+        tabindex: "0",
+        onclick: function () { openNotebook(item.notebook_id); },
+        onkeydown: function (ev) {
+          if (ev.key === "Enter" || ev.key === " ") {
+            ev.preventDefault();
+            openNotebook(item.notebook_id);
+          }
+        },
+      }, []);
+
+      const icon = el("span", { class: "activity-icon", "aria-hidden": "true" }, []);
+      icon.innerHTML = NOTEBOOK_ICON_SVG;
+
+      const label = el("span", {
+        class: "pipeline-list-label",
+        text: item.name || item.notebook_id,
+      }, []);
+
+      const delBtn = el("button", {
+        class: "pipeline-options-trigger",
+        type: "button",
+        "aria-label": "Delete notebook",
+        title: "Delete",
+        onclick: function (ev) {
+          ev.stopPropagation();
+          deleteNotebook(item.notebook_id);
+        },
+      }, []);
+      delBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>' +
+        '</svg>';
+
+      card.appendChild(icon);
+      card.appendChild(label);
+      card.appendChild(delBtn);
+
+      const row = el("div", { class: "pipeline-list-row" }, [card]);
       root.appendChild(row);
     });
   }
@@ -114,11 +160,16 @@
   // ---- save / load / new ---------------------------------------------------
 
   function newNotebook() {
+    if (NB.current && NB.current.dirty) {
+      if (!confirm("Discard unsaved changes in the current notebook?")) return;
+    }
     NB.current = newEmptyNotebook();
     document.getElementById("nb_name").value = NB.current.name;
     showNotebookView();
     renderCells();
     renderSidebarList();
+    setKernelStatus("Idle");
+    setDirtyBadge(false);
   }
 
   function openNotebook(notebook_id) {
@@ -138,6 +189,8 @@
         showNotebookView();
         renderCells();
         renderSidebarList();
+        setDirtyBadge(false);
+        setKernelStatus("Idle");
       });
   }
 
@@ -158,6 +211,7 @@
       .then(function (r) { return r.json(); })
       .then(function () {
         NB.current.dirty = false;
+        setDirtyBadge(false);
         return refreshList();
       });
   }
@@ -204,7 +258,7 @@
             if (existing) newOrder.push(existing);
           });
           NB.current.cells = newOrder;
-          NB.current.dirty = true;
+          markDirty();
         },
       });
     }
@@ -225,7 +279,11 @@
     const runBtn = el("button", {
       class: "nb-run", type: "button",
       onclick: function () { runCell(cell.id); },
-    }, ["▶ Run"]);
+      title: "Run cell (Shift+Enter)",
+    }, []);
+    runBtn.innerHTML = '<svg viewBox="0 0 24 24" width="11" height="11" aria-hidden="true">' +
+      '<path d="M7 5l12 7-12 7V5z" fill="currentColor"/></svg>' +
+      '<span style="margin-left:6px">Run</span>';
     const delBtn = el("button", {
       type: "button",
       onclick: function () { deleteCell(cell.id); },
@@ -264,7 +322,7 @@
       });
       cm.on("change", function () {
         cell.source = cm.getValue();
-        NB.current.dirty = true;
+        markDirty();
       });
       cell._cm = cm;
     }, 0);
@@ -284,7 +342,7 @@
 
   function addCell(idx) {
     NB.current.cells.splice(idx, 0, makeBlankCell());
-    NB.current.dirty = true;
+    markDirty();
     renderCells();
   }
 
@@ -293,7 +351,7 @@
     if (i < 0) return;
     NB.current.cells.splice(i, 1);
     if (NB.current.cells.length === 0) NB.current.cells.push(makeBlankCell());
-    NB.current.dirty = true;
+    markDirty();
     renderCells();
   }
 
@@ -347,7 +405,7 @@
           if (idx === NB.current.cells.length - 1) addCell(NB.current.cells.length);
           focusCell(idx + 1);
         }
-        NB.current.dirty = true;
+        markDirty();
       })
       .catch(function (err) {
         if (err.name === "AbortError") {
@@ -376,6 +434,21 @@
       node.appendChild(el("pre", { class: "nb-result", text: result.value }, []));
     } else if (result.type === "dataframe" && result.value) {
       node.appendChild(renderDataFrame(result.value));
+    }
+    // If the cell ran cleanly with no output of any kind, show a subtle "(no output)"
+    // marker so the user gets visual confirmation the run completed.
+    const empty = !data.stderr && !data.stdout
+      && (result.type === "none" || result.value == null);
+    if (empty && data.status === "success") {
+      node.appendChild(el("div", { class: "nb-no-output", text: "(no output)" }, []));
+    }
+    if (data.duration_ms != null) {
+      node.appendChild(el("div", {
+        class: "nb-duration",
+        text: data.duration_ms < 1000
+          ? data.duration_ms + " ms"
+          : (data.duration_ms / 1000).toFixed(2) + " s",
+      }, []));
     }
   }
 
@@ -442,7 +515,7 @@
       nameInput.addEventListener("input", function (ev) {
         if (NB.current) {
           NB.current.name = ev.target.value;
-          NB.current.dirty = true;
+          markDirty();
         }
       });
     }
@@ -457,6 +530,14 @@
 
     const killBtn = document.getElementById("nb_kill");
     if (killBtn) killBtn.addEventListener("click", killCell);
+
+    document.addEventListener("keydown", function (ev) {
+      if (!document.body.classList.contains("notebook-mode")) return;
+      const isSave = (ev.ctrlKey || ev.metaKey) && (ev.key === "s" || ev.key === "S");
+      if (!isSave) return;
+      ev.preventDefault();
+      saveCurrent().then(function () { setKernelStatus("Saved"); });
+    });
 
     refreshList();
   }
