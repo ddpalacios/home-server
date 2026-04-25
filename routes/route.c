@@ -516,6 +516,12 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_from_local(socket,http_header,body, route);
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/notebook/list")==0){
 		get_from_local(socket,http_header,body, route);
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/etl/notebook/variables")!=NULL){
+		get_from_local(socket,http_header,body, route);
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/etl/notebook/export")!=NULL){
+		get_from_local(socket,http_header,body, route);
+	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/etl/notebook/dataframe/csv")!=NULL){
+		get_from_local(socket,http_header,body, route);
 
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/phrase-matching")==0){
 		get_live_html(cSSL, http_header, "/phrase-matching/home.html");
