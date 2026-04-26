@@ -1006,6 +1006,21 @@
     }
     cell.job_id = resp.job_id;
     registerRunningJob(cell, owningNotebook);
+
+    if (opts && opts.awaitComplete) {
+      // Resolve only after the cell finishes — used by Run All so each cell
+      // runs in order, not in parallel.
+      return new Promise(function (resolve) {
+        const wrapped = Object.assign({}, opts, {
+          onComplete: function (completeEv) {
+            resolve({ status: completeEv.status, job_id: resp.job_id });
+            if (typeof opts.onComplete === "function") opts.onComplete(completeEv);
+          },
+        });
+        attachEventStream(cell, owningNotebook, resp.job_id, -1, wrapped);
+      });
+    }
+
     attachEventStream(cell, owningNotebook, resp.job_id, -1, opts);
     return { status: "submitted", job_id: resp.job_id };
   }
@@ -1162,28 +1177,28 @@
                   "error", function () { openNotebook(owningNotebook.notebook_id); });
       }
     }
+    if (opts && typeof opts.onComplete === "function") {
+      try { opts.onComplete(completeEv); } catch (e) { /* ignore */ }
+    }
   }
 
-  function runAll() {
+  async function runAll() {
     if (!NB.current) return;
     const cells = NB.current.cells.slice();
-    let idx = 0;
-    function next() {
-      if (idx >= cells.length) {
-        setKernelStatus("Run All complete");
+    for (let i = 0; i < cells.length; i++) {
+      const cell = cells[i];
+      if ((cell.type || "code") === "markdown") continue;
+      // awaitComplete: run cells strictly top-to-bottom. Without this,
+      // runCell returns on submit (not completion), so all cells fire in
+      // parallel and the per-notebook kernel lock causes cells 2+ to fail
+      // with status='busy'.
+      const result = await runCell(cell.id, { awaitComplete: true });
+      if (result && result.status === "error") {
+        setKernelStatus("Run All stopped on error", "nb-error");
         return;
       }
-      const cell = cells[idx++];
-      if ((cell.type || "code") === "markdown") return next();
-      return runCell(cell.id).then(function (data) {
-        if (data && data.status === "error") {
-          setKernelStatus("Run All stopped on error", "nb-error");
-          return;
-        }
-        next();
-      });
     }
-    next();
+    setKernelStatus("Run All complete");
   }
 
   function liveOutputNodeForCell(cellId) {
