@@ -10,8 +10,6 @@
 #include "http_utilities.h"
 #include "session.h"
 #include "Socket.h"
-=======
-#include "json_utilities.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -19,11 +17,6 @@
 #include <unistd.h>
 #include <ctype.h>
 #define IPSTRLEN INET6_ADDRSTRLEN
-
-#define LOCAL_SERVER_HOST "127.0.0.1"
-#define LOCAL_SERVER_PORT "5000"
-
-=======
 #define ETL_BACKEND_HOST "127.0.0.1"
 #define ETL_BACKEND_PORT "5000"
 
@@ -88,11 +81,6 @@ int connect_to_local_server(const char* host, const char* port){
 	hints.ai_protocol = IPPROTO_TCP;
 	const int status = getaddrinfo(host, port, &hints, &addrs_res);
 	if (status != 0 || addrs_res == NULL){
-		printf("getaddrinfo failed for host '%s': %s\n", host, gai_strerror(status));
-		return -1;
-	}
-	int sfd = -1;
-=======
 		fprintf(stderr, "getaddrinfo(%s:%s) failed: %s\n", host, port, gai_strerror(status));
 		return -1;
 	}
@@ -110,15 +98,6 @@ int connect_to_local_server(const char* host, const char* port){
 		}
 		sfd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
 		if (sfd < 0){
-			printf("Error opening socket for host: '%s' at '%s'\n", host, ipstr);
-			continue;
-		}
-		if (connect(sfd, addr->ai_addr, addr->ai_addrlen) == 0){
-			printf("Successfully connected to '%s'\n", host);
-			freeaddrinfo(addrs_res);
-			return sfd;
-		}
-=======
 			printf("Error creating socket for host: '%s' at '%s'\n", host, ipstr);
 			continue;
 		}
@@ -136,6 +115,9 @@ int connect_to_local_server(const char* host, const char* port){
 		sfd = -1;
 	}
 	freeaddrinfo(addrs_res);
+	if (sfd >= 0 && connected == 0){
+		return sfd;
+	}
 	return -1;
 }
 
@@ -151,17 +133,6 @@ static int body_has_preview_true(const char* body){
 }
 
 void post_ctabustracker_getpredictions(struct Socket* socket,char* http_header, char*body, char* route){
-    int sfd  = connect_to_local_server(LOCAL_SERVER_HOST, LOCAL_SERVER_PORT);
-    if (sfd < 0) {
-        printf("post_ctabustracker_getpredictions: failed to connect to local server\n");
-=======
-	if (sfd >= 0 && connected == 0){
-		return sfd;
-	}
-	return -1;
-}
-
-void post_ctabustracker_getpredictions(struct Socket* socket,char* http_header, char*body, char* route){
     int sfd  = connect_to_local_server(ETL_BACKEND_HOST, ETL_BACKEND_PORT);
     if (sfd < 0) {
         send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"backend unavailable\"}");
@@ -173,8 +144,6 @@ void post_ctabustracker_getpredictions(struct Socket* socket,char* http_header, 
             "Host: %s:%s\r\n"
             "Connection: close\r\n"
             "\r\n",
-            LOCAL_SERVER_HOST, LOCAL_SERVER_PORT);
-=======
             ETL_BACKEND_HOST, ETL_BACKEND_PORT);
     send(sfd,request, strlen(request),0);
     close(sfd);
@@ -183,9 +152,9 @@ void post_ctabustracker_getpredictions(struct Socket* socket,char* http_header, 
  }
 
 void post_generate_phrase(struct Socket* socket,char* http_header, char*body, char* route){
-    int sfd  = connect_to_local_server(LOCAL_SERVER_HOST, LOCAL_SERVER_PORT);
+    int sfd  = connect_to_local_server(ETL_BACKEND_HOST, ETL_BACKEND_PORT);
     if (sfd < 0) {
-        printf("post_generate_phrase: failed to connect to local server\n");
+        send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"backend unavailable\"}");
         return;
     }
     const char *safe_body = body ? body : "";
@@ -194,6 +163,7 @@ void post_generate_phrase(struct Socket* socket,char* http_header, char*body, ch
     if (!request) {
         perror("malloc failed");
         close(sfd);
+        send_JSON_response_code(socket->cSSL, 500, "{\"error\":\"out of memory\"}");
         return;
     }
     snprintf(request, req_size,
@@ -204,24 +174,7 @@ void post_generate_phrase(struct Socket* socket,char* http_header, char*body, ch
         "Connection: close\r\n"
         "\r\n"
         "%s",
-        LOCAL_SERVER_HOST, LOCAL_SERVER_PORT, strlen(safe_body), safe_body);
-=======
-    int sfd  = connect_to_local_server(ETL_BACKEND_HOST, ETL_BACKEND_PORT);
-    if (sfd < 0) {
-        send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"backend unavailable\"}");
-        return;
-    }
-    char request[2048];
-	snprintf(request, sizeof(request),
-		"POST /phrase-matching/generate HTTP/1.1\r\n"
-		"Host: %s:%s\r\n"
-		"Content-Type: application/json\r\n"
-		"Content-Length: %zu\r\n"
-		"Connection: close\r\n"
-		"\r\n"
-		"%s",
-		ETL_BACKEND_HOST, ETL_BACKEND_PORT, strlen(body), body);
-	printf("Request %s\n", request);
+        ETL_BACKEND_HOST, ETL_BACKEND_PORT, strlen(safe_body), safe_body);
     send(sfd,request, strlen(request),0);
     free(request);
     close(sfd);
@@ -229,10 +182,6 @@ void post_generate_phrase(struct Socket* socket,char* http_header, char*body, ch
 
  
 void post_to_local(struct Socket* socket,char* http_header, char*body, char* route){
-	int sfd  = connect_to_local_server(LOCAL_SERVER_HOST, LOCAL_SERVER_PORT);
-	if (sfd < 0) {
-		printf("post_to_local: failed to connect to local server\n");
-=======
 	int sfd  = connect_to_local_server(ETL_BACKEND_HOST, ETL_BACKEND_PORT);
 	if (sfd < 0) {
 		send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"backend unavailable\"}");
@@ -244,7 +193,6 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, char* rou
 	if (!request) {
 		perror("malloc failed");
 		close(sfd);
-=======
 		send_JSON_response_code(socket->cSSL, 500, "{\"error\":\"out of memory\"}");
 		return;
 	}
@@ -258,8 +206,6 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, char* rou
 		"\r\n"
 		"%s",
 		route,
-		LOCAL_SERVER_HOST, LOCAL_SERVER_PORT, strlen(safe_body), safe_body);
-=======
 		ETL_BACKEND_HOST, ETL_BACKEND_PORT, strlen(safe_body), safe_body);
 
 	send(sfd, request, strlen(request), 0);
@@ -324,8 +270,6 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, char* rou
  }
 
 void post_to_local_no_reply(const char* route, const char* body){
-	int sfd  = connect_to_local_server(LOCAL_SERVER_HOST, LOCAL_SERVER_PORT);
-=======
 	int sfd  = connect_to_local_server(ETL_BACKEND_HOST, ETL_BACKEND_PORT);
 	if (sfd < 0) {
 		return;
@@ -348,8 +292,6 @@ void post_to_local_no_reply(const char* route, const char* body){
 		"\r\n"
 		"%s",
 		route,
-		LOCAL_SERVER_HOST, LOCAL_SERVER_PORT, strlen(safe_body), safe_body);
-=======
 		ETL_BACKEND_HOST, ETL_BACKEND_PORT, strlen(safe_body), safe_body);
 	send(sfd, request, strlen(request), 0);
 	free(request);
@@ -357,10 +299,6 @@ void post_to_local_no_reply(const char* route, const char* body){
 }
 
  void get_from_local(struct Socket* socket,char* http_header, char*body, char* route){
-	int sfd  = connect_to_local_server(LOCAL_SERVER_HOST, LOCAL_SERVER_PORT);
-	if (sfd < 0) {
-		printf("get_from_local: failed to connect to local server\n");
-=======
 	int sfd  = connect_to_local_server(ETL_BACKEND_HOST, ETL_BACKEND_PORT);
 	if (sfd < 0) {
 		send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"backend unavailable\"}");
@@ -371,7 +309,6 @@ void post_to_local_no_reply(const char* route, const char* body){
 	if (!request) {
 		perror("malloc failed");
 		close(sfd);
-=======
 		send_JSON_response_code(socket->cSSL, 500, "{\"error\":\"out of memory\"}");
 		return;
 	}
@@ -382,19 +319,6 @@ void post_to_local_no_reply(const char* route, const char* body){
 		"Connection: close\r\n"
 		"\r\n",
 		route,
-		LOCAL_SERVER_HOST, LOCAL_SERVER_PORT);
-	
-	send(sfd, request, strlen(request), 0);
-	free(request);
-	char buf[8192]; 
-    char *response = NULL;
-    size_t total = 0;
-
-    for (;;) {
-        int bytes_recved = recv(sfd, buf, sizeof(buf), 0);
-        if (bytes_recved <= 0)
-            break;
-=======
 		ETL_BACKEND_HOST, ETL_BACKEND_PORT);
 
 	send(sfd, request, strlen(request), 0);
@@ -412,7 +336,6 @@ void post_to_local_no_reply(const char* route, const char* body){
         if (!tmp) {
             perror("realloc");
             free(response);
-=======
             close(sfd);
             send_JSON_response_code(socket->cSSL, 500, "{\"error\":\"out of memory\"}");
             return;
@@ -421,13 +344,6 @@ void post_to_local_no_reply(const char* route, const char* body){
 			memcpy(response + total, buf, bytes_recved);
 			total += bytes_recved;
 		}
-		if (!response) {
-			printf("No data received\n");
-			return;
-		}
-
-		response[total] = '\0'; 
-=======
 		if (!response || recv_error) {
 			free(response);
 			close(sfd);
@@ -440,32 +356,6 @@ void post_to_local_no_reply(const char* route, const char* body){
 		char *header_end = strstr(response, "\r\n\r\n");
 		if (!header_end) {
 			printf("No HTTP header end found\n");
-		} else {
-			char *status_line_end = strstr(response, "\r\n");
-			int is_redirect = 0;
-			if (status_line_end) {
-				if (strstr(response, "HTTP/1.1 302") || strstr(response, "HTTP/1.0 302")) {
-					is_redirect = 1;
-				}
-			}
-			if (is_redirect) {
-				char *location = strstr(response, "Location: ");
-				if (location) {
-					location += strlen("Location: ");
-					char *location_end = strstr(location, "\r\n");
-					if (location_end) {
-						size_t location_len = location_end - location;
-						char location_value[2048];
-						if (location_len >= sizeof(location_value)) {
-							location_len = sizeof(location_value) - 1;
-						}
-						strncpy(location_value, location, location_len);
-						location_value[location_len] = '\0';
-
-						char redirect_header[4096];
-						snprintf(redirect_header, sizeof(redirect_header),
-							"HTTP/1.1 302 Found\r\n"
-=======
 			send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"malformed upstream response\"}");
 		} else {
 			char status_text[64] = {0};
@@ -495,14 +385,6 @@ void post_to_local_no_reply(const char* route, const char* body){
 							"Connection: close\r\n"
 							"Content-Length: 0\r\n"
 							"\r\n",
-							location_value);
-						SSL_write(socket->cSSL, redirect_header, strlen(redirect_header));
-					}
-				}
-			} else {
-				char *res_body = header_end + 4;
-				send_JSON_response_code(socket->cSSL, 200, res_body);
-=======
 							code, status_text[0] ? status_text : "Found",
 							location_value);
 					}
@@ -593,11 +475,11 @@ void post_to_local_no_reply(const char* route, const char* body){
 //     close(sfd);
 //  }
 
-void post_run_activity(struct Socket* socket,char* http_header, char*body, char* route){
-	int sfd  = connect_to_local_server(LOCAL_SERVER_HOST, LOCAL_SERVER_PORT);
-	if (sfd < 0) {
-		printf("post_run_activity: failed to connect to local server\n");
-=======
+/* Forward a DELETE request to the upstream backend. Mirrors post_to_local
+ * but emits "DELETE" in the request line instead of "POST". The Flask
+ * DELETE handlers do not read a body, but we still send Content-Length: 0
+ * and forward the body if any was supplied for parity with post_to_local. */
+void delete_to_local(struct Socket* socket, char* http_header, char* body, char* route){
 	int sfd  = connect_to_local_server(ETL_BACKEND_HOST, ETL_BACKEND_PORT);
 	if (sfd < 0) {
 		send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"backend unavailable\"}");
@@ -609,7 +491,156 @@ void post_run_activity(struct Socket* socket,char* http_header, char*body, char*
 	if (!request) {
 		perror("malloc failed");
 		close(sfd);
-=======
+		send_JSON_response_code(socket->cSSL, 500, "{\"error\":\"out of memory\"}");
+		return;
+	}
+
+	snprintf(request, req_size,
+		"DELETE %s HTTP/1.1\r\n"
+		"Host: %s:%s\r\n"
+		"Content-Type: application/json\r\n"
+		"Content-Length: %zu\r\n"
+		"Connection: close\r\n"
+		"\r\n"
+		"%s",
+		route,
+		ETL_BACKEND_HOST, ETL_BACKEND_PORT, strlen(safe_body), safe_body);
+
+	send(sfd, request, strlen(request), 0);
+	free(request);
+	char buf[8192];
+	char *response = NULL;
+	size_t total = 0;
+	int recv_error = 0;
+
+	for (;;) {
+		int bytes_recved = recv(sfd, buf, sizeof(buf), 0);
+		if (bytes_recved == 0) break;
+		if (bytes_recved < 0) { perror("recv"); recv_error = 1; break; }
+		char *tmp = realloc(response, total + bytes_recved + 1);
+		if (!tmp) {
+			perror("realloc");
+			free(response);
+			close(sfd);
+			send_JSON_response_code(socket->cSSL, 500, "{\"error\":\"out of memory\"}");
+			return;
+		}
+		response = tmp;
+		memcpy(response + total, buf, bytes_recved);
+		total += bytes_recved;
+	}
+	if (!response || recv_error) {
+		free(response);
+		close(sfd);
+		send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"upstream read failure\"}");
+		return;
+	}
+
+	response[total] = '\0';
+
+	char *res_body = strstr(response, "\r\n\r\n");
+	if (res_body) {
+		res_body += 4;
+		size_t body_len = total - (size_t)(res_body - response);
+		char status_text[64] = {0};
+		char content_type[128] = {0};
+		char set_cookie[1024] = {0};
+		int code = parse_upstream_status(response, status_text, sizeof(status_text));
+		extract_header(response, "Content-Type:", content_type, sizeof(content_type));
+		int has_cookie = extract_header(response, "Set-Cookie:", set_cookie, sizeof(set_cookie));
+		send_proxy_response(socket->cSSL,
+			code > 0 ? code : 200,
+			status_text[0] ? status_text : "OK",
+			content_type[0] ? content_type : "application/json",
+			has_cookie ? set_cookie : NULL,
+			res_body, body_len);
+	} else {
+		send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"malformed upstream response\"}");
+	}
+
+	free(response);
+	close(sfd);
+}
+
+/* Proxy a GET request to the upstream backend and forward the response body
+ * unbuffered, chunk by chunk. Used for Server-Sent Events (text/event-stream)
+ * where the upstream response is open-ended and bytes must reach the browser
+ * as soon as they arrive.
+ *
+ * Unlike post_to_local / get_from_local (which read the entire response into
+ * memory before sending), this:
+ *   1. Sends headers as soon as the \r\n\r\n delimiter is seen.
+ *   2. Then loops recv()->SSL_write() until upstream closes.
+ */
+void proxy_sse_to_local(struct Socket* socket, char* http_header, char* body, char* route){
+    int sfd = connect_to_local_server(ETL_BACKEND_HOST, ETL_BACKEND_PORT);
+    if (sfd < 0){
+        send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"backend unavailable\"}");
+        return;
+    }
+
+    char request[2048];
+    snprintf(request, sizeof(request),
+             "GET %s HTTP/1.1\r\n"
+             "Host: %s:%s\r\n"
+             "Accept: text/event-stream\r\n"
+             "Cache-Control: no-cache\r\n"
+             "Connection: close\r\n"
+             "\r\n",
+             route, ETL_BACKEND_HOST, ETL_BACKEND_PORT);
+    send(sfd, request, strlen(request), 0);
+
+    /* Read until we have the full header block, then forward it once. */
+    char hdr[8192];
+    size_t hdr_len = 0;
+    int header_done = 0;
+    while (!header_done && hdr_len < sizeof(hdr) - 1){
+        int n = recv(sfd, hdr + hdr_len, sizeof(hdr) - 1 - hdr_len, 0);
+        if (n <= 0) break;
+        hdr_len += (size_t)n;
+        hdr[hdr_len] = '\0';
+        if (strstr(hdr, "\r\n\r\n") != NULL) header_done = 1;
+    }
+    if (!header_done){
+        close(sfd);
+        send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"upstream header timeout\"}");
+        return;
+    }
+
+    /* Forward the headers up to the body delimiter, then any pre-buffered body. */
+    char *body_start = strstr(hdr, "\r\n\r\n");
+    body_start += 4;
+    size_t header_only_len = (size_t)(body_start - hdr);
+    SSL_write(socket->cSSL, hdr, (int)header_only_len);
+    size_t leftover = hdr_len - header_only_len;
+    if (leftover > 0){
+        SSL_write(socket->cSSL, body_start, (int)leftover);
+    }
+
+    /* Stream the rest as it arrives. */
+    char buf[4096];
+    for (;;){
+        int n = recv(sfd, buf, sizeof(buf), 0);
+        if (n <= 0) break;
+        int w = SSL_write(socket->cSSL, buf, n);
+        if (w <= 0) break;
+    }
+
+    close(sfd);
+}
+
+void post_run_activity(struct Socket* socket,char* http_header, char*body, char* route){
+	int sfd  = connect_to_local_server(ETL_BACKEND_HOST, ETL_BACKEND_PORT);
+	if (sfd < 0) {
+		send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"backend unavailable\"}");
+		return;
+	}
+	const char *safe_body = body ? body : "";
+	size_t req_size = strlen(safe_body) + 2048;
+	char *request = malloc(req_size);
+	if (!request) {
+		perror("malloc failed");
+		close(sfd);
 		send_JSON_response_code(socket->cSSL, 500, "{\"error\":\"out of memory\"}");
 		return;
 	}
@@ -623,32 +654,17 @@ void post_run_activity(struct Socket* socket,char* http_header, char*body, char*
 		"\r\n"
 		"%s",
 		route,
-		LOCAL_SERVER_HOST, LOCAL_SERVER_PORT, strlen(safe_body), safe_body);
-=======
 		ETL_BACKEND_HOST, ETL_BACKEND_PORT, strlen(safe_body), safe_body);
 
 	send(sfd, request, strlen(request), 0);
 	free(request);
 
-	/* For non-preview /etl/run/ calls, return 200 immediately so the UI doesn't block on
-	 * long Spark jobs. The client polls /etl/pipeline/runs for status. */
-	int is_etl_run = (strcmp(route, "/etl/run/") == 0) || (strcmp(route, "/etl/run") == 0);
-	if (is_etl_run && !body_has_preview_true(safe_body)) {
-		char response_body[] = "{\"status\":\"accepted\"}";
-		send_JSON_response_code(socket->cSSL, 200, response_body);
-		close(sfd);
-		return;
-	}
-
-    char buf[8192]; 
-=======
 	/* Non-preview /etl/run posts trigger long-running pipelines. The Python
-	   backend now returns the run_id eagerly (see L1 /etl/run/ handler), but
-	   we still don't want to keep this connection open for the entire job;
+	   backend returns the run_id eagerly and finishes in a background thread;
 	   read the headers + first body chunk so we capture the run_id, then
-	   forward what we have and let Python finish in a background thread. */
+	   forward what we have and close. */
 	int short_circuit = (strstr(route, "/etl/run") != NULL
-		&& strstr(safe_body, "\"preview\":true") == NULL);
+		&& !body_has_preview_true(safe_body));
 
     char buf[8192];
     char *response = NULL;
@@ -657,16 +673,12 @@ void post_run_activity(struct Socket* socket,char* http_header, char*body, char*
 
     for (;;) {
         int bytes_recved = recv(sfd, buf, sizeof(buf), 0);
-        if (bytes_recved <= 0)
-            break;
-=======
         if (bytes_recved == 0) break;
         if (bytes_recved < 0) { perror("recv"); recv_error = 1; break; }
         char *tmp = realloc(response, total + bytes_recved + 1);
         if (!tmp) {
             perror("realloc");
             free(response);
-=======
             close(sfd);
             send_JSON_response_code(socket->cSSL, 500, "{\"error\":\"out of memory\"}");
             return;
@@ -674,12 +686,6 @@ void post_run_activity(struct Socket* socket,char* http_header, char*body, char*
 			response = tmp;
 			memcpy(response + total, buf, bytes_recved);
 			total += bytes_recved;
-		}
-		if (!response) {
-			printf("No data received\n");
-			return;
-		}
-=======
 
 			if (short_circuit && total > 0) {
 				char *eoh = strstr(response, "\r\n\r\n");

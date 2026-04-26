@@ -8,3 +8,5 @@ void post_run_pipeline(struct Socket* socket,char* http_header, char*body, char*
 void post_to_local(struct Socket* socket,char* http_header, char*body, char* route);
 void post_to_local_no_reply(const char* route, const char* body);
 void get_from_local(struct Socket* socket,char* http_header, char*body, char* route);
+void delete_to_local(struct Socket* socket, char* http_header, char* body, char* route);
+void proxy_sse_to_local(struct Socket* socket, char* http_header, char* body, char* route);

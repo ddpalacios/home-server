@@ -508,6 +508,8 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_gol_script(cSSL, http_header, "/etl/notebook.css");
 	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/notebook/execute")==0){
 		post_to_local(socket,http_header,body, route);
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/notebook/lint")==0){
+		post_to_local(socket,http_header,body, route);
 	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/notebook/cancel")==0){
 		post_to_local(socket,http_header,body, route);
 	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/notebook/restart")==0){
@@ -528,6 +530,22 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_from_local(socket,http_header,body, route);
 	}else if (strcmp(request_type, "GET")==0 && strstr(route, "/etl/notebook/spark/status")!=NULL){
 		get_from_local(socket,http_header,body, route);
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/notebook/submit")==0){
+		post_to_local(socket, http_header, body, route);
+	}else if (strcmp(request_type, "GET")==0 && strncmp(route, "/etl/notebook/events/", 21)==0){
+		proxy_sse_to_local(socket, http_header, body, route);
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/spark/configs")==0){
+		get_from_local(socket, http_header, body, route);
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/spark/configs")==0){
+		post_to_local(socket, http_header, body, route);
+	}else if (strcmp(request_type, "DELETE")==0 && strncmp(route, "/etl/spark/configs/", 19)==0){
+		delete_to_local(socket, http_header, body, route);
+	}else if (strcmp(request_type, "POST")==0 && strcmp(route, "/etl/spark/activate")==0){
+		post_to_local(socket, http_header, body, route);
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/spark/status")==0){
+		get_from_local(socket, http_header, body, route);
+	}else if (strcmp(request_type, "GET")==0 && strncmp(route, "/etl/spark/logs", 15)==0){
+		get_from_local(socket, http_header, body, route);
 
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/phrase-matching")==0){
 		get_live_html(cSSL, http_header, "/phrase-matching/home.html");
