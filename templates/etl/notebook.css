@@ -897,6 +897,13 @@ body.notebook-mode .content { padding: 0; }
   background: rgba(31, 79, 214, 0.2);
 }
 
+.nb-workspace .nb-loading-skeleton {
+  padding: 24px;
+  text-align: center;
+  color: #6b7c93;
+  font-size: 13px;
+}
+
 /* ---- Toast notifications ----------------------------------------------- */
 .nb-toast-layer {
   position: fixed;

@@ -402,12 +402,42 @@
   }
 
   function openNotebook(notebook_id) {
+    // Show the notebook view IMMEDIATELY so the user sees navigation happen,
+    // even if a heavy cell is running and the load fetch takes time. We swap
+    // out NB.current with a placeholder, render an empty 'loading' shell, and
+    // let the fetch populate the real cells when it returns. Any cells still
+    // streaming output in the previous notebook keep doing so via their
+    // EventSources — the events just write to detached DOM until the user
+    // navigates back.
+    showNotebookView();
+    NB.current = {
+      notebook_id: notebook_id,
+      name: "Loading…",
+      cells: [],
+      dirty: false,
+      exec_counter: 0,
+      _loading: true,
+    };
+    var nameField = document.getElementById("nb_name");
+    if (nameField) nameField.value = "Loading…";
+    var cellsRoot = document.getElementById("nb_cells");
+    if (cellsRoot) {
+      cellsRoot.innerHTML = '<div class="nb-loading-skeleton">Loading notebook…</div>';
+    }
+    setKernelStatus("Idle");
+    if (typeof window.renderPipelineListSelection === "function") window.renderPipelineListSelection("");
+    if (typeof window.renderSavedPipelineListSelection === "function") window.renderSavedPipelineListSelection("");
+    renderSidebarList();
+
     return fetch("/etl/notebook/load?notebook_id=" + encodeURIComponent(notebook_id))
       .then(function (r) {
         if (!r.ok) throw new Error("not found");
         return r.json();
       })
       .then(function (doc) {
+        // If the user already clicked a different notebook while we were
+        // loading, abandon this response.
+        if (!NB.current || NB.current.notebook_id !== notebook_id) return;
         const cells = (doc.cells && doc.cells.length) ? doc.cells : [makeBlankCell("code")];
         // Backfill missing fields on older saved notebooks.
         cells.forEach(function (c) {
