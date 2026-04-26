@@ -271,6 +271,111 @@
     }, 250);
   })();
 
+  // ---- sidebar Spark Settings panel ---------------------------------------
+
+  async function refreshSparkPanel() {
+    const sel = document.getElementById("nb_spark_active_select");
+    const status = document.getElementById("nb_spark_status");
+    const log = document.getElementById("nb_spark_log");
+    if (!sel || !status || !log) return;
+
+    let configs, statusBody;
+    try {
+      [configs, statusBody] = await Promise.all([
+        fetch("/etl/spark/configs").then(r => r.json()),
+        fetch("/etl/spark/status").then(r => r.json()),
+      ]);
+    } catch (e) { return; }
+
+    const active = configs.active;
+    // Populate select if needed.
+    const previous = sel.value;
+    sel.innerHTML = "";
+    (configs.configs || []).forEach(function (c) {
+      const opt = document.createElement("option");
+      opt.value = c.config_id;
+      opt.textContent = c.name + " (" + c.config_id + ")";
+      if (c.config_id === active) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    if (previous && previous !== active && sel.querySelector('option[value="' + previous + '"]')) {
+      sel.value = previous;  // user is mid-selection
+    }
+
+    if (statusBody.active && statusBody.jobs && statusBody.jobs.length) {
+      const jobs = statusBody.jobs.length;
+      const cores = statusBody.default_parallelism || 0;
+      status.textContent = jobs + " active job" + (jobs === 1 ? "" : "s") + " · " + cores + " cores";
+    } else if (statusBody.active === false) {
+      status.textContent = "Session not started.";
+    } else {
+      status.textContent = "Idle";
+    }
+
+    log.textContent = (statusBody.recent_stderr || []).join("\n");
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    setInterval(refreshSparkPanel, 4000);
+    refreshSparkPanel();
+
+    const sel = document.getElementById("nb_spark_active_select");
+    if (sel) sel.addEventListener("change", function () {
+      activateConfig(sel.value, false);
+    });
+
+    const newBtn = document.getElementById("nb_spark_new");
+    if (newBtn) newBtn.addEventListener("click", function () {
+      const name = prompt("Config name?");
+      if (!name) return;
+      const driver = prompt("spark.driver.memory (e.g. 4g)?", "4g");
+      const cores = prompt("spark.executor.cores?", "4");
+      const partitions = prompt("spark.sql.shuffle.partitions?", "8");
+      fetch("/etl/spark/configs", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name, options: {
+          "spark.driver.memory": driver, "spark.executor.cores": cores,
+          "spark.sql.shuffle.partitions": partitions,
+        }}),
+      }).then(r => r.json()).then(refreshSparkPanel);
+    });
+
+    const openLogs = document.getElementById("nb_spark_open_logs");
+    if (openLogs) openLogs.addEventListener("click", function () {
+      fetch("/etl/spark/logs?lines=200").then(r => r.json()).then(function (data) {
+        const w = window.open("", "_blank");
+        if (!w) return alert("Popup blocked.");
+        w.document.write("<pre style='font-family:monospace;font-size:12px;padding:12px'>" +
+          (data.lines || []).map(s => s.replace(/[<>&]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;"})[c])).join("\n") +
+          "</pre>");
+        w.document.title = "Spark logs";
+      });
+    });
+  });
+
+  function activateConfig(config_id, force) {
+    fetch("/etl/spark/activate", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ config_id: config_id, force: !!force }),
+    }).then(r => r.json().then(function (body) {
+      if (r.status === 200) {
+        refreshSparkPanel();
+        return;
+      }
+      if (r.status === 409 && body.status === "running_jobs") {
+        const ok = confirm("Activating '" + config_id + "' will cancel " + body.count +
+                            " running cell" + (body.count === 1 ? "" : "s") +
+                            " across " + (body.notebooks ? body.notebooks.length : "?") +
+                            " notebook(s). Continue?");
+        if (ok) activateConfig(config_id, true);
+        else refreshSparkPanel();   // revert dropdown
+        return;
+      }
+      alert("Failed to activate: " + (body.error || body.status));
+      refreshSparkPanel();
+    }));
+  }
+
   // ---- save / load / new ---------------------------------------------------
 
   function newNotebook() {

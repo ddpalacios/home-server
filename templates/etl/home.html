@@ -78,6 +78,25 @@
             <div id="nb_running_list" class="nb-running-list"></div>
           </details>
         </div>
+        <div class="pipeline-panel pipeline-panel--spark">
+          <details id="nb_spark_section" open>
+            <summary>
+              <span>Spark Settings</span>
+            </summary>
+            <div class="nb-spark-panel">
+              <div class="nb-spark-row">
+                <label for="nb_spark_active_select">Config</label>
+                <select id="nb_spark_active_select"></select>
+                <button id="nb_spark_new" type="button" title="New config">+</button>
+              </div>
+              <div id="nb_spark_status" class="nb-spark-status">Loading…</div>
+              <div class="nb-spark-log-header">Recent log
+                <button id="nb_spark_open_logs" type="button">Open full</button>
+              </div>
+              <pre id="nb_spark_log" class="nb-spark-log"></pre>
+            </div>
+          </details>
+        </div>
         <details id="savedTriggersGroup" class="activity-group saved-triggers-group" open>
             <summary>Saved Triggers</summary>
             <div class="activity-group-content">

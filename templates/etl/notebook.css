@@ -1179,3 +1179,89 @@ body.notebook-mode .content { padding: 0; }
   background: rgba(31, 79, 214, 0.08);
   border-radius: 999px;
 }
+
+/* ---- Sidebar Spark Settings panel ------------------------------------- */
+.pipeline-panel--spark summary {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #475569;
+}
+.nb-spark-panel {
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 35vh;
+  overflow-y: auto;
+}
+.nb-spark-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.nb-spark-row label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+}
+.nb-spark-row select {
+  flex: 1;
+  font-size: 13px;
+  padding: 4px 6px;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  border-radius: 6px;
+  background: #fff;
+}
+.nb-spark-row button {
+  font-size: 14px;
+  font-weight: 700;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  background: #fff;
+  cursor: pointer;
+}
+.nb-spark-status {
+  font-size: 12px;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+.nb-spark-log-header {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+.nb-spark-log-header button {
+  background: transparent;
+  border: none;
+  color: #1d4ed8;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+}
+.nb-spark-log {
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 6px;
+  padding: 6px 8px;
+  margin: 0;
+  max-height: 12em;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  color: #334155;
+}
