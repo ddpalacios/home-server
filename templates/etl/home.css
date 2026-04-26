@@ -1053,27 +1053,77 @@ select[multiple] {
 
 /* .column-settings*, .combine-section*, .combine-columns-section — visuals from .panel/.stack/.row in etl-design-system.css */
 
-.file-input {
-  padding: 10px 12px;
-  border: 1px dashed rgba(15, 23, 42, 0.25);
-  border-radius: 10px;
-  background: #ffffff;
-  color: var(--ink);
+.file-dropzone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px 14px;
+  border: 1.5px dashed var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--ink-700);
+  font-size: 12.5px;
   cursor: pointer;
+  text-align: center;
+  transition: border-color var(--motion-fast), background var(--motion-fast);
 }
 
-.file-input::file-selector-button {
-  margin-right: 12px;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 8px;
-  background: var(--accent);
-  color: #ffffff;
-  cursor: pointer;
+.file-dropzone:hover {
+  border-color: var(--brand-500);
+  background: rgba(31, 79, 214, 0.04);
 }
 
-.file-input::file-selector-button:hover {
-  background: var(--accent-strong);
+.file-dropzone.is-dragging {
+  border-color: var(--brand-500);
+  background: var(--brand-50);
+}
+
+.file-dropzone.has-file {
+  border-style: solid;
+  border-color: var(--success);
+  background: rgba(4, 120, 87, 0.04);
+}
+
+.file-dropzone-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--brand-50);
+  color: var(--brand-500);
+}
+.file-dropzone-icon svg { display: block; }
+
+.file-dropzone.has-file .file-dropzone-icon {
+  background: rgba(4, 120, 87, 0.10);
+  color: var(--success);
+}
+
+.file-dropzone-text strong { color: var(--brand-500); font-weight: 600; }
+.file-dropzone-text .help { color: var(--ink-500); font-size: 11px; }
+
+.file-dropzone-filename {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-900);
+  margin-top: 2px;
+  word-break: break-all;
+  max-width: 100%;
+}
+.file-dropzone:not(.has-file) .file-dropzone-filename { display: none; }
+
+.file-dropzone-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
 }
 
 #selected_activity_settings, #operator_properties {

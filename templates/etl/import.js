@@ -70,34 +70,70 @@ class Import_Activity extends Activity{
 
     get_settings_element(){
         let div = super.get_settings_element();
-        const file_section = document.createElement('div');
-        file_section.id = this.activityId + "_file_settings";
-        file_section.style.display = "flex";
-        file_section.style.flexDirection = "column";
-        file_section.style.gap = "8px";
-        file_section.style.padding = "6px 0 0";
-
-        const file_label = document.createElement('label');
-        file_label.textContent = "Upload File";
-        file_label.style.color = "black";
-        file_section.appendChild(file_label);
 
         const existing_file_input = div.querySelector('input[type="file"]');
-        if (existing_file_input) {
-            existing_file_input.remove();
-            existing_file_input.className = "file-input";
-            existing_file_input.style.width = "25%";
-            file_section.appendChild(existing_file_input);
-        } else {
-            const file_input = document.createElement('input');
-            file_input.type = 'file';
-            file_input.className = "file-input";
-            file_input.style.width = "25%";
-            file_input.addEventListener("change", (event) => this._inputFile_onchange(event, this.flowchart, this));
-            file_section.appendChild(file_input);
-        }
+        if (existing_file_input) existing_file_input.remove();
 
-        div.insertBefore(file_section, div.firstChild);
+        const field = document.createElement('div');
+        field.className = 'field';
+        field.id = this.activityId + "_file_settings";
+
+        const file_label = document.createElement('label');
+        file_label.className = 'label';
+        file_label.textContent = 'Source file';
+        field.appendChild(file_label);
+
+        const dropzone = document.createElement('label');
+        dropzone.className = 'file-dropzone';
+
+        const dz_icon = document.createElement('span');
+        dz_icon.className = 'file-dropzone-icon';
+        dz_icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>';
+        dropzone.appendChild(dz_icon);
+
+        const dz_text = document.createElement('span');
+        dz_text.className = 'file-dropzone-text';
+        dz_text.innerHTML = '<strong>Click to upload</strong> or drag and drop<br><span class="help">CSV or JSON</span>';
+        dropzone.appendChild(dz_text);
+
+        const filename = document.createElement('span');
+        filename.className = 'file-dropzone-filename';
+        dropzone.appendChild(filename);
+
+        const file_input = document.createElement('input');
+        file_input.type = 'file';
+        file_input.className = 'file-dropzone-input';
+        file_input.accept = '.csv,.json,application/json,text/csv';
+        file_input.addEventListener('change', (event) => {
+            const f = event.target.files && event.target.files[0];
+            if (f) {
+                dropzone.classList.add('has-file');
+                filename.textContent = f.name;
+            }
+            this._inputFile_onchange(event, this.flowchart, this);
+        });
+        dropzone.appendChild(file_input);
+
+        ['dragover', 'dragenter'].forEach((ev) => {
+            dropzone.addEventListener(ev, (e) => {
+                e.preventDefault();
+                dropzone.classList.add('is-dragging');
+            });
+        });
+        ['dragleave', 'dragend'].forEach((ev) => {
+            dropzone.addEventListener(ev, () => dropzone.classList.remove('is-dragging'));
+        });
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('is-dragging');
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+                file_input.files = e.dataTransfer.files;
+                file_input.dispatchEvent(new Event('change'));
+            }
+        });
+
+        field.appendChild(dropzone);
+        div.insertBefore(field, div.firstChild);
 
         return div;
     }
