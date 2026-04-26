@@ -33,6 +33,15 @@
 
 <div class="sidebar sidebar-v2" id="sidebar">
     <div class="sidebar-header">
+        <button id="homeButton" class="sidebar-home" type="button" aria-label="Go to home">
+          <span class="sidebar-home-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12L12 3l9 9"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>
+          </span>
+          <span class="sidebar-home-text">
+            <strong>ETL Studio</strong>
+            <span>Home</span>
+          </span>
+        </button>
         <div class="sidebar-header-row">
             <h3>Activities</h3>
             <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Collapse activities panel">
@@ -210,6 +219,78 @@
 
 					</div>
 	      </div> 
+      <div id="home_workspace" class="home-workspace" hidden>
+        <div class="home-hero">
+          <div class="home-hero-eyebrow">ETL Studio</div>
+          <h1 class="home-hero-title">Welcome back</h1>
+          <p class="home-hero-sub">Design dataflows, build pipelines, and run notebooks — all from one workspace.</p>
+        </div>
+        <section class="home-section">
+          <div class="home-section-header">
+            <h2>Quick start</h2>
+            <span class="help">Pick an action to begin.</span>
+          </div>
+          <div class="home-actions">
+            <button class="home-action" type="button" data-go="new-dataflow">
+              <span class="home-action-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
+              <span class="home-action-text"><strong>New Dataflow</strong><span class="help">Visual ETL canvas</span></span>
+            </button>
+            <button class="home-action" type="button" data-go="new-pipeline">
+              <span class="home-action-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></span>
+              <span class="home-action-text"><strong>New Pipeline</strong><span class="help">Saved, schedulable run</span></span>
+            </button>
+            <button class="home-action" type="button" data-go="new-notebook">
+              <span class="home-action-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z"/><path d="M5 4v13"/><path d="M9 9h6M9 13h4"/></svg></span>
+              <span class="home-action-text"><strong>New Notebook</strong><span class="help">Python &amp; SQL cells</span></span>
+            </button>
+            <button class="home-action" type="button" data-go="new-trigger">
+              <span class="home-action-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+              <span class="home-action-text"><strong>New Trigger</strong><span class="help">Schedule a pipeline</span></span>
+            </button>
+          </div>
+        </section>
+        <section class="home-section">
+          <div class="home-section-header"><h2>Your resources</h2></div>
+          <div class="home-cards">
+            <div class="home-card">
+              <div class="home-card-head">
+                <span class="home-card-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
+                <h3>Dataflows</h3>
+              </div>
+              <div class="home-card-count" id="homeDataflowCount">0</div>
+              <p class="home-card-desc">Visual flowcharts that chain ingest → transform → output activities.</p>
+              <button class="buttons home-card-cta" type="button" data-go="view-dataflows">View all →</button>
+            </div>
+            <div class="home-card">
+              <div class="home-card-head">
+                <span class="home-card-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>
+                <h3>Pipelines</h3>
+              </div>
+              <div class="home-card-count" id="homePipelineCount">0</div>
+              <p class="home-card-desc">Saved, parameterized pipelines you can run on demand or on a schedule.</p>
+              <button class="buttons home-card-cta" type="button" data-go="view-pipelines">View all →</button>
+            </div>
+            <div class="home-card">
+              <div class="home-card-head">
+                <span class="home-card-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z"/><path d="M5 4v13"/></svg></span>
+                <h3>Notebooks</h3>
+              </div>
+              <div class="home-card-count" id="homeNotebookCount">0</div>
+              <p class="home-card-desc">Interactive Python notebooks with PySpark and SQL kernels.</p>
+              <button class="buttons home-card-cta" type="button" data-go="view-notebooks">View all →</button>
+            </div>
+            <div class="home-card">
+              <div class="home-card-head">
+                <span class="home-card-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+                <h3>Triggers</h3>
+              </div>
+              <div class="home-card-count" id="homeTriggerCount">0</div>
+              <p class="home-card-desc">Time-based schedules that run a saved pipeline at a fixed cadence.</p>
+              <button class="buttons home-card-cta" type="button" data-go="view-triggers">View all →</button>
+            </div>
+          </div>
+        </section>
+      </div>
       <div id="notebook_workspace" class="nb-workspace" hidden>
         <div class="nb-toolbar">
           <div class="nb-toolbar-title">

@@ -124,6 +124,7 @@
   // ---- layout toggle -------------------------------------------------------
 
   function showNotebookView() {
+    if (typeof window.hideHomeView === "function") window.hideHomeView();
     document.body.classList.add("notebook-mode");
     const ws = document.getElementById("notebook_workspace");
     if (ws) ws.hidden = false;
@@ -160,6 +161,7 @@
     root.innerHTML = "";
     const countEl = document.getElementById("notebookCount");
     if (countEl) countEl.textContent = String((NB.list || []).length);
+    if (typeof window.refreshHomeCounts === "function") window.refreshHomeCounts();
     NB.list.forEach(function (item) {
       const isCurrent = NB.current && NB.current.notebook_id === item.notebook_id;
       const row = el("div", {

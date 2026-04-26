@@ -523,6 +523,46 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
+  // Home view wiring.
+  var homeButton = document.getElementById("homeButton");
+  if (homeButton) {
+    homeButton.addEventListener("click", showHomeView);
+  }
+  function expandSection(detailsEl) {
+    if (detailsEl && detailsEl.tagName === "DETAILS") detailsEl.open = true;
+    if (detailsEl && typeof detailsEl.scrollIntoView === "function") {
+      detailsEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+  document.querySelectorAll("#home_workspace [data-go]").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      var go = btn.getAttribute("data-go");
+      hideHomeView();
+      if (go === "new-dataflow") {
+        var b = document.getElementById("newPipelineButton");
+        if (b) b.click();
+      } else if (go === "new-pipeline") {
+        var b2 = document.getElementById("newSavedPipelineButton");
+        if (b2) b2.click();
+      } else if (go === "new-notebook") {
+        var b3 = document.getElementById("newNotebookButton");
+        if (b3) b3.click();
+      } else if (go === "new-trigger") {
+        if (typeof window.openTriggerModal === "function") window.openTriggerModal("select");
+      } else if (go === "view-dataflows") {
+        expandSection(document.querySelector(".pipeline-panel"));
+        setActivePipelineType("dataflow");
+      } else if (go === "view-pipelines") {
+        expandSection(document.querySelector(".pipeline-panel--pipelines"));
+        setActivePipelineType("pipeline");
+      } else if (go === "view-notebooks") {
+        expandSection(document.querySelector(".pipeline-panel--notebooks"));
+      } else if (go === "view-triggers") {
+        expandSection(document.getElementById("savedTriggersGroup"));
+      }
+    });
+  });
+
   if (pipelinePanel && ingestGroup && sidebarButtons) {
     var pipelineDetails = document.createElement("details");
     pipelineDetails.className = "pipeline-collapsible";
@@ -708,37 +748,76 @@ function setCurrentPipelineId(value) {
   }
 }
 
+function ensureCanvasRendered() {
+  var chartEl = document.getElementById("chart_container");
+  if (chartEl) {
+    void chartEl.offsetHeight;
+  }
+  var schedule = function() {
+    if ($flowchart && $flowchart.flowchart) {
+      try { $flowchart.flowchart("redrawLinksLayer"); } catch (_) { /* ignore */ }
+    }
+    if (typeof window.repositionImportPlaceholder === "function") {
+      window.repositionImportPlaceholder();
+    }
+    if (typeof window.repositionSelectPlaceholders === "function") {
+      window.repositionSelectPlaceholders();
+    }
+    if (typeof window.scheduleLinkAddRefresh === "function") {
+      window.scheduleLinkAddRefresh();
+    }
+  };
+  requestAnimationFrame(function() {
+    schedule();
+    requestAnimationFrame(schedule);
+  });
+}
+window.ensureCanvasRendered = ensureCanvasRendered;
+
+function showHomeView() {
+  document.body.classList.add("home-mode");
+  var hw = document.getElementById("home_workspace");
+  if (hw) hw.hidden = false;
+  if (window.NB && typeof window.NB.hideNotebookView === "function") {
+    window.NB.hideNotebookView();
+  }
+  refreshHomeCounts();
+}
+window.showHomeView = showHomeView;
+
+function hideHomeView() {
+  if (!document.body.classList.contains("home-mode")) return;
+  document.body.classList.remove("home-mode");
+  var hw = document.getElementById("home_workspace");
+  if (hw) hw.hidden = true;
+}
+window.hideHomeView = hideHomeView;
+
+function refreshHomeCounts() {
+  var df = document.getElementById("homeDataflowCount");
+  var pp = document.getElementById("homePipelineCount");
+  var nb = document.getElementById("homeNotebookCount");
+  var tg = document.getElementById("homeTriggerCount");
+  if (df) df.textContent = String((cachedPipelines || []).length);
+  if (pp) pp.textContent = String((cachedSavedPipelines || []).length);
+  if (nb) nb.textContent = String((window.NB && window.NB.list) ? window.NB.list.length : 0);
+  if (tg) tg.textContent = String((cachedTriggers || []).length);
+}
+window.refreshHomeCounts = refreshHomeCounts;
+
 function setActivePipelineType(type) {
   if (type !== "dataflow" && type !== "pipeline") {
     return;
   }
-  var wasInNotebookMode = document.body.classList.contains("notebook-mode");
+  hideHomeView();
   if (window.NB && typeof window.NB.hideNotebookView === "function") {
     window.NB.hideNotebookView();
   }
-  if (wasInNotebookMode) {
-    // The chart container was display:none under notebook-mode — force a layout pass
-    // and a flowchart redraw on the next frame so links/operators paint immediately
-    // instead of waiting for the user to interact with the canvas.
-    var chartEl = document.getElementById("chart_container");
-    if (chartEl) {
-      void chartEl.offsetHeight;
-    }
-    requestAnimationFrame(function() {
-      if ($flowchart && $flowchart.flowchart) {
-        try { $flowchart.flowchart("redrawLinksLayer"); } catch (_) { /* ignore */ }
-      }
-      if (typeof window.repositionImportPlaceholder === "function") {
-        window.repositionImportPlaceholder();
-      }
-      if (typeof window.repositionSelectPlaceholders === "function") {
-        window.repositionSelectPlaceholders();
-      }
-      if (typeof window.scheduleLinkAddRefresh === "function") {
-        window.scheduleLinkAddRefresh();
-      }
-    });
-  }
+  // Always force the canvas to paint when entering pipeline/dataflow mode.
+  // It was previously hidden (notebook-mode, home-mode) so its layout was
+  // suspended; without this the user has to click the canvas to trigger a
+  // repaint.
+  ensureCanvasRendered();
   activePipelineType = type;
   try {
     localStorage.setItem("etl_pipeline_type", type);
@@ -943,6 +1022,7 @@ function renderSavedPipelineListSelection(activeId) {
 function renderPipelineList(pipelines) {
   cachedPipelines = Array.isArray(pipelines) ? pipelines.slice() : [];
   window.cachedDataflows = cachedPipelines.slice();
+  if (typeof window.refreshHomeCounts === "function") window.refreshHomeCounts();
   if (typeof window.refreshDataflowActivityOptions === "function") {
     window.refreshDataflowActivityOptions(window.cachedDataflows);
   }
@@ -1176,6 +1256,7 @@ function renderPipelineList(pipelines) {
 
 function renderSavedPipelineList(pipelines) {
   cachedSavedPipelines = Array.isArray(pipelines) ? pipelines.slice() : [];
+  if (typeof window.refreshHomeCounts === "function") window.refreshHomeCounts();
   if (typeof window.refreshPipelineActivityOptions === "function") {
     window.refreshPipelineActivityOptions(cachedSavedPipelines);
   }
@@ -1433,6 +1514,7 @@ function renderTriggerList(triggers, pipelineId) {
   cachedTriggers = triggers.slice();
   var triggerCountEl = document.getElementById("triggerCount");
   if (triggerCountEl) triggerCountEl.textContent = String(cachedTriggers.length);
+  if (typeof window.refreshHomeCounts === "function") window.refreshHomeCounts();
   var floatingMenu = document.getElementById("triggerOptionsMenu");
   if (!floatingMenu) {
     floatingMenu = document.createElement("div");
@@ -1821,6 +1903,7 @@ function loadPipelineFromBlobStorage() {
   if (!storedPipelineId) {
     fetchPipelineList();
     fetchSavedPipelineList();
+    if (typeof showHomeView === "function") showHomeView();
     return;
   }
   if (storedPipelineType === "pipeline") {
