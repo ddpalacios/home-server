@@ -752,6 +752,20 @@
     box-shadow: 0 0 0 3px rgba(31, 79, 214, 0.18);
 }
 
+/* Pipeline list rows carry the legacy .buttons class but should stay full-width
+   list items — not inline 32px chips. Restore the sidebar-list-row layout. */
+.sidebar-v2 .ds-sidebar-list-row.buttons {
+    display: flex;
+    width: 100%;
+    height: auto;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-weight: inherit;
+    text-align: left;
+    justify-content: flex-start;
+    box-shadow: var(--shadow-1);
+}
+
 .add-button {
   display: inline-flex;
   align-items: center;
