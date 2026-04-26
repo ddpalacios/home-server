@@ -324,9 +324,22 @@
     log.textContent = (statusBody.recent_stderr || []).join("\n");
   }
 
-  document.addEventListener("DOMContentLoaded", function () {
-    setInterval(refreshSparkPanel, 4000);
+  function startSparkPolling() {
+    if (NB._sparkInterval) return;
     refreshSparkPanel();
+    NB._sparkInterval = setInterval(refreshSparkPanel, 4000);
+  }
+  function stopSparkPolling() {
+    if (NB._sparkInterval) {
+      clearInterval(NB._sparkInterval);
+      NB._sparkInterval = null;
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    // Only wire the inputs; don't start polling until the Settings view is
+    // actually visible. home-ui.js calls NB.startSparkPolling() from
+    // showSettingsView and NB.stopSparkPolling() from hideSettingsView.
 
     const sel = document.getElementById("nb_spark_active_select");
     if (sel) sel.addEventListener("change", function () {
@@ -1814,6 +1827,8 @@
     deleteNotebook: deleteNotebook,
     showNotebookView: showNotebookView,
     hideNotebookView: hideNotebookView,
+    startSparkPolling: startSparkPolling,
+    stopSparkPolling: stopSparkPolling,
     runCell: runCell,
     runAll: runAll,
     addCell: addCell,

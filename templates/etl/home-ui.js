@@ -814,6 +814,9 @@ function showSettingsView() {
   document.body.classList.add("settings-mode");
   var sw = document.getElementById("settings_workspace");
   if (sw) sw.hidden = false;
+  if (window.NB && typeof window.NB.startSparkPolling === "function") {
+    window.NB.startSparkPolling();
+  }
 }
 window.showSettingsView = showSettingsView;
 
@@ -822,6 +825,9 @@ function hideSettingsView() {
   document.body.classList.remove("settings-mode");
   var sw = document.getElementById("settings_workspace");
   if (sw) sw.hidden = true;
+  if (window.NB && typeof window.NB.stopSparkPolling === "function") {
+    window.NB.stopSparkPolling();
+  }
 }
 window.hideSettingsView = hideSettingsView;
 
