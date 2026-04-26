@@ -41,6 +41,14 @@ struct Socket *sockets = NULL;
 struct pollfd *pfds = NULL;
 int fd_count = 0;
 
+/* Serializes SSL_free across worker threads. SSL_free recurses into
+ * libcrypto cleanup paths that, in this build, segfault at offset 0x30
+ * when called concurrently from multiple workers (despite SSL_CTX being
+ * documented as thread-safe in OpenSSL 1.1.0+). The handshake itself
+ * stays on the main thread; this mutex covers only the worker-side
+ * shutdown/free in case multiple workers finish at the same time. */
+static pthread_mutex_t g_ssl_lifecycle_lock = PTHREAD_MUTEX_INITIALIZER;
+
 static int bind_address_to_port(const char* port){
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));
@@ -95,11 +103,17 @@ static void* worker_thread(void* arg){
         free(peek_buf);
     }
 
-    /* Full TLS + TCP teardown — single-thread access to cSSL throughout
-     * its lifetime, so no race, no double-free. */
+    /* Full TLS + TCP teardown. cSSL is owned by this worker thread for
+     * its whole lifetime (no other thread reads/writes it), but
+     * SSL_free recurses into libcrypto cleanup that's racy on this
+     * build, so serialize SSL_free across workers via the global
+     * mutex. The shutdown/SSL_write/SSL_read above don't need the lock
+     * because they only touch this worker's own SSL*. */
     if (client->cSSL != NULL) {
         SSL_shutdown(client->cSSL);
+        pthread_mutex_lock(&g_ssl_lifecycle_lock);
         SSL_free(client->cSSL);
+        pthread_mutex_unlock(&g_ssl_lifecycle_lock);
         client->cSSL = NULL;
     }
     if (client->fd >= 0) {
