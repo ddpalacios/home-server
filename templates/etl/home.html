@@ -263,20 +263,18 @@
     </div>
 
     <div class="footer" id="footer" style="overflow-x: hidden; overflow-y: hidden;">
-      <div class="resize-handle" id="resizeHandle"> <img src="/etl/images/drag.png" width="50" height="50"></div>
-	  		<div class="navbar" style=" padding: 16px 20px; z-index: 1000; background: linear-gradient(135deg, #cfd7e2 0%, #bcc6d4 100%); border: 1px solid rgba(15, 23, 42, 0.08); width: 100%; display: flex; flex-direction: row; gap: 50px; transition: background 0.3s ease;">
-				<div class="tab">
-				<button class="tablinks" id="tabGeneral" onclick="switchTabPanel(event, 'tab_general')">General</button>
-				<button class="tablinks" id="tabSettings" onclick="switchTabPanel(event, 'tab_settings')">Settings</button>
-				<button class="tablinks" id="tabDataPreview" onclick="switchTabPanel(event, 'data_preview')">Data Preview</button>
-				<button class="tablinks" id="tabActivities" onclick="switchTabPanel(event, 'tab_activities')">Activities</button>
-				<button class="tablinks" id="tabScheduledTriggers" onclick="switchTabPanel(event, 'scheduled_triggers')">Scheduled Triggers</button>
-				<button class="tablinks" id="tabTestRuns" onclick="switchTabPanel(event, 'test_runs')">Test Runs</button>
+      <div class="resize-handle ds-resize-handle" id="resizeHandle"></div>
+				<div class="navbar ds-bottom-tab-strip">
+				<div class="tab tabs">
+				<button class="tablinks tab active" id="tabGeneral" onclick="switchTabPanel(event, 'tab_general')">General</button>
+				<button class="tablinks tab" id="tabSettings" onclick="switchTabPanel(event, 'tab_settings')">Settings</button>
+				<button class="tablinks tab" id="tabDataPreview" onclick="switchTabPanel(event, 'data_preview')">Data preview</button>
+				<button class="tablinks tab" id="tabActivities" onclick="switchTabPanel(event, 'tab_activities')">Activities</button>
+				<button class="tablinks tab" id="tabScheduledTriggers" onclick="switchTabPanel(event, 'scheduled_triggers')">Scheduled triggers</button>
+				<button class="tablinks tab" id="tabTestRuns" onclick="switchTabPanel(event, 'test_runs')">Test runs</button>
 				</div>
-				
-
 			</div>
-			<div id="tab_general" class="tabcontent" style="display: flex; flex-direction: column; gap: 30px;">
+			<div id="tab_general" class="tabcontent ds-bottom-tab-content" style="display: flex; flex-direction: column; gap: 30px;">
 				<div id="pipeline_properties" class="general-panel" style="display: flex; flex-direction: column; gap: 10px;">
 					<label for="pipeline_title">Pipeline Name</label>
 					<input id="pipeline_title" type="text" placeholder="Untitled pipeline">
@@ -291,20 +289,20 @@
 				</div>
 				
 			</div>
-				<div id="tab_settings" class="tabcontent">
+				<div id="tab_settings" class="tabcontent ds-bottom-tab-content">
 				<div id="link_properties" style="display: block;">
 					<label for="link_color">Link's color: </label><input id="link_color" type="color"></div>
 				<div id="selected_activity_settings" style="display: flex; flex-direction: column; gap: 10px;"></div>
 				
 			</div>
-				<div id="data_preview" class="tabcontent">
+				<div id="data_preview" class="tabcontent ds-bottom-tab-content">
 						<div id="preview_button_stash" style="display: none;">
 							<button id="refresh_preview" class="buttons" type="button">Refresh</button>
 							<button id="export_preview" class="buttons" type="button">Export</button>
 						</div>
 						<div id="activity_previews"></div>
 				</div>
-					<div id="tab_activities" class="tabcontent">
+					<div id="tab_activities" class="tabcontent ds-bottom-tab-content">
 						<div class="activity-group-content">
 							<div class="activity-group-label">Add an activity block to the flowchart.</div>
 							<button id="dataflow_activity" class="create_operator buttons">
@@ -327,7 +325,7 @@
 							</button>
 						</div>
 					</div>
-				<div id="scheduled_triggers" class="tabcontent">
+				<div id="scheduled_triggers" class="tabcontent ds-bottom-tab-content">
 					<div class="scheduled-triggers__toolbar">
 						<div class="scheduled-triggers__controls">
 							<label for="scheduled_trigger_select">Trigger</label>
@@ -343,7 +341,7 @@
 						<div id="scheduled_trigger_table"></div>
 					</div>
 				</div>
-				<div id="test_runs" class="tabcontent">
+				<div id="test_runs" class="tabcontent ds-bottom-tab-content">
 					<div class="scheduled-triggers__toolbar">
 						<div class="scheduled-triggers__controls">
 							<label for="test_runs_pipeline_select">Pipeline</label>
