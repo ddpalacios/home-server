@@ -198,6 +198,26 @@ void* process_thread(void* arg){
     }
     free(peek_buf);
 
+    /* For non-keep-alive responses, do the full SSL/socket teardown HERE
+     * on the worker thread. The main loop's remove_file_descriptor used
+     * to do this in its join section, but with multiple workers active
+     * it could race against another worker still doing SSL operations
+     * on the same connection — segfault inside libssl.so at offset 0x30
+     * (NULL deref of an internal SSL field).
+     *
+     * By tearing down on the worker, the SSL is touched by exactly one
+     * thread for its whole lifetime. We mark cSSL=NULL and fd=-1 so the
+     * main loop's remove_file_descriptor (still called for the array
+     * bookkeeping) skips the SSL/close calls. */
+    if (!new_client->keep_alive && new_client->cSSL != NULL) {
+        SSL_shutdown(new_client->cSSL);
+        SSL_free(new_client->cSSL);
+        new_client->cSSL = NULL;
+        /* Leave fd alive for main's remove_file_descriptor to close.
+         * cSSL=NULL signals 'SSL already torn down'; main's NULL-check
+         * skips the SSL ops but still calls close(fd). */
+    }
+
     new_client->finished = 1;
     pthread_exit(NULL);
 }
@@ -237,6 +257,16 @@ void start_listening_for_clients(char* port){
 		struct Socket* new_client = accept_new_client(listener_fd, &sockets, &pfds, &fd_count, &max_socket_size);
 		if (!new_client) continue;
 
+		/* Take exclusive ownership of this FD: clear POLLIN so the
+		 * main loop doesn't spawn a SECOND worker for the same FD
+		 * when the next poll fires on its incoming bytes. Two workers
+		 * racing on the same SSL connection caused use-after-free
+		 * crashes when one finished and main's remove_file_descriptor
+		 * SSL_free'd the cSSL while the other was still in SSL_peek. */
+		for (int j = 0; j < fd_count; j++) {
+		    if (pfds[j].fd == new_client->fd) { pfds[j].events = 0; break; }
+		}
+
 		printf("FD Count: %d\n", fd_count);
 		pthread_create(&threads[thread_count], NULL, process_thread, (void*)new_client);
 		clients[thread_count] = new_client;
@@ -247,9 +277,13 @@ void start_listening_for_clients(char* port){
 			    if (client->fd != triggered_fd){
 				    continue;
 			    }else{
+				/* Same exclusive-ownership flip on subsequent
+				 * POLLIN events for an already-registered FD. */
+				pfds[i].events = 0;
 				pthread_create(&threads[thread_count], NULL, process_thread, (void*)client);
 				clients[thread_count] = client;
 				thread_count++;
+				break;
 			    }
 		    }
 	    }
@@ -273,15 +307,18 @@ void start_listening_for_clients(char* port){
 			}
 
 			if (!clients[i]->keep_alive){
-				/* WebsocketClient cleanup used to run inline here, doing
-				 * 3 MySQL connect+query+disconnect cycles on the MAIN
-				 * thread per closed connection. With even moderate
-				 * traffic that pinned the accept loop on a libmysql
-				 * futex and starved new TLS handshakes (the user-
-				 * reported 30s ConnectTimeout). Defer the cleanup to
-				 * the token reaper / a separate path. Orphaned rows
-				 * are non-critical (lookup paths re-validate). */
 				remove_file_descriptor(sockets, pfds, clients[i]->fd, &fd_count);
+			} else {
+				/* Re-enable POLLIN so the next request on this same
+				 * keep-alive connection gets dispatched. We cleared
+				 * it when we spawned this worker to prevent a second
+				 * worker racing on the same SSL connection. */
+				for (int k = 0; k < fd_count; k++) {
+					if (pfds[k].fd == clients[i]->fd) {
+						pfds[k].events = POLLIN;
+						break;
+					}
+				}
 			}
 
 			for (int j = i; j < thread_count - 1; j++) {
