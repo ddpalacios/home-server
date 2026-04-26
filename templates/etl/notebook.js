@@ -197,6 +197,80 @@
     });
   }
 
+  function renderRunningPanel() {
+    const list = document.getElementById("nb_running_list");
+    const count = document.getElementById("nb_running_count");
+    if (!list || !count) return;
+    list.innerHTML = "";
+    const entries = Array.from(NB.runningJobs.entries());  // [[job_id, info], ...]
+    count.textContent = String(entries.length);
+    if (entries.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "nb-running-empty";
+      empty.textContent = "Nothing running.";
+      list.appendChild(empty);
+      return;
+    }
+    entries.forEach(function (pair) {
+      const job_id = pair[0];
+      const info = pair[1];
+      const row = document.createElement("div");
+      row.className = "nb-running-row";
+
+      const title = document.createElement("div");
+      title.className = "nb-running-title";
+      title.textContent = info.notebook_name + " · cell " + (info.cell_id || "?");
+      row.appendChild(title);
+
+      const meta = document.createElement("div");
+      meta.className = "nb-running-meta";
+      const elapsed = ((Date.now() - (info.started_at || Date.now())) / 1000) | 0;
+      let metaText = elapsed + "s";
+      if (info.last_progress) {
+        metaText += " · " + (info.last_progress.active_jobs || 0) + " job · " +
+                    (info.last_progress.tasks || "—") + " tasks";
+      }
+      meta.textContent = metaText;
+      row.appendChild(meta);
+
+      const actions = document.createElement("div");
+      actions.className = "nb-running-actions";
+      const jump = document.createElement("button");
+      jump.type = "button";
+      jump.className = "nb-running-jump";
+      jump.textContent = "Open";
+      jump.addEventListener("click", function () {
+        openNotebook(info.notebook_id).then(function () {
+          if (typeof focusCellById === "function") focusCellById(info.cell_id);
+        });
+      });
+      const stop = document.createElement("button");
+      stop.type = "button";
+      stop.className = "nb-running-stop";
+      stop.textContent = "Stop";
+      stop.addEventListener("click", function () {
+        fetch("/etl/notebook/cancel", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ job_id: job_id }),
+        });
+      });
+      actions.appendChild(jump);
+      actions.appendChild(stop);
+      row.appendChild(actions);
+
+      list.appendChild(row);
+    });
+  }
+
+  // Tick every 250ms while anything is running so the elapsed column updates.
+  (function startRunningTick() {
+    setInterval(function () {
+      if (NB.runningJobs && NB.runningJobs.size > 0) {
+        try { renderRunningPanel(); } catch (e) { /* no-op */ }
+      }
+    }, 250);
+  })();
+
   // ---- save / load / new ---------------------------------------------------
 
   function newNotebook() {
@@ -690,6 +764,11 @@
     const target = NB.current.cells[idx];
     if (!target) return;
     setTimeout(function () { if (target._cm) target._cm.focus(); }, 0);
+  }
+
+  function focusCellById(cellId) {
+    const idx = (NB.current && NB.current.cells || []).findIndex(c => c.id === cellId);
+    if (idx >= 0 && typeof focusCell === "function") focusCell(idx);
   }
 
   // ---- Spark live status ---------------------------------------------------
