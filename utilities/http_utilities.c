@@ -233,55 +233,33 @@ void set_and_send_session_and_refresh_cookies(SSL* cSSL, char*session_token,char
 		refresh_cookie = NULL;
 	}
 }
-void send_response_code(SSL *cSSL,int code ){
-	char http_header[2048];
-	if (code == 200){
-			snprintf(http_header, sizeof(http_header),
-					"HTTP/1.1 200 OK\r\n"
-					"\r\n");
-	SSL_write(cSSL, http_header, strlen(http_header));
-	}else if (code == 201) {
-			snprintf(http_header, sizeof(http_header),
-					"HTTP/1.1 201 Created\r\n"
-					"\r\n");
-	SSL_write(cSSL, http_header, strlen(http_header));
+void send_response_code(SSL *cSSL, int code) {
+	/* HTTP/1.1 with no body MUST include Content-Length: 0 (or chunked
+	 * transfer-encoding) so the client knows the response is complete.
+	 * Without it, python-requests / urllib3 wait for the connection
+	 * close to delimit the body and surface that as a 30s ReadTimeout.
+	 * Connection: close also asks the client not to reuse the socket. */
+	const char *status =
+		(code == 200) ? "200 OK" :
+		(code == 201) ? "201 Created" :
+		(code == 400) ? "400 Bad Request" :
+		(code == 401) ? "401 Unauthorized" :
+		(code == 404) ? "404 Not Found" :
+		(code == 405) ? "405 Not Allowed" :
+		(code == 409) ? "409 Conflict" :
+		(code == 500) ? "500 Internal Server Error" :
+		"200 OK";
 
-	}else if (code == 400) {
-		snprintf(http_header, sizeof(http_header),
-				"HTTP/1.1 400 Bad Request\r\n"
-				"\r\n");
-
-	SSL_write(cSSL, http_header, strlen(http_header));
-
-	}else if (code == 401) {
-		snprintf(http_header, sizeof(http_header),
-				"HTTP/1.1 401 Unauthorized\r\n"
-				"\r\n");
-
-	SSL_write(cSSL, http_header, strlen(http_header));
-	}else if (code == 409) {
-		snprintf(http_header, sizeof(http_header),
-				"HTTP/1.1 409 Conflict\r\n"
-				"\r\n");
-
-	SSL_write(cSSL, http_header, strlen(http_header));
-
-	}else if (code == 404) {
-		snprintf(http_header, sizeof(http_header),
-				"HTTP/1.1 404 Not Found\r\n"
-				"\r\n");
-
-	SSL_write(cSSL, http_header, strlen(http_header));
-
-	
-	}else if (code == 405) {
-		snprintf(http_header, sizeof(http_header),
-				"HTTP/1.1 405 Not Allowed\r\n"
-				"\r\n");
-
-	SSL_write(cSSL, http_header, strlen(http_header));
+	char http_header[256];
+	int n = snprintf(http_header, sizeof(http_header),
+		"HTTP/1.1 %s\r\n"
+		"Content-Length: 0\r\n"
+		"Connection: close\r\n"
+		"\r\n",
+		status);
+	if (n > 0) {
+		SSL_write(cSSL, http_header, n);
 	}
-
 }
 int get_http_header(char* request, char*header_result, size_t header_result_size){
 		char*header_end = strstr(request, "\r\n\r\n");

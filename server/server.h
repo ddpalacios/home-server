@@ -15,6 +15,5 @@ typedef struct Server {
 
 } server;
 
-int bind_address_to_port(char* port,struct addrinfo);
 void start_listening_for_clients(char* port);
 struct Server connect_to_server(const char* host, const char* port);
