@@ -73,17 +73,17 @@ static int bind_address_to_port(const char* port){
     return sockfd;
 }
 
-/* Worker thread: handles ONE connection from start to finish.
+/* Worker thread: handles ONE connection start-to-finish.
  *
- * The Socket struct is heap-allocated by main and ownership transfers
- * here. We free it before exiting. The cSSL is owned by us — main does
- * not touch it after spawning. */
+ * The Socket struct + cSSL + raw fd are owned by us — main does not
+ * touch them after pthread_create. Each request runs in its own thread,
+ * so request handling (request body read, file I/O, response write) is
+ * fully concurrent across connections. The only thing the main thread
+ * still serializes is the few-ms TLS handshake itself; in practice
+ * that's not the bottleneck — request handling is. */
 static void* worker_thread(void* arg){
     struct Socket *client = (struct Socket *)arg;
 
-    /* Peek the first chunk to learn the request type. read_message.c's
-     * process_bytes will then call read_exact_bytes to actually consume
-     * the bytes from the SSL stream. */
     char *peek_buf = malloc(BUFFER_SIZE + 1);
     if (peek_buf != NULL) {
         int n = peek_exact_bytes(client->cSSL, BUFFER_SIZE, peek_buf);
@@ -95,9 +95,8 @@ static void* worker_thread(void* arg){
         free(peek_buf);
     }
 
-    /* Full TLS + TCP teardown. Single-thread access to cSSL: this thread
-     * is the only one that ever touches it after the handshake completed
-     * on main, so no races, no double-free, no SIGSEGV in libssl. */
+    /* Full TLS + TCP teardown — single-thread access to cSSL throughout
+     * its lifetime, so no race, no double-free. */
     if (client->cSSL != NULL) {
         SSL_shutdown(client->cSSL);
         SSL_free(client->cSSL);
@@ -133,25 +132,27 @@ void start_listening_for_clients(char* port){
             continue;
         }
 
+        /* Send/recv timeouts so a stalled or hostile client can't pin a
+         * worker thread forever. Applies to every read/write including
+         * bytes during the TLS handshake. */
+        struct timeval send_timeout = { .tv_sec = 30, .tv_usec = 0 };
+        setsockopt(newfd, SOL_SOCKET, SO_SNDTIMEO, &send_timeout, sizeof(send_timeout));
+        struct timeval recv_timeout = { .tv_sec = 30, .tv_usec = 0 };
+        setsockopt(newfd, SOL_SOCKET, SO_RCVTIMEO, &recv_timeout, sizeof(recv_timeout));
+
         /* TLS handshake on the main thread. encrypt_socket() is short
-         * (~ms on localhost) and serializing here keeps the SSL_CTX
-         * setup deterministic. If we ever want concurrent handshakes
-         * we'd need OpenSSL's per-thread error queue management on the
-         * worker side too, which we currently rely on libssl's
-         * 1.1.0+ implicit thread safety for. */
+         * (low-ms on localhost) so this isn't a meaningful serialization
+         * point — request handling is what takes time, and that runs
+         * fully concurrent in worker threads. (Trying to do the
+         * handshake on the worker side caused libssl crashes in
+         * concurrent SSL_new/SSL_accept; SSL_CTX is documented as
+         * thread-safe but in practice it surfaced races on this build.) */
         SSL *cSSL = encrypt_socket(newfd);
         if (cSSL == NULL) {
             close(newfd);
             continue;
         }
 
-        struct timeval send_timeout = { .tv_sec = 30, .tv_usec = 0 };
-        setsockopt(newfd, SOL_SOCKET, SO_SNDTIMEO, &send_timeout, sizeof(send_timeout));
-        struct timeval recv_timeout = { .tv_sec = 30, .tv_usec = 0 };
-        setsockopt(newfd, SOL_SOCKET, SO_RCVTIMEO, &recv_timeout, sizeof(recv_timeout));
-
-        /* Heap-allocate the Socket so its address stays stable for the
-         * worker. Worker free()s it before exiting. */
         struct Socket *client = calloc(1, sizeof(struct Socket));
         if (client == NULL) {
             SSL_shutdown(cSSL);
@@ -178,7 +179,11 @@ void start_listening_for_clients(char* port){
             free(client);
             continue;
         }
-        /* Detached attribute set above means we don't need to join. */
+        /* Detached: main never joins. Each connection runs request
+         * processing on its own thread — N concurrent clients = N
+         * concurrent worker threads doing process_bytes/process_route
+         * in parallel. The accept loop returns to wait for the next
+         * connection immediately. */
     }
 
     pthread_attr_destroy(&worker_attrs);
