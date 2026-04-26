@@ -159,8 +159,8 @@
     border-bottom: 1px solid var(--line);
     border-top-left-radius: var(--radius-lg);
     border-top-right-radius: var(--radius-lg);
-    background: var(--brand-500);
-    color: #ffffff;
+    background: var(--brand-50);
+    color: var(--ink-900);
     height: auto;
     overflow: hidden;
     text-overflow: ellipsis;
