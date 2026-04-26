@@ -125,6 +125,7 @@
 
   function showNotebookView() {
     if (typeof window.hideHomeView === "function") window.hideHomeView();
+    if (typeof window.hideSettingsView === "function") window.hideSettingsView();
     document.body.classList.add("notebook-mode");
     const ws = document.getElementById("notebook_workspace");
     if (ws) ws.hidden = false;

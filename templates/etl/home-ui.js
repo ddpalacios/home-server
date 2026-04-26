@@ -531,6 +531,10 @@ document.addEventListener("DOMContentLoaded", function() {
   if (homeButton) {
     homeButton.addEventListener("click", showHomeView);
   }
+  var settingsButton = document.getElementById("settingsButton");
+  if (settingsButton) {
+    settingsButton.addEventListener("click", showSettingsView);
+  }
   function expandSection(detailsEl) {
     if (detailsEl && detailsEl.tagName === "DETAILS") detailsEl.open = true;
     if (detailsEl && typeof detailsEl.scrollIntoView === "function") {
@@ -562,6 +566,8 @@ document.addEventListener("DOMContentLoaded", function() {
         expandSection(document.querySelector(".pipeline-panel--notebooks"));
       } else if (go === "view-triggers") {
         expandSection(document.getElementById("savedTriggersGroup"));
+      } else if (go === "open-settings") {
+        showSettingsView();
       }
     });
   });
@@ -797,6 +803,7 @@ function ensureCanvasRendered() {
 window.ensureCanvasRendered = ensureCanvasRendered;
 
 function showHomeView() {
+  hideSettingsView();
   document.body.classList.add("home-mode");
   var hw = document.getElementById("home_workspace");
   if (hw) hw.hidden = false;
@@ -815,6 +822,25 @@ function hideHomeView() {
 }
 window.hideHomeView = hideHomeView;
 
+function showSettingsView() {
+  hideHomeView();
+  if (window.NB && typeof window.NB.hideNotebookView === "function") {
+    window.NB.hideNotebookView();
+  }
+  document.body.classList.add("settings-mode");
+  var sw = document.getElementById("settings_workspace");
+  if (sw) sw.hidden = false;
+}
+window.showSettingsView = showSettingsView;
+
+function hideSettingsView() {
+  if (!document.body.classList.contains("settings-mode")) return;
+  document.body.classList.remove("settings-mode");
+  var sw = document.getElementById("settings_workspace");
+  if (sw) sw.hidden = true;
+}
+window.hideSettingsView = hideSettingsView;
+
 function refreshHomeCounts() {
   var df = document.getElementById("homeDataflowCount");
   var pp = document.getElementById("homePipelineCount");
@@ -832,6 +858,7 @@ function setActivePipelineType(type) {
     return;
   }
   hideHomeView();
+  hideSettingsView();
   if (window.NB && typeof window.NB.hideNotebookView === "function") {
     window.NB.hideNotebookView();
   }

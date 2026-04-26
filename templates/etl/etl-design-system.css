@@ -265,20 +265,39 @@
 .ds-resize-handle:hover::after { background: var(--brand-500); width: 64px; }
 
 /* === HOME (SaaS-style landing) === */
+.sidebar-brand-row {
+  display: flex; align-items: stretch; gap: 6px; margin: 0 0 12px;
+}
 .sidebar-home {
   display: flex; align-items: center; gap: 10px;
-  width: 100%; padding: 8px 10px;
+  flex: 1; min-width: 0; padding: 8px 10px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   cursor: pointer;
   font-family: var(--font-ui);
   text-align: left;
-  margin: 0 0 12px;
   box-shadow: var(--shadow-1);
   transition: border-color var(--motion-fast), background var(--motion-fast);
 }
 .sidebar-home:hover { border-color: var(--brand-500); background: var(--brand-50); }
+.sidebar-icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; flex-shrink: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  color: var(--ink-700);
+  cursor: pointer;
+  box-shadow: var(--shadow-1);
+  transition: border-color var(--motion-fast), background var(--motion-fast),
+              color var(--motion-fast);
+}
+.sidebar-icon-btn:hover {
+  border-color: var(--brand-500);
+  background: var(--brand-50);
+  color: var(--brand-500);
+}
 .sidebar-home-icon {
   display: inline-flex; width: 28px; height: 28px;
   align-items: center; justify-content: center;
@@ -292,9 +311,52 @@
 body.home-mode .pipeline-run,
 body.home-mode #chart_container,
 body.home-mode #notebook_workspace,
+body.home-mode #settings_workspace,
 body.home-mode .footer,
 body.home-mode .zoom-controls { display: none !important; }
 body.home-mode .content { padding: 0; }
+
+body.settings-mode .pipeline-run,
+body.settings-mode #chart_container,
+body.settings-mode #notebook_workspace,
+body.settings-mode #home_workspace,
+body.settings-mode .footer,
+body.settings-mode .zoom-controls { display: none !important; }
+body.settings-mode .content { padding: 0; }
+
+.settings-workspace {
+  width: 100%; height: 100%; overflow-y: auto;
+  background: var(--surface-2);
+  padding: 32px 40px 48px;
+  font-family: var(--font-ui);
+}
+.settings-card {
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 18px 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+.settings-card-row {
+  display: flex; align-items: flex-end; gap: 12px;
+  flex-wrap: wrap;
+}
+.settings-card-row--col {
+  flex-direction: column; align-items: stretch; gap: 6px;
+}
+.settings-row-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+}
+.settings-card .nb-spark-log {
+  max-height: 280px;
+  font-size: 12px;
+}
+.settings-card .nb-spark-status {
+  font-size: 13px;
+  color: var(--ink-700);
+}
 
 .home-workspace {
   width: 100%; height: 100%; overflow-y: auto;
