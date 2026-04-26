@@ -515,85 +515,7 @@ body.notebook-mode .content { padding: 0; }
 .nb-workspace .nb-md-view a:hover { text-decoration: underline; }
 .nb-workspace .nb-md-view .nb-md-empty { color: #94a3b8; }
 
-/* ---------- Live Spark progress widget ---------- */
-
-.nb-workspace .nb-spark-widget {
-  border: 1px solid rgba(31, 79, 214, 0.2);
-  border-radius: 10px;
-  background: linear-gradient(135deg, #f8faff 0%, #eef2ff 100%);
-  padding: 10px 14px;
-  margin-bottom: 10px;
-  font-family: "Space Grotesk", system-ui, sans-serif;
-  font-size: 12px;
-  color: #1f2937;
-}
-.nb-workspace .nb-spark-widget.nb-spark-running {
-  border-color: rgba(16, 185, 129, 0.45);
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-}
-
-.nb-workspace .nb-spark-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-}
-.nb-workspace .nb-spark-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #94a3b8;
-}
-.nb-workspace .nb-spark-running .nb-spark-dot {
-  background: #16a34a;
-  box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7);
-  animation: nb-spark-pulse 1.4s infinite;
-}
-@keyframes nb-spark-pulse {
-  0%   { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.6); }
-  70%  { box-shadow: 0 0 0 8px rgba(22, 163, 74, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
-}
-.nb-workspace .nb-spark-title {
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  font-size: 11px;
-  color: #475569;
-}
-.nb-workspace .nb-spark-summary {
-  margin-left: auto;
-  color: #475569;
-  font-weight: 500;
-  font-family: ui-monospace, "JetBrains Mono", monospace;
-  font-size: 11px;
-}
-
-.nb-workspace .nb-spark-body { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
-.nb-workspace .nb-spark-body:empty { display: none; }
-
-.nb-workspace .nb-spark-job {
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  border-radius: 8px;
-  padding: 8px 10px;
-}
-.nb-workspace .nb-spark-job-header {
-  font-weight: 600;
-  font-size: 11px;
-  color: #1f4fd6;
-  margin-bottom: 6px;
-}
-.nb-workspace .nb-spark-stage { padding: 4px 0; }
-.nb-workspace .nb-spark-stage-name {
-  font-family: ui-monospace, "JetBrains Mono", monospace;
-  font-size: 11px;
-  color: #475569;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-bottom: 4px;
-}
+/* ---------- Inline Spark progress bar ---------- */
 
 .nb-workspace .nb-spark-bar {
   position: relative;
@@ -601,60 +523,6 @@ body.notebook-mode .content { padding: 0; }
   background: rgba(15, 23, 42, 0.06);
   border-radius: 999px;
   overflow: hidden;
-}
-.nb-workspace .nb-spark-bar-fill {
-  position: absolute;
-  top: 0; left: 0; bottom: 0;
-  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
-  border-radius: 999px 0 0 999px;
-  transition: width 0.3s ease;
-}
-.nb-workspace .nb-spark-bar-active {
-  position: absolute;
-  top: 0; bottom: 0;
-  background: rgba(31, 79, 214, 0.4);
-  border-radius: 0;
-  background-image: repeating-linear-gradient(
-    -45deg,
-    rgba(31, 79, 214, 0.6) 0,
-    rgba(31, 79, 214, 0.6) 4px,
-    rgba(31, 79, 214, 0.3) 4px,
-    rgba(31, 79, 214, 0.3) 8px
-  );
-  animation: nb-spark-stripes 1.2s linear infinite;
-  transition: width 0.3s ease, left 0.3s ease;
-}
-@keyframes nb-spark-stripes {
-  0%   { background-position: 0 0; }
-  100% { background-position: 16px 0; }
-}
-
-.nb-workspace .nb-spark-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  font-size: 11px;
-  color: #475569;
-  margin-top: 4px;
-}
-.nb-workspace .nb-spark-stats span {
-  font-family: ui-monospace, "JetBrains Mono", monospace;
-}
-.nb-workspace .nb-spark-stat-active { color: #1d4ed8; font-weight: 600; }
-.nb-workspace .nb-spark-stat-failed { color: #b91c1c; font-weight: 600; }
-.nb-workspace .nb-spark-stat-pct {
-  margin-left: auto;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.nb-workspace .nb-spark-execs {
-  font-size: 11px;
-  color: #64748b;
-  font-family: ui-monospace, "JetBrains Mono", monospace;
-  text-align: right;
-  padding-top: 4px;
-  border-top: 1px dashed rgba(15, 23, 42, 0.08);
 }
 
 /* ---------- Inline images (matplotlib) ---------- */

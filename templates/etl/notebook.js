@@ -12,8 +12,6 @@
     autosaveTimer: null,
     varsVisible: false,
     selectedCellId: null,
-    sparkPollTimer: null,
-    sparkStatusNode: null,
   };
 
   NB.runningJobs = NB.runningJobs || new Map();   // job_id -> {notebook_id, notebook_name, cell_id, started_at, last_progress}
@@ -37,9 +35,6 @@
   }
 
   const AUTOSAVE_DEBOUNCE_MS = 5000;
-  const SPARK_POLL_INTERVAL_MS = 1500;
-  const SPARK_POLL_DELAY_MS = 800;
-  const SPARK_HINT_RE = /\b(spark\.|sc\.|%sparksql|\.toPandas\(|\.collect\(|\.show\(|\.write\.|\.read\.|sql\()/;
 
   function uid(prefix) {
     return prefix + "_" + Math.random().toString(36).slice(2, 10);
@@ -889,144 +884,6 @@
   function focusCellById(cellId) {
     const idx = (NB.current && NB.current.cells || []).findIndex(c => c.id === cellId);
     if (idx >= 0 && typeof focusCell === "function") focusCell(idx);
-  }
-
-  // ---- Spark live status ---------------------------------------------------
-
-  function startSparkPolling(cell) {
-    stopSparkPolling();
-    if (!cell || !cell._outputNode) return;
-
-    // Skip polling entirely for cells that don't look Spark-related — keeps
-    // the network log quiet for plain Python cells.
-    const code = (cell._cm ? cell._cm.getValue() : cell.source) || "";
-    if (!SPARK_HINT_RE.test(code)) return;
-
-    // Mount the widget at the top of the cell's output area so it sits above
-    // any stdout/stderr chunks once the response arrives.
-    const widget = el("div", { class: "nb-spark-widget" }, []);
-    widget.innerHTML = '<div class="nb-spark-header">' +
-      '<span class="nb-spark-dot"></span>' +
-      '<span class="nb-spark-title">Spark</span>' +
-      '<span class="nb-spark-summary"></span>' +
-      '</div>' +
-      '<div class="nb-spark-body"></div>';
-
-    cell._outputNode.innerHTML = "";
-    cell._outputNode.appendChild(widget);
-    NB.sparkStatusNode = widget;
-
-    function poll() {
-      fetch("/etl/notebook/spark/status")
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-          if (!NB.sparkStatusNode) return;
-          renderSparkWidget(NB.sparkStatusNode, data);
-        })
-        .catch(function () { /* ignore transient errors */ });
-    }
-    // Delay the first poll so short-lived cells don't trigger any /spark/status
-    // hits at all.
-    NB.sparkPollDelay = setTimeout(function () {
-      NB.sparkPollDelay = null;
-      poll();
-      NB.sparkPollTimer = setInterval(poll, SPARK_POLL_INTERVAL_MS);
-    }, SPARK_POLL_DELAY_MS);
-  }
-
-  function stopSparkPolling() {
-    if (NB.sparkPollTimer) {
-      clearInterval(NB.sparkPollTimer);
-      NB.sparkPollTimer = null;
-    }
-    if (NB.sparkPollDelay) {
-      clearTimeout(NB.sparkPollDelay);
-      NB.sparkPollDelay = null;
-    }
-    NB.sparkStatusNode = null;
-  }
-
-  function renderSparkWidget(widget, data) {
-    const summary = widget.querySelector(".nb-spark-summary");
-    const body = widget.querySelector(".nb-spark-body");
-    if (!summary || !body) return;
-
-    if (!data || !data.active) {
-      summary.textContent = data && data.error ? "session error" : "session not started";
-      body.innerHTML = "";
-      widget.classList.remove("nb-spark-running");
-      return;
-    }
-
-    const jobs = data.jobs || [];
-    const totalActive = jobs.reduce(function (sum, job) {
-      return sum + (job.stages || []).reduce(function (s, st) { return s + (st.num_active || 0); }, 0);
-    }, 0);
-    const parallelism = data.default_parallelism || 0;
-
-    if (!jobs.length) {
-      summary.textContent = "idle · default parallelism " + parallelism;
-      body.innerHTML = "";
-      widget.classList.remove("nb-spark-running");
-      return;
-    }
-
-    widget.classList.add("nb-spark-running");
-    summary.textContent = jobs.length + (jobs.length === 1 ? " job" : " jobs") +
-      " · " + totalActive + "/" + parallelism + " task slots active";
-
-    // Render jobs and stages.
-    body.innerHTML = "";
-    jobs.forEach(function (job) {
-      const jobEl = el("div", { class: "nb-spark-job" }, []);
-      jobEl.appendChild(el("div", {
-        class: "nb-spark-job-header",
-        text: "Job " + job.job_id + " · " + (job.status || "RUNNING"),
-      }, []));
-
-      (job.stages || []).forEach(function (stage) {
-        const total = stage.num_tasks || 0;
-        const done = stage.num_completed || 0;
-        const active = stage.num_active || 0;
-        const failed = stage.num_failed || 0;
-        const pct = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0;
-
-        const stageEl = el("div", { class: "nb-spark-stage" }, []);
-        stageEl.appendChild(el("div", { class: "nb-spark-stage-name", text: stage.name || ("Stage " + stage.stage_id) }, []));
-
-        const bar = el("div", { class: "nb-spark-bar" }, []);
-        const fill = el("div", { class: "nb-spark-bar-fill", style: "width: " + pct + "%" }, []);
-        const activeFill = el("div", {
-          class: "nb-spark-bar-active",
-          style: "left: " + pct + "%; width: " + (total > 0 ? Math.min(100 - pct, Math.round((active / total) * 100)) : 0) + "%",
-        }, []);
-        bar.appendChild(fill);
-        bar.appendChild(activeFill);
-        stageEl.appendChild(bar);
-
-        const stats = el("div", { class: "nb-spark-stats" }, []);
-        stats.appendChild(el("span", { text: done + " / " + total + " tasks" }, []));
-        if (active) stats.appendChild(el("span", { class: "nb-spark-stat-active", text: active + " active" }, []));
-        if (failed) stats.appendChild(el("span", { class: "nb-spark-stat-failed", text: failed + " failed" }, []));
-        stats.appendChild(el("span", { class: "nb-spark-stat-pct", text: pct + "%" }, []));
-        stageEl.appendChild(stats);
-
-        jobEl.appendChild(stageEl);
-      });
-
-      body.appendChild(jobEl);
-    });
-
-    // Executor footer (just the count + total running tasks).
-    const execs = data.executors || [];
-    if (execs.length) {
-      const totalRunning = execs.reduce(function (s, e) { return s + (e.running_tasks || 0); }, 0);
-      body.appendChild(el("div", {
-        class: "nb-spark-execs",
-        text: execs.length + (execs.length === 1 ? " executor" : " executors") +
-              " · " + totalRunning + " tasks running",
-      }, []));
-    }
   }
 
   // ---- run + output --------------------------------------------------------
