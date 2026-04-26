@@ -768,6 +768,27 @@ var cachedPipelines = [];
 var cachedSavedPipelines = [];
 var operatorI = 0;
 
+function reserveNextOperatorId() {
+  var maxExisting = -1;
+  if (typeof $flowchart !== "undefined" && $flowchart && $flowchart.length) {
+    try {
+      var operators = $flowchart.flowchart("getOperators") || {};
+      Object.keys(operators).forEach(function(key) {
+        var n = parseInt(key, 10);
+        if (!isNaN(n) && n > maxExisting) {
+          maxExisting = n;
+        }
+      });
+    } catch (e) {}
+  }
+  var next = Math.max(operatorI, maxExisting + 1);
+  operatorI = next + 1;
+  if (typeof window.flowchartSetOperatorIndex === "function") {
+    try { window.flowchartSetOperatorIndex(operatorI); } catch (e) {}
+  }
+  return next;
+}
+
 function setOperatorIndexFromActivities(activities) {
   var ids = [];
   if (activities && typeof activities === "object") {
@@ -1028,6 +1049,8 @@ function renderPipelineList(pipelines) {
     return;
   }
   list.innerHTML = "";
+  var pipelineCountEl = document.getElementById("pipelineCount");
+  if (pipelineCountEl) pipelineCountEl.textContent = String(cachedPipelines.length);
   function getDuplicateName(baseName) {
     var normalized = (baseName || "pipeline").replace(/_duplicate_\d+$/i, "");
     var maxIndex = 0;
@@ -1262,6 +1285,8 @@ function renderSavedPipelineList(pipelines) {
     return;
   }
   list.innerHTML = "";
+  var savedPipelineCountEl = document.getElementById("savedPipelineCount");
+  if (savedPipelineCountEl) savedPipelineCountEl.textContent = String(cachedSavedPipelines.length);
   function getDuplicateName(baseName) {
     var normalized = (baseName || "pipeline").replace(/_duplicate_\d+$/i, "");
     var maxIndex = 0;
@@ -3086,7 +3111,7 @@ $(document).ready(function() {
   function createIngestAtSlot(activityType) {
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     var slot = getImportSlotPosition();
     var title = "Import Data";
     if (activityType === "sheets_read") {
@@ -3120,7 +3145,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
     $flowchart.flowchart("createOperator", operatorId, operatorData);
 
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
@@ -3169,7 +3193,7 @@ $(document).ready(function() {
   }
 
   function createSelectAtPlaceholder(placeholder) {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     var slot = {
       left: parseInt(placeholder.style.left || String(importBaseLeft + selectBaseOffset), 10),
       top: parseInt(placeholder.style.top || String(importBaseTop), 10)
@@ -3197,7 +3221,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
     let select_activity = new Select_Activity($flowchart, new_activity);
@@ -3219,7 +3242,7 @@ $(document).ready(function() {
           left: parseInt(placeholder.style.left || String(importBaseLeft + selectBaseOffset), 10),
           top: parseInt(placeholder.style.top || String(importBaseTop), 10)
         };
-        var operatorId = operatorI;
+        var operatorId = reserveNextOperatorId();
         var operatorData = {
           top: slot.top,
           left: slot.left,
@@ -3243,7 +3266,6 @@ $(document).ready(function() {
             }
           }
         };
-        operatorI++;
         $flowchart.flowchart("createOperator", operatorId, operatorData);
         let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
         let select_activity = new Select_Activity($flowchart, new_activity);
@@ -3263,7 +3285,7 @@ $(document).ready(function() {
       left: parseInt(placeholder.style.left || String(importBaseLeft + selectBaseOffset), 10),
       top: parseInt(placeholder.style.top || String(importBaseTop), 10)
     };
-    var beforeId = operatorI;
+    var idsBefore = Object.keys($flowchart.flowchart("getOperators") || {});
     var buttonMap = {
       select: "#select_activity",
       filter: "#filter_activity",
@@ -3287,14 +3309,25 @@ $(document).ready(function() {
       http_sink: "#http_sink_activity"
     };
     var selector = buttonMap[activityType];
-    if (selector) {
-      var btn = document.querySelector(selector);
-      if (btn) {
-        btn.click();
-      }
+    if (!selector) {
+      console.warn("createActivityAtPlaceholder: unknown activityType", activityType);
+      return;
     }
-    var newId = operatorI - 1;
-    if (newId >= beforeId) {
+    var btn = document.querySelector(selector);
+    if (!btn) {
+      console.warn("createActivityAtPlaceholder: missing button", selector);
+      return;
+    }
+    btn.click();
+    var idsAfter = Object.keys($flowchart.flowchart("getOperators") || {});
+    var addedIds = idsAfter.filter(function(id) { return idsBefore.indexOf(id) === -1; });
+    if (addedIds.length !== 1) {
+      console.warn("createActivityAtPlaceholder: expected 1 new operator, got", addedIds.length);
+      return;
+    }
+    var newId = parseInt(addedIds[0], 10);
+    if (isNaN(newId)) { newId = addedIds[0]; }
+    {
       var operators = $flowchart.flowchart("getOperators") || {};
       var operatorData = operators[newId];
       if (operatorData && operatorData.internal && operatorData.internal.els && operatorData.internal.els.operator) {
@@ -3819,7 +3852,7 @@ $(document).ready(function() {
   }
 
   function createSelectAtPosition(slot) {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     var operatorData = {
       top: slot.top,
       left: slot.left,
@@ -3843,7 +3876,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
     let select_activity = new Select_Activity($flowchart, new_activity);
@@ -3871,7 +3903,6 @@ $(document).ready(function() {
     if (activityType === "select") {
       return createSelectAtPosition(slot);
     }
-    var beforeId = operatorI;
     var buttonMap = {
       select: "#select_activity",
       filter: "#filter_activity",
@@ -3891,21 +3922,31 @@ $(document).ready(function() {
       combine: "#combine_activity",
       append: "#append_activity",
       flatten: "#flatten_activity",
-      sheets_write: "#sheets_write_activity"
+      sheets_write: "#sheets_write_activity",
+      http_sink: "#http_sink_activity"
     };
     var selector = buttonMap[activityType];
-    if (selector) {
-      var btn = document.querySelector(selector);
-      if (btn) {
-        btn.click();
-      }
+    if (!selector) {
+      console.warn("createActivityAtPosition: unknown activityType", activityType);
+      return null;
     }
-    var newId = operatorI - 1;
-    if (newId >= beforeId) {
-      positionOperator(newId, slot);
-      return newId;
+    var btn = document.querySelector(selector);
+    if (!btn) {
+      console.warn("createActivityAtPosition: missing button", selector);
+      return null;
     }
-    return null;
+    var idsBefore = Object.keys($flowchart.flowchart("getOperators") || {});
+    btn.click();
+    var idsAfter = Object.keys($flowchart.flowchart("getOperators") || {});
+    var addedIds = idsAfter.filter(function(id) { return idsBefore.indexOf(id) === -1; });
+    if (addedIds.length !== 1) {
+      console.warn("createActivityAtPosition: expected 1 new operator, got", addedIds.length);
+      return null;
+    }
+    var newId = parseInt(addedIds[0], 10);
+    if (isNaN(newId)) { newId = addedIds[0]; }
+    positionOperator(newId, slot);
+    return newId;
   }
 
   function createActivityBetween(activityType, linkContext) {
@@ -6307,7 +6348,7 @@ $(document).ready(function() {
   });
 
   function createSelectAtFallback() {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorData = {
@@ -6332,7 +6373,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
     let select_activity = new Select_Activity($flowchart, new_activity);
@@ -6351,7 +6391,7 @@ $(document).ready(function() {
   });
 
   $("#sort_activity").on("click", function() {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorData = {
@@ -6376,7 +6416,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
     let sort_activity = new Sort_Activity($flowchart, new_activity);
@@ -6385,7 +6424,7 @@ $(document).ready(function() {
   });
 
   $("#join_activity").on("click", function() {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorData = {
@@ -6415,7 +6454,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
 
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
@@ -6425,7 +6463,7 @@ $(document).ready(function() {
   });
 
   $("#aggregate_activity").on("click", function() {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorData = {
@@ -6450,7 +6488,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
     let group_activity = new Group_Activity($flowchart, new_activity);
@@ -6459,7 +6496,7 @@ $(document).ready(function() {
   });
 
   $("#custom_activity").on("click", function() {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorData = {
@@ -6485,7 +6522,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
     let custom_activity = new Custom_Activity($flowchart, new_activity);
@@ -6494,7 +6530,7 @@ $(document).ready(function() {
   });
 
   $("#replace_activity").on("click", function() {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorData = {
@@ -6520,7 +6556,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
 
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
@@ -6530,7 +6565,7 @@ $(document).ready(function() {
   });
 
   $("#fill_activity").on("click", function() {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorData = {
@@ -6555,7 +6590,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
 
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
@@ -6565,7 +6599,7 @@ $(document).ready(function() {
   });
 
   $("#clean_activity").on("click", function() {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorData = {
@@ -6590,7 +6624,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
 
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
@@ -6600,7 +6633,7 @@ $(document).ready(function() {
   });
 
   $("#dedupe_activity").on("click", function() {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorData = {
@@ -6625,7 +6658,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
 
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
@@ -6635,7 +6667,7 @@ $(document).ready(function() {
   });
 
   $("#cast_activity").on("click", function() {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorData = {
@@ -6660,7 +6692,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
 
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
@@ -6670,7 +6701,7 @@ $(document).ready(function() {
   });
 
   $("#regex_activity").on("click", function() {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorData = {
@@ -6695,7 +6726,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
 
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
@@ -6705,7 +6735,7 @@ $(document).ready(function() {
   });
 
   $("#pivot_activity").on("click", function() {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorData = {
@@ -6730,7 +6760,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
 
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
@@ -6740,7 +6769,7 @@ $(document).ready(function() {
   });
 
   $("#window_activity").on("click", function() {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorData = {
@@ -6765,7 +6794,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
 
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
@@ -6775,7 +6803,7 @@ $(document).ready(function() {
   });
 
   $("#flatten_activity").on("click", function() {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorData = {
@@ -6799,7 +6827,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
 
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
@@ -6809,7 +6836,7 @@ $(document).ready(function() {
   });
 
   $("#filter_activity").on("click", function() {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorData = {
@@ -6834,7 +6861,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
 
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
@@ -6844,7 +6870,7 @@ $(document).ready(function() {
   });
 
   $("#split_activity").on("click", function() {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorData = {
@@ -6870,7 +6896,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
     let split_activity = new Split_Activity($flowchart, new_activity);
@@ -6879,7 +6904,7 @@ $(document).ready(function() {
   });
 
   $("#combine_activity").on("click", function() {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorData = {
@@ -6904,7 +6929,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
     let combine_activity = new Combine_Activity($flowchart, new_activity);
@@ -6921,7 +6945,7 @@ $(document).ready(function() {
   });
 
   $("#sheets_write_activity").on("click", function() {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorData = {
@@ -6946,7 +6970,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
     let sheets_activity = new GoogleSheets_Activity($flowchart, new_activity);
@@ -6955,7 +6978,7 @@ $(document).ready(function() {
   });
 
   $("#http_sink_activity").on("click", function() {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorData = {
@@ -6980,7 +7003,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
     let http_activity = new Http_Sink_Activity($flowchart, new_activity);
@@ -6989,7 +7011,7 @@ $(document).ready(function() {
   });
 
   $("#append_activity").on("click", function() {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorData = {
@@ -7017,7 +7039,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
 
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
@@ -7027,7 +7048,7 @@ $(document).ready(function() {
   });
 
   $("#dataflow_activity").on("click", function() {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorData = {
@@ -7052,7 +7073,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
     let dataflow_activity = new DataFlow_Activity($flowchart, new_activity);
@@ -7061,7 +7081,7 @@ $(document).ready(function() {
   });
 
   $("#pipeline_activity").on("click", function() {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorData = {
@@ -7086,7 +7106,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
     let pipeline_activity = new Pipeline_Activity($flowchart, new_activity);
@@ -7095,7 +7114,7 @@ $(document).ready(function() {
   });
 
   $("#stream_activity").on("click", function() {
-    var operatorId = operatorI;
+    var operatorId = reserveNextOperatorId();
     const footer = document.getElementById("footer");
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorData = {
@@ -7120,7 +7139,6 @@ $(document).ready(function() {
         }
       }
     };
-    operatorI++;
     $flowchart.flowchart("createOperator", operatorId, operatorData);
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
     let stream_activity = new Stream_Activity($flowchart, new_activity);

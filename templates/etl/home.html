@@ -31,7 +31,7 @@
 	</head>
 <body>
 
-<div class="sidebar" id="sidebar">
+<div class="sidebar sidebar-v2" id="sidebar">
     <div class="sidebar-header">
         <div class="sidebar-header-row">
             <h3>Activities</h3>
@@ -52,37 +52,46 @@
     </div>
     <div class="sidebar-scroll">
     <div class="sidebar-buttons">
-        <div class="pipeline-panel">
-            <button id="newPipelineButton" class="pipeline-new-button" type="button">
-              + New Dataflow
-            </button>
-            <div id="pipelineList" class="pipeline-list"></div>
-        </div>
-        <div class="pipeline-panel pipeline-panel--pipelines">
-            <button id="newSavedPipelineButton" class="pipeline-new-button" type="button">
-              + New Pipeline
-            </button>
-            <div id="savedPipelineList" class="pipeline-list"></div>
-        </div>
-        <div class="pipeline-panel pipeline-panel--notebooks">
-            <button id="newNotebookButton" class="pipeline-new-button" type="button">
-              + New Notebook
-            </button>
-            <div id="notebookList" class="pipeline-list"></div>
-        </div>
-        <div class="pipeline-panel pipeline-panel--running">
-          <details id="nb_running_section" open>
-            <summary>
-              <span>Running cells</span>
-              <span class="nb-running-count" id="nb_running_count">0</span>
+        <details class="ds-sidebar-section pipeline-panel" open>
+            <summary class="ds-sidebar-section-header">
+                <span>Dataflows</span>
+                <span class="row" style="gap: 6px;">
+                    <span class="pill pill-neutral count" id="pipelineCount">0</span>
+                    <button id="newPipelineButton" class="new-btn" type="button">+ New</button>
+                </span>
+            </summary>
+            <div id="pipelineList" class="pipeline-list ds-sidebar-list"></div>
+        </details>
+        <details class="ds-sidebar-section pipeline-panel pipeline-panel--pipelines" open>
+            <summary class="ds-sidebar-section-header">
+                <span>Pipelines</span>
+                <span class="row" style="gap: 6px;">
+                    <span class="pill pill-neutral count" id="savedPipelineCount">0</span>
+                    <button id="newSavedPipelineButton" class="new-btn" type="button">+ New</button>
+                </span>
+            </summary>
+            <div id="savedPipelineList" class="pipeline-list ds-sidebar-list"></div>
+        </details>
+        <details class="ds-sidebar-section pipeline-panel pipeline-panel--notebooks" open>
+            <summary class="ds-sidebar-section-header">
+                <span>Notebooks</span>
+                <span class="row" style="gap: 6px;">
+                    <span class="pill pill-neutral count" id="notebookCount">0</span>
+                    <button id="newNotebookButton" class="new-btn" type="button">+ New</button>
+                </span>
+            </summary>
+            <div id="notebookList" class="pipeline-list ds-sidebar-list"></div>
+        </details>
+        <details id="nb_running_section" class="ds-sidebar-section pipeline-panel pipeline-panel--running" open>
+            <summary class="ds-sidebar-section-header">
+                <span>Running cells</span>
+                <span class="pill pill-neutral count" id="nb_running_count">0</span>
             </summary>
             <div id="nb_running_list" class="nb-running-list"></div>
-          </details>
-        </div>
-        <div class="pipeline-panel pipeline-panel--spark">
-          <details id="nb_spark_section" open>
-            <summary>
-              <span>Spark Settings</span>
+        </details>
+        <details id="nb_spark_section" class="ds-sidebar-section pipeline-panel pipeline-panel--spark" open>
+            <summary class="ds-sidebar-section-header">
+                <span>Spark Settings</span>
             </summary>
             <div class="nb-spark-panel">
               <div class="nb-spark-row">
@@ -96,8 +105,7 @@
               </div>
               <pre id="nb_spark_log" class="nb-spark-log"></pre>
             </div>
-          </details>
-        </div>
+        </details>
         <details id="savedTriggersGroup" class="activity-group saved-triggers-group" open>
             <summary>Saved Triggers</summary>
             <div class="activity-group-content">

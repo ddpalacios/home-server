@@ -158,6 +158,8 @@
     const root = document.getElementById("notebookList");
     if (!root) return;
     root.innerHTML = "";
+    const countEl = document.getElementById("notebookCount");
+    if (countEl) countEl.textContent = String((NB.list || []).length);
     NB.list.forEach(function (item) {
       const isCurrent = NB.current && NB.current.notebook_id === item.notebook_id;
       const card = el("div", {
