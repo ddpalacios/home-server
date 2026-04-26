@@ -18,16 +18,11 @@ function switchTabPanel(evt, cityName) {
   if (cityName === "scheduled_triggers") {
     refreshScheduledTriggerRuns();
   }
-  if (cityName === "test_runs") {
-    refreshTestRuns();
-  }
 }
 
 var cachedTriggers = [];
 var selectedTriggerId = "";
 var scheduledTriggerRuns = [];
-var selectedTestRunPipelineId = "";
-var testRunRows = [];
 
 function updateScheduledTriggerOptions(triggers, activePipelineId) {
   var select = document.getElementById("scheduled_trigger_select");
@@ -67,14 +62,6 @@ function setSelectedTrigger(triggerId) {
   var select = document.getElementById("scheduled_trigger_select");
   if (select && selectedTriggerId) {
     select.value = selectedTriggerId;
-  }
-}
-
-function setSelectedTestRunPipeline(pipelineId) {
-  selectedTestRunPipelineId = pipelineId || "";
-  var select = document.getElementById("test_runs_pipeline_select");
-  if (select && selectedTestRunPipelineId) {
-    select.value = selectedTestRunPipelineId;
   }
 }
 
@@ -141,95 +128,6 @@ function renderScheduledTriggerRuns(runs) {
   }).reverse();
   createTable(scheduledTriggerRuns, list, "scheduled_trigger");
   decorateStatusTable("scheduled_trigger_table");
-}
-
-function updateTestRunOptions(pipelines) {
-  var select = document.getElementById("test_runs_pipeline_select");
-  if (!select) {
-    return;
-  }
-  select.innerHTML = "";
-  var items = Array.isArray(pipelines) ? pipelines : [];
-  items.forEach(function(item) {
-    var opt = document.createElement("option");
-    opt.value = item.pipeline_id || "";
-    opt.textContent = item.pipeline_name || item.pipeline_id || "Untitled Pipeline";
-    select.appendChild(opt);
-  });
-  var hasSelected = items.some(function(item) {
-    return item.pipeline_id === selectedTestRunPipelineId;
-  });
-  if ((!selectedTestRunPipelineId || !hasSelected) && items.length) {
-    selectedTestRunPipelineId = items[0].pipeline_id || "";
-  }
-  if (selectedTestRunPipelineId) {
-    select.value = selectedTestRunPipelineId;
-  }
-  refreshTestRuns();
-}
-
-function refreshTestRuns() {
-  var table = document.getElementById("test_runs_table");
-  var empty = document.getElementById("test_runs_empty");
-  if (!table || !empty) {
-    return;
-  }
-  if (!selectedTestRunPipelineId) {
-    table.innerHTML = "";
-    empty.textContent = "Select a pipeline to see run history.";
-    empty.style.display = "block";
-    return;
-  }
-  var request = new Request("/etl/pipeline/runs?pipelineId=" + encodeURIComponent(selectedTestRunPipelineId), {
-    method: "GET",
-    headers: new Headers({
-      "Accept": "application/json"
-    })
-  });
-  fetch(request)
-    .then(function(response) {
-      if (!response.ok) {
-        return { runs: [] };
-      }
-      return response.json();
-    })
-    .then(function(result) {
-      var runs = result && Array.isArray(result.runs) ? result.runs : [];
-      renderTestRuns(runs);
-    })
-    .catch(function(error) {
-      console.error(error);
-    });
-}
-
-function renderTestRuns(runs) {
-  var table = document.getElementById("test_runs_table");
-  var empty = document.getElementById("test_runs_empty");
-  if (!table || !empty) {
-    return;
-  }
-  table.innerHTML = "";
-  if (!runs.length) {
-    empty.textContent = "No executions logged yet.";
-    empty.style.display = "block";
-    testRunRows = [];
-    return;
-  }
-  empty.style.display = "none";
-  var pipelineName = getPipelineNameById(selectedTestRunPipelineId) || "Untitled Pipeline";
-  testRunRows = runs.slice().map(function(entry) {
-    var startedAt = entry.started_at || "";
-    var finishedAt = entry.finished_at || "";
-    return {
-      "pipeline_name": entry.pipeline_name || pipelineName,
-      "start": formatRunTimestamp(startedAt) || "Unknown",
-      "end": finishedAt ? formatRunTimestamp(finishedAt) : "In progress",
-      "duration": formatRunDuration(startedAt, finishedAt),
-      "status": entry.status || "unknown"
-    };
-  }).reverse();
-  createTable(testRunRows, table, "test_runs");
-  decorateStatusTable("test_runs_table");
 }
 
 function formatRunTimestamp(value) {
@@ -489,9 +387,6 @@ document.addEventListener("DOMContentLoaded", function() {
   var scheduledTriggerSelect = document.getElementById("scheduled_trigger_select");
   var scheduledTriggerRefresh = document.getElementById("scheduled_trigger_refresh");
   var scheduledTriggerExport = document.getElementById("scheduled_trigger_export");
-  var testRunsPipelineSelect = document.getElementById("test_runs_pipeline_select");
-  var testRunsRefresh = document.getElementById("test_runs_refresh");
-  var testRunsExport = document.getElementById("test_runs_export");
   var pipelineGroup = null;
   var savedPipelineGroup = null;
   var ingestGroup = null;
@@ -604,32 +499,6 @@ document.addEventListener("DOMContentLoaded", function() {
       a.click();
     });
   }
-  if (testRunsPipelineSelect) {
-    testRunsPipelineSelect.addEventListener("change", function() {
-      setSelectedTestRunPipeline(this.value);
-      refreshTestRuns();
-    });
-  }
-  if (testRunsRefresh) {
-    testRunsRefresh.addEventListener("click", function() {
-      refreshTestRuns();
-    });
-  }
-  if (testRunsExport) {
-    testRunsExport.addEventListener("click", function() {
-      if (!testRunRows.length) {
-        return;
-      }
-      var data = jsonToCsv(testRunRows);
-      const blob = new Blob([data], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "test_run_history.csv";
-      a.click();
-    });
-  }
-
   if (newPipelineButton) {
     newPipelineButton.addEventListener("click", function() {
       setActivePipelineType("dataflow");
@@ -843,8 +712,32 @@ function setActivePipelineType(type) {
   if (type !== "dataflow" && type !== "pipeline") {
     return;
   }
+  var wasInNotebookMode = document.body.classList.contains("notebook-mode");
   if (window.NB && typeof window.NB.hideNotebookView === "function") {
     window.NB.hideNotebookView();
+  }
+  if (wasInNotebookMode) {
+    // The chart container was display:none under notebook-mode — force a layout pass
+    // and a flowchart redraw on the next frame so links/operators paint immediately
+    // instead of waiting for the user to interact with the canvas.
+    var chartEl = document.getElementById("chart_container");
+    if (chartEl) {
+      void chartEl.offsetHeight;
+    }
+    requestAnimationFrame(function() {
+      if ($flowchart && $flowchart.flowchart) {
+        try { $flowchart.flowchart("redrawLinksLayer"); } catch (_) { /* ignore */ }
+      }
+      if (typeof window.repositionImportPlaceholder === "function") {
+        window.repositionImportPlaceholder();
+      }
+      if (typeof window.repositionSelectPlaceholders === "function") {
+        window.repositionSelectPlaceholders();
+      }
+      if (typeof window.scheduleLinkAddRefresh === "function") {
+        window.scheduleLinkAddRefresh();
+      }
+    });
   }
   activePipelineType = type;
   try {
@@ -1263,14 +1156,12 @@ function renderPipelineList(pipelines) {
     });
     card.addEventListener("click", function() {
       setActivePipelineType("dataflow");
-      setSelectedTestRunPipeline(item.pipeline_id);
       loadPipelineById(item.pipeline_id);
     });
     card.addEventListener("keydown", function(event) {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         setActivePipelineType("dataflow");
-        setSelectedTestRunPipeline(item.pipeline_id);
         loadPipelineById(item.pipeline_id);
       }
     });
@@ -1281,7 +1172,6 @@ function renderPipelineList(pipelines) {
     list.appendChild(row);
   });
   renderPipelineListSelection(activePipelineType === "dataflow" ? pipeline_id : "");
-  updateTestRunOptions(cachedPipelines);
 }
 
 function renderSavedPipelineList(pipelines) {
@@ -2225,6 +2115,7 @@ function deleteSavedPipeline(pipelineId) {
     return;
   }
   if (!confirm("Are you sure you want to delete this pipeline? This cannot be undone.")) return;
+  disableEmptyPipelineSeed = true;
   var pipelineList = document.getElementById("savedPipelineList");
   var pipelineRow = pipelineList ? pipelineList.querySelector(".pipeline-list-item[data-pipeline-id=\"" + pipelineId + "\"]") : null;
   if (pipelineRow && pipelineRow.parentElement) {
@@ -2239,7 +2130,8 @@ function deleteSavedPipeline(pipelineId) {
   fetch(request)
     .then(function(response) {
       if (response.ok && pipeline_id === pipelineId && typeof window.flowchartClearWorkspace === "function") {
-        window.flowchartClearWorkspace();
+        suppressEmptyPipelineSeed = true;
+        window.flowchartClearWorkspace({ skipNewPipeline: true, skipSave: true, skipFetch: true });
         setCurrentPipelineId("");
         renderSavedPipelineListSelection("");
       }
@@ -2388,9 +2280,6 @@ function createTable(jsonArray, tableContainer, activityId) {
     if (activityId === "scheduled_trigger") {
       decorateStatusTable("scheduled_trigger_table");
     }
-    if (activityId === "test_runs") {
-      decorateStatusTable("test_runs_table");
-    }
   };
 
   const headerRow = document.createElement("tr");
@@ -2490,9 +2379,6 @@ function createTable(jsonArray, tableContainer, activityId) {
   tableContainer.appendChild(table);
   if (activityId === "scheduled_trigger") {
     decorateStatusTable("scheduled_trigger_table");
-  }
-  if (activityId === "test_runs") {
-    decorateStatusTable("test_runs_table");
   }
 
   if (columnSelect) {

@@ -271,7 +271,6 @@
 				<button class="tablinks tab" id="tabDataPreview" onclick="switchTabPanel(event, 'data_preview')">Data preview</button>
 				<button class="tablinks tab" id="tabActivities" onclick="switchTabPanel(event, 'tab_activities')">Activities</button>
 				<button class="tablinks tab" id="tabScheduledTriggers" onclick="switchTabPanel(event, 'scheduled_triggers')">Scheduled triggers</button>
-				<button class="tablinks tab" id="tabTestRuns" onclick="switchTabPanel(event, 'test_runs')">Test runs</button>
 				</div>
 			</div>
 			<div id="tab_general" class="tabcontent ds-bottom-tab-content" style="display: flex; flex-direction: column; gap: 12px;">
@@ -347,22 +346,6 @@
 					<div id="scheduled_trigger_empty" class="scheduled-triggers__empty">Select a trigger to see run history.</div>
 					<div class="table-responsive">
 						<div id="scheduled_trigger_table"></div>
-					</div>
-				</div>
-				<div id="test_runs" class="tabcontent ds-bottom-tab-content">
-					<div class="scheduled-triggers__toolbar">
-						<div class="scheduled-triggers__controls">
-							<label for="test_runs_pipeline_select">Pipeline</label>
-							<select id="test_runs_pipeline_select"></select>
-						</div>
-						<div class="scheduled-triggers__actions">
-							<button id="test_runs_refresh" type="button" class="buttons">Refresh</button>
-							<button id="test_runs_export" type="button" class="buttons">Export</button>
-						</div>
-					</div>
-					<div id="test_runs_empty" class="scheduled-triggers__empty">Select a pipeline to see run history.</div>
-					<div class="table-responsive">
-						<div id="test_runs_table"></div>
 					</div>
 				</div>
     </div>
