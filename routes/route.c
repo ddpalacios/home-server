@@ -424,6 +424,8 @@ void process_route(struct Socket *socket,char* http_header, char* body){
 		get_gol_script(cSSL, http_header, "/etl/stream.js");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/home-ui.js")==0){
 		get_gol_script(cSSL, http_header, "/etl/home-ui.js");
+	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/etl-design-system.css")==0){
+		get_gol_script(cSSL, http_header, "/etl/etl-design-system.css");
 	}else if (strcmp(request_type, "GET")==0 && strcmp(route, "/etl/home.css")==0){
 		get_gol_script(cSSL, http_header, "/etl/home.css");
 
