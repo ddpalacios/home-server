@@ -373,8 +373,11 @@ document.addEventListener("DOMContentLoaded", function() {
   var activityButtons = Array.prototype.slice.call(
     document.querySelectorAll(".sidebar-buttons .create_operator")
   );
+  // Every collapsible <details> in the sidebar — covers .ds-sidebar-section
+  // (Dataflows / Pipelines / Notebooks / Saved Triggers / Spark Settings /
+  // Ingest activity group) and the legacy .activity-group structure.
   var activityGroups = Array.prototype.slice.call(
-    document.querySelectorAll(".activity-group")
+    document.querySelectorAll(".sidebar details, .activity-group")
   );
   var groupToggle = document.getElementById("groupToggle");
   var newPipelineButton = document.getElementById("newPipelineButton");

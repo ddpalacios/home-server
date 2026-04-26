@@ -1851,14 +1851,58 @@ th, td {
     padding: 6px 10px;
 }
 
-/* Floating sidebar toggle (visible only when sidebar is collapsed) */
+/* Sidebar header toggle buttons (Hide + Collapse/Expand All) */
+.sidebar-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 26px;
+    padding: 0 10px;
+    font-family: var(--font-ui);
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--ink-700);
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    box-shadow: var(--shadow-1);
+    transition: background var(--motion-fast), border-color var(--motion-fast),
+                color var(--motion-fast);
+    white-space: nowrap;
+}
+.sidebar-toggle:hover {
+    background: var(--surface-3);
+    border-color: var(--ink-500);
+    color: var(--ink-900);
+}
+.sidebar-toggle:active {
+    background: var(--surface-2);
+}
+
+/* Floating "Activities" button — visible only when sidebar is collapsed.
+   Brand-tinted pill so it reads as the primary affordance for re-opening the
+   sidebar from the canvas. */
 .sidebar-toggle--floating {
     position: fixed;
     top: 14px;
     left: 14px;
     z-index: 1200;
+    height: 32px;
+    padding: 0 14px;
+    gap: 6px;
+    font-size: 12.5px;
+    color: #ffffff;
+    background: linear-gradient(180deg, #2858e0 0%, #1f4fd6 100%);
+    border-color: var(--brand-700);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), var(--shadow-2);
     opacity: 0;
     pointer-events: none;
+}
+.sidebar-toggle--floating:hover {
+    background: linear-gradient(180deg, #1f4fd6 0%, #1438a8 100%);
+    color: #ffffff;
+    border-color: var(--brand-700);
 }
 
 body.sidebar-collapsed .sidebar-toggle--floating {
