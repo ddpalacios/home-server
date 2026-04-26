@@ -458,19 +458,25 @@
   }
 
   function openNotebook(notebook_id) {
-    // Strategy: keep the previous notebook's view in place so the user always
-    // has something to see. If we have a cached doc for this notebook, swap
-    // it in immediately and revalidate from the server in the background.
-    // Otherwise show a thin top loading bar over the current view until the
-    // fetch returns. Cells still streaming in the previous notebook continue
-    // via their EventSources — they just write to detached DOM.
-    showNotebookView();
-
+    // Three cases:
+    //   1) Cached doc           → swap in instantly, revalidate via fetch.
+    //   2) Already in a notebook → keep the current notebook visible, show
+    //                              loading bar, swap when fetch returns.
+    //   3) Coming from home/canvas with no cache → fetch first, THEN show
+    //                              the notebook view together with its cells.
+    //                              Showing notebook-mode early just gave the
+    //                              user a blank workspace and made them
+    //                              click twice.
     const cached = NB.docCache[notebook_id];
+    NB.pendingOpenId = notebook_id;
+    const alreadyInNotebookMode = document.body.classList.contains("notebook-mode");
+
     if (cached) {
       applyNotebookDoc(cached, notebook_id);
+      setNotebookLoadingIndicator(true);
+    } else if (alreadyInNotebookMode) {
+      setNotebookLoadingIndicator(true);
     }
-    setNotebookLoadingIndicator(true);
 
     return fetch("/etl/notebook/load?notebook_id=" + encodeURIComponent(notebook_id))
       .then(function (r) {
@@ -480,8 +486,8 @@
       .then(function (doc) {
         NB.docCache[notebook_id] = doc;
         // If the user already clicked a different notebook while this load
-        // was in flight, drop the result — they're looking at someone else.
-        if (NB.current && NB.current.notebook_id !== notebook_id) {
+        // was in flight, drop the result.
+        if (NB.pendingOpenId !== notebook_id) {
           setNotebookLoadingIndicator(false);
           return;
         }
@@ -490,8 +496,7 @@
       })
       .catch(function (err) {
         setNotebookLoadingIndicator(false);
-        if (!cached) {
-          // No cached fallback either — show a minimal failure state.
+        if (!cached && document.body.classList.contains("notebook-mode")) {
           const cellsRoot = document.getElementById("nb_cells");
           if (cellsRoot) {
             cellsRoot.innerHTML = '<div class="nb-loading-skeleton">Could not load notebook.</div>';

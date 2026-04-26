@@ -759,14 +759,14 @@ function setCurrentPipelineId(value) {
 
 function ensureCanvasRendered() {
   var chartEl = document.getElementById("chart_container");
-  var workspaceEl = document.getElementById("flowchartworkspace");
   if (chartEl) {
     void chartEl.offsetHeight;
   }
-  var schedule = function() {
-    // Re-size + re-transform the workspace using the now-visible container
-    // dimensions. While the canvas was hidden (display:none), clientWidth/Height
-    // were 0, so the layers were sized 0×0.
+  // Re-size + re-transform the workspace using the now-visible container
+  // dimensions. While the canvas was hidden (display:none), clientWidth/Height
+  // were 0, so the layers were sized 0×0. Run inside rAF so layout has
+  // settled after the display:block transition.
+  requestAnimationFrame(function() {
     if (typeof window.applyFlowchartPanZoom === "function") {
       try { window.applyFlowchartPanZoom(); } catch (_) { /* ignore */ }
     }
@@ -782,22 +782,6 @@ function ensureCanvasRendered() {
     if (typeof window.scheduleLinkAddRefresh === "function") {
       window.scheduleLinkAddRefresh();
     }
-    // Belt-and-suspenders: a window resize is what most layout-sensitive code
-    // listens to, including jQuery flowchart's draggable/sortable.
-    try { window.dispatchEvent(new Event("resize")); } catch (_) { /* ignore */ }
-    // Force a compositing-layer invalidation so the browser actually paints
-    // operators that were on a stale GPU layer from when the container was
-    // hidden.
-    if (workspaceEl) {
-      workspaceEl.style.willChange = "transform";
-      requestAnimationFrame(function() {
-        workspaceEl.style.willChange = "";
-      });
-    }
-  };
-  requestAnimationFrame(function() {
-    schedule();
-    requestAnimationFrame(schedule);
   });
 }
 window.ensureCanvasRendered = ensureCanvasRendered;
@@ -2083,6 +2067,11 @@ function LoadFromBlobStorage(pipeline) {
     }
     if (typeof window.scheduleLinkAddRefresh === "function") {
       window.scheduleLinkAddRefresh();
+    }
+    // Re-paint the canvas now that operators are mounted. Without this, links
+    // can render against a workspace sized for an empty canvas.
+    if (typeof window.ensureCanvasRendered === "function") {
+      window.ensureCanvasRendered();
     }
   }, 0);
   suspendPipelineSave = false;
