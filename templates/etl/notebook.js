@@ -162,8 +162,8 @@
     if (countEl) countEl.textContent = String((NB.list || []).length);
     NB.list.forEach(function (item) {
       const isCurrent = NB.current && NB.current.notebook_id === item.notebook_id;
-      const card = el("div", {
-        class: "pipeline-list-item buttons" + (isCurrent ? " is-active" : ""),
+      const row = el("div", {
+        class: "ds-sidebar-list-row" + (isCurrent ? " is-active" : ""),
         "data-notebook-id": item.notebook_id,
         role: "button",
         tabindex: "0",
@@ -176,36 +176,30 @@
         },
       }, []);
 
-      const icon = el("span", { class: "activity-icon", "aria-hidden": "true", html: NOTEBOOK_ICON_SVG }, []);
-      const label = el("span", { class: "pipeline-list-label", text: item.name || item.notebook_id }, []);
+      const icon = el("span", { class: "icon", "aria-hidden": "true", html: NOTEBOOK_ICON_SVG }, []);
+      const label = el("span", { class: "label", text: item.name || item.notebook_id }, []);
+      row.appendChild(icon);
+      row.appendChild(label);
+
+      const isRunning = Array.from(NB.runningJobs.values())
+        .some(function (j) { return j.notebook_id === item.notebook_id; });
+      if (isRunning) {
+        const pill = el("span", { class: "pill pill-running" }, []);
+        pill.appendChild(el("span", { class: "dot" }, []));
+        pill.appendChild(document.createTextNode("running"));
+        row.appendChild(pill);
+      }
+
       const delBtn = el("button", {
-        class: "pipeline-options-trigger",
+        class: "btn btn-ghost btn-icon",
         type: "button",
         "aria-label": "Delete notebook",
         title: "Delete",
         html: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
         onclick: function (ev) { ev.stopPropagation(); deleteNotebook(item.notebook_id); },
       }, []);
-
-      card.appendChild(icon);
-      card.appendChild(label);
-
-      const isRunning = Array.from(NB.runningJobs.values())
-        .some(function (j) { return j.notebook_id === item.notebook_id; });
-      if (isRunning) {
-        card.classList.add("nb-list-running");
-        const dot = document.createElement("span");
-        dot.className = "nb-list-running-dot";
-        dot.title = "A cell is running";
-        card.appendChild(dot);
-        const runLabel = document.createElement("span");
-        runLabel.className = "nb-list-running-label";
-        runLabel.textContent = "Running";
-        card.appendChild(runLabel);
-      }
-
-      card.appendChild(delBtn);
-      root.appendChild(el("div", { class: "pipeline-list-row" }, [card]));
+      row.appendChild(delBtn);
+      root.appendChild(row);
     });
   }
 
