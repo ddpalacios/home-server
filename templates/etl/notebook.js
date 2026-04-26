@@ -928,7 +928,7 @@
   function setCellStatus(cell, status) {
     cell.status = status;
     if (cell._wrapper) {
-      cell._wrapper.classList.remove("nb-idle", "nb-running", "nb-success", "nb-error");
+      cell._wrapper.classList.remove("nb-idle", "nb-queued", "nb-running", "nb-success", "nb-error");
       cell._wrapper.classList.add("nb-" + status);
     }
     if (cell._statusLabel) cell._statusLabel.textContent = status;
@@ -968,24 +968,62 @@
 
   // ---- run + output --------------------------------------------------------
 
-  async function runCell(cellId, opts) {
+  // Per-notebook run queue. Each notebook has its own kernel on the server
+  // with a kernel.lock that only one cell can hold at a time. If the user
+  // mashes Run on cell A then cell B, both submits race against the lock and
+  // cell B finalizes with status='busy'. We instead queue manual runs (and
+  // Run All) on the client and submit them strictly in order.
+  NB.runQueues = NB.runQueues || new Map();   // notebook_id -> array of pending items
+  NB.runWorkers = NB.runWorkers || new Map(); // notebook_id -> bool (worker running)
+
+  function runCell(cellId, opts) {
     const cell = NB.current.cells.find(function (c) { return c.id === cellId; });
-    if (!cell) return { status: "skipped" };
+    if (!cell) return Promise.resolve({ status: "skipped" });
     if ((cell.type || "code") === "markdown") {
       if (cell._wrapper) cell._wrapper.classList.remove("nb-md-editing");
-      return { status: "success" };
+      return Promise.resolve({ status: "success" });
     }
     const code = (cell._cm ? cell._cm.getValue() : cell.source) || "";
-    if (!code.trim()) return { status: "skipped" };
+    if (!code.trim()) return Promise.resolve({ status: "skipped" });
     cell.source = code;
 
     const owningNotebook = NB.current;
+    return enqueueCellRun(cell, owningNotebook, opts || {});
+  }
+
+  function enqueueCellRun(cell, owningNotebook, opts) {
+    const nb_id = owningNotebook.notebook_id;
+    if (!NB.runQueues.has(nb_id)) NB.runQueues.set(nb_id, []);
+    return new Promise(function (resolve) {
+      NB.runQueues.get(nb_id).push({ cell: cell, owningNotebook: owningNotebook, opts: opts, resolve: resolve });
+      setCellStatus(cell, "queued");
+      pumpRunQueue(nb_id);
+    });
+  }
+
+  async function pumpRunQueue(nb_id) {
+    if (NB.runWorkers.get(nb_id)) return;
+    NB.runWorkers.set(nb_id, true);
+    try {
+      const queue = NB.runQueues.get(nb_id);
+      while (queue && queue.length > 0) {
+        const item = queue.shift();
+        try {
+          const result = await _executeCell(item.cell, item.owningNotebook, item.opts);
+          item.resolve(result);
+        } catch (e) {
+          item.resolve({ status: "error", error: e });
+        }
+      }
+    } finally {
+      NB.runWorkers.delete(nb_id);
+    }
+  }
+
+  async function _executeCell(cell, owningNotebook, opts) {
     setCellStatus(cell, "running");
     setKernelStatus("Running…", "nb-busy");
-    // Reset both the DOM container AND the in-memory output buffer. Without
-    // resetting cell.output, each rerun appends fresh stdout/stderr on top of
-    // the previous run's text — so '[notebook] loaded 1 cell from Base' shows
-    // up 3× after 3 runs.
+    // Reset both the DOM container AND the in-memory output buffer.
     if (cell._outputNode) cell._outputNode.innerHTML = "";
     cell.output = { stdout: "", stderr: "", images: [], result: { type: "none", value: null } };
 
@@ -996,8 +1034,8 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           notebook_id: owningNotebook.notebook_id,
-          cell_id: cellId,
-          code: code,
+          cell_id: cell.id,
+          code: cell.source,
         }),
       }).then(function (r) { return r.json(); });
     } catch (err) {
@@ -1007,22 +1045,17 @@
     cell.job_id = resp.job_id;
     registerRunningJob(cell, owningNotebook);
 
-    if (opts && opts.awaitComplete) {
-      // Resolve only after the cell finishes — used by Run All so each cell
-      // runs in order, not in parallel.
-      return new Promise(function (resolve) {
-        const wrapped = Object.assign({}, opts, {
-          onComplete: function (completeEv) {
-            resolve({ status: completeEv.status, job_id: resp.job_id });
-            if (typeof opts.onComplete === "function") opts.onComplete(completeEv);
-          },
-        });
-        attachEventStream(cell, owningNotebook, resp.job_id, -1, wrapped);
+    return new Promise(function (resolve) {
+      const wrapped = Object.assign({}, opts, {
+        onComplete: function (completeEv) {
+          resolve({ status: completeEv.status, job_id: resp.job_id });
+          if (typeof opts.onComplete === "function") {
+            try { opts.onComplete(completeEv); } catch (e) { /* ignore */ }
+          }
+        },
       });
-    }
-
-    attachEventStream(cell, owningNotebook, resp.job_id, -1, opts);
-    return { status: "submitted", job_id: resp.job_id };
+      attachEventStream(cell, owningNotebook, resp.job_id, -1, wrapped);
+    });
   }
 
   function finalizeWithError(cell, owningNotebook, message) {
@@ -1188,11 +1221,10 @@
     for (let i = 0; i < cells.length; i++) {
       const cell = cells[i];
       if ((cell.type || "code") === "markdown") continue;
-      // awaitComplete: run cells strictly top-to-bottom. Without this,
-      // runCell returns on submit (not completion), so all cells fire in
-      // parallel and the per-notebook kernel lock causes cells 2+ to fail
-      // with status='busy'.
-      const result = await runCell(cell.id, { awaitComplete: true });
+      // runCell goes through the per-notebook queue and resolves on
+      // completion, so this loop is strictly sequential and interleaves
+      // correctly with any manual cell clicks the user makes mid-run.
+      const result = await runCell(cell.id);
       if (result && result.status === "error") {
         setKernelStatus("Run All stopped on error", "nb-error");
         return;

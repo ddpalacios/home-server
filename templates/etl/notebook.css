@@ -272,6 +272,7 @@ body.notebook-mode .content { padding: 0; }
   box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
+.nb-workspace .nb-cell.nb-queued  { border-color: rgba(107, 124, 147, 0.35); }
 .nb-workspace .nb-cell.nb-running { border-color: rgba(31, 79, 214, 0.35); box-shadow: 0 4px 14px rgba(31, 79, 214, 0.12); }
 .nb-workspace .nb-cell.nb-error   { border-color: rgba(220, 38, 38, 0.35); }
 .nb-workspace .nb-cell.nb-selected {
@@ -324,6 +325,7 @@ body.notebook-mode .content { padding: 0; }
   letter-spacing: 0.04em;
 }
 .nb-workspace .nb-cell.nb-idle    .nb-status-pill { background: #e2e8f0; color: #475569; }
+.nb-workspace .nb-cell.nb-queued  .nb-status-pill { background: #e2e8f0; color: #475569; }
 .nb-workspace .nb-cell.nb-running .nb-status-pill { background: #dbeafe; color: #1d4ed8; }
 .nb-workspace .nb-cell.nb-success .nb-status-pill { background: #dcfce7; color: #166534; }
 .nb-workspace .nb-cell.nb-error   .nb-status-pill { background: #fee2e2; color: #991b1b; }
