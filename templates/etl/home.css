@@ -880,17 +880,9 @@ body.zoomed-out #chart_container .drag-boundary-outline {
   opacity: 0;
 }
 
-/* Tab strip visuals now live in etl-design-system.css under .ds-bottom-tab-strip + .tabs/.tab. */
-.tab {
-  overflow: hidden;
-  background-color: transparent;
-  display: flex;
-  width: 100%;
-  flex-direction: row;
-}
-
+/* Tab strip visuals live in etl-design-system.css under .ds-bottom-tab-strip + .tabs/.tab. */
 /* Reset legacy <button class="tablinks"> baseline so design-system .tab styling shows through. */
-.tab button.tablinks {
+button.tablinks {
   background: transparent;
   border: none;
   outline: none;
@@ -1126,30 +1118,19 @@ select:focus {
 #selected_activity_settings, #operator_properties {
   display: flex;
   flex-direction: column;
-  margin-left: 10px;
-  padding: 10px;
+  padding: 8px 10px;
   gap: 8px;
   flex: 1;
   min-height: 0;
   height: 100%;
   max-height: none;
   width: 100%;
-  overflow-y: auto;  
+  overflow-y: auto;
   overflow-x: hidden;
-  scrollbar-width: auto;
-  scrollbar-color: rgba(15, 23, 42, 0.45) rgba(15, 23, 42, 0.08);
-  scrollbar-gutter: stable both-edges;
-  padding-bottom: 140px;
-}
-
-/* Activity settings card chrome — moved to .panel/.field/.label/.input in etl-design-system.css */
-#selected_activity_settings > div {
-  /* legacy descendants in activities.js still wrap rows in <div> children — keep them as panels */
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-1);
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+  scrollbar-gutter: stable;
+  padding-bottom: 32px;
 }
 
 .activity-settings-row {
@@ -1164,11 +1145,50 @@ select:focus {
   color: var(--ink-700);
 }
 
-#selected_activity_settings select,
-#selected_activity_settings input,
-#selected_activity_settings textarea {
+/* Inputs in static .field rows fill their column. Inside .row containers (rename_settings)
+   we want intrinsic widths so the row stays horizontal — see .rename_settings overrides. */
+#selected_activity_settings .field > select,
+#selected_activity_settings .field > input,
+#selected_activity_settings .field > textarea {
   width: 100%;
   max-width: 100%;
+}
+
+/* Rename / filter / sort condition rows: keep on one line, dense. */
+#selected_activity_settings .rename_settings {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+}
+#selected_activity_settings .rename_settings + .rename_settings {
+  border-top: 1px solid var(--line);
+}
+#selected_activity_settings .rename_settings .item_select,
+#selected_activity_settings .rename_settings .text_input_value {
+  flex: 1 1 0;
+  min-width: 80px;
+  width: auto;
+  max-width: none;
+  height: 28px;
+  font-size: 12px;
+  padding: 0 8px;
+}
+#selected_activity_settings .rename_settings > button.buttons,
+#selected_activity_settings .rename_settings > button.btn {
+  flex: 0 0 auto;
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+/* Settings panels: collapse the giant DS panel padding for nested cards in the bottom drawer. */
+#selected_activity_settings .panel {
+  padding: 10px 12px;
+}
+#selected_activity_settings .stack {
+  gap: 8px;
 }
 
 #selected_activity_settings .CodeMirror {
@@ -1528,66 +1548,74 @@ select:focus {
 .filter-bar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   justify-content: space-between;
   flex-wrap: wrap;
-  margin-bottom: 12px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.06);
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  border: 1px solid var(--line);
 }
 
 .filter-bar-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .filter-bar label {
   font-weight: 600;
-  color: var(--ink);
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  color: var(--ink-700);
+  font-size: 12px;
 }
 
 .filter-bar select,
 .filter-bar input {
-  max-width: 260px;
-  border-radius: 10px;
-  border: 1px solid rgba(15, 23, 42, 0.15);
-  background: #ffffff;
-  padding: 10px 12px;
-  font-size: 0.9rem;
-  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  height: 28px;
+  max-width: 220px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  padding: 0 8px;
+  font-size: 12px;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.04);
+  transition: border-color var(--motion-fast), box-shadow var(--motion-fast);
 }
 
 .filter-bar select:focus,
 .filter-bar input:focus {
-  border-color: var(--accent);
+  border-color: var(--brand-500);
   box-shadow: 0 0 0 3px rgba(31, 79, 214, 0.15);
   outline: none;
 }
 
 .export-button {
   margin-left: auto;
+  height: 28px;
+  padding: 0 10px;
   width: auto !important;
-  min-width: 120px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #1f4fd6 0%, #3b82f6 100%);
-  color: #ffffff;
+  min-width: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong);
+  background: var(--surface) !important;
+  color: var(--ink-900);
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: var(--shadow-1);
+}
+.export-button:hover {
+  background: var(--surface-3) !important;
+  border-color: var(--ink-500);
 }
 
 /* Table wrapper: scroll horizontally instead of overflowing */
 .table-responsive {
   width: 100%;
   overflow-x: auto;
-  border-radius: 10px;
-  margin-top: 10px;
+  border-radius: var(--radius-md);
+  margin-top: 6px;
 }
 
 #scheduled_trigger_table,
@@ -1600,69 +1628,96 @@ select:focus {
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 500px; /* lets columns breathe, but scrolls on small screens */
 }
 
 th, td {
-  border: 1px solid #ccc;
-  padding: 8px;
-  color: black;
+  border: 1px solid var(--line);
+  padding: 6px 10px;
+  color: var(--ink-900);
   text-align: left;
-  word-break: break-word;
+  word-break: normal;
+  white-space: nowrap;
 }
 
 th {
-  background-color: #f4f4f4;
+  background-color: var(--surface-2);
 }
 
 #activity_previews {
-  margin-top: 16px;
+  margin-top: 8px;
 }
 
-#activity_previews .table-responsive,
+.preview-loading {
+  display: flex;
+  align-items: center;
+  padding: 6px 0 8px;
+  color: var(--ink-700);
+  font-size: 12px;
+}
+
+#activity_previews .table-responsive {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  max-height: 520px;
+  overflow: auto;
+}
+
 #activity_previews #data_table_container {
-  border-radius: 12px;
-  border: 1px solid rgba(15, 23, 42, 0.12);
-  background: #ffffff;
-  box-shadow: 0 10px 18px rgba(15, 23, 42, 0.06);
+  border: none;
+  background: transparent;
+  max-height: none;
+  overflow: visible;
 }
 
 #activity_previews table {
   border-collapse: separate;
   border-spacing: 0;
-  min-width: 680px;
-  font-size: 0.9rem;
+  min-width: 0;
+  width: max-content;
+  font-size: 12px;
+  table-layout: auto;
 }
 
 #activity_previews th,
 #activity_previews td {
   border: none;
-  padding: 10px 12px;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  white-space: nowrap;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#activity_previews th:last-child,
+#activity_previews td:last-child {
+  border-right: none;
 }
 
 #activity_previews th {
   position: sticky;
   top: 0;
   z-index: 2;
-  background: #f7f9fc;
-  color: var(--ink);
+  background: var(--surface-2);
+  color: var(--ink-700);
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  font-size: 0.72rem;
+  font-size: 11px;
+  padding: 8px 10px;
 }
 
-#activity_previews tbody tr:nth-child(even) {
-  background: #f8fafc;
+#activity_previews tbody tr:nth-child(even) td {
+  background: var(--surface-3);
 }
 
-#activity_previews tbody tr:hover {
-  background: #eef4ff;
+#activity_previews tbody tr:hover td {
+  background: rgba(31, 79, 214, 0.04);
 }
 
 .table-resizable {
-  table-layout: fixed;
+  table-layout: auto;
 }
 
 .table-resizable th {
@@ -1673,7 +1728,7 @@ th {
   position: absolute;
   top: 0;
   right: 0;
-  width: 8px;
+  width: 6px;
   height: 100%;
   cursor: col-resize;
   user-select: none;
@@ -1683,12 +1738,11 @@ th {
 .table-resizable .column-resizer::after {
   content: "";
   position: absolute;
-  top: 15%;
-  right: 3px;
-  width: 2px;
-  height: 70%;
-  background: rgba(15, 23, 42, 0.2);
-  border-radius: 2px;
+  top: 20%;
+  right: 2px;
+  width: 1px;
+  height: 60%;
+  background: var(--line-strong);
 }
 
 /* Make headings and spacing smaller on phones */
@@ -1716,21 +1770,14 @@ th {
     font-size: 12px;
   }
 }
-#data_table_container {
-  max-height: 800px;   /* or whatever height you want */
-  overflow-y: auto;    /* vertical scroll */
-  overflow-x: auto;    /* horizontal scroll if needed */
-  border: 1px solid #ccc; /* optional border */
-}
-
 #data_table {
-  width: 100%;         /* make table fill container */
+  width: 100%;
   border-collapse: collapse;
 }
 
 #data_table th, #data_table td {
-  padding: 8px;
-  border: 1px solid #ccc;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
   text-align: left;
 }
 /* Sidebar layout — visuals come from etl-design-system.css (.sidebar-v2) */

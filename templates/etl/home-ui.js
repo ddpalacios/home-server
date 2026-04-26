@@ -5624,7 +5624,7 @@ $(document).ready(function() {
     const refresh_button = document.getElementById("refresh_preview");
     if (refresh_button) {
       refresh_button.classList.add("export-button");
-      refresh_button.style.background = "linear-gradient(135deg, #111827 0%, #4b5563 100%)";
+      refresh_button.style.background = "";
       actions_div.appendChild(refresh_button);
     }
     const export_button = document.getElementById("export_preview");
@@ -5645,9 +5645,9 @@ $(document).ready(function() {
     let activity_previews = document.getElementById("activity_previews");
     let data_preview_container = ensurePreviewContainer(targetId);
     // Show a transient loading state while the ordered run completes.
-    let loading_text = document.createElement("h1");
-    loading_text.textContent = "Loading...";
-    loading_text.style.color = "#ffffff";
+    let loading_text = document.createElement("div");
+    loading_text.className = "preview-loading";
+    loading_text.innerHTML = '<span class="pill pill-running"><span class="dot"></span>Loading preview…</span>';
     activity_previews.prepend(loading_text);
     running = true;
     // Ask the server for dependency order, then run the ordered activities.
