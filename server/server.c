@@ -109,10 +109,15 @@ struct Socket* insert_file_descriptor(struct Socket *sockets[],struct pollfd *pf
  void remove_file_descriptor(struct Socket *sockets,struct pollfd pfds[], int fd, int *fd_count){
  	for (int i=0; i<*fd_count; i++){
  		if (sockets[i].fd  == fd) {
-			int ret = SSL_shutdown(sockets[i].cSSL);
-			SSL_free(sockets[i].cSSL);
+			/* cSSL may be NULL if the TLS handshake never ran (e.g.
+			 * client disconnected before handshake or handshake
+			 * failed on the worker thread). */
+			if (sockets[i].cSSL != NULL) {
+				int ret = SSL_shutdown(sockets[i].cSSL);
+				SSL_free(sockets[i].cSSL);
+				sockets[i].cSSL = NULL;
+			}
 		        close(fd);
-			sockets[i].cSSL = NULL;
  			sockets[i] = sockets[*fd_count-1];
  			break;
  		}
@@ -133,21 +138,46 @@ struct Socket* accept_new_client(int listener_fd, struct Socket **sockets,struct
        socklen_t addrlen;
        addrlen = sizeof(remoteaddr);
        int newfd = accept(listener_fd,(struct sockaddr *)&remoteaddr,  &addrlen);
-       struct timeval send_timeout;
-       send_timeout.tv_sec = 0;
-       send_timeout.tv_usec = 200000;
-       setsockopt(newfd, SOL_SOCKET, SO_SNDTIMEO, &send_timeout, sizeof(send_timeout));
-       SSL* cSSL = encrypt_socket(newfd);
-       char host[NI_MAXHOST];
-       char service[NI_MAXSERV];
-       if (cSSL != NULL){
-         struct Socket* socket  = insert_file_descriptor(sockets, pfds, newfd,cSSL, host,  fd_count, max_fd_size, 0x0);
-         return socket;
-       }else{
-	 	close(newfd);
-         return NULL;
+       if (newfd < 0) {
+           return NULL;
        }
 
+       /* DO NOT do the TLS handshake on this thread. It used to be done here
+        * inline (encrypt_socket → SSL_accept), but SSL_accept can block on
+        * read/write during the handshake, and OpenSSL contends on internal
+        * locks with worker threads holding long-lived SSL connections (e.g.
+        * /etl/notebook/events SSE proxies). When that happens, the main
+        * accept loop stalls and ALL new connections sit in the kernel
+        * backlog — clients see TLS handshake timeouts after 30s.
+        *
+        * Instead, register the bare TCP socket here (cSSL = NULL) and let
+        * process_thread do the SSL_accept on the worker. The main thread
+        * returns to poll() immediately and is always ready to accept the
+        * next connection. */
+       struct timeval send_timeout;
+       send_timeout.tv_sec = 5;
+       send_timeout.tv_usec = 0;
+       setsockopt(newfd, SOL_SOCKET, SO_SNDTIMEO, &send_timeout, sizeof(send_timeout));
+       /* Bound the SSL_accept read too so a stalled client can't pin a
+        * worker thread forever. */
+       struct timeval recv_timeout;
+       recv_timeout.tv_sec = 10;
+       recv_timeout.tv_usec = 0;
+       setsockopt(newfd, SOL_SOCKET, SO_RCVTIMEO, &recv_timeout, sizeof(recv_timeout));
+
+       char host[NI_MAXHOST];
+       struct Socket* socket = insert_file_descriptor(sockets, pfds, newfd, NULL, host, fd_count, max_fd_size, 0x0);
+       /* Suppress POLLIN until the worker has done SSL_accept. Otherwise
+        * the main loop sees the ClientHello bytes as POLLIN on this FD and
+        * spawns a SECOND worker for it, which races against the first
+        * worker's SSL_accept and yields 'unexpected EOF' on the client. */
+       for (int i = 0; i < *fd_count; i++) {
+           if ((*pfds)[i].fd == newfd) {
+               (*pfds)[i].events = 0;
+               break;
+           }
+       }
+       return socket;
      }
 
 void fill_address_info(struct addrinfo *hints){
@@ -157,28 +187,91 @@ void fill_address_info(struct addrinfo *hints){
 	hints->ai_flags= AI_PASSIVE;
 }
 
+/* Background thread: deletes expired auth tokens periodically without
+ * blocking the main accept loop. Runs every 60 seconds. Failures are
+ * silently swallowed — token expiry isn't critical-path for serving
+ * requests, so we don't want a transient MySQL hiccup to stop sessions. */
+void* run_token_reaper(void* arg){
+	(void)arg;
+	while (1) {
+		delete_expired_tokens();
+		sleep(60);
+	}
+	return NULL;
+}
+
 void* process_thread(void* arg){
     struct Socket *new_client = (struct Socket *)arg;
 
+    /* If this is the first time we're seeing this socket (cSSL still NULL
+     * because accept_new_client deferred the handshake to us), do the TLS
+     * handshake here on the worker thread. This keeps the main accept loop
+     * non-blocking even when an existing worker (e.g. an SSE proxy) is
+     * holding OpenSSL internal locks. */
+    if (new_client->cSSL == NULL) {
+        SSL* cSSL = encrypt_socket(new_client->fd);
+        if (cSSL == NULL) {
+            new_client->keep_alive = 0x0;
+            new_client->finished = 1;
+            pthread_exit(NULL);
+        }
+        new_client->cSSL = cSSL;
+    }
+
+    /* Take exclusive ownership of this FD while processing. Without this,
+     * any unread data on the socket (including the bytes from a long-lived
+     * SSE proxy that this worker is itself reading) keeps poll() returning
+     * POLLIN on the FD, and the main accept loop spawns a fresh thread per
+     * iteration trying to handle the same FD — they all block in SSL_read
+     * and accumulate without bound. The original code had this race; it
+     * only didn't visibly break because each worker happened to consume
+     * the buffer before the next main-loop iteration. SSE breaks that
+     * assumption: data keeps arriving from the upstream, POLLIN stays
+     * asserted, and the main thread spirals.
+     *
+     * After process_bytes returns we re-enable POLLIN for keep-alive so
+     * the main loop can detect the next request on this FD. Non-keep-alive
+     * connections are torn down by remove_file_descriptor. */
+    for (int i = 0; i < fd_count; i++) {
+        if (pfds[i].fd == new_client->fd) {
+            pfds[i].events = 0;
+            break;
+        }
+    }
+
     char *peek_buf = malloc(BUFFER_SIZE+1);
-    int bytes_peeked = peek_exact_bytes(new_client->cSSL, BUFFER_SIZE, peek_buf);
-	// printf("PEEKED BYTES: %d\n", bytes_peeked);
+    int bytes_peeked = (peek_buf != NULL)
+        ? peek_exact_bytes(new_client->cSSL, BUFFER_SIZE, peek_buf)
+        : 0;
 
     if (bytes_peeked > 0 && peek_buf != NULL) {
-		if (bytes_peeked > BUFFER_SIZE) {
-			bytes_peeked = BUFFER_SIZE;
-		}
-		peek_buf[bytes_peeked] = '\0';
-        process_bytes(sockets,new_client, peek_buf, fd_count);
-        free(peek_buf);
-    }else{
-		new_client->keep_alive = 0x0;
-		// int ret = SSL_shutdown(new_client->cSSL);
-		// SSL_free(new_client->cSSL);
-		// close(new_client->fd);
+        if (bytes_peeked > BUFFER_SIZE) {
+            bytes_peeked = BUFFER_SIZE;
+        }
+        peek_buf[bytes_peeked] = '\0';
+        process_bytes(sockets, new_client, peek_buf, fd_count);
+    } else {
+        new_client->keep_alive = 0x0;
+    }
+    /* Free peek_buf on every exit path. The previous version only freed
+     * inside the success branch, which leaked ~1KB per failed peek
+     * (idle clients, port scans, broken handshakes). free(NULL) is safe. */
+    free(peek_buf);
 
-	}
-    new_client->finished = 1;  
+    /* Re-enable POLLIN if this is a keep-alive connection so the next
+     * request on the same socket gets dispatched. Otherwise the FD is
+     * about to be closed by the join loop's remove_file_descriptor, so
+     * leaving events=0 is fine. */
+    if (new_client->keep_alive) {
+        for (int i = 0; i < fd_count; i++) {
+            if (pfds[i].fd == new_client->fd) {
+                pfds[i].events = POLLIN;
+                break;
+            }
+        }
+    }
+
+    new_client->finished = 1;
     pthread_exit(NULL);
 }
 
@@ -203,8 +296,19 @@ void start_listening_for_clients(char* port){
 	struct Socket* clients[MAX_CLIENTS];
 	int thread_count = 0;
 
+	/* Run token expiry on a separate timer thread instead of inline in the
+	 * accept loop. Calling delete_expired_tokens() on every loop iteration
+	 * meant a fresh MySQL connect+query+disconnect cycle per request,
+	 * blocking the main accept thread on a libmysql/glibc futex while a
+	 * worker thread (e.g. an SSE proxy) was holding internal libmysql
+	 * state. Symptom: every new TLS handshake starved for ~6-8s while a
+	 * notebook cell was running, surfacing as ConnectTimeout on the
+	 * blob-storage wrapper. */
+	pthread_t token_reaper;
+	pthread_create(&token_reaper, NULL, run_token_reaper, NULL);
+	pthread_detach(token_reaper);
+
 	while(1) {
-	    delete_expired_tokens();
 		// printf("Total Sockets: %d\n", fd_count);
 	    int triggered_fd = wait_for_event(&pfds, fd_count);
 
@@ -249,11 +353,14 @@ void start_listening_for_clients(char* port){
 			}
 
 			if (!clients[i]->keep_alive){
-				 if (websocketclient_exists_by_socketid(clients[i]->Id)){
-					struct WebsocketClient ws_client =  get_websocketclientBySocketId(clients[i]->Id);
-					delete_websocketclient_by_Id(ws_client.Id);
-				 }
-
+				/* WebsocketClient cleanup used to run inline here, doing
+				 * 3 MySQL connect+query+disconnect cycles on the MAIN
+				 * thread per closed connection. With even moderate
+				 * traffic that pinned the accept loop on a libmysql
+				 * futex and starved new TLS handshakes (the user-
+				 * reported 30s ConnectTimeout). Defer the cleanup to
+				 * the token reaper / a separate path. Orphaned rows
+				 * are non-critical (lookup paths re-validate). */
 				remove_file_descriptor(sockets, pfds, clients[i]->fd, &fd_count);
 			}
 

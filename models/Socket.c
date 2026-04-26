@@ -155,6 +155,15 @@ static void ssl_ctx_init_once(void) {
 		return;
 	}
 	SSL_CTX_set_options(g_ssl_ctx, SSL_OP_SINGLE_DH_USE);
+	/* Disable session cache. With cache enabled, every SSL_accept hits a
+	 * per-CTX rwlock to look up / insert sessions. While a long-lived
+	 * worker (e.g. an SSE proxy SSL_write loop) is doing SSL operations
+	 * that touch the same CTX, new TLS handshakes serialize on that lock
+	 * and clients see ~30s ConnectTimeout from the wrapper. We don't get
+	 * any benefit from session resumption on this internal localhost
+	 * server, so turn it off. */
+	SSL_CTX_set_session_cache_mode(g_ssl_ctx, SSL_SESS_CACHE_OFF);
+	SSL_CTX_set_num_tickets(g_ssl_ctx, 0);
 
 	char cert_path[PATH_MAX];
 	char key_path[PATH_MAX];
