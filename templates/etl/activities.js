@@ -108,7 +108,7 @@ class Settings{
         let div = document.getElementById(activity.activityId+"_column_edit")
         let current_named_columns = []
         for (let i =0; i < div.children.length; i++){
-            if (div.children[i].className != 'rename_settings'){continue}
+            if (!div.children[i].classList || !div.children[i].classList.contains('rename_settings')){continue}
             current_named_columns.push(div.children[i].children[2].value)
         }
         let total_dupes = 1
@@ -184,7 +184,7 @@ class Settings{
 
      get_column_selection_element(widget,rows,flexDirection){
         let div = document.createElement('div')
-        div.className = 'rename_settings'
+        div.className = 'rename_settings row'
         div.id = crypto.randomUUID();
         if (flexDirection != null || flexDirection != undefined){
             div.style.display = 'flex'
@@ -201,7 +201,7 @@ class Settings{
                 }else{
                  selector_element = this.get_selector_element(options,default_value)
                 }
-                selector_element.className = "item_select"
+                selector_element.className = "item_select select"
                 selector_element.name = element?.name
                 selector_element.disabled = element?.disabled
                 selector_element.addEventListener("change", (event) => this._on_selector_change(event, widget, this));
@@ -210,7 +210,7 @@ class Settings{
             if (elem_type == 'input'){
                 let input = document.createElement('input')
                 input.placeholder = element['placeholder']
-                input.className = "text_input_value"
+                input.className = "text_input_value input"
 
                 input.name = element?.name
                 if (element?.value != undefined){
@@ -222,11 +222,12 @@ class Settings{
             }
             if (elem_type == 'button'){
                 let button = document.createElement('button')
-                button.className = "buttons"
+                button.className = "buttons btn btn-secondary"
                 button.innerHTML = element['label']
                 button.style.color = element['color']
                 if (element['color'] === 'red') {
-                    button.classList.add('danger-button')
+                    button.classList.add('danger-button', 'btn-danger')
+                    button.classList.remove('btn-secondary')
                     button.setAttribute('data-action', 'drop')
                 }
                 button.addEventListener("click", (event) => this._on_button_click(event, widget, this));
@@ -1109,8 +1110,12 @@ function settings_create_column_edit_record(widget,original_columns,new_record){
                 let new_key_input = document.createElement('input')
                 new_key_input.disabled = true
                 new_key_input.value = new_record['columnName']
+                new_key_input.classList.add('input')
+                originalName_selector_element.classList.add('select')
+                data_type_selector_element.classList.add('select')
+                delete_button.classList.add('btn', 'btn-danger')
                 let div = document.createElement('div')
-                div.className = 'rename_settings'
+                div.className = 'rename_settings row'
                 div.appendChild(originalName_selector_element)
                 div.appendChild(data_type_selector_element)
                 div.appendChild(new_key_input)

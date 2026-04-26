@@ -222,7 +222,7 @@ class Join_Activity extends Activity{
         const columns_div = this._ensure_container()
         columns_div.innerHTML = ""
         const section = document.createElement("div")
-        section.className = "combine-section"
+        section.className = "combine-section panel stack"
         const table1_columns = this._get_table_columns("input_1")
         const table2_columns = this._get_table_columns("input_2")
         const header = document.createElement("div")
@@ -257,7 +257,7 @@ class Join_Activity extends Activity{
         }
 
         const table2_section = document.createElement("div")
-        table2_section.className = "combine-columns-section join-table2-columns"
+        table2_section.className = "combine-columns-section join-table2-columns panel stack"
 
         const table2_header = document.createElement("div")
         table2_header.style.display = "flex"

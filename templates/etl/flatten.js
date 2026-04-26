@@ -6,7 +6,7 @@ class Flatten_Activity extends Activity{
     }
 
     _setup_column_container(columns_div, add_button){
-        columns_div.classList.add("column-settings");
+        columns_div.classList.add("column-settings", "stack");
 
         if (add_button) {
             const existing_actions = columns_div.querySelector(".column-settings-actions");

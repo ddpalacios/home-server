@@ -167,7 +167,7 @@ class Pivot_Activity extends Activity{
         div.id = this.activityId
 
         const section = document.createElement('div')
-        section.className = "combine-section"
+        section.className = "combine-section panel stack"
 
         const add_button = document.createElement("button")
         add_button.innerHTML = this.add_button_label

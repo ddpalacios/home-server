@@ -6,7 +6,7 @@ class Append_Activity extends Activity{
     }
 
     _setup_column_container(columns_div, add_button){
-        columns_div.classList.add("column-settings");
+        columns_div.classList.add("column-settings", "stack");
 
         if (add_button) {
             const existing_actions = columns_div.querySelector(".column-settings-actions");
@@ -24,7 +24,7 @@ class Append_Activity extends Activity{
         div.id = this.activityId
 
         const section = document.createElement('div')
-        section.className = "combine-section"
+        section.className = "combine-section panel stack"
 
         const title = document.createElement('span')
         title.textContent = "Append Rows"
