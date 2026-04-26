@@ -538,3 +538,59 @@
   background: transparent;
   border-bottom-color: rgba(15, 23, 42, 0.04);
 }
+
+
+/* === MORE distinct rows: white tiles on a stronger gray drawer ===
+ * Each row gets its own white background so it reads as a physical tile.
+ * Rows are separated by ~3px of the gray drawer showing through (no more hairline dividers).
+ */
+.sidebar-v2 details.ds-sidebar-section .ds-sidebar-list,
+.sidebar-v2 details.ds-sidebar-section .activity-group-content {
+  background: #edf1f7;            /* stronger drawer gray */
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sidebar-v2 .ds-sidebar-list .ds-sidebar-list-row,
+.sidebar-v2 .ds-sidebar-list-row.create_operator {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  height: auto;
+  min-height: 44px;
+  box-shadow: var(--shadow-1);
+}
+
+/* Last-row hairline reset is no longer needed (rows are tiles, not bordered list rows) */
+.sidebar-v2 .ds-sidebar-list .ds-sidebar-list-row:last-child {
+  border-bottom: 1px solid var(--line);
+}
+
+/* Hover: visibly lift to brand-tinted */
+.sidebar-v2 .ds-sidebar-list .ds-sidebar-list-row:hover,
+.sidebar-v2 .ds-sidebar-list-row.create_operator:hover {
+  background: var(--brand-50);
+  border-color: var(--brand-200);
+  padding-left: 12px;             /* cancel the indent we added before */
+  box-shadow: var(--shadow-2);
+}
+
+/* Active tile: solid brand fill with white text */
+.sidebar-v2 .ds-sidebar-list .ds-sidebar-list-row.is-active {
+  background: var(--brand-500);
+  border-color: var(--brand-500);
+  color: #ffffff;
+  box-shadow: var(--shadow-2);
+}
+.sidebar-v2 .ds-sidebar-list .ds-sidebar-list-row.is-active .icon,
+.sidebar-v2 .ds-sidebar-list .ds-sidebar-list-row.is-active .label,
+.sidebar-v2 .ds-sidebar-list .ds-sidebar-list-row.is-active .meta {
+  color: #ffffff;
+}
+.sidebar-v2 .ds-sidebar-list .ds-sidebar-list-row.is-active .pill {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
