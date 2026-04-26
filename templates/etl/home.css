@@ -982,69 +982,8 @@ button.tablinks {
   font-size: 13px;
 }
 
-#scheduled_trigger_table table,
-#test_runs_table table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-#scheduled_trigger_table thead th,
-#test_runs_table thead th {
-  background: #eef2f7;
-  color: #0f172a;
-  font-weight: 700;
-  padding: 14px 16px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.4);
-}
-
-#scheduled_trigger_table tbody tr,
-#test_runs_table tbody tr {
-  background: #fff;
-}
-
-#scheduled_trigger_table tbody tr:nth-child(even),
-#test_runs_table tbody tr:nth-child(even) {
-  background: #f8fafc;
-}
-
-#scheduled_trigger_table tbody td,
-#test_runs_table tbody td {
-  padding: 14px 16px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
-}
-
-#scheduled_trigger_table tbody tr:hover,
-#test_runs_table tbody tr:hover {
-  background: #eef2ff;
-}
-
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-weight: 600;
-  text-transform: capitalize;
-  background: rgba(148, 163, 184, 0.12);
-  color: #1f2937;
-}
-
-.status-pill.is-success {
-  color: #15803d;
-  background: rgba(34, 197, 94, 0.16);
-}
-
-.status-pill.is-error {
-  color: #b91c1c;
-  background: rgba(239, 68, 68, 0.16);
-}
-
-.status-pill.is-running {
-  color: #b45309;
-  background: rgba(245, 158, 11, 0.18);
-}
+/* #scheduled_trigger_table / #test_runs_table use .table from etl-design-system.css */
+/* .status-pill replaced by .pill / .pill-* in etl-design-system.css */
 
 /* --- Base Select Box --- */
 select {
@@ -1624,23 +1563,18 @@ select:focus {
   overflow-y: auto;
 }
 
-/* Table styles */
+/* Plain <table> baseline; .table-classed tables use design-system styling. */
 table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 th, td {
-  border: 1px solid var(--line);
   padding: 6px 10px;
   color: var(--ink-900);
   text-align: left;
-  word-break: normal;
   white-space: nowrap;
-}
-
-th {
-  background-color: var(--surface-2);
 }
 
 #activity_previews {

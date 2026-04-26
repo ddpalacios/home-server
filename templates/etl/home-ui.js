@@ -300,15 +300,20 @@ function decorateStatusTable(tableId) {
     }
     var value = (cell.textContent || "").trim().toLowerCase();
     var pill = document.createElement("span");
-    pill.className = "status-pill";
-    pill.textContent = value || "unknown";
+    pill.className = "pill";
     if (value === "success") {
-      pill.classList.add("is-success");
+      pill.classList.add("pill-success");
     } else if (value === "in progress") {
-      pill.classList.add("is-running");
+      pill.classList.add("pill-running");
+      var dot = document.createElement("span");
+      dot.className = "dot";
+      pill.appendChild(dot);
     } else if (value === "error") {
-      pill.classList.add("is-error");
+      pill.classList.add("pill-error");
+    } else {
+      pill.classList.add("pill-neutral");
     }
+    pill.appendChild(document.createTextNode(value || "unknown"));
     cell.textContent = "";
     cell.appendChild(pill);
   });
@@ -2323,7 +2328,7 @@ function createTable(jsonArray, tableContainer, activityId) {
   }
 
   const table = document.createElement("table");
-  table.classList.add("table-resizable");
+  table.classList.add("table-resizable", "table");
   const thead = document.createElement("thead");
   const tbody = document.createElement("tbody");
   const sortState = { key: null, direction: "asc" };
