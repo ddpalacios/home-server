@@ -287,6 +287,13 @@
     const status = document.getElementById("nb_spark_status");
     const log = document.getElementById("nb_spark_log");
     if (!sel || !status || !log) return;
+    // Bail out unless the Settings view is actually visible — otherwise a
+    // cached/legacy interval would keep hitting /etl/spark/status while the
+    // user is on Home, the canvas, or a notebook.
+    if (!document.body.classList.contains("settings-mode")) {
+      stopSparkPolling();
+      return;
+    }
 
     let configs, statusBody;
     try {
