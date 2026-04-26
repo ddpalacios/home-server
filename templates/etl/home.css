@@ -773,13 +773,6 @@
               border-color var(--motion-fast) var(--ease);
 }
 
-.add-button::before {
-  content: "+";
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1;
-}
-
 .add-button:hover {
   background: var(--brand-100);
   border-color: var(--brand-500);
