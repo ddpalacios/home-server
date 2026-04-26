@@ -1,0 +1,65 @@
+/* ETL Design System
+ * One file. Loaded before home.css.
+ * Section 1: tokens. Section 2+: components (added in later tasks).
+ */
+
+:root {
+  /* === BRAND === */
+  --brand-50:  #eef2ff;
+  --brand-100: #dbe6ff;
+  --brand-200: #b6c8ff;
+  --brand-500: #1f4fd6;   /* primary */
+  --brand-600: #1438a8;   /* hover */
+  --brand-700: #102b85;   /* press */
+
+  /* === NEUTRALS === */
+  --ink-900: #1a1f36;
+  --ink-700: #425466;
+  --ink-500: #6b7c93;
+  --ink-300: #aab7c4;
+
+  --line:        #e3e8ee;
+  --line-strong: #c1c9d2;
+
+  --surface:   #ffffff;
+  --surface-2: #f6f9fc;
+  --surface-3: #fafbfc;
+
+  /* === SEMANTIC === */
+  --success: #047857;
+  --warn:    #b45309;
+  --error:   #b91c1c;
+
+  /* === SPACING === */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 48px;
+
+  /* === RADIUS === */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* === SHADOW === */
+  --shadow-1: 0 1px 1px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-2: 0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -2px rgba(0,0,0,0.05);
+  --shadow-3: 0 10px 15px -3px rgba(0,0,0,0.10), 0 4px 6px -4px rgba(0,0,0,0.05);
+
+  /* === MOTION === */
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --motion-slow: 240ms;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* === FONT STACKS === */
+  --font-ui:   "Space Grotesk", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+}
+
+/* === BASE === */
+*, *::before, *::after { box-sizing: border-box; }
