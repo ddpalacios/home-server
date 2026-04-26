@@ -134,19 +134,24 @@
 
 /* === TABS === */
 .tabs {
-  display: flex; gap: 0;
+  display: flex; gap: 2px;
   border-bottom: 1px solid var(--line);
-  padding: 0 var(--space-1);
+  padding: 0 var(--space-2);
   overflow-x: auto;
+  background: var(--surface);
 }
 .tab {
-  padding: 10px 14px; font-size: 13px; font-weight: 500;
-  color: var(--ink-500); border-bottom: 2px solid transparent;
+  padding: 8px 14px; font-size: 12.5px; font-weight: 500;
+  letter-spacing: 0.005em;
+  color: var(--ink-500); border: 1px solid transparent;
+  border-bottom: 2px solid transparent;
+  border-top-left-radius: var(--radius-sm);
+  border-top-right-radius: var(--radius-sm);
   margin-bottom: -1px; cursor: pointer; white-space: nowrap;
-  transition: color var(--motion-fast), border-color var(--motion-fast);
+  transition: color var(--motion-fast), background var(--motion-fast), border-color var(--motion-fast);
 }
-.tab:hover { color: var(--ink-900); }
-.tab.active { color: var(--brand-500); border-bottom-color: var(--brand-500); font-weight: 600; }
+.tab:hover { color: var(--ink-900); background: var(--surface-2); }
+.tab.active { color: var(--brand-500); border-bottom-color: var(--brand-500); font-weight: 600; background: transparent; }
 
 
 /* === STATUS PILLS === */
@@ -233,7 +238,7 @@
 
 /* === BOTTOM-TAB STRIP === */
 .ds-bottom-tab-strip {
-  height: 40px;
+  height: 38px;
   background: var(--surface);
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
