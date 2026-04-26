@@ -650,3 +650,34 @@
   background: var(--brand-100);
 }
 
+
+
+/* === Ingest activity buttons get a distinct, button-y outline ===
+ * These are <button id="import_activity"> etc — actions that ADD a node to the canvas,
+ * not existing items. Visual hint: brand-tinted border so users see them as "buttons" not "rows".
+ */
+.sidebar-v2 .ds-sidebar-list-row.create_operator {
+  background: var(--surface) !important;
+  border: 1px solid rgba(31, 79, 214, 0.22) !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--brand-700);
+  font-weight: 500;
+  box-shadow: 0 1px 0 rgba(31,79,214,0.04), var(--shadow-1);
+  cursor: pointer;
+}
+.sidebar-v2 .ds-sidebar-list-row.create_operator .icon {
+  color: var(--brand-500);
+}
+.sidebar-v2 .ds-sidebar-list-row.create_operator .label {
+  color: var(--brand-700);
+}
+.sidebar-v2 .ds-sidebar-list-row.create_operator:hover {
+  background: var(--brand-50) !important;
+  border-color: var(--brand-300) !important;
+  box-shadow: var(--shadow-2);
+  padding-left: 12px;            /* override the row-hover indent so buttons don't shift */
+}
+.sidebar-v2 .ds-sidebar-list-row.create_operator:active {
+  transform: scale(0.99);
+  box-shadow: inset 0 1px 2px rgba(31,79,214,0.10);
+}
