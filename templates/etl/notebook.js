@@ -192,6 +192,21 @@
 
       card.appendChild(icon);
       card.appendChild(label);
+
+      const isRunning = Array.from(NB.runningJobs.values())
+        .some(function (j) { return j.notebook_id === item.notebook_id; });
+      if (isRunning) {
+        card.classList.add("nb-list-running");
+        const dot = document.createElement("span");
+        dot.className = "nb-list-running-dot";
+        dot.title = "A cell is running";
+        card.appendChild(dot);
+        const runLabel = document.createElement("span");
+        runLabel.className = "nb-list-running-label";
+        runLabel.textContent = "Running";
+        card.appendChild(runLabel);
+      }
+
       card.appendChild(delBtn);
       root.appendChild(el("div", { class: "pipeline-list-row" }, [card]));
     });
