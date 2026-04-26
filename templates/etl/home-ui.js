@@ -1661,56 +1661,13 @@ function renderTriggerList(triggers, pipelineId) {
   updateScheduledTriggerOptions(cachedTriggers, effectivePipelineId);
 }
 
-function seedEmptyPipelineIfNeeded(pipelines) {
-  if (emptyPipelineSeeded) {
-    return;
-  }
-  if (pipeline_id) {
-    return;
-  }
-  if (disableEmptyPipelineSeed) {
-    return;
-  }
-  if (suppressEmptyPipelineSeed) {
-    suppressEmptyPipelineSeed = false;
-    return;
-  }
-  if (!Array.isArray(pipelines) || pipelines.length > 0) {
-    return;
-  }
-  if (!window.googleLoginProfile || !window.googleLoginProfile.logged_in) {
-    return;
-  }
-  emptyPipelineSeeded = true;
-  if (typeof window.flowchartClearWorkspace === "function") {
-    window.flowchartClearWorkspace();
-    return;
-  }
-  var googleId = window.googleLoginProfile.google_id || window.googleLoginProfile.email || "unknown";
-  var safeGoogleId = googleId.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_-]/g, "");
-  if (!safeGoogleId) {
-    safeGoogleId = "unknown";
-  }
-  if (!pipeline_id) {
-    setCurrentPipelineId(generatePipelineId());
-  }
-  var data = {};
-  if ($flowchart && $flowchart.flowchart) {
-    data = $flowchart.flowchart("getData", pipeline_id || "local") || {};
-  }
-  if (!data.activities) {
-    data.activities = {};
-  }
-  if (!data.links) {
-    data.links = {};
-  }
-  data.pipeline_name = getNextPipelineName();
-  data.description = "";
-  data.pipeline_id = pipeline_id;
-  data.google_id = safeGoogleId;
-  setActivePipelineType("dataflow");
-  post_pipeline(safeGoogleId, pipeline_id, data);
-  fetchPipelineList();
+function seedEmptyPipelineIfNeeded(_pipelines) {
+  // Intentionally a no-op. We used to auto-create an empty 'pipeline_N'
+  // whenever the dataflow list was empty so the user always had something
+  // on the canvas. With the home view in place that's the wrong default —
+  // an empty list means the user lands on Home and clicks 'New Dataflow'
+  // explicitly. Auto-seeding caused a phantom dataflow to reappear right
+  // after the user deleted their only one.
 }
 
 function fetchPipelineList() {
