@@ -59,10 +59,16 @@ int bind_address_to_port(char* port,struct addrinfo hints){
 }
 
 struct Socket* insert_file_descriptor(struct Socket *sockets[],struct pollfd *pfds[],int fd, SSL *cSSL,char* hostname,int *fd_count, int *max_fd_size, int is_listener){
-	 if (*fd_count == *max_fd_size){
-	 	*max_fd_size *=2;
-	 	*pfds = realloc(*pfds, sizeof(**pfds) * (*max_fd_size));
-                *sockets = realloc(*sockets, sizeof(**sockets) * (*max_fd_size));
+	 /* Reallocating sockets[] used to double the array. That MOVED memory
+	  * and invalidated every Socket* pointer worker threads were holding
+	  * — under 20+ concurrent requests we crashed in SSL_write with
+	  * a NULL/freed cSSL. Refuse to grow past max_fd_size instead; the
+	  * caller pre-allocates a comfortable bound (MAX_CLIENTS = 1024). */
+	 if (*fd_count >= *max_fd_size){
+	 	fprintf(stderr, "insert_file_descriptor: at capacity (%d), refusing new fd=%d\n",
+	 	        *max_fd_size, fd);
+	 	if (fd >= 0) close(fd);
+	 	return NULL;
 	 }
     unsigned char* socket_id = malloc(16);	
     create_unique_identifier(socket_id);
@@ -142,40 +148,26 @@ struct Socket* accept_new_client(int listener_fd, struct Socket **sockets,struct
            return NULL;
        }
 
-       /* DO NOT do the TLS handshake on this thread. It used to be done here
-        * inline (encrypt_socket → SSL_accept), but SSL_accept can block on
-        * read/write during the handshake, and OpenSSL contends on internal
-        * locks with worker threads holding long-lived SSL connections (e.g.
-        * /etl/notebook/events SSE proxies). When that happens, the main
-        * accept loop stalls and ALL new connections sit in the kernel
-        * backlog — clients see TLS handshake timeouts after 30s.
-        *
-        * Instead, register the bare TCP socket here (cSSL = NULL) and let
-        * process_thread do the SSL_accept on the worker. The main thread
-        * returns to poll() immediately and is always ready to accept the
-        * next connection. */
+       /* TLS handshake here on the main accept thread. Doing it on the
+        * worker thread (with the FD held in pfds with events=0 until
+        * handshake done) caused use-after-free races between workers
+        * and the main loop's swap-on-remove logic in sockets[]. */
+       SSL* cSSL = encrypt_socket(newfd);
+       if (cSSL == NULL) {
+           close(newfd);
+           return NULL;
+       }
        struct timeval send_timeout;
        send_timeout.tv_sec = 5;
        send_timeout.tv_usec = 0;
        setsockopt(newfd, SOL_SOCKET, SO_SNDTIMEO, &send_timeout, sizeof(send_timeout));
-       /* Bound the SSL_accept read too so a stalled client can't pin a
-        * worker thread forever. */
-       struct timeval recv_timeout;
-       recv_timeout.tv_sec = 10;
-       recv_timeout.tv_usec = 0;
-       setsockopt(newfd, SOL_SOCKET, SO_RCVTIMEO, &recv_timeout, sizeof(recv_timeout));
 
        char host[NI_MAXHOST];
-       struct Socket* socket = insert_file_descriptor(sockets, pfds, newfd, NULL, host, fd_count, max_fd_size, 0x0);
-       /* Suppress POLLIN until the worker has done SSL_accept. Otherwise
-        * the main loop sees the ClientHello bytes as POLLIN on this FD and
-        * spawns a SECOND worker for it, which races against the first
-        * worker's SSL_accept and yields 'unexpected EOF' on the client. */
-       for (int i = 0; i < *fd_count; i++) {
-           if ((*pfds)[i].fd == newfd) {
-               (*pfds)[i].events = 0;
-               break;
-           }
+       struct Socket* socket = insert_file_descriptor(sockets, pfds, newfd, cSSL, host, fd_count, max_fd_size, 0x0);
+       if (socket == NULL) {
+           SSL_shutdown(cSSL);
+           SSL_free(cSSL);
+           return NULL;
        }
        return socket;
      }
@@ -189,42 +181,6 @@ void fill_address_info(struct addrinfo *hints){
 
 void* process_thread(void* arg){
     struct Socket *new_client = (struct Socket *)arg;
-
-    /* If this is the first time we're seeing this socket (cSSL still NULL
-     * because accept_new_client deferred the handshake to us), do the TLS
-     * handshake here on the worker thread. This keeps the main accept loop
-     * non-blocking even when an existing worker (e.g. an SSE proxy) is
-     * holding OpenSSL internal locks. */
-    if (new_client->cSSL == NULL) {
-        SSL* cSSL = encrypt_socket(new_client->fd);
-        if (cSSL == NULL) {
-            new_client->keep_alive = 0x0;
-            new_client->finished = 1;
-            pthread_exit(NULL);
-        }
-        new_client->cSSL = cSSL;
-    }
-
-    /* Take exclusive ownership of this FD while processing. Without this,
-     * any unread data on the socket (including the bytes from a long-lived
-     * SSE proxy that this worker is itself reading) keeps poll() returning
-     * POLLIN on the FD, and the main accept loop spawns a fresh thread per
-     * iteration trying to handle the same FD — they all block in SSL_read
-     * and accumulate without bound. The original code had this race; it
-     * only didn't visibly break because each worker happened to consume
-     * the buffer before the next main-loop iteration. SSE breaks that
-     * assumption: data keeps arriving from the upstream, POLLIN stays
-     * asserted, and the main thread spirals.
-     *
-     * After process_bytes returns we re-enable POLLIN for keep-alive so
-     * the main loop can detect the next request on this FD. Non-keep-alive
-     * connections are torn down by remove_file_descriptor. */
-    for (int i = 0; i < fd_count; i++) {
-        if (pfds[i].fd == new_client->fd) {
-            pfds[i].events = 0;
-            break;
-        }
-    }
 
     char *peek_buf = malloc(BUFFER_SIZE+1);
     int bytes_peeked = (peek_buf != NULL)
@@ -240,40 +196,7 @@ void* process_thread(void* arg){
     } else {
         new_client->keep_alive = 0x0;
     }
-    /* Free peek_buf on every exit path. The previous version only freed
-     * inside the success branch, which leaked ~1KB per failed peek
-     * (idle clients, port scans, broken handshakes). free(NULL) is safe. */
     free(peek_buf);
-
-    if (new_client->keep_alive) {
-        /* Re-enable POLLIN so the main loop dispatches the next request
-         * on this same socket. Cleanup is deferred to the eventual close
-         * (when the client disconnects or keep_alive flips). */
-        for (int i = 0; i < fd_count; i++) {
-            if (pfds[i].fd == new_client->fd) {
-                pfds[i].events = POLLIN;
-                break;
-            }
-        }
-    } else {
-        /* Close the SSL/TCP connection here on the worker thread. If we
-         * deferred this to the main loop's join section (which used to
-         * call remove_file_descriptor → SSL_shutdown → close), the close
-         * wouldn't actually run until poll() wakes up for the next
-         * event. Clients without an explicit Content-Length on the
-         * response (the common case for this server's send_response_code
-         * 200) wait for the TLS close_notify to know the response is
-         * complete, so a delayed close = a 30-second client-side timeout. */
-        if (new_client->cSSL != NULL) {
-            SSL_shutdown(new_client->cSSL);
-            SSL_free(new_client->cSSL);
-            new_client->cSSL = NULL;
-        }
-        /* Don't close(fd) here — the main loop's remove_file_descriptor
-         * still owns the FD lifecycle. We only do SSL_shutdown so the
-         * client gets close_notify immediately and considers the
-         * response complete; the kernel-level close happens later. */
-    }
 
     new_client->finished = 1;
     pthread_exit(NULL);
@@ -286,7 +209,12 @@ void start_listening_for_clients(char* port){
         SSL_load_error_strings(); 
         struct addrinfo hints;
         fill_address_info(&hints);
-        int max_socket_size = 10;
+        /* Preallocate the full sockets/pfds arrays at MAX_CLIENTS so
+         * insert_file_descriptor never has to grow them (which would
+         * realloc the storage and invalidate every Socket* pointer the
+         * worker threads are using — root cause of the SIGSEGV under
+         * concurrent /etl/notebook/lint requests). */
+        int max_socket_size = MAX_CLIENTS;
         fd_count = 0;
         sockets = malloc(sizeof(struct Socket) * max_socket_size);
         pfds =  malloc(sizeof(struct pollfd) * max_socket_size);
