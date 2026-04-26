@@ -1532,6 +1532,8 @@ function renderTriggerList(triggers, pipelineId) {
     return;
   }
   cachedTriggers = triggers.slice();
+  var triggerCountEl = document.getElementById("triggerCount");
+  if (triggerCountEl) triggerCountEl.textContent = String(cachedTriggers.length);
   var floatingMenu = document.getElementById("triggerOptionsMenu");
   if (!floatingMenu) {
     floatingMenu = document.createElement("div");

@@ -365,3 +365,71 @@
   font-size: 10px;
   letter-spacing: 0;
 }
+
+
+/* === Ingest section list rows (buttons that act like rows) ===
+ * The Ingest section uses <button id="import_activity" class="create_operator ds-sidebar-list-row">.
+ * Reset button defaults so they render the same as <div> rows.
+ */
+.sidebar-v2 .ds-sidebar-list-row.create_operator {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: var(--ink-900);
+  margin: 0;
+}
+.sidebar-v2 .ds-sidebar-list-row.create_operator:last-child { border-bottom: none; }
+.sidebar-v2 .ds-sidebar-list-row.create_operator:hover { background: rgba(31,79,214,0.04); }
+.sidebar-v2 .ds-sidebar-list-row.create_operator .icon {
+  width: 18px; height: 18px;
+}
+.sidebar-v2 .ds-sidebar-list-row.create_operator .icon svg {
+  width: 100%; height: 100%;
+}
+
+/* === Larger tap targets for "+ New" + section header === */
+.sidebar-v2 .ds-sidebar-section-header {
+  padding: 12px 14px;
+  min-height: 40px;
+}
+.sidebar-v2 .ds-sidebar-section-header .new-btn {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+  background: var(--brand-50);
+  color: var(--brand-500);
+  border: 1px solid transparent;
+}
+.sidebar-v2 .ds-sidebar-section-header .new-btn:hover {
+  background: var(--brand-100);
+  border-color: var(--brand-200);
+}
+
+/* === Drop the legacy gradient styling on Ingest <details> chrome === */
+.sidebar-v2 details.ds-sidebar-section {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  margin: 0;
+  padding: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+.sidebar-v2 details.ds-sidebar-section > summary {
+  list-style: none;
+}
+.sidebar-v2 details.ds-sidebar-section > summary::-webkit-details-marker { display: none; }
+
+/* Override legacy .activity-group rule that may still apply if class is present */
+.sidebar-v2 .activity-group-content {
+  display: block;
+  gap: 0;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}

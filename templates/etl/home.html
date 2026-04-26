@@ -106,35 +106,38 @@
               <pre id="nb_spark_log" class="nb-spark-log"></pre>
             </div>
         </details>
-        <details id="savedTriggersGroup" class="activity-group saved-triggers-group" open>
-            <summary>Saved Triggers</summary>
-            <div class="activity-group-content">
-                <button id="newTriggerButton" class="pipeline-new-button" type="button">
-                  + New Trigger
-                </button>
-                <div id="triggerList" class="pipeline-list"></div>
-            </div>
+        <details id="savedTriggersGroup" class="ds-sidebar-section saved-triggers-group" open>
+            <summary class="ds-sidebar-section-header">
+                <span>Triggers</span>
+                <span class="row" style="gap: 6px;">
+                    <span class="pill pill-neutral count" id="triggerCount">0</span>
+                    <button id="newTriggerButton" class="new-btn" type="button">+ New</button>
+                </span>
+            </summary>
+            <div id="triggerList" class="pipeline-list ds-sidebar-list"></div>
         </details>
-        <details class="activity-group" open>
-            <summary>Ingest</summary>
-            <div class="activity-group-content">
-                <button id="import_activity" class="create_operator buttons">
-                    <span class="activity-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M12 4v12"/><path d="M7 9l5 5 5-5"/><path d="M5 20h14"/></svg>
+        <details class="ds-sidebar-section" open>
+            <summary class="ds-sidebar-section-header">
+                <span>Ingest</span>
+            </summary>
+            <div class="ds-sidebar-list">
+                <button id="import_activity" class="create_operator ds-sidebar-list-row" type="button">
+                    <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 4v12"/><path d="M7 9l5 5 5-5"/><path d="M5 20h14"/></svg>
                     </span>
-                    Create Import
+                    <span class="label">Import data</span>
                 </button>
-                <button id="sheets_read_activity" class="create_operator buttons">
-                    <span class="activity-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h6"/></svg>
+                <button id="sheets_read_activity" class="create_operator ds-sidebar-list-row" type="button">
+                    <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h6"/></svg>
                     </span>
-                    Google Sheets (Read)
+                    <span class="label">Google Sheets (Read)</span>
                 </button>
-                <button id="http_request_activity" class="create_operator buttons">
-                    <span class="activity-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M4 7h10M4 12h16M4 17h12"/><path d="M18 7l2 2-2 2"/></svg>
+                <button id="http_request_activity" class="create_operator ds-sidebar-list-row" type="button">
+                    <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h10M4 12h16M4 17h12"/><path d="M18 7l2 2-2 2"/></svg>
                     </span>
-                    HTTP Request
+                    <span class="label">HTTP Request</span>
                 </button>
             </div>
         </details>
