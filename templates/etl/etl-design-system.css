@@ -433,3 +433,67 @@
   background: transparent;
   box-shadow: none;
 }
+
+
+/* === Sections as distinct white cards (clearer separation) ===
+ * The sidebar-v2 background is var(--surface-2) (light gray).
+ * Each <details> section sits on top as a white card with a hairline border.
+ * 8px vertical gap between cards makes the separation obvious at a glance.
+ */
+.sidebar-v2 .sidebar-buttons {
+  gap: 8px;
+  padding: 8px;
+}
+
+.sidebar-v2 details.ds-sidebar-section {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin: 0;
+  box-shadow: var(--shadow-1);
+}
+
+/* Header sits on the white card */
+.sidebar-v2 .ds-sidebar-section-header {
+  background: var(--surface);
+  color: var(--ink-700);
+  font-weight: 700;
+  border-bottom: 1px solid var(--line);
+}
+.sidebar-v2 details.ds-sidebar-section:not([open]) .ds-sidebar-section-header {
+  border-bottom-color: transparent;
+}
+.sidebar-v2 .ds-sidebar-section-header:hover {
+  background: var(--surface-3);
+}
+
+/* List inside a card has no extra border-bottom on the last row (the card border handles it) */
+.sidebar-v2 details.ds-sidebar-section .ds-sidebar-list .ds-sidebar-list-row:last-child {
+  border-bottom: none;
+}
+
+/* === Stronger hover affordance on rows (clickability) === */
+.sidebar-v2 .ds-sidebar-list-row {
+  cursor: pointer;
+  transition: background var(--motion-fast), padding-left var(--motion-fast);
+}
+.sidebar-v2 .ds-sidebar-list-row:hover {
+  background: var(--brand-50);
+  padding-left: 16px;     /* subtle 2px indent on hover */
+}
+.sidebar-v2 .ds-sidebar-list-row.is-active {
+  background: var(--brand-50);
+}
+
+/* The "+ New" button stands out a little more inside the white card */
+.sidebar-v2 .ds-sidebar-section-header .new-btn {
+  background: var(--brand-500);
+  color: #ffffff;
+  border-color: var(--brand-500);
+  font-weight: 600;
+}
+.sidebar-v2 .ds-sidebar-section-header .new-btn:hover {
+  background: var(--brand-600);
+  border-color: var(--brand-600);
+}
