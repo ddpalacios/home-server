@@ -422,6 +422,9 @@
           exec_counter: maxCount,
         };
         document.getElementById("nb_name").value = NB.current.name;
+        // Clear active highlights in other sidebar sections (pipelines, dataflows).
+        if (typeof window.renderPipelineListSelection === "function") window.renderPipelineListSelection("");
+        if (typeof window.renderSavedPipelineListSelection === "function") window.renderSavedPipelineListSelection("");
         showNotebookView();
         renderCells();
         renderSidebarList();

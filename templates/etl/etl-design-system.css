@@ -594,3 +594,30 @@
   background: rgba(255, 255, 255, 0.18);
   color: #ffffff;
 }
+
+
+/* === Subtle active state (override the solid brand fill from the previous pass) === */
+.sidebar-v2 .ds-sidebar-list .ds-sidebar-list-row.is-active {
+  background: var(--brand-50);
+  border-color: var(--brand-200);
+  color: var(--brand-700);
+  box-shadow: var(--shadow-1);
+}
+.sidebar-v2 .ds-sidebar-list .ds-sidebar-list-row.is-active::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 6px; bottom: 6px;
+  width: 3px;
+  background: var(--brand-500);
+  border-radius: 0 2px 2px 0;
+}
+.sidebar-v2 .ds-sidebar-list .ds-sidebar-list-row.is-active {
+  position: relative;
+}
+.sidebar-v2 .ds-sidebar-list .ds-sidebar-list-row.is-active .icon { color: var(--brand-500); }
+.sidebar-v2 .ds-sidebar-list .ds-sidebar-list-row.is-active .label { color: var(--brand-700); font-weight: 600; }
+.sidebar-v2 .ds-sidebar-list .ds-sidebar-list-row.is-active .meta { color: var(--ink-500); }
+.sidebar-v2 .ds-sidebar-list .ds-sidebar-list-row.is-active .pill {
+  background: rgba(31,79,214,0.10);
+  color: var(--brand-500);
+}

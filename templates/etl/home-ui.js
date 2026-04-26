@@ -849,6 +849,10 @@ function setActivePipelineType(type) {
   }
   renderPipelineListSelection(type === "dataflow" ? pipeline_id : "");
   renderSavedPipelineListSelection(type === "pipeline" ? pipeline_id : "");
+  // Clear notebook highlight when switching to dataflow/pipeline.
+  document.querySelectorAll('#notebookList .ds-sidebar-list-row.is-active').forEach(function(r) {
+    r.classList.remove('is-active');
+  });
   var importPlaceholderEl = document.getElementById("importPlaceholder");
   var selectPlaceholdersEl = document.getElementById("selectPlaceholders");
   var linkAddLayerEl = document.getElementById("linkAddLayer");
