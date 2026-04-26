@@ -2186,6 +2186,7 @@ function deletePipeline(pipelineId) {
   if (!pipelineId) {
     return;
   }
+  if (!confirm("Are you sure you want to delete this dataflow? This cannot be undone.")) return;
   disableEmptyPipelineSeed = true;
   var pipelineList = document.getElementById("pipelineList");
   var pipelineRow = pipelineList ? pipelineList.querySelector(".pipeline-list-item[data-pipeline-id=\"" + pipelineId + "\"]") : null;
@@ -2218,6 +2219,7 @@ function deleteSavedPipeline(pipelineId) {
   if (!pipelineId) {
     return;
   }
+  if (!confirm("Are you sure you want to delete this pipeline? This cannot be undone.")) return;
   var pipelineList = document.getElementById("savedPipelineList");
   var pipelineRow = pipelineList ? pipelineList.querySelector(".pipeline-list-item[data-pipeline-id=\"" + pipelineId + "\"]") : null;
   if (pipelineRow && pipelineRow.parentElement) {
@@ -2249,6 +2251,7 @@ function deleteTrigger(triggerId) {
   if (!triggerId) {
     return;
   }
+  if (!confirm("Are you sure you want to delete this trigger? This cannot be undone.")) return;
   if (triggerId === selectedTriggerId) {
     selectedTriggerId = "";
   }

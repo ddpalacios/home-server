@@ -681,3 +681,30 @@
   transform: scale(0.99);
   box-shadow: inset 0 1px 2px rgba(31,79,214,0.10);
 }
+
+
+/* === Ingest activity buttons — hard outline + bold label === */
+.sidebar-v2 .ds-sidebar-list-row.create_operator {
+  background: var(--surface) !important;
+  border: 1.5px solid var(--brand-500) !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--brand-700);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  box-shadow: 0 1px 2px rgba(31,79,214,0.10);
+  cursor: pointer;
+}
+.sidebar-v2 .ds-sidebar-list-row.create_operator .label {
+  color: var(--brand-700);
+  font-weight: 700;
+}
+.sidebar-v2 .ds-sidebar-list-row.create_operator:hover {
+  background: var(--brand-50) !important;
+  border-color: var(--brand-600) !important;
+  box-shadow: 0 4px 8px rgba(31,79,214,0.18);
+}
+.sidebar-v2 .ds-sidebar-list-row.create_operator:active {
+  transform: scale(0.99);
+  background: var(--brand-100) !important;
+  box-shadow: inset 0 1px 2px rgba(31,79,214,0.18);
+}
