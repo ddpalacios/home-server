@@ -749,6 +749,12 @@
           "Shift-Enter":   function () { runCell(cell.id, { advance: true }); },
           "Ctrl-Enter":    function () { runCell(cell.id, { advance: false }); },
           "Esc":           function (cmInstance) { cmInstance.getInputField().blur(); },
+          "Ctrl-/":        function (cmInstance) {
+            if (cmInstance.toggleComment) cmInstance.toggleComment({ indent: true });
+          },
+          "Cmd-/":         function (cmInstance) {
+            if (cmInstance.toggleComment) cmInstance.toggleComment({ indent: true });
+          },
           "Ctrl-Q":        function (cmInstance) {
             if (cmInstance.foldCode) cmInstance.foldCode(cmInstance.getCursor());
           },
