@@ -243,6 +243,16 @@
         setDirtyBadge(false);
         setKernelStatus("Idle");
         if (NB.varsVisible) refreshVars();
+        // Re-attach to any cell that has a job_id but no recorded final status.
+        (NB.current.cells || []).forEach(function (c) {
+          if (c.job_id && !(c.output && c.output.status &&
+                            c.output.status !== "running")) {
+            // Clear the output area; the SSE replay will repopulate it.
+            if (c._outputNode) c._outputNode.innerHTML = "";
+            registerRunningJob(c, NB.current);
+            attachEventStream(c, NB.current, c.job_id, -1, {});
+          }
+        });
       });
   }
 
@@ -272,6 +282,7 @@
           output: c.output,
           status: c.status,
           exec_count: c.exec_count,
+          job_id: c.job_id || null,
         };
       }),
     };
