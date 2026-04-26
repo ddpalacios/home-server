@@ -153,7 +153,9 @@
     overflow: hidden;
     flex: 1;
     width: 100%;
-    background: var(--canvas-bg);
+    background:
+      radial-gradient(circle at center, rgba(15,23,42,0.06) 1px, transparent 1px) 0 0 / 16px 16px,
+      var(--surface-2);
   }
 
   .create-trigger-button {
