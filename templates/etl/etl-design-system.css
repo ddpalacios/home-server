@@ -497,3 +497,44 @@
   background: var(--brand-600);
   border-color: var(--brand-600);
 }
+
+
+/* === List area inside each section gets a subtle gray drawer so rows pop ===
+ * Section card: --surface (white)
+ *   ├── Header: --surface (white) — sits on the card
+ *   └── List drawer: --surface-2 (light gray) — items live here, visually distinct
+ * Hover: brightens row back to --brand-50 (light blue) — clear "you can click this"
+ */
+.sidebar-v2 details.ds-sidebar-section .ds-sidebar-list,
+.sidebar-v2 details.ds-sidebar-section .activity-group-content {
+  background: var(--surface-2);
+  padding: 4px 0;
+}
+
+/* Rows inside the gray drawer — stay transparent so the drawer color shows through.
+ * The hairline divider becomes lighter so it doesn't fight with the gray.
+ */
+.sidebar-v2 .ds-sidebar-list .ds-sidebar-list-row {
+  background: transparent;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.04);
+}
+.sidebar-v2 .ds-sidebar-list .ds-sidebar-list-row:last-child {
+  border-bottom: none;
+}
+
+/* Hover lifts the row to white-blue so it clearly stands out as the focus item */
+.sidebar-v2 .ds-sidebar-list .ds-sidebar-list-row:hover {
+  background: var(--brand-50);
+}
+
+/* Active row stays prominent: brand-50 fill + 2px left bar */
+.sidebar-v2 .ds-sidebar-list .ds-sidebar-list-row.is-active {
+  background: var(--brand-50);
+  box-shadow: inset 3px 0 0 var(--brand-500);
+}
+
+/* Ingest buttons (which are <button>s with .ds-sidebar-list-row) need the same treatment */
+.sidebar-v2 .ds-sidebar-list-row.create_operator {
+  background: transparent;
+  border-bottom-color: rgba(15, 23, 42, 0.04);
+}
