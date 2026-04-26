@@ -13,9 +13,7 @@
 #include "http_utilities.h"
 #include "json_utilities.h"
 #include "string_utilities.h"
-#include "User_Token.h"
 #include "send_message.h"
-#include "WebsocketClient.h"
 #include "read_message.h"
 #include <sys/types.h>
 #include <arpa/inet.h>
@@ -109,15 +107,17 @@ struct Socket* insert_file_descriptor(struct Socket *sockets[],struct pollfd *pf
  void remove_file_descriptor(struct Socket *sockets,struct pollfd pfds[], int fd, int *fd_count){
  	for (int i=0; i<*fd_count; i++){
  		if (sockets[i].fd  == fd) {
-			/* cSSL may be NULL if the TLS handshake never ran (e.g.
-			 * client disconnected before handshake or handshake
-			 * failed on the worker thread). */
+			/* cSSL/fd may already be cleaned up by the worker thread
+			 * for non-keep-alive HTTP responses (so the client's
+			 * close_notify isn't delayed by the main loop's poll). */
 			if (sockets[i].cSSL != NULL) {
 				int ret = SSL_shutdown(sockets[i].cSSL);
 				SSL_free(sockets[i].cSSL);
 				sockets[i].cSSL = NULL;
 			}
-		        close(fd);
+			if (fd >= 0) {
+			        close(fd);
+			}
  			sockets[i] = sockets[*fd_count-1];
  			break;
  		}
@@ -187,19 +187,6 @@ void fill_address_info(struct addrinfo *hints){
 	hints->ai_flags= AI_PASSIVE;
 }
 
-/* Background thread: deletes expired auth tokens periodically without
- * blocking the main accept loop. Runs every 60 seconds. Failures are
- * silently swallowed — token expiry isn't critical-path for serving
- * requests, so we don't want a transient MySQL hiccup to stop sessions. */
-void* run_token_reaper(void* arg){
-	(void)arg;
-	while (1) {
-		delete_expired_tokens();
-		sleep(60);
-	}
-	return NULL;
-}
-
 void* process_thread(void* arg){
     struct Socket *new_client = (struct Socket *)arg;
 
@@ -258,17 +245,34 @@ void* process_thread(void* arg){
      * (idle clients, port scans, broken handshakes). free(NULL) is safe. */
     free(peek_buf);
 
-    /* Re-enable POLLIN if this is a keep-alive connection so the next
-     * request on the same socket gets dispatched. Otherwise the FD is
-     * about to be closed by the join loop's remove_file_descriptor, so
-     * leaving events=0 is fine. */
     if (new_client->keep_alive) {
+        /* Re-enable POLLIN so the main loop dispatches the next request
+         * on this same socket. Cleanup is deferred to the eventual close
+         * (when the client disconnects or keep_alive flips). */
         for (int i = 0; i < fd_count; i++) {
             if (pfds[i].fd == new_client->fd) {
                 pfds[i].events = POLLIN;
                 break;
             }
         }
+    } else {
+        /* Close the SSL/TCP connection here on the worker thread. If we
+         * deferred this to the main loop's join section (which used to
+         * call remove_file_descriptor → SSL_shutdown → close), the close
+         * wouldn't actually run until poll() wakes up for the next
+         * event. Clients without an explicit Content-Length on the
+         * response (the common case for this server's send_response_code
+         * 200) wait for the TLS close_notify to know the response is
+         * complete, so a delayed close = a 30-second client-side timeout. */
+        if (new_client->cSSL != NULL) {
+            SSL_shutdown(new_client->cSSL);
+            SSL_free(new_client->cSSL);
+            new_client->cSSL = NULL;
+        }
+        /* Don't close(fd) here — the main loop's remove_file_descriptor
+         * still owns the FD lifecycle. We only do SSL_shutdown so the
+         * client gets close_notify immediately and considers the
+         * response complete; the kernel-level close happens later. */
     }
 
     new_client->finished = 1;
@@ -295,18 +299,6 @@ void start_listening_for_clients(char* port){
 	pthread_t threads[MAX_CLIENTS];
 	struct Socket* clients[MAX_CLIENTS];
 	int thread_count = 0;
-
-	/* Run token expiry on a separate timer thread instead of inline in the
-	 * accept loop. Calling delete_expired_tokens() on every loop iteration
-	 * meant a fresh MySQL connect+query+disconnect cycle per request,
-	 * blocking the main accept thread on a libmysql/glibc futex while a
-	 * worker thread (e.g. an SSE proxy) was holding internal libmysql
-	 * state. Symptom: every new TLS handshake starved for ~6-8s while a
-	 * notebook cell was running, surfacing as ConnectTimeout on the
-	 * blob-storage wrapper. */
-	pthread_t token_reaper;
-	pthread_create(&token_reaper, NULL, run_token_reaper, NULL);
-	pthread_detach(token_reaper);
 
 	while(1) {
 		// printf("Total Sockets: %d\n", fd_count);

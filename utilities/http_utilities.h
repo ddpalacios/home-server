@@ -32,3 +32,10 @@ char* get_code_message(int code);
 int is_connection_keep_alive(char*http_header);
 int get_content_length(char*http_header);
 int get_http_header(char* request, char*header_result, size_t header_result_size);
+
+/* Static-asset / template helpers used by the ETL UI. Defined in
+ * routes/life-of-sounds/GET/get_live_page.c and get_game_of_life_script.c
+ * (kept under that path for now; they are not websocket-related). */
+void get_live_html(SSL* cSSL, char* request, char* template_name);
+void get_gol_script(SSL* cSSL, char* request, char* template_name);
+void get_image_file(SSL* cSSL, char* request, char* template_name);

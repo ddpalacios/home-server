@@ -448,72 +448,7 @@ void process_websocket_message(struct Socket* sockets,struct Socket* socket,int 
 				}
 				*/
 void process_bytes(struct Socket *sockets, struct Socket *socket, char* buf, int fd_count){
-		if (is_tcp_buffer(buf)){
-
-			char* tcp_buf = malloc(BUFFER_SIZE);
-			int nbytes =  read_tcp_message(socket->cSSL, &tcp_buf);
-			// printf("TCP Buf %s\n", tcp_buf);
-			socket->is_tcp = 0x1;
-			socket->keep_alive = 0x1;
-			int payload_length = 0;
-			if (nbytes <= 125){
-				payload_length = nbytes;
-			}else if (nbytes <= 65535){
-				payload_length = 126;
-			}else{
-				payload_length = 127;
-			}
-
-			cJSON *json = cJSON_Parse(tcp_buf);
-			
-			if (json) {
-				char* socketId = get_optional_value(json, "socketId");
-				int broadcast = get_broadcast_flag(json);
-				char* jobId = get_optional_value(json, "jobId");
-				if (jobId) {
-					printf("Message %s\n", tcp_buf);
-					socket->jobId = strdup(jobId);
-				}
-				if (broadcast || !socketId) {
-					// printf("Sending Websocket Message %s\n",tcp_buf);
-					send_tcp_to_websocket_clients(sockets, fd_count, payload_length, nbytes, tcp_buf);
-				} else {
-					send_tcp_to_socket_id(sockets, fd_count, socketId, payload_length, nbytes, tcp_buf);
-				}
-				cJSON_Delete(json);
-			}else{
-				send_tcp_message(socket->cSSL, 0x1, 0x1, nbytes, tcp_buf);
-				// send_message_as_websocket(socket, fd_count, payload_length, nbytes, tcp_buf);
-			}
-			if (tcp_buf != NULL){
-				free(tcp_buf);
-				tcp_buf = NULL;
-			}
-		}
-		if (is_websocket_buffer(buf)){
-			unsigned char* websocket_buf = malloc(2);
-			if (!websocket_buf){perror("error"); exit(1);}
-			int nbytes = read_exact_bytes(socket->cSSL, 2, websocket_buf);
-			int finVal = websocket_buf[0] & 0x80;
-			int opcode = websocket_buf[0] & 0x0F;
-			if (nbytes <= 0 || opcode == 0x8){
-				printf("Killing off Socket %d\n", socket->fd);
-				socket->keep_alive = 0x0;
-			}else{
-				int payload_length = websocket_buf[1] & 0x7F;
-				char* message = NULL;
-				nbytes = read_websocket_message(socket->cSSL, payload_length, &message);
-				int message_length = nbytes;
-				message[nbytes] = '\0';
-				printf("WEBSOCKET MESSAGE %s\n", message);
-				process_websocket_message(sockets,socket, fd_count, message,payload_length, nbytes);
-				if (websocket_buf != NULL) {
-					free(websocket_buf);
-					websocket_buf = NULL;
-				}
-
-			}
-		}
+		(void)sockets;
 		if (buf != NULL && strstr(buf, "HTTP/1.1")!=NULL){
 			size_t header_buf_size = 32768;
 			char* peeked_http_header = malloc(header_buf_size);
