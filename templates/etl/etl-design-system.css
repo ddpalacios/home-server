@@ -621,3 +621,32 @@
   background: rgba(31,79,214,0.10);
   color: var(--brand-500);
 }
+
+
+/* === "+ New" buttons — soft & stylish, not solid-fill harsh === */
+.sidebar-v2 .ds-sidebar-section-header .new-btn {
+  height: 26px;
+  padding: 0 10px 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--brand-500);
+  background: rgba(31, 79, 214, 0.06);
+  border: 1px solid rgba(31, 79, 214, 0.14);
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: background var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast), transform var(--motion-fast);
+}
+.sidebar-v2 .ds-sidebar-section-header .new-btn:hover {
+  background: var(--brand-50);
+  border-color: var(--brand-200);
+  color: var(--brand-600);
+}
+.sidebar-v2 .ds-sidebar-section-header .new-btn:active {
+  transform: scale(0.97);
+  background: var(--brand-100);
+}
+
