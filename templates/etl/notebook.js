@@ -925,13 +925,21 @@
     return toast;
   }
 
+  const STATUS_LABELS = {
+    idle: "Idle",
+    queued: "Queued",
+    running: "Running",
+    success: "Success",
+    error: "Error",
+  };
+
   function setCellStatus(cell, status) {
     cell.status = status;
     if (cell._wrapper) {
       cell._wrapper.classList.remove("nb-idle", "nb-queued", "nb-running", "nb-success", "nb-error");
       cell._wrapper.classList.add("nb-" + status);
     }
-    if (cell._statusLabel) cell._statusLabel.textContent = status;
+    if (cell._statusLabel) cell._statusLabel.textContent = STATUS_LABELS[status] || status;
   }
 
   function setExecBadge(cell) {
