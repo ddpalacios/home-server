@@ -16,8 +16,30 @@
     sparkStatusNode: null,
   };
 
+  NB.runningJobs = NB.runningJobs || new Map();   // job_id -> {notebook_id, notebook_name, cell_id, started_at, last_progress}
+
+  function registerRunningJob(cell, notebook) {
+    NB.runningJobs.set(cell.job_id, {
+      notebook_id: notebook.notebook_id,
+      notebook_name: notebook.name || "Untitled",
+      cell_id: cell.id,
+      started_at: Date.now(),
+      last_progress: null,
+    });
+    if (typeof renderRunningPanel === "function") renderRunningPanel();
+    if (typeof renderSidebarList === "function") renderSidebarList();
+  }
+
+  function unregisterRunningJob(job_id) {
+    NB.runningJobs.delete(job_id);
+    if (typeof renderRunningPanel === "function") renderRunningPanel();
+    if (typeof renderSidebarList === "function") renderSidebarList();
+  }
+
   const AUTOSAVE_DEBOUNCE_MS = 5000;
-  const SPARK_POLL_INTERVAL_MS = 600;
+  const SPARK_POLL_INTERVAL_MS = 1500;
+  const SPARK_POLL_DELAY_MS = 800;
+  const SPARK_HINT_RE = /\b(spark\.|sc\.|%sparksql|\.toPandas\(|\.collect\(|\.show\(|\.write\.|\.read\.|sql\()/;
 
   function uid(prefix) {
     return prefix + "_" + Math.random().toString(36).slice(2, 10);
@@ -48,19 +70,31 @@
   function setKernelStatus(text, klass) {
     const node = document.getElementById("nb_kernel_status");
     if (!node) return;
-    node.textContent = text;
+    // While a cell is running, only the runCell flow may overwrite the status —
+    // otherwise concurrent operations (save, auto-save, etc.) would clobber the
+    // "Running…" indicator and make it look like the kernel went idle.
+    if (NB.runningCellId && klass !== "nb-busy" && klass !== "nb-error") {
+      return;
+    }
+    const label = node.querySelector(".nb-status-label");
+    if (label) {
+      label.textContent = text;
+    } else {
+      node.textContent = text;
+    }
     node.className = "nb-kernel-status" + (klass ? " " + klass : "");
   }
 
   function setDirtyBadge(dirty) {
     const node = document.getElementById("nb_save");
     if (!node) return;
+    const label = node.querySelector(".nb-btn-label");
     if (dirty) {
       node.classList.add("nb-save-dirty");
-      node.textContent = "Save *";
+      if (label) label.textContent = "Save *"; else node.textContent = "Save *";
     } else {
       node.classList.remove("nb-save-dirty");
-      node.textContent = "Save";
+      if (label) label.textContent = "Save"; else node.textContent = "Save";
     }
   }
 
@@ -213,11 +247,24 @@
   }
 
   function saveCurrent() {
-    if (!NB.current) return Promise.resolve();
+    return saveNotebookSnapshot(NB.current).then(function () {
+      if (NB.current) {
+        NB.current.dirty = false;
+        setDirtyBadge(false);
+      }
+      return refreshList();
+    });
+  }
+
+  // Save a specific notebook object (not necessarily NB.current). Used when
+  // a cell finishes running after the user has navigated away — we persist
+  // the result so re-opening the notebook surfaces it.
+  function saveNotebookSnapshot(notebook) {
+    if (!notebook) return Promise.resolve();
     const payload = {
-      notebook_id: NB.current.notebook_id,
-      name: NB.current.name || "Untitled notebook",
-      cells: NB.current.cells.map(function (c) {
+      notebook_id: notebook.notebook_id,
+      name: notebook.name || "Untitled notebook",
+      cells: notebook.cells.map(function (c) {
         return {
           id: c.id,
           type: c.type || "code",
@@ -232,13 +279,7 @@
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
-    })
-      .then(function (r) { return r.json(); })
-      .then(function () {
-        NB.current.dirty = false;
-        setDirtyBadge(false);
-        return refreshList();
-      });
+    }).then(function (r) { return r.json(); }).catch(function () { /* swallow */ });
   }
 
   function deleteNotebook(notebook_id) {
@@ -401,16 +442,45 @@
 
     setTimeout(function () {
       if (typeof CodeMirror === "undefined") return;
+      ensurePythonLinter();
+      const foldAvailable = !!(CodeMirror.fold && CodeMirror.fold.indent);
+      const gutters = ["CodeMirror-linenumbers", "CodeMirror-lint-markers"];
+      if (foldAvailable) gutters.push("CodeMirror-foldgutter");
       const cm = CodeMirror.fromTextArea(textarea, {
         mode: { name: "python", version: 3 },
         theme: "eclipse",
         lineNumbers: true,
         indentUnit: 4,
         viewportMargin: Infinity,
+        gutters: gutters,
+        foldGutter: foldAvailable,
+        foldOptions: foldAvailable ? {
+          rangeFinder: CodeMirror.fold.indent,
+          minFoldSize: 2,
+          scanUp: false,
+        } : undefined,
+        lint: typeof CodeMirror.lint !== "undefined" ? {
+          getAnnotations: pythonLintAnnotations,
+          async: true,
+          delay: 450,
+          lintOnChange: true,
+        } : false,
         extraKeys: {
-          "Shift-Enter": function () { runCell(cell.id, { advance: true }); },
-          "Ctrl-Enter":  function () { runCell(cell.id, { advance: false }); },
-          "Esc":         function (cmInstance) { cmInstance.getInputField().blur(); },
+          "Shift-Enter":   function () { runCell(cell.id, { advance: true }); },
+          "Ctrl-Enter":    function () { runCell(cell.id, { advance: false }); },
+          "Esc":           function (cmInstance) { cmInstance.getInputField().blur(); },
+          "Ctrl-Q":        function (cmInstance) {
+            if (cmInstance.foldCode) cmInstance.foldCode(cmInstance.getCursor());
+          },
+          "Cmd-Q":         function (cmInstance) {
+            if (cmInstance.foldCode) cmInstance.foldCode(cmInstance.getCursor());
+          },
+          "Shift-Ctrl-[":  function (cmInstance) {
+            if (cmInstance.foldCode) cmInstance.foldCode(cmInstance.getCursor());
+          },
+          "Shift-Ctrl-]":  function (cmInstance) {
+            if (cmInstance.foldCode) cmInstance.foldCode(cmInstance.getCursor());
+          },
         },
       });
       cm.on("focus", function () { selectCell(cell.id); });
@@ -420,6 +490,46 @@
       });
       cell._cm = cm;
     }, 0);
+  }
+
+  let _lintInflight = null;
+  function pythonLintAnnotations(text, updateLinting, options, cmInstance) {
+    if (_lintInflight && typeof _lintInflight.abort === "function") {
+      try { _lintInflight.abort(); } catch (e) {}
+    }
+    if (!text || !text.trim()) {
+      updateLinting([]);
+      return;
+    }
+    const controller = (typeof AbortController !== "undefined") ? new AbortController() : null;
+    _lintInflight = controller;
+    const notebookId = (NB && NB.current && NB.current.notebook_id) ? NB.current.notebook_id : "";
+    fetch("/etl/notebook/lint", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: text, notebook_id: notebookId }),
+      signal: controller ? controller.signal : undefined,
+    }).then(function (r) { return r.json(); })
+      .then(function (data) {
+        const diags = (data && Array.isArray(data.diagnostics)) ? data.diagnostics : [];
+        const annotations = diags.map(function (d) {
+          return {
+            from: CodeMirror.Pos(d.line | 0, d.col | 0),
+            to:   CodeMirror.Pos(d.end_line | 0, Math.max((d.end_col | 0), (d.col | 0) + 1)),
+            message: d.message || "issue",
+            severity: d.severity === "error" ? "error" : "warning",
+          };
+        });
+        updateLinting(annotations);
+      })
+      .catch(function () { updateLinting([]); });
+  }
+
+  function ensurePythonLinter() {
+    if (typeof CodeMirror === "undefined" || typeof CodeMirror.registerHelper !== "function") return;
+    if (CodeMirror._nbPyLintRegistered) return;
+    CodeMirror.registerHelper("lint", "python", function () { return []; });
+    CodeMirror._nbPyLintRegistered = true;
   }
 
   function mountMarkdownEditor(wrapper, cell) {
@@ -481,6 +591,60 @@
     });
   }
 
+  // Last line of a Python traceback usually has the most useful info.
+  function summarizeError(text) {
+    if (!text) return "see cell output";
+    const lines = String(text).trim().split(/\r?\n/);
+    for (let i = lines.length - 1; i >= 0; i--) {
+      const t = lines[i].trim();
+      if (t && !t.startsWith("File ") && !t.startsWith("at ")) {
+        return t.length > 140 ? t.slice(0, 137) + "…" : t;
+      }
+    }
+    return lines[lines.length - 1] || "see cell output";
+  }
+
+  function showToast(message, severity, onClick) {
+    let layer = document.getElementById("nb_toast_layer");
+    if (!layer) {
+      layer = document.createElement("div");
+      layer.id = "nb_toast_layer";
+      layer.className = "nb-toast-layer";
+      document.body.appendChild(layer);
+    }
+    const toast = document.createElement("div");
+    toast.className = "nb-toast nb-toast-" + (severity || "info");
+    if (typeof onClick === "function") {
+      toast.classList.add("nb-toast-clickable");
+      toast.addEventListener("click", function (ev) {
+        if (ev.target.classList && ev.target.classList.contains("nb-toast-close")) return;
+        onClick();
+        dismiss();
+      });
+    }
+    const msg = document.createElement("div");
+    msg.className = "nb-toast-message";
+    msg.textContent = message;
+    toast.appendChild(msg);
+    const close = document.createElement("button");
+    close.className = "nb-toast-close";
+    close.type = "button";
+    close.setAttribute("aria-label", "Dismiss");
+    close.textContent = "×";
+    close.addEventListener("click", function (ev) {
+      ev.stopPropagation();
+      dismiss();
+    });
+    toast.appendChild(close);
+    layer.appendChild(toast);
+    function dismiss() {
+      toast.classList.add("nb-toast-leaving");
+      setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 220);
+    }
+    setTimeout(dismiss, 9000);
+    return toast;
+  }
+
   function setCellStatus(cell, status) {
     cell.status = status;
     if (cell._wrapper) {
@@ -523,6 +687,11 @@
     stopSparkPolling();
     if (!cell || !cell._outputNode) return;
 
+    // Skip polling entirely for cells that don't look Spark-related — keeps
+    // the network log quiet for plain Python cells.
+    const code = (cell._cm ? cell._cm.getValue() : cell.source) || "";
+    if (!SPARK_HINT_RE.test(code)) return;
+
     // Mount the widget at the top of the cell's output area so it sits above
     // any stdout/stderr chunks once the response arrives.
     const widget = el("div", { class: "nb-spark-widget" }, []);
@@ -546,14 +715,23 @@
         })
         .catch(function () { /* ignore transient errors */ });
     }
-    poll();
-    NB.sparkPollTimer = setInterval(poll, SPARK_POLL_INTERVAL_MS);
+    // Delay the first poll so short-lived cells don't trigger any /spark/status
+    // hits at all.
+    NB.sparkPollDelay = setTimeout(function () {
+      NB.sparkPollDelay = null;
+      poll();
+      NB.sparkPollTimer = setInterval(poll, SPARK_POLL_INTERVAL_MS);
+    }, SPARK_POLL_DELAY_MS);
   }
 
   function stopSparkPolling() {
     if (NB.sparkPollTimer) {
       clearInterval(NB.sparkPollTimer);
       NB.sparkPollTimer = null;
+    }
+    if (NB.sparkPollDelay) {
+      clearTimeout(NB.sparkPollDelay);
+      NB.sparkPollDelay = null;
     }
     NB.sparkStatusNode = null;
   }
@@ -643,75 +821,196 @@
 
   // ---- run + output --------------------------------------------------------
 
-  function runCell(cellId, opts) {
+  async function runCell(cellId, opts) {
     const cell = NB.current.cells.find(function (c) { return c.id === cellId; });
-    if (!cell) return Promise.resolve({ status: "skipped" });
+    if (!cell) return { status: "skipped" };
     if ((cell.type || "code") === "markdown") {
-      // For markdown cells, "run" just exits edit mode.
       if (cell._wrapper) cell._wrapper.classList.remove("nb-md-editing");
-      return Promise.resolve({ status: "success" });
+      return { status: "success" };
     }
     const code = (cell._cm ? cell._cm.getValue() : cell.source) || "";
-    if (!code.trim()) return Promise.resolve({ status: "skipped" });
+    if (!code.trim()) return { status: "skipped" };
     cell.source = code;
 
+    const owningNotebook = NB.current;
     setCellStatus(cell, "running");
     setKernelStatus("Running…", "nb-busy");
-    NB.runningCellId = cellId;
-    startSparkPolling(cell);
+    // Clear any prior output node so streaming chunks render into a clean container.
+    if (cell._outputNode) cell._outputNode.innerHTML = "";
 
-    const ctrl = new AbortController();
-    NB.inFlight = ctrl;
+    let resp;
+    try {
+      resp = await fetch("/etl/notebook/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          notebook_id: owningNotebook.notebook_id,
+          cell_id: cellId,
+          code: code,
+        }),
+      }).then(function (r) { return r.json(); });
+    } catch (err) {
+      finalizeWithError(cell, owningNotebook, "Failed to submit cell: " + (err && err.message));
+      return { status: "error" };
+    }
+    cell.job_id = resp.job_id;
+    registerRunningJob(cell, owningNotebook);
+    attachEventStream(cell, owningNotebook, resp.job_id, -1, opts);
+    return { status: "submitted", job_id: resp.job_id };
+  }
 
-    return fetch("/etl/notebook/execute", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        notebook_id: NB.current.notebook_id,
-        cell_id: cellId,
-        code: code,
-      }),
-      signal: ctrl.signal,
-    })
-      .then(function (r) {
-        if (r.status === 409) {
-          return { status: "error", stderr: "Kernel busy", stdout: "", result: { type: "none", value: null }, images: [] };
+  function finalizeWithError(cell, owningNotebook, message) {
+    const errData = {
+      status: "error", stderr: message, stdout: "",
+      result: { type: "none", value: null }, images: [],
+    };
+    cell.output = errData;
+    cell.status = "error";
+    owningNotebook.dirty = true;
+    if (typeof renderOutputForCell === "function") renderOutputForCell(cell, errData);
+    if (cell.job_id) unregisterRunningJob(cell.job_id);
+    if (NB.current === owningNotebook) {
+      setCellStatus(cell, "error");
+      setKernelStatus("Error", "nb-error");
+    }
+  }
+
+  function attachEventStream(cell, owningNotebook, job_id, fromSeq, opts) {
+    const url = "/etl/notebook/events/" + encodeURIComponent(job_id) + "?from=" + fromSeq;
+    const es = new EventSource(url);
+    cell._eventSource = es;
+    let lastSeq = fromSeq;
+    es.onmessage = function (msg) {
+      if (!msg.data) return;
+      let ev;
+      try { ev = JSON.parse(msg.data); } catch (e) { return; }
+      if (typeof ev.seq === "number") lastSeq = ev.seq;
+      applyEvent(cell, owningNotebook, ev);
+      if (ev.type === "complete") {
+        es.close();
+        cell._eventSource = null;
+        finalizeCell(cell, owningNotebook, ev, opts);
+      }
+    };
+    es.onerror = function () {
+      if (es.readyState === EventSource.CLOSED) {
+        // Reconnect from where we left off.
+        setTimeout(function () {
+          if (cell.job_id === job_id && !cell._eventSource) {
+            attachEventStream(cell, owningNotebook, job_id, lastSeq, opts);
+          }
+        }, 2000);
+      }
+    };
+  }
+
+  function applyEvent(cell, owningNotebook, ev) {
+    const onOwner = NB.current && NB.current.notebook_id === owningNotebook.notebook_id;
+    switch (ev.type) {
+      case "start":
+        if (onOwner && cell._outputNode) cell._outputNode.innerHTML = "";
+        break;
+      case "stdout_chunk":
+        appendChunkToCell(cell, "nb-stdout", ev.text || "");
+        break;
+      case "stderr_chunk":
+        appendChunkToCell(cell, "nb-stderr", ev.text || "");
+        break;
+      case "spark": {
+        const entry = NB.runningJobs.get(cell.job_id);
+        if (entry) {
+          entry.last_progress = ev;
+          if (typeof renderRunningPanel === "function") renderRunningPanel();
         }
-        return r.json();
-      })
-      .then(function (data) {
-        stopSparkPolling();
-        NB.current.exec_counter = (NB.current.exec_counter || 0) + 1;
-        cell.exec_count = NB.current.exec_counter;
-        setExecBadge(cell);
-        cell.output = data;
-        setCellStatus(cell, data.status === "success" ? "success" : "error");
-        if (cell._outputNode) renderOutput(cell._outputNode, data);
-        setKernelStatus("Idle");
-        NB.inFlight = null;
-        NB.runningCellId = null;
-        if (opts && opts.advance) {
-          const idx = NB.current.cells.findIndex(function (c) { return c.id === cellId; });
-          if (idx === NB.current.cells.length - 1) addCell(NB.current.cells.length, "code");
-          focusCell(idx + 1);
-        }
-        markDirty();
-        if (NB.varsVisible) refreshVars();
-        return data;
-      })
-      .catch(function (err) {
-        stopSparkPolling();
-        if (err.name === "AbortError") {
-          setCellStatus(cell, "error");
-          setKernelStatus("Cancelled");
-        } else {
-          setCellStatus(cell, "error");
-          setKernelStatus("Error", "nb-error");
-        }
-        NB.inFlight = null;
-        NB.runningCellId = null;
-        return { status: "error" };
-      });
+        if (onOwner) updateInlineSparkBar(cell, ev);
+        break;
+      }
+      case "result":
+        cell.output = cell.output || { stdout: "", stderr: "", images: [] };
+        cell.output.result = ev.result;
+        cell.output.images = ev.images || cell.output.images || [];
+        if (onOwner && cell._outputNode) renderResultInto(cell._outputNode, ev.result, ev.images || []);
+        break;
+      case "truncated":
+        appendChunkToCell(cell, "nb-stderr",
+          "[older output truncated — " + (ev.dropped || 0) + " events]\n");
+        break;
+      case "complete":
+        // handled by attachEventStream after this dispatch
+        break;
+    }
+  }
+
+  function appendChunkToCell(cell, klass, text) {
+    if (!text) return;
+    // Maintain an aggregate string on the cell so reconnect renders match.
+    cell.output = cell.output || { stdout: "", stderr: "", images: [], result: { type: "none", value: null } };
+    if (klass === "nb-stdout") cell.output.stdout = (cell.output.stdout || "") + text;
+    else if (klass === "nb-stderr") cell.output.stderr = (cell.output.stderr || "") + text;
+    if (NB.current && cell._outputNode) {
+      const node = cell._outputNode;
+      if (!node) return;
+      let pre = node.querySelector("pre." + klass);
+      if (!pre) {
+        pre = document.createElement("pre");
+        pre.className = klass;
+        node.appendChild(pre);
+      }
+      pre.appendChild(document.createTextNode(text));
+    }
+  }
+
+  function updateInlineSparkBar(cell, ev) {
+    if (!cell._outputNode) return;
+    let bar = cell._outputNode.querySelector(".nb-spark-bar");
+    if (!bar) {
+      bar = document.createElement("div");
+      bar.className = "nb-spark-bar";
+      bar.innerHTML = '<span class="nb-spark-bar-label"></span>';
+      cell._outputNode.insertBefore(bar, cell._outputNode.firstChild);
+    }
+    const label = bar.querySelector(".nb-spark-bar-label");
+    if (label) label.textContent =
+      "Spark: " + (ev.active_jobs || 0) + " job" + ((ev.active_jobs === 1) ? "" : "s") +
+      " · " + (ev.tasks || "—") + " tasks";
+  }
+
+  function renderResultInto(node, result, images) {
+    if (!node) return;
+    // Reuse existing renderOutput for one-shot result+images render.
+    const data = { stdout: "", stderr: "", result: result || { type: "none" }, images: images || [] };
+    // Append the result block AFTER any streamed text rather than wiping the node.
+    const tmp = document.createElement("div");
+    if (typeof renderOutput === "function") renderOutput(tmp, data);
+    // Move children of tmp into node.
+    while (tmp.firstChild) node.appendChild(tmp.firstChild);
+  }
+
+  function finalizeCell(cell, owningNotebook, completeEv, opts) {
+    cell.output = cell.output || { stdout: "", stderr: "", images: [], result: { type: "none", value: null } };
+    cell.output.status = completeEv.status;
+    cell.output.duration_ms = completeEv.duration_ms;
+    cell.status = (completeEv.status === "success") ? "success" : "error";
+    owningNotebook.dirty = true;
+    unregisterRunningJob(cell.job_id);
+    if (NB.current && NB.current.notebook_id === owningNotebook.notebook_id) {
+      setCellStatus(cell, cell.status);
+      setKernelStatus(cell.status === "error" ? "Error" : "Idle",
+                      cell.status === "error" ? "nb-error" : null);
+      if (opts && opts.advance && cell.status !== "error") {
+        const idx = owningNotebook.cells.findIndex(function (c) { return c.id === cell.id; });
+        if (idx === owningNotebook.cells.length - 1) addCell(owningNotebook.cells.length, "code");
+        focusCell(idx + 1);
+      }
+      markDirty();
+    } else {
+      // Persist the result for later viewing.
+      if (typeof saveNotebookSnapshot === "function") saveNotebookSnapshot(owningNotebook);
+      if (cell.status === "error" && typeof showToast === "function") {
+        showToast("Error in '" + (owningNotebook.name || "Untitled") + "': see notebook",
+                  "error", function () { openNotebook(owningNotebook.notebook_id); });
+      }
+    }
   }
 
   function runAll() {
@@ -734,6 +1033,37 @@
       });
     }
     next();
+  }
+
+  function liveOutputNodeForCell(cellId) {
+    if (cellId == null) return null;
+    const wrapper = document.querySelector('.nb-cell[data-cell-id="' + CSS.escape(String(cellId)) + '"]');
+    if (!wrapper) return null;
+    return wrapper.querySelector(".nb-cell-output");
+  }
+
+  function renderOutputForCell(cell, data) {
+    if (!cell || !data) return;
+    let node = cell._outputNode;
+    // If the captured node is no longer attached (e.g. a re-render happened
+    // between starting the cell and the response coming back), look up the
+    // current node by data-cell-id so the output isn't silently lost.
+    if (!node || !node.isConnected) {
+      const live = liveOutputNodeForCell(cell.id);
+      if (live) {
+        node = live;
+        cell._outputNode = live;
+      }
+    }
+    if (!node) {
+      // Truly no DOM to write to — log so the failure is visible in DevTools.
+      if (data.status === "error") console.warn("[notebook] cell errored but no output node:", data.stderr || data);
+      return;
+    }
+    renderOutput(node, data);
+    if (data.status === "error") {
+      console.warn("[notebook] cell error:\n" + (data.stderr || "(no stderr)"));
+    }
   }
 
   function renderOutput(node, data) {
@@ -1178,6 +1508,11 @@
     const panel = document.getElementById("nb_vars_panel");
     if (!panel) return;
     panel.hidden = !NB.varsVisible;
+    const toggle = document.getElementById("nb_toggle_vars");
+    if (toggle) {
+      toggle.classList.toggle("is-active", !!NB.varsVisible);
+      toggle.setAttribute("aria-pressed", NB.varsVisible ? "true" : "false");
+    }
     if (NB.varsVisible) refreshVars();
   }
 
