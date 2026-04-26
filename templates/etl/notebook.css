@@ -903,6 +903,28 @@ body.notebook-mode .content { padding: 0; }
   color: #6b7c93;
   font-size: 13px;
 }
+.nb-workspace .nb-loading-bar {
+  position: relative;
+  height: 2px;
+  width: 100%;
+  background: rgba(31, 79, 214, 0.10);
+  overflow: hidden;
+  z-index: 5;
+}
+.nb-workspace .nb-loading-bar::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  height: 100%;
+  width: 30%;
+  background: #1f4fd6;
+  animation: nb-loading-slide 1s ease-in-out infinite;
+}
+@keyframes nb-loading-slide {
+  0%   { left: -30%; }
+  100% { left: 100%; }
+}
+.nb-workspace .nb-loading-bar[hidden] { display: none; }
 
 /* ---- Toast notifications ----------------------------------------------- */
 .nb-toast-layer {

@@ -401,33 +401,76 @@
     if (NB.varsVisible) refreshVars();
   }
 
-  function openNotebook(notebook_id) {
-    // Show the notebook view IMMEDIATELY so the user sees navigation happen,
-    // even if a heavy cell is running and the load fetch takes time. We swap
-    // out NB.current with a placeholder, render an empty 'loading' shell, and
-    // let the fetch populate the real cells when it returns. Any cells still
-    // streaming output in the previous notebook keep doing so via their
-    // EventSources — the events just write to detached DOM until the user
-    // navigates back.
-    showNotebookView();
+  // In-memory cache of loaded notebook docs so revisits are instant while a
+  // cell is running. Populated by openNotebook on every successful load.
+  NB.docCache = NB.docCache || {};
+
+  function applyNotebookDoc(doc, notebook_id) {
+    const cells = (doc.cells && doc.cells.length) ? doc.cells : [makeBlankCell("code")];
+    cells.forEach(function (c) {
+      if (!c.type) c.type = "code";
+      if (c.exec_count === undefined) c.exec_count = null;
+    });
+    const maxCount = cells.reduce(function (m, c) {
+      return (typeof c.exec_count === "number" && c.exec_count > m) ? c.exec_count : m;
+    }, 0);
     NB.current = {
-      notebook_id: notebook_id,
-      name: "Loading…",
-      cells: [],
+      notebook_id: doc.notebook_id || notebook_id,
+      name: doc.name || "",
+      cells: cells,
       dirty: false,
-      exec_counter: 0,
-      _loading: true,
+      exec_counter: maxCount,
     };
-    var nameField = document.getElementById("nb_name");
-    if (nameField) nameField.value = "Loading…";
-    var cellsRoot = document.getElementById("nb_cells");
-    if (cellsRoot) {
-      cellsRoot.innerHTML = '<div class="nb-loading-skeleton">Loading notebook…</div>';
-    }
-    setKernelStatus("Idle");
+    const nameField = document.getElementById("nb_name");
+    if (nameField) nameField.value = NB.current.name;
     if (typeof window.renderPipelineListSelection === "function") window.renderPipelineListSelection("");
     if (typeof window.renderSavedPipelineListSelection === "function") window.renderSavedPipelineListSelection("");
+    showNotebookView();
+    renderCells();
     renderSidebarList();
+    setDirtyBadge(false);
+    setKernelStatus("Idle");
+    if (NB.varsVisible) refreshVars();
+    (NB.current.cells || []).forEach(function (c) {
+      if (c.job_id && !(c.output && c.output.status &&
+                        c.output.status !== "running")) {
+        if (c._outputNode) c._outputNode.innerHTML = "";
+        registerRunningJob(c, NB.current);
+        attachEventStream(c, NB.current, c.job_id, -1, {});
+      }
+    });
+  }
+
+  function setNotebookLoadingIndicator(visible) {
+    let bar = document.getElementById("nb_loading_bar");
+    if (visible) {
+      if (!bar) {
+        bar = document.createElement("div");
+        bar.id = "nb_loading_bar";
+        bar.className = "nb-loading-bar";
+        const ws = document.getElementById("notebook_workspace");
+        if (ws) ws.insertBefore(bar, ws.firstChild);
+      }
+      bar.hidden = false;
+    } else if (bar) {
+      bar.hidden = true;
+    }
+  }
+
+  function openNotebook(notebook_id) {
+    // Strategy: keep the previous notebook's view in place so the user always
+    // has something to see. If we have a cached doc for this notebook, swap
+    // it in immediately and revalidate from the server in the background.
+    // Otherwise show a thin top loading bar over the current view until the
+    // fetch returns. Cells still streaming in the previous notebook continue
+    // via their EventSources — they just write to detached DOM.
+    showNotebookView();
+
+    const cached = NB.docCache[notebook_id];
+    if (cached) {
+      applyNotebookDoc(cached, notebook_id);
+    }
+    setNotebookLoadingIndicator(true);
 
     return fetch("/etl/notebook/load?notebook_id=" + encodeURIComponent(notebook_id))
       .then(function (r) {
@@ -435,45 +478,25 @@
         return r.json();
       })
       .then(function (doc) {
-        // If the user already clicked a different notebook while we were
-        // loading, abandon this response.
-        if (!NB.current || NB.current.notebook_id !== notebook_id) return;
-        const cells = (doc.cells && doc.cells.length) ? doc.cells : [makeBlankCell("code")];
-        // Backfill missing fields on older saved notebooks.
-        cells.forEach(function (c) {
-          if (!c.type) c.type = "code";
-          if (c.exec_count === undefined) c.exec_count = null;
-        });
-        const maxCount = cells.reduce(function (m, c) {
-          return (typeof c.exec_count === "number" && c.exec_count > m) ? c.exec_count : m;
-        }, 0);
-        NB.current = {
-          notebook_id: doc.notebook_id,
-          name: doc.name || "",
-          cells: cells,
-          dirty: false,
-          exec_counter: maxCount,
-        };
-        document.getElementById("nb_name").value = NB.current.name;
-        // Clear active highlights in other sidebar sections (pipelines, dataflows).
-        if (typeof window.renderPipelineListSelection === "function") window.renderPipelineListSelection("");
-        if (typeof window.renderSavedPipelineListSelection === "function") window.renderSavedPipelineListSelection("");
-        showNotebookView();
-        renderCells();
-        renderSidebarList();
-        setDirtyBadge(false);
-        setKernelStatus("Idle");
-        if (NB.varsVisible) refreshVars();
-        // Re-attach to any cell that has a job_id but no recorded final status.
-        (NB.current.cells || []).forEach(function (c) {
-          if (c.job_id && !(c.output && c.output.status &&
-                            c.output.status !== "running")) {
-            // Clear the output area; the SSE replay will repopulate it.
-            if (c._outputNode) c._outputNode.innerHTML = "";
-            registerRunningJob(c, NB.current);
-            attachEventStream(c, NB.current, c.job_id, -1, {});
+        NB.docCache[notebook_id] = doc;
+        // If the user already clicked a different notebook while this load
+        // was in flight, drop the result — they're looking at someone else.
+        if (NB.current && NB.current.notebook_id !== notebook_id) {
+          setNotebookLoadingIndicator(false);
+          return;
+        }
+        applyNotebookDoc(doc, notebook_id);
+        setNotebookLoadingIndicator(false);
+      })
+      .catch(function (err) {
+        setNotebookLoadingIndicator(false);
+        if (!cached) {
+          // No cached fallback either — show a minimal failure state.
+          const cellsRoot = document.getElementById("nb_cells");
+          if (cellsRoot) {
+            cellsRoot.innerHTML = '<div class="nb-loading-skeleton">Could not load notebook.</div>';
           }
-        });
+        }
       });
   }
 
@@ -934,8 +957,12 @@
     const owningNotebook = NB.current;
     setCellStatus(cell, "running");
     setKernelStatus("Running…", "nb-busy");
-    // Clear any prior output node so streaming chunks render into a clean container.
+    // Reset both the DOM container AND the in-memory output buffer. Without
+    // resetting cell.output, each rerun appends fresh stdout/stderr on top of
+    // the previous run's text — so '[notebook] loaded 1 cell from Base' shows
+    // up 3× after 3 runs.
     if (cell._outputNode) cell._outputNode.innerHTML = "";
+    cell.output = { stdout: "", stderr: "", images: [], result: { type: "none", value: null } };
 
     let resp;
     try {
