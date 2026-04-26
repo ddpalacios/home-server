@@ -275,17 +275,25 @@
 				</div>
 			</div>
 			<div id="tab_general" class="tabcontent ds-bottom-tab-content" style="display: flex; flex-direction: column; gap: 30px;">
-				<div id="pipeline_properties" class="general-panel" style="display: flex; flex-direction: column; gap: 10px;">
-					<label for="pipeline_title">Pipeline Name</label>
-					<input id="pipeline_title" type="text" placeholder="Untitled pipeline">
-					<label for="pipeline_description">Description</label>
-					<textarea rows="5" cols="10" id="pipeline_description" type="text" placeholder="Describe the pipeline purpose"></textarea>
+				<div id="pipeline_properties" class="panel general-panel" style="display: flex; flex-direction: column; gap: 12px;">
+					<div class="field">
+						<label class="label" for="pipeline_title">Pipeline name</label>
+						<input class="input" id="pipeline_title" type="text" placeholder="Untitled pipeline">
+					</div>
+					<div class="field">
+						<label class="label" for="pipeline_description">Description</label>
+						<textarea class="textarea" rows="5" id="pipeline_description" placeholder="Describe the pipeline purpose"></textarea>
+					</div>
 				</div>
-				<div id="operator_properties" class="general-panel" style="display: flex; flex-direction: column; gap: 10px;">
-					<label for="operator_title">Name</label>
-					<input id="operator_title" type="text">
-					<label for="operator_description">Description</label>
-					<textarea rows="5" cols="10" id="operator_description" type="text" placeholder="Describe what this activity does"></textarea>
+				<div id="operator_properties" class="panel general-panel" style="display: flex; flex-direction: column; gap: 12px;">
+					<div class="field">
+						<label class="label" for="operator_title">Name</label>
+						<input class="input" id="operator_title" type="text">
+					</div>
+					<div class="field">
+						<label class="label" for="operator_description">Description</label>
+						<textarea class="textarea" rows="5" id="operator_description" placeholder="Describe what this activity does"></textarea>
+					</div>
 				</div>
 				
 			</div>

@@ -1095,27 +1095,8 @@ select:focus {
   color: #555;
   pointer-events: none;
 }
-.text_input_value, #operator_title {
-  padding: 8px 12px;
-   font-size: 0.8em;
-
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background: #f8f8f8;
-  color: #333;
-  outline: none;
-  transition: border-color 0.2s ease, background 0.2s ease;
-}
-
-.text_input_value:hover {
-  border-color: #999;
-  background: #fefefe;
-}
-
-.text_input_value:focus {
-  border-color: #0078ff;
-  background: #fff;
-}
+/* .text_input_value + #operator_title — visuals come from .input in etl-design-system.css */
+.text_input_value, #operator_title { outline: none; }
 
 .column-settings {
   display: flex;
@@ -1264,46 +1245,14 @@ select:focus {
   padding-bottom: 140px;
 }
 
+/* Activity settings card chrome — moved to .panel/.field/.label/.input in etl-design-system.css */
 #selected_activity_settings > div {
-  padding: 10px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.05);
-}
-
-.activity-settings-card {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  /* legacy descendants in activities.js still wrap rows in <div> children — keep them as panels */
   padding: 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(15, 23, 42, 0.1);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(234, 241, 255, 0.6) 100%);
-  box-shadow: 0 12px 20px rgba(15, 23, 42, 0.08);
-}
-
-.activity-settings-header {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.activity-settings-title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--ink);
-}
-
-.activity-settings-subtitle {
-  font-size: 0.85rem;
-  color: var(--ink-soft);
-}
-
-.activity-settings-field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
 }
 
 .activity-settings-row {
@@ -1312,23 +1261,10 @@ select:focus {
   gap: 8px;
 }
 
-.activity-settings-field--grow {
-  flex: 1;
-}
-
-.activity-settings-select {
-  appearance: none;
-  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(234, 241, 255, 0.7) 100%);
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 10px 6px;
-}
-
 #selected_activity_settings label {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-700);
 }
 
 #selected_activity_settings select,
@@ -1336,12 +1272,6 @@ select:focus {
 #selected_activity_settings textarea {
   width: 100%;
   max-width: 100%;
-  border-radius: 10px;
-  border: 1px solid rgba(15, 23, 42, 0.14);
-  background: #ffffff;
-  padding: 9px 12px;
-  font-size: 0.9rem;
-  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06);
 }
 
 #selected_activity_settings .CodeMirror {
