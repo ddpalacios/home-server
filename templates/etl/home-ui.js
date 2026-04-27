@@ -344,6 +344,10 @@ function updateGoogleLoginButtonStatus() {
       fetchPipelineList();
       fetchSavedPipelineList();
       fetchTriggerList();
+      // SQL scripts also key off google_id; refresh once we know it.
+      if (window.SqlUI && typeof window.SqlUI.refreshList === "function") {
+        window.SqlUI.refreshList();
+      }
       var icon = button.querySelector(".google-login-icon");
       var label = button.querySelector("span:last-child");
       if (icon && data.picture) {
@@ -689,6 +693,8 @@ var suppressEmptyPipelineSeed = false;
 var disableEmptyPipelineSeed = false;
 var cachedPipelines = [];
 var cachedSavedPipelines = [];
+var cachedSavedNotebooks = [];
+var cachedSavedSqlDocs = [];
 var operatorI = 0;
 
 function reserveNextOperatorId() {
@@ -794,6 +800,9 @@ function showHomeView() {
   if (window.NB && typeof window.NB.hideNotebookView === "function") {
     window.NB.hideNotebookView();
   }
+  if (window.SqlUI && typeof window.SqlUI.closeSqlView === "function") {
+    window.SqlUI.closeSqlView();
+  }
   refreshHomeCounts();
 }
 window.showHomeView = showHomeView;
@@ -810,6 +819,9 @@ function showSettingsView() {
   hideHomeView();
   if (window.NB && typeof window.NB.hideNotebookView === "function") {
     window.NB.hideNotebookView();
+  }
+  if (window.SqlUI && typeof window.SqlUI.closeSqlView === "function") {
+    window.SqlUI.closeSqlView();
   }
   document.body.classList.add("settings-mode");
   var sw = document.getElementById("settings_workspace");
@@ -852,6 +864,13 @@ function setActivePipelineType(type) {
   if (window.NB && typeof window.NB.hideNotebookView === "function") {
     window.NB.hideNotebookView();
   }
+  if (window.SqlUI && typeof window.SqlUI.closeSqlView === "function") {
+    window.SqlUI.closeSqlView();
+  }
+  // Clear SQL list highlight when leaving SQL mode.
+  document.querySelectorAll('#sqlList .ds-sidebar-list-row.is-active').forEach(function(r) {
+    r.classList.remove('is-active');
+  });
   // Always force the canvas to paint when entering pipeline/dataflow mode.
   // It was previously hidden (notebook-mode, home-mode) so its layout was
   // suspended; without this the user has to click the canvas to trigger a
@@ -944,6 +963,16 @@ function getAvailablePipelines() {
   return Array.isArray(cachedSavedPipelines) ? cachedSavedPipelines : [];
 }
 window.getAvailablePipelines = getAvailablePipelines;
+
+function getAvailableNotebooks() {
+  return Array.isArray(cachedSavedNotebooks) ? cachedSavedNotebooks : [];
+}
+window.getAvailableNotebooks = getAvailableNotebooks;
+
+function getAvailableSqlDocs() {
+  return Array.isArray(cachedSavedSqlDocs) ? cachedSavedSqlDocs : [];
+}
+window.getAvailableSqlDocs = getAvailableSqlDocs;
 
 function generatePipelineId() {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -1755,6 +1784,56 @@ function fetchSavedPipelineList() {
 }
 window.fetchSavedPipelineList = fetchSavedPipelineList;
 
+function fetchSavedNotebookList() {
+  var request = new Request("/etl/notebook/list", {
+    method: "GET",
+    headers: new Headers({ "Accept": "application/json" })
+  });
+  fetch(request)
+    .then(function(response) {
+      if (!response.ok) { return { notebooks: [] }; }
+      return response.json();
+    })
+    .then(function(result) {
+      var items = (result && Array.isArray(result.notebooks)) ? result.notebooks : [];
+      cachedSavedNotebooks = items.slice();
+      if (typeof window.refreshNotebookActivityOptions === "function") {
+        window.refreshNotebookActivityOptions(cachedSavedNotebooks);
+      }
+    })
+    .catch(function(error) { console.error(error); });
+}
+window.fetchSavedNotebookList = fetchSavedNotebookList;
+
+function fetchSavedSqlList() {
+  var googleId = "unknown";
+  if (window.googleLoginProfile && (window.googleLoginProfile.google_id || window.googleLoginProfile.email)) {
+    googleId = window.googleLoginProfile.google_id || window.googleLoginProfile.email;
+  }
+  var safeGoogleId = googleId.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_-]/g, "");
+  // Mirror the pipeline list URL shape; the SQL list endpoint is in
+  // SERVER_TODO.md until the C-server route lands. Until then,
+  // sql_persistence.js's fallback may populate cachedSavedSqlDocs directly.
+  var request = new Request("/blob-storage/etl/sql/list?googleId=" + safeGoogleId, {
+    method: "GET",
+    headers: new Headers({ "Accept": "application/json" })
+  });
+  fetch(request)
+    .then(function(response) {
+      if (!response.ok) { return { values: [] }; }
+      return response.json();
+    })
+    .then(function(result) {
+      var items = (result && Array.isArray(result.values)) ? result.values : [];
+      cachedSavedSqlDocs = items.slice();
+      if (typeof window.refreshSqlActivityOptions === "function") {
+        window.refreshSqlActivityOptions(cachedSavedSqlDocs);
+      }
+    })
+    .catch(function(error) { console.error(error); });
+}
+window.fetchSavedSqlList = fetchSavedSqlList;
+
 function fetchTriggerList(activePipelineId) {
   if (activePipelineType !== "pipeline") {
     return;
@@ -2015,6 +2094,15 @@ function LoadFromBlobStorage(pipeline) {
     }
     if (operatorData.properties.activityType == "dataflow") {
       a = new DataFlow_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "pipeline") {
+      a = new Pipeline_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "notebook") {
+      a = new Notebook_Activity($flowchart, new_activity);
+    }
+    if (operatorData.properties.activityType == "sql") {
+      a = new SQL_Activity($flowchart, new_activity);
     }
     if (operatorData.properties.activityType == "stream") {
       a = new Stream_Activity($flowchart, new_activity);
@@ -3097,8 +3185,15 @@ $(document).ready(function() {
     startHeight = parseInt(window.getComputedStyle(footer).height, 10);
     var operatorId = reserveNextOperatorId();
     var slot = getImportSlotPosition();
+    /* "blob-storage" is now a first-class activity type with its own
+     * class (BlobStorage_Activity) — no upload UI, only the path
+     * picker. It used to alias to Import_Activity with a pre-seeded
+     * source flag; that path is gone (Slice 2 of the
+     * blob-storage-data-preview build). */
     var title = "Import Data";
-    if (activityType === "sheets_read") {
+    if (activityType === "blob-storage") {
+      title = "Blob storage";
+    } else if (activityType === "sheets_read") {
       title = "Google Sheets (Read)";
     } else if (activityType === "http_request") {
       title = "HTTP Request";
@@ -3112,7 +3207,7 @@ $(document).ready(function() {
         fileType: null,
         settings: null,
         dependencies: [],
-        activityType: activityType,
+        activityType: activityType === "blob-storage" ? "blob_storage" : activityType,
         activityId: operatorId,
         locked: true,
         inputs: {
@@ -3132,7 +3227,10 @@ $(document).ready(function() {
     $flowchart.flowchart("createOperator", operatorId, operatorData);
 
     let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
-    if (activityType === "import") {
+    if (activityType === "blob-storage") {
+      let blob_activity = new BlobStorage_Activity($flowchart, new_activity);
+      main_activities[operatorId] = blob_activity;
+    } else if (activityType === "import") {
       let import_activity = new Import_Activity($flowchart, new_activity);
       main_activities[operatorId] = import_activity;
     } else if (activityType === "sheets_read") {
@@ -4617,6 +4715,40 @@ $(document).ready(function() {
         }
       }
 
+      if (activity.activityType == "blob_storage") {
+        let target_activity = main_activities[operatorId];
+        if (!target_activity) {
+          target_activity = new BlobStorage_Activity($flowchart, activity);
+          main_activities[operatorId] = target_activity;
+        }
+        let elem = target_activity.settings;
+        if (elem == null || elem == undefined) { return; }
+        let found = false;
+        for (let i = 0; i < settings_div.children.length; i++) {
+          if (settings_div.children[i].id == elem.id) {
+            found = true;
+            settings_div.children[i].style.display = "block";
+          }
+        }
+        if (!found) {
+          settings_div.insertBefore(elem, settings_div.firstChild);
+        }
+        if (found) {
+          for (let i = 0; i < settings_div.children.length; i++) {
+            if (settings_div.children[i].id == elem.id && settings_div.children[i] !== elem) {
+              settings_div.children[i].replaceWith(elem);
+              break;
+            }
+          }
+        }
+        // Notify the Data Preview tab so it can re-render for this activity.
+        try {
+          window.dispatchEvent(new CustomEvent('blob-storage:activity-selected', {
+            detail: { activityId: operatorId, activity: activity },
+          }));
+        } catch (e) { /* no-op */ }
+      }
+
       if (activity.activityType == "dataflow") {
         let target_activity = main_activities[operatorId];
         let elem = target_activity.settings;
@@ -4660,6 +4792,88 @@ $(document).ready(function() {
         if (elem == null || elem == undefined) { return; }
         if (typeof window.refreshPipelineActivityOptions === "function") {
           window.refreshPipelineActivityOptions(getAvailablePipelines());
+        }
+        let found = false;
+        for (let i = 0; i < settings_div.children.length; i++) {
+          if (settings_div.children[i].id == elem.id) {
+            found = true;
+            settings_div.children[i].style.display = "block";
+          }
+          if (settings_div.children[i].id == elem.id + "_column_edit") {
+            found = true;
+            settings_div.children[i].style.display = "flex";
+            settings_div.children[i].style.flexDirection = "column";
+            settings_div.children[i].style.gap = "15px";
+          }
+        }
+        if (!found) {
+          settings_div.insertBefore(elem, settings_div.firstChild);
+        }
+        if (found) {
+          for (let i = 0; i < settings_div.children.length; i++) {
+            if (settings_div.children[i].id == elem.id && settings_div.children[i] !== elem) {
+              settings_div.children[i].replaceWith(elem);
+              break;
+            }
+          }
+        }
+      }
+
+      if (activity.activityType == "notebook") {
+        let target_activity = main_activities[operatorId];
+        if (!target_activity) {
+          target_activity = new Notebook_Activity($flowchart, activity);
+          main_activities[operatorId] = target_activity;
+        }
+        let elem = target_activity.settings;
+        if (elem == null || elem == undefined) { return; }
+        // Refresh the dropdown options from the cache, and kick off a fetch
+        // to repopulate it so the user sees the latest saved notebooks.
+        if (typeof window.refreshNotebookActivityOptions === "function") {
+          window.refreshNotebookActivityOptions(getAvailableNotebooks());
+        }
+        if (typeof window.fetchSavedNotebookList === "function") {
+          window.fetchSavedNotebookList();
+        }
+        let found = false;
+        for (let i = 0; i < settings_div.children.length; i++) {
+          if (settings_div.children[i].id == elem.id) {
+            found = true;
+            settings_div.children[i].style.display = "block";
+          }
+          if (settings_div.children[i].id == elem.id + "_column_edit") {
+            found = true;
+            settings_div.children[i].style.display = "flex";
+            settings_div.children[i].style.flexDirection = "column";
+            settings_div.children[i].style.gap = "15px";
+          }
+        }
+        if (!found) {
+          settings_div.insertBefore(elem, settings_div.firstChild);
+        }
+        if (found) {
+          for (let i = 0; i < settings_div.children.length; i++) {
+            if (settings_div.children[i].id == elem.id && settings_div.children[i] !== elem) {
+              settings_div.children[i].replaceWith(elem);
+              break;
+            }
+          }
+        }
+      }
+
+      if (activity.activityType == "sql") {
+        let target_activity = main_activities[operatorId];
+        if (!target_activity) {
+          target_activity = new SQL_Activity($flowchart, activity);
+          main_activities[operatorId] = target_activity;
+        }
+        let elem = target_activity.settings;
+        if (elem == null || elem == undefined) { return; }
+        if (typeof window.refreshSqlActivityOptions === "function") {
+          window.refreshSqlActivityOptions(getAvailableSqlDocs());
+        }
+        if (typeof window.fetchSavedSqlList === "function") {
+          window.fetchSavedSqlList();
         }
         let found = false;
         for (let i = 0; i < settings_div.children.length; i++) {
@@ -5703,9 +5917,28 @@ $(document).ready(function() {
     const label = button.querySelector("span");
     const triggerButton = document.getElementById("createTrigger");
     let monitorStarted = false;
+
+    // Second click while running → cancel the in-flight run.
     if (button.classList.contains("is-running")) {
+      const runId = activeRunId;
+      if (!runId) return;  // nothing to cancel (legacy path)
+      if (label) label.textContent = "Cancelling...";
+      try {
+        await fetch("/etl/pipeline/cancel", {
+          method: "POST",
+          headers: new Headers({ "Content-Type": "application/json" }),
+          body: JSON.stringify({ run_id: runId }),
+        });
+      } catch (error) {
+        console.error("Cancel pipeline failed:", error);
+      }
+      // Don't reset the button here — the SSE stream will deliver the
+      // pipeline_completed event with status=cancelled, and the monitor
+      // will reset the button then. paintOperatorStatus will mark each
+      // activity as cancelled/skipped as the executor processes the cancel.
       return;
     }
+
     let activites = $flowchart.flowchart("getOperators");
     if (!activites || Object.keys(activites).length === 0) {
       alert("Add at least one activity to the canvas before running.");
@@ -5732,13 +5965,14 @@ $(document).ready(function() {
       if (!pipelineName && pipeline_id) {
         pipelineName = getPipelineNameById(pipeline_id) || "";
       }
-      await post_ordered_activities(activities, false, {
+      const runResponse = await post_ordered_activities(activities, false, {
         pipeline_id: pipeline_id || "",
         pipeline_name: pipelineName || "Untitled Pipeline"
-      })
-      if (pipeline_id) {
+      });
+      const runId = (runResponse && runResponse.run_id) || null;
+      if (runId || pipeline_id) {
         monitorStarted = true;
-        startPipelineRunMonitor(pipeline_id, button, label, icon, triggerButton);
+        startPipelineRunMonitor(runId, pipeline_id, button, label, icon, triggerButton);
       }
     } catch (error) {
       console.error("Pipeline run failed:", error);
@@ -5756,26 +5990,71 @@ $(document).ready(function() {
     }
   });
 
-  let pipelineRunMonitor = null;
-  async function fetchLatestPipelineRun(pipelineId) {
-    if (!pipelineId) {
-      return null;
+  // ----- Per-activity live status painting --------------------------------
+  // Each operator is rendered as a `<div class="flowchart-operator">` whose
+  // body has id `activity_body_<operatorId>`. We climb to the operator div
+  // and toggle one of the `op-status-*` classes defined in home.css.
+  const OP_STATUS_CLASSES = ["op-status-queued", "op-status-running",
+                              "op-status-succeeded", "op-status-failed",
+                              "op-status-cancelled", "op-status-skipped"];
+
+  function _operatorElement(opId) {
+    if (opId == null) return null;
+    const body = document.getElementById("activity_body_" + opId);
+    return body ? body.closest(".flowchart-operator") : null;
+  }
+
+  function paintOperatorStatus(opId, status) {
+    const op = _operatorElement(opId);
+    if (!op) return;
+    OP_STATUS_CLASSES.forEach(c => op.classList.remove(c));
+    if (status) op.classList.add("op-status-" + status);
+    // Also stamp a small badge in the title bar.
+    const title = op.querySelector(".flowchart-operator-title");
+    if (!title) return;
+    let badge = title.querySelector(".op-status-badge");
+    if (!status) {
+      if (badge) badge.remove();
+      return;
     }
+    if (!badge) {
+      badge = document.createElement("span");
+      badge.className = "op-status-badge";
+      title.appendChild(badge);
+    }
+    badge.textContent = status;
+  }
+
+  function clearAllOperatorStatuses() {
+    document.querySelectorAll(".flowchart-operator").forEach(op => {
+      OP_STATUS_CLASSES.forEach(c => op.classList.remove(c));
+      const badge = op.querySelector(".op-status-badge");
+      if (badge) badge.remove();
+    });
+  }
+  window.paintOperatorStatus = paintOperatorStatus;
+  window.clearAllOperatorStatuses = clearAllOperatorStatuses;
+
+  // ----- Live run monitor (EventSource over /etl/pipeline/events/<rid>) ---
+  // State exposed on the closure so the run-button click handler (when the
+  // pipeline is already running) can switch between "Stop" and "Run" without
+  // re-fetching the run id, and so test consumers can inspect via window.
+  let pipelineRunMonitor = null;          // EventSource (or polling timer fallback)
+  let activeRunId = null;
+  let activePipelineId = null;
+  window.getActiveRunId = function() { return activeRunId; };
+
+  async function fetchLatestPipelineRun(pipelineId) {
+    if (!pipelineId) return null;
     const request = new Request("/etl/pipeline/runs?pipelineId=" + encodeURIComponent(pipelineId), {
       method: "GET",
-      headers: new Headers({
-        "Accept": "application/json"
-      })
+      headers: new Headers({ "Accept": "application/json" })
     });
     try {
       const response = await fetch(request);
-      if (!response.ok) {
-        return null;
-      }
+      if (!response.ok) return null;
       const payload = await response.json();
-      if (!payload || !Array.isArray(payload.runs) || !payload.runs.length) {
-        return null;
-      }
+      if (!payload || !Array.isArray(payload.runs) || !payload.runs.length) return null;
       return payload.runs[payload.runs.length - 1];
     } catch (error) {
       return null;
@@ -5793,20 +6072,299 @@ $(document).ready(function() {
     }
   }
 
-  function startPipelineRunMonitor(pipelineId, button, label, icon, triggerButton) {
-    if (pipelineRunMonitor) {
+  function _stopMonitor() {
+    if (!pipelineRunMonitor) return;
+    if (typeof pipelineRunMonitor.close === "function") {
+      pipelineRunMonitor.close();
+    } else if (typeof pipelineRunMonitor === "number") {
       clearInterval(pipelineRunMonitor);
     }
+    pipelineRunMonitor = null;
+  }
+
+  function _startPollingFallback(pipelineId, button, label, icon, triggerButton) {
     pipelineRunMonitor = setInterval(async () => {
       const latest = await fetchLatestPipelineRun(pipelineId);
-      if (!latest || latest.status === "in progress") {
-        return;
-      }
-      clearInterval(pipelineRunMonitor);
-      pipelineRunMonitor = null;
+      if (!latest || latest.status === "in progress") return;
+      _stopMonitor();
+      activeRunId = null;
+      activePipelineId = null;
       resetRunButton(button, label, icon, triggerButton);
     }, 3000);
   }
+
+  function startPipelineRunMonitor(runId, pipelineId, button, label, icon, triggerButton) {
+    _stopMonitor();
+    activeRunId = runId || null;
+    activePipelineId = pipelineId || null;
+    // Exit any historical view first so the historical highlight in the
+    // history-panel rows is cleared and the canvas is fresh.
+    if (typeof window.exitPipelineHistoryView === "function") {
+      window.exitPipelineHistoryView();
+    }
+    clearAllOperatorStatuses();
+
+    // Without a run_id (e.g., the 202 didn't return one), fall back to the
+    // legacy polling-based "is the run done yet" check. Per-activity status
+    // overlays are unavailable in this branch.
+    if (!runId) {
+      _startPollingFallback(pipelineId, button, label, icon, triggerButton);
+      return;
+    }
+
+    let es;
+    try {
+      es = new EventSource("/etl/pipeline/events/" + encodeURIComponent(runId));
+    } catch (error) {
+      _startPollingFallback(pipelineId, button, label, icon, triggerButton);
+      return;
+    }
+    pipelineRunMonitor = es;
+
+    function _finish() {
+      _stopMonitor();
+      activeRunId = null;
+      activePipelineId = null;
+      resetRunButton(button, label, icon, triggerButton);
+    }
+
+    function _parse(event) {
+      try { return JSON.parse(event.data); } catch (e) { return null; }
+    }
+
+    es.addEventListener("message", function(event) {
+      const data = _parse(event);
+      if (!data || !data.type) return;
+      if (data.type === "activity_started") {
+        paintOperatorStatus(data.activity_id, "running");
+      } else if (data.type === "activity_completed") {
+        paintOperatorStatus(data.activity_id, data.status || "succeeded");
+      } else if (data.type === "activity_skipped") {
+        paintOperatorStatus(data.activity_id, "skipped");
+      } else if (data.type === "pipeline_completed") {
+        _finish();
+      }
+    });
+
+    // SSE-level error frames: pipeline_jobs.replay() emits
+    // `event: error\ndata: {"error":"not_found"}` and closes when the run
+    // isn't registered. Without explicit termination, EventSource auto-
+    // reconnects every 2s forever (per the `retry: 2000` directive).
+    // Treat any server-emitted `error` payload as terminal so a stale run
+    // id never produces an infinite reconnect loop.
+    es.addEventListener("error", function(event) {
+      const payload = _parse(event);
+      if (payload && payload.error) {
+        console.warn("Pipeline run unknown to server:", payload.error);
+        _finish();
+        return;
+      }
+      // Transport-level errors: only terminate when permanently closed.
+      // Mid-reconnect (CONNECTING) is the normal path when the server
+      // cleanly closes after pipeline_completed.
+      if (es.readyState === EventSource.CLOSED) {
+        _finish();
+      }
+    });
+  }
+
+  // ----- Slice 7: run history panel ---------------------------------------
+  // Lists past runs of the active pipeline and lets the user paint the canvas
+  // with the per-activity statuses from any historical run. The summary list
+  // comes from /etl/pipeline/runs (existing); the per-run detail comes from
+  // /etl/pipeline/run (slice 4).
+  (function initRunHistoryPanel() {
+    const button = document.getElementById("pipeline_history");
+    const exitButton = document.getElementById("pipeline_history_exit");
+    const panel = document.getElementById("pipeline_history_panel");
+    const list = document.getElementById("pipeline_history_list");
+    if (!button || !panel || !list) return;
+    const closeButton = panel.querySelector(".pipeline-history-panel-close");
+
+    let viewingRunId = null;
+
+    function _formatRunTime(record) {
+      const ts = record.started_at || record.finished_at || "";
+      if (!ts) return "—";
+      try {
+        const d = new Date(ts);
+        if (!isNaN(d.getTime())) {
+          return d.toLocaleString();
+        }
+      } catch (e) { /* fall through */ }
+      return ts;
+    }
+
+    function _renderEmpty(message) {
+      list.innerHTML = "";
+      const div = document.createElement("div");
+      div.className = "pipeline-history-empty";
+      div.textContent = message;
+      list.appendChild(div);
+    }
+
+    function _renderRows(runs) {
+      list.innerHTML = "";
+      if (!runs || !runs.length) {
+        _renderEmpty("No past runs.");
+        return;
+      }
+      // Newest first.
+      const sorted = runs.slice().sort(function(a, b) {
+        return (b.started_at || "").localeCompare(a.started_at || "");
+      });
+      sorted.forEach(function(run) {
+        const row = document.createElement("div");
+        row.className = "pipeline-history-row";
+        row.dataset.runId = run.run_id || "";
+        if (viewingRunId && run.run_id === viewingRunId) {
+          row.classList.add("is-active");
+        }
+        const meta = document.createElement("div");
+        meta.className = "pipeline-history-row-meta";
+        const time = document.createElement("div");
+        time.className = "pipeline-history-row-time";
+        time.textContent = _formatRunTime(run);
+        const id = document.createElement("div");
+        id.className = "pipeline-history-row-id";
+        id.textContent = run.run_id || "";
+        meta.appendChild(time);
+        meta.appendChild(id);
+        row.appendChild(meta);
+        const status = document.createElement("span");
+        status.className = "pipeline-history-status";
+        status.dataset.status = run.status || "";
+        status.textContent = run.status || "?";
+        row.appendChild(status);
+        row.addEventListener("click", function() {
+          _viewRun(run);
+        });
+        list.appendChild(row);
+      });
+    }
+
+    async function _fetchRuns(pipelineId) {
+      const request = new Request(
+        "/etl/pipeline/runs?pipelineId=" + encodeURIComponent(pipelineId),
+        { method: "GET", headers: new Headers({ "Accept": "application/json" }) }
+      );
+      try {
+        const response = await fetch(request);
+        if (!response.ok) return [];
+        const payload = await response.json();
+        return (payload && Array.isArray(payload.runs)) ? payload.runs : [];
+      } catch (error) {
+        return [];
+      }
+    }
+
+    async function _fetchRunDetail(pipelineId, runId) {
+      const url = "/etl/pipeline/run?pipeline_id="
+        + encodeURIComponent(pipelineId)
+        + "&run_id=" + encodeURIComponent(runId);
+      const request = new Request(url, {
+        method: "GET",
+        headers: new Headers({ "Accept": "application/json" }),
+      });
+      try {
+        const response = await fetch(request);
+        if (!response.ok) return null;
+        return await response.json();
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function _paintRecord(record) {
+      if (typeof window.clearAllOperatorStatuses === "function") {
+        window.clearAllOperatorStatuses();
+      }
+      const activities = record && Array.isArray(record.activities) ? record.activities : [];
+      activities.forEach(function(act) {
+        if (!act || act.operatorId == null) return;
+        if (typeof window.paintOperatorStatus === "function") {
+          window.paintOperatorStatus(String(act.operatorId), act.status || "");
+        }
+      });
+    }
+
+    async function _viewRun(run) {
+      const pipelineId = pipeline_id || "";
+      if (!pipelineId || !run.run_id) return;
+      const detail = await _fetchRunDetail(pipelineId, run.run_id);
+      if (!detail) {
+        // Detail file may not exist for old runs (slice 4 introduced it).
+        // Fall back to clearing the canvas and surfacing a hint.
+        if (typeof window.clearAllOperatorStatuses === "function") {
+          window.clearAllOperatorStatuses();
+        }
+        _renderEmpty("Run details unavailable.");
+        return;
+      }
+      viewingRunId = run.run_id;
+      _paintRecord(detail);
+      // Highlight the active row in the panel.
+      list.querySelectorAll(".pipeline-history-row").forEach(function(row) {
+        row.classList.toggle("is-active", row.dataset.runId === viewingRunId);
+      });
+      if (exitButton) exitButton.hidden = false;
+    }
+
+    async function _openPanel() {
+      const pipelineId = pipeline_id || "";
+      if (!pipelineId) {
+        _renderEmpty("Save the pipeline before viewing run history.");
+        panel.hidden = false;
+        button.setAttribute("aria-expanded", "true");
+        return;
+      }
+      panel.hidden = false;
+      button.setAttribute("aria-expanded", "true");
+      _renderEmpty("Loading…");
+      const runs = await _fetchRuns(pipelineId);
+      _renderRows(runs);
+    }
+
+    function _closePanel() {
+      panel.hidden = true;
+      button.setAttribute("aria-expanded", "false");
+    }
+
+    function _exitHistory() {
+      viewingRunId = null;
+      if (typeof window.clearAllOperatorStatuses === "function") {
+        window.clearAllOperatorStatuses();
+      }
+      if (exitButton) exitButton.hidden = true;
+      list.querySelectorAll(".pipeline-history-row").forEach(function(row) {
+        row.classList.remove("is-active");
+      });
+    }
+
+    button.addEventListener("click", function() {
+      if (panel.hidden) {
+        _openPanel();
+      } else {
+        _closePanel();
+      }
+    });
+    if (closeButton) closeButton.addEventListener("click", _closePanel);
+    if (exitButton) exitButton.addEventListener("click", _exitHistory);
+
+    // Hide the panel on outside clicks (but not when the operator canvas is
+    // clicked — canvas clicks are part of the editing surface and shouldn't
+    // dismiss the panel either).
+    document.addEventListener("click", function(event) {
+      if (panel.hidden) return;
+      if (panel.contains(event.target)) return;
+      if (event.target === button || button.contains(event.target)) return;
+      _closePanel();
+    });
+
+    // Expose a manual reset hook so the live-run flow can clear the historical
+    // viewing state when the user kicks off a fresh run.
+    window.exitPipelineHistoryView = _exitHistory;
+  })();
 
   (function initTriggerModal() {
     const triggerButton = document.getElementById("createTrigger");
@@ -7097,6 +7655,62 @@ $(document).ready(function() {
     activites = $flowchart.flowchart("getOperators");
   });
 
+  $("#notebook_activity").on("click", function() {
+    var operatorId = reserveNextOperatorId();
+    const footer = document.getElementById("footer");
+    startHeight = parseInt(window.getComputedStyle(footer).height, 10);
+    var operatorData = {
+      top: ($flowchart.height() / 2) - (startHeight / 2),
+      left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+      properties: {
+        title: "Notebook",
+        activityType: "notebook",
+        dependencies: [],
+        settings: {},
+        inputs: {
+          input: { label: "Input", value: { "datatypes": null, "values": null } }
+        },
+        outputs: {
+          output: { label: "Output", value: { "datatypes": null, "values": null } }
+        }
+      }
+    };
+    $flowchart.flowchart("createOperator", operatorId, operatorData);
+    let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
+    let notebook_activity = new Notebook_Activity($flowchart, new_activity);
+    main_activities[operatorId] = notebook_activity;
+    if (typeof fetchSavedNotebookList === "function") { fetchSavedNotebookList(); }
+    activites = $flowchart.flowchart("getOperators");
+  });
+
+  $("#sql_activity").on("click", function() {
+    var operatorId = reserveNextOperatorId();
+    const footer = document.getElementById("footer");
+    startHeight = parseInt(window.getComputedStyle(footer).height, 10);
+    var operatorData = {
+      top: ($flowchart.height() / 2) - (startHeight / 2),
+      left: ($flowchart.width() / 2) - 100 + (operatorI * 10),
+      properties: {
+        title: "SQL",
+        activityType: "sql",
+        dependencies: [],
+        settings: {},
+        inputs: {
+          input: { label: "Input", value: { "datatypes": null, "values": null } }
+        },
+        outputs: {
+          output: { label: "Output", value: { "datatypes": null, "values": null } }
+        }
+      }
+    };
+    $flowchart.flowchart("createOperator", operatorId, operatorData);
+    let new_activity = $flowchart.flowchart("getOperatorActivity", operatorId);
+    let sql_activity = new SQL_Activity($flowchart, new_activity);
+    main_activities[operatorId] = sql_activity;
+    if (typeof fetchSavedSqlList === "function") { fetchSavedSqlList(); }
+    activites = $flowchart.flowchart("getOperators");
+  });
+
   $("#stream_activity").on("click", function() {
     var operatorId = reserveNextOperatorId();
     const footer = document.getElementById("footer");
@@ -7449,7 +8063,11 @@ function build_ordered_activities_payload(flowchart, data, targetId){
       settings = main_activity.get_operation_settings()
     }
     let activity_data = null
-    if (activity.activityType == "import" || activity.activityType == "sheets_read" || activity.activityType == "http_request") {
+    if (activity.activityType == "import" && (settings && settings.import && settings.import.source) === "blob-storage") {
+      // Blob-storage import: backend reads via Spark using settings.import.{source_root,path,format}.
+      // Don't embed any client-side payload.
+      activity_data = null
+    } else if (activity.activityType == "import" || activity.activityType == "sheets_read" || activity.activityType == "http_request") {
       activity_data = activity?.inputs?.input?.value?.values ?? activity?.outputs?.output?.value?.values ?? null
     } else if (activity.activityType == "join" || activity.activityType == "append") {
       const table_1 = activity?.inputs?.input_1?.value?.outputs?.output?.value?.values ?? null

@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="/etl/etl-design-system.css">
 <link rel="stylesheet" href="/etl/home.css">
 <link rel="stylesheet" href="/etl/notebook.css">
+<link rel="stylesheet" href="/etl/sql.css">
 	<link rel="stylesheet" href="/etl/jquery.flowchart.css">
 
 	<script src="/etl/jquery.flowchart.js"></script>
@@ -96,6 +97,16 @@
             </summary>
             <div id="notebookList" class="pipeline-list ds-sidebar-list"></div>
         </details>
+        <details class="ds-sidebar-section pipeline-panel pipeline-panel--sql" open>
+            <summary class="ds-sidebar-section-header">
+                <span>SQL scripts</span>
+                <span class="row" style="gap: 6px;">
+                    <span class="pill pill-neutral count" id="sqlCount">0</span>
+                    <button id="newSqlButton" class="new-btn" type="button">+ New</button>
+                </span>
+            </summary>
+            <div id="sqlList" class="pipeline-list ds-sidebar-list"></div>
+        </details>
         <details id="nb_running_section" class="ds-sidebar-section pipeline-panel pipeline-panel--running" open>
             <summary class="ds-sidebar-section-header">
                 <span>Running cells</span>
@@ -161,6 +172,26 @@
           </svg>
           <!-- <span>+ Create Trigger</span> -->
         </button>
+        <button id="pipeline_history" class="pipeline-history-button" type="button"
+                aria-label="View run history" aria-expanded="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 8v5l3 2"/>
+            <circle cx="12" cy="12" r="9"/>
+          </svg>
+          <span>History</span>
+        </button>
+        <button id="pipeline_history_exit" class="pipeline-history-exit"
+                type="button" hidden>
+          Exit history
+        </button>
+      </div>
+      <div id="pipeline_history_panel" class="pipeline-history-panel" hidden>
+        <div class="pipeline-history-panel-header">
+          <span class="pipeline-history-panel-title">Past runs</span>
+          <button class="pipeline-history-panel-close" type="button"
+                  aria-label="Close history panel">×</button>
+        </div>
+        <div id="pipeline_history_list" class="pipeline-history-list"></div>
       </div>
       	 <div id="chart_container">
 				 <div class="drag-boundary-outline" aria-hidden="true"></div>
@@ -180,6 +211,7 @@
            </div>
            <div id="ingestMenu" class="ingest-menu" role="menu" aria-hidden="true">
              <button type="button" data-ingest="import" role="menuitem">Import Data</button>
+             <button type="button" data-ingest="blob-storage" role="menuitem">Blob storage</button>
              <button type="button" data-ingest="sheets_read" role="menuitem">Google Sheets (Read)</button>
              <button type="button" data-ingest="http_request" role="menuitem">HTTP Request</button>
            </div>
@@ -302,6 +334,57 @@
           </div>
         </section>
       </div>
+      <div id="sql_workspace" class="sql-workspace" hidden>
+        <aside id="sql_files_panel" class="sql-files-panel">
+          <div class="sql-files-header">
+            <button id="sql_files_toggle" class="sql-files-toggle" type="button" aria-label="Toggle files panel" title="Hide files">«</button>
+            <span class="sql-files-title">Data files</span>
+            <button id="sql_files_refresh" class="sql-files-refresh" type="button" title="Re-scan blob-storage">↻</button>
+          </div>
+          <div class="sql-files-search-wrap">
+            <input id="sql_files_search" type="search" placeholder="Filter…" aria-label="Filter data files">
+          </div>
+          <div id="sql_files_tree" class="sql-files-tree" aria-busy="true">
+            <div class="sql-files-empty">Loading…</div>
+          </div>
+        </aside>
+        <div class="sql-main-area">
+          <div class="sql-toolbar">
+            <div class="sql-toolbar-title">
+              <button id="sql_files_show" class="sql-files-show nb-btn" type="button" title="Show files panel" hidden>Files</button>
+              <input id="sql_name" type="text" placeholder="Untitled SQL" class="sql-name-input">
+              <span id="sql_status_pill" class="sql-status-pill" aria-hidden="true">
+                <span class="sql-status-dot"></span>
+                <span class="sql-status-label">Ready</span>
+              </span>
+            </div>
+            <div class="sql-toolbar-actions">
+              <button id="sql_run" class="nb-btn nb-btn-run" type="button" title="Run query (Cmd/Ctrl+Enter)">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M4 3l9 5-9 5z"/></svg>
+                <span class="nb-btn-label">Run</span>
+              </button>
+              <button id="sql_cancel" class="nb-btn nb-btn-stop nb-btn-icon" type="button" title="Cancel running query" aria-label="Cancel running query" hidden>
+                <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="4" y="4" width="8" height="8" rx="1" fill="currentColor"/></svg>
+              </button>
+              <span class="nb-toolbar-divider" aria-hidden="true"></span>
+              <button id="sql_save" class="nb-btn nb-btn-primary" type="button" title="Save (Cmd/Ctrl+S)">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M3 2h8.5L14 4.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm1 1v4h7V3H4zm0 6v4h8V9H4z"/></svg>
+                <span class="nb-btn-label">Save</span>
+              </button>
+              <button id="sql_save_as" class="nb-btn" type="button" title="Save as new SQL script">Save As</button>
+              <button id="sql_format" class="nb-btn" type="button" title="Format SQL">Format</button>
+              <button id="sql_clear" class="nb-btn" type="button" title="Clear query">Clear</button>
+            </div>
+          </div>
+          <div class="sql-editor-wrap">
+            <textarea id="sql_editor" placeholder="-- Write a Spark SQL query, or click a file on the left.&#10;-- Cmd/Ctrl+Enter to run."></textarea>
+          </div>
+          <div class="sql-hint" id="sql_table_rule_hint">
+            Files in <code>blob-storage/raw</code> and <code>blob-storage/processed</code> are auto-registered as Spark temp views.
+            Click any file in the left panel to insert <code>SELECT * FROM &lt;table&gt; LIMIT 100</code> and run it.
+          </div>
+        </div>
+      </div>
       <div id="notebook_workspace" class="nb-workspace" hidden>
         <div class="nb-toolbar">
           <div class="nb-toolbar-title">
@@ -416,6 +499,18 @@
 								</span>
 								Pipeline
 							</button>
+							<button id="notebook_activity" class="create_operator buttons">
+								<span class="activity-icon" aria-hidden="true">
+									<svg viewBox="0 0 24 24"><path d="M4 4h7v7H4z"/><path d="M13 13h7v7h-7z"/><path d="M11 7l6 6"/></svg>
+								</span>
+								Notebook
+							</button>
+							<button id="sql_activity" class="create_operator buttons">
+								<span class="activity-icon" aria-hidden="true">
+									<svg viewBox="0 0 24 24"><path d="M4 4h7v7H4z"/><path d="M13 13h7v7h-7z"/><path d="M11 7l6 6"/></svg>
+								</span>
+								SQL
+							</button>
 							<button id="stream_activity" class="create_operator buttons">
 								<span class="activity-icon" aria-hidden="true">
 									<svg viewBox="0 0 24 24"><path d="M4 4h7v7H4z"/><path d="M13 13h7v7h-7z"/><path d="M11 7l6 6"/></svg>
@@ -424,6 +519,12 @@
 							</button>
 						</div>
 					</div>
+				<div id="sql_results_panel" class="ds-bottom-tab-content sql-results-panel" hidden>
+					<div class="sql-results-meta">
+						<span id="sql_results_status" class="sql-results-status">Run a query to see results.</span>
+					</div>
+					<div id="sql_results_mount" class="sql-results-mount"></div>
+				</div>
 				<div id="scheduled_triggers" class="tabcontent ds-bottom-tab-content">
 					<div class="scheduled-triggers__toolbar">
 						<div class="scheduled-triggers__controls">
@@ -524,7 +625,6 @@
     </div>
   </div>
   <script > let ws = null;</script>
-  <script src="/websocket.js" defer></script>
   <script src="/etl/activities.js" defer></script>
   <script src="/etl/run.js" defer></script>
   <script src="/etl/import.js" defer></script>
@@ -551,6 +651,8 @@
   <script src="/etl/stream.js" defer></script>
   <script src="/etl/dataflow.js" defer></script>
   <script src="/etl/pipeline.js" defer></script>
+  <script src="/etl/notebook_activity.js" defer></script>
+  <script src="/etl/sql_activity.js" defer></script>
   <script>
     window.GOOGLE_OAUTH_CONFIG = {
       client_id: "639323802562-f5i8qpon5o6umajc5bvvqcgqjudpnhf6.apps.googleusercontent.com",
@@ -559,7 +661,11 @@
       state: ""
     };
   </script>
+  <script src="/etl/path_picker.js" defer></script>
+  <script src="/etl/blob_storage_activity.js" defer></script>
   <script src="/etl/home-ui.js" defer></script>
   <script src="/etl/notebook.js" defer></script>
+  <script src="/etl/sql_persistence.js" defer></script>
+  <script src="/etl/sql_ui.js" defer></script>
   </body>
 </html>

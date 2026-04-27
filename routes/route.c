@@ -184,6 +184,8 @@ void process_route(struct Socket *socket, char* http_header, char* body){
 	/* ETL shared path picker (used by activity settings panels). */
 	} else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/etl/path_picker.js") == 0) {
 		get_gol_script(cSSL, http_header, "/etl/path_picker.js");
+	} else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/etl/blob_storage_activity.js") == 0) {
+		get_gol_script(cSSL, http_header, "/etl/blob_storage_activity.js");
 
 	/* ETL SQL activity static assets + backend proxy. */
 	} else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/etl/sql_persistence.js") == 0) {
