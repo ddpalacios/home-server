@@ -196,6 +196,10 @@ void process_route(struct Socket *socket, char* http_header, char* body){
 		get_gol_script(cSSL, http_header, "/etl/sql_ui.js");
 	} else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/etl/sql.css") == 0) {
 		get_gol_script(cSSL, http_header, "/etl/sql.css");
+	/* HTTP Request activity — diagnostic Test Request endpoint. */
+	} else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/etl/http_request/test") == 0) {
+		post_to_local(socket, http_header, body, route);
+
 	/* ETL Blob Storage Data Preview. Shares Spark resources with /etl/sql. */
 	} else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/etl/preview") == 0) {
 		post_to_local(socket, http_header, body, route);
