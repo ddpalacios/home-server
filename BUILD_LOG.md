@@ -277,3 +277,123 @@ log lines are unambiguous.)
 ---
 
 (Phase 3 + 4 results appended below as each slice lands.)
+
+---
+
+## Phase 3 — Implementation results
+
+| Slice | Commit | Tests | Notes |
+|---|---|---|---|
+| 1 — `/etl/preview` backend | local-server `6d1d94a`, home-server `a7f8d13` | 15 new + 222 existing → 237 ✅ | Format detection (json/jsonl/csv), LRU+TTL+mtime cache, hard 1000-row server cap, `setJobGroup`/`cancelJobGroup`, AbortController-friendly cancel route. Reuses `_executor` and `_get_spark` from `sql_routes.py` so SQL + preview share concurrency caps + FAIR scheduler. |
+| 2 — `BlobStorage_Activity` class | home-server `4c499b6` | 237 still ✅ + JS `node -c` clean | New `templates/etl/blob_storage_activity.js`. `createIngestAtSlot("blob-storage")` instantiates this instead of aliasing to `Import_Activity`. Activity persists `settings.blob_storage = {zone, path}`; reads legacy `settings.import.{source_root|zone, path}` for forwards-compat. Click-to-upload UI deleted from this code path. |
+| 3 — Data Preview tab shell | home-server `7dd8145` | JS `node -c` clean | New `templates/etl/blob_storage_preview.js` with the full state machine (`no-path`, `ready`, `loading`, `loaded`, `error`). Shell DOM in `home.html`, full styling in `home.css` (skeleton shimmer, status pill, summary line, error inline). `refreshPreview` is a stub in this commit — the visual states can be exercised on the canvas without a backend round-trip. |
+| 4 — Wire refresh to `/etl/preview` | home-server `3519b81` | 237 still ✅ | Real fetch with `AbortController`. `no_cache=true` on every refresh per the brief. `request_id` round-trips so server-side cancellation can target one specific run. Stale-response guard: when the user switches activities mid-flight, the response is dropped. Inline error rendering driven off `error_kind` (not toast). |
+| 5 — Polish | home-server `56876dc` | 237 still ✅ | 500ms debounce on `refreshPreview` (Try Again retries bypass with `force=true`). Tab-away cancellation: switching to General/Settings/Activities/Scheduled triggers calls `cancelInFlight`. Auto-tick "Last loaded" every 30s. Click-to-expand modal for nested cell values (Esc / overlay click / Close button to dismiss). Type badges were already folded into Slice 4's `mountTable`. |
+
+Total commits: 5 home-server, 1 local-server. Each is its own commit
+so any single slice can be reverted independently.
+
+### Files
+
+- `local-server/preview_routes.py` (new, ~265 LOC)
+- `local-server/local-server.py` (added blueprint registration, ~5 LOC)
+- `local-server/tests/test_preview_routes.py` (new, ~250 LOC, 15 tests)
+- `home-server/templates/etl/blob_storage_activity.js` (new, ~110 LOC)
+- `home-server/templates/etl/blob_storage_preview.js` (new, ~430 LOC)
+- `home-server/templates/etl/home.html` (panel DOM, script tag)
+- `home-server/templates/etl/home-ui.js` (`createIngestAtSlot` + activity dispatcher)
+- `home-server/templates/etl/home.css` (panel + skeleton + modal styles)
+- `home-server/routes/route.c` (3 new static-asset routes + 2 new proxy routes)
+
+### What was deliberately NOT done
+
+- **Backend upload endpoint**: there isn't one. The pre-existing
+  upload was 100% client-side (CSV/JSON parsed in the browser via the
+  Import activity dropzone). Nothing to remove server-side. Logged
+  here in lieu of a SERVER_TODO entry — there's nothing to track.
+- **TS strict types**: project has no TS, no tsconfig, no build step.
+  JSDoc-style annotations match the convention of every other JS file
+  in `templates/etl/`. Calling out so a later reviewer doesn't expect
+  `.ts` files.
+- **Frontend test harness**: no jest/vitest installed. Frontend
+  "tests" are `node -c` syntax checks + the manual checklist below.
+- **Sync/Upload activity for backfilling files**: doesn't exist;
+  recorded in `PRODUCT_TODO.md`.
+
+---
+
+## Phase 4 — Verification
+
+### Automated
+
+- `cd ~/local-server && python3 -m pytest -q` → **237 passed, 1 warning**
+  (15 new preview tests + 222 pre-existing).
+- `node -c` clean on every new JS file: `path_picker.js`,
+  `blob_storage_activity.js`, `blob_storage_preview.js`.
+- `home-server/build/home-server` rebuilt cleanly with the new
+  static-asset + proxy routes.
+
+### Manual checklist (run after restarting both servers)
+
+- [ ] `python3 ~/local-server/local-server.py` — restart so `preview_bp`
+      is registered.
+- [ ] `~/home-server/build/home-server` — restart so the new route
+      entries are live.
+- [ ] Hard-reload browser. DevTools open.
+- [ ] On the canvas, click `+ Import → Blob storage`. The new operator
+      appears with title "Blob storage".
+- [ ] Click the operator. Bottom panel → Settings tab. **Confirm: no
+      "click to upload" affordance is present**, no Source dropdown,
+      no `<input type="file">`. Just the helper line + the path
+      picker.
+- [ ] Click the picker. Pick a small `.json` file under `raw/`.
+      Trigger collapses to the breadcrumb.
+- [ ] Switch to the **Data preview** tab. **Tab does NOT auto-load.**
+      Status reads "Click Refresh to load preview." Refresh button is
+      enabled.
+- [ ] Click `↻ Refresh Preview`. Skeleton shimmer appears. Status
+      reads "Reading raw/…". Cancel button appears. Within ~5–15s
+      (Spark cold-start), table renders. Header summary shows the row
+      count, column count, and `json`. "Last loaded: …" appears.
+- [ ] Click Refresh again rapidly (multiple clicks within 500ms): only
+      one fetch fires (debounce).
+- [ ] Switch to **Settings**, change to a `.csv` file. Switch back to
+      Data preview. **Status returns to "Click Refresh to load
+      preview."** Old data is gone.
+- [ ] Refresh. CSV renders with type-inferred columns (`int`, `string`,
+      etc.) shown in the header.
+- [ ] Pick a non-existent path (rename a file in storage to simulate).
+      Refresh. **Inline error**: "This file no longer exists at
+      raw/…" + Try Again button. No toast.
+- [ ] Pick a JSON file with nested arrays/objects. Cells render as
+      truncated JSON strings. Click one — modal opens with the full
+      pretty-printed value. Esc closes it.
+- [ ] Pick a file >1000 rows (or any file; `total_rows` will reflect
+      reality). When `total_rows > 1000`, the orange truncation banner
+      appears: "Showing first 1000 of N rows. Use a SQL Activity to
+      query the full dataset."
+- [ ] Click Refresh, then immediately click another non-blob_storage
+      activity on the canvas. **In-flight request is cancelled** (panel
+      hides, `/etl/preview/cancel` POST appears in DevTools network).
+- [ ] DevTools → Network → click Refresh. Confirm: `POST /etl/preview`
+      with body `{request_id, zone, path, limit:1000, no_cache:true}`,
+      response body matches `{status:"ok", columns, rows, total_rows,
+      truncated, elapsed_ms, format, zone, path, request_id, from_cache}`.
+
+### Build artifacts
+
+```
+$ git -C ~/home-server log --oneline -5
+56876dc Slice 5: Polish — debounce, tab-away cancel, expand modal
+3519b81 Slice 4: wire Data Preview refresh to POST /etl/preview
+7dd8145 Slice 3: Data Preview tab shell with all 5 states (no fetch yet)
+4c499b6 Slice 2: BlobStorage_Activity class — no upload UI
+a7f8d13 Slice 1: proxy /etl/preview + /etl/preview/cancel to local-server
+
+$ git -C ~/local-server log --oneline -1
+6d1d94a Add /etl/preview endpoint with caching, format detection, and cancellation
+```
+
+To roll back any single slice without touching the others:
+`git revert <commit_hash>` in the appropriate repo, then `make` the
+home-server and restart both processes.
