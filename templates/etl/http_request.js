@@ -432,7 +432,11 @@ class Http_Request_Activity extends Activity {
                 headers: headers,
                 body: body,
                 body_format: this._config.body_format,
-                timeout_seconds: 30,
+                timeout_seconds: this._config.timeout_seconds || 30,
+                /* Honor the Advanced-section toggles. The activity owns
+                 * the policy; the test endpoint just applies it. */
+                verify_ssl: this._config.verify_ssl !== false,
+                follow_redirects: this._config.follow_redirects !== false,
             }),
         }).then((r) => r.json().catch(() => ({ status: "error", message: "Empty response" })))
           .then((resp) => {
