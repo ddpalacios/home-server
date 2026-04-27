@@ -2698,6 +2698,11 @@ body.sidebar-collapsed .sidebar-toggle--floating {
   flex-direction: column;
   gap: 8px;
   padding: 8px 4px 0;
+  /* Both flex and explicit height so the panel fills the tab whether
+     the tab uses display:flex (current behavior of switchTabPanel) or
+     plain block layout. */
+  flex: 1 1 auto;
+  min-height: 0;
   height: 100%;
   box-sizing: border-box;
   overflow: hidden;
@@ -2837,4 +2842,37 @@ body.sidebar-collapsed .sidebar-toggle--floating {
 }
 .bs-modal-dialog .buttons {
   align-self: flex-end;
+}
+
+/* Stretch the dataframe card inside the Blob Storage preview mount so
+   the table fills the available height instead of being capped at the
+   notebook's default 420px max. Mirrors the SQL workspace pattern. */
+.bs-preview-mount > .nb-df-card {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: 0;
+}
+.bs-preview-mount > .nb-df-card > .nb-df-table-panel {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.bs-preview-mount > .nb-df-card > .nb-df-table-panel > .nb-df-scroll {
+  flex: 1 1 auto;
+  max-height: none;
+  min-height: 0;
+}
+.bs-preview-mount > .nb-df-card > .nb-chart-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.bs-preview-mount > .nb-df-card > .nb-chart-panel .nb-chart-canvas-wrap {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 240px;
 }
