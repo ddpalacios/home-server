@@ -483,6 +483,30 @@
 							<button id="export_preview" class="buttons" type="button">Export</button>
 						</div>
 						<div id="activity_previews"></div>
+						<div id="blob_storage_preview_panel" class="bs-preview-panel" hidden>
+							<div class="bs-preview-header">
+								<span id="bs_preview_path" class="bs-preview-path">No file selected</span>
+								<span class="bs-preview-spacer"></span>
+								<span id="bs_preview_loaded" class="bs-preview-loaded"></span>
+								<button id="bs_preview_refresh" class="buttons" type="button">↻ Refresh Preview</button>
+								<button id="bs_preview_cancel" class="buttons" type="button" hidden>Cancel</button>
+								<button id="bs_preview_to_settings" class="buttons" type="button" hidden>Go to Settings</button>
+							</div>
+							<div id="bs_preview_summary" class="bs-preview-summary"></div>
+							<div id="bs_preview_status" class="bs-preview-status"></div>
+							<div id="bs_preview_error" class="bs-preview-error" hidden></div>
+							<div id="bs_preview_skeleton" class="bs-preview-skeleton" hidden>
+								<div class="bs-skel-row"></div>
+								<div class="bs-skel-row"></div>
+								<div class="bs-skel-row"></div>
+								<div class="bs-skel-row"></div>
+								<div class="bs-skel-row"></div>
+								<div class="bs-skel-row"></div>
+								<div class="bs-skel-row"></div>
+							</div>
+							<div id="bs_preview_truncation" class="bs-preview-truncation" hidden></div>
+							<div id="bs_preview_mount" class="bs-preview-mount sql-results-panel"></div>
+						</div>
 				</div>
 					<div id="tab_activities" class="tabcontent ds-bottom-tab-content">
 						<div class="activity-group-content">
@@ -663,6 +687,7 @@
   </script>
   <script src="/etl/path_picker.js" defer></script>
   <script src="/etl/blob_storage_activity.js" defer></script>
+  <script src="/etl/blob_storage_preview.js" defer></script>
   <script src="/etl/home-ui.js" defer></script>
   <script src="/etl/notebook.js" defer></script>
   <script src="/etl/sql_persistence.js" defer></script>
