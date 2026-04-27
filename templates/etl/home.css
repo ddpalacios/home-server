@@ -2792,3 +2792,49 @@ body.sidebar-collapsed .sidebar-toggle--floating {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* Blob Storage preview — nested-cell click-to-expand modal */
+.bs-cell-nested {
+  cursor: zoom-in;
+  color: #1f4fd6;
+  font-family: "JetBrains Mono", "Menlo", monospace;
+  font-size: 11px;
+}
+.bs-cell-nested:hover { background: rgba(31, 79, 214, 0.08); }
+.bs-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 6000;
+}
+.bs-modal-dialog {
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.32);
+  width: min(720px, 92vw);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 12px;
+}
+.bs-modal-pre {
+  flex: 1 1 auto;
+  overflow: auto;
+  font-family: "JetBrains Mono", "Menlo", monospace;
+  font-size: 12px;
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 6px;
+  padding: 10px 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}
+.bs-modal-dialog .buttons {
+  align-self: flex-end;
+}

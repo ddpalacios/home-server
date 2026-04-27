@@ -18,7 +18,11 @@
        requestId, abortCtrl } */
     states: Object.create(null),
     activeId: null,
+    /* Slice 5 polish: monotonic clock for the 500ms refresh debounce. */
+    _lastRefreshAt: 0,
   };
+
+  var REFRESH_DEBOUNCE_MS = 500;
 
   function getActiveState() {
     return BS.activeId ? (BS.states[BS.activeId] || null) : null;
@@ -237,12 +241,70 @@
         chartable: true,
       };
       mount.appendChild(window.NB.renderDataFrame(dfValue, false));
+      /* Polish: scan rendered cells for stringified arrays/objects and
+       * make them click-to-expand into a modal. NB.renderDataFrame
+       * stringifies these inline; we offer the full structured view
+       * without modifying the shared component. */
+      enhanceNestedCells(mount);
     } else {
       var pre = document.createElement("pre");
       pre.style.fontSize = "11px";
       pre.textContent = JSON.stringify(body, null, 2);
       mount.appendChild(pre);
     }
+  }
+
+  /* -------- Nested-cell click-to-expand modal (Slice 5) ------------- */
+
+  function enhanceNestedCells(mount) {
+    if (!mount) return;
+    var cells = mount.querySelectorAll("td");
+    Array.prototype.forEach.call(cells, function (td) {
+      var t = (td.textContent || "").trim();
+      if (!t) return;
+      if ((t[0] === "{" && t[t.length - 1] === "}")
+       || (t[0] === "[" && t[t.length - 1] === "]")) {
+        td.classList.add("bs-cell-nested");
+        td.title = "Click to expand";
+        td.addEventListener("click", function (ev) {
+          ev.stopPropagation();
+          openExpandModal(t);
+        });
+      }
+    });
+  }
+
+  function openExpandModal(text) {
+    var overlay = document.createElement("div");
+    overlay.className = "bs-modal-overlay";
+    overlay.addEventListener("click", function () { closeExpandModal(overlay); });
+    var dialog = document.createElement("div");
+    dialog.className = "bs-modal-dialog";
+    dialog.addEventListener("click", function (ev) { ev.stopPropagation(); });
+    var pre = document.createElement("pre");
+    pre.className = "bs-modal-pre";
+    try { pre.textContent = JSON.stringify(JSON.parse(text), null, 2); }
+    catch (_) { pre.textContent = text; }
+    var close = document.createElement("button");
+    close.type = "button";
+    close.className = "buttons";
+    close.textContent = "Close";
+    close.addEventListener("click", function () { closeExpandModal(overlay); });
+    dialog.appendChild(pre);
+    dialog.appendChild(close);
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+    var onKey = function (ev) {
+      if (ev.key === "Escape") { closeExpandModal(overlay); }
+    };
+    overlay._onKey = onKey;
+    document.addEventListener("keydown", onKey);
+  }
+
+  function closeExpandModal(overlay) {
+    if (!overlay) return;
+    if (overlay._onKey) document.removeEventListener("keydown", overlay._onKey);
+    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
   }
 
   /* -------- Refresh + cancel (live fetch) ---------------------------- */
@@ -254,6 +316,13 @@
       s.status = "no-path"; render(); return;
     }
     if (s.status === "loading") return;
+    /* 500ms debounce on rapid clicks, except when a Try Again retry
+     * comes in (force=true) — that flow should always go through. */
+    if (!force) {
+      var now = Date.now();
+      if (now - BS._lastRefreshAt < REFRESH_DEBOUNCE_MS) return;
+      BS._lastRefreshAt = now;
+    }
 
     var requestId = "prev_" + Date.now().toString(16) + Math.random().toString(16).slice(2, 8);
     var abortCtrl = ("AbortController" in window) ? new AbortController() : null;
@@ -397,7 +466,9 @@
       var tabSettings = document.getElementById("tabSettings");
       if (tabSettings) tabSettings.click();
     });
-    /* Hide the panel when a non-blob_storage activity is selected. */
+    /* Hide the panel when a non-blob_storage activity is selected.
+     * Also cancel any in-flight preview — the user is leaving this
+     * tab/activity and a stale response would confuse the UI. */
     var canvas = document.getElementById("flowchartworkspace");
     if (canvas) {
       canvas.addEventListener("click", function () {
@@ -408,12 +479,36 @@
           var act = window.$flowchart.flowchart("getOperatorActivity", sel);
           if (!act) return;
           if (act.activityType !== "blob_storage") {
+            cancelInFlight();
             BS.activeId = null;
             hide();
           }
         }, 0);
       });
     }
+
+    /* Tab navigation away: when the user switches to General /
+     * Settings / Activities / Scheduled triggers, cancel any in-flight
+     * preview. They can come back and click Refresh again. */
+    var tabStrip = document.querySelector(".navbar.ds-bottom-tab-strip");
+    if (tabStrip) {
+      tabStrip.addEventListener("click", function (ev) {
+        var btn = ev.target.closest(".tablinks");
+        if (!btn) return;
+        if (btn.id !== "tabDataPreview") {
+          cancelInFlight();
+        }
+      });
+    }
+
+    /* Auto-tick the "Last loaded" relative timestamp every 30s while
+     * the user is sitting on the tab. */
+    setInterval(function () {
+      var s = getActiveState();
+      if (!s || s.status !== "loaded" || !s.loadedAt) return;
+      var loaded = $("bs_preview_loaded");
+      if (loaded) loaded.textContent = "Last loaded: " + fmtRelative(s.loadedAt);
+    }, 30 * 1000);
   }
 
   if (document.readyState === "loading") {
