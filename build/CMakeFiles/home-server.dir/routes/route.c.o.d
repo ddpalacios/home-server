@@ -125,46 +125,8 @@ CMakeFiles/home-server.dir/routes/route.c.o: \
  /usr/include/x86_64-linux-gnu/asm/sockios.h \
  /usr/include/asm-generic/sockios.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
- /home/dpalacios/home-server/models/websocket.h \
  /home/dpalacios/home-server/routes/route.h \
- /home/dpalacios/home-server/models/Invitation.h \
  /home/dpalacios/home-server/utilities/http_utilities.h \
- /home/dpalacios/home-server/routes/database-server/POST/post_frame.h \
- /home/dpalacios/home-server/models/FrameField.h \
- /home/dpalacios/home-server/routes/Websocket/GET/start_websocket_session.h \
- /home/dpalacios/home-server/routes/life-of-sounds/POST/post_user.h \
- /home/dpalacios/home-server/routes/life-of-sounds/POST/login.h \
- /home/dpalacios/home-server/routes/life-of-sounds/POST/post_websocket_session.h \
- /home/dpalacios/home-server/routes/life-of-sounds/POST/post_websocket_client.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_websocket_client.h \
- /home/dpalacios/home-server/routes/life-of-sounds/POST/post_audio.h \
- /home/dpalacios/home-server/routes/life-of-sounds/POST/post_browser_session.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/new_login.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/studio.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_live_page.h \
- /home/dpalacios/home-server/routes/chicago-transits/GET/get_template.h \
  /home/dpalacios/home-server/routes/blob-storage/GET/get_blob_storage_files.h \
  /home/dpalacios/home-server/routes/blob-storage/POST/post_blob.h \
- /home/dpalacios/home-server/routes/local-server/POST/post_local_server.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_web_audio_api_script.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_game_of_life_script.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/data_page.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_recordings_page.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_data_table.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_session_messages.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_websocket_script.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_html_utilities_script.h \
- /home/dpalacios/home-server/routes/life-of-sounds/PATCH/patch_websocket_client.h \
- /home/dpalacios/home-server/routes/life-of-sounds/PATCH/patch_browser_session.h \
- /home/dpalacios/home-server/routes/life-of-sounds/PATCH/patch_websocket_session.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_audio.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_audio_blob.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/sessioninfo.h \
- /home/dpalacios/home-server/routes/life-of-sounds/DELETE/sessioninfo.h \
- /home/dpalacios/home-server/routes/life-of-sounds/DELETE/delete_websocket_session.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/home.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/websocket_protocol.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_user.h \
- /home/dpalacios/home-server/utilities/json_utilities.h \
- /home/dpalacios/home-server/models/User.h \
- /home/dpalacios/home-server/routes/life-of-sounds/GET/login.h
+ /home/dpalacios/home-server/routes/local-server/POST/post_local_server.h

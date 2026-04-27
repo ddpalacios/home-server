@@ -344,6 +344,60 @@ void post_blob(struct Socket* socket,char* http_header, char*body, char* route){
 		send_response_code(cSSL, 200);
 		return;
 	}
+	else if (strstr(route, "/blob-storage/etl/sql/save")!= NULL){
+		/* Save a SQL script doc. Mirrors dataflow/pipeline save. */
+		char* googleId = get_query_parameter(route, "googleId");
+		char* sqlId    = get_query_parameter(route, "sqlId");
+		if (googleId == NULL || sqlId == NULL){
+			send_response_code(cSSL, 400);
+			return;
+		}
+		if (!body){
+			send_response_code(cSSL, 400);
+			return;
+		}
+		const char *home = getenv("HOME");
+		if (!home || !home[0]){
+			send_response_code(cSSL, 500);
+			return;
+		}
+		char dir_path[2048];
+		snprintf(dir_path, sizeof(dir_path), "%s/home-server/blob-storage/raw/etl/sql", home);
+		mkdir(dir_path, 0755);
+		snprintf(write_path, sizeof(write_path),"%s/home-server/blob-storage/raw/etl/sql/%s.json", home, sqlId);
+		FILE *file = fopen(write_path, "w");
+		if (!file){
+			send_response_code(cSSL, 500);
+			return;
+		}
+		if (fputs(body, file) == EOF){
+			fclose(file);
+			send_response_code(cSSL, 500);
+			return;
+		}
+		fclose(file);
+		send_response_code(cSSL, 200);
+		return;
+	}
+	else if (strstr(route, "/blob-storage/etl/sql/delete")!= NULL){
+		char* sqlId = get_query_parameter(route, "sqlId");
+		if (sqlId == NULL){
+			send_response_code(cSSL, 400);
+			return;
+		}
+		const char *home = getenv("HOME");
+		if (!home || !home[0]){
+			send_response_code(cSSL, 500);
+			return;
+		}
+		snprintf(write_path, sizeof(write_path),"%s/home-server/blob-storage/raw/etl/sql/%s.json", home, sqlId);
+		if (remove(write_path) != 0){
+			send_response_code(cSSL, 404);
+			return;
+		}
+		send_response_code(cSSL, 200);
+		return;
+	}
 	else if (strstr(route, "/blob-storage/raw/")!= NULL
 		|| strstr(route, "/blob-storage/processed/")!= NULL
 		|| strstr(route, "/blob-storage/bronze/")!= NULL

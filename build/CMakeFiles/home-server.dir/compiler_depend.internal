@@ -156,6 +156,27 @@ CMakeFiles/home-server.dir/main.c.o
  /usr/include/rpc/netdb.h
  /usr/include/x86_64-linux-gnu/bits/netdb.h
  /usr/include/cjson/cJSON.h
+ /usr/include/signal.h
+ /usr/include/x86_64-linux-gnu/bits/signum-generic.h
+ /usr/include/x86_64-linux-gnu/bits/signum-arch.h
+ /usr/include/x86_64-linux-gnu/bits/types/sig_atomic_t.h
+ /usr/include/x86_64-linux-gnu/bits/types/siginfo_t.h
+ /usr/include/x86_64-linux-gnu/bits/types/__sigval_t.h
+ /usr/include/x86_64-linux-gnu/bits/siginfo-arch.h
+ /usr/include/x86_64-linux-gnu/bits/siginfo-consts.h
+ /usr/include/x86_64-linux-gnu/bits/types/sigval_t.h
+ /usr/include/x86_64-linux-gnu/bits/types/sigevent_t.h
+ /usr/include/x86_64-linux-gnu/bits/sigevent-consts.h
+ /usr/include/x86_64-linux-gnu/bits/sigaction.h
+ /usr/include/x86_64-linux-gnu/bits/sigcontext.h
+ /usr/include/x86_64-linux-gnu/bits/types/stack_t.h
+ /usr/include/x86_64-linux-gnu/sys/ucontext.h
+ /usr/include/x86_64-linux-gnu/bits/sigstack.h
+ /usr/include/x86_64-linux-gnu/bits/sigstksz.h
+ /usr/include/x86_64-linux-gnu/bits/ss_flags.h
+ /usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h
+ /usr/include/x86_64-linux-gnu/bits/sigthread.h
+ /usr/include/x86_64-linux-gnu/bits/signal_ext.h
  /home/dpalacios/home-server/server/server.h
  /usr/include/openssl/ssl.h
  /usr/include/openssl/macros.h
@@ -844,6 +865,16 @@ CMakeFiles/home-server.dir/models/Socket.c.o
  /usr/include/netdb.h
  /usr/include/rpc/netdb.h
  /usr/include/x86_64-linux-gnu/bits/netdb.h
+ /usr/include/unistd.h
+ /usr/include/x86_64-linux-gnu/bits/posix_opt.h
+ /usr/include/x86_64-linux-gnu/bits/environments.h
+ /usr/include/x86_64-linux-gnu/bits/confname.h
+ /usr/include/x86_64-linux-gnu/bits/getopt_posix.h
+ /usr/include/x86_64-linux-gnu/bits/getopt_core.h
+ /usr/include/x86_64-linux-gnu/bits/unistd_ext.h
+ /usr/include/x86_64-linux-gnu/sys/stat.h
+ /usr/include/x86_64-linux-gnu/bits/stat.h
+ /usr/include/x86_64-linux-gnu/bits/struct_stat.h
  /home/dpalacios/home-server/models/Socket.h
 
 CMakeFiles/home-server.dir/models/User.c.o
@@ -6064,8 +6095,8 @@ CMakeFiles/home-server.dir/routes/local-server/POST/post_local_server.c.o
  /usr/include/openssl/tls1.h
  /usr/include/openssl/dtls1.h
  /usr/include/openssl/srtp.h
- /home/dpalacios/home-server/utilities/json_utilities.h
  /usr/include/cjson/cJSON.h
+ /home/dpalacios/home-server/utilities/json_utilities.h
  /home/dpalacios/home-server/server/send_message.h
  /home/dpalacios/home-server/models/Socket.h
  /usr/include/x86_64-linux-gnu/sys/socket.h
@@ -6093,6 +6124,8 @@ CMakeFiles/home-server.dir/routes/local-server/POST/post_local_server.c.o
  /usr/include/netdb.h
  /usr/include/rpc/netdb.h
  /usr/include/x86_64-linux-gnu/bits/netdb.h
+ /usr/include/netinet/tcp.h
+ /usr/include/x86_64-linux-gnu/sys/time.h
  /usr/include/unistd.h
  /usr/include/x86_64-linux-gnu/bits/posix_opt.h
  /usr/include/x86_64-linux-gnu/bits/environments.h
@@ -6100,6 +6133,13 @@ CMakeFiles/home-server.dir/routes/local-server/POST/post_local_server.c.o
  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h
  /usr/include/x86_64-linux-gnu/bits/getopt_core.h
  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h
+ /usr/include/ctype.h
+ /usr/include/errno.h
+ /usr/include/x86_64-linux-gnu/bits/errno.h
+ /usr/include/linux/errno.h
+ /usr/include/x86_64-linux-gnu/asm/errno.h
+ /usr/include/asm-generic/errno.h
+ /usr/include/asm-generic/errno-base.h
 
 CMakeFiles/home-server.dir/routes/route.c.o
  /home/dpalacios/home-server/routes/route.c
@@ -6273,49 +6313,11 @@ CMakeFiles/home-server.dir/routes/route.c.o
  /usr/include/x86_64-linux-gnu/asm/sockios.h
  /usr/include/asm-generic/sockios.h
  /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h
- /home/dpalacios/home-server/models/websocket.h
  /home/dpalacios/home-server/routes/route.h
- /home/dpalacios/home-server/models/Invitation.h
  /home/dpalacios/home-server/utilities/http_utilities.h
- /home/dpalacios/home-server/routes/database-server/POST/post_frame.h
- /home/dpalacios/home-server/models/FrameField.h
- /home/dpalacios/home-server/routes/Websocket/GET/start_websocket_session.h
- /home/dpalacios/home-server/routes/life-of-sounds/POST/post_user.h
- /home/dpalacios/home-server/routes/life-of-sounds/POST/login.h
- /home/dpalacios/home-server/routes/life-of-sounds/POST/post_websocket_session.h
- /home/dpalacios/home-server/routes/life-of-sounds/POST/post_websocket_client.h
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_websocket_client.h
- /home/dpalacios/home-server/routes/life-of-sounds/POST/post_audio.h
- /home/dpalacios/home-server/routes/life-of-sounds/POST/post_browser_session.h
- /home/dpalacios/home-server/routes/life-of-sounds/GET/new_login.h
- /home/dpalacios/home-server/routes/life-of-sounds/GET/studio.h
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_live_page.h
- /home/dpalacios/home-server/routes/chicago-transits/GET/get_template.h
  /home/dpalacios/home-server/routes/blob-storage/GET/get_blob_storage_files.h
  /home/dpalacios/home-server/routes/blob-storage/POST/post_blob.h
  /home/dpalacios/home-server/routes/local-server/POST/post_local_server.h
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_web_audio_api_script.h
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_game_of_life_script.h
- /home/dpalacios/home-server/routes/life-of-sounds/GET/data_page.h
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_recordings_page.h
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_data_table.h
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_session_messages.h
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_websocket_script.h
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_html_utilities_script.h
- /home/dpalacios/home-server/routes/life-of-sounds/PATCH/patch_websocket_client.h
- /home/dpalacios/home-server/routes/life-of-sounds/PATCH/patch_browser_session.h
- /home/dpalacios/home-server/routes/life-of-sounds/PATCH/patch_websocket_session.h
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_audio.h
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_audio_blob.h
- /home/dpalacios/home-server/routes/life-of-sounds/GET/sessioninfo.h
- /home/dpalacios/home-server/routes/life-of-sounds/DELETE/sessioninfo.h
- /home/dpalacios/home-server/routes/life-of-sounds/DELETE/delete_websocket_session.h
- /home/dpalacios/home-server/routes/life-of-sounds/GET/home.h
- /home/dpalacios/home-server/routes/life-of-sounds/GET/websocket_protocol.h
- /home/dpalacios/home-server/routes/life-of-sounds/GET/get_user.h
- /home/dpalacios/home-server/utilities/json_utilities.h
- /home/dpalacios/home-server/models/User.h
- /home/dpalacios/home-server/routes/life-of-sounds/GET/login.h
 
 CMakeFiles/home-server.dir/server/read_message.c.o
  /home/dpalacios/home-server/server/read_message.c
@@ -6722,8 +6724,6 @@ CMakeFiles/home-server.dir/server/send_message.c.o
 CMakeFiles/home-server.dir/server/server.c.o
  /home/dpalacios/home-server/server/server.c
  /usr/include/stdc-predef.h
- /usr/include/cjson/cJSON.h
- /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h
  /usr/include/pthread.h
  /usr/include/features.h
  /usr/include/features-time64.h
@@ -6737,6 +6737,7 @@ CMakeFiles/home-server.dir/server/server.c.o
  /usr/include/x86_64-linux-gnu/bits/types.h
  /usr/include/x86_64-linux-gnu/bits/typesizes.h
  /usr/include/x86_64-linux-gnu/bits/time64.h
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h
  /usr/include/x86_64-linux-gnu/bits/types/time_t.h
  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h
  /usr/include/x86_64-linux-gnu/bits/endian.h
@@ -6798,13 +6799,6 @@ CMakeFiles/home-server.dir/server/server.c.o
  /usr/include/x86_64-linux-gnu/bits/floatn-common.h
  /usr/include/alloca.h
  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h
- /usr/include/errno.h
- /usr/include/x86_64-linux-gnu/bits/errno.h
- /usr/include/linux/errno.h
- /usr/include/x86_64-linux-gnu/asm/errno.h
- /usr/include/asm-generic/errno.h
- /usr/include/asm-generic/errno-base.h
- /usr/include/x86_64-linux-gnu/bits/types/error_t.h
  /usr/include/stdio.h
  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdarg.h
  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h
@@ -6815,7 +6809,25 @@ CMakeFiles/home-server.dir/server/server.c.o
  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h
  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h
  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h
- /home/dpalacios/home-server/models/Socket.h
+ /usr/include/string.h
+ /usr/include/strings.h
+ /usr/include/unistd.h
+ /usr/include/x86_64-linux-gnu/bits/posix_opt.h
+ /usr/include/x86_64-linux-gnu/bits/environments.h
+ /usr/include/x86_64-linux-gnu/bits/confname.h
+ /usr/include/x86_64-linux-gnu/bits/getopt_posix.h
+ /usr/include/x86_64-linux-gnu/bits/getopt_core.h
+ /usr/include/x86_64-linux-gnu/bits/unistd_ext.h
+ /usr/include/linux/close_range.h
+ /usr/include/netdb.h
+ /usr/include/netinet/in.h
+ /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h
+ /usr/include/x86_64-linux-gnu/bits/in.h
+ /usr/include/rpc/netdb.h
+ /usr/include/x86_64-linux-gnu/bits/types/sigevent_t.h
+ /usr/include/x86_64-linux-gnu/bits/types/__sigval_t.h
+ /usr/include/x86_64-linux-gnu/bits/netdb.h
+ /usr/include/arpa/inet.h
  /usr/include/openssl/ssl.h
  /usr/include/openssl/macros.h
  /usr/include/x86_64-linux-gnu/openssl/opensslconf.h
@@ -6826,7 +6838,6 @@ CMakeFiles/home-server.dir/server/server.c.o
  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h
  /usr/include/stdint.h
  /usr/include/x86_64-linux-gnu/bits/wchar.h
- /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h
  /usr/include/openssl/comp.h
  /usr/include/openssl/crypto.h
  /usr/include/openssl/safestack.h
@@ -6863,8 +6874,6 @@ CMakeFiles/home-server.dir/server/server.c.o
  /usr/include/openssl/asn1err.h
  /usr/include/openssl/objectserr.h
  /usr/include/openssl/ec.h
- /usr/include/string.h
- /usr/include/strings.h
  /usr/include/openssl/ecerr.h
  /usr/include/openssl/rsa.h
  /usr/include/openssl/rsaerr.h
@@ -6901,37 +6910,13 @@ CMakeFiles/home-server.dir/server/server.c.o
  /usr/include/openssl/tls1.h
  /usr/include/openssl/dtls1.h
  /usr/include/openssl/srtp.h
+ /home/dpalacios/home-server/models/Socket.h
  /home/dpalacios/home-server/routes/route.h
  /home/dpalacios/home-server/server/server.h
  /usr/include/poll.h
  /usr/include/x86_64-linux-gnu/sys/poll.h
  /usr/include/x86_64-linux-gnu/bits/poll.h
- /usr/include/netdb.h
- /usr/include/netinet/in.h
- /usr/include/x86_64-linux-gnu/bits/in.h
- /usr/include/rpc/netdb.h
- /usr/include/x86_64-linux-gnu/bits/types/sigevent_t.h
- /usr/include/x86_64-linux-gnu/bits/types/__sigval_t.h
- /usr/include/x86_64-linux-gnu/bits/netdb.h
- /home/dpalacios/home-server/models/FrameField.h
- /home/dpalacios/home-server/utilities/http_utilities.h
- /home/dpalacios/home-server/utilities/json_utilities.h
- /home/dpalacios/home-server/utilities/string_utilities.h
- /home/dpalacios/home-server/models/User_Token.h
- /home/dpalacios/home-server/server/send_message.h
- /home/dpalacios/home-server/models/WebsocketClient.h
  /home/dpalacios/home-server/server/read_message.h
- /usr/include/arpa/inet.h
- /usr/include/unistd.h
- /usr/include/x86_64-linux-gnu/bits/posix_opt.h
- /usr/include/x86_64-linux-gnu/bits/environments.h
- /usr/include/x86_64-linux-gnu/bits/confname.h
- /usr/include/x86_64-linux-gnu/bits/getopt_posix.h
- /usr/include/x86_64-linux-gnu/bits/getopt_core.h
- /usr/include/x86_64-linux-gnu/bits/unistd_ext.h
- /usr/include/linux/close_range.h
- /usr/include/x86_64-linux-gnu/sys/time.h
- /usr/include/openssl/err.h
 
 CMakeFiles/home-server.dir/utilities/http_utilities.c.o
  /home/dpalacios/home-server/utilities/http_utilities.c

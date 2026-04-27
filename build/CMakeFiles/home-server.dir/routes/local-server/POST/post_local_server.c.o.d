@@ -108,8 +108,8 @@ CMakeFiles/home-server.dir/routes/local-server/POST/post_local_server.c.o: \
  /usr/include/openssl/prov_ssl.h /usr/include/openssl/ssl2.h \
  /usr/include/openssl/ssl3.h /usr/include/openssl/tls1.h \
  /usr/include/openssl/dtls1.h /usr/include/openssl/srtp.h \
- /home/dpalacios/home-server/utilities/json_utilities.h \
  /usr/include/cjson/cJSON.h \
+ /home/dpalacios/home-server/utilities/json_utilities.h \
  /home/dpalacios/home-server/server/send_message.h \
  /home/dpalacios/home-server/models/Socket.h \
  /usr/include/x86_64-linux-gnu/sys/socket.h \
@@ -133,9 +133,13 @@ CMakeFiles/home-server.dir/routes/local-server/POST/post_local_server.c.o: \
  /home/dpalacios/home-server/utilities/http_utilities.h \
  /home/dpalacios/home-server/models/session.h /usr/include/netdb.h \
  /usr/include/rpc/netdb.h /usr/include/x86_64-linux-gnu/bits/netdb.h \
+ /usr/include/netinet/tcp.h /usr/include/x86_64-linux-gnu/sys/time.h \
  /usr/include/unistd.h /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
  /usr/include/x86_64-linux-gnu/bits/environments.h \
  /usr/include/x86_64-linux-gnu/bits/confname.h \
  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
- /usr/include/x86_64-linux-gnu/bits/unistd_ext.h
+ /usr/include/x86_64-linux-gnu/bits/unistd_ext.h /usr/include/ctype.h \
+ /usr/include/errno.h /usr/include/x86_64-linux-gnu/bits/errno.h \
+ /usr/include/linux/errno.h /usr/include/x86_64-linux-gnu/asm/errno.h \
+ /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h

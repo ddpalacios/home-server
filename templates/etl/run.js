@@ -224,7 +224,11 @@ function buildStoredDataflowActivities(dataflow, ordered) {
             return null;
         }
         let activity_data = null;
-        if (activity.activityType === "import" || activity.activityType === "sheets_read" || activity.activityType === "http_request") {
+        if (activity.activityType === "import" && (activity?.settings?.import?.source) === "blob-storage") {
+            // Blob-storage source: backend reads via Spark — don't embed
+            // any payload. Path lives in settings.import.{source_root,path,format}.
+            activity_data = null;
+        } else if (activity.activityType === "import" || activity.activityType === "sheets_read" || activity.activityType === "http_request") {
             activity_data = activity?.inputs?.input?.value?.values ?? activity?.outputs?.output?.value?.values ?? null;
         } else if (activity.activityType === "join" || activity.activityType === "append") {
             const table_1 = activity?.inputs?.input_1?.value?.outputs?.output?.value?.values ?? null;
@@ -483,7 +487,6 @@ async function run_activity_flow(activity, widget, data){
 async function get_ordered_nodes(widget, targetIds){
     let all_dependecies = widget.flowchart("getDependencies");
     console.log("dependencies", all_dependecies);
-=======
     let dependencies = {}
     let target_ids = []
     // let operators = widget.flowchart('getOperators')
@@ -576,7 +579,6 @@ async function post_ordered_activities(activities, preview = false, meta){
     return null;
 }
 
-=======
 async function execute_activity(widget,activityid){
             let dependencies = {}
             let operators = widget.flowchart('getOperators')

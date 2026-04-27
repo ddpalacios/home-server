@@ -74,6 +74,28 @@ class Import_Activity extends Activity{
         const existing_file_input = div.querySelector('input[type="file"]');
         if (existing_file_input) existing_file_input.remove();
 
+        // ---- Source-kind selector (Upload | Blob storage) ---------------
+        const source_field = document.createElement('div');
+        source_field.className = 'field';
+        source_field.id = this.activityId + '_source_field';
+        const source_label = document.createElement('label');
+        source_label.className = 'label';
+        source_label.textContent = 'Source';
+        source_field.appendChild(source_label);
+        const source_select = document.createElement('select');
+        source_select.id = this.activityId + '_source_select';
+        source_select.className = 'select';
+        ['upload', 'blob-storage'].forEach((kind) => {
+            const opt = document.createElement('option');
+            opt.value = kind;
+            opt.textContent = kind === 'upload' ? 'Upload file' : 'Blob storage';
+            source_select.appendChild(opt);
+        });
+        const saved_source = (this.activity?.settings?.import?.source) || 'upload';
+        source_select.value = saved_source;
+        source_field.appendChild(source_select);
+        div.insertBefore(source_field, div.firstChild);
+
         const field = document.createElement('div');
         field.className = 'field';
         field.id = this.activityId + "_file_settings";
@@ -135,7 +157,102 @@ class Import_Activity extends Activity{
         field.appendChild(dropzone);
         div.insertBefore(field, div.firstChild);
 
+        // ---- Blob-storage picker -----------------------------------------
+        // Hidden by default; visible when the source-kind dropdown is set
+        // to "blob-storage". Lets the user expand `raw/` or `processed/`
+        // and pick a single .json/.csv file. The selected path is saved
+        // on the activity settings; the backend reads it via Spark when
+        // the dataflow runs.
+        const blob_field = document.createElement('div');
+        blob_field.className = 'field';
+        blob_field.id = this.activityId + '_blob_field';
+
+        // Use the shared <PathPicker /> equivalent. One instance per
+        // import activity; lives for the activity's lifetime so the
+        // expanded-tree state survives the user toggling between
+        // Settings and Data preview tabs.
+        if (typeof window.createPathPicker !== 'function') {
+            blob_field.appendChild(document.createTextNode(
+                'Path picker unavailable (createPathPicker not loaded).'));
+        } else {
+            const saved = this._readImportPathFromSettings();
+            this._pathPicker = window.createPathPicker({
+                label: 'Blob-storage path',
+                placeholder: 'Pick a file in raw/ or processed/…',
+                value: saved,
+                selectMode: 'file',
+                fileExtensions: ['json', 'csv'],
+                rootZones: ['raw', 'processed'],
+                initialPath: saved ? saved.path : '',
+                onChange: (val) => this._onPathPickerChange(val),
+            });
+            blob_field.appendChild(this._pathPicker.element);
+        }
+
+        // Render under the dropzone field so the layout flows top→bottom:
+        // [Source select] → [dropzone OR blob picker].
+        field.parentNode.insertBefore(blob_field, field.nextSibling);
+
+        // Initial visibility based on saved source.
+        this._toggleSourceFields(saved_source);
+
+        // Toggle handler.
+        source_select.addEventListener('change', (ev) => {
+            const kind = ev.target.value;
+            this._toggleSourceFields(kind);
+            this._persistImportSettings({ source: kind });
+        });
+
         return div;
+    }
+
+    _toggleSourceFields(kind){
+        const file_field = document.getElementById(this.activityId + '_file_settings');
+        const blob_field = document.getElementById(this.activityId + '_blob_field');
+        if (file_field) file_field.style.display = (kind === 'upload') ? '' : 'none';
+        if (blob_field) blob_field.style.display = (kind === 'blob-storage') ? '' : 'none';
+    }
+
+    _persistImportSettings(patch){
+        if (!this.activity) return;
+        const current = (this.activity.settings && this.activity.settings.import) || {};
+        const next = Object.assign({}, current, patch || {});
+        this.activity.settings = Object.assign({}, this.activity.settings || {}, { import: next });
+        if (this.flowchart && this.flowchart.flowchart) {
+            this.flowchart.flowchart('setSettings', this.activityId, this.activity.settings);
+        }
+    }
+
+    /* Read existing import settings as a {zone, path} value the picker
+     * understands. We migrated from {source_root, path} → {zone, path};
+     * accept both shapes so already-saved dataflows still light up. */
+    _readImportPathFromSettings(){
+        const s = this.activity?.settings?.import;
+        if (!s) return null;
+        const zone = s.zone || s.source_root;
+        if (zone !== 'raw' && zone !== 'processed') return null;
+        const path = s.path;
+        if (!path) return null;
+        return { zone: zone, path: path };
+    }
+
+    _onPathPickerChange(val){
+        if (!val) {
+            this._persistImportSettings({
+                source: 'blob-storage',
+                source_root: undefined, zone: undefined,
+                path: undefined, format: undefined, table: undefined,
+            });
+            return;
+        }
+        const ext = (val.path || '').toLowerCase().endsWith('.csv') ? 'csv' : 'json';
+        this._persistImportSettings({
+            source: 'blob-storage',
+            zone: val.zone,
+            source_root: val.zone, /* legacy alias kept for downstream */
+            path: val.path,
+            format: ext,
+        });
     }
 
     _setInput(widget, activityId, inputValue){

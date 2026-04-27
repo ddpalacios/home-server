@@ -726,32 +726,43 @@ jQuery(function ($) {
             }
         },
         setDependency: function(parentNodeId, value){
-            if (this.data.operators[parentNodeId].internal.properties.activityType != 'join' &&
-                this.data.operators[parentNodeId].internal.properties.activityType != 'append'){
-                this.data.operators[parentNodeId].internal.properties.dependencies = []
-                this.data.operators[parentNodeId].internal.properties.dependencies.push(value)
-            }else{
-                let deps = this.data.operators[parentNodeId].internal.properties.dependencies
-                if (!Array.isArray(deps)) {
-                    deps = []
-                }
-                if (value && value.operatorId !== undefined && value.connector) {
-                    let index = value.connector === "input_1" ? 0 : value.connector === "input_2" ? 1 : null
-                    if (index !== null) {
-                        deps[index] = value
-                    } else {
-                        deps.push(value)
-                    }
-                }else{
-                    deps.push(value)
-                }
-                deps = deps.filter(entry => entry !== undefined && entry !== null)
-                if (deps.length > 2){
-                    deps = deps.slice(0, 2)
-                }
-                this.data.operators[parentNodeId].internal.properties.dependencies = deps
+            let activityType = this.data.operators[parentNodeId].internal.properties.activityType
+            if (activityType != 'join' && activityType != 'append'){
+                this.data.operators[parentNodeId].internal.properties.dependencies = [value]
+                return
             }
-
+            let existing = this.data.operators[parentNodeId].internal.properties.dependencies
+            if (!Array.isArray(existing)) {
+                existing = []
+            }
+            let slot1 = null
+            let slot2 = null
+            existing.forEach(function(dep) {
+                if (dep && typeof dep === "object" && dep.connector === "input_1") {
+                    slot1 = dep
+                } else if (dep && typeof dep === "object" && dep.connector === "input_2") {
+                    slot2 = dep
+                } else if (dep != null) {
+                    if (slot1 === null) { slot1 = dep } else if (slot2 === null) { slot2 = dep }
+                }
+            })
+            if (value && typeof value === "object" && value.operatorId !== undefined && value.connector) {
+                if (value.connector === "input_1") {
+                    slot1 = value
+                } else if (value.connector === "input_2") {
+                    slot2 = value
+                } else if (slot1 === null) {
+                    slot1 = value
+                } else if (slot2 === null) {
+                    slot2 = value
+                }
+            } else if (value != null) {
+                if (slot1 === null) { slot1 = value } else if (slot2 === null) { slot2 = value }
+            }
+            let next = []
+            if (slot1 !== null) next.push(slot1)
+            if (slot2 !== null) next.push(slot2)
+            this.data.operators[parentNodeId].internal.properties.dependencies = next
         },
         setinputVal: function(operatorId,inputName, value){
             console.log("Setting input", value)
@@ -1550,18 +1561,17 @@ jQuery(function ($) {
             var toConnector = linkData.toConnector;
             var overallGroup = linkData.internal.els.overallGroup;
             let parent_node = this.getOperatorActivity(linkData.toOperator)
-            let new_dependent_list = []
-            for (let i=0; i<parent_node.dependencies.length; i++){
-                let dependent = parent_node.dependencies[i]
-                if (dependent.operatorId == linkData.fromOperator){
-                     parent_node.dependencies.splice(i, 1);
-                     new_dependent_list = parent_node.dependencies
-                     break
+            let existing_deps = Array.isArray(parent_node.dependencies) ? parent_node.dependencies : []
+            let new_dependent_list = existing_deps.filter(function(dep) {
+                if (dep && typeof dep === "object" && dep.operatorId !== undefined) {
+                    if (linkData.toConnector && dep.connector && dep.connector !== linkData.toConnector) {
+                        return true
+                    }
+                    return dep.operatorId != linkData.fromOperator
                 }
-
-            }
-            // console.log("NEW DEPENDENTS",new_dependent_list)
-            this.setDependencies(linkData.toOperator,new_dependent_list)
+                return dep != linkData.fromOperator
+            })
+            this.setDependencies(linkData.toOperator, new_dependent_list)
                 
                 
 

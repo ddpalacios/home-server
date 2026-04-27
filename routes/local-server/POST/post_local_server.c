@@ -14,11 +14,40 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <errno.h>
 #define IPSTRLEN INET6_ADDRSTRLEN
 #define ETL_BACKEND_HOST "127.0.0.1"
 #define ETL_BACKEND_PORT "5000"
+
+/* How long to wait per recv() chunk from the upstream local-server before
+ * giving up. Without a timeout the proxy can hang forever if local-server
+ * is slow or wedged, which freezes the user's browser request. 60s is more
+ * than enough for any synchronous notebook operation; long-running cells
+ * stream via SSE, which has its own (longer) per-event budget below. */
+#define UPSTREAM_RECV_TIMEOUT_SEC 60
+
+/* SSE connections are long-lived. The Spark progress sampler emits an event
+ * every ~800ms; we allow up to 30s between events so a quiet Spark stage
+ * doesn't trip a false timeout. */
+#define UPSTREAM_SSE_RECV_TIMEOUT_SEC 30
+
+/* Apply SO_RCVTIMEO / SO_SNDTIMEO and TCP_NODELAY to the upstream socket.
+ * Without these, recv() blocks indefinitely on a hung backend, send() can
+ * silently buffer, and TCP Nagle delays small SSE events by up to 40ms.
+ * Returns 0 on success, -1 if any setsockopt fails (caller can ignore). */
+static int set_proxy_socket_timeouts(int sfd, int recv_seconds) {
+    struct timeval tv = { .tv_sec = recv_seconds, .tv_usec = 0 };
+    int rc = 0;
+    if (setsockopt(sfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) rc = -1;
+    if (setsockopt(sfd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) < 0) rc = -1;
+    int yes = 1;
+    if (setsockopt(sfd, IPPROTO_TCP, TCP_NODELAY, &yes, sizeof(yes)) < 0) rc = -1;
+    return rc;
+}
 
 /* Parse the status line "HTTP/1.x NNN Reason\r\n" at the start of `response`.
    Writes status_text (caller-owned buffer of size `st_size`) and returns the
@@ -138,6 +167,7 @@ void post_ctabustracker_getpredictions(struct Socket* socket,char* http_header, 
         send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"backend unavailable\"}");
         return;
     }
+    set_proxy_socket_timeouts(sfd, UPSTREAM_RECV_TIMEOUT_SEC);
     char request[2048];
     snprintf(request, sizeof(request),
             "POST /CTA/ctabustracker/getpredictions/run HTTP/1.1\r\n"
@@ -157,6 +187,7 @@ void post_generate_phrase(struct Socket* socket,char* http_header, char*body, ch
         send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"backend unavailable\"}");
         return;
     }
+    set_proxy_socket_timeouts(sfd, UPSTREAM_RECV_TIMEOUT_SEC);
     const char *safe_body = body ? body : "";
     size_t req_size = strlen(safe_body) + 2048;
     char *request = malloc(req_size);
@@ -187,6 +218,7 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, char* rou
 		send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"backend unavailable\"}");
 		return;
 	}
+	set_proxy_socket_timeouts(sfd, UPSTREAM_RECV_TIMEOUT_SEC);
 	const char *safe_body = body ? body : "";
 	size_t req_size = strlen(safe_body) + 2048;
 	char *request = malloc(req_size);
@@ -274,6 +306,7 @@ void post_to_local_no_reply(const char* route, const char* body){
 	if (sfd < 0) {
 		return;
 	}
+	set_proxy_socket_timeouts(sfd, UPSTREAM_RECV_TIMEOUT_SEC);
 	const char *safe_body = body ? body : "";
 	size_t req_size = strlen(safe_body) + 2048;
 	char *request = malloc(req_size);
@@ -304,6 +337,7 @@ void post_to_local_no_reply(const char* route, const char* body){
 		send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"backend unavailable\"}");
 		return;
 	}
+	set_proxy_socket_timeouts(sfd, UPSTREAM_RECV_TIMEOUT_SEC);
 	size_t req_size = strlen(route) + 512;
 	char *request = malloc(req_size);
 	if (!request) {
@@ -485,6 +519,7 @@ void delete_to_local(struct Socket* socket, char* http_header, char* body, char*
 		send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"backend unavailable\"}");
 		return;
 	}
+	set_proxy_socket_timeouts(sfd, UPSTREAM_RECV_TIMEOUT_SEC);
 	const char *safe_body = body ? body : "";
 	size_t req_size = strlen(safe_body) + 2048;
 	char *request = malloc(req_size);
@@ -578,6 +613,10 @@ void proxy_sse_to_local(struct Socket* socket, char* http_header, char* body, ch
         send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"backend unavailable\"}");
         return;
     }
+    /* SSE: longer per-event recv timeout (events are sparse during quiet
+     * Spark stages), and TCP_NODELAY so individual events aren't held up
+     * by Nagle on the upstream socket. */
+    set_proxy_socket_timeouts(sfd, UPSTREAM_SSE_RECV_TIMEOUT_SEC);
 
     char request[2048];
     snprintf(request, sizeof(request),
@@ -635,6 +674,7 @@ void post_run_activity(struct Socket* socket,char* http_header, char*body, char*
 		send_JSON_response_code(socket->cSSL, 502, "{\"error\":\"backend unavailable\"}");
 		return;
 	}
+	set_proxy_socket_timeouts(sfd, UPSTREAM_RECV_TIMEOUT_SEC);
 	const char *safe_body = body ? body : "";
 	size_t req_size = strlen(safe_body) + 2048;
 	char *request = malloc(req_size);

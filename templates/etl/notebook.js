@@ -126,6 +126,9 @@
   function showNotebookView() {
     if (typeof window.hideHomeView === "function") window.hideHomeView();
     if (typeof window.hideSettingsView === "function") window.hideSettingsView();
+    if (window.SqlUI && typeof window.SqlUI.closeSqlView === "function") {
+      window.SqlUI.closeSqlView();
+    }
     document.body.classList.add("notebook-mode");
     const ws = document.getElementById("notebook_workspace");
     if (ws) ws.hidden = false;
@@ -1480,13 +1483,18 @@
     { value: "doughnut",label: "Doughnut" },
     { value: "scatter", label: "Scatter" },
   ];
+  /* Aggregation operates on the Y column — grouping is by X. There used
+   * to be a "None (raw rows)" option but it produced bar charts with one
+   * bar per row, so the X axis showed every duplicate label
+   * ("con con con by by") instead of the unique values you actually
+   * want. Bar/line/area/pie always need grouped X; if you want one
+   * point per row (no grouping at all) use the scatter chart type. */
   const AGGREGATIONS = [
-    { value: "none",  label: "None (raw rows)" },
-    { value: "sum",   label: "Sum by X" },
-    { value: "avg",   label: "Average by X" },
-    { value: "count", label: "Count by X" },
-    { value: "min",   label: "Min by X" },
-    { value: "max",   label: "Max by X" },
+    { value: "sum",   label: "Sum of Y" },
+    { value: "avg",   label: "Average of Y" },
+    { value: "count", label: "Count of rows" },
+    { value: "min",   label: "Min of Y" },
+    { value: "max",   label: "Max of Y" },
   ];
 
   // Pleasant qualitative palette (Tableau-ish) for slices/series.
@@ -1509,6 +1517,32 @@
     });
   }
 
+  function hasDuplicateXValues(rows, xi) {
+    /* Returns true if column `xi` has at least one repeated value among
+     * the first 200 rows. Used to pick a sensible default aggregation:
+     * categorical X (many duplicates) needs grouping, otherwise the chart
+     * shows the same label N times in a row. */
+    const seen = new Set();
+    const limit = Math.min(rows.length, 200);
+    for (let r = 0; r < limit; r++) {
+      const v = rows[r][xi];
+      const k = v == null ? "" : String(v);
+      if (seen.has(k)) return true;
+      seen.add(k);
+    }
+    return false;
+  }
+
+  function defaultAggregationFor(rows, xi, yi, numericMask) {
+    /* Always group by X. We pick "sum" when summing makes sense
+     * (numeric Y, distinct from X) and "count" otherwise. Even for
+     * timeseries-style data with unique X values, sum-of-one-row equals
+     * the row's value, so the visual is identical to "raw rows" while
+     * preventing duplicate-X confusion. */
+    if (xi === yi) return "count";
+    return numericMask[yi] ? "sum" : "count";
+  }
+
   function renderChartBuilder(columns, rows) {
     const panel = el("div", { class: "nb-chart-panel" }, []);
     const numericMask = detectNumericColumns(columns, rows);
@@ -1522,7 +1556,7 @@
       type: "bar",
       xCol: defaultX,
       yCol: defaultY,
-      agg: "none",
+      agg: defaultAggregationFor(rows, defaultX, defaultY, numericMask),
     };
 
     const controls = el("div", { class: "nb-chart-controls" }, []);
@@ -1553,8 +1587,26 @@
     const colOptions = columns.map(function (c, i) { return { value: String(i), label: c }; });
 
     const typeSel = makeSelect(CHART_TYPES, state.type, function (v) { state.type = v; redraw(); });
-    const xSel    = makeSelect(colOptions, String(state.xCol), function (v) { state.xCol = parseInt(v, 10); redraw(); });
-    const ySel    = makeSelect(colOptions, String(state.yCol), function (v) { state.yCol = parseInt(v, 10); redraw(); });
+    /* When X or Y change, recompute the auto-default aggregation and
+     * sync the agg dropdown so the chart looks right out of the box.
+     * (User-supplied agg sticks across redraws otherwise.) */
+    function resyncAggDefault() {
+      const nextAgg = defaultAggregationFor(rows, state.xCol, state.yCol, numericMask);
+      if (nextAgg !== state.agg) {
+        state.agg = nextAgg;
+        if (aggSel) aggSel.value = nextAgg;
+      }
+    }
+    const xSel    = makeSelect(colOptions, String(state.xCol), function (v) {
+      state.xCol = parseInt(v, 10);
+      resyncAggDefault();
+      redraw();
+    });
+    const ySel    = makeSelect(colOptions, String(state.yCol), function (v) {
+      state.yCol = parseInt(v, 10);
+      resyncAggDefault();
+      redraw();
+    });
     const aggSel  = makeSelect(AGGREGATIONS, state.agg, function (v) { state.agg = v; redraw(); });
 
     controls.appendChild(field("Type", typeSel));
@@ -1581,43 +1633,43 @@
       const xi = state.xCol, yi = state.yCol;
       const labels = [];
       const values = [];
-      if (state.agg === "none") {
-        rows.forEach(function (r) {
-          labels.push(String(r[xi] == null ? "" : r[xi]));
+      // Bar/line/area/pie all group by X. Anything that snuck through
+      // as "none" (legacy state, hand-edited) becomes a sensible sum/
+      // count automatically — never duplicate-X. Scatter bypasses this
+      // path entirely (see redraw()).
+      const VALID = { sum: 1, avg: 1, count: 1, min: 1, max: 1 };
+      const aggMode = VALID[state.agg]
+        ? state.agg
+        : (numericMask[yi] && xi !== yi ? "sum" : "count");
+      const groups = new Map();
+      rows.forEach(function (r) {
+        const key = String(r[xi] == null ? "" : r[xi]);
+        if (!groups.has(key)) groups.set(key, { sum: 0, count: 0, min: Infinity, max: -Infinity });
+        const g = groups.get(key);
+        if (aggMode === "count") {
+          g.count += 1;
+        } else {
           const num = Number(r[yi]);
-          values.push(isNaN(num) ? 0 : num);
-        });
-      } else {
-        const groups = new Map();
-        rows.forEach(function (r) {
-          const key = String(r[xi] == null ? "" : r[xi]);
-          if (!groups.has(key)) groups.set(key, { sum: 0, count: 0, min: Infinity, max: -Infinity });
-          const g = groups.get(key);
-          if (state.agg === "count") {
+          if (!isNaN(num)) {
+            g.sum += num;
             g.count += 1;
-          } else {
-            const num = Number(r[yi]);
-            if (!isNaN(num)) {
-              g.sum += num;
-              g.count += 1;
-              if (num < g.min) g.min = num;
-              if (num > g.max) g.max = num;
-            }
+            if (num < g.min) g.min = num;
+            if (num > g.max) g.max = num;
           }
-        });
-        groups.forEach(function (g, key) {
-          labels.push(key);
-          let v;
-          if (state.agg === "sum")        v = g.sum;
-          else if (state.agg === "avg")   v = g.count ? g.sum / g.count : 0;
-          else if (state.agg === "count") v = g.count;
-          else if (state.agg === "min")   v = isFinite(g.min) ? g.min : 0;
-          else if (state.agg === "max")   v = isFinite(g.max) ? g.max : 0;
-          else                            v = g.sum;
-          values.push(v);
-        });
-      }
-      return { labels: labels, values: values };
+        }
+      });
+      groups.forEach(function (g, key) {
+        labels.push(key);
+        let v;
+        if (aggMode === "sum")        v = g.sum;
+        else if (aggMode === "avg")   v = g.count ? g.sum / g.count : 0;
+        else if (aggMode === "count") v = g.count;
+        else if (aggMode === "min")   v = isFinite(g.min) ? g.min : 0;
+        else if (aggMode === "max")   v = isFinite(g.max) ? g.max : 0;
+        else                          v = g.sum;
+        values.push(v);
+      });
+      return { labels: labels, values: values, autoGrouped: aggMode !== state.agg, autoMode: aggMode };
     }
 
     function redraw() {
@@ -1638,7 +1690,13 @@
       }
 
       let chartType = state.type;
-      let dataset = { label: columns[state.yCol] || "value", data: series.values };
+      // Surface the aggregation in the legend, e.g. "sum(price)" or "count".
+      const effectiveAgg = series.autoMode || state.agg;
+      const yName = columns[state.yCol] || "value";
+      const seriesLabel = effectiveAgg === "count"
+        ? "count"
+        : effectiveAgg + "(" + yName + ")";
+      let dataset = { label: seriesLabel, data: series.values };
 
       if (chartType === "scatter") {
         const xi = state.xCol, yi = state.yCol;
@@ -1905,6 +1963,11 @@
     exportIpynb: exportIpynb,
     toggleVarsPanel: toggleVarsPanel,
     refreshVars: refreshVars,
+    /* Shared with sql_ui.js so the SQL workspace renders results with
+     * the same look/feel as %%sparksql in notebooks. Pass a value-shape
+     * dict { columns:[...], rows:[[...]], total_rows, truncated,
+     * chartable: true } and an `allowDownload` flag. */
+    renderDataFrame: renderDataFrame,
     _internal: { NB: NB },
   };
 })();

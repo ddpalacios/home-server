@@ -253,6 +253,108 @@ void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, 
       free(result);
       return;
     }
+    if (strstr(route, "/blob-storage/etl/sql/load") != NULL){
+      /* Load one SQL script. Mirrors dataflow/pipeline load. */
+      char* sqlId = get_query_parameter(route, "sqlId");
+      if (sqlId == NULL){
+        send_response_code(cSSL, 400);
+        return;
+      }
+      char path[2048];
+      snprintf(path, sizeof(path), "../blob-storage/raw/etl/sql/%s.json", sqlId);
+      char* result = get_file_buffer(path);
+      if (result == NULL){
+        send_response_code(cSSL, 404);
+        return;
+      }
+      send_JSON_response_code(cSSL, 200, result);
+      free(result);
+      return;
+    }
+    if (strstr(route, "/blob-storage/etl/sql/list") != NULL){
+      /* List SQL scripts for a googleId. Mirrors dataflow/pipeline list:
+         iterate the sql directory, read each json, filter by google_id,
+         return [{sql_id, name, description, updated_at}]. */
+      char* googleId = get_query_parameter(route, "googleId");
+      if (googleId == NULL){
+        send_response_code(cSSL, 400);
+        return;
+      }
+      const char *home = getenv("HOME");
+      if (!home || !home[0]){
+        send_response_code(cSSL, 500);
+        return;
+      }
+      char sql_dir[2048];
+      snprintf(sql_dir, sizeof(sql_dir), "%s/home-server/blob-storage/raw/etl/sql", home);
+      cJSON* root = create_json_object();
+      cJSON* values = cJSON_AddArrayToObject(root, "values");
+      DIR *dir = opendir(sql_dir);
+      if (dir != NULL){
+        struct dirent *entry;
+        while ((entry = readdir(dir)) != NULL){
+          if (entry->d_type != DT_REG){
+            continue;
+          }
+          if (!strstr(entry->d_name, ".json")){
+            continue;
+          }
+          char path[2048];
+          snprintf(path, sizeof(path), "%s/home-server/blob-storage/raw/etl/sql/%s", home, entry->d_name);
+          char* content = get_file_buffer(path);
+          if (content == NULL){
+            continue;
+          }
+          cJSON* parsed = cJSON_Parse(content);
+          free(content);
+          if (parsed == NULL){
+            continue;
+          }
+          cJSON* stored_google = cJSON_GetObjectItem(parsed, "google_id");
+          if (!cJSON_IsString(stored_google) || strcmp(stored_google->valuestring, googleId) != 0){
+            cJSON_Delete(parsed);
+            continue;
+          }
+          cJSON* item = cJSON_CreateObject();
+          char sql_id[256];
+          snprintf(sql_id, sizeof(sql_id), "%s", entry->d_name);
+          char* dot = strstr(sql_id, ".json");
+          if (dot){
+            *dot = '\0';
+          }
+          cJSON* stored_id = cJSON_GetObjectItem(parsed, "sql_id");
+          if (cJSON_IsString(stored_id)) {
+            cJSON_AddStringToObject(item, "sql_id", stored_id->valuestring);
+          } else {
+            cJSON_AddStringToObject(item, "sql_id", sql_id);
+          }
+          cJSON* name = cJSON_GetObjectItem(parsed, "name");
+          if (cJSON_IsString(name)) {
+            cJSON_AddStringToObject(item, "name", name->valuestring);
+          } else {
+            cJSON_AddStringToObject(item, "name", "Untitled SQL");
+          }
+          cJSON* description = cJSON_GetObjectItem(parsed, "description");
+          if (cJSON_IsString(description)) {
+            cJSON_AddStringToObject(item, "description", description->valuestring);
+          } else {
+            cJSON_AddStringToObject(item, "description", "");
+          }
+          cJSON* updated = cJSON_GetObjectItem(parsed, "updated_at");
+          if (cJSON_IsNumber(updated)) {
+            cJSON_AddNumberToObject(item, "updated_at", updated->valuedouble);
+          }
+          cJSON_AddItemToArray(values, item);
+          cJSON_Delete(parsed);
+        }
+        closedir(dir);
+      }
+      char* json_string = cJSON_Print(root);
+      send_JSON_response_code(cSSL, 200, json_string);
+      free(json_string);
+      cJSON_Delete(root);
+      return;
+    }
     if (strstr(route, "/blob-storage/etl/pipeline/list") != NULL){
       char* googleId = get_query_parameter(route, "googleId");
       if (googleId == NULL){
@@ -524,7 +626,7 @@ void get_blob_storage_files(struct Socket* socket,char* http_header, char*body, 
         idx++;
       }
       rel_path[idx] = '\0';
-      if (rel_path[0] == '\0' || rel_path[0] == '/' || strstr(rel_path, "..") != NULL || strchr(rel_path, '\\') != NULL){
+      if (rel_path[0] == '/' || strstr(rel_path, "..") != NULL || strchr(rel_path, '\\') != NULL){
         send_response_code(cSSL, 400);
         return;
       }
