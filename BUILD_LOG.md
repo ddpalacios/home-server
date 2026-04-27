@@ -544,3 +544,71 @@ Saved JSON shape (one row in `settings.call`):
 Old fields (`pagination_mode`, `unroll_by`, etc.) are migrated to the
 new `pagination.*` shape on load via `_migrateLegacyPagination`.
 
+
+## Phase 3 — Implementation results so far
+
+| Slice | Commit(s) | Notes |
+|---|---|---|
+| 1 — Collapsible sections shell | home-server `8587c95` | 95% rewrite of `http_request.js`. Five `<details>` sections, status badges, normalized `_config` model, autosave wired, legacy `pagination_mode` migrated to new `pagination` shape on load. |
+| 2 — Test Request endpoint + UI | local-server `<sha>` + home-server `f486e1a` | New `local-server/http_request_test_route.py` with `POST /etl/http_request/test`. 8 tests. C-server proxies the route. UI wired in Slice 1 — clicking "+ Test Request" sends one diagnostic request and renders status / headers / body preview. |
+| 3 — Headers polish | folded into `8587c95` | Quick-add chips (Authorization, Content-Type, Accept, User-Agent), drag-to-reorder via jQuery UI sortable, sensitive-value masking (👁 button) for Authorization/X-API-Key/Cookie/X-Auth-Token/Proxy-Authorization, native `list=hr-header-suggestions` autocomplete for header name, helper line about `{{name}}` variables. |
+| 4 — Body multi-format | folded into `8587c95` | Format selector (None / JSON / Form-encoded / Raw text / GraphQL). JSON has live validation + Format button. Form-encoded uses an inline k/v editor. GraphQL uses two textareas (query + variables). Body section auto-hides for GET/HEAD/OPTIONS/DELETE. Auto-Content-Type written into headers when format changes. Multipart deferred — the previous turn removed the upload-from-browser affordance for the Blob Storage activity, so the multipart File rows would need a separate path-picker integration that's out of scope for this sweep. |
+| 5 — Pagination wizard | folded into `8587c95` | Five strategy cards with descriptions + show-example: Offset/Limit, Page Number, Cursor, Link Header, Custom Field. Per-strategy fields with helper text under each + `(?)` tooltips. Step 3 safety limits (max_pages, delay_ms, records_path) always shown. |
+
+Slices 3-5 ship as part of the Slice 1 rewrite because they are
+mutually-coupled rendering responsibilities of the same single-class
+component — splitting them into separate commits would have meant
+writing `http_request.js` four times in a row. Each section has clear
+JSDoc-style comments naming its slice for future archaeology.
+
+
+| 6 — Pagination runtime | local-server `<sha>` | New `local-server/http_pagination.py` (~340 LOC) — five-strategy orchestrator with variable resolution, records-path extraction, max-pages safety, configurable inter-page delay, and an RFC-5988 Link-header parser. Wired into `perform_http_call` so saved activities with the new `pagination` shape execute through it; legacy shape (`pagination_mode`+flat fields) still routes through the old code path. **24 new tests** for all five strategies, max-pages cap, delay, vars resolution, records auto-detect, link parsing — full backend suite **269 passing**. |
+| 7 — Advanced + final polish | home-server `<sha>` | Footer with a live validation summary (URL required + valid, JSON body parses, all pagination required-fields per strategy). Reset-to-saved button. Section badges populated correctly throughout. Advanced section already shipped in Slice 1: timeout / follow-redirects / verify-SSL toggles, retry dropdown (none / 3 / 5), output-destination PathPicker. |
+
+## Phase 4 — Verification
+
+- Backend full suite: `python3 -m pytest -q` → **269 passed, 1 warning**
+  (24 new pagination + 8 new test-endpoint + 237 prior).
+- Frontend: `node -c http_request.js` clean.
+- C home-server: rebuilt cleanly with two new proxy entries
+  (`/etl/http_request/test`, plus the existing preview/sql proxies).
+
+### Manual checklist (run after restarting both servers)
+
+- [ ] `python3 ~/local-server/local-server.py` (so the new
+      `http_request_test_bp` and the `http_pagination` module are
+      registered).
+- [ ] `~/home-server/build/home-server` (so the new proxy entry is
+      live).
+- [ ] Hard-reload the browser.
+- [ ] Drag an HTTP Request activity onto the canvas. Open settings.
+      **Five collapsible sections** appear with badges (Request shows
+      method, Headers shows count, etc.). Only the Request section is
+      expanded by default.
+- [ ] Method dropdown is color-tinted: GET green, POST blue, PUT
+      orange, PATCH yellow, DELETE red, HEAD/OPTIONS grey.
+- [ ] URL field shows red border on malformed input, yellow on http://.
+- [ ] Click "+ Test Request" with a known URL like
+      `https://httpbin.org/get`. Status pill + headers + body preview
+      render below the button.
+- [ ] Headers section: click "+ Authorization" chip → row pre-filled.
+      The 👁 button toggles password masking on/off. Drag rows to
+      reorder.
+- [ ] Switch method to POST → Body section auto-shows. Pick JSON →
+      type bad JSON → red border + "Invalid JSON" message under the
+      textarea. Format button reflows valid JSON.
+- [ ] Pick GraphQL → two textareas (Query + Variables).
+- [ ] Pagination: enable. Five strategy cards appear with
+      descriptions and "Show example" details. Pick Offset/Limit →
+      offset/limit/page-size fields with helper text + (?) tooltips.
+      Switch to Cursor → fields change, helper text matches cursor
+      strategy. Pick Link Header → only two fields (header + rel).
+- [ ] Set max pages to 5 + run. Backend logs at most 5 paginated
+      requests; if more pages exist, response carries
+      `meta.hit_max_pages: true`.
+- [ ] Reload the page; the activity round-trips with all settings
+      preserved.
+- [ ] Open an existing HTTP Request activity saved BEFORE this build
+      (legacy `pagination_mode: 'continuation'`). Settings load with
+      pagination.strategy='cursor' selected and the right fields
+      populated — `_migrateLegacyPagination` did its job.

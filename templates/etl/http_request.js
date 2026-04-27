@@ -240,14 +240,18 @@ class Http_Request_Activity extends Activity {
         advDetails.appendChild(this._renderAdvancedBody());
         root.appendChild(advDetails);
 
-        /* Reset button (reverts to last saved config) */
-        const resetWrap = this._el("div", { class: "hr-reset-wrap" });
+        /* Footer: validation summary + Reset button. */
+        const footer = this._el("div", { class: "hr-footer" });
+        const validationSummary = this._el("div", { class: "hr-validation-summary" });
+        this._validationSummary = validationSummary;
+        footer.appendChild(validationSummary);
         const resetBtn = this._el("button", {
             class: "buttons", type: "button", text: "Reset to saved",
             onclick: () => this._resetToSaved(),
         });
-        resetWrap.appendChild(resetBtn);
-        root.appendChild(resetWrap);
+        footer.appendChild(resetBtn);
+        root.appendChild(footer);
+        this._refreshValidation();
 
         this._applyMethodVisibility();
         return root;
@@ -1180,9 +1184,67 @@ class Http_Request_Activity extends Activity {
             this.flowchart.flowchart("setSettings", this.activityId, settings);
         }
         this._refreshBadges();
+        this._refreshValidation();
         if (typeof window.flowchartSchedulePipelineSave === "function") {
             window.flowchartSchedulePipelineSave();
         }
+    }
+
+    _validateConfig() {
+        const issues = [];
+        const c = this._config;
+        const url = (c.url || "").trim();
+        if (!url) {
+            issues.push("URL is required.");
+        } else {
+            try { new URL(url.replace(/\{\{[^}]+\}\}/g, "PLACEHOLDER")); }
+            catch (e) { issues.push("URL appears malformed."); }
+        }
+        if (c.body_format === "json" && this._bodyApplies()) {
+            const v = (c.body || "").trim();
+            if (v) {
+                try { JSON.parse(v.replace(/\{\{[^}]+\}\}/g, '""')); }
+                catch (e) { issues.push("Body is not valid JSON."); }
+            }
+        }
+        if (c.pagination?.enabled) {
+            const p = c.pagination;
+            if (p.strategy === "offset") {
+                if (!p.offset_param) issues.push("Pagination: offset parameter name is required.");
+                if (!p.limit_param)  issues.push("Pagination: limit parameter name is required.");
+                if (!p.limit_value || p.limit_value < 1) issues.push("Pagination: page size must be ≥ 1.");
+                if (p.stop_when === "total" && !p.total_field) issues.push("Pagination: total count field is required when stop=Total count.");
+            } else if (p.strategy === "page") {
+                if (!p.page_param) issues.push("Pagination: page parameter name is required.");
+                if (p.stop_when === "has_more" && !p.has_more_field) issues.push("Pagination: has-more field is required.");
+                if (p.stop_when === "total_pages" && !p.total_pages_field) issues.push("Pagination: total pages field is required.");
+            } else if (p.strategy === "cursor") {
+                if (!p.cursor_param) issues.push("Pagination: cursor parameter name is required.");
+                if (!p.next_cursor_field) issues.push("Pagination: next-cursor field path is required.");
+            } else if (p.strategy === "link") {
+                if (!p.link_header) issues.push("Pagination: link header name is required.");
+                if (!p.link_rel) issues.push("Pagination: rel value is required.");
+            } else if (p.strategy === "custom") {
+                if (!p.next_url_field) issues.push("Pagination: next-page URL field path is required.");
+            }
+        }
+        return issues;
+    }
+
+    _refreshValidation() {
+        if (!this._validationSummary) return;
+        const issues = this._validateConfig();
+        const root = this._validationSummary;
+        root.innerHTML = "";
+        if (!issues.length) {
+            root.classList.remove("is-active");
+            return;
+        }
+        root.classList.add("is-active");
+        root.appendChild(this._el("strong", { text: "Configuration issues:" }));
+        const ul = this._el("ul", { class: "hr-validation-list" });
+        issues.forEach((m) => ul.appendChild(this._el("li", { text: m })));
+        root.appendChild(ul);
     }
 
     _legacyModeFor(p) {
