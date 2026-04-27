@@ -116,6 +116,10 @@ void process_route(struct Socket *socket, char* http_header, char* body){
 		get_gol_script(cSSL, http_header, "/etl/dataflow.js");
 	} else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/etl/pipeline.js") == 0) {
 		get_gol_script(cSSL, http_header, "/etl/pipeline.js");
+	} else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/etl/notebook_activity.js") == 0) {
+		get_gol_script(cSSL, http_header, "/etl/notebook_activity.js");
+	} else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/etl/sql_activity.js") == 0) {
+		get_gol_script(cSSL, http_header, "/etl/sql_activity.js");
 	} else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/etl/http_request.js") == 0) {
 		get_gol_script(cSSL, http_header, "/etl/http_request.js");
 	} else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/etl/jquery.flowchart.js") == 0) {
@@ -154,6 +158,18 @@ void process_route(struct Socket *socket, char* http_header, char* body){
 		get_from_local(socket, http_header, body, route);
 	} else if (strcmp(request_type, "GET") == 0 && strstr(route, "/etl/pipeline/runs") != NULL) {
 		get_from_local(socket, http_header, body, route);
+	/* ETL parallel-pipeline executor routes (slices 3, 3b, 4):
+	 * - SSE event stream per run (per-activity status, completion).
+	 * - Per-run history detail.
+	 * - Cancel whole run / single in-flight activity. */
+	} else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/etl/pipeline/events/", 21) == 0) {
+		proxy_sse_to_local(socket, http_header, body, route);
+	} else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/etl/pipeline/run?", 18) == 0) {
+		get_from_local(socket, http_header, body, route);
+	} else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/etl/pipeline/cancel") == 0) {
+		post_to_local(socket, http_header, body, route);
+	} else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/etl/pipeline/cancel_activity") == 0) {
+		post_to_local(socket, http_header, body, route);
 	} else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/etl/google/status") == 0) {
 		get_from_local(socket, http_header, body, route);
 	} else if (strcmp(request_type, "GET") == 0 && strstr(route, "/etl/google/callback") != NULL) {
@@ -164,6 +180,29 @@ void process_route(struct Socket *socket, char* http_header, char* body){
 		get_gol_script(cSSL, http_header, "/etl/notebook.js");
 	} else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/etl/notebook.css") == 0) {
 		get_gol_script(cSSL, http_header, "/etl/notebook.css");
+
+	/* ETL shared path picker (used by activity settings panels). */
+	} else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/etl/path_picker.js") == 0) {
+		get_gol_script(cSSL, http_header, "/etl/path_picker.js");
+
+	/* ETL SQL activity static assets + backend proxy. */
+	} else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/etl/sql_persistence.js") == 0) {
+		get_gol_script(cSSL, http_header, "/etl/sql_persistence.js");
+	} else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/etl/sql_ui.js") == 0) {
+		get_gol_script(cSSL, http_header, "/etl/sql_ui.js");
+	} else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/etl/sql.css") == 0) {
+		get_gol_script(cSSL, http_header, "/etl/sql.css");
+	/* ETL Blob Storage Data Preview. Shares Spark resources with /etl/sql. */
+	} else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/etl/preview") == 0) {
+		post_to_local(socket, http_header, body, route);
+	} else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/etl/preview/cancel") == 0) {
+		post_to_local(socket, http_header, body, route);
+	} else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/etl/sql/execute") == 0) {
+		post_to_local(socket, http_header, body, route);
+	} else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/etl/sql/cancel") == 0) {
+		post_to_local(socket, http_header, body, route);
+	} else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/etl/sql/tables", 15) == 0) {
+		get_from_local(socket, http_header, body, route);
 	} else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/etl/notebook/execute") == 0) {
 		post_to_local(socket, http_header, body, route);
 	} else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/etl/notebook/lint") == 0) {
