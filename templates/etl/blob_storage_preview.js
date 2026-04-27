@@ -245,7 +245,7 @@
     }
   }
 
-  /* -------- Refresh (stubbed in this slice) -------------------------- */
+  /* -------- Refresh + cancel (live fetch) ---------------------------- */
 
   function refreshPreview(force) {
     var s = getActiveState();
@@ -253,20 +253,84 @@
     if (!s.value || !s.value.zone || !s.value.path) {
       s.status = "no-path"; render(); return;
     }
-    /* TODO(slice 4): real fetch to /etl/preview. For now, this stub
-     * exists so the state machine + button wiring can be inspected on
-     * the canvas without a backend round-trip. */
+    if (s.status === "loading") return;
+
+    var requestId = "prev_" + Date.now().toString(16) + Math.random().toString(16).slice(2, 8);
+    var abortCtrl = ("AbortController" in window) ? new AbortController() : null;
+    s.requestId = requestId;
+    s.abortCtrl = abortCtrl;
     s.status = "loading";
+    s.lastError = null;
+    s.body = null;
     render();
+
+    fetch("/etl/preview", {
+      method: "POST",
+      headers: new Headers({
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      }),
+      body: JSON.stringify({
+        request_id: requestId,
+        zone: s.value.zone,
+        path: s.value.path,
+        limit: 1000,
+        /* The brief makes Refresh always mean "show me fresh". */
+        no_cache: true,
+      }),
+      signal: abortCtrl ? abortCtrl.signal : undefined,
+    }).then(function (r) {
+      return r.json().then(function (j) { return { ok: r.ok, status: r.status, body: j }; })
+        .catch(function () { return { ok: r.ok, status: r.status, body: null }; });
+    }).then(function (resp) {
+      /* The user may have switched activities while we were in flight;
+       * drop the response on the floor in that case so we don't paint
+       * over the wrong state. */
+      if (BS.states[BS.activeId] !== s || s.requestId !== requestId) return;
+      if (resp.body && resp.body.status === "ok") {
+        s.status = "loaded";
+        s.body = resp.body;
+        s.loadedAt = Math.floor(Date.now() / 1000);
+        s.lastError = null;
+      } else {
+        s.status = "error";
+        s.lastError = {
+          kind: (resp.body && resp.body.error_kind) || "runtime",
+          message: (resp.body && resp.body.message) || ("HTTP " + resp.status),
+        };
+      }
+      s.requestId = null;
+      s.abortCtrl = null;
+      render();
+    }).catch(function (err) {
+      if (s.requestId !== requestId) return;
+      if (err && err.name === "AbortError") {
+        s.status = "error";
+        s.lastError = { kind: "cancelled", message: "Preview cancelled." };
+      } else {
+        s.status = "error";
+        s.lastError = { kind: "network", message: String(err && err.message || err) };
+      }
+      s.requestId = null;
+      s.abortCtrl = null;
+      render();
+    });
   }
 
   function cancelInFlight() {
     var s = getActiveState();
     if (!s) return;
-    /* TODO(slice 4): real cancel via AbortController + /etl/preview/cancel. */
-    if (s.status === "loading") {
-      s.status = "ready";
-      render();
+    var rid = s.requestId;
+    if (s.abortCtrl) {
+      try { s.abortCtrl.abort(); } catch (e) { /* */ }
+    }
+    if (rid) {
+      /* Best-effort server-side cancellation. */
+      fetch("/etl/preview/cancel", {
+        method: "POST",
+        headers: new Headers({ "Content-Type": "application/json" }),
+        body: JSON.stringify({ request_id: rid }),
+      }).catch(function () { /* */ });
     }
   }
 
