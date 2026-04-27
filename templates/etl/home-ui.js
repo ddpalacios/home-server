@@ -2638,6 +2638,73 @@ $(document).ready(function() {
     multipleLinksOnOutput: true
   });
 
+  /* Universal autosave: wrap every user-driven mutation method on the
+   * jQuery-flowchart widget prototype so any settings change in any
+   * activity (existing or future) automatically schedules a save.
+   *
+   * Without this, individual activity files had to remember to call
+   * window.flowchartSchedulePipelineSave themselves — only http_request
+   * and replace did. Every other activity (filter, sort, join, cast,
+   * pivot, dedupe, custom_column, blob_storage, etc.) silently let
+   * settings sit in memory until the next manual save. Patching at the
+   * prototype level gives us complete coverage in one place.
+   *
+   * Excluded methods:
+   *   - setData             (mass-load — saving what was just loaded is wasted I/O)
+   *   - setinputVal/setoutputVal (runtime data propagation, not user intent)
+   *   - update_activity_inputs/outputs, run_activity (runtime)
+   *
+   * Re-entry guard: Flow2Text's synchronous loop calls
+   * activity.get_operation_settings() which calls setSettings on every
+   * activity — left unguarded, that re-arms the save timer and creates
+   * a save loop. Flow2Text below sets suspendPipelineSave for its
+   * synchronous body so wrapped methods bail out early. */
+  (function wrapFlowchartAutosave() {
+    if (!$.flowchart || !$.flowchart.flowchart || !$.flowchart.flowchart.prototype) {
+      console.warn("[autosave] flowchart widget prototype not found — autosave wrap skipped.");
+      return;
+    }
+    var proto = $.flowchart.flowchart.prototype;
+    var WRAP = [
+      "setSettings",
+      "setLinkMainColor",
+      "setFileType",
+      "setDependency",
+      "addSelectColumn",
+      "removeSelectColumn",
+      "addCustomValue",
+      "changeDataTypeSelectColumn",
+      "renameSelectColumn",
+      "addDropColumn",
+      "removeDropColumn",
+      "addLink",
+      "createLink",
+      "deleteLink",
+      "createOperator",
+      "addOperator",
+      "deleteOperator",
+      "deleteSelected",
+      "setOperatorTitle",
+      "setOperatorBody",
+    ];
+    WRAP.forEach(function (name) {
+      var orig = proto[name];
+      if (typeof orig !== "function") return;
+      if (orig.__autosave_wrapped) return;
+      var wrapped = function () {
+        var rv = orig.apply(this, arguments);
+        try {
+          if (typeof window.flowchartSchedulePipelineSave === "function") {
+            window.flowchartSchedulePipelineSave();
+          }
+        } catch (e) { /* don't let autosave wrappers break user actions */ }
+        return rv;
+      };
+      wrapped.__autosave_wrapped = true;
+      proto[name] = wrapped;
+    });
+  })();
+
   if (!pipeline_id) {
     try {
       var storedPipelineId = localStorage.getItem("etl_pipeline_id") || "";
@@ -7861,6 +7928,14 @@ $(document).ready(function() {
   }
 
   function Flow2Text(retryCount) {
+    /* Suspend autosave during the synchronous part of this function.
+     * The wrappers installed at the top of $(document).ready wrap
+     * setSettings (called by every activity's get_operation_settings)
+     * and would otherwise re-arm the timer mid-loop, looping us back
+     * here forever. The 50ms debounce alone wasn't enough — each
+     * setSettings cleared and re-armed the timer. */
+    var prevSuspend = suspendPipelineSave;
+    suspendPipelineSave = true;
     var data = null;
     try {
       var operators = $flowchart.flowchart("getOperators") || {};
@@ -7882,6 +7957,7 @@ $(document).ready(function() {
       }
       data = $flowchart.flowchart("getData", pipeline_id || "local");
     } catch (error) {
+      suspendPipelineSave = prevSuspend;
       if (retryCount && retryCount < 3) {
         setTimeout(function() {
           Flow2Text(retryCount + 1);
@@ -7889,6 +7965,7 @@ $(document).ready(function() {
       }
       return;
     }
+    suspendPipelineSave = prevSuspend;
     var googleId = "unknown";
     if (window.googleLoginProfile && (window.googleLoginProfile.google_id || window.googleLoginProfile.email)) {
       googleId = window.googleLoginProfile.google_id || window.googleLoginProfile.email;
