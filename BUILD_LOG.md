@@ -397,3 +397,150 @@ $ git -C ~/local-server log --oneline -1
 To roll back any single slice without touching the others:
 `git revert <commit_hash>` in the appropriate repo, then `make` the
 home-server and restart both processes.
+
+# BUILD_LOG — HTTP Request settings overhaul
+
+End-to-end build, 7 slices, commits per slice.
+
+## Phase 1 — Discovery
+
+### Stack reality (matches every prior log entry)
+
+- Plain JS, no TypeScript, no bundler. JSDoc types are the convention.
+- jQuery 3.2 + jQuery UI + jquery.flowchart + CodeMirror 5 + Chart.js.
+  No formik / no Material / no Ant. Form primitives are plain `<input>`
+  / `<select>` / `<textarea>` styled with `.input`, `.select`,
+  `.buttons`, `.field`, `.label` classes from `etl-design-system.css`.
+- Code editor: **CodeMirror 5** (Monaco isn't loaded). The SQL workspace
+  uses CM5 with sql + sparksql; same convention applies here. JSON
+  editing needs the javascript mode — adding it to `home.html`.
+- Tooltip: native `title=""` attribute. No library.
+- Collapsible sections: `<details>` / `<summary>` (HTML-native), already
+  used by the sidebar panels. No accordion library.
+- PathPicker: `window.createPathPicker` (built earlier). Reused for
+  multipart File rows + output destination.
+
+### 1. HTTP Request activity today
+
+- File: `templates/etl/http_request.js` (~815 LOC).
+- DOM: `#<activityId>_column_edit` flat list of `.select-column-row`
+  rows: URL+method, body, then a series of pagination input rows whose
+  visibility is toggled by a `pagination_mode` `<select>` with values
+  `none | next_url | continuation | offset`. Headers added by
+  `_add_column` using the framework's generic header-row template.
+- **Saved shape**: `settings.call = [ {fields...} ]` — flat object on
+  the first array entry. Headers are flattened into separate
+  `{header_key, header_value}` entries appended to the same array.
+  Fields persisted today:
+  ```
+  url, request_type, body,
+  headers: { name: value },
+  pagination_mode: 'none' | 'next_url' | 'continuation' | 'offset',
+  unroll_by,
+  next_page_property,
+  continuation_property, continuation_query_param,
+  offset_param, limit_param, limit_value, total_rows_property
+  ```
+- **Runtime executor**: `perform_http_call` in `local-server/local-server.py`
+  (line ~3510). Reads `settings.call` and dispatches based on
+  `pagination_mode`. Currently supports the four modes above.
+
+### 2. Other activity settings panels
+
+- Pattern is very simple: each activity class extends `Activity` and
+  builds a flat list of `.field` rows. No tabs, no accordions used
+  elsewhere — collapsible sections will be a NEW pattern, but
+  `<details>` is HTML-native so it's not a library addition.
+- Filter, Cast, Sort, Pivot, etc. all use the same `<select>` +
+  `<input>` + per-row delete pattern. Visual style is consistent.
+
+### 3. Form primitives
+
+| Brief asks | What's available | Plan |
+|---|---|---|
+| Tooltip / popover for help | native `title=""` only | Add a small reusable `infoTip(text)` helper that renders an `(?)` icon with `title=""` — sufficient for our needs. |
+| Tabs / accordions | none in use | `<details>` / `<summary>` for sections (HTML-native, no dep). |
+| Code editor (Monaco) | CodeMirror 5 (sql, python modes loaded) | Use CM5 with `mode/javascript` (added to `home.html`) for JSON + GraphQL. |
+| Validation pattern | inline border/text per-field | Same — a small `.field-error` helper line under each input. |
+| Switch / Toggle | none | `<input type="checkbox">` with `.toggle` styling (small CSS addition). |
+| Drag-to-reorder | jQuery UI sortable is loaded | Use `.sortable()` for the headers list. |
+
+### 4. Existing pagination support
+
+The existing executor already handles three of the brief's five
+strategies:
+- `next_url` → close to "Custom field" (next-page URL is in a
+  response field).
+- `continuation` → "Cursor" (token + query param).
+- `offset` → "Offset / Limit" (with total-rows JSON path).
+
+Missing:
+- Page-number strategy.
+- RFC 5988 Link-header strategy.
+
+Slice 6 adds those two and renames the existing three to match the
+brief's vocabulary. Old saved activities are migrated on load by
+mapping `pagination_mode` to the new `pagination.strategy`.
+
+### 5. Decisions
+
+- **No new deps.** Sections via `<details>`. Tooltips via `(?)` + `title`.
+  Switch via a styled `<input type="checkbox">`. Sortable via the
+  already-loaded jQuery UI `.sortable()`.
+- **CodeMirror 5** for body editors. New: `mode/javascript` for JSON.
+- **Saved shape** keeps `settings.call = [{...}]` for backwards compat
+  but adds new sub-fields. Old fields stay readable; new ones are
+  written with the brief's `pagination` nested shape *via* the same
+  flat array (one entry: `{call: [{ method, url, body, body_format,
+  headers, pagination: {...}, timeout, ...}]}`).
+- **Variable highlighting.** Use a single style: the field has a
+  small "supports {{name}} variables" hint underneath; live highlighting
+  inside the `<input>` requires an overlay or contenteditable shim that
+  is more code than warranted. Decision: skip live highlighting; show
+  the hint + reference. Power users will recognize their own tokens.
+- **Test Request** endpoint: new `POST /etl/http_request/test` in
+  local-server, proxied via `post_to_local`. One-shot, no pagination,
+  size-capped response preview.
+
+## Phase 2 — Design (locked)
+
+Saved JSON shape (one row in `settings.call`):
+
+```json
+{
+  "url": "https://api.example.com/v1/users",
+  "request_type": "GET",
+  "body_format": "json|form|multipart|raw|graphql|none",
+  "body": "...",
+  "body_extras": { "content_type": "...", "graphql_variables": "...",
+                   "multipart_files": [{name, path: {zone, path}}] },
+  "headers": { "Authorization": "Bearer ...", ... },
+  "pagination": {
+    "enabled": true,
+    "strategy": "offset|page|cursor|link|custom",
+    "max_pages": 100,
+    "delay_ms": 0,
+    "records_path": "data.items",
+    /* per-strategy fields */
+    "offset_param": "offset", "limit_param": "limit", "limit_value": 100,
+    "stop_when": "empty|short_page|total",
+    "total_field": "meta.total",
+    "page_param": "page", "page_size_param": "per_page", "first_page": 1,
+    "has_more_field": "has_more", "total_pages_field": "meta.total_pages",
+    "cursor_param": "cursor", "next_cursor_field": "next_cursor",
+    "first_request": "no_param|empty|custom",
+    "first_cursor_value": "",
+    "link_header": "Link", "link_rel": "next",
+    "next_url_field": "meta.next_url"
+  },
+  "timeout_seconds": 30,
+  "follow_redirects": true,
+  "verify_ssl": true,
+  "retry": "none|3|5",
+  "output_path": { "zone": "raw", "path": "..." }
+}
+```
+
+Old fields (`pagination_mode`, `unroll_by`, etc.) are migrated to the
+new `pagination.*` shape on load via `_migrateLegacyPagination`.
+
