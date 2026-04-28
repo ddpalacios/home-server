@@ -1,0 +1,88 @@
+<dialog id="welcomeModal" class="welcome-modal">
+  <form id="welcomeForm" method="dialog" autocomplete="off">
+    <div class="welcome-eyebrow">Welcome 👋</div>
+    <h2 class="welcome-title">Let's get you set up</h2>
+    <p class="welcome-sub">A few quick details and your dashboard will be ready.</p>
+
+    <div class="welcome-row two-col">
+      <label>
+        <span>First name</span>
+        <input id="welcomeFirstName" type="text" maxlength="80" required />
+      </label>
+      <label>
+        <span>Last name</span>
+        <input id="welcomeLastName" type="text" maxlength="80" required />
+      </label>
+    </div>
+    <label class="welcome-row">
+      <span>Business name</span>
+      <input id="welcomeBusinessName" type="text" maxlength="80" required />
+    </label>
+    <label class="welcome-row">
+      <span>Website URL</span>
+      <input id="welcomeWebsiteUrl" type="url" placeholder="https://yourbusiness.com" maxlength="2048" required />
+    </label>
+
+    <div id="welcomeError" class="welcome-error" hidden></div>
+
+    <div class="welcome-actions">
+      <button type="submit" id="welcomeSubmit" class="welcome-submit">Get started →</button>
+    </div>
+  </form>
+</dialog>
+
+<style>
+  .welcome-modal {
+    border: 0; border-radius: 18px; padding: 0; max-width: 460px; width: 92%;
+    background: transparent; box-shadow: none;
+  }
+  .welcome-modal::backdrop {
+    background: linear-gradient(180deg, rgba(238, 242, 255, 0.85), rgba(219, 234, 254, 0.85));
+    backdrop-filter: blur(2px);
+  }
+  .welcome-modal form {
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    border-radius: 18px;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+    padding: 28px;
+    font-family: "Inter", "Segoe UI", Arial, Helvetica, sans-serif;
+    color: #0f172a;
+  }
+  .welcome-eyebrow {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.18em;
+    text-transform: uppercase; color: #1f4fd1; margin-bottom: 8px;
+  }
+  .welcome-title { font-size: 22px; font-weight: 800; margin: 0 0 6px; line-height: 1.2; }
+  .welcome-sub { font-size: 13px; color: #64748b; margin: 0 0 18px; line-height: 1.5; }
+  .welcome-row { display: block; margin-bottom: 12px; }
+  .welcome-row.two-col {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+  .welcome-row label, .welcome-row > label { display: block; }
+  .welcome-row span {
+    display: block; font-size: 11px; font-weight: 600;
+    color: #475569; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .welcome-row input {
+    width: 100%; box-sizing: border-box;
+    background: #f1f5f9; border: 1px solid #e2e8f0;
+    border-radius: 10px; padding: 10px 12px;
+    font-size: 14px; font-family: inherit; color: #0f172a;
+  }
+  .welcome-row input:focus {
+    outline: 2px solid rgba(37, 99, 235, 0.35); border-color: #2563eb;
+  }
+  .welcome-error {
+    background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;
+    border-radius: 10px; padding: 8px 12px; font-size: 13px; margin: 4px 0 12px;
+  }
+  .welcome-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
+  .welcome-submit {
+    background: linear-gradient(135deg, #2563eb, #3aa0ff);
+    color: #fff; border: 0; padding: 10px 22px;
+    border-radius: 999px; font-size: 14px; font-weight: 700;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.35); cursor: pointer;
+  }
+  .welcome-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+</style>
