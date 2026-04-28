@@ -147,13 +147,24 @@
     }
 
     function unassignedPhones() {
-      // Available = not bound to a real customer (cust_*). Phones with
-      // demo_admin_* / demo_* IDs from prior demo runs are still bindable.
-      return allPhones.filter((p) => {
-        const aid = (p.assigned_account_id || "");
-        return !aid || !aid.startsWith("cust_");
-      });
+      // Show ALL phones. Admin can re-bind any of them; the option label
+      // tells them whether it's currently free, demo-bound, or bound to a
+      // real customer (so they know they're overwriting).
+      return allPhones.slice();
     }
+
+    function phoneOptionLabel(p, hideOwnerEmail) {
+      const label = p.phone_display || p.phone_number || p.phone_id;
+      const aid = p.assigned_account_id || "";
+      if (!aid) return label + "  (free)";
+      if (!aid.startsWith("cust_")) return label + "  (reusing demo)";
+      // Bound to a real customer — try to show whose, if we have it.
+      const owner = (allUsersByCustomerId && allUsersByCustomerId[aid]) || null;
+      const who = owner && !hideOwnerEmail ? owner.email : aid;
+      return label + "  (currently " + who + ")";
+    }
+
+    let allUsersByCustomerId = {};
 
     function renderPhoneCell(u) {
       const bound = phoneForCustomer(u.customer_id);
@@ -165,15 +176,10 @@
       }
       const opts = unassignedPhones();
       if (!opts.length) {
-        return `<span style="color:var(--muted); font-size:12px;">No unassigned phones</span>`;
+        return `<span style="color:var(--muted); font-size:12px;">No phones in pool</span>`;
       }
       const optionsHtml = ['<option value="">Choose a phone…</option>']
-        .concat(opts.map((p) => {
-          const label = p.phone_display || p.phone_number || p.phone_id;
-          const aid = p.assigned_account_id || "";
-          const suffix = aid && !aid.startsWith("cust_") ? "  (reusing demo)" : "";
-          return `<option value="${escapeHtml(p.phone_id)}">${escapeHtml(label + suffix)}</option>`;
-        }))
+        .concat(opts.map((p) => `<option value="${escapeHtml(p.phone_id)}">${escapeHtml(phoneOptionLabel(p))}</option>`))
         .join("");
       return `
         <select class="bind-phone-select" style="font-size:13px;">${optionsHtml}</select>
@@ -260,8 +266,9 @@
     async function loadUsers() {
       setFeedback("");
       // Refresh phones map first so the Phone column renders correctly.
+      // The add-form select is refreshed AFTER user data populates
+      // allUsersByCustomerId, so option labels can show owner emails.
       await fetchAllPhones();
-      refreshAddPhoneSelect();
       try {
         const res = await fetch("/admin/users/list", { credentials: "same-origin" });
         if (!res.ok) {
@@ -269,7 +276,15 @@
           return;
         }
         const body = await res.json();
+        // Build a customer_id → user record map so phone labels can show
+        // who currently owns each bound phone.
+        allUsersByCustomerId = {};
+        (body.users || []).forEach((u) => {
+          if (u.customer_id) allUsersByCustomerId[u.customer_id] = u;
+        });
         $rows.innerHTML = "";
+        // Populate the add-form phone selector now that we have owner info.
+        refreshAddPhoneSelect();
         if (!body.users || body.users.length === 0) {
           renderEmpty();
           return;
@@ -283,17 +298,12 @@
     function refreshAddPhoneSelect() {
       const sel = document.getElementById("addPhoneSelect");
       if (!sel) return;
-      // Preserve current selection if still applicable.
       const prior = sel.value;
-      // Drop existing options except the placeholder (first).
       while (sel.options.length > 1) sel.remove(1);
       unassignedPhones().forEach((p) => {
         const opt = document.createElement("option");
         opt.value = p.phone_id;
-        const label = p.phone_display || p.phone_number || p.phone_id;
-        const aid = p.assigned_account_id || "";
-        const suffix = aid && !aid.startsWith("cust_") ? "  (reusing demo)" : "";
-        opt.textContent = label + suffix;
+        opt.textContent = phoneOptionLabel(p);
         sel.appendChild(opt);
       });
       if (prior && Array.from(sel.options).some((o) => o.value === prior)) sel.value = prior;
