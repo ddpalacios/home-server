@@ -7133,7 +7133,8 @@
         const res = await fetch("/me", { credentials: "same-origin" });
         if (!res.ok) return;
         const me = await res.json();
-        if (!me || !me.authenticated || me.onboarded) return;
+        // Admins never see the welcome modal; neither do users already onboarded.
+        if (!me || !me.authenticated || me.is_admin || me.onboarded) return;
         const dlg = document.getElementById("welcomeModal");
         if (!dlg || typeof dlg.showModal !== "function") return;
         dlg.showModal();
@@ -7231,8 +7232,9 @@
         missed.value = data.missed_call_intent || "default";
       } catch (e) { /* silent */ }
       function autosave() {
+        // POST (not PUT) so the C proxy on home-server forwards correctly.
         return fetch("/me/voice-settings", {
-          method: "PUT", credentials: "same-origin",
+          method: "POST", credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             personality: personality.value,
