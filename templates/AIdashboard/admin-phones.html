@@ -393,7 +393,7 @@
               <th scope="col">Phone Number</th>
               <th scope="col">Status</th>
               <th scope="col">Website</th>
-              <th scope="col">Demo URL</th>
+              <th scope="col">Preview URL</th>
               <th scope="col">Routing</th>
               <th scope="col" aria-label="Actions"></th>
             </tr>
@@ -413,7 +413,7 @@
   <div class="modal" id="assignModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="assignModalTitle">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 id="assignModalTitle">Assign phone</h3>
+        <h3 id="assignModalTitle">Set up phone</h3>
         <button class="modal-close" type="button" data-close-modal aria-label="Close">×</button>
       </div>
       <label>
@@ -426,11 +426,11 @@
           <option value="">(use website URL only)</option>
         </select>
       </label>
-      <p class="helper">This will scrape the site, train a bot on its content, and assign this phone number to the resulting demo. The demo will show a "Call this number" CTA tied to the phone.</p>
+      <p class="helper">This will read the site, train a bot on its content, and assign this phone number to the resulting bot. The bot's preview page will show a "Call this number" CTA tied to the phone.</p>
       <p class="field-error" id="assignFieldError"></p>
       <div class="modal-actions">
         <button class="btn secondary" type="button" data-close-modal>Cancel</button>
-        <button class="btn" type="button" id="assignRunBtn">Run</button>
+        <button class="btn" type="button" id="assignRunBtn">Train bot &amp; assign</button>
       </div>
     </div>
   </div>
@@ -474,7 +474,7 @@
   <div class="modal" id="confirmModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 id="confirmModalTitle">Replace existing demo?</h3>
+        <h3 id="confirmModalTitle">Replace existing setup?</h3>
         <button class="modal-close" type="button" data-close-modal aria-label="Close">×</button>
       </div>
       <p id="confirmModalBody" class="helper"></p>
@@ -651,7 +651,7 @@
         } else if (status === "building") {
           buttons.push(`<button class="btn danger" type="button" data-action="cancel" data-phone="${phone.phone_id}">Cancel</button>`);
         } else if (status === "ready") {
-          buttons.push(`<button class="btn secondary" type="button" data-action="reassign" data-phone="${phone.phone_id}">Reassign</button>`);
+          buttons.push(`<button class="btn secondary" type="button" data-action="reassign" data-phone="${phone.phone_id}">Update website</button>`);
           if (phone.demo_url) {
             buttons.push(`<a class="btn" href="${escapeHtml(phone.demo_url)}" target="_blank" rel="noopener noreferrer">Open</a>`);
           }
@@ -781,8 +781,8 @@
           openAssignModal(phone, "assign");
         } else if (action === "reassign") {
           openConfirm(
-            "Replace existing demo?",
-            `This will retrain the bot on a new site and replace the existing demo${phone.demo_url ? " at " + phone.demo_url : ""}. Continue?`,
+            "Replace existing setup?",
+            `This will retrain the bot on a new site and replace the existing setup${phone.demo_url ? " at " + phone.demo_url : ""}. Continue?`,
             () => openAssignModal(phone, "reassign"),
           );
         } else if (action === "retry") {
@@ -792,10 +792,10 @@
         } else if (action === "routing") {
           openRoutingModal(phone);
         } else if (action === "disconnect") {
-          const site = phone.assigned_website_url || phone.demo_url || "this demo";
+          const site = phone.assigned_website_url || phone.demo_url || "this number";
           openConfirm(
             "Disconnect this number?",
-            `This will permanently delete the knowledge base for ${site}, remove the demo URL, and unlink ${phone.phone_display || phone.phone_number}. The phone number itself stays — you can re-assign it later. Continue?`,
+            `This will permanently delete the knowledge base for ${site}, remove the preview URL, and unlink ${phone.phone_display || phone.phone_number}. The phone number itself stays — you can re-assign it later. Continue?`,
             () => disconnectPhone(phone),
           );
         }
@@ -988,7 +988,7 @@
         activePhoneId = phone.phone_id;
         activeMode = mode;
         document.getElementById("assignModalTitle").textContent =
-          (mode === "reassign" ? "Reassign " : "Assign ") + (phone.phone_display || phone.phone_number);
+          (mode === "reassign" ? "Update website for " : "Set up ") + (phone.phone_display || phone.phone_number);
         assignUrlInput.value = mode === "reassign" ? (phone.assigned_website_url || "") : "";
         setFieldError("");
         openModal(assignModal);
