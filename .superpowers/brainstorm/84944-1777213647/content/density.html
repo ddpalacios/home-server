@@ -1,0 +1,86 @@
+<h2>Density — how compact?</h2>
+<p class="subtitle">"More compact" can mean a few different things. Picking a density scale up front locks the spacing across every screen. Side-by-side comparison of the same notebook list.</p>
+
+<style>
+  .dn-list { background: #fff; border: 1px solid #e3e8ee; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); font-family: "Inter", system-ui, sans-serif; color: #1a1f36; }
+  .dn-head { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e3e8ee; }
+  .dn-row { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f0f3f7; }
+  .dn-row:last-child { border-bottom: none; }
+  .dn-name { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .dn-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; background: #f6f9fc; border: 1px solid #e3e8ee; border-radius: 4px; color: #6b7c93; }
+  .dn-icon svg { width: 12px; height: 12px; }
+  .dn-meta { color: #6b7c93; font-variant-numeric: tabular-nums; }
+  .dn-dot { width: 6px; height: 6px; border-radius: 50%; background: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,0.15); margin-left: 6px; }
+  .dn-pill { display: inline-block; padding: 1px 7px; font-size: 10px; font-weight: 600; border-radius: 999px; background: #ecfdf5; color: #047857; margin-left: 6px; }
+
+  /* Comfortable */
+  .dn-A .dn-head, .dn-A .dn-row { padding: 14px 16px; }
+  .dn-A .dn-head { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #6b7c93; }
+  .dn-A .dn-row { font-size: 14px; }
+  .dn-A .dn-icon { width: 24px; height: 24px; }
+  .dn-A .dn-meta { font-size: 12px; }
+  .dn-A .dn-pill { font-size: 11px; padding: 2px 9px; }
+
+  /* Standard compact */
+  .dn-B .dn-head, .dn-B .dn-row { padding: 8px 14px; }
+  .dn-B .dn-head { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #6b7c93; }
+  .dn-B .dn-row { font-size: 13px; }
+  .dn-B .dn-icon { width: 20px; height: 20px; }
+  .dn-B .dn-meta { font-size: 11px; }
+
+  /* Dense */
+  .dn-C .dn-head, .dn-C .dn-row { padding: 5px 12px; }
+  .dn-C .dn-head { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #6b7c93; }
+  .dn-C .dn-row { font-size: 12px; }
+  .dn-C .dn-icon { width: 16px; height: 16px; }
+  .dn-C .dn-meta { font-size: 11px; }
+  .dn-C .dn-pill { font-size: 9px; padding: 0 6px; }
+  .dn-C .dn-dot { width: 5px; height: 5px; box-shadow: 0 0 0 2px rgba(22,163,74,0.18); }
+</style>
+
+<div class="cards">
+  <div class="card" data-choice="comfortable" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 16px; background: #f6f9fc;">
+      <div class="dn-list dn-A">
+        <div class="dn-head"><span>Notebooks</span><span>Updated</span></div>
+        <div class="dn-row"><div class="dn-name"><span class="dn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h11l3 3v13H5z"/></svg></span><span>CLASS_Reddit</span><span class="dn-dot" title="running"></span></div><span class="dn-meta">2m ago</span></div>
+        <div class="dn-row"><div class="dn-name"><span class="dn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h11l3 3v13H5z"/></svg></span><span>Base</span></div><span class="dn-meta">1h ago</span></div>
+        <div class="dn-row"><div class="dn-name"><span class="dn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h11l3 3v13H5z"/></svg></span><span>Untitled notebook</span></div><span class="dn-meta">yesterday</span></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Comfortable · ~44 px rows</h3>
+      <p>Roomy, friendlier, easier to tap. Notion-like. Good if you have a few items per screen and want less visual fatigue. Roughly your current density.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="standard" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 16px; background: #f6f9fc;">
+      <div class="dn-list dn-B">
+        <div class="dn-head"><span>Notebooks</span><span>Updated</span></div>
+        <div class="dn-row"><div class="dn-name"><span class="dn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h11l3 3v13H5z"/></svg></span><span>CLASS_Reddit</span><span class="dn-dot" title="running"></span></div><span class="dn-meta">2m ago</span></div>
+        <div class="dn-row"><div class="dn-name"><span class="dn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h11l3 3v13H5z"/></svg></span><span>Base</span></div><span class="dn-meta">1h ago</span></div>
+        <div class="dn-row"><div class="dn-name"><span class="dn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h11l3 3v13H5z"/></svg></span><span>Untitled notebook</span></div><span class="dn-meta">yesterday</span></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Standard compact · ~32 px rows</h3>
+      <p><strong>Recommended.</strong> Stripe Dashboard / Retool feel. Dense enough to fit 2× more on screen, still tappable, still scannable. Hits "compact + professional" without crossing into "tiny". This is what most modern SaaS tools land on.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="dense" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 16px; background: #f6f9fc;">
+      <div class="dn-list dn-C">
+        <div class="dn-head"><span>Notebooks</span><span>Updated</span></div>
+        <div class="dn-row"><div class="dn-name"><span class="dn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h11l3 3v13H5z"/></svg></span><span>CLASS_Reddit</span><span class="dn-dot" title="running"></span></div><span class="dn-meta">2m ago</span></div>
+        <div class="dn-row"><div class="dn-name"><span class="dn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h11l3 3v13H5z"/></svg></span><span>Base</span></div><span class="dn-meta">1h ago</span></div>
+        <div class="dn-row"><div class="dn-name"><span class="dn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h11l3 3v13H5z"/></svg></span><span>Untitled notebook</span></div><span class="dn-meta">yesterday</span></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Dense · ~24 px rows</h3>
+      <p>Bloomberg / dev console / Notion table-mode feel. Maximum information density. Less forgiving for touch / tired eyes; readable but unmistakably "tool" not "app". Good if you live in this thing all day.</p>
+    </div>
+  </div>
+</div>

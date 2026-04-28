@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Section 2 — core components</title>
+<style>
+  :root {
+    --brand-50: #eef2ff; --brand-100: #dbe6ff; --brand-500: #1f4fd6; --brand-600: #1438a8;
+    --ink-900: #1a1f36; --ink-700: #425466; --ink-500: #6b7c93; --ink-300: #aab7c4;
+    --line: #e3e8ee; --line-strong: #c1c9d2;
+    --surface: #ffffff; --surface-2: #f6f9fc; --surface-3: #fafbfc;
+    --success: #047857; --warn: #b45309; --error: #b91c1c;
+    --radius-sm: 4px; --radius-md: 6px; --radius-lg: 8px;
+    --shadow-1: 0 1px 1px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-2: 0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -2px rgba(0,0,0,0.05);
+  }
+  body { margin: 0; font-family: "Space Grotesk", system-ui, sans-serif; background: var(--surface-2); color: var(--ink-900); padding: 24px; font-size: 14px; line-height: 1.45; }
+  h2 { margin: 0 0 4px; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+  .subtitle { color: var(--ink-500); margin: 0 0 24px; font-size: 14px; }
+  .section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-500); margin-bottom: 8px; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-1); margin-bottom: 16px; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .stack { display: flex; flex-direction: column; gap: 16px; }
+
+  /* Button */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 14px; height: 32px; font-family: inherit; font-size: 13px; font-weight: 600; border-radius: var(--radius-md); border: 1px solid transparent; cursor: pointer; transition: all 120ms cubic-bezier(0.2,0.8,0.2,1); letter-spacing: 0.005em; }
+  .btn-primary { background: linear-gradient(180deg, #2858e0 0%, #1f4fd6 100%); color: #fff; border-color: #1438a8; box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), var(--shadow-1); }
+  .btn-primary:hover { background: linear-gradient(180deg, #1f4fd6 0%, #1438a8 100%); }
+  .btn-primary:active { background: #102b85; box-shadow: inset 0 1px 2px rgba(0,0,0,0.18); }
+  .btn-secondary { background: var(--surface); color: var(--ink-900); border-color: var(--line-strong); box-shadow: var(--shadow-1); }
+  .btn-secondary:hover { background: var(--surface-3); border-color: var(--ink-500); }
+  .btn-ghost { background: transparent; color: var(--ink-700); }
+  .btn-ghost:hover { background: rgba(15,23,42,0.06); color: var(--ink-900); }
+  .btn-danger { background: var(--surface); color: var(--error); border-color: rgba(185,28,28,0.30); }
+  .btn-danger:hover { background: rgba(185,28,28,0.06); border-color: var(--error); }
+  .btn-icon { width: 32px; padding: 0; }
+  .btn-icon svg { width: 14px; height: 14px; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Form */
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .label { font-size: 12px; font-weight: 600; color: var(--ink-700); }
+  .input, .select, .textarea {
+    height: 32px; padding: 0 10px; font-family: inherit; font-size: 13px; color: var(--ink-900);
+    background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+    box-shadow: inset 0 1px 1px rgba(0,0,0,0.04);
+    transition: border-color 120ms, box-shadow 120ms;
+  }
+  .input:focus, .select:focus, .textarea:focus { outline: none; border-color: var(--brand-500); box-shadow: 0 0 0 3px rgba(31,79,214,0.15); }
+  .textarea { height: auto; padding: 8px 10px; resize: vertical; min-height: 64px; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px; line-height: 1.5; }
+  .help { font-size: 11px; color: var(--ink-500); }
+
+  /* Tabs (bottom-panel pattern) */
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--line); padding: 0 4px; }
+  .tab { padding: 10px 14px; font-size: 13px; font-weight: 500; color: var(--ink-500); border-bottom: 2px solid transparent; cursor: pointer; transition: color 120ms, border-color 120ms; margin-bottom: -1px; }
+  .tab:hover { color: var(--ink-900); }
+  .tab.active { color: var(--brand-500); border-bottom-color: var(--brand-500); font-weight: 600; }
+
+  /* Status pills */
+  .pill { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; line-height: 1.6; letter-spacing: 0.01em; }
+  .pill-success { background: rgba(4,120,87,0.10); color: var(--success); }
+  .pill-warn { background: rgba(180,83,9,0.10); color: var(--warn); }
+  .pill-error { background: rgba(185,28,28,0.10); color: var(--error); }
+  .pill-neutral { background: rgba(107,124,147,0.10); color: var(--ink-500); }
+  .pill-running { background: rgba(31,79,214,0.10); color: var(--brand-500); }
+  .pill-running .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--brand-500); box-shadow: 0 0 0 3px rgba(31,79,214,0.18); animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+  /* Table */
+  table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+  th { text-align: left; padding: 8px 12px; background: var(--surface-2); font-size: 11px; font-weight: 600; color: var(--ink-500); text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--line); }
+  th:first-child { border-top-left-radius: var(--radius-sm); }
+  th:last-child { border-top-right-radius: var(--radius-sm); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--line); color: var(--ink-900); font-variant-numeric: tabular-nums; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(31,79,214,0.04); }
+  td.mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px; color: var(--ink-700); }
+
+  /* Card */
+  .card-shell { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 16px 18px; box-shadow: var(--shadow-1); }
+  .card-title { font-size: 15px; font-weight: 600; color: var(--ink-900); margin: 0 0 2px; }
+  .card-sub { font-size: 12px; color: var(--ink-500); margin: 0 0 12px; }
+</style>
+</head>
+<body>
+
+<h2>Section 2 — core components</h2>
+<p class="subtitle">Rendered with the tokens from Section 1. This is the foundation we propagate. Hover to feel transitions.</p>
+
+<div class="stack">
+
+  <!-- BUTTONS -->
+  <div class="panel">
+    <div class="section-label">Buttons</div>
+    <div class="row">
+      <button class="btn btn-primary">Save changes</button>
+      <button class="btn btn-secondary">Cancel</button>
+      <button class="btn btn-ghost">Discard</button>
+      <button class="btn btn-danger">Delete</button>
+      <button class="btn btn-icon btn-secondary" title="More"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="3" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="13" cy="8" r="1.5"/></svg></button>
+      <button class="btn btn-primary" disabled>Disabled</button>
+    </div>
+    <div class="help" style="margin-top: 10px">Primary uses the only gradient in the system. Secondary is hairline + tiny resting shadow. Ghost & danger are flat. All 32 px tall, 6 px radius.</div>
+  </div>
+
+  <!-- FORM -->
+  <div class="panel">
+    <div class="section-label">Form controls</div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div class="field">
+        <label class="label">Notebook name</label>
+        <input class="input" value="CLASS_Reddit"/>
+        <div class="help">A–Z, 0–9, _ and - only.</div>
+      </div>
+      <div class="field">
+        <label class="label">Active config</label>
+        <select class="select"><option>Default (8g driver, 4 cores)</option><option>Big</option></select>
+      </div>
+      <div class="field" style="grid-column: 1 / 3;">
+        <label class="label">Cell code</label>
+        <textarea class="textarea">df = spark.sql("SELECT * FROM events WHERE status = 'active'")
+df.show(20)</textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="panel" style="padding-top: 0;">
+    <div style="margin: 0 -20px;">
+      <div class="tabs" style="padding: 0 20px;">
+        <span class="tab active">General</span>
+        <span class="tab">Settings</span>
+        <span class="tab">Data preview</span>
+        <span class="tab">Activities</span>
+        <span class="tab">Scheduled triggers</span>
+        <span class="tab">Test runs</span>
+      </div>
+    </div>
+    <div class="help" style="margin-top: 12px">Bottom-panel tabs. 2 px brand underline on active. Hover lifts text only — no pill chrome.</div>
+  </div>
+
+  <!-- STATUS PILLS -->
+  <div class="panel">
+    <div class="section-label">Status pills</div>
+    <div class="row">
+      <span class="pill pill-success">success</span>
+      <span class="pill pill-warn">degraded</span>
+      <span class="pill pill-error">error</span>
+      <span class="pill pill-neutral">queued</span>
+      <span class="pill pill-running"><span class="dot"></span>running</span>
+    </div>
+  </div>
+
+  <!-- CARD -->
+  <div class="panel">
+    <div class="section-label">Card / panel</div>
+    <div class="card-shell">
+      <h4 class="card-title">Filter — status = "active"</h4>
+      <p class="card-sub">Activity · 1.2k rows · 1.4 s</p>
+      <div class="row">
+        <span class="pill pill-success">success</span>
+        <button class="btn btn-secondary" style="height: 28px; padding: 0 10px; font-size: 12px;">View output</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="panel" style="padding: 0;">
+    <div class="section-label" style="padding: 18px 20px 8px;">Table (data preview)</div>
+    <table>
+      <thead>
+        <tr><th>id</th><th>timestamp</th><th>status</th><th style="text-align: right">duration</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="mono">a3f4e2…</td><td class="mono">2026-04-26 09:14:32</td><td><span class="pill pill-success">success</span></td><td class="mono" style="text-align: right">1.42 s</td></tr>
+        <tr><td class="mono">b8c1d9…</td><td class="mono">2026-04-26 09:13:18</td><td><span class="pill pill-running"><span class="dot"></span>running</span></td><td class="mono" style="text-align: right">12.8 s</td></tr>
+        <tr><td class="mono">c91a7b…</td><td class="mono">2026-04-26 09:11:02</td><td><span class="pill pill-error">error</span></td><td class="mono" style="text-align: right">0.11 s</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+</body>
+</html>

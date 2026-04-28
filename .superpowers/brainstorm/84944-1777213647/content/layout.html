@@ -1,0 +1,121 @@
+<h2>Layout structure — where do things live?</h2>
+<p class="subtitle">Today: sidebar on the left, canvas in the middle, a tabbed panel at the bottom (General / Settings / Data Preview / Activities / Triggers / Test Runs). The bottom panel forces vertical context-switching. Modern canvas tools (Figma, Retool, Power BI, Looker Studio) put contextual settings in a right inspector instead. Pick the layout you want.</p>
+
+<style>
+  .lo-frame { background: #fff; border: 1px solid #e3e8ee; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); display: grid; height: 280px; overflow: hidden; font-family: "Inter", system-ui, sans-serif; font-size: 11px; }
+  .lo-block { padding: 8px 10px; }
+  .lo-h { font-weight: 600; color: #1a1f36; margin-bottom: 4px; font-size: 11px; }
+  .lo-line { display: block; padding: 3px 0; color: #6b7c93; border-bottom: 1px solid #f0f3f7; font-size: 10px; }
+  .lo-line:last-child { border-bottom: none; }
+  .lo-canvas { background: repeating-linear-gradient(0deg, #fafbfc 0 24px, #f4f6f9 24px 25px), #fafbfc; display: flex; align-items: center; justify-content: center; color: #aab2bd; font-size: 11px; }
+  .lo-tabs { display: flex; gap: 14px; padding: 0 10px; border-bottom: 1px solid #e3e8ee; background: #f6f9fc; align-items: center; height: 28px; }
+  .lo-tab { font-size: 10px; color: #6b7c93; padding: 0 0 6px; border-bottom: 2px solid transparent; }
+  .lo-tab.active { color: #5469d4; border-bottom-color: #5469d4; font-weight: 600; }
+  .lo-sidebar { background: #fcfcfc; border-right: 1px solid #e3e8ee; }
+  .lo-inspector { background: #fcfcfc; border-left: 1px solid #e3e8ee; }
+  .lo-bottom { background: #fff; border-top: 1px solid #e3e8ee; }
+  .lo-headerbar { background: #fff; border-bottom: 1px solid #e3e8ee; padding: 7px 12px; display: flex; align-items: center; justify-content: space-between; font-size: 11px; }
+  .lo-pill { display: inline-block; padding: 1px 7px; font-size: 9px; font-weight: 600; border-radius: 999px; background: #ecfdf5; color: #047857; }
+
+  /* Layout A — current (sidebar + canvas + bottom tabs) */
+  .lo-A { grid-template-columns: 130px 1fr; grid-template-rows: 1fr 110px; }
+  .lo-A .lo-sidebar { grid-column: 1; grid-row: 1 / 3; }
+  .lo-A .lo-canvas { grid-column: 2; grid-row: 1; }
+  .lo-A .lo-bottom { grid-column: 2; grid-row: 2; }
+
+  /* Layout B — sidebar + canvas + right inspector */
+  .lo-B { grid-template-columns: 130px 1fr 150px; grid-template-rows: 1fr; }
+  .lo-B .lo-sidebar { grid-column: 1; }
+  .lo-B .lo-canvas { grid-column: 2; }
+  .lo-B .lo-inspector { grid-column: 3; }
+
+  /* Layout C — top header + sidebar + canvas + right inspector */
+  .lo-C { grid-template-columns: 130px 1fr 150px; grid-template-rows: 32px 1fr; }
+  .lo-C .lo-headerbar { grid-column: 1 / 4; grid-row: 1; }
+  .lo-C .lo-sidebar { grid-column: 1; grid-row: 2; }
+  .lo-C .lo-canvas { grid-column: 2; grid-row: 2; }
+  .lo-C .lo-inspector { grid-column: 3; grid-row: 2; }
+</style>
+
+<div class="cards">
+  <div class="card" data-choice="a-bottom" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 16px; background: #f6f9fc;">
+      <div class="lo-frame lo-A">
+        <div class="lo-sidebar lo-block">
+          <div class="lo-h">Notebooks</div>
+          <span class="lo-line">CLASS_Reddit</span>
+          <span class="lo-line">Base</span>
+          <span class="lo-line">Untitled</span>
+          <div class="lo-h" style="margin-top: 10px">Pipelines</div>
+          <span class="lo-line">Demo</span>
+        </div>
+        <div class="lo-canvas">canvas / flowchart</div>
+        <div class="lo-bottom">
+          <div class="lo-tabs">
+            <span class="lo-tab active">Settings</span><span class="lo-tab">Data preview</span><span class="lo-tab">Test runs</span>
+          </div>
+          <div class="lo-block" style="font-size: 10px; color: #6b7c93;">Filter · column = "status" · 1.2k rows</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A · Today's layout, tightened</h3>
+      <p>Same three zones. Bottom panel becomes shorter, tabs visually crisper. Familiar to you and any existing users. <strong>Cons:</strong> bottom panel forces vertical context-switching when you click an operator — the canvas resizes and you lose spatial sense.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b-inspector" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 16px; background: #f6f9fc;">
+      <div class="lo-frame lo-B">
+        <div class="lo-sidebar lo-block">
+          <div class="lo-h">Notebooks</div>
+          <span class="lo-line">CLASS_Reddit</span>
+          <span class="lo-line">Base</span>
+          <span class="lo-line">Untitled</span>
+          <div class="lo-h" style="margin-top: 10px">Pipelines</div>
+          <span class="lo-line">Demo</span>
+        </div>
+        <div class="lo-canvas">canvas / flowchart</div>
+        <div class="lo-inspector lo-block">
+          <div class="lo-h">Filter</div>
+          <div class="lo-line">column · status</div>
+          <div class="lo-line">op · =</div>
+          <div class="lo-line">value · "active"</div>
+          <div class="lo-h" style="margin-top: 10px">Preview</div>
+          <span class="lo-line">1.2k rows</span>
+          <span class="lo-line"><span class="lo-pill">success</span></span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B · Right inspector</h3>
+      <p><strong>Recommended.</strong> Click an operator → its settings + preview slide into the right panel. Canvas keeps its size. Matches Figma / Retool / Looker / Power BI. Bottom panel goes away. The "tabs" become smaller pill toggles inside the inspector.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c-header" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 16px; background: #f6f9fc;">
+      <div class="lo-frame lo-C">
+        <div class="lo-headerbar">
+          <span style="font-weight: 600; color: #1a1f36">Demo pipeline</span>
+          <span style="display: flex; gap: 8px; align-items: center;"><span class="lo-pill">success</span><span style="color: #6b7c93">Run · Save · Share</span></span>
+        </div>
+        <div class="lo-sidebar lo-block">
+          <div class="lo-h">Notebooks</div>
+          <span class="lo-line">CLASS_Reddit</span>
+          <span class="lo-line">Base</span>
+        </div>
+        <div class="lo-canvas">canvas</div>
+        <div class="lo-inspector lo-block">
+          <div class="lo-h">Filter</div>
+          <div class="lo-line">column · status</div>
+          <div class="lo-line">op · =</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C · Top app bar + inspector</h3>
+      <p>Same as B but adds a thin top app bar showing the current pipeline name + global actions (Run / Save / Share / status). Looks the most "product app" of the three. <strong>Cons:</strong> 32 px more vertical chrome — slight density tax.</p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,26 @@
+<h2>Redesign scope — how should we tackle this?</h2>
+<p class="subtitle">The ETL app has ~7 distinct UI surfaces (sidebar, canvas, notebook, bottom tabs, activity settings, tables/modals, header). A "full redesign" is a lot — pick the path that fits how you want to iterate.</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Foundation first → propagate</h3>
+      <p>Start with a tight design system: tokens (color, type, space, radius, shadow), reusable components (buttons, inputs, cards, tabs), and one showcase area redesigned end-to-end (e.g., the sidebar). You react. Then the same system gets applied to the rest in successive passes. <strong>Recommended</strong> — fast feedback, low risk, you see the direction before it touches everything.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Single big-bang pass</h3>
+      <p>One design system + one redesign of every visible surface in a single spec. Faster end-to-end if I get it right; risky if the look isn't what you wanted (Azure Synapse 2.0). You'd need to commit to the visual direction up front from a mockup and live with whatever ships.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Per-area, no foundation</h3>
+      <p>Pick one area (sidebar / notebook / bottom tabs / activity settings), redesign just that, ship, repeat. No shared system. Visually inconsistent during the journey but every change is small and reversible. Slowest path overall but lowest risk per step.</p>
+    </div>
+  </div>
+</div>

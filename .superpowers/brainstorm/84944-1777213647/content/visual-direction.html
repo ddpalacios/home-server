@@ -1,0 +1,102 @@
+<h2>Visual direction — which feels right?</h2>
+<p class="subtitle">Three concrete directions. Each shows a button + a small card so you can see how a settings panel might look. All compact. All professional. They differ in personality.</p>
+
+<style>
+  .vd-card { padding: 24px 20px 20px; border-radius: 12px; min-height: 280px; }
+  .vd-pill { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.02em; margin-bottom: 14px; }
+
+  /* A — Linear-flavored */
+  .vd-a { background: #0b0d10; color: #e7e9ee; font-family: "Inter", system-ui, sans-serif; border: 1px solid #1c2025; }
+  .vd-a .vd-pill { background: rgba(255,255,255,0.06); color: #9aa4af; }
+  .vd-a h3 { color: #fff; margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+  .vd-a .vd-sub { color: #6b7280; font-size: 12px; margin-bottom: 16px; }
+  .vd-a .vd-btn { background: #ffffff; color: #0b0d10; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; border: none; cursor: default; }
+  .vd-a .vd-btn-2 { background: transparent; color: #9aa4af; padding: 6px 14px; border-radius: 6px; font-size: 13px; border: 1px solid #1c2025; margin-left: 6px; cursor: default; }
+  .vd-a .vd-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1c2025; font-size: 13px; }
+  .vd-a .vd-row:last-child { border-bottom: none; }
+  .vd-a .vd-key { color: #9aa4af; }
+  .vd-a .vd-val { color: #e7e9ee; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px; }
+
+  /* B — Stripe-flavored */
+  .vd-b { background: #ffffff; color: #1a1f36; font-family: "Inter", system-ui, sans-serif; border: 1px solid #e3e8ee; box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06); }
+  .vd-b .vd-pill { background: #f6f9fc; color: #6b7c93; border: 1px solid #e3e8ee; }
+  .vd-b h3 { color: #1a1f36; margin: 0 0 4px; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+  .vd-b .vd-sub { color: #6b7c93; font-size: 12px; margin-bottom: 16px; }
+  .vd-b .vd-btn { background: linear-gradient(180deg, #6772e5 0%, #5469d4 100%); color: #fff; padding: 6px 14px; border-radius: 4px; font-size: 13px; font-weight: 500; border: none; box-shadow: 0 1px 0 rgba(0,0,0,0.05); cursor: default; }
+  .vd-b .vd-btn-2 { background: #fff; color: #525f7f; padding: 6px 14px; border-radius: 4px; font-size: 13px; border: 1px solid #d4dae3; margin-left: 6px; cursor: default; box-shadow: 0 1px 0 rgba(0,0,0,0.04); }
+  .vd-b .vd-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f3f7; font-size: 13px; }
+  .vd-b .vd-row:last-child { border-bottom: none; }
+  .vd-b .vd-key { color: #6b7c93; }
+  .vd-b .vd-val { color: #1a1f36; font-weight: 500; font-size: 12px; }
+
+  /* C — Refined current */
+  .vd-c { background: linear-gradient(160deg, #ffffff 0%, #f6f8fc 100%); color: #0f172a; font-family: "Space Grotesk", system-ui, sans-serif; border: 1px solid rgba(15,23,42,0.08); box-shadow: 0 4px 14px rgba(15,23,42,0.06); }
+  .vd-c .vd-pill { background: rgba(31,79,214,0.10); color: #1d4ed8; }
+  .vd-c h3 { color: #0f172a; margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+  .vd-c .vd-sub { color: rgba(15,23,42,0.6); font-size: 12px; margin-bottom: 16px; }
+  .vd-c .vd-btn { background: #1f4fd6; color: #fff; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: default; }
+  .vd-c .vd-btn-2 { background: rgba(255,255,255,0.7); color: #0f172a; padding: 6px 14px; border-radius: 8px; font-size: 13px; border: 1px solid rgba(15,23,42,0.10); margin-left: 6px; cursor: default; backdrop-filter: blur(8px); }
+  .vd-c .vd-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid rgba(15,23,42,0.06); font-size: 13px; }
+  .vd-c .vd-row:last-child { border-bottom: none; }
+  .vd-c .vd-key { color: rgba(15,23,42,0.6); }
+  .vd-c .vd-val { color: #0f172a; font-weight: 500; font-size: 12px; }
+</style>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image vd-card vd-a">
+      <span class="vd-pill">A · Linear</span>
+      <h3>Cell · filter rows</h3>
+      <div class="vd-sub">Activity settings</div>
+      <button class="vd-btn">Run cell</button>
+      <button class="vd-btn-2">Cancel</button>
+      <div style="margin-top: 18px">
+        <div class="vd-row"><span class="vd-key">notebook_id</span><span class="vd-val">nb_q31ve2ab</span></div>
+        <div class="vd-row"><span class="vd-key">duration</span><span class="vd-val">1.4s</span></div>
+        <div class="vd-row"><span class="vd-key">status</span><span class="vd-val">success</span></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Linear-flavored</h3>
+      <p>Dark surfaces, sharp 6px radius, monochrome with a single accent. Developer-tool aesthetic. Maximum density. Strong but inverts your current light look — major shift.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image vd-card vd-b">
+      <span class="vd-pill">B · Stripe</span>
+      <h3>Cell · filter rows</h3>
+      <div class="vd-sub">Activity settings</div>
+      <button class="vd-btn">Run cell</button>
+      <button class="vd-btn-2">Cancel</button>
+      <div style="margin-top: 18px">
+        <div class="vd-row"><span class="vd-key">Notebook ID</span><span class="vd-val">nb_q31ve2ab</span></div>
+        <div class="vd-row"><span class="vd-key">Duration</span><span class="vd-val">1.4s</span></div>
+        <div class="vd-row"><span class="vd-key">Status</span><span class="vd-val">success</span></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Stripe-flavored</h3>
+      <p>White surfaces, hairline 1px borders, 4px radius, tight precision typography (Inter). Indigo gradient on primary action. Looks premium and trustworthy. Closest to "professional" in finance/SaaS terms.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image vd-card vd-c">
+      <span class="vd-pill">C · Refined</span>
+      <h3>Cell · filter rows</h3>
+      <div class="vd-sub">Activity settings</div>
+      <button class="vd-btn">Run cell</button>
+      <button class="vd-btn-2">Cancel</button>
+      <div style="margin-top: 18px">
+        <div class="vd-row"><span class="vd-key">Notebook ID</span><span class="vd-val">nb_q31ve2ab</span></div>
+        <div class="vd-row"><span class="vd-key">Duration</span><span class="vd-val">1.4s</span></div>
+        <div class="vd-row"><span class="vd-key">Status</span><span class="vd-val">success</span></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Refined current</h3>
+      <p>Keeps your existing palette, Space Grotesk font, blue accent (#1f4fd6) and soft glass effects. Tightens spacing, hairline dividers, more deliberate hierarchy. Smallest jump from today; consistent with your notebook toolbar redesign.</p>
+    </div>
+  </div>
+</div>

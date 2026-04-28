@@ -1,0 +1,495 @@
+/* SQL activity workspace — sibling to dataflow + notebook modes.
+   Scoped under .sql-workspace and body.sql-mode, mirroring notebook.css. */
+
+/* Layout toggle: in SQL mode, hide the flowchart canvas, the dataflow run
+   button, the notebook workspace, and the dataflow tab strip. The bottom
+   panel stays visible (we reuse it for results) but its tab strip and
+   per-activity tab content are hidden in favor of #sql_results_panel /
+   #sql_tables_panel. */
+body.sql-mode .pipeline-run,
+body.sql-mode #chart_container,
+body.sql-mode #notebook_workspace,
+body.sql-mode #home_workspace,
+body.sql-mode #settings_workspace,
+body.sql-mode .zoom-controls,
+body.sql-mode .navbar.ds-bottom-tab-strip,
+body.sql-mode #tab_general,
+body.sql-mode #tab_settings,
+body.sql-mode #data_preview,
+body.sql-mode #tab_activities,
+body.sql-mode #scheduled_triggers { display: none !important; }
+body.sql-mode .content { padding: 0; }
+
+.pipeline-panel--sql .activity-icon svg { width: 20px; height: 20px; color: #0a7c66; }
+.pipeline-panel--sql .pipeline-options-trigger svg { width: 14px; height: 14px; }
+
+/* SQL workspace — two-column layout: files panel (left) + editor area (right).
+   Sits in the main canvas area above the resizable footer. */
+.sql-workspace {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  padding: 16px 16px 16px 16px;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.sql-workspace[hidden] { display: none; }
+
+.sql-main-area {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0; /* allow flex children to shrink */
+}
+
+/* Left files panel. Collapses to 0 width via `is-collapsed`. */
+.sql-files-panel {
+  width: 260px;
+  flex: 0 0 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  padding: 8px;
+  box-sizing: border-box;
+  overflow: hidden;
+  transition: flex-basis 160ms ease, width 160ms ease, padding 160ms ease, opacity 160ms ease;
+}
+.sql-files-panel.is-collapsed {
+  flex-basis: 0;
+  width: 0;
+  padding: 0;
+  border-color: transparent;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sql-files-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 4px 0;
+}
+.sql-files-title {
+  flex: 1;
+  font-weight: 600;
+  font-size: 13px;
+  color: #0f172a;
+  letter-spacing: 0.01em;
+}
+.sql-files-toggle,
+.sql-files-refresh,
+.sql-files-show {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #475569;
+  padding: 2px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+}
+.sql-files-toggle:hover,
+.sql-files-refresh:hover,
+.sql-files-show:hover { background: rgba(15, 23, 42, 0.06); color: #0f172a; }
+
+.sql-files-search-wrap { padding: 0 4px; }
+.sql-files-search-wrap input[type="search"] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 6px;
+  font-size: 12.5px;
+}
+
+.sql-files-tree {
+  flex: 1;
+  overflow: auto;
+  padding: 2px 0;
+}
+.sql-files-empty {
+  padding: 16px 12px;
+  font-size: 12.5px;
+  color: #94a3b8;
+  text-align: center;
+}
+
+.sql-tree-section {
+  margin: 4px 2px;
+}
+.sql-tree-section-header {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  padding: 6px 8px 4px;
+}
+
+.sql-tree-dir,
+.sql-tree-file {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  font-size: 12.5px;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+}
+.sql-tree-dir:hover,
+.sql-tree-file:hover { background: rgba(15, 23, 42, 0.06); }
+.sql-tree-dir { font-weight: 500; color: #334155; }
+.sql-tree-file {
+  color: #1e293b;
+  font-family: "JetBrains Mono", "Menlo", monospace;
+  font-size: 12px;
+}
+.sql-tree-file.has-error { color: #b91c1c; }
+.sql-tree-file.has-error::after {
+  content: "⚠";
+  margin-left: auto;
+  font-size: 11px;
+}
+.sql-tree-icon {
+  width: 14px; height: 14px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #94a3b8;
+  font-size: 11px;
+}
+.sql-tree-children { padding-left: 12px; border-left: 1px dashed rgba(15, 23, 42, 0.08); margin-left: 8px; }
+.sql-tree-dir[aria-expanded="false"] + .sql-tree-children { display: none; }
+.sql-tree-chevron { font-size: 9px; color: #94a3b8; width: 10px; display: inline-block; }
+.sql-tree-dir[aria-expanded="true"]  .sql-tree-chevron::before { content: "▾"; }
+.sql-tree-dir[aria-expanded="false"] .sql-tree-chevron::before { content: "▸"; }
+
+.sql-tree-file .sql-tree-tablename {
+  margin-left: auto;
+  color: #94a3b8;
+  font-size: 10.5px;
+  font-style: italic;
+  white-space: nowrap;
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sql-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: saturate(140%) blur(8px);
+  -webkit-backdrop-filter: saturate(140%) blur(8px);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 8px;
+}
+
+.sql-toolbar-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 240px;
+}
+.sql-name-input {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 4px 6px;
+  border-radius: 6px;
+  color: #0f172a;
+}
+.sql-name-input:hover { border-color: rgba(15, 23, 42, 0.12); }
+.sql-name-input:focus {
+  outline: none;
+  border-color: rgba(10, 124, 102, 0.5);
+  background: #fff;
+}
+
+.sql-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.06);
+  color: #475569;
+}
+.sql-status-pill .sql-status-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #94a3b8;
+}
+.sql-status-pill[data-state="running"] { background: rgba(245, 158, 11, 0.12); color: #b45309; }
+.sql-status-pill[data-state="running"] .sql-status-dot { background: #f59e0b; animation: sql-pulse 1.4s ease-in-out infinite; }
+.sql-status-pill[data-state="ok"]      { background: rgba(34, 197, 94, 0.12); color: #166534; }
+.sql-status-pill[data-state="ok"] .sql-status-dot { background: #22c55e; }
+.sql-status-pill[data-state="error"]   { background: rgba(239, 68, 68, 0.12); color: #b91c1c; }
+.sql-status-pill[data-state="error"] .sql-status-dot { background: #ef4444; }
+@keyframes sql-pulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
+
+.sql-toolbar-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+.sql-editor-wrap {
+  flex: 1;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  background: #fbfbfd;
+  overflow: hidden;
+  min-height: 200px;
+}
+.sql-editor-wrap textarea,
+.sql-editor-wrap .CodeMirror {
+  width: 100%;
+  height: 100%;
+  font-family: "JetBrains Mono", "Menlo", monospace;
+  font-size: 13px;
+  border: 0;
+  resize: none;
+  padding: 10px 12px;
+  background: transparent;
+  color: #0f172a;
+  box-sizing: border-box;
+  outline: none;
+}
+.sql-editor-wrap .CodeMirror { padding: 0; }
+.sql-editor-wrap .CodeMirror-scroll { padding: 8px 4px; }
+.sql-editor-wrap .CodeMirror-gutters { background: transparent; border-right: 1px solid rgba(15,23,42,0.05); }
+
+.sql-hint {
+  font-size: 12px;
+  color: #64748b;
+  padding: 4px 4px 0;
+}
+.sql-hint code {
+  font-family: "JetBrains Mono", "Menlo", monospace;
+  font-size: 11.5px;
+  background: rgba(15, 23, 42, 0.06);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+/* Bottom-panel result pane. Stretches to fill the entire footer height
+   so the dataframe table + chart pane have room to breathe. */
+.sql-results-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 14px 14px;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.sql-results-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: #475569;
+  flex-wrap: wrap;
+  flex: 0 0 auto;
+}
+.sql-results-meta .sql-results-meta-spacer { flex: 1; }
+.sql-results-status .pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.06);
+}
+.sql-results-status .pill.pill-running { background: rgba(245, 158, 11, 0.12); color: #b45309; }
+.sql-results-status .pill.pill-ok      { background: rgba(34, 197, 94, 0.12); color: #166534; }
+.sql-results-status .pill.pill-error   { background: rgba(239, 68, 68, 0.12); color: #b91c1c; }
+
+.sql-results-error {
+  flex: 0 0 auto;
+  font-family: "JetBrains Mono", "Menlo", monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #7f1d1d;
+  padding: 8px 10px;
+  border-radius: 6px;
+  max-height: 40%;
+  overflow: auto;
+}
+
+/* Mount node for one or more result cards, stacked vertically. Scrolls
+   internally so the meta bar stays visible regardless of card count. */
+.sql-results-mount {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.sql-result-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 10px;
+  background: #ffffff;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.sql-result-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  flex-wrap: wrap;
+}
+.sql-result-card-stmt {
+  flex: 1 1 280px;
+  font-family: "JetBrains Mono", "Menlo", monospace;
+  font-size: 11.5px;
+  color: #0f172a;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  min-width: 0;
+}
+.sql-result-card-stmt.is-expanded {
+  white-space: pre-wrap;
+  word-break: break-word;
+  cursor: zoom-out;
+}
+.sql-result-card-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #475569;
+}
+.sql-result-card-meta .sql-trunc-note { font-size: 11px; color: #94a3b8; }
+.sql-result-card-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.sql-result-card-body {
+  /* The inner NB.renderDataFrame card grows to a sensible default; with
+     many result cards we keep each one bounded so the user can scroll. */
+  display: flex;
+  flex-direction: column;
+  min-height: 280px;
+  max-height: 560px;
+}
+.sql-result-card-body > .nb-df-card {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: 0;
+  border: 0;
+  border-radius: 0;
+}
+.sql-result-card-body > .nb-df-card > .nb-df-table-panel {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.sql-result-card-body > .nb-df-card > .nb-df-table-panel > .nb-df-scroll {
+  flex: 1 1 auto;
+  max-height: none;
+  min-height: 0;
+}
+.sql-result-card-body > .nb-df-card > .nb-chart-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.sql-result-card-body > .nb-df-card > .nb-chart-panel .nb-chart-canvas-wrap {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 240px;
+}
+
+.sql-result-card-error {
+  font-family: "JetBrains Mono", "Menlo", monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  background: rgba(239, 68, 68, 0.06);
+  color: #7f1d1d;
+  padding: 10px 12px;
+  border-top: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* Tables panel ("Show available tables"). */
+.sql-tables-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  height: 100%;
+  box-sizing: border-box;
+}
+.sql-tables-toolbar { display: flex; align-items: center; gap: 8px; }
+.sql-tables-toolbar input[type="search"] {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 6px;
+  font-size: 13px;
+}
+.sql-tables-list {
+  flex: 1;
+  overflow: auto;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 6px;
+  background: #fff;
+}
+.sql-table-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) auto minmax(280px, 2fr);
+  gap: 12px;
+  align-items: baseline;
+  padding: 6px 12px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.05);
+  font-size: 12.5px;
+}
+.sql-table-row:last-child { border-bottom: 0; }
+.sql-table-row .sql-table-name {
+  font-family: "JetBrains Mono", "Menlo", monospace;
+  font-weight: 600;
+  color: #0f172a;
+  cursor: pointer;
+}
+.sql-table-row .sql-table-source {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+.sql-table-row .sql-table-path {
+  font-family: "JetBrains Mono", "Menlo", monospace;
+  font-size: 11.5px;
+  color: #475569;
+  word-break: break-all;
+}
+.sql-table-row.has-error { background: rgba(239, 68, 68, 0.04); }
+.sql-table-row.has-error .sql-table-path { color: #b91c1c; }
