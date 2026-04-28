@@ -352,6 +352,12 @@
     </div>
   </div>
 
+  <noscript>
+    <div style="margin:24px;padding:16px;border-radius:12px;background:#fef3c7;color:#92400e;font-family:Inter,Arial,sans-serif;">
+      JavaScript is required for the phone assignment console.
+    </div>
+  </noscript>
+
   <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 
   <script>
@@ -381,6 +387,10 @@
       let lastFocused = null;
 
       function showToast(message, kind) {
+        // Cap the visible stack so repeated errors don't pile up.
+        while (toastStack.children.length > 3) {
+          toastStack.firstElementChild.remove();
+        }
         const t = document.createElement("div");
         t.className = "toast" + (kind ? " " + kind : "");
         t.textContent = message;
@@ -424,6 +434,24 @@
         if (e.key === "Escape") {
           if (assignModal.classList.contains("is-open")) closeModal(assignModal);
           if (confirmModal.classList.contains("is-open")) closeModal(confirmModal);
+        }
+        if (e.key === "Tab") {
+          // Trap focus within whichever modal is open.
+          const openModalEl = [assignModal, confirmModal].find((m) => m.classList.contains("is-open"));
+          if (!openModalEl) return;
+          const focusables = openModalEl.querySelectorAll(
+            'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          );
+          if (!focusables.length) return;
+          const first = focusables[0];
+          const last = focusables[focusables.length - 1];
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
         }
       });
 
