@@ -1144,8 +1144,13 @@
             if (!isEmbedded) window.location.href = "/login";
             return;
           }
-          if (!me.is_admin) {
-            if (!isEmbedded) window.location.href = "/dashboard";
+          // Non-admin users are allowed when embedded — the dashboard's
+          // "My Numbers" tab loads this page in an iframe and the server
+          // already filters /admin/phones?scope=mine to phones bound to
+          // their customer_id. Standalone non-admin visits still bounce
+          // to /dashboard (no point in showing a top-level admin page).
+          if (!me.is_admin && !isEmbedded) {
+            window.location.href = "/dashboard";
             return;
           }
           refresh();
