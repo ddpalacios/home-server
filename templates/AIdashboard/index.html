@@ -7046,23 +7046,16 @@
             save_lead(data);
 
           } 
-          // Persistent chip pool — show next_questions on every bot
-          // turn, falling back to the last non-empty pool we got from
-          // the model, then to the bot's default_start_questions.
-          const modelChips = Array.isArray(data.next_questions) ? data.next_questions : [];
-          if (modelChips.length) {
-            window.__lastInsightsChips = modelChips.slice(0, 4);
-          }
-          let chipPool = window.__lastInsightsChips || [];
-          if (!chipPool.length) {
-            const cfg = window.__aiWidgetCfgCache;
-            if (cfg && Array.isArray(cfg.default_start_questions)) {
-              chipPool = cfg.default_start_questions.slice(0, 4);
-            }
-          }
+          // Only show fresh model chips, and never repeat the previous
+          // turn's chips. If the model didn't return any new ones, no
+          // chips render — better than recycling stale prompts.
+          const modelChips = Array.isArray(data.next_questions) ? data.next_questions.filter(Boolean) : [];
+          const priorSet = new Set((window.__lastInsightsChips || []).map((c) => String(c).trim().toLowerCase()));
+          const freshChips = modelChips.filter((c) => !priorSet.has(String(c).trim().toLowerCase())).slice(0, 4);
+          window.__lastInsightsChips = freshChips;
           const thread = insightsMessages[requestMode];
           const lastIndex = thread.length - 1;
-          const newMsg = { role: "bot", text: responseText || "", nextQuestions: chipPool };
+          const newMsg = { role: "bot", text: responseText || "", nextQuestions: freshChips };
           if (lastIndex >= 0 && thread[lastIndex].role === "bot") {
             thread[lastIndex] = newMsg;
           } else {
