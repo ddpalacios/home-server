@@ -2457,6 +2457,115 @@
         display: flex !important;
       }
     }
+
+    /* === Admin flip-switch panel ====================================== */
+    .admin-panel {
+      max-width: 1200px;
+      margin: 22px auto 8px;
+      background: linear-gradient(135deg, #ffffff 0%, #f1f5ff 100%);
+      border: 1px solid #dbeafe;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px 22px;
+    }
+    .admin-panel[hidden] { display: none !important; }
+    .admin-panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .admin-panel-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .admin-panel-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      margin-top: 4px;
+    }
+    .admin-panel-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+      max-width: 560px;
+    }
+
+    .admin-flip {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+      flex-shrink: 0;
+    }
+    .admin-flip input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .admin-flip-track {
+      position: relative;
+      width: 46px;
+      height: 26px;
+      border-radius: 999px;
+      background: #cbd5e1;
+      transition: background-color 0.2s ease;
+    }
+    .admin-flip-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
+      transition: transform 0.2s ease;
+    }
+    .admin-flip input:checked + .admin-flip-track {
+      background: var(--accent);
+    }
+    .admin-flip input:checked + .admin-flip-track .admin-flip-thumb {
+      transform: translateX(20px);
+    }
+    .admin-flip input:focus-visible + .admin-flip-track {
+      outline: 2px solid var(--accent-2);
+      outline-offset: 2px;
+    }
+    .admin-flip-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      min-width: 26px;
+    }
+    .admin-flip input:checked ~ .admin-flip-label {
+      color: var(--accent);
+    }
+
+    .admin-panel-body {
+      margin-top: 16px;
+      border-top: 1px solid #e0e7ff;
+      padding-top: 14px;
+    }
+    .admin-panel-body[hidden] { display: none !important; }
+    .admin-panel-frame {
+      width: 100%;
+      height: 720px;
+      border: 0;
+      background: transparent;
+      border-radius: 14px;
+      display: block;
+    }
+
+    @media (max-width: 720px) {
+      .admin-panel-head { flex-direction: column; align-items: flex-start; }
+      .admin-panel-frame { height: 600px; }
+    }
   </style>
 </head>
 <body>
@@ -2469,7 +2578,6 @@
         </a>
         <div class="nav-actions">
           <div class="nav-links">
-            <a href="/admin/phones" id="adminNavLink" hidden>Admin Settings</a>
             <a href="#overview">Dashboard</a>
             <a href="#leads">Recent Leads</a>
             <a href="#insights">AI Insights</a>
@@ -2490,7 +2598,6 @@
       <div id="mobile-menu-button" style="font-size:2rem; cursor:pointer; user-select:none;">☰</div>
     </nav>
     <div id="mobile-menu">
-      <a href="/admin/phones" id="adminNavLinkMobile" hidden>Admin Settings</a>
       <a href="#overview">Dashboard</a>
       <a href="#settings">AI Assistant Settings</a>
       <a href="#knowledge">Knowledge Base</a>
@@ -2503,6 +2610,35 @@
     </div>
 
     <main class="page">
+
+      <!-- Admin panel: flip-switch reveals the embedded /admin/phones page.
+           Whole section stays hidden until /me confirms is_admin=true. -->
+      <section id="adminPanel" class="admin-panel" hidden>
+        <div class="admin-panel-head">
+          <div>
+            <div class="admin-panel-eyebrow">Admin</div>
+            <h2 class="admin-panel-title">Phone Number Settings</h2>
+            <p class="admin-panel-sub">Assign Twilio numbers to client websites, configure routing, and send test reroutes.</p>
+          </div>
+          <label class="admin-flip" for="adminFlipSwitch" title="Toggle admin panel">
+            <input id="adminFlipSwitch" type="checkbox" role="switch" aria-controls="adminPanelBody" aria-expanded="false" />
+            <span class="admin-flip-track" aria-hidden="true">
+              <span class="admin-flip-thumb"></span>
+            </span>
+            <span class="admin-flip-label" id="adminFlipLabel">Off</span>
+          </label>
+        </div>
+        <div class="admin-panel-body" id="adminPanelBody" hidden>
+          <iframe
+            id="adminPanelFrame"
+            class="admin-panel-frame"
+            title="Phone Number Settings"
+            src="about:blank"
+            loading="lazy"
+            referrerpolicy="same-origin"
+          ></iframe>
+        </div>
+      </section>
 
       <header id="overview">
         <div class="welcome">
@@ -6870,20 +7006,50 @@
 
     updatePublishState();
 
-    async function checkAdminAndRevealNav() {
+    async function checkAdminAndRevealPanel() {
       try {
         const res = await fetch("/me", { credentials: "include" });
         if (!res.ok) return;
         const me = await res.json();
-        if (me && me.is_admin) {
-          ["adminNavLink", "adminNavLinkMobile"].forEach((id) => {
-            const el = document.getElementById(id);
-            if (el) el.removeAttribute("hidden");
-          });
-        }
+        if (!me || !me.is_admin) return;
+        const panel = document.getElementById("adminPanel");
+        if (panel) panel.removeAttribute("hidden");
+        wireAdminFlipSwitch();
       } catch (e) {
-        // Silently ignore — admin nav stays hidden, which is the safe default.
+        // Silently ignore — admin panel stays hidden, which is the safe default.
       }
+    }
+
+    function wireAdminFlipSwitch() {
+      const sw = document.getElementById("adminFlipSwitch");
+      const body = document.getElementById("adminPanelBody");
+      const frame = document.getElementById("adminPanelFrame");
+      const label = document.getElementById("adminFlipLabel");
+      if (!sw || !body || !frame || sw.dataset.bound) return;
+      sw.dataset.bound = "1";
+      // Persist toggle state across page reloads.
+      try {
+        if (sessionStorage.getItem("jgl_admin_panel_open") === "1") {
+          sw.checked = true;
+        }
+      } catch (e) {}
+      const apply = () => {
+        const on = sw.checked;
+        sw.setAttribute("aria-expanded", on ? "true" : "false");
+        if (label) label.textContent = on ? "On" : "Off";
+        if (on) {
+          body.removeAttribute("hidden");
+          // Lazy-load the iframe the first time it's shown.
+          if (frame.getAttribute("src") === "about:blank" || !frame.getAttribute("src")) {
+            frame.setAttribute("src", "/admin/phones");
+          }
+        } else {
+          body.setAttribute("hidden", "");
+        }
+        try { sessionStorage.setItem("jgl_admin_panel_open", on ? "1" : "0"); } catch (e) {}
+      };
+      sw.addEventListener("change", apply);
+      apply();
     }
 
     ensureAuthenticated().then((data) => {
@@ -6906,7 +7072,7 @@
         loadLeads();
         loadKnowledgeBase("client");
         loadKnowledgeBase("internal");
-        checkAdminAndRevealNav();
+        checkAdminAndRevealPanel();
       }
     });
   </script>

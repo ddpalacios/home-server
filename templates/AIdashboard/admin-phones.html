@@ -383,13 +383,24 @@
   </style>
 </head>
 <body>
-  <header class="topbar">
+  <header class="topbar" data-standalone>
     <div class="topbar-inner">
       <a href="/dashboard" aria-label="Back to dashboard">← Dashboard</a>
       <span class="topbar-title">Admin Settings</span>
       <a href="/auth/logout">Logout</a>
     </div>
   </header>
+  <script>
+    // Hide the standalone topbar + page-header when the page is loaded inside
+    // the dashboard's flip-switch panel (iframe). Saves vertical space.
+    if (window.self !== window.top) {
+      const topbar = document.querySelector('[data-standalone]');
+      if (topbar) topbar.style.display = 'none';
+      const main = document.querySelector('main');
+      if (main) main.style.margin = '0';
+      document.body.style.background = 'transparent';
+    }
+  </script>
 
   <main>
     <section class="page-header">
@@ -1078,25 +1089,29 @@
       // Initial gate: confirm we're an admin. Server-side gate is the real
       // protection; this is just for a clean redirect and to avoid showing
       // a 403-laden page if the user is logged in as non-admin.
+      // When embedded in an iframe (e.g. the dashboard's flip-switch panel)
+      // we never navigate the parent window — let the host page decide.
+      const isEmbedded = window.self !== window.top;
+
       async function gateThenLoad() {
         try {
           const res = await fetch("/me", { credentials: "same-origin" });
           if (!res.ok) {
-            window.location.href = "/login";
+            if (!isEmbedded) window.location.href = "/login";
             return;
           }
           const me = await res.json();
           if (!me.authenticated) {
-            window.location.href = "/login";
+            if (!isEmbedded) window.location.href = "/login";
             return;
           }
           if (!me.is_admin) {
-            window.location.href = "/dashboard";
+            if (!isEmbedded) window.location.href = "/dashboard";
             return;
           }
           refresh();
         } catch (e) {
-          window.location.href = "/login";
+          if (!isEmbedded) window.location.href = "/login";
         }
       }
 
