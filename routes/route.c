@@ -245,8 +245,8 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
 
     if (strcmp(request_type, "POST") == 0 &&
         (strcmp(route, "/twilio/voice") == 0 || strcmp(route, "/voice") == 0)) {
-        printf("Twilio live voice webhook received.\n");
-        send_twilio_voice_stream_response(cSSL, http_header);
+        printf("Twilio live voice webhook received — proxying to Flask for phone-to-account lookup.\n");
+        post_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/voice-legacy") == 0) {
         printf("Twilio Voice webhook received.\n");
         printf("Raw Headers:\n%s\n", http_header);
@@ -435,6 +435,8 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/auth/") != NULL) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/auth/") != NULL) {
+        post_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/widget.js") == 0) {
         get_to_local(socket, http_header, body, route_with_query, "9000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/widget.css") == 0) {
