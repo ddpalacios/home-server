@@ -2803,41 +2803,20 @@
           </div>
 
           <div class="voice-row voice-script-row">
-            <label class="voice-label">
-              <span>First call greeting</span>
-              <span class="voice-help">Said when a customer calls for the first time.</span>
-            </label>
             <div class="voice-template-row">
-              <select id="voiceFirstCall" class="voice-template-pick">
-                <option value="default">Default</option>
-                <option value="warm">Warm</option>
-                <option value="concise">Concise</option>
-                <option value="custom" hidden>Custom (edited)</option>
+              <label class="voice-label" style="margin-bottom:0;">
+                <span>Use this opener for</span>
+              </label>
+              <select id="voiceIntent" class="voice-template-pick">
+                <option value="first_call">First call (new customer)</option>
+                <option value="missed_call">Missed call follow-up</option>
               </select>
-              <button type="button" class="btn-link" id="voiceFirstReset">Reset to default</button>
+              <button type="button" class="btn-link" id="voiceResetBtn">Reset to default</button>
             </div>
-            <textarea id="voiceFirstScript" class="voice-script" rows="3" maxlength="800"
+            <p class="voice-help" id="voiceIntentHelp" style="margin: 6px 0 8px;">Said when a customer calls for the first time.</p>
+            <textarea id="voiceScript" class="voice-script" rows="3" maxlength="800"
               placeholder="Hi, thanks for calling {business_name}. How can I help you today?"></textarea>
-            <div class="voice-bot-says" id="voiceFirstPreview"></div>
-          </div>
-
-          <div class="voice-row voice-script-row">
-            <label class="voice-label">
-              <span>Missed-call greeting</span>
-              <span class="voice-help">Said when the customer is calling back after a missed connection.</span>
-            </label>
-            <div class="voice-template-row">
-              <select id="voiceMissedCall" class="voice-template-pick">
-                <option value="default">Default</option>
-                <option value="apologetic">Apologetic</option>
-                <option value="concise">Concise</option>
-                <option value="custom" hidden>Custom (edited)</option>
-              </select>
-              <button type="button" class="btn-link" id="voiceMissedReset">Reset to default</button>
-            </div>
-            <textarea id="voiceMissedScript" class="voice-script" rows="3" maxlength="800"
-              placeholder="Hi, this is the assistant at {business_name} returning your call. How can I help?"></textarea>
-            <div class="voice-bot-says" id="voiceMissedPreview"></div>
+            <div class="voice-bot-says" id="voicePreview"></div>
           </div>
 
           <div class="voice-actions">
@@ -7431,19 +7410,51 @@
 
     async function loadVoiceSettings() {
       const personality = document.getElementById("voicePersonality");
-      const firstSel = document.getElementById("voiceFirstCall");
-      const missedSel = document.getElementById("voiceMissedCall");
-      const firstScript = document.getElementById("voiceFirstScript");
-      const missedScript = document.getElementById("voiceMissedScript");
-      const firstReset = document.getElementById("voiceFirstReset");
-      const missedReset = document.getElementById("voiceMissedReset");
+      const intentSel = document.getElementById("voiceIntent");
+      const intentHelp = document.getElementById("voiceIntentHelp");
+      const script = document.getElementById("voiceScript");
+      const resetBtn = document.getElementById("voiceResetBtn");
       const saveBtn = document.getElementById("voiceSaveBtn");
       const status = document.getElementById("voiceSaveStatus");
-      if (!personality || !firstScript || !missedScript) return;
+      if (!personality || !intentSel || !script) return;
 
-      let businessName = "your business";
+      // Local state of both scripts; the visible textarea reflects the
+      // currently-picked intent and writes back into this object on edit.
+      const state = {
+        first_call_script: VOICE_FIRST_TEMPLATES["default"],
+        missed_call_script: VOICE_MISSED_TEMPLATES["default"],
+        first_call_intent: "default",
+        missed_call_intent: "default",
+        businessName: "your business",
+      };
 
-      // Pull current settings + business name (from /me).
+      function helpText(intent) {
+        return intent === "missed_call"
+          ? "Said when the customer is calling back after a missed connection."
+          : "Said when a customer calls for the first time.";
+      }
+
+      function defaultScript(intent) {
+        return intent === "missed_call"
+          ? VOICE_MISSED_TEMPLATES["default"]
+          : VOICE_FIRST_TEMPLATES["default"];
+      }
+
+      function renderPreview() {
+        const preview = document.getElementById("voicePreview");
+        if (!preview) return;
+        const raw = (script.value || "").trim();
+        const rendered = raw.replace(/\{business_name\}/g, state.businessName || "your business");
+        preview.textContent = rendered ? `"${rendered}"` : "";
+      }
+
+      function showCurrent() {
+        const intent = intentSel.value;
+        if (intentHelp) intentHelp.textContent = helpText(intent);
+        script.value = (intent === "missed_call" ? state.missed_call_script : state.first_call_script) || "";
+        renderPreview();
+      }
+
       try {
         const [meRes, vRes] = await Promise.all([
           fetch("/me", { credentials: "same-origin" }),
@@ -7451,70 +7462,36 @@
         ]);
         if (meRes.ok) {
           const me = await meRes.json();
-          if (me.business_name) businessName = me.business_name;
+          if (me.business_name) state.businessName = me.business_name;
         }
         if (vRes.ok) {
           const data = await vRes.json();
           personality.value = data.personality || "professional";
-
-          // First-call: prefer custom script if present and non-default,
-          // otherwise show the template's text in the editor.
-          const firstTplKey = data.first_call_intent || "default";
-          firstSel.value = firstTplKey;
-          const firstStored = (data.first_call_script || "").trim();
-          const firstTemplate = VOICE_FIRST_TEMPLATES[firstTplKey] || VOICE_FIRST_TEMPLATES["default"];
-          firstScript.value = firstStored || firstTemplate;
-          if (firstStored && firstStored !== firstTemplate) firstSel.value = "custom";
-
-          const missedTplKey = data.missed_call_intent || "default";
-          missedSel.value = missedTplKey;
-          const missedStored = (data.missed_call_script || "").trim();
-          const missedTemplate = VOICE_MISSED_TEMPLATES[missedTplKey] || VOICE_MISSED_TEMPLATES["default"];
-          missedScript.value = missedStored || missedTemplate;
-          if (missedStored && missedStored !== missedTemplate) missedSel.value = "custom";
+          state.first_call_intent = data.first_call_intent || "default";
+          state.missed_call_intent = data.missed_call_intent || "default";
+          state.first_call_script = (data.first_call_script || "").trim() || VOICE_FIRST_TEMPLATES[state.first_call_intent] || VOICE_FIRST_TEMPLATES["default"];
+          state.missed_call_script = (data.missed_call_script || "").trim() || VOICE_MISSED_TEMPLATES[state.missed_call_intent] || VOICE_MISSED_TEMPLATES["default"];
         }
       } catch (e) { /* silent */ }
 
-      renderVoicePreview("voiceFirstScript", "voiceFirstPreview", businessName);
-      renderVoicePreview("voiceMissedScript", "voiceMissedPreview", businessName);
+      showCurrent();
 
-      // Picking a template REPLACES the textarea with that template's text.
-      firstSel.addEventListener("change", () => {
-        const k = firstSel.value;
-        if (k === "custom") return; // keep current text
-        firstScript.value = VOICE_FIRST_TEMPLATES[k] || VOICE_FIRST_TEMPLATES["default"];
-        renderVoicePreview("voiceFirstScript", "voiceFirstPreview", businessName);
-      });
-      missedSel.addEventListener("change", () => {
-        const k = missedSel.value;
-        if (k === "custom") return;
-        missedScript.value = VOICE_MISSED_TEMPLATES[k] || VOICE_MISSED_TEMPLATES["default"];
-        renderVoicePreview("voiceMissedScript", "voiceMissedPreview", businessName);
+      // Switching intent updates the visible textarea + help line.
+      intentSel.addEventListener("change", () => showCurrent());
+
+      // Edits write back into state for the currently-picked intent.
+      script.addEventListener("input", () => {
+        if (intentSel.value === "missed_call") state.missed_call_script = script.value;
+        else state.first_call_script = script.value;
+        renderPreview();
       });
 
-      // Editing the textarea flips the picker to "custom".
-      firstScript.addEventListener("input", () => {
-        const tplKey = firstSel.value === "custom" ? "default" : firstSel.value;
-        const tpl = VOICE_FIRST_TEMPLATES[tplKey] || "";
-        if (firstScript.value.trim() !== tpl.trim()) firstSel.value = "custom";
-        renderVoicePreview("voiceFirstScript", "voiceFirstPreview", businessName);
-      });
-      missedScript.addEventListener("input", () => {
-        const tplKey = missedSel.value === "custom" ? "default" : missedSel.value;
-        const tpl = VOICE_MISSED_TEMPLATES[tplKey] || "";
-        if (missedScript.value.trim() !== tpl.trim()) missedSel.value = "custom";
-        renderVoicePreview("voiceMissedScript", "voiceMissedPreview", businessName);
-      });
-
-      if (firstReset) firstReset.addEventListener("click", () => {
-        firstSel.value = "default";
-        firstScript.value = VOICE_FIRST_TEMPLATES["default"];
-        renderVoicePreview("voiceFirstScript", "voiceFirstPreview", businessName);
-      });
-      if (missedReset) missedReset.addEventListener("click", () => {
-        missedSel.value = "default";
-        missedScript.value = VOICE_MISSED_TEMPLATES["default"];
-        renderVoicePreview("voiceMissedScript", "voiceMissedPreview", businessName);
+      if (resetBtn) resetBtn.addEventListener("click", () => {
+        const def = defaultScript(intentSel.value);
+        script.value = def;
+        if (intentSel.value === "missed_call") state.missed_call_script = def;
+        else state.first_call_script = def;
+        renderPreview();
       });
 
       function setStatus(msg, kind) {
@@ -7529,10 +7506,10 @@
           setStatus("Saving…");
           const body = {
             personality: personality.value,
-            first_call_intent: firstSel.value === "custom" ? "default" : firstSel.value,
-            missed_call_intent: missedSel.value === "custom" ? "default" : missedSel.value,
-            first_call_script: firstScript.value || "",
-            missed_call_script: missedScript.value || "",
+            first_call_intent: state.first_call_intent,
+            missed_call_intent: state.missed_call_intent,
+            first_call_script: state.first_call_script || "",
+            missed_call_script: state.missed_call_script || "",
           };
           try {
             const res = await fetch("/me/voice-settings", {
@@ -7545,12 +7522,12 @@
               setStatus(err.error || ("Save failed (" + res.status + ")"), "error");
               return;
             }
-            setStatus("Saved. Will apply on next Publish.", "ok");
+            setStatus("Saved. Click Publish App to apply on live calls.", "ok");
           } catch (e) {
             setStatus("Network error", "error");
           } finally {
             saveBtn.disabled = false;
-            setTimeout(() => setStatus(""), 4000);
+            setTimeout(() => setStatus(""), 5000);
           }
         });
       }
