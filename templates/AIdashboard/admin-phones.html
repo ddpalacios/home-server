@@ -840,6 +840,16 @@
         clearRoutingErrors();
         syncRoutingMethodUi();
         validateRoutingModal();
+        // Send Test only makes sense when a target is already saved on this
+        // phone — otherwise the server returns 400 no_target. Lock it until
+        // there's something to test against.
+        if (routingTestBtn) {
+          const hasSavedTarget = !!(r && r.target && (r.target + "").trim());
+          routingTestBtn.disabled = !hasSavedTarget;
+          routingTestBtn.title = hasSavedTarget
+            ? ""
+            : "Save a routing target first, then come back to send a test.";
+        }
         openModal(routingModal);
       }
 
@@ -981,7 +991,14 @@
             const labels = { email: "Test email sent", sms: "Test SMS sent", voice_call: "Test call placed" };
             showToast(labels[data.method] || "Test sent.", "success");
           } else {
-            showToast((data && data.error) || ("Test failed (HTTP " + res.status + ")"), "error");
+            const errMap = {
+              "no routing target configured": "Save a routing target first (Email / Voice / SMS), then click Send Test.",
+              "method_not_allowed": "That routing method isn't enabled for your account.",
+              "not_your_phone": "This phone isn't assigned to your account.",
+              "phone not found": "This phone is no longer in the pool.",
+            };
+            const raw = (data && data.error) || "";
+            showToast(errMap[raw] || raw || ("Test failed (HTTP " + res.status + ")"), "error");
           }
         } catch (e) {
           showToast("Network error.", "error");
