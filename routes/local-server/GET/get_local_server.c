@@ -67,6 +67,7 @@ void get_to_local(struct Socket* socket, char* http_header, char* body, char* ro
     }
 
     const char *cookie_header = NULL;
+    char *fwd_host = NULL;
     if (http_header) {
         const char *cookie_start = strstr(http_header, "\r\nCookie:");
         if (!cookie_start && strncmp(http_header, "Cookie:", 7) == 0) {
@@ -86,39 +87,77 @@ void get_to_local(struct Socket* socket, char* http_header, char* body, char* ro
                 }
             }
         }
+
+        /* Pull original Host so we can forward it as X-Forwarded-Host. */
+        const char *host_start = strstr(http_header, "\r\nHost:");
+        if (!host_start && strncmp(http_header, "Host:", 5) == 0) {
+            host_start = http_header;
+        }
+        if (host_start) {
+            host_start += (host_start == http_header) ? 5 : 7;
+            while (*host_start == ' ') host_start++;
+            const char *host_end = strstr(host_start, "\r\n");
+            if (host_end && host_end > host_start) {
+                size_t len = (size_t)(host_end - host_start);
+                fwd_host = malloc(len + 1);
+                if (fwd_host) {
+                    memcpy(fwd_host, host_start, len);
+                    fwd_host[len] = '\0';
+                }
+            }
+        }
     }
 
-    size_t req_size = strlen(route) + 1024 + (cookie_header ? strlen(cookie_header) : 0);
+    size_t req_size = strlen(route) + 1024 + (cookie_header ? strlen(cookie_header) : 0) + (fwd_host ? strlen(fwd_host) : 0);
     char *request = malloc(req_size);
     if (!request) {
         if (cookie_header) free((void *)cookie_header);
+        if (fwd_host) free(fwd_host);
         close(sfd);
         return;
     }
 
-    if (cookie_header) {
+    /* Always forward https for X-Forwarded-Proto since home-server terminates TLS on the public side. */
+    if (cookie_header && fwd_host) {
+        snprintf(request, req_size,
+            "GET %s HTTP/1.1\r\n"
+            "Host: %s:%s\r\n"
+            "X-Forwarded-Host: %s\r\n"
+            "X-Forwarded-Proto: https\r\n"
+            "Connection: close\r\n"
+            "Cookie: %s\r\n"
+            "\r\n",
+            route, "127.0.0.1", port, fwd_host, cookie_header);
+    } else if (fwd_host) {
+        snprintf(request, req_size,
+            "GET %s HTTP/1.1\r\n"
+            "Host: %s:%s\r\n"
+            "X-Forwarded-Host: %s\r\n"
+            "X-Forwarded-Proto: https\r\n"
+            "Connection: close\r\n"
+            "\r\n",
+            route, "127.0.0.1", port, fwd_host);
+    } else if (cookie_header) {
         snprintf(request, req_size,
             "GET %s HTTP/1.1\r\n"
             "Host: %s:%s\r\n"
             "Connection: close\r\n"
             "Cookie: %s\r\n"
             "\r\n",
-            route,
-            "127.0.0.1", port,
-            cookie_header);
+            route, "127.0.0.1", port, cookie_header);
     } else {
         snprintf(request, req_size,
             "GET %s HTTP/1.1\r\n"
             "Host: %s:%s\r\n"
             "Connection: close\r\n"
             "\r\n",
-            route,
-            "127.0.0.1", port);
+            route, "127.0.0.1", port);
     }
 
     send(sfd, request, strlen(request), 0);
     free(request);
     if (cookie_header) free((void *)cookie_header);
+    if (fwd_host) free(fwd_host);
 
     char buf[8192];
     char *response = NULL;
