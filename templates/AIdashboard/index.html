@@ -2469,6 +2469,7 @@
         </a>
         <div class="nav-actions">
           <div class="nav-links">
+            <a href="/admin/phones" id="adminNavLink" hidden>Admin Settings</a>
             <a href="#overview">Dashboard</a>
             <a href="#leads">Recent Leads</a>
             <a href="#insights">AI Insights</a>
@@ -2489,6 +2490,7 @@
       <div id="mobile-menu-button" style="font-size:2rem; cursor:pointer; user-select:none;">☰</div>
     </nav>
     <div id="mobile-menu">
+      <a href="/admin/phones" id="adminNavLinkMobile" hidden>Admin Settings</a>
       <a href="#overview">Dashboard</a>
       <a href="#settings">AI Assistant Settings</a>
       <a href="#knowledge">Knowledge Base</a>
@@ -6867,6 +6869,23 @@
     }
 
     updatePublishState();
+
+    async function checkAdminAndRevealNav() {
+      try {
+        const res = await fetch("/me", { credentials: "include" });
+        if (!res.ok) return;
+        const me = await res.json();
+        if (me && me.is_admin) {
+          ["adminNavLink", "adminNavLinkMobile"].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.removeAttribute("hidden");
+          });
+        }
+      } catch (e) {
+        // Silently ignore — admin nav stays hidden, which is the safe default.
+      }
+    }
+
     ensureAuthenticated().then((data) => {
       if (data) {
         const first = (data.first_name || "").trim();
@@ -6887,6 +6906,7 @@
         loadLeads();
         loadKnowledgeBase("client");
         loadKnowledgeBase("internal");
+        checkAdminAndRevealNav();
       }
     });
   </script>
