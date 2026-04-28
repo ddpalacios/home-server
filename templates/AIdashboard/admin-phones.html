@@ -645,6 +645,7 @@
       function buildActions(phone) {
         const status = phone.build_status || "idle";
         const hasAssignment = !!(phone.assigned_account_id || phone.assigned_website_url || phone.demo_url);
+        const isAdmin = window.__isAdminCaller !== false;
         const buttons = [];
         if (status === "idle") {
           buttons.push(`<button class="btn" type="button" data-action="assign" data-phone="${phone.phone_id}">Assign Website</button>`);
@@ -652,14 +653,19 @@
           buttons.push(`<button class="btn danger" type="button" data-action="cancel" data-phone="${phone.phone_id}">Cancel</button>`);
         } else if (status === "ready") {
           buttons.push(`<button class="btn secondary" type="button" data-action="reassign" data-phone="${phone.phone_id}">Update website</button>`);
-          if (phone.demo_url) {
+          // "Open" (preview link) is admin-only — non-admins (My Numbers
+          // view) don't need it; the live widget on their site is the
+          // real customer-facing surface.
+          if (isAdmin && phone.demo_url) {
             buttons.push(`<a class="btn" href="${escapeHtml(phone.demo_url)}" target="_blank" rel="noopener noreferrer">Open</a>`);
           }
         } else if (status === "failed") {
           buttons.push(`<button class="btn" type="button" data-action="retry" data-phone="${phone.phone_id}">Retry</button>`);
         }
         buttons.push(`<button class="btn secondary" type="button" data-action="routing" data-phone="${phone.phone_id}">Routing</button>`);
-        if (hasAssignment && status !== "building") {
+        // "Disconnect" is admin-only at the server too (returns 403 for
+        // non-admins). Hide it from non-admin UI.
+        if (isAdmin && hasAssignment && status !== "building") {
           buttons.push(`<button class="btn danger" type="button" data-action="disconnect" data-phone="${phone.phone_id}">Disconnect</button>`);
         }
         return `<div class="row-actions">${buttons.join("")}</div>`;
@@ -1010,10 +1016,16 @@
 
       assignUrlInput.addEventListener("input", () => setFieldError(""));
 
+      // Non-admin view (My Numbers) hides the Open + Disconnect actions in
+      // buildActions(). buildActions reads window.__isAdminCaller, which is
+      // initialized to true; setupAdminBindRowAndSmsGate flips it on /me load.
+      window.__isAdminCaller = true;
+
       async function setupAdminBindRowAndSmsGate() {
         try {
           const meRes = await fetch("/me", { credentials: "same-origin" });
           const me = await meRes.json();
+          window.__isAdminCaller = !!(me && me.is_admin);
           const row = document.getElementById("adminBindUserRow");
           const select = document.getElementById("adminBindEmail");
           if (me && me.is_admin && row && select) {
@@ -1034,6 +1046,10 @@
           if (me && !me.is_admin) {
             const smsLabel = document.getElementById("routingMethodSmsLabel");
             if (smsLabel) smsLabel.remove();
+            // Non-admins shouldn't see the actions that mutate ownership
+            // or duplicate functionality already on the dashboard.
+            // Re-render the rows now that we know the role.
+            if (typeof refresh === "function") refresh();
           }
         } catch (_) { /* silent */ }
       }
