@@ -62,10 +62,6 @@
       padding: 0 22px 80px;
     }
 
-    .page-header { margin-bottom: 22px; }
-    .page-header h1 { font-size: 26px; font-weight: 700; }
-    .page-header p { color: var(--muted); margin-top: 6px; font-size: 15px; }
-
     .card {
       background: var(--panel);
       border-radius: var(--radius);
@@ -78,17 +74,21 @@
     table { width: 100%; border-collapse: collapse; }
     th, td {
       text-align: left;
-      padding: 14px 12px;
+      padding: 12px 14px;
       border-bottom: 1px solid var(--border);
       vertical-align: middle;
     }
     th {
-      font-size: 12px;
+      font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.06em;
       color: var(--muted);
-      font-weight: 600;
+      font-weight: 700;
+      padding-top: 10px;
+      padding-bottom: 10px;
+      background: #fafbfd;
     }
+    tbody tr:hover td { background: #fafbfd; }
     tbody tr:last-child td { border-bottom: none; }
 
     .phone-cell { font-family: "JetBrains Mono", "Menlo", monospace; font-weight: 600; font-size: 15px; }
@@ -141,44 +141,40 @@
       font-size: 13px;
     }
 
-    /* === Routing block (per-phone) ====================================== */
-    .routing-row td {
-      background: #f8fafc;
-      border-top: 1px dashed var(--border);
-      border-bottom: 1px solid var(--border);
-      padding: 14px 12px 18px;
-    }
-    .routing-card {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 14px;
-    }
-    .routing-card .routing-title {
-      font-size: 13px;
-      font-weight: 700;
+    /* Routing summary cell + method pills (reused by routing modal) */
+    .routing-cell { font-size: 13px; }
+    .routing-summary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       color: var(--text);
-      letter-spacing: 0.02em;
+    }
+    .routing-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #3730a3;
+      line-height: 1.6;
     }
-    .routing-card .routing-warn {
-      font-size: 13px;
-      color: #92400e;
-      background: #fef3c7;
-      padding: 8px 10px;
-      border-radius: 8px;
-      display: none;
-    }
-    .routing-card .routing-warn.is-visible { display: block; }
+    .routing-tag-email { background: #dbeafe; color: #1d4ed8; }
+    .routing-tag-sms   { background: #ede9fe; color: #6d28d9; }
+    .routing-tag-voice_call { background: #d1fae5; color: #047857; }
+    .routing-cell .empty { color: var(--muted); }
     .routing-methods {
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 8px;
     }
     .routing-method {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 6px 10px;
+      padding: 6px 12px;
       border-radius: 999px;
       border: 1px solid var(--border);
       background: #ffffff;
@@ -186,63 +182,17 @@
       font-size: 13px;
       font-weight: 600;
     }
-    .routing-method input[type="radio"] {
-      accent-color: var(--accent);
-    }
+    .routing-method input[type="radio"] { accent-color: var(--accent); }
     .routing-method.is-selected {
       border-color: var(--accent);
       background: rgba(37, 99, 235, 0.08);
     }
-    .routing-fields {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-    .routing-field {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .routing-field label {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    .routing-field input {
-      padding: 9px 11px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      font-size: 14px;
-      font-family: inherit;
-      background: #ffffff;
-      transition: border-color 0.15s ease;
-    }
-    .routing-field input:focus {
-      outline: 2px solid var(--accent-2);
-      outline-offset: 1px;
-    }
-    .routing-field input.invalid {
+    .modal input.invalid {
       border-color: var(--status-failed);
       background: #fef2f2;
     }
-    .routing-field .helper {
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .routing-field .helper.error { color: var(--status-failed); }
-    .routing-field-replyto[hidden] { display: none; }
-    .routing-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-    }
-    @media (max-width: 720px) {
-      .routing-fields { grid-template-columns: 1fr; }
-      .routing-card { font-size: 13px; }
-    }
+    .modal .helper.error { color: var(--status-failed); }
+    .modal label[hidden] { display: none !important; }
 
     .btn {
       display: inline-flex;
@@ -308,7 +258,7 @@
       font-weight: 600;
       color: var(--text);
     }
-    .modal input[type="url"], .modal input[type="text"] {
+    .modal input[type="url"], .modal input[type="text"], .modal input[type="email"] {
       width: 100%;
       padding: 10px 12px;
       border-radius: 10px;
@@ -397,17 +347,44 @@
       const topbar = document.querySelector('[data-standalone]');
       if (topbar) topbar.style.display = 'none';
       const main = document.querySelector('main');
-      if (main) main.style.margin = '0';
+      if (main) { main.style.margin = '0'; main.style.padding = '0'; main.style.maxWidth = 'none'; }
+      document.documentElement.style.background = 'transparent';
       document.body.style.background = 'transparent';
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+      document.body.style.minHeight = '0';
+      const card = document.querySelector('main .card');
+      if (card) { card.style.boxShadow = 'none'; card.style.border = 'none'; card.style.padding = '0'; card.style.background = 'transparent'; card.style.borderRadius = '0'; }
+
+      // Tell the parent how tall we are so it can size the iframe → no inner scroll.
+      let lastReported = 0;
+      function reportHeight() {
+        const h = Math.max(
+          document.documentElement.scrollHeight,
+          document.body.scrollHeight
+        );
+        if (Math.abs(h - lastReported) < 2) return;
+        lastReported = h;
+        try {
+          window.parent.postMessage({ type: "admin-phones:height", height: h }, "*");
+        } catch (e) {}
+      }
+      window.addEventListener("load", reportHeight);
+      window.addEventListener("resize", reportHeight);
+      if (typeof ResizeObserver !== "undefined") {
+        const ro = new ResizeObserver(reportHeight);
+        ro.observe(document.body);
+      } else {
+        setInterval(reportHeight, 600);
+      }
+      // Re-report shortly after each fetch/render in case fonts/layout shift.
+      setTimeout(reportHeight, 50);
+      setTimeout(reportHeight, 300);
+      setTimeout(reportHeight, 1200);
     }
   </script>
 
   <main>
-    <section class="page-header">
-      <h1>Phone Number Assignment</h1>
-      <p>Assign Twilio numbers to client websites and build demos. Each demo includes a prominent phone CTA tied to the assigned number.</p>
-    </section>
-
     <section class="card">
       <div class="table-wrap">
         <table id="phonesTable" aria-live="polite">
@@ -417,14 +394,15 @@
               <th scope="col">Status</th>
               <th scope="col">Website</th>
               <th scope="col">Demo URL</th>
+              <th scope="col">Routing</th>
               <th scope="col" aria-label="Actions"></th>
             </tr>
           </thead>
           <tbody id="phonesBody">
-            <tr><td colspan="5"><span class="skeleton" style="width:60%;"></span></td></tr>
-            <tr><td colspan="5"><span class="skeleton" style="width:60%;"></span></td></tr>
-            <tr><td colspan="5"><span class="skeleton" style="width:60%;"></span></td></tr>
-            <tr><td colspan="5"><span class="skeleton" style="width:60%;"></span></td></tr>
+            <tr><td colspan="6"><span class="skeleton" style="width:60%;"></span></td></tr>
+            <tr><td colspan="6"><span class="skeleton" style="width:60%;"></span></td></tr>
+            <tr><td colspan="6"><span class="skeleton" style="width:60%;"></span></td></tr>
+            <tr><td colspan="6"><span class="skeleton" style="width:60%;"></span></td></tr>
           </tbody>
         </table>
       </div>
@@ -442,11 +420,52 @@
         Website URL
         <input id="assignUrlInput" type="url" placeholder="https://example.com" inputmode="url" autocomplete="off" />
       </label>
+      <label id="adminBindUserRow" hidden>
+        Bind to user
+        <select id="adminBindEmail">
+          <option value="">(use website URL only)</option>
+        </select>
+      </label>
       <p class="helper">This will scrape the site, train a bot on its content, and assign this phone number to the resulting demo. The demo will show a "Call this number" CTA tied to the phone.</p>
       <p class="field-error" id="assignFieldError"></p>
       <div class="modal-actions">
         <button class="btn secondary" type="button" data-close-modal>Cancel</button>
         <button class="btn" type="button" id="assignRunBtn">Run</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Routing modal -->
+  <div class="modal" id="routingModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="routingModalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="routingModalTitle">Routing</h3>
+        <button class="modal-close" type="button" data-close-modal aria-label="Close">×</button>
+      </div>
+      <div class="routing-methods" role="radiogroup" aria-label="Routing method" id="routingMethods">
+        <label class="routing-method"><input type="radio" name="routing-method" value="email" /> Email</label>
+        <label class="routing-method" id="routingMethodSmsLabel"><input type="radio" name="routing-method" value="sms" /> SMS</label>
+        <label class="routing-method"><input type="radio" name="routing-method" value="voice_call" /> Voice call</label>
+      </div>
+      <label>
+        <span id="routingTargetLabel">Target</span>
+        <input id="routingTargetInput" type="text" autocomplete="off" />
+        <span class="helper" id="routingTargetHelper"></span>
+      </label>
+      <label id="routingReplyWrap" hidden>
+        Reply-To (email only)
+        <input id="routingReplyInput" type="email" autocomplete="off" />
+        <span class="helper" id="routingReplyHelper"></span>
+      </label>
+      <label>
+        Label
+        <input id="routingLabelInput" type="text" autocomplete="off" maxlength="80" placeholder="e.g. Daniel (owner)" />
+        <span class="helper">Used in the bot's announcement and the email greeting.</span>
+      </label>
+      <div class="modal-actions">
+        <button class="btn secondary" type="button" id="routingTestBtn">Send Test</button>
+        <button class="btn secondary" type="button" data-close-modal>Cancel</button>
+        <button class="btn" type="button" id="routingSaveBtn" disabled>Save</button>
       </div>
     </div>
   </div>
@@ -491,6 +510,17 @@
       const confirmModal = document.getElementById("confirmModal");
       const confirmModalBody = document.getElementById("confirmModalBody");
       const confirmModalProceed = document.getElementById("confirmModalProceed");
+      const routingModal = document.getElementById("routingModal");
+      const routingTitle = document.getElementById("routingModalTitle");
+      const routingTargetInput = document.getElementById("routingTargetInput");
+      const routingTargetLabel = document.getElementById("routingTargetLabel");
+      const routingTargetHelper = document.getElementById("routingTargetHelper");
+      const routingReplyWrap = document.getElementById("routingReplyWrap");
+      const routingReplyInput = document.getElementById("routingReplyInput");
+      const routingReplyHelper = document.getElementById("routingReplyHelper");
+      const routingLabelInput = document.getElementById("routingLabelInput");
+      const routingSaveBtn = document.getElementById("routingSaveBtn");
+      const routingTestBtn = document.getElementById("routingTestBtn");
       const toastStack = document.getElementById("toastStack");
 
       let activePhoneId = null;
@@ -538,7 +568,7 @@
         });
       });
 
-      [assignModal, confirmModal].forEach((m) => {
+      [assignModal, confirmModal, routingModal].forEach((m) => {
         m.addEventListener("click", (e) => {
           if (e.target === m) closeModal(m);
         });
@@ -548,10 +578,11 @@
         if (e.key === "Escape") {
           if (assignModal.classList.contains("is-open")) closeModal(assignModal);
           if (confirmModal.classList.contains("is-open")) closeModal(confirmModal);
+          if (routingModal.classList.contains("is-open")) closeModal(routingModal);
         }
         if (e.key === "Tab") {
           // Trap focus within whichever modal is open.
-          const openModalEl = [assignModal, confirmModal].find((m) => m.classList.contains("is-open"));
+          const openModalEl = [assignModal, confirmModal, routingModal].find((m) => m.classList.contains("is-open"));
           if (!openModalEl) return;
           const focusables = openModalEl.querySelectorAll(
             'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -613,6 +644,7 @@
 
       function buildActions(phone) {
         const status = phone.build_status || "idle";
+        const hasAssignment = !!(phone.assigned_account_id || phone.assigned_website_url || phone.demo_url);
         const buttons = [];
         if (status === "idle") {
           buttons.push(`<button class="btn" type="button" data-action="assign" data-phone="${phone.phone_id}">Assign Website</button>`);
@@ -621,13 +653,27 @@
         } else if (status === "ready") {
           buttons.push(`<button class="btn secondary" type="button" data-action="reassign" data-phone="${phone.phone_id}">Reassign</button>`);
           if (phone.demo_url) {
-            buttons.push(`<a class="btn" href="${escapeHtml(phone.demo_url)}" target="_blank" rel="noopener noreferrer">Open Demo</a>`);
+            buttons.push(`<a class="btn" href="${escapeHtml(phone.demo_url)}" target="_blank" rel="noopener noreferrer">Open</a>`);
           }
         } else if (status === "failed") {
           buttons.push(`<button class="btn" type="button" data-action="retry" data-phone="${phone.phone_id}">Retry</button>`);
-          buttons.push(`<button class="btn secondary" type="button" data-action="reassign" data-phone="${phone.phone_id}">Reassign</button>`);
+        }
+        buttons.push(`<button class="btn secondary" type="button" data-action="routing" data-phone="${phone.phone_id}">Routing</button>`);
+        if (hasAssignment && status !== "building") {
+          buttons.push(`<button class="btn danger" type="button" data-action="disconnect" data-phone="${phone.phone_id}">Disconnect</button>`);
         }
         return `<div class="row-actions">${buttons.join("")}</div>`;
+      }
+
+      function routingSummary(phone) {
+        const r = phone.routing;
+        if (!r || !r.method || !r.target) {
+          return `<span class='empty'>— Not configured</span>`;
+        }
+        const tagText = r.method === "email" ? "Email"
+                       : r.method === "sms" ? "SMS"
+                       : "Call";
+        return `<span class="routing-summary"><span class="routing-tag routing-tag-${r.method}">${tagText}</span>${escapeHtml(r.target)}</span>`;
       }
 
       function renderRow(phone) {
@@ -647,58 +693,9 @@
           <td>${statusBadge(phone.build_status)}</td>
           <td class="url-cell">${websiteCell}</td>
           <td class="demo-cell">${demoCell}</td>
+          <td class="routing-cell">${routingSummary(phone)}</td>
           <td>${buildActions(phone)}${errLine}</td>
         `;
-        return tr;
-      }
-
-      function renderRoutingRow(phone) {
-        const routing = phone.routing && phone.routing.method ? phone.routing : null;
-        const method = (routing && routing.method) || "";
-        const target = (routing && routing.target) || "";
-        const label = (routing && routing.label) || "";
-        const replyTo = (routing && routing.reply_to) || "";
-        const tr = document.createElement("tr");
-        tr.className = "routing-row";
-        tr.dataset.routingFor = phone.phone_id;
-        tr.innerHTML = `
-          <td colspan="5">
-            <div class="routing-card">
-              <div class="routing-title">When the caller asks for a person, route via:</div>
-              <div class="routing-warn" data-warn>Using default fallback. Configure routing for ${escapeHtml(phone.phone_display || phone.phone_number)}.</div>
-              <div class="routing-methods" role="radiogroup" aria-label="Routing method">
-                ${["email", "sms", "voice_call"].map((m) => `
-                  <label class="routing-method${method === m ? " is-selected" : ""}">
-                    <input type="radio" name="rmethod-${phone.phone_id}" value="${m}" ${method === m ? "checked" : ""} />
-                    ${m === "email" ? "Email" : m === "sms" ? "SMS" : "Voice call"}
-                  </label>
-                `).join("")}
-              </div>
-              <div class="routing-fields">
-                <div class="routing-field">
-                  <label for="rtarget-${phone.phone_id}" data-target-label>Target</label>
-                  <input id="rtarget-${phone.phone_id}" type="text" autocomplete="off" value="${escapeHtml(target)}" />
-                  <span class="helper" data-target-helper></span>
-                </div>
-                <div class="routing-field routing-field-replyto" data-reply-wrapper ${method === "email" ? "" : "hidden"}>
-                  <label for="rreply-${phone.phone_id}">Reply-To (email only)</label>
-                  <input id="rreply-${phone.phone_id}" type="email" autocomplete="off" value="${escapeHtml(replyTo)}" />
-                  <span class="helper" data-reply-helper></span>
-                </div>
-                <div class="routing-field">
-                  <label for="rlabel-${phone.phone_id}">Label</label>
-                  <input id="rlabel-${phone.phone_id}" type="text" autocomplete="off" maxlength="80" value="${escapeHtml(label)}" placeholder="e.g. Daniel (owner)" />
-                  <span class="helper">Used in the bot's announcement and the email greeting.</span>
-                </div>
-              </div>
-              <div class="routing-actions">
-                <button class="btn" type="button" data-routing-save="${phone.phone_id}" disabled>Save</button>
-                <button class="btn secondary" type="button" data-routing-test="${phone.phone_id}">Send Test</button>
-              </div>
-            </div>
-          </td>
-        `;
-        attachRoutingHandlers(tr, phone);
         return tr;
       }
 
@@ -709,199 +706,16 @@
         return /^\+[1-9]\d{6,14}$/.test(v);
       }
 
-      function readRoutingForm(tr) {
-        const phoneId = tr.dataset.routingFor;
-        const methodInput = tr.querySelector(`input[name="rmethod-${phoneId}"]:checked`);
-        const method = methodInput ? methodInput.value : "";
-        return {
-          method,
-          target: (tr.querySelector(`#rtarget-${phoneId}`) || {}).value || "",
-          reply_to: (tr.querySelector(`#rreply-${phoneId}`) || {}).value || "",
-          label: (tr.querySelector(`#rlabel-${phoneId}`) || {}).value || "",
-        };
-      }
-
-      function validateRoutingForm(tr) {
-        const form = readRoutingForm(tr);
-        const phoneId = tr.dataset.routingFor;
-        const targetEl = tr.querySelector(`#rtarget-${phoneId}`);
-        const replyEl = tr.querySelector(`#rreply-${phoneId}`);
-        const targetHelper = tr.querySelector("[data-target-helper]");
-        const replyHelper = tr.querySelector("[data-reply-helper]");
-        const targetLabel = tr.querySelector("[data-target-label]");
-        let valid = true;
-        // Reset
-        targetEl.classList.remove("invalid");
-        if (replyEl) replyEl.classList.remove("invalid");
-        targetHelper.textContent = "";
-        targetHelper.classList.remove("error");
-        if (replyHelper) {
-          replyHelper.textContent = "";
-          replyHelper.classList.remove("error");
-        }
-        if (!form.method) {
-          valid = false;
-        }
-        if (form.method === "email") {
-          targetLabel.textContent = "Email address";
-          if (!form.target) {
-            valid = false;
-          } else if (!isValidEmail(form.target.trim())) {
-            valid = false;
-            targetEl.classList.add("invalid");
-            targetHelper.textContent = "Enter a valid email address.";
-            targetHelper.classList.add("error");
-          }
-        } else if (form.method === "sms" || form.method === "voice_call") {
-          targetLabel.textContent = "Phone number (E.164, e.g. +12245551234)";
-          if (!form.target) {
-            valid = false;
-          } else if (!isValidE164(form.target.trim())) {
-            valid = false;
-            targetEl.classList.add("invalid");
-            targetHelper.textContent = "Phone must be in E.164 format (start with + and country code).";
-            targetHelper.classList.add("error");
-          }
-        }
-        if (form.method === "email" && form.reply_to && !isValidEmail(form.reply_to.trim())) {
-          valid = false;
-          replyEl.classList.add("invalid");
-          replyHelper.textContent = "Enter a valid email address (or leave blank).";
-          replyHelper.classList.add("error");
-        }
-        return { valid, form };
-      }
-
-      function attachRoutingHandlers(tr, phone) {
-        const phoneId = tr.dataset.routingFor;
-        const replyWrap = tr.querySelector("[data-reply-wrapper]");
-        const warn = tr.querySelector("[data-warn]");
-        const saveBtn = tr.querySelector(`[data-routing-save="${phoneId}"]`);
-        const testBtn = tr.querySelector(`[data-routing-test="${phoneId}"]`);
-
-        // Show fallback warning when no routing configured.
-        if (!phone.routing || !phone.routing.method || !phone.routing.target) {
-          warn.classList.add("is-visible");
-        }
-
-        function syncReplyToVisibility() {
-          const checked = tr.querySelector(`input[name="rmethod-${phoneId}"]:checked`);
-          const isEmail = checked && checked.value === "email";
-          replyWrap.hidden = !isEmail;
-        }
-        function syncMethodPills() {
-          tr.querySelectorAll(".routing-method").forEach((el) => {
-            const inp = el.querySelector("input");
-            if (inp && inp.checked) el.classList.add("is-selected");
-            else el.classList.remove("is-selected");
-          });
-        }
-        function syncSave() {
-          const { valid } = validateRoutingForm(tr);
-          saveBtn.disabled = !valid;
-        }
-
-        tr.querySelectorAll(`input[name="rmethod-${phoneId}"]`).forEach((r) => {
-          r.addEventListener("change", () => {
-            syncReplyToVisibility();
-            syncMethodPills();
-            syncSave();
-          });
-        });
-        ["rtarget-", "rreply-", "rlabel-"].forEach((p) => {
-          const el = tr.querySelector(`#${p}${phoneId}`);
-          if (el) el.addEventListener("input", syncSave);
-        });
-
-        saveBtn.addEventListener("click", async () => {
-          const { valid, form } = validateRoutingForm(tr);
-          if (!valid) return;
-          const body = {
-            method: form.method,
-            target: (form.target || "").trim(),
-            label: (form.label || "").trim(),
-          };
-          if (form.method === "email" && form.reply_to.trim()) body.reply_to = form.reply_to.trim();
-          saveBtn.disabled = true;
-          try {
-            const res = await fetch(PHONES_URL + "/" + encodeURIComponent(phoneId) + "/routing", {
-              method: "POST",
-              headers: { "Content-Type": "application/json", "Accept": "application/json" },
-              credentials: "same-origin",
-              body: JSON.stringify(body),
-            });
-            const data = await res.json().catch(() => ({}));
-            if (res.ok) {
-              showToast("Routing saved.", "success");
-              warn.classList.remove("is-visible");
-              // Update local state so subsequent renders reflect the new routing.
-              if (data && data.phone) {
-                const idx = currentPhones.findIndex((p) => p.phone_id === phoneId);
-                if (idx >= 0) currentPhones[idx] = data.phone;
-              }
-            } else if (data.fields) {
-              const fields = data.fields;
-              if (fields.target) {
-                tr.querySelector(`#rtarget-${phoneId}`).classList.add("invalid");
-                const h = tr.querySelector("[data-target-helper]");
-                h.textContent = fields.target; h.classList.add("error");
-              }
-              if (fields.reply_to) {
-                const r = tr.querySelector(`#rreply-${phoneId}`);
-                if (r) r.classList.add("invalid");
-                const h2 = tr.querySelector("[data-reply-helper]");
-                if (h2) { h2.textContent = fields.reply_to; h2.classList.add("error"); }
-              }
-              showToast("Validation failed.", "error");
-            } else {
-              showToast(data.error || ("Save failed (HTTP " + res.status + ")"), "error");
-            }
-          } catch (e) {
-            showToast("Network error.", "error");
-          } finally {
-            syncSave();
-          }
-        });
-
-        testBtn.addEventListener("click", async () => {
-          testBtn.disabled = true;
-          try {
-            const res = await fetch(PHONES_URL + "/" + encodeURIComponent(phoneId) + "/routing/test", {
-              method: "POST",
-              headers: { "Accept": "application/json" },
-              credentials: "same-origin",
-            });
-            const data = await res.json().catch(() => ({}));
-            if (data && data.success) {
-              const labels = { email: "Test email sent", sms: "Test SMS sent", voice_call: "Test call placed" };
-              showToast(labels[data.method] || "Test sent.", "success");
-            } else {
-              const err = (data && data.error) || ("Test failed (HTTP " + res.status + ")");
-              showToast(err, "error");
-            }
-          } catch (e) {
-            showToast("Network error.", "error");
-          } finally {
-            testBtn.disabled = false;
-          }
-        });
-
-        syncReplyToVisibility();
-        syncMethodPills();
-        syncSave();
-      }
-
       function renderPhones(phones) {
         tbody.innerHTML = "";
         if (!phones || !phones.length) {
           const tr = document.createElement("tr");
-          tr.innerHTML = `<td colspan="5" style="color:var(--muted); text-align:center; padding:30px;">No phone numbers configured.</td>`;
+          tr.innerHTML = `<td colspan="6" style="color:var(--muted); text-align:center; padding:30px;">No phone numbers configured.</td>`;
           tbody.appendChild(tr);
           return;
         }
         phones.forEach((p) => {
           tbody.appendChild(renderRow(p));
-          tbody.appendChild(renderRoutingRow(p));
         });
       }
 
@@ -975,6 +789,198 @@
           retryBuild(phone);
         } else if (action === "cancel") {
           cancelBuild(phone);
+        } else if (action === "routing") {
+          openRoutingModal(phone);
+        } else if (action === "disconnect") {
+          const site = phone.assigned_website_url || phone.demo_url || "this demo";
+          openConfirm(
+            "Disconnect this number?",
+            `This will permanently delete the knowledge base for ${site}, remove the demo URL, and unlink ${phone.phone_display || phone.phone_number}. The phone number itself stays — you can re-assign it later. Continue?`,
+            () => disconnectPhone(phone),
+          );
+        }
+      });
+
+      async function disconnectPhone(phone) {
+        try {
+          const res = await fetch(PHONES_URL + "/" + encodeURIComponent(phone.phone_id) + "/disconnect", {
+            method: "POST",
+            headers: { "Accept": "application/json" },
+            credentials: "same-origin",
+          });
+          const body = await res.json().catch(() => ({}));
+          if (res.status === 200) {
+            showToast("Disconnected.", "success");
+            refresh();
+          } else {
+            showToast(body.error || ("Disconnect failed (HTTP " + res.status + ")"), "error");
+          }
+        } catch (e) {
+          showToast("Network error.", "error");
+        }
+      }
+
+      function openRoutingModal(phone) {
+        activePhoneId = phone.phone_id;
+        const r = phone.routing || {};
+        const method = r.method || "email";
+        routingTitle.textContent = "Routing — " + (phone.phone_display || phone.phone_number || "");
+        routingModal.querySelectorAll('input[name="routing-method"]').forEach((inp) => {
+          inp.checked = inp.value === method;
+        });
+        routingTargetInput.value = r.target || "";
+        routingReplyInput.value = r.reply_to || "";
+        routingLabelInput.value = r.label || "";
+        clearRoutingErrors();
+        syncRoutingMethodUi();
+        validateRoutingModal();
+        openModal(routingModal);
+      }
+
+      function clearRoutingErrors() {
+        routingTargetInput.classList.remove("invalid");
+        routingReplyInput.classList.remove("invalid");
+        routingTargetHelper.textContent = "";
+        routingTargetHelper.classList.remove("error");
+        routingReplyHelper.textContent = "";
+        routingReplyHelper.classList.remove("error");
+      }
+
+      function currentRoutingMethod() {
+        const sel = routingModal.querySelector('input[name="routing-method"]:checked');
+        return sel ? sel.value : "";
+      }
+
+      function syncRoutingMethodUi() {
+        const m = currentRoutingMethod();
+        routingModal.querySelectorAll(".routing-method").forEach((el) => {
+          const inp = el.querySelector("input");
+          if (inp && inp.checked) el.classList.add("is-selected");
+          else el.classList.remove("is-selected");
+        });
+        const isEmail = m === "email";
+        routingReplyWrap.hidden = !isEmail;
+        if (m === "email") {
+          routingTargetLabel.textContent = "Email address";
+        } else if (m === "sms" || m === "voice_call") {
+          routingTargetLabel.textContent = "Phone number (E.164, e.g. +12245551234)";
+        } else {
+          routingTargetLabel.textContent = "Target";
+        }
+      }
+
+      function validateRoutingModal() {
+        clearRoutingErrors();
+        const method = currentRoutingMethod();
+        const target = (routingTargetInput.value || "").trim();
+        const replyTo = (routingReplyInput.value || "").trim();
+        let valid = true;
+        if (!method) valid = false;
+        if (method === "email") {
+          if (!target) valid = false;
+          else if (!isValidEmail(target)) {
+            valid = false;
+            routingTargetInput.classList.add("invalid");
+            routingTargetHelper.textContent = "Enter a valid email address.";
+            routingTargetHelper.classList.add("error");
+          }
+          if (replyTo && !isValidEmail(replyTo)) {
+            valid = false;
+            routingReplyInput.classList.add("invalid");
+            routingReplyHelper.textContent = "Enter a valid email address (or leave blank).";
+            routingReplyHelper.classList.add("error");
+          }
+        } else if (method === "sms" || method === "voice_call") {
+          if (!target) valid = false;
+          else if (!isValidE164(target)) {
+            valid = false;
+            routingTargetInput.classList.add("invalid");
+            routingTargetHelper.textContent = "Phone must be in E.164 format (start with + and country code).";
+            routingTargetHelper.classList.add("error");
+          }
+        }
+        routingSaveBtn.disabled = !valid;
+        return valid;
+      }
+
+      routingModal.querySelectorAll('input[name="routing-method"]').forEach((inp) => {
+        inp.addEventListener("change", () => { syncRoutingMethodUi(); validateRoutingModal(); });
+      });
+      [routingTargetInput, routingReplyInput, routingLabelInput].forEach((el) => {
+        el.addEventListener("input", validateRoutingModal);
+      });
+
+      routingSaveBtn.addEventListener("click", async () => {
+        if (!validateRoutingModal() || !activePhoneId) return;
+        const method = currentRoutingMethod();
+        const body = {
+          method,
+          target: (routingTargetInput.value || "").trim(),
+          label: (routingLabelInput.value || "").trim(),
+        };
+        const replyTo = (routingReplyInput.value || "").trim();
+        if (method === "email" && replyTo) body.reply_to = replyTo;
+        routingSaveBtn.disabled = true;
+        try {
+          const res = await fetch(PHONES_URL + "/" + encodeURIComponent(activePhoneId) + "/routing", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            credentials: "same-origin",
+            body: JSON.stringify(body),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok) {
+            showToast("Routing saved.", "success");
+            if (data && data.phone) {
+              const idx = currentPhones.findIndex((p) => p.phone_id === activePhoneId);
+              if (idx >= 0) {
+                currentPhones[idx] = data.phone;
+                renderPhones(currentPhones);
+              }
+            }
+            closeModal(routingModal);
+          } else if (data.fields) {
+            if (data.fields.target) {
+              routingTargetInput.classList.add("invalid");
+              routingTargetHelper.textContent = data.fields.target;
+              routingTargetHelper.classList.add("error");
+            }
+            if (data.fields.reply_to) {
+              routingReplyInput.classList.add("invalid");
+              routingReplyHelper.textContent = data.fields.reply_to;
+              routingReplyHelper.classList.add("error");
+            }
+            showToast("Validation failed.", "error");
+          } else {
+            showToast(data.error || ("Save failed (HTTP " + res.status + ")"), "error");
+          }
+        } catch (e) {
+          showToast("Network error.", "error");
+        } finally {
+          validateRoutingModal();
+        }
+      });
+
+      routingTestBtn.addEventListener("click", async () => {
+        if (!activePhoneId) return;
+        routingTestBtn.disabled = true;
+        try {
+          const res = await fetch(PHONES_URL + "/" + encodeURIComponent(activePhoneId) + "/routing/test", {
+            method: "POST",
+            headers: { "Accept": "application/json" },
+            credentials: "same-origin",
+          });
+          const data = await res.json().catch(() => ({}));
+          if (data && data.success) {
+            const labels = { email: "Test email sent", sms: "Test SMS sent", voice_call: "Test call placed" };
+            showToast(labels[data.method] || "Test sent.", "success");
+          } else {
+            showToast((data && data.error) || ("Test failed (HTTP " + res.status + ")"), "error");
+          }
+        } catch (e) {
+          showToast("Network error.", "error");
+        } finally {
+          routingTestBtn.disabled = false;
         }
       });
 
@@ -1004,6 +1010,35 @@
 
       assignUrlInput.addEventListener("input", () => setFieldError(""));
 
+      async function setupAdminBindRowAndSmsGate() {
+        try {
+          const meRes = await fetch("/me", { credentials: "same-origin" });
+          const me = await meRes.json();
+          const row = document.getElementById("adminBindUserRow");
+          const select = document.getElementById("adminBindEmail");
+          if (me && me.is_admin && row && select) {
+            row.removeAttribute("hidden");
+            try {
+              const usersRes = await fetch("/admin/users/list", { credentials: "same-origin" });
+              if (usersRes.ok) {
+                const data = await usersRes.json();
+                (data.users || []).forEach((u) => {
+                  const opt = document.createElement("option");
+                  opt.value = u.email;
+                  opt.textContent = u.first_name ? `${u.first_name} <${u.email}>` : u.email;
+                  select.appendChild(opt);
+                });
+              }
+            } catch (_) { /* silent */ }
+          }
+          if (me && !me.is_admin) {
+            const smsLabel = document.getElementById("routingMethodSmsLabel");
+            if (smsLabel) smsLabel.remove();
+          }
+        } catch (_) { /* silent */ }
+      }
+      setupAdminBindRowAndSmsGate();
+
       assignRunBtn.addEventListener("click", async () => {
         const url = (assignUrlInput.value || "").trim();
         if (!isValidHttpsUrl(url)) {
@@ -1023,11 +1058,15 @@
         }
         assignRunBtn.disabled = true;
         try {
+          const bindEl = document.getElementById("adminBindEmail");
+          const bindEmail = bindEl ? (bindEl.value || "").trim() : "";
+          const reqBody = { website_url: url };
+          if (bindEmail) reqBody.bind_to_email = bindEmail;
           const res = await fetch(PHONES_URL + "/" + encodeURIComponent(activePhoneId) + "/assign", {
             method: "POST",
             headers: { "Content-Type": "application/json", "Accept": "application/json" },
             credentials: "same-origin",
-            body: JSON.stringify({ website_url: url }),
+            body: JSON.stringify(reqBody),
           });
           const body = await res.json().catch(() => ({}));
           if (res.status === 202) {
