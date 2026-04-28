@@ -107,3 +107,41 @@ the heavy lifting and treats /demo-kb-ingest as synchronous.
 3. **No changes required to `routes/route.c` for v1.** The existing
    `/twiliobot` static-HTML route is unchanged; the demo-page CTA
    markup was added in `templates/portfolio/twiliobot.html`.
+
+## Reroute — Zoho SMTP DNS for palacios-solutions.com (added 2026-04-27)
+
+The reroute email path sends from `no-reply@palacios-solutions.com` via
+Zoho SMTP (port 587 + STARTTLS). For deliverability the user must
+configure the following DNS records on `palacios-solutions.com` —
+the application code does not and cannot configure these:
+
+- **SPF** TXT: `v=spf1 include:zoho.com ~all`
+  - Verify the exact `include:` value in the Zoho Mail Admin Console;
+    Zoho occasionally publishes a region-specific include
+    (e.g. `zohomail.com`).
+- **DKIM**: enable in Zoho Mail Admin Console → DKIM Configuration.
+  Add the CNAME (or TXT) record Zoho generates to DNS. Verify the
+  status flips to Verified before relying on the path in production.
+- **DMARC** TXT: `v=DMARC1; p=none; rua=mailto:dmarc@palacios-solutions.com`
+  - `p=none` while monitoring; tighten to `p=quarantine` once
+    SPF and DKIM are passing in `rua` reports for at least a week.
+
+Without all three, reroute emails land in spam for Gmail/Outlook
+recipients. The send still succeeds (Zoho accepts the SMTP relay)
+but recipients won't see the message. This is a configuration task
+on the user's DNS provider, NOT a code change in this repo.
+
+App-side env vars (set in `local-server/.env`, see `.env.example`):
+- `ZOHO_SMTP_HOST` (default `smtp.zoho.com`)
+- `ZOHO_SMTP_PORT` (default 587)
+- `ZOHO_SMTP_USER`
+- `ZOHO_SMTP_PASSWORD` (Zoho App Password if 2FA enabled; never
+  commit this value)
+- `ZOHO_FROM_ADDRESS`
+- `ZOHO_FROM_NAME`
+
+Reroute storage paths used by the dashboard backend (NOT served by
+home-server's C blob handlers; the Python Flask process writes them
+directly via filesystem):
+- `home-server/blob-storage/raw/admin/reroute_log.json` (JSONL)
+- `home-server/blob-storage/raw/admin/reroute_failures.json` (JSONL)
