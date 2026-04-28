@@ -2529,6 +2529,7 @@
     .welcome-modal {
       border: 0; border-radius: 18px; padding: 0; max-width: 460px; width: 92%;
       background: transparent; box-shadow: none;
+      position: fixed; inset: 0; margin: auto; height: fit-content;
     }
     .welcome-modal::backdrop {
       background: linear-gradient(180deg, rgba(238, 242, 255, 0.85), rgba(219, 234, 254, 0.85));
@@ -7194,8 +7195,18 @@
       if (!pill) return;
       try {
         const res = await fetch("/onboarding/status", { credentials: "same-origin" });
-        if (!res.ok) return;
+        if (!res.ok) {
+          // Transient error (e.g. proxy hiccup) — keep polling instead of giving up.
+          setTimeout(pollKbStatus, 6000);
+          return;
+        }
         const data = await res.json();
+        // Best-effort welcome heading update — covers the case where
+        // /auth/status lags behind onboarding completion.
+        const welcomeEl = document.getElementById("welcomeTitle");
+        if (welcomeEl && data.first_name && welcomeEl.textContent.trim() === "Welcome") {
+          welcomeEl.textContent = `Welcome, ${data.first_name}!`;
+        }
         if (data.kb_status === "pending") {
           pill.hidden = false;
           pill.className = "kb-pill pending";

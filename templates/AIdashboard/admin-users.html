@@ -92,8 +92,8 @@
               <th>First name</th>
               <th>Logged in?</th>
               <th>Added on</th>
-              <th>Added by</th>
               <th>Invited</th>
+              <th>Phone</th>
               <th></th>
             </tr>
           </thead>
@@ -127,9 +127,52 @@
         ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
     }
 
+    let allPhones = [];
+
+    async function fetchAllPhones() {
+      try {
+        const res = await fetch("/admin/phones?format=json&scope=all", { credentials: "same-origin" });
+        if (!res.ok) return;
+        const data = await res.json();
+        allPhones = data.phones || [];
+      } catch (e) { /* silent */ }
+    }
+
+    function phoneForCustomer(customer_id) {
+      if (!customer_id) return null;
+      return allPhones.find((p) => (p.assigned_account_id || "") === customer_id) || null;
+    }
+
+    function unassignedPhones() {
+      return allPhones.filter((p) => !p.assigned_account_id);
+    }
+
+    function renderPhoneCell(u) {
+      const bound = phoneForCustomer(u.customer_id);
+      if (bound) {
+        return `<span title="${escapeHtml(bound.phone_number || "")}">${escapeHtml(bound.phone_display || bound.phone_number || "—")}</span>`;
+      }
+      if (!u.website_url) {
+        return `<span style="color:var(--muted); font-size:12px;">No phone — user must onboard first</span>`;
+      }
+      const opts = unassignedPhones();
+      if (!opts.length) {
+        return `<span style="color:var(--muted); font-size:12px;">No unassigned phones</span>`;
+      }
+      const optionsHtml = ['<option value="">Choose a phone…</option>']
+        .concat(opts.map((p) => `<option value="${escapeHtml(p.phone_id)}">${escapeHtml(p.phone_display || p.phone_number || p.phone_id)}</option>`))
+        .join("");
+      return `
+        <select class="bind-phone-select" style="font-size:13px;">${optionsHtml}</select>
+        <button type="button" class="bind-phone-btn">Bind</button>
+      `;
+    }
+
     function renderRow(u) {
       const tr = document.createElement("tr");
       tr.dataset.email = u.email;
+      tr.dataset.customerId = u.customer_id || "";
+      tr.dataset.websiteUrl = u.website_url || "";
       const removeAttrs = u.is_self
         ? `disabled title="You cannot remove your own admin email"`
         : "";
@@ -139,8 +182,8 @@
         <td>${escapeHtml(u.first_name)}</td>
         <td><span class="pill ${u.has_logged_in ? "yes" : "no"}">${u.has_logged_in ? "Yes" : "No"}</span></td>
         <td>${fmtDate(u.added_at)}</td>
-        <td>${escapeHtml(u.added_by)}</td>
         <td>${invitedLabel}</td>
+        <td>${renderPhoneCell(u)}</td>
         <td>
           <button type="button" class="resend">Resend invite</button>
           <button type="button" class="remove" ${removeAttrs}>Remove</button>
@@ -154,7 +197,47 @@
       if (resendBtn) {
         resendBtn.addEventListener("click", () => resendInvite(u.email, tr));
       }
+      const bindBtn = tr.querySelector("button.bind-phone-btn");
+      if (bindBtn) {
+        bindBtn.addEventListener("click", () => bindPhone(u, tr));
+      }
       return tr;
+    }
+
+    async function bindPhone(u, rowEl) {
+      setFeedback("");
+      const select = rowEl.querySelector("select.bind-phone-select");
+      const btn = rowEl.querySelector("button.bind-phone-btn");
+      if (!select || !select.value) {
+        setFeedback("Pick a phone first.", "error");
+        return;
+      }
+      const phoneId = select.value;
+      btn.disabled = true;
+      try {
+        const res = await fetch(`/admin/phones/${encodeURIComponent(phoneId)}/assign`, {
+          method: "POST", credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ website_url: u.website_url, bind_to_email: u.email }),
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok && res.status !== 202) {
+          const msgs = {
+            unknown_user: "That email isn't on the allowlist.",
+            forbidden: "You don't have permission.",
+          };
+          setFeedback(msgs[body.error] || ("Bind failed: " + (body.error || res.status)), "error");
+          btn.disabled = false;
+          return;
+        }
+        setFeedback(`Bound ${u.email} to a phone — build started.`, "ok");
+        // Refresh phones + table.
+        await fetchAllPhones();
+        await loadUsers();
+      } catch (err) {
+        setFeedback("Network error binding phone.", "error");
+        btn.disabled = false;
+      }
     }
 
     function renderEmpty() {
@@ -163,6 +246,8 @@
 
     async function loadUsers() {
       setFeedback("");
+      // Refresh phones map first so the Phone column renders correctly.
+      await fetchAllPhones();
       try {
         const res = await fetch("/admin/users/list", { credentials: "same-origin" });
         if (!res.ok) {
