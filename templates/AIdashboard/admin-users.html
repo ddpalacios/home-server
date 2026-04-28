@@ -99,7 +99,145 @@
     </section>
   </main>
   <script>
-    // Interactive logic added in Task 9.
+    const $rows = document.getElementById("rows");
+    const $form = document.getElementById("addForm");
+    const $input = document.getElementById("emailInput");
+    const $addBtn = document.getElementById("addBtn");
+    const $feedback = document.getElementById("feedback");
+
+    function setFeedback(text, kind) {
+      $feedback.textContent = text || "";
+      $feedback.className = "feedback" + (kind ? " " + kind : "");
+    }
+
+    function fmtDate(epochSeconds) {
+      if (!epochSeconds) return "—";
+      const d = new Date(epochSeconds * 1000);
+      return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+    }
+
+    function escapeHtml(s) {
+      return String(s || "").replace(/[&<>"']/g, (c) =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    function renderRow(u) {
+      const tr = document.createElement("tr");
+      tr.dataset.email = u.email;
+      const removeAttrs = u.is_self
+        ? `disabled title="You cannot remove your own admin email"`
+        : "";
+      tr.innerHTML = `
+        <td>${escapeHtml(u.email)}</td>
+        <td>${escapeHtml(u.first_name)}</td>
+        <td><span class="pill ${u.has_logged_in ? "yes" : "no"}">${u.has_logged_in ? "Yes" : "No"}</span></td>
+        <td>${fmtDate(u.added_at)}</td>
+        <td>${escapeHtml(u.added_by)}</td>
+        <td><button type="button" class="remove" ${removeAttrs}>Remove</button></td>
+      `;
+      const btn = tr.querySelector("button.remove");
+      if (btn && !u.is_self) {
+        btn.addEventListener("click", () => removeUser(u.email));
+      }
+      return tr;
+    }
+
+    function renderEmpty() {
+      $rows.innerHTML = `<tr><td colspan="6" class="empty">No users yet. Add one above.</td></tr>`;
+    }
+
+    async function loadUsers() {
+      setFeedback("");
+      try {
+        const res = await fetch("/admin/users/list", { credentials: "same-origin" });
+        if (!res.ok) {
+          setFeedback("Could not load users (HTTP " + res.status + ").", "error");
+          return;
+        }
+        const body = await res.json();
+        $rows.innerHTML = "";
+        if (!body.users || body.users.length === 0) {
+          renderEmpty();
+          return;
+        }
+        body.users.forEach((u) => $rows.appendChild(renderRow(u)));
+      } catch (err) {
+        setFeedback("Network error loading users.", "error");
+      }
+    }
+
+    async function addUser(email) {
+      $addBtn.disabled = true;
+      setFeedback("");
+      try {
+        const res = await fetch("/admin/users/add", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        const body = await res.json();
+        if (!res.ok) {
+          const codeMessages = {
+            invalid_email: "That doesn't look like a valid email.",
+            duplicate: "That email is already on the list.",
+            unauthenticated: "Your session expired. Refresh and log in.",
+            forbidden: "You don't have permission to do that.",
+            storage_error: "Couldn't save right now. Try again.",
+          };
+          setFeedback(codeMessages[body.error] || "Add failed: " + (body.error || res.status), "error");
+          return;
+        }
+        $input.value = "";
+        $rows.prepend(renderRow(body));
+        const emptyRow = $rows.querySelector(".empty");
+        if (emptyRow) emptyRow.parentElement.remove();
+        setFeedback("Added " + body.email + ".", "ok");
+      } catch (err) {
+        setFeedback("Network error adding user.", "error");
+      } finally {
+        $addBtn.disabled = false;
+      }
+    }
+
+    async function removeUser(email) {
+      if (!confirm("Remove " + email + "? They'll lose access immediately.")) return;
+      setFeedback("");
+      try {
+        const res = await fetch("/admin/users/remove", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        const body = await res.json();
+        if (!res.ok) {
+          const codeMessages = {
+            cannot_remove_self: "You can't remove your own admin email.",
+            not_found: "That email isn't on the list anymore.",
+            forbidden: "You don't have permission to do that.",
+            storage_error: "Couldn't save right now. Try again.",
+          };
+          setFeedback(codeMessages[body.error] || "Remove failed: " + (body.error || res.status), "error");
+          return;
+        }
+        const row = $rows.querySelector(`tr[data-email="${CSS.escape(email)}"]`);
+        if (row) row.remove();
+        if (!$rows.querySelector("tr")) renderEmpty();
+        setFeedback("Removed " + email + ".", "ok");
+      } catch (err) {
+        setFeedback("Network error removing user.", "error");
+      }
+    }
+
+    $form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const email = ($input.value || "").trim();
+      if (!email) return;
+      addUser(email);
+    });
+
+    loadUsers();
   </script>
 </body>
 </html>
