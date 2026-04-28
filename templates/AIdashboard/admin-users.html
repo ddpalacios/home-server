@@ -64,6 +64,11 @@
       padding: 6px 12px; border-radius: 8px; cursor: pointer; color: var(--danger); font-weight: 600;
     }
     button.remove:disabled { opacity: 0.4; cursor: not-allowed; color: var(--muted); }
+    button.resend {
+      background: transparent; border: 1px solid var(--border);
+      padding: 6px 12px; border-radius: 8px; cursor: pointer; color: var(--accent); font-weight: 600; margin-right: 6px;
+    }
+    button.resend:disabled { opacity: 0.4; cursor: not-allowed; }
     .empty { color: var(--muted); padding: 16px; text-align: center; font-size: 13px; }
   </style>
 </head>
@@ -88,11 +93,12 @@
               <th>Logged in?</th>
               <th>Added on</th>
               <th>Added by</th>
+              <th>Invited</th>
               <th></th>
             </tr>
           </thead>
           <tbody id="rows">
-            <tr><td colspan="6" class="empty">Loading…</td></tr>
+            <tr><td colspan="7" class="empty">Loading…</td></tr>
           </tbody>
         </table>
       </div>
@@ -127,23 +133,32 @@
       const removeAttrs = u.is_self
         ? `disabled title="You cannot remove your own admin email"`
         : "";
+      const invitedLabel = u.last_invite_at ? fmtDate(u.last_invite_at) : "—";
       tr.innerHTML = `
         <td>${escapeHtml(u.email)}</td>
         <td>${escapeHtml(u.first_name)}</td>
         <td><span class="pill ${u.has_logged_in ? "yes" : "no"}">${u.has_logged_in ? "Yes" : "No"}</span></td>
         <td>${fmtDate(u.added_at)}</td>
         <td>${escapeHtml(u.added_by)}</td>
-        <td><button type="button" class="remove" ${removeAttrs}>Remove</button></td>
+        <td>${invitedLabel}</td>
+        <td>
+          <button type="button" class="resend">Resend invite</button>
+          <button type="button" class="remove" ${removeAttrs}>Remove</button>
+        </td>
       `;
-      const btn = tr.querySelector("button.remove");
-      if (btn && !u.is_self) {
-        btn.addEventListener("click", () => removeUser(u.email));
+      const removeBtn = tr.querySelector("button.remove");
+      if (removeBtn && !u.is_self) {
+        removeBtn.addEventListener("click", () => removeUser(u.email));
+      }
+      const resendBtn = tr.querySelector("button.resend");
+      if (resendBtn) {
+        resendBtn.addEventListener("click", () => resendInvite(u.email, tr));
       }
       return tr;
     }
 
     function renderEmpty() {
-      $rows.innerHTML = `<tr><td colspan="6" class="empty">No users yet. Add one above.</td></tr>`;
+      $rows.innerHTML = `<tr><td colspan="7" class="empty">No users yet. Add one above.</td></tr>`;
     }
 
     async function loadUsers() {
@@ -192,11 +207,51 @@
         $rows.prepend(renderRow(body));
         const emptyRow = $rows.querySelector(".empty");
         if (emptyRow) emptyRow.parentElement.remove();
-        setFeedback("Added " + body.email + ".", "ok");
+        if (body.invite_status === "sent") {
+          setFeedback("Added " + body.email + " — invite sent.", "ok");
+        } else if (body.invite_status === "failed") {
+          setFeedback("Added " + body.email + " — invite failed. Click \"Resend invite\" to try again.", "error");
+        } else {
+          setFeedback("Added " + body.email + ".", "ok");
+        }
       } catch (err) {
         setFeedback("Network error adding user.", "error");
       } finally {
         $addBtn.disabled = false;
+      }
+    }
+
+    async function resendInvite(email, rowEl) {
+      setFeedback("");
+      const btn = rowEl ? rowEl.querySelector("button.resend") : null;
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch("/admin/users/invite", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        const body = await res.json();
+        if (!res.ok || body.sent === false) {
+          const codeMessages = {
+            not_found: "That email isn't on the list anymore.",
+            invalid_email: "That email looks invalid.",
+            forbidden: "You don't have permission to do that.",
+            send_failed: "Couldn't send the invite. Try again later.",
+          };
+          setFeedback(codeMessages[body.error] || "Resend failed: " + (body.error || res.status), "error");
+          return;
+        }
+        if (rowEl) {
+          const cell = rowEl.querySelector("td:nth-child(6)");
+          if (cell) cell.textContent = fmtDate(Math.floor(Date.now() / 1000));
+        }
+        setFeedback("Invite resent to " + email + ".", "ok");
+      } catch (err) {
+        setFeedback("Network error resending invite.", "error");
+      } finally {
+        if (btn) btn.disabled = false;
       }
     }
 
