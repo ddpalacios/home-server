@@ -4549,8 +4549,11 @@
           accountId = data.customer_id;
           const embedBox = document.getElementById("embedScriptBox");
           if (embedBox) {
+            // Use the current browser origin so localhost dev shows
+            // https://127.0.0.1:9030/... and prod shows https://justgotalead.com/...
+            const origin = window.location.origin || "https://justgotalead.com";
             embedBox.textContent =
-              `<script src="https://justgotalead.com/${accountId}/widget.js"></` +
+              `<script src="${origin}/${accountId}/widget.js"></` +
               `script>`;
           }
         }
