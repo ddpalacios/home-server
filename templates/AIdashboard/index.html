@@ -2459,112 +2459,35 @@
     }
 
     /* === Admin flip-switch panel ====================================== */
-    .admin-panel {
-      max-width: 1200px;
-      margin: 22px auto 8px;
-      background: linear-gradient(135deg, #ffffff 0%, #f1f5ff 100%);
-      border: 1px solid #dbeafe;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 18px 22px;
-    }
-    .admin-panel[hidden] { display: none !important; }
-    .admin-panel-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-    }
-    .admin-panel-eyebrow {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--accent);
-    }
-    .admin-panel-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--text);
-      margin-top: 4px;
-    }
-    .admin-panel-sub {
-      font-size: 13px;
-      color: var(--muted);
-      margin-top: 4px;
-      max-width: 560px;
-    }
-
-    .admin-flip {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-      user-select: none;
-      flex-shrink: 0;
-    }
-    .admin-flip input {
-      position: absolute;
-      opacity: 0;
-      pointer-events: none;
-    }
-    .admin-flip-track {
-      position: relative;
-      width: 46px;
-      height: 26px;
-      border-radius: 999px;
-      background: #cbd5e1;
-      transition: background-color 0.2s ease;
-    }
-    .admin-flip-thumb {
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: #ffffff;
-      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
-      transition: transform 0.2s ease;
-    }
-    .admin-flip input:checked + .admin-flip-track {
-      background: var(--accent);
-    }
-    .admin-flip input:checked + .admin-flip-track .admin-flip-thumb {
-      transform: translateX(20px);
-    }
-    .admin-flip input:focus-visible + .admin-flip-track {
-      outline: 2px solid var(--accent-2);
-      outline-offset: 2px;
-    }
-    .admin-flip-label {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--muted);
-      min-width: 26px;
-    }
-    .admin-flip input:checked ~ .admin-flip-label {
-      color: var(--accent);
-    }
-
-    .admin-panel-body {
-      margin-top: 16px;
-      border-top: 1px solid #e0e7ff;
-      padding-top: 14px;
-    }
-    .admin-panel-body[hidden] { display: none !important; }
     .admin-panel-frame {
       width: 100%;
-      height: 720px;
+      height: 320px; /* sensible starting size; iframe self-reports actual height via postMessage */
       border: 0;
       background: transparent;
-      border-radius: 14px;
       display: block;
+      margin-top: 12px;
+      transition: height 0.18s ease;
     }
-
-    @media (max-width: 720px) {
-      .admin-panel-head { flex-direction: column; align-items: flex-start; }
-      .admin-panel-frame { height: 600px; }
+    .admin-nav-link[hidden] { display: none !important; }
+    .admin-tabbar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .admin-tab {
+      background: transparent;
+      border: 0;
+      padding: 8px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #6b7280;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    .admin-tab.active {
+      color: #2563eb;
+      border-bottom-color: #2563eb;
     }
   </style>
 </head>
@@ -2583,6 +2506,7 @@
             <a href="#insights">AI Insights</a>
             <a href="/messages">Messages</a>
             <a href="#knowledge">Knowledge Base</a>
+            <a href="#admin" class="admin-nav-link" data-admin-nav hidden>Admin</a>
             <a href="#settings" class="cta">AI Assistant Settings</a>
           </div>
           <button class="btn shiny" type="button" id="publishAppButton" disabled>Publish App</button>
@@ -2605,40 +2529,12 @@
       <a href="/messages">Messages</a>
       <a href="#leads">Recent Leads</a>
       <a href="#insights" style="color:#2b6cb0; font-weight:700;">AI Insights</a>
+      <a href="#admin" class="admin-nav-link" data-admin-nav hidden>Admin</a>
       <button class="btn shiny" type="button" id="publishAppButtonMobile">Publish App</button>
       <button class="btn secondary" type="button" id="logoutButtonMobile">Logout</button>
     </div>
 
     <main class="page">
-
-      <!-- Admin panel: flip-switch reveals the embedded /admin/phones page.
-           Whole section stays hidden until /me confirms is_admin=true. -->
-      <section id="adminPanel" class="admin-panel" hidden>
-        <div class="admin-panel-head">
-          <div>
-            <div class="admin-panel-eyebrow">Admin</div>
-            <h2 class="admin-panel-title">Phone Number Settings</h2>
-            <p class="admin-panel-sub">Assign Twilio numbers to client websites, configure routing, and send test reroutes.</p>
-          </div>
-          <label class="admin-flip" for="adminFlipSwitch" title="Toggle admin panel">
-            <input id="adminFlipSwitch" type="checkbox" role="switch" aria-controls="adminPanelBody" aria-expanded="false" />
-            <span class="admin-flip-track" aria-hidden="true">
-              <span class="admin-flip-thumb"></span>
-            </span>
-            <span class="admin-flip-label" id="adminFlipLabel">Off</span>
-          </label>
-        </div>
-        <div class="admin-panel-body" id="adminPanelBody" hidden>
-          <iframe
-            id="adminPanelFrame"
-            class="admin-panel-frame"
-            title="Phone Number Settings"
-            src="about:blank"
-            loading="lazy"
-            referrerpolicy="same-origin"
-          ></iframe>
-        </div>
-      </section>
 
       <header id="overview">
         <div class="welcome">
@@ -2647,6 +2543,29 @@
         </div>
         <div class="badge">AI Agent Dashboard</div>
       </header>
+
+      <section class="grid" id="admin" hidden>
+        <div class="card" style="grid-column: span 12;">
+          <div class="card-header">
+            <div>
+              <h2 class="section-title" style="margin:0;">Admin Settings</h2>
+              <p class="section-note">Manage phone numbers and the SSO allowlist.</p>
+            </div>
+          </div>
+          <nav class="admin-tabbar" data-admin-tabs>
+            <button type="button" class="admin-tab active" data-admin-tab="phones">Phones</button>
+            <button type="button" class="admin-tab" data-admin-tab="users">Allowed Users</button>
+          </nav>
+          <iframe
+            id="adminPanelFrame"
+            class="admin-panel-frame"
+            title="Admin Settings"
+            src="about:blank"
+            loading="lazy"
+            referrerpolicy="same-origin"
+          ></iframe>
+        </div>
+      </section>
 
       
 
@@ -7012,45 +6931,41 @@
         if (!res.ok) return;
         const me = await res.json();
         if (!me || !me.is_admin) return;
-        const panel = document.getElementById("adminPanel");
-        if (panel) panel.removeAttribute("hidden");
-        wireAdminFlipSwitch();
+        const section = document.getElementById("admin");
+        if (section) section.removeAttribute("hidden");
+        document.querySelectorAll("[data-admin-nav]").forEach((el) => {
+          el.removeAttribute("hidden");
+        });
+        const frame = document.getElementById("adminPanelFrame");
+        const tabs = document.querySelectorAll("[data-admin-tab]");
+
+        function activate(tabName) {
+          const url = tabName === "users" ? "/admin/users" : "/admin/phones";
+          if (frame) frame.setAttribute("src", url);
+          tabs.forEach((btn) => {
+            btn.classList.toggle("active", btn.dataset.adminTab === tabName);
+          });
+        }
+
+        tabs.forEach((btn) => {
+          btn.addEventListener("click", () => activate(btn.dataset.adminTab));
+        });
+        activate("phones");
       } catch (e) {
         // Silently ignore — admin panel stays hidden, which is the safe default.
       }
     }
 
-    function wireAdminFlipSwitch() {
-      const sw = document.getElementById("adminFlipSwitch");
-      const body = document.getElementById("adminPanelBody");
+    // Iframe self-reports its content height — keeps the section flush with the
+    // table and prevents the inner scrollbar.
+    window.addEventListener("message", (e) => {
+      const data = e && e.data;
+      if (!data || data.type !== "admin-phones:height") return;
       const frame = document.getElementById("adminPanelFrame");
-      const label = document.getElementById("adminFlipLabel");
-      if (!sw || !body || !frame || sw.dataset.bound) return;
-      sw.dataset.bound = "1";
-      // Persist toggle state across page reloads.
-      try {
-        if (sessionStorage.getItem("jgl_admin_panel_open") === "1") {
-          sw.checked = true;
-        }
-      } catch (e) {}
-      const apply = () => {
-        const on = sw.checked;
-        sw.setAttribute("aria-expanded", on ? "true" : "false");
-        if (label) label.textContent = on ? "On" : "Off";
-        if (on) {
-          body.removeAttribute("hidden");
-          // Lazy-load the iframe the first time it's shown.
-          if (frame.getAttribute("src") === "about:blank" || !frame.getAttribute("src")) {
-            frame.setAttribute("src", "/admin/phones");
-          }
-        } else {
-          body.setAttribute("hidden", "");
-        }
-        try { sessionStorage.setItem("jgl_admin_panel_open", on ? "1" : "0"); } catch (e) {}
-      };
-      sw.addEventListener("change", apply);
-      apply();
-    }
+      if (!frame || !e.source || e.source !== frame.contentWindow) return;
+      const h = Math.max(120, Math.min(2400, Number(data.height) || 0));
+      if (h > 0) frame.style.height = h + "px";
+    });
 
     ensureAuthenticated().then((data) => {
       if (data) {
