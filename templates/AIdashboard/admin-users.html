@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Settings — Allowed Users</title>
+  <style>
+    :root {
+      --accent: #2563eb;
+      --bg: #f7f9fc;
+      --panel: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      --radius: 20px;
+      --danger: #b91c1c;
+      --success: #047857;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Inter", "Segoe UI", Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #f9fbff 0%, #f2f5fb 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    main { max-width: 1100px; margin: 32px auto; padding: 0 22px 80px; }
+    .card {
+      background: var(--panel);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      border: 1px solid var(--border);
+    }
+    h1 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+    form.add-row { display: flex; gap: 10px; align-items: center; margin-bottom: 18px; }
+    form.add-row input[type="email"] {
+      flex: 1; padding: 10px 12px; border: 1px solid var(--border);
+      border-radius: 10px; font-size: 14px;
+    }
+    form.add-row button {
+      padding: 10px 16px; border: 0; border-radius: 10px;
+      background: var(--accent); color: #fff; font-weight: 600; cursor: pointer;
+    }
+    form.add-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .feedback { font-size: 13px; min-height: 18px; margin-bottom: 10px; }
+    .feedback.error { color: var(--danger); }
+    .feedback.ok { color: var(--success); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+      text-align: left; padding: 12px 14px;
+      border-bottom: 1px solid var(--border); vertical-align: middle; font-size: 14px;
+    }
+    th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; }
+    .pill {
+      display: inline-block; padding: 2px 8px; border-radius: 999px;
+      font-size: 11px; font-weight: 600;
+    }
+    .pill.yes { background: #dcfce7; color: #047857; }
+    .pill.no  { background: #f3f4f6; color: #6b7280; }
+    button.remove {
+      background: transparent; border: 1px solid var(--border);
+      padding: 6px 12px; border-radius: 8px; cursor: pointer; color: var(--danger); font-weight: 600;
+    }
+    button.remove:disabled { opacity: 0.4; cursor: not-allowed; color: var(--muted); }
+    .empty { color: var(--muted); padding: 16px; text-align: center; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="card">
+      <h1>Allowed Users</h1>
+      <p class="sub">Anyone listed here can sign in via Google SSO. Add an email to invite, remove to revoke.</p>
+
+      <form class="add-row" id="addForm" autocomplete="off">
+        <input type="email" id="emailInput" placeholder="user@example.com" required />
+        <button type="submit" id="addBtn">Add</button>
+      </form>
+      <div class="feedback" id="feedback"></div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>First name</th>
+              <th>Logged in?</th>
+              <th>Added on</th>
+              <th>Added by</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="rows">
+            <tr><td colspan="6" class="empty">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <script>
+    // Interactive logic added in Task 9.
+  </script>
+</body>
+</html>
