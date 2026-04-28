@@ -7471,6 +7471,10 @@
           state.missed_call_intent = data.missed_call_intent || "default";
           state.first_call_script = (data.first_call_script || "").trim() || VOICE_FIRST_TEMPLATES[state.first_call_intent] || VOICE_FIRST_TEMPLATES["default"];
           state.missed_call_script = (data.missed_call_script || "").trim() || VOICE_MISSED_TEMPLATES[state.missed_call_intent] || VOICE_MISSED_TEMPLATES["default"];
+          // Re-open the dropdown to whichever slot the user last marked as
+          // active — that's the one the bot will actually use.
+          if (data.active_intent === "missed_call") intentSel.value = "missed_call";
+          else intentSel.value = "first_call";
         }
       } catch (e) { /* silent */ }
 
@@ -7510,6 +7514,8 @@
             missed_call_intent: state.missed_call_intent,
             first_call_script: state.first_call_script || "",
             missed_call_script: state.missed_call_script || "",
+            // Drives which script the live voice handler uses on the call.
+            active_intent: intentSel.value === "missed_call" ? "missed_call" : "first_call",
           };
           try {
             const res = await fetch("/me/voice-settings", {
