@@ -239,6 +239,61 @@
         line-height: 1.6;
       }
 
+      .login-divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--muted);
+        font-size: 0.8rem;
+        margin: 6px 0 0;
+      }
+      .login-divider::before,
+      .login-divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+      .email-toggle {
+        background: none;
+        border: 0;
+        color: var(--accent);
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9rem;
+        padding: 6px 0;
+        text-align: center;
+      }
+      .email-toggle:hover { text-decoration: underline; }
+      .email-form {
+        display: none;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 8px;
+      }
+      .email-form.is-open { display: flex; }
+      .email-form input[type="email"] {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 14px;
+        font-size: 0.95rem;
+        font-family: inherit;
+      }
+      .email-form button {
+        border: 0;
+        border-radius: 14px;
+        padding: 13px 18px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        background: var(--accent);
+        color: #fff;
+        cursor: pointer;
+      }
+      .email-form button:disabled { opacity: 0.6; cursor: not-allowed; }
+      .email-feedback { font-size: 0.85rem; min-height: 18px; }
+      .email-feedback.error { color: #b91c1c; }
+      .email-feedback.ok { color: #047857; line-height: 1.6; }
+
       @keyframes angleReveal {
         0% {
           clip-path: polygon(0 0, 100% 0, 100% 50%, 100% 100%, 0 100%);
@@ -310,16 +365,83 @@
           </svg>
           Continue with Google
         </button>
+        <div class="login-divider">or</div>
+        <button type="button" class="email-toggle" id="emailToggle">Sign in with email instead</button>
+        <form class="email-form" id="emailForm" autocomplete="off">
+          <input type="email" id="emailInput" placeholder="you@example.com" required />
+          <button type="submit" id="emailSubmit">Email me a sign-in link</button>
+          <div class="email-feedback" id="emailFeedback"></div>
+        </form>
         <p class="login-note">
           By continuing, you agree to authenticate with Google. If your account exists, you will be redirected to the dashboard.
         </p>
       </section>
     </div>
     <script>
-      const button = document.getElementById("googleLogin");
-      if (button) {
-        button.addEventListener("click", () => {
+      const googleBtn = document.getElementById("googleLogin");
+      if (googleBtn) {
+        googleBtn.addEventListener("click", () => {
           window.location.href = "/auth/google";
+        });
+      }
+
+      const toggle = document.getElementById("emailToggle");
+      const form = document.getElementById("emailForm");
+      const submit = document.getElementById("emailSubmit");
+      const feedback = document.getElementById("emailFeedback");
+      const emailInput = document.getElementById("emailInput");
+
+      if (toggle && form) {
+        toggle.addEventListener("click", () => {
+          form.classList.toggle("is-open");
+          if (form.classList.contains("is-open")) emailInput.focus();
+        });
+      }
+
+      function setFeedback(text, kind) {
+        if (!feedback) return;
+        feedback.textContent = text || "";
+        feedback.className = "email-feedback" + (kind ? " " + kind : "");
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const err = params.get("error");
+      const errMessages = {
+        invalid_link: "That link isn't valid. Request a new one below.",
+        expired_link: "That link expired. Enter your email below to get a fresh one.",
+        already_used: "That link was already used. Request a new one below.",
+        unauthorized: "Your access was revoked. Contact the admin.",
+      };
+      if (err && errMessages[err] && form) {
+        form.classList.add("is-open");
+        setFeedback(errMessages[err], "error");
+      }
+
+      if (form) {
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const email = (emailInput.value || "").trim();
+          if (!email) return;
+          submit.disabled = true;
+          setFeedback("");
+          try {
+            const res = await fetch("/auth/email/request", {
+              method: "POST",
+              credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email }),
+            });
+            if (res.status === 400) {
+              setFeedback("Please enter a valid email address.", "error");
+              submit.disabled = false;
+              return;
+            }
+            setFeedback("Check your inbox — your sign-in link will arrive in a moment. It expires in 15 minutes.", "ok");
+            emailInput.value = "";
+          } catch (_) {
+            setFeedback("Network error. Please try again.", "error");
+            submit.disabled = false;
+          }
         });
       }
     </script>
