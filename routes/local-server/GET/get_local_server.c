@@ -67,6 +67,8 @@ void get_to_local(struct Socket* socket, char* http_header, char* body, char* ro
     }
 
     const char *cookie_header = NULL;
+    char *accept_header = NULL;
+    char *fwd_host_value = NULL;
     if (http_header) {
         const char *cookie_start = strstr(http_header, "\r\nCookie:");
         if (!cookie_start && strncmp(http_header, "Cookie:", 7) == 0) {
@@ -86,12 +88,96 @@ void get_to_local(struct Socket* socket, char* http_header, char* body, char* ro
                 }
             }
         }
+
+        /* Forward Accept so endpoints that content-negotiate (e.g.
+         * /admin/phones returns HTML page vs JSON list) see the client's
+         * preference. Without this Flask defaults to HTML and the JS fetch
+         * fails JSON.parse on "<!DOCTYPE ..."  */
+        const char *accept_start = strstr(http_header, "\r\nAccept:");
+        if (!accept_start && strncmp(http_header, "Accept:", 7) == 0) {
+            accept_start = http_header;
+        }
+        if (accept_start) {
+            accept_start += (accept_start == http_header) ? 7 : 9;
+            while (*accept_start == ' ') accept_start++;
+            const char *accept_end = strstr(accept_start, "\r\n");
+            if (accept_end && accept_end > accept_start) {
+                size_t len = (size_t)(accept_end - accept_start);
+                accept_header = malloc(len + 1);
+                if (accept_header) {
+                    memcpy(accept_header, accept_start, len);
+                    accept_header[len] = '\0';
+                }
+            }
+        }
     }
 
-    size_t req_size = strlen(route) + 1024 + (cookie_header ? strlen(cookie_header) : 0);
+    if (http_header) {
+        /* Forward the public-facing host so Flask can build redirect URLs
+         * (e.g. magic-link verify -> /dashboard) that point back at the
+         * client's actual host instead of the local-server's upstream addr.
+         * Mirrors post_local_server.c.
+         *   1. Incoming X-Forwarded-Host (set by an upstream proxy).
+         *   2. Otherwise the local Host header. */
+        const char *xfh_start = strstr(http_header, "\r\nX-Forwarded-Host:");
+        if (!xfh_start && strncasecmp(http_header, "X-Forwarded-Host:", 17) == 0) {
+            xfh_start = http_header;
+        }
+        if (xfh_start) {
+            xfh_start += (xfh_start == http_header) ? 17 : 19;
+            while (*xfh_start == ' ') xfh_start++;
+            const char *xfh_end = strstr(xfh_start, "\r\n");
+            if (xfh_end && xfh_end > xfh_start) {
+                size_t len = (size_t)(xfh_end - xfh_start);
+                fwd_host_value = malloc(len + 1);
+                if (fwd_host_value) {
+                    memcpy(fwd_host_value, xfh_start, len);
+                    fwd_host_value[len] = '\0';
+                }
+            }
+        }
+        if (!fwd_host_value) {
+            const char *host_start = strstr(http_header, "\r\nHost:");
+            if (!host_start && strncmp(http_header, "Host:", 5) == 0) {
+                host_start = http_header;
+            }
+            if (host_start) {
+                host_start += (host_start == http_header) ? 5 : 7;
+                while (*host_start == ' ') host_start++;
+                const char *host_end = strstr(host_start, "\r\n");
+                if (host_end && host_end > host_start) {
+                    size_t len = (size_t)(host_end - host_start);
+                    fwd_host_value = malloc(len + 1);
+                    if (fwd_host_value) {
+                        memcpy(fwd_host_value, host_start, len);
+                        fwd_host_value[len] = '\0';
+                    }
+                }
+            }
+        }
+    }
+
+    char accept_line[1024];
+    accept_line[0] = '\0';
+    if (accept_header) {
+        snprintf(accept_line, sizeof(accept_line), "Accept: %s\r\n", accept_header);
+    }
+
+    char fwd_host_line[512];
+    fwd_host_line[0] = '\0';
+    if (fwd_host_value) {
+        snprintf(fwd_host_line, sizeof(fwd_host_line),
+            "X-Forwarded-Host: %s\r\nX-Forwarded-Proto: https\r\n",
+            fwd_host_value);
+    }
+
+    size_t req_size = strlen(route) + 1024 + (cookie_header ? strlen(cookie_header) : 0)
+        + strlen(accept_line) + strlen(fwd_host_line);
     char *request = malloc(req_size);
     if (!request) {
         if (cookie_header) free((void *)cookie_header);
+        if (accept_header) free(accept_header);
+        if (fwd_host_value) free(fwd_host_value);
         close(sfd);
         return;
     }
@@ -100,25 +186,35 @@ void get_to_local(struct Socket* socket, char* http_header, char* body, char* ro
         snprintf(request, req_size,
             "GET %s HTTP/1.1\r\n"
             "Host: %s:%s\r\n"
+            "%s"
             "Connection: close\r\n"
             "Cookie: %s\r\n"
+            "%s"
             "\r\n",
             route,
             "127.0.0.1", port,
-            cookie_header);
+            fwd_host_line,
+            cookie_header,
+            accept_line);
     } else {
         snprintf(request, req_size,
             "GET %s HTTP/1.1\r\n"
             "Host: %s:%s\r\n"
+            "%s"
             "Connection: close\r\n"
+            "%s"
             "\r\n",
             route,
-            "127.0.0.1", port);
+            "127.0.0.1", port,
+            fwd_host_line,
+            accept_line);
     }
 
     send(sfd, request, strlen(request), 0);
     free(request);
     if (cookie_header) free((void *)cookie_header);
+    if (accept_header) free(accept_header);
+    if (fwd_host_value) free(fwd_host_value);
 
     char buf[8192];
     char *response = NULL;
