@@ -464,6 +464,120 @@
         .mc-modal-card{width:min(94vw,100%)}
         .mc-modal-body{grid-template-columns:1fr}
       }
+
+      /* === Phone CTA card (admin-assigned demos) =========================== */
+      .phone-cta-card {
+        position: relative;
+        margin: 0 auto 28px;
+        padding: 28px 28px 22px;
+        background: linear-gradient(135deg, #ffffff 0%, #eef4ff 100%);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        text-align: center;
+        overflow: hidden;
+      }
+      .phone-cta-card[hidden] { display: none !important; }
+      .phone-cta-card.is-pulse {
+        animation: phoneCtaPulse 1.6s ease-out 1;
+      }
+      @keyframes phoneCtaPulse {
+        0%   { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.55), var(--shadow); }
+        70%  { box-shadow: 0 0 0 26px rgba(37, 99, 235, 0); var(--shadow);}
+        100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); var(--shadow);}
+      }
+      .phone-cta-headline {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--accent, #2563eb);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
+      .phone-cta-headline .icon { font-size: 18px; }
+      .phone-cta-number {
+        display: block;
+        font-family: "SF Mono", "Menlo", "JetBrains Mono", "Consolas", monospace;
+        font-size: 42px;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 6px 0 14px;
+        letter-spacing: 0.02em;
+        word-break: break-word;
+        text-decoration: none;
+      }
+      a.phone-cta-number:hover { text-decoration: underline; }
+      .phone-cta-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        margin-bottom: 14px;
+      }
+      .phone-cta-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--text, #111827);
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background-color 0.15s ease, transform 0.05s ease;
+      }
+      .phone-cta-btn.primary { background: #0f172a; color: #fff; border-color: #0f172a; }
+      .phone-cta-btn:hover { background: #f1f5f9; }
+      .phone-cta-btn.primary:hover { background: #1e293b; }
+      .phone-cta-btn:active { transform: scale(0.98); }
+      .phone-cta-copied {
+        display: inline-block;
+        margin-left: 6px;
+        font-size: 13px;
+        color: #047857;
+        font-weight: 600;
+        opacity: 0;
+        transition: opacity 0.18s ease;
+      }
+      .phone-cta-copied.is-visible { opacity: 1; }
+      .phone-cta-meta {
+        font-size: 13px;
+        color: var(--muted, #6b7280);
+        line-height: 1.5;
+        max-width: 460px;
+        margin: 0 auto 4px;
+      }
+      .phone-cta-foot {
+        margin-top: 12px;
+        padding-top: 10px;
+        border-top: 1px dashed var(--border);
+        font-size: 11px;
+        color: var(--muted, #6b7280);
+        letter-spacing: 0.02em;
+      }
+      .phone-cta-foot a {
+        color: var(--muted, #6b7280);
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .phone-cta-foot a:hover { color: var(--accent, #2563eb); text-decoration: underline; }
+      @media (max-width: 768px) {
+        .phone-cta-card { padding: 22px 18px 16px; }
+        .phone-cta-number { font-size: 32px; }
+        .phone-cta-btn.copy-only { display: none; }
+      }
+      @media (min-width: 769px) {
+        .phone-cta-btn.tel-only { display: none; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .phone-cta-card.is-pulse { animation: none; }
+      }
     </style>
   </head>
   <body>
@@ -552,6 +666,24 @@
 
       <!-- ═══════════════ DEMO STAGE ═══════════════ -->
       <section class="demo-stage" id="demoStage">
+
+        <!-- Phone CTA — visible only when an admin has assigned a Twilio number to this demo. -->
+        <section class="phone-cta-card" id="phoneCtaSection" hidden aria-labelledby="phoneCtaHeadline">
+          <div class="phone-cta-headline" id="phoneCtaHeadline">
+            <span class="icon" aria-hidden="true">📞</span>
+            <span>Try calling your new helper</span>
+          </div>
+          <a class="phone-cta-number" id="phoneCtaNumber" href="#" aria-label="Phone number"></a>
+          <div class="phone-cta-actions">
+            <a class="phone-cta-btn primary tel-only" id="phoneCtaTelBtn" href="#" aria-label="Tap to call">📲 Tap to call</a>
+            <button class="phone-cta-btn copy-only" type="button" id="phoneCtaCopyBtn" aria-label="Copy phone number">📋 Copy number</button>
+            <span class="phone-cta-copied" id="phoneCtaCopied" role="status">Copied!</span>
+          </div>
+          <p class="phone-cta-meta">Available 24/7. Sounds like <span id="phoneCtaCompany">your business</span>'s receptionist.</p>
+          <div class="phone-cta-foot">
+            Powered by <a href="https://justgotalead.com" target="_blank" rel="noopener noreferrer">Just Got A Lead</a>
+          </div>
+        </section>
 
         <header class="dashboard-header" id="demoWelcomeHeader">
           <div class="welcome">
@@ -1760,6 +1892,66 @@
         }
       }
 
+      // ─── PHONE CTA (admin-assigned demos only) ────────────────
+      function renderPhoneCta(profile, entries) {
+        const section = document.getElementById("phoneCtaSection");
+        if (!section) return;
+        const numberE164 = (profile && profile.phone_number) || "";
+        const numberDisplay = (profile && profile.phone_display) || numberE164;
+        if (!numberE164) {
+          section.hidden = true;
+          return;
+        }
+        const numberEl = document.getElementById("phoneCtaNumber");
+        const telBtn = document.getElementById("phoneCtaTelBtn");
+        const copyBtn = document.getElementById("phoneCtaCopyBtn");
+        const copiedEl = document.getElementById("phoneCtaCopied");
+        const companyEl = document.getElementById("phoneCtaCompany");
+        if (numberEl) {
+          numberEl.textContent = numberDisplay;
+          numberEl.href = "tel:" + numberE164;
+        }
+        if (telBtn) telBtn.href = "tel:" + numberE164;
+        if (companyEl) {
+          const name = deriveCompanyName(profile, entries);
+          companyEl.textContent = name && name.toLowerCase() !== "ai assistant" ? name : "your business";
+        }
+        if (copyBtn && !copyBtn.dataset.bound) {
+          copyBtn.dataset.bound = "1";
+          copyBtn.addEventListener("click", async () => {
+            try {
+              await navigator.clipboard.writeText(numberE164);
+              if (copiedEl) {
+                copiedEl.classList.add("is-visible");
+                setTimeout(() => copiedEl.classList.remove("is-visible"), 2000);
+              }
+            } catch (e) {
+              // Fallback: select+copy via execCommand if clipboard API blocked.
+              const sel = document.createElement("textarea");
+              sel.value = numberE164;
+              sel.setAttribute("readonly", "");
+              sel.style.position = "absolute";
+              sel.style.left = "-9999px";
+              document.body.appendChild(sel);
+              sel.select();
+              try { document.execCommand("copy"); } catch (e2) {}
+              document.body.removeChild(sel);
+              if (copiedEl) {
+                copiedEl.classList.add("is-visible");
+                setTimeout(() => copiedEl.classList.remove("is-visible"), 2000);
+              }
+            }
+          });
+        }
+        section.hidden = false;
+        // One-shot pulse on first reveal.
+        if (!section.dataset.pulsed) {
+          section.dataset.pulsed = "1";
+          section.classList.add("is-pulse");
+          setTimeout(() => section.classList.remove("is-pulse"), 1700);
+        }
+      }
+
       // ─── HERO FILL ───────────────────────────────────────────
       function fillHero(profile, entries) {
         const name = deriveCompanyName(profile, entries);
@@ -2359,6 +2551,7 @@
           fillHero(profile, entries);
           setDemoMetrics(metrics);
           loadTrialPhoneStatus();
+          renderPhoneCta(profile, entries);
 
           // ── sections shown to everyone on ?demo= ──
           prospectCta.classList.add("is-visible");
