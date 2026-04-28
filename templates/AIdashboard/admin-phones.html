@@ -445,7 +445,7 @@
       <div class="routing-methods" role="radiogroup" aria-label="Routing method" id="routingMethods">
         <label class="routing-method"><input type="radio" name="routing-method" value="email" /> Email</label>
         <label class="routing-method" id="routingMethodSmsLabel"><input type="radio" name="routing-method" value="sms" /> SMS</label>
-        <label class="routing-method"><input type="radio" name="routing-method" value="voice_call" /> Voice call</label>
+        <label class="routing-method" id="routingMethodVoiceLabel"><input type="radio" name="routing-method" value="voice_call" /> Voice call</label>
       </div>
       <label>
         <span id="routingTargetLabel">Target</span>
@@ -1046,6 +1046,10 @@
           if (me && !me.is_admin) {
             const smsLabel = document.getElementById("routingMethodSmsLabel");
             if (smsLabel) smsLabel.remove();
+            // Voice-call routing is admin-only too — non-admins set up
+            // email reroute only.
+            const voiceLabel = document.getElementById("routingMethodVoiceLabel");
+            if (voiceLabel) voiceLabel.remove();
             // Non-admins shouldn't see the actions that mutate ownership
             // or duplicate functionality already on the dashboard.
             // Re-render the rows now that we know the role.
