@@ -2492,6 +2492,129 @@
   </style>
 </head>
 <body>
+  <dialog id="welcomeModal" class="welcome-modal">
+    <form id="welcomeForm" method="dialog" autocomplete="off">
+      <div class="welcome-eyebrow">Welcome 👋</div>
+      <h2 class="welcome-title">Let's get you set up</h2>
+      <p class="welcome-sub">A few quick details and your dashboard will be ready.</p>
+
+      <div class="welcome-row two-col">
+        <label>
+          <span>First name</span>
+          <input id="welcomeFirstName" type="text" maxlength="80" required />
+        </label>
+        <label>
+          <span>Last name</span>
+          <input id="welcomeLastName" type="text" maxlength="80" required />
+        </label>
+      </div>
+      <label class="welcome-row">
+        <span>Business name</span>
+        <input id="welcomeBusinessName" type="text" maxlength="80" required />
+      </label>
+      <label class="welcome-row">
+        <span>Website URL</span>
+        <input id="welcomeWebsiteUrl" type="url" placeholder="https://yourbusiness.com" maxlength="2048" required />
+      </label>
+
+      <div id="welcomeError" class="welcome-error" hidden></div>
+
+      <div class="welcome-actions">
+        <button type="submit" id="welcomeSubmit" class="welcome-submit">Get started →</button>
+      </div>
+    </form>
+  </dialog>
+
+  <style>
+    .welcome-modal {
+      border: 0; border-radius: 18px; padding: 0; max-width: 460px; width: 92%;
+      background: transparent; box-shadow: none;
+    }
+    .welcome-modal::backdrop {
+      background: linear-gradient(180deg, rgba(238, 242, 255, 0.85), rgba(219, 234, 254, 0.85));
+      backdrop-filter: blur(2px);
+    }
+    .welcome-modal form {
+      background: #ffffff;
+      border: 1px solid rgba(15, 23, 42, 0.06);
+      border-radius: 18px;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+      padding: 28px;
+      font-family: "Inter", "Segoe UI", Arial, Helvetica, sans-serif;
+      color: #0f172a;
+    }
+    .welcome-eyebrow {
+      font-size: 12px; font-weight: 700; letter-spacing: 0.18em;
+      text-transform: uppercase; color: #1f4fd1; margin-bottom: 8px;
+    }
+    .welcome-title { font-size: 22px; font-weight: 800; margin: 0 0 6px; line-height: 1.2; }
+    .welcome-sub { font-size: 13px; color: #64748b; margin: 0 0 18px; line-height: 1.5; }
+    .welcome-row { display: block; margin-bottom: 12px; }
+    .welcome-row.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .welcome-row label, .welcome-row > label { display: block; }
+    .welcome-row span {
+      display: block; font-size: 11px; font-weight: 600;
+      color: #475569; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .welcome-row input {
+      width: 100%; box-sizing: border-box;
+      background: #f1f5f9; border: 1px solid #e2e8f0;
+      border-radius: 10px; padding: 10px 12px;
+      font-size: 14px; font-family: inherit; color: #0f172a;
+    }
+    .welcome-row input:focus {
+      outline: 2px solid rgba(37, 99, 235, 0.35); border-color: #2563eb;
+    }
+    .welcome-error {
+      background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;
+      border-radius: 10px; padding: 8px 12px; font-size: 13px; margin: 4px 0 12px;
+    }
+    .welcome-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
+    .welcome-submit {
+      background: linear-gradient(135deg, #2563eb, #3aa0ff);
+      color: #fff; border: 0; padding: 10px 22px;
+      border-radius: 999px; font-size: 14px; font-weight: 700;
+      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.35); cursor: pointer;
+    }
+    .welcome-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .kb-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 14px; border-radius: 999px;
+      font-size: 13px; font-weight: 600; margin: 8px 0 12px;
+    }
+    .kb-pill.pending {
+      background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;
+    }
+    .kb-pill.pending::before {
+      content: ""; width: 12px; height: 12px; border-radius: 50%;
+      border: 2px solid #1d4ed8; border-right-color: transparent;
+      animation: kbSpin 0.8s linear infinite;
+    }
+    .kb-pill.failed {
+      background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;
+    }
+    .kb-pill.failed button {
+      background: transparent; border: 0; color: #b91c1c; font-weight: 700;
+      text-decoration: underline; cursor: pointer; padding: 0; margin-left: 6px;
+    }
+    @keyframes kbSpin { to { transform: rotate(360deg); } }
+
+    .voice-grid {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px; margin-top: 12px;
+    }
+    .voice-grid label { display: block; }
+    .voice-grid label span {
+      display: block; font-size: 12px; font-weight: 600;
+      color: #475569; margin-bottom: 6px;
+    }
+    .voice-grid select {
+      width: 100%; padding: 9px 12px; font-size: 14px;
+      border: 1px solid #e2e8f0; border-radius: 10px;
+    }
+  </style>
+
   <div class="layout">
     <nav class="desktop-nav">
       <div class="nav-container">
@@ -2548,13 +2671,13 @@
         <div class="card" style="grid-column: span 12;">
           <div class="card-header">
             <div>
-              <h2 class="section-title" style="margin:0;">Admin Settings</h2>
-              <p class="section-note">Manage phone numbers and the SSO allowlist.</p>
+              <h2 class="section-title" id="adminSectionTitle" style="margin:0;">Admin Settings</h2>
+              <p class="section-note" id="adminSectionNote">Manage phone numbers and the SSO allowlist.</p>
             </div>
           </div>
           <nav class="admin-tabbar" data-admin-tabs>
             <button type="button" class="admin-tab active" data-admin-tab="phones">Phones</button>
-            <button type="button" class="admin-tab" data-admin-tab="users">Allowed Users</button>
+            <button type="button" class="admin-tab" data-admin-tab="users" id="adminTabUsers">Allowed Users</button>
           </nav>
           <iframe
             id="adminPanelFrame"
@@ -2567,7 +2690,44 @@
         </div>
       </section>
 
-      
+      <section class="grid" id="voicePanel">
+        <div class="card" style="grid-column: span 12;">
+          <div class="card-header">
+            <div>
+              <h2 class="section-title" style="margin:0;">Voice settings</h2>
+              <p class="section-note">Personality and what your bot says when answering calls.</p>
+            </div>
+          </div>
+          <div class="voice-grid">
+            <label>
+              <span>Personality</span>
+              <select id="voicePersonality">
+                <option value="professional">Professional</option>
+                <option value="cheery">Cheery</option>
+                <option value="calm">Calm</option>
+              </select>
+            </label>
+            <label>
+              <span>First call greeting</span>
+              <select id="voiceFirstCall">
+                <option value="default">Default</option>
+                <option value="warm">Warm</option>
+                <option value="concise">Concise</option>
+              </select>
+            </label>
+            <label>
+              <span>Missed-call greeting</span>
+              <select id="voiceMissedCall">
+                <option value="default">Default</option>
+                <option value="apologetic">Apologetic</option>
+                <option value="concise">Concise</option>
+              </select>
+            </label>
+          </div>
+        </div>
+      </section>
+
+
 
 
       
@@ -2692,6 +2852,7 @@
       </section>
 
       <section class="grid" id="knowledge">
+        <div id="kbStatusPill" class="kb-pill" hidden style="grid-column: span 12;"></div>
         <div class="card kb-card is-locked" id="kbCardClient" data-kb-type="client" style="grid-column: span 12;">
           <div class="card-header">
             <h2 class="section-title" style="margin:0;">Client Knowledge Base</h2>
@@ -6930,12 +7091,27 @@
         const res = await fetch("/me", { credentials: "include" });
         if (!res.ok) return;
         const me = await res.json();
-        if (!me || !me.is_admin) return;
+        if (!me || !me.authenticated) return;
+
         const section = document.getElementById("admin");
         if (section) section.removeAttribute("hidden");
         document.querySelectorAll("[data-admin-nav]").forEach((el) => {
           el.removeAttribute("hidden");
         });
+
+        const titleEl = document.getElementById("adminSectionTitle");
+        const noteEl = document.getElementById("adminSectionNote");
+        const usersTab = document.getElementById("adminTabUsers");
+        if (me.is_admin) {
+          if (titleEl) titleEl.textContent = "Admin Settings";
+          if (noteEl) noteEl.textContent = "Manage phone numbers and the SSO allowlist.";
+          if (usersTab) usersTab.removeAttribute("hidden");
+        } else {
+          if (titleEl) titleEl.textContent = "My Numbers";
+          if (noteEl) noteEl.textContent = "Your assigned business number(s) and call routing.";
+          if (usersTab) usersTab.setAttribute("hidden", "");
+        }
+
         const frame = document.getElementById("adminPanelFrame");
         const tabs = document.querySelectorAll("[data-admin-tab]");
 
@@ -6947,14 +7123,135 @@
           });
         }
 
-        tabs.forEach((btn) => {
-          btn.addEventListener("click", () => activate(btn.dataset.adminTab));
-        });
+        tabs.forEach((btn) => btn.addEventListener("click", () => activate(btn.dataset.adminTab)));
         activate("phones");
-      } catch (e) {
-        // Silently ignore — admin panel stays hidden, which is the safe default.
-      }
+      } catch (e) { /* silent — admin panel stays hidden */ }
     }
+
+    async function maybeOpenWelcomeModal() {
+      try {
+        const res = await fetch("/me", { credentials: "same-origin" });
+        if (!res.ok) return;
+        const me = await res.json();
+        if (!me || !me.authenticated || me.onboarded) return;
+        const dlg = document.getElementById("welcomeModal");
+        if (!dlg || typeof dlg.showModal !== "function") return;
+        dlg.showModal();
+      } catch (e) { /* silent */ }
+    }
+
+    function wireWelcomeForm() {
+      const form = document.getElementById("welcomeForm");
+      if (!form) return;
+      const errEl = document.getElementById("welcomeError");
+      const submitBtn = document.getElementById("welcomeSubmit");
+      function setErr(msg) {
+        if (!errEl) return;
+        errEl.textContent = msg || "";
+        errEl.hidden = !msg;
+      }
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        setErr("");
+        if (submitBtn) submitBtn.disabled = true;
+        const body = {
+          first_name: document.getElementById("welcomeFirstName").value.trim(),
+          last_name: document.getElementById("welcomeLastName").value.trim(),
+          business_name: document.getElementById("welcomeBusinessName").value.trim(),
+          website_url: document.getElementById("welcomeWebsiteUrl").value.trim(),
+        };
+        try {
+          const res = await fetch("/onboarding/complete", {
+            method: "POST", credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            const msgs = {
+              missing_field: "Please fill in every field.",
+              invalid_url: "Couldn't reach that URL — check the address.",
+              already_onboarded: "You're already set up — refreshing now.",
+              unknown_user: "Your account isn't on the allowlist.",
+            };
+            setErr(msgs[data.error] || ("Something went wrong: " + (data.error || res.status)));
+            if (submitBtn) submitBtn.disabled = false;
+            return;
+          }
+          const dlg = document.getElementById("welcomeModal");
+          if (dlg && typeof dlg.close === "function") dlg.close();
+          window.location.reload();
+        } catch (err) {
+          setErr("Network error. Please try again.");
+          if (submitBtn) submitBtn.disabled = false;
+        }
+      });
+    }
+
+    async function pollKbStatus() {
+      const pill = document.getElementById("kbStatusPill");
+      if (!pill) return;
+      try {
+        const res = await fetch("/onboarding/status", { credentials: "same-origin" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.kb_status === "pending") {
+          pill.hidden = false;
+          pill.className = "kb-pill pending";
+          pill.textContent = "Building your knowledge base — usually under a minute";
+          setTimeout(pollKbStatus, 4000);
+        } else if (data.kb_status === "failed") {
+          pill.hidden = false;
+          pill.className = "kb-pill failed";
+          pill.innerHTML = "Couldn't build your knowledge base. <button type='button' id='kbRetry'>Retry</button>";
+          const retryBtn = document.getElementById("kbRetry");
+          if (retryBtn) retryBtn.addEventListener("click", async () => {
+            retryBtn.disabled = true;
+            const r = await fetch("/onboarding/retry-kb", { method: "POST", credentials: "same-origin" });
+            if (r.ok) pollKbStatus();
+            else retryBtn.disabled = false;
+          });
+        } else {
+          pill.hidden = true;
+        }
+      } catch (e) { /* silent */ }
+    }
+
+    async function loadVoiceSettings() {
+      const personality = document.getElementById("voicePersonality");
+      const firstCall = document.getElementById("voiceFirstCall");
+      const missed = document.getElementById("voiceMissedCall");
+      if (!personality || !firstCall || !missed) return;
+      try {
+        const res = await fetch("/me/voice-settings", { credentials: "same-origin" });
+        if (!res.ok) return;
+        const data = await res.json();
+        personality.value = data.personality || "professional";
+        firstCall.value = data.first_call_intent || "default";
+        missed.value = data.missed_call_intent || "default";
+      } catch (e) { /* silent */ }
+      function autosave() {
+        return fetch("/me/voice-settings", {
+          method: "PUT", credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            personality: personality.value,
+            first_call_intent: firstCall.value,
+            missed_call_intent: missed.value,
+          }),
+        });
+      }
+      personality.addEventListener("change", autosave);
+      firstCall.addEventListener("change", autosave);
+      missed.addEventListener("change", autosave);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      maybeOpenWelcomeModal();
+      wireWelcomeForm();
+      pollKbStatus();
+      loadVoiceSettings();
+    });
 
     // Iframe self-reports its content height — keeps the section flush with the
     // table and prevents the inner scrollbar.
