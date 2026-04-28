@@ -2493,36 +2493,54 @@
 </head>
 <body>
   <dialog id="welcomeModal" class="welcome-modal">
-    <form id="welcomeForm" method="dialog" autocomplete="off">
-      <div class="welcome-eyebrow">Welcome 👋</div>
-      <h2 class="welcome-title">Let's get you set up</h2>
-      <p class="welcome-sub">A few quick details and your dashboard will be ready.</p>
+    <div id="welcomeFormView">
+      <form id="welcomeForm" method="dialog" autocomplete="off">
+        <div class="welcome-eyebrow">Welcome 👋</div>
+        <h2 class="welcome-title">Let's get you set up</h2>
+        <p class="welcome-sub">A few quick details and your dashboard will be ready.</p>
 
-      <div class="welcome-row two-col">
-        <label>
-          <span>First name</span>
-          <input id="welcomeFirstName" type="text" maxlength="80" required />
+        <div class="welcome-row two-col">
+          <label>
+            <span>First name</span>
+            <input id="welcomeFirstName" type="text" maxlength="80" required />
+          </label>
+          <label>
+            <span>Last name</span>
+            <input id="welcomeLastName" type="text" maxlength="80" required />
+          </label>
+        </div>
+        <label class="welcome-row">
+          <span>Business name</span>
+          <input id="welcomeBusinessName" type="text" maxlength="80" required />
         </label>
-        <label>
-          <span>Last name</span>
-          <input id="welcomeLastName" type="text" maxlength="80" required />
+        <label class="welcome-row">
+          <span>Website URL</span>
+          <input id="welcomeWebsiteUrl" type="url" placeholder="https://yourbusiness.com" maxlength="2048" required />
         </label>
-      </div>
-      <label class="welcome-row">
-        <span>Business name</span>
-        <input id="welcomeBusinessName" type="text" maxlength="80" required />
-      </label>
-      <label class="welcome-row">
-        <span>Website URL</span>
-        <input id="welcomeWebsiteUrl" type="url" placeholder="https://yourbusiness.com" maxlength="2048" required />
-      </label>
 
-      <div id="welcomeError" class="welcome-error" hidden></div>
+        <div id="welcomeError" class="welcome-error" hidden></div>
 
-      <div class="welcome-actions">
-        <button type="submit" id="welcomeSubmit" class="welcome-submit">Get started →</button>
-      </div>
-    </form>
+        <div class="welcome-actions">
+          <button type="submit" id="welcomeSubmit" class="welcome-submit">Get started →</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="welcomeProgressView" hidden>
+      <div class="welcome-eyebrow">Setting up</div>
+      <h2 class="welcome-title">Building your assistant</h2>
+      <p class="welcome-sub" id="welcomeProgressSub">This usually takes under a minute. Hang tight!</p>
+
+      <ol class="onboarding-steps" id="onboardingSteps">
+        <li data-step="saved" class="step done"><span class="step-icon">✓</span> Saved your details</li>
+        <li data-step="crawling" class="step"><span class="step-icon">…</span> Reading your website</li>
+        <li data-step="summarizing" class="step"><span class="step-icon">…</span> Summarizing the content</li>
+        <li data-step="saving" class="step"><span class="step-icon">…</span> Building your knowledge base</li>
+        <li data-step="ready" class="step"><span class="step-icon">…</span> Finalizing dashboard</li>
+      </ol>
+
+      <div id="welcomeProgressError" class="welcome-error" hidden></div>
+    </div>
   </dialog>
 
   <style>
@@ -2578,6 +2596,44 @@
       box-shadow: 0 8px 18px rgba(37, 99, 235, 0.35); cursor: pointer;
     }
     .welcome-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .onboarding-steps {
+      list-style: none; padding: 0; margin: 18px 0 6px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .onboarding-steps .step {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 14px; color: #94a3b8; line-height: 1.4;
+      padding: 10px 12px; border-radius: 12px;
+      background: #f8fafc; border: 1px solid #e2e8f0;
+      transition: background 0.18s ease, color 0.18s ease;
+    }
+    .onboarding-steps .step.active {
+      color: #1d4ed8; background: #eff6ff; border-color: #bfdbfe;
+    }
+    .onboarding-steps .step.done {
+      color: #047857; background: #ecfdf5; border-color: #a7f3d0;
+    }
+    .onboarding-steps .step.failed {
+      color: #b91c1c; background: #fef2f2; border-color: #fecaca;
+    }
+    .onboarding-steps .step .step-icon {
+      flex: 0 0 24px; height: 24px; width: 24px;
+      border-radius: 50%; background: #ffffff;
+      border: 1px solid currentColor;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+    }
+    .onboarding-steps .step.active .step-icon {
+      border-style: dashed;
+      animation: kbSpin 1s linear infinite;
+    }
+    .onboarding-steps .step.done .step-icon {
+      background: #047857; color: #ffffff; border-color: #047857;
+    }
+    .onboarding-steps .step.failed .step-icon {
+      background: #b91c1c; color: #ffffff; border-color: #b91c1c;
+    }
 
     .kb-pill {
       display: inline-flex; align-items: center; gap: 8px;
@@ -7142,6 +7198,65 @@
       } catch (e) { /* silent */ }
     }
 
+    const ONBOARDING_PHASE_ORDER = ["saved", "crawling", "summarizing", "saving", "ready"];
+
+    function setStepStates(currentPhase, failed) {
+      const steps = document.querySelectorAll("#onboardingSteps .step");
+      const idx = ONBOARDING_PHASE_ORDER.indexOf(currentPhase);
+      steps.forEach((el) => {
+        const phase = el.dataset.step;
+        el.classList.remove("active", "done", "failed");
+        const elIdx = ONBOARDING_PHASE_ORDER.indexOf(phase);
+        if (failed && phase === currentPhase) {
+          el.classList.add("failed");
+          const ic = el.querySelector(".step-icon"); if (ic) ic.textContent = "!";
+        } else if (idx < 0 || elIdx < idx) {
+          el.classList.add("done");
+          const ic = el.querySelector(".step-icon"); if (ic) ic.textContent = "✓";
+        } else if (elIdx === idx) {
+          el.classList.add("active");
+          const ic = el.querySelector(".step-icon"); if (ic) ic.textContent = "…";
+        } else {
+          const ic = el.querySelector(".step-icon"); if (ic) ic.textContent = "…";
+        }
+      });
+    }
+
+    async function pollWelcomeProgress() {
+      const errEl = document.getElementById("welcomeProgressError");
+      const subEl = document.getElementById("welcomeProgressSub");
+      try {
+        const res = await fetch("/onboarding/status", { credentials: "same-origin" });
+        if (!res.ok) {
+          // Transient — keep trying.
+          setTimeout(pollWelcomeProgress, 4000);
+          return;
+        }
+        const data = await res.json();
+        const phase = data.kb_phase || (data.kb_status === "ready" ? "ready" : "crawling");
+        if (data.kb_status === "failed") {
+          setStepStates(phase, true);
+          if (errEl) {
+            errEl.textContent = "Couldn't build your knowledge base: " + (data.kb_error || "unknown error") + ". Reloading the dashboard so you can retry.";
+            errEl.hidden = false;
+          }
+          setTimeout(() => window.location.reload(), 4000);
+          return;
+        }
+        if (data.kb_status === "ready") {
+          setStepStates("ready", false);
+          if (subEl) subEl.textContent = "All set! Loading your dashboard…";
+          setTimeout(() => window.location.reload(), 1200);
+          return;
+        }
+        // pending
+        setStepStates(phase || "crawling", false);
+        setTimeout(pollWelcomeProgress, 3000);
+      } catch (err) {
+        setTimeout(pollWelcomeProgress, 4000);
+      }
+    }
+
     function wireWelcomeForm() {
       const form = document.getElementById("welcomeForm");
       if (!form) return;
@@ -7180,9 +7295,13 @@
             if (submitBtn) submitBtn.disabled = false;
             return;
           }
-          const dlg = document.getElementById("welcomeModal");
-          if (dlg && typeof dlg.close === "function") dlg.close();
-          window.location.reload();
+          // Swap to the progress view inside the same modal and start polling.
+          const formView = document.getElementById("welcomeFormView");
+          const progView = document.getElementById("welcomeProgressView");
+          if (formView) formView.hidden = true;
+          if (progView) progView.hidden = false;
+          setStepStates("crawling", false);
+          pollWelcomeProgress();
         } catch (err) {
           setErr("Network error. Please try again.");
           if (submitBtn) submitBtn.disabled = false;

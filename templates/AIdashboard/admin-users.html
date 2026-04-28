@@ -80,7 +80,10 @@
 
       <form class="add-row" id="addForm" autocomplete="off">
         <input type="email" id="emailInput" placeholder="user@example.com" required />
-        <button type="submit" id="addBtn">Add</button>
+        <select id="addPhoneSelect" style="padding:10px 12px; border:1px solid var(--border); border-radius:10px; font-size:14px; min-width: 180px;">
+          <option value="">No phone (optional)</option>
+        </select>
+        <button type="submit" id="addBtn">Add &amp; invite</button>
       </form>
       <div class="feedback" id="feedback"></div>
 
@@ -258,6 +261,7 @@
       setFeedback("");
       // Refresh phones map first so the Phone column renders correctly.
       await fetchAllPhones();
+      refreshAddPhoneSelect();
       try {
         const res = await fetch("/admin/users/list", { credentials: "same-origin" });
         if (!res.ok) {
@@ -276,15 +280,38 @@
       }
     }
 
+    function refreshAddPhoneSelect() {
+      const sel = document.getElementById("addPhoneSelect");
+      if (!sel) return;
+      // Preserve current selection if still applicable.
+      const prior = sel.value;
+      // Drop existing options except the placeholder (first).
+      while (sel.options.length > 1) sel.remove(1);
+      unassignedPhones().forEach((p) => {
+        const opt = document.createElement("option");
+        opt.value = p.phone_id;
+        const label = p.phone_display || p.phone_number || p.phone_id;
+        const aid = p.assigned_account_id || "";
+        const suffix = aid && !aid.startsWith("cust_") ? "  (reusing demo)" : "";
+        opt.textContent = label + suffix;
+        sel.appendChild(opt);
+      });
+      if (prior && Array.from(sel.options).some((o) => o.value === prior)) sel.value = prior;
+    }
+
     async function addUser(email) {
       $addBtn.disabled = true;
       setFeedback("");
+      const phoneSel = document.getElementById("addPhoneSelect");
+      const phoneId = phoneSel ? (phoneSel.value || "") : "";
       try {
+        const reqBody = { email };
+        if (phoneId) reqBody.phone_id = phoneId;
         const res = await fetch("/admin/users/add", {
           method: "POST",
           credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
+          body: JSON.stringify(reqBody),
         });
         const body = await res.json();
         if (!res.ok) {
@@ -299,15 +326,20 @@
           return;
         }
         $input.value = "";
+        if (phoneSel) phoneSel.value = "";
+        // Refresh phones map so the row + selector reflect the just-bound phone.
+        await fetchAllPhones();
+        refreshAddPhoneSelect();
         $rows.prepend(renderRow(body));
         const emptyRow = $rows.querySelector(".empty");
         if (emptyRow) emptyRow.parentElement.remove();
+        const bindMsg = body.bind_status === "bound" ? " Phone pre-bound." : "";
         if (body.invite_status === "sent") {
-          setFeedback("Added " + body.email + " — invite sent.", "ok");
+          setFeedback("Added " + body.email + " — invite sent." + bindMsg, "ok");
         } else if (body.invite_status === "failed") {
-          setFeedback("Added " + body.email + " — invite failed. Click \"Resend invite\" to try again.", "error");
+          setFeedback("Added " + body.email + " — invite failed. Click \"Resend invite\" to try again." + bindMsg, "error");
         } else {
-          setFeedback("Added " + body.email + ".", "ok");
+          setFeedback("Added " + body.email + "." + bindMsg, "ok");
         }
       } catch (err) {
         setFeedback("Network error adding user.", "error");
