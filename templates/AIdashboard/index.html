@@ -7046,12 +7046,27 @@
             save_lead(data);
 
           } 
+          // Persistent chip pool — show next_questions on every bot
+          // turn, falling back to the last non-empty pool we got from
+          // the model, then to the bot's default_start_questions.
+          const modelChips = Array.isArray(data.next_questions) ? data.next_questions : [];
+          if (modelChips.length) {
+            window.__lastInsightsChips = modelChips.slice(0, 4);
+          }
+          let chipPool = window.__lastInsightsChips || [];
+          if (!chipPool.length) {
+            const cfg = window.__aiWidgetCfgCache;
+            if (cfg && Array.isArray(cfg.default_start_questions)) {
+              chipPool = cfg.default_start_questions.slice(0, 4);
+            }
+          }
           const thread = insightsMessages[requestMode];
           const lastIndex = thread.length - 1;
+          const newMsg = { role: "bot", text: responseText || "", nextQuestions: chipPool };
           if (lastIndex >= 0 && thread[lastIndex].role === "bot") {
-            thread[lastIndex] = { role: "bot", text: responseText || "" };
+            thread[lastIndex] = newMsg;
           } else {
-            thread.push({ role: "bot", text: responseText || "" });
+            thread.push(newMsg);
           }
           renderInsightsChat(requestMode);
         } finally {
