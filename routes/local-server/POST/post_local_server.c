@@ -181,20 +181,62 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, char* rou
 			return;
 		}
 
-		response[total] = '\0'; 
-		printf("Total bytes received: %zu\n", total);
+		response[total] = '\0';
 
-		char *res_body = strstr(response, "\r\n\r\n");
-		if (res_body) {
-			res_body += 4;
-			size_t body_len = strlen(res_body);
-
-			send_html_response_code(socket->cSSL, 200, body_len);
-			
-			SSL_write(socket->cSSL, res_body, body_len);
-		} else {
-			printf("No HTTP body found\n");
+		/* Parse upstream status, Content-Type and body so the client sees
+		 * the real values (admin endpoints return JSON with 200/202/400/
+		 * 403/404/409/429 — forcing text/html and 200 broke them all). */
+		int up_status = 200;
+		if (sscanf(response, "HTTP/%*s %d", &up_status) != 1) {
+			up_status = 200;
 		}
+		char *header_end = strstr(response, "\r\n\r\n");
+		if (!header_end) {
+			free(response);
+			close(sfd);
+			return;
+		}
+		size_t header_len = (size_t)(header_end - response);
+		char *res_body = header_end + 4;
+		size_t body_len = total - (size_t)(res_body - response);
+
+		char *up_content_type = NULL;
+		char *header_block = malloc(header_len + 1);
+		if (header_block) {
+			memcpy(header_block, response, header_len);
+			header_block[header_len] = '\0';
+			char *line = strtok(header_block, "\r\n");
+			while (line) {
+				if (strncasecmp(line, "Content-Type:", 13) == 0) {
+					char *val = line + 13;
+					while (*val == ' ') val++;
+					up_content_type = strdup(val);
+					break;
+				}
+				line = strtok(NULL, "\r\n");
+			}
+			free(header_block);
+		}
+
+		const char *ctype = up_content_type ? up_content_type : "application/json";
+		const char *status_text = (up_status == 200) ? "OK" : get_code_message(up_status);
+		char header_out[2048];
+		int header_n = snprintf(header_out, sizeof(header_out),
+			"HTTP/1.1 %d %s\r\n"
+			"Content-Type: %s\r\n"
+			"Cache-Control: no-cache, no-store, must-revalidate\r\n"
+			"Access-Control-Allow-Origin: *\r\n"
+			"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+			"Access-Control-Allow-Headers: Content-Type\r\n"
+			"Connection: close\r\n"
+			"Content-Length: %zu\r\n"
+			"\r\n",
+			up_status, status_text, ctype, body_len);
+		SSL_write(socket->cSSL, header_out, header_n);
+		if (body_len > 0) {
+			SSL_write(socket->cSSL, res_body, body_len);
+		}
+		if (up_content_type) free(up_content_type);
 
     free(response);
     close(sfd);

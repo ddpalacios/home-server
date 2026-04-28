@@ -266,7 +266,31 @@ void get_to_local(struct Socket* socket, char* http_header, char* body, char* ro
         return;
     }
 
-    if (strstr(route, "/dashboard") != NULL || strstr(route, "/messages") != NULL) {
+    /* Prefer the upstream Content-Type when we have one — the URL-suffix
+     * fallbacks below mishandle anything that doesn't end in .html/.css/.js
+     * (e.g. /admin/phones, /me JSON), which would otherwise be served as
+     * application/octet-stream and trigger a browser download. */
+    if (content_type) {
+        char header_out[2048];
+        const char *status_text = (status_code == 200) ? "OK" : get_code_message(status_code);
+        int header_len = snprintf(header_out, sizeof(header_out),
+                                  "HTTP/1.1 %d %s\r\n"
+                                  "Content-Type: %s\r\n"
+                                  "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                                  "Pragma: no-cache\r\n"
+                                  "Expires: 0\r\n"
+                                  "Access-Control-Allow-Origin: *\r\n"
+                                  "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+                                  "Access-Control-Allow-Headers: Content-Type\r\n"
+                                  "Connection: close\r\n"
+                                  "Content-Length: %zu\r\n"
+                                  "\r\n",
+                                  status_code, status_text, content_type, body_len);
+        SSL_write(socket->cSSL, header_out, header_len);
+        if (body_len > 0) {
+            SSL_write(socket->cSSL, res_body, body_len);
+        }
+    } else if (strstr(route, "/dashboard") != NULL || strstr(route, "/messages") != NULL) {
         send_html_response_code(socket->cSSL, 200, (int)body_len);
         SSL_write(socket->cSSL, res_body, body_len);
     } else if (strstr(route, ".css") != NULL) {
