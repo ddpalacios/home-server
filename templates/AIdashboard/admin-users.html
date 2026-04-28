@@ -144,7 +144,12 @@
     }
 
     function unassignedPhones() {
-      return allPhones.filter((p) => !p.assigned_account_id);
+      // Available = not bound to a real customer (cust_*). Phones with
+      // demo_admin_* / demo_* IDs from prior demo runs are still bindable.
+      return allPhones.filter((p) => {
+        const aid = (p.assigned_account_id || "");
+        return !aid || !aid.startsWith("cust_");
+      });
     }
 
     function renderPhoneCell(u) {
@@ -160,7 +165,12 @@
         return `<span style="color:var(--muted); font-size:12px;">No unassigned phones</span>`;
       }
       const optionsHtml = ['<option value="">Choose a phone…</option>']
-        .concat(opts.map((p) => `<option value="${escapeHtml(p.phone_id)}">${escapeHtml(p.phone_display || p.phone_number || p.phone_id)}</option>`))
+        .concat(opts.map((p) => {
+          const label = p.phone_display || p.phone_number || p.phone_id;
+          const aid = p.assigned_account_id || "";
+          const suffix = aid && !aid.startsWith("cust_") ? "  (reusing demo)" : "";
+          return `<option value="${escapeHtml(p.phone_id)}">${escapeHtml(label + suffix)}</option>`;
+        }))
         .join("");
       return `
         <select class="bind-phone-select" style="font-size:13px;">${optionsHtml}</select>
