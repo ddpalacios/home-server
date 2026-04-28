@@ -445,6 +445,16 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/me/") != NULL) {
         post_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/trial-phone/") != NULL) {
+        get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/trial-phone/") != NULL) {
+        post_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/chat-reset") == 0) {
+        post_to_local(socket, http_header, body, route_with_query, "9000");
+    } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/domains") == 0) {
+        post_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/voice-transcript") != NULL) {
+        post_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/widget.js") == 0) {
         get_to_local(socket, http_header, body, route_with_query, "9000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/widget.css") == 0) {
