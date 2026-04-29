@@ -2869,6 +2869,147 @@
         <div class="badge">AI Agent Dashboard</div>
       </header>
 
+      <!-- ─── Trial banner (visible only on trial sessions) ─── -->
+      <section id="trialBanner" class="trial-banner" hidden>
+        <div class="trial-banner-row">
+          <div class="trial-banner-eyebrow">
+            <span class="trial-pill"><span class="trial-dot"></span> TRIAL</span>
+            <span class="trial-day">Day <strong id="tbDay">—</strong> of 7</span>
+          </div>
+          <div class="trial-banner-stats">
+            <div class="trial-stat">
+              <span class="trial-stat-num" id="tbCallsToday">0</span>
+              <span class="trial-stat-cap">/ <span id="tbCallsCap">50</span></span>
+              <span class="trial-stat-label">today</span>
+            </div>
+            <div class="trial-stat">
+              <span class="trial-stat-num" id="tbLeadsTotal">0</span>
+              <span class="trial-stat-label" id="tbKpiLabel">leads</span>
+            </div>
+            <div class="trial-stat">
+              <span class="trial-stat-num" id="tbPipeline">$0</span>
+              <span class="trial-stat-label">pipeline</span>
+            </div>
+          </div>
+          <a class="trial-cta" id="tbUpgradeBtn" href="#">
+            <span>Sign up — keep this number</span>
+            <span class="arrow">→</span>
+          </a>
+        </div>
+        <!-- Cap warning row (only shows when near or hit cap) -->
+        <div class="trial-cap-warn" id="tbCapWarn" hidden>
+          <span class="trial-cap-icon">⚠</span>
+          <span id="tbCapMsg">You're getting more calls than the demo can handle.</span>
+        </div>
+      </section>
+
+      <style>
+        .trial-banner {
+          position: relative; overflow: hidden;
+          margin: 0 0 22px;
+          padding: 18px 22px;
+          background: linear-gradient(135deg,
+                        rgba(43, 108, 176, 0.06),
+                        rgba(56, 189, 248, 0.06));
+          border: 1px solid rgba(43, 108, 176, 0.18);
+          border-radius: 14px;
+        }
+        .trial-banner-row {
+          display: flex; align-items: center;
+          gap: 22px; flex-wrap: wrap;
+        }
+        .trial-banner-eyebrow {
+          display: flex; align-items: center; gap: 12px;
+          flex: 0 0 auto;
+        }
+        .trial-pill {
+          display: inline-flex; align-items: center; gap: 6px;
+          padding: 4px 10px; border-radius: 999px;
+          background: var(--accent, #2b6cb0); color: #fff;
+          font-family: "Space Grotesk", sans-serif;
+          font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+        }
+        .trial-pill .trial-dot {
+          width: 6px; height: 6px; border-radius: 50%; background: #fff;
+          animation: tb-pulse 1.6s infinite;
+        }
+        @keyframes tb-pulse {
+          0%, 100% { opacity: 1; }
+          50%      { opacity: 0.45; }
+        }
+        .trial-day {
+          font-family: "Space Grotesk", sans-serif;
+          font-size: 13px; color: var(--muted, #475569); font-weight: 600;
+        }
+        .trial-day strong { color: #0f172a; }
+        .trial-banner-stats {
+          display: flex; gap: 22px; flex: 1 1 auto;
+          flex-wrap: wrap;
+        }
+        .trial-stat {
+          display: inline-flex; align-items: baseline; gap: 6px;
+          font-family: "Space Grotesk", sans-serif;
+        }
+        .trial-stat-num {
+          font-size: 22px; font-weight: 700; color: #0f172a;
+          letter-spacing: -0.02em;
+        }
+        .trial-stat-cap {
+          font-size: 13px; color: var(--muted, #475569); font-weight: 600;
+        }
+        .trial-stat-label {
+          font-size: 11px; font-weight: 600; color: var(--muted, #475569);
+          text-transform: uppercase; letter-spacing: 0.06em;
+        }
+        .trial-cta {
+          display: inline-flex; align-items: center; gap: 8px;
+          padding: 11px 18px; border-radius: 10px;
+          background: #0f172a; color: #fff;
+          font-family: "Manrope", sans-serif;
+          font-size: 13px; font-weight: 700;
+          text-decoration: none;
+          transition: background .2s, transform .25s cubic-bezier(.22,1,.36,1);
+          box-shadow: 0 6px 16px -3px rgba(15, 23, 42, .25);
+        }
+        .trial-cta:hover { background: #2b6cb0; }
+        .trial-cta:active { transform: scale(.985); }
+        .trial-cta .arrow { transition: transform .25s cubic-bezier(.22,1,.36,1); }
+        .trial-cta:hover .arrow { transform: translateX(3px); }
+
+        /* Near-cap state */
+        .trial-banner.is-near-cap {
+          background: linear-gradient(135deg, rgba(245, 158, 11, .08), rgba(251, 191, 36, .08));
+          border-color: rgba(245, 158, 11, .35);
+        }
+        /* Hit-cap state */
+        .trial-banner.is-hit-cap {
+          background: linear-gradient(135deg, rgba(239, 68, 68, .08), rgba(248, 113, 113, .08));
+          border-color: rgba(239, 68, 68, .35);
+        }
+        .trial-banner.is-hit-cap .trial-pill { background: #b91c1c; }
+
+        .trial-cap-warn {
+          display: flex; align-items: center; gap: 10px;
+          margin-top: 12px; padding: 10px 14px;
+          background: rgba(245, 158, 11, .12);
+          border: 1px solid rgba(245, 158, 11, .35);
+          border-radius: 10px;
+          font-size: 13px; color: #78350f; font-weight: 600;
+        }
+        .trial-banner.is-hit-cap .trial-cap-warn {
+          background: rgba(239, 68, 68, .10);
+          border-color: rgba(239, 68, 68, .35);
+          color: #7f1d1d;
+        }
+        .trial-cap-icon { font-size: 16px; }
+
+        @media (max-width: 720px) {
+          .trial-banner-row { gap: 14px; }
+          .trial-banner-stats { gap: 16px; }
+          .trial-cta { width: 100%; justify-content: center; }
+        }
+      </style>
+
       <section class="grid" id="admin" hidden>
         <div class="card" style="grid-column: span 12;">
           <div class="card-header">
@@ -7535,6 +7676,62 @@
         .catch(() => startDashboardTutorial());
     };
 
+    // ─────── Trial banner (live stats + cap warning) ───────
+    function _fmtMoney(usd) {
+      if (!usd) return "$0";
+      if (usd >= 1000000) return "$" + (usd / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
+      if (usd >= 10000)   return "$" + Math.round(usd / 1000) + "k";
+      return "$" + usd.toLocaleString();
+    }
+    async function loadTrialBanner() {
+      try {
+        const res = await fetch("/me/trial-stats", { credentials: "same-origin" });
+        if (!res.ok) return;
+        const s = await res.json();
+        if (!s || !s.trial) return;
+        const banner = document.getElementById("trialBanner");
+        if (!banner) return;
+        banner.hidden = false;
+        document.getElementById("tbDay").textContent = s.day_of_trial;
+        document.getElementById("tbCallsToday").textContent = s.calls_today || 0;
+        document.getElementById("tbCallsCap").textContent = s.calls_cap || 50;
+        document.getElementById("tbLeadsTotal").textContent = s.leads_total || 0;
+        document.getElementById("tbKpiLabel").textContent = (s.kpi_label || "leads").toLowerCase();
+        document.getElementById("tbPipeline").textContent = _fmtMoney(s.estimated_pipeline_usd || 0);
+
+        const upgrade = document.getElementById("tbUpgradeBtn");
+        upgrade.addEventListener("click", async (e) => {
+          e.preventDefault();
+          // Optimistic: try /upgrade/start (Phase 5c). If unavailable, send to /try/setup as a graceful fallback.
+          try {
+            const r = await fetch("/upgrade/start", { method: "POST", credentials: "same-origin" });
+            if (r.ok) {
+              const body = await r.json();
+              window.location.href = body.dashboard_url || "/dashboard";
+            } else {
+              window.location.href = "/try/setup";
+            }
+          } catch (_) {
+            window.location.href = "/try/setup";
+          }
+        });
+
+        banner.classList.toggle("is-near-cap", !!s.near_cap && !s.hit_cap);
+        banner.classList.toggle("is-hit-cap",  !!s.hit_cap);
+        const warn = document.getElementById("tbCapWarn");
+        const msg  = document.getElementById("tbCapMsg");
+        if (s.hit_cap) {
+          warn.hidden = false;
+          msg.innerHTML = `You hit today's <strong>${s.calls_cap}-call cap</strong>. New callers are getting the high-volume message — upgrade for unlimited.`;
+        } else if (s.near_cap) {
+          warn.hidden = false;
+          msg.innerHTML = `You're getting close to today's cap (<strong>${s.calls_today}/${s.calls_cap}</strong>). Upgrade before you start missing calls.`;
+        } else {
+          warn.hidden = true;
+        }
+      } catch (e) { /* silent */ }
+    }
+
     const ONBOARDING_PHASE_ORDER = ["saved", "crawling", "summarizing", "saving", "ready"];
 
     function setStepStates(currentPhase, failed) {
@@ -7841,6 +8038,7 @@
       wireWelcomeForm();
       pollKbStatus();
       loadVoiceSettings();
+      loadTrialBanner();
     });
 
     // Iframe self-reports its content height — keeps the section flush with the
