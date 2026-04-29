@@ -330,6 +330,41 @@
       .url-cell { max-width: 160px; }
       .modal-card { padding: 18px; }
     }
+    /* Slice 4: billing badges + margin summary */
+    .bill-badge {
+      display: inline-block; margin-left: 8px;
+      padding: 2px 8px; border-radius: 999px;
+      font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em;
+      vertical-align: 1px;
+    }
+    .bill-included {
+      background: rgba(22,163,74,.10); color: #047857;
+      border: 1px solid rgba(22,163,74,.22);
+      text-transform: uppercase;
+    }
+    .bill-addon {
+      background: rgba(245,158,11,.10); color: #92400e;
+      border: 1px solid rgba(245,158,11,.30);
+    }
+    .phones-margin-summary {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+      padding: 10px 14px; margin-bottom: 14px;
+      background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+      font-size: 12.5px; color: #475569;
+    }
+    .phones-margin-summary[hidden] { display: none; }
+    .phones-margin-summary strong { color: #0f172a; font-weight: 700; }
+    .phones-margin-summary .muted { color: #94a3b8; font-size: 12px; }
+    .phones-margin-summary .margin-pill {
+      padding: 3px 10px; border-radius: 999px; font-weight: 700; font-size: 11.5px;
+      margin-left: auto;
+    }
+    .phones-margin-summary .margin-pill.is-good {
+      background: rgba(22,163,74,.10); color: #047857; border: 1px solid rgba(22,163,74,.22);
+    }
+    .phones-margin-summary .margin-pill.is-bad {
+      background: rgba(239,68,68,.10); color: #b91c1c; border: 1px solid rgba(239,68,68,.30);
+    }
   </style>
 </head>
 <body>
@@ -386,6 +421,7 @@
 
   <main>
     <section class="card">
+      <div class="phones-margin-summary" id="phonesMarginSummary" hidden></div>
       <div class="table-wrap">
         <table id="phonesTable" aria-live="polite">
           <thead>
@@ -703,6 +739,18 @@
         `;
       }
 
+      function billingBadge(phone) {
+        const mode = phone.billing_mode || "";
+        const cost = phone.monthly_cost_usd ? Number(phone.monthly_cost_usd).toFixed(2) : "";
+        if (mode === "addon") {
+          return `<span class="bill-badge bill-addon" title="Customer pays $${cost}/mo on top of plan">+$${cost}/mo</span>`;
+        }
+        if (mode === "included") {
+          return `<span class="bill-badge bill-included" title="Counts against the customer's plan allotment">incl</span>`;
+        }
+        return "";
+      }
+
       function renderRow(phone) {
         const tr = document.createElement("tr");
         tr.dataset.phoneId = phone.phone_id;
@@ -715,8 +763,9 @@
         const errLine = phone.build_status === "failed" && phone.build_error
           ? `<span class="row-error">Error: ${escapeHtml(phone.build_error)}</span>`
           : "";
+        const phoneCell = `${escapeHtml(phone.phone_display || phone.phone_number || "")} ${billingBadge(phone)}`;
         tr.innerHTML = `
-          <td class="phone-cell">${escapeHtml(phone.phone_display || phone.phone_number || "")}</td>
+          <td class="phone-cell">${phoneCell}</td>
           <td>${statusBadge(phone.build_status)}</td>
           <td class="url-cell">${websiteCell}</td>
           <td class="demo-cell">${demoCell}</td>
@@ -724,6 +773,35 @@
           <td>${buildActions(phone)}${errLine}</td>
         `;
         return tr;
+      }
+
+      // Slice 4: total monthly cost vs. revenue summary (margin sanity check).
+      function renderMarginSummary(phones) {
+        const summary = document.getElementById("phonesMarginSummary");
+        if (!summary) return;
+        if (!phones || !phones.length) { summary.hidden = true; return; }
+        let twilioCost = 0;
+        let stripeRevenue = 0;
+        let included = 0, addon = 0, untracked = 0;
+        for (const p of phones) {
+          const cost = Number(p.monthly_cost_usd || 0);
+          twilioCost += cost;
+          if (p.billing_mode === "addon")    { addon++;    stripeRevenue += cost; }
+          else if (p.billing_mode === "included") { included++; }
+          else                                { untracked++; }
+        }
+        const margin = stripeRevenue - twilioCost;
+        const marginClass = margin >= 0 ? "is-good" : "is-bad";
+        summary.innerHTML = `
+          <span><strong>${phones.length}</strong> in pool</span>
+          <span>·  Twilio cost ~<strong>$${twilioCost.toFixed(2)}/mo</strong></span>
+          <span>·  Add-on revenue ~<strong>$${stripeRevenue.toFixed(2)}/mo</strong></span>
+          <span class="margin-pill ${marginClass}">Margin from add-ons: ${margin >= 0 ? "+" : "-"}$${Math.abs(margin).toFixed(2)}/mo</span>
+          ${included ? `<span class="muted">·  ${included} incl</span>` : ""}
+          ${addon ? `<span class="muted">·  ${addon} add-on</span>` : ""}
+          ${untracked ? `<span class="muted">·  ${untracked} untracked</span>` : ""}
+        `;
+        summary.hidden = false;
       }
 
       function isValidEmail(v) {
@@ -734,6 +812,7 @@
       }
 
       function renderPhones(phones) {
+        renderMarginSummary(phones);
         tbody.innerHTML = "";
         if (!phones || !phones.length) {
           const tr = document.createElement("tr");

@@ -3117,6 +3117,7 @@
               <span>No numbers yet — buy your first one to start catching calls.</span>
             </div>
           </div>
+          <div class="pn-summary-line" id="pnSummaryLine" hidden></div>
           <div class="pn-error" id="pnError" hidden></div>
         </div>
       </section>
@@ -3208,6 +3209,10 @@
               <a class="btn shiny" id="pnSuccessCall" href="#">📞 Test it: tap to call</a>
               <p class="pn-step-sub" style="margin-top:14px;">It's wired into your bot. Try calling it and asking a customer-style question.</p>
             </div>
+            <div class="pn-warning" id="pnSuccessWarn" hidden>
+              <span class="pn-warning-icon">⏳</span>
+              <span id="pnSuccessWarnMsg"></span>
+            </div>
             <div class="pn-actions">
               <button type="button" class="btn shiny" id="pnStep4Done">Done</button>
             </div>
@@ -3256,6 +3261,22 @@
           transition: background .15s, border-color .15s;
         }
         .pn-row .pn-release:hover { background: #fef2f2; border-color: #fca5a5; }
+
+        .pn-summary-line {
+          margin-top: 14px; padding: 10px 14px; border-radius: 10px;
+          background: #f8fafc; border: 1px solid #e2e8f0;
+          font-size: 12.5px; color: #475569; line-height: 1.5;
+        }
+        .pn-summary-line strong { color: #0f172a; font-weight: 700; }
+        .pn-summary-line[hidden] { display: none; }
+
+        .pn-warning {
+          margin-top: 10px; padding: 10px 14px; border-radius: 10px;
+          background: rgba(245,158,11,.10); border: 1px solid rgba(245,158,11,.30);
+          color: #78350f; font-size: 13px; font-weight: 500; line-height: 1.5;
+          display: flex; align-items: flex-start; gap: 10px;
+        }
+        .pn-warning-icon { font-size: 16px; flex: 0 0 auto; }
 
         .pn-empty {
           display: flex; align-items: center; gap: 10px; padding: 22px 16px;
@@ -8368,6 +8389,7 @@
       }
 
       function renderList() {
+        renderSummaryLine();
         // Quota
         if (state.included > 0 || state.active > 0) {
           quota.hidden = false;
@@ -8409,6 +8431,20 @@
         list.querySelectorAll("[data-num]").forEach(btn => {
           btn.addEventListener("click", () => releaseNumber(btn.dataset.num));
         });
+      }
+
+      function renderSummaryLine() {
+        const el = document.getElementById("pnSummaryLine");
+        if (!el) return;
+        if (!state.phones || state.phones.length === 0) { el.hidden = true; return; }
+        const included = state.phones.filter(p => (p.billing_mode || "included") === "included").length;
+        const addons = state.phones.filter(p => p.billing_mode === "addon");
+        const addonCost = addons.reduce((s, p) => s + Number(p.monthly_cost_usd || 0), 0);
+        const parts = [`<strong>${state.phones.length} active</strong>`];
+        if (included > 0) parts.push(`${included} included`);
+        if (addons.length > 0) parts.push(`${addons.length} add-on at $${addonCost.toFixed(2)}/mo`);
+        el.innerHTML = `Phone numbers: ${parts.join(" · ")}`;
+        el.hidden = false;
       }
 
       async function releaseNumber(phoneNumber) {
@@ -8593,6 +8629,17 @@
               body.phone.phone_display || body.phone.phone_number;
             document.getElementById("pnSuccessCall").href =
               "tel:" + (body.phone.phone_number || "").replace(/[^\d+]/g, "");
+            const warn = document.getElementById("pnSuccessWarn");
+            const warnMsg = document.getElementById("pnSuccessWarnMsg");
+            const wh = body.webhook_health || {};
+            if (warn) {
+              if (wh && wh.ok === false && wh.message) {
+                warnMsg.textContent = wh.message;
+                warn.hidden = false;
+              } else {
+                warn.hidden = true;
+              }
+            }
             setStep(4);
           } else if (res.status === 409) {
             // Number snatched between search and confirm
