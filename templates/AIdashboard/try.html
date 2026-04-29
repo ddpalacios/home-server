@@ -3,228 +3,530 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Try JustGotALead — Free 7-Day Trial</title>
+  <title>JustGotALead — Free 7-day AI receptionist trial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
       --accent: #2563eb;
       --accent-2: #38bdf8;
-      --text: #111827;
-      --muted: #6b7280;
-      --border: #e5e7eb;
+      --accent-soft: rgba(37, 99, 235, 0.12);
+      --green: #047857;
+      --green-soft: rgba(4, 120, 87, 0.12);
+      --text: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
       --bg: #f8fafc;
       --panel: #ffffff;
-      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      --shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+      --shadow-hover: 0 24px 60px rgba(15, 23, 42, 0.12);
+      --radius: 18px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
     body {
-      font-family: "Inter", "Segoe UI", Arial, sans-serif;
-      background: linear-gradient(180deg, #f9fbff 0%, #f2f5fb 100%);
+      font-family: "Inter", -apple-system, "Segoe UI", system-ui, sans-serif;
+      background:
+        radial-gradient(ellipse at top left, rgba(56, 189, 248, 0.10), transparent 50%),
+        radial-gradient(ellipse at bottom right, rgba(37, 99, 235, 0.08), transparent 60%),
+        linear-gradient(180deg, #f9fbff 0%, #eef2f9 100%);
       color: var(--text);
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       padding: 24px;
+      -webkit-font-smoothing: antialiased;
     }
+
+    .stage { width: min(540px, 100%); position: relative; }
     .card {
       background: var(--panel);
-      border-radius: 20px;
-      padding: 32px;
+      border-radius: var(--radius);
+      padding: 32px 32px 28px;
       box-shadow: var(--shadow);
-      width: min(560px, 100%);
-      border: 1px solid var(--border);
+      border: 1px solid var(--line);
+      transition: opacity 320ms ease, transform 320ms ease;
     }
-    h1 { font-size: 24px; margin-bottom: 8px; }
-    p.lede { color: var(--muted); margin-bottom: 24px; font-size: 15px; }
-    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; margin-top: 16px; }
-    input[type="url"], input[type="email"], select {
-      width: 100%;
-      padding: 11px 14px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      font-size: 15px;
-      font-family: inherit;
+    .card.is-leaving { opacity: 0; transform: translateY(-8px); pointer-events: none; }
+    .card.is-entering { animation: enter 380ms cubic-bezier(.2,.7,.2,1) both; }
+    @keyframes enter {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: none; }
     }
-    input:focus, select:focus { outline: 2px solid var(--accent-2); }
-    .radio-group { display: flex; flex-direction: column; gap: 8px; }
-    .radio-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); cursor: pointer; }
-    .radio-row:hover { background: #fafbfd; }
-    .radio-row input { margin: 0; }
+
+    .pill-mark {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 11px; border-radius: 999px;
+      background: var(--green-soft); color: var(--green);
+      font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
+      margin-bottom: 14px;
+    }
+    .pill-mark .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 1.6s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
+
+    h1 {
+      font-size: 28px; line-height: 1.2; font-weight: 800;
+      letter-spacing: -0.02em; margin-bottom: 10px;
+    }
+    p.sub { color: var(--muted); margin-bottom: 22px; font-size: 15px; line-height: 1.55; }
+    label { display: block; font-size: 13px; font-weight: 600; margin: 16px 0 6px; color: var(--text); }
+    input[type="url"], input[type="email"] {
+      width: 100%; padding: 13px 14px; border-radius: 12px;
+      border: 1px solid var(--line); font-size: 15px; font-family: inherit;
+      background: #fdfdff; transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    input:focus {
+      outline: none; border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+    .input-hint { font-size: 12px; color: var(--muted); margin-top: 4px; min-height: 16px; transition: color .15s; }
+    .input-hint.is-good { color: var(--green); }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 14px; border-radius: 999px; cursor: pointer;
+      border: 1px solid var(--line); background: #fff;
+      font-size: 13px; font-weight: 600; color: var(--text);
+      transition: all .15s ease;
+      user-select: none;
+    }
+    .chip:hover { border-color: #cbd5e1; }
+    .chip.is-selected {
+      background: var(--accent-soft); border-color: var(--accent);
+      color: var(--accent); transform: translateY(-1px);
+    }
+    .chip .emoji { font-size: 14px; }
+
+    .advanced-toggle {
+      display: inline-flex; align-items: center; gap: 4px;
+      margin-top: 16px; cursor: pointer;
+      font-size: 13px; color: var(--muted); font-weight: 600;
+      background: none; border: none; padding: 0;
+    }
+    .advanced-toggle:hover { color: var(--text); }
+    .advanced-toggle .arrow { transition: transform .2s; }
+    .advanced-toggle.is-open .arrow { transform: rotate(90deg); }
+    .advanced-panel {
+      max-height: 0; overflow: hidden;
+      transition: max-height .25s ease;
+    }
+    .advanced-panel.is-open { max-height: 320px; }
+
+    .mode-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line);
+      cursor: pointer; transition: all .15s; margin-top: 8px;
+      font-size: 14px;
+    }
+    .mode-row:hover { border-color: #cbd5e1; background: #fafbfd; }
+    .mode-row input { margin: 0; accent-color: var(--accent); }
+    .mode-row.is-selected { border-color: var(--accent); background: var(--accent-soft); }
+
     .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 12px 20px;
-      border-radius: 10px;
-      border: none;
-      background: var(--accent);
-      color: #fff;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 15px;
-      width: 100%;
-      margin-top: 24px;
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 6px; padding: 14px 20px; border-radius: 12px; border: none;
+      background: linear-gradient(135deg, var(--accent), #1d4ed8);
+      color: #fff; font-weight: 700; font-size: 15px; cursor: pointer;
+      width: 100%; margin-top: 22px;
+      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.25);
+      transition: transform .12s ease, box-shadow .12s ease, opacity .15s;
+      letter-spacing: 0.01em;
     }
-    .btn:hover { background: #1d4ed8; }
-    .btn:disabled { background: #94a3b8; cursor: not-allowed; }
-    .err { color: #b91c1c; font-size: 14px; margin-top: 12px; }
-    .footnote { color: var(--muted); font-size: 13px; margin-top: 20px; text-align: center; }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(37, 99, 235, 0.32); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn .arrow { display: inline-block; transition: transform .2s; }
+    .btn:hover .arrow { transform: translateX(3px); }
+
+    .err { color: #b91c1c; font-size: 14px; margin-top: 12px; min-height: 18px; }
+
+    .trust {
+      display: flex; flex-wrap: wrap; gap: 14px; justify-content: center;
+      margin-top: 18px; font-size: 12px; color: var(--muted);
+    }
+    .trust span { display: inline-flex; align-items: center; gap: 5px; }
+
+    /* Progress card */
+    .stages-list { list-style: none; padding: 0; margin: 18px 0 16px; }
+    .stage-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 0; font-size: 15px;
+      border-bottom: 1px solid #f1f5f9;
+      transition: color .25s ease, opacity .25s ease;
+    }
+    .stage-item:last-child { border-bottom: none; }
+    .stage-item.is-pending { color: #94a3b8; }
+    .stage-item.is-active  { color: var(--text); font-weight: 600; }
+    .stage-item.is-done    { color: var(--green); }
+    .stage-icon {
+      flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+      background: #f1f5f9; color: #94a3b8;
+      transition: all .25s ease;
+    }
+    .is-active .stage-icon {
+      background: var(--accent-soft); color: var(--accent);
+      animation: spin 1.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .is-done .stage-icon {
+      background: var(--green-soft); color: var(--green);
+      animation: none;
+    }
+
+    .progress-track {
+      height: 8px; background: #e2e8f0; border-radius: 999px;
+      overflow: hidden; position: relative; margin-top: 4px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      width: 10%; border-radius: 999px;
+      transition: width .6s cubic-bezier(.2,.7,.2,1);
+      position: relative;
+      overflow: hidden;
+    }
+    .progress-fill::after {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent);
+      transform: translateX(-100%);
+      animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer { to { transform: translateX(100%); } }
+
+    .meta-line { font-size: 13px; color: var(--muted); margin-top: 10px; text-align: center; }
+
+    /* Success card */
+    .phone-cta {
+      display: block; text-align: center;
+      margin-top: 18px; padding: 22px 18px;
+      border: 2px dashed var(--accent);
+      border-radius: 14px; text-decoration: none;
+      transition: background .2s ease;
+    }
+    .phone-cta:hover { background: var(--accent-soft); }
+    .phone-cta .number {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-size: 26px; font-weight: 800; color: var(--accent);
+      letter-spacing: -0.01em;
+    }
+    .phone-cta .helper { display: block; font-size: 12px; color: var(--muted); margin-top: 6px; font-weight: 500; }
+
+    .ask-line {
+      margin: 18px 0 6px; font-size: 14px; color: var(--text);
+      text-align: center;
+    }
+    .ask-line em { color: var(--accent); font-style: normal; font-weight: 600; }
+
+    .countdown {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--muted);
+      padding: 6px 12px; border-radius: 999px;
+      background: #f8fafc; border: 1px solid var(--line);
+    }
+
+    /* Tiny toast on copy */
+    .toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(40px);
+      background: #0f172a; color: #fff; padding: 10px 16px; border-radius: 999px;
+      font-size: 13px; opacity: 0; transition: opacity .2s, transform .2s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   </style>
 </head>
 <body>
-  <main class="card" id="cardForm">
-    <h1>Try this on your business in 60 seconds</h1>
-    <p class="lede">We'll catch missed calls, capture leads, and book appointments — free for 7 days.</p>
+  <div class="stage">
 
-    <form id="trialForm" onsubmit="return false;">
-      <label for="websiteUrl">Your business website</label>
-      <input id="websiteUrl" type="url" placeholder="https://mikeroofing.com" required />
+    <main class="card is-entering" id="cardForm">
+      <div class="pill-mark"><span class="dot"></span> Live · Free · 7 days</div>
+      <h1>Catch every call you miss.</h1>
+      <p class="sub">An AI receptionist trained on your website, ready in 60 seconds. No credit card. Cancel any time with one click.</p>
 
-      <label for="industry">What do you do?</label>
-      <select id="industry" required>
-        <option value="">Select an industry…</option>
-        <option value="roofer">Roofer / Storm Restoration</option>
-        <option value="plumber">Plumber</option>
-        <option value="realtor">Realtor</option>
-        <option value="landscaper">Landscaper / Lawn Care</option>
-        <option value="cleaner">House / Office Cleaner</option>
-        <option value="hvac">HVAC / Heating &amp; Cooling</option>
-        <option value="mover">Moving / Hauling</option>
-        <option value="other">Other</option>
-      </select>
+      <form id="trialForm" onsubmit="return false;" novalidate>
+        <label for="websiteUrl">Your business website</label>
+        <input id="websiteUrl" type="url" placeholder="https://mikeroofing.com" autocomplete="url" autofocus required />
+        <div class="input-hint" id="urlHint">We'll read your site and train the AI on what you do.</div>
 
-      <label>Where do you want help?</label>
-      <div class="radio-group">
-        <label class="radio-row"><input type="radio" name="mode" value="voice" checked /> Catch my missed calls</label>
-        <label class="radio-row"><input type="radio" name="mode" value="widget" /> Live chat on my website</label>
-        <label class="radio-row"><input type="radio" name="mode" value="email" /> AI receptionist for my email</label>
-      </div>
+        <label>What do you do?</label>
+        <div class="chips" id="industryChips">
+          <button type="button" class="chip" data-value="roofer"><span class="emoji">🏠</span> Roofer</button>
+          <button type="button" class="chip" data-value="plumber"><span class="emoji">🔧</span> Plumber</button>
+          <button type="button" class="chip" data-value="hvac"><span class="emoji">❄️</span> HVAC</button>
+          <button type="button" class="chip" data-value="cleaner"><span class="emoji">🧽</span> Cleaning</button>
+          <button type="button" class="chip" data-value="landscaper"><span class="emoji">🌿</span> Landscaping</button>
+          <button type="button" class="chip" data-value="realtor"><span class="emoji">🏡</span> Realtor</button>
+          <button type="button" class="chip" data-value="mover"><span class="emoji">📦</span> Moving</button>
+          <button type="button" class="chip" data-value="other"><span class="emoji">✨</span> Something else</button>
+        </div>
+        <div class="input-hint" id="industryHint">&nbsp;</div>
 
-      <label for="email">Your email (we send your dashboard link here)</label>
-      <input id="email" type="email" placeholder="mike@mikeroofing.com" required />
+        <label for="email">Where should we send your dashboard link?</label>
+        <input id="email" type="email" placeholder="you@yourbusiness.com" autocomplete="email" required />
+        <div class="input-hint" id="emailHint">We'll only use this to send your sign-in link.</div>
 
-      <button class="btn" type="submit" id="startBtn">Start free trial ▶</button>
-      <p class="err" id="formError" style="display:none"></p>
-      <p class="footnote">No credit card · 7 days · 4 trial lines, first-come</p>
-    </form>
-  </main>
+        <button type="button" class="advanced-toggle" id="advancedToggle">
+          <span class="arrow">▸</span> More options
+        </button>
+        <div class="advanced-panel" id="advancedPanel">
+          <label style="margin-top:10px">Where should the bot help?</label>
+          <label class="mode-row is-selected"><input type="radio" name="mode" value="voice" checked /> Catch missed phone calls</label>
+          <label class="mode-row"><input type="radio" name="mode" value="widget" /> Live chat on my website</label>
+          <label class="mode-row"><input type="radio" name="mode" value="email" /> Auto-reply to email inquiries</label>
+        </div>
 
-  <main class="card" id="cardProgress" style="display:none">
-    <h1 id="progressTitle">Building your demo…</h1>
-    <ul style="list-style:none; padding:0; margin:18px 0 12px; font-size:15px; line-height:1.9;">
-      <li id="stageReading" style="color:var(--muted)"><span class="stageIcon">◯</span> Reading your site</li>
-      <li id="stageIdentifying" style="color:var(--muted)"><span class="stageIcon">◯</span> Identifying services</li>
-      <li id="stageTraining" style="color:var(--muted)"><span class="stageIcon">◯</span> Training the AI</li>
-      <li id="stageWiring" style="color:var(--muted)"><span class="stageIcon">◯</span> Connecting your phone number</li>
-    </ul>
-    <div style="height: 6px; background: #e5e7eb; border-radius: 999px; overflow: hidden; margin-top: 8px;">
-      <div id="progressBar" style="height: 100%; background: var(--accent); width: 10%; transition: width 0.4s ease;"></div>
-    </div>
-    <p class="footnote" style="margin-top:14px;"><span id="progressPercent">10%</span> · ~<span id="progressEta">85</span>s remaining</p>
-    <p class="footnote" style="margin-top:8px;">We just sent a magic link to <strong id="progressEmail"></strong> so you can manage everything from any device.</p>
-  </main>
+        <button class="btn" type="submit" id="startBtn">
+          Start free trial <span class="arrow">→</span>
+        </button>
+        <p class="err" id="formError"></p>
 
-  <main class="card" id="cardSuccess" style="display:none; text-align:center;">
-    <h1>✓ Your demo is live.</h1>
-    <div style="font-size: 22px; font-weight: 700; padding: 18px; border: 2px solid var(--accent); border-radius: 14px; margin-top: 18px;">
-      <a id="successCallLink" href="#" style="color: var(--accent); text-decoration: none;">📞 Call <span id="successPhone"></span></a>
-      <div style="font-size:13px; color: var(--muted); font-weight:500; margin-top:6px;">Tap to call from this phone</div>
-    </div>
-    <p class="lede" style="margin: 20px 0 6px;">Try it: ask <em>"<span id="successExample">Tell me about your services.</span>"</em></p>
-    <p class="footnote" style="margin-top: 8px;">Active for 7 days · expires <span id="successExpiry">soon</span></p>
-    <a class="btn" id="continueSetupBtn" href="/try/setup" style="display:inline-flex; margin-top:24px; text-decoration:none;">Continue setup ▶</a>
-  </main>
+        <div class="trust">
+          <span>🔒 No credit card</span>
+          <span>🛡 1-click cancel</span>
+          <span>⏱ Auto-ends in 7 days</span>
+        </div>
+      </form>
+    </main>
+
+    <main class="card" id="cardProgress" style="display:none">
+      <div class="pill-mark"><span class="dot"></span> Building your demo…</div>
+      <h1 id="progressTitle">Hang tight — almost there.</h1>
+      <p class="sub">We're reading your site and training your AI. This takes about 90 seconds.</p>
+
+      <ul class="stages-list">
+        <li class="stage-item is-pending" id="stageReading">
+          <span class="stage-icon">1</span>
+          <span class="stage-text">Reading your website</span>
+        </li>
+        <li class="stage-item is-pending" id="stageIdentifying">
+          <span class="stage-icon">2</span>
+          <span class="stage-text">Identifying your services</span>
+        </li>
+        <li class="stage-item is-pending" id="stageTraining">
+          <span class="stage-icon">3</span>
+          <span class="stage-text">Training the AI</span>
+        </li>
+        <li class="stage-item is-pending" id="stageWiring">
+          <span class="stage-icon">4</span>
+          <span class="stage-text">Connecting your phone number</span>
+        </li>
+      </ul>
+
+      <div class="progress-track"><div class="progress-fill" id="progressBar"></div></div>
+      <p class="meta-line"><span id="progressPercent">10%</span> · ~<span id="progressEta">85</span>s remaining</p>
+      <p class="meta-line" style="margin-top:14px;">📬 We just sent a magic link to <strong id="progressEmail"></strong></p>
+    </main>
+
+    <main class="card" id="cardSuccess" style="display:none; text-align:center;">
+      <div class="pill-mark" style="background:var(--green-soft); color:var(--green); margin-left:auto; margin-right:auto;"><span class="dot" style="background:var(--green);"></span> Demo is live</div>
+      <h1>You're set, give it a try.</h1>
+      <p class="sub" style="margin-bottom:14px;">Call the number below — your AI will answer like it's worked there for years.</p>
+
+      <a class="phone-cta" id="successCallLink" href="#">
+        <span class="number"><span>📞</span> <span id="successPhone">—</span></span>
+        <span class="helper">Tap to call from this phone</span>
+      </a>
+
+      <p class="ask-line">Try asking: <em id="successExample">"Tell me about your services."</em></p>
+
+      <p style="margin-top:14px;">
+        <span class="countdown">⏱ Active until <span id="successExpiry">soon</span></span>
+      </p>
+
+      <a class="btn" id="continueSetupBtn" href="/dashboard" style="display:inline-flex; text-decoration:none; margin-top:22px;">
+        Open my dashboard <span class="arrow">→</span>
+      </a>
+    </main>
+
+  </div>
+
+  <div class="toast" id="toast">Copied</div>
 
   <script>
     (function () {
-      const form = document.getElementById("trialForm");
-      const startBtn = document.getElementById("startBtn");
-      const formError = document.getElementById("formError");
       const cardForm = document.getElementById("cardForm");
       const cardProgress = document.getElementById("cardProgress");
       const cardSuccess = document.getElementById("cardSuccess");
+      const startBtn = document.getElementById("startBtn");
+      const formError = document.getElementById("formError");
       const progressBar = document.getElementById("progressBar");
-      const progressLine = document.getElementById("progressLine");
       const progressEmail = document.getElementById("progressEmail");
       const successPhone = document.getElementById("successPhone");
       const successCallLink = document.getElementById("successCallLink");
 
-      function err(msg) {
-        formError.textContent = msg;
-        formError.style.display = "block";
+      // ---- Form interactions ----
+
+      let pickedIndustry = "";
+      const chips = Array.from(document.querySelectorAll("#industryChips .chip"));
+      chips.forEach(ch => {
+        ch.addEventListener("click", () => {
+          chips.forEach(c => c.classList.remove("is-selected"));
+          ch.classList.add("is-selected");
+          pickedIndustry = ch.dataset.value;
+          document.getElementById("industryHint").textContent = "";
+        });
+      });
+
+      // Advanced toggle (mode picker)
+      const advBtn = document.getElementById("advancedToggle");
+      const advPanel = document.getElementById("advancedPanel");
+      advBtn.addEventListener("click", () => {
+        advBtn.classList.toggle("is-open");
+        advPanel.classList.toggle("is-open");
+      });
+      // Radio active class
+      document.querySelectorAll('input[name="mode"]').forEach(r => {
+        r.addEventListener("change", () => {
+          document.querySelectorAll(".mode-row").forEach(row => {
+            const inp = row.querySelector('input[name="mode"]');
+            row.classList.toggle("is-selected", !!(inp && inp.checked));
+          });
+        });
+      });
+
+      // Live URL hint
+      const urlInput = document.getElementById("websiteUrl");
+      const urlHint = document.getElementById("urlHint");
+      urlInput.addEventListener("input", () => {
+        const v = urlInput.value.trim();
+        if (/^https?:\/\/[^\s]+\.[^\s]+/.test(v) || /^[\w-]+\.[\w.-]+/.test(v)) {
+          urlHint.textContent = "Looks good — we'll read this site.";
+          urlHint.classList.add("is-good");
+        } else {
+          urlHint.textContent = "We'll read your site and train the AI on what you do.";
+          urlHint.classList.remove("is-good");
+        }
+      });
+
+      // Email hint
+      const emailInput = document.getElementById("email");
+      const emailHint = document.getElementById("emailHint");
+      emailInput.addEventListener("input", () => {
+        const v = emailInput.value.trim();
+        if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) {
+          emailHint.textContent = "✓ We'll send your sign-in link here.";
+          emailHint.classList.add("is-good");
+        } else {
+          emailHint.textContent = "We'll only use this to send your sign-in link.";
+          emailHint.classList.remove("is-good");
+        }
+      });
+
+      // ---- Card transitions ----
+
+      function fadeOut(card, then) {
+        card.classList.add("is-leaving");
+        setTimeout(() => {
+          card.style.display = "none";
+          card.classList.remove("is-leaving");
+          then && then();
+        }, 320);
+      }
+      function fadeIn(card) {
+        card.style.display = "block";
+        card.classList.remove("is-entering");
+        // Force reflow then re-apply for clean replay
+        void card.offsetWidth;
+        card.classList.add("is-entering");
       }
 
-      startBtn.addEventListener("click", async function () {
-        formError.style.display = "none";
-        const url = document.getElementById("websiteUrl").value.trim();
-        const industry = document.getElementById("industry").value;
-        const mode = document.querySelector('input[name="mode"]:checked').value;
-        const email = document.getElementById("email").value.trim();
+      function err(msg) { formError.textContent = msg || ""; }
 
-        if (!url || !industry || !email) { err("Please fill every field."); return; }
+      // ---- Submit ----
+
+      function normalizeUrl(v) {
+        v = (v || "").trim();
+        if (!v) return v;
+        if (!/^https?:\/\//.test(v)) return "https://" + v;
+        return v;
+      }
+
+      startBtn.addEventListener("click", async () => {
+        err("");
+        const rawUrl = urlInput.value;
+        const url = normalizeUrl(rawUrl);
+        const mode = document.querySelector('input[name="mode"]:checked').value;
+        const email = emailInput.value.trim();
+
+        if (!url || !pickedIndustry || !email) {
+          if (!url) err("Add your website to get started.");
+          else if (!pickedIndustry) {
+            err("Pick what you do so we know how to train your AI.");
+            document.getElementById("industryHint").textContent = "← pick one";
+          }
+          else err("We need an email to send your sign-in link.");
+          return;
+        }
+        urlInput.value = url;
 
         startBtn.disabled = true;
-        startBtn.textContent = "Starting…";
+        startBtn.innerHTML = "Starting your demo… <span class='arrow'>→</span>";
+
         try {
           const res = await fetch("/try", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ website_url: url, industry: industry, mode: mode, email: email }),
+            body: JSON.stringify({ website_url: url, industry: pickedIndustry, mode: mode, email: email }),
           });
           const body = await res.json();
           if (!res.ok) {
             err(body.error || "Something went wrong.");
             startBtn.disabled = false;
-            startBtn.textContent = "Start free trial ▶";
+            startBtn.innerHTML = "Start free trial <span class='arrow'>→</span>";
             return;
           }
-          cardForm.style.display = "none";
-          cardProgress.style.display = "block";
-          progressEmail.textContent = email;
-          // Best-effort: extract a business name from the URL host to
-          // personalize "Building your demo for <Business>…"
-          try {
-            const host = new URL(url).hostname.replace(/^www\./, "");
-            const root = host.split(".")[0];
-            if (root) {
-              const bn = root.charAt(0).toUpperCase() + root.slice(1);
-              document.getElementById("progressTitle").textContent =
-                `Building your demo for ${bn}…`;
-            }
-          } catch (e) { /* leave default */ }
-          pollStatus(body.status_url, body.phone_display);
+          fadeOut(cardForm, () => {
+            fadeIn(cardProgress);
+            progressEmail.textContent = email;
+            // Best-effort business-name personalization
+            try {
+              const host = new URL(url).hostname.replace(/^www\./, "");
+              const root = host.split(".")[0];
+              if (root) {
+                const bn = root.charAt(0).toUpperCase() + root.slice(1);
+                document.getElementById("progressTitle").textContent =
+                  `Building ${bn}'s AI receptionist…`;
+              }
+            } catch (e) {}
+            pollStatus(body.status_url, body.phone_display);
+          });
         } catch (e) {
           err("Network error. Please retry.");
           startBtn.disabled = false;
-          startBtn.textContent = "Start free trial ▶";
+          startBtn.innerHTML = "Start free trial <span class='arrow'>→</span>";
         }
       });
 
+      // ---- Build polling ----
+
       const PHASE_ORDER = ["reading", "identifying", "training", "wiring", "ready"];
-      const PHASE_PCT = { idle: 10, reading: 22, identifying: 45, training: 70, wiring: 87, ready: 100 };
+      const PHASE_PCT = { idle: 8, reading: 22, identifying: 45, training: 70, wiring: 87, ready: 100 };
+      const STAGE_IDS = ["stageReading", "stageIdentifying", "stageTraining", "stageWiring"];
 
       function applyPhaseUI(phase) {
         const idx = PHASE_ORDER.indexOf(phase);
-        const ids = ["stageReading", "stageIdentifying", "stageTraining", "stageWiring"];
-        ids.forEach((id, i) => {
+        STAGE_IDS.forEach((id, i) => {
           const li = document.getElementById(id);
-          const icon = li.querySelector(".stageIcon");
+          li.classList.remove("is-pending", "is-active", "is-done");
+          const icon = li.querySelector(".stage-icon");
           if (idx < 0 || i > idx) {
-            li.style.color = "var(--muted)";
-            icon.textContent = "◯";
+            li.classList.add("is-pending");
+            icon.textContent = String(i + 1);
           } else if (i < idx) {
-            li.style.color = "var(--text)";
+            li.classList.add("is-done");
             icon.textContent = "✓";
           } else {
-            li.style.color = "var(--text)";
-            icon.textContent = "⟳";
+            li.classList.add("is-active");
+            icon.textContent = "●";
           }
         });
-        const pct = PHASE_PCT[phase] != null ? PHASE_PCT[phase] : 10;
+        const pct = PHASE_PCT[phase] != null ? PHASE_PCT[phase] : 8;
         progressBar.style.width = pct + "%";
         document.getElementById("progressPercent").textContent = pct + "%";
         document.getElementById("progressEta").textContent =
-          Math.max(0, Math.round((100 - pct) * 0.9));
+          Math.max(2, Math.round((100 - pct) * 0.85));
       }
 
       function formatExpiry(epochSeconds) {
@@ -249,24 +551,26 @@
           applyPhaseUI(phase);
           if (body.build_status === "ready") {
             applyPhaseUI("ready");
-            await new Promise(r => setTimeout(r, 300));
-            cardProgress.style.display = "none";
-            cardSuccess.style.display = "block";
-            const phoneText = body.phone_display || phoneDisplay || "";
-            successPhone.textContent = phoneText;
-            successCallLink.href = "tel:" + phoneText.replace(/[^\d+]/g, "");
-            const ex = (body.example_question || "").trim();
-            if (ex) document.getElementById("successExample").textContent = ex;
-            document.getElementById("successExpiry").textContent =
-              formatExpiry(body.trial_expires_at);
+            await new Promise(r => setTimeout(r, 400));
+            fadeOut(cardProgress, () => {
+              fadeIn(cardSuccess);
+              const phoneText = body.phone_display || phoneDisplay || "";
+              successPhone.textContent = phoneText;
+              successCallLink.href = "tel:" + phoneText.replace(/[^\d+]/g, "");
+              const ex = (body.example_question || "").trim();
+              if (ex) document.getElementById("successExample").textContent = '"' + ex + '"';
+              document.getElementById("successExpiry").textContent =
+                formatExpiry(body.trial_expires_at);
+            });
             return;
           }
           if (body.build_status === "failed") {
             err("Build failed: " + (body.build_error || "unknown error"));
-            cardProgress.style.display = "none";
-            cardForm.style.display = "block";
-            startBtn.disabled = false;
-            startBtn.textContent = "Try again ▶";
+            fadeOut(cardProgress, () => {
+              fadeIn(cardForm);
+              startBtn.disabled = false;
+              startBtn.innerHTML = "Try again <span class='arrow'>→</span>";
+            });
             return;
           }
         }
