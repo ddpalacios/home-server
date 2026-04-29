@@ -126,7 +126,7 @@
     /* Body now wraps a vertical column: header + form */
     .form-wrap {
       flex: 1; display: flex; align-items: center; justify-content: center;
-      padding: 32px 24px 56px;
+      padding: 16px 24px 24px;
     }
 
     /* ─────── Inline progress (above the CTA) ─────── */
@@ -243,7 +243,7 @@
     .card {
       background: var(--panel);
       border-radius: var(--radius);
-      padding: 28px 44px 24px;
+      padding: 22px 36px 20px;
       box-shadow: var(--shadow);
       border: 1px solid var(--line);
       transition: opacity 380ms cubic-bezier(.22,1,.36,1), transform 380ms cubic-bezier(.22,1,.36,1);
@@ -261,54 +261,54 @@
 
     /* ── Hero pill ── */
     .pill-mark {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 7px 14px; border-radius: 999px;
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 5px 11px; border-radius: 999px;
       background: var(--green-soft); color: var(--green);
-      font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+      font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em;
       text-transform: uppercase;
-      margin-bottom: 18px;
+      margin-bottom: 10px;
       border: 1px solid rgba(4,120,87,.18);
     }
     .pill-mark .dot {
-      width: 7px; height: 7px; border-radius: 50%; background: var(--green);
+      width: 6px; height: 6px; border-radius: 50%; background: var(--green);
       animation: pulse 1.6s infinite;
     }
     @keyframes pulse {
       0%   { box-shadow: 0 0 0 0 rgba(4,120,87,.45); }
-      70%  { box-shadow: 0 0 0 8px rgba(4,120,87,0); }
+      70%  { box-shadow: 0 0 0 7px rgba(4,120,87,0); }
       100% { box-shadow: 0 0 0 0 rgba(4,120,87,0); }
     }
 
     h1 {
-      font-size: clamp(28px, 4vw, 36px);
-      line-height: 1.1; font-weight: 800;
+      font-size: clamp(24px, 3.4vw, 30px);
+      line-height: 1.12; font-weight: 800;
       letter-spacing: -0.025em;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
     h1 .em { font-size: 1.15em; vertical-align: -.05em; margin-right: 4px; }
 
     p.sub {
-      color: var(--muted); margin-bottom: 22px;
-      font-size: 16px; line-height: 1.5;
+      color: var(--muted); margin-bottom: 14px;
+      font-size: 14.5px; line-height: 1.45;
       font-weight: 500;
     }
 
     /* ── Field row ── */
     .field-row {
-      display: grid; grid-template-columns: 56px 1fr;
-      gap: 16px; align-items: center;
-      padding: 14px 0;
+      display: grid; grid-template-columns: 44px 1fr;
+      gap: 14px; align-items: center;
+      padding: 10px 0;
       border-top: 1px solid var(--line);
     }
     .field-row:last-of-type { border-bottom: 1px solid var(--line); }
     .field-row .icon {
-      width: 48px; height: 48px;
-      border-radius: 12px;
+      width: 40px; height: 40px;
+      border-radius: 10px;
       background: #f8fafc;
       border: 1px solid var(--line);
       display: flex; align-items: center; justify-content: center;
-      font-size: 24px;
-      flex: 0 0 48px;
+      font-size: 20px;
+      flex: 0 0 40px;
     }
     .field-row .body { min-width: 0; }
     .field-row label {
@@ -368,31 +368,45 @@
     }
     .chip.is-selected .emoji { transform: scale(1.15); }
 
-    /* ── Mode picker (industry-aware copy swaps in) ── */
-    .mode-list { display: flex; flex-direction: column; gap: 6px; }
-    .mode-row {
-      display: flex; align-items: flex-start; gap: 12px;
-      padding: 12px 14px; border-radius: 12px;
-      border: 1px solid var(--line); background: #fff;
-      cursor: pointer; transition: all .25s cubic-bezier(.22,1,.36,1);
+    /* ── Mode picker — horizontal segmented control ── */
+    .mode-seg {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 4px; padding: 4px;
+      background: #f1f5f9; border-radius: 10px;
+      border: 1px solid var(--line);
     }
-    .mode-row:hover { border-color: var(--line-strong); }
-    .mode-row input[type="radio"] {
-      margin: 4px 0 0 0; flex: 0 0 auto;
-      accent-color: var(--accent);
+    .mode-seg .mode-row {
+      position: relative; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 8px 10px; border-radius: 7px;
+      font-size: 13px; font-weight: 600; color: var(--muted);
+      transition: all .25s cubic-bezier(.22,1,.36,1);
+      text-align: center; line-height: 1.2;
     }
-    .mode-row.is-selected {
-      border-color: var(--accent);
-      background: var(--accent-soft);
+    .mode-seg .mode-row input[type="radio"] {
+      position: absolute; opacity: 0; pointer-events: none;
+    }
+    .mode-seg .mode-row .mode-emoji { font-size: 14px; }
+    .mode-seg .mode-row:hover { color: var(--text); }
+    .mode-seg .mode-row.is-selected {
+      background: #fff; color: var(--text);
+      box-shadow: 0 1px 0 rgba(15,23,42,.04), 0 4px 10px rgba(15,23,42,.06);
     }
     .mode-row-label {
-      font-size: 14px; font-weight: 700; color: var(--text);
+      font-size: 13px; font-weight: 600;
       letter-spacing: -0.005em;
-      transition: color .25s ease;
     }
     .mode-row-sub {
-      font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.4;
-      font-weight: 500;
+      /* Subtitle is now shown as a single industry-aware helper line */
+      display: none;
+    }
+    .mode-helper {
+      font-size: 12px; color: var(--muted); margin-top: 8px;
+      font-weight: 500; min-height: 16px;
+      transition: opacity .25s;
+    }
+    @media (max-width: 540px) {
+      .mode-seg { grid-template-columns: 1fr; gap: 4px; }
     }
 
     /* ── Submit button ── */
@@ -670,29 +684,24 @@
           <div class="icon">🎯</div>
           <div class="body">
             <label>Where do you want help?</label>
-            <div class="mode-list" id="modeList">
+            <div class="mode-seg" id="modeList">
               <label class="mode-row is-selected" data-mode="voice">
                 <input type="radio" name="mode" value="voice" checked />
-                <div>
-                  <div class="mode-row-label" id="modeLabelVoice">Catch missed phone calls</div>
-                  <div class="mode-row-sub" id="modeSubVoice">Most popular — most calls a small business misses are after-hours.</div>
-                </div>
+                <span class="mode-emoji">📞</span>
+                <span class="mode-row-label" id="modeLabelVoice">Phone calls</span>
               </label>
               <label class="mode-row" data-mode="widget">
                 <input type="radio" name="mode" value="widget" />
-                <div>
-                  <div class="mode-row-label" id="modeLabelWidget">Live chat on my website</div>
-                  <div class="mode-row-sub" id="modeSubWidget">Capture visitors who'd otherwise bounce.</div>
-                </div>
+                <span class="mode-emoji">💬</span>
+                <span class="mode-row-label" id="modeLabelWidget">Website chat</span>
               </label>
               <label class="mode-row" data-mode="email">
                 <input type="radio" name="mode" value="email" />
-                <div>
-                  <div class="mode-row-label" id="modeLabelEmail">Auto-respond to email inquiries</div>
-                  <div class="mode-row-sub" id="modeSubEmail">Reply within minutes, even at 2am.</div>
-                </div>
+                <span class="mode-emoji">✉</span>
+                <span class="mode-row-label" id="modeLabelEmail">Email</span>
               </label>
             </div>
+            <div class="mode-helper" id="modeHelper">Most popular — catch missed phone calls.</div>
           </div>
         </div>
 
@@ -892,59 +901,66 @@
         }, success ? 1300 : 350);
       }
 
-      // ── Mode-copy table: per-industry labels + pain subtitles ──
+      // ── Mode-copy table: industry × mode → concrete action the AI takes ──
       const MODE_COPY = {
         roofer: {
-          voice:  { label: "Catch storm-damage calls I'm missing",      sub: "23% of roofers' inbound calls go unanswered." },
-          widget: { label: "Free hail-damage chat on my website",       sub: "Capture leads while you're up on a roof." },
-          email:  { label: "Auto-respond to insurance inquiries",       sub: "Reply within minutes, even at 2am." },
+          voice:  { label: "Storm-damage calls captured",   sub: "Triages insurance vs. cash, asks for damage photos, books an inspector before they hire someone else." },
+          widget: { label: "Hail-damage estimate chat",     sub: "Address + insurance carrier + damage photos collected while you're up on a roof." },
+          email:  { label: "Storm-warning outreach",        sub: "When a storm hits your zip, the bot emails past customers to schedule inspections — before competitors knock on their door." },
         },
         plumber: {
-          voice:  { label: "Catch plumbing emergencies you can't get to",sub: "Most leaks call after-hours. They go to whoever picks up first." },
-          widget: { label: "Same-day plumbing chat on my website",      sub: "Triage flood vs. routine before they leave." },
-          email:  { label: "Auto-reply to service requests by email",   sub: "Confirm slot + dispatcher in the same minute." },
+          voice:  { label: "Emergency triage in 3 questions", sub: "Water on/off? Leaking now? Flood Y/N. Pages you for emergencies, books routine for next-day." },
+          widget: { label: "Same-day plumbing chat",        sub: "Flood vs. routine sorted in 30 seconds. Lead captured before they call the next plumber." },
+          email:  { label: "After-hours email responder",   sub: "Replies to every service email with a confirmed slot — at 2am, on weekends, when you can't." },
         },
         hvac: {
-          voice:  { label: "Catch no-heat / no-AC calls I'm missing",   sub: "Same-day urgency or routine — the bot triages first." },
-          widget: { label: "Same-day HVAC chat on my website",          sub: "Capture emergency vs. maintenance instantly." },
-          email:  { label: "Auto-respond to service emails",            sub: "Confirm urgency + slot before the next page even loads." },
+          voice:  { label: "No-heat / no-AC triage",        sub: "Priority for elderly + small kids in the home. Routine maintenance booked for the next open slot." },
+          widget: { label: "Same-day HVAC chat",            sub: "Captures unit age, symptoms, urgency. Emergency tickets paged straight to your phone." },
+          email:  { label: "Service-call auto-reply",       sub: "Maintenance contracts + emergency requests answered with a confirmed slot in under a minute." },
         },
         cleaner: {
-          voice:  { label: "Catch booking calls I'm missing",           sub: "Most clients call between jobs — and don't leave a voicemail." },
-          widget: { label: "Quick quote chat on my website",            sub: "Sq footage + frequency answered in 30 seconds." },
-          email:  { label: "Auto-reply to quote requests",              sub: "Recurring vs. one-time, priced before they go cold." },
+          voice:  { label: "60-second quote calls",         sub: "Square footage + rooms + frequency captured. Quote sent before they hang up." },
+          widget: { label: "Live pricing chat",             sub: "Recurring vs. one-time priced live. Move-in/out detected — premium rate applied automatically." },
+          email:  { label: "Booking-request auto-reply",    sub: "Every quote email answered same-minute with crew + slot before they shop the next three cleaners." },
         },
         landscaper: {
-          voice:  { label: "Catch estimate calls I'm missing",          sub: "Spring rush + storm cleanup calls don't wait." },
-          widget: { label: "Free estimate chat on my website",          sub: "Lot size + service answered before you're back at the truck." },
-          email:  { label: "Auto-respond to quote emails",              sub: "Reply with a slot before the lead emails three other crews." },
+          voice:  { label: "Estimate calls qualified",      sub: "Lot size, service, preferred day captured. Spring-rush bookings sorted to the right crew automatically." },
+          widget: { label: "Free estimate chat",            sub: "Lot size → instant quote. Routes to your nearest crew based on the address they typed." },
+          email:  { label: "Bad-weather auto-reschedule",   sub: "When rain rolls in, the bot reschedules every booked estimate and notifies your customers — before you wake up." },
         },
         realtor: {
-          voice:  { label: "Catch buyer / seller calls I miss",         sub: "Pre-approved buyers and listing leads go to whoever answers first." },
-          widget: { label: "Home-value chat on my website",             sub: "Qualify buyer vs. seller before they leave." },
-          email:  { label: "Auto-respond to listing inquiries",         sub: "Confirm timeframe + pre-approval status instantly." },
+          voice:  { label: "Buyer vs. seller in 4 questions",sub: "Pre-approval, area, timeframe captured. Pre-approved buyers paged to your phone instantly." },
+          widget: { label: "Home-value chat",               sub: "Address + buy/sell + pre-approval. Hot leads forwarded the second they submit." },
+          email:  { label: "Listing-inquiry auto-reply",    sub: "Every showing request answered with confirmed slots before they reach the next agent on Zillow." },
         },
         mover: {
-          voice:  { label: "Catch quote calls I'm missing",             sub: "Most movers shop 3+ companies — fastest reply usually wins." },
-          widget: { label: "Quick moving-quote chat",                   sub: "Date + size + bedrooms in 60 seconds." },
-          email:  { label: "Auto-reply to quote emails",                sub: "Lock in date + size before they reach the next quote." },
+          voice:  { label: "60-second quote calls",         sub: "Move date + size + bedrooms + heavy items captured. Quote sent before they hang up — beats the next three movers." },
+          widget: { label: "Quote-locking chat",            sub: "Date + bedrooms + origin/destination → date-locked quote in 30 seconds." },
+          email:  { label: "Date-lock auto-reply",          sub: "Auto-reply with a quote + tentative date before they reach the next mover in the search results." },
         },
         other: {
-          voice:  { label: "Catch the calls I'm missing",               sub: "Don't miss customers who try once and move on." },
-          widget: { label: "Live chat on my website",                   sub: "Capture visitors who'd otherwise bounce." },
-          email:  { label: "Auto-respond to email inquiries",           sub: "Reply within minutes, even at 2am." },
+          voice:  { label: "Every call captured",           sub: "Customer's name, problem, urgency captured. Follow-up text sent automatically." },
+          widget: { label: "Live website chat",             sub: "Turns visitors into qualified leads while you're heads-down working." },
+          email:  { label: "Same-minute email reply",       sub: "Every inquiry gets a personalized reply within minutes — even at 2am." },
         },
       };
 
-      function applyModeCopy(industry) {
-        const copy = MODE_COPY[industry] || MODE_COPY.other;
-        document.getElementById("modeLabelVoice").textContent  = copy.voice.label;
-        document.getElementById("modeSubVoice").textContent    = copy.voice.sub;
-        document.getElementById("modeLabelWidget").textContent = copy.widget.label;
-        document.getElementById("modeSubWidget").textContent   = copy.widget.sub;
-        document.getElementById("modeLabelEmail").textContent  = copy.email.label;
-        document.getElementById("modeSubEmail").textContent    = copy.email.sub;
+      function applyModeHelper() {
+        const helper = document.getElementById("modeHelper");
+        if (!helper) return;
+        const industry = pickedIndustry || "other";
+        const mode = (document.querySelector('input[name="mode"]:checked') || {}).value || "voice";
+        const copy = (MODE_COPY[industry] || MODE_COPY.other)[mode];
+        if (!copy) return;
+        helper.style.opacity = "0";
+        setTimeout(() => {
+          helper.innerHTML = `<strong>${copy.label}</strong> · ${copy.sub}`;
+          helper.style.opacity = "1";
+        }, 150);
       }
+      // Keep `applyModeCopy(industry)` as a thin wrapper since callers below
+      // still invoke it on chip click.
+      function applyModeCopy(_industry) { applyModeHelper(); }
 
       // ── Industry chips ──
       let pickedIndustry = "";
@@ -968,6 +984,7 @@
             const inp = row.querySelector('input[name="mode"]');
             row.classList.toggle("is-selected", !!(inp && inp.checked));
           });
+          applyModeHelper();
         });
       });
 
