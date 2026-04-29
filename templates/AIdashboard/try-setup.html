@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Set up your trial — JustGotALead</title>
+  <style>
+    :root {
+      --accent: #2563eb;
+      --accent-2: #38bdf8;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --panel: #ffffff;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Inter", "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(180deg, #f9fbff 0%, #f2f5fb 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: var(--panel);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: var(--shadow);
+      width: min(560px, 100%);
+      border: 1px solid var(--border);
+    }
+    .stepper { display: flex; gap: 6px; margin-bottom: 16px; }
+    .dot { flex: 1; height: 4px; border-radius: 2px; background: var(--border); }
+    .dot.active { background: var(--accent); }
+    .dot.done { background: #047857; }
+    .label-step { font-size: 12px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+    h1 { font-size: 22px; margin-bottom: 8px; }
+    p.lede { color: var(--muted); margin-bottom: 24px; font-size: 14px; }
+    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; margin-top: 14px; }
+    input[type="text"], input[type="email"], input[type="url"], select, textarea {
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 15px;
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent-2); }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border-radius: 999px;
+      border: 1px solid var(--border); background: #fff;
+      cursor: pointer; font-size: 13px; font-weight: 600;
+    }
+    .pill input { margin: 0; }
+    .pill.is-selected { border-color: var(--accent); background: rgba(37,99,235,0.08); }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .actions { display: flex; gap: 10px; justify-content: space-between; margin-top: 24px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 11px 18px; border-radius: 10px; border: none;
+      background: var(--accent); color: #fff; font-weight: 600;
+      cursor: pointer; font-size: 14px;
+    }
+    .btn:hover { background: #1d4ed8; }
+    .btn:disabled { background: #94a3b8; cursor: not-allowed; }
+    .btn.secondary { background: #fff; color: var(--text); border: 1px solid var(--border); }
+    .btn.secondary:hover { background: #f8fafc; }
+    .err { color: #b91c1c; font-size: 13px; margin-top: 10px; min-height: 18px; }
+    pre.code {
+      background: #f8fafc; border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px; font-size: 13px;
+      overflow-x: auto; white-space: pre-wrap; word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="stepper" id="stepper">
+      <div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+    <div class="label-step" id="stepLabel">Step 1 of 4 · Working hours</div>
+
+    <section id="s1">
+      <h1>When are you available?</h1>
+      <p class="lede">The bot will only book appointments inside these hours.</p>
+
+      <label for="tz">Time zone</label>
+      <select id="tz">
+        <option value="America/New_York">Eastern (NYC)</option>
+        <option value="America/Chicago" selected>Central (Chicago)</option>
+        <option value="America/Denver">Mountain (Denver)</option>
+        <option value="America/Los_Angeles">Pacific (LA)</option>
+        <option value="UTC">UTC</option>
+      </select>
+
+      <div class="row2">
+        <div>
+          <label for="hourFrom">Open at</label>
+          <select id="hourFrom"></select>
+        </div>
+        <div>
+          <label for="hourTo">Close at</label>
+          <select id="hourTo"></select>
+        </div>
+      </div>
+
+      <label>Days open</label>
+      <div class="pill-row" id="dayPills"></div>
+      <p class="err" id="e1"></p>
+    </section>
+
+    <section id="s2" style="display:none">
+      <h1>How should the bot reply?</h1>
+      <p class="lede">For now we send replies from a JustGotALead-branded address. You can switch this to your domain after upgrade.</p>
+
+      <label for="fromAddr">Reply-from address</label>
+      <input id="fromAddr" type="email" placeholder="ai@your-business-demo.com" />
+
+      <label for="notifyAddr">Where should leads be emailed to you?</label>
+      <input id="notifyAddr" type="email" placeholder="you@yourbusiness.com" />
+      <p class="err" id="e2"></p>
+    </section>
+
+    <section id="s3" style="display:none">
+      <h1>Push leads to your CRM (optional)</h1>
+      <p class="lede">Paste a Zapier/Make/HubSpot webhook URL. We'll POST every lead to it. Skip if you only want emails.</p>
+
+      <label for="webhookUrl">Webhook URL</label>
+      <input id="webhookUrl" type="url" placeholder="https://hooks.zapier.com/..." />
+      <p class="err" id="e3"></p>
+
+      <div style="margin-top:14px">
+        <button class="btn secondary" type="button" id="testWebhookBtn" disabled>Send test payload</button>
+        <span id="testWebhookResult" style="font-size:13px; margin-left:10px;"></span>
+      </div>
+    </section>
+
+    <section id="s4" style="display:none">
+      <h1>Plug it in</h1>
+      <p class="lede" id="wireUpLede">Last step — connect your real workflow.</p>
+      <div id="wireUpVoice" style="display:none">
+        <p>Forward your business line to your demo number when you can't pick up. Tap your carrier:</p>
+        <div class="pill-row">
+          <button type="button" class="pill" data-carrier="att">AT&amp;T</button>
+          <button type="button" class="pill" data-carrier="verizon">Verizon</button>
+          <button type="button" class="pill" data-carrier="tmobile">T-Mobile</button>
+          <button type="button" class="pill" data-carrier="sprint">Sprint</button>
+        </div>
+        <pre class="code" id="carrierCode" style="margin-top:12px; display:none"></pre>
+      </div>
+      <div id="wireUpWidget" style="display:none">
+        <p>Paste this snippet just before <code>&lt;/body&gt;</code> on your site:</p>
+        <pre class="code" id="widgetSnippet"></pre>
+      </div>
+      <div id="wireUpEmail" style="display:none">
+        <p>Set up an email forwarding rule from your inbox to:</p>
+        <pre class="code" id="emailListenAddr"></pre>
+        <p style="margin-top:8px; font-size:13px; color:var(--muted)">In Gmail: Settings → Forwarding and POP/IMAP → Add a forwarding address.</p>
+      </div>
+    </section>
+
+    <div class="actions">
+      <button class="btn secondary" type="button" id="backBtn">Back</button>
+      <button class="btn" type="button" id="nextBtn">Continue ▶</button>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      let step = 1;
+      const total = 4;
+      const stepper = document.getElementById("stepper");
+      const stepLabel = document.getElementById("stepLabel");
+      const stepLabels = ["Working hours", "Email sender", "CRM webhook", "Plug it in"];
+      const back = document.getElementById("backBtn");
+      const next = document.getElementById("nextBtn");
+      const sections = [null, document.getElementById("s1"), document.getElementById("s2"),
+                        document.getElementById("s3"), document.getElementById("s4")];
+      const errs = [null, document.getElementById("e1"), document.getElementById("e2"),
+                    document.getElementById("e3"), null];
+
+      const hourFrom = document.getElementById("hourFrom");
+      const hourTo = document.getElementById("hourTo");
+      for (let h = 0; h < 24; h++) {
+        const lbl = (h === 0 ? "12 AM" :
+                     h < 12 ? `${h} AM` :
+                     h === 12 ? "12 PM" : `${h - 12} PM`);
+        const opt1 = document.createElement("option"); opt1.value = h; opt1.textContent = lbl;
+        const opt2 = document.createElement("option"); opt2.value = h; opt2.textContent = lbl;
+        hourFrom.appendChild(opt1); hourTo.appendChild(opt2);
+      }
+      hourFrom.value = 8; hourTo.value = 18;
+
+      const days = [["mon","Mon"],["tue","Tue"],["wed","Wed"],["thu","Thu"],
+                    ["fri","Fri"],["sat","Sat"],["sun","Sun"]];
+      const dayPills = document.getElementById("dayPills");
+      const selectedDays = new Set(["mon","tue","wed","thu","fri"]);
+      for (const [k, lbl] of days) {
+        const p = document.createElement("button");
+        p.type = "button";
+        p.className = "pill" + (selectedDays.has(k) ? " is-selected" : "");
+        p.textContent = lbl;
+        p.dataset.day = k;
+        p.addEventListener("click", () => {
+          if (selectedDays.has(k)) { selectedDays.delete(k); p.classList.remove("is-selected"); }
+          else { selectedDays.add(k); p.classList.add("is-selected"); }
+        });
+        dayPills.appendChild(p);
+      }
+
+      let trialMode = "voice";
+      let trialPhoneDisplay = "";
+      fetch("/me").then(r => r.json()).then(me => {
+        const trial = me.trial || {};
+        trialMode = trial.mode || "voice";
+        if (trial.phone_id) {
+          fetch("/try/status/" + encodeURIComponent(trial.phone_id))
+            .then(r => r.json())
+            .then(s => { trialPhoneDisplay = s.phone_display || ""; });
+        }
+        prepareWireUp(trial);
+      }).catch(() => {});
+
+      function setStep(n) {
+        step = n;
+        stepper.children[0].className = "dot " + (step > 1 ? "done" : "active");
+        stepper.children[1].className = "dot " + (step > 2 ? "done" : (step === 2 ? "active" : ""));
+        stepper.children[2].className = "dot " + (step > 3 ? "done" : (step === 3 ? "active" : ""));
+        stepper.children[3].className = "dot " + (step === 4 ? "active" : "");
+        stepLabel.textContent = `Step ${step} of ${total} · ${stepLabels[step-1]}`;
+        for (let i = 1; i <= 4; i++) sections[i].style.display = (i === step ? "" : "none");
+        back.disabled = step === 1;
+        next.textContent = step === 4 ? "Finish ▶" : "Continue ▶";
+      }
+
+      function showErr(n, msg) { if (errs[n]) { errs[n].textContent = msg || ""; } }
+
+      async function saveStep1() {
+        const tz = document.getElementById("tz").value;
+        const from = parseInt(hourFrom.value, 10);
+        const to = parseInt(hourTo.value, 10);
+        if (to <= from) { showErr(1, "Close time must be after open time."); return false; }
+        const hours = {};
+        for (const [k] of days) {
+          hours[k] = selectedDays.has(k) ? [from, to] : "closed";
+        }
+        const r = await fetch("/integrations/working-hours", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ time_zone: tz, hours: hours }),
+        });
+        if (!r.ok) { showErr(1, (await r.json()).error || "Failed to save."); return false; }
+        return true;
+      }
+
+      async function saveStep2() {
+        const fromA = document.getElementById("fromAddr").value.trim();
+        const notify = document.getElementById("notifyAddr").value.trim();
+        if (!fromA || !notify) { showErr(2, "Both fields required."); return false; }
+        const r = await fetch("/integrations/email-sender", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ from_address: fromA, notify_emails: [notify] }),
+        });
+        if (!r.ok) { showErr(2, (await r.json()).error || "Invalid email."); return false; }
+        return true;
+      }
+
+      async function saveStep3() {
+        const url = document.getElementById("webhookUrl").value.trim();
+        if (!url) return true;
+        const r = await fetch("/integrations/webhook", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: url }),
+        });
+        if (!r.ok) { showErr(3, (await r.json()).error || "Invalid URL."); return false; }
+        return true;
+      }
+
+      async function finishWizard() {
+        const r = await fetch("/try/finish", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}",
+        });
+        if (!r.ok) return false;
+        const body = await r.json();
+        window.location.href = body.dashboard_url || "/dashboard";
+        return true;
+      }
+
+      function prepareWireUp(trial) {
+        const lede = document.getElementById("wireUpLede");
+        document.getElementById("wireUpVoice").style.display = "none";
+        document.getElementById("wireUpWidget").style.display = "none";
+        document.getElementById("wireUpEmail").style.display = "none";
+        if (trialMode === "voice") {
+          document.getElementById("wireUpVoice").style.display = "";
+          lede.textContent = "Forward your business line to the demo number when you're busy.";
+        } else if (trialMode === "widget") {
+          document.getElementById("wireUpWidget").style.display = "";
+          lede.textContent = "Paste this on your website to start capturing chats.";
+          const acct = trial.account_id || "";
+          document.getElementById("widgetSnippet").textContent =
+            `<script src="https://justgotalead.com/widget.js" data-account="${acct}"><\/script>`;
+        } else if (trialMode === "email") {
+          document.getElementById("wireUpEmail").style.display = "";
+          lede.textContent = "Set up email forwarding so the bot can reply on your behalf.";
+          const acct = trial.account_id || "";
+          document.getElementById("emailListenAddr").textContent =
+            `inbox-${acct}@try.justgotalead.com`;
+        }
+      }
+
+      document.querySelectorAll('[data-carrier]').forEach(btn => {
+        btn.addEventListener("click", () => {
+          const phone = (trialPhoneDisplay || "").replace(/[^\d+]/g, "");
+          const codes = {
+            att:     "*21*" + phone + "#",
+            verizon: "*72 " + phone,
+            tmobile: "**21*" + phone + "#",
+            sprint:  "*72 " + phone,
+          };
+          const out = document.getElementById("carrierCode");
+          out.textContent = codes[btn.dataset.carrier] || phone;
+          out.style.display = "";
+        });
+      });
+
+      const testBtn = document.getElementById("testWebhookBtn");
+      const webhookInput = document.getElementById("webhookUrl");
+      webhookInput.addEventListener("input", () => {
+        testBtn.disabled = !webhookInput.value.trim();
+      });
+      testBtn.addEventListener("click", async () => {
+        const out = document.getElementById("testWebhookResult");
+        out.textContent = "Sending…";
+        const url = webhookInput.value.trim();
+        if (!url) return;
+        const sv = await fetch("/integrations/webhook", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: url }),
+        });
+        if (!sv.ok) { out.textContent = "Save failed."; return; }
+        const r = await fetch("/integrations/webhook/test", { method: "POST" });
+        const body = await r.json();
+        if (r.ok) out.textContent = `✓ delivered (${body.upstream_status})`;
+        else out.textContent = `✗ failed (${body.upstream_status || "no response"})`;
+      });
+
+      back.addEventListener("click", () => { if (step > 1) setStep(step - 1); });
+      next.addEventListener("click", async () => {
+        next.disabled = true;
+        try {
+          let ok = true;
+          if (step === 1) ok = await saveStep1();
+          else if (step === 2) ok = await saveStep2();
+          else if (step === 3) ok = await saveStep3();
+          else if (step === 4) { ok = await finishWizard(); return; }
+          if (ok) {
+            showErr(step, "");
+            setStep(step + 1);
+          }
+        } finally {
+          next.disabled = false;
+        }
+      });
+
+      setStep(1);
+    })();
+  </script>
+</body>
+</html>
