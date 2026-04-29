@@ -4644,421 +4644,99 @@
       
     
 
-      <!-- ─────────── Receptionist Settings (single-column, centered) ─────────── -->
-      <section class="grid" id="settings" data-route-section="settings" hidden>
-        <div class="page-wrap" id="settingsCard">
-          <!-- Header -->
-          <header class="page-head">
-            <div>
-              <h2 class="page-title">Receptionist Settings</h2>
-              <p class="page-sub">Customize how your AI assistant looks and sounds on your website.</p>
-            </div>
-            <div class="page-head-actions">
-              <button class="btn ghost" type="button" id="settingsEditToggle">Edit</button>
-              <button class="btn shiny" type="button" id="publishBotConfig" style="display:none;">Save</button>
-            </div>
-          </header>
-          <div class="edit-banner" style="display:none;">Edit mode is on. Changes won't apply until you save.</div>
+      <!-- ─────────── Receptionist Settings (plain) ─────────── -->
+      <section id="settings" data-route-section="settings" hidden>
+        <div id="settingsCard">
+          <h2>Receptionist Settings</h2>
+          <p>
+            <button type="button" id="settingsEditToggle">Edit</button>
+            <button type="button" id="publishBotConfig" style="display:none;">Save</button>
+          </p>
 
-          <!-- Tabs -->
-          <div class="page-tabs">
-            <button type="button" class="page-tab is-active" data-settings-tab="brand">Brand</button>
-            <button type="button" class="page-tab" data-settings-tab="copy">Copy</button>
-            <button type="button" class="page-tab" data-settings-tab="chips">Quick replies</button>
-            <button type="button" class="page-tab" data-settings-tab="preview">Preview</button>
-          </div>
+          <p>
+            <label for="agentName">Assistant name</label><br>
+            <input type="text" id="agentName" />
+          </p>
 
-          <!-- Brand pane -->
-          <div class="page-card settings-pane is-active" data-settings-pane="brand">
-            <div class="settings-field">
-              <label for="agentName">Assistant name</label>
-              <input type="text" id="agentName" value="" placeholder="e.g. Sun-Up Roofing Assistant" />
-              <div class="settings-help">Shown at the top of the widget.</div>
-            </div>
-            <div class="settings-field">
-              <label for="iconSelect">Widget icon</label>
-              <select id="iconSelect">
-                <option value="chat">Chat bubble</option>
-                <option value="spark">Spark</option>
-                <option value="bolt">Bolt</option>
-              </select>
-              <div class="settings-help">The button shape your customers click to start chatting.</div>
-            </div>
-            <div class="settings-section-title">Colors</div>
-            <div class="settings-color-grid">
-              <div class="settings-color">
-                <label for="primaryColor">Primary</label>
-                <div class="settings-color-row">
-                  <input type="color" id="primaryColor" value="#2f80ed" />
-                  <span class="settings-color-hint">Buttons + links</span>
-                </div>
-              </div>
-              <div class="settings-color">
-                <label for="accentColor">Accent</label>
-                <div class="settings-color-row">
-                  <input type="color" id="accentColor" value="#56ccf2" />
-                  <span class="settings-color-hint">Highlights + chips</span>
-                </div>
-              </div>
-              <div class="settings-color">
-                <label for="headerGradientStart">Header start</label>
-                <div class="settings-color-row">
-                  <input type="color" id="headerGradientStart" value="#eef2f7" />
-                  <span class="settings-color-hint">Gradient top</span>
-                </div>
-              </div>
-              <div class="settings-color">
-                <label for="headerGradientEnd">Header end</label>
-                <div class="settings-color-row">
-                  <input type="color" id="headerGradientEnd" value="#d9e1ec" />
-                  <span class="settings-color-hint">Gradient bottom</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <p>
+            <label for="greetingMessage">Greeting message</label><br>
+            <input type="text" id="greetingMessage" />
+          </p>
 
-          <!-- Copy pane -->
-          <div class="page-card settings-pane" data-settings-pane="copy" hidden>
-            <div class="settings-field">
-              <label for="greetingMessage">Greeting message</label>
-              <input type="text" id="greetingMessage" value="" placeholder="Hi! How can I help you today?" />
-              <div class="settings-help">First thing visitors read when they open the chat.</div>
-            </div>
-            <div class="settings-field">
-              <label for="subtitleMessage">Subtitle</label>
-              <input type="text" id="subtitleMessage" value="" placeholder="Online · Replies in seconds" />
-              <div class="settings-help">Sits under the assistant name in the widget header.</div>
-            </div>
-          </div>
+          <p>
+            <label for="subtitleMessage">Subtitle</label><br>
+            <input type="text" id="subtitleMessage" />
+          </p>
 
-          <!-- Quick replies pane -->
-          <div class="page-card settings-pane" data-settings-pane="chips" hidden>
-            <div class="settings-field">
-              <label>Starter questions</label>
-              <div class="settings-help">These appear as one-tap chips when a customer first opens your widget. Aim for the 3–5 questions you get asked most.</div>
-              <div class="chip-row" id="chipEditor" style="margin-top:10px;"></div>
-              <div class="settings-add-row">
-                <input type="text" id="newChipInput" class="chip-input" placeholder="e.g. Do you offer free estimates?" />
-                <button class="btn shiny" type="button" id="addChipButton">Add</button>
-              </div>
-            </div>
-          </div>
+          <p>
+            <label for="iconSelect">Widget icon</label><br>
+            <select id="iconSelect">
+              <option value="chat">Chat bubble</option>
+              <option value="spark">Spark</option>
+              <option value="bolt">Bolt</option>
+            </select>
+          </p>
 
-          <!-- Preview pane (own tab — keeps the chatbot's position:fixed
-               from breaking the editor layout) -->
-          <div class="page-card settings-pane settings-preview-pane" data-settings-pane="preview" hidden>
-            <div class="settings-preview-head">
-              <span class="settings-preview-eyebrow">Live preview</span>
-              <span class="settings-preview-dot" title="Updates as you type"></span>
-            </div>
-            <p class="settings-help" style="margin-bottom:16px;">This is exactly how your assistant will appear on your website.</p>
-            <div class="widget-preview-frame">
-              <div class="widget-preview" id="previewPanel">
-                <div class="chatbot" data-state="open">
-                  <button class="chatbot-toggle" type="button" aria-label="Open chat">
-                    <span id="previewIcon">
-                      <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M7 18l-3 3V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H7z" fill="currentColor"></path>
-                        <circle cx="9" cy="10" r="1.3" fill="#ffffff"></circle>
-                        <circle cx="12" cy="10" r="1.3" fill="#ffffff"></circle>
-                        <circle cx="15" cy="10" r="1.3" fill="#ffffff"></circle>
-                      </svg>
-                    </span>
-                  </button>
-                  <div class="chatbot-panel" aria-live="polite">
-                    <div class="chatbot-header">
-                      <div class="chatbot-header-profile">
-                        <div class="chatbot-header-text">
-                          <div class="chatbot-title" id="previewName"></div>
-                          <div class="chatbot-subtitle" id="previewSubtitle"></div>
-                        </div>
-                      </div>
-                      <button class="chatbot-fullscreen" type="button">Full</button>
-                    </div>
-                    <div class="chatbot-messages">
-                      <div class="chatbot-message bot">
-                        <div class="chatbot-agent-square" aria-hidden="true">
-                          <img src="/robot_icon.png" alt="" />
-                        </div>
-                        <div class="chatbot-bubble">
-                          <span id="previewGreeting"></span>
-                          <div class="chatbot-timestamp">11:58 AM</div>
-                        </div>
-                      </div>
-                      <div class="chatbot-suggestions" id="previewChips">
-                        <button type="button" class="chatbot-chip"></button>
-                      </div>
-                    </div>
-                    <form class="chatbot-input">
-                      <input type="text" placeholder="Type your message..." />
-                      <button type="button">Send</button>
-                    </form>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <p>
+            <label for="primaryColor">Primary color</label>
+            <input type="color" id="primaryColor" value="#2f80ed" />
+            <label for="accentColor" style="margin-left:16px;">Accent color</label>
+            <input type="color" id="accentColor" value="#56ccf2" />
+          </p>
+
+          <p>
+            <label for="headerGradientStart">Header gradient start</label>
+            <input type="color" id="headerGradientStart" value="#eef2f7" />
+            <label for="headerGradientEnd" style="margin-left:16px;">Header gradient end</label>
+            <input type="color" id="headerGradientEnd" value="#d9e1ec" />
+          </p>
+
+          <p>
+            <label>Starter questions</label>
+            <span id="chipEditor"></span><br>
+            <input type="text" id="newChipInput" placeholder="Add a question" />
+            <button type="button" id="addChipButton">Add</button>
+          </p>
+
+          <!-- Hidden preview kept for the existing JS to bind to.
+               Not visually shown — it pulls the chatbot widget into a
+               position:fixed corner on real sites and breaks the layout
+               here. Users see their changes on the live site instead. -->
+          <div id="previewPanel" style="display:none;">
+            <span id="previewIcon"></span>
+            <span id="previewName"></span>
+            <span id="previewSubtitle"></span>
+            <span id="previewGreeting"></span>
+            <div id="previewChips"></div>
           </div>
         </div>
       </section>
 
-      <!-- ─────────── Embed widget (single-column, centered) ─────────── -->
-      <section class="grid" id="embed" data-route-section="embed" hidden>
-        <div class="page-wrap">
-          <header class="page-head">
-            <div>
-              <h2 class="page-title">Embed your widget</h2>
-              <p class="page-sub">Two steps: whitelist the domains that can load your widget, then paste the script tag on your site.</p>
-            </div>
-          </header>
+      <!-- ─────────── Embed widget (plain) ─────────── -->
+      <section id="embed" data-route-section="embed" hidden>
+        <div>
+          <h2>Embed your widget</h2>
 
-          <div class="page-card embed-step">
-            <div class="embed-step-num">1</div>
-            <div class="embed-step-body">
-              <div class="embed-step-title">Approved domains</div>
-              <div class="embed-step-desc">Only domains in this list can load your widget. Add your live site, plus any staging URL you'll test on.</div>
-              <div class="embed-domains" id="domainList"></div>
-              <div class="embed-add-row">
-                <input type="text" id="domainInput" class="chip-input" placeholder="https://yourbusiness.com" />
-                <button class="btn shiny" type="button" id="addDomainButton">Add domain</button>
-              </div>
-            </div>
-          </div>
+          <p><strong>Step 1. Approved domains</strong></p>
+          <p>Only domains in this list can load your widget.</p>
+          <div id="domainList"></div>
+          <p>
+            <input type="text" id="domainInput" placeholder="https://yourbusiness.com" />
+            <button type="button" id="addDomainButton">Add domain</button>
+          </p>
 
-          <div class="page-card embed-step">
-            <div class="embed-step-num">2</div>
-            <div class="embed-step-body">
-              <div class="embed-step-title">Paste this script before <code>&lt;/body&gt;</code></div>
-              <div class="embed-step-desc">Drop this on every page where you want the assistant to appear. Most CMS platforms have a "custom code" or "footer code" field for this.</div>
-              <div class="embed-code-box">
-                <pre id="embedScriptBox">&lt;script src=&quot;https://justgotalead.com/&lt;your_account_id&gt;/widget.js&quot;&gt;&lt;/script&gt;</pre>
-                <button class="btn ghost" type="button" id="copyEmbedButton">📋 Copy</button>
-              </div>
-            </div>
-          </div>
+          <p><strong>Step 2. Paste this script before &lt;/body&gt; on your site</strong></p>
+          <pre id="embedScriptBox" style="white-space:pre-wrap; word-break:break-all;">&lt;script src=&quot;https://justgotalead.com/&lt;your_account_id&gt;/widget.js&quot;&gt;&lt;/script&gt;</pre>
+          <p><button type="button" id="copyEmbedButton">Copy</button></p>
 
-          <div class="embed-help">
-            <strong>Need help installing?</strong>
-            Email <a href="mailto:hello@justgotalead.com">hello@justgotalead.com</a> with the URL of your site — we'll get it live for you.
-          </div>
+          <p>
+            <small>Need help? Email
+              <a href="mailto:hello@justgotalead.com">hello@justgotalead.com</a>
+              with the URL of your site.
+            </small>
+          </p>
         </div>
       </section>
-
-      <style>
-        /* ─── Centered single-column page layout ─── */
-        .page-wrap {
-          grid-column: span 12;
-          max-width: 760px;
-          margin: 0 auto;
-          width: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-        .page-head {
-          display: flex; justify-content: space-between; align-items: flex-start;
-          gap: 16px; flex-wrap: wrap;
-          padding: 4px 0 8px;
-        }
-        .page-title {
-          font-family: "Space Grotesk", "Inter", sans-serif;
-          font-size: 24px; font-weight: 800; color: #0f172a;
-          letter-spacing: -0.025em; margin: 0;
-        }
-        .page-sub { font-size: 14px; color: #64748b; margin: 4px 0 0; line-height: 1.5; max-width: 60ch; }
-        .page-head-actions { display: flex; gap: 8px; }
-        .page-card {
-          background: #fff;
-          border: 1px solid #e2e8f0;
-          border-radius: 14px;
-          padding: 24px 26px;
-          box-shadow: 0 4px 14px -8px rgba(15, 23, 42, .06);
-        }
-        .page-tabs {
-          display: flex; gap: 4px;
-          padding: 4px; background: #f1f5f9;
-          border: 1px solid #e2e8f0; border-radius: 12px;
-          margin-bottom: 4px;
-        }
-        .page-tab {
-          flex: 1; padding: 10px 14px; border-radius: 9px;
-          background: transparent; border: none; cursor: pointer;
-          font-size: 13.5px; font-weight: 600; color: #64748b;
-          transition: background .15s, color .15s, box-shadow .15s;
-        }
-        .page-tab:hover { color: #2b6cb0; }
-        .page-tab.is-active {
-          background: #fff; color: #0f172a;
-          box-shadow: 0 2px 6px -2px rgba(15, 23, 42, .12);
-        }
-
-        /* Settings panes */
-        .settings-pane { display: flex; flex-direction: column; gap: 18px; }
-        .settings-pane[hidden] { display: none !important; }
-
-        .settings-field { display: flex; flex-direction: column; gap: 6px; }
-        .settings-field > label {
-          font-size: 12.5px; font-weight: 700; color: #1e293b;
-          letter-spacing: -0.005em;
-        }
-        .settings-field input[type="text"],
-        .settings-field select,
-        .settings-field input[type="email"] {
-          padding: 11px 14px; font-size: 14px;
-          border: 1px solid #cbd5e1; border-radius: 10px; background: #fff;
-          color: #0f172a;
-          transition: border-color .15s, box-shadow .15s;
-        }
-        .settings-field input:focus, .settings-field select:focus {
-          outline: none; border-color: #2b6cb0;
-          box-shadow: 0 0 0 3px rgba(43, 108, 176, .15);
-        }
-        .settings-help { font-size: 12px; color: #64748b; line-height: 1.5; }
-        .settings-section-title {
-          font-size: 11.5px; font-weight: 700; color: #475569;
-          text-transform: uppercase; letter-spacing: 0.07em;
-          margin: 6px 0 -4px;
-        }
-        .settings-color-grid {
-          display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;
-        }
-        @media (max-width: 560px) { .settings-color-grid { grid-template-columns: 1fr; } }
-        .settings-color { display: flex; flex-direction: column; gap: 6px; }
-        .settings-color label { font-size: 12.5px; font-weight: 700; color: #1e293b; }
-        .settings-color-row {
-          display: flex; align-items: center; gap: 10px;
-          padding: 8px 12px; background: #f8fafc;
-          border: 1px solid #e2e8f0; border-radius: 10px;
-        }
-        .settings-color-row input[type="color"] {
-          width: 36px; height: 36px; padding: 0; border: none; cursor: pointer;
-          background: transparent; border-radius: 8px;
-        }
-        .settings-color-row input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-        .settings-color-row input[type="color"]::-webkit-color-swatch { border: 1px solid #e2e8f0; border-radius: 6px; }
-        .settings-color-hint { font-size: 12px; color: #64748b; flex: 1; }
-        .settings-add-row { display: flex; gap: 8px; margin-top: 10px; }
-        .settings-add-row input { flex: 1; }
-        .settings-add-row .chip-input {
-          padding: 11px 14px; font-size: 14px;
-          border: 1px solid #cbd5e1; border-radius: 10px; background: #fff;
-        }
-        .settings-add-row .chip-input:focus {
-          outline: none; border-color: #2b6cb0;
-          box-shadow: 0 0 0 3px rgba(43, 108, 176, .15);
-        }
-
-        /* Preview pane — clamps the chatbot inside a frame so its
-           position:fixed children don't escape to the viewport. */
-        .settings-preview-pane {
-          background: linear-gradient(160deg, #f8fafc 0%, #eef2f7 100%);
-        }
-        .settings-preview-head {
-          display: flex; justify-content: space-between; align-items: center;
-          margin-bottom: 6px;
-        }
-        .settings-preview-eyebrow {
-          font-size: 11px; font-weight: 700; color: #475569;
-          text-transform: uppercase; letter-spacing: 0.08em;
-        }
-        .settings-preview-dot {
-          width: 8px; height: 8px; border-radius: 50%;
-          background: #16a34a;
-          box-shadow: 0 0 0 4px rgba(22, 163, 74, .15);
-          animation: settings-pulse 1.6s ease-in-out infinite;
-        }
-        @keyframes settings-pulse { 50% { opacity: .5; transform: scale(.8); } }
-        /* Establish a containing block so any position:fixed inside the
-           chatbot is constrained to this frame (it transforms `fixed` →
-           viewport-of-parent because of the `transform` containing-block
-           trick). */
-        .widget-preview-frame {
-          position: relative;
-          transform: translateZ(0);
-          background: #fff;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
-          padding: 16px;
-          min-height: 360px;
-          overflow: hidden;
-        }
-        .widget-preview-frame .widget-preview { position: relative; }
-
-        /* ─── Embed page ─── */
-        .embed-step {
-          display: grid; grid-template-columns: 44px 1fr; gap: 16px;
-          align-items: start;
-        }
-        .embed-step-num {
-          width: 36px; height: 36px;
-          background: #0f172a; color: #fff;
-          border-radius: 10px;
-          display: inline-flex; align-items: center; justify-content: center;
-          font-family: "Space Grotesk", sans-serif;
-          font-size: 16px; font-weight: 800;
-        }
-        .embed-step-body { min-width: 0; }
-        .embed-step-title {
-          font-size: 16px; font-weight: 700; color: #0f172a;
-          letter-spacing: -0.01em; margin-bottom: 4px;
-        }
-        .embed-step-title code {
-          font-size: 13.5px; padding: 2px 6px; background: #f1f5f9;
-          border-radius: 4px; color: #475569;
-          font-family: "JetBrains Mono", "Menlo", monospace;
-        }
-        .embed-step-desc { font-size: 13.5px; color: #64748b; line-height: 1.5; margin-bottom: 14px; }
-        .embed-domains {
-          display: flex; flex-wrap: wrap; gap: 6px;
-          padding: 12px;
-          background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px;
-          min-height: 48px;
-          margin-bottom: 12px;
-        }
-        .embed-domains:empty::before {
-          content: "No domains added yet.";
-          color: #94a3b8; font-size: 12.5px; font-style: italic;
-        }
-        .embed-add-row { display: flex; gap: 8px; flex-wrap: wrap; }
-        .embed-add-row input {
-          flex: 1; min-width: 220px;
-          padding: 11px 14px; font-size: 14px;
-          border: 1px solid #cbd5e1; border-radius: 10px; background: #fff;
-        }
-        .embed-add-row input:focus {
-          outline: none; border-color: #2b6cb0;
-          box-shadow: 0 0 0 3px rgba(43, 108, 176, .15);
-        }
-        .embed-code-box {
-          position: relative;
-          background: #0f172a; border-radius: 12px;
-          padding: 16px 18px; padding-right: 80px;
-          color: #e2e8f0;
-        }
-        .embed-code-box pre {
-          font-family: "JetBrains Mono", "Menlo", monospace;
-          font-size: 12.5px; line-height: 1.55;
-          margin: 0;
-          white-space: pre-wrap; word-break: break-all;
-          color: inherit; background: transparent;
-        }
-        .embed-code-box .btn {
-          position: absolute; top: 12px; right: 12px;
-          background: rgba(255, 255, 255, .08); color: #e2e8f0;
-          border: 1px solid rgba(255, 255, 255, .14);
-          padding: 6px 12px; font-size: 12px; border-radius: 8px; cursor: pointer;
-        }
-        .embed-code-box .btn:hover { background: rgba(255, 255, 255, .14); }
-        .embed-help {
-          padding: 14px 16px;
-          background: rgba(43, 108, 176, .06);
-          border: 1px solid rgba(43, 108, 176, .18);
-          border-radius: 12px;
-          font-size: 13px; color: #1e293b; line-height: 1.5;
-        }
-        .embed-help strong { color: #0f172a; display: block; margin-bottom: 2px; }
-        .embed-help a { color: #2b6cb0; font-weight: 700; text-decoration: none; }
-        .embed-help a:hover { text-decoration: underline; }
-      </style>
 
 
       <div class="modal" id="confirmPublishModal" aria-hidden="true">
