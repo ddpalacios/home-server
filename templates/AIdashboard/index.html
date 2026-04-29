@@ -2492,6 +2492,103 @@
   </style>
 </head>
 <body>
+
+  <!-- ─── Driver.js (CDN) for the dashboard tutorial ─── -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.js"></script>
+
+  <!-- ─── Lightweight profile modal (post-magic-link, name only) ─── -->
+  <dialog id="profileModal" class="profile-modal" aria-labelledby="pmTitle" aria-modal="true">
+    <form id="profileForm" autocomplete="off">
+      <div class="pm-eyebrow">👋 Hi there</div>
+      <h2 id="pmTitle" class="pm-title">What should we call you?</h2>
+      <p class="pm-sub">Quick — just your name. We'll save you a few clicks later.</p>
+      <div class="pm-row">
+        <div class="pm-field">
+          <label for="pmFirst">First name</label>
+          <input id="pmFirst" type="text" maxlength="80" required autocomplete="given-name" autofocus />
+        </div>
+        <div class="pm-field">
+          <label for="pmLast">Last name</label>
+          <input id="pmLast" type="text" maxlength="80" required autocomplete="family-name" />
+        </div>
+      </div>
+      <div id="pmError" class="pm-error" hidden></div>
+      <button type="submit" id="pmSubmit" class="pm-submit">
+        <span class="pm-label">Continue</span>
+        <span class="pm-arrow">→</span>
+      </button>
+    </form>
+    <style>
+      .profile-modal {
+        max-width: 460px; width: calc(100% - 32px);
+        border: 1px solid #e2e8f0; border-radius: 18px;
+        padding: 32px;
+        background: #fff;
+        box-shadow: 0 28px 60px rgba(15, 23, 42, 0.18);
+        font-family: "Manrope", system-ui, sans-serif;
+      }
+      .profile-modal::backdrop {
+        background: rgba(15, 23, 42, 0.55);
+        backdrop-filter: blur(4px);
+      }
+      .pm-eyebrow {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 13px; font-weight: 600;
+        letter-spacing: 0.04em; text-transform: uppercase;
+        color: #2b6cb0; margin-bottom: 12px;
+      }
+      .pm-title {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 26px; font-weight: 700;
+        letter-spacing: -0.025em; color: #0f172a;
+        margin-bottom: 8px;
+      }
+      .pm-sub { color: #475569; font-size: 14px; margin-bottom: 22px; line-height: 1.5; }
+      .pm-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      @media (max-width: 480px) { .pm-row { grid-template-columns: 1fr; } }
+      .pm-field label {
+        display: block; font-size: 12px; font-weight: 600;
+        color: #1e293b; margin-bottom: 6px;
+      }
+      .pm-field input {
+        width: 100%; padding: 11px 13px; border-radius: 10px;
+        border: 1px solid #e2e8f0; background: #fdfdff;
+        font-family: inherit; font-size: 15px; color: #0f172a;
+        transition: all .2s cubic-bezier(.22,1,.36,1);
+      }
+      .pm-field input:focus {
+        outline: none; border-color: #2b6cb0;
+        box-shadow: 0 0 0 4px rgba(43, 108, 176, 0.10);
+        background: #fff;
+      }
+      .pm-error {
+        margin-top: 12px; padding: 8px 12px; border-radius: 8px;
+        background: #fef2f2; color: #b91c1c;
+        font-size: 13px; font-weight: 500;
+        border: 1px solid #fecaca;
+      }
+      .pm-submit {
+        width: 100%; margin-top: 18px;
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        padding: 14px 18px; border-radius: 12px; border: none;
+        background: #2b6cb0; color: #fff;
+        font-family: inherit; font-weight: 700; font-size: 15px;
+        cursor: pointer; position: relative; overflow: hidden;
+        box-shadow: 0 6px 18px -3px rgba(43, 108, 176, 0.4);
+        transition: background .2s, transform .25s cubic-bezier(.22,1,.36,1);
+      }
+      .pm-submit:hover { background: #1e3a8a; }
+      .pm-submit:active { transform: scale(.985); }
+      .pm-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+      .pm-arrow {
+        font-family: "Space Grotesk", serif;
+        transition: transform .25s cubic-bezier(.22,1,.36,1);
+      }
+      .pm-submit:hover .pm-arrow { transform: translateX(4px); }
+    </style>
+  </dialog>
+
   <dialog id="welcomeModal" class="welcome-modal">
     <div id="welcomeFormView">
       <form id="welcomeForm" method="dialog" autocomplete="off">
@@ -2725,6 +2822,7 @@
             <a href="#settings" class="cta">AI Assistant Settings</a>
           </div>
           <button class="btn shiny" type="button" id="publishAppButton" disabled>Publish App</button>
+          <button class="btn secondary" type="button" id="replayTutorialButton" title="Replay the dashboard tutorial" style="border-color:#e2e8f0;">↺ Tutorial</button>
           <button class="btn secondary" type="button" id="logoutButton">Logout</button>
         </div>
       </div>
@@ -5058,6 +5156,15 @@
       if (publishAppButtonMobile) publishAppButtonMobile.disabled = !canPublish;
     }
 
+    const replayTutorialButton = document.getElementById("replayTutorialButton");
+    if (replayTutorialButton) {
+      replayTutorialButton.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (typeof window.replayDashboardTutorial === "function") {
+          window.replayDashboardTutorial();
+        }
+      });
+    }
     if (logoutButton) {
       logoutButton.addEventListener("click", () => {
         resetChatHistory();
@@ -7238,13 +7345,183 @@
         const res = await fetch("/me", { credentials: "same-origin" });
         if (!res.ok) return;
         const me = await res.json();
-        // Admins never see the welcome modal; neither do users already onboarded.
-        if (!me || !me.authenticated || me.is_admin || me.onboarded) return;
-        const dlg = document.getElementById("welcomeModal");
-        if (!dlg || typeof dlg.showModal !== "function") return;
-        dlg.showModal();
+        if (!me || !me.authenticated || me.is_admin) return;
+
+        // Path A: brand-new (no onboarded_at) → existing welcome modal
+        // (collects business + URL + spawns KB build).
+        if (!me.onboarded) {
+          const dlg = document.getElementById("welcomeModal");
+          if (dlg && typeof dlg.showModal === "function") dlg.showModal();
+          return;
+        }
+
+        // Path B: trial user (onboarded=true via trial KB) but missing
+        // first/last name → show the lightweight profile modal,
+        // then run the dashboard tutorial.
+        const needsName = !(me.first_name && me.last_name);
+        const needsTutorial = !me.tutorial_completed_at;
+        if (needsName) {
+          openProfileModal(/*onSaved=*/() => {
+            if (needsTutorial) startDashboardTutorial();
+          });
+        } else if (needsTutorial) {
+          startDashboardTutorial();
+        }
       } catch (e) { /* silent */ }
     }
+
+    // ─────── Lightweight profile modal (post-magic-link) ───────
+    function openProfileModal(onSaved) {
+      const dlg = document.getElementById("profileModal");
+      if (!dlg || typeof dlg.showModal !== "function") return;
+      const form = document.getElementById("profileForm");
+      const errEl = document.getElementById("pmError");
+      const firstEl = document.getElementById("pmFirst");
+      const lastEl = document.getElementById("pmLast");
+      const submit = document.getElementById("pmSubmit");
+      const showErr = (m) => {
+        errEl.textContent = m || "";
+        errEl.hidden = !m;
+      };
+      // Block ESC + outside-click dismissal
+      dlg.addEventListener("cancel", (e) => e.preventDefault());
+      dlg.addEventListener("click", (e) => {
+        // dialog click target equals dlg itself when backdrop clicked
+        if (e.target === dlg) e.preventDefault();
+      });
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        showErr("");
+        const first = (firstEl.value || "").trim();
+        const last = (lastEl.value || "").trim();
+        if (!first || !last) { showErr("Both names are required."); return; }
+        if (first.length > 80 || last.length > 80) { showErr("Keep names under 80 characters."); return; }
+        submit.disabled = true;
+        submit.querySelector(".pm-label").textContent = "Saving…";
+        try {
+          const r = await fetch("/me/profile", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ first_name: first, last_name: last }),
+          });
+          if (!r.ok) {
+            const body = await r.json().catch(() => ({}));
+            showErr(body.error || "Couldn't save — try again.");
+            submit.disabled = false;
+            submit.querySelector(".pm-label").textContent = "Continue";
+            return;
+          }
+          dlg.close();
+          if (typeof onSaved === "function") onSaved();
+        } catch (err) {
+          showErr("Network error — try again.");
+          submit.disabled = false;
+          submit.querySelector(".pm-label").textContent = "Continue";
+        }
+      });
+      dlg.showModal();
+    }
+
+    // ─────── Dashboard tutorial (Driver.js) ───────
+    function startDashboardTutorial() {
+      // Driver.js is loaded via CDN (<script>) — `driver` lives at
+      // window.driver.js.driver. Fall back gracefully if the CDN failed.
+      const driverFactory = window.driver && window.driver.js && window.driver.js.driver;
+      if (typeof driverFactory !== "function") return;
+
+      const steps = [
+        {
+          element: "#overview",
+          popover: {
+            title: "👋 Welcome to your dashboard",
+            description: "Quick tour — about 30 seconds. We'll show you each section and what it does. You can <strong>skip</strong> at any time.",
+          },
+        },
+        {
+          element: "#voicePanel",
+          popover: {
+            title: "🎙 Your bot's voice",
+            description: "Pick how your receptionist sounds — warm, calm, energetic. Test it any time.",
+          },
+        },
+        {
+          element: "#leads",
+          popover: {
+            title: "📥 Captured leads",
+            description: "Every caller, chat, and email lands here. Name, phone, what they want, and when. Export anytime.",
+          },
+        },
+        {
+          element: "#activity",
+          popover: {
+            title: "📞 Live activity",
+            description: "See calls and messages as they happen. Jump into a transcript with one click.",
+          },
+        },
+        {
+          element: "#insights",
+          popover: {
+            title: "🔎 Ask questions",
+            description: "Ask plain-English questions about your callers — \"how many roof leaks last week?\" — and get an answer.",
+          },
+        },
+        {
+          element: "#knowledge",
+          popover: {
+            title: "📚 What your bot knows",
+            description: "We trained it on your website. Add facts, FAQs, or pricing here so it answers exactly the way you want.",
+          },
+        },
+        {
+          element: "#settings",
+          popover: {
+            title: "⚙️ Settings",
+            description: "Hours, calendar, lead destinations, webhooks. The replay-tutorial link lives here too.",
+          },
+        },
+      ];
+
+      // Filter steps to only those whose element actually exists in DOM
+      // (admin-only sections / hidden panels won't break the tour).
+      const visibleSteps = steps.filter((s) => {
+        const el = document.querySelector(s.element);
+        return el && el.offsetParent !== null;
+      });
+      if (visibleSteps.length === 0) {
+        // Nothing to tour — mark complete so we don't loop forever.
+        fetch("/me/tutorial-complete", { method: "POST", credentials: "same-origin" }).catch(() => {});
+        return;
+      }
+
+      const drv = driverFactory({
+        showProgress: true,
+        progressText: "Step {{current}} of {{total}}",
+        nextBtnText: "Next →",
+        prevBtnText: "← Back",
+        doneBtnText: "🎉 Finish",
+        animate: true,
+        smoothScroll: true,
+        allowClose: true,
+        steps: visibleSteps,
+        onCloseClick: () => {
+          drv.destroy();
+          fetch("/me/tutorial-complete", { method: "POST", credentials: "same-origin" }).catch(() => {});
+        },
+        onDestroyed: () => {
+          fetch("/me/tutorial-complete", { method: "POST", credentials: "same-origin" }).catch(() => {});
+        },
+      });
+      drv.drive();
+    }
+
+    // Expose a global so the "Replay tutorial" link can call it from
+    // wherever the user lands.
+    window.replayDashboardTutorial = function () {
+      fetch("/me/tutorial-reset", { method: "POST", credentials: "same-origin" })
+        .then(() => startDashboardTutorial())
+        .catch(() => startDashboardTutorial());
+    };
 
     const ONBOARDING_PHASE_ORDER = ["saved", "crawling", "summarizing", "saving", "ready"];
 
