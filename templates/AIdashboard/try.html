@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Try JustGotALead — Free 7-Day Trial</title>
+  <style>
+    :root {
+      --accent: #2563eb;
+      --accent-2: #38bdf8;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Inter", "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(180deg, #f9fbff 0%, #f2f5fb 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: var(--panel);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: var(--shadow);
+      width: min(560px, 100%);
+      border: 1px solid var(--border);
+    }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    p.lede { color: var(--muted); margin-bottom: 24px; font-size: 15px; }
+    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; margin-top: 16px; }
+    input[type="url"], input[type="email"], select {
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 15px;
+      font-family: inherit;
+    }
+    input:focus, select:focus { outline: 2px solid var(--accent-2); }
+    .radio-group { display: flex; flex-direction: column; gap: 8px; }
+    .radio-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); cursor: pointer; }
+    .radio-row:hover { background: #fafbfd; }
+    .radio-row input { margin: 0; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 20px;
+      border-radius: 10px;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 15px;
+      width: 100%;
+      margin-top: 24px;
+    }
+    .btn:hover { background: #1d4ed8; }
+    .btn:disabled { background: #94a3b8; cursor: not-allowed; }
+    .err { color: #b91c1c; font-size: 14px; margin-top: 12px; }
+    .footnote { color: var(--muted); font-size: 13px; margin-top: 20px; text-align: center; }
+  </style>
+</head>
+<body>
+  <main class="card" id="cardForm">
+    <h1>Try this on your business in 60 seconds</h1>
+    <p class="lede">We'll catch missed calls, capture leads, and book appointments — free for 7 days.</p>
+
+    <form id="trialForm" onsubmit="return false;">
+      <label for="websiteUrl">Your business website</label>
+      <input id="websiteUrl" type="url" placeholder="https://mikeroofing.com" required />
+
+      <label for="industry">What do you do?</label>
+      <select id="industry" required>
+        <option value="">Select an industry…</option>
+        <option value="roofer">Roofer / Storm Restoration</option>
+        <option value="plumber">Plumber</option>
+        <option value="realtor">Realtor</option>
+      </select>
+
+      <label>Where do you want help?</label>
+      <div class="radio-group">
+        <label class="radio-row"><input type="radio" name="mode" value="voice" checked /> Catch my missed calls</label>
+        <label class="radio-row"><input type="radio" name="mode" value="widget" /> Live chat on my website</label>
+        <label class="radio-row"><input type="radio" name="mode" value="email" /> AI receptionist for my email</label>
+      </div>
+
+      <label for="email">Your email (we send your dashboard link here)</label>
+      <input id="email" type="email" placeholder="mike@mikeroofing.com" required />
+
+      <button class="btn" type="submit" id="startBtn">Start free trial ▶</button>
+      <p class="err" id="formError" style="display:none"></p>
+      <p class="footnote">No credit card · 7 days · 4 trial lines, first-come</p>
+    </form>
+  </main>
+
+  <main class="card" id="cardProgress" style="display:none">
+    <h1>Building your demo…</h1>
+    <p class="lede" id="progressLine">Reading your site…</p>
+    <div style="height: 6px; background: #e5e7eb; border-radius: 999px; overflow: hidden; margin-top: 16px;">
+      <div id="progressBar" style="height: 100%; background: var(--accent); width: 10%; transition: width 0.4s ease;"></div>
+    </div>
+    <p class="footnote">Magic link sent to <span id="progressEmail"></span></p>
+  </main>
+
+  <main class="card" id="cardSuccess" style="display:none; text-align:center;">
+    <h1>✓ Your demo is live</h1>
+    <p class="lede" style="margin-bottom: 20px;">Try it: ask about <span id="successHook">an inspection</span>.</p>
+    <div style="font-size: 22px; font-weight: 700; padding: 16px; border: 2px solid var(--accent); border-radius: 12px;">
+      <a id="successCallLink" href="#" style="color: var(--accent); text-decoration: none;">📞 Call <span id="successPhone"></span></a>
+    </div>
+    <p class="footnote" style="margin-top: 16px;">Check your email for your dashboard link · trial expires in 7 days</p>
+  </main>
+
+  <script>
+    (function () {
+      const form = document.getElementById("trialForm");
+      const startBtn = document.getElementById("startBtn");
+      const formError = document.getElementById("formError");
+      const cardForm = document.getElementById("cardForm");
+      const cardProgress = document.getElementById("cardProgress");
+      const cardSuccess = document.getElementById("cardSuccess");
+      const progressBar = document.getElementById("progressBar");
+      const progressLine = document.getElementById("progressLine");
+      const progressEmail = document.getElementById("progressEmail");
+      const successPhone = document.getElementById("successPhone");
+      const successCallLink = document.getElementById("successCallLink");
+
+      function err(msg) {
+        formError.textContent = msg;
+        formError.style.display = "block";
+      }
+
+      startBtn.addEventListener("click", async function () {
+        formError.style.display = "none";
+        const url = document.getElementById("websiteUrl").value.trim();
+        const industry = document.getElementById("industry").value;
+        const mode = document.querySelector('input[name="mode"]:checked').value;
+        const email = document.getElementById("email").value.trim();
+
+        if (!url || !industry || !email) { err("Please fill every field."); return; }
+
+        startBtn.disabled = true;
+        startBtn.textContent = "Starting…";
+        try {
+          const res = await fetch("/try", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ website_url: url, industry: industry, mode: mode, email: email }),
+          });
+          const body = await res.json();
+          if (!res.ok) {
+            err(body.error || "Something went wrong.");
+            startBtn.disabled = false;
+            startBtn.textContent = "Start free trial ▶";
+            return;
+          }
+          cardForm.style.display = "none";
+          cardProgress.style.display = "block";
+          progressEmail.textContent = email;
+          pollStatus(body.status_url, body.phone_display);
+        } catch (e) {
+          err("Network error. Please retry.");
+          startBtn.disabled = false;
+          startBtn.textContent = "Start free trial ▶";
+        }
+      });
+
+      async function pollStatus(statusUrl, phoneDisplay) {
+        const stages = [
+          [10, "Reading your site…"],
+          [35, "Identifying your services…"],
+          [60, "Training the AI…"],
+          [85, "Connecting your phone number…"],
+        ];
+        let i = 0;
+        function tickFake() {
+          if (i < stages.length) {
+            progressBar.style.width = stages[i][0] + "%";
+            progressLine.textContent = stages[i][1];
+            i++;
+          }
+        }
+        const fakeTick = setInterval(tickFake, 1500);
+
+        const start = Date.now();
+        while (Date.now() - start < 180000) {
+          await new Promise(r => setTimeout(r, 2000));
+          let body;
+          try {
+            const res = await fetch(statusUrl);
+            body = await res.json();
+          } catch (e) { continue; }
+          if (body.build_status === "ready") {
+            clearInterval(fakeTick);
+            progressBar.style.width = "100%";
+            progressLine.textContent = "Done.";
+            await new Promise(r => setTimeout(r, 400));
+            cardProgress.style.display = "none";
+            cardSuccess.style.display = "block";
+            successPhone.textContent = body.phone_display || phoneDisplay;
+            const callTarget = (body.phone_display || phoneDisplay || "").replace(/[^\d+]/g, "");
+            successCallLink.href = "tel:" + callTarget;
+            return;
+          }
+          if (body.build_status === "failed") {
+            clearInterval(fakeTick);
+            err("Build failed: " + (body.build_error || "unknown error"));
+            cardProgress.style.display = "none";
+            cardForm.style.display = "block";
+            startBtn.disabled = false;
+            startBtn.textContent = "Try again ▶";
+            return;
+          }
+        }
+        clearInterval(fakeTick);
+        err("Timed out waiting for build. Check your inbox in a minute.");
+      }
+    })();
+  </script>
+</body>
+</html>
