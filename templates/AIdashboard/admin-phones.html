@@ -682,12 +682,33 @@
         return `<span class="routing-summary"><span class="routing-tag routing-tag-${r.method}">${tagText}</span>${escapeHtml(r.target)}</span>`;
       }
 
+      function trialBadge(phone) {
+        if (!phone.trial_email) return "";
+        const exp = phone.trial_expires_at
+          ? new Date(phone.trial_expires_at * 1000)
+              .toLocaleDateString(undefined, {month:"short", day:"numeric"})
+          : "—";
+        const phaseLabel = {
+          idle: "queued", reading: "reading site", identifying: "identifying services",
+          training: "training AI", wiring: "connecting phone", ready: "ready",
+          "": "",
+        }[phone.build_phase || ""] || (phone.build_phase || "");
+        return `
+          <div style="font-size:12px; line-height:1.5; margin-top:6px; padding:6px 8px; background:#fef3c7; border-radius:6px; color:#78350f;">
+            <strong>🧪 Trial:</strong> ${escapeHtml(phone.trial_email)}<br>
+            <span>industry: ${escapeHtml(phone.trial_industry || "—")} · mode: ${escapeHtml(phone.trial_mode || "—")} · expires: ${exp}</span>
+            ${phaseLabel ? `<br><span>phase: ${escapeHtml(phaseLabel)}</span>` : ""}
+            ${phone.setup_complete ? "<br><span style='color:#047857'>✓ setup complete</span>" : ""}
+          </div>
+        `;
+      }
+
       function renderRow(phone) {
         const tr = document.createElement("tr");
         tr.dataset.phoneId = phone.phone_id;
         const websiteCell = phone.assigned_website_url
-          ? escapeHtml(phone.assigned_website_url)
-          : "<span class='empty'>—</span>";
+          ? escapeHtml(phone.assigned_website_url) + trialBadge(phone)
+          : (phone.trial_email ? trialBadge(phone) : "<span class='empty'>—</span>");
         const demoCell = phone.demo_url
           ? `<a href="${escapeHtml(phone.demo_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(phone.demo_url)}</a>`
           : "<span class='empty'>—</span>";
@@ -798,10 +819,14 @@
         } else if (action === "routing") {
           openRoutingModal(phone);
         } else if (action === "disconnect") {
+          const isTrial = !!phone.trial_email;
           const site = phone.assigned_website_url || phone.demo_url || "this number";
+          const msg = isTrial
+            ? `This will end the trial for ${phone.trial_email}, delete their knowledge base, clear all trial state, and return ${phone.phone_display || phone.phone_number} to the pool. The user will need to start over. Continue?`
+            : `This will permanently delete the knowledge base for ${site}, remove the preview URL, and unlink ${phone.phone_display || phone.phone_number}. The phone number itself stays — you can re-assign it later. Continue?`;
           openConfirm(
-            "Disconnect this number?",
-            `This will permanently delete the knowledge base for ${site}, remove the preview URL, and unlink ${phone.phone_display || phone.phone_number}. The phone number itself stays — you can re-assign it later. Continue?`,
+            isTrial ? "End this trial?" : "Disconnect this number?",
+            msg,
             () => disconnectPhone(phone),
           );
         }
