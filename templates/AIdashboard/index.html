@@ -206,6 +206,12 @@
        Embed onto the page when the user is on Phones / Voice / etc. */
     .app-body [data-route-section] { display: none !important; }
     .app-body [data-route-section].is-active { display: block !important; }
+    /* The HTML `hidden` attribute is the secondary safety net used by
+       the router. The UA stylesheet only sets `display: none` at
+       specificity 0,1,0 — which loses to `.grid { display: grid }`.
+       Re-state it as an author-level !important so .grid can't win. */
+    [data-route-section][hidden] { display: none !important; }
+    [hidden] { display: none !important; }
     /* The trialBanner sticks above whichever section is active */
     .app-body > #trialBanner { display: block; }
     .app-body > #trialBanner[hidden] { display: none !important; }
