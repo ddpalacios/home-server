@@ -6,54 +6,53 @@
   <title>Free 7-day trial — JustGotALead</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --accent:       #2563eb;
-      --accent-deep:  #1d4ed8;
-      --accent-2:     #38bdf8;
-      --accent-soft:  rgba(37, 99, 235, 0.10);
-      --green:        #047857;
-      --green-soft:   rgba(4, 120, 87, 0.10);
-      --text:         #0f172a;
-      --text-soft:    #1e293b;
-      --muted:        #64748b;
+      /* Tokens copied from / route for visual continuity */
+      --bg:           #f5f7fb;
+      --surface:      #ffffff;
+      --surface-2:    #f1f5f9;
+      --panel:        #ffffff;
       --line:         #e2e8f0;
       --line-strong:  #cbd5e1;
-      --panel:        #ffffff;
-      --shadow:       0 1px 0 rgba(15, 23, 42, .04), 0 12px 32px rgba(15, 23, 42, .06);
+      --text:         #0f172a;
+      --text-soft:    #1e293b;
+      --muted:        #475569;
+      --accent:       #2b6cb0;
+      --accent-deep:  #1e3a8a;
+      --accent-2:     #2563eb;
+      --accent-soft:  rgba(43, 108, 176, 0.10);
+      --success:      #16a34a;
+      --green:        #16a34a;
+      --green-soft:   rgba(22, 163, 74, 0.10);
+      --shadow:       0 20px 50px rgba(15, 23, 42, 0.08);
+      --shadow-sm:    0 1px 0 rgba(15, 23, 42, .04), 0 6px 16px rgba(15, 23, 42, .04);
       --radius:       18px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; }
     body {
-      font-family: "Inter", -apple-system, system-ui, sans-serif;
+      font-family: "Manrope", system-ui, -apple-system, sans-serif;
       font-feature-settings: "tnum";
-      background:
-        radial-gradient(900px 700px at 12% -10%, rgba(56, 189, 248, 0.12), transparent 70%),
-        radial-gradient(800px 600px at 110% 110%, rgba(37, 99, 235, 0.10), transparent 70%),
-        #f6f8fc;
+      background: var(--bg);
       color: var(--text);
       min-height: 100vh;
       display: flex; align-items: center; justify-content: center;
       padding: 24px;
       -webkit-font-smoothing: antialiased;
-      letter-spacing: -0.01em;
+      line-height: 1.6;
       overflow-x: hidden;
     }
-    body::before {
-      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-      background-image: radial-gradient(rgba(15,23,42,.05) 1px, transparent 1px);
-      background-size: 22px 22px;
-      mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%);
-      -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%);
+    .display-font {
+      font-family: "Space Grotesk", "Manrope", system-ui, sans-serif;
     }
 
     /* Top progress bar */
     .top-bar {
       position: fixed; left: 0; top: 0; height: 3px; width: 0%;
       background: linear-gradient(90deg, var(--accent), var(--accent-2));
-      box-shadow: 0 0 12px rgba(56,189,248,.7);
+      box-shadow: 0 0 12px rgba(43, 108, 176, 0.6);
       z-index: 9999; opacity: 0;
       transition: width .45s cubic-bezier(.22,1,.36,1), opacity .25s;
     }
@@ -74,6 +73,9 @@
       box-shadow: var(--shadow);
       border: 1px solid var(--line);
       transition: opacity 380ms cubic-bezier(.22,1,.36,1), transform 380ms cubic-bezier(.22,1,.36,1);
+    }
+    h1, h2 {
+      font-family: "Space Grotesk", "Manrope", system-ui, sans-serif;
     }
     .card.is-leaving { opacity: 0; transform: translateY(-14px) scale(.98); pointer-events: none; }
     .card.is-entering { animation: enter 520ms cubic-bezier(.22, 1, .36, 1) both; }
@@ -188,7 +190,7 @@
       background: var(--accent);
       border-color: var(--accent);
       color: #fff;
-      box-shadow: 0 6px 18px -3px rgba(37, 99, 235, 0.35);
+      box-shadow: 0 6px 18px -3px rgba(43, 108, 176, 0.35);
     }
     .chip.is-selected .emoji { transform: scale(1.15); }
 
@@ -199,7 +201,7 @@
       background: var(--accent);
       color: #fff; font-weight: 700; font-size: 16px; cursor: pointer;
       width: 100%; margin-top: 18px;
-      box-shadow: 0 8px 22px -4px rgba(37, 99, 235, 0.4),
+      box-shadow: 0 8px 22px -4px rgba(43, 108, 176, 0.4),
                   0 1px 0 rgba(255,255,255,0.3) inset;
       transition: transform .35s cubic-bezier(.22,1,.36,1),
                   box-shadow .25s ease, background .2s;
@@ -215,7 +217,7 @@
     }
     .btn:hover {
       background: var(--accent-deep);
-      box-shadow: 0 12px 28px -4px rgba(37, 99, 235, 0.5),
+      box-shadow: 0 12px 28px -4px rgba(43, 108, 176, 0.5),
                   0 1px 0 rgba(255,255,255,0.3) inset;
     }
     .btn:hover::after { transform: translateX(130%); }
@@ -302,7 +304,7 @@
     .is-active .stage-icon svg.ring  { display: block; animation: ringspin 1.4s linear infinite; }
     .is-done   .stage-icon svg.check { display: block; }
     @keyframes ringspin { to { transform: rotate(360deg); } }
-    .ring circle.bg   { fill: none; stroke: rgba(37,99,235,.18); stroke-width: 2.5; }
+    .ring circle.bg   { fill: none; stroke: rgba(43,108,176,.18); stroke-width: 2.5; }
     .ring circle.head { fill: none; stroke: var(--accent); stroke-width: 2.5;
                         stroke-linecap: round; stroke-dasharray: 70; stroke-dashoffset: 50; }
     .check path {
@@ -342,7 +344,7 @@
     .magic-note {
       margin-top: 24px; padding: 18px 20px;
       background: var(--accent-soft);
-      border: 1px solid rgba(37,99,235,.18);
+      border: 1px solid rgba(43,108,176,.18);
       border-radius: 12px;
       font-size: 14px; color: var(--text-soft); line-height: 1.5;
       display: flex; align-items: center; gap: 14px;
@@ -374,7 +376,7 @@
     .phone-card:hover {
       background: linear-gradient(180deg, #fff, var(--accent-soft));
       transform: translateY(-2px);
-      box-shadow: 0 12px 32px -8px rgba(37,99,235,.25);
+      box-shadow: 0 12px 32px -8px rgba(43,108,176,.25);
     }
     .phone-card .e { font-size: 36px; }
     .phone-card .number {
