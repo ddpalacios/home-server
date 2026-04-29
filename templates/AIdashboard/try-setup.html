@@ -4,287 +4,440 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Set up your trial — JustGotALead</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,700;1,9..144,400&family=Geist+Mono:wght@400;500&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --accent: #2563eb;
-      --accent-2: #38bdf8;
-      --text: #111827;
-      --muted: #6b7280;
-      --border: #e5e7eb;
-      --panel: #ffffff;
-      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      --bg:           #FAF7F0;
+      --bg-veil:      #F4EFE3;
+      --card:         #FFFFFF;
+      --ink:          #1A1916;
+      --ink-soft:     #2A2825;
+      --ink-muted:    #736B5E;
+      --ink-faint:    #B8B0A2;
+      --line:         #E8E2D5;
+      --line-soft:    #F1ECDF;
+      --accent:       #1F5C2E;
+      --accent-deep:  #163E1F;
+      --accent-soft:  rgba(31, 92, 46, 0.08);
+      --shadow:       0 1px 0 rgba(20, 18, 12, .04), 0 12px 32px rgba(20, 18, 12, .06);
+      --serif:        "Fraunces", ui-serif, Georgia, serif;
+      --sans:         "Geist", ui-sans-serif, system-ui, sans-serif;
+      --mono:         "Geist Mono", ui-monospace, Menlo, monospace;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
     body {
-      font-family: "Inter", "Segoe UI", Arial, sans-serif;
-      background: linear-gradient(180deg, #f9fbff 0%, #f2f5fb 100%);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
+      font-family: var(--sans); background: var(--bg); color: var(--ink);
+      -webkit-font-smoothing: antialiased; letter-spacing: -0.01em;
+      min-height: 100vh; padding: 28px 32px 80px;
+      display: flex; align-items: flex-start; justify-content: center;
+      overflow-x: hidden;
     }
-    .card {
-      background: var(--panel);
-      border-radius: 20px;
-      padding: 32px;
+    body::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.10 0 0 0 0 0.09 0 0 0 0 0.07 0 0 0 0.06 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+      opacity: 0.55; mix-blend-mode: multiply;
+    }
+
+    .stage { width: min(560px, 100%); position: relative; z-index: 1; padding-top: 32px; }
+
+    .header-row {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 32px;
+    }
+    .brand {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: var(--serif); font-weight: 700; font-size: 16px;
+      font-variation-settings: "opsz" 14;
+      color: var(--ink); text-decoration: none;
+    }
+    .brand .glyph { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 0 3px var(--accent-soft); }
+
+    /* ───── Step indicator ───── */
+    .stepline {
+      display: flex; gap: 10px; align-items: center;
+      font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--ink-muted);
+    }
+    .stepline .dot {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--line);
+      transition: background .25s ease;
+    }
+    .stepline .dot.is-active { background: var(--accent); }
+    .stepline .dot.is-done   { background: var(--accent); opacity: .55; }
+
+    .panel {
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: 4px; padding: 36px 36px 28px;
       box-shadow: var(--shadow);
-      width: min(560px, 100%);
-      border: 1px solid var(--border);
     }
-    .stepper { display: flex; gap: 6px; margin-bottom: 16px; }
-    .dot { flex: 1; height: 4px; border-radius: 2px; background: var(--border); }
-    .dot.active { background: var(--accent); }
-    .dot.done { background: #047857; }
-    .label-step { font-size: 12px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
-    h1 { font-size: 22px; margin-bottom: 8px; }
-    p.lede { color: var(--muted); margin-bottom: 24px; font-size: 14px; }
-    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; margin-top: 14px; }
-    input[type="text"], input[type="email"], input[type="url"], select, textarea {
-      width: 100%;
-      padding: 11px 14px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      font-size: 15px;
-      font-family: inherit;
+    @media (max-width: 640px) { .panel { padding: 28px 24px 22px; } }
+
+    .panel-eyebrow {
+      font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--ink-muted);
+      margin-bottom: 18px;
+      display: flex; justify-content: space-between;
     }
-    input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent-2); }
-    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    h1 {
+      font-family: var(--serif);
+      font-size: 36px; line-height: 1.05; font-weight: 400;
+      font-variation-settings: "opsz" 60;
+      letter-spacing: -0.03em; color: var(--ink);
+      margin-bottom: 8px;
+    }
+    h1 em { font-style: italic; color: var(--accent); }
+    .lede {
+      font-family: var(--serif); font-size: 16px;
+      font-variation-settings: "opsz" 30;
+      color: var(--ink-muted); line-height: 1.45;
+      margin-bottom: 28px; max-width: 460px;
+    }
+
+    .field { margin-bottom: 18px; }
+    .field label {
+      display: block; font-family: var(--serif); font-size: 15px;
+      font-weight: 500; color: var(--ink); margin-bottom: 6px;
+      font-variation-settings: "opsz" 24;
+    }
+    select, input[type="text"], input[type="email"], input[type="url"] {
+      width: 100%; padding: 11px 0;
+      border: none; border-bottom: 1px solid var(--line);
+      background: transparent; color: var(--ink);
+      font-family: var(--sans); font-size: 15px;
+      transition: border-color .2s;
+    }
+    input:focus, select:focus { outline: none; border-bottom-color: var(--accent); }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    .pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
     .pill {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 8px 14px; border-radius: 999px;
-      border: 1px solid var(--border); background: #fff;
-      cursor: pointer; font-size: 13px; font-weight: 600;
+      padding: 7px 13px; border-radius: 999px;
+      border: 1px solid var(--line); background: transparent;
+      font-family: var(--sans); font-size: 13px; font-weight: 500;
+      color: var(--ink-soft); cursor: pointer;
+      transition: all .15s;
     }
-    .pill input { margin: 0; }
-    .pill.is-selected { border-color: var(--accent); background: rgba(37,99,235,0.08); }
-    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-    .actions { display: flex; gap: 10px; justify-content: space-between; margin-top: 24px; }
+    .pill:hover { border-color: var(--ink-faint); color: var(--ink); }
+    .pill.is-selected { background: var(--ink); color: var(--bg-veil); border-color: var(--ink); }
+
+    .err { color: #B23A2A; font-family: var(--mono); font-size: 12px; min-height: 16px; margin-top: 8px; letter-spacing: 0.01em; }
+
+    .actions { display: flex; gap: 10px; justify-content: space-between; margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--line); }
     .btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      padding: 11px 18px; border-radius: 10px; border: none;
-      background: var(--accent); color: #fff; font-weight: 600;
-      cursor: pointer; font-size: 14px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 14px 22px; border: none; border-radius: 2px;
+      background: var(--ink); color: var(--bg);
+      font-family: var(--sans); font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: background .2s, transform .15s;
     }
-    .btn:hover { background: #1d4ed8; }
-    .btn:disabled { background: #94a3b8; cursor: not-allowed; }
-    .btn.secondary { background: #fff; color: var(--text); border: 1px solid var(--border); }
-    .btn.secondary:hover { background: #f8fafc; }
-    .err { color: #b91c1c; font-size: 13px; margin-top: 10px; min-height: 18px; }
+    .btn:hover { background: var(--accent-deep); }
+    .btn:active { transform: scale(.998); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn .arrow { font-family: var(--serif); font-style: italic; transition: transform .25s; }
+    .btn:hover .arrow { transform: translateX(4px); }
+    .btn.secondary {
+      background: transparent; color: var(--ink); border: 1px solid var(--line);
+    }
+    .btn.secondary:hover { background: var(--bg-veil); }
+
+    /* ───── Calendar step pieces ───── */
+    .cta-row {
+      display: grid; gap: 10px; margin-top: 8px;
+    }
+    .cta-cal {
+      display: flex; align-items: center; gap: 14px;
+      padding: 16px; border: 1px solid var(--line); border-radius: 4px;
+      background: var(--bg-veil); text-decoration: none; color: var(--ink);
+      transition: border-color .2s, background .2s;
+      font-family: var(--sans); font-size: 14px; font-weight: 500;
+    }
+    .cta-cal:hover { border-color: var(--accent); background: #EFE9DA; }
+    .cta-cal.is-disabled { opacity: 0.5; pointer-events: none; }
+    .cta-cal .glyph {
+      width: 28px; height: 28px; border-radius: 4px;
+      background: #fff; border: 1px solid var(--line);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-family: var(--serif); font-style: italic; font-size: 14px; color: var(--ink-soft);
+    }
+    .cta-cal .arrow { margin-left: auto; font-family: var(--serif); font-style: italic; color: var(--ink-muted); }
+    .cta-cal .tag {
+      margin-left: auto; font-family: var(--mono); font-size: 10px;
+      text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint);
+    }
+
+    .skip-link {
+      text-align: right; margin-top: 8px;
+      font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .skip-link a { color: var(--ink-muted); text-decoration: none; border-bottom: 1px solid var(--line); padding-bottom: 2px; }
+    .skip-link a:hover { color: var(--ink); border-color: var(--ink-faint); }
+
+    .connected-line {
+      font-family: var(--serif); font-size: 16px; font-weight: 500;
+      font-variation-settings: "opsz" 24;
+      color: var(--accent); margin: 10px 0 4px;
+      display: inline-flex; align-items: baseline; gap: 6px;
+    }
+    .connected-line::before { content: "✓"; }
+
+    /* Email + CRM radios */
+    .lead-radio {
+      display: block; padding: 14px 16px;
+      border: 1px solid var(--line); border-radius: 4px;
+      margin-top: 8px; cursor: pointer;
+      font-family: var(--serif); font-size: 15px;
+      font-variation-settings: "opsz" 24;
+      transition: border-color .15s, background .15s;
+    }
+    .lead-radio:hover { border-color: var(--ink-faint); }
+    .lead-radio.is-active { border-color: var(--accent); background: var(--accent-soft); }
+    .lead-radio input { margin-right: 10px; accent-color: var(--accent); }
+    .lead-radio .sub {
+      display: block; margin-top: 4px;
+      font-family: var(--sans); font-size: 12px;
+      color: var(--ink-muted); letter-spacing: 0;
+    }
+
     pre.code {
-      background: #f8fafc; border: 1px solid var(--border);
-      border-radius: 10px; padding: 12px; font-size: 13px;
+      background: var(--bg-veil); border: 1px solid var(--line);
+      border-radius: 2px; padding: 12px 14px;
+      font-family: var(--mono); font-size: 12px; color: var(--ink-soft);
       overflow-x: auto; white-space: pre-wrap; word-break: break-word;
     }
-    .cal-cta {
-      width: 100%; justify-content: flex-start; padding: 14px 16px;
-      margin-top: 10px; font-size: 15px; gap: 12px;
-    }
-    .cal-cta .glyph {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 26px; height: 26px; border-radius: 6px; background: #fff;
-      color: #1f2937; font-weight: 700; border: 1px solid var(--border);
-    }
-    .cal-cta .arrow { margin-left: auto; opacity: 0.7; }
-    .skip-link { text-align: right; margin-top: 8px; font-size: 13px; }
-    .skip-link a { color: var(--muted); }
-    .connected-line { color: #047857; font-weight: 600; margin: 14px 0 4px; }
-    .lead-radio {
-      display: block; padding: 12px 14px; border: 1px solid var(--border);
-      border-radius: 10px; margin-top: 10px; cursor: pointer; font-size: 14px;
-    }
-    .lead-radio:hover { background: #fafbfd; }
-    .lead-radio.is-active { border-color: var(--accent); background: rgba(37,99,235,0.06); }
-    .lead-radio input { margin-right: 8px; }
-    .lead-radio .sub { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; }
+
+    /* ───── Summary card ───── */
     .summary-block {
-      background: #fafbfd; border: 1px solid var(--border);
-      border-radius: 12px; padding: 14px 16px; margin: 12px 0;
-      font-size: 14px; line-height: 1.7;
+      background: var(--bg-veil);
+      border-left: 2px solid var(--accent);
+      padding: 18px 20px; margin: 10px 0 24px;
+      font-family: var(--serif); font-size: 15px;
+      font-variation-settings: "opsz" 24;
+      line-height: 1.7;
     }
-    .summary-block h3 { font-size: 13px; color: var(--muted); margin-bottom: 6px;
-                        text-transform: uppercase; letter-spacing: 0.05em; }
-    .summary-step { margin-top: 14px; }
-    .summary-step h4 { font-size: 14px; margin-bottom: 4px; }
+    .summary-block h3 {
+      font-family: var(--mono); font-size: 11px;
+      text-transform: uppercase; letter-spacing: 0.12em;
+      color: var(--ink-muted); margin-bottom: 8px;
+    }
+    .summary-block strong { color: var(--ink); font-weight: 600; }
+    .summary-step { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+    .summary-step h4 {
+      font-family: var(--serif); font-size: 17px; font-weight: 500;
+      font-variation-settings: "opsz" 24; color: var(--ink);
+      margin-bottom: 6px; letter-spacing: -0.01em;
+    }
+    .summary-step .sub {
+      font-family: var(--sans); font-size: 13px; color: var(--ink-muted);
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
-  <main class="card" id="cardWizard">
-    <div class="stepper" id="stepper">
-      <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+  <div class="stage">
+
+    <div class="header-row">
+      <a class="brand" href="/"><span class="glyph"></span> JustGotALead</a>
+      <div class="stepline" id="stepline">
+        <span class="dot is-active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span id="stepLabel">Step 1 of 3 · Calendar</span>
+      </div>
     </div>
-    <div class="label-step" id="stepLabel">Step 1 of 3 · Calendar</div>
 
-    <section id="s1">
-      <h1>Let's connect your calendar.</h1>
-      <p class="lede">The bot will only book times when you're actually free, and write the event for you. No more phone tag.</p>
+    <main class="panel" id="cardWizard">
+      <div class="panel-eyebrow"><span>Set up</span><span><span id="stepCount">01</span> / 03</span></div>
 
-      <div id="calChooser">
-        <a class="btn cal-cta" id="calConnectBtn" href="/auth/google/calendar/start">
-          <span class="glyph">G</span> Connect Google Calendar <span class="arrow">▶</span>
-        </a>
-        <button class="btn secondary cal-cta" type="button" disabled title="Coming soon">
-          <span class="glyph">⊠</span> Connect Outlook <span class="arrow" style="font-size:11px;">soon</span>
+      <!-- ─── Step 1: Calendar ─── -->
+      <section id="s1">
+        <h1>Connect your <em>calendar</em>.</h1>
+        <p class="lede">The bot will only book times you're actually free, and write the event for you. No phone tag.</p>
+
+        <div id="calChooser">
+          <div class="cta-row">
+            <a class="cta-cal" id="calConnectBtn" href="/auth/google/calendar/start">
+              <span class="glyph">G</span>
+              Connect Google Calendar
+              <span class="arrow">→</span>
+            </a>
+            <a class="cta-cal is-disabled" href="#" aria-disabled="true">
+              <span class="glyph">⊞</span>
+              Outlook
+              <span class="tag">Coming soon</span>
+            </a>
+          </div>
+          <div class="skip-link"><a href="#" id="skipCalendarLink">Skip for now →</a></div>
+        </div>
+
+        <div id="calConnected" style="display:none">
+          <div class="connected-line">Calendar connected — <span id="calEmail">your account</span></div>
+          <p style="font-size:13px; color: var(--ink-muted); margin: 8px 0 18px; font-family: var(--mono);">
+            Working hours · the bot books only inside these.
+          </p>
+
+          <div class="field">
+            <label for="tz">Time zone</label>
+            <select id="tz">
+              <option value="America/New_York">Eastern (NYC)</option>
+              <option value="America/Chicago" selected>Central (Chicago)</option>
+              <option value="America/Denver">Mountain (Denver)</option>
+              <option value="America/Los_Angeles">Pacific (LA)</option>
+              <option value="UTC">UTC</option>
+            </select>
+          </div>
+          <div class="row2">
+            <div class="field"><label for="hourFrom">Open at</label><select id="hourFrom"></select></div>
+            <div class="field"><label for="hourTo">Close at</label><select id="hourTo"></select></div>
+          </div>
+          <div class="field">
+            <label>Days open</label>
+            <div class="pill-row" id="dayPills"></div>
+          </div>
+
+          <p style="margin-top:6px;">
+            <button id="calDisconnectBtn" class="btn secondary" type="button" style="padding:8px 12px; font-size:12px;">Disconnect calendar</button>
+          </p>
+        </div>
+        <p class="err" id="e1"></p>
+      </section>
+
+      <!-- ─── Step 2: Email sender ─── -->
+      <section id="s2" style="display:none">
+        <h1>How should the bot <em>reply</em>?</h1>
+        <p class="lede">For now we send replies from a JustGotALead address. You can switch to your real domain after upgrade.</p>
+
+        <label class="lead-radio is-active">
+          <input type="radio" name="senderMode" value="demo" checked />
+          As your business AI
+          <span class="sub">from: ai@<span id="demoFromHost">your-business-demo.com</span> · works right now</span>
+        </label>
+        <label class="lead-radio">
+          <input type="radio" name="senderMode" value="real" />
+          As your real domain
+          <span class="sub">from: ai@yourbusiness.com · DNS instructions next, ~10 min</span>
+        </label>
+
+        <div class="field" style="margin-top:22px;">
+          <label for="notifyAddr">Where leads come back to you</label>
+          <input id="notifyAddr" type="email" placeholder="you@yourbusiness.com" />
+        </div>
+        <p class="err" id="e2"></p>
+      </section>
+
+      <!-- ─── Step 3: CRM ─── -->
+      <section id="s3" style="display:none">
+        <h1>Push leads <em>anywhere</em>?</h1>
+        <p class="lede">Email is already on. You can also POST every lead to a webhook (Zapier, Make, HubSpot, etc.).</p>
+
+        <label class="lead-radio is-active">
+          <input type="radio" name="leadMode" value="email" checked />
+          Just email me
+          <span class="sub">already on — leads land in your inbox</span>
+        </label>
+        <label class="lead-radio">
+          <input type="radio" name="leadMode" value="webhook" />
+          Push to my CRM
+          <span class="sub">paste a webhook URL — Zapier, Make, HubSpot, JobNimbus, ServiceTitan</span>
+        </label>
+        <label class="lead-radio">
+          <input type="radio" name="leadMode" value="both" />
+          Both
+          <span class="sub">email + webhook · recommended once your CRM is wired</span>
+        </label>
+
+        <div id="webhookPanel" style="display:none; margin-top:18px;">
+          <div class="field">
+            <label for="webhookUrl">Webhook URL</label>
+            <input id="webhookUrl" type="url" placeholder="https://hooks.zapier.com/…" />
+          </div>
+          <div style="margin-top:10px">
+            <button class="btn secondary" type="button" id="testWebhookBtn" disabled style="padding:9px 14px; font-size:12px;">Send test payload</button>
+            <span id="testWebhookResult" style="font-size:12px; margin-left:10px; font-family: var(--mono); color: var(--ink-muted);"></span>
+          </div>
+        </div>
+        <p class="err" id="e3"></p>
+      </section>
+
+      <div class="actions">
+        <button class="btn secondary" type="button" id="backBtn">← Back</button>
+        <button class="btn" type="button" id="nextBtn">
+          <span class="label">Continue</span>
+          <span class="arrow">→</span>
         </button>
-        <p class="skip-link"><a href="#" id="skipCalendarLink">skip for now →</a></p>
+      </div>
+    </main>
+
+    <!-- ─── Summary card ─── -->
+    <main class="panel" id="cardSummary" style="display:none">
+      <div class="panel-eyebrow"><span>All set</span><span>03 / 03 ✓</span></div>
+
+      <h1>You're <em>set</em><span id="summaryName"></span>.</h1>
+      <p class="lede">Here's everything that's running for you.</p>
+
+      <div class="summary-block">
+        <h3>Your AI receptionist</h3>
+        <div>📞 Phone — <strong id="sumPhone">—</strong></div>
+        <div>📅 Calendar — <strong id="sumCalendar">not connected</strong></div>
+        <div>✉ Replies as — <strong id="sumReplyAs">demo address</strong></div>
+        <div>📥 Leads to — <strong id="sumLeadsTo">your email</strong></div>
       </div>
 
-      <div id="calConnected" style="display:none">
-        <p class="connected-line">✓ Calendar connected — <span id="calEmail">your account</span></p>
-        <p style="font-size:13px; color: var(--muted); margin-top:10px;">Working hours (the bot will book only inside these):</p>
-
-        <label for="tz">Time zone</label>
-        <select id="tz">
-          <option value="America/New_York">Eastern (NYC)</option>
-          <option value="America/Chicago" selected>Central (Chicago)</option>
-          <option value="America/Denver">Mountain (Denver)</option>
-          <option value="America/Los_Angeles">Pacific (LA)</option>
-          <option value="UTC">UTC</option>
-        </select>
-        <div class="row2">
-          <div>
-            <label for="hourFrom">Open at</label>
-            <select id="hourFrom"></select>
-          </div>
-          <div>
-            <label for="hourTo">Close at</label>
-            <select id="hourTo"></select>
-          </div>
+      <div class="summary-step">
+        <h4>1. Forward your business line to <span id="sumPhone2">your trial number</span></h4>
+        <p class="sub">Tap your carrier to get the code:</p>
+        <div class="pill-row">
+          <button type="button" class="pill" data-carrier="att">AT&amp;T</button>
+          <button type="button" class="pill" data-carrier="verizon">Verizon</button>
+          <button type="button" class="pill" data-carrier="tmobile">T-Mobile</button>
+          <button type="button" class="pill" data-carrier="sprint">Sprint</button>
         </div>
-        <label>Days open</label>
-        <div class="pill-row" id="dayPills"></div>
-
-        <p style="margin-top:14px; font-size:13px;">
-          <button id="calDisconnectBtn" class="btn secondary" type="button" style="padding:6px 10px; font-size:12px;">Disconnect calendar</button>
-        </p>
+        <pre class="code" id="carrierCode" style="margin-top:10px; display:none"></pre>
       </div>
-      <p class="err" id="e1"></p>
-    </section>
 
-    <section id="s2" style="display:none">
-      <h1>How should the bot reply to customers?</h1>
-      <p class="lede">For now we send replies from a JustGotALead-branded address. You can switch to your real domain after upgrade.</p>
-
-      <label class="lead-radio is-active">
-        <input type="radio" name="senderMode" value="demo" checked />
-        As your business AI
-        <span class="sub">from: ai@<span id="demoFromHost">your-business-demo.com</span> (works right now, no setup)</span>
-      </label>
-      <label class="lead-radio">
-        <input type="radio" name="senderMode" value="real" />
-        As your real domain
-        <span class="sub">from: ai@yourbusiness.com (DNS instructions next; ~10 min)</span>
-      </label>
-
-      <label for="notifyAddr" style="margin-top:18px;">Where leads come back to you</label>
-      <input id="notifyAddr" type="email" placeholder="you@yourbusiness.com" />
-      <p class="err" id="e2"></p>
-    </section>
-
-    <section id="s3" style="display:none">
-      <h1>Push leads anywhere else?</h1>
-      <p class="lede">Pick how leads should reach you. Email is already on; you can also POST every lead to a webhook (Zapier, Make, HubSpot, etc.).</p>
-
-      <label class="lead-radio is-active">
-        <input type="radio" name="leadMode" value="email" checked />
-        Just email me
-        <span class="sub">already on — leads land in your inbox</span>
-      </label>
-      <label class="lead-radio">
-        <input type="radio" name="leadMode" value="webhook" />
-        Push to my CRM
-        <span class="sub">paste a webhook URL — works with Zapier, Make, HubSpot, JobNimbus, ServiceTitan, anything</span>
-      </label>
-      <label class="lead-radio">
-        <input type="radio" name="leadMode" value="both" />
-        Both
-        <span class="sub">email + webhook — recommended once your CRM is wired</span>
-      </label>
-
-      <div id="webhookPanel" style="display:none; margin-top:14px;">
-        <label for="webhookUrl">Webhook URL</label>
-        <input id="webhookUrl" type="url" placeholder="https://hooks.zapier.com/..." />
-        <div style="margin-top:10px">
-          <button class="btn secondary" type="button" id="testWebhookBtn" disabled>Send test payload</button>
-          <span id="testWebhookResult" style="font-size:13px; margin-left:10px;"></span>
-        </div>
+      <div class="summary-step">
+        <h4>2. Try a test call right now</h4>
+        <a class="btn" id="sumCallBtn" href="#" style="text-decoration:none;">
+          <span class="label">▶ Call <span id="sumCallPhone">—</span></span>
+        </a>
       </div>
-      <p class="err" id="e3"></p>
-    </section>
 
-    <div class="actions">
-      <button class="btn secondary" type="button" id="backBtn">Back</button>
-      <button class="btn" type="button" id="nextBtn">Continue ▶</button>
-    </div>
-  </main>
-
-  <main class="card" id="cardSummary" style="display:none">
-    <h1>✓ All set<span id="summaryName"></span>.</h1>
-
-    <div class="summary-block">
-      <h3>Your AI receptionist</h3>
-      <div>📞 <strong>Phone:</strong> <span id="sumPhone">—</span></div>
-      <div>📅 <strong>Calendar:</strong> <span id="sumCalendar">not connected</span></div>
-      <div>✉ <strong>Replies as:</strong> <span id="sumReplyAs">demo address</span></div>
-      <div>📥 <strong>Leads to:</strong> <span id="sumLeadsTo">your email</span></div>
-    </div>
-
-    <h3 style="font-size:14px; color:var(--muted); margin-top:16px; text-transform:uppercase; letter-spacing:0.05em;">What to do now</h3>
-
-    <div class="summary-step">
-      <h4>1. Forward your business line to <span id="sumPhone2">—</span></h4>
-      <p style="font-size:13px; color:var(--muted)">Tap your carrier to get the code:</p>
-      <div class="pill-row">
-        <button type="button" class="pill" data-carrier="att">AT&amp;T</button>
-        <button type="button" class="pill" data-carrier="verizon">Verizon</button>
-        <button type="button" class="pill" data-carrier="tmobile">T-Mobile</button>
-        <button type="button" class="pill" data-carrier="sprint">Sprint</button>
+      <div class="summary-step">
+        <h4>3. Open your dashboard</h4>
+        <a class="btn secondary" href="/dashboard" style="text-decoration:none;">Continue with set up →</a>
       </div>
-      <pre class="code" id="carrierCode" style="margin-top:10px; display:none"></pre>
-    </div>
 
-    <div class="summary-step">
-      <h4>2. Try a test call right now</h4>
-      <a class="btn" id="sumCallBtn" href="#" style="display:inline-flex; text-decoration:none;">▶ Call <span id="sumCallPhone">—</span></a>
-    </div>
+      <p class="lede" style="margin-top:24px; font-size:13px; color: var(--ink-muted);">
+        We just emailed all of this to <strong id="sumEmail" style="color: var(--ink);"></strong>.
+      </p>
+    </main>
 
-    <div class="summary-step">
-      <h4>3. Open your dashboard to tweak the bot</h4>
-      <a class="btn secondary" href="/dashboard">Continue with set up →</a>
-    </div>
-
-    <div class="summary-step" style="border-top:1px solid var(--border); padding-top:14px; margin-top:18px;">
-      <h4>Want to keep this number after the trial?</h4>
-      <p style="font-size:13px; color:var(--muted)">Sign up now and we'll move your bot, knowledge base, calendar, and integrations to a permanent account — no re-do.</p>
-      <button id="sumUpgradeBtn" class="btn" type="button" style="background:#047857; margin-top:6px;">Sign up to keep this setup ▶</button>
-    </div>
-
-    <p class="lede" style="margin-top:20px; font-size:13px;">We just emailed all of this to <strong id="sumEmail"></strong>.</p>
-  </main>
+  </div>
 
   <script>
     (function () {
       let step = 1;
       const total = 3;
-      const stepper = document.getElementById("stepper");
       const stepLabel = document.getElementById("stepLabel");
+      const stepCount = document.getElementById("stepCount");
       const stepLabels = ["Calendar", "Email sender", "CRM"];
+      const dots = document.querySelectorAll("#stepline .dot");
       const back = document.getElementById("backBtn");
       const next = document.getElementById("nextBtn");
       const sections = [null, document.getElementById("s1"),
-                        document.getElementById("s2"),
-                        document.getElementById("s3")];
+                        document.getElementById("s2"), document.getElementById("s3")];
       const errs = [null, document.getElementById("e1"),
-                    document.getElementById("e2"),
-                    document.getElementById("e3")];
+                    document.getElementById("e2"), document.getElementById("e3")];
 
       // Hour selects
       const hourFrom = document.getElementById("hourFrom");
       const hourTo = document.getElementById("hourTo");
       for (let h = 0; h < 24; h++) {
-        const lbl = (h === 0 ? "12 AM" :
-                     h < 12 ? `${h} AM` :
+        const lbl = (h === 0 ? "12 AM" : h < 12 ? `${h} AM` :
                      h === 12 ? "12 PM" : `${h - 12} PM`);
         const o1 = document.createElement("option"); o1.value = h; o1.textContent = lbl;
         const o2 = document.createElement("option"); o2.value = h; o2.textContent = lbl;
@@ -309,7 +462,6 @@
         dayPills.appendChild(p);
       }
 
-      // Pull trial info
       let trialPhoneDisplay = "";
       let trialEmail = "";
       let trialBusinessName = "";
@@ -325,8 +477,6 @@
             const s = await fetch("/try/status/" + encodeURIComponent(trial.phone_id))
               .then(r => r.json());
             trialPhoneDisplay = s.phone_display || "";
-            // Best-effort business name from trial info if available
-            trialBusinessName = trial.business_name || "";
           }
         } catch (e) { /* fail-open */ }
         applyCalendarUI();
@@ -336,47 +486,39 @@
         const params = new URLSearchParams(location.search);
         if (params.get("calendar") === "connected") calendarConnected = true;
         if (params.get("calendar") === "error") {
-          document.getElementById("e1").textContent =
-            "Connect failed — try again or skip for now.";
+          document.getElementById("e1").textContent = "Connect failed — try again or skip.";
         }
-        document.getElementById("calChooser").style.display =
-          calendarConnected ? "none" : "";
-        document.getElementById("calConnected").style.display =
-          calendarConnected ? "" : "none";
-        document.getElementById("calEmail").textContent =
-          trialEmail || "your account";
+        document.getElementById("calChooser").style.display = calendarConnected ? "none" : "";
+        document.getElementById("calConnected").style.display = calendarConnected ? "" : "none";
+        document.getElementById("calEmail").textContent = trialEmail || "your account";
       }
 
-      // Skip-calendar link advances to step 2 without saving working hours.
       document.getElementById("skipCalendarLink").addEventListener("click", (e) => {
-        e.preventDefault();
-        setStep(2);
+        e.preventDefault(); setStep(2);
       });
-
       document.getElementById("calDisconnectBtn").addEventListener("click", async () => {
         await fetch("/integrations/calendar/disconnect", { method: "POST" });
-        calendarConnected = false;
-        applyCalendarUI();
+        calendarConnected = false; applyCalendarUI();
       });
 
       function setStep(n) {
         step = n;
         for (let i = 0; i < total; i++) {
-          stepper.children[i].className =
-            "dot " + (step > i + 1 ? "done" : step === i + 1 ? "active" : "");
+          dots[i].classList.remove("is-active", "is-done");
+          if (i < step - 1) dots[i].classList.add("is-done");
+          else if (i === step - 1) dots[i].classList.add("is-active");
         }
         stepLabel.textContent = `Step ${step} of ${total} · ${stepLabels[step-1]}`;
+        stepCount.textContent = String(step).padStart(2, "0");
         for (let i = 1; i <= total; i++)
           sections[i].style.display = (i === step ? "" : "none");
         back.disabled = step === 1;
-        next.textContent = step === total ? "Finish setup ▶" : "Continue ▶";
+        next.querySelector(".label").textContent = step === total ? "Finish set up" : "Continue";
       }
 
       function showErr(n, msg) { if (errs[n]) errs[n].textContent = msg || ""; }
 
       async function saveStep1() {
-        // Only save working hours if calendar is connected; otherwise
-        // step 1 is a no-op (the user explicitly skipped calendar).
         if (!calendarConnected) return true;
         const tz = document.getElementById("tz").value;
         const from = parseInt(hourFrom.value, 10);
@@ -396,11 +538,7 @@
         const senderMode = document.querySelector('input[name="senderMode"]:checked').value;
         const notify = document.getElementById("notifyAddr").value.trim();
         if (!notify) { showErr(2, "Lead-destination email is required."); return false; }
-        // Demo from-address is auto-derived server-side; for real-domain
-        // mode we still send the same shape, the DNS UI is a follow-up.
-        const fromA = senderMode === "real"
-          ? `ai@user-domain.tld`  // placeholder — DNS panel sets the real one
-          : `ai@business-demo.com`;
+        const fromA = senderMode === "real" ? `ai@user-domain.tld` : `ai@business-demo.com`;
         const r = await fetch("/integrations/email-sender", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ from_address: fromA, notify_emails: [notify] }),
@@ -413,10 +551,7 @@
         const leadMode = document.querySelector('input[name="leadMode"]:checked').value;
         if (leadMode === "email") return true;
         const url = document.getElementById("webhookUrl").value.trim();
-        if (!url) {
-          showErr(3, "Webhook URL required when 'Push to my CRM' is selected.");
-          return false;
-        }
+        if (!url) { showErr(3, "Webhook URL required when 'Push to my CRM' is selected."); return false; }
         const r = await fetch("/integrations/webhook", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url: url }),
@@ -425,11 +560,13 @@
         return true;
       }
 
-      // Lead-mode radios toggle webhook panel.
+      // Lead-mode toggling
       document.querySelectorAll('input[name="leadMode"]').forEach(r => {
         r.addEventListener("change", () => {
-          document.querySelectorAll(".lead-radio").forEach(el => el.classList.remove("is-active"));
-          r.closest(".lead-radio").classList.add("is-active");
+          document.querySelectorAll(".lead-radio").forEach(el => {
+            const child = el.querySelector('input[name="leadMode"]');
+            if (child) el.classList.toggle("is-active", child.checked);
+          });
           const wantsWebhook = r.value === "webhook" || r.value === "both";
           document.getElementById("webhookPanel").style.display = wantsWebhook ? "" : "none";
         });
@@ -443,12 +580,9 @@
         });
       });
 
-      // Webhook test button
       const testBtn = document.getElementById("testWebhookBtn");
       const webhookInput = document.getElementById("webhookUrl");
-      webhookInput.addEventListener("input", () => {
-        testBtn.disabled = !webhookInput.value.trim();
-      });
+      webhookInput.addEventListener("input", () => { testBtn.disabled = !webhookInput.value.trim(); });
       testBtn.addEventListener("click", async () => {
         const out = document.getElementById("testWebhookResult");
         out.textContent = "Sending…";
@@ -465,7 +599,7 @@
         else out.textContent = `✗ failed (${body.upstream_status || "no response"})`;
       });
 
-      // Carrier-code generator (lives on summary card; same handler as before)
+      // Carrier code generator (summary card)
       document.querySelectorAll('[data-carrier]').forEach(btn => {
         btn.addEventListener("click", () => {
           const phone = (trialPhoneDisplay || "").replace(/[^\d+]/g, "");
@@ -485,14 +619,11 @@
         document.getElementById("cardWizard").style.display = "none";
         const card = document.getElementById("cardSummary");
         card.style.display = "";
-
         const phoneTxt = trialPhoneDisplay || "—";
         document.getElementById("sumPhone").textContent = phoneTxt;
         document.getElementById("sumPhone2").textContent = phoneTxt;
         document.getElementById("sumCallPhone").textContent = phoneTxt;
-        document.getElementById("sumCallBtn").href =
-          "tel:" + (trialPhoneDisplay || "").replace(/[^\d+]/g, "");
-
+        document.getElementById("sumCallBtn").href = "tel:" + (trialPhoneDisplay || "").replace(/[^\d+]/g, "");
         document.getElementById("sumCalendar").textContent =
           calendarConnected ? `Google (${trialEmail || "connected"})` : "not connected";
         const senderMode = document.querySelector('input[name="senderMode"]:checked').value;
@@ -500,11 +631,9 @@
           senderMode === "real" ? "your domain (DNS pending)" : "demo address";
         const notify = document.getElementById("notifyAddr").value.trim();
         document.getElementById("sumLeadsTo").textContent = notify || "your email";
-
         document.getElementById("sumEmail").textContent = trialEmail || "your inbox";
-        if (trialBusinessName) {
+        if (trialBusinessName)
           document.getElementById("summaryName").textContent = `, ${trialBusinessName}`;
-        }
       }
 
       async function finishWizard() {
@@ -529,38 +658,11 @@
             if (ok) { await finishWizard(); return; }
           }
           if (ok) { showErr(step, ""); setStep(step + 1); }
-        } finally {
-          next.disabled = false;
-        }
+        } finally { next.disabled = false; }
       });
 
       setStep(1);
       loadTrialInfo();
-
-      // Sign-up button on summary screen
-      const upgradeBtn = document.getElementById("sumUpgradeBtn");
-      if (upgradeBtn) {
-        upgradeBtn.addEventListener("click", async (e) => {
-          e.preventDefault();
-          upgradeBtn.disabled = true;
-          upgradeBtn.textContent = "Migrating…";
-          try {
-            const r = await fetch("/upgrade/start", { method: "POST" });
-            const body = await r.json();
-            if (r.ok && body.ok) {
-              window.location.href = body.dashboard_url || "/dashboard";
-            } else {
-              upgradeBtn.disabled = false;
-              upgradeBtn.textContent = "Sign up to keep this setup ▶";
-              alert("Upgrade failed: " + (body.error || "unknown error"));
-            }
-          } catch (err) {
-            upgradeBtn.disabled = false;
-            upgradeBtn.textContent = "Sign up to keep this setup ▶";
-            alert("Upgrade failed: network error");
-          }
-        });
-      }
     })();
   </script>
 </body>
