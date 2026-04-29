@@ -368,6 +368,33 @@
     }
     .chip.is-selected .emoji { transform: scale(1.15); }
 
+    /* ── Mode picker (industry-aware copy swaps in) ── */
+    .mode-list { display: flex; flex-direction: column; gap: 6px; }
+    .mode-row {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 14px; border-radius: 12px;
+      border: 1px solid var(--line); background: #fff;
+      cursor: pointer; transition: all .25s cubic-bezier(.22,1,.36,1);
+    }
+    .mode-row:hover { border-color: var(--line-strong); }
+    .mode-row input[type="radio"] {
+      margin: 4px 0 0 0; flex: 0 0 auto;
+      accent-color: var(--accent);
+    }
+    .mode-row.is-selected {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .mode-row-label {
+      font-size: 14px; font-weight: 700; color: var(--text);
+      letter-spacing: -0.005em;
+      transition: color .25s ease;
+    }
+    .mode-row-sub {
+      font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.4;
+      font-weight: 500;
+    }
+
     /* ── Submit button ── */
     .btn {
       display: inline-flex; align-items: center; justify-content: center;
@@ -640,6 +667,36 @@
         </div>
 
         <div class="field-row">
+          <div class="icon">🎯</div>
+          <div class="body">
+            <label>Where do you want help?</label>
+            <div class="mode-list" id="modeList">
+              <label class="mode-row is-selected" data-mode="voice">
+                <input type="radio" name="mode" value="voice" checked />
+                <div>
+                  <div class="mode-row-label" id="modeLabelVoice">Catch missed phone calls</div>
+                  <div class="mode-row-sub" id="modeSubVoice">Most popular — most calls a small business misses are after-hours.</div>
+                </div>
+              </label>
+              <label class="mode-row" data-mode="widget">
+                <input type="radio" name="mode" value="widget" />
+                <div>
+                  <div class="mode-row-label" id="modeLabelWidget">Live chat on my website</div>
+                  <div class="mode-row-sub" id="modeSubWidget">Capture visitors who'd otherwise bounce.</div>
+                </div>
+              </label>
+              <label class="mode-row" data-mode="email">
+                <input type="radio" name="mode" value="email" />
+                <div>
+                  <div class="mode-row-label" id="modeLabelEmail">Auto-respond to email inquiries</div>
+                  <div class="mode-row-sub" id="modeSubEmail">Reply within minutes, even at 2am.</div>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-row">
           <div class="icon">📨</div>
           <div class="body">
             <label for="email">Your email</label>
@@ -835,6 +892,60 @@
         }, success ? 1300 : 350);
       }
 
+      // ── Mode-copy table: per-industry labels + pain subtitles ──
+      const MODE_COPY = {
+        roofer: {
+          voice:  { label: "Catch storm-damage calls I'm missing",      sub: "23% of roofers' inbound calls go unanswered." },
+          widget: { label: "Free hail-damage chat on my website",       sub: "Capture leads while you're up on a roof." },
+          email:  { label: "Auto-respond to insurance inquiries",       sub: "Reply within minutes, even at 2am." },
+        },
+        plumber: {
+          voice:  { label: "Catch plumbing emergencies you can't get to",sub: "Most leaks call after-hours. They go to whoever picks up first." },
+          widget: { label: "Same-day plumbing chat on my website",      sub: "Triage flood vs. routine before they leave." },
+          email:  { label: "Auto-reply to service requests by email",   sub: "Confirm slot + dispatcher in the same minute." },
+        },
+        hvac: {
+          voice:  { label: "Catch no-heat / no-AC calls I'm missing",   sub: "Same-day urgency or routine — the bot triages first." },
+          widget: { label: "Same-day HVAC chat on my website",          sub: "Capture emergency vs. maintenance instantly." },
+          email:  { label: "Auto-respond to service emails",            sub: "Confirm urgency + slot before the next page even loads." },
+        },
+        cleaner: {
+          voice:  { label: "Catch booking calls I'm missing",           sub: "Most clients call between jobs — and don't leave a voicemail." },
+          widget: { label: "Quick quote chat on my website",            sub: "Sq footage + frequency answered in 30 seconds." },
+          email:  { label: "Auto-reply to quote requests",              sub: "Recurring vs. one-time, priced before they go cold." },
+        },
+        landscaper: {
+          voice:  { label: "Catch estimate calls I'm missing",          sub: "Spring rush + storm cleanup calls don't wait." },
+          widget: { label: "Free estimate chat on my website",          sub: "Lot size + service answered before you're back at the truck." },
+          email:  { label: "Auto-respond to quote emails",              sub: "Reply with a slot before the lead emails three other crews." },
+        },
+        realtor: {
+          voice:  { label: "Catch buyer / seller calls I miss",         sub: "Pre-approved buyers and listing leads go to whoever answers first." },
+          widget: { label: "Home-value chat on my website",             sub: "Qualify buyer vs. seller before they leave." },
+          email:  { label: "Auto-respond to listing inquiries",         sub: "Confirm timeframe + pre-approval status instantly." },
+        },
+        mover: {
+          voice:  { label: "Catch quote calls I'm missing",             sub: "Most movers shop 3+ companies — fastest reply usually wins." },
+          widget: { label: "Quick moving-quote chat",                   sub: "Date + size + bedrooms in 60 seconds." },
+          email:  { label: "Auto-reply to quote emails",                sub: "Lock in date + size before they reach the next quote." },
+        },
+        other: {
+          voice:  { label: "Catch the calls I'm missing",               sub: "Don't miss customers who try once and move on." },
+          widget: { label: "Live chat on my website",                   sub: "Capture visitors who'd otherwise bounce." },
+          email:  { label: "Auto-respond to email inquiries",           sub: "Reply within minutes, even at 2am." },
+        },
+      };
+
+      function applyModeCopy(industry) {
+        const copy = MODE_COPY[industry] || MODE_COPY.other;
+        document.getElementById("modeLabelVoice").textContent  = copy.voice.label;
+        document.getElementById("modeSubVoice").textContent    = copy.voice.sub;
+        document.getElementById("modeLabelWidget").textContent = copy.widget.label;
+        document.getElementById("modeSubWidget").textContent   = copy.widget.sub;
+        document.getElementById("modeLabelEmail").textContent  = copy.email.label;
+        document.getElementById("modeSubEmail").textContent    = copy.email.sub;
+      }
+
       // ── Industry chips ──
       let pickedIndustry = "";
       const chips = Array.from(document.querySelectorAll(".chip"));
@@ -843,8 +954,20 @@
           chips.forEach(c => c.classList.remove("is-selected"));
           ch.classList.add("is-selected");
           pickedIndustry = ch.dataset.value;
+          applyModeCopy(pickedIndustry);
           document.getElementById("industryHint").textContent = "✓ Got it.";
           document.getElementById("industryHint").classList.add("is-good");
+        });
+      });
+
+      // ── Mode radios — selected state + persists user choice ──
+      const modeRadios = Array.from(document.querySelectorAll('input[name="mode"]'));
+      modeRadios.forEach(r => {
+        r.addEventListener("change", () => {
+          document.querySelectorAll(".mode-row").forEach(row => {
+            const inp = row.querySelector('input[name="mode"]');
+            row.classList.toggle("is-selected", !!(inp && inp.checked));
+          });
         });
       });
 
@@ -952,7 +1075,12 @@
           const res = await fetch("/try", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ website_url: url, industry: pickedIndustry, mode: "voice", email: email }),
+            body: JSON.stringify({
+              website_url: url,
+              industry: pickedIndustry,
+              mode: (document.querySelector('input[name="mode"]:checked') || {}).value || "voice",
+              email: email,
+            }),
           });
           const body = await res.json();
           if (!res.ok) {
