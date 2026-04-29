@@ -254,6 +254,12 @@
       <a class="btn secondary" href="/dashboard">Open dashboard →</a>
     </div>
 
+    <div class="summary-step" style="border-top:1px solid var(--border); padding-top:14px; margin-top:18px;">
+      <h4>Want to keep this number after the trial?</h4>
+      <p style="font-size:13px; color:var(--muted)">Sign up now and we'll move your bot, knowledge base, calendar, and integrations to a permanent account — no re-do.</p>
+      <button id="sumUpgradeBtn" class="btn" type="button" style="background:#047857; margin-top:6px;">Sign up to keep this setup ▶</button>
+    </div>
+
     <p class="lede" style="margin-top:20px; font-size:13px;">We just emailed all of this to <strong id="sumEmail"></strong>.</p>
   </main>
 
@@ -530,6 +536,31 @@
 
       setStep(1);
       loadTrialInfo();
+
+      // Sign-up button on summary screen
+      const upgradeBtn = document.getElementById("sumUpgradeBtn");
+      if (upgradeBtn) {
+        upgradeBtn.addEventListener("click", async (e) => {
+          e.preventDefault();
+          upgradeBtn.disabled = true;
+          upgradeBtn.textContent = "Migrating…";
+          try {
+            const r = await fetch("/upgrade/start", { method: "POST" });
+            const body = await r.json();
+            if (r.ok && body.ok) {
+              window.location.href = body.dashboard_url || "/dashboard";
+            } else {
+              upgradeBtn.disabled = false;
+              upgradeBtn.textContent = "Sign up to keep this setup ▶";
+              alert("Upgrade failed: " + (body.error || "unknown error"));
+            }
+          } catch (err) {
+            upgradeBtn.disabled = false;
+            upgradeBtn.textContent = "Sign up to keep this setup ▶";
+            alert("Upgrade failed: network error");
+          }
+        });
+      }
     })();
   </script>
 </body>
