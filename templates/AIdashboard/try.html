@@ -436,39 +436,55 @@
 
     .err { color: #b91c1c; font-size: 14px; margin-top: 14px; min-height: 18px; font-weight: 500; }
 
-    /* ── "Every trial includes" — channel value cards ── */
+    /* ── "What you get" — channel value cards ── */
     .included {
-      margin-top: 18px;
-      padding: 14px 16px;
-      background: linear-gradient(135deg,
-                    rgba(43, 108, 176, 0.04),
-                    rgba(56, 189, 248, 0.04));
-      border: 1px solid rgba(43, 108, 176, 0.14);
-      border-radius: 12px;
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
     }
     .included-title {
-      font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
-      text-transform: uppercase; color: var(--muted);
-      margin-bottom: 10px;
+      font-size: 14px; font-weight: 700; color: var(--text);
+      margin-bottom: 14px; letter-spacing: -0.01em;
+      text-align: center;
     }
+    .included-title em { color: var(--success, #16a34a); font-style: normal; }
     .included-row {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
     }
     @media (max-width: 540px) {
-      .included-row { grid-template-columns: 1fr; }
+      .included-row { grid-template-columns: 1fr; gap: 10px; }
     }
     .included-item {
-      display: grid; grid-template-columns: 24px 1fr;
-      gap: 10px; align-items: start;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 8px; padding: 16px 10px;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      text-align: center;
+      transition: transform .25s cubic-bezier(.22,1,.36,1),
+                  border-color .25s ease, background .25s ease;
     }
-    .included-item .e { font-size: 18px; line-height: 1; padding-top: 1px; }
+    .included-item:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+      background: #fff;
+    }
+    .included-item .e {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--accent-soft);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 22px; line-height: 1;
+      transition: transform .35s cubic-bezier(.22,1,.36,1);
+    }
+    .included-item:hover .e { transform: scale(1.08) rotate(-4deg); }
     .included-item .t {
-      display: block; font-size: 13px; font-weight: 700; color: var(--text);
-      letter-spacing: -0.005em;
+      display: block; font-size: 14px; font-weight: 700;
+      color: var(--text); letter-spacing: -0.005em;
+      line-height: 1.25;
     }
     .included-item .s {
-      display: block; font-size: 11.5px; color: var(--muted);
-      font-weight: 500; line-height: 1.4; margin-top: 1px;
+      display: block; font-size: 12px; color: var(--muted);
+      font-weight: 500; line-height: 1.4;
     }
 
     /* ── Trust strip ── */
@@ -724,22 +740,22 @@
         <p class="err" id="formError"></p>
 
         <div class="included">
-          <div class="included-title">Every trial includes</div>
+          <div class="included-title">We do these 3 things — <em>free</em>.</div>
           <div class="included-row">
             <div class="included-item">
               <span class="e">📞</span>
-              <span class="t">Voice line</span>
-              <span class="s">Real number, 24/7 pickup.</span>
+              <span class="t">Answer your phone</span>
+              <span class="s">Day or night.</span>
             </div>
             <div class="included-item">
               <span class="e">💬</span>
-              <span class="t">Web chat</span>
-              <span class="s">One-line snippet for your site.</span>
+              <span class="t">Chat on your site</span>
+              <span class="s">Talks to your visitors.</span>
             </div>
             <div class="included-item">
               <span class="e">📨</span>
-              <span class="t">Lead alerts</span>
-              <span class="s">Every booking lands in your inbox.</span>
+              <span class="t">Email you the lead</span>
+              <span class="s">As soon as it comes in.</span>
             </div>
           </div>
         </div>
