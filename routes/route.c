@@ -419,7 +419,11 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && (strcmp(route, "/try") == 0 || strncmp(route, "/try/", 5) == 0)) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
-    } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/try") == 0) {
+    } else if (strcmp(request_type, "POST") == 0 && (strcmp(route, "/try") == 0 || strncmp(route, "/try/", 5) == 0)) {
+        post_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/integrations/", 14) == 0) {
+        get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/integrations/", 14) == 0) {
         post_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/admin/") != NULL) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
