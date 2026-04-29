@@ -129,16 +129,55 @@
       padding: 32px 24px 56px;
     }
 
-    /* Top progress bar */
-    .top-bar {
-      position: fixed; left: 0; top: 0; height: 3px; width: 0%;
-      background: linear-gradient(90deg, var(--accent), var(--accent-2));
-      box-shadow: 0 0 12px rgba(43, 108, 176, 0.6);
-      z-index: 9999; opacity: 0;
-      transition: width .45s cubic-bezier(.22,1,.36,1), opacity .25s;
+    /* Inline progress (lives above the CTA, fires on click) */
+    .inline-progress {
+      max-height: 0; overflow: hidden;
+      margin-top: 14px;
+      transition: max-height .35s cubic-bezier(.22,1,.36,1), opacity .25s ease;
+      opacity: 0;
     }
-    .top-bar.is-on { opacity: 1; }
-    .top-bar.is-done { opacity: 0; transition: opacity .35s ease .15s; }
+    .inline-progress.is-on { max-height: 90px; opacity: 1; }
+    .inline-progress-track {
+      height: 4px; border-radius: 999px; background: var(--surface-2);
+      overflow: hidden; position: relative;
+    }
+    .inline-progress-fill {
+      height: 100%; width: 8%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      border-radius: 999px;
+      transition: width .55s cubic-bezier(.22,1,.36,1);
+      position: relative; overflow: hidden;
+    }
+    .inline-progress-fill::after {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent);
+      transform: translateX(-100%);
+      animation: ip-shimmer 1.4s infinite;
+    }
+    @keyframes ip-shimmer { to { transform: translateX(100%); } }
+
+    .inline-progress-status {
+      display: flex; align-items: center; gap: 10px;
+      margin-top: 10px;
+      font-size: 13px; font-weight: 600; color: var(--text-soft);
+    }
+    .inline-progress-status .ip-icon {
+      width: 16px; height: 16px; flex: 0 0 16px;
+      animation: ip-spin 1s linear infinite;
+    }
+    .inline-progress-status .ip-icon circle      { fill: none; stroke: rgba(43,108,176,.18); stroke-width: 2.4; }
+    .inline-progress-status .ip-icon circle.head { fill: none; stroke: var(--accent); stroke-width: 2.4;
+                                                    stroke-linecap: round; stroke-dasharray: 32; stroke-dashoffset: 24; }
+    @keyframes ip-spin { to { transform: rotate(360deg); } }
+    /* When complete, swap spinner → check, stop animation */
+    .inline-progress.is-done .ip-icon { animation: none; }
+    .inline-progress.is-done .ip-icon circle      { display: none; }
+    .inline-progress.is-done .ip-icon circle.head { display: none; }
+    .inline-progress.is-done .ip-text { color: var(--success); }
+    .ip-text {
+      transition: opacity .25s ease;
+    }
+    .ip-text.is-fading { opacity: 0; }
 
     .stage {
       position: relative; z-index: 1;
@@ -497,8 +536,6 @@
   </style>
 </head>
 <body>
-  <div class="top-bar" id="topBar"></div>
-
   <header>
     <div class="container nav">
       <a class="logo" href="/">
@@ -554,6 +591,14 @@
             <label for="email">Your email</label>
             <input id="email" type="email" placeholder="you@yourshop.com" autocomplete="email" required />
             <div class="helper" id="emailHint">We send your link here.</div>
+          </div>
+        </div>
+
+        <div class="inline-progress" id="inlineProgress" aria-live="polite">
+          <div class="inline-progress-track"><div class="inline-progress-fill" id="inlineProgressFill"></div></div>
+          <div class="inline-progress-status">
+            <svg class="ip-icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><circle class="head" cx="8" cy="8" r="6"/></svg>
+            <span class="ip-text" id="inlineProgressText">Sending you an email…</span>
           </div>
         </div>
 
@@ -677,28 +722,53 @@
       const successPhone = document.getElementById("successPhone");
       const successCallLink = document.getElementById("successCallLink");
 
-      // ── Top bar ──
-      const topBar = document.getElementById("topBar");
-      let topBarTimer = null;
-      function topBarStart() {
-        topBar.classList.remove("is-done");
-        topBar.classList.add("is-on");
-        topBar.style.width = "10%";
-        clearInterval(topBarTimer);
+      // ── Inline progress (above the CTA) ──
+      const inlineProgress = document.getElementById("inlineProgress");
+      const inlineProgressFill = document.getElementById("inlineProgressFill");
+      const inlineProgressText = document.getElementById("inlineProgressText");
+      let ipTrickleTimer = null, ipMessageTimer = null;
+      const IP_MESSAGES = [
+        "Sending you an email…",
+        "Almost there…",
+      ];
+      function ipSetText(t) {
+        inlineProgressText.classList.add("is-fading");
+        setTimeout(() => {
+          inlineProgressText.textContent = t;
+          inlineProgressText.classList.remove("is-fading");
+        }, 200);
+      }
+      function ipStart() {
+        inlineProgress.classList.remove("is-done");
+        inlineProgress.classList.add("is-on");
+        inlineProgressText.textContent = IP_MESSAGES[0];
+        inlineProgressFill.style.width = "10%";
+
+        clearInterval(ipTrickleTimer);
         let pct = 10;
-        topBarTimer = setInterval(() => {
+        ipTrickleTimer = setInterval(() => {
           if (pct >= 82) return;
           pct += (82 - pct) * 0.1;
-          topBar.style.width = pct + "%";
-        }, 220);
+          inlineProgressFill.style.width = pct + "%";
+        }, 240);
+
+        clearTimeout(ipMessageTimer);
+        ipMessageTimer = setTimeout(() => {
+          ipSetText(IP_MESSAGES[1]);
+        }, 1600);
       }
-      function topBarFinish() {
-        clearInterval(topBarTimer);
-        topBar.style.width = "100%";
+      function ipFinish(success) {
+        clearInterval(ipTrickleTimer);
+        clearTimeout(ipMessageTimer);
+        inlineProgressFill.style.width = "100%";
+        if (success) {
+          inlineProgress.classList.add("is-done");
+          ipSetText("✓ Email sent! Check your inbox.");
+        }
         setTimeout(() => {
-          topBar.classList.add("is-done"); topBar.classList.remove("is-on");
-          setTimeout(() => { topBar.style.width = "0%"; }, 400);
-        }, 220);
+          inlineProgress.classList.remove("is-on", "is-done");
+          inlineProgressFill.style.width = "0%";
+        }, success ? 1100 : 350);
       }
 
       // ── Industry chips ──
@@ -812,7 +882,7 @@
         }
         urlInput.value = url;
         startBtnLoading("Starting…");
-        topBarStart();
+        ipStart();
 
         try {
           const res = await fetch("/try", {
@@ -822,28 +892,32 @@
           });
           const body = await res.json();
           if (!res.ok) {
-            topBarFinish();
+            ipFinish(false);
             err(body.error || "Something went wrong. Try again.");
             startBtnReset();
             return;
           }
-          topBarFinish();
-          fadeOut(cardForm, () => {
-            fadeIn(cardProgress);
-            progressEmail.textContent = email;
-            try {
-              const host = new URL(url).hostname.replace(/^www\./, "");
-              const root = host.split(".")[0];
-              if (root) {
-                const bn = root.charAt(0).toUpperCase() + root.slice(1);
-                document.getElementById("progressTitle").innerHTML =
-                  `Building <strong>${bn.replace(/[<>"&]/g, "")}</strong>.<br><span style="color:var(--muted)">Hang tight.</span>`;
-              }
-            } catch (e) {}
-            pollStatus(body.status_url, body.phone_display);
-          });
+          // Surface the success line — let the user read it for ~900ms,
+          // then transition to the build progress card.
+          ipFinish(true);
+          setTimeout(() => {
+            fadeOut(cardForm, () => {
+              fadeIn(cardProgress);
+              progressEmail.textContent = email;
+              try {
+                const host = new URL(url).hostname.replace(/^www\./, "");
+                const root = host.split(".")[0];
+                if (root) {
+                  const bn = root.charAt(0).toUpperCase() + root.slice(1);
+                  document.getElementById("progressTitle").innerHTML =
+                    `Building <strong>${bn.replace(/[<>"&]/g, "")}</strong>.<br><span style="color:var(--muted)">Hang tight.</span>`;
+                }
+              } catch (e) {}
+              pollStatus(body.status_url, body.phone_display);
+            });
+          }, 900);
         } catch (e) {
-          topBarFinish();
+          ipFinish(false);
           err("Network error. Try again.");
           startBtnReset();
         }
