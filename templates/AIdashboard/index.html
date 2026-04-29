@@ -3988,11 +3988,55 @@
 
       <section class="grid" id="leads" data-route-section="leads">
         <div class="card" style="grid-column: span 12;">
-          <div class="card-header">
-            <h2 class="section-title" style="margin:0;">Recent Leads</h2>
-            <button class="btn secondary embed" type="button" id="leadsExportButton">Export CSV</button>
+          <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div>
+              <h2 class="section-title" style="margin:0;">Leads</h2>
+              <p class="section-note" style="margin:4px 0 0;">Phone calls, widget submissions, and imported lists — one place.</p>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn secondary" type="button" id="leadsExportButton">Export CSV</button>
+              <button class="btn shiny" type="button" id="leadsNewCampaignBtn">📧 New email campaign</button>
+            </div>
           </div>
-          <p class="section-note">For visibility only. Full lead management stays in your CRM.</p>
+
+          <!-- Tab bar -->
+          <div class="leads-tabbar">
+            <button type="button" class="leads-tab is-active" data-leads-tab="captured">
+              <span class="leads-tab-label">Captured</span>
+              <span class="leads-tab-sub">Phone &amp; widget</span>
+            </button>
+            <button type="button" class="leads-tab" data-leads-tab="imported">
+              <span class="leads-tab-label">Imported</span>
+              <span class="leads-tab-sub">CSV uploads</span>
+            </button>
+          </div>
+
+          <!-- Imported tab content (above captured to set styles up early in the DOM) -->
+          <div class="leads-pane" data-leads-pane="imported" hidden>
+            <div class="leads-imported-header">
+              <p class="section-note" style="margin:0;">Bring in a list (Excel/Sheets export) and run a campaign on it. Emails go through your own Gmail — your customers see your address.</p>
+              <button class="btn shiny" type="button" id="leadsImportBtn">⬆ Import CSV</button>
+            </div>
+            <div class="leads-imports-list" id="leadsImportsList">
+              <div class="leads-empty"><span class="leads-empty-icon">📥</span><span>No imports yet — upload a CSV to start your first campaign.</span></div>
+            </div>
+            <div class="leads-imported-leads-wrap" id="leadsImportedLeadsWrap" hidden>
+              <h3 class="leads-imported-title"><span id="leadsImportedTitle">Imported leads</span> <button type="button" class="btn-link" id="leadsImportedBack">← Back to imports</button></h3>
+              <div class="table-wrapper">
+                <table class="table" id="leadsImportedTable">
+                  <thead><tr><th><input type="checkbox" id="leadsImportedCheckAll"></th><th>Name</th><th>Email</th><th>Phone</th><th>Service</th><th>Status</th></tr></thead>
+                  <tbody id="leadsImportedTableBody"></tbody>
+                </table>
+              </div>
+              <div class="leads-imported-actions">
+                <span class="leads-imported-count" id="leadsImportedSelected">0 selected</span>
+                <button type="button" class="btn shiny" id="leadsImportedCampaignBtn" disabled>Start campaign with selection →</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Captured tab content (existing UI) -->
+          <div class="leads-pane is-active" data-leads-pane="captured">
           <div class="leads-toolbar">
             <div class="leads-filter">
               <select id="leadsFilterColumn" aria-label="Filter column">
@@ -4040,10 +4084,254 @@
               <div class="transcript-content" id="transcriptContent"></div>
             </div>
           </div>
+          </div><!-- /.leads-pane[captured] -->
         </div>
       </section>
 
-      <div class="kb-insights-wrap">
+      <!-- ─── CSV import modal ─── -->
+      <dialog id="csvImportDialog" class="pn-wizard">
+        <div class="pn-wizard-shell">
+          <div class="pn-wizard-head">
+            <span class="pn-stepdots">
+              <span class="pn-dot is-active" data-csv-step="1"></span>
+              <span class="pn-dot" data-csv-step="2"></span>
+              <span class="pn-dot" data-csv-step="3"></span>
+            </span>
+            <button type="button" class="pn-close" id="csvImportClose">×</button>
+          </div>
+          <section class="pn-step" data-csv-step="1">
+            <h3 class="pn-step-title">Upload a CSV</h3>
+            <p class="pn-step-sub">Export from your CRM, Sheets, or Excel. First row should be headers (Name, Email, Phone, etc.).</p>
+            <label class="pn-field">
+              <span>What's this list for? (optional)</span>
+              <input id="csvPurpose" type="text" placeholder="Thursday reschedules" maxlength="200" />
+            </label>
+            <input id="csvFile" type="file" accept=".csv,text/csv" />
+            <div class="pn-actions">
+              <button type="button" class="btn secondary" id="csvCancel">Cancel</button>
+              <button type="button" class="btn shiny" id="csvNext1" disabled>Preview →</button>
+            </div>
+          </section>
+          <section class="pn-step" data-csv-step="2" hidden>
+            <h3 class="pn-step-title">Map columns</h3>
+            <p class="pn-step-sub">Match the columns we recognize. Any extras ride along as merge variables.</p>
+            <div id="csvMapper" class="csv-mapper"></div>
+            <div class="pn-actions">
+              <button type="button" class="btn secondary" id="csvBack2">← Back</button>
+              <button type="button" class="btn shiny" id="csvNext2">Import →</button>
+            </div>
+          </section>
+          <section class="pn-step" data-csv-step="3" hidden>
+            <h3 class="pn-step-title pn-success-title">✓ Import complete</h3>
+            <div id="csvSummary" class="pn-success-card"></div>
+            <div class="pn-actions">
+              <button type="button" class="btn secondary" id="csvDoneAnother">Import another</button>
+              <button type="button" class="btn shiny" id="csvStartCampaign">Start a campaign with these →</button>
+            </div>
+          </section>
+        </div>
+      </dialog>
+
+      <!-- ─── Campaign wizard modal ─── -->
+      <dialog id="campaignDialog" class="pn-wizard">
+        <div class="pn-wizard-shell">
+          <div class="pn-wizard-head">
+            <span class="pn-stepdots">
+              <span class="pn-dot is-active" data-camp-step="1"></span>
+              <span class="pn-dot" data-camp-step="2"></span>
+              <span class="pn-dot" data-camp-step="3"></span>
+              <span class="pn-dot" data-camp-step="4"></span>
+              <span class="pn-dot" data-camp-step="5"></span>
+              <span class="pn-dot" data-camp-step="6"></span>
+            </span>
+            <button type="button" class="pn-close" id="campClose">×</button>
+          </div>
+          <!-- Step 1: pick use case -->
+          <section class="pn-step" data-camp-step="1">
+            <h3 class="pn-step-title">What's this email for?</h3>
+            <p class="pn-step-sub">Pick the closest match — we'll fill in the template.</p>
+            <div class="camp-templates" id="campTemplates"></div>
+            <div class="pn-actions">
+              <button type="button" class="btn secondary" id="campCancel">Cancel</button>
+            </div>
+          </section>
+          <!-- Step 2: audience -->
+          <section class="pn-step" data-camp-step="2" hidden>
+            <h3 class="pn-step-title">Audience</h3>
+            <p class="pn-step-sub" id="campAudienceCount">Sending to <strong>0</strong> recipients.</p>
+            <label class="camp-toggle"><input type="checkbox" id="campSkipReplied"> Skip recipients who've already replied to a campaign</label>
+            <label class="camp-toggle"><input type="checkbox" id="campSkipRecent"> Skip recipients with inbound contact in the last <input type="number" id="campSkipRecentDays" value="14" min="1" max="180" style="width:60px;"> days</label>
+            <label class="camp-toggle"><input type="checkbox" id="campSkipUnsub" checked disabled> Skip already-unsubscribed addresses (always)</label>
+            <div class="pn-actions">
+              <button type="button" class="btn secondary" id="campBack2">← Back</button>
+              <button type="button" class="btn shiny" id="campNext2">Next →</button>
+            </div>
+          </section>
+          <!-- Step 3: from -->
+          <section class="pn-step" data-camp-step="3" hidden>
+            <h3 class="pn-step-title">Send from</h3>
+            <p class="pn-step-sub">Emails go through your own Gmail — recipients see your address, replies land in your inbox.</p>
+            <div id="campConnectionsList" class="camp-conn-list"></div>
+            <div class="pn-actions">
+              <button type="button" class="btn secondary" id="campBack3">← Back</button>
+              <button type="button" class="btn shiny" id="campNext3" disabled>Next →</button>
+            </div>
+          </section>
+          <!-- Step 4: compose -->
+          <section class="pn-step" data-camp-step="4" hidden>
+            <h3 class="pn-step-title">Compose</h3>
+            <p class="pn-step-sub">Use <code>{{first_name}}</code>, <code>{{appointment_time}}</code> — see "Available placeholders" on the right.</p>
+            <div class="camp-compose-grid">
+              <div class="camp-compose-form">
+                <label class="pn-field"><span>Subject</span>
+                  <input id="campSubject" type="text" maxlength="200" />
+                </label>
+                <label class="pn-field"><span>Body</span>
+                  <textarea id="campBody" rows="10" style="font-family:'JetBrains Mono', monospace; font-size:13px;"></textarea>
+                </label>
+                <div class="camp-preview-wrap">
+                  <div class="camp-preview-label">Preview (recipient <span id="campPreviewIdx">1</span> of <span id="campPreviewTotal">1</span>) <button type="button" class="btn-link" id="campPreviewNext">→ Next</button></div>
+                  <div class="camp-preview" id="campPreview"></div>
+                </div>
+              </div>
+              <div class="camp-placeholders" id="campPlaceholders"></div>
+            </div>
+            <div class="pn-actions">
+              <button type="button" class="btn secondary" id="campBack4">← Back</button>
+              <button type="button" class="btn shiny" id="campNext4">Next →</button>
+            </div>
+          </section>
+          <!-- Step 5: schedule -->
+          <section class="pn-step" data-camp-step="5" hidden>
+            <h3 class="pn-step-title">Schedule</h3>
+            <label class="camp-toggle"><input type="radio" name="campSched" value="now" id="campSchedNow" checked> Send now</label>
+            <label class="camp-toggle"><input type="radio" name="campSched" value="later" id="campSchedLater"> Schedule for <input type="datetime-local" id="campSchedAt"></label>
+            <label class="pn-field" style="margin-top:14px;">
+              <span>Send rate (per hour)</span>
+              <input id="campRate" type="range" min="5" max="200" value="30" />
+              <span class="camp-rate-label"><span id="campRateValue">30</span>/hr — pacing keeps you in good standing with Gmail.</span>
+            </label>
+            <div class="pn-actions">
+              <button type="button" class="btn secondary" id="campBack5">← Back</button>
+              <button type="button" class="btn shiny" id="campNext5">Review →</button>
+            </div>
+          </section>
+          <!-- Step 6: review + launch -->
+          <section class="pn-step" data-camp-step="6" hidden>
+            <h3 class="pn-step-title">Review</h3>
+            <div class="camp-review" id="campReview"></div>
+            <div class="pn-actions">
+              <button type="button" class="btn secondary" id="campBack6">← Back</button>
+              <button type="button" class="btn shiny" id="campLaunch">🚀 Launch campaign</button>
+            </div>
+          </section>
+        </div>
+      </dialog>
+
+      <style>
+        .leads-tabbar {
+          display: flex; gap: 6px; margin: 18px 0 0;
+          border-bottom: 1px solid #e2e8f0;
+        }
+        .leads-tab {
+          background: transparent; border: none;
+          padding: 12px 18px 10px;
+          display: flex; flex-direction: column; align-items: flex-start;
+          cursor: pointer; color: #64748b;
+          border-bottom: 2px solid transparent;
+          transition: color .15s, border-color .15s;
+        }
+        .leads-tab .leads-tab-label { font-size: 14px; font-weight: 700; letter-spacing: -0.005em; }
+        .leads-tab .leads-tab-sub { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+        .leads-tab:hover { color: #2b6cb0; }
+        .leads-tab.is-active { color: #0f172a; border-bottom-color: #2b6cb0; }
+        .leads-tab.is-active .leads-tab-sub { color: #2b6cb0; }
+        .leads-pane { padding-top: 16px; }
+        .leads-pane:not(.is-active) { display: none; }
+        .leads-imported-header {
+          display: flex; justify-content: space-between; align-items: center;
+          gap: 12px; flex-wrap: wrap; margin-bottom: 14px;
+        }
+        .leads-imports-list { display: flex; flex-direction: column; gap: 10px; }
+        .leads-empty {
+          display: flex; align-items: center; gap: 10px;
+          padding: 22px; border: 1px dashed #e2e8f0; border-radius: 12px;
+          color: #64748b; font-size: 13.5px;
+        }
+        .leads-empty-icon { font-size: 22px; }
+        .leads-import-row {
+          display: grid; grid-template-columns: 1fr auto auto; gap: 14px;
+          align-items: center;
+          padding: 14px 16px; background: #fff;
+          border: 1px solid #e2e8f0; border-radius: 12px;
+          transition: border-color .15s, box-shadow .15s;
+        }
+        .leads-import-row:hover { border-color: #cbd5e1; box-shadow: 0 4px 14px -4px rgba(15,23,42,.08); }
+        .leads-import-row .li-title { font-weight: 700; color: #0f172a; font-size: 14px; }
+        .leads-import-row .li-meta  { font-size: 12px; color: #64748b; margin-top: 2px; }
+        .leads-imported-title {
+          display: flex; align-items: center; justify-content: space-between;
+          margin: 18px 0 12px; font-size: 15px; color: #0f172a;
+        }
+        .leads-imported-actions {
+          display: flex; justify-content: space-between; align-items: center;
+          margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2e8f0;
+        }
+        .leads-imported-count { font-size: 12.5px; color: #64748b; }
+        .csv-mapper {
+          display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+          margin: 12px 0;
+        }
+        .csv-mapper label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #475569; font-weight: 600; }
+        .csv-mapper select { padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; }
+        .camp-templates {
+          display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+          margin: 14px 0;
+        }
+        .camp-template-card {
+          padding: 14px; border-radius: 12px; border: 1px solid #e2e8f0;
+          background: #fff; cursor: pointer; text-align: left;
+          transition: border-color .15s, box-shadow .15s, transform .15s;
+        }
+        .camp-template-card:hover { border-color: #2b6cb0; transform: translateY(-1px); box-shadow: 0 6px 18px -8px rgba(43,108,176,.25); }
+        .camp-template-card .ct-name { font-weight: 700; color: #0f172a; font-size: 14px; margin-bottom: 4px; }
+        .camp-template-card .ct-desc { font-size: 12.5px; color: #64748b; line-height: 1.45; }
+        .camp-toggle {
+          display: flex; align-items: center; gap: 8px;
+          padding: 10px 0; font-size: 13.5px; color: #1e293b;
+        }
+        .camp-toggle input[type="number"] { padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; }
+        .camp-conn-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+        .camp-conn { display: flex; justify-content: space-between; align-items: center;
+                     padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 10px;
+                     cursor: pointer; }
+        .camp-conn.is-selected { border-color: #2b6cb0; background: rgba(43,108,176,.04); }
+        .camp-conn-empty { padding: 16px; text-align: center; color: #64748b; font-size: 13px; }
+        .camp-compose-grid { display: grid; grid-template-columns: 1fr 240px; gap: 14px; }
+        @media (max-width: 720px) { .camp-compose-grid { grid-template-columns: 1fr; } }
+        .camp-placeholders { background: #f8fafc; border: 1px solid #e2e8f0;
+                             border-radius: 10px; padding: 12px; max-height: 380px; overflow-y: auto; }
+        .camp-ph-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+                         color: #64748b; font-weight: 700; margin-bottom: 8px; }
+        .camp-ph-btn { display: block; width: 100%; text-align: left;
+                       padding: 6px 8px; margin-bottom: 4px;
+                       background: #fff; border: 1px solid #e2e8f0; border-radius: 6px;
+                       font-family: "JetBrains Mono", monospace; font-size: 12px;
+                       color: #0f172a; cursor: pointer;
+                       transition: background .12s, border-color .12s; }
+        .camp-ph-btn:hover { background: #f1f5f9; border-color: #cbd5e1; }
+        .camp-ph-btn.is-recommended { border-color: rgba(43,108,176,.40); background: rgba(43,108,176,.04); }
+        .camp-preview-wrap { margin-top: 14px; }
+        .camp-preview-label { font-size: 11px; color: #64748b; margin-bottom: 4px; display: flex; justify-content: space-between; }
+        .camp-preview { padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0;
+                        border-radius: 8px; font-size: 13px; line-height: 1.5;
+                        white-space: pre-wrap; }
+        .camp-rate-label { font-size: 12px; color: #64748b; }
+        .camp-review { padding: 14px; background: #f8fafc; border: 1px solid #e2e8f0;
+                       border-radius: 12px; font-size: 13.5px; line-height: 1.6; }
+        .camp-review-row { display: flex; justify-content: space-between; padding: 4px 0; }
+        .camp-review-row strong { color: #0f172a; }
+      </style>
       <section class="grid" id="insights" data-route-section="insights">
         <div class="card" style="grid-column: span 12;">
           <div class="card-header">
@@ -8972,7 +9260,508 @@
       initAppChrome();
       initMockUpgradeShortcut();
       initAdminTrialsPanel();
+      initLeadsTabs();
+      initCsvImport();
+      initCampaignWizard();
     });
+
+    // ─────────────────── Leads tabs ───────────────────
+    function initLeadsTabs() {
+      const tabs = document.querySelectorAll("[data-leads-tab]");
+      const panes = document.querySelectorAll("[data-leads-pane]");
+      if (!tabs.length) return;
+      function activate(name) {
+        tabs.forEach(t => t.classList.toggle("is-active", t.dataset.leadsTab === name));
+        panes.forEach(p => {
+          const isActive = p.dataset.leadsPane === name;
+          p.classList.toggle("is-active", isActive);
+          p.hidden = !isActive;
+        });
+        if (name === "imported") loadImports();
+      }
+      tabs.forEach(t => t.addEventListener("click", () => activate(t.dataset.leadsTab)));
+    }
+
+    async function loadImports() {
+      const list = document.getElementById("leadsImportsList");
+      if (!list) return;
+      try {
+        const res = await fetch("/me/leads/imports", { credentials: "same-origin" });
+        if (!res.ok) return;
+        const body = await res.json();
+        const imports = (body.imports || []).slice().reverse();
+        if (!imports.length) {
+          list.innerHTML = `<div class="leads-empty"><span class="leads-empty-icon">📥</span><span>No imports yet — upload a CSV to start your first campaign.</span></div>`;
+          return;
+        }
+        list.innerHTML = imports.map(imp => `
+          <div class="leads-import-row" data-import-id="${imp.id}">
+            <div>
+              <div class="li-title">${escapeHtml(imp.import_purpose || imp.filename)}</div>
+              <div class="li-meta">${imp.row_count} recipients · uploaded ${new Date(imp.created_at*1000).toLocaleDateString()}</div>
+            </div>
+            <button type="button" class="btn secondary" data-import-view="${imp.id}">View leads</button>
+            <button type="button" class="btn shiny" data-import-campaign="${imp.id}">Start campaign →</button>
+          </div>
+        `).join("");
+        list.querySelectorAll("[data-import-campaign]").forEach(b =>
+          b.addEventListener("click", () => openCampaignWizard({ importId: b.dataset.importCampaign })));
+        list.querySelectorAll("[data-import-view]").forEach(b =>
+          b.addEventListener("click", () => viewImportedLeads(b.dataset.importView)));
+      } catch (e) { /* network */ }
+    }
+
+    let _importedLeadsCache = [];
+    async function viewImportedLeads(importId) {
+      try {
+        const res = await fetch(`/me/leads?source=csv_import&import_id=${encodeURIComponent(importId)}`, { credentials: "same-origin" });
+        if (!res.ok) return;
+        const body = await res.json();
+        _importedLeadsCache = body.leads || [];
+        const wrap = document.getElementById("leadsImportedLeadsWrap");
+        const tbody = document.getElementById("leadsImportedTableBody");
+        const title = document.getElementById("leadsImportedTitle");
+        if (title) title.textContent = `${_importedLeadsCache.length} imported leads`;
+        wrap.hidden = false;
+        document.getElementById("leadsImportsList").style.display = "none";
+        tbody.innerHTML = _importedLeadsCache.map(l => `
+          <tr>
+            <td><input type="checkbox" data-lead-id="${l.id}" checked></td>
+            <td>${escapeHtml((l.first_name || "") + " " + (l.last_name || ""))}</td>
+            <td>${escapeHtml(l.email || "")}</td>
+            <td>${escapeHtml(l.phone || "")}</td>
+            <td>${escapeHtml(l.service_type || "")}</td>
+            <td>${l.has_reply ? "Replied" : "—"}</td>
+          </tr>
+        `).join("");
+        const checkAll = document.getElementById("leadsImportedCheckAll");
+        const sel = document.getElementById("leadsImportedSelected");
+        const startBtn = document.getElementById("leadsImportedCampaignBtn");
+        function updateCount() {
+          const n = tbody.querySelectorAll("input[type='checkbox']:checked").length;
+          sel.textContent = `${n} selected`;
+          startBtn.disabled = n === 0;
+        }
+        checkAll.addEventListener("change", () => {
+          tbody.querySelectorAll("input[type='checkbox']").forEach(c => c.checked = checkAll.checked);
+          updateCount();
+        });
+        tbody.addEventListener("change", updateCount);
+        updateCount();
+        startBtn.onclick = () => {
+          const ids = Array.from(tbody.querySelectorAll("input[type='checkbox']:checked"))
+            .map(c => c.dataset.leadId);
+          openCampaignWizard({ importId, leadIds: ids });
+        };
+      } catch (e) {}
+    }
+
+    document.addEventListener("click", (ev) => {
+      if (ev.target && ev.target.id === "leadsImportedBack") {
+        document.getElementById("leadsImportedLeadsWrap").hidden = true;
+        document.getElementById("leadsImportsList").style.display = "";
+      }
+    });
+
+    // ─────────────────── CSV import wizard ───────────────────
+    function initCsvImport() {
+      const dlg = document.getElementById("csvImportDialog");
+      const btn = document.getElementById("leadsImportBtn");
+      if (!dlg || !btn) return;
+      let parsedRows = [];
+      let parsedHeaders = [];
+      btn.addEventListener("click", () => { setCsvStep(1); openDlg(dlg); });
+      document.getElementById("csvImportClose").addEventListener("click", () => closeDlg(dlg));
+      document.getElementById("csvCancel").addEventListener("click", () => closeDlg(dlg));
+
+      const fileInp = document.getElementById("csvFile");
+      const next1 = document.getElementById("csvNext1");
+      fileInp.addEventListener("change", () => {
+        next1.disabled = !fileInp.files || !fileInp.files[0];
+      });
+      next1.addEventListener("click", () => {
+        const f = fileInp.files[0];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const text = e.target.result;
+          const lines = text.split(/\r?\n/).filter(l => l.trim());
+          if (!lines.length) { alert("Empty file."); return; }
+          parsedHeaders = lines[0].split(",").map(s => s.trim().replace(/^"|"$/g, ""));
+          parsedRows = lines.slice(1, 4).map(l => l.split(",").map(s => s.trim().replace(/^"|"$/g, "")));
+          renderMapper();
+          setCsvStep(2);
+        };
+        reader.readAsText(f);
+      });
+
+      function renderMapper() {
+        const canon = ["first_name","last_name","email","phone","company",
+                       "appointment_date","appointment_time","service_type"];
+        const opts = ['<option value="">— skip —</option>',
+          ...parsedHeaders.map(h => `<option value="${escapeHtml(h)}">${escapeHtml(h)}</option>`)].join("");
+        const root = document.getElementById("csvMapper");
+        root.innerHTML = canon.map(k => {
+          // Auto-guess by best column-name match
+          const guess = parsedHeaders.find(h => h.toLowerCase().replace(/[^a-z]/g,"") === k.replace(/_/g,"")) || "";
+          return `<label>${escapeHtml(k)}
+            <select data-canon="${k}">${opts.replace(`value="${escapeHtml(guess)}"`,`value="${escapeHtml(guess)}" selected`)}</select>
+          </label>`;
+        }).join("");
+      }
+
+      document.getElementById("csvBack2").addEventListener("click", () => setCsvStep(1));
+      document.getElementById("csvNext2").addEventListener("click", async () => {
+        const map = {};
+        document.querySelectorAll("#csvMapper select").forEach(s => {
+          if (s.value) map[s.dataset.canon] = s.value;
+        });
+        const fd = new FormData();
+        fd.append("file", fileInp.files[0]);
+        fd.append("import_purpose", document.getElementById("csvPurpose").value || "");
+        fd.append("column_map", JSON.stringify(map));
+        fd.append("dedupe_strategy", "skip");
+        try {
+          const res = await fetch("/me/leads/import", { method: "POST", credentials: "same-origin", body: fd });
+          if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            alert(`Import failed: ${body.error || res.status}`);
+            return;
+          }
+          const body = await res.json();
+          document.getElementById("csvSummary").innerHTML = `
+            <div style="font-size:18px;font-weight:800;margin-bottom:6px;">${body.row_count} rows processed</div>
+            <div style="color:#475569;font-size:13.5px;">${body.inserted} new · ${body.updated} updated · ${body.skipped} skipped</div>`;
+          window._lastImportId = body.import_id;
+          setCsvStep(3);
+          loadImports();
+        } catch (e) { alert("Network error."); }
+      });
+
+      document.getElementById("csvDoneAnother").addEventListener("click", () => {
+        fileInp.value = ""; next1.disabled = true; setCsvStep(1);
+      });
+      document.getElementById("csvStartCampaign").addEventListener("click", () => {
+        closeDlg(dlg);
+        if (window._lastImportId) openCampaignWizard({ importId: window._lastImportId });
+      });
+    }
+
+    function setCsvStep(n) {
+      document.querySelectorAll("#csvImportDialog .pn-step").forEach(s => {
+        s.hidden = String(s.dataset.csvStep) !== String(n);
+      });
+      document.querySelectorAll("#csvImportDialog .pn-dot").forEach(d => {
+        const s = parseInt(d.dataset.csvStep, 10);
+        d.classList.toggle("is-active", s === n);
+        d.classList.toggle("is-done", s < n);
+      });
+    }
+    function openDlg(dlg) { if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open",""); }
+    function closeDlg(dlg) { if (dlg.close) dlg.close(); else dlg.removeAttribute("open"); }
+
+    // ─────────────────── Campaign wizard ───────────────────
+    let _campState = {
+      template: null,
+      audience: { skip_replied: false, skip_recent_inbound_days: 0, skip_unsubscribed: true },
+      connection: null,
+      subject: "",
+      body: "",
+      schedule: { now: true, at: null },
+      rate: 30,
+      leads: [],
+      importId: null,
+      previewIdx: 0,
+    };
+
+    function initCampaignWizard() {
+      const dlg = document.getElementById("campaignDialog");
+      if (!dlg) return;
+      document.getElementById("campClose").addEventListener("click", () => closeDlg(dlg));
+      document.getElementById("campCancel").addEventListener("click", () => closeDlg(dlg));
+      document.getElementById("campBack2").addEventListener("click", () => setCampStep(1));
+      document.getElementById("campBack3").addEventListener("click", () => setCampStep(2));
+      document.getElementById("campBack4").addEventListener("click", () => setCampStep(3));
+      document.getElementById("campBack5").addEventListener("click", () => setCampStep(4));
+      document.getElementById("campBack6").addEventListener("click", () => setCampStep(5));
+
+      document.getElementById("campNext2").addEventListener("click", () => {
+        _campState.audience.skip_replied = document.getElementById("campSkipReplied").checked;
+        _campState.audience.skip_recent_inbound_days = document.getElementById("campSkipRecent").checked
+          ? parseInt(document.getElementById("campSkipRecentDays").value, 10) || 0 : 0;
+        loadConnections();
+        setCampStep(3);
+      });
+      document.getElementById("campNext3").addEventListener("click", () => setCampStep(4));
+      document.getElementById("campNext4").addEventListener("click", () => setCampStep(5));
+      document.getElementById("campNext5").addEventListener("click", () => {
+        _campState.schedule.now = document.getElementById("campSchedNow").checked;
+        if (!_campState.schedule.now) {
+          const v = document.getElementById("campSchedAt").value;
+          _campState.schedule.at = v ? Math.floor(new Date(v).getTime() / 1000) : null;
+        }
+        _campState.rate = parseInt(document.getElementById("campRate").value, 10);
+        renderReview();
+        setCampStep(6);
+      });
+      document.getElementById("campLaunch").addEventListener("click", launchCampaign);
+
+      const rate = document.getElementById("campRate");
+      rate.addEventListener("input", () => {
+        document.getElementById("campRateValue").textContent = rate.value;
+      });
+      document.getElementById("campSubject").addEventListener("input", refreshPreview);
+      document.getElementById("campBody").addEventListener("input", refreshPreview);
+      document.getElementById("campPreviewNext").addEventListener("click", () => {
+        _campState.previewIdx = (_campState.previewIdx + 1) % Math.max(1, _campState.leads.length);
+        refreshPreview();
+      });
+
+      document.getElementById("leadsNewCampaignBtn").addEventListener("click", () => {
+        // Top-level button: open wizard requiring import selection.
+        openCampaignWizard({});
+      });
+    }
+
+    async function openCampaignWizard({ importId = null, leadIds = null } = {}) {
+      const dlg = document.getElementById("campaignDialog");
+      _campState = {
+        template: null,
+        audience: { skip_replied: false, skip_recent_inbound_days: 0, skip_unsubscribed: true },
+        connection: null,
+        subject: "", body: "",
+        schedule: { now: true, at: null },
+        rate: 30,
+        leads: [],
+        importId, previewIdx: 0,
+      };
+      // Load leads for the import (or all imported leads if no importId).
+      if (importId) {
+        try {
+          const res = await fetch(`/me/leads?source=csv_import&import_id=${encodeURIComponent(importId)}`, { credentials: "same-origin" });
+          if (res.ok) {
+            const body = await res.json();
+            const all = body.leads || [];
+            _campState.leads = leadIds ? all.filter(l => leadIds.includes(l.id)) : all;
+          }
+        } catch (e) {}
+      }
+      if (!_campState.leads.length) {
+        alert("Pick an import first — go to Leads → Imported and click Start campaign on a list.");
+        return;
+      }
+      // Render templates
+      await loadTemplates();
+      setCampStep(1);
+      openDlg(dlg);
+    }
+
+    async function loadTemplates() {
+      try {
+        const res = await fetch("/me/campaign-templates", { credentials: "same-origin" });
+        if (!res.ok) return;
+        const body = await res.json();
+        const root = document.getElementById("campTemplates");
+        root.innerHTML = (body.templates || []).map(t => `
+          <button type="button" class="camp-template-card" data-tmpl-key="${t.key}">
+            <div class="ct-name">${escapeHtml(t.name)}</div>
+            <div class="ct-desc">${escapeHtml(t.description)}</div>
+          </button>`).join("");
+        root.querySelectorAll("[data-tmpl-key]").forEach(b => {
+          b.addEventListener("click", () => pickTemplate((body.templates || []).find(x => x.key === b.dataset.tmplKey)));
+        });
+      } catch (e) {}
+    }
+
+    function pickTemplate(t) {
+      _campState.template = t;
+      _campState.subject = t.default_subject;
+      _campState.body = t.default_body;
+      _campState.rate = t.default_send_rate_per_hour || 30;
+      _campState.audience = Object.assign({ skip_unsubscribed: true }, t.default_audience_filter || {});
+      _campState.schedule = { now: !!t.send_now_default, at: null };
+      // Pre-fill audience controls
+      document.getElementById("campSkipReplied").checked = !!_campState.audience.skip_replied;
+      const recent = _campState.audience.skip_recent_inbound_days || 0;
+      document.getElementById("campSkipRecent").checked = recent > 0;
+      document.getElementById("campSkipRecentDays").value = recent || 14;
+      document.getElementById("campAudienceCount").innerHTML =
+        `Sending to <strong>${_campState.leads.length}</strong> recipients (filters re-apply at send time).`;
+      // Pre-fill compose
+      document.getElementById("campSubject").value = _campState.subject;
+      document.getElementById("campBody").value = _campState.body;
+      // Pre-fill rate
+      document.getElementById("campRate").value = _campState.rate;
+      document.getElementById("campRateValue").textContent = _campState.rate;
+      document.getElementById("campSchedNow").checked = _campState.schedule.now;
+      document.getElementById("campSchedLater").checked = !_campState.schedule.now;
+      renderPlaceholders();
+      refreshPreview();
+      setCampStep(2);
+    }
+
+    function renderPlaceholders() {
+      const root = document.getElementById("campPlaceholders");
+      // Compute keys from first lead's merge surface.
+      const sample = _campState.leads[0] || {};
+      const canonical = ["first_name","last_name","email","phone","company",
+                         "appointment_date","appointment_time","service_type"];
+      const custom = Object.keys(sample.custom_fields || {});
+      const recommended = (_campState.template && _campState.template.recommended_placeholders) || [];
+      function btn(k) {
+        const isRec = recommended.includes(k);
+        return `<button type="button" class="camp-ph-btn ${isRec ? 'is-recommended' : ''}" data-ph="${k}">{{${k}}}</button>`;
+      }
+      root.innerHTML = `
+        <div class="camp-ph-title">Recommended</div>
+        ${recommended.map(btn).join("")}
+        <div class="camp-ph-title" style="margin-top:14px;">Standard fields</div>
+        ${canonical.filter(c => !recommended.includes(c)).map(btn).join("")}
+        ${custom.length ? `<div class="camp-ph-title" style="margin-top:14px;">From your CSV</div>${custom.map(btn).join("")}` : ""}
+      `;
+      root.querySelectorAll("[data-ph]").forEach(b =>
+        b.addEventListener("click", () => insertPlaceholder(b.dataset.ph)));
+    }
+
+    function insertPlaceholder(key) {
+      const ta = document.activeElement && (document.activeElement.id === "campSubject" || document.activeElement.id === "campBody")
+        ? document.activeElement : document.getElementById("campBody");
+      const v = `{{${key}}}`;
+      const start = ta.selectionStart || 0;
+      const end = ta.selectionEnd || 0;
+      ta.value = ta.value.slice(0, start) + v + ta.value.slice(end);
+      ta.focus();
+      ta.selectionStart = ta.selectionEnd = start + v.length;
+      _campState.subject = document.getElementById("campSubject").value;
+      _campState.body = document.getElementById("campBody").value;
+      refreshPreview();
+    }
+
+    function refreshPreview() {
+      _campState.subject = document.getElementById("campSubject").value;
+      _campState.body = document.getElementById("campBody").value;
+      const total = _campState.leads.length;
+      if (!total) return;
+      _campState.previewIdx = Math.min(_campState.previewIdx, total - 1);
+      const lead = _campState.leads[_campState.previewIdx] || {};
+      const ctx = Object.assign({
+        first_name: lead.first_name, last_name: lead.last_name,
+        email: lead.email, phone: lead.phone, company: lead.company,
+        appointment_date: lead.appointment_date,
+        appointment_time: lead.appointment_time,
+        service_type: lead.service_type,
+      }, lead.custom_fields || {});
+      const re = /\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g;
+      function render(s) { return (s||"").replace(re, (_m, k) => ctx[k] || ""); }
+      document.getElementById("campPreviewIdx").textContent = _campState.previewIdx + 1;
+      document.getElementById("campPreviewTotal").textContent = total;
+      document.getElementById("campPreview").textContent =
+        `Subject: ${render(_campState.subject)}\n\n${render(_campState.body)}`;
+    }
+
+    async function loadConnections() {
+      const root = document.getElementById("campConnectionsList");
+      try {
+        const res = await fetch("/me/email-connections", { credentials: "same-origin" });
+        if (!res.ok) {
+          root.innerHTML = `<div class="camp-conn-empty">Email connections aren't enabled — set EMAIL_TOKEN_ENCRYPTION_KEY on the server.</div>`;
+          document.getElementById("campNext3").disabled = true;
+          return;
+        }
+        const body = await res.json();
+        const list = body.connections || [];
+        if (!list.length) {
+          root.innerHTML = `<div class="camp-conn-empty">
+            No Gmail connected yet.<br>
+            <a href="/auth/google/connect-email" class="btn shiny" style="display:inline-block;margin-top:10px;">Connect Gmail</a>
+          </div>`;
+          document.getElementById("campNext3").disabled = true;
+          return;
+        }
+        root.innerHTML = list.map(c => `
+          <div class="camp-conn" data-conn-id="${c.id}">
+            <div>
+              <div style="font-weight:700;color:#0f172a;">${escapeHtml(c.email_address)}</div>
+              <div style="font-size:11.5px;color:#64748b;">${c.status} · ${c.provider}</div>
+            </div>
+            <input type="radio" name="campConn" value="${c.id}">
+          </div>`).join("");
+        root.querySelectorAll(".camp-conn").forEach(el => {
+          el.addEventListener("click", () => {
+            root.querySelectorAll(".camp-conn").forEach(c => c.classList.remove("is-selected"));
+            el.classList.add("is-selected");
+            el.querySelector("input").checked = true;
+            _campState.connection = el.dataset.connId;
+            document.getElementById("campNext3").disabled = false;
+          });
+        });
+      } catch (e) {
+        root.innerHTML = `<div class="camp-conn-empty">Couldn't load connections — try again.</div>`;
+      }
+    }
+
+    function renderReview() {
+      const r = document.getElementById("campReview");
+      const conn = _campState.connection;
+      const sched = _campState.schedule.now ? "Send now" :
+        (_campState.schedule.at ? `Schedule ${new Date(_campState.schedule.at*1000).toLocaleString()}` : "—");
+      r.innerHTML = `
+        <div class="camp-review-row"><span>Recipients</span><strong>${_campState.leads.length}</strong></div>
+        <div class="camp-review-row"><span>From</span><strong id="reviewFrom">${escapeHtml(conn || "")}</strong></div>
+        <div class="camp-review-row"><span>Use case</span><strong>${escapeHtml((_campState.template||{}).name || "Custom")}</strong></div>
+        <div class="camp-review-row"><span>Skip replied</span><strong>${_campState.audience.skip_replied ? "Yes" : "No"}</strong></div>
+        <div class="camp-review-row"><span>Skip recent inbound</span><strong>${_campState.audience.skip_recent_inbound_days || 0} days</strong></div>
+        <div class="camp-review-row"><span>Schedule</span><strong>${sched}</strong></div>
+        <div class="camp-review-row"><span>Rate</span><strong>${_campState.rate}/hour</strong></div>
+      `;
+    }
+
+    async function launchCampaign() {
+      const btn = document.getElementById("campLaunch");
+      btn.disabled = true;
+      btn.textContent = "Launching…";
+      try {
+        const res = await fetch("/me/campaigns", {
+          method: "POST", credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: (_campState.template || {}).name || "Campaign",
+            template_key: (_campState.template || {}).key || "",
+            subject_template: _campState.subject,
+            body_template: _campState.body,
+            from_connection_id: _campState.connection,
+            scheduled_at: _campState.schedule.now ? null : _campState.schedule.at,
+            send_rate_per_hour: _campState.rate,
+            audience_filter: _campState.audience,
+            recipient_lead_ids: _campState.leads.map(l => l.id),
+          }),
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          alert(`Launch failed: ${body.error || res.status}`);
+          btn.disabled = false; btn.textContent = "🚀 Launch campaign";
+          return;
+        }
+        const body = await res.json();
+        alert(`Campaign launched. ${body.queued} recipients queued. ${
+          body.skipped ? Object.entries(body.skipped).filter(([_,v])=>v>0).map(([k,v])=>`${v} ${k}`).join(", ") : ""
+        }`);
+        closeDlg(document.getElementById("campaignDialog"));
+      } catch (e) {
+        alert("Network error launching campaign.");
+        btn.disabled = false; btn.textContent = "🚀 Launch campaign";
+      }
+    }
+
+    function setCampStep(n) {
+      document.querySelectorAll("#campaignDialog .pn-step").forEach(s => {
+        s.hidden = String(s.dataset.campStep) !== String(n);
+      });
+      document.querySelectorAll("#campaignDialog .pn-dot").forEach(d => {
+        const s = parseInt(d.dataset.campStep, 10);
+        d.classList.toggle("is-active", s === n);
+        d.classList.toggle("is-done", s < n);
+      });
+    }
 
     // The admin gate. Runs synchronously at the start of DOMContentLoaded
     // — every other init waits for it. On admin: body gets .app-is-admin,
