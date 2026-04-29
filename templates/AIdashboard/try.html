@@ -223,9 +223,23 @@
 
     /* ─── Pricing ─── */
     .pricing {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
     }
-    @media (max-width: 900px) { .pricing { grid-template-columns: 1fr; } }
+    @media (max-width: 1100px) { .pricing { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px)  { .pricing { grid-template-columns: 1fr; } }
+    .price-card.is-custom {
+      background: linear-gradient(180deg, #fff, rgba(15,23,42,.04));
+      border-color: var(--text-soft);
+    }
+    .price-card.is-custom .price-amount {
+      font-size: 26px;
+    }
+    .price-card.is-custom .price-cta {
+      background: var(--text);
+    }
+    .price-card.is-custom .price-cta:hover {
+      background: var(--accent-deep);
+    }
     .price-card {
       position: relative; padding: 24px 22px 22px;
       border: 1px solid var(--line); border-radius: 14px;
@@ -1269,6 +1283,18 @@
           <li>Dedicated success manager</li>
         </ul>
         <a class="price-cta" href="https://buy.stripe.com/aFa6oB4nT8qxfVQ0C90Jq02" target="_blank" rel="noopener">Choose Pro →</a>
+      </article>
+      <article class="price-card is-custom">
+        <span class="price-tier">Enterprise / Custom</span>
+        <div class="price-amount">Let's talk</div>
+        <ul class="price-bullets">
+          <li>Everything in Pro</li>
+          <li>Per-branch billing (franchises)</li>
+          <li>Custom CRM (ServiceTitan, JobNimbus, Salesforce)</li>
+          <li>BAA, MSA, security review</li>
+          <li>White-label / reseller program</li>
+        </ul>
+        <a class="price-cta" href="mailto:hello@justgotalead.com?subject=Enterprise%20inquiry" target="_blank" rel="noopener">Talk to us →</a>
       </article>
     </div>
   </section>
