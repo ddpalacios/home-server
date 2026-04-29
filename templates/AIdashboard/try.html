@@ -129,55 +129,109 @@
       padding: 32px 24px 56px;
     }
 
-    /* Inline progress (lives above the CTA, fires on click) */
+    /* ─────── Inline progress (above the CTA) ─────── */
     .inline-progress {
       max-height: 0; overflow: hidden;
-      margin-top: 14px;
-      transition: max-height .35s cubic-bezier(.22,1,.36,1), opacity .25s ease;
-      opacity: 0;
+      margin-top: 16px; opacity: 0;
+      transition: max-height .4s cubic-bezier(.22,1,.36,1),
+                  opacity .25s ease,
+                  margin-top .25s ease;
     }
-    .inline-progress.is-on { max-height: 90px; opacity: 1; }
-    .inline-progress-track {
-      height: 4px; border-radius: 999px; background: var(--surface-2);
-      overflow: hidden; position: relative;
-    }
-    .inline-progress-fill {
-      height: 100%; width: 8%;
-      background: linear-gradient(90deg, var(--accent), var(--accent-2));
-      border-radius: 999px;
-      transition: width .55s cubic-bezier(.22,1,.36,1);
+    .inline-progress.is-on { max-height: 110px; opacity: 1; }
+
+    .ip-card {
       position: relative; overflow: hidden;
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: linear-gradient(135deg,
+                    rgba(43, 108, 176, 0.06),
+                    rgba(56, 189, 248, 0.06));
+      border: 1px solid rgba(43, 108, 176, 0.18);
+      transition: background .35s ease, border-color .35s ease;
     }
-    .inline-progress-fill::after {
+    .inline-progress.is-done .ip-card {
+      background: linear-gradient(135deg,
+                    rgba(22, 163, 74, 0.08),
+                    rgba(34, 197, 94, 0.10));
+      border-color: rgba(22, 163, 74, 0.22);
+    }
+
+    /* Big animated emoji on the left */
+    .ip-emoji {
+      font-size: 28px; line-height: 1;
+      flex: 0 0 auto;
+      transform-origin: center;
+      animation: ip-wiggle 2.2s ease-in-out infinite;
+      filter: drop-shadow(0 2px 4px rgba(43,108,176,.18));
+      transition: transform .25s cubic-bezier(.22,1,.36,1);
+    }
+    @keyframes ip-wiggle {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      20%      { transform: rotate(-8deg) scale(1.05); }
+      40%      { transform: rotate( 6deg) scale(1.02); }
+      60%      { transform: rotate(-4deg) scale(1.04); }
+      80%      { transform: rotate( 8deg) scale(1.03); }
+    }
+    .inline-progress.is-done .ip-emoji {
+      animation: ip-pop .6s cubic-bezier(.22,1.6,.36,1) both;
+      filter: drop-shadow(0 2px 6px rgba(22,163,74,.30));
+    }
+    @keyframes ip-pop {
+      0%   { transform: scale(.4) rotate(-20deg); opacity: 0; }
+      60%  { transform: scale(1.18) rotate(8deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0); opacity: 1; }
+    }
+
+    /* Status text with animated dots */
+    .ip-body { flex: 1; min-width: 0; }
+    .ip-text {
+      font-weight: 700; font-size: 14.5px;
+      color: var(--text);
+      letter-spacing: -0.005em;
+      transition: opacity .25s ease, color .35s ease;
+      display: inline-flex; align-items: baseline;
+    }
+    .ip-text.is-fading { opacity: 0; }
+    .inline-progress.is-done .ip-text { color: var(--success); }
+
+    .ip-dots { display: inline-flex; margin-left: 1px; }
+    .ip-dots span {
+      display: inline-block; width: 4px; height: 4px;
+      margin: 0 1px; border-radius: 50%;
+      background: currentColor; opacity: 0.4;
+      animation: ip-bounce 1.2s infinite ease-in-out both;
+    }
+    .ip-dots span:nth-child(1) { animation-delay: 0s; }
+    .ip-dots span:nth-child(2) { animation-delay: .15s; }
+    .ip-dots span:nth-child(3) { animation-delay: .3s; }
+    @keyframes ip-bounce {
+      0%, 80%, 100% { transform: translateY(0);     opacity: 0.4; }
+      40%           { transform: translateY(-3px);  opacity: 1;   }
+    }
+    .inline-progress.is-done .ip-dots { display: none; }
+
+    /* Slim animated bar at the bottom of the pill */
+    .ip-bar {
+      position: absolute; left: 0; bottom: 0; height: 3px;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      border-radius: 0 0 14px 14px;
+      transition: width .55s cubic-bezier(.22,1,.36,1),
+                  background .35s ease;
+      overflow: hidden;
+    }
+    .ip-bar::after {
       content: ""; position: absolute; inset: 0;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.65), transparent);
       transform: translateX(-100%);
       animation: ip-shimmer 1.4s infinite;
     }
     @keyframes ip-shimmer { to { transform: translateX(100%); } }
-
-    .inline-progress-status {
-      display: flex; align-items: center; gap: 10px;
-      margin-top: 10px;
-      font-size: 13px; font-weight: 600; color: var(--text-soft);
+    .inline-progress.is-done .ip-bar {
+      background: linear-gradient(90deg, var(--success), #22c55e);
     }
-    .inline-progress-status .ip-icon {
-      width: 16px; height: 16px; flex: 0 0 16px;
-      animation: ip-spin 1s linear infinite;
-    }
-    .inline-progress-status .ip-icon circle      { fill: none; stroke: rgba(43,108,176,.18); stroke-width: 2.4; }
-    .inline-progress-status .ip-icon circle.head { fill: none; stroke: var(--accent); stroke-width: 2.4;
-                                                    stroke-linecap: round; stroke-dasharray: 32; stroke-dashoffset: 24; }
-    @keyframes ip-spin { to { transform: rotate(360deg); } }
-    /* When complete, swap spinner → check, stop animation */
-    .inline-progress.is-done .ip-icon { animation: none; }
-    .inline-progress.is-done .ip-icon circle      { display: none; }
-    .inline-progress.is-done .ip-icon circle.head { display: none; }
-    .inline-progress.is-done .ip-text { color: var(--success); }
-    .ip-text {
-      transition: opacity .25s ease;
-    }
-    .ip-text.is-fading { opacity: 0; }
+    .inline-progress.is-done .ip-bar::after { animation: none; opacity: 0; }
 
     .stage {
       position: relative; z-index: 1;
@@ -595,10 +649,12 @@
         </div>
 
         <div class="inline-progress" id="inlineProgress" aria-live="polite">
-          <div class="inline-progress-track"><div class="inline-progress-fill" id="inlineProgressFill"></div></div>
-          <div class="inline-progress-status">
-            <svg class="ip-icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><circle class="head" cx="8" cy="8" r="6"/></svg>
-            <span class="ip-text" id="inlineProgressText">Sending you an email…</span>
+          <div class="ip-card">
+            <span class="ip-emoji" id="inlineProgressEmoji">📨</span>
+            <div class="ip-body">
+              <span class="ip-text" id="inlineProgressText">Sending you an email<span class="ip-dots"><span></span><span></span><span></span></span></span>
+            </div>
+            <div class="ip-bar" id="inlineProgressFill"></div>
           </div>
         </div>
 
@@ -726,22 +782,27 @@
       const inlineProgress = document.getElementById("inlineProgress");
       const inlineProgressFill = document.getElementById("inlineProgressFill");
       const inlineProgressText = document.getElementById("inlineProgressText");
+      const inlineProgressEmoji= document.getElementById("inlineProgressEmoji");
       let ipTrickleTimer = null, ipMessageTimer = null;
-      const IP_MESSAGES = [
-        "Sending you an email…",
-        "Almost there…",
+      const IP_STAGES = [
+        { emoji: "📨", text: "Sending you an email" },
+        { emoji: "🚀", text: "Almost there" },
       ];
-      function ipSetText(t) {
+      const IP_DOTS = '<span class="ip-dots"><span></span><span></span><span></span></span>';
+
+      function ipSet(stage) {
         inlineProgressText.classList.add("is-fading");
         setTimeout(() => {
-          inlineProgressText.textContent = t;
+          inlineProgressText.innerHTML = stage.text + IP_DOTS;
+          inlineProgressEmoji.textContent = stage.emoji;
           inlineProgressText.classList.remove("is-fading");
         }, 200);
       }
       function ipStart() {
         inlineProgress.classList.remove("is-done");
         inlineProgress.classList.add("is-on");
-        inlineProgressText.textContent = IP_MESSAGES[0];
+        inlineProgressText.innerHTML = IP_STAGES[0].text + IP_DOTS;
+        inlineProgressEmoji.textContent = IP_STAGES[0].emoji;
         inlineProgressFill.style.width = "10%";
 
         clearInterval(ipTrickleTimer);
@@ -753,9 +814,7 @@
         }, 240);
 
         clearTimeout(ipMessageTimer);
-        ipMessageTimer = setTimeout(() => {
-          ipSetText(IP_MESSAGES[1]);
-        }, 1600);
+        ipMessageTimer = setTimeout(() => { ipSet(IP_STAGES[1]); }, 1600);
       }
       function ipFinish(success) {
         clearInterval(ipTrickleTimer);
@@ -763,12 +822,17 @@
         inlineProgressFill.style.width = "100%";
         if (success) {
           inlineProgress.classList.add("is-done");
-          ipSetText("✓ Email sent! Check your inbox.");
+          inlineProgressText.classList.add("is-fading");
+          setTimeout(() => {
+            inlineProgressEmoji.textContent = "🎉";
+            inlineProgressText.innerHTML = "Email sent! Check your inbox.";
+            inlineProgressText.classList.remove("is-fading");
+          }, 200);
         }
         setTimeout(() => {
           inlineProgress.classList.remove("is-on", "is-done");
           inlineProgressFill.style.width = "0%";
-        }, success ? 1100 : 350);
+        }, success ? 1300 : 350);
       }
 
       // ── Industry chips ──
