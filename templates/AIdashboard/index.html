@@ -38,6 +38,200 @@
       min-height: 100vh;
     }
 
+    /* ───────────── App shell (sidebar + topbar layout) ───────────── */
+    .app-shell {
+      display: grid;
+      grid-template-columns: 76px 1fr;
+      min-height: 100vh;
+      background: #fff;
+    }
+    .app-sidebar {
+      position: sticky; top: 0;
+      height: 100vh;
+      background: #fff;
+      border-right: 1px solid #e2e8f0;
+      display: flex; flex-direction: column;
+      align-items: center;
+      padding: 18px 0 14px;
+      z-index: 30;
+    }
+    .app-sidebar-logo {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: inline-flex; align-items: center; justify-content: center;
+      margin-bottom: 22px;
+      overflow: hidden;
+      transition: transform .2s ease;
+    }
+    .app-sidebar-logo:hover { transform: scale(1.04); }
+    .app-sidebar-logo img {
+      width: 100%; height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+    .app-sidebar-nav {
+      display: flex; flex-direction: column; gap: 4px;
+      width: 100%; align-items: center;
+    }
+    .app-sidebar-nav .nav-spacer { flex: 1; }
+    .app-sidebar-foot {
+      margin-top: auto;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      padding-top: 10px;
+    }
+    .app-nav-btn {
+      position: relative;
+      width: 44px; height: 44px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #64748b;
+      cursor: pointer;
+      transition: background .15s ease, color .15s ease, border-color .15s ease;
+    }
+    .app-nav-btn svg { width: 20px; height: 20px; stroke-width: 1.8; }
+    .app-nav-btn:hover {
+      background: rgba(43,108,176,.06);
+      color: #2b6cb0;
+    }
+    .app-nav-btn.is-active {
+      background: rgba(43,108,176,.10);
+      color: #2b6cb0;
+      border-color: rgba(43,108,176,.20);
+    }
+    .app-nav-btn .nav-tooltip {
+      position: absolute;
+      left: calc(100% + 10px);
+      top: 50%;
+      transform: translateY(-50%) translateX(-6px);
+      background: #0f172a;
+      color: #fff;
+      font-size: 12px; font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 8px;
+      white-space: nowrap;
+      opacity: 0; pointer-events: none;
+      transition: opacity .15s ease, transform .15s ease;
+      box-shadow: 0 6px 18px -6px rgba(15,23,42,.30);
+      z-index: 50;
+    }
+    .app-nav-btn .nav-tooltip::before {
+      content: "";
+      position: absolute;
+      left: -4px; top: 50%; transform: translateY(-50%) rotate(45deg);
+      width: 8px; height: 8px;
+      background: #0f172a;
+    }
+    .app-nav-btn:hover .nav-tooltip,
+    .app-nav-btn:focus-visible .nav-tooltip {
+      opacity: 1;
+      transform: translateY(-50%) translateX(0);
+    }
+    .app-nav-badge {
+      position: absolute; top: 4px; right: 4px;
+      min-width: 16px; height: 16px;
+      border-radius: 999px;
+      background: #ef4444; color: #fff;
+      font-size: 10px; font-weight: 700;
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 0 4px;
+      border: 1.5px solid #fff;
+    }
+    .app-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: #0f172a; color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+      cursor: default;
+    }
+
+    .app-main {
+      display: flex; flex-direction: column;
+      min-width: 0;
+    }
+    .app-topbar {
+      position: sticky; top: 0;
+      background: #fff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 14px 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px;
+      z-index: 25;
+      min-height: 64px;
+    }
+    .app-topbar-title {
+      font-family: "Space Grotesk", "Inter", sans-serif;
+      font-size: 20px; font-weight: 800; color: #0f172a;
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+    .app-topbar-actions {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .app-trial-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px; border-radius: 999px;
+      background: rgba(99,102,241,.10);
+      color: #4338ca;
+      font-size: 11.5px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      border: 1px solid rgba(99,102,241,.25);
+    }
+    .app-trial-pill .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: currentColor;
+      animation: app-pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes app-pulse { 50% { opacity: .45; transform: scale(.8); } }
+    .app-topbar-btn {
+      padding: 8px 14px; border-radius: 10px;
+      border: 1px solid #e2e8f0; background: #fff;
+      font-size: 13px; font-weight: 600; color: #475569;
+      cursor: pointer;
+      transition: background .15s, border-color .15s, color .15s;
+    }
+    .app-topbar-btn:hover { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
+
+    .app-body {
+      padding: 28px;
+      max-width: 1280px;
+      width: 100%;
+      box-sizing: border-box;
+      margin: 0 auto;
+    }
+    .app-body [data-route-section] { display: none; }
+    .app-body [data-route-section].is-active { display: block; }
+    /* The trialBanner sticks above whichever section is active */
+    .app-body > #trialBanner { display: block; }
+    .app-body > #trialBanner[hidden] { display: none !important; }
+
+    /* HARD GATE — admin-only UI is invisible until <body> is flagged as
+       admin. /me runs first thing on load and adds .app-is-admin only
+       when the API confirms is_admin=true. Non-admins never see these
+       elements, not even for a frame. */
+    [data-admin-only] { display: none !important; }
+    body.app-is-admin [data-admin-only] { display: revert !important; }
+    body.app-is-admin [data-admin-only].app-nav-btn { display: inline-flex !important; }
+    body.app-is-admin [data-route-section][data-admin-only] { display: none !important; }
+    body.app-is-admin [data-route-section][data-admin-only].is-active { display: block !important; }
+    /* The kb-insights wrapper holds Insights + Knowledge sections —
+       hide it when neither child is the current route. */
+    .app-body .kb-insights-wrap:not(:has([data-route-section].is-active)) {
+      display: none;
+    }
+
+    @media (max-width: 720px) {
+      .app-shell { grid-template-columns: 60px 1fr; }
+      .app-sidebar { padding: 12px 0 10px; }
+      .app-sidebar-logo { width: 34px; height: 34px; font-size: 16px; }
+      .app-nav-btn { width: 40px; height: 40px; }
+      .app-body { padding: 18px; }
+      .app-topbar { padding: 12px 18px; }
+    }
+
+    .desktop-nav, .mobile-nav, #mobile-menu { display: none !important; }
+
     .desktop-nav {
       display: flex;
       width: 100%;
@@ -2816,7 +3010,74 @@
     .voice-grid { display: none; } /* legacy */
   </style>
 
-  <div class="layout">
+  <div class="app-shell">
+    <aside class="app-sidebar" aria-label="Primary navigation">
+      <a class="app-sidebar-logo" href="/dashboard" aria-label="JustGotALead">
+        <img src="/portfolio/images/justgotalead.png" alt="JustGotALead" />
+      </a>
+      <nav class="app-sidebar-nav">
+        <button class="app-nav-btn" type="button" data-route="adminTrials" id="appAdminTrialsBtn" aria-label="Trial overview" data-admin-only>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v4H3z"/><path d="M5 7v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>
+          <span class="nav-tooltip">Trial overview (admin)</span>
+        </button>
+        <button class="app-nav-btn" type="button" data-route="phones" aria-label="Phone numbers">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.86 19.86 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.86 19.86 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7a2 2 0 0 1 1.72 2z"/></svg>
+          <span class="nav-tooltip">Phone numbers</span>
+        </button>
+        <button class="app-nav-btn" type="button" data-route="leads" aria-label="Leads">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span class="nav-tooltip">Leads</span>
+        </button>
+        <button class="app-nav-btn" type="button" data-route="voice" aria-label="Voice">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          <span class="nav-tooltip">Voice</span>
+        </button>
+        <button class="app-nav-btn" type="button" data-route="activity" aria-label="Activity">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span class="nav-tooltip">Activity</span>
+        </button>
+        <button class="app-nav-btn" type="button" data-route="insights" aria-label="Insights">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span class="nav-tooltip">Insights</span>
+        </button>
+        <button class="app-nav-btn" type="button" data-route="knowledge" aria-label="Knowledge base">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <span class="nav-tooltip">Knowledge base</span>
+        </button>
+        <button class="app-nav-btn" type="button" data-route="embed" aria-label="Embed">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span class="nav-tooltip">Embed widget</span>
+        </button>
+        <button class="app-nav-btn" type="button" data-route="settings" aria-label="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span class="nav-tooltip">Settings</span>
+        </button>
+      </nav>
+      <div class="app-sidebar-foot">
+        <button class="app-nav-btn" type="button" id="appReplayTutorial" aria-label="Replay tutorial">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><polyline points="3 4 3 10 9 10"/></svg>
+          <span class="nav-tooltip">Replay tutorial</span>
+        </button>
+        <button class="app-nav-btn" type="button" id="appLogoutBtn" aria-label="Log out">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span class="nav-tooltip">Log out</span>
+        </button>
+        <div class="app-avatar" id="appAvatar" title="Account">D</div>
+      </div>
+    </aside>
+
+    <div class="app-main">
+      <header class="app-topbar">
+        <h1 class="app-topbar-title" id="appPageTitle">Phone numbers</h1>
+        <div class="app-topbar-actions">
+          <span class="app-trial-pill" id="appTrialPill" hidden>
+            <span class="dot"></span> TRIAL
+          </span>
+          <button class="app-topbar-btn" type="button" id="appPublishBtn" disabled>Publish</button>
+        </div>
+      </header>
+
+  <div class="layout-legacy" hidden>
     <nav class="desktop-nav">
       <div class="nav-container">
         <a class="logo" href="/dashboard">
@@ -2860,16 +3121,9 @@
       <button class="btn shiny" type="button" id="publishAppButtonMobile">Publish App</button>
       <button class="btn secondary" type="button" id="logoutButtonMobile">Logout</button>
     </div>
+  </div><!-- /.layout-legacy -->
 
-    <main class="page">
-
-      <header id="overview">
-        <div class="welcome">
-          <h1 id="welcomeTitle">Welcome</h1>
-          <p data-typewriter="true" data-no-cursor="true" data-text="Your line is live. Track leads, watch the pipeline grow, and fine-tune below."></p>
-        </div>
-        <div class="badge">Lead capture · Live</div>
-      </header>
+    <main class="app-body">
 
       <!-- ─── Trial banner (visible only on trial sessions) ─── -->
       <section id="trialBanner" class="trial-banner" hidden>
@@ -2882,15 +3136,15 @@
             <div class="trial-stat">
               <span class="trial-stat-num" id="tbCallsToday">0</span>
               <span class="trial-stat-cap">/ <span id="tbCallsCap">50</span></span>
-              <span class="trial-stat-label">today</span>
+              <span class="trial-stat-label">calls made today</span>
             </div>
             <div class="trial-stat">
               <span class="trial-stat-num" id="tbLeadsTotal">0</span>
-              <span class="trial-stat-label" id="tbKpiLabel">leads</span>
+              <span class="trial-stat-label">leads contacted</span>
             </div>
             <div class="trial-stat">
               <span class="trial-stat-num" id="tbPipeline">$0</span>
-              <span class="trial-stat-label">pipeline</span>
+              <span class="trial-stat-label">pipeline value</span>
             </div>
           </div>
           <a class="trial-cta" id="tbUpgradeBtn" href="#">
@@ -2904,6 +3158,134 @@
           <span id="tbCapMsg"></span>
         </div>
       </section>
+
+      <!-- ─── Admin trial overview (admin-only landing page) ─── -->
+      <section class="grid" id="adminTrials" data-route-section="adminTrials" data-admin-only>
+        <div class="card" style="grid-column: span 12;">
+          <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap;">
+            <div>
+              <h2 class="section-title" style="margin:0;">Trial overview</h2>
+              <p class="section-note">Every active trial — phone, days remaining, calls, leads. Updates only when you refresh.</p>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span class="at-meta" id="atUpdatedAt">Not loaded yet.</span>
+              <button class="btn shiny" type="button" id="atRefreshBtn">↻ Refresh</button>
+            </div>
+          </div>
+
+          <div class="at-summary" id="atSummary" hidden>
+            <div class="at-summary-tile">
+              <span class="at-summary-num" id="atActiveCount">0</span>
+              <span class="at-summary-label">active trials</span>
+            </div>
+            <div class="at-summary-tile">
+              <span class="at-summary-num" id="atExpiredCount">0</span>
+              <span class="at-summary-label">expired (last 7d)</span>
+            </div>
+            <div class="at-summary-tile">
+              <span class="at-summary-num" id="atCallsTodayTotal">0</span>
+              <span class="at-summary-label">calls today (all)</span>
+            </div>
+            <div class="at-summary-tile">
+              <span class="at-summary-num" id="atLeadsTotal">0</span>
+              <span class="at-summary-label">leads (all)</span>
+            </div>
+          </div>
+
+          <div class="at-table-wrap">
+            <table class="at-table" id="atTable">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Number</th>
+                  <th>Day</th>
+                  <th>Days left</th>
+                  <th>Calls today</th>
+                  <th>Leads</th>
+                  <th>Status</th>
+                  <th>Industry / Mode</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="atRows">
+                <tr class="at-empty"><td colspan="9">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="at-error" id="atError" hidden></div>
+        </div>
+      </section>
+
+      <style>
+        /* ─── Admin trials table ─── */
+        .at-meta { font-size: 12px; color: #64748b; }
+        .at-summary {
+          display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+          margin: 14px 0 18px;
+        }
+        @media (max-width: 720px) { .at-summary { grid-template-columns: repeat(2, 1fr); } }
+        .at-summary-tile {
+          padding: 14px 16px;
+          background: linear-gradient(135deg, rgba(43,108,176,.06), rgba(56,189,248,.06));
+          border: 1px solid rgba(43,108,176,.18);
+          border-radius: 12px;
+          display: flex; flex-direction: column; gap: 2px;
+        }
+        .at-summary-num {
+          font-family: "Space Grotesk", "Inter", sans-serif;
+          font-size: 22px; font-weight: 800; color: #0f172a;
+          letter-spacing: -0.02em;
+        }
+        .at-summary-label { font-size: 11.5px; color: #475569;
+                            text-transform: uppercase; letter-spacing: 0.06em;
+                            font-weight: 600; }
+        .at-table-wrap { overflow-x: auto; margin-top: 8px; }
+        .at-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+        .at-table th, .at-table td {
+          text-align: left; padding: 10px 12px;
+          border-bottom: 1px solid #e2e8f0;
+        }
+        .at-table th {
+          font-size: 11px; font-weight: 700;
+          text-transform: uppercase; letter-spacing: 0.06em;
+          color: #64748b; background: #f8fafc;
+          position: sticky; top: 0;
+        }
+        .at-table tbody tr:hover td { background: #f8fafc; }
+        .at-empty td { padding: 28px 16px; text-align: center; color: #64748b; }
+        .at-num {
+          font-family: "JetBrains Mono", "Menlo", monospace;
+          font-size: 13px;
+        }
+        .at-pill {
+          display: inline-flex; align-items: center; gap: 5px;
+          padding: 3px 9px; border-radius: 999px;
+          font-size: 10.5px; font-weight: 700;
+          text-transform: uppercase; letter-spacing: 0.05em;
+          border: 1px solid transparent;
+        }
+        .at-pill .at-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+        .at-pill-live   { color: #047857; background: rgba(22,163,74,.10);  border-color: rgba(22,163,74,.22); }
+        .at-pill-build  { color: #92400e; background: rgba(245,158,11,.10); border-color: rgba(245,158,11,.30); }
+        .at-pill-fail   { color: #b91c1c; background: rgba(220,38,38,.08);  border-color: rgba(220,38,38,.25); }
+        .at-pill-expire { color: #475569; background: #f1f5f9;              border-color: #e2e8f0; }
+        .at-row-warn td { background: rgba(245,158,11,.05); }
+        .at-row-cap td  { background: rgba(220,38,38,.05); }
+        .at-revoke {
+          padding: 5px 12px; border-radius: 8px;
+          background: #fff; color: #b91c1c; border: 1px solid #fecaca;
+          font-size: 12px; font-weight: 600; cursor: pointer;
+          transition: background .15s, border-color .15s;
+        }
+        .at-revoke:hover:not(:disabled) { background: #fef2f2; border-color: #fca5a5; }
+        .at-revoke:disabled { opacity: .55; cursor: not-allowed; }
+        .at-error {
+          margin-top: 10px; padding: 10px 14px;
+          background: rgba(220,38,38,.05); border: 1px solid rgba(220,38,38,.25);
+          border-radius: 10px; color: #991b1b; font-size: 13px;
+        }
+      </style>
 
       <style>
         .trial-banner {
@@ -3015,30 +3397,34 @@
         }
       </style>
 
-      <section class="grid" id="admin" hidden>
+      <!-- ─────────── Phone numbers (top of dashboard) ─────────── -->
+      <section class="grid" id="phoneNumbers" data-route-section="phones">
         <div class="card" style="grid-column: span 12;">
-          <div class="card-header">
+          <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap;">
             <div>
-              <h2 class="section-title" id="adminSectionTitle" style="margin:0;">Admin Settings</h2>
-              <p class="section-note" id="adminSectionNote">Manage phone numbers and the SSO allowlist.</p>
+              <h2 class="section-title" style="margin:0;">Your phone numbers</h2>
+              <p class="section-note">The line your customers call. Set where missed calls forward — that's it.</p>
             </div>
+            <button class="btn shiny" type="button" id="pnAddBtn">+ Add a number</button>
           </div>
-          <nav class="admin-tabbar" data-admin-tabs>
-            <button type="button" class="admin-tab active" data-admin-tab="phones">Phones</button>
-            <button type="button" class="admin-tab" data-admin-tab="users" id="adminTabUsers">Allowed Users</button>
-          </nav>
-          <iframe
-            id="adminPanelFrame"
-            class="admin-panel-frame"
-            title="Admin Settings"
-            src="about:blank"
-            loading="lazy"
-            referrerpolicy="same-origin"
-          ></iframe>
+
+          <div class="pn-quota" id="pnQuota" hidden>
+            <div class="pn-quota-row">
+              <span class="pn-quota-text"><strong id="pnQuotaActive">0</strong> of
+                <strong id="pnQuotaIncluded">0</strong> included on your <span id="pnQuotaPlan">plan</span></span>
+              <span class="pn-quota-overflow" id="pnQuotaOverflow" hidden></span>
+            </div>
+            <div class="pn-quota-track"><div class="pn-quota-fill" id="pnQuotaFill"></div></div>
+          </div>
+
+          <div class="pn-list" id="pnList"></div>
+          <div class="pn-summary-line" id="pnSummaryLine" hidden></div>
+          <div class="pn-error" id="pnError" hidden></div>
         </div>
       </section>
 
-      <section class="grid" id="voicePanel">
+
+      <section class="grid" id="voicePanel" data-route-section="voice">
         <div class="card" style="grid-column: span 12;">
           <div class="card-header">
             <div>
@@ -3089,39 +3475,6 @@
 
       
 
-      <!-- ─────────── Phone numbers panel (Slice 3) ─────────── -->
-      <section class="grid" id="phoneNumbers">
-        <div class="card" style="grid-column: span 12;">
-          <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <h2 class="section-title" style="margin:0;">Phone numbers</h2>
-              <p class="section-note">Buy more numbers, change routing, or release ones you don't need.</p>
-            </div>
-            <button class="btn shiny" type="button" id="pnAddBtn">+ Add a number</button>
-          </div>
-
-          <!-- Quota indicator -->
-          <div class="pn-quota" id="pnQuota" hidden>
-            <div class="pn-quota-row">
-              <span class="pn-quota-text"><strong id="pnQuotaActive">0</strong> of
-                <strong id="pnQuotaIncluded">0</strong> included on your <span id="pnQuotaPlan">plan</span></span>
-              <span class="pn-quota-overflow" id="pnQuotaOverflow" hidden></span>
-            </div>
-            <div class="pn-quota-track"><div class="pn-quota-fill" id="pnQuotaFill"></div></div>
-          </div>
-
-          <!-- List of active numbers -->
-          <div class="pn-list" id="pnList">
-            <div class="pn-empty" id="pnEmpty" hidden>
-              <span class="pn-empty-icon">📞</span>
-              <span>No numbers yet — buy your first one to start catching calls.</span>
-            </div>
-          </div>
-          <div class="pn-summary-line" id="pnSummaryLine" hidden></div>
-          <div class="pn-error" id="pnError" hidden></div>
-        </div>
-      </section>
-
       <!-- ─────────── Add-a-number wizard (modal) ─────────── -->
       <dialog id="pnWizard" class="pn-wizard" aria-labelledby="pnWizardTitle">
         <div class="pn-wizard-shell">
@@ -3138,7 +3491,7 @@
           <!-- Step 1: filters -->
           <section class="pn-step" data-step="1">
             <h3 id="pnWizardTitle" class="pn-step-title">Pick a number</h3>
-            <p class="pn-step-sub">Search Twilio inventory by country, type, and area code or city.</p>
+            <p class="pn-step-sub" id="pnStep1Sub">Search local numbers by area code or city.</p>
             <div class="pn-row2">
               <label class="pn-field">
                 <span>Country</span>
@@ -3156,16 +3509,40 @@
                 </select>
               </label>
             </div>
-            <div class="pn-row2">
+
+            <!-- Local-only filters: area code (3 digits) + city -->
+            <div class="pn-row2" id="pnLocalFilters">
               <label class="pn-field">
                 <span>Area code (optional)</span>
-                <input id="pnAreaCode" type="text" placeholder="415" inputmode="numeric" maxlength="3" />
+                <input id="pnAreaCode" type="text" placeholder="e.g. 224 (Chicago)" inputmode="numeric" maxlength="3" />
               </label>
               <label class="pn-field">
                 <span>City (optional)</span>
-                <input id="pnLocality" type="text" placeholder="San Francisco" />
+                <input id="pnLocality" type="text" placeholder="e.g. Chicago" />
               </label>
             </div>
+
+            <!-- Toll-free filter: prefix picker (no geographic area codes) -->
+            <div class="pn-row2" id="pnTollfreeFilters" hidden>
+              <label class="pn-field" style="flex: 1;">
+                <span>Toll-free prefix</span>
+                <select id="pnTollfreePrefix">
+                  <option value="">Any (recommended)</option>
+                  <option value="800">800</option>
+                  <option value="833">833</option>
+                  <option value="844">844</option>
+                  <option value="855">855</option>
+                  <option value="866">866</option>
+                  <option value="877">877</option>
+                  <option value="888">888</option>
+                </select>
+              </label>
+            </div>
+
+            <p class="pn-helper" id="pnTypeHint">
+              Local numbers have city area codes (415, 224, 312…). Toll-free numbers start with 800/833/844/855/866/877/888 — they're not tied to a city.
+            </p>
+
             <div class="pn-actions">
               <button type="button" class="btn secondary" id="pnStep1Cancel">Cancel</button>
               <button type="button" class="btn shiny" id="pnStep1Search">Search →</button>
@@ -3185,7 +3562,7 @@
 
           <!-- Step 3: confirm -->
           <section class="pn-step" data-step="3" hidden>
-            <h3 class="pn-step-title">Confirm purchase</h3>
+            <h3 class="pn-step-title" id="pnStep3Title">Confirm purchase</h3>
             <div class="pn-confirm-card">
               <div class="pn-confirm-num" id="pnConfirmNumber">—</div>
               <div class="pn-confirm-locality" id="pnConfirmLocality">—</div>
@@ -3193,6 +3570,49 @@
               <div class="pn-confirm-cap" id="pnConfirmCap"></div>
             </div>
             <p class="pn-step-sub" id="pnConfirmNote">This will be added to your subscription, prorated to today.</p>
+
+            <!-- Trial-only upgrade prompt: replaces the Confirm button -->
+            <div class="pn-upgrade" id="pnUpgrade" hidden>
+              <div class="pn-upgrade-head">
+                <span class="pn-upgrade-icon">🔒</span>
+                <div>
+                  <div class="pn-upgrade-title">Upgrade to claim this number</div>
+                  <div class="pn-upgrade-sub">
+                    Trial accounts come with one shared line.
+                    Upgrade to keep your trial line and add new numbers like this one.
+                  </div>
+                </div>
+              </div>
+              <div class="pn-upgrade-tiers">
+                <a class="pn-upgrade-tier" id="pnUpgradeBasic"
+                   href="https://buy.stripe.com/28E9AN2fL6ip2500C90Jq00"
+                   target="_blank" rel="noopener">
+                  <span class="pn-upgrade-tier-name">Basic</span>
+                  <span class="pn-upgrade-tier-price">$99/mo</span>
+                  <span class="pn-upgrade-tier-meta">1 line included</span>
+                </a>
+                <a class="pn-upgrade-tier pn-upgrade-tier-best" id="pnUpgradeAdvanced"
+                   href="https://buy.stripe.com/9B6dR3g6B2292503Ol0Jq01"
+                   target="_blank" rel="noopener">
+                  <span class="pn-upgrade-best-pill">Most popular</span>
+                  <span class="pn-upgrade-tier-name">Advanced</span>
+                  <span class="pn-upgrade-tier-price">$199/mo</span>
+                  <span class="pn-upgrade-tier-meta">3 lines included</span>
+                </a>
+                <a class="pn-upgrade-tier" id="pnUpgradePro"
+                   href="https://buy.stripe.com/aFa6oB4nT8qxfVQ0C90Jq02"
+                   target="_blank" rel="noopener">
+                  <span class="pn-upgrade-tier-name">Pro</span>
+                  <span class="pn-upgrade-tier-price">$399/mo</span>
+                  <span class="pn-upgrade-tier-meta">10 lines included</span>
+                </a>
+              </div>
+              <p class="pn-upgrade-note">
+                You'll be redirected to Stripe. After checkout, your number is reserved
+                for 15 minutes — come right back here to claim it.
+              </p>
+            </div>
+
             <div class="pn-actions">
               <button type="button" class="btn secondary" id="pnStep3Back">← Back</button>
               <button type="button" class="btn shiny" id="pnStep3Buy">
@@ -3237,23 +3657,42 @@
         .pn-quota-fill { height: 100%; background: linear-gradient(90deg, #2b6cb0, #38bdf8);
                          width: 0%; transition: width .55s cubic-bezier(.22,1,.36,1); border-radius: 999px; }
 
-        .pn-list { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+        .pn-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
         .pn-row {
-          display: grid; grid-template-columns: 1fr auto auto;
-          gap: 14px; align-items: center;
-          padding: 14px 16px; border-radius: 10px;
+          display: block;
+          padding: 16px 18px; border-radius: 14px;
           border: 1px solid #e2e8f0; background: #fff;
           transition: border-color .2s ease, box-shadow .2s ease;
         }
-        .pn-row:hover { border-color: #cbd5e1; box-shadow: 0 4px 14px -4px rgba(15,23,42,.08); }
-        .pn-row .pn-num { font-size: 15px; font-weight: 700; color: #0f172a; letter-spacing: -0.005em; }
-        .pn-row .pn-meta { font-size: 12px; color: #475569; margin-top: 2px; }
+        .pn-row:hover { border-color: #cbd5e1; box-shadow: 0 6px 18px -8px rgba(15,23,42,.10); }
+        .pn-row-head {
+          display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+          justify-content: space-between;
+        }
+        .pn-row-id { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; min-width: 0; }
+        .pn-row-id .pn-num { font-family: "Space Grotesk", sans-serif;
+                             font-size: 22px; font-weight: 800; color: #0f172a;
+                             letter-spacing: -0.025em; }
+        .pn-row .pn-meta { font-size: 12px; color: #64748b; margin-top: 2px;
+                           font-family: "JetBrains Mono", "Menlo", monospace; }
+        .pn-row-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .pn-row .pn-copy {
+          font-size: 11px; color: #475569;
+          background: #f1f5f9; border: 1px solid #e2e8f0;
+          padding: 4px 10px; border-radius: 999px;
+          cursor: pointer; font-weight: 600;
+          transition: background .12s, color .12s;
+        }
+        .pn-row .pn-copy:hover { background: #e2e8f0; }
+        .pn-row .pn-copy.is-copied { background: #dcfce7; color: #047857; border-color: #86efac; }
         .pn-row .pn-badge {
-          font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px;
-          letter-spacing: 0.04em; text-transform: uppercase;
+          font-size: 10.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px;
+          letter-spacing: 0.05em; text-transform: uppercase;
         }
         .pn-badge-included { background: rgba(22,163,74,.10); color: #047857; border: 1px solid rgba(22,163,74,.22); }
         .pn-badge-addon    { background: rgba(245,158,11,.10); color: #92400e; border: 1px solid rgba(245,158,11,.30); }
+        .pn-badge-trial    { background: rgba(99,102,241,.10); color: #4338ca; border: 1px solid rgba(99,102,241,.30); }
+        .pn-badge-test     { background: repeating-linear-gradient(45deg, rgba(120,113,108,.10) 0 6px, rgba(120,113,108,.18) 6px 12px); color: #57534e; border: 1px dashed #a8a29e; }
         .pn-row .pn-release {
           padding: 6px 12px; border-radius: 8px;
           background: #fff; color: #b91c1c; border: 1px solid #fecaca;
@@ -3261,6 +3700,68 @@
           transition: background .15s, border-color .15s;
         }
         .pn-row .pn-release:hover { background: #fef2f2; border-color: #fca5a5; }
+
+        /* Status pill */
+        .pn-status {
+          display: inline-flex; align-items: center; gap: 6px;
+          padding: 4px 10px; border-radius: 999px;
+          font-size: 10.5px; font-weight: 700;
+          text-transform: uppercase; letter-spacing: 0.06em;
+          border: 1px solid transparent;
+        }
+        .pn-status .pn-status-dot {
+          width: 7px; height: 7px; border-radius: 50%;
+          background: currentColor;
+        }
+        .pn-status-live    { color: #047857; background: rgba(22,163,74,.10);  border-color: rgba(22,163,74,.22); }
+        .pn-status-live .pn-status-dot { animation: pn-pulse 1.6s ease-in-out infinite; }
+        .pn-status-build   { color: #92400e; background: rgba(245,158,11,.10); border-color: rgba(245,158,11,.30); }
+        .pn-status-build .pn-status-dot { animation: pn-pulse 1.0s ease-in-out infinite; }
+        .pn-status-fail    { color: #b91c1c; background: rgba(220,38,38,.08);  border-color: rgba(220,38,38,.25); }
+        .pn-status-idle    { color: #475569; background: #f1f5f9;              border-color: #e2e8f0; }
+        @keyframes pn-pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50%      { opacity: .5; transform: scale(.85); }
+        }
+
+        /* Inline routing form */
+        .pn-route {
+          margin-top: 14px; padding: 12px 14px;
+          background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
+        }
+        .pn-route-label {
+          display: block;
+          font-size: 11px; font-weight: 700; color: #475569;
+          text-transform: uppercase; letter-spacing: 0.06em;
+          margin-bottom: 8px;
+        }
+        .pn-route-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .pn-route-row input {
+          flex: 1; min-width: 220px;
+          padding: 9px 12px; border-radius: 8px;
+          border: 1px solid #cbd5e1; background: #fff;
+          font-size: 13.5px; color: #0f172a;
+          font-family: inherit;
+          transition: border-color .12s, box-shadow .12s;
+        }
+        .pn-route-row input:focus {
+          outline: none; border-color: #2b6cb0;
+          box-shadow: 0 0 0 3px rgba(43,108,176,.18);
+        }
+        .pn-route-save {
+          padding: 9px 16px; border-radius: 8px;
+          background: #0f172a; color: #fff; border: none;
+          font-size: 13px; font-weight: 600; cursor: pointer;
+          transition: background .12s, opacity .12s;
+        }
+        .pn-route-save:hover:not(:disabled) { background: #1e293b; }
+        .pn-route-save:disabled { opacity: .55; cursor: not-allowed; }
+        .pn-route-status {
+          margin-top: 8px; font-size: 12px; min-height: 16px;
+          color: #64748b;
+        }
+        .pn-route-status.is-ok  { color: #047857; }
+        .pn-route-status.is-err { color: #b91c1c; }
 
         .pn-summary-line {
           margin-top: 14px; padding: 10px 14px; border-radius: 10px;
@@ -3296,6 +3797,18 @@
           max-width: 520px; width: calc(100% - 32px);
           box-shadow: 0 28px 60px rgba(15,23,42,.18);
           background: #fff;
+          /* Force-center against any inherited dialog styling */
+          position: fixed;
+          top: 50%; left: 50%;
+          transform: translate(-50%, -50%);
+          margin: 0;
+        }
+        .pn-wizard[open] {
+          animation: pnFadeIn .35s cubic-bezier(.22, 1, .36, 1) both;
+        }
+        @keyframes pnFadeIn {
+          from { opacity: 0; transform: translate(-50%, calc(-50% + 14px)) scale(.98); }
+          to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
         }
         .pn-wizard::backdrop { background: rgba(15,23,42,.55); backdrop-filter: blur(4px); }
         .pn-wizard-shell { padding: 24px 26px 22px; }
@@ -3313,6 +3826,14 @@
         .pn-step-sub { font-size: 13px; color: #475569; margin-bottom: 18px; }
         .pn-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
         .pn-field span { display: block; font-size: 12px; font-weight: 600; color: #1e293b; margin-bottom: 6px; }
+        .pn-helper {
+          margin: 4px 0 -4px;
+          padding: 10px 14px;
+          background: rgba(43,108,176,.06);
+          border: 1px solid rgba(43,108,176,.18);
+          border-radius: 10px;
+          font-size: 12px; color: #1e293b; line-height: 1.5;
+        }
         .pn-field input, .pn-field select {
           width: 100%; padding: 10px 12px; border-radius: 8px;
           border: 1px solid #e2e8f0; font-size: 14px; font-family: inherit;
@@ -3371,9 +3892,71 @@
           vertical-align: -2px;
         }
         @keyframes pnspin { to { transform: rotate(360deg); } }
+
+        /* Trial upgrade card inside step 3 */
+        .pn-upgrade {
+          margin: 12px 0 4px;
+          padding: 16px;
+          border-radius: 14px;
+          background: linear-gradient(135deg, rgba(99,102,241,.06), rgba(56,189,248,.06));
+          border: 1px solid rgba(99,102,241,.22);
+        }
+        .pn-upgrade[hidden] { display: none; }
+        .pn-upgrade-head {
+          display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px;
+        }
+        .pn-upgrade-icon {
+          font-size: 22px; line-height: 1;
+          width: 36px; height: 36px;
+          display: inline-flex; align-items: center; justify-content: center;
+          background: #fff; border-radius: 10px;
+          border: 1px solid rgba(99,102,241,.22);
+          flex-shrink: 0;
+        }
+        .pn-upgrade-title {
+          font-size: 15px; font-weight: 700; color: #0f172a;
+          letter-spacing: -0.005em; margin-bottom: 2px;
+        }
+        .pn-upgrade-sub { font-size: 12.5px; color: #475569; line-height: 1.45; }
+        .pn-upgrade-tiers {
+          display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+        }
+        .pn-upgrade-tier {
+          position: relative;
+          display: flex; flex-direction: column; gap: 2px;
+          padding: 12px 10px;
+          background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
+          text-decoration: none; color: #0f172a;
+          transition: border-color .15s, box-shadow .15s, transform .15s;
+        }
+        .pn-upgrade-tier:hover {
+          border-color: #6366f1;
+          box-shadow: 0 6px 18px -8px rgba(99,102,241,.35);
+          transform: translateY(-1px);
+        }
+        .pn-upgrade-tier-name { font-size: 12px; font-weight: 700; color: #475569;
+                                text-transform: uppercase; letter-spacing: 0.06em; }
+        .pn-upgrade-tier-price { font-family: "Space Grotesk", sans-serif;
+                                 font-size: 18px; font-weight: 800; color: #0f172a;
+                                 letter-spacing: -0.02em; }
+        .pn-upgrade-tier-meta { font-size: 11px; color: #64748b; }
+        .pn-upgrade-tier-best { border-color: #6366f1; box-shadow: 0 4px 14px -6px rgba(99,102,241,.30); }
+        .pn-upgrade-best-pill {
+          position: absolute; top: -8px; right: 8px;
+          background: #6366f1; color: #fff;
+          font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em;
+          padding: 2px 8px; border-radius: 999px;
+          text-transform: uppercase;
+        }
+        .pn-upgrade-note {
+          margin-top: 12px; font-size: 11.5px; color: #64748b; line-height: 1.5;
+        }
+        @media (max-width: 480px) {
+          .pn-upgrade-tiers { grid-template-columns: 1fr; }
+        }
       </style>
 
-      <section class="grid" id="activity">
+      <section class="grid" id="activity" data-route-section="activity">
         <div class="card chart-card">
         <div class="card-header">
           <div>
@@ -3403,7 +3986,7 @@
         </div>
       </section>
 
-      <section class="grid" id="leads">
+      <section class="grid" id="leads" data-route-section="leads">
         <div class="card" style="grid-column: span 12;">
           <div class="card-header">
             <h2 class="section-title" style="margin:0;">Recent Leads</h2>
@@ -3461,7 +4044,7 @@
       </section>
 
       <div class="kb-insights-wrap">
-      <section class="grid" id="insights">
+      <section class="grid" id="insights" data-route-section="insights">
         <div class="card" style="grid-column: span 12;">
           <div class="card-header">
             <h2 class="section-title" style="margin:0;">Insights</h2>
@@ -3484,7 +4067,7 @@
         </div>
       </section>
 
-      <section class="grid" id="knowledge">
+      <section class="grid" id="knowledge" data-route-section="knowledge">
         <div id="kbStatusPill" class="kb-pill" hidden style="grid-column: span 12;"></div>
         <div class="card kb-card is-locked" id="kbCardClient" data-kb-type="client" style="grid-column: span 12;">
           <div class="card-header">
@@ -3642,7 +4225,7 @@
       
     
 
-      <section class="grid" id="settings">
+      <section class="grid" id="settings" data-route-section="settings">
         <div class="card settings-card is-locked" id="settingsCard">
           <div class="card-header">
             <h2 class="section-title">Receptionist Settings</h2>
@@ -3755,7 +4338,7 @@
         </div>
       </section>
 
-      <section class="grid" id="embed">
+      <section class="grid" id="embed" data-route-section="embed">
            <div class="card" style="grid-column: span 12;">
           <div class="embed-section">
             <div>
@@ -3870,7 +4453,8 @@
 
       <div class="toast" id="saveToast">Saved!</div>
 </main>
-  </div>
+    </div><!-- /.app-main -->
+  </div><!-- /.app-shell -->
 
       <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
       <script>
@@ -7740,45 +8324,9 @@
     updatePublishState();
 
     async function checkAdminAndRevealPanel() {
-      try {
-        const res = await fetch("/me", { credentials: "include" });
-        if (!res.ok) return;
-        const me = await res.json();
-        if (!me || !me.authenticated) return;
-
-        const section = document.getElementById("admin");
-        if (section) section.removeAttribute("hidden");
-        document.querySelectorAll("[data-admin-nav]").forEach((el) => {
-          el.removeAttribute("hidden");
-        });
-
-        const titleEl = document.getElementById("adminSectionTitle");
-        const noteEl = document.getElementById("adminSectionNote");
-        const usersTab = document.getElementById("adminTabUsers");
-        if (me.is_admin) {
-          if (titleEl) titleEl.textContent = "Admin Settings";
-          if (noteEl) noteEl.textContent = "Manage phone numbers and the SSO allowlist.";
-          if (usersTab) usersTab.removeAttribute("hidden");
-        } else {
-          if (titleEl) titleEl.textContent = "My Numbers";
-          if (noteEl) noteEl.textContent = "Your assigned business number(s) and call routing.";
-          if (usersTab) usersTab.setAttribute("hidden", "");
-        }
-
-        const frame = document.getElementById("adminPanelFrame");
-        const tabs = document.querySelectorAll("[data-admin-tab]");
-
-        function activate(tabName) {
-          const url = tabName === "users" ? "/admin/users" : "/admin/phones";
-          if (frame) frame.setAttribute("src", url);
-          tabs.forEach((btn) => {
-            btn.classList.toggle("active", btn.dataset.adminTab === tabName);
-          });
-        }
-
-        tabs.forEach((btn) => btn.addEventListener("click", () => activate(btn.dataset.adminTab)));
-        activate("phones");
-      } catch (e) { /* silent — admin panel stays hidden */ }
+      // The legacy admin/My Numbers iframe panel was removed — phone
+      // management lives in the top-of-page #phoneNumbers section now.
+      // Kept as a no-op so callers don't break.
     }
 
     async function maybeOpenWelcomeModal() {
@@ -7865,72 +8413,143 @@
     }
 
     // ─────── Dashboard tutorial (Driver.js) ───────
+    // Refined for the sidebar + topbar + route-based main body.
+    // Each step that lives inside a route-section switches the route
+    // first (via appShowRoute) so the highlighted element is rendered.
     function startDashboardTutorial() {
-      // Driver.js is loaded via CDN (<script>) — `driver` lives at
-      // window.driver.js.driver. Fall back gracefully if the CDN failed.
       const driverFactory = window.driver && window.driver.js && window.driver.js.driver;
       if (typeof driverFactory !== "function") return;
 
-      const steps = [
+      const switchTo = (route) => () => {
+        if (typeof appShowRoute === "function") appShowRoute(route);
+      };
+
+      const rawSteps = [
         {
-          element: "#overview",
+          element: ".app-sidebar",
           popover: {
+            side: "right", align: "start",
             title: "👋 Welcome to your dashboard",
-            description: "Quick tour — about 30 seconds. We'll show you each section and what it does. You can <strong>skip</strong> at any time.",
+            description: "Quick 30-second tour. The icons on the left are how you move around — hover any icon to see its name. You can <strong>skip</strong> any time.",
           },
+        },
+        {
+          element: "#appPageTitle",
+          popover: {
+            side: "bottom", align: "start",
+            title: "📍 You're always here",
+            description: "This title shows which section you're looking at. We'll start with <strong>Phone numbers</strong>.",
+          },
+          onHighlightStarted: switchTo("phones"),
+        },
+        {
+          element: "#phoneNumbers",
+          popover: {
+            side: "left", align: "start",
+            title: "📞 Your phone numbers",
+            description: "Your trial line is already live and answering calls. Each row shows status, billing, and where missed calls forward.",
+          },
+          onHighlightStarted: switchTo("phones"),
+        },
+        {
+          element: ".pn-row .pn-status",
+          popover: {
+            side: "bottom", align: "center",
+            title: "🟢 Active = ready to call",
+            description: "When the pill says <strong>Active</strong>, the line is ready right now. <em>Setting up</em> means we're still building. <em>Failed</em> means it needs attention.",
+          },
+          onHighlightStarted: switchTo("phones"),
+        },
+        {
+          element: ".pn-row .pn-route",
+          popover: {
+            side: "top", align: "start",
+            title: "✉️ Where leads go",
+            description: "Type the email you want missed calls and lead summaries to forward to, then hit <strong>Save</strong>. That's the whole setup.",
+          },
+          onHighlightStarted: switchTo("phones"),
+        },
+        {
+          element: "#pnAddBtn",
+          popover: {
+            side: "bottom", align: "end",
+            title: "➕ Add a number",
+            description: "Need a second line for another city or a toll-free? Buy one here. Trial users see a preview and a one-click upgrade.",
+          },
+          onHighlightStarted: switchTo("phones"),
         },
         {
           element: "#voicePanel",
           popover: {
+            side: "left", align: "start",
             title: "🎙 How your line sounds",
-            description: "Pick how your receptionist sounds — warm, calm, energetic. Test it any time.",
+            description: "Pick the personality and the exact opening line. Edit it any time — your line picks up the change immediately.",
           },
+          onHighlightStarted: switchTo("voice"),
         },
         {
           element: "#leads",
           popover: {
+            side: "left", align: "start",
             title: "📥 Captured leads",
             description: "Every caller, chat, and email lands here. Name, phone, what they want, and when. Export anytime.",
           },
+          onHighlightStarted: switchTo("leads"),
         },
         {
           element: "#activity",
           popover: {
-            title: "📞 Live activity",
-            description: "See calls and messages as they happen. Jump into a transcript with one click.",
+            side: "left", align: "start",
+            title: "📊 Live activity",
+            description: "Calls and messages as they happen. Click any row to read the full transcript.",
           },
+          onHighlightStarted: switchTo("activity"),
         },
         {
           element: "#insights",
           popover: {
-            title: "🔎 Ask questions",
-            description: "Ask plain-English questions about your callers — \"how many roof leaks last week?\" — and get an answer.",
+            side: "left", align: "start",
+            title: "🔎 Ask plain-English questions",
+            description: "\"How many roof leaks last week?\" — type it and get the answer. No SQL, no filters.",
           },
+          onHighlightStarted: switchTo("insights"),
         },
         {
           element: "#knowledge",
           popover: {
+            side: "left", align: "start",
             title: "📚 What your line knows",
-            description: "Already loaded with your website. Add facts, FAQs, or pricing here so customers get the answer you'd give.",
+            description: "We loaded your website automatically. Add prices, FAQs, or service notes here so callers get the answer you'd give.",
           },
+          onHighlightStarted: switchTo("knowledge"),
         },
         {
           element: "#settings",
           popover: {
+            side: "left", align: "start",
             title: "⚙️ Settings",
-            description: "Hours, calendar, lead destinations, webhooks. The replay-tutorial link lives here too.",
+            description: "Hours, calendar, lead destinations, webhooks. The deep-dive controls live in here.",
           },
+          onHighlightStarted: switchTo("settings"),
+        },
+        {
+          element: "#appReplayTutorial",
+          popover: {
+            side: "right", align: "end",
+            title: "↺ Replay any time",
+            description: "Hit this from the sidebar to walk through the tour again. You're all set — go catch some leads.",
+          },
+          onHighlightStarted: switchTo("phones"),
         },
       ];
 
-      // Filter steps to only those whose element actually exists in DOM
-      // (admin-only sections / hidden panels won't break the tour).
-      const visibleSteps = steps.filter((s) => {
-        const el = document.querySelector(s.element);
-        return el && el.offsetParent !== null;
+      // Keep only steps whose element exists in the DOM; if a step's
+      // route swap is needed first, pretend the element exists.
+      const steps = rawSteps.filter((s) => {
+        if (s.onHighlightStarted) return true; // route swap fires before query
+        return !!document.querySelector(s.element);
       });
-      if (visibleSteps.length === 0) {
-        // Nothing to tour — mark complete so we don't loop forever.
+      if (steps.length === 0) {
         fetch("/me/tutorial-complete", { method: "POST", credentials: "same-origin" }).catch(() => {});
         return;
       }
@@ -7944,12 +8563,14 @@
         animate: true,
         smoothScroll: true,
         allowClose: true,
-        steps: visibleSteps,
+        steps: steps,
         onCloseClick: () => {
           drv.destroy();
           fetch("/me/tutorial-complete", { method: "POST", credentials: "same-origin" }).catch(() => {});
         },
         onDestroyed: () => {
+          // Land the user back on Phone numbers when the tour ends.
+          if (typeof appShowRoute === "function") appShowRoute("phones");
           fetch("/me/tutorial-complete", { method: "POST", credentials: "same-origin" }).catch(() => {});
         },
       });
@@ -7976,6 +8597,8 @@
         const res = await fetch("/me/trial-stats", { credentials: "same-origin" });
         if (!res.ok) return;
         const s = await res.json();
+        // Admins never see trial UI — they manage trials, they don't run them.
+        if (s && s.is_admin) return;
         // If the admin disconnected this trial, the server clears the
         // session and signals trial_ended — kick the user to /login.
         if (s && s.trial_ended) {
@@ -7990,7 +8613,9 @@
         document.getElementById("tbCallsToday").textContent = s.calls_today || 0;
         document.getElementById("tbCallsCap").textContent = s.calls_cap || 50;
         document.getElementById("tbLeadsTotal").textContent = s.leads_total || 0;
-        document.getElementById("tbKpiLabel").textContent = (s.kpi_label || "leads").toLowerCase();
+        // Static "leads contacted" label — industry-specific labels were
+        // confusing ("storm-damage / insurance leads"); plain copy reads
+        // better and matches the other tiles.
         document.getElementById("tbPipeline").textContent = _fmtMoney(s.estimated_pipeline_usd || 0);
 
         const upgrade = document.getElementById("tbUpgradeBtn");
@@ -8327,7 +8952,13 @@
       }
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded", async () => {
+      // FIRST — gate admin UI before anything else can render it.
+      // Non-admins must never see admin elements, not even for a frame.
+      // CSS hides [data-admin-only] until <body> gets the .app-is-admin
+      // class, which only happens here after /me confirms is_admin.
+      await applyAdminGate();
+
       maybeOpenWelcomeModal();
       wireWelcomeForm();
       pollKbStatus();
@@ -8337,7 +8968,351 @@
       // immediately when an admin disconnects their trial.
       setInterval(loadTrialBanner, 30000);
       initPhoneNumbersPanel();
+      initAppRouter();
+      initAppChrome();
+      initMockUpgradeShortcut();
+      initAdminTrialsPanel();
     });
+
+    // The admin gate. Runs synchronously at the start of DOMContentLoaded
+    // — every other init waits for it. On admin: body gets .app-is-admin,
+    // window.__appIsAdmin = true, and admin UI becomes visible. On
+    // non-admin (or any error): the body class is never set, the admin
+    // section + button get yanked from the DOM, and the router refuses
+    // any admin-only route.
+    async function applyAdminGate() {
+      window.__appIsAdmin = false;
+      try {
+        const res = await fetch("/me", { credentials: "same-origin" });
+        if (res.ok) {
+          const d = await res.json();
+          if (d && d.is_admin) {
+            window.__appIsAdmin = true;
+            document.body.classList.add("app-is-admin");
+            return;
+          }
+        }
+      } catch (_) {}
+      // Fall-through: not admin. Strip admin DOM so even devtools edits
+      // can't reactivate it without a server-side admin role.
+      document.querySelectorAll("[data-admin-only]").forEach(el => el.remove());
+    }
+
+    // ─────────── Admin: trial overview ───────────
+    function initAdminTrialsPanel() {
+      const tbody    = document.getElementById("atRows");
+      const summary  = document.getElementById("atSummary");
+      const errBox   = document.getElementById("atError");
+      const updated  = document.getElementById("atUpdatedAt");
+      const refresh  = document.getElementById("atRefreshBtn");
+      if (!tbody || !refresh) return;
+
+      function fmtTimeAgo(epoch) {
+        if (!epoch) return "";
+        const diff = Math.max(0, Math.floor(Date.now() / 1000) - epoch);
+        if (diff < 60)    return `just now`;
+        if (diff < 3600)  return `${Math.floor(diff/60)}m ago`;
+        if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+        return `${Math.floor(diff/86400)}d ago`;
+      }
+      function statusPill(row) {
+        if (row.is_expired)                            return { cls: "at-pill-expire", label: "Expired" };
+        const bs = (row.build_status || "idle").toLowerCase();
+        if (bs === "ready" || bs === "live")           return { cls: "at-pill-live",   label: "Active" };
+        if (bs === "building" || bs === "queued")      return { cls: "at-pill-build",  label: "Setting up" };
+        if (bs === "failed" || bs === "error")         return { cls: "at-pill-fail",   label: "Failed" };
+        return { cls: "at-pill-expire", label: "Idle" };
+      }
+      function renderRows(rows) {
+        tbody.innerHTML = "";
+        if (!rows.length) {
+          tbody.innerHTML = `<tr class="at-empty"><td colspan="9">No active trials.</td></tr>`;
+          return;
+        }
+        for (const r of rows) {
+          const tr = document.createElement("tr");
+          if (r.hit_cap)        tr.className = "at-row-cap";
+          else if (r.near_cap)  tr.className = "at-row-warn";
+          const s = statusPill(r);
+          const daysLeft = r.is_expired ? "0" : (r.days_left ?? "—");
+          const action = r.is_expired
+            ? `<span class="at-meta">—</span>`
+            : `<button type="button" class="at-revoke" data-revoke="${escapeHtml(r.phone_id || "")}" data-email="${escapeHtml(r.email || "")}">Revoke</button>`;
+          tr.innerHTML = `
+            <td>${escapeHtml(r.email || "—")}</td>
+            <td><span class="at-num">${escapeHtml(r.phone_display || r.phone_number || "—")}</span></td>
+            <td>${r.day_of_trial ?? "—"} <span class="at-meta">/ 7</span></td>
+            <td><strong>${escapeHtml(String(daysLeft))}</strong></td>
+            <td>${r.calls_today} <span class="at-meta">/ ${r.calls_cap || "—"}</span></td>
+            <td>${r.leads_total}</td>
+            <td><span class="at-pill ${s.cls}"><span class="at-dot"></span>${s.label}</span></td>
+            <td>${escapeHtml(r.industry || "—")} <span class="at-meta">· ${escapeHtml(r.mode || "—")}</span></td>
+            <td>${action}</td>
+          `;
+          tbody.appendChild(tr);
+        }
+        tbody.querySelectorAll("[data-revoke]").forEach(btn => {
+          btn.addEventListener("click", () => revokeTrial(btn));
+        });
+      }
+
+      async function revokeTrial(btn) {
+        const phoneId = btn.dataset.revoke;
+        const email   = btn.dataset.email || "this trial user";
+        if (!phoneId) return;
+        const confirmed = confirm(
+          `Revoke the trial for ${email}?\n\n` +
+          `This will:\n` +
+          `  • Disconnect their phone number (returns it to the trial pool)\n` +
+          `  • Wipe their demo KB / bot config\n` +
+          `  • End their session — they'll be kicked back to /login\n\n` +
+          `This cannot be undone.`
+        );
+        if (!confirmed) return;
+        const originalLabel = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = "Revoking…";
+        try {
+          const res = await fetch(`/admin/phones/${encodeURIComponent(phoneId)}/disconnect`, {
+            method: "POST", credentials: "same-origin",
+          });
+          if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            alert(body.message || body.error || `Couldn't revoke (status ${res.status}).`);
+            btn.disabled = false;
+            btn.textContent = originalLabel;
+            return;
+          }
+          // Reload the table so the row drops out of the list.
+          load();
+        } catch (e) {
+          alert("Network error — couldn't reach the server.");
+          btn.disabled = false;
+          btn.textContent = originalLabel;
+        }
+      }
+      async function load() {
+        if (errBox) errBox.hidden = true;
+        refresh.disabled = true;
+        const originalLabel = refresh.textContent;
+        refresh.textContent = "↻ Refreshing…";
+        try {
+          const res = await fetch("/admin/trials", { credentials: "same-origin" });
+          if (res.status === 403 || res.status === 401) {
+            // Not admin — silently disable the panel.
+            tbody.innerHTML = `<tr class="at-empty"><td colspan="8">Admin only.</td></tr>`;
+            return;
+          }
+          if (!res.ok) {
+            errBox.hidden = false;
+            errBox.textContent = `Couldn't load trials (status ${res.status}).`;
+            return;
+          }
+          const body = await res.json();
+          const rows = body.trials || [];
+          renderRows(rows);
+          // Summary tiles
+          summary.hidden = false;
+          document.getElementById("atActiveCount").textContent = body.active || 0;
+          document.getElementById("atExpiredCount").textContent = body.expired || 0;
+          document.getElementById("atCallsTodayTotal").textContent =
+            rows.reduce((s, r) => s + (r.calls_today || 0), 0);
+          document.getElementById("atLeadsTotal").textContent =
+            rows.reduce((s, r) => s + (r.leads_total || 0), 0);
+          if (updated) updated.textContent = `Updated ${fmtTimeAgo(body.generated_at)}`;
+        } catch (e) {
+          errBox.hidden = false;
+          errBox.textContent = "Network error loading trials.";
+        } finally {
+          refresh.disabled = false;
+          refresh.textContent = originalLabel;
+        }
+      }
+      refresh.addEventListener("click", load);
+      // Lazy-load on first switch into the route, OR if it's the
+      // initial route on page load.
+      const btn = document.getElementById("appAdminTrialsBtn");
+      let loaded = false;
+      const triggerOnce = () => { if (!loaded) { loaded = true; load(); } };
+      if (btn) btn.addEventListener("click", triggerOnce);
+      // Watchdog: if appShowRoute lands on adminTrials at boot, kick off load.
+      const initObserver = new MutationObserver(() => {
+        const sec = document.getElementById("adminTrials");
+        if (sec && sec.classList.contains("is-active")) triggerOnce();
+      });
+      const sec = document.getElementById("adminTrials");
+      if (sec) initObserver.observe(sec, { attributes: true, attributeFilter: ["class"] });
+    }
+
+    // ─────────── Dev mock-upgrade shortcut ───────────
+    // Intercept clicks on the wizard's upgrade tier cards. If the
+    // backend has /dev/mock-upgrade enabled (DEV_MOCK_UPGRADE=1 or
+    // DISABLE_TRY_RATE_LIMIT=1), we flip the trial session into a paid
+    // customer locally and reload the wizard so the user can keep
+    // testing the buy-a-number flow without leaving for Stripe.
+    // If the dev endpoint is disabled (404), we fall back to opening
+    // the real Stripe checkout — so prod behaves normally.
+    function initMockUpgradeShortcut() {
+      const tiers = [
+        { id: "pnUpgradeBasic",    tier: "basic" },
+        { id: "pnUpgradeAdvanced", tier: "advanced" },
+        { id: "pnUpgradePro",      tier: "pro" },
+      ];
+      tiers.forEach(({ id, tier }) => {
+        const a = document.getElementById(id);
+        if (!a) return;
+        a.addEventListener("click", async (ev) => {
+          ev.preventDefault();
+          const original = a.innerHTML;
+          a.style.pointerEvents = "none";
+          a.style.opacity = "0.7";
+          try {
+            const res = await fetch("/dev/mock-upgrade", {
+              method: "POST",
+              credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ tier }),
+            });
+            if (res.ok) {
+              // Flash a quick success state, then reload the dashboard
+              // so /me/phones returns the paid view.
+              a.innerHTML = `<span class="pn-upgrade-tier-name" style="color:#047857;">✓ Upgraded</span>
+                             <span class="pn-upgrade-tier-price" style="color:#047857;">${tier}</span>
+                             <span class="pn-upgrade-tier-meta">reloading…</span>`;
+              setTimeout(() => location.reload(), 600);
+              return;
+            }
+            // 404 = endpoint disabled (prod). Fall through to Stripe.
+            window.open(a.href, "_blank", "noopener");
+          } catch (_) {
+            // Network or other error — let the user reach Stripe anyway.
+            window.open(a.href, "_blank", "noopener");
+          } finally {
+            a.style.pointerEvents = "";
+            a.style.opacity = "";
+            // restore label only if we didn't already swap it on success
+            if (a.innerHTML !== original && !a.innerHTML.includes("✓ Upgraded")) {
+              a.innerHTML = original;
+            }
+          }
+        });
+      });
+    }
+
+    // ─────────── App router (sidebar → main body) ───────────
+    const APP_ROUTES = {
+      adminTrials: { title: "Trial overview", section: "adminTrials", adminOnly: true },
+      phones:    { title: "Phone numbers", section: "phoneNumbers" },
+      leads:     { title: "Leads",         section: "leads" },
+      voice:     { title: "Voice",         section: "voicePanel" },
+      activity:  { title: "Activity",      section: "activity" },
+      insights:  { title: "Insights",      section: "insights" },
+      knowledge: { title: "Knowledge base", section: "knowledge" },
+      embed:     { title: "Embed widget",  section: "embed" },
+      settings:  { title: "Settings",      section: "settings" },
+    };
+    // Tracked here so appShowRoute can gate admin-only routes even
+    // before the /me round-trip completes (defaults to false).
+    window.__appIsAdmin = false;
+
+    function appShowRoute(route) {
+      let def = APP_ROUTES[route];
+      if (!def) return;
+      // Admin-only routes are off-limits to non-admins. If a non-admin
+      // lands on one (via #hash, etc.), silently rewrite to phones so
+      // they never see the empty admin chrome.
+      if (def.adminOnly && !window.__appIsAdmin) {
+        route = "phones";
+        def = APP_ROUTES[route];
+        if (!def) return;
+      }
+      const titleEl = document.getElementById("appPageTitle");
+      if (titleEl) titleEl.textContent = def.title;
+      document.querySelectorAll("[data-route-section]").forEach(el => {
+        el.classList.toggle("is-active", el.dataset.routeSection === route);
+      });
+      document.querySelectorAll(".app-nav-btn[data-route]").forEach(btn => {
+        btn.classList.toggle("is-active", btn.dataset.route === route);
+      });
+      try { history.replaceState(null, "", "#" + route); } catch (_) {}
+    }
+    function initAppRouter() {
+      document.querySelectorAll(".app-nav-btn[data-route]").forEach(btn => {
+        btn.addEventListener("click", () => appShowRoute(btn.dataset.route));
+      });
+      // Pick initial route: from hash, otherwise default to "phones".
+      const hashRoute = (location.hash || "").replace(/^#/, "");
+      const initial = APP_ROUTES[hashRoute] ? hashRoute : "phones";
+      appShowRoute(initial);
+    }
+
+    function initAppChrome() {
+      // Wire logout in the sidebar to the existing logout flow.
+      const out = document.getElementById("appLogoutBtn");
+      if (out) {
+        out.addEventListener("click", () => {
+          const legacy = document.getElementById("logoutButton");
+          if (legacy) legacy.click(); else location.href = "/logout";
+        });
+      }
+      // Replay tutorial passthrough.
+      const replay = document.getElementById("appReplayTutorial");
+      if (replay) {
+        replay.addEventListener("click", () => {
+          const legacy = document.getElementById("replayTutorialButton");
+          if (legacy) legacy.click();
+        });
+      }
+      // Publish passthrough (currently disabled — kept for future use).
+      const pub = document.getElementById("appPublishBtn");
+      if (pub) {
+        pub.addEventListener("click", () => {
+          const legacy = document.getElementById("publishAppButton");
+          if (legacy && !legacy.disabled) legacy.click();
+        });
+      }
+      // Trial pill mirrors the existing trial banner state.
+      try {
+        fetch("/me/trial-stats", { credentials: "same-origin" })
+          .then(r => r.ok ? r.json() : null)
+          .then(d => {
+            // Pill is for active trial users only. Admins (d.is_admin=true)
+            // and paid customers (d.trial !== true) never see it.
+            if (d && d.trial === true && !d.is_admin) {
+              const pill = document.getElementById("appTrialPill");
+              if (pill) pill.hidden = false;
+            }
+          })
+          .catch(() => {});
+      } catch (_) {}
+      // Avatar initial. Admin gating + admin landing already handled by
+      // applyAdminGate() at the very start of DOMContentLoaded.
+      try {
+        fetch("/me", { credentials: "same-origin" })
+          .then(r => r.ok ? r.json() : null)
+          .then(d => {
+            const av = document.getElementById("appAvatar");
+            if (av && d && d.first_name) {
+              av.textContent = d.first_name[0].toUpperCase();
+            } else if (av && d && d.email) {
+              av.textContent = d.email[0].toUpperCase();
+            }
+            if (window.__appIsAdmin) {
+              // Suppress the trial pill / banner for admins (defense in depth).
+              const pill = document.getElementById("appTrialPill");
+              if (pill) { pill.hidden = true; pill.style.display = "none"; pill.remove(); }
+              const banner = document.getElementById("trialBanner");
+              if (banner) banner.hidden = true;
+              // Land admins on the trial overview unless URL hash chose another route.
+              const hash = (location.hash || "").replace(/^#/, "");
+              if (!hash && typeof appShowRoute === "function") {
+                appShowRoute("adminTrials");
+              }
+            }
+          })
+          .catch(() => {});
+      } catch (_) {}
+    }
 
     // ─────────── Phone Numbers panel (Slice 3) ───────────
     function initPhoneNumbersPanel() {
@@ -8345,7 +9320,6 @@
       if (!panel) return;
       const dlg = document.getElementById("pnWizard");
       const list = document.getElementById("pnList");
-      const empty = document.getElementById("pnEmpty");
       const errBox = document.getElementById("pnError");
       const quota = document.getElementById("pnQuota");
       const fmtMoney = (n) => n ? `$${Number(n).toFixed(2)}` : "";
@@ -8359,6 +9333,7 @@
         searching: false,
         purchasing: false,
         searchDebounce: null,
+        is_trial: false,
       };
 
       function showErr(msg) {
@@ -8371,7 +9346,7 @@
         try {
           const res = await fetch("/me/phones", { credentials: "same-origin" });
           if (res.status === 403) {
-            // Trial users — hide the panel entirely.
+            // Not entitled to the panel at all.
             panel.hidden = true;
             return;
           }
@@ -8384,6 +9359,22 @@
           state.included = body.included || 0;
           state.active = body.active || 0;
           state.phones = body.phones || [];
+          // Admins are never "trial" — even if a phone record still has
+          // billing_mode=trial from a stuck record, we won't render it
+          // that way for them.
+          state.is_admin = !!body.is_admin;
+          state.is_trial = !!body.is_trial && !state.is_admin;
+          // mock_mode = backend is in dev (localhost or DEV_MOCK_TWILIO).
+          // Drives the confirm dialog + the buy-button label.
+          state.mock_mode = !!body.mock_mode;
+          // Trial users can browse + select a number, but checkout pivots
+          // to an upgrade prompt — keep the same button copy as paid.
+          const addBtn = document.getElementById("pnAddBtn");
+          if (addBtn) {
+            addBtn.disabled = false;
+            addBtn.title = "";
+            addBtn.textContent = state.is_trial ? "+ Find a number" : "+ Add a number";
+          }
           renderList();
         } catch (e) { showErr("Network error loading numbers."); }
       }
@@ -8410,27 +9401,168 @@
 
         // List rows
         list.querySelectorAll(".pn-row").forEach(el => el.remove());
-        empty.hidden = state.phones.length > 0;
         for (const p of state.phones) {
           const row = document.createElement("div");
           row.className = "pn-row";
+          row.dataset.phoneId = p.phone_id || "";
           const billing = p.billing_mode || "included";
-          const badge = billing === "addon"
-            ? `<span class="pn-badge pn-badge-addon">${fmtMoney(p.monthly_cost_usd)}/mo</span>`
-            : `<span class="pn-badge pn-badge-included">Included</span>`;
+
+          // Billing badge — never show "Trial" to admins.
+          let badge;
+          if (billing === "trial" && !state.is_admin) {
+            badge = `<span class="pn-badge pn-badge-trial">Trial</span>`;
+          } else if (billing === "addon") {
+            badge = `<span class="pn-badge pn-badge-addon">${fmtMoney(p.monthly_cost_usd)}/mo</span>`;
+          } else {
+            badge = `<span class="pn-badge pn-badge-included">Included</span>`;
+          }
+          // Stack a TEST badge for dev-mock numbers so it's obvious this
+          // line was minted locally and isn't actually wired to Twilio.
+          if (p.mock) {
+            badge = `<span class="pn-badge pn-badge-test" title="Dev mock — no real Twilio number was purchased.">TEST</span>${badge}`;
+          }
+
+          // Status pill
+          const status = phoneStatus(p);
+          const statusPill = `
+            <span class="pn-status ${status.cls}">
+              <span class="pn-status-dot"></span>${escapeHtml(status.label)}
+            </span>`;
+
+          // Action (release for paid/admin; read-only for non-admin trial)
+          const action = (billing === "trial" && !state.is_admin)
+            ? `<span class="pn-meta" style="font-size:11px; color:#64748b; font-family:inherit;">Read-only</span>`
+            : `<button type="button" class="pn-release" data-num="${escapeHtml(p.phone_number || "")}">Release</button>`;
+
+          // Inline routing form
+          const routingTarget = (p.routing && p.routing.target) || "";
+          const routingForm = `
+            <div class="pn-route">
+              <label class="pn-route-label" for="pnRouteEmail-${escapeHtml(p.phone_id || "")}">
+                Forward missed calls + leads to
+              </label>
+              <div class="pn-route-row">
+                <input
+                  type="email"
+                  id="pnRouteEmail-${escapeHtml(p.phone_id || "")}"
+                  data-route-input="${escapeHtml(p.phone_id || "")}"
+                  value="${escapeHtml(routingTarget)}"
+                  placeholder="you@yourbusiness.com"
+                  autocomplete="email"
+                />
+                <button type="button" class="pn-route-save"
+                        data-route-save="${escapeHtml(p.phone_id || "")}">Save</button>
+              </div>
+              <div class="pn-route-status" data-route-status="${escapeHtml(p.phone_id || "")}"></div>
+            </div>`;
+
           row.innerHTML = `
-            <div>
-              <div class="pn-num">${escapeHtml(p.phone_display || p.phone_number || "")}</div>
-              <div class="pn-meta">${escapeHtml(p.phone_number || "")} · routes to ${escapeHtml((p.routing && p.routing.target) || "—")}</div>
+            <div class="pn-row-head">
+              <div class="pn-row-id">
+                <div>
+                  <div class="pn-num">${escapeHtml(p.phone_display || p.phone_number || "")}</div>
+                  <div class="pn-meta">${escapeHtml(p.phone_number || "")}</div>
+                </div>
+                <button type="button" class="pn-copy" data-copy="${escapeHtml(p.phone_number || "")}">📋 Copy</button>
+              </div>
+              <div class="pn-row-actions">
+                ${statusPill}
+                ${badge}
+                ${action}
+              </div>
             </div>
-            ${badge}
-            <button type="button" class="pn-release" data-num="${escapeHtml(p.phone_number || "")}">Release</button>
+            ${routingForm}
           `;
           list.appendChild(row);
         }
+
+        // Wire interactions
         list.querySelectorAll("[data-num]").forEach(btn => {
           btn.addEventListener("click", () => releaseNumber(btn.dataset.num));
         });
+        list.querySelectorAll("[data-copy]").forEach(btn => {
+          btn.addEventListener("click", () => copyToClipboard(btn));
+        });
+        list.querySelectorAll("[data-route-save]").forEach(btn => {
+          btn.addEventListener("click", () => saveRouting(btn.dataset.routeSave));
+        });
+      }
+
+      function phoneStatus(p) {
+        const bs = (p.build_status || "idle").toLowerCase();
+        // "Active" = ready to call right now, "Setting up" = still building,
+        // "Failed" = build error, "Idle" = un-assigned (rare for users).
+        if (bs === "ready" || bs === "live")      return { cls: "pn-status-live",  label: "Active" };
+        if (bs === "building" || bs === "queued") return { cls: "pn-status-build", label: "Setting up" };
+        if (bs === "failed" || bs === "error")    return { cls: "pn-status-fail",  label: "Failed" };
+        return { cls: "pn-status-idle", label: "Idle" };
+      }
+
+      function copyToClipboard(btn) {
+        const num = btn.dataset.copy || "";
+        if (!num) return;
+        const fallback = () => {
+          const ta = document.createElement("textarea");
+          ta.value = num; ta.style.position = "fixed"; ta.style.opacity = "0";
+          document.body.appendChild(ta); ta.select();
+          try { document.execCommand("copy"); } catch (_) {}
+          document.body.removeChild(ta);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(num).catch(fallback);
+        } else { fallback(); }
+        const orig = btn.innerHTML;
+        btn.classList.add("is-copied");
+        btn.innerHTML = "✓ Copied";
+        setTimeout(() => {
+          btn.classList.remove("is-copied");
+          btn.innerHTML = orig;
+        }, 1400);
+      }
+
+      async function saveRouting(phoneId) {
+        if (!phoneId) return;
+        const input  = document.querySelector(`[data-route-input="${phoneId}"]`);
+        const btn    = document.querySelector(`[data-route-save="${phoneId}"]`);
+        const status = document.querySelector(`[data-route-status="${phoneId}"]`);
+        if (!input || !btn || !status) return;
+        const target = (input.value || "").trim();
+        const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target);
+        if (!valid) {
+          status.textContent = "Enter a valid email address.";
+          status.className = "pn-route-status is-err";
+          return;
+        }
+        btn.disabled = true;
+        const originalLabel = btn.textContent;
+        btn.textContent = "Saving…";
+        status.textContent = "";
+        status.className = "pn-route-status";
+        try {
+          const res = await fetch(`/me/phones/${encodeURIComponent(phoneId)}/routing`, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ method: "email", target }),
+          });
+          if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            status.textContent = body.message || body.error || "Couldn't save routing.";
+            status.className = "pn-route-status is-err";
+          } else {
+            status.textContent = "Saved — calls will forward here.";
+            status.className = "pn-route-status is-ok";
+            // Update local state so subsequent renders show the new value.
+            const ph = state.phones.find(x => x.phone_id === phoneId);
+            if (ph) { ph.routing = { method: "email", target }; }
+          }
+        } catch (e) {
+          status.textContent = "Network error. Try again.";
+          status.className = "pn-route-status is-err";
+        } finally {
+          btn.disabled = false;
+          btn.textContent = originalLabel;
+        }
       }
 
       function renderSummaryLine() {
@@ -8482,11 +9614,35 @@
         setStep(1);
         document.getElementById("pnAreaCode").value = "";
         document.getElementById("pnLocality").value = "";
+        const tfPrefix = document.getElementById("pnTollfreePrefix");
+        if (tfPrefix) tfPrefix.value = "";
         document.getElementById("pnResults").innerHTML = "";
+        applyTypeFilters(); // reset to whatever the selected type is
         if (typeof dlg.showModal === "function") dlg.showModal();
         else dlg.setAttribute("open", "");
       }
       function closeWizard() { dlg.close ? dlg.close() : dlg.removeAttribute("open"); }
+
+      // Toggle which filter row is visible based on local vs toll-free.
+      function applyTypeFilters() {
+        const t = (document.getElementById("pnType").value || "local").toLowerCase();
+        const local = document.getElementById("pnLocalFilters");
+        const tf    = document.getElementById("pnTollfreeFilters");
+        const sub   = document.getElementById("pnStep1Sub");
+        const hint  = document.getElementById("pnTypeHint");
+        if (t === "tollfree") {
+          if (local) local.hidden = true;
+          if (tf)    tf.hidden = false;
+          if (sub)   sub.textContent = "Toll-free numbers (800/833/844/855/866/877/888) — not tied to a city.";
+          if (hint)  hint.textContent = "Toll-free numbers don't have geographic area codes. Pick a prefix or leave it as Any.";
+        } else {
+          if (local) local.hidden = false;
+          if (tf)    tf.hidden = true;
+          if (sub)   sub.textContent = "Search local numbers by area code or city.";
+          if (hint)  hint.textContent = "Local numbers have city area codes (415, 224, 312…). Type a 3-digit area code or a city name.";
+        }
+      }
+      document.getElementById("pnType").addEventListener("change", applyTypeFilters);
 
       document.getElementById("pnAddBtn").addEventListener("click", openWizard);
       document.getElementById("pnWizardClose").addEventListener("click", closeWizard);
@@ -8515,8 +9671,24 @@
         showErr("");
         const country  = document.getElementById("pnCountry").value || "US";
         const type_    = document.getElementById("pnType").value || "local";
-        const area     = (document.getElementById("pnAreaCode").value || "").trim();
-        const locality = (document.getElementById("pnLocality").value || "").trim();
+
+        // Pick filters based on type so we don't send a city area-code
+        // (415) into a toll-free search, which always returns 0.
+        let area = "";
+        let locality = "";
+        if (type_ === "tollfree") {
+          area = (document.getElementById("pnTollfreePrefix").value || "").trim();
+        } else {
+          area = (document.getElementById("pnAreaCode").value || "").trim();
+          locality = (document.getElementById("pnLocality").value || "").trim();
+          // Guard: an Illinois/Ohio area-code typed into the City field
+          // (e.g. "224") would search Twilio for a city named "224" and
+          // return zero. Detect that and slide it into area_code instead.
+          if (!area && /^\d{3}$/.test(locality)) {
+            area = locality;
+            locality = "";
+          }
+        }
 
         const results = document.getElementById("pnResults");
         const retry = document.getElementById("pnStep2Retry");
@@ -8543,7 +9715,20 @@
           document.getElementById("pnStep2Sub").textContent =
             `${items.length} ${type_ === "tollfree" ? "toll-free" : "local"} numbers · ${body.monthly_cost_label || ""}`;
           if (items.length === 0) {
-            results.innerHTML = `<div class="pn-empty">No numbers match. Try another area code.</div>`;
+            const hints = [];
+            if (type_ === "tollfree" && area && !["800","833","844","855","866","877","888"].includes(area)) {
+              hints.push(`<strong>${escapeHtml(area)}</strong> isn't a toll-free prefix. Toll-free uses 800, 833, 844, 855, 866, 877, or 888.`);
+            }
+            if (type_ === "local" && /^\d{3}$/.test(locality)) {
+              hints.push(`Looks like you typed an area code (<strong>${escapeHtml(locality)}</strong>) in the City field — try the Area code field instead.`);
+            }
+            if (type_ === "local" && area) {
+              hints.push(`No numbers available in area code <strong>${escapeHtml(area)}</strong> right now. Try a nearby code (e.g. 224 → Illinois, 614 → Ohio).`);
+            }
+            const headline = items.length === 0
+              ? (hints.length ? hints.join("<br>") : "No numbers match. Try a different area code or city.")
+              : "";
+            results.innerHTML = `<div class="pn-empty">${headline}</div>`;
             retry.hidden = false;
             return;
           }
@@ -8584,17 +9769,52 @@
           (item.locality || "") + (item.region ? `, ${item.region}` : "");
         document.getElementById("pnConfirmCap").innerHTML = capsBadges(item.capabilities);
 
-        // Cost / billing-mode preview
-        const overFlow = state.active >= state.included;
-        if (overFlow) {
-          document.getElementById("pnConfirmCost").textContent =
-            `+ ${fmtMoney(item.monthly_cost_usd)}/mo · prorated to today`;
-          document.getElementById("pnConfirmNote").textContent =
-            `You're at your plan's included limit — this number will be added as an add-on and charged on your next invoice.`;
+        const upgradeBox = document.getElementById("pnUpgrade");
+        const buyBtn = document.getElementById("pnStep3Buy");
+        const titleEl = document.getElementById("pnStep3Title");
+        const noteEl = document.getElementById("pnConfirmNote");
+        const costEl = document.getElementById("pnConfirmCost");
+
+        if (state.is_trial) {
+          // Trial users: pivot the confirm step into an upgrade prompt.
+          if (titleEl) titleEl.textContent = "Upgrade to claim this number";
+          costEl.textContent = `${fmtMoney(item.monthly_cost_usd)}/mo · only after upgrade`;
+          noteEl.hidden = true;
+          if (upgradeBox) upgradeBox.hidden = false;
+          if (buyBtn) buyBtn.hidden = true;
         } else {
-          document.getElementById("pnConfirmCost").textContent = "Included in your plan";
-          document.getElementById("pnConfirmNote").textContent =
-            "This number is included in your plan — no charge today.";
+          // Paid path. In dev/local mock mode, retitle so the user can
+          // see at a glance that this won't actually charge anyone.
+          if (titleEl) {
+            titleEl.textContent = state.mock_mode
+              ? "Confirm test purchase (no charge)"
+              : "Confirm purchase";
+          }
+          noteEl.hidden = false;
+          if (upgradeBox) upgradeBox.hidden = true;
+          if (buyBtn) buyBtn.hidden = false;
+          if (buyBtn) {
+            const lab = buyBtn.querySelector(".pn-buy-label");
+            if (lab) lab.textContent = state.mock_mode
+              ? "Run test purchase →"
+              : "Confirm purchase";
+          }
+
+          const overFlow = state.active >= state.included;
+          if (state.mock_mode) {
+            costEl.textContent = "TEST · no Twilio purchase, no Stripe charge";
+            noteEl.innerHTML =
+              "Dev / localhost — this creates a fake phone record so you can " +
+              "exercise the post-purchase flow without paying anyone.";
+          } else if (overFlow) {
+            costEl.textContent = `+ ${fmtMoney(item.monthly_cost_usd)}/mo · prorated to today`;
+            noteEl.textContent =
+              `You're at your plan's included limit — this number will be added as an add-on and charged on your next invoice.`;
+          } else {
+            costEl.textContent = "Included in your plan";
+            noteEl.textContent =
+              "This number is included in your plan — no charge today.";
+          }
         }
         setStep(3);
       }
@@ -8603,10 +9823,45 @@
 
       async function buyNumber() {
         if (state.purchasing || !state.wizardSelected) return;
+        if (state.is_trial) {
+          // Defensive guard: trial users see the upgrade card, not the buy
+          // button — but if they somehow trigger this, redirect to Basic.
+          window.open("https://buy.stripe.com/28E9AN2fL6ip2500C90Jq00",
+                      "_blank", "noopener");
+          return;
+        }
+
+        // REAL purchase guard. Only fire the "are you sure" prompt when
+        // we know the backend is going to actually call Twilio + Stripe.
+        // Mock mode (dev / localhost) skips this — those clicks are free.
+        if (!state.mock_mode) {
+          const sel = state.wizardSelected;
+          const num = sel.item.friendly_name || sel.item.phone_number || "this number";
+          const cost = sel.item.monthly_cost_usd
+            ? `$${Number(sel.item.monthly_cost_usd).toFixed(2)}/mo`
+            : "the listed monthly rate";
+          const overflow = state.active >= state.included;
+          const billingLine = overflow
+            ? `\n\nYou're past your plan's included lines, so this will be added\nas an add-on at ${cost}, prorated to today.`
+            : `\n\nThis is included in your plan — no charge today.`;
+          const ok = confirm(
+            `Buy ${num}?\n` +
+            `\nThis will:` +
+            `\n  • Reserve the number on Twilio (real money)` +
+            `\n  • Bill ${cost} to your Stripe subscription` +
+            `\n  • Wire it to your AI line and add it to your dashboard` +
+            billingLine +
+            `\n\nProceed?`
+          );
+          if (!ok) return;
+        }
+
         state.purchasing = true;
         const btn = document.getElementById("pnStep3Buy");
         btn.disabled = true;
-        btn.querySelector(".pn-buy-label").innerHTML = '<span class="pn-spinner"></span>Charging…';
+        btn.querySelector(".pn-buy-label").innerHTML = state.mock_mode
+          ? '<span class="pn-spinner"></span>Mocking…'
+          : '<span class="pn-spinner"></span>Charging…';
         try {
           const sel = state.wizardSelected;
           const idemKey = "purchase-" + sel.item.phone_number + "-" + Date.now();

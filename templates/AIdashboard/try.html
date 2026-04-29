@@ -130,7 +130,7 @@
       padding: 24px 24px 32px;
     }
 
-    /* ───── Page sections (How it works · Includes · Testimonials · FAQ · Pricing) ───── */
+    /* ───── Page sections (How it works · Includes · FAQ · Pricing) ───── */
     .section {
       width: min(960px, 92%); margin: 0 auto 24px;
       padding: 32px 36px;
@@ -186,122 +186,177 @@
     }
     .step p { font-size: 13px; color: var(--muted); line-height: 1.5; font-weight: 500; }
 
-    /* ─── Testimonials ─── */
-    .testimonials {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
-    }
-    @media (max-width: 900px) { .testimonials { grid-template-columns: 1fr; } }
-    .quote-card {
-      padding: 20px 20px 16px;
-      border: 1px solid var(--line); border-radius: 14px;
-      background: #fff;
-      display: flex; flex-direction: column; gap: 12px;
-      transition: transform .25s cubic-bezier(.22,1,.36,1), border-color .25s ease;
-    }
-    .quote-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-    .quote-card .stars {
-      font-size: 13px; color: #f59e0b; letter-spacing: 1px;
-    }
-    .quote-card blockquote {
-      font-family: "Space Grotesk", sans-serif;
-      font-size: 15px; line-height: 1.45; color: var(--text);
-      font-weight: 500; letter-spacing: -0.005em;
-      flex: 1;
-    }
-    .quote-card blockquote::before { content: "“"; color: var(--accent); margin-right: 1px; }
-    .quote-card blockquote::after  { content: "”"; color: var(--accent); margin-left: 1px; }
-    .quote-author { display: flex; align-items: center; gap: 10px; }
-    .quote-avatar {
-      width: 36px; height: 36px; border-radius: 50%;
-      display: inline-flex; align-items: center; justify-content: center;
-      font-family: "Space Grotesk", sans-serif;
-      font-size: 13px; font-weight: 700; color: #fff;
-      flex: 0 0 36px;
-    }
-    .quote-name { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.2; }
-    .quote-meta { font-size: 11.5px; color: var(--muted); font-weight: 500; }
-
     /* ─── Pricing ─── */
+    .pricing-wrap { padding-top: 8px; }
     .pricing {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      align-items: stretch;
+      max-width: 1080px;
+      margin: 0 auto;
     }
-    @media (max-width: 1100px) { .pricing { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 600px)  { .pricing { grid-template-columns: 1fr; } }
-    .price-card.is-custom {
-      background: linear-gradient(180deg, #fff, rgba(15,23,42,.04));
-      border-color: var(--text-soft);
-    }
-    .price-card.is-custom .price-amount {
-      font-size: 26px;
-    }
-    .price-card.is-custom .price-cta {
-      background: var(--text);
-    }
-    .price-card.is-custom .price-cta:hover {
-      background: var(--accent-deep);
-    }
+    @media (max-width: 980px) { .pricing { grid-template-columns: 1fr; max-width: 480px; } }
+
     .price-card {
-      position: relative; padding: 24px 22px 22px;
-      border: 1px solid var(--line); border-radius: 14px;
+      position: relative;
+      display: flex; flex-direction: column;
+      padding: 36px 30px 30px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
       background: #fff;
-      display: flex; flex-direction: column; gap: 14px;
-      transition: transform .25s cubic-bezier(.22,1,.36,1), border-color .25s ease;
+      transition: transform .35s cubic-bezier(.22,1,.36,1),
+                  border-color .25s ease,
+                  box-shadow .35s ease;
     }
-    .price-card:hover { transform: translateY(-2px); border-color: var(--line-strong); }
-    .price-card.is-featured {
-      border-color: var(--accent);
-      box-shadow: 0 12px 32px -8px rgba(43,108,176,.25);
-      background: linear-gradient(180deg, #fff, rgba(43,108,176,.04));
+    .price-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--line-strong);
+      box-shadow: 0 16px 40px -12px rgba(15,23,42,.12);
     }
-    .price-card.is-featured::before {
-      content: "Most popular";
-      position: absolute; top: -12px; left: 50%;
-      transform: translateX(-50%);
-      background: var(--accent); color: #fff;
-      font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
-      text-transform: uppercase;
-      padding: 4px 12px; border-radius: 999px;
-      box-shadow: 0 4px 12px rgba(43,108,176,.35);
-    }
+
     .price-tier {
       font-family: "Space Grotesk", sans-serif;
-      font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+      font-size: 11.5px; font-weight: 700; letter-spacing: 0.12em;
       text-transform: uppercase; color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .price-tagline {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 18px; font-weight: 600; color: var(--text);
+      letter-spacing: -0.015em;
+      line-height: 1.3;
+      margin-bottom: 18px;
+      min-height: 46px;
     }
     .price-amount {
       font-family: "Space Grotesk", sans-serif;
-      font-size: 36px; font-weight: 800; color: var(--text);
-      letter-spacing: -0.025em;
+      font-size: 48px; font-weight: 800; color: var(--text);
+      letter-spacing: -0.03em; line-height: 1;
       display: flex; align-items: baseline; gap: 6px;
+      margin-bottom: 4px;
     }
     .price-amount .pm {
       font-size: 14px; font-weight: 500; color: var(--muted);
+      letter-spacing: 0;
+    }
+    .price-amount-note {
+      font-size: 12.5px; color: var(--muted);
+      margin-bottom: 22px;
+    }
+
+    .price-divider {
+      height: 1px; background: var(--line);
+      margin: 0 -30px 22px; opacity: .65;
+    }
+
+    .price-headline {
+      font-size: 13px; font-weight: 700; color: var(--text);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 12px;
     }
     .price-bullets {
-      list-style: none; padding: 0; margin: 0;
-      display: flex; flex-direction: column; gap: 8px;
+      list-style: none; padding: 0; margin: 0 0 28px;
+      display: flex; flex-direction: column; gap: 12px;
     }
     .price-bullets li {
-      display: flex; align-items: flex-start; gap: 8px;
-      font-size: 13px; color: var(--text-soft); line-height: 1.4;
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 14px; color: var(--text); line-height: 1.45;
+      font-weight: 500;
     }
     .price-bullets li::before {
-      content: "✓"; color: var(--success, #16a34a);
-      font-weight: 800; flex: 0 0 14px;
+      content: ""; flex: 0 0 18px;
+      width: 18px; height: 18px; margin-top: 2px;
+      border-radius: 50%;
+      background: rgba(22,163,74,.10);
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M2.5 6.5l2.5 2.5 4.5-5' stroke='%2316a34a' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+      background-repeat: no-repeat; background-position: center;
     }
+
     .price-cta {
-      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-      padding: 12px 18px; border-radius: 10px;
-      background: var(--text); color: #fff;
-      font-weight: 700; font-size: 14px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 14px 22px; border-radius: 12px;
+      background: #fff; color: var(--text);
+      border: 1.5px solid var(--text);
+      font-weight: 700; font-size: 14.5px;
       text-decoration: none;
-      transition: background .2s, transform .25s cubic-bezier(.22,1,.36,1);
+      transition: background .2s, color .2s, border-color .2s, transform .25s cubic-bezier(.22,1,.36,1);
       margin-top: auto;
     }
-    .price-cta:hover { background: var(--accent); }
+    .price-cta:hover { background: var(--text); color: #fff; }
     .price-cta:active { transform: scale(.985); }
-    .price-card.is-featured .price-cta { background: var(--accent); }
-    .price-card.is-featured .price-cta:hover { background: var(--accent-deep); }
+
+    /* Featured (most popular) */
+    .price-card.is-featured {
+      border: 1.5px solid var(--accent);
+      background: linear-gradient(180deg, #fff 0%, rgba(43,108,176,.045) 100%);
+      box-shadow: 0 20px 50px -16px rgba(43,108,176,.30);
+      transform: translateY(-8px);
+    }
+    .price-card.is-featured:hover { transform: translateY(-12px); }
+    .price-card.is-featured::before {
+      content: "Most popular";
+      position: absolute; top: -14px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent); color: #fff;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.10em;
+      text-transform: uppercase;
+      padding: 6px 16px; border-radius: 999px;
+      box-shadow: 0 6px 16px rgba(43,108,176,.40);
+      white-space: nowrap;
+    }
+    .price-card.is-featured .price-tier { color: var(--accent); }
+    .price-card.is-featured .price-cta {
+      background: var(--accent); color: #fff; border-color: var(--accent);
+    }
+    .price-card.is-featured .price-cta:hover {
+      background: var(--accent-deep); border-color: var(--accent-deep);
+    }
+
+    /* Enterprise — small, secondary line below the cards */
+    .pricing-enterprise {
+      max-width: 1080px;
+      margin: 32px auto 0;
+      padding: 22px 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; flex-wrap: wrap;
+      border: 1px dashed var(--line-strong);
+      border-radius: 14px;
+      background: rgba(15,23,42,.02);
+    }
+    .pricing-enterprise-text strong {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 16px; color: var(--text);
+      display: block; margin-bottom: 4px;
+      letter-spacing: -0.01em;
+    }
+    .pricing-enterprise-text span {
+      font-size: 13px; color: var(--muted);
+    }
+    .pricing-enterprise a {
+      font-size: 14px; font-weight: 700; color: var(--text);
+      text-decoration: none;
+      padding: 10px 18px; border-radius: 10px;
+      border: 1px solid var(--line-strong);
+      background: #fff;
+      transition: background .2s, color .2s, border-color .2s;
+      white-space: nowrap;
+    }
+    .pricing-enterprise a:hover { background: var(--text); color: #fff; border-color: var(--text); }
+
+    .pricing-trust {
+      max-width: 1080px;
+      margin: 28px auto 0;
+      display: flex; justify-content: center; gap: 32px; flex-wrap: wrap;
+      font-size: 12.5px; color: var(--muted);
+    }
+    .pricing-trust span {
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .pricing-trust span::before {
+      content: ""; width: 6px; height: 6px; border-radius: 50%;
+      background: #16a34a;
+    }
 
     /* ─── Bottom CTA ─── */
     .bottom-cta {
@@ -941,7 +996,6 @@
       <nav class="nav-links">
         <a href="#how">How it works</a>
         <a href="#includes">Includes</a>
-        <a href="#testimonials">Reviews</a>
         <a href="#faq">FAQ</a>
         <a href="#pricing">Pricing</a>
         <a class="login-btn" href="/login">Login <span class="arrow">→</span></a>
@@ -1171,51 +1225,9 @@
     </div>
   </section>
 
-  <!-- ─────────── Testimonials ─────────── -->
-  <section id="testimonials" class="section">
-    <span class="section-eyebrow">03 · Reviews</span>
-    <h2>Owners who stopped missing calls.</h2>
-    <p class="lead">A few business owners who started with the same trial.</p>
-    <div class="testimonials">
-      <article class="quote-card">
-        <div class="stars">★ ★ ★ ★ ★</div>
-        <blockquote>Set it up in two minutes, booked four jobs the first weekend. Sounds like one of us, not a robot.</blockquote>
-        <div class="quote-author">
-          <span class="quote-avatar" style="background:#2b6cb0;">MR</span>
-          <div>
-            <div class="quote-name">Mike R.</div>
-            <div class="quote-meta">Sun-Up Roofing · Aurora, IL</div>
-          </div>
-        </div>
-      </article>
-      <article class="quote-card">
-        <div class="stars">★ ★ ★ ★ ★</div>
-        <blockquote>We used to miss every after-hours call. Last month the line caught 23 jobs we'd have lost — that's $14k of work.</blockquote>
-        <div class="quote-author">
-          <span class="quote-avatar" style="background:#16a34a;">SP</span>
-          <div>
-            <div class="quote-name">Sandra P.</div>
-            <div class="quote-meta">Always-On Plumbing · Houston, TX</div>
-          </div>
-        </div>
-      </article>
-      <article class="quote-card">
-        <div class="stars">★ ★ ★ ★ ★</div>
-        <blockquote>Rained on a Tuesday — the line auto-rescheduled all 12 estimates and emailed every customer before I woke up.</blockquote>
-        <div class="quote-author">
-          <span class="quote-avatar" style="background:#f59e0b;">CG</span>
-          <div>
-            <div class="quote-name">Carlos G.</div>
-            <div class="quote-meta">Green Edge Landscaping · Naperville, IL</div>
-          </div>
-        </div>
-      </article>
-    </div>
-  </section>
-
   <!-- ─────────── FAQ ─────────── -->
   <section id="faq" class="section">
-    <span class="section-eyebrow">04 · Common questions</span>
+    <span class="section-eyebrow">03 · Common questions</span>
     <h2>Quick answers to the doubts.</h2>
     <p class="lead">If something's not here, email us at hello@justgotalead.com.</p>
     <div class="faq" id="faqList">
@@ -1244,58 +1256,74 @@
 
   <!-- ─────────── Pricing ─────────── -->
   <section id="pricing" class="section">
-    <span class="section-eyebrow">05 · Pricing</span>
-    <h2>Pick a plan when you're ready.</h2>
-    <p class="lead">Trial is always free. These kick in only if you choose to keep your number after day 7. Cancel anytime, no contracts.</p>
-    <div class="pricing">
-      <article class="price-card">
-        <span class="price-tier">Basic</span>
-        <div class="price-amount">$99 <span class="pm">/ month</span></div>
-        <ul class="price-bullets">
-          <li>Phone, chat, email — all included</li>
-          <li>Up to <strong>200 leads</strong> per month</li>
-          <li>Lead alerts to your inbox</li>
-          <li>Industry-tailored voice + replies</li>
-          <li>Email support (24-hour reply)</li>
-        </ul>
-        <a class="price-cta" href="https://buy.stripe.com/28E9AN2fL6ip2500C90Jq00" target="_blank" rel="noopener">Choose Basic →</a>
-      </article>
-      <article class="price-card is-featured">
-        <span class="price-tier">Advanced</span>
-        <div class="price-amount">$199 <span class="pm">/ month</span></div>
-        <ul class="price-bullets">
-          <li>Everything in Basic</li>
-          <li>Up to <strong>1,000 leads</strong> per month</li>
-          <li>Calendar booking (Google + Outlook)</li>
-          <li>Push leads to your CRM (Zapier / webhook)</li>
-          <li>Priority support (4-hour reply)</li>
-        </ul>
-        <a class="price-cta" href="https://buy.stripe.com/9B6dR3g6B2292503Ol0Jq01" target="_blank" rel="noopener">Choose Advanced →</a>
-      </article>
-      <article class="price-card">
-        <span class="price-tier">Pro</span>
-        <div class="price-amount">$399 <span class="pm">/ month</span></div>
-        <ul class="price-bullets">
-          <li>Everything in Advanced</li>
-          <li><strong>Unlimited</strong> leads</li>
-          <li>Brand persona (write how your line should sound)</li>
-          <li>Multi-location routing (franchises)</li>
-          <li>Dedicated success manager</li>
-        </ul>
-        <a class="price-cta" href="https://buy.stripe.com/aFa6oB4nT8qxfVQ0C90Jq02" target="_blank" rel="noopener">Choose Pro →</a>
-      </article>
-      <article class="price-card is-custom">
-        <span class="price-tier">Enterprise / Custom</span>
-        <div class="price-amount">Let's talk</div>
-        <ul class="price-bullets">
-          <li>Everything in Pro</li>
-          <li>Per-branch billing (franchises)</li>
-          <li>Custom CRM (ServiceTitan, JobNimbus, Salesforce)</li>
-          <li>BAA, MSA, security review</li>
-          <li>White-label / reseller program</li>
-        </ul>
-        <a class="price-cta" href="mailto:hello@justgotalead.com?subject=Enterprise%20inquiry" target="_blank" rel="noopener">Talk to us →</a>
-      </article>
+    <span class="section-eyebrow">04 · Pricing</span>
+    <h2>Simple pricing. Cancel anytime.</h2>
+    <p class="lead">Your 7-day trial is always free. Pick a plan only if you want to keep your line.</p>
+
+    <div class="pricing-wrap">
+      <div class="pricing">
+        <article class="price-card">
+          <span class="price-tier">Basic</span>
+          <div class="price-tagline">For one location getting started.</div>
+          <div class="price-amount">$99<span class="pm">/mo</span></div>
+          <div class="price-amount-note">Billed monthly · no contracts</div>
+          <div class="price-divider"></div>
+          <div class="price-headline">What you get</div>
+          <ul class="price-bullets">
+            <li>Phone, chat, and email — all included</li>
+            <li>Up to <strong>200 leads</strong> per month</li>
+            <li>Lead alerts straight to your inbox</li>
+            <li>Email support (24h reply)</li>
+          </ul>
+          <a class="price-cta" href="https://buy.stripe.com/28E9AN2fL6ip2500C90Jq00" target="_blank" rel="noopener">Start with Basic →</a>
+        </article>
+
+        <article class="price-card is-featured">
+          <span class="price-tier">Advanced</span>
+          <div class="price-tagline">For growing shops that book daily.</div>
+          <div class="price-amount">$199<span class="pm">/mo</span></div>
+          <div class="price-amount-note">Billed monthly · no contracts</div>
+          <div class="price-divider"></div>
+          <div class="price-headline">Everything in Basic, plus</div>
+          <ul class="price-bullets">
+            <li>Up to <strong>1,000 leads</strong> per month</li>
+            <li>Calendar booking (Google &amp; Outlook)</li>
+            <li>Push leads to your CRM</li>
+            <li>Priority support (4h reply)</li>
+          </ul>
+          <a class="price-cta" href="https://buy.stripe.com/9B6dR3g6B2292503Ol0Jq01" target="_blank" rel="noopener">Start with Advanced →</a>
+        </article>
+
+        <article class="price-card">
+          <span class="price-tier">Pro</span>
+          <div class="price-tagline">For multi-location and franchises.</div>
+          <div class="price-amount">$399<span class="pm">/mo</span></div>
+          <div class="price-amount-note">Billed monthly · no contracts</div>
+          <div class="price-divider"></div>
+          <div class="price-headline">Everything in Advanced, plus</div>
+          <ul class="price-bullets">
+            <li><strong>Unlimited</strong> leads</li>
+            <li>Brand persona — write how your line sounds</li>
+            <li>Multi-location routing</li>
+            <li>Dedicated success manager</li>
+          </ul>
+          <a class="price-cta" href="https://buy.stripe.com/aFa6oB4nT8qxfVQ0C90Jq02" target="_blank" rel="noopener">Start with Pro →</a>
+        </article>
+      </div>
+
+      <div class="pricing-enterprise">
+        <div class="pricing-enterprise-text">
+          <strong>Enterprise &amp; custom integrations</strong>
+          <span>ServiceTitan · JobNimbus · Salesforce · BAA · white-label</span>
+        </div>
+        <a href="mailto:hello@justgotalead.com?subject=Enterprise%20inquiry">Talk to sales →</a>
+      </div>
+
+      <div class="pricing-trust">
+        <span>No setup fee</span>
+        <span>Cancel anytime</span>
+        <span>Your data stays yours</span>
+      </div>
     </div>
   </section>
 
