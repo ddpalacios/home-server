@@ -110,21 +110,29 @@
   </main>
 
   <main class="card" id="cardProgress" style="display:none">
-    <h1>Building your demo…</h1>
-    <p class="lede" id="progressLine">Reading your site…</p>
-    <div style="height: 6px; background: #e5e7eb; border-radius: 999px; overflow: hidden; margin-top: 16px;">
+    <h1 id="progressTitle">Building your demo…</h1>
+    <ul style="list-style:none; padding:0; margin:18px 0 12px; font-size:15px; line-height:1.9;">
+      <li id="stageReading" style="color:var(--muted)"><span class="stageIcon">◯</span> Reading your site</li>
+      <li id="stageIdentifying" style="color:var(--muted)"><span class="stageIcon">◯</span> Identifying services</li>
+      <li id="stageTraining" style="color:var(--muted)"><span class="stageIcon">◯</span> Training the AI</li>
+      <li id="stageWiring" style="color:var(--muted)"><span class="stageIcon">◯</span> Connecting your phone number</li>
+    </ul>
+    <div style="height: 6px; background: #e5e7eb; border-radius: 999px; overflow: hidden; margin-top: 8px;">
       <div id="progressBar" style="height: 100%; background: var(--accent); width: 10%; transition: width 0.4s ease;"></div>
     </div>
-    <p class="footnote">Magic link sent to <span id="progressEmail"></span></p>
+    <p class="footnote" style="margin-top:14px;"><span id="progressPercent">10%</span> · ~<span id="progressEta">85</span>s remaining</p>
+    <p class="footnote" style="margin-top:8px;">We just sent a magic link to <strong id="progressEmail"></strong> so you can manage everything from any device.</p>
   </main>
 
   <main class="card" id="cardSuccess" style="display:none; text-align:center;">
-    <h1>✓ Your demo is live</h1>
-    <p class="lede" style="margin-bottom: 20px;">Try it: ask about <span id="successHook">an inspection</span>.</p>
-    <div style="font-size: 22px; font-weight: 700; padding: 16px; border: 2px solid var(--accent); border-radius: 12px;">
+    <h1>✓ Your demo is live.</h1>
+    <div style="font-size: 22px; font-weight: 700; padding: 18px; border: 2px solid var(--accent); border-radius: 14px; margin-top: 18px;">
       <a id="successCallLink" href="#" style="color: var(--accent); text-decoration: none;">📞 Call <span id="successPhone"></span></a>
+      <div style="font-size:13px; color: var(--muted); font-weight:500; margin-top:6px;">Tap to call from this phone</div>
     </div>
-    <p class="footnote" style="margin-top: 16px;">Check your email for your dashboard link · trial expires in 7 days</p>
+    <p class="lede" style="margin: 20px 0 6px;">Try it: ask <em>"<span id="successExample">Tell me about your services.</span>"</em></p>
+    <p class="footnote" style="margin-top: 8px;">Active for 7 days · expires <span id="successExpiry">soon</span></p>
+    <a class="btn" id="continueSetupBtn" href="/try/setup" style="display:inline-flex; margin-top:24px; text-decoration:none;">Continue setup ▶</a>
   </main>
 
   <script>
@@ -173,6 +181,17 @@
           cardForm.style.display = "none";
           cardProgress.style.display = "block";
           progressEmail.textContent = email;
+          // Best-effort: extract a business name from the URL host to
+          // personalize "Building your demo for <Business>…"
+          try {
+            const host = new URL(url).hostname.replace(/^www\./, "");
+            const root = host.split(".")[0];
+            if (root) {
+              const bn = root.charAt(0).toUpperCase() + root.slice(1);
+              document.getElementById("progressTitle").textContent =
+                `Building your demo for ${bn}…`;
+            }
+          } catch (e) { /* leave default */ }
           pollStatus(body.status_url, body.phone_display);
         } catch (e) {
           err("Network error. Please retry.");
@@ -181,45 +200,68 @@
         }
       });
 
-      async function pollStatus(statusUrl, phoneDisplay) {
-        const stages = [
-          [10, "Reading your site…"],
-          [35, "Identifying your services…"],
-          [60, "Training the AI…"],
-          [85, "Connecting your phone number…"],
-        ];
-        let i = 0;
-        function tickFake() {
-          if (i < stages.length) {
-            progressBar.style.width = stages[i][0] + "%";
-            progressLine.textContent = stages[i][1];
-            i++;
-          }
-        }
-        const fakeTick = setInterval(tickFake, 1500);
+      const PHASE_ORDER = ["reading", "identifying", "training", "wiring", "ready"];
+      const PHASE_PCT = { idle: 10, reading: 22, identifying: 45, training: 70, wiring: 87, ready: 100 };
 
+      function applyPhaseUI(phase) {
+        const idx = PHASE_ORDER.indexOf(phase);
+        const ids = ["stageReading", "stageIdentifying", "stageTraining", "stageWiring"];
+        ids.forEach((id, i) => {
+          const li = document.getElementById(id);
+          const icon = li.querySelector(".stageIcon");
+          if (idx < 0 || i > idx) {
+            li.style.color = "var(--muted)";
+            icon.textContent = "◯";
+          } else if (i < idx) {
+            li.style.color = "var(--text)";
+            icon.textContent = "✓";
+          } else {
+            li.style.color = "var(--text)";
+            icon.textContent = "⟳";
+          }
+        });
+        const pct = PHASE_PCT[phase] != null ? PHASE_PCT[phase] : 10;
+        progressBar.style.width = pct + "%";
+        document.getElementById("progressPercent").textContent = pct + "%";
+        document.getElementById("progressEta").textContent =
+          Math.max(0, Math.round((100 - pct) * 0.9));
+      }
+
+      function formatExpiry(epochSeconds) {
+        if (!epochSeconds) return "in 7 days";
+        const d = new Date(epochSeconds * 1000);
+        return d.toLocaleDateString(undefined, {
+          weekday: "short", month: "short", day: "numeric",
+        });
+      }
+
+      async function pollStatus(statusUrl, phoneDisplay) {
+        applyPhaseUI("reading");
         const start = Date.now();
-        while (Date.now() - start < 180000) {
+        while (Date.now() - start < 240000) {
           await new Promise(r => setTimeout(r, 2000));
           let body;
           try {
             const res = await fetch(statusUrl);
             body = await res.json();
           } catch (e) { continue; }
+          const phase = body.build_phase || "reading";
+          applyPhaseUI(phase);
           if (body.build_status === "ready") {
-            clearInterval(fakeTick);
-            progressBar.style.width = "100%";
-            progressLine.textContent = "Done.";
-            await new Promise(r => setTimeout(r, 400));
+            applyPhaseUI("ready");
+            await new Promise(r => setTimeout(r, 300));
             cardProgress.style.display = "none";
             cardSuccess.style.display = "block";
-            successPhone.textContent = body.phone_display || phoneDisplay;
-            const callTarget = (body.phone_display || phoneDisplay || "").replace(/[^\d+]/g, "");
-            successCallLink.href = "tel:" + callTarget;
+            const phoneText = body.phone_display || phoneDisplay || "";
+            successPhone.textContent = phoneText;
+            successCallLink.href = "tel:" + phoneText.replace(/[^\d+]/g, "");
+            const ex = (body.example_question || "").trim();
+            if (ex) document.getElementById("successExample").textContent = ex;
+            document.getElementById("successExpiry").textContent =
+              formatExpiry(body.trial_expires_at);
             return;
           }
           if (body.build_status === "failed") {
-            clearInterval(fakeTick);
             err("Build failed: " + (body.build_error || "unknown error"));
             cardProgress.style.display = "none";
             cardForm.style.display = "block";
@@ -228,7 +270,6 @@
             return;
           }
         }
-        clearInterval(fakeTick);
         err("Timed out waiting for build. Check your inbox in a minute.");
       }
     })();
