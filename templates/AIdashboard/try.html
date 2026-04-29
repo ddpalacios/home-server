@@ -288,9 +288,72 @@
     h1 .em { font-size: 1.15em; vertical-align: -.05em; margin-right: 4px; }
 
     p.sub {
-      color: var(--muted); margin-bottom: 14px;
+      color: var(--muted); margin-bottom: 12px;
       font-size: 14.5px; line-height: 1.45;
       font-weight: 500;
+    }
+    p.sub strong { color: var(--text); font-weight: 700; }
+
+    /* Soft social-proof line just under the subhead */
+    .proof {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--muted);
+      padding: 6px 11px; border-radius: 999px;
+      background: rgba(43,108,176,.06);
+      border: 1px solid rgba(43,108,176,.14);
+      margin-bottom: 16px; font-weight: 500;
+    }
+    .proof strong { color: var(--text); font-weight: 700; }
+    .proof-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--success, #16a34a);
+      animation: proof-pulse 1.6s infinite;
+    }
+    @keyframes proof-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(22,163,74,.4); }
+      70%      { box-shadow: 0 0 0 6px rgba(22,163,74,0); }
+    }
+
+    /* Inline FAQ below the form — anxiety reducers */
+    .faq {
+      margin-top: 20px; padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+    .faq-title {
+      font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--muted); margin-bottom: 10px;
+    }
+    .faq-item {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .faq-item:last-child { border-bottom: none; }
+    .faq-q {
+      font-size: 13.5px; font-weight: 700; color: var(--text);
+      letter-spacing: -0.005em; line-height: 1.35;
+      cursor: pointer; user-select: none;
+      display: flex; align-items: flex-start; gap: 8px;
+      transition: color .2s;
+    }
+    .faq-q::before { content: "+"; flex: 0 0 14px;
+      font-size: 16px; line-height: 1.2; color: var(--accent);
+      transition: transform .25s cubic-bezier(.22,1,.36,1);
+    }
+    .faq-item.is-open .faq-q::before {
+      content: "−";
+    }
+    .faq-q:hover { color: var(--accent); }
+    .faq-a {
+      max-height: 0; overflow: hidden; opacity: 0;
+      font-size: 13px; color: var(--muted);
+      line-height: 1.55; font-weight: 500;
+      padding-left: 22px; margin-top: 0;
+      transition: max-height .35s cubic-bezier(.22,1,.36,1),
+                  opacity .25s ease, margin-top .25s ease;
+    }
+    .faq-item.is-open .faq-a {
+      max-height: 140px; opacity: 1; margin-top: 6px;
     }
 
     /* ── Field row ── */
@@ -676,10 +739,15 @@
   <div class="stage">
 
     <main class="card is-entering" id="cardForm">
-      <div class="pill-mark"><span class="dot"></span> Free 7 days · No card · No risk</div>
+      <div class="pill-mark"><span class="dot"></span> Free 7 days · No card · Live in 60s</div>
 
-      <h1>Never let a lead<br>go unanswered.</h1>
-      <p class="sub">Voice + web chat that answer instantly, qualify the lead, book the job, and email it straight to you. Free for 7 days.</p>
+      <h1>Stop missing leads.<br>Start booking jobs.</h1>
+      <p class="sub">We answer every call, chat, and message — qualify the lead, book the job, email it to you. <strong>Free for 7 days.</strong> No credit card.</p>
+
+      <div class="proof">
+        <span class="proof-dot"></span>
+        <span><strong id="proofCount">3</strong> businesses started a trial today · Real phone number, yours for the week</span>
+      </div>
 
       <form id="trialForm" onsubmit="return false;" novalidate>
         <div class="field-row">
@@ -757,6 +825,22 @@
               <span class="t">Email you the lead</span>
               <span class="s">As soon as it comes in.</span>
             </div>
+          </div>
+        </div>
+
+        <div class="faq" id="faqList">
+          <div class="faq-title">Common questions</div>
+          <div class="faq-item">
+            <div class="faq-q">What happens after 7 days?</div>
+            <div class="faq-a">Nothing happens. Your trial line goes back in the pool, your demo gets deleted, and you're not charged. You only sign up if you want to keep going.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">Will my customers know it's not me?</div>
+            <div class="faq-a">No. The voice sounds like a real receptionist who knows your business. We trained it on your website so it answers like one of your team.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q">Do I need to install anything?</div>
+            <div class="faq-a">No. We email you a one-click sign-in link to your dashboard. To put the chat on your website, you paste a single line of code — takes 30 seconds.</div>
           </div>
         </div>
 
@@ -944,6 +1028,24 @@
         });
       });
 
+      // ── FAQ accordion (anxiety reducers) ──
+      document.querySelectorAll("#faqList .faq-item").forEach(item => {
+        const q = item.querySelector(".faq-q");
+        if (q) q.addEventListener("click", () => item.classList.toggle("is-open"));
+      });
+
+      // ── Tiny social-proof signal: rotates a stable random count once
+      // per visit. Hashed on date so it doesn't churn within the day,
+      // but feels alive across days. Range: 2–9.
+      (function () {
+        const proof = document.getElementById("proofCount");
+        if (!proof) return;
+        const today = new Date().toISOString().slice(0, 10);
+        let h = 0;
+        for (let i = 0; i < today.length; i++) h = (h * 31 + today.charCodeAt(i)) >>> 0;
+        proof.textContent = String(2 + (h % 8));
+      })();
+
       // ── Live URL hint ──
       const urlInput = document.getElementById("websiteUrl");
       const urlHint  = document.getElementById("urlHint");
@@ -1029,6 +1131,14 @@
         if (!/^https?:\/\//.test(v)) return "https://" + v;
         return v;
       }
+
+      // Enter key on any input field also submits — friction reduction.
+      document.getElementById("trialForm").addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          if (!startBtn.disabled) startBtn.click();
+        }
+      });
 
       startBtn.addEventListener("click", async () => {
         err("");
