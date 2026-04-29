@@ -163,6 +163,14 @@
         <pre class="code" id="emailListenAddr"></pre>
         <p style="margin-top:8px; font-size:13px; color:var(--muted)">In Gmail: Settings → Forwarding and POP/IMAP → Add a forwarding address.</p>
       </div>
+
+      <div id="wireUpCalendar" class="card" style="display:none; margin-top:18px; padding:14px; border:1px solid var(--border, #e5e7eb); border-radius:10px;">
+        <h3 style="margin:0 0 6px">Google Calendar (optional)</h3>
+        <p style="margin:0 0 10px; font-size:14px;">Let the bot book directly into your calendar. We only insert events for confirmed leads — we never read your existing events.</p>
+        <div id="calStatus" class="muted" style="font-size:13px; margin-bottom:8px;">Not connected.</div>
+        <a id="calConnectBtn" class="btn secondary" href="/auth/google/calendar/start">Connect Google Calendar</a>
+        <button id="calDisconnectBtn" class="btn-link" type="button" style="margin-left:10px; display:none">Disconnect</button>
+      </div>
     </section>
 
     <div class="actions">
@@ -301,11 +309,14 @@
         document.getElementById("wireUpVoice").style.display = "none";
         document.getElementById("wireUpWidget").style.display = "none";
         document.getElementById("wireUpEmail").style.display = "none";
+        document.getElementById("wireUpCalendar").style.display = "none";
         if (trialMode === "voice") {
           document.getElementById("wireUpVoice").style.display = "";
+          document.getElementById("wireUpCalendar").style.display = "";
           lede.textContent = "Forward your business line to the demo number when you're busy.";
         } else if (trialMode === "widget") {
           document.getElementById("wireUpWidget").style.display = "";
+          document.getElementById("wireUpCalendar").style.display = "";
           lede.textContent = "Paste this on your website to start capturing chats.";
           const acct = trial.account_id || "";
           document.getElementById("widgetSnippet").textContent =
@@ -317,7 +328,39 @@
           document.getElementById("emailListenAddr").textContent =
             `inbox-${acct}@try.justgotalead.com`;
         }
+        refreshCalendarStatus();
       }
+
+      async function refreshCalendarStatus() {
+        const status = document.getElementById("calStatus");
+        const connect = document.getElementById("calConnectBtn");
+        const disconnect = document.getElementById("calDisconnectBtn");
+        const params = new URLSearchParams(location.search);
+        if (params.get("calendar") === "connected") {
+          status.textContent = "Calendar connected.";
+        } else if (params.get("calendar") === "error") {
+          status.textContent = "Connect failed — try again.";
+        }
+        try {
+          const me = await fetch("/me").then(r => r.json());
+          const ints = (me && me.integrations) || [];
+          if (ints.includes("google_cal")) {
+            status.textContent = "Calendar connected.";
+            connect.textContent = "Reconnect calendar";
+            disconnect.style.display = "";
+          } else {
+            connect.textContent = "Connect Google Calendar";
+            disconnect.style.display = "none";
+          }
+        } catch (_) { /* fail-open */ }
+      }
+
+      document.getElementById("calDisconnectBtn").addEventListener("click", async () => {
+        await fetch("/integrations/calendar/disconnect", { method: "POST" });
+        document.getElementById("calStatus").textContent = "Disconnected.";
+        document.getElementById("calConnectBtn").textContent = "Connect Google Calendar";
+        document.getElementById("calDisconnectBtn").style.display = "none";
+      });
 
       document.querySelectorAll('[data-carrier]').forEach(btn => {
         btn.addEventListener("click", () => {
