@@ -47,12 +47,26 @@
       border: 1px solid var(--line);
       transition: opacity 320ms ease, transform 320ms ease;
     }
-    .card.is-leaving { opacity: 0; transform: translateY(-8px); pointer-events: none; }
-    .card.is-entering { animation: enter 380ms cubic-bezier(.2,.7,.2,1) both; }
+    .card.is-leaving { opacity: 0; transform: translateY(-12px) scale(.985); pointer-events: none; }
+    .card.is-entering { animation: enter 480ms cubic-bezier(.22, 1, .36, 1) both; }
     @keyframes enter {
-      from { opacity: 0; transform: translateY(12px); }
+      from { opacity: 0; transform: translateY(20px) scale(.985); }
       to   { opacity: 1; transform: none; }
     }
+
+    /* Top-of-page progress bar (NProgress-style). Shown during in-flight
+       network calls + page transitions. */
+    .top-bar {
+      position: fixed; left: 0; top: 0; height: 3px; width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.7);
+      z-index: 9999;
+      opacity: 0;
+      transition: width .45s cubic-bezier(.22,1,.36,1), opacity .25s;
+      pointer-events: none;
+    }
+    .top-bar.is-on { opacity: 1; }
+    .top-bar.is-done { opacity: 0; transition: opacity .35s ease .15s; }
 
     .pill-mark {
       display: inline-flex; align-items: center; gap: 6px;
@@ -136,8 +150,33 @@
     .btn:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(37, 99, 235, 0.32); }
     .btn:active { transform: translateY(0); }
     .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
-    .btn .arrow { display: inline-block; transition: transform .2s; }
-    .btn:hover .arrow { transform: translateX(3px); }
+    .btn .arrow { display: inline-block; transition: transform .25s cubic-bezier(.22,1,.36,1); }
+    .btn:hover .arrow { transform: translateX(4px); }
+    .btn .label { display: inline-flex; align-items: center; gap: 8px; }
+
+    /* Inline spinner inside the button while submitting */
+    .btn-spinner {
+      width: 16px; height: 16px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,.35);
+      border-top-color: #fff;
+      animation: btnspin .8s linear infinite;
+    }
+    @keyframes btnspin { to { transform: rotate(360deg); } }
+    .btn.is-loading { background: linear-gradient(135deg, #1d4ed8, #1e40af); }
+    .btn.is-loading .arrow { display: none; }
+
+    /* Stage items reveal one-by-one when the progress card mounts */
+    .stages-list .stage-item { opacity: 0; transform: translateX(-8px); }
+    .card.is-entering .stages-list .stage-item {
+      animation: stage-in .5s cubic-bezier(.22,1,.36,1) forwards;
+    }
+    .card.is-entering .stages-list .stage-item:nth-child(1) { animation-delay: .10s; }
+    .card.is-entering .stages-list .stage-item:nth-child(2) { animation-delay: .20s; }
+    .card.is-entering .stages-list .stage-item:nth-child(3) { animation-delay: .30s; }
+    .card.is-entering .stages-list .stage-item:nth-child(4) { animation-delay: .40s; }
+    @keyframes stage-in {
+      to { opacity: 1; transform: none; }
+    }
 
     .err { color: #b91c1c; font-size: 14px; margin-top: 12px; min-height: 18px; }
 
@@ -238,6 +277,7 @@
   </style>
 </head>
 <body>
+  <div class="top-bar" id="topBar"></div>
   <div class="stage">
 
     <main class="card is-entering" id="cardForm">
@@ -278,7 +318,7 @@
         </div>
 
         <button class="btn" type="submit" id="startBtn">
-          Start free trial <span class="arrow">→</span>
+          <span class="label">Start free trial <span class="arrow">→</span></span>
         </button>
         <p class="err" id="formError"></p>
 
@@ -434,6 +474,44 @@
 
       function err(msg) { formError.textContent = msg || ""; }
 
+      // ---- Top progress bar ----
+      const topBar = document.getElementById("topBar");
+      let topBarTimer = null;
+      function topBarStart() {
+        topBar.classList.remove("is-done");
+        topBar.classList.add("is-on");
+        topBar.style.width = "8%";
+        clearInterval(topBarTimer);
+        // Trickle towards 80% while waiting for the network
+        let pct = 8;
+        topBarTimer = setInterval(() => {
+          if (pct >= 80) return;
+          pct += (80 - pct) * 0.12;
+          topBar.style.width = pct + "%";
+        }, 220);
+      }
+      function topBarFinish() {
+        clearInterval(topBarTimer);
+        topBar.style.width = "100%";
+        setTimeout(() => {
+          topBar.classList.add("is-done");
+          topBar.classList.remove("is-on");
+          setTimeout(() => { topBar.style.width = "0%"; }, 400);
+        }, 220);
+      }
+
+      // ---- Button morph helpers ----
+      function startBtnLoading(label) {
+        startBtn.disabled = true;
+        startBtn.classList.add("is-loading");
+        startBtn.innerHTML = `<span class="label"><span class="btn-spinner"></span> ${label || "Starting…"}</span>`;
+      }
+      function startBtnReset(label) {
+        startBtn.disabled = false;
+        startBtn.classList.remove("is-loading");
+        startBtn.innerHTML = `<span class="label">${label || "Start free trial"} <span class="arrow">→</span></span>`;
+      }
+
       // ---- Submit ----
 
       function normalizeUrl(v) {
@@ -461,8 +539,8 @@
         }
         urlInput.value = url;
 
-        startBtn.disabled = true;
-        startBtn.innerHTML = "Starting your demo… <span class='arrow'>→</span>";
+        startBtnLoading("Starting your demo…");
+        topBarStart();
 
         try {
           const res = await fetch("/try", {
@@ -472,11 +550,12 @@
           });
           const body = await res.json();
           if (!res.ok) {
+            topBarFinish();
             err(body.error || "Something went wrong.");
-            startBtn.disabled = false;
-            startBtn.innerHTML = "Start free trial <span class='arrow'>→</span>";
+            startBtnReset();
             return;
           }
+          topBarFinish();
           fadeOut(cardForm, () => {
             fadeIn(cardProgress);
             progressEmail.textContent = email;
@@ -493,9 +572,9 @@
             pollStatus(body.status_url, body.phone_display);
           });
         } catch (e) {
+          topBarFinish();
           err("Network error. Please retry.");
-          startBtn.disabled = false;
-          startBtn.innerHTML = "Start free trial <span class='arrow'>→</span>";
+          startBtnReset();
         }
       });
 
@@ -568,8 +647,7 @@
             err("Build failed: " + (body.build_error || "unknown error"));
             fadeOut(cardProgress, () => {
               fadeIn(cardForm);
-              startBtn.disabled = false;
-              startBtn.innerHTML = "Try again <span class='arrow'>→</span>";
+              startBtnReset("Try again");
             });
             return;
           }
