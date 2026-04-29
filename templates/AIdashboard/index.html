@@ -200,11 +200,20 @@
       box-sizing: border-box;
       margin: 0 auto;
     }
-    .app-body [data-route-section] { display: none; }
-    .app-body [data-route-section].is-active { display: block; }
+    /* Route sections — only the .is-active one renders. !important wins
+       against `section.grid { display: grid }` and any inline-style or
+       JS-injected display value that would otherwise leak Settings /
+       Embed onto the page when the user is on Phones / Voice / etc. */
+    .app-body [data-route-section] { display: none !important; }
+    .app-body [data-route-section].is-active { display: block !important; }
     /* The trialBanner sticks above whichever section is active */
     .app-body > #trialBanner { display: block; }
     .app-body > #trialBanner[hidden] { display: none !important; }
+    /* Defensive: native <dialog> elements without the `open` attribute
+       must not render inline. Browsers do this via UA stylesheet, but
+       our pn-wizard rule sets position:fixed which some browsers
+       (older Safari) treat as overriding the UA `display:none`. */
+    dialog:not([open]) { display: none !important; }
 
     /* HARD GATE — admin-only UI is invisible until <body> is flagged as
        admin. /me runs first thing on load and adds .app-is-admin only

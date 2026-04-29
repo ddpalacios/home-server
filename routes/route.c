@@ -8,6 +8,7 @@
 #include "http_utilities.h"
 #include "local-server/GET/get_local_server.h"
 #include "local-server/POST/post_local_server.h"
+#include "blob-storage/POST/post_blob.h"
 #include "read_message.h"
 
 static char from_hex(char c) {
@@ -396,6 +397,10 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         if (parsed) cJSON_Delete(parsed);
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/twiliobot") == 0) {
         get_live_html(cSSL, http_header, "portfolio/twiliobot.html");
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/privacy") == 0) {
+        get_live_html(cSSL, http_header, "portfolio/privacy.html");
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/terms") == 0) {
+        get_live_html(cSSL, http_header, "portfolio/terms.html");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/") == 0) {
         get_live_html(cSSL, http_header, "portfolio/home.html");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/home") == 0) {
@@ -538,6 +543,8 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         post_to_local(socket, http_header, body, route, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/chat-reset") == 0) {
         post_to_local(socket, http_header, body, route_with_query, "9000");
+    } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/blob-storage/", 14) == 0) {
+        post_blob(socket, http_header, body, route);
     } else if (strcmp(request_type, "DELETE") == 0 && strstr(route, "/knowledege") != NULL) {
         delete_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/portfolio/images/") != NULL) {

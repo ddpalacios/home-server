@@ -25,6 +25,7 @@ file(GLOB MAIN
     "routes/route.c"
     "routes/local-server/POST/post_local_server.c"
     "routes/local-server/GET/get_local_server.c"
+    "routes/blob-storage/POST/post_blob.c"
 )
 
 

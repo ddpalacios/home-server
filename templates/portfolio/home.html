@@ -1314,6 +1314,43 @@
         border: 1px solid rgba(148, 163, 184, 0.35);
         font-size: 1rem;
         background: #f8fafc;
+        font-family: inherit;
+      }
+
+      .contact-form textarea {
+        min-height: 120px;
+        resize: vertical;
+      }
+
+      .contact-form .consent {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 6px 0 2px;
+        font-size: 0.8rem;
+        line-height: 1.5;
+        color: #475569;
+        cursor: pointer;
+      }
+
+      .contact-form .consent input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        margin-top: 2px;
+        flex-shrink: 0;
+        cursor: pointer;
+      }
+
+      .contact-form .consent a {
+        color: var(--accent);
+        text-decoration: underline;
+      }
+
+      .contact-form .form-error {
+        color: #b91c1c;
+        font-size: 0.85rem;
+        font-weight: 600;
+        min-height: 1.1em;
       }
 
       .contact-form button {
@@ -1324,6 +1361,11 @@
         color: #ffffff;
         font-weight: 600;
         cursor: pointer;
+      }
+
+      .contact-form button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
       }
 
       .roi-card {
@@ -2347,6 +2389,18 @@
         <p class="section-subtitle">
           Tell us about your service business and we’ll show you the right setup.
         </p>
+        <form id="lead-form" class="contact-form" novalidate>
+          <input name="name" type="text" placeholder="Your name" autocomplete="name" required />
+          <input name="email" type="email" placeholder="Email address" autocomplete="email" required />
+          <input name="phone" type="tel" placeholder="Phone number" autocomplete="tel" required />
+          <textarea name="message" placeholder="Tell us about your service business" required></textarea>
+          <label class="consent" for="sms_consent">
+            <input type="checkbox" id="sms_consent" name="sms_consent" />
+            <span id="sms_consent_text">I agree to receive SMS text messages from Just Got a Lead at the phone number provided regarding my inquiry, including responses, follow-ups, and appointment scheduling. Message frequency varies. Msg &amp; data rates may apply. Reply STOP to opt out, HELP for help. See our <a href="https://justgotalead.com/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a> and <a href="https://justgotalead.com/terms" target="_blank" rel="noopener noreferrer">SMS Terms</a>.</span>
+          </label>
+          <div class="form-error" id="lead-form-error" role="alert" aria-live="polite"></div>
+          <button id="lead-submit" type="submit">Send inquiry</button>
+        </form>
         <div class="contact-email">
           <h3>Email us directly</h3>
           <p>We reply quickly and can tailor a demo to your service business.</p>
@@ -2542,6 +2596,68 @@
         roiHoursInput.value = 0;
       }
       calcROI();
+
+      (function () {
+        const form = document.getElementById("lead-form");
+        if (!form) return;
+        const errorEl = document.getElementById("lead-form-error");
+        const submitBtn = document.getElementById("lead-submit");
+        const consentEl = document.getElementById("sms_consent");
+        const consentTextEl = document.getElementById("sms_consent_text");
+        const CONSENT_ERROR = "You must agree to receive SMS messages to submit this form.";
+
+        form.addEventListener("submit", async function (event) {
+          event.preventDefault();
+          errorEl.textContent = "";
+
+          if (!consentEl.checked) {
+            errorEl.textContent = CONSENT_ERROR;
+            consentEl.focus();
+            return;
+          }
+
+          const fd = new FormData(form);
+          const consentText = (consentTextEl.innerText || consentTextEl.textContent || "")
+            .replace(/\s+/g, " ")
+            .trim();
+
+          const payload = {
+            values: [
+              {
+                name: (fd.get("name") || "").toString().trim(),
+                email: (fd.get("email") || "").toString().trim(),
+                phone: (fd.get("phone") || "").toString().trim(),
+                message: (fd.get("message") || "").toString().trim(),
+                submit_date: new Date().toISOString(),
+                sms_consent: true,
+                sms_consent_text: consentText,
+              },
+            ],
+          };
+
+          submitBtn.disabled = true;
+          const originalLabel = submitBtn.textContent;
+          submitBtn.textContent = "Sending…";
+          try {
+            const res = await fetch("/blob-storage/email", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              body: JSON.stringify(payload),
+            });
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            submitBtn.textContent = "Sent!";
+            form.reset();
+          } catch (err) {
+            errorEl.textContent =
+              "Could not submit right now. Please try again or email us directly.";
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalLabel;
+          }
+        });
+      })();
     </script>
   </body>
 </html>

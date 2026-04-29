@@ -25,6 +25,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/home-server.dir/models/session.c.o.d"
   "CMakeFiles/home-server.dir/models/websocket.c.o"
   "CMakeFiles/home-server.dir/models/websocket.c.o.d"
+  "CMakeFiles/home-server.dir/routes/blob-storage/POST/post_blob.c.o"
+  "CMakeFiles/home-server.dir/routes/blob-storage/POST/post_blob.c.o.d"
   "CMakeFiles/home-server.dir/routes/local-server/GET/get_local_server.c.o"
   "CMakeFiles/home-server.dir/routes/local-server/GET/get_local_server.c.o.d"
   "CMakeFiles/home-server.dir/routes/local-server/POST/post_local_server.c.o"

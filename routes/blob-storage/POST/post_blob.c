@@ -14,6 +14,7 @@
 #include <netdb.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <time.h>
 #define IPSTRLEN INET6_ADDRSTRLEN
 
 static int ensure_dir(const char *dir_path){
@@ -99,7 +100,6 @@ void connect_to_server(const char* host, const char* port, char*body){
 	int overwrite = 0;
 
 	if (strstr(route, "/blob-storage/email")){
-		connect_to_server("127.0.0.1", "5000", body);
 		const char *home = getenv("HOME");
 		if (!home || !home[0]){
 			send_response_code(cSSL, 500);
@@ -108,6 +108,104 @@ void connect_to_server(const char* host, const char* port, char*body){
 		snprintf(write_path, sizeof(write_path),"%s/home-server/blob-storage/bronze_portfolio_appointments.json", home);
 		snprintf(path, sizeof(path),"blob-storage/bronze_portfolio_appointments.json");
 
+		/* Server-stamp TCPA/A2P-10DLC consent fields onto each lead in values[]
+		 * so the proof-of-consent record can't be forged from the client.
+		 * sms_consent_timestamp + sms_consent_ip MUST come from the server. */
+		cJSON *parsed = cJSON_Parse(body ? body : "{}");
+		if (!parsed){
+			send_response_code(cSSL, 400);
+			return;
+		}
+		cJSON *vals = cJSON_GetObjectItem(parsed, "values");
+		if (cJSON_IsArray(vals)){
+			time_t now = time(NULL);
+			struct tm tm_utc;
+			gmtime_r(&now, &tm_utc);
+			char ts[32];
+			strftime(ts, sizeof(ts), "%Y-%m-%dT%H:%M:%SZ", &tm_utc);
+			const char *peer_ip = (socket && socket->ip_addr) ? socket->ip_addr : "";
+			int n = cJSON_GetArraySize(vals);
+			for (int i = 0; i < n; i++){
+				cJSON *item = cJSON_GetArrayItem(vals, i);
+				if (!cJSON_IsObject(item)) continue;
+				cJSON_DeleteItemFromObject(item, "sms_consent_timestamp");
+				cJSON_AddStringToObject(item, "sms_consent_timestamp", ts);
+				cJSON_DeleteItemFromObject(item, "sms_consent_ip");
+				cJSON_AddStringToObject(item, "sms_consent_ip", peer_ip);
+				/* Coerce sms_consent to a real boolean — the client may send
+				 * the field omitted, as a string, etc. Default false. */
+				cJSON *consent = cJSON_GetObjectItem(item, "sms_consent");
+				int has_consent = consent && cJSON_IsTrue(consent);
+				cJSON_DeleteItemFromObject(item, "sms_consent");
+				cJSON_AddBoolToObject(item, "sms_consent", has_consent);
+			}
+		}
+		char *augmented = cJSON_PrintUnformatted(parsed);
+		cJSON_Delete(parsed);
+		if (!augmented){
+			send_response_code(cSSL, 500);
+			return;
+		}
+
+		/* Forward augmented payload to the local Flask app for any future
+		 * downstream side effects (notifications, CRM sync, etc.). */
+		connect_to_server("127.0.0.1", "5000", augmented);
+
+		/* Append to the JSON blob, creating it if it doesn't exist. */
+		char *frame_json = get_file_buffer(path);
+		if (frame_json == NULL){
+			FILE *file = fopen(write_path, "w");
+			if (!file){
+				perror("Failed to open file");
+				free(augmented);
+				send_response_code(cSSL, 500);
+				return;
+			}
+			fputs(augmented, file);
+			fclose(file);
+		} else {
+			cJSON *root = cJSON_Parse(frame_json);
+			cJSON *new_root = cJSON_Parse(augmented);
+			free(frame_json);
+			if (!root){
+				root = cJSON_CreateObject();
+			}
+			cJSON *old_values = cJSON_GetObjectItem(root, "values");
+			if (!cJSON_IsArray(old_values)){
+				cJSON_DeleteItemFromObject(root, "values");
+				old_values = cJSON_AddArrayToObject(root, "values");
+			}
+			cJSON *new_values = new_root ? cJSON_GetObjectItem(new_root, "values") : NULL;
+			if (cJSON_IsArray(new_values)){
+				int sz = cJSON_GetArraySize(new_values);
+				for (int i = 0; i < sz; i++){
+					cJSON *item = cJSON_DetachItemFromArray(new_values, 0);
+					if (item) cJSON_AddItemToArray(old_values, item);
+				}
+			}
+			char *merged = cJSON_Print(root);
+			cJSON_Delete(root);
+			if (new_root) cJSON_Delete(new_root);
+			if (!merged){
+				free(augmented);
+				send_response_code(cSSL, 500);
+				return;
+			}
+			FILE *file = fopen(write_path, "w");
+			if (!file){
+				perror("Failed to open file");
+				free(merged);
+				free(augmented);
+				send_response_code(cSSL, 500);
+				return;
+			}
+			fputs(merged, file);
+			fclose(file);
+			free(merged);
+		}
+		free(augmented);
+		send_response_code(cSSL, 200);
+		return;
 	}
 	else if (strstr(route, "/blob-storage/etl/pipeline/save")!= NULL){
 		char* pipelineId = get_query_parameter(route, "pipelineId");

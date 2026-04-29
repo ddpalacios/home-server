@@ -441,6 +441,30 @@ models/websocket.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/models/websocket.c.s
 .PHONY : models/websocket.c.s
 
+routes/blob-storage/POST/post_blob.o: routes/blob-storage/POST/post_blob.c.o
+.PHONY : routes/blob-storage/POST/post_blob.o
+
+# target to build an object file
+routes/blob-storage/POST/post_blob.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/blob-storage/POST/post_blob.c.o
+.PHONY : routes/blob-storage/POST/post_blob.c.o
+
+routes/blob-storage/POST/post_blob.i: routes/blob-storage/POST/post_blob.c.i
+.PHONY : routes/blob-storage/POST/post_blob.i
+
+# target to preprocess a source file
+routes/blob-storage/POST/post_blob.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/blob-storage/POST/post_blob.c.i
+.PHONY : routes/blob-storage/POST/post_blob.c.i
+
+routes/blob-storage/POST/post_blob.s: routes/blob-storage/POST/post_blob.c.s
+.PHONY : routes/blob-storage/POST/post_blob.s
+
+# target to generate assembly for a file
+routes/blob-storage/POST/post_blob.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/home-server.dir/build.make CMakeFiles/home-server.dir/routes/blob-storage/POST/post_blob.c.s
+.PHONY : routes/blob-storage/POST/post_blob.c.s
+
 routes/local-server/GET/get_local_server.o: routes/local-server/GET/get_local_server.c.o
 .PHONY : routes/local-server/GET/get_local_server.o
 
@@ -729,6 +753,9 @@ help:
 	@echo "... models/websocket.o"
 	@echo "... models/websocket.i"
 	@echo "... models/websocket.s"
+	@echo "... routes/blob-storage/POST/post_blob.o"
+	@echo "... routes/blob-storage/POST/post_blob.i"
+	@echo "... routes/blob-storage/POST/post_blob.s"
 	@echo "... routes/local-server/GET/get_local_server.o"
 	@echo "... routes/local-server/GET/get_local_server.i"
 	@echo "... routes/local-server/GET/get_local_server.s"
