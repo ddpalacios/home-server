@@ -366,6 +366,32 @@
           Continue with Google
         </button>
         <div class="login-divider">or</div>
+        <div id="reasonBanner" class="reason-banner" hidden>
+          <span class="reason-icon">ℹ️</span>
+          <span id="reasonText">Your trial ended. Sign in or start a new trial at <a href="/try">/try</a>.</span>
+        </div>
+        <style>
+          .reason-banner {
+            display: flex; align-items: flex-start; gap: 10px;
+            background: rgba(245, 158, 11, .10);
+            border: 1px solid rgba(245, 158, 11, .35);
+            color: #78350f; padding: 10px 14px; border-radius: 10px;
+            font-size: 13px; font-weight: 500; line-height: 1.5;
+            margin: 14px 0;
+          }
+          .reason-banner[hidden] { display: none; }
+          .reason-banner a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+        </style>
+        <script>
+          (function () {
+            const params = new URLSearchParams(location.search);
+            const reason = params.get("reason");
+            if (reason === "trial_ended") {
+              const b = document.getElementById("reasonBanner");
+              if (b) b.hidden = false;
+            }
+          })();
+        </script>
         <button type="button" class="email-toggle" id="emailToggle">Sign in with email instead</button>
         <form class="email-form" id="emailForm" autocomplete="off">
           <input type="email" id="emailInput" placeholder="you@example.com" required />

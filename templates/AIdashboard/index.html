@@ -7691,6 +7691,12 @@
         const res = await fetch("/me/trial-stats", { credentials: "same-origin" });
         if (!res.ok) return;
         const s = await res.json();
+        // If the admin disconnected this trial, the server clears the
+        // session and signals trial_ended — kick the user to /login.
+        if (s && s.trial_ended) {
+          window.location.href = "/login?reason=trial_ended";
+          return;
+        }
         if (!s || !s.trial) return;
         const banner = document.getElementById("trialBanner");
         if (!banner) return;
@@ -8042,6 +8048,9 @@
       pollKbStatus();
       loadVoiceSettings();
       loadTrialBanner();
+      // Poll trial status every 30s so the dashboard kicks a user out
+      // immediately when an admin disconnects their trial.
+      setInterval(loadTrialBanner, 30000);
     });
 
     // Iframe self-reports its content height — keeps the section flush with the
