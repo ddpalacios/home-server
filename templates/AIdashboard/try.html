@@ -3,38 +3,35 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>JustGotALead — Free 7-day AI receptionist trial</title>
+  <title>Free 7-day trial — JustGotALead</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --accent: #2563eb;
-      --accent-deep: #1d4ed8;
-      --accent-2: #38bdf8;
-      --accent-soft: rgba(37, 99, 235, 0.10);
-      --accent-line: rgba(37, 99, 235, 0.22);
-      --green: #047857;
-      --green-soft: rgba(4, 120, 87, 0.10);
-      --text: #0f172a;
-      --text-soft: #1e293b;
-      --muted: #64748b;
-      --line: #e2e8f0;
-      --line-strong: #cbd5e1;
-      --bg: #f8fafc;
-      --panel: #ffffff;
-      --shadow: 0 1px 0 rgba(15, 23, 42, .04), 0 12px 32px rgba(15, 23, 42, .06);
-      --shadow-lift: 0 1px 0 rgba(15, 23, 42, .04), 0 24px 48px rgba(15, 23, 42, .10);
-      --radius: 16px;
+      --accent:       #2563eb;
+      --accent-deep:  #1d4ed8;
+      --accent-2:     #38bdf8;
+      --accent-soft:  rgba(37, 99, 235, 0.10);
+      --green:        #047857;
+      --green-soft:   rgba(4, 120, 87, 0.10);
+      --text:         #0f172a;
+      --text-soft:    #1e293b;
+      --muted:        #64748b;
+      --line:         #e2e8f0;
+      --line-strong:  #cbd5e1;
+      --panel:        #ffffff;
+      --shadow:       0 1px 0 rgba(15, 23, 42, .04), 0 12px 32px rgba(15, 23, 42, .06);
+      --radius:       18px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; }
     body {
-      font-family: "Inter", -apple-system, "Segoe UI", system-ui, sans-serif;
-      font-feature-settings: "ss01", "ss02", "cv11", "tnum";
+      font-family: "Inter", -apple-system, system-ui, sans-serif;
+      font-feature-settings: "tnum";
       background:
-        radial-gradient(800px 600px at 12% -10%, rgba(56, 189, 248, 0.12), transparent 70%),
-        radial-gradient(700px 500px at 110% 110%, rgba(37, 99, 235, 0.10), transparent 70%),
+        radial-gradient(900px 700px at 12% -10%, rgba(56, 189, 248, 0.12), transparent 70%),
+        radial-gradient(800px 600px at 110% 110%, rgba(37, 99, 235, 0.10), transparent 70%),
         #f6f8fc;
       color: var(--text);
       min-height: 100vh;
@@ -44,7 +41,6 @@
       letter-spacing: -0.01em;
       overflow-x: hidden;
     }
-    /* Subtle dot grid overlay — adds depth without noise */
     body::before {
       content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
       background-image: radial-gradient(rgba(15,23,42,.05) 1px, transparent 1px);
@@ -52,17 +48,32 @@
       mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%);
       -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%);
     }
-    .stage { position: relative; z-index: 1; }
 
-    .stage { width: min(540px, 100%); }
+    /* Top progress bar */
+    .top-bar {
+      position: fixed; left: 0; top: 0; height: 3px; width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      box-shadow: 0 0 12px rgba(56,189,248,.7);
+      z-index: 9999; opacity: 0;
+      transition: width .45s cubic-bezier(.22,1,.36,1), opacity .25s;
+    }
+    .top-bar.is-on { opacity: 1; }
+    .top-bar.is-done { opacity: 0; transition: opacity .35s ease .15s; }
+
+    .stage {
+      position: relative; z-index: 1;
+      width: 100%;
+      max-width: 760px;
+    }
+    @media (min-width: 1100px) { .stage { max-width: 820px; } }
+
     .card {
       background: var(--panel);
       border-radius: var(--radius);
-      padding: 36px 36px 30px;
+      padding: 44px 48px 36px;
       box-shadow: var(--shadow);
       border: 1px solid var(--line);
       transition: opacity 380ms cubic-bezier(.22,1,.36,1), transform 380ms cubic-bezier(.22,1,.36,1);
-      position: relative;
     }
     .card.is-leaving { opacity: 0; transform: translateY(-14px) scale(.98); pointer-events: none; }
     .card.is-entering { animation: enter 520ms cubic-bezier(.22, 1, .36, 1) both; }
@@ -70,67 +81,78 @@
       from { opacity: 0; transform: translateY(22px) scale(.98); }
       to   { opacity: 1; transform: none; }
     }
-    /* Subtle blue corner glow on the card edge — defines depth */
-    .card::before {
-      content: ""; position: absolute; inset: -1px; border-radius: inherit;
-      pointer-events: none;
-      background: linear-gradient(135deg, rgba(37,99,235,.18), transparent 30%);
-      mask: linear-gradient(#000, #000) content-box, linear-gradient(#000, #000);
-      -webkit-mask: linear-gradient(#000, #000) content-box, linear-gradient(#000, #000);
-      -webkit-mask-composite: xor; mask-composite: exclude;
-      padding: 1px;
-    }
+    @media (max-width: 600px) { .card { padding: 32px 24px 26px; } }
 
-    /* Top-of-page progress bar (NProgress-style). Shown during in-flight
-       network calls + page transitions. */
-    .top-bar {
-      position: fixed; left: 0; top: 0; height: 3px; width: 0%;
-      background: linear-gradient(90deg, var(--accent), var(--accent-2));
-      box-shadow: 0 0 12px rgba(56, 189, 248, 0.7);
-      z-index: 9999;
-      opacity: 0;
-      transition: width .45s cubic-bezier(.22,1,.36,1), opacity .25s;
-      pointer-events: none;
-    }
-    .top-bar.is-on { opacity: 1; }
-    .top-bar.is-done { opacity: 0; transition: opacity .35s ease .15s; }
-
+    /* ── Hero pill ── */
     .pill-mark {
-      display: inline-flex; align-items: center; gap: 7px;
-      padding: 6px 12px; border-radius: 999px;
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 7px 14px; border-radius: 999px;
       background: var(--green-soft); color: var(--green);
-      font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+      font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
       text-transform: uppercase;
       margin-bottom: 18px;
       border: 1px solid rgba(4,120,87,.18);
     }
     .pill-mark .dot {
-      width: 6px; height: 6px; border-radius: 50%; background: var(--green);
-      animation: pulse 1.6s infinite cubic-bezier(.22,1,.36,1);
-      box-shadow: 0 0 0 0 rgba(4,120,87,.4);
+      width: 7px; height: 7px; border-radius: 50%; background: var(--green);
+      animation: pulse 1.6s infinite;
     }
     @keyframes pulse {
       0%   { box-shadow: 0 0 0 0 rgba(4,120,87,.45); }
-      70%  { box-shadow: 0 0 0 7px rgba(4,120,87,0); }
+      70%  { box-shadow: 0 0 0 8px rgba(4,120,87,0); }
       100% { box-shadow: 0 0 0 0 rgba(4,120,87,0); }
     }
 
     h1 {
-      font-size: 30px; line-height: 1.15; font-weight: 800;
-      letter-spacing: -0.025em; margin-bottom: 10px;
+      font-size: clamp(34px, 5.5vw, 48px);
+      line-height: 1.05; font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 12px;
     }
-    h1 .dim { color: var(--muted); font-weight: 700; }
-    p.sub { color: var(--muted); margin-bottom: 26px; font-size: 15px; line-height: 1.55; max-width: 440px; }
-    label {
-      display: block; font-size: 12px; font-weight: 600;
-      margin: 18px 0 6px; color: var(--text-soft);
-      letter-spacing: 0.01em;
+    h1 .em { font-size: 1.15em; vertical-align: -.05em; margin-right: 4px; }
+
+    p.sub {
+      color: var(--muted); margin-bottom: 32px;
+      font-size: 17px; line-height: 1.5;
+      font-weight: 500;
     }
+
+    /* ── Field row ── */
+    .field-row {
+      display: grid; grid-template-columns: 64px 1fr;
+      gap: 18px; align-items: start;
+      padding: 22px 0;
+      border-top: 1px solid var(--line);
+    }
+    .field-row:last-of-type { border-bottom: 1px solid var(--line); }
+    .field-row .icon {
+      width: 56px; height: 56px;
+      border-radius: 14px;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+      flex: 0 0 56px;
+    }
+    .field-row .body { min-width: 0; }
+    .field-row label {
+      display: block; font-size: 16px; font-weight: 700;
+      color: var(--text); margin-bottom: 8px;
+    }
+    .field-row .helper {
+      font-size: 13px; color: var(--muted); margin-top: 6px;
+      min-height: 16px; transition: color .2s;
+      display: flex; align-items: center; gap: 6px;
+      font-weight: 500;
+    }
+    .field-row .helper.is-good { color: var(--green); }
+
     input[type="url"], input[type="email"] {
-      width: 100%; padding: 13px 14px; border-radius: 10px;
-      border: 1px solid var(--line); font-size: 15px; font-family: inherit;
-      background: #fdfdff; transition: all .2s cubic-bezier(.22,1,.36,1);
+      width: 100%; padding: 12px 14px; border-radius: 10px;
+      border: 1px solid var(--line); font-size: 16px; font-family: inherit;
+      background: #fdfdff;
       color: var(--text);
+      transition: all .2s cubic-bezier(.22,1,.36,1);
     }
     input::placeholder { color: #94a3b8; }
     input:focus {
@@ -138,80 +160,51 @@
       box-shadow: 0 0 0 4px var(--accent-soft);
       background: #fff;
     }
-    .input-hint {
-      font-size: 12px; color: var(--muted); margin-top: 6px; min-height: 16px;
-      transition: color .2s, transform .2s;
-      display: flex; align-items: center; gap: 4px;
-    }
-    .input-hint.is-good { color: var(--green); transform: translateX(2px); }
-    .input-hint .check {
-      display: inline-block; width: 12px; height: 12px;
-      flex: 0 0 12px; opacity: 0; transform: scale(.6);
-      transition: opacity .2s, transform .25s cubic-bezier(.22,1,.36,1);
-    }
-    .input-hint.is-good .check { opacity: 1; transform: scale(1); }
 
-    .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+    /* ── Industry chips with emoji ── */
+    .chips {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+    }
+    @media (max-width: 600px) {
+      .chips { grid-template-columns: repeat(2, 1fr); }
+    }
     .chip {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 9px 14px; border-radius: 999px; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      padding: 14px 8px; border-radius: 14px; cursor: pointer;
       border: 1px solid var(--line); background: #fff;
       font-size: 13px; font-weight: 600; color: var(--text-soft);
       transition: all .25s cubic-bezier(.22,1,.36,1);
       user-select: none; position: relative;
     }
-    .chip::before {
-      content: ""; position: absolute; inset: 0;
-      border-radius: 999px; background: var(--accent);
-      transform: scale(.4); opacity: 0;
-      transition: transform .35s cubic-bezier(.22,1,.36,1), opacity .25s;
-      pointer-events: none;
+    .chip .emoji {
+      font-size: 26px; line-height: 1; transition: transform .35s cubic-bezier(.22,1,.36,1);
     }
-    .chip > * { position: relative; z-index: 1; }
-    .chip:hover { border-color: var(--line-strong); color: var(--text); }
+    .chip:hover {
+      border-color: var(--line-strong);
+      transform: translateY(-1px);
+    }
+    .chip:hover .emoji { transform: scale(1.12) rotate(-3deg); }
     .chip.is-selected {
-      color: #fff; border-color: var(--accent);
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      box-shadow: 0 6px 18px -3px rgba(37, 99, 235, 0.35);
     }
-    .chip.is-selected::before { transform: scale(1); opacity: 1; }
+    .chip.is-selected .emoji { transform: scale(1.15); }
 
-    .advanced-toggle {
-      display: inline-flex; align-items: center; gap: 4px;
-      margin-top: 16px; cursor: pointer;
-      font-size: 13px; color: var(--muted); font-weight: 600;
-      background: none; border: none; padding: 0;
-    }
-    .advanced-toggle:hover { color: var(--text); }
-    .advanced-toggle .arrow { transition: transform .2s; }
-    .advanced-toggle.is-open .arrow { transform: rotate(90deg); }
-    .advanced-panel {
-      max-height: 0; overflow: hidden;
-      transition: max-height .25s ease;
-    }
-    .advanced-panel.is-open { max-height: 320px; }
-
-    .mode-row {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line);
-      cursor: pointer; transition: all .15s; margin-top: 8px;
-      font-size: 14px;
-    }
-    .mode-row:hover { border-color: #cbd5e1; background: #fafbfd; }
-    .mode-row input { margin: 0; accent-color: var(--accent); }
-    .mode-row.is-selected { border-color: var(--accent); background: var(--accent-soft); }
-
+    /* ── Submit button ── */
     .btn {
       display: inline-flex; align-items: center; justify-content: center;
-      gap: 8px; padding: 15px 20px; border-radius: 12px; border: none;
+      gap: 10px; padding: 18px 24px; border-radius: 14px; border: none;
       background: var(--accent);
-      color: #fff; font-weight: 600; font-size: 15px; cursor: pointer;
-      width: 100%; margin-top: 24px;
-      box-shadow: 0 6px 18px -3px rgba(37, 99, 235, 0.35),
+      color: #fff; font-weight: 700; font-size: 17px; cursor: pointer;
+      width: 100%; margin-top: 28px;
+      box-shadow: 0 8px 22px -4px rgba(37, 99, 235, 0.4),
                   0 1px 0 rgba(255,255,255,0.3) inset;
       transition: transform .35s cubic-bezier(.22,1,.36,1),
                   box-shadow .25s ease, background .2s;
       letter-spacing: -0.005em;
       position: relative; overflow: hidden;
-      will-change: transform;
     }
     .btn::after {
       content: ""; position: absolute; inset: 0;
@@ -222,48 +215,64 @@
     }
     .btn:hover {
       background: var(--accent-deep);
-      box-shadow: 0 10px 24px -4px rgba(37, 99, 235, 0.45),
+      box-shadow: 0 12px 28px -4px rgba(37, 99, 235, 0.5),
                   0 1px 0 rgba(255,255,255,0.3) inset;
     }
     .btn:hover::after { transform: translateX(130%); }
     .btn:active { transform: scale(.985); }
     .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
     .btn .arrow {
-      display: inline-block;
+      display: inline-block; font-size: 1.1em;
       transition: transform .35s cubic-bezier(.22,1,.36,1);
     }
-    .btn:hover .arrow { transform: translateX(5px); }
-    .btn .label { display: inline-flex; align-items: center; gap: 9px; }
+    .btn:hover .arrow { transform: translateX(6px); }
+    .btn .label { display: inline-flex; align-items: center; gap: 10px; }
 
-    /* SVG inline spinner — replaces a CSS border spinner with a path */
     .btn-spinner {
-      width: 16px; height: 16px;
+      width: 18px; height: 18px;
       animation: btnspin 1s linear infinite;
     }
     @keyframes btnspin { to { transform: rotate(360deg); } }
-    .btn-spinner circle {
-      fill: none; stroke: rgba(255,255,255,.35); stroke-width: 2.5;
-    }
-    .btn-spinner circle.head {
-      stroke: #fff; stroke-linecap: round;
-      stroke-dasharray: 32; stroke-dashoffset: 24;
-    }
+    .btn-spinner circle      { fill: none; stroke: rgba(255,255,255,.35); stroke-width: 2.5; }
+    .btn-spinner circle.head { fill: none; stroke: #fff; stroke-width: 2.5;
+                               stroke-linecap: round; stroke-dasharray: 32; stroke-dashoffset: 24; }
     .btn.is-loading { background: var(--accent-deep); }
     .btn.is-loading .arrow { display: none; }
 
-    /* Stage items reveal one-by-one when the progress card mounts */
-    .stages-list { list-style: none; padding: 0; margin: 22px 0 16px; }
-    .stages-list .stage-item {
-      display: flex; align-items: center; gap: 14px;
-      padding: 13px 0; font-size: 15px;
+    .err { color: #b91c1c; font-size: 14px; margin-top: 14px; min-height: 18px; font-weight: 500; }
+
+    /* ── Trust strip ── */
+    .trust {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 8px; margin-top: 24px; padding-top: 22px;
+      border-top: 1px solid var(--line);
+    }
+    .trust-item {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      text-align: center;
+    }
+    .trust-item .e { font-size: 24px; }
+    .trust-item .t { font-size: 12px; font-weight: 600; color: var(--text-soft); }
+    .trust-item .s { font-size: 11px; color: var(--muted); }
+
+    /* ─────── Build progress card ─────── */
+    .progress-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 13px; color: var(--muted); font-weight: 600;
+      margin-bottom: 14px;
+    }
+    .stages-list { list-style: none; padding: 0; margin: 24px 0 18px; }
+    .stage-item {
+      display: flex; align-items: center; gap: 16px;
+      padding: 14px 0; font-size: 16px;
       border-bottom: 1px solid var(--line);
       color: #94a3b8; font-weight: 500;
       opacity: 0; transform: translateX(-8px);
       transition: color .35s ease;
     }
-    .stages-list .stage-item:last-child { border-bottom: none; }
-    .stages-list .stage-item.is-active { color: var(--text); font-weight: 600; }
-    .stages-list .stage-item.is-done   { color: var(--green); font-weight: 500; }
+    .stage-item:last-child { border-bottom: none; }
+    .stage-item.is-active { color: var(--text); font-weight: 700; }
+    .stage-item.is-done   { color: var(--green); font-weight: 600; }
     .card.is-entering .stages-list .stage-item {
       animation: stage-in .55s cubic-bezier(.22,1,.36,1) forwards;
     }
@@ -273,108 +282,135 @@
     .card.is-entering .stages-list .stage-item:nth-child(4) { animation-delay: .40s; }
     @keyframes stage-in { to { opacity: 1; transform: none; } }
 
-    /* SVG state icons inside stages: pending (number), active (ring), done (drawn check) */
     .stage-icon {
-      flex: 0 0 28px; width: 28px; height: 28px;
-      border-radius: 50%; background: #f1f5f9;
-      display: inline-flex; align-items: center; justify-content: center;
-      font-size: 12px; font-weight: 700; color: #94a3b8;
-      transition: background .3s ease, color .3s ease;
+      flex: 0 0 40px; width: 40px; height: 40px;
+      border-radius: 12px;
+      background: #f1f5f9;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      transition: background .3s ease;
       position: relative;
     }
-    .is-active .stage-icon { background: var(--accent-soft); color: var(--accent); }
-    .is-done .stage-icon   { background: var(--green-soft); color: var(--green); }
-    .is-active .stage-num,
-    .is-done   .stage-num   { display: none; }
-    .stage-icon svg { width: 100%; height: 100%; display: none; }
-    .is-active .stage-icon svg.ring { display: block; animation: ringspin 1.4s linear infinite; }
+    .is-active .stage-icon { background: var(--accent-soft); }
+    .is-done   .stage-icon { background: var(--green-soft); }
+
+    .stage-icon .emoji { transition: opacity .25s; }
+    .is-done .stage-icon .emoji { opacity: 0.3; }
+
+    .stage-icon svg.ring,
+    .stage-icon svg.check { position: absolute; inset: 0; width: 100%; height: 100%; display: none; }
+    .is-active .stage-icon svg.ring  { display: block; animation: ringspin 1.4s linear infinite; }
     .is-done   .stage-icon svg.check { display: block; }
     @keyframes ringspin { to { transform: rotate(360deg); } }
     .ring circle.bg   { fill: none; stroke: rgba(37,99,235,.18); stroke-width: 2.5; }
     .ring circle.head { fill: none; stroke: var(--accent); stroke-width: 2.5;
-                        stroke-linecap: round; stroke-dasharray: 28; stroke-dashoffset: 18;
-                        transform-origin: center; }
-    /* Drawn check: stroke-dashoffset animates from path length to 0 */
+                        stroke-linecap: round; stroke-dasharray: 70; stroke-dashoffset: 50; }
     .check path {
-      fill: none; stroke: var(--green); stroke-width: 2.5;
+      fill: none; stroke: var(--green); stroke-width: 3;
       stroke-linecap: round; stroke-linejoin: round;
-      stroke-dasharray: 18; stroke-dashoffset: 18;
+      stroke-dasharray: 28; stroke-dashoffset: 28;
       animation: drawcheck .45s cubic-bezier(.22,1,.36,1) forwards;
     }
     @keyframes drawcheck { to { stroke-dashoffset: 0; } }
 
-    .err { color: #b91c1c; font-size: 14px; margin-top: 12px; min-height: 18px; }
-
-    .trust {
-      display: flex; flex-wrap: wrap; gap: 0;
-      margin-top: 22px; padding-top: 18px;
-      border-top: 1px solid var(--line);
-      font-size: 12px; color: var(--muted);
-      justify-content: space-between; letter-spacing: 0;
-    }
-    .trust span { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
-
-    /* Progress card */
-    .stages-list { list-style: none; padding: 0; margin: 18px 0 16px; }
     .progress-track {
-      height: 6px; background: #eef2f7; border-radius: 999px;
-      overflow: hidden; position: relative; margin-top: 8px;
+      height: 8px; background: #eef2f7; border-radius: 999px;
+      overflow: hidden; position: relative; margin-top: 12px;
     }
     .progress-fill {
       height: 100%;
       background: linear-gradient(90deg, var(--accent), var(--accent-2));
-      width: 10%; border-radius: 999px;
-      transition: width .6s cubic-bezier(.2,.7,.2,1);
-      position: relative;
-      overflow: hidden;
+      width: 8%; border-radius: 999px;
+      transition: width .6s cubic-bezier(.22,1,.36,1);
+      position: relative; overflow: hidden;
     }
     .progress-fill::after {
       content: ""; position: absolute; inset: 0;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.5), transparent);
       transform: translateX(-100%);
       animation: shimmer 1.4s infinite;
     }
     @keyframes shimmer { to { transform: translateX(100%); } }
 
-    .meta-line { font-size: 13px; color: var(--muted); margin-top: 10px; text-align: center; }
+    .meta-line {
+      font-size: 13px; color: var(--muted); margin-top: 10px;
+      display: flex; justify-content: space-between;
+      font-weight: 500;
+    }
+    .meta-line .pct { color: var(--accent); font-weight: 700; }
 
-    /* Success card */
-    .phone-cta {
-      display: block; text-align: center;
-      margin-top: 18px; padding: 22px 18px;
+    .magic-note {
+      margin-top: 24px; padding: 18px 20px;
+      background: var(--accent-soft);
+      border: 1px solid rgba(37,99,235,.18);
+      border-radius: 12px;
+      font-size: 14px; color: var(--text-soft); line-height: 1.5;
+      display: flex; align-items: center; gap: 14px;
+      font-weight: 500;
+    }
+    .magic-note .e { font-size: 28px; flex: 0 0 auto; }
+
+    /* ─────── Success card ─────── */
+    .success-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--green); font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      margin-bottom: 14px;
+      padding: 7px 14px; border-radius: 999px;
+      background: var(--green-soft);
+      border: 1px solid rgba(4,120,87,.18);
+    }
+    .success-eyebrow .e { font-size: 16px; }
+
+    .phone-card {
+      display: block; padding: 32px 24px;
+      margin-top: 22px;
+      background: linear-gradient(180deg, #fff, #fafbff);
       border: 2px dashed var(--accent);
-      border-radius: 14px; text-decoration: none;
-      transition: background .2s ease;
+      border-radius: 16px;
+      text-decoration: none; text-align: center;
+      transition: all .25s ease;
     }
-    .phone-cta:hover { background: var(--accent-soft); }
-    .phone-cta .number {
-      display: inline-flex; align-items: center; gap: 10px;
-      font-size: 26px; font-weight: 800; color: var(--accent);
-      letter-spacing: -0.01em;
+    .phone-card:hover {
+      background: linear-gradient(180deg, #fff, var(--accent-soft));
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px -8px rgba(37,99,235,.25);
     }
-    .phone-cta .helper { display: block; font-size: 12px; color: var(--muted); margin-top: 6px; font-weight: 500; }
-
-    .ask-line {
-      margin: 18px 0 6px; font-size: 14px; color: var(--text);
-      text-align: center;
+    .phone-card .e { font-size: 36px; }
+    .phone-card .number {
+      display: block; margin-top: 4px;
+      font-size: clamp(28px, 4.5vw, 36px);
+      font-weight: 800; color: var(--accent);
+      letter-spacing: -0.015em;
     }
-    .ask-line em { color: var(--accent); font-style: normal; font-weight: 600; }
-
-    .countdown {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-size: 12px; color: var(--muted);
-      padding: 6px 12px; border-radius: 999px;
-      background: #f8fafc; border: 1px solid var(--line);
+    .phone-card .helper {
+      display: block; margin-top: 10px;
+      font-size: 13px; color: var(--muted); font-weight: 500;
     }
 
-    /* Tiny toast on copy */
-    .toast {
-      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(40px);
-      background: #0f172a; color: #fff; padding: 10px 16px; border-radius: 999px;
-      font-size: 13px; opacity: 0; transition: opacity .2s, transform .2s;
-      pointer-events: none;
+    .ask {
+      margin: 26px 0 14px; font-size: 15px;
+      color: var(--text-soft);
+      padding: 16px 18px;
+      background: #f8fafc;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      display: flex; align-items: center; gap: 12px;
     }
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .ask .e { font-size: 20px; }
+    .ask em { font-style: normal; font-weight: 600; color: var(--accent); }
+
+    .meta-row {
+      display: flex; justify-content: space-between; align-items: center;
+      margin: 18px 0;
+      padding: 14px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+      color: var(--text-soft);
+      font-weight: 600;
+    }
+    .meta-row span { display: inline-flex; align-items: center; gap: 6px; }
   </style>
 </head>
 <body>
@@ -382,260 +418,179 @@
   <div class="stage">
 
     <main class="card is-entering" id="cardForm">
-      <div class="pill-mark"><span class="dot"></span> Live · Free · 7 days</div>
-      <h1>Catch every call you miss.</h1>
-      <p class="sub">An AI receptionist trained on your website, ready in 60 seconds. No credit card. Cancel any time with one click.</p>
+      <div class="pill-mark"><span class="dot"></span> Free 7 days · No card</div>
+
+      <h1><span class="em">📞</span>Don't miss<br>another call.</h1>
+      <p class="sub">We pick up your phone for you — free for 7 days.</p>
 
       <form id="trialForm" onsubmit="return false;" novalidate>
-        <label for="websiteUrl">Your business website</label>
-        <input id="websiteUrl" type="url" placeholder="https://mikeroofing.com" autocomplete="url" autofocus required />
-        <div class="input-hint" id="urlHint">We'll read your site and train the AI on what you do.</div>
-
-        <label>What do you do?</label>
-        <div class="chips" id="industryChips">
-          <button type="button" class="chip" data-value="roofer">Roofer</button>
-          <button type="button" class="chip" data-value="plumber">Plumber</button>
-          <button type="button" class="chip" data-value="hvac">HVAC</button>
-          <button type="button" class="chip" data-value="cleaner">Cleaning</button>
-          <button type="button" class="chip" data-value="landscaper">Landscaping</button>
-          <button type="button" class="chip" data-value="realtor">Realtor</button>
-          <button type="button" class="chip" data-value="mover">Moving</button>
-          <button type="button" class="chip" data-value="other">Something else</button>
-        </div>
-        <div class="input-hint" id="industryHint">&nbsp;</div>
-
-        <label for="email">Where should we send your dashboard link?</label>
-        <input id="email" type="email" placeholder="you@yourbusiness.com" autocomplete="email" required />
-        <div class="input-hint" id="emailHint">We'll only use this to send your sign-in link.</div>
-
-        <button type="button" class="advanced-toggle" id="advancedToggle">
-          <span class="arrow">▸</span> More options
-        </button>
-        <div class="advanced-panel" id="advancedPanel">
-          <label style="margin-top:10px">Where should the bot help?</label>
-          <label class="mode-row is-selected"><input type="radio" name="mode" value="voice" checked /> Catch missed phone calls</label>
-          <label class="mode-row"><input type="radio" name="mode" value="widget" /> Live chat on my website</label>
-          <label class="mode-row"><input type="radio" name="mode" value="email" /> Auto-reply to email inquiries</label>
+        <div class="field-row">
+          <div class="icon">🌐</div>
+          <div class="body">
+            <label for="websiteUrl">Your website</label>
+            <input id="websiteUrl" type="url" placeholder="mikeroofing.com" autocomplete="url" autofocus required />
+            <div class="helper" id="urlHint">So we know about your business.</div>
+          </div>
         </div>
 
-        <button class="btn" type="submit" id="startBtn">
-          <span class="label">Start free trial <span class="arrow">→</span></span>
+        <div class="field-row">
+          <div class="icon">🛠️</div>
+          <div class="body">
+            <label>What do you do?</label>
+            <div class="chips" id="industryChips">
+              <button type="button" class="chip" data-value="roofer"><span class="emoji">🏠</span><span>Roofer</span></button>
+              <button type="button" class="chip" data-value="plumber"><span class="emoji">🚰</span><span>Plumber</span></button>
+              <button type="button" class="chip" data-value="hvac"><span class="emoji">❄️</span><span>HVAC</span></button>
+              <button type="button" class="chip" data-value="cleaner"><span class="emoji">🧽</span><span>Cleaner</span></button>
+              <button type="button" class="chip" data-value="landscaper"><span class="emoji">🌿</span><span>Landscaper</span></button>
+              <button type="button" class="chip" data-value="realtor"><span class="emoji">🏡</span><span>Realtor</span></button>
+              <button type="button" class="chip" data-value="mover"><span class="emoji">📦</span><span>Mover</span></button>
+              <button type="button" class="chip" data-value="other"><span class="emoji">✨</span><span>Other</span></button>
+            </div>
+            <div class="helper" id="industryHint">Pick one.</div>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="icon">📨</div>
+          <div class="body">
+            <label for="email">Your email</label>
+            <input id="email" type="email" placeholder="you@yourshop.com" autocomplete="email" required />
+            <div class="helper" id="emailHint">We send your link here.</div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn" id="startBtn">
+          <span class="label">🎉 Start my free trial</span>
+          <span class="arrow">→</span>
         </button>
         <p class="err" id="formError"></p>
 
         <div class="trust">
-          <span>🔒 No credit card</span>
-          <span>🛡 1-click cancel</span>
-          <span>⏱ Auto-ends in 7 days</span>
+          <div class="trust-item">
+            <span class="e">🔒</span>
+            <span class="t">No card</span>
+            <span class="s">Ever.</span>
+          </div>
+          <div class="trust-item">
+            <span class="e">🛟</span>
+            <span class="t">Cancel anytime</span>
+            <span class="s">One click.</span>
+          </div>
+          <div class="trust-item">
+            <span class="e">⏱️</span>
+            <span class="t">Stops in 7 days</span>
+            <span class="s">All by itself.</span>
+          </div>
         </div>
       </form>
     </main>
 
     <main class="card" id="cardProgress" style="display:none">
-      <div class="pill-mark"><span class="dot"></span> Building your demo…</div>
-      <h1 id="progressTitle">Hang tight — almost there.</h1>
-      <p class="sub">We're reading your site and training your AI. This takes about 90 seconds.</p>
+      <div class="progress-eyebrow">⚙️ Building your demo…</div>
+      <h1 id="progressTitle">Almost ready.<br><span style="color:var(--muted)">Hang tight.</span></h1>
 
       <ul class="stages-list">
         <li class="stage-item is-pending" id="stageReading">
           <span class="stage-icon">
-            <span class="stage-num">1</span>
-            <svg class="ring" viewBox="0 0 28 28"><circle class="bg" cx="14" cy="14" r="10"/><circle class="head" cx="14" cy="14" r="10"/></svg>
-            <svg class="check" viewBox="0 0 28 28"><path d="M8 14.5l4 4 8-9"/></svg>
+            <span class="emoji">📖</span>
+            <svg class="ring" viewBox="0 0 40 40"><circle class="bg" cx="20" cy="20" r="14"/><circle class="head" cx="20" cy="20" r="14"/></svg>
+            <svg class="check" viewBox="0 0 40 40"><path d="M11 21l5 5 12-13"/></svg>
           </span>
-          <span class="stage-text">Reading your website</span>
+          <span class="stage-text">Reading your site</span>
         </li>
         <li class="stage-item is-pending" id="stageIdentifying">
           <span class="stage-icon">
-            <span class="stage-num">2</span>
-            <svg class="ring" viewBox="0 0 28 28"><circle class="bg" cx="14" cy="14" r="10"/><circle class="head" cx="14" cy="14" r="10"/></svg>
-            <svg class="check" viewBox="0 0 28 28"><path d="M8 14.5l4 4 8-9"/></svg>
+            <span class="emoji">🔎</span>
+            <svg class="ring" viewBox="0 0 40 40"><circle class="bg" cx="20" cy="20" r="14"/><circle class="head" cx="20" cy="20" r="14"/></svg>
+            <svg class="check" viewBox="0 0 40 40"><path d="M11 21l5 5 12-13"/></svg>
           </span>
-          <span class="stage-text">Identifying your services</span>
+          <span class="stage-text">Finding what you do</span>
         </li>
         <li class="stage-item is-pending" id="stageTraining">
           <span class="stage-icon">
-            <span class="stage-num">3</span>
-            <svg class="ring" viewBox="0 0 28 28"><circle class="bg" cx="14" cy="14" r="10"/><circle class="head" cx="14" cy="14" r="10"/></svg>
-            <svg class="check" viewBox="0 0 28 28"><path d="M8 14.5l4 4 8-9"/></svg>
+            <span class="emoji">📚</span>
+            <svg class="ring" viewBox="0 0 40 40"><circle class="bg" cx="20" cy="20" r="14"/><circle class="head" cx="20" cy="20" r="14"/></svg>
+            <svg class="check" viewBox="0 0 40 40"><path d="M11 21l5 5 12-13"/></svg>
           </span>
-          <span class="stage-text">Training the AI</span>
+          <span class="stage-text">Getting it ready</span>
         </li>
         <li class="stage-item is-pending" id="stageWiring">
           <span class="stage-icon">
-            <span class="stage-num">4</span>
-            <svg class="ring" viewBox="0 0 28 28"><circle class="bg" cx="14" cy="14" r="10"/><circle class="head" cx="14" cy="14" r="10"/></svg>
-            <svg class="check" viewBox="0 0 28 28"><path d="M8 14.5l4 4 8-9"/></svg>
+            <span class="emoji">📞</span>
+            <svg class="ring" viewBox="0 0 40 40"><circle class="bg" cx="20" cy="20" r="14"/><circle class="head" cx="20" cy="20" r="14"/></svg>
+            <svg class="check" viewBox="0 0 40 40"><path d="M11 21l5 5 12-13"/></svg>
           </span>
-          <span class="stage-text">Connecting your phone number</span>
+          <span class="stage-text">Setting up your phone</span>
         </li>
       </ul>
 
       <div class="progress-track"><div class="progress-fill" id="progressBar"></div></div>
-      <p class="meta-line"><span id="progressPercent">10%</span> · ~<span id="progressEta">85</span>s remaining</p>
-      <p class="meta-line" style="margin-top:14px;">📬 We just sent a magic link to <strong id="progressEmail"></strong></p>
+      <div class="meta-line">
+        <span class="pct" id="progressPercent">8%</span>
+        <span>~<span id="progressEta">85</span>s left</span>
+      </div>
+
+      <div class="magic-note">
+        <span class="e">📨</span>
+        <div>We sent your sign-in link to <strong id="progressEmail"></strong>.</div>
+      </div>
     </main>
 
-    <main class="card" id="cardSuccess" style="display:none; text-align:center;">
-      <div class="pill-mark" style="background:var(--green-soft); color:var(--green); margin-left:auto; margin-right:auto;"><span class="dot" style="background:var(--green);"></span> Demo is live</div>
-      <h1>You're set, give it a try.</h1>
-      <p class="sub" style="margin-bottom:14px;">Call the number below — your AI will answer like it's worked there for years.</p>
+    <main class="card" id="cardSuccess" style="display:none">
+      <div class="success-eyebrow"><span class="e">✅</span> All done</div>
 
-      <a class="phone-cta" id="successCallLink" href="#">
-        <span class="number"><span>📞</span> <span id="successPhone">—</span></span>
-        <span class="helper">Tap to call from this phone</span>
+      <h1>Give it a try!</h1>
+      <p class="sub">Call your new number and see how it sounds.</p>
+
+      <a class="phone-card" id="successCallLink" href="#">
+        <div class="e">📞</div>
+        <div class="number" id="successPhone">—</div>
+        <span class="helper">👆 Tap to call from this phone</span>
       </a>
 
-      <p class="ask-line">Try asking: <em id="successExample">"Tell me about your services."</em></p>
+      <div class="ask">
+        <span class="e">💬</span>
+        <div>Try saying: <em id="successExample">"How much for a check?"</em></div>
+      </div>
 
-      <p style="margin-top:14px;">
-        <span class="countdown">⏱ Active until <span id="successExpiry">soon</span></span>
-      </p>
+      <div class="meta-row">
+        <span>📅 Until <span id="successExpiry">soon</span></span>
+        <span>🆓 Free</span>
+      </div>
 
-      <a class="btn" id="continueSetupBtn" href="/dashboard" style="display:inline-flex; text-decoration:none; margin-top:22px;">
-        Continue with set up <span class="arrow">→</span>
+      <a class="btn" id="continueSetupBtn" href="/dashboard" style="text-decoration:none;">
+        <span class="label">Continue with set up</span>
+        <span class="arrow">→</span>
       </a>
     </main>
 
   </div>
 
-  <div class="toast" id="toast">Copied</div>
-
   <script>
     (function () {
-      const cardForm = document.getElementById("cardForm");
+      const cardForm     = document.getElementById("cardForm");
       const cardProgress = document.getElementById("cardProgress");
-      const cardSuccess = document.getElementById("cardSuccess");
-      const startBtn = document.getElementById("startBtn");
-      const formError = document.getElementById("formError");
-      const progressBar = document.getElementById("progressBar");
-      const progressEmail = document.getElementById("progressEmail");
+      const cardSuccess  = document.getElementById("cardSuccess");
+      const startBtn     = document.getElementById("startBtn");
+      const formError    = document.getElementById("formError");
+      const progressBar  = document.getElementById("progressBar");
+      const progressEmail= document.getElementById("progressEmail");
       const successPhone = document.getElementById("successPhone");
       const successCallLink = document.getElementById("successCallLink");
 
-      // ---- Form interactions ----
-
-      let pickedIndustry = "";
-      const chips = Array.from(document.querySelectorAll("#industryChips .chip"));
-      chips.forEach(ch => {
-        ch.addEventListener("click", () => {
-          chips.forEach(c => c.classList.remove("is-selected"));
-          ch.classList.add("is-selected");
-          pickedIndustry = ch.dataset.value;
-          document.getElementById("industryHint").textContent = "";
-        });
-      });
-
-      // Advanced toggle (mode picker)
-      const advBtn = document.getElementById("advancedToggle");
-      const advPanel = document.getElementById("advancedPanel");
-      advBtn.addEventListener("click", () => {
-        advBtn.classList.toggle("is-open");
-        advPanel.classList.toggle("is-open");
-      });
-      // Radio active class
-      document.querySelectorAll('input[name="mode"]').forEach(r => {
-        r.addEventListener("change", () => {
-          document.querySelectorAll(".mode-row").forEach(row => {
-            const inp = row.querySelector('input[name="mode"]');
-            row.classList.toggle("is-selected", !!(inp && inp.checked));
-          });
-        });
-      });
-
-      // Live URL hint
-      const urlInput = document.getElementById("websiteUrl");
-      const urlHint = document.getElementById("urlHint");
-      urlInput.addEventListener("input", () => {
-        const v = urlInput.value.trim();
-        if (/^https?:\/\/[^\s]+\.[^\s]+/.test(v) || /^[\w-]+\.[\w.-]+/.test(v)) {
-          urlHint.textContent = "Looks good — we'll read this site.";
-          urlHint.classList.add("is-good");
-        } else {
-          urlHint.textContent = "We'll read your site and train the AI on what you do.";
-          urlHint.classList.remove("is-good");
-        }
-      });
-
-      // Email hint
-      const emailInput = document.getElementById("email");
-      const emailHint = document.getElementById("emailHint");
-      emailInput.addEventListener("input", () => {
-        const v = emailInput.value.trim();
-        if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) {
-          emailHint.textContent = "✓ We'll send your sign-in link here.";
-          emailHint.classList.add("is-good");
-        } else {
-          emailHint.textContent = "We'll only use this to send your sign-in link.";
-          emailHint.classList.remove("is-good");
-        }
-      });
-
-      // ---- Card transitions ----
-
-      function fadeOut(card, then) {
-        card.classList.add("is-leaving");
-        setTimeout(() => {
-          card.style.display = "none";
-          card.classList.remove("is-leaving");
-          then && then();
-        }, 320);
-      }
-      function fadeIn(card) {
-        card.style.display = "block";
-        card.classList.remove("is-entering");
-        // Force reflow then re-apply for clean replay
-        void card.offsetWidth;
-        card.classList.add("is-entering");
-      }
-
-      function err(msg) { formError.textContent = msg || ""; }
-
-      // ── Magnetic button: subtle cursor-follow on hover (desktop only) ──
-      if (window.matchMedia("(pointer: fine)").matches) {
-        startBtn.addEventListener("mousemove", (e) => {
-          const r = startBtn.getBoundingClientRect();
-          const x = e.clientX - r.left - r.width / 2;
-          const y = e.clientY - r.top - r.height / 2;
-          startBtn.style.transform = `translate(${x * 0.06}px, ${y * 0.18}px) scale(1.01)`;
-        });
-        startBtn.addEventListener("mouseleave", () => {
-          startBtn.style.transform = "";
-        });
-      }
-
-      // ── Animated percent counter (tween from current → target) ──
-      let pctCurrent = 8;
-      function animatePercent(target) {
-        const el = document.getElementById("progressPercent");
-        const start = pctCurrent;
-        const dur = 600;
-        const t0 = performance.now();
-        function step(t) {
-          const k = Math.min(1, (t - t0) / dur);
-          // ease-out cubic
-          const e = 1 - Math.pow(1 - k, 3);
-          const v = Math.round(start + (target - start) * e);
-          el.textContent = v + "%";
-          if (k < 1) requestAnimationFrame(step);
-          else pctCurrent = target;
-        }
-        requestAnimationFrame(step);
-      }
-
-      // ---- Top progress bar ----
+      // ── Top bar ──
       const topBar = document.getElementById("topBar");
       let topBarTimer = null;
       function topBarStart() {
         topBar.classList.remove("is-done");
         topBar.classList.add("is-on");
-        topBar.style.width = "8%";
+        topBar.style.width = "10%";
         clearInterval(topBarTimer);
-        // Trickle towards 80% while waiting for the network
-        let pct = 8;
+        let pct = 10;
         topBarTimer = setInterval(() => {
-          if (pct >= 80) return;
-          pct += (80 - pct) * 0.12;
+          if (pct >= 82) return;
+          pct += (82 - pct) * 0.1;
           topBar.style.width = pct + "%";
         }, 220);
       }
@@ -643,25 +598,102 @@
         clearInterval(topBarTimer);
         topBar.style.width = "100%";
         setTimeout(() => {
-          topBar.classList.add("is-done");
-          topBar.classList.remove("is-on");
+          topBar.classList.add("is-done"); topBar.classList.remove("is-on");
           setTimeout(() => { topBar.style.width = "0%"; }, 400);
         }, 220);
       }
 
-      // ---- Button morph helpers ----
+      // ── Industry chips ──
+      let pickedIndustry = "";
+      const chips = Array.from(document.querySelectorAll(".chip"));
+      chips.forEach(ch => {
+        ch.addEventListener("click", () => {
+          chips.forEach(c => c.classList.remove("is-selected"));
+          ch.classList.add("is-selected");
+          pickedIndustry = ch.dataset.value;
+          document.getElementById("industryHint").textContent = "✓ Got it.";
+          document.getElementById("industryHint").classList.add("is-good");
+        });
+      });
+
+      // ── Live URL hint ──
+      const urlInput = document.getElementById("websiteUrl");
+      const urlHint  = document.getElementById("urlHint");
+      urlInput.addEventListener("input", () => {
+        const v = urlInput.value.trim();
+        if (/^https?:\/\/[^\s]+\.[^\s]+/.test(v) || /^[\w-]+\.[\w.-]+/.test(v)) {
+          urlHint.textContent = "✓ Looks good.";
+          urlHint.classList.add("is-good");
+        } else {
+          urlHint.textContent = "So we know about your business.";
+          urlHint.classList.remove("is-good");
+        }
+      });
+      const emailInput = document.getElementById("email");
+      const emailHint  = document.getElementById("emailHint");
+      emailInput.addEventListener("input", () => {
+        const v = emailInput.value.trim();
+        if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) {
+          emailHint.textContent = "✓ Got it.";
+          emailHint.classList.add("is-good");
+        } else {
+          emailHint.textContent = "We send your link here.";
+          emailHint.classList.remove("is-good");
+        }
+      });
+
+      // ── Magnetic CTA ──
+      if (window.matchMedia("(pointer: fine)").matches) {
+        startBtn.addEventListener("mousemove", (e) => {
+          const r = startBtn.getBoundingClientRect();
+          const x = e.clientX - r.left - r.width / 2;
+          const y = e.clientY - r.top - r.height / 2;
+          startBtn.style.transform = `translate(${x * 0.05}px, ${y * 0.15}px) scale(1.005)`;
+        });
+        startBtn.addEventListener("mouseleave", () => { startBtn.style.transform = ""; });
+      }
+
+      // ── Card transitions ──
+      function fadeOut(card, then) {
+        card.classList.add("is-leaving");
+        setTimeout(() => {
+          card.style.display = "none";
+          card.classList.remove("is-leaving");
+          then && then();
+        }, 380);
+      }
+      function fadeIn(card) {
+        card.style.display = "block";
+        card.classList.remove("is-entering");
+        void card.offsetWidth;
+        card.classList.add("is-entering");
+      }
+
+      function err(msg) { formError.textContent = msg || ""; }
       function startBtnLoading(label) {
         startBtn.disabled = true;
         startBtn.classList.add("is-loading");
-        startBtn.innerHTML = `<span class="label"><svg class="btn-spinner" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><circle class="head" cx="8" cy="8" r="6"/></svg> ${label || "Starting…"}</span>`;
+        startBtn.innerHTML = `<span class="label"><svg class="btn-spinner" viewBox="0 0 18 18"><circle cx="9" cy="9" r="6.5"/><circle class="head" cx="9" cy="9" r="6.5"/></svg> ${label || "Starting…"}</span><span class="arrow">→</span>`;
       }
       function startBtnReset(label) {
         startBtn.disabled = false;
         startBtn.classList.remove("is-loading");
-        startBtn.innerHTML = `<span class="label">${label || "Start free trial"} <span class="arrow">→</span></span>`;
+        startBtn.innerHTML = `<span class="label">${label || "🎉 Start my free trial"}</span><span class="arrow">→</span>`;
       }
 
-      // ---- Submit ----
+      // ── Animated percent counter ──
+      let pctCurrent = 8;
+      function animatePercent(target) {
+        const el = document.getElementById("progressPercent");
+        const start = pctCurrent, dur = 600, t0 = performance.now();
+        function step(t) {
+          const k = Math.min(1, (t - t0) / dur);
+          const e = 1 - Math.pow(1 - k, 3);
+          el.textContent = Math.round(start + (target - start) * e) + "%";
+          if (k < 1) requestAnimationFrame(step); else pctCurrent = target;
+        }
+        requestAnimationFrame(step);
+      }
 
       function normalizeUrl(v) {
         v = (v || "").trim();
@@ -672,35 +704,28 @@
 
       startBtn.addEventListener("click", async () => {
         err("");
-        const rawUrl = urlInput.value;
-        const url = normalizeUrl(rawUrl);
-        const mode = document.querySelector('input[name="mode"]:checked').value;
+        const url = normalizeUrl(urlInput.value);
         const email = emailInput.value.trim();
-
         if (!url || !pickedIndustry || !email) {
-          if (!url) err("Add your website to get started.");
-          else if (!pickedIndustry) {
-            err("Pick what you do so we know how to train your AI.");
-            document.getElementById("industryHint").textContent = "← pick one";
-          }
-          else err("We need an email to send your sign-in link.");
+          if (!url) err("👈 Add your website.");
+          else if (!pickedIndustry) err("👈 Pick what you do.");
+          else err("👈 Add your email.");
           return;
         }
         urlInput.value = url;
-
-        startBtnLoading("Starting your demo…");
+        startBtnLoading("Starting…");
         topBarStart();
 
         try {
           const res = await fetch("/try", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ website_url: url, industry: pickedIndustry, mode: mode, email: email }),
+            body: JSON.stringify({ website_url: url, industry: pickedIndustry, mode: "voice", email: email }),
           });
           const body = await res.json();
           if (!res.ok) {
             topBarFinish();
-            err(body.error || "Something went wrong.");
+            err(body.error || "Something went wrong. Try again.");
             startBtnReset();
             return;
           }
@@ -708,54 +733,47 @@
           fadeOut(cardForm, () => {
             fadeIn(cardProgress);
             progressEmail.textContent = email;
-            // Best-effort business-name personalization
             try {
               const host = new URL(url).hostname.replace(/^www\./, "");
               const root = host.split(".")[0];
               if (root) {
                 const bn = root.charAt(0).toUpperCase() + root.slice(1);
-                document.getElementById("progressTitle").textContent =
-                  `Building ${bn}'s AI receptionist…`;
+                document.getElementById("progressTitle").innerHTML =
+                  `Building <strong>${bn.replace(/[<>"&]/g, "")}</strong>.<br><span style="color:var(--muted)">Hang tight.</span>`;
               }
             } catch (e) {}
             pollStatus(body.status_url, body.phone_display);
           });
         } catch (e) {
           topBarFinish();
-          err("Network error. Please retry.");
+          err("Network error. Try again.");
           startBtnReset();
         }
       });
 
-      // ---- Build polling ----
-
       const PHASE_ORDER = ["reading", "identifying", "training", "wiring", "ready"];
-      const PHASE_PCT = { idle: 8, reading: 22, identifying: 45, training: 70, wiring: 87, ready: 100 };
-      const STAGE_IDS = ["stageReading", "stageIdentifying", "stageTraining", "stageWiring"];
+      const PHASE_PCT   = { idle: 8, reading: 22, identifying: 45, training: 70, wiring: 87, ready: 100 };
+      const STAGE_IDS   = ["stageReading", "stageIdentifying", "stageTraining", "stageWiring"];
 
       function applyPhaseUI(phase) {
         const idx = PHASE_ORDER.indexOf(phase);
         STAGE_IDS.forEach((id, i) => {
           const li = document.getElementById(id);
           li.classList.remove("is-pending", "is-active", "is-done");
-          if (idx < 0 || i > idx)      li.classList.add("is-pending");
-          else if (i < idx)            li.classList.add("is-done");
-          else                         li.classList.add("is-active");
+          if (idx < 0 || i > idx) li.classList.add("is-pending");
+          else if (i < idx)       li.classList.add("is-done");
+          else                    li.classList.add("is-active");
         });
         const pct = PHASE_PCT[phase] != null ? PHASE_PCT[phase] : 8;
         progressBar.style.width = pct + "%";
-        // Animate the percent counter (tween from current → target)
         animatePercent(pct);
-        document.getElementById("progressEta").textContent =
-          Math.max(2, Math.round((100 - pct) * 0.85));
+        document.getElementById("progressEta").textContent = Math.max(2, Math.round((100 - pct) * 0.85));
       }
 
       function formatExpiry(epochSeconds) {
         if (!epochSeconds) return "in 7 days";
         const d = new Date(epochSeconds * 1000);
-        return d.toLocaleDateString(undefined, {
-          weekday: "short", month: "short", day: "numeric",
-        });
+        return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
       }
 
       async function pollStatus(statusUrl, phoneDisplay) {
@@ -780,21 +798,17 @@
               successCallLink.href = "tel:" + phoneText.replace(/[^\d+]/g, "");
               const ex = (body.example_question || "").trim();
               if (ex) document.getElementById("successExample").textContent = '"' + ex + '"';
-              document.getElementById("successExpiry").textContent =
-                formatExpiry(body.trial_expires_at);
+              document.getElementById("successExpiry").textContent = formatExpiry(body.trial_expires_at);
             });
             return;
           }
           if (body.build_status === "failed") {
-            err("Build failed: " + (body.build_error || "unknown error"));
-            fadeOut(cardProgress, () => {
-              fadeIn(cardForm);
-              startBtnReset("Try again");
-            });
+            err("Hmm, something went wrong. Try again.");
+            fadeOut(cardProgress, () => { fadeIn(cardForm); startBtnReset("🔄 Try again"); });
             return;
           }
         }
-        err("Timed out waiting for build. Check your inbox in a minute.");
+        err("⏱ Took too long. Check your inbox in a minute.");
       }
     })();
   </script>
