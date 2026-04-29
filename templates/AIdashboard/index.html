@@ -2827,6 +2827,7 @@
           <div class="nav-links">
             <a href="#overview">Dashboard</a>
             <a href="#leads">Recent Leads</a>
+            <a href="#phoneNumbers">Phone numbers</a>
             <a href="#insights">Insights</a>
             <a href="/messages">Messages</a>
             <a href="#knowledge">Knowledge Base</a>
@@ -2849,6 +2850,7 @@
     <div id="mobile-menu">
       <a href="#overview">Dashboard</a>
       <a href="#settings">Receptionist Settings</a>
+      <a href="#phoneNumbers">Phone numbers</a>
       <a href="#knowledge">Knowledge Base</a>
       <a href="#activity">Activity / Usage</a>
       <a href="/messages">Messages</a>
@@ -3087,7 +3089,269 @@
 
       
 
-      
+      <!-- ─────────── Phone numbers panel (Slice 3) ─────────── -->
+      <section class="grid" id="phoneNumbers">
+        <div class="card" style="grid-column: span 12;">
+          <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <h2 class="section-title" style="margin:0;">Phone numbers</h2>
+              <p class="section-note">Buy more numbers, change routing, or release ones you don't need.</p>
+            </div>
+            <button class="btn shiny" type="button" id="pnAddBtn">+ Add a number</button>
+          </div>
+
+          <!-- Quota indicator -->
+          <div class="pn-quota" id="pnQuota" hidden>
+            <div class="pn-quota-row">
+              <span class="pn-quota-text"><strong id="pnQuotaActive">0</strong> of
+                <strong id="pnQuotaIncluded">0</strong> included on your <span id="pnQuotaPlan">plan</span></span>
+              <span class="pn-quota-overflow" id="pnQuotaOverflow" hidden></span>
+            </div>
+            <div class="pn-quota-track"><div class="pn-quota-fill" id="pnQuotaFill"></div></div>
+          </div>
+
+          <!-- List of active numbers -->
+          <div class="pn-list" id="pnList">
+            <div class="pn-empty" id="pnEmpty" hidden>
+              <span class="pn-empty-icon">📞</span>
+              <span>No numbers yet — buy your first one to start catching calls.</span>
+            </div>
+          </div>
+          <div class="pn-error" id="pnError" hidden></div>
+        </div>
+      </section>
+
+      <!-- ─────────── Add-a-number wizard (modal) ─────────── -->
+      <dialog id="pnWizard" class="pn-wizard" aria-labelledby="pnWizardTitle">
+        <div class="pn-wizard-shell">
+          <div class="pn-wizard-head">
+            <span class="pn-stepdots">
+              <span class="pn-dot is-active" data-step="1"></span>
+              <span class="pn-dot" data-step="2"></span>
+              <span class="pn-dot" data-step="3"></span>
+              <span class="pn-dot" data-step="4"></span>
+            </span>
+            <button type="button" class="pn-close" id="pnWizardClose" aria-label="Close">×</button>
+          </div>
+
+          <!-- Step 1: filters -->
+          <section class="pn-step" data-step="1">
+            <h3 id="pnWizardTitle" class="pn-step-title">Pick a number</h3>
+            <p class="pn-step-sub">Search Twilio inventory by country, type, and area code or city.</p>
+            <div class="pn-row2">
+              <label class="pn-field">
+                <span>Country</span>
+                <select id="pnCountry">
+                  <option value="US" selected>United States</option>
+                  <option value="CA">Canada</option>
+                  <option value="GB">United Kingdom</option>
+                </select>
+              </label>
+              <label class="pn-field">
+                <span>Type</span>
+                <select id="pnType">
+                  <option value="local" selected>Local</option>
+                  <option value="tollfree">Toll-free</option>
+                </select>
+              </label>
+            </div>
+            <div class="pn-row2">
+              <label class="pn-field">
+                <span>Area code (optional)</span>
+                <input id="pnAreaCode" type="text" placeholder="415" inputmode="numeric" maxlength="3" />
+              </label>
+              <label class="pn-field">
+                <span>City (optional)</span>
+                <input id="pnLocality" type="text" placeholder="San Francisco" />
+              </label>
+            </div>
+            <div class="pn-actions">
+              <button type="button" class="btn secondary" id="pnStep1Cancel">Cancel</button>
+              <button type="button" class="btn shiny" id="pnStep1Search">Search →</button>
+            </div>
+          </section>
+
+          <!-- Step 2: results -->
+          <section class="pn-step" data-step="2" hidden>
+            <h3 class="pn-step-title">Available numbers</h3>
+            <p class="pn-step-sub" id="pnStep2Sub">Click a number to buy it.</p>
+            <div class="pn-results" id="pnResults" aria-busy="false"></div>
+            <div class="pn-actions">
+              <button type="button" class="btn secondary" id="pnStep2Back">← Back</button>
+              <button type="button" class="btn secondary" id="pnStep2Retry" hidden>Try a nearby area</button>
+            </div>
+          </section>
+
+          <!-- Step 3: confirm -->
+          <section class="pn-step" data-step="3" hidden>
+            <h3 class="pn-step-title">Confirm purchase</h3>
+            <div class="pn-confirm-card">
+              <div class="pn-confirm-num" id="pnConfirmNumber">—</div>
+              <div class="pn-confirm-locality" id="pnConfirmLocality">—</div>
+              <div class="pn-confirm-cost" id="pnConfirmCost">—</div>
+              <div class="pn-confirm-cap" id="pnConfirmCap"></div>
+            </div>
+            <p class="pn-step-sub" id="pnConfirmNote">This will be added to your subscription, prorated to today.</p>
+            <div class="pn-actions">
+              <button type="button" class="btn secondary" id="pnStep3Back">← Back</button>
+              <button type="button" class="btn shiny" id="pnStep3Buy">
+                <span class="pn-buy-label">Confirm purchase</span>
+              </button>
+            </div>
+          </section>
+
+          <!-- Step 4: success -->
+          <section class="pn-step" data-step="4" hidden>
+            <h3 class="pn-step-title pn-success-title">🎉 Your new number is live.</h3>
+            <div class="pn-success-card">
+              <div class="pn-success-num" id="pnSuccessNumber">—</div>
+              <a class="btn shiny" id="pnSuccessCall" href="#">📞 Test it: tap to call</a>
+              <p class="pn-step-sub" style="margin-top:14px;">It's wired into your bot. Try calling it and asking a customer-style question.</p>
+            </div>
+            <div class="pn-actions">
+              <button type="button" class="btn shiny" id="pnStep4Done">Done</button>
+            </div>
+          </section>
+        </div>
+      </dialog>
+
+      <style>
+        /* ─── Phone numbers panel ─── */
+        #phoneNumbers .card-header h2 { font-size: 1.05rem; }
+        .pn-quota {
+          margin-top: 14px; padding: 12px 14px;
+          background: rgba(43,108,176,.06);
+          border: 1px solid rgba(43,108,176,.18);
+          border-radius: 10px;
+        }
+        .pn-quota-row { display: flex; justify-content: space-between; align-items: baseline;
+                         font-size: 13px; color: #1e293b; gap: 12px; flex-wrap: wrap; }
+        .pn-quota-row strong { font-weight: 700; color: #0f172a; }
+        .pn-quota-overflow { font-size: 12px; color: #475569; }
+        .pn-quota-track { height: 6px; background: #e2e8f0; border-radius: 999px; overflow: hidden; margin-top: 8px; }
+        .pn-quota-fill { height: 100%; background: linear-gradient(90deg, #2b6cb0, #38bdf8);
+                         width: 0%; transition: width .55s cubic-bezier(.22,1,.36,1); border-radius: 999px; }
+
+        .pn-list { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+        .pn-row {
+          display: grid; grid-template-columns: 1fr auto auto;
+          gap: 14px; align-items: center;
+          padding: 14px 16px; border-radius: 10px;
+          border: 1px solid #e2e8f0; background: #fff;
+          transition: border-color .2s ease, box-shadow .2s ease;
+        }
+        .pn-row:hover { border-color: #cbd5e1; box-shadow: 0 4px 14px -4px rgba(15,23,42,.08); }
+        .pn-row .pn-num { font-size: 15px; font-weight: 700; color: #0f172a; letter-spacing: -0.005em; }
+        .pn-row .pn-meta { font-size: 12px; color: #475569; margin-top: 2px; }
+        .pn-row .pn-badge {
+          font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px;
+          letter-spacing: 0.04em; text-transform: uppercase;
+        }
+        .pn-badge-included { background: rgba(22,163,74,.10); color: #047857; border: 1px solid rgba(22,163,74,.22); }
+        .pn-badge-addon    { background: rgba(245,158,11,.10); color: #92400e; border: 1px solid rgba(245,158,11,.30); }
+        .pn-row .pn-release {
+          padding: 6px 12px; border-radius: 8px;
+          background: #fff; color: #b91c1c; border: 1px solid #fecaca;
+          font-size: 12px; font-weight: 600; cursor: pointer;
+          transition: background .15s, border-color .15s;
+        }
+        .pn-row .pn-release:hover { background: #fef2f2; border-color: #fca5a5; }
+
+        .pn-empty {
+          display: flex; align-items: center; gap: 10px; padding: 22px 16px;
+          background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px;
+          color: #475569; font-size: 14px;
+        }
+        .pn-empty-icon { font-size: 22px; }
+        .pn-error {
+          margin-top: 12px; padding: 10px 14px; border-radius: 10px;
+          background: #fef2f2; color: #b91c1c; font-size: 13px;
+          border: 1px solid #fecaca;
+        }
+
+        /* Wizard dialog */
+        .pn-wizard {
+          padding: 0; border: none; border-radius: 16px;
+          max-width: 520px; width: calc(100% - 32px);
+          box-shadow: 0 28px 60px rgba(15,23,42,.18);
+          background: #fff;
+        }
+        .pn-wizard::backdrop { background: rgba(15,23,42,.55); backdrop-filter: blur(4px); }
+        .pn-wizard-shell { padding: 24px 26px 22px; }
+        .pn-wizard-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .pn-stepdots { display: inline-flex; gap: 6px; }
+        .pn-dot { width: 8px; height: 8px; border-radius: 50%; background: #e2e8f0; transition: background .2s; }
+        .pn-dot.is-active { background: #2b6cb0; }
+        .pn-dot.is-done { background: #047857; }
+        .pn-close {
+          width: 30px; height: 30px; border-radius: 50%; border: none; background: #f1f5f9;
+          font-size: 18px; line-height: 1; cursor: pointer; color: #475569;
+        }
+        .pn-close:hover { background: #e2e8f0; }
+        .pn-step-title { font-size: 22px; font-weight: 700; color: #0f172a; letter-spacing: -0.02em; margin-bottom: 4px; }
+        .pn-step-sub { font-size: 13px; color: #475569; margin-bottom: 18px; }
+        .pn-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        .pn-field span { display: block; font-size: 12px; font-weight: 600; color: #1e293b; margin-bottom: 6px; }
+        .pn-field input, .pn-field select {
+          width: 100%; padding: 10px 12px; border-radius: 8px;
+          border: 1px solid #e2e8f0; font-size: 14px; font-family: inherit;
+          background: #fdfdff;
+        }
+        .pn-field input:focus, .pn-field select:focus {
+          outline: none; border-color: #2b6cb0;
+          box-shadow: 0 0 0 4px rgba(43,108,176,.10); background: #fff;
+        }
+        .pn-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+        .pn-actions .btn { padding: 9px 16px; font-size: 13px; }
+
+        .pn-results { display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow-y: auto; padding-right: 4px; }
+        .pn-results[aria-busy="true"]::after {
+          content: "Searching…"; display: block; padding: 10px 0;
+          color: #475569; font-size: 13px; font-style: italic;
+        }
+        .pn-result {
+          display: grid; grid-template-columns: 1fr auto;
+          align-items: center; gap: 10px;
+          padding: 11px 14px; border-radius: 9px;
+          border: 1px solid #e2e8f0; background: #fff;
+          cursor: pointer; transition: border-color .15s, background .15s;
+        }
+        .pn-result:hover { border-color: #2b6cb0; background: rgba(43,108,176,.04); }
+        .pn-result-num { font-size: 14px; font-weight: 700; color: #0f172a; }
+        .pn-result-meta { font-size: 11.5px; color: #475569; margin-top: 2px; }
+        .pn-result-pick { font-size: 12px; font-weight: 700; color: #2b6cb0; }
+        .pn-caps { display: inline-flex; gap: 4px; margin-left: 6px; }
+        .pn-cap { font-size: 10px; padding: 1px 6px; border-radius: 999px;
+                  background: #f1f5f9; color: #475569; font-weight: 600; }
+
+        .pn-confirm-card {
+          padding: 18px 20px; border-radius: 12px; background: #f8fafc;
+          border: 1px solid #e2e8f0; text-align: center; margin-bottom: 12px;
+        }
+        .pn-confirm-num { font-family: "Space Grotesk", sans-serif;
+                          font-size: 28px; font-weight: 800; color: #0f172a;
+                          letter-spacing: -0.025em; margin-bottom: 4px; }
+        .pn-confirm-locality { font-size: 12px; color: #475569; margin-bottom: 10px; }
+        .pn-confirm-cost { font-size: 14px; font-weight: 700; color: #2b6cb0; }
+        .pn-confirm-cap { margin-top: 8px; }
+
+        .pn-success-card { padding: 22px 18px; border-radius: 12px;
+                           background: linear-gradient(135deg, rgba(22,163,74,.06), rgba(34,197,94,.10));
+                           border: 1px solid rgba(22,163,74,.22); text-align: center; }
+        .pn-success-title { color: #047857; }
+        .pn-success-num { font-family: "Space Grotesk", sans-serif;
+                          font-size: 30px; font-weight: 800; color: #0f172a;
+                          letter-spacing: -0.025em; margin-bottom: 14px; }
+
+        .pn-buy-label .pn-spinner {
+          display: inline-block; width: 12px; height: 12px;
+          border: 1.5px solid rgba(255,255,255,.4); border-top-color: #fff;
+          border-radius: 50%; animation: pnspin .8s linear infinite; margin-right: 8px;
+          vertical-align: -2px;
+        }
+        @keyframes pnspin { to { transform: rotate(360deg); } }
+      </style>
+
       <section class="grid" id="activity">
         <div class="card chart-card">
         <div class="card-header">
@@ -8051,7 +8315,313 @@
       // Poll trial status every 30s so the dashboard kicks a user out
       // immediately when an admin disconnects their trial.
       setInterval(loadTrialBanner, 30000);
+      initPhoneNumbersPanel();
     });
+
+    // ─────────── Phone Numbers panel (Slice 3) ───────────
+    function initPhoneNumbersPanel() {
+      const panel = document.getElementById("phoneNumbers");
+      if (!panel) return;
+      const dlg = document.getElementById("pnWizard");
+      const list = document.getElementById("pnList");
+      const empty = document.getElementById("pnEmpty");
+      const errBox = document.getElementById("pnError");
+      const quota = document.getElementById("pnQuota");
+      const fmtMoney = (n) => n ? `$${Number(n).toFixed(2)}` : "";
+
+      let state = {
+        plan_tier: "basic",
+        included: 1,
+        active: 0,
+        phones: [],
+        wizardSelected: null,
+        searching: false,
+        purchasing: false,
+        searchDebounce: null,
+      };
+
+      function showErr(msg) {
+        if (!msg) { errBox.hidden = true; errBox.textContent = ""; return; }
+        errBox.hidden = false;
+        errBox.textContent = msg;
+      }
+
+      async function loadList() {
+        try {
+          const res = await fetch("/me/phones", { credentials: "same-origin" });
+          if (res.status === 403) {
+            // Trial users — hide the panel entirely.
+            panel.hidden = true;
+            return;
+          }
+          if (!res.ok) {
+            showErr("Couldn't load your numbers. Refresh the page.");
+            return;
+          }
+          const body = await res.json();
+          state.plan_tier = body.plan_tier || "basic";
+          state.included = body.included || 0;
+          state.active = body.active || 0;
+          state.phones = body.phones || [];
+          renderList();
+        } catch (e) { showErr("Network error loading numbers."); }
+      }
+
+      function renderList() {
+        // Quota
+        if (state.included > 0 || state.active > 0) {
+          quota.hidden = false;
+          document.getElementById("pnQuotaActive").textContent = state.active;
+          document.getElementById("pnQuotaIncluded").textContent = state.included;
+          document.getElementById("pnQuotaPlan").textContent = (state.plan_tier || "basic").replace(/^./, c => c.toUpperCase());
+          const pct = state.included ? Math.min(100, (state.active * 100) / state.included) : 0;
+          document.getElementById("pnQuotaFill").style.width = pct + "%";
+          const overflow = Math.max(0, state.active - state.included);
+          const overflowEl = document.getElementById("pnQuotaOverflow");
+          overflowEl.hidden = overflow === 0;
+          if (overflow > 0) {
+            overflowEl.textContent = `${overflow} add-on · $1.15/mo each beyond your plan`;
+          }
+        } else {
+          quota.hidden = true;
+        }
+
+        // List rows
+        list.querySelectorAll(".pn-row").forEach(el => el.remove());
+        empty.hidden = state.phones.length > 0;
+        for (const p of state.phones) {
+          const row = document.createElement("div");
+          row.className = "pn-row";
+          const billing = p.billing_mode || "included";
+          const badge = billing === "addon"
+            ? `<span class="pn-badge pn-badge-addon">${fmtMoney(p.monthly_cost_usd)}/mo</span>`
+            : `<span class="pn-badge pn-badge-included">Included</span>`;
+          row.innerHTML = `
+            <div>
+              <div class="pn-num">${escapeHtml(p.phone_display || p.phone_number || "")}</div>
+              <div class="pn-meta">${escapeHtml(p.phone_number || "")} · routes to ${escapeHtml((p.routing && p.routing.target) || "—")}</div>
+            </div>
+            ${badge}
+            <button type="button" class="pn-release" data-num="${escapeHtml(p.phone_number || "")}">Release</button>
+          `;
+          list.appendChild(row);
+        }
+        list.querySelectorAll("[data-num]").forEach(btn => {
+          btn.addEventListener("click", () => releaseNumber(btn.dataset.num));
+        });
+      }
+
+      async function releaseNumber(phoneNumber) {
+        if (!phoneNumber) return;
+        if (!confirm(`Release ${phoneNumber}? You won't be billed for it after this billing cycle.`)) return;
+        try {
+          const res = await fetch("/me/phones/" + encodeURIComponent(phoneNumber), {
+            method: "DELETE", credentials: "same-origin",
+            headers: {"Idempotency-Key": "release-" + phoneNumber + "-" + Date.now()},
+          });
+          if (res.status === 409) {
+            const body = await res.json().catch(() => ({}));
+            alert(body.message || "Can't release this number — configure another contact route first.");
+            return;
+          }
+          if (!res.ok) { alert("Couldn't release the number. Try again."); return; }
+          await loadList();
+        } catch (e) { alert("Network error."); }
+      }
+
+      // ─── Wizard ───
+      function setStep(n) {
+        dlg.querySelectorAll(".pn-step").forEach(s => {
+          s.hidden = String(s.dataset.step) !== String(n);
+        });
+        dlg.querySelectorAll(".pn-dot").forEach(d => {
+          const s = parseInt(d.dataset.step, 10);
+          d.classList.toggle("is-active", s === n);
+          d.classList.toggle("is-done", s < n);
+        });
+      }
+
+      function openWizard() {
+        showErr("");
+        setStep(1);
+        document.getElementById("pnAreaCode").value = "";
+        document.getElementById("pnLocality").value = "";
+        document.getElementById("pnResults").innerHTML = "";
+        if (typeof dlg.showModal === "function") dlg.showModal();
+        else dlg.setAttribute("open", "");
+      }
+      function closeWizard() { dlg.close ? dlg.close() : dlg.removeAttribute("open"); }
+
+      document.getElementById("pnAddBtn").addEventListener("click", openWizard);
+      document.getElementById("pnWizardClose").addEventListener("click", closeWizard);
+      document.getElementById("pnStep1Cancel").addEventListener("click", closeWizard);
+      document.getElementById("pnStep2Back").addEventListener("click", () => setStep(1));
+      document.getElementById("pnStep3Back").addEventListener("click", () => setStep(2));
+      document.getElementById("pnStep4Done").addEventListener("click", () => { closeWizard(); loadList(); });
+      document.getElementById("pnStep2Retry").addEventListener("click", () => setStep(1));
+
+      document.getElementById("pnStep1Search").addEventListener("click", search);
+
+      // Debounce for live area-code/locality typing in step 1 — only kicks
+      // in after the user has clicked Search once (we track via state.searching).
+      function debouncedSearch() {
+        clearTimeout(state.searchDebounce);
+        state.searchDebounce = setTimeout(search, 300);
+      }
+      document.getElementById("pnAreaCode").addEventListener("input", () => {
+        if (state.searching || dlg.querySelector('.pn-step[data-step="2"]:not([hidden])')) debouncedSearch();
+      });
+      document.getElementById("pnLocality").addEventListener("input", () => {
+        if (state.searching || dlg.querySelector('.pn-step[data-step="2"]:not([hidden])')) debouncedSearch();
+      });
+
+      async function search() {
+        showErr("");
+        const country  = document.getElementById("pnCountry").value || "US";
+        const type_    = document.getElementById("pnType").value || "local";
+        const area     = (document.getElementById("pnAreaCode").value || "").trim();
+        const locality = (document.getElementById("pnLocality").value || "").trim();
+
+        const results = document.getElementById("pnResults");
+        const retry = document.getElementById("pnStep2Retry");
+        results.innerHTML = "";
+        results.setAttribute("aria-busy", "true");
+        retry.hidden = true;
+        setStep(2);
+        state.searching = true;
+
+        try {
+          const url = `/me/phones/search?country=${country}&type=${type_}` +
+                      (area ? `&area_code=${area}` : "") +
+                      (locality ? `&locality=${encodeURIComponent(locality)}` : "");
+          const res = await fetch(url, { credentials: "same-origin" });
+          results.setAttribute("aria-busy", "false");
+          if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            results.innerHTML = `<div class="pn-empty">${escapeHtml(body.message || "Search failed.")}</div>`;
+            retry.hidden = false;
+            return;
+          }
+          const body = await res.json();
+          const items = body.results || [];
+          document.getElementById("pnStep2Sub").textContent =
+            `${items.length} ${type_ === "tollfree" ? "toll-free" : "local"} numbers · ${body.monthly_cost_label || ""}`;
+          if (items.length === 0) {
+            results.innerHTML = `<div class="pn-empty">No numbers match. Try another area code.</div>`;
+            retry.hidden = false;
+            return;
+          }
+          for (const it of items) {
+            const row = document.createElement("button");
+            row.type = "button";
+            row.className = "pn-result";
+            row.innerHTML = `
+              <div>
+                <div class="pn-result-num">${escapeHtml(it.friendly_name || it.phone_number)}</div>
+                <div class="pn-result-meta">${escapeHtml((it.locality || "") + (it.region ? ", " + it.region : ""))}<span class="pn-caps">${capsBadges(it.capabilities)}</span></div>
+              </div>
+              <span class="pn-result-pick">Select →</span>
+            `;
+            row.addEventListener("click", () => pickNumber(it, country, type_, body.monthly_cost_label || ""));
+            results.appendChild(row);
+          }
+        } catch (e) {
+          results.setAttribute("aria-busy", "false");
+          results.innerHTML = `<div class="pn-empty">Network error. Try again.</div>`;
+          retry.hidden = false;
+        } finally { state.searching = false; }
+      }
+
+      function capsBadges(caps) {
+        if (!caps) return "";
+        const out = [];
+        if (caps.voice) out.push('<span class="pn-cap">voice</span>');
+        if (caps.sms)   out.push('<span class="pn-cap">sms</span>');
+        if (caps.mms)   out.push('<span class="pn-cap">mms</span>');
+        return out.join("");
+      }
+
+      function pickNumber(item, country, type_, costLabel) {
+        state.wizardSelected = { item, country, type: type_ };
+        document.getElementById("pnConfirmNumber").textContent = item.friendly_name || item.phone_number;
+        document.getElementById("pnConfirmLocality").textContent =
+          (item.locality || "") + (item.region ? `, ${item.region}` : "");
+        document.getElementById("pnConfirmCap").innerHTML = capsBadges(item.capabilities);
+
+        // Cost / billing-mode preview
+        const overFlow = state.active >= state.included;
+        if (overFlow) {
+          document.getElementById("pnConfirmCost").textContent =
+            `+ ${fmtMoney(item.monthly_cost_usd)}/mo · prorated to today`;
+          document.getElementById("pnConfirmNote").textContent =
+            `You're at your plan's included limit — this number will be added as an add-on and charged on your next invoice.`;
+        } else {
+          document.getElementById("pnConfirmCost").textContent = "Included in your plan";
+          document.getElementById("pnConfirmNote").textContent =
+            "This number is included in your plan — no charge today.";
+        }
+        setStep(3);
+      }
+
+      document.getElementById("pnStep3Buy").addEventListener("click", buyNumber);
+
+      async function buyNumber() {
+        if (state.purchasing || !state.wizardSelected) return;
+        state.purchasing = true;
+        const btn = document.getElementById("pnStep3Buy");
+        btn.disabled = true;
+        btn.querySelector(".pn-buy-label").innerHTML = '<span class="pn-spinner"></span>Charging…';
+        try {
+          const sel = state.wizardSelected;
+          const idemKey = "purchase-" + sel.item.phone_number + "-" + Date.now();
+          const res = await fetch("/me/phones/purchase", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+              "Content-Type": "application/json",
+              "Idempotency-Key": idemKey,
+            },
+            body: JSON.stringify({
+              phone_number: sel.item.phone_number,
+              country: sel.country,
+              type: sel.type,
+            }),
+          });
+          if (res.ok) {
+            const body = await res.json();
+            document.getElementById("pnSuccessNumber").textContent =
+              body.phone.phone_display || body.phone.phone_number;
+            document.getElementById("pnSuccessCall").href =
+              "tel:" + (body.phone.phone_number || "").replace(/[^\d+]/g, "");
+            setStep(4);
+          } else if (res.status === 409) {
+            // Number snatched between search and confirm
+            alert("That number was just taken. Pick another.");
+            await search();
+          } else if (res.status === 402) {
+            const body = await res.json().catch(() => ({}));
+            alert("Card declined or billing not set up. Update your billing and try again.\n\n" + (body.message || ""));
+          } else {
+            const body = await res.json().catch(() => ({}));
+            alert("Couldn't complete the purchase: " + (body.message || body.error || "unknown error"));
+          }
+        } catch (e) { alert("Network error during purchase."); }
+        finally {
+          state.purchasing = false;
+          btn.disabled = false;
+          btn.querySelector(".pn-buy-label").textContent = "Confirm purchase";
+        }
+      }
+
+      // Tiny escape util — uses textContent indirectly via DOM.
+      function escapeHtml(s) {
+        return String(s == null ? "" : s)
+          .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      }
+
+      loadList();
+    }
 
     // Iframe self-reports its content height — keeps the section flush with the
     // table and prevents the inner scrollbar.
