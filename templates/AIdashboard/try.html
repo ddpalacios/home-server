@@ -368,82 +368,6 @@
     }
     .chip.is-selected .emoji { transform: scale(1.15); }
 
-    /* ── Time-bucket picker (vertical list) ── */
-    .mode-list { display: flex; flex-direction: column; gap: 6px; }
-    .mode-list .mode-row {
-      position: relative; cursor: pointer;
-      display: grid; grid-template-columns: 18px 1fr;
-      gap: 12px; align-items: start;
-      padding: 10px 14px; border-radius: 10px;
-      border: 1px solid var(--line); background: #fff;
-      transition: all .25s cubic-bezier(.22,1,.36,1);
-    }
-    .mode-list .mode-row:hover { border-color: var(--line-strong); }
-    .mode-list .mode-row.is-selected {
-      border-color: var(--accent);
-      background: var(--accent-soft);
-    }
-    .mode-list .mode-row input[type="radio"] {
-      position: absolute; opacity: 0; pointer-events: none;
-    }
-    .mode-radio {
-      width: 16px; height: 16px; border-radius: 50%;
-      border: 1.5px solid var(--line-strong);
-      background: #fff; display: inline-block;
-      margin-top: 4px;
-      transition: all .25s cubic-bezier(.22,1,.36,1);
-      position: relative;
-    }
-    .mode-radio::after {
-      content: ""; position: absolute; inset: 3px;
-      border-radius: 50%; background: var(--accent);
-      transform: scale(0); opacity: 0;
-      transition: all .25s cubic-bezier(.22,1,.36,1);
-    }
-    .mode-row.is-selected .mode-radio { border-color: var(--accent); }
-    .mode-row.is-selected .mode-radio::after { transform: scale(1); opacity: 1; }
-
-    .mode-row-body { min-width: 0; }
-    .mode-row-head {
-      display: flex; align-items: center; gap: 8px;
-    }
-    .mode-row-emoji {
-      font-size: 16px; line-height: 1;
-      filter: grayscale(.2);
-      transition: filter .25s, transform .25s cubic-bezier(.22,1,.36,1);
-    }
-    .mode-row.is-selected .mode-row-emoji { filter: none; transform: scale(1.05); }
-    .mode-row-label {
-      font-size: 14px; font-weight: 700; color: var(--text);
-      letter-spacing: -0.005em; line-height: 1.3;
-    }
-    .mode-row-sub {
-      max-height: 0; overflow: hidden; opacity: 0;
-      font-size: 12px; color: var(--muted);
-      line-height: 1.45; font-weight: 500;
-      transition: max-height .35s cubic-bezier(.22,1,.36,1),
-                  opacity .25s ease, margin-top .25s ease;
-    }
-    .mode-row.is-selected .mode-row-sub {
-      max-height: 80px; opacity: 1; margin-top: 4px;
-    }
-
-    /* "Something else" textarea */
-    #focusNote {
-      width: 100%; margin-top: 8px;
-      padding: 11px 13px; border-radius: 10px;
-      border: 1px solid var(--line); background: #fdfdff;
-      font-family: inherit; font-size: 14px; color: var(--text);
-      resize: vertical; min-height: 56px; line-height: 1.45;
-      transition: all .2s cubic-bezier(.22,1,.36,1);
-    }
-    #focusNote::placeholder { color: #94a3b8; font-style: italic; }
-    #focusNote:focus {
-      outline: none; border-color: var(--accent);
-      box-shadow: 0 0 0 4px var(--accent-soft);
-      background: #fff;
-    }
-
     /* Guarantee strip (above the CTA) */
     .guarantee {
       display: flex; align-items: center; gap: 10px;
@@ -462,9 +386,6 @@
       font-size: 13px; font-weight: 800;
     }
     .guarantee b { color: #052e16; }
-
-    /* Hidden — old element kept for compatibility */
-    .mode-helper { display: none; }
 
     /* ── Submit button ── */
     .btn {
@@ -515,10 +436,45 @@
 
     .err { color: #b91c1c; font-size: 14px; margin-top: 14px; min-height: 18px; font-weight: 500; }
 
+    /* ── "Every trial includes" — channel value cards ── */
+    .included {
+      margin-top: 18px;
+      padding: 14px 16px;
+      background: linear-gradient(135deg,
+                    rgba(43, 108, 176, 0.04),
+                    rgba(56, 189, 248, 0.04));
+      border: 1px solid rgba(43, 108, 176, 0.14);
+      border-radius: 12px;
+    }
+    .included-title {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .included-row {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    }
+    @media (max-width: 540px) {
+      .included-row { grid-template-columns: 1fr; }
+    }
+    .included-item {
+      display: grid; grid-template-columns: 24px 1fr;
+      gap: 10px; align-items: start;
+    }
+    .included-item .e { font-size: 18px; line-height: 1; padding-top: 1px; }
+    .included-item .t {
+      display: block; font-size: 13px; font-weight: 700; color: var(--text);
+      letter-spacing: -0.005em;
+    }
+    .included-item .s {
+      display: block; font-size: 11.5px; color: var(--muted);
+      font-weight: 500; line-height: 1.4; margin-top: 1px;
+    }
+
     /* ── Trust strip ── */
     .trust {
       display: flex; justify-content: space-around; gap: 8px;
-      margin-top: 16px; padding-top: 14px;
+      margin-top: 14px; padding-top: 12px;
       border-top: 1px solid var(--line);
     }
     .trust-item {
@@ -706,8 +662,8 @@
     <main class="card is-entering" id="cardForm">
       <div class="pill-mark"><span class="dot"></span> Free 7 days · No card · No risk</div>
 
-      <h1>Where's the<br>leak in your business?</h1>
-      <p class="sub">Pick the moment you keep losing customers — we'll handle it free for 7 days.</p>
+      <h1>Never let a lead<br>go unanswered.</h1>
+      <p class="sub">Voice + web chat that answer instantly, qualify the lead, book the job, and email it straight to you. Free for 7 days.</p>
 
       <form id="trialForm" onsubmit="return false;" novalidate>
         <div class="field-row">
@@ -734,62 +690,6 @@
               <button type="button" class="chip" data-value="other"><span class="emoji">✨</span><span>Other</span></button>
             </div>
             <div class="helper" id="industryHint">Pick one.</div>
-          </div>
-        </div>
-
-        <div class="field-row">
-          <div class="icon">🎯</div>
-          <div class="body">
-            <label>Where's the leak?</label>
-            <div class="mode-list" id="modeList">
-              <label class="mode-row is-selected" data-bucket="intake">
-                <input type="radio" name="focus" value="intake" checked />
-                <span class="mode-radio"></span>
-                <div class="mode-row-body">
-                  <div class="mode-row-head">
-                    <span class="mode-row-emoji">🪝</span>
-                    <span class="mode-row-label" id="modeLabelIntake">Bringing leads in</span>
-                  </div>
-                  <div class="mode-row-sub" id="modeSubIntake">Calls, web chats, email inquiries — caught and qualified before they go cold.</div>
-                </div>
-              </label>
-              <label class="mode-row" data-bucket="during">
-                <input type="radio" name="focus" value="during" />
-                <span class="mode-radio"></span>
-                <div class="mode-row-body">
-                  <div class="mode-row-head">
-                    <span class="mode-row-emoji">🛠</span>
-                    <span class="mode-row-label" id="modeLabelDuring">Once the job is booked</span>
-                  </div>
-                  <div class="mode-row-sub" id="modeSubDuring">ETAs, weather reschedules, day-of confirmations, customer comms while on site.</div>
-                </div>
-              </label>
-              <label class="mode-row" data-bucket="after">
-                <input type="radio" name="focus" value="after" />
-                <span class="mode-radio"></span>
-                <div class="mode-row-body">
-                  <div class="mode-row-head">
-                    <span class="mode-row-emoji">🔁</span>
-                    <span class="mode-row-label" id="modeLabelAfter">After the job's done</span>
-                  </div>
-                  <div class="mode-row-sub" id="modeSubAfter">Review requests, win-back, recurring-service reminders, season/storm outreach.</div>
-                </div>
-              </label>
-              <label class="mode-row" data-bucket="other">
-                <input type="radio" name="focus" value="other" />
-                <span class="mode-radio"></span>
-                <div class="mode-row-body">
-                  <div class="mode-row-head">
-                    <span class="mode-row-emoji">📝</span>
-                    <span class="mode-row-label">Something else — describe it</span>
-                  </div>
-                  <div class="mode-row-sub">Tell us where in the customer journey you'd like us to step in.</div>
-                </div>
-              </label>
-            </div>
-            <textarea id="focusNote" name="focus_note" rows="2"
-              placeholder="e.g. 'follow up with no-show appointments', 'win back customers we haven't seen in a year'…"
-              hidden></textarea>
           </div>
         </div>
 
@@ -822,6 +722,27 @@
           <span class="arrow">→</span>
         </button>
         <p class="err" id="formError"></p>
+
+        <div class="included">
+          <div class="included-title">Every trial includes</div>
+          <div class="included-row">
+            <div class="included-item">
+              <span class="e">📞</span>
+              <span class="t">Voice line</span>
+              <span class="s">Real number, 24/7 pickup.</span>
+            </div>
+            <div class="included-item">
+              <span class="e">💬</span>
+              <span class="t">Web chat</span>
+              <span class="s">One-line snippet for your site.</span>
+            </div>
+            <div class="included-item">
+              <span class="e">📨</span>
+              <span class="t">Lead alerts</span>
+              <span class="s">Every booking lands in your inbox.</span>
+            </div>
+          </div>
+        </div>
 
         <div class="trust">
           <div class="trust-item">
@@ -994,61 +915,7 @@
         }, success ? 1300 : 350);
       }
 
-      // ── Bucket-copy table: industry × time-bucket → concrete actions ──
-      const BUCKET_COPY = {
-        roofer: {
-          intake: { label: "Bringing leads in",     sub: "Storm-damage calls + hail-damage chat + insurance-claim email triage." },
-          during: { label: "Once the job is booked",sub: "Inspector ETA texts, photo-upload links, customer arrival confirmations." },
-          after:  { label: "After the job's done",  sub: "When a storm hits your zip, email past customers to schedule inspections — before competitors knock." },
-        },
-        plumber: {
-          intake: { label: "Bringing leads in",     sub: "Emergency triage in 3 questions. Floods paged to your phone, routine booked for next-day." },
-          during: { label: "Once the job is booked",sub: "Same-day arrival ETAs, parts-needed alerts, on-site customer comms." },
-          after:  { label: "After the job's done",  sub: "Maintenance reminders, review collection, water-heater warranty outreach." },
-        },
-        hvac: {
-          intake: { label: "Bringing leads in",     sub: "No-heat / no-AC triaged for elderly + small kids first. Maintenance plans booked automatically." },
-          during: { label: "Once the job is booked",sub: "Tech ETA texts, photo-of-issue capture, parts-needed status to the customer." },
-          after:  { label: "After the job's done",  sub: "Seasonal tune-up reminders, filter-replacement campaigns, review collection." },
-        },
-        cleaner: {
-          intake: { label: "Bringing leads in",     sub: "60-second quote captures. Recurring vs. one-time priced live, move-in/out detected." },
-          during: { label: "Once the job is booked",sub: "Crew ETA texts, day-of confirmations, walk-through photos sent automatically." },
-          after:  { label: "After the job's done",  sub: "Re-booking reminders, referral campaigns, monthly check-in emails." },
-        },
-        landscaper: {
-          intake: { label: "Bringing leads in",     sub: "Estimate calls + free-estimate chat + spring-cleanup email replies." },
-          during: { label: "Once the job is booked",sub: "Bad-weather auto-reschedule + crew ETA texts + day-of confirmations — before you wake up." },
-          after:  { label: "After the job's done",  sub: "Recurring-service reminders, neighbor referrals, post-storm cleanup alerts." },
-        },
-        realtor: {
-          intake: { label: "Bringing leads in",     sub: "Buyer/seller qualified in 4 questions. Pre-approved buyers paged immediately." },
-          during: { label: "Once the deal's open",  sub: "Showing reminders, document-needed nudges, walkthrough confirmations." },
-          after:  { label: "After the deal closes", sub: "Anniversary check-ins, referral asks, market-update outreach to past clients." },
-        },
-        mover: {
-          intake: { label: "Bringing leads in",     sub: "60-second quote calls. Date + size + bedrooms + heavy items captured." },
-          during: { label: "Once the job is booked",sub: "Crew ETA texts, item-list confirmations, day-of arrival timing." },
-          after:  { label: "After the job's done",  sub: "Review requests, referral campaigns, season-ahead outreach." },
-        },
-        other: {
-          intake: { label: "Bringing leads in",     sub: "Calls, web chats, email inquiries — caught and qualified before they go cold." },
-          during: { label: "Once the job is booked",sub: "ETAs, weather reschedules, day-of confirmations, customer comms while on site." },
-          after:  { label: "After the job's done",  sub: "Review requests, win-back, recurring-service reminders, season/storm outreach." },
-        },
-      };
-
-      function applyModeCopy(industry) {
-        const copy = BUCKET_COPY[industry] || BUCKET_COPY.other;
-        const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
-        set("modeLabelIntake", copy.intake.label);  set("modeSubIntake", copy.intake.sub);
-        set("modeLabelDuring", copy.during.label);  set("modeSubDuring", copy.during.sub);
-        set("modeLabelAfter",  copy.after.label);   set("modeSubAfter",  copy.after.sub);
-        // "Something else" row labels stay generic — don't overwrite.
-      }
-      function applyModeHelper() { /* legacy no-op */ }
-
-      // ── Industry chips ──
+      // ── Industry chips (still useful — flavors the bot's voice) ──
       let pickedIndustry = "";
       const chips = Array.from(document.querySelectorAll(".chip"));
       chips.forEach(ch => {
@@ -1056,30 +923,10 @@
           chips.forEach(c => c.classList.remove("is-selected"));
           ch.classList.add("is-selected");
           pickedIndustry = ch.dataset.value;
-          applyModeCopy(pickedIndustry);
           document.getElementById("industryHint").textContent = "✓ Got it.";
           document.getElementById("industryHint").classList.add("is-good");
         });
       });
-
-      // ── Bucket radios — selected state + textarea reveal for "other" ──
-      const focusRadios = Array.from(document.querySelectorAll('input[name="focus"]'));
-      const focusNote = document.getElementById("focusNote");
-      function syncFocusUI() {
-        const checked = document.querySelector('input[name="focus"]:checked');
-        const value = (checked && checked.value) || "intake";
-        document.querySelectorAll(".mode-row").forEach(row => {
-          const inp = row.querySelector('input[name="focus"]');
-          row.classList.toggle("is-selected", !!(inp && inp.checked));
-        });
-        if (value === "other") {
-          focusNote.hidden = false;
-          requestAnimationFrame(() => focusNote.focus());
-        } else {
-          focusNote.hidden = true;
-        }
-      }
-      focusRadios.forEach(r => r.addEventListener("change", syncFocusUI));
 
       // ── Live URL hint ──
       const urlInput = document.getElementById("websiteUrl");
@@ -1171,17 +1018,10 @@
         err("");
         const url = normalizeUrl(urlInput.value);
         const email = emailInput.value.trim();
-        const focus = (document.querySelector('input[name="focus"]:checked') || {}).value || "intake";
-        const focusNoteVal = (document.getElementById("focusNote").value || "").trim();
         if (!url || !pickedIndustry || !email) {
           if (!url) err("👈 Add your website.");
           else if (!pickedIndustry) err("👈 Pick what you do.");
           else err("👈 Add your email.");
-          return;
-        }
-        if (focus === "other" && !focusNoteVal) {
-          err("👈 Tell us what you'd like us to handle.");
-          document.getElementById("focusNote").focus();
           return;
         }
         urlInput.value = url;
@@ -1196,8 +1036,6 @@
               website_url: url,
               industry: pickedIndustry,
               mode: "voice",
-              focus: (document.querySelector('input[name="focus"]:checked') || {}).value || "intake",
-              focus_note: (document.getElementById("focusNote").value || "").trim(),
               email: email,
             }),
           });
