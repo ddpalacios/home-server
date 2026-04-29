@@ -77,100 +77,140 @@
       border-radius: 10px; padding: 12px; font-size: 13px;
       overflow-x: auto; white-space: pre-wrap; word-break: break-word;
     }
+    .cal-cta {
+      width: 100%; justify-content: flex-start; padding: 14px 16px;
+      margin-top: 10px; font-size: 15px; gap: 12px;
+    }
+    .cal-cta .glyph {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px; border-radius: 6px; background: #fff;
+      color: #1f2937; font-weight: 700; border: 1px solid var(--border);
+    }
+    .cal-cta .arrow { margin-left: auto; opacity: 0.7; }
+    .skip-link { text-align: right; margin-top: 8px; font-size: 13px; }
+    .skip-link a { color: var(--muted); }
+    .connected-line { color: #047857; font-weight: 600; margin: 14px 0 4px; }
+    .lead-radio {
+      display: block; padding: 12px 14px; border: 1px solid var(--border);
+      border-radius: 10px; margin-top: 10px; cursor: pointer; font-size: 14px;
+    }
+    .lead-radio:hover { background: #fafbfd; }
+    .lead-radio.is-active { border-color: var(--accent); background: rgba(37,99,235,0.06); }
+    .lead-radio input { margin-right: 8px; }
+    .lead-radio .sub { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; }
+    .summary-block {
+      background: #fafbfd; border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 16px; margin: 12px 0;
+      font-size: 14px; line-height: 1.7;
+    }
+    .summary-block h3 { font-size: 13px; color: var(--muted); margin-bottom: 6px;
+                        text-transform: uppercase; letter-spacing: 0.05em; }
+    .summary-step { margin-top: 14px; }
+    .summary-step h4 { font-size: 14px; margin-bottom: 4px; }
   </style>
 </head>
 <body>
-  <main class="card">
+  <main class="card" id="cardWizard">
     <div class="stepper" id="stepper">
-      <div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
     </div>
-    <div class="label-step" id="stepLabel">Step 1 of 4 · Working hours</div>
+    <div class="label-step" id="stepLabel">Step 1 of 3 · Calendar</div>
 
     <section id="s1">
-      <h1>When are you available?</h1>
-      <p class="lede">The bot will only book appointments inside these hours.</p>
+      <h1>Let's connect your calendar.</h1>
+      <p class="lede">The bot will only book times when you're actually free, and write the event for you. No more phone tag.</p>
 
-      <label for="tz">Time zone</label>
-      <select id="tz">
-        <option value="America/New_York">Eastern (NYC)</option>
-        <option value="America/Chicago" selected>Central (Chicago)</option>
-        <option value="America/Denver">Mountain (Denver)</option>
-        <option value="America/Los_Angeles">Pacific (LA)</option>
-        <option value="UTC">UTC</option>
-      </select>
-
-      <div class="row2">
-        <div>
-          <label for="hourFrom">Open at</label>
-          <select id="hourFrom"></select>
-        </div>
-        <div>
-          <label for="hourTo">Close at</label>
-          <select id="hourTo"></select>
-        </div>
+      <div id="calChooser">
+        <a class="btn cal-cta" id="calConnectBtn" href="/auth/google/calendar/start">
+          <span class="glyph">G</span> Connect Google Calendar <span class="arrow">▶</span>
+        </a>
+        <button class="btn secondary cal-cta" type="button" disabled title="Coming soon">
+          <span class="glyph">⊠</span> Connect Outlook <span class="arrow" style="font-size:11px;">soon</span>
+        </button>
+        <p class="skip-link"><a href="#" id="skipCalendarLink">skip for now →</a></p>
       </div>
 
-      <label>Days open</label>
-      <div class="pill-row" id="dayPills"></div>
+      <div id="calConnected" style="display:none">
+        <p class="connected-line">✓ Calendar connected — <span id="calEmail">your account</span></p>
+        <p style="font-size:13px; color: var(--muted); margin-top:10px;">Working hours (the bot will book only inside these):</p>
+
+        <label for="tz">Time zone</label>
+        <select id="tz">
+          <option value="America/New_York">Eastern (NYC)</option>
+          <option value="America/Chicago" selected>Central (Chicago)</option>
+          <option value="America/Denver">Mountain (Denver)</option>
+          <option value="America/Los_Angeles">Pacific (LA)</option>
+          <option value="UTC">UTC</option>
+        </select>
+        <div class="row2">
+          <div>
+            <label for="hourFrom">Open at</label>
+            <select id="hourFrom"></select>
+          </div>
+          <div>
+            <label for="hourTo">Close at</label>
+            <select id="hourTo"></select>
+          </div>
+        </div>
+        <label>Days open</label>
+        <div class="pill-row" id="dayPills"></div>
+
+        <p style="margin-top:14px; font-size:13px;">
+          <button id="calDisconnectBtn" class="btn secondary" type="button" style="padding:6px 10px; font-size:12px;">Disconnect calendar</button>
+        </p>
+      </div>
       <p class="err" id="e1"></p>
     </section>
 
     <section id="s2" style="display:none">
-      <h1>How should the bot reply?</h1>
-      <p class="lede">For now we send replies from a JustGotALead-branded address. You can switch this to your domain after upgrade.</p>
+      <h1>How should the bot reply to customers?</h1>
+      <p class="lede">For now we send replies from a JustGotALead-branded address. You can switch to your real domain after upgrade.</p>
 
-      <label for="fromAddr">Reply-from address</label>
-      <input id="fromAddr" type="email" placeholder="ai@your-business-demo.com" />
+      <label class="lead-radio is-active">
+        <input type="radio" name="senderMode" value="demo" checked />
+        As your business AI
+        <span class="sub">from: ai@<span id="demoFromHost">your-business-demo.com</span> (works right now, no setup)</span>
+      </label>
+      <label class="lead-radio">
+        <input type="radio" name="senderMode" value="real" />
+        As your real domain
+        <span class="sub">from: ai@yourbusiness.com (DNS instructions next; ~10 min)</span>
+      </label>
 
-      <label for="notifyAddr">Where should leads be emailed to you?</label>
+      <label for="notifyAddr" style="margin-top:18px;">Where leads come back to you</label>
       <input id="notifyAddr" type="email" placeholder="you@yourbusiness.com" />
       <p class="err" id="e2"></p>
     </section>
 
     <section id="s3" style="display:none">
-      <h1>Push leads to your CRM (optional)</h1>
-      <p class="lede">Paste a Zapier/Make/HubSpot webhook URL. We'll POST every lead to it. Skip if you only want emails.</p>
+      <h1>Push leads anywhere else?</h1>
+      <p class="lede">Pick how leads should reach you. Email is already on; you can also POST every lead to a webhook (Zapier, Make, HubSpot, etc.).</p>
 
-      <label for="webhookUrl">Webhook URL</label>
-      <input id="webhookUrl" type="url" placeholder="https://hooks.zapier.com/..." />
-      <p class="err" id="e3"></p>
+      <label class="lead-radio is-active">
+        <input type="radio" name="leadMode" value="email" checked />
+        Just email me
+        <span class="sub">already on — leads land in your inbox</span>
+      </label>
+      <label class="lead-radio">
+        <input type="radio" name="leadMode" value="webhook" />
+        Push to my CRM
+        <span class="sub">paste a webhook URL — works with Zapier, Make, HubSpot, JobNimbus, ServiceTitan, anything</span>
+      </label>
+      <label class="lead-radio">
+        <input type="radio" name="leadMode" value="both" />
+        Both
+        <span class="sub">email + webhook — recommended once your CRM is wired</span>
+      </label>
 
-      <div style="margin-top:14px">
-        <button class="btn secondary" type="button" id="testWebhookBtn" disabled>Send test payload</button>
-        <span id="testWebhookResult" style="font-size:13px; margin-left:10px;"></span>
-      </div>
-    </section>
-
-    <section id="s4" style="display:none">
-      <h1>Plug it in</h1>
-      <p class="lede" id="wireUpLede">Last step — connect your real workflow.</p>
-      <div id="wireUpVoice" style="display:none">
-        <p>Forward your business line to your demo number when you can't pick up. Tap your carrier:</p>
-        <div class="pill-row">
-          <button type="button" class="pill" data-carrier="att">AT&amp;T</button>
-          <button type="button" class="pill" data-carrier="verizon">Verizon</button>
-          <button type="button" class="pill" data-carrier="tmobile">T-Mobile</button>
-          <button type="button" class="pill" data-carrier="sprint">Sprint</button>
+      <div id="webhookPanel" style="display:none; margin-top:14px;">
+        <label for="webhookUrl">Webhook URL</label>
+        <input id="webhookUrl" type="url" placeholder="https://hooks.zapier.com/..." />
+        <div style="margin-top:10px">
+          <button class="btn secondary" type="button" id="testWebhookBtn" disabled>Send test payload</button>
+          <span id="testWebhookResult" style="font-size:13px; margin-left:10px;"></span>
         </div>
-        <pre class="code" id="carrierCode" style="margin-top:12px; display:none"></pre>
       </div>
-      <div id="wireUpWidget" style="display:none">
-        <p>Paste this snippet just before <code>&lt;/body&gt;</code> on your site:</p>
-        <pre class="code" id="widgetSnippet"></pre>
-      </div>
-      <div id="wireUpEmail" style="display:none">
-        <p>Set up an email forwarding rule from your inbox to:</p>
-        <pre class="code" id="emailListenAddr"></pre>
-        <p style="margin-top:8px; font-size:13px; color:var(--muted)">In Gmail: Settings → Forwarding and POP/IMAP → Add a forwarding address.</p>
-      </div>
-
-      <div id="wireUpCalendar" class="card" style="display:none; margin-top:18px; padding:14px; border:1px solid var(--border, #e5e7eb); border-radius:10px;">
-        <h3 style="margin:0 0 6px">Google Calendar (optional)</h3>
-        <p style="margin:0 0 10px; font-size:14px;">Let the bot book directly into your calendar. We only insert events for confirmed leads — we never read your existing events.</p>
-        <div id="calStatus" class="muted" style="font-size:13px; margin-bottom:8px;">Not connected.</div>
-        <a id="calConnectBtn" class="btn secondary" href="/auth/google/calendar/start">Connect Google Calendar</a>
-        <button id="calDisconnectBtn" class="btn-link" type="button" style="margin-left:10px; display:none">Disconnect</button>
-      </div>
+      <p class="err" id="e3"></p>
     </section>
 
     <div class="actions">
@@ -179,29 +219,70 @@
     </div>
   </main>
 
+  <main class="card" id="cardSummary" style="display:none">
+    <h1>✓ All set<span id="summaryName"></span>.</h1>
+
+    <div class="summary-block">
+      <h3>Your AI receptionist</h3>
+      <div>📞 <strong>Phone:</strong> <span id="sumPhone">—</span></div>
+      <div>📅 <strong>Calendar:</strong> <span id="sumCalendar">not connected</span></div>
+      <div>✉ <strong>Replies as:</strong> <span id="sumReplyAs">demo address</span></div>
+      <div>📥 <strong>Leads to:</strong> <span id="sumLeadsTo">your email</span></div>
+    </div>
+
+    <h3 style="font-size:14px; color:var(--muted); margin-top:16px; text-transform:uppercase; letter-spacing:0.05em;">What to do now</h3>
+
+    <div class="summary-step">
+      <h4>1. Forward your business line to <span id="sumPhone2">—</span></h4>
+      <p style="font-size:13px; color:var(--muted)">Tap your carrier to get the code:</p>
+      <div class="pill-row">
+        <button type="button" class="pill" data-carrier="att">AT&amp;T</button>
+        <button type="button" class="pill" data-carrier="verizon">Verizon</button>
+        <button type="button" class="pill" data-carrier="tmobile">T-Mobile</button>
+        <button type="button" class="pill" data-carrier="sprint">Sprint</button>
+      </div>
+      <pre class="code" id="carrierCode" style="margin-top:10px; display:none"></pre>
+    </div>
+
+    <div class="summary-step">
+      <h4>2. Try a test call right now</h4>
+      <a class="btn" id="sumCallBtn" href="#" style="display:inline-flex; text-decoration:none;">▶ Call <span id="sumCallPhone">—</span></a>
+    </div>
+
+    <div class="summary-step">
+      <h4>3. Open your dashboard to tweak the bot</h4>
+      <a class="btn secondary" href="/dashboard">Open dashboard →</a>
+    </div>
+
+    <p class="lede" style="margin-top:20px; font-size:13px;">We just emailed all of this to <strong id="sumEmail"></strong>.</p>
+  </main>
+
   <script>
     (function () {
       let step = 1;
-      const total = 4;
+      const total = 3;
       const stepper = document.getElementById("stepper");
       const stepLabel = document.getElementById("stepLabel");
-      const stepLabels = ["Working hours", "Email sender", "CRM webhook", "Plug it in"];
+      const stepLabels = ["Calendar", "Email sender", "CRM"];
       const back = document.getElementById("backBtn");
       const next = document.getElementById("nextBtn");
-      const sections = [null, document.getElementById("s1"), document.getElementById("s2"),
-                        document.getElementById("s3"), document.getElementById("s4")];
-      const errs = [null, document.getElementById("e1"), document.getElementById("e2"),
-                    document.getElementById("e3"), null];
+      const sections = [null, document.getElementById("s1"),
+                        document.getElementById("s2"),
+                        document.getElementById("s3")];
+      const errs = [null, document.getElementById("e1"),
+                    document.getElementById("e2"),
+                    document.getElementById("e3")];
 
+      // Hour selects
       const hourFrom = document.getElementById("hourFrom");
       const hourTo = document.getElementById("hourTo");
       for (let h = 0; h < 24; h++) {
         const lbl = (h === 0 ? "12 AM" :
                      h < 12 ? `${h} AM` :
                      h === 12 ? "12 PM" : `${h - 12} PM`);
-        const opt1 = document.createElement("option"); opt1.value = h; opt1.textContent = lbl;
-        const opt2 = document.createElement("option"); opt2.value = h; opt2.textContent = lbl;
-        hourFrom.appendChild(opt1); hourTo.appendChild(opt2);
+        const o1 = document.createElement("option"); o1.value = h; o1.textContent = lbl;
+        const o2 = document.createElement("option"); o2.value = h; o2.textContent = lbl;
+        hourFrom.appendChild(o1); hourTo.appendChild(o2);
       }
       hourFrom.value = 8; hourTo.value = 18;
 
@@ -222,45 +303,83 @@
         dayPills.appendChild(p);
       }
 
-      let trialMode = "voice";
+      // Pull trial info
       let trialPhoneDisplay = "";
-      fetch("/me").then(r => r.json()).then(me => {
-        const trial = me.trial || {};
-        trialMode = trial.mode || "voice";
-        if (trial.phone_id) {
-          fetch("/try/status/" + encodeURIComponent(trial.phone_id))
-            .then(r => r.json())
-            .then(s => { trialPhoneDisplay = s.phone_display || ""; });
+      let trialEmail = "";
+      let trialBusinessName = "";
+      let calendarConnected = false;
+      async function loadTrialInfo() {
+        try {
+          const me = await fetch("/me").then(r => r.json());
+          trialEmail = (me && me.email) || "";
+          const ints = (me && me.integrations) || [];
+          calendarConnected = ints.includes("google_cal");
+          const trial = (me && me.trial) || {};
+          if (trial.phone_id) {
+            const s = await fetch("/try/status/" + encodeURIComponent(trial.phone_id))
+              .then(r => r.json());
+            trialPhoneDisplay = s.phone_display || "";
+            // Best-effort business name from trial info if available
+            trialBusinessName = trial.business_name || "";
+          }
+        } catch (e) { /* fail-open */ }
+        applyCalendarUI();
+      }
+
+      function applyCalendarUI() {
+        const params = new URLSearchParams(location.search);
+        if (params.get("calendar") === "connected") calendarConnected = true;
+        if (params.get("calendar") === "error") {
+          document.getElementById("e1").textContent =
+            "Connect failed — try again or skip for now.";
         }
-        prepareWireUp(trial);
-      }).catch(() => {});
+        document.getElementById("calChooser").style.display =
+          calendarConnected ? "none" : "";
+        document.getElementById("calConnected").style.display =
+          calendarConnected ? "" : "none";
+        document.getElementById("calEmail").textContent =
+          trialEmail || "your account";
+      }
+
+      // Skip-calendar link advances to step 2 without saving working hours.
+      document.getElementById("skipCalendarLink").addEventListener("click", (e) => {
+        e.preventDefault();
+        setStep(2);
+      });
+
+      document.getElementById("calDisconnectBtn").addEventListener("click", async () => {
+        await fetch("/integrations/calendar/disconnect", { method: "POST" });
+        calendarConnected = false;
+        applyCalendarUI();
+      });
 
       function setStep(n) {
         step = n;
-        stepper.children[0].className = "dot " + (step > 1 ? "done" : "active");
-        stepper.children[1].className = "dot " + (step > 2 ? "done" : (step === 2 ? "active" : ""));
-        stepper.children[2].className = "dot " + (step > 3 ? "done" : (step === 3 ? "active" : ""));
-        stepper.children[3].className = "dot " + (step === 4 ? "active" : "");
+        for (let i = 0; i < total; i++) {
+          stepper.children[i].className =
+            "dot " + (step > i + 1 ? "done" : step === i + 1 ? "active" : "");
+        }
         stepLabel.textContent = `Step ${step} of ${total} · ${stepLabels[step-1]}`;
-        for (let i = 1; i <= 4; i++) sections[i].style.display = (i === step ? "" : "none");
+        for (let i = 1; i <= total; i++)
+          sections[i].style.display = (i === step ? "" : "none");
         back.disabled = step === 1;
-        next.textContent = step === 4 ? "Finish ▶" : "Continue ▶";
+        next.textContent = step === total ? "Finish setup ▶" : "Continue ▶";
       }
 
-      function showErr(n, msg) { if (errs[n]) { errs[n].textContent = msg || ""; } }
+      function showErr(n, msg) { if (errs[n]) errs[n].textContent = msg || ""; }
 
       async function saveStep1() {
+        // Only save working hours if calendar is connected; otherwise
+        // step 1 is a no-op (the user explicitly skipped calendar).
+        if (!calendarConnected) return true;
         const tz = document.getElementById("tz").value;
         const from = parseInt(hourFrom.value, 10);
         const to = parseInt(hourTo.value, 10);
         if (to <= from) { showErr(1, "Close time must be after open time."); return false; }
         const hours = {};
-        for (const [k] of days) {
-          hours[k] = selectedDays.has(k) ? [from, to] : "closed";
-        }
+        for (const [k] of days) hours[k] = selectedDays.has(k) ? [from, to] : "closed";
         const r = await fetch("/integrations/working-hours", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ time_zone: tz, hours: hours }),
         });
         if (!r.ok) { showErr(1, (await r.json()).error || "Failed to save."); return false; }
@@ -268,12 +387,16 @@
       }
 
       async function saveStep2() {
-        const fromA = document.getElementById("fromAddr").value.trim();
+        const senderMode = document.querySelector('input[name="senderMode"]:checked').value;
         const notify = document.getElementById("notifyAddr").value.trim();
-        if (!fromA || !notify) { showErr(2, "Both fields required."); return false; }
+        if (!notify) { showErr(2, "Lead-destination email is required."); return false; }
+        // Demo from-address is auto-derived server-side; for real-domain
+        // mode we still send the same shape, the DNS UI is a follow-up.
+        const fromA = senderMode === "real"
+          ? `ai@user-domain.tld`  // placeholder — DNS panel sets the real one
+          : `ai@business-demo.com`;
         const r = await fetch("/integrations/email-sender", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ from_address: fromA, notify_emails: [notify] }),
         });
         if (!r.ok) { showErr(2, (await r.json()).error || "Invalid email."); return false; }
@@ -281,87 +404,62 @@
       }
 
       async function saveStep3() {
+        const leadMode = document.querySelector('input[name="leadMode"]:checked').value;
+        if (leadMode === "email") return true;
         const url = document.getElementById("webhookUrl").value.trim();
-        if (!url) return true;
+        if (!url) {
+          showErr(3, "Webhook URL required when 'Push to my CRM' is selected.");
+          return false;
+        }
         const r = await fetch("/integrations/webhook", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url: url }),
         });
         if (!r.ok) { showErr(3, (await r.json()).error || "Invalid URL."); return false; }
         return true;
       }
 
-      async function finishWizard() {
-        const r = await fetch("/try/finish", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: "{}",
+      // Lead-mode radios toggle webhook panel.
+      document.querySelectorAll('input[name="leadMode"]').forEach(r => {
+        r.addEventListener("change", () => {
+          document.querySelectorAll(".lead-radio").forEach(el => el.classList.remove("is-active"));
+          r.closest(".lead-radio").classList.add("is-active");
+          const wantsWebhook = r.value === "webhook" || r.value === "both";
+          document.getElementById("webhookPanel").style.display = wantsWebhook ? "" : "none";
         });
-        if (!r.ok) return false;
-        const body = await r.json();
-        window.location.href = body.dashboard_url || "/dashboard";
-        return true;
-      }
-
-      function prepareWireUp(trial) {
-        const lede = document.getElementById("wireUpLede");
-        document.getElementById("wireUpVoice").style.display = "none";
-        document.getElementById("wireUpWidget").style.display = "none";
-        document.getElementById("wireUpEmail").style.display = "none";
-        document.getElementById("wireUpCalendar").style.display = "none";
-        if (trialMode === "voice") {
-          document.getElementById("wireUpVoice").style.display = "";
-          document.getElementById("wireUpCalendar").style.display = "";
-          lede.textContent = "Forward your business line to the demo number when you're busy.";
-        } else if (trialMode === "widget") {
-          document.getElementById("wireUpWidget").style.display = "";
-          document.getElementById("wireUpCalendar").style.display = "";
-          lede.textContent = "Paste this on your website to start capturing chats.";
-          const acct = trial.account_id || "";
-          document.getElementById("widgetSnippet").textContent =
-            `<script src="https://justgotalead.com/widget.js" data-account="${acct}"><\/script>`;
-        } else if (trialMode === "email") {
-          document.getElementById("wireUpEmail").style.display = "";
-          lede.textContent = "Set up email forwarding so the bot can reply on your behalf.";
-          const acct = trial.account_id || "";
-          document.getElementById("emailListenAddr").textContent =
-            `inbox-${acct}@try.justgotalead.com`;
-        }
-        refreshCalendarStatus();
-      }
-
-      async function refreshCalendarStatus() {
-        const status = document.getElementById("calStatus");
-        const connect = document.getElementById("calConnectBtn");
-        const disconnect = document.getElementById("calDisconnectBtn");
-        const params = new URLSearchParams(location.search);
-        if (params.get("calendar") === "connected") {
-          status.textContent = "Calendar connected.";
-        } else if (params.get("calendar") === "error") {
-          status.textContent = "Connect failed — try again.";
-        }
-        try {
-          const me = await fetch("/me").then(r => r.json());
-          const ints = (me && me.integrations) || [];
-          if (ints.includes("google_cal")) {
-            status.textContent = "Calendar connected.";
-            connect.textContent = "Reconnect calendar";
-            disconnect.style.display = "";
-          } else {
-            connect.textContent = "Connect Google Calendar";
-            disconnect.style.display = "none";
-          }
-        } catch (_) { /* fail-open */ }
-      }
-
-      document.getElementById("calDisconnectBtn").addEventListener("click", async () => {
-        await fetch("/integrations/calendar/disconnect", { method: "POST" });
-        document.getElementById("calStatus").textContent = "Disconnected.";
-        document.getElementById("calConnectBtn").textContent = "Connect Google Calendar";
-        document.getElementById("calDisconnectBtn").style.display = "none";
+      });
+      document.querySelectorAll('input[name="senderMode"]').forEach(r => {
+        r.addEventListener("change", () => {
+          document.querySelectorAll('label.lead-radio').forEach(el => {
+            const child = el.querySelector('input[name="senderMode"]');
+            if (child) el.classList.toggle("is-active", child.checked);
+          });
+        });
       });
 
+      // Webhook test button
+      const testBtn = document.getElementById("testWebhookBtn");
+      const webhookInput = document.getElementById("webhookUrl");
+      webhookInput.addEventListener("input", () => {
+        testBtn.disabled = !webhookInput.value.trim();
+      });
+      testBtn.addEventListener("click", async () => {
+        const out = document.getElementById("testWebhookResult");
+        out.textContent = "Sending…";
+        const url = webhookInput.value.trim();
+        if (!url) return;
+        const sv = await fetch("/integrations/webhook", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: url }),
+        });
+        if (!sv.ok) { out.textContent = "Save failed."; return; }
+        const r = await fetch("/integrations/webhook/test", { method: "POST" });
+        const body = await r.json();
+        if (r.ok) out.textContent = `✓ delivered (${body.upstream_status})`;
+        else out.textContent = `✗ failed (${body.upstream_status || "no response"})`;
+      });
+
+      // Carrier-code generator (lives on summary card; same handler as before)
       document.querySelectorAll('[data-carrier]').forEach(btn => {
         btn.addEventListener("click", () => {
           const phone = (trialPhoneDisplay || "").replace(/[^\d+]/g, "");
@@ -377,27 +475,41 @@
         });
       });
 
-      const testBtn = document.getElementById("testWebhookBtn");
-      const webhookInput = document.getElementById("webhookUrl");
-      webhookInput.addEventListener("input", () => {
-        testBtn.disabled = !webhookInput.value.trim();
-      });
-      testBtn.addEventListener("click", async () => {
-        const out = document.getElementById("testWebhookResult");
-        out.textContent = "Sending…";
-        const url = webhookInput.value.trim();
-        if (!url) return;
-        const sv = await fetch("/integrations/webhook", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: url }),
+      function showSummary() {
+        document.getElementById("cardWizard").style.display = "none";
+        const card = document.getElementById("cardSummary");
+        card.style.display = "";
+
+        const phoneTxt = trialPhoneDisplay || "—";
+        document.getElementById("sumPhone").textContent = phoneTxt;
+        document.getElementById("sumPhone2").textContent = phoneTxt;
+        document.getElementById("sumCallPhone").textContent = phoneTxt;
+        document.getElementById("sumCallBtn").href =
+          "tel:" + (trialPhoneDisplay || "").replace(/[^\d+]/g, "");
+
+        document.getElementById("sumCalendar").textContent =
+          calendarConnected ? `Google (${trialEmail || "connected"})` : "not connected";
+        const senderMode = document.querySelector('input[name="senderMode"]:checked').value;
+        document.getElementById("sumReplyAs").textContent =
+          senderMode === "real" ? "your domain (DNS pending)" : "demo address";
+        const notify = document.getElementById("notifyAddr").value.trim();
+        document.getElementById("sumLeadsTo").textContent = notify || "your email";
+
+        document.getElementById("sumEmail").textContent = trialEmail || "your inbox";
+        if (trialBusinessName) {
+          document.getElementById("summaryName").textContent = `, ${trialBusinessName}`;
+        }
+      }
+
+      async function finishWizard() {
+        const r = await fetch("/try/finish", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: "{}",
         });
-        if (!sv.ok) { out.textContent = "Save failed."; return; }
-        const r = await fetch("/integrations/webhook/test", { method: "POST" });
-        const body = await r.json();
-        if (r.ok) out.textContent = `✓ delivered (${body.upstream_status})`;
-        else out.textContent = `✗ failed (${body.upstream_status || "no response"})`;
-      });
+        if (!r.ok) return false;
+        showSummary();
+        return true;
+      }
 
       back.addEventListener("click", () => { if (step > 1) setStep(step - 1); });
       next.addEventListener("click", async () => {
@@ -406,18 +518,18 @@
           let ok = true;
           if (step === 1) ok = await saveStep1();
           else if (step === 2) ok = await saveStep2();
-          else if (step === 3) ok = await saveStep3();
-          else if (step === 4) { ok = await finishWizard(); return; }
-          if (ok) {
-            showErr(step, "");
-            setStep(step + 1);
+          else if (step === 3) {
+            ok = await saveStep3();
+            if (ok) { await finishWizard(); return; }
           }
+          if (ok) { showErr(step, ""); setStep(step + 1); }
         } finally {
           next.disabled = false;
         }
       });
 
       setStep(1);
+      loadTrialInfo();
     })();
   </script>
 </body>
