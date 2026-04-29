@@ -368,13 +368,11 @@
     }
     .chip.is-selected .emoji { transform: scale(1.15); }
 
-    /* ── Mode picker — vertical list, pain-focused labels ── */
-    .mode-list {
-      display: flex; flex-direction: column; gap: 6px;
-    }
+    /* ── Time-bucket picker (vertical list) ── */
+    .mode-list { display: flex; flex-direction: column; gap: 6px; }
     .mode-list .mode-row {
       position: relative; cursor: pointer;
-      display: grid; grid-template-columns: 22px 1fr;
+      display: grid; grid-template-columns: 18px 1fr;
       gap: 12px; align-items: start;
       padding: 10px 14px; border-radius: 10px;
       border: 1px solid var(--line); background: #fff;
@@ -392,7 +390,7 @@
       width: 16px; height: 16px; border-radius: 50%;
       border: 1.5px solid var(--line-strong);
       background: #fff; display: inline-block;
-      margin-top: 2px;
+      margin-top: 4px;
       transition: all .25s cubic-bezier(.22,1,.36,1);
       position: relative;
     }
@@ -402,12 +400,19 @@
       transform: scale(0); opacity: 0;
       transition: all .25s cubic-bezier(.22,1,.36,1);
     }
-    .mode-row.is-selected .mode-radio {
-      border-color: var(--accent);
+    .mode-row.is-selected .mode-radio { border-color: var(--accent); }
+    .mode-row.is-selected .mode-radio::after { transform: scale(1); opacity: 1; }
+
+    .mode-row-body { min-width: 0; }
+    .mode-row-head {
+      display: flex; align-items: center; gap: 8px;
     }
-    .mode-row.is-selected .mode-radio::after {
-      transform: scale(1); opacity: 1;
+    .mode-row-emoji {
+      font-size: 16px; line-height: 1;
+      filter: grayscale(.2);
+      transition: filter .25s, transform .25s cubic-bezier(.22,1,.36,1);
     }
+    .mode-row.is-selected .mode-row-emoji { filter: none; transform: scale(1.05); }
     .mode-row-label {
       font-size: 14px; font-weight: 700; color: var(--text);
       letter-spacing: -0.005em; line-height: 1.3;
@@ -422,7 +427,43 @@
     .mode-row.is-selected .mode-row-sub {
       max-height: 80px; opacity: 1; margin-top: 4px;
     }
-    /* Hidden — kept for compatibility with old code */
+
+    /* "Something else" textarea */
+    #focusNote {
+      width: 100%; margin-top: 8px;
+      padding: 11px 13px; border-radius: 10px;
+      border: 1px solid var(--line); background: #fdfdff;
+      font-family: inherit; font-size: 14px; color: var(--text);
+      resize: vertical; min-height: 56px; line-height: 1.45;
+      transition: all .2s cubic-bezier(.22,1,.36,1);
+    }
+    #focusNote::placeholder { color: #94a3b8; font-style: italic; }
+    #focusNote:focus {
+      outline: none; border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+      background: #fff;
+    }
+
+    /* Guarantee strip (above the CTA) */
+    .guarantee {
+      display: flex; align-items: center; gap: 10px;
+      margin: 16px 0 4px;
+      padding: 10px 14px; border-radius: 10px;
+      background: linear-gradient(135deg, rgba(22, 163, 74, .08), rgba(34, 197, 94, .10));
+      border: 1px solid rgba(22, 163, 74, .22);
+      font-size: 13px; font-weight: 600; color: #14532d;
+      line-height: 1.4;
+    }
+    .guarantee-icon {
+      flex: 0 0 auto;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--success, #16a34a); color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800;
+    }
+    .guarantee b { color: #052e16; }
+
+    /* Hidden — old element kept for compatibility */
     .mode-helper { display: none; }
 
     /* ── Submit button ── */
@@ -663,10 +704,10 @@
   <div class="stage">
 
     <main class="card is-entering" id="cardForm">
-      <div class="pill-mark"><span class="dot"></span> Free 7 days · No card</div>
+      <div class="pill-mark"><span class="dot"></span> Free 7 days · No card · No risk</div>
 
-      <h1><span class="em">📞</span>Don't miss<br>another call.</h1>
-      <p class="sub">We pick up your phone for you — free for 7 days.</p>
+      <h1>Where's the<br>leak in your business?</h1>
+      <p class="sub">Pick the moment you keep losing customers — we'll handle it free for 7 days.</p>
 
       <form id="trialForm" onsubmit="return false;" novalidate>
         <div class="field-row">
@@ -699,34 +740,56 @@
         <div class="field-row">
           <div class="icon">🎯</div>
           <div class="body">
-            <label>What problem should we solve?</label>
+            <label>Where's the leak?</label>
             <div class="mode-list" id="modeList">
-              <label class="mode-row is-selected" data-mode="voice">
-                <input type="radio" name="mode" value="voice" checked />
+              <label class="mode-row is-selected" data-bucket="intake">
+                <input type="radio" name="focus" value="intake" checked />
                 <span class="mode-radio"></span>
-                <div>
-                  <div class="mode-row-label" id="modeLabelVoice">Catch every call I'm missing</div>
-                  <div class="mode-row-sub" id="modeSubVoice">Customer's name, problem, urgency captured. Follow-up text sent automatically.</div>
+                <div class="mode-row-body">
+                  <div class="mode-row-head">
+                    <span class="mode-row-emoji">🪝</span>
+                    <span class="mode-row-label" id="modeLabelIntake">Bringing leads in</span>
+                  </div>
+                  <div class="mode-row-sub" id="modeSubIntake">Calls, web chats, email inquiries — caught and qualified before they go cold.</div>
                 </div>
               </label>
-              <label class="mode-row" data-mode="widget">
-                <input type="radio" name="mode" value="widget" />
+              <label class="mode-row" data-bucket="during">
+                <input type="radio" name="focus" value="during" />
                 <span class="mode-radio"></span>
-                <div>
-                  <div class="mode-row-label" id="modeLabelWidget">Capture website visitors as leads</div>
-                  <div class="mode-row-sub" id="modeSubWidget">Turns visitors into qualified leads while you're heads-down working.</div>
+                <div class="mode-row-body">
+                  <div class="mode-row-head">
+                    <span class="mode-row-emoji">🛠</span>
+                    <span class="mode-row-label" id="modeLabelDuring">Once the job is booked</span>
+                  </div>
+                  <div class="mode-row-sub" id="modeSubDuring">ETAs, weather reschedules, day-of confirmations, customer comms while on site.</div>
                 </div>
               </label>
-              <label class="mode-row" data-mode="email">
-                <input type="radio" name="mode" value="email" />
+              <label class="mode-row" data-bucket="after">
+                <input type="radio" name="focus" value="after" />
                 <span class="mode-radio"></span>
-                <div>
-                  <div class="mode-row-label" id="modeLabelEmail">Reply to every email instantly</div>
-                  <div class="mode-row-sub" id="modeSubEmail">Every inquiry gets a personalized reply within minutes — even at 2am.</div>
+                <div class="mode-row-body">
+                  <div class="mode-row-head">
+                    <span class="mode-row-emoji">🔁</span>
+                    <span class="mode-row-label" id="modeLabelAfter">After the job's done</span>
+                  </div>
+                  <div class="mode-row-sub" id="modeSubAfter">Review requests, win-back, recurring-service reminders, season/storm outreach.</div>
+                </div>
+              </label>
+              <label class="mode-row" data-bucket="other">
+                <input type="radio" name="focus" value="other" />
+                <span class="mode-radio"></span>
+                <div class="mode-row-body">
+                  <div class="mode-row-head">
+                    <span class="mode-row-emoji">📝</span>
+                    <span class="mode-row-label">Something else — describe it</span>
+                  </div>
+                  <div class="mode-row-sub">Tell us where in the customer journey you'd like the AI to step in.</div>
                 </div>
               </label>
             </div>
-            <div class="mode-helper" id="modeHelper"></div>
+            <textarea id="focusNote" name="focus_note" rows="2"
+              placeholder="e.g. 'follow up with no-show appointments', 'win back customers we haven't seen in a year'…"
+              hidden></textarea>
           </div>
         </div>
 
@@ -737,6 +800,11 @@
             <input id="email" type="email" placeholder="you@yourshop.com" autocomplete="email" required />
             <div class="helper" id="emailHint">We send your link here.</div>
           </div>
+        </div>
+
+        <div class="guarantee" role="status">
+          <span class="guarantee-icon">✓</span>
+          <span><b>Catch a lead in 7 days</b> — or we'll extend your trial another 7, free. No card, ever.</span>
         </div>
 
         <div class="inline-progress" id="inlineProgress" aria-live="polite">
@@ -926,58 +994,57 @@
         }, success ? 1300 : 350);
       }
 
-      // ── Mode-copy table: industry × mode → concrete action the AI takes ──
-      const MODE_COPY = {
+      // ── Bucket-copy table: industry × time-bucket → concrete actions ──
+      const BUCKET_COPY = {
         roofer: {
-          voice:  { label: "Storm-damage calls captured",   sub: "Triages insurance vs. cash, asks for damage photos, books an inspector before they hire someone else." },
-          widget: { label: "Hail-damage estimate chat",     sub: "Address + insurance carrier + damage photos collected while you're up on a roof." },
-          email:  { label: "Storm-warning outreach",        sub: "When a storm hits your zip, the bot emails past customers to schedule inspections — before competitors knock on their door." },
+          intake: { label: "Bringing leads in",     sub: "Storm-damage calls + hail-damage chat + insurance-claim email triage." },
+          during: { label: "Once the job is booked",sub: "Inspector ETA texts, photo-upload links, customer arrival confirmations." },
+          after:  { label: "After the job's done",  sub: "When a storm hits your zip, email past customers to schedule inspections — before competitors knock." },
         },
         plumber: {
-          voice:  { label: "Emergency triage in 3 questions", sub: "Water on/off? Leaking now? Flood Y/N. Pages you for emergencies, books routine for next-day." },
-          widget: { label: "Same-day plumbing chat",        sub: "Flood vs. routine sorted in 30 seconds. Lead captured before they call the next plumber." },
-          email:  { label: "After-hours email responder",   sub: "Replies to every service email with a confirmed slot — at 2am, on weekends, when you can't." },
+          intake: { label: "Bringing leads in",     sub: "Emergency triage in 3 questions. Floods paged to your phone, routine booked for next-day." },
+          during: { label: "Once the job is booked",sub: "Same-day arrival ETAs, parts-needed alerts, on-site customer comms." },
+          after:  { label: "After the job's done",  sub: "Maintenance reminders, review collection, water-heater warranty outreach." },
         },
         hvac: {
-          voice:  { label: "No-heat / no-AC triage",        sub: "Priority for elderly + small kids in the home. Routine maintenance booked for the next open slot." },
-          widget: { label: "Same-day HVAC chat",            sub: "Captures unit age, symptoms, urgency. Emergency tickets paged straight to your phone." },
-          email:  { label: "Service-call auto-reply",       sub: "Maintenance contracts + emergency requests answered with a confirmed slot in under a minute." },
+          intake: { label: "Bringing leads in",     sub: "No-heat / no-AC triaged for elderly + small kids first. Maintenance plans booked automatically." },
+          during: { label: "Once the job is booked",sub: "Tech ETA texts, photo-of-issue capture, parts-needed status to the customer." },
+          after:  { label: "After the job's done",  sub: "Seasonal tune-up reminders, filter-replacement campaigns, review collection." },
         },
         cleaner: {
-          voice:  { label: "60-second quote calls",         sub: "Square footage + rooms + frequency captured. Quote sent before they hang up." },
-          widget: { label: "Live pricing chat",             sub: "Recurring vs. one-time priced live. Move-in/out detected — premium rate applied automatically." },
-          email:  { label: "Booking-request auto-reply",    sub: "Every quote email answered same-minute with crew + slot before they shop the next three cleaners." },
+          intake: { label: "Bringing leads in",     sub: "60-second quote captures. Recurring vs. one-time priced live, move-in/out detected." },
+          during: { label: "Once the job is booked",sub: "Crew ETA texts, day-of confirmations, walk-through photos sent automatically." },
+          after:  { label: "After the job's done",  sub: "Re-booking reminders, referral campaigns, monthly check-in emails." },
         },
         landscaper: {
-          voice:  { label: "Estimate calls qualified",      sub: "Lot size, service, preferred day captured. Spring-rush bookings sorted to the right crew automatically." },
-          widget: { label: "Free estimate chat",            sub: "Lot size → instant quote. Routes to your nearest crew based on the address they typed." },
-          email:  { label: "Bad-weather auto-reschedule",   sub: "When rain rolls in, the bot reschedules every booked estimate and notifies your customers — before you wake up." },
+          intake: { label: "Bringing leads in",     sub: "Estimate calls + free-estimate chat + spring-cleanup email replies." },
+          during: { label: "Once the job is booked",sub: "Bad-weather auto-reschedule + crew ETA texts + day-of confirmations — before you wake up." },
+          after:  { label: "After the job's done",  sub: "Recurring-service reminders, neighbor referrals, post-storm cleanup alerts." },
         },
         realtor: {
-          voice:  { label: "Buyer vs. seller in 4 questions",sub: "Pre-approval, area, timeframe captured. Pre-approved buyers paged to your phone instantly." },
-          widget: { label: "Home-value chat",               sub: "Address + buy/sell + pre-approval. Hot leads forwarded the second they submit." },
-          email:  { label: "Listing-inquiry auto-reply",    sub: "Every showing request answered with confirmed slots before they reach the next agent on Zillow." },
+          intake: { label: "Bringing leads in",     sub: "Buyer/seller qualified in 4 questions. Pre-approved buyers paged immediately." },
+          during: { label: "Once the deal's open",  sub: "Showing reminders, document-needed nudges, walkthrough confirmations." },
+          after:  { label: "After the deal closes", sub: "Anniversary check-ins, referral asks, market-update outreach to past clients." },
         },
         mover: {
-          voice:  { label: "60-second quote calls",         sub: "Move date + size + bedrooms + heavy items captured. Quote sent before they hang up — beats the next three movers." },
-          widget: { label: "Quote-locking chat",            sub: "Date + bedrooms + origin/destination → date-locked quote in 30 seconds." },
-          email:  { label: "Date-lock auto-reply",          sub: "Auto-reply with a quote + tentative date before they reach the next mover in the search results." },
+          intake: { label: "Bringing leads in",     sub: "60-second quote calls. Date + size + bedrooms + heavy items captured." },
+          during: { label: "Once the job is booked",sub: "Crew ETA texts, item-list confirmations, day-of arrival timing." },
+          after:  { label: "After the job's done",  sub: "Review requests, referral campaigns, season-ahead outreach." },
         },
         other: {
-          voice:  { label: "Every call captured",           sub: "Customer's name, problem, urgency captured. Follow-up text sent automatically." },
-          widget: { label: "Live website chat",             sub: "Turns visitors into qualified leads while you're heads-down working." },
-          email:  { label: "Same-minute email reply",       sub: "Every inquiry gets a personalized reply within minutes — even at 2am." },
+          intake: { label: "Bringing leads in",     sub: "Calls, web chats, email inquiries — caught and qualified before they go cold." },
+          during: { label: "Once the job is booked",sub: "ETAs, weather reschedules, day-of confirmations, customer comms while on site." },
+          after:  { label: "After the job's done",  sub: "Review requests, win-back, recurring-service reminders, season/storm outreach." },
         },
       };
 
       function applyModeCopy(industry) {
-        const copy = MODE_COPY[industry] || MODE_COPY.other;
-        document.getElementById("modeLabelVoice").textContent  = copy.voice.label;
-        document.getElementById("modeSubVoice").textContent    = copy.voice.sub;
-        document.getElementById("modeLabelWidget").textContent = copy.widget.label;
-        document.getElementById("modeSubWidget").textContent   = copy.widget.sub;
-        document.getElementById("modeLabelEmail").textContent  = copy.email.label;
-        document.getElementById("modeSubEmail").textContent    = copy.email.sub;
+        const copy = BUCKET_COPY[industry] || BUCKET_COPY.other;
+        const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+        set("modeLabelIntake", copy.intake.label);  set("modeSubIntake", copy.intake.sub);
+        set("modeLabelDuring", copy.during.label);  set("modeSubDuring", copy.during.sub);
+        set("modeLabelAfter",  copy.after.label);   set("modeSubAfter",  copy.after.sub);
+        // "Something else" row labels stay generic — don't overwrite.
       }
       function applyModeHelper() { /* legacy no-op */ }
 
@@ -995,17 +1062,24 @@
         });
       });
 
-      // ── Mode radios — selected state + persists user choice ──
-      const modeRadios = Array.from(document.querySelectorAll('input[name="mode"]'));
-      modeRadios.forEach(r => {
-        r.addEventListener("change", () => {
-          document.querySelectorAll(".mode-row").forEach(row => {
-            const inp = row.querySelector('input[name="mode"]');
-            row.classList.toggle("is-selected", !!(inp && inp.checked));
-          });
-          applyModeHelper();
+      // ── Bucket radios — selected state + textarea reveal for "other" ──
+      const focusRadios = Array.from(document.querySelectorAll('input[name="focus"]'));
+      const focusNote = document.getElementById("focusNote");
+      function syncFocusUI() {
+        const checked = document.querySelector('input[name="focus"]:checked');
+        const value = (checked && checked.value) || "intake";
+        document.querySelectorAll(".mode-row").forEach(row => {
+          const inp = row.querySelector('input[name="focus"]');
+          row.classList.toggle("is-selected", !!(inp && inp.checked));
         });
-      });
+        if (value === "other") {
+          focusNote.hidden = false;
+          requestAnimationFrame(() => focusNote.focus());
+        } else {
+          focusNote.hidden = true;
+        }
+      }
+      focusRadios.forEach(r => r.addEventListener("change", syncFocusUI));
 
       // ── Live URL hint ──
       const urlInput = document.getElementById("websiteUrl");
@@ -1097,10 +1171,17 @@
         err("");
         const url = normalizeUrl(urlInput.value);
         const email = emailInput.value.trim();
+        const focus = (document.querySelector('input[name="focus"]:checked') || {}).value || "intake";
+        const focusNoteVal = (document.getElementById("focusNote").value || "").trim();
         if (!url || !pickedIndustry || !email) {
           if (!url) err("👈 Add your website.");
           else if (!pickedIndustry) err("👈 Pick what you do.");
           else err("👈 Add your email.");
+          return;
+        }
+        if (focus === "other" && !focusNoteVal) {
+          err("👈 Tell us what you'd like the AI to handle.");
+          document.getElementById("focusNote").focus();
           return;
         }
         urlInput.value = url;
@@ -1114,7 +1195,9 @@
             body: JSON.stringify({
               website_url: url,
               industry: pickedIndustry,
-              mode: (document.querySelector('input[name="mode"]:checked') || {}).value || "voice",
+              mode: "voice",
+              focus: (document.querySelector('input[name="focus"]:checked') || {}).value || "intake",
+              focus_note: (document.getElementById("focusNote").value || "").trim(),
               email: email,
             }),
           });
