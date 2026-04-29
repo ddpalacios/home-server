@@ -2899,7 +2899,7 @@
         <!-- Cap warning row (only shows when near or hit cap) -->
         <div class="trial-cap-warn" id="tbCapWarn" hidden>
           <span class="trial-cap-icon">⚠</span>
-          <span id="tbCapMsg">You're getting more calls than the demo can handle.</span>
+          <span id="tbCapMsg"></span>
         </div>
       </section>
 
@@ -2914,6 +2914,9 @@
           border: 1px solid rgba(43, 108, 176, 0.18);
           border-radius: 14px;
         }
+        /* Honor the [hidden] attribute even when the class sets display */
+        .trial-banner[hidden],
+        .trial-cap-warn[hidden] { display: none !important; }
         .trial-banner-row {
           display: flex; align-items: center;
           gap: 22px; flex-wrap: wrap;
