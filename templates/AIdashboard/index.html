@@ -3430,10 +3430,126 @@
           <div class="pn-summary-line" id="pnSummaryLine" hidden></div>
           <div class="pn-error" id="pnError" hidden></div>
         </div>
+
+        <!-- Analytics + transcript table per phone -->
+        <div class="card" style="grid-column: span 12;" id="phoneAnalyticsCard" hidden>
+          <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+            <div>
+              <h2 class="section-title" style="margin:0;">Phone usage</h2>
+              <p class="section-note" style="margin:4px 0 0;">Every call this number has handled — full transparency. <span id="paPhoneLabel"></span></p>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <select class="btn secondary" id="paPhoneSelect" style="padding:8px 12px; border-radius:8px;"></select>
+              <button class="btn shiny" type="button" id="paRefresh">↻ Refresh</button>
+            </div>
+          </div>
+          <div class="pa-summary" id="paSummary" hidden>
+            <div class="pa-tile"><span class="pa-num" id="paTotalCalls">0</span><span class="pa-label">Total calls</span></div>
+            <div class="pa-tile"><span class="pa-num" id="paCompleted">0</span><span class="pa-label">Completed</span></div>
+            <div class="pa-tile"><span class="pa-num" id="paMissed">0</span><span class="pa-label">Missed / no-answer</span></div>
+            <div class="pa-tile"><span class="pa-num" id="paTotalDur">0s</span><span class="pa-label">Total time on calls</span></div>
+            <div class="pa-tile"><span class="pa-num" id="paAvgDur">0s</span><span class="pa-label">Avg call length</span></div>
+            <div class="pa-tile"><span class="pa-num" id="paLastCall">—</span><span class="pa-label">Most recent call</span></div>
+          </div>
+          <div class="table-wrapper" id="paTableWrap" hidden>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>When</th>
+                  <th>From</th>
+                  <th>Duration</th>
+                  <th>Status</th>
+                  <th>Direction</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="paTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pa-empty" id="paEmpty" hidden>No calls yet on this number.</div>
+          <div class="pn-error" id="paError" hidden></div>
+        </div>
+
+        <!-- Transcript drawer -->
+        <dialog id="paTranscriptDlg" class="pn-wizard">
+          <div class="pn-wizard-shell">
+            <div class="pn-wizard-head">
+              <strong id="paTranscriptTitle" style="font-size:15px; color:#0f172a;">Call transcript</strong>
+              <button type="button" class="pn-close" id="paTranscriptClose">×</button>
+            </div>
+            <div class="pa-trans-meta" id="paTranscriptMeta"></div>
+            <div class="pa-trans-body" id="paTranscriptBody">Loading…</div>
+          </div>
+        </dialog>
+
+        <style>
+          .pa-summary {
+            display: grid; grid-template-columns: repeat(6, 1fr);
+            gap: 10px; margin: 16px 0 18px;
+          }
+          @media (max-width: 1100px) { .pa-summary { grid-template-columns: repeat(3, 1fr); } }
+          @media (max-width: 600px)  { .pa-summary { grid-template-columns: repeat(2, 1fr); } }
+          .pa-tile {
+            padding: 14px 16px;
+            background: linear-gradient(135deg, rgba(43,108,176,.06), rgba(56,189,248,.06));
+            border: 1px solid rgba(43,108,176,.18);
+            border-radius: 12px;
+            display: flex; flex-direction: column; gap: 2px;
+          }
+          .pa-num {
+            font-family: "Space Grotesk", "Inter", sans-serif;
+            font-size: 20px; font-weight: 800; color: #0f172a;
+            letter-spacing: -0.02em;
+          }
+          .pa-label { font-size: 11px; color: #475569;
+                      text-transform: uppercase; letter-spacing: 0.06em;
+                      font-weight: 600; }
+          .pa-empty { padding: 24px; text-align: center; color: #64748b;
+                      font-size: 13.5px; border: 1px dashed #e2e8f0;
+                      border-radius: 12px; }
+          .pa-status {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 9px; border-radius: 999px;
+            font-size: 10.5px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.05em;
+          }
+          .pa-status-ok    { color: #047857; background: rgba(22,163,74,.10); border: 1px solid rgba(22,163,74,.22); }
+          .pa-status-miss  { color: #92400e; background: rgba(245,158,11,.10); border: 1px solid rgba(245,158,11,.30); }
+          .pa-status-fail  { color: #b91c1c; background: rgba(220,38,38,.08); border: 1px solid rgba(220,38,38,.25); }
+          .pa-status-other { color: #475569; background: #f1f5f9; border: 1px solid #e2e8f0; }
+          .pa-mock-badge {
+            font-size: 10px; padding: 2px 6px; border-radius: 6px;
+            background: repeating-linear-gradient(45deg, rgba(120,113,108,.10) 0 6px, rgba(120,113,108,.18) 6px 12px);
+            color: #57534e; border: 1px dashed #a8a29e;
+            margin-left: 6px; vertical-align: middle;
+          }
+          .pa-view-btn {
+            padding: 5px 12px; border-radius: 8px;
+            background: #fff; color: #0f172a; border: 1px solid #cbd5e1;
+            font-size: 12px; font-weight: 600; cursor: pointer;
+            transition: background .15s, border-color .15s;
+          }
+          .pa-view-btn:hover { background: #f8fafc; border-color: #94a3b8; }
+          .pa-view-btn:disabled { opacity: .55; cursor: not-allowed; }
+          .pa-trans-meta { font-size: 12.5px; color: #64748b; margin-bottom: 12px;
+                           font-family: "JetBrains Mono", monospace; }
+          .pa-trans-body { max-height: 60vh; overflow-y: auto;
+                           background: #f8fafc; border: 1px solid #e2e8f0;
+                           border-radius: 10px; padding: 14px;
+                           font-size: 13.5px; line-height: 1.6;
+                           white-space: pre-wrap; }
+          .pa-trans-line { margin-bottom: 10px; padding-bottom: 10px;
+                           border-bottom: 1px solid #e2e8f0; }
+          .pa-trans-line:last-child { border-bottom: none; }
+          .pa-trans-role { font-weight: 700; color: #2b6cb0; font-size: 11.5px;
+                           text-transform: uppercase; letter-spacing: 0.06em;
+                           display: block; margin-bottom: 2px; }
+          .pa-trans-role.user { color: #047857; }
+        </style>
       </section>
 
 
-      <section class="grid" id="voicePanel" data-route-section="voice">
+      <section class="grid" id="voicePanel" data-route-section="voice" hidden>
         <div class="card" style="grid-column: span 12;">
           <div class="card-header">
             <div>
@@ -3965,7 +4081,7 @@
         }
       </style>
 
-      <section class="grid" id="activity" data-route-section="activity">
+      <section class="grid" id="activity" data-route-section="activity" hidden>
         <div class="card chart-card">
         <div class="card-header">
           <div>
@@ -3995,7 +4111,7 @@
         </div>
       </section>
 
-      <section class="grid" id="leads" data-route-section="leads">
+      <section class="grid" id="leads" data-route-section="leads" hidden>
         <div class="card" style="grid-column: span 12;">
           <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
             <div>
@@ -4341,7 +4457,7 @@
         .camp-review-row { display: flex; justify-content: space-between; padding: 4px 0; }
         .camp-review-row strong { color: #0f172a; }
       </style>
-      <section class="grid" id="insights" data-route-section="insights">
+      <section class="grid" id="insights" data-route-section="insights" hidden>
         <div class="card" style="grid-column: span 12;">
           <div class="card-header">
             <h2 class="section-title" style="margin:0;">Insights</h2>
@@ -4364,7 +4480,7 @@
         </div>
       </section>
 
-      <section class="grid" id="knowledge" data-route-section="knowledge">
+      <section class="grid" id="knowledge" data-route-section="knowledge" hidden>
         <div id="kbStatusPill" class="kb-pill" hidden style="grid-column: span 12;"></div>
         <div class="card kb-card is-locked" id="kbCardClient" data-kb-type="client" style="grid-column: span 12;">
           <div class="card-header">
@@ -4522,7 +4638,7 @@
       
     
 
-      <section class="grid" id="settings" data-route-section="settings">
+      <section class="grid" id="settings" data-route-section="settings" hidden>
         <div class="card settings-card is-locked" id="settingsCard">
           <div class="card-header">
             <h2 class="section-title">Receptionist Settings</h2>
@@ -4635,7 +4751,7 @@
         </div>
       </section>
 
-      <section class="grid" id="embed" data-route-section="embed">
+      <section class="grid" id="embed" data-route-section="embed" hidden>
            <div class="card" style="grid-column: span 12;">
           <div class="embed-section">
             <div>
@@ -9272,7 +9388,154 @@
       initLeadsTabs();
       initCsvImport();
       initCampaignWizard();
+      initPhoneAnalytics();
     });
+
+    // ─────────── Phone analytics + transcript drawer ───────────
+    function initPhoneAnalytics() {
+      const card = document.getElementById("phoneAnalyticsCard");
+      if (!card) return;
+      const select = document.getElementById("paPhoneSelect");
+      const refresh = document.getElementById("paRefresh");
+      const dlg = document.getElementById("paTranscriptDlg");
+      const closeBtn = document.getElementById("paTranscriptClose");
+
+      // Re-populate the phone selector whenever /me/phones loads.
+      window.__rebuildPhoneAnalytics = function (phones) {
+        if (!phones || phones.length === 0) {
+          card.hidden = true;
+          return;
+        }
+        card.hidden = false;
+        const previous = select.value;
+        select.innerHTML = phones.map(p =>
+          `<option value="${p.phone_id}">${escapeHtml(p.phone_display || p.phone_number)}${p.mock ? " · TEST" : ""}</option>`
+        ).join("");
+        // Preserve selection across refreshes.
+        if (previous && phones.some(p => p.phone_id === previous)) {
+          select.value = previous;
+        }
+        loadAnalytics(select.value);
+      };
+      select.addEventListener("change", () => loadAnalytics(select.value));
+      refresh.addEventListener("click", () => loadAnalytics(select.value));
+      closeBtn.addEventListener("click", () => closeDlg(dlg));
+    }
+
+    async function loadAnalytics(phoneId) {
+      if (!phoneId) return;
+      const summary = document.getElementById("paSummary");
+      const tableWrap = document.getElementById("paTableWrap");
+      const empty = document.getElementById("paEmpty");
+      const errBox = document.getElementById("paError");
+      const refreshBtn = document.getElementById("paRefresh");
+      const phoneLabel = document.getElementById("paPhoneLabel");
+      summary.hidden = true; tableWrap.hidden = true; empty.hidden = true;
+      errBox.hidden = true;
+      refreshBtn.disabled = true;
+      const orig = refreshBtn.textContent;
+      refreshBtn.textContent = "↻ Loading…";
+      try {
+        const res = await fetch(`/me/phones/${encodeURIComponent(phoneId)}/calls`,
+                                { credentials: "same-origin" });
+        if (!res.ok) {
+          errBox.hidden = false;
+          errBox.textContent = `Couldn't load call history (status ${res.status}).`;
+          return;
+        }
+        const body = await res.json();
+        if (phoneLabel) {
+          phoneLabel.innerHTML = body.is_mock
+            ? `<span class="pa-mock-badge">TEST data</span>`
+            : "";
+        }
+        // Summary
+        document.getElementById("paTotalCalls").textContent = body.summary.total_calls;
+        document.getElementById("paCompleted").textContent  = body.summary.completed_calls;
+        document.getElementById("paMissed").textContent     = body.summary.missed_calls;
+        document.getElementById("paTotalDur").textContent   = body.summary.total_duration;
+        document.getElementById("paAvgDur").textContent     = body.summary.avg_duration;
+        document.getElementById("paLastCall").textContent   = body.summary.last_call_at
+          ? new Date(body.summary.last_call_at).toLocaleString() : "—";
+        summary.hidden = false;
+
+        if (!body.calls || body.calls.length === 0) {
+          empty.hidden = false;
+          return;
+        }
+        // Table
+        const tbody = document.getElementById("paTableBody");
+        tbody.innerHTML = body.calls.map(c => {
+          const when = c.start_time ? new Date(c.start_time).toLocaleString() : "—";
+          let pillCls = "pa-status-other", label = c.status || "—";
+          if (c.status === "completed")       pillCls = "pa-status-ok";
+          else if (["no-answer", "busy"].includes(c.status)) pillCls = "pa-status-miss";
+          else if (["failed", "canceled"].includes(c.status)) pillCls = "pa-status-fail";
+          return `<tr>
+            <td>${escapeHtml(when)}</td>
+            <td><span style="font-family:'JetBrains Mono',monospace; font-size:12.5px;">${escapeHtml(c.from_formatted || c.from || "—")}</span></td>
+            <td>${escapeHtml(c.duration)}</td>
+            <td><span class="pa-status ${pillCls}">${escapeHtml(label)}</span></td>
+            <td>${escapeHtml(c.direction || "—")}${c.is_mock ? '<span class="pa-mock-badge">TEST</span>' : ''}</td>
+            <td><button type="button" class="pa-view-btn" data-call-sid="${escapeHtml(c.sid)}"
+                ${c.has_transcript ? "" : "disabled"}>View transcript</button></td>
+          </tr>`;
+        }).join("");
+        tableWrap.hidden = false;
+        tbody.querySelectorAll("[data-call-sid]").forEach(b => {
+          b.addEventListener("click", () => openTranscript(phoneId, b.dataset.callSid));
+        });
+      } catch (e) {
+        errBox.hidden = false;
+        errBox.textContent = "Network error loading call history.";
+      } finally {
+        refreshBtn.disabled = false;
+        refreshBtn.textContent = orig;
+      }
+    }
+
+    async function openTranscript(phoneId, callSid) {
+      const dlg = document.getElementById("paTranscriptDlg");
+      const meta = document.getElementById("paTranscriptMeta");
+      const bodyEl = document.getElementById("paTranscriptBody");
+      meta.textContent = `Call SID: ${callSid}`;
+      bodyEl.textContent = "Loading…";
+      openDlg(dlg);
+      try {
+        // The voice-transcript endpoint is keyed on accountid + callSid.
+        // /me returns the user's customer_id we can use to query.
+        const me = await (await fetch("/me", { credentials: "same-origin" })).json();
+        const acct = me.customer_id || "";
+        if (!acct) {
+          bodyEl.textContent = "No account ID available — can't load transcript.";
+          return;
+        }
+        const res = await fetch(
+          `/voice-transcript?accountid=${encodeURIComponent(acct)}&callSid=${encodeURIComponent(callSid)}`,
+          { credentials: "same-origin" });
+        if (!res.ok) {
+          bodyEl.textContent = `Transcript not available (${res.status}).`;
+          return;
+        }
+        const body = await res.json();
+        const trans = body.transcript;
+        if (Array.isArray(trans) && trans.length) {
+          bodyEl.innerHTML = trans.map(t => {
+            const role = (t.role || "bot").toLowerCase();
+            return `<div class="pa-trans-line">
+              <span class="pa-trans-role ${role}">${escapeHtml(role)}</span>
+              ${escapeHtml(t.text || t.content || "")}
+            </div>`;
+          }).join("");
+        } else if (typeof trans === "object" && trans !== null) {
+          bodyEl.textContent = JSON.stringify(trans, null, 2);
+        } else {
+          bodyEl.textContent = "Empty transcript.";
+        }
+      } catch (e) {
+        bodyEl.textContent = "Error loading transcript.";
+      }
+    }
 
     // ─────────────────── Leads tabs ───────────────────
     function initLeadsTabs() {
@@ -10027,7 +10290,12 @@
       const titleEl = document.getElementById("appPageTitle");
       if (titleEl) titleEl.textContent = def.title;
       document.querySelectorAll("[data-route-section]").forEach(el => {
-        el.classList.toggle("is-active", el.dataset.routeSection === route);
+        const isActive = el.dataset.routeSection === route;
+        el.classList.toggle("is-active", isActive);
+        // Toggle the HTML `hidden` attribute too — it's our pre-CSS
+        // safety net so a section can't render even if CSS hasn't loaded.
+        if (isActive) el.removeAttribute("hidden");
+        else          el.setAttribute("hidden", "");
       });
       document.querySelectorAll(".app-nav-btn[data-route]").forEach(btn => {
         btn.classList.toggle("is-active", btn.dataset.route === route);
@@ -10165,6 +10433,11 @@
           // mock_mode = backend is in dev (localhost or DEV_MOCK_TWILIO).
           // Drives the confirm dialog + the buy-button label.
           state.mock_mode = !!body.mock_mode;
+          // Hand the phone list off to the analytics card so it can
+          // refresh its phone selector + auto-load the first phone.
+          if (typeof window.__rebuildPhoneAnalytics === "function") {
+            try { window.__rebuildPhoneAnalytics(state.phones); } catch (_) {}
+          }
           // Trial users can browse + select a number, but checkout pivots
           // to an upgrade prompt — keep the same button copy as paid.
           const addBtn = document.getElementById("pnAddBtn");
