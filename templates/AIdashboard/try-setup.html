@@ -170,7 +170,7 @@
 
       <div id="calConnected" style="display:none">
         <p class="connected-line">✓ Calendar connected — <span id="calEmail">your account</span></p>
-        <p style="font-size:13px; color: var(--muted); margin-top:10px;">Working hours (the bot will book only inside these):</p>
+        <p style="font-size:13px; color: var(--muted); margin-top:10px;">Working hours — bookings only land inside these.</p>
 
         <label for="tz">Time zone</label>
         <select id="tz">
@@ -201,13 +201,13 @@
     </section>
 
     <section id="s2" style="display:none">
-      <h1>How should the bot reply to customers?</h1>
+      <h1>How should replies be sent?</h1>
       <p class="lede">For now we send replies from a JustGotALead-branded address. You can switch to your real domain after upgrade.</p>
 
       <label class="lead-radio is-active">
         <input type="radio" name="senderMode" value="demo" checked />
-        As your business AI
-        <span class="sub">from: ai@<span id="demoFromHost">your-business-demo.com</span> (works right now, no setup)</span>
+        From our managed address
+        <span class="sub">replies go out from: hello@<span id="demoFromHost">your-business-demo.com</span> — works right now, no setup</span>
       </label>
       <label class="lead-radio">
         <input type="radio" name="senderMode" value="real" />
@@ -261,7 +261,7 @@
     <h1>✓ All set<span id="summaryName"></span>.</h1>
 
     <div class="summary-block">
-      <h3>Your AI receptionist</h3>
+      <h3>Your missed-call coverage</h3>
       <div>📞 <strong>Phone:</strong> <span id="sumPhone">—</span></div>
       <div>📅 <strong>Calendar:</strong> <span id="sumCalendar">not connected</span></div>
       <div>✉ <strong>Replies as:</strong> <span id="sumReplyAs">demo address</span></div>
@@ -288,7 +288,7 @@
     </div>
 
     <div class="summary-step">
-      <h4>3. Open your dashboard to tweak the bot</h4>
+      <h4>3. Open your dashboard to fine-tune</h4>
       <a class="btn secondary" href="/dashboard">Continue with set up →</a>
     </div>
 

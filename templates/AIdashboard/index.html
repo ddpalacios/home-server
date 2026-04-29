@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AI Dashboard</title>
+  <title>Dashboard — JustGotALead</title>
   <style>
     :root {
       --accent: #2563eb;
@@ -2827,11 +2827,11 @@
           <div class="nav-links">
             <a href="#overview">Dashboard</a>
             <a href="#leads">Recent Leads</a>
-            <a href="#insights">AI Insights</a>
+            <a href="#insights">Insights</a>
             <a href="/messages">Messages</a>
             <a href="#knowledge">Knowledge Base</a>
             <a href="#admin" class="admin-nav-link" data-admin-nav hidden>Admin</a>
-            <a href="#settings" class="cta">AI Assistant Settings</a>
+            <a href="#settings" class="cta">Receptionist Settings</a>
           </div>
           <button class="btn shiny" type="button" id="publishAppButton" disabled>Publish App</button>
           <button class="btn secondary" type="button" id="replayTutorialButton" title="Replay the dashboard tutorial" style="border-color:#e2e8f0;">↺ Tutorial</button>
@@ -2848,12 +2848,12 @@
     </nav>
     <div id="mobile-menu">
       <a href="#overview">Dashboard</a>
-      <a href="#settings">AI Assistant Settings</a>
+      <a href="#settings">Receptionist Settings</a>
       <a href="#knowledge">Knowledge Base</a>
       <a href="#activity">Activity / Usage</a>
       <a href="/messages">Messages</a>
       <a href="#leads">Recent Leads</a>
-      <a href="#insights" style="color:#2b6cb0; font-weight:700;">AI Insights</a>
+      <a href="#insights" style="color:#2b6cb0; font-weight:700;">Insights</a>
       <a href="#admin" class="admin-nav-link" data-admin-nav hidden>Admin</a>
       <button class="btn shiny" type="button" id="publishAppButtonMobile">Publish App</button>
       <button class="btn secondary" type="button" id="logoutButtonMobile">Logout</button>
@@ -2864,9 +2864,9 @@
       <header id="overview">
         <div class="welcome">
           <h1 id="welcomeTitle">Welcome</h1>
-          <p data-typewriter="true" data-no-cursor="true" data-text="Your AI assistant is live. Track leads and fine-tune the experience below."></p>
+          <p data-typewriter="true" data-no-cursor="true" data-text="Your line is live. Track leads, watch the pipeline grow, and fine-tune below."></p>
         </div>
-        <div class="badge">AI Agent Dashboard</div>
+        <div class="badge">Lead capture · Live</div>
       </header>
 
       <!-- ─── Trial banner (visible only on trial sessions) ─── -->
@@ -3090,7 +3090,7 @@
         <div class="card-header">
           <div>
             <h2>Booked Leads Trend</h2>
-            <p class="chart-subtitle">Weekly bookings from your AI assistant.</p>
+            <p class="chart-subtitle">Weekly bookings caught by your line.</p>
           </div>
           <select class="filter-select" aria-label="Date range">
             <option>Last 7 days</option>
@@ -3161,7 +3161,7 @@
                   <div class="transcript-meta" id="transcriptMeta">Loading...</div>
                 </div>
                 <div class="transcript-actions">
-                  <button class="transcript-summary-button" type="button" id="transcriptSummaryButton">Generate AI Summary</button>
+                  <button class="transcript-summary-button" type="button" id="transcriptSummaryButton">Generate Summary</button>
                   <button class="transcript-close" type="button" id="transcriptClose" aria-label="Close transcript">×</button>
                 </div>
               </div>
@@ -3176,7 +3176,7 @@
       <section class="grid" id="insights">
         <div class="card" style="grid-column: span 12;">
           <div class="card-header">
-            <h2 class="section-title" style="margin:0;">AI Insights</h2>
+            <h2 class="section-title" style="margin:0;">Insights</h2>
           </div>
           <p class="section-note">Ask questions about your business data. Insights are based on CRM summaries.</p>
           <div class="insights-box">
@@ -3357,7 +3357,7 @@
       <section class="grid" id="settings">
         <div class="card settings-card is-locked" id="settingsCard">
           <div class="card-header">
-            <h2 class="section-title">AI Assistant Settings</h2>
+            <h2 class="section-title">Receptionist Settings</h2>
             <button class="btn ghost" type="button" id="settingsEditToggle">Edit Settings</button>
           </div>
           <div class="edit-banner">Edit mode is on. Changes won’t apply until you save.</div>
@@ -3505,7 +3505,7 @@
             <h3>Publish All Settings?</h3>
             <button class="modal-close" type="button" data-close="confirmPublishModal">×</button>
           </div>
-          <div class="section-note">This will save your AI assistant settings and knowledge base changes. Are you sure you want to continue?</div>
+          <div class="section-note">This will save your line settings and knowledge base changes. Are you sure you want to continue?</div>
           <div class="save-loading" id="publishSaveLoading">
             <div class="spinner" aria-hidden="true"></div>
             <span>Publishing your app...</span>
@@ -3554,7 +3554,7 @@
             <h3>Save Assistant Settings?</h3>
             <button class="modal-close" type="button" data-close="confirmSettingsSaveModal">×</button>
           </div>
-          <div class="section-note">This will save your AI assistant settings. Continue?</div>
+          <div class="section-note">This will save your line settings. Continue?</div>
           <div class="save-loading" id="settingsSaveLoading">
             <div class="spinner" aria-hidden="true"></div>
             <span>Saving settings...</span>
@@ -4142,7 +4142,7 @@
         const b = Math.min(255, Math.round(rgb.b + (255 - rgb.b) * amount));
         return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
       };
-      previewName.textContent = nameInput.value || "AI Assistant";
+      previewName.textContent = nameInput.value || "Receptionist";
       previewGreeting.textContent = greetingMessage.value || "Hi! How can I help you today?";
       previewSubtitle.textContent = subtitleMessage.value || "Ask about services, pricing, or scheduling";
       previewPanel.style.setProperty("--forest", primaryColor.value);
@@ -6414,7 +6414,7 @@
         : payload.ai_summary?.text;
       if (savedSummary && transcriptSummary) {
         typeTranscriptSummary(savedSummary);
-        if (transcriptSummaryButton) transcriptSummaryButton.textContent = "Regenerate AI Summary";
+        if (transcriptSummaryButton) transcriptSummaryButton.textContent = "Regenerate Summary";
       }
     }
 
@@ -6439,7 +6439,7 @@
           throw new Error(data?.error || `Summary failed (${res.status})`);
         }
         typeTranscriptSummary(data.summary || "No summary was generated.");
-        transcriptSummaryButton.textContent = "Regenerate AI Summary";
+        transcriptSummaryButton.textContent = "Regenerate Summary";
       } catch (err) {
         transcriptSummary.textContent = err.message || "Unable to generate summary.";
       } finally {
@@ -6463,7 +6463,7 @@
       }
       if (transcriptSummaryButton) {
         transcriptSummaryButton.disabled = false;
-        transcriptSummaryButton.textContent = "Generate AI Summary";
+        transcriptSummaryButton.textContent = "Generate Summary";
       }
       transcriptMeta.textContent = `Loading call ${callSid}...`;
       transcriptContent.innerHTML = `<div class="transcript-message"><div class="transcript-text">Loading transcript...</div></div>`;
@@ -7594,7 +7594,7 @@
         {
           element: "#voicePanel",
           popover: {
-            title: "🎙 Your bot's voice",
+            title: "🎙 How your line sounds",
             description: "Pick how your receptionist sounds — warm, calm, energetic. Test it any time.",
           },
         },
@@ -7622,8 +7622,8 @@
         {
           element: "#knowledge",
           popover: {
-            title: "📚 What your bot knows",
-            description: "We trained it on your website. Add facts, FAQs, or pricing here so it answers exactly the way you want.",
+            title: "📚 What your line knows",
+            description: "Already loaded with your website. Add facts, FAQs, or pricing here so customers get the answer you'd give.",
           },
         },
         {

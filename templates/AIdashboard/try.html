@@ -783,7 +783,7 @@
                     <span class="mode-row-emoji">📝</span>
                     <span class="mode-row-label">Something else — describe it</span>
                   </div>
-                  <div class="mode-row-sub">Tell us where in the customer journey you'd like the AI to step in.</div>
+                  <div class="mode-row-sub">Tell us where in the customer journey you'd like us to step in.</div>
                 </div>
               </label>
             </div>
@@ -844,8 +844,8 @@
     </main>
 
     <main class="card" id="cardProgress" style="display:none">
-      <div class="progress-eyebrow">⚙️ Building your demo…</div>
-      <h1 id="progressTitle">Almost ready.<br><span style="color:var(--muted)">Hang tight.</span></h1>
+      <div class="progress-eyebrow">⚙️ Getting your line ready…</div>
+      <h1 id="progressTitle">60 seconds until you stop<br>missing leads.</h1>
 
       <ul class="stages-list">
         <li class="stage-item is-pending" id="stageReading">
@@ -854,7 +854,7 @@
             <svg class="ring" viewBox="0 0 40 40"><circle class="bg" cx="20" cy="20" r="14"/><circle class="head" cx="20" cy="20" r="14"/></svg>
             <svg class="check" viewBox="0 0 40 40"><path d="M11 21l5 5 12-13"/></svg>
           </span>
-          <span class="stage-text">Reading your site</span>
+          <span class="stage-text">Learning your business</span>
         </li>
         <li class="stage-item is-pending" id="stageIdentifying">
           <span class="stage-icon">
@@ -862,7 +862,7 @@
             <svg class="ring" viewBox="0 0 40 40"><circle class="bg" cx="20" cy="20" r="14"/><circle class="head" cx="20" cy="20" r="14"/></svg>
             <svg class="check" viewBox="0 0 40 40"><path d="M11 21l5 5 12-13"/></svg>
           </span>
-          <span class="stage-text">Finding what you do</span>
+          <span class="stage-text">Mapping your services + prices</span>
         </li>
         <li class="stage-item is-pending" id="stageTraining">
           <span class="stage-icon">
@@ -870,7 +870,7 @@
             <svg class="ring" viewBox="0 0 40 40"><circle class="bg" cx="20" cy="20" r="14"/><circle class="head" cx="20" cy="20" r="14"/></svg>
             <svg class="check" viewBox="0 0 40 40"><path d="M11 21l5 5 12-13"/></svg>
           </span>
-          <span class="stage-text">Getting it ready</span>
+          <span class="stage-text">Crafting your customer replies</span>
         </li>
         <li class="stage-item is-pending" id="stageWiring">
           <span class="stage-icon">
@@ -878,7 +878,7 @@
             <svg class="ring" viewBox="0 0 40 40"><circle class="bg" cx="20" cy="20" r="14"/><circle class="head" cx="20" cy="20" r="14"/></svg>
             <svg class="check" viewBox="0 0 40 40"><path d="M11 21l5 5 12-13"/></svg>
           </span>
-          <span class="stage-text">Setting up your phone</span>
+          <span class="stage-text">Lining up a real phone number</span>
         </li>
       </ul>
 
@@ -897,8 +897,8 @@
     <main class="card" id="cardSuccess" style="display:none">
       <div class="success-eyebrow"><span class="e">✅</span> All done</div>
 
-      <h1>Give it a try!</h1>
-      <p class="sub">Call your new number and see how it sounds.</p>
+      <h1>Your line is live.<br><span style="color:var(--muted)">Try it now.</span></h1>
+      <p class="sub">Call the number below — it'll answer like one of your team.</p>
 
       <a class="phone-card" id="successCallLink" href="#">
         <div class="e">📞</div>
@@ -1180,7 +1180,7 @@
           return;
         }
         if (focus === "other" && !focusNoteVal) {
-          err("👈 Tell us what you'd like the AI to handle.");
+          err("👈 Tell us what you'd like us to handle.");
           document.getElementById("focusNote").focus();
           return;
         }
@@ -1221,7 +1221,7 @@
                 if (root) {
                   const bn = root.charAt(0).toUpperCase() + root.slice(1);
                   document.getElementById("progressTitle").innerHTML =
-                    `Building <strong>${bn.replace(/[<>"&]/g, "")}</strong>.<br><span style="color:var(--muted)">Hang tight.</span>`;
+                    `60 seconds until <strong>${bn.replace(/[<>"&]/g, "")}</strong><br>stops missing leads.`;
                 }
               } catch (e) {}
               pollStatus(body.status_url, body.phone_display);
