@@ -458,10 +458,17 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/me/") != NULL) {
         post_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "DELETE") == 0 && strstr(route, "/me/") != NULL) {
+        delete_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/unsubscribe/", 13) == 0) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/unsubscribe/", 13) == 0) {
         post_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/track/open/", 12) == 0) {
+        /* Email open-tracking pixel — public route hit by recipients'
+         * email clients when they render the message. Always returns
+         * a 1x1 transparent gif. */
+        get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/trial-phone/") != NULL) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/trial-phone/") != NULL) {
@@ -493,6 +500,10 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/knowledege") != NULL) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/kb/", 4) == 0) {
+        get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/voices") == 0) {
+        get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/lead-sample") != NULL) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/leads") != NULL) {
@@ -516,6 +527,8 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/bot-config") != NULL) {
         post_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/knowledege") != NULL) {
+        post_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/kb/", 4) == 0) {
         post_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/prompt-save") != NULL) {
         post_to_local(socket, http_header, body, route_with_query, "5000");
@@ -546,6 +559,8 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
     } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/blob-storage/", 14) == 0) {
         post_blob(socket, http_header, body, route);
     } else if (strcmp(request_type, "DELETE") == 0 && strstr(route, "/knowledege") != NULL) {
+        delete_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "DELETE") == 0 && strncmp(route, "/kb/", 4) == 0) {
         delete_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/portfolio/images/") != NULL) {
         get_image_file(cSSL, http_header, route);

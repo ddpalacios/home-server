@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Free 7-day trial — JustGotALead</title>
+  <title>JustGotALead</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -984,6 +984,68 @@
       font-weight: 600;
     }
     .meta-row span { display: inline-flex; align-items: center; gap: 6px; }
+
+    .email-cta {
+      margin-top: 22px;
+      padding: 22px 24px;
+      background: var(--accent-soft);
+      border: 1px solid rgba(43,108,176,.22);
+      border-radius: 14px;
+      display: flex; align-items: flex-start; gap: 16px;
+      text-align: left;
+    }
+    .email-cta-icon {
+      font-size: 32px; line-height: 1;
+      flex: 0 0 auto;
+    }
+    .email-cta-body { flex: 1 1 auto; min-width: 0; }
+    .email-cta-title {
+      font-size: 16px; font-weight: 700;
+      color: var(--text);
+      line-height: 1.35;
+      margin: 0 0 6px;
+    }
+    .email-cta-sub {
+      font-size: 14px; line-height: 1.55;
+      color: var(--text-soft);
+      margin: 0;
+    }
+    .email-cta-sub strong {
+      font-weight: 700; color: var(--accent);
+      word-break: break-word;
+    }
+    .email-cta-hint {
+      display: block;
+      margin-top: 10px;
+      font-size: 12.5px; color: var(--muted);
+      font-weight: 500;
+    }
+
+    .success-secondary-row {
+      margin-top: 14px;
+      text-align: center;
+    }
+    .success-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 4px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .success-secondary:hover {
+      color: var(--accent-deep);
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+    .success-secondary .arrow {
+      transition: transform .2s ease;
+    }
+    .success-secondary:hover .arrow {
+      transform: translateX(4px);
+    }
   </style>
 </head>
 <body>
@@ -1007,10 +1069,10 @@
   <div class="stage">
 
     <main class="card is-entering" id="cardForm">
-      <div class="pill-mark"><span class="dot"></span> Free 7 days · No card · Live in 60s</div>
+      <div class="pill-mark"><span class="dot"></span> Free 14 days · No card · Live in 60s</div>
 
       <h1>Stop missing leads.<br>Start booking jobs.</h1>
-      <p class="sub">We answer every call, chat, and message — qualify the lead, book the job, email it to you. <strong>Free for 7 days.</strong> No credit card.</p>
+      <p class="sub">We answer every call, chat, and message — qualify the lead, book the job, email it to you. <strong>Free for 14 days.</strong> No credit card.</p>
 
       <div class="proof">
         <span class="proof-dot"></span>
@@ -1056,7 +1118,7 @@
 
         <div class="guarantee" role="status">
           <span class="guarantee-icon">✓</span>
-          <span><b>Catch a lead in 7 days</b> — or we'll extend your trial another 7, free. No card, ever.</span>
+          <span><b>Catch a lead in 14 days</b> — or we'll extend your trial another 14, free. No card, ever.</span>
         </div>
 
         <div class="inline-progress" id="inlineProgress" aria-live="polite">
@@ -1088,7 +1150,7 @@
           </div>
           <div class="trust-item">
             <span class="e">⏱️</span>
-            <span class="t">Stops in 7 days</span>
+            <span class="t">Stops in 14 days</span>
             <span class="s">All by itself.</span>
           </div>
         </div>
@@ -1168,10 +1230,24 @@
         <span>🆓 Free</span>
       </div>
 
-      <a class="btn" id="continueSetupBtn" href="/try/setup" style="text-decoration:none;">
-        <span class="label">Continue with set up</span>
-        <span class="arrow">→</span>
-      </a>
+      <div class="email-cta" role="status" aria-live="polite">
+        <div class="email-cta-icon" aria-hidden="true">📬</div>
+        <div class="email-cta-body">
+          <p class="email-cta-title">Check your inbox to fine-tune your responses</p>
+          <p class="email-cta-sub">
+            We sent a sign-in link to <strong id="successEmail">your email</strong>.
+            Open it to customize pricing, hours, voice, and how your AI replies.
+          </p>
+          <span class="email-cta-hint">Didn't get it? Check spam or promotions.</span>
+        </div>
+      </div>
+
+      <div class="success-secondary-row">
+        <a class="success-secondary" id="successDashLink" href="/dashboard">
+          Open your dashboard now
+          <span class="arrow">→</span>
+        </a>
+      </div>
     </main>
 
   </div>
@@ -1229,10 +1305,10 @@
   <section id="faq" class="section">
     <span class="section-eyebrow">03 · Common questions</span>
     <h2>Quick answers to the doubts.</h2>
-    <p class="lead">If something's not here, email us at hello@justgotalead.com.</p>
+    <p class="lead">If something's not here, email us at support@palacios-solutions.com.</p>
     <div class="faq" id="faqList">
       <div class="faq-item">
-        <div class="faq-q">What happens after 7 days?</div>
+        <div class="faq-q">What happens after 14 days?</div>
         <div class="faq-a">Nothing happens. Your trial line goes back in the pool, your demo gets deleted, and you're not charged. You only sign up if you want to keep going.</div>
       </div>
       <div class="faq-item">
@@ -1245,7 +1321,7 @@
       </div>
       <div class="faq-item">
         <div class="faq-q">What if I don't get any leads in the trial?</div>
-        <div class="faq-a">We'll extend you another 7 days, free. No card, no follow-up sales call. If after that it still hasn't caught a lead, you walk away with nothing lost.</div>
+        <div class="faq-a">We'll extend you another 14 days, free. No card, no follow-up sales call. If after that it still hasn't caught a lead, you walk away with nothing lost.</div>
       </div>
       <div class="faq-item">
         <div class="faq-q">How do you handle customer data?</div>
@@ -1258,7 +1334,7 @@
   <section id="pricing" class="section">
     <span class="section-eyebrow">04 · Pricing</span>
     <h2>Simple pricing. Cancel anytime.</h2>
-    <p class="lead">Your 7-day trial is always free. Pick a plan only if you want to keep your line.</p>
+    <p class="lead">Your 14-day trial is always free. Pick a plan only if you want to keep your line.</p>
 
     <div class="pricing-wrap">
       <div class="pricing">
@@ -1316,7 +1392,7 @@
           <strong>Enterprise &amp; custom integrations</strong>
           <span>ServiceTitan · JobNimbus · Salesforce · BAA · white-label</span>
         </div>
-        <a href="mailto:hello@justgotalead.com?subject=Enterprise%20inquiry">Talk to sales →</a>
+        <a href="mailto:support@palacios-solutions.com?subject=Enterprise%20inquiry">Talk to sales →</a>
       </div>
 
       <div class="pricing-trust">
@@ -1330,7 +1406,7 @@
   <!-- ─────────── Bottom CTA ─────────── -->
   <section class="section bottom-cta">
     <h2>Ready to stop missing leads?</h2>
-    <p class="lead">Free 7-day trial. No card. Live in 60 seconds.</p>
+    <p class="lead">Free 14-day trial. No card. Live in 60 seconds.</p>
     <a class="btn-anchor" href="#cardForm">Start my free trial →</a>
   </section>
 
@@ -1614,7 +1690,7 @@
       }
 
       function formatExpiry(epochSeconds) {
-        if (!epochSeconds) return "in 7 days";
+        if (!epochSeconds) return "in 14 days";
         const d = new Date(epochSeconds * 1000);
         return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
       }
@@ -1642,6 +1718,9 @@
               const ex = (body.example_question || "").trim();
               if (ex) document.getElementById("successExample").textContent = '"' + ex + '"';
               document.getElementById("successExpiry").textContent = formatExpiry(body.trial_expires_at);
+              const emailVal = (progressEmail && progressEmail.textContent) || "";
+              if (emailVal) document.getElementById("successEmail").textContent = emailVal;
+              document.getElementById("successDashLink").href = body.dashboard_url || "/dashboard";
             });
             return;
           }

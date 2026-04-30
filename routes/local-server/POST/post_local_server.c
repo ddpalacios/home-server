@@ -336,25 +336,118 @@ void delete_to_local(struct Socket* socket,char* http_header, char*body, char* r
 		return;
 	}
 	const char *safe_body = body ? body : "";
-	size_t req_size = strlen(safe_body) + 2048;
+
+	/* Forward the incoming Cookie header so Flask can resolve the session.
+	 * Without this the upstream sees no session and every authenticated
+	 * DELETE comes back as 401 (e.g. /me/leads/imports/<id>). Mirrors
+	 * post_to_local's cookie-passthrough logic. */
+	char *cookie_value = NULL;
+	char *fwd_host_value = NULL;
+	if (http_header) {
+		const char *cookie_start = strstr(http_header, "\r\nCookie:");
+		if (!cookie_start && strncmp(http_header, "Cookie:", 7) == 0) {
+			cookie_start = http_header;
+		}
+		if (cookie_start) {
+			cookie_start += (cookie_start == http_header) ? 7 : 9;
+			while (*cookie_start == ' ') cookie_start++;
+			const char *cookie_end = strstr(cookie_start, "\r\n");
+			if (cookie_end && cookie_end > cookie_start) {
+				size_t len = (size_t)(cookie_end - cookie_start);
+				cookie_value = malloc(len + 1);
+				if (cookie_value) {
+					memcpy(cookie_value, cookie_start, len);
+					cookie_value[len] = '\0';
+				}
+			}
+		}
+		const char *xfh_start = strstr(http_header, "\r\nX-Forwarded-Host:");
+		if (!xfh_start && strncasecmp(http_header, "X-Forwarded-Host:", 17) == 0) {
+			xfh_start = http_header;
+		}
+		if (xfh_start) {
+			xfh_start += (xfh_start == http_header) ? 17 : 19;
+			while (*xfh_start == ' ') xfh_start++;
+			const char *xfh_end = strstr(xfh_start, "\r\n");
+			if (xfh_end && xfh_end > xfh_start) {
+				size_t len = (size_t)(xfh_end - xfh_start);
+				fwd_host_value = malloc(len + 1);
+				if (fwd_host_value) {
+					memcpy(fwd_host_value, xfh_start, len);
+					fwd_host_value[len] = '\0';
+				}
+			}
+		}
+		if (!fwd_host_value) {
+			const char *host_start = strstr(http_header, "\r\nHost:");
+			if (!host_start && strncmp(http_header, "Host:", 5) == 0) {
+				host_start = http_header;
+			}
+			if (host_start) {
+				host_start += (host_start == http_header) ? 5 : 7;
+				while (*host_start == ' ') host_start++;
+				const char *host_end = strstr(host_start, "\r\n");
+				if (host_end && host_end > host_start) {
+					size_t len = (size_t)(host_end - host_start);
+					fwd_host_value = malloc(len + 1);
+					if (fwd_host_value) {
+						memcpy(fwd_host_value, host_start, len);
+						fwd_host_value[len] = '\0';
+					}
+				}
+			}
+		}
+	}
+
+	char fwd_host_line[512];
+	fwd_host_line[0] = '\0';
+	if (fwd_host_value) {
+		snprintf(fwd_host_line, sizeof(fwd_host_line),
+			"X-Forwarded-Host: %s\r\nX-Forwarded-Proto: https\r\n",
+			fwd_host_value);
+	}
+
+	size_t req_size = strlen(safe_body) + 2048
+		+ (cookie_value ? strlen(cookie_value) : 0)
+		+ strlen(fwd_host_line);
 	char *request = malloc(req_size);
 	if (!request) {
 		perror("malloc failed");
+		if (cookie_value) free(cookie_value);
+		if (fwd_host_value) free(fwd_host_value);
 		close(sfd);
 		return;
 	}
 
-	snprintf(request, req_size,
-		"DELETE %s HTTP/1.1\r\n"
-		"Host: %s:%s\r\n"
-		"Content-Type: application/json\r\n"
-		"Content-Length: %zu\r\n"
-		"Connection: close\r\n"
-		"\r\n"
-		"%s",
-		route,
-		"127.0.0.1", port, strlen(safe_body), safe_body);
-	
+	if (cookie_value) {
+		snprintf(request, req_size,
+			"DELETE %s HTTP/1.1\r\n"
+			"Host: %s:%s\r\n"
+			"%s"
+			"Content-Type: application/json\r\n"
+			"Content-Length: %zu\r\n"
+			"Cookie: %s\r\n"
+			"Connection: close\r\n"
+			"\r\n"
+			"%s",
+			route,
+			"127.0.0.1", port, fwd_host_line, strlen(safe_body), cookie_value, safe_body);
+		free(cookie_value);
+	} else {
+		snprintf(request, req_size,
+			"DELETE %s HTTP/1.1\r\n"
+			"Host: %s:%s\r\n"
+			"%s"
+			"Content-Type: application/json\r\n"
+			"Content-Length: %zu\r\n"
+			"Connection: close\r\n"
+			"\r\n"
+			"%s",
+			route,
+			"127.0.0.1", port, fwd_host_line, strlen(safe_body), safe_body);
+	}
+	if (fwd_host_value) free(fwd_host_value);
+
 	send(sfd, request, strlen(request), 0);
 	free(request);
 	char buf[8192]; 
