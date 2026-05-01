@@ -16,7 +16,11 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <sys/time.h>
 #define IPSTRLEN INET6_ADDRSTRLEN
+#define LOCAL_RECV_TIMEOUT_SEC 30
+#define LOCAL_SEND_TIMEOUT_SEC 10
+#define MAX_LOCAL_RESPONSE (50 * 1024 * 1024)
 int connect_to_local_server(const char* host, const char* port){
 	struct addrinfo hints;
  	struct addrinfo *addrs_res;
@@ -51,10 +55,11 @@ int connect_to_local_server(const char* host, const char* port){
 			break;
 		}
 	}
-	freeaddrinfo(addrs_res); 
+	freeaddrinfo(addrs_res);
  	if (sfd>=0 && connected==0){
         return sfd;
  	}
+	return -1;
  }
 
 void post_ctabustracker_getpredictions(struct Socket* socket,char* http_header, char*body, char* route){
@@ -96,6 +101,10 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, char* rou
 		send_response_code(socket->cSSL, 502);
 		return;
 	}
+	struct timeval tv_recv = { .tv_sec = LOCAL_RECV_TIMEOUT_SEC, .tv_usec = 0 };
+	struct timeval tv_send = { .tv_sec = LOCAL_SEND_TIMEOUT_SEC, .tv_usec = 0 };
+	setsockopt(sfd, SOL_SOCKET, SO_RCVTIMEO, &tv_recv, sizeof(tv_recv));
+	setsockopt(sfd, SOL_SOCKET, SO_SNDTIMEO, &tv_send, sizeof(tv_send));
 	const char *safe_body = body ? body : "";
 
 	/* Forward incoming Cookie header so the upstream Flask session is
@@ -243,7 +252,7 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, char* rou
 	
 	send(sfd, request, strlen(request), 0);
 	free(request);
-	char buf[8192]; 
+	char buf[8192];
     char *response = NULL;
     size_t total = 0;
 
@@ -251,10 +260,18 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, char* rou
         int bytes_recved = recv(sfd, buf, sizeof(buf), 0);
         if (bytes_recved <= 0)
             break;
+        if (total + (size_t)bytes_recved > MAX_LOCAL_RESPONSE) {
+            printf("post_to_local: upstream response too large, aborting\n");
+            free(response);
+            close(sfd);
+            send_response_code(socket->cSSL, 502);
+            return;
+        }
         char *tmp = realloc(response, total + bytes_recved + 1);
         if (!tmp) {
             perror("realloc");
             free(response);
+            close(sfd);
             return;
         }
 			response = tmp;
@@ -263,6 +280,8 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, char* rou
 		}
 		if (!response) {
 			printf("No data received\n");
+			close(sfd);
+			send_response_code(socket->cSSL, 502);
 			return;
 		}
 
@@ -335,6 +354,10 @@ void delete_to_local(struct Socket* socket,char* http_header, char*body, char* r
 		send_response_code(socket->cSSL, 502);
 		return;
 	}
+	struct timeval tv_recv = { .tv_sec = LOCAL_RECV_TIMEOUT_SEC, .tv_usec = 0 };
+	struct timeval tv_send = { .tv_sec = LOCAL_SEND_TIMEOUT_SEC, .tv_usec = 0 };
+	setsockopt(sfd, SOL_SOCKET, SO_RCVTIMEO, &tv_recv, sizeof(tv_recv));
+	setsockopt(sfd, SOL_SOCKET, SO_SNDTIMEO, &tv_send, sizeof(tv_send));
 	const char *safe_body = body ? body : "";
 
 	/* Forward the incoming Cookie header so Flask can resolve the session.
@@ -450,7 +473,7 @@ void delete_to_local(struct Socket* socket,char* http_header, char*body, char* r
 
 	send(sfd, request, strlen(request), 0);
 	free(request);
-	char buf[8192]; 
+	char buf[8192];
     char *response = NULL;
     size_t total = 0;
 
@@ -458,6 +481,13 @@ void delete_to_local(struct Socket* socket,char* http_header, char*body, char* r
         int bytes_recved = recv(sfd, buf, sizeof(buf), 0);
         if (bytes_recved <= 0)
             break;
+        if (total + (size_t)bytes_recved > MAX_LOCAL_RESPONSE) {
+            printf("delete_to_local: upstream response too large, aborting\n");
+            free(response);
+            close(sfd);
+            send_response_code(socket->cSSL, 502);
+            return;
+        }
         char *tmp = realloc(response, total + bytes_recved + 1);
         if (!tmp) {
             perror("realloc");
@@ -471,10 +501,12 @@ void delete_to_local(struct Socket* socket,char* http_header, char*body, char* r
 		}
 		if (!response) {
 			printf("No data received\n");
+			close(sfd);
+			send_response_code(socket->cSSL, 502);
 			return;
 		}
 
-		response[total] = '\0'; 
+		response[total] = '\0';
 		printf("Total bytes received: %zu\n", total);
 
 		char *header_end = NULL;

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <stdio.h>
 
@@ -10,6 +11,9 @@
 #include "Socket.h"
 
 #define IPSTRLEN INET6_ADDRSTRLEN
+#define LOCAL_RECV_TIMEOUT_SEC 30
+#define LOCAL_SEND_TIMEOUT_SEC 10
+#define MAX_LOCAL_RESPONSE (50 * 1024 * 1024)
 
 static int connect_to_local_server(const char* host, const char* port) {
     struct addrinfo hints;
@@ -65,6 +69,10 @@ void get_to_local(struct Socket* socket, char* http_header, char* body, char* ro
         send_response_code(socket->cSSL, 502);
         return;
     }
+    struct timeval tv_recv = { .tv_sec = LOCAL_RECV_TIMEOUT_SEC, .tv_usec = 0 };
+    struct timeval tv_send = { .tv_sec = LOCAL_SEND_TIMEOUT_SEC, .tv_usec = 0 };
+    setsockopt(sfd, SOL_SOCKET, SO_RCVTIMEO, &tv_recv, sizeof(tv_recv));
+    setsockopt(sfd, SOL_SOCKET, SO_SNDTIMEO, &tv_send, sizeof(tv_send));
 
     const char *cookie_header = NULL;
     char *accept_header = NULL;
@@ -224,6 +232,13 @@ void get_to_local(struct Socket* socket, char* http_header, char* body, char* ro
         int bytes_recved = recv(sfd, buf, sizeof(buf), 0);
         if (bytes_recved <= 0) {
             break;
+        }
+        if (total + (size_t)bytes_recved > MAX_LOCAL_RESPONSE) {
+            printf("get_to_local: upstream response too large, aborting\n");
+            free(response);
+            close(sfd);
+            send_response_code(socket->cSSL, 502);
+            return;
         }
         char *tmp = realloc(response, total + bytes_recved + 1);
         if (!tmp) {

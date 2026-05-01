@@ -26,6 +26,8 @@
 #define WORKER_COUNT 16
 #define QUEUE_CAPACITY 1024
 #define MAX_WEBSOCKET_PAYLOAD (64 * 1024 * 1024)
+#define MAX_BODY_SIZE (10 * 1024 * 1024)
+#define MAX_HEADER_SIZE (65536)
 #define VOICE_BRIDGE_HOST "127.0.0.1"
 #define VOICE_BRIDGE_PORT "7001"
 #define VOICE_LOG_EVERY_MEDIA 100
@@ -443,7 +445,7 @@ static void log_twilio_websocket_event(const unsigned char *payload, uint64_t pa
 }
 
 static int peek_http_header(SSL *ssl, char *buf, int buf_size) {
-    while (1) {
+    for (int i = 0; i < 8; i++) {
         int nbytes = SSL_peek(ssl, buf, buf_size);
         if (nbytes <= 0) {
             return 0;
@@ -456,6 +458,7 @@ static int peek_http_header(SSL *ssl, char *buf, int buf_size) {
             return nbytes;
         }
     }
+    return 0;
 }
 
 static void handle_websocket_connection(struct Socket *socket, char *http_header) {
@@ -645,6 +648,18 @@ static void handle_client(int fd) {
         }
     }
 
+    if (content_length < 0 || content_length > MAX_BODY_SIZE) {
+        free(peek_buf);
+        free(peeked_http_header);
+        free(http_header);
+        const char *r413 = "HTTP/1.1 413 Content Too Large\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+        SSL_write(cSSL, r413, (int)strlen(r413));
+        SSL_shutdown(cSSL);
+        SSL_free(cSSL);
+        close(fd);
+        return;
+    }
+
     char *body = NULL;
     if (content_length > 0) {
         body = malloc(content_length + 1);
@@ -729,7 +744,9 @@ void start_listening_for_clients(char *port) {
             } else {
                 int fd = pfds[i].fd;
                 if (queue_push(&g_queue, fd) != 0) {
-                    handle_client(fd);
+                    /* Worker pool saturated — drop the connection immediately
+                     * rather than blocking the accept thread. */
+                    close(fd);
                 }
                 pfds[i] = pfds[fd_count - 1];
                 fd_count--;

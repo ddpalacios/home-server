@@ -399,8 +399,12 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         get_live_html(cSSL, http_header, "portfolio/twiliobot.html");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/privacy") == 0) {
         get_live_html(cSSL, http_header, "portfolio/privacy.html");
+    } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/privacy/", 9) == 0) {
+        get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/terms") == 0) {
         get_live_html(cSSL, http_header, "portfolio/terms.html");
+    } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/terms/", 7) == 0) {
+        get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/") == 0) {
         get_live_html(cSSL, http_header, "portfolio/home.html");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/home") == 0) {
@@ -509,6 +513,8 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/leads") != NULL) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/voice-transcript") != NULL) {
+        get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/lead-transcript") != NULL) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/domains") != NULL) {
         get_to_local(socket, http_header, body, route_with_query, "5000");

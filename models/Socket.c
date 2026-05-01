@@ -7,10 +7,10 @@
 #include "Socket.h"
 //#define CLIENT_CERT "../../../../etc/letsencrypt/live/palacios-solutions.com/fullchain.pem"
 //#define CLIENT_KEY "../../../../etc/letsencrypt/live/palacios-solutions.com/privkey.pem"
-//#define CLIENT_CERT "/etc/letsencrypt/live/justgotalead.com/fullchain.pem"
-//#define CLIENT_KEY "/etc/letsencrypt/live/justgotalead.com/privkey.pem"
-#define CLIENT_CERT "/home/dpalacios/home-server/server/self_signed_cert.crt"
-#define CLIENT_KEY "/home/dpalacios/home-server/server/privateKey.key"
+#define CLIENT_CERT "/etc/letsencrypt/live/justgotalead.com/fullchain.pem"
+#define CLIENT_KEY "/etc/letsencrypt/live/justgotalead.com/privkey.pem"
+//#define CLIENT_CERT "/home/dpalacios/home-server/server/self_signed_cert.crt"
+//#define CLIENT_KEY "/home/dpalacios/home-server/server/privateKey.key"
 void sink_socket_info(struct Socket *socket,struct sockaddr_storage remoteaddr ){    
     char host[NI_MAXHOST];	
     char service[NI_MAXSERV];	
@@ -83,7 +83,7 @@ SSL* encrypt_socket(int fd){
 	SSL_CTX *ssl_ctx;
 	ssl_ctx = SSL_CTX_new(SSLv23_server_method());
 	SSL_CTX_set_options(ssl_ctx, SSL_OP_SINGLE_DH_USE);
-	int use_cert = SSL_CTX_use_certificate_file(ssl_ctx, CLIENT_CERT, SSL_FILETYPE_PEM);
+	int use_cert = SSL_CTX_use_certificate_chain_file(ssl_ctx, CLIENT_CERT);
 	int use_key = SSL_CTX_use_PrivateKey_file(ssl_ctx, CLIENT_KEY, SSL_FILETYPE_PEM);
 	if (use_cert <=0 || use_key <=0){
 		printf("ERROR LOADING SSL CERT OR KEY\n");

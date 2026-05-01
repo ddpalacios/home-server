@@ -3699,7 +3699,7 @@
             </div>
           </div>
           <a class="trial-banner-cta" id="tbKeepAccountBtn"
-             href="https://buy.stripe.com/28E9AN2fL6ip2500C90Jq00"
+             href="https://buy.stripe.com/28EcMZ7A58qx2501Gd0Jq04"
              target="_blank" rel="noopener noreferrer">
             Sign up to keep my account
           </a>
@@ -3766,6 +3766,42 @@
           </div>
 
           <div class="at-error" id="atError" hidden></div>
+        </div>
+
+        <!-- ─── Customer Privacy & SMS Terms pages ─── -->
+        <div class="card" style="grid-column: span 12; margin-top: 20px;">
+          <div class="card-header">
+            <div>
+              <h2 class="section-title" style="margin:0;">Customer Privacy &amp; SMS Terms Pages</h2>
+              <p class="section-note">Each slug generates hosted Privacy Policy and SMS Terms pages for a customer's A2P 10DLC registration.</p>
+            </div>
+          </div>
+
+          <form class="cp-add-row" id="cpAddForm" autocomplete="off">
+            <input type="text" id="cpSlugInput" placeholder="slug (e.g. joes-plumbing)" required pattern="[a-z0-9\-]+" title="Lowercase letters, numbers, and hyphens only" />
+            <input type="text" id="cpNameInput" placeholder="Business name" required />
+            <input type="email" id="cpEmailInput" placeholder="Contact email" required />
+            <button type="submit" id="cpAddBtn" class="btn shiny">Add customer</button>
+          </form>
+          <div class="cp-feedback" id="cpFeedback"></div>
+
+          <div class="at-table-wrap">
+            <table class="at-table" id="cpTable">
+              <thead>
+                <tr>
+                  <th>Slug</th>
+                  <th>Business name</th>
+                  <th>Email</th>
+                  <th>Links</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="cpRows">
+                <tr class="at-empty"><td colspan="5">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="cp-feedback" id="cpFeedbackBottom"></div>
         </div>
       </section>
 
@@ -3837,6 +3873,28 @@
           background: rgba(220,38,38,.05); border: 1px solid rgba(220,38,38,.25);
           border-radius: 10px; color: #991b1b; font-size: 13px;
         }
+        /* ─── Customer pages form ─── */
+        .cp-add-row {
+          display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+          margin: 14px 0 10px;
+        }
+        .cp-add-row input {
+          flex: 1; min-width: 130px; padding: 9px 12px;
+          border: 1px solid #e2e8f0; border-radius: 10px; font-size: 13.5px;
+          font-family: inherit; color: #0f172a;
+        }
+        .cp-feedback {
+          font-size: 13px; min-height: 18px; margin-bottom: 6px;
+          color: #047857;
+        }
+        .cp-feedback.err { color: #b91c1c; }
+        .cp-link { display: block; font-size: 12px; color: #2563eb; word-break: break-all; }
+        .cp-remove {
+          padding: 5px 12px; border-radius: 8px;
+          background: #fff; color: #b91c1c; border: 1px solid #fecaca;
+          font-size: 12px; font-weight: 600; cursor: pointer;
+        }
+        .cp-remove:hover { background: #fef2f2; }
       </style>
 
       <style>
@@ -4326,14 +4384,14 @@
               </div>
               <div class="pn-upgrade-tiers">
                 <a class="pn-upgrade-tier" id="pnUpgradeBasic"
-                   href="https://buy.stripe.com/28E9AN2fL6ip2500C90Jq00"
+                   href="https://buy.stripe.com/28EcMZ7A58qx2501Gd0Jq04"
                    target="_blank" rel="noopener">
                   <span class="pn-upgrade-tier-name">Basic</span>
                   <span class="pn-upgrade-tier-price">$99/mo</span>
                   <span class="pn-upgrade-tier-meta">1 line included</span>
                 </a>
                 <a class="pn-upgrade-tier pn-upgrade-tier-best" id="pnUpgradeAdvanced"
-                   href="https://buy.stripe.com/9B6dR3g6B2292503Ol0Jq01"
+                   href="https://buy.stripe.com/eVq00d4nTgX3aBwbgN0Jq06"
                    target="_blank" rel="noopener">
                   <span class="pn-upgrade-best-pill">Most popular</span>
                   <span class="pn-upgrade-tier-name">Advanced</span>
@@ -4341,7 +4399,7 @@
                   <span class="pn-upgrade-tier-meta">3 lines included</span>
                 </a>
                 <a class="pn-upgrade-tier" id="pnUpgradePro"
-                   href="https://buy.stripe.com/aFa6oB4nT8qxfVQ0C90Jq02"
+                   href="https://buy.stripe.com/eVq00dcUpfSZgZUesZ0Jq05"
                    target="_blank" rel="noopener">
                   <span class="pn-upgrade-tier-name">Pro</span>
                   <span class="pn-upgrade-tier-price">$399/mo</span>
@@ -12479,6 +12537,7 @@
           if (text) questions.push(text);
         });
       }
+      const emailAddressEl = document.getElementById("wgtEmailAddress");
       return {
         name: nameInput ? nameInput.value.trim() : "",
         greeting_message: greetingMessage ? greetingMessage.value.trim() : "",
@@ -12489,6 +12548,7 @@
         header_gradient_end: headerGradientEnd ? headerGradientEnd.value : "",
         widget_icon: iconSelect ? iconSelect.value : "",
         default_start_questions: questions,
+        notification_email: emailAddressEl ? emailAddressEl.value.trim() : "",
       };
     }
 
@@ -12567,6 +12627,7 @@
         default_start_questions: normalizeStartQuestions(
           cfg.default_start_questions || raw.default_start_questions
         ),
+        notification_email: cfg.notification_email || "",
       };
     }
 
@@ -12595,6 +12656,8 @@
         });
         syncPreviewChips();
       }
+      const emailAddressEl = document.getElementById("wgtEmailAddress");
+      if (emailAddressEl) emailAddressEl.value = cfg.notification_email || "";
       updateIcon();
       updatePreview();
     }
@@ -14606,7 +14669,9 @@
         .map((raw) => {
           const recordIndex = leadRecords.indexOf(raw);
           const callSid = getLeadCallSid(raw);
-          const transcriptButton = callSid
+          const transcriptId = raw?.transcript_id || "";
+          const hasTranscript = !!(callSid || transcriptId);
+          const transcriptButton = hasTranscript
             ? `<button class="transcript-button" type="button" data-transcript-index="${recordIndex}">View transcript</button>`
             : `<button class="transcript-button" type="button" disabled>No transcript</button>`;
           return `
@@ -14688,15 +14753,20 @@
     function renderTranscriptPayload(data, path) {
       if (!transcriptContent || !transcriptMeta) return;
       const payload = data?.transcript || data || {};
-      const transcript = Array.isArray(payload.transcript) ? payload.transcript : [];
-      const callSid = payload.callSid || "";
-      const status = payload.status || "unknown";
-      const datetime = payload.datetime_utc || "";
-      transcriptMeta.textContent = [
-        callSid ? `Call ${callSid}` : "",
-        status ? `Status: ${status}` : "",
-        datetime ? new Date(datetime).toLocaleString() : "",
-      ].filter(Boolean).join(" · ");
+      // Widget transcripts: transcript array is top-level on the payload itself.
+      const transcript = Array.isArray(payload.transcript)
+        ? payload.transcript
+        : Array.isArray(data.transcript) ? data.transcript : [];
+      const callSid = payload.callSid || data.callSid || "";
+      const source = payload.source || data.source || "";
+      const status = payload.status || "";
+      const datetime = payload.datetime_utc || data.created_at || "";
+      const metaParts = [];
+      if (callSid) metaParts.push(`Call ${callSid}`);
+      if (source === "website") metaParts.push("Website chat");
+      if (status) metaParts.push(`Status: ${status}`);
+      if (datetime) metaParts.push(new Date(datetime).toLocaleString());
+      transcriptMeta.textContent = metaParts.join(" · ") || "Transcript";
 
       const messages = transcript.length
         ? transcript
@@ -14756,7 +14826,9 @@
 
     async function openTranscriptModal(lead) {
       const callSid = getLeadCallSid(lead);
-      if (!callSid || !transcriptModal || !transcriptContent || !transcriptMeta) return;
+      const transcriptId = lead?.transcript_id || "";
+      if (!callSid && !transcriptId) return;
+      if (!transcriptModal || !transcriptContent || !transcriptMeta) return;
       transcriptModal.classList.add("is-open");
       transcriptModal.setAttribute("aria-hidden", "false");
       activeTranscriptCallSid = callSid;
@@ -14769,16 +14841,21 @@
         transcriptSummary.textContent = "";
       }
       if (transcriptSummaryButton) {
-        transcriptSummaryButton.disabled = false;
+        transcriptSummaryButton.disabled = !callSid;
         transcriptSummaryButton.textContent = "Generate Summary";
       }
-      transcriptMeta.textContent = `Loading call ${callSid}...`;
+      const apiBase = window.location.origin || "https://127.0.0.1:9030";
+      let fetchUrl;
+      if (callSid) {
+        transcriptMeta.textContent = `Loading call ${callSid}...`;
+        fetchUrl = `${apiBase}/voice-transcript?accountid=${encodeURIComponent(accountId)}&callSid=${encodeURIComponent(callSid)}`;
+      } else {
+        transcriptMeta.textContent = "Loading chat transcript...";
+        fetchUrl = `${apiBase}/lead-transcript?accountid=${encodeURIComponent(accountId)}&transcript_id=${encodeURIComponent(transcriptId)}`;
+      }
       transcriptContent.innerHTML = `<div class="transcript-message"><div class="transcript-text">Loading transcript...</div></div>`;
       try {
-        const apiBase = window.location.origin || "https://127.0.0.1:9030";
-        const res = await fetch(
-          `${apiBase}/voice-transcript?accountid=${encodeURIComponent(accountId)}&callSid=${encodeURIComponent(callSid)}`
-        );
+        const res = await fetch(fetchUrl);
         const data = await res.json();
         if (!res.ok) {
           throw new Error(data?.error || `Transcript fetch failed (${res.status})`);
@@ -19285,6 +19362,123 @@
       if (sec) initObserver.observe(sec, { attributes: true, attributeFilter: ["class"] });
     }
 
+    // ─────────── Customer pages (admin) ───────────
+    {
+      const BASE = "https://justgotalead.com";
+      const $rows    = document.getElementById("cpRows");
+      const $form    = document.getElementById("cpAddForm");
+      const $slug    = document.getElementById("cpSlugInput");
+      const $name    = document.getElementById("cpNameInput");
+      const $email   = document.getElementById("cpEmailInput");
+      const $addBtn  = document.getElementById("cpAddBtn");
+      const $fb      = document.getElementById("cpFeedback");
+
+      function cpFeedback(msg, err) {
+        $fb.textContent = msg || "";
+        $fb.className = "cp-feedback" + (err ? " err" : "");
+      }
+
+      function esc(s) {
+        return String(s || "").replace(/[&<>"']/g, c =>
+          ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+      }
+
+      function cpRenderRow(b) {
+        const tr = document.createElement("tr");
+        tr.dataset.slug = b.slug;
+        const pUrl = `${BASE}/privacy/${b.slug}`;
+        const tUrl = `${BASE}/terms/${b.slug}`;
+        tr.innerHTML = `
+          <td><code>${esc(b.slug)}</code></td>
+          <td>${esc(b.name)}</td>
+          <td>${esc(b.email)}</td>
+          <td>
+            <a class="cp-link" href="${esc(pUrl)}" target="_blank">/privacy/${esc(b.slug)}</a>
+            <a class="cp-link" href="${esc(tUrl)}" target="_blank">/terms/${esc(b.slug)}</a>
+          </td>
+          <td><button type="button" class="cp-remove">Remove</button></td>
+        `;
+        tr.querySelector(".cp-remove").addEventListener("click", () => cpRemove(b.slug));
+        return tr;
+      }
+
+      function cpRenderEmpty() {
+        $rows.innerHTML = `<tr class="at-empty"><td colspan="5">No customers yet. Add one above.</td></tr>`;
+      }
+
+      async function cpLoad() {
+        try {
+          const res = await fetch("/admin/customer-pages/list", { credentials: "same-origin" });
+          if (!res.ok) return;
+          const data = await res.json();
+          $rows.innerHTML = "";
+          if (!data.businesses || !data.businesses.length) { cpRenderEmpty(); return; }
+          data.businesses.forEach(b => $rows.appendChild(cpRenderRow(b)));
+        } catch (e) { /* silent on load */ }
+      }
+
+      $form && $form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const slug  = ($slug.value  || "").trim().toLowerCase();
+        const name  = ($name.value  || "").trim();
+        const email = ($email.value || "").trim();
+        if (!slug || !name || !email) return;
+        $addBtn.disabled = true;
+        cpFeedback("");
+        try {
+          const res = await fetch("/admin/customer-pages/add", {
+            method: "POST", credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ slug, name, email }),
+          });
+          const body = await res.json();
+          if (!res.ok) {
+            const msgs = { duplicate: "That slug already exists.", invalid_slug: "Slug must be lowercase letters, numbers, and hyphens.", missing_fields: "Fill in all three fields." };
+            cpFeedback(msgs[body.error] || ("Add failed: " + (body.error || res.status)), true);
+            return;
+          }
+          $slug.value = ""; $name.value = ""; $email.value = "";
+          const emptyRow = $rows.querySelector(".at-empty");
+          if (emptyRow) emptyRow.closest("tr").remove();
+          $rows.prepend(cpRenderRow(body));
+          cpFeedback("Added " + body.name + ".");
+        } catch (e) {
+          cpFeedback("Network error.", true);
+        } finally {
+          $addBtn.disabled = false;
+        }
+      });
+
+      async function cpRemove(slug) {
+        if (!confirm("Remove " + slug + "? The URLs will stop working.")) return;
+        cpFeedback("");
+        try {
+          const res = await fetch("/admin/customer-pages/remove", {
+            method: "POST", credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ slug }),
+          });
+          if (!res.ok) { cpFeedback("Remove failed.", true); return; }
+          const row = $rows.querySelector(`tr[data-slug="${CSS.escape(slug)}"]`);
+          if (row) row.remove();
+          if (!$rows.querySelector("tr:not(.at-empty)")) cpRenderEmpty();
+          cpFeedback("Removed " + slug + ".");
+        } catch (e) {
+          cpFeedback("Network error.", true);
+        }
+      }
+
+      // Load when adminTrials section becomes active.
+      const cpSec = document.getElementById("adminTrials");
+      if (cpSec) {
+        const cpObs = new MutationObserver(() => {
+          if (cpSec.classList.contains("is-active")) cpLoad();
+        });
+        cpObs.observe(cpSec, { attributes: true, attributeFilter: ["class"] });
+        if (cpSec.classList.contains("is-active")) cpLoad();
+      }
+    }
+
     // ─────────── Dev mock-upgrade shortcut ───────────
     // Intercept clicks on the wizard's upgrade tier cards. If the
     // backend has /dev/mock-upgrade enabled (DEV_MOCK_UPGRADE=1 or
@@ -19972,7 +20166,7 @@
         if (state.is_trial) {
           // Defensive guard: trial users see the upgrade card, not the buy
           // button — but if they somehow trigger this, redirect to Basic.
-          window.open("https://buy.stripe.com/28E9AN2fL6ip2500C90Jq00",
+          window.open("https://buy.stripe.com/28EcMZ7A58qx2501Gd0Jq04",
                       "_blank", "noopener");
           return;
         }
@@ -20552,6 +20746,10 @@
           scheduleAutosave();
         });
         renderEmailField();
+      }
+      const emailAddressInput = document.getElementById("wgtEmailAddress");
+      if (emailAddressInput) {
+        emailAddressInput.addEventListener("input", () => scheduleAutosave());
       }
 
       // ─── Autosave debounce ────────────────────────────────────
