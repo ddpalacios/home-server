@@ -3546,9 +3546,9 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v4H3z"/><path d="M5 7v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>
           <span class="nav-tooltip">Trial overview (admin)</span>
         </button>
-        <button class="app-nav-btn" type="button" data-route="activity" aria-label="Insights">
+        <button class="app-nav-btn" type="button" data-route="activity" aria-label="Home">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9.66 17a2 2 0 0 0 4.68 0"/><path d="M12 3a7 7 0 0 0-5 11.9V17a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2.1A7 7 0 0 0 12 3z"/><line x1="9" y1="13" x2="15" y2="13"/></svg>
-          <span class="nav-tooltip">Insights</span>
+          <span class="nav-tooltip">Home</span>
         </button>
         <button class="app-nav-btn" type="button" data-route="phones" aria-label="Phone numbers">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.86 19.86 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.86 19.86 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7a2 2 0 0 1 1.72 2z"/></svg>
@@ -3640,7 +3640,7 @@
             <a href="#overview">Dashboard</a>
             <a href="#leads">Recent Leads</a>
             <a href="#phoneNumbers">Phone numbers</a>
-            <a href="#insights">Insights</a>
+            <a href="#home">Home</a>
             <a href="/messages">Messages</a>
             <a href="#knowledge">Knowledge Base</a>
             <a href="#admin" class="admin-nav-link" data-admin-nav hidden>Admin</a>
@@ -3667,7 +3667,7 @@
       <a href="#activity">Activity / Usage</a>
       <a href="/messages">Messages</a>
       <a href="#leads">Recent Leads</a>
-      <a href="#insights" style="color:#2b6cb0; font-weight:700;">Insights</a>
+      <a href="#home" style="color:#2b6cb0; font-weight:700;">Home</a>
       <a href="#admin" class="admin-nav-link" data-admin-nav hidden>Admin</a>
       <button class="btn shiny" type="button" id="publishAppButtonMobile">Publish App</button>
       <button class="btn secondary" type="button" id="logoutButtonMobile">Logout</button>
@@ -4806,6 +4806,17 @@
           </div>
         </div>
 
+        <!-- Top-of-page KPI snapshot. Mirrors the same #actPipelineStats
+             populated by /me/pipeline below; moved up so the totals are
+             the first thing visible under the insights box. -->
+        <div class="card" style="grid-column: span 12; margin-top: 16px;">
+          <div class="card-header" style="margin-bottom: 8px;">
+            <h2 class="section-title" style="margin:0;">Where things are</h2>
+          </div>
+          <p class="section-note">A quick look at how your leads are moving.</p>
+          <div class="pl-stat-row" id="actPipelineStats"></div>
+        </div>
+
         <!-- Phone activity — at-a-glance read of the AI receptionist's
              call volume, what callers ask about, and recent calls. Data
              comes from /me/insights/phone-activity. -->
@@ -4874,16 +4885,13 @@
         </div>
         </div>
 
-        <!-- Pipeline summary — the three big numbers + the funnel breakdown
-             from the Pipeline page, mirrored here so the Insights view
-             gives a single-glance read of "where things are" right above
-             the chatbot. Data comes from /me/pipeline. -->
+        <!-- Funnel + flat lead table. The KPI tiles that used to live
+             here have been hoisted up under the insights box. -->
         <div class="card" style="grid-column: span 12; margin-top: 16px;">
           <div class="card-header" style="margin-bottom: 8px;">
-            <h2 class="section-title" style="margin:0;">Where things are</h2>
+            <h2 class="section-title" style="margin:0;">Funnel</h2>
           </div>
-          <p class="section-note">A quick look at how your leads are moving.</p>
-          <div class="pl-stat-row" id="actPipelineStats" style="margin-bottom: 16px;"></div>
+          <p class="section-note">How your leads are moving through each stage.</p>
           <div class="pl-funnel-row" id="actPipelineFunnel"></div>
           <div class="pl-conv-strip" id="actPipelineConv" style="margin-top: 8px;"></div>
           <!-- Flat lead table — same columns the Pipeline page's Table
@@ -19556,6 +19564,7 @@
     window.__appIsAdmin = false;
 
     function appShowRoute(route) {
+      if (route === "home") route = "activity";
       let def = APP_ROUTES[route];
       if (!def) return;
       // Admin-only routes are off-limits to non-admins. If a non-admin
@@ -19585,7 +19594,10 @@
       document.querySelectorAll(".app-nav-btn[data-route]").forEach(btn => {
         btn.addEventListener("click", () => appShowRoute(btn.dataset.route));
       });
-      // Pick initial route: from hash, otherwise default to "phones".
+      // Pick initial route: from hash, otherwise default to "home".
+      if (!window.location.hash) {
+        window.history.replaceState(null, "", "/dashboard#home");
+      }
       const hashRoute = (location.hash || "").replace(/^#/, "");
       const initial = APP_ROUTES[hashRoute] ? hashRoute : "phones";
       appShowRoute(initial);
@@ -22249,6 +22261,16 @@
           .map(u => `${esc((u.name || "").trim() || "Lead")} ${fmtDateTime(u.appointment_at)}`)
           .join(" · ");
         statsEl.innerHTML = `
+          <div class="pl-stat" data-stat="leads">
+            <div class="pl-stat-label">Total leads</div>
+            <div class="pl-stat-num">${hm.leads_total || 0}</div>
+            <div class="pl-stat-sub">${hm.leads_captured || 0} captured · ${hm.leads_imported || 0} imported</div>
+          </div>
+          <div class="pl-stat" data-stat="open">
+            <div class="pl-stat-label">Still open</div>
+            <div class="pl-stat-num">${hm.open_count || 0}</div>
+            <div class="pl-stat-sub">${counts.contacted || 0} contacted · ${counts.engaged || 0} engaged · ${counts.quoted || 0} quoted</div>
+          </div>
           <div class="pl-stat" data-stat="paying">
             <div class="pl-stat-label">Paying customers</div>
             <div class="pl-stat-num">${hm.paying_count || 0}</div>
@@ -22258,11 +22280,6 @@
             <div class="pl-stat-label">Upcoming appointments</div>
             <div class="pl-stat-num">${hm.upcoming_count || 0}</div>
             <div class="pl-stat-sub">${upcomingPreview ? esc(upcomingPreview) : "Next 7 days"}</div>
-          </div>
-          <div class="pl-stat" data-stat="open">
-            <div class="pl-stat-label">Still open</div>
-            <div class="pl-stat-num">${hm.open_count || 0}</div>
-            <div class="pl-stat-sub">${counts.contacted || 0} contacted · ${counts.engaged || 0} engaged · ${counts.quoted || 0} quoted</div>
           </div>
         `;
         statsEl.querySelectorAll("[data-stat]").forEach(card => {
