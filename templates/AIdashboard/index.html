@@ -3249,17 +3249,17 @@
       gap: 8px;
       height: 38px;
       padding: 0 14px;
-      background: linear-gradient(180deg, #1f2937 0%, #0a0a0a 100%);
+      background: linear-gradient(180deg, #6366f1 0%, #4f46e5 100%);
       color: #fff;
       font-size: 13px;
       font-weight: 600;
       border: 0;
       border-radius: 999px;
       box-shadow:
-        0 1px 0 rgba(255,255,255,0.08) inset,
-        0 -1px 0 rgba(0,0,0,0.3) inset,
-        0 1px 2px rgba(0,0,0,0.2),
-        0 4px 14px rgba(0,0,0,0.18);
+        0 1px 0 rgba(255,255,255,0.15) inset,
+        0 -1px 0 rgba(0,0,0,0.18) inset,
+        0 1px 2px rgba(79,70,229,0.30),
+        0 4px 14px rgba(79,70,229,0.28);
       cursor: pointer;
       white-space: nowrap;
       transition:
@@ -3269,25 +3269,25 @@
     #aiModeBadge:hover {
       transform: translateY(-1px);
       box-shadow:
-        0 1px 0 rgba(255,255,255,0.1) inset,
-        0 -1px 0 rgba(0,0,0,0.3) inset,
-        0 2px 4px rgba(0,0,0,0.2),
-        0 8px 22px rgba(0,0,0,0.22);
+        0 1px 0 rgba(255,255,255,0.18) inset,
+        0 -1px 0 rgba(0,0,0,0.18) inset,
+        0 2px 4px rgba(79,70,229,0.32),
+        0 8px 22px rgba(79,70,229,0.32);
     }
     #aiModeBadge:active {
       transform: translateY(0) scale(0.96);
       box-shadow:
-        0 1px 0 rgba(255,255,255,0.05) inset,
-        0 -1px 0 rgba(0,0,0,0.3) inset,
-        0 1px 2px rgba(0,0,0,0.18);
+        0 1px 0 rgba(255,255,255,0.10) inset,
+        0 -1px 0 rgba(0,0,0,0.18) inset,
+        0 1px 2px rgba(79,70,229,0.28);
       transition: transform 0.06s ease, box-shadow 0.06s ease;
     }
     #aiModeBadge[data-open="true"] {
       transform: translateY(0);
       box-shadow:
-        0 0 0 3px rgba(99,102,241,0.32),
-        0 1px 0 rgba(255,255,255,0.1) inset,
-        0 4px 14px rgba(0,0,0,0.22);
+        0 0 0 3px rgba(99,102,241,0.30),
+        0 1px 0 rgba(255,255,255,0.18) inset,
+        0 4px 14px rgba(79,70,229,0.32);
     }
     #aiModeBadge .ai-mode-icon {
       font-size: 16px;
@@ -3299,7 +3299,7 @@
     }
     @keyframes ai-pulse {
       0%, 100% { transform: scale(1);    filter: drop-shadow(0 0 0 rgba(99,102,241,0)); }
-      50%       { transform: scale(1.08); filter: drop-shadow(0 0 6px rgba(99,102,241,0.5)); }
+      50%      { transform: scale(1.08); filter: drop-shadow(0 0 6px rgba(99,102,241,0.6)); }
     }
     #aiModeBadge .ai-mode-chevron {
       transition: transform 0.2s ease;
@@ -3364,7 +3364,7 @@
     .ai-mode-opt:hover { background: #f3f4f6; }
     .ai-mode-opt:active { transform: scale(0.98); transition: transform 0.04s; }
     .ai-mode-opt.is-active {
-      background: linear-gradient(180deg, #1f2937, #0a0a0a);
+      background: linear-gradient(180deg, #6366f1, #4f46e5);
       color: #fff;
     }
     .ai-mode-opt .opt-title {
@@ -27611,19 +27611,28 @@
       panel.querySelectorAll(".ai-mode-opt").forEach(btn => {
         btn.addEventListener("click", async () => {
           const mode = btn.dataset.mode;
+          // Optimistic — render immediately, persist in background.
+          const prev = (badge.dataset.mode || "hybrid");
+          render(mode);
+          _writeModeCache(mode);
+          panel.dataset.open = "false";
+          badge.dataset.open = "false";
+          badge.classList.add("is-confirming");
+          setTimeout(() => badge.classList.remove("is-confirming"), 350);
+
           try {
-            await fetch("/me/ai/policy", {
+            const res = await fetch("/me/ai/policy", {
               method: "POST",
               credentials: "same-origin",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ mode }),
             });
-            render(mode);
-            _writeModeCache(mode);
-            setPanelOpen(false);
-            badge.classList.add("is-confirming");
-            setTimeout(() => badge.classList.remove("is-confirming"), 350);
-          } catch (_) {}
+            if (!res.ok) throw new Error("save_failed");
+          } catch (_) {
+            // Revert on failure — rare, but the UI shouldn't lie.
+            render(prev);
+            _writeModeCache(prev);
+          }
         });
       });
 
