@@ -4952,6 +4952,19 @@
             <div id="homeServicesList" style="display:flex;flex-direction:column;gap:8px;"></div>
           </div>
         </div>
+
+        <div class="card chart-card" style="grid-column: span 12; margin-top: 16px;">
+          <div class="card-header">
+            <h2>Lead status over time</h2>
+            <p class="chart-subtitle">Volume + composition. Each bar is a day; each color a stage.</p>
+          </div>
+          <div class="chart-shell">
+            <div class="chart-panel">
+              <canvas id="homeStatusChart" class="leads-chart-canvas" aria-label="Lead status over time"></canvas>
+              <div class="chart-empty" id="homeStatusChartEmpty" hidden>No data in this range yet.</div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section class="grid" id="leads" data-route-section="leads" hidden>
@@ -22389,6 +22402,35 @@
               </div>
               <div style="color:#71717a;">${r.count}</div>
             </div>`).join("") || `<div style="color:#71717a;font-size:12px;">No services yet.</div>`;
+        }
+
+        const STAGES = ["new","contacted","engaged","quoted","scheduled","won","lost"];
+        const STAGE_COLORS = {
+          new: "#cbd5e1", contacted: "#93c5fd", engaged: "#60a5fa",
+          quoted: "#3b82f6", scheduled: "#22c55e", won: "#15803d", lost: "#fca5a5",
+        };
+        const trend = data.trend || [];
+        const homeChartCanvas = document.getElementById("homeStatusChart");
+        const homeChartEmpty = document.getElementById("homeStatusChartEmpty");
+        if (window._homeStatusChart) window._homeStatusChart.destroy();
+        const homeLabels = trend.map(t => t.date);
+        const homeDatasets = STAGES.map(s => ({
+          label: s, data: trend.map(t => t[s] || 0), backgroundColor: STAGE_COLORS[s],
+          stack: "stack-1", borderWidth: 0,
+        }));
+        const homeTotal = trend.reduce((a, t) => a + STAGES.reduce((b, s) => b + (t[s] || 0), 0), 0);
+        if (homeChartEmpty) homeChartEmpty.hidden = homeTotal > 0;
+        if (homeChartCanvas) homeChartCanvas.style.display = homeTotal > 0 ? "" : "none";
+        if (homeTotal > 0 && homeChartCanvas && typeof Chart !== "undefined") {
+          window._homeStatusChart = new Chart(homeChartCanvas, {
+            type: "bar",
+            data: { labels: homeLabels, datasets: homeDatasets },
+            options: {
+              responsive: true, maintainAspectRatio: false,
+              scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
+              plugins: { legend: { position: "bottom" } },
+            },
+          });
         }
       }
 
