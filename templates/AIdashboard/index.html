@@ -4893,7 +4893,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg>
           <span class="nav-tooltip">Instagram</span>
         </button>
-        <button class="app-nav-btn" type="button" data-route="inbox" id="appInboxNavBtn" aria-label="Inbox" hidden>
+        <button class="app-nav-btn" type="button" data-route="inbox" id="appInboxNavBtn" aria-label="Inbox">
           <!-- Inbox / message bubble icon -->
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           <span class="nav-tooltip">Inbox</span>
@@ -6329,8 +6329,15 @@
         <div style="grid-column: 1 / -1; width: 100%;">
           <div class="leads-page">
             <header class="leads-page-head">
-              <h1 class="leads-page-title">Leads</h1>
-              <p class="leads-page-sub">Everyone who's reached out — captured by your AI or added by you.</p>
+              <div class="leads-page-titlewrap">
+                <h1 class="leads-page-title">Leads</h1>
+                <p class="leads-page-sub">Everyone who's reached out — captured by your AI or added by you.</p>
+              </div>
+              <div class="pl-views" role="tablist" id="leadsViewSwitcher" aria-label="Switch view">
+                <button type="button" class="pl-view-btn is-active" data-leads-view="table">Table</button>
+                <button type="button" class="pl-view-btn" data-leads-view="funnel">Funnel</button>
+                <button type="button" class="pl-view-btn" data-leads-view="board">Board</button>
+              </div>
             </header>
 
             <!-- Toolbar row 1: search + import CTA -->
@@ -6364,34 +6371,50 @@
             <!-- Active filter chips + clear-all -->
             <div class="leads-active-filters" id="leadsActiveFilters" hidden></div>
 
-            <!-- Count + select-all toggle -->
-            <div class="leads-count-row">
-              <span class="leads-count" id="leadsCount">0 leads</span>
-              <label class="leads-select-toggle">
-                <input type="checkbox" id="leadsSelectMode">
-                <span>Select</span>
-              </label>
+            <!-- Table view (default) -->
+            <div data-leads-view-pane="table">
+              <!-- Count + select-all toggle -->
+              <div class="leads-count-row">
+                <span class="leads-count" id="leadsCount">0 leads</span>
+                <label class="leads-select-toggle">
+                  <input type="checkbox" id="leadsSelectMode">
+                  <span>Select</span>
+                </label>
+              </div>
+
+              <!-- Bulk actions bar (shown when leads selected) -->
+              <div class="leads-bulk-bar" id="leadsBulkBar" hidden>
+                <span class="leads-bulk-count" id="leadsBulkCount">0 leads selected</span>
+                <button type="button" class="leads-bulk-btn" data-bulk-act="email">Send email</button>
+                <button type="button" class="leads-bulk-btn" data-bulk-act="stage">Move to stage ▾</button>
+                <button type="button" class="leads-bulk-btn" data-bulk-act="campaign">Add to campaign</button>
+                <button type="button" class="leads-bulk-btn" data-bulk-act="more">⋮ More</button>
+                <button type="button" class="leads-bulk-cancel" id="leadsBulkCancel">Cancel</button>
+              </div>
+
+              <!-- The table -->
+              <div class="leads-table-wrap" id="leadsTableWrap">
+                <table class="leads-table">
+                  <thead id="leadsTableHead"></thead>
+                  <tbody id="leadsTableBody"></tbody>
+                </table>
+                <div class="leads-loading" id="leadsLoading" hidden>Loading…</div>
+                <div class="leads-empty" id="leadsEmpty" hidden></div>
+                <div class="leads-show-more" id="leadsShowMore" hidden>Showing <span id="leadsShown">0</span> of <span id="leadsTotal">0</span> leads</div>
+              </div>
             </div>
 
-            <!-- Bulk actions bar (shown when leads selected) -->
-            <div class="leads-bulk-bar" id="leadsBulkBar" hidden>
-              <span class="leads-bulk-count" id="leadsBulkCount">0 leads selected</span>
-              <button type="button" class="leads-bulk-btn" data-bulk-act="email">Send email</button>
-              <button type="button" class="leads-bulk-btn" data-bulk-act="stage">Move to stage ▾</button>
-              <button type="button" class="leads-bulk-btn" data-bulk-act="campaign">Add to campaign</button>
-              <button type="button" class="leads-bulk-btn" data-bulk-act="more">⋮ More</button>
-              <button type="button" class="leads-bulk-cancel" id="leadsBulkCancel">Cancel</button>
+            <!-- Funnel view -->
+            <div data-leads-view-pane="funnel" hidden>
+              <div class="pl-funnel-row" id="leadsFunnelRow"></div>
+              <div class="pl-conv-strip" id="leadsConvStrip" style="margin-top:14px;"></div>
             </div>
 
-            <!-- The table -->
-            <div class="leads-table-wrap" id="leadsTableWrap">
-              <table class="leads-table">
-                <thead id="leadsTableHead"></thead>
-                <tbody id="leadsTableBody"></tbody>
-              </table>
-              <div class="leads-loading" id="leadsLoading" hidden>Loading…</div>
-              <div class="leads-empty" id="leadsEmpty" hidden></div>
-              <div class="leads-show-more" id="leadsShowMore" hidden>Showing <span id="leadsShown">0</span> of <span id="leadsTotal">0</span> leads</div>
+            <!-- Board view -->
+            <div data-leads-view-pane="board" hidden>
+              <div class="pl-board-wrap">
+                <div class="pl-board" id="leadsBoard"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -10807,7 +10830,11 @@
 
         /* ─── Unified leads table ─────────────────────────────────── */
         .leads-page { display:flex; flex-direction:column; gap:14px; padding:0 4px; }
-        .leads-page-head { display:flex; flex-direction:column; gap:4px; padding-bottom:8px; }
+        .leads-page-head {
+          display:flex; align-items:flex-start; justify-content:space-between;
+          gap:16px; flex-wrap:wrap; padding-bottom:8px;
+        }
+        .leads-page-titlewrap { display:flex; flex-direction:column; gap:4px; }
         .leads-page-title { font-size:24px; font-weight:600; color:#0a0a0a; margin:0; }
         .leads-page-sub { font-size:13px; color:#6b7280; margin:0; }
 

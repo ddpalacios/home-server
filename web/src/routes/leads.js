@@ -35,6 +35,12 @@ const STAGE_LABELS = {
   new:"New", contacted:"Contacted", engaged:"Engaged",
   quoted:"Quoted", scheduled:"Scheduled", won:"Won", lost:"Lost",
 };
+const STAGE_COLORS = {
+  new:"#888780", contacted:"#378ADD", engaged:"#7F77DD",
+  quoted:"#BA7517", scheduled:"#1D9E75", won:"#639922", lost:"#A32D2D",
+};
+const BOARD_STAGES = ["new","contacted","engaged","quoted","scheduled","won"];
+const FUNNEL_ORDER = ["new","contacted","engaged","quoted","scheduled","won","lost"];
 
 const SOURCE_ICONS = {
   phone_call:"📞", widget:"💬", csv_import:"📂",
@@ -55,6 +61,8 @@ let _sortBy = { key: "created_at", dir: "desc" };
 let _filters = { source: null, stage: null, when: null, search: "" };
 let _moreFilters = { hasPhone: false, hasEmail: false, replied: false, unsubscribed: false };
 let _openMenuEl = null;
+let _view = "table";  // "table" | "funnel" | "board"
+let _dragLeadId = "";
 
 // ─── Unified table — utilities ───────────────────────────────────────────────
 
@@ -492,9 +500,200 @@ function updateFilterPills() {
 
 function _refreshFiltersAndRender() {
   applyFilters();
-  renderTable();
+  renderActiveView();
   updateFilterPills();
   renderActiveFilterChips();
+}
+
+// ─── View switching ──────────────────────────────────────────────────────────
+
+function _setView(v) {
+  if (!["table","funnel","board"].includes(v)) v = "table";
+  _view = v;
+  document.querySelectorAll("[data-leads-view]").forEach(btn => {
+    btn.classList.toggle("is-active", btn.dataset.leadsView === v);
+  });
+  document.querySelectorAll("[data-leads-view-pane]").forEach(p => {
+    p.hidden = p.dataset.leadsViewPane !== v;
+  });
+  renderActiveView();
+}
+
+function renderActiveView() {
+  if (_view === "table") renderTable();
+  else if (_view === "funnel") renderFunnel();
+  else if (_view === "board") renderBoard();
+}
+
+// ─── Funnel view ─────────────────────────────────────────────────────────────
+
+function renderFunnel() {
+  const row = document.getElementById("leadsFunnelRow");
+  if (!row) return;
+  const counts = {};
+  for (const s of FUNNEL_ORDER) counts[s] = 0;
+  for (const l of _filteredLeads) {
+    const s = l.stage || "new";
+    if (counts[s] != null) counts[s]++;
+  }
+  row.innerHTML = FUNNEL_ORDER.map((s, idx) => {
+    const isLost = s === "lost";
+    const arrow = (idx > 0 && !isLost) ? `<div class="pl-stage-arrow">›</div>` : "";
+    return `${arrow}<div class="pl-stage-card" data-stage="${s}" data-terminal="${isLost ? "true" : "false"}">
+      <span class="pl-stage-name">${escapeHtml(STAGE_LABELS[s])}</span>
+      <span class="pl-stage-count">${counts[s] || 0}</span>
+    </div>`;
+  }).join("");
+  row.querySelectorAll("[data-stage]").forEach(el => {
+    el.addEventListener("click", () => {
+      _filters.stage = el.dataset.stage;
+      _setView("board");
+      _refreshFiltersAndRender();
+    });
+  });
+}
+
+// ─── Board view ──────────────────────────────────────────────────────────────
+
+let _boardBuilt = false;
+
+function renderBoard() {
+  const board = document.getElementById("leadsBoard");
+  if (!board) return;
+  if (!_boardBuilt) {
+    board.innerHTML = BOARD_STAGES.map(s =>
+      `<div class="pl-col" data-stage="${s}">
+        <div class="pl-col-head">
+          <span>${escapeHtml(STAGE_LABELS[s])}</span>
+          <span class="pl-col-count" data-col-count="${s}">0</span>
+        </div>
+        <div class="pl-col-body" data-drop-stage="${s}"></div>
+      </div>`).join("");
+    _wireBoardDropTargets(board);
+    _boardBuilt = true;
+  }
+  const buckets = {};
+  for (const s of BOARD_STAGES) buckets[s] = [];
+  for (const l of _filteredLeads) {
+    const s = l.stage || "new";
+    if (buckets[s]) buckets[s].push(l);
+  }
+  for (const s of BOARD_STAGES) {
+    _paintBoardColumn(board, s, buckets[s]);
+    const c = board.querySelector(`[data-col-count="${s}"]`);
+    if (c) c.textContent = buckets[s].length;
+  }
+}
+
+function _paintBoardColumn(board, stage, rows) {
+  const body = board.querySelector(`[data-drop-stage="${stage}"]`);
+  if (!body) return;
+  if (!rows || !rows.length) {
+    body.innerHTML = `<div class="pl-col-empty">Drop a card here.</div>`;
+    return;
+  }
+  body.innerHTML = rows.map(_renderBoardCardHtml).join("");
+  _wireBoardCardEventsIn(body);
+}
+
+function _renderBoardCardHtml(l) {
+  const name = fullName(l);
+  const initStr = initials(name);
+  const color = avatarColor(name);
+  const sub = [
+    SOURCE_LABELS[l.source] || (l.source || "").replace(/_/g, " "),
+    l.last_activity_at ? relativeTime(l.last_activity_at) : (l.created_at ? relativeTime(l.created_at) : ""),
+  ].filter(Boolean).join(" · ");
+  const reach = `
+    <span class="leads-reach-cell" style="margin-top:6px;display:inline-flex;gap:6px;font-size:11px;color:#6b7280;">
+      ${l.email ? `<span title="${escapeHtml(l.email)}">✉️</span>` : ""}
+      ${l.phone ? `<span title="${escapeHtml(l.phone)}">📞</span>` : ""}
+    </span>`;
+  return `<div class="pl-card" draggable="true" data-lead-id="${escapeHtml(l.id)}" style="--card-color:${color};">
+    <div class="pl-card-head">
+      <span class="pl-card-name" style="display:flex;align-items:center;gap:6px;">
+        <span class="leads-avatar" style="background:${color};width:22px;height:22px;font-size:10px;">${escapeHtml(initStr)}</span>
+        ${escapeHtml(name)}
+      </span>
+    </div>
+    ${sub ? `<div class="pl-card-sub">${escapeHtml(sub)}</div>` : ""}
+    ${reach}
+  </div>`;
+}
+
+function _wireBoardDropTargets(board) {
+  board.querySelectorAll(".pl-col").forEach(col => {
+    const stage = col.dataset.stage;
+    col.addEventListener("dragover", (e) => {
+      if (!_dragLeadId) return;
+      e.preventDefault();
+      col.classList.add("is-drop-target");
+    });
+    col.addEventListener("dragleave", (e) => {
+      if (!col.contains(e.relatedTarget)) col.classList.remove("is-drop-target");
+    });
+    col.addEventListener("drop", (e) => {
+      e.preventDefault();
+      col.classList.remove("is-drop-target");
+      if (!_dragLeadId) return;
+      _moveLeadStage(_dragLeadId, stage);
+    });
+  });
+}
+
+function _wireBoardCardEventsIn(scope) {
+  scope.querySelectorAll(".pl-card").forEach(card => {
+    card.addEventListener("dragstart", (e) => {
+      _dragLeadId = card.dataset.leadId;
+      card.classList.add("is-dragging");
+      try {
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", _dragLeadId);
+      } catch (_) {}
+    });
+    card.addEventListener("dragend", () => {
+      card.classList.remove("is-dragging");
+      _dragLeadId = "";
+      document.querySelectorAll(".is-drop-target").forEach(c => c.classList.remove("is-drop-target"));
+    });
+    card.addEventListener("click", (e) => {
+      const id = card.dataset.leadId;
+      const lead = _allLeads.find(l => l.id === id) || null;
+      if (typeof window.openLeadDetailModal === "function") {
+        window.openLeadDetailModal(id, lead);
+      }
+    });
+  });
+}
+
+async function _moveLeadStage(leadId, newStage) {
+  const lead = _allLeads.find(l => l.id === leadId);
+  if (!lead || lead.stage === newStage) return;
+  const prev = lead.stage;
+  lead.stage = newStage;
+  applyFilters();
+  renderBoard();
+  try {
+    const res = await fetch(`/me/leads/${encodeURIComponent(leadId)}/stage`, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ stage: newStage }),
+    });
+    if (!res.ok) {
+      lead.stage = prev;
+      applyFilters();
+      renderBoard();
+      _showLeadsToast("Couldn't move — try again.", "error");
+    } else {
+      _showLeadsToast(`Moved to ${STAGE_LABELS[newStage]}.`, "success");
+    }
+  } catch (_) {
+    lead.stage = prev;
+    applyFilters();
+    renderBoard();
+    _showLeadsToast("Network error.", "error");
+  }
 }
 
 // ─── Filter dropdown menus ───────────────────────────────────────────────────
@@ -662,6 +861,11 @@ function attachEventHandlers() {
   if (pillWhen)   pillWhen.addEventListener("click",   () => openWhenMenu(pillWhen));
   if (pillMore)   pillMore.addEventListener("click",   () => openMoreMenu(pillMore));
 
+  // View switcher (Funnel / Board / Table)
+  document.querySelectorAll("[data-leads-view]").forEach(btn => {
+    btn.addEventListener("click", () => _setView(btn.dataset.leadsView));
+  });
+
   // Close menus on outside click
   document.addEventListener("click", (e) => {
     if (_openMenuEl && !_openMenuEl.contains(e.target)) {
@@ -791,7 +995,7 @@ async function loadUnifiedLeads() {
   if (cached && Array.isArray(cached.leads)) {
     _allLeads = cached.leads;
     applyFilters();
-    renderTable();
+    renderActiveView();
   } else {
     if (loadingEl) loadingEl.hidden = false;
     if (emptyEl)   emptyEl.hidden   = true;
@@ -808,11 +1012,11 @@ async function loadUnifiedLeads() {
           JSON.stringify({ leads: _allLeads, ts: Date.now() }));
       } catch (_) {}
       applyFilters();
-      renderTable();
+      renderActiveView();
     } else if (!cached) {
       _allLeads = [];
       applyFilters();
-      renderTable();
+      renderActiveView();
     }
   } catch (_) {
     if (!cached) {
