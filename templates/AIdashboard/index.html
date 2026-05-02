@@ -13242,20 +13242,31 @@
         }
         .out-page-sub { font-size:13px; color:#6b7280; margin:0; }
 
-        .out-section { display:flex; flex-direction:column; gap:14px; }
-        .out-section-head { display:flex; flex-direction:column; gap:2px; }
-        .out-section-titlewrap { display:flex; align-items:center; gap:8px; }
-        .out-section-icon { font-size:14px; line-height:1; opacity:0.75; }
-        .out-section-title {
-          font-size:11.5px; font-weight:700; color:#525252;
-          margin:0; letter-spacing:0.08em; text-transform:uppercase;
+        /* Tab strip */
+        .out-tabs {
+          display:inline-flex; gap:0;
+          border:1px solid #e5e7eb; border-radius:10px;
+          padding:3px; background:#f4f4f5;
+          align-self:flex-start;
         }
-        .out-section-help { width:18px; height:18px; font-size:10px; }
-        .out-section-sub { font-size:13px; color:#6b7280; margin:0; }
+        .out-tab {
+          display:inline-flex; align-items:center; gap:6px;
+          padding:8px 16px;
+          font-size:13px; font-weight:500; font-family:inherit;
+          color:#525252; background:transparent;
+          border:0; border-radius:7px; cursor:pointer;
+          transition:background 0.12s ease, color 0.12s ease;
+        }
+        .out-tab:hover { color:#0a0a0a; }
+        .out-tab.is-active {
+          background:#fff; color:#0a0a0a;
+          box-shadow:0 1px 2px rgba(0,0,0,0.06);
+        }
+        .out-tab-icon { font-size:13px; line-height:1; }
 
-        .out-divider {
-          height:1px; background:#f1f5f9; width:100%;
-        }
+        .out-pane { display:flex; flex-direction:column; gap:12px; }
+        .out-pane[hidden] { display:none; }
+        .out-section-sub { font-size:13px; color:#6b7280; margin:0; }
 
         /* When the engagement list-card is mounted under outreach, drop its
            top corners so it visually attaches to the section header. */
@@ -13899,31 +13910,26 @@
               <p class="out-page-sub">Everything your business sends to customers.</p>
             </header>
 
-            <!-- AUTOMATIC sub-section -->
-            <section class="out-section">
-              <div class="out-section-head">
-                <div class="out-section-titlewrap">
-                  <span class="out-section-icon" aria-hidden="true">⚡</span>
-                  <h2 class="out-section-title">AUTOMATIC</h2>
-                </div>
-                <p class="out-section-sub">These send on their own when something happens.</p>
-              </div>
+            <nav class="out-tabs" role="tablist" aria-label="Outreach type">
+              <button type="button" class="out-tab is-active" data-out-tab="auto" role="tab" aria-selected="true">
+                <span class="out-tab-icon" aria-hidden="true">⚡</span> Automatic
+              </button>
+              <button type="button" class="out-tab" data-out-tab="ondemand" role="tab" aria-selected="false">
+                <span class="out-tab-icon" aria-hidden="true">📨</span> On-demand
+              </button>
+            </nav>
+
+            <!-- AUTOMATIC tab pane -->
+            <div class="out-pane" data-out-pane="auto">
+              <p class="out-section-sub">These send on their own when something happens.</p>
               <div id="outreachAutoMount"></div>
-            </section>
+            </div>
 
-            <div class="out-divider" aria-hidden="true"></div>
-
-            <!-- ON-DEMAND sub-section -->
-            <section class="out-section">
-              <div class="out-section-head">
-                <div class="out-section-titlewrap">
-                  <span class="out-section-icon" aria-hidden="true">📨</span>
-                  <h2 class="out-section-title">ON-DEMAND</h2>
-                </div>
-                <p class="out-section-sub">You send these when you want — to a list you pick.</p>
-              </div>
+            <!-- ON-DEMAND tab pane -->
+            <div class="out-pane" data-out-pane="ondemand" hidden>
+              <p class="out-section-sub">You send these when you want — to a list you pick.</p>
               <div id="outreachOnDemandMount"></div>
-            </section>
+            </div>
           </div>
         </div>
       </section>
@@ -18792,6 +18798,20 @@
         if (engCard) autoMount.appendChild(engCard);
         const cmpPane = document.querySelector('#campaigns [data-camp-pane="oneshot"] .cmp-page');
         if (cmpPane) onDemandMount.appendChild(cmpPane);
+        // Wire tab switching once content is in place.
+        document.querySelectorAll("[data-out-tab]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const target = btn.dataset.outTab;
+            document.querySelectorAll("[data-out-tab]").forEach(t => {
+              const active = t.dataset.outTab === target;
+              t.classList.toggle("is-active", active);
+              t.setAttribute("aria-selected", active ? "true" : "false");
+            });
+            document.querySelectorAll("[data-out-pane]").forEach(p => {
+              p.hidden = p.dataset.outPane !== target;
+            });
+          });
+        });
         _outreachMounted = true;
       }
       SECTION_ON_ENTER.outreach = async function loadOutreachSection() {
