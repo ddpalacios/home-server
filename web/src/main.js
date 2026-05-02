@@ -13,19 +13,24 @@ window.__dashboardBundle = {
   version: 1,
 };
 
-// Stub for future dynamic route loaders. Today returns null so existing
-// inline route handlers keep working. As routes get migrated into the
-// bundle, this map will gain entries.
+// Dynamic route loaders. Each entry is a function that returns a promise
+// of the route module. Routes are loaded lazily on first navigation.
 const ROUTE_MODULE_LOADERS = {
   // "leads": () => import("./routes/leads.js"),
-  // "campaigns": () => import("./routes/campaigns.js"),
+  "campaigns": () => import("./routes/campaigns.js"),
 };
 
 window.__dashboardLoadRouteModule = async function (route) {
   const loader = ROUTE_MODULE_LOADERS[route];
   if (!loader) return null;
   try {
-    return await loader();
+    const mod = await loader();
+    if (mod && typeof mod.init === "function") {
+      try { mod.init(); } catch (err) {
+        console.warn(`[dashboard-bundle] init failed for ${route}:`, err);
+      }
+    }
+    return mod;
   } catch (err) {
     console.warn(`[dashboard-bundle] failed to load route ${route}:`, err);
     return null;
