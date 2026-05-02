@@ -20,6 +20,11 @@ const ROUTE_MODULE_LOADERS = {
   "campaigns": () => import("./routes/campaigns.js"),
   "replies":   () => import("./routes/replies.js"),
   "pipeline":  () => import("./routes/pipeline.js"),
+  "voice":     () => import("./routes/voice.js"),
+  "kb":        () => import("./routes/kb.js"),
+  "knowledge": () => import("./routes/kb.js"),
+  "embed":     () => import("./routes/embed.js"),
+  "settings":  () => import("./routes/settings.js"),
 };
 
 window.__dashboardLoadRouteModule = async function (route) {
