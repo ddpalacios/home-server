@@ -775,31 +775,57 @@ function _openBulkStageDropdown(ids) {
 
 // ─── Main load ───────────────────────────────────────────────────────────────
 
+const LEADS_CACHE_KEY = "dashboard.leads_unified";
+
 async function loadUnifiedLeads() {
   const loadingEl = document.getElementById("leadsLoading");
   const emptyEl   = document.getElementById("leadsEmpty");
   const tbody     = document.getElementById("leadsTableBody");
   if (!tbody) return;
 
-  if (loadingEl) loadingEl.hidden = false;
-  if (emptyEl)   emptyEl.hidden   = true;
-
-  try {
-    const res = await fetch("/me/leads", { credentials: "same-origin" });
-    if (!res.ok) throw new Error("fetch failed " + res.status);
-    const body = await res.json();
-    _allLeads = body.leads || [];
+  // Cache-first paint
+  const cached = (() => {
+    try { return JSON.parse(localStorage.getItem(LEADS_CACHE_KEY) || "null"); }
+    catch (_) { return null; }
+  })();
+  if (cached && Array.isArray(cached.leads)) {
+    _allLeads = cached.leads;
     applyFilters();
     renderTable();
-    updateFilterPills();
-    renderActiveFilterChips();
-  } catch (e) {
-    if (loadingEl) loadingEl.hidden = true;
-    if (emptyEl) {
-      emptyEl.hidden = false;
-      emptyEl.innerHTML = `<div class="leads-empty-text">Couldn't load leads — check your connection and try again.</div>`;
+  } else {
+    if (loadingEl) loadingEl.hidden = false;
+    if (emptyEl)   emptyEl.hidden   = true;
+  }
+
+  // Background refresh
+  try {
+    const res = await fetch("/me/leads", { credentials: "same-origin" });
+    if (res.ok) {
+      const body = await res.json();
+      _allLeads = body.leads || [];
+      try {
+        localStorage.setItem(LEADS_CACHE_KEY,
+          JSON.stringify({ leads: _allLeads, ts: Date.now() }));
+      } catch (_) {}
+      applyFilters();
+      renderTable();
+    } else if (!cached) {
+      _allLeads = [];
+      applyFilters();
+      renderTable();
+    }
+  } catch (_) {
+    if (!cached) {
+      if (loadingEl) loadingEl.hidden = true;
+      if (emptyEl) {
+        emptyEl.hidden = false;
+        emptyEl.innerHTML = `<div class="leads-empty-text">Couldn't load leads — check your connection and try again.</div>`;
+      }
     }
   }
+
+  updateFilterPills();
+  renderActiveFilterChips();
 }
 
 // ─── Imports list ────────────────────────────────────────────────────────────

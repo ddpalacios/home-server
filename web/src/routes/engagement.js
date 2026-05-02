@@ -84,22 +84,45 @@ const STAGE_HELP = {
 };
 
 const ENG_NUDGE_KEY = "dashboard.eng_nudge_dismissed";
+const ENG_CACHE_KEY = "dashboard.eng_automations";
 
 let _automations = [];
 
 async function loadEngagementSection() {
-  // Pull the list of automations from the existing /me/sequences endpoint.
+  // Render from cache first (instant on revisit)
+  const cached = (() => {
+    try { return JSON.parse(localStorage.getItem(ENG_CACHE_KEY) || "null"); }
+    catch (_) { return null; }
+  })();
+  if (cached && Array.isArray(cached.automations)) {
+    _automations = cached.automations;
+    render();
+    maybeShowNudge();
+  }
+
+  // Background refresh
   try {
     const res = await fetch("/me/sequences", { credentials: "same-origin" });
     if (res.ok) {
       const body = await res.json();
       _automations = body.sequences || [];
-    } else {
+      try {
+        localStorage.setItem(ENG_CACHE_KEY,
+          JSON.stringify({ automations: _automations, ts: Date.now() }));
+      } catch (_) {}
+      render();
+    } else if (!cached) {
       _automations = [];
+      render();
     }
-  } catch (_) { _automations = []; }
-  render();
-  maybeShowNudge();
+  } catch (_) {
+    if (!cached) {
+      _automations = [];
+      render();
+    }
+  }
+
+  if (!cached) maybeShowNudge();
 }
 
 function render() {
