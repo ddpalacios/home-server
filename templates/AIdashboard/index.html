@@ -6426,8 +6426,8 @@
         .pl-view-btn { padding: 6px 14px; font-size: 12.5px; font-weight: 500; color: #525252; background: transparent; border: 0; border-radius: 6px; cursor: pointer; }
         .pl-view-btn.is-active { background: #fff; color: #0a0a0a; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
 
-        .pl-stat-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-        @media (max-width: 760px) { .pl-stat-row { grid-template-columns: 1fr; } }
+        .pl-stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        @media (max-width: 900px) { .pl-stat-row { grid-template-columns: repeat(2, 1fr); } }
         .pl-stat {
           background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
           padding: 16px 18px; cursor: pointer; transition: border-color 120ms;
@@ -22282,34 +22282,65 @@
         // Three big stat cards — same shape as the Pipeline page's
         // header. Click one to jump into the Pipeline route filtered
         // appropriately (uses the same #pipeline route hash).
-        const upcomingPreview = (hm.upcoming_next || []).slice(0, 2)
-          .map(u => `${esc((u.name || "").trim() || "Lead")} ${fmtDateTime(u.appointment_at)}`)
-          .join(" · ");
+        const fmt$ = n => "$" + (n || 0).toLocaleString("en-US");
         statsEl.innerHTML = `
           <div class="pl-stat" data-stat="leads">
             <div class="pl-stat-label">Total leads</div>
             <div class="pl-stat-num">${hm.leads_total || 0}</div>
             <div class="pl-stat-sub">${hm.leads_captured || 0} captured · ${hm.leads_imported || 0} imported</div>
           </div>
-          <div class="pl-stat" data-stat="open">
-            <div class="pl-stat-label">Still open</div>
-            <div class="pl-stat-num">${hm.open_count || 0}</div>
-            <div class="pl-stat-sub">${counts.contacted || 0} contacted · ${counts.engaged || 0} engaged · ${counts.quoted || 0} quoted</div>
+          <div class="pl-stat" data-stat="phone">
+            <div class="pl-stat-label">Phone</div>
+            <div class="pl-stat-num">${hm.leads_phone || 0}</div>
+            <div class="pl-stat-sub">From phone calls</div>
           </div>
-          <div class="pl-stat" data-stat="paying">
-            <div class="pl-stat-label">Paying customers</div>
-            <div class="pl-stat-num">${hm.paying_count || 0}</div>
-            <div class="pl-stat-sub">${(hm.paying_percent || 0).toFixed(1)}% of all leads</div>
+          <div class="pl-stat" data-stat="web">
+            <div class="pl-stat-label">Website</div>
+            <div class="pl-stat-num">${hm.leads_web || 0}</div>
+            <div class="pl-stat-sub">From the chat widget</div>
           </div>
-          <div class="pl-stat" data-stat="upcoming">
-            <div class="pl-stat-label">Upcoming appointments</div>
-            <div class="pl-stat-num">${hm.upcoming_count || 0}</div>
-            <div class="pl-stat-sub">${upcomingPreview ? esc(upcomingPreview) : "Next 7 days"}</div>
+          <div class="pl-stat" data-stat="imported">
+            <div class="pl-stat-label">Imported</div>
+            <div class="pl-stat-num">${hm.leads_imported || 0}</div>
+            <div class="pl-stat-sub">From CSV uploads</div>
+          </div>
+          <div class="pl-stat" data-stat="they-owe">
+            <div class="pl-stat-label">They owe you</div>
+            <div class="pl-stat-num">${hm.awaiting_their_reply || 0}</div>
+            <div class="pl-stat-sub">No reply from them yet</div>
+          </div>
+          <div class="pl-stat" data-stat="you-owe">
+            <div class="pl-stat-label">You owe them</div>
+            <div class="pl-stat-num">${hm.awaiting_your_reply || 0}</div>
+            <div class="pl-stat-sub">Their last message is unanswered</div>
+          </div>
+          <div class="pl-stat" data-stat="predicted">
+            <div class="pl-stat-label">Predicted revenue</div>
+            <div class="pl-stat-num">${fmt$(hm.revenue_predicted_usd)}</div>
+            <div class="pl-stat-sub">Open pipeline × avg job</div>
+          </div>
+          <div class="pl-stat" data-stat="actual">
+            <div class="pl-stat-label">Actual revenue</div>
+            <div class="pl-stat-num">${fmt$(hm.revenue_actual_usd)}</div>
+            <div class="pl-stat-sub">Won × avg job</div>
           </div>
         `;
+        const STAT_ROUTES = {
+          "leads":     "leads",
+          "phone":     "leads",
+          "web":       "leads",
+          "imported":  "leads",
+          "they-owe":  "replies",
+          "you-owe":   "replies",
+          "predicted": null,
+          "actual":    null,
+        };
         statsEl.querySelectorAll("[data-stat]").forEach(card => {
+          const route = STAT_ROUTES[card.dataset.stat];
+          if (!route) return;
+          card.style.cursor = "pointer";
           card.addEventListener("click", () => {
-            if (typeof appShowRoute === "function") appShowRoute("pipeline");
+            if (typeof appShowRoute === "function") appShowRoute(route);
           });
         });
         // Funnel row — same 7-stage cards used on the Pipeline page,
