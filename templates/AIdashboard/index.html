@@ -3771,32 +3771,45 @@
       width: 28px;
       height: 28px;
       border-radius: 50%;
-      background: #e5e7eb;
-      color: #fff;
+      background: #fff;
+      border: 2px solid #d1d5db;
+      color: #9ca3af;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 12px;
       font-weight: 700;
       flex-shrink: 0;
-      transition: background 0.18s;
+      transition: background 0.18s, border-color 0.18s, color 0.18s;
     }
-    .wiz-dot.is-active { background: #0a0a0a; }
-    .wiz-dot.is-done   { background: #6b7280; }
+    .wiz-dot.is-active { background: #185FA5; border-color: #185FA5; color: #fff; }
+    .wiz-dot.is-done   { background: #6b7280; border-color: #6b7280; color: #fff; }
+    .wiz-dot.is-outline {
+      background: #fff;
+      border: 2px solid #d1d5db;
+      color: #9ca3af;
+    }
     .wiz-bar {
       width: 32px;
-      height: 2px;
+      height: 1px;
       background: #e5e7eb;
       flex-shrink: 0;
     }
     .wiz-step-label {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: #6b7280;
-      margin-top: 14px;
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: normal;
+      text-transform: none;
+      color: #9ca3af;
+      margin-top: 12px;
       text-align: center;
+    }
+    .wiz-progress-wrap {
+      margin-top: 40px;
+      margin-bottom: 0;
+    }
+    .wiz-step-label-wrap {
+      margin-bottom: 40px;
     }
     .wiz-body {
       background: #fff;
@@ -4037,10 +4050,12 @@
     }
     /* Step 3 — timing */
     .wiz-time-row {
-      border: 1.5px solid #e5e7eb;
+      background: #fff;
+      border: 1px solid rgba(15, 23, 42, 0.08);
       border-radius: 12px;
       padding: 18px 20px;
       margin-bottom: 16px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
     }
     .wiz-time-row:last-child { margin-bottom: 0; }
     .wiz-time-title {
@@ -4110,6 +4125,131 @@
       color: #6b7280;
       line-height: 1.55;
       margin: 0 0 16px;
+    }
+    /* ── Step 1: visual card flow ── */
+    .wiz-flow {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      margin: 8px 0 24px;
+    }
+    .wiz-flow-card {
+      background: #fff;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 12px;
+      padding: 18px 22px;
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.6) inset,
+        0 1px 2px rgba(15, 23, 42, 0.04),
+        0 4px 14px rgba(15, 23, 42, 0.05);
+    }
+    .wiz-flow-card[data-kind="owner"],
+    .wiz-flow-card[data-kind="ai"] {
+      background: #fafafa;
+    }
+    .wiz-flow-row {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 8px;
+    }
+    .wiz-flow-icon { font-size: 18px; line-height: 1; }
+    .wiz-flow-label {
+      font-size: 13px; font-weight: 600; color: #6b7280;
+      text-transform: none; letter-spacing: normal;
+    }
+    .wiz-flow-headline {
+      font-size: 16px; font-weight: 500; color: #0a0a0a;
+      line-height: 1.5;
+    }
+    .wiz-flow-timing {
+      font-size: 13px; color: #9ca3af; margin-top: 4px;
+    }
+    .wiz-flow-connector {
+      display: flex; flex-direction: column; align-items: center;
+      margin: 0;
+      position: relative;
+    }
+    .wiz-flow-connector::before,
+    .wiz-flow-connector::after {
+      content: "";
+      display: block;
+      width: 1px; height: 14px;
+      background: #d1d5db;
+    }
+    .wiz-flow-pill {
+      display: inline-block;
+      padding: 4px 12px;
+      font-size: 12px; color: #4b5563;
+      background: #f3f4f6;
+      border-radius: 999px;
+      margin: 4px 0;
+      font-weight: 500;
+    }
+    /* ── Step 2: updated card heading ── */
+    .wiz-mail-badge-head {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0a0a0a;
+      margin-bottom: 2px;
+    }
+    .wiz-mail-badge-sub {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 16px;
+    }
+    .wiz-tap-to-add {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: -10px;
+      margin-bottom: 14px;
+    }
+    /* ── Step 3: segmented timing rows ── */
+    .wiz-time-card-head {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 14px; font-weight: 600; color: #0a0a0a;
+    }
+    .wiz-time-card-title {
+      font-size: 14px; font-weight: 600; color: #0a0a0a;
+    }
+    .wiz-time-card-sub {
+      font-size: 13px; color: #6b7280;
+      margin: 4px 0 14px;
+    }
+    .wiz-time-segments {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .wiz-seg {
+      padding: 10px 8px;
+      font-size: 12.5px; font-weight: 500;
+      color: #374151;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+      font-family: inherit;
+    }
+    .wiz-seg:hover:not(.is-active) { background: #f5f5f5; }
+    .wiz-seg.is-active {
+      background: #185FA5;
+      border-color: #185FA5;
+      color: #fff;
+    }
+    .wiz-time-numeric {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .wiz-time-numeric[hidden] { display: none; }
+    .wiz-time-input-inline {
+      width: 90px;
+    }
+    .wiz-time-unit-label {
+      font-size: 13px; color: #6b7280;
+    }
+    /* Mobile */
+    @media (max-width: 540px) {
+      .wiz-time-segments { grid-template-columns: repeat(3, 1fr); }
     }
     /* Mobile */
     @media (max-width: 640px) {
@@ -7972,17 +8112,20 @@
             </div>
           </div>
 
-          <div class="wiz-progress" role="tablist" aria-label="Wizard progress" id="wizProgress">
-            <div class="wiz-dot is-active" data-wiz-step="1" aria-current="step">1</div>
-            <div class="wiz-bar"></div>
-            <div class="wiz-dot" data-wiz-step="2">2</div>
-            <div class="wiz-bar"></div>
-            <div class="wiz-dot" data-wiz-step="3">3</div>
-            <div class="wiz-bar"></div>
-            <div class="wiz-dot" data-wiz-step="4">4</div>
+          <div class="wiz-progress-wrap">
+            <div class="wiz-progress" role="tablist" aria-label="Wizard progress" id="wizProgress">
+              <div class="wiz-dot is-active" data-wiz-step="1" aria-current="step">1</div>
+              <div class="wiz-bar"></div>
+              <div class="wiz-dot" data-wiz-step="2">2</div>
+              <div class="wiz-bar"></div>
+              <div class="wiz-dot" data-wiz-step="3">3</div>
+              <div class="wiz-bar"></div>
+              <div class="wiz-dot" data-wiz-step="4">4</div>
+            </div>
+            <div class="wiz-step-label-wrap">
+              <div class="wiz-step-label" id="wizStepLabel">Looking at it</div>
+            </div>
           </div>
-
-          <div class="wiz-step-label" id="wizStepLabel">Looking at it</div>
 
           <div class="wiz-body" id="wizBody"><!-- step content rendered here --></div>
 
@@ -32132,7 +32275,18 @@ function toInternal(text) {
   return out;
 }
 
-// ── Automation summaries ──
+// ── Automation headlines (≤8 words each) ──
+const AUTOMATION_HEADLINES = {
+  "first_contact":       "Greets new leads and pings you to follow up.",
+  "job_onboarding":      "Confirms bookings and sends prep reminders.",
+  "estimate_onboarding": "Confirms estimates with a friendly reminder.",
+  "quote_followup":      "Chases quotes with a couple of nudges.",
+  "during_job":          "Reminds you to take notes and photos.",
+  "after_job":           "Says thanks and asks for a review.",
+  "win_back":            "Reaches back to leads who went cold.",
+};
+
+// ── Automation summaries (kept for reference) ──
 const AUTOMATION_SUMMARIES = {
   "first_contact": "When a new lead comes in, we wait 30 seconds, then send them a quick 'we got your message' email. After that, if you haven't responded yourself within 5 minutes, we text you a reminder so you don't miss it.",
   "job_onboarding": "When you book a job with a customer, we send them a confirmation right away. The day before the job, we send a friendly reminder. The morning of, we ping you with the day's appointments so you know what to prep for.",
@@ -32256,7 +32410,7 @@ function renderWizardHeader() {
   document.getElementById("wizIcon").textContent    = AUTOMATION_ICONS[def.id] || "⚙️";
   document.getElementById("wizTitle").textContent   = def.name || def.id;
   document.getElementById("wizSubtitle").textContent =
-    AUTOMATION_SUMMARIES[def.id] || "An automation that runs for new leads.";
+    AUTOMATION_HEADLINES[def.id] || "An automation that runs for new leads.";
 }
 
 function goToWizardStep(n) {
@@ -32273,8 +32427,8 @@ function goToWizardStep(n) {
     else          d.removeAttribute("aria-current");
   });
 
-  const labels = { 1: "Looking at it", 2: "Change the words",
-                   3: "Change the timing", 4: "Try it before saving" };
+  const labels = { 1: "Looking at it", 2: "Edit the words",
+                   3: "Change the timing", 4: "Test it" };
   document.getElementById("wizStepLabel").textContent = labels[n] || "";
   document.getElementById("wizBody").innerHTML = renderWizardBody(n);
   attachWizardBodyHandlers(n);
@@ -32313,99 +32467,161 @@ function renderWizardFooter(n) {
   }
 }
 
-// ── Step 1: read-only summary + preview ──
+// ── Step 1: visual card flow ──
 function renderWizStep1() {
   const def = WIZARD_STATE.def;
-  const summary = AUTOMATION_SUMMARIES[def.id] || "An automation that runs for new leads.";
+  const steps = def.steps || [];
 
-  const sampleLead = {
-    "{first_name}":      "Sample",
-    "{last_name}":       "Customer",
-    "{service_type}":    "yard cleanup",
-    "{appointment_at}":  "Friday at 2pm",
-    "{phone}":           "(555) 123-4567",
-    "{address}":         "123 Main St",
-    "{owner_name}":      "the team",
-    "{reschedule_link}": "https://example.com/reschedule",
-    "{review_link}":     "https://example.com/review",
-  };
-  function fillSample(text) {
-    let out = String(text || "");
-    for (const [k, v] of Object.entries(sampleLead)) out = out.split(k).join(v);
+  // Build raw items list: { type, seconds (for waits), subject, body (for messages) }
+  // Then apply owner_alert collapse logic
+  const rawItems = steps.map((s) => {
+    if (s.type === "wait")
+      return { type: "wait", seconds: Number(s.seconds || 0) };
+    if (s.type === "wait_until_appointment")
+      return { type: "wait_until_appointment", seconds: Number(s.offset_seconds_before || 0) };
+    if (s.type === "send_email")
+      return { type: "send_email", subject: toFriendly(s.subject || ""), body: toFriendly(s.body || "") };
+    if (s.type === "send_sms")
+      return { type: "send_sms", body: toFriendly(s.body || "") };
+    if (s.type === "owner_alert")
+      return { type: "owner_alert" };
+    if (s.type === "ai_conversation")
+      return { type: "ai_conversation" };
+    return null;
+  }).filter(Boolean);
+
+  // Collapse repeated owner_alert patterns:
+  // N>=2 owner_alerts interleaved with N-1 waits of the same duration → single collapsed card
+  function collapseOwnerAlerts(items) {
+    const out = [];
+    let i = 0;
+    while (i < items.length) {
+      const item = items[i];
+      if (item.type !== "owner_alert") { out.push(item); i++; continue; }
+      // Look ahead for pattern: owner_alert (wait owner_alert)+ where all waits equal
+      let j = i + 1;
+      let repeatWait = null;
+      let count = 1;
+      while (j < items.length) {
+        const w = items[j];
+        const oa = items[j + 1];
+        if (w && w.type === "wait" && oa && oa.type === "owner_alert") {
+          if (repeatWait === null) repeatWait = w.seconds;
+          if (w.seconds !== repeatWait) break;
+          count++;
+          j += 2;
+        } else {
+          break;
+        }
+      }
+      if (count >= 2 && repeatWait !== null) {
+        out.push({ type: "owner_alert_collapsed", repeatEvery: repeatWait });
+        i = j;
+      } else {
+        out.push(item);
+        i++;
+      }
+    }
     return out;
   }
 
-  const blocks = [];
-  let lastWait = null;
-  (def.steps || []).forEach((s) => {
-    if (s.type === "wait") {
-      lastWait = `then about ${friendlyTime(Number(s.seconds || 0))} later`;
-    } else if (s.type === "wait_until_appointment") {
-      lastWait = `then about ${friendlyTime(Number(s.offset_seconds_before || 0))} before the appointment`;
-    } else if (s.type === "send_email") {
-      blocks.push({ kind: "email", wait: lastWait,
-                    subject: fillSample(s.subject || ""),
-                    body:    fillSample(s.body    || "") });
-      lastWait = null;
-    } else if (s.type === "send_sms") {
-      blocks.push({ kind: "sms", wait: lastWait, body: fillSample(s.body || "") });
-      lastWait = null;
-    } else if (s.type === "owner_alert") {
-      blocks.push({ kind: "owner", wait: lastWait });
-      lastWait = null;
-    } else if (s.type === "ai_conversation") {
-      blocks.push({ kind: "ai", wait: lastWait });
-      lastWait = null;
+  const collapsed = collapseOwnerAlerts(rawItems);
+
+  // Now build flow items: alternating connector pills and cards
+  const flowItems = [];
+  let pendingWait = null;
+
+  collapsed.forEach((item) => {
+    if (item.type === "wait" || item.type === "wait_until_appointment") {
+      pendingWait = item;
+      return;
+    }
+    // Emit connector before this card if there was a wait
+    if (pendingWait) {
+      let pillText;
+      if (pendingWait.type === "wait_until_appointment") {
+        pillText = `${friendlyTime(pendingWait.seconds)} before the appointment`;
+      } else {
+        pillText = friendlyTime(pendingWait.seconds) === "right away"
+          ? "right away"
+          : friendlyTime(pendingWait.seconds);
+      }
+      flowItems.push({ kind: "connector", pill: pillText });
+      pendingWait = null;
+    }
+    // Emit card
+    const hadPrecedingConnector = flowItems.length > 0 && flowItems[flowItems.length - 1].kind === "connector";
+    if (item.type === "send_email") {
+      const firstSentence = item.subject || item.body.split(/[.\n]/)[0];
+      flowItems.push({
+        kind: "card",
+        dataKind: "email",
+        icon: "📧",
+        label: "Email to your customer",
+        headline: `"${firstSentence}"`,
+        timing: hadPrecedingConnector ? null : "Sent right away",
+      });
+    } else if (item.type === "send_sms") {
+      const firstSentence = (item.body || "").split(/[.\n]/)[0].trim();
+      flowItems.push({
+        kind: "card",
+        dataKind: "sms",
+        icon: "📱",
+        label: "Text to your customer",
+        headline: `"${firstSentence}"`,
+        timing: hadPrecedingConnector ? null : "Sent right away",
+      });
+    } else if (item.type === "owner_alert") {
+      flowItems.push({
+        kind: "card",
+        dataKind: "owner",
+        icon: "🔔",
+        label: "Reminder to you",
+        headline: "We text you that the lead is waiting.",
+        timing: "Customers don't see this.",
+      });
+    } else if (item.type === "owner_alert_collapsed") {
+      flowItems.push({
+        kind: "card",
+        dataKind: "owner",
+        icon: "🔔",
+        label: "Reminder to you",
+        headline: `We'll keep reminding you every ${friendlyTime(item.repeatEvery)} until you reply.`,
+        timing: "Customers don't see this.",
+      });
+    } else if (item.type === "ai_conversation") {
+      flowItems.push({
+        kind: "card",
+        dataKind: "ai",
+        icon: "🤖",
+        label: "AI takes over",
+        headline: "AI replies for you when you can't.",
+        timing: "Only when you've gone silent.",
+      });
     }
   });
 
-  const blocksHtml = blocks.map((b, idx) => {
-    const waitLine = b.wait
-      ? `<div class="wiz-mail-divider">${escHtmlWiz(b.wait)}</div>`
-      : (idx === 0 ? `<div class="wiz-mail-divider">When a new lead comes in:</div>` : "");
-    if (b.kind === "email") {
-      return `${waitLine}
-        <div class="wiz-mail">
-          <div class="wiz-mail-meta">📧 Email to your customer</div>
-          <div class="wiz-mail-subject">${escHtmlWiz(b.subject)}</div>
-          <div class="wiz-mail-body">${escHtmlWiz(b.body).replace(/\n/g, "<br>")}</div>
-        </div>`;
+  const html = flowItems.map((fi) => {
+    if (fi.kind === "connector") {
+      return `<div class="wiz-flow-connector">
+        <span class="wiz-flow-pill">${escHtmlWiz(fi.pill)}</span>
+      </div>`;
     }
-    if (b.kind === "sms") {
-      return `${waitLine}
-        <div class="wiz-mail">
-          <div class="wiz-mail-meta">📱 Text to your customer</div>
-          <div class="wiz-mail-body">${escHtmlWiz(b.body).replace(/\n/g, "<br>")}</div>
-        </div>`;
-    }
-    if (b.kind === "owner") {
-      return `${waitLine}
-        <div class="wiz-mail wiz-mail-internal">
-          <div class="wiz-mail-meta">🔔 Reminder to you</div>
-          <div class="wiz-mail-body">This is just a heads-up to your phone — your customer doesn't see this. We'll remind you that the lead is waiting.</div>
-        </div>`;
-    }
-    if (b.kind === "ai") {
-      return `${waitLine}
-        <div class="wiz-mail wiz-mail-internal">
-          <div class="wiz-mail-meta">🤖 AI takes over</div>
-          <div class="wiz-mail-body">If you still haven't replied, the AI takes over the conversation so the customer never feels ignored.</div>
-        </div>`;
-    }
-    return "";
+    // card
+    const timingLine = fi.timing
+      ? `<div class="wiz-flow-timing">${escHtmlWiz(fi.timing)}</div>`
+      : "";
+    return `<div class="wiz-flow-card" data-kind="${fi.dataKind}">
+      <div class="wiz-flow-row">
+        <span class="wiz-flow-icon">${fi.icon}</span>
+        <span class="wiz-flow-label">${escHtmlWiz(fi.label)}</span>
+      </div>
+      <div class="wiz-flow-headline">${escHtmlWiz(fi.headline)}</div>
+      ${timingLine}
+    </div>`;
   }).join("");
 
-  return `
-    <div class="wiz-summary-card">
-      <div class="wiz-summary-icon">📋</div>
-      <div>
-        <div class="wiz-summary-title">Here's what this automation does today:</div>
-        <p class="wiz-summary-text">${escHtmlWiz(summary)}</p>
-      </div>
-    </div>
-    <h3 class="wiz-section-h">What your customer will get</h3>
-    <div class="wiz-preview-list">${blocksHtml}</div>
-  `;
+  return `<div class="wiz-flow">${html}</div>`;
 }
 
 // ── Step 2: editable email/SMS cards ──
@@ -32428,44 +32644,48 @@ function renderWizStep2() {
     } else if (s.type === "send_email") {
       emailNum += 1;
       const e = WIZARD_STATE.emailEdits[i];
-      const when = lastWait ? `Sent ${lastWait} after the lead arrives` : "Sent right when the lead comes in";
+      const when = lastWait ? `Sent ${lastWait} after` : "Sent right away";
       cards.push(emailEditCardHtml(i, emailNum, when, e));
       lastWait = null;
     } else if (s.type === "send_sms") {
       smsNum += 1;
       const e = WIZARD_STATE.smsEdits[i];
-      const when = lastWait ? `Sent ${lastWait} after` : "Sent right when the lead comes in";
+      const when = lastWait ? `Sent ${lastWait} after` : "Sent right away";
       cards.push(smsEditCardHtml(i, smsNum, when, e));
       lastWait = null;
     } else if (s.type === "owner_alert" || s.type === "ai_conversation") {
       lastWait = null;
     }
   });
-  return `<div class="wiz-edit-tip">💡 You can use the buttons below each field to add personal info that gets filled in for each customer.</div>
-          ${cards.join("")}`;
+  return `${cards.join("")}`;
 }
 
 function emailEditCardHtml(stepIdx, num, when, e) {
   const subjectId = `wizEmailSubject-${stepIdx}`;
   const bodyId    = `wizEmailBody-${stepIdx}`;
   return `<div class="wiz-mail-edit-card" data-step="${stepIdx}" data-kind="email">
-    <div class="wiz-mail-badge">Email #${num} · ${escHtmlWiz(when)}</div>
+    <div class="wiz-mail-badge-head">📧 Email #${num}</div>
+    <div class="wiz-mail-badge-sub">${escHtmlWiz(when)}</div>
     <label class="wiz-input-label" for="${subjectId}">Subject line</label>
     <input class="wiz-input" id="${subjectId}" data-field="subject" value="${escAttrWiz(e.subject)}" placeholder="What appears in the inbox">
     <div class="wiz-pill-row" data-target-id="${subjectId}">${pillRowHtml()}</div>
+    <div class="wiz-tap-to-add">Tap to add.</div>
     <label class="wiz-input-label" for="${bodyId}">Email body</label>
     <textarea class="wiz-textarea" id="${bodyId}" data-field="body" rows="7" placeholder="What you want to say">${escHtmlWiz(e.body)}</textarea>
     <div class="wiz-pill-row" data-target-id="${bodyId}">${pillRowHtml()}</div>
+    <div class="wiz-tap-to-add">Tap to add.</div>
   </div>`;
 }
 
 function smsEditCardHtml(stepIdx, num, when, e) {
   const bodyId = `wizSmsBody-${stepIdx}`;
   return `<div class="wiz-mail-edit-card" data-step="${stepIdx}" data-kind="sms">
-    <div class="wiz-mail-badge">Text #${num} · ${escHtmlWiz(when)}</div>
+    <div class="wiz-mail-badge-head">📱 Text #${num}</div>
+    <div class="wiz-mail-badge-sub">${escHtmlWiz(when)}</div>
     <label class="wiz-input-label" for="${bodyId}">Message</label>
     <textarea class="wiz-textarea" id="${bodyId}" data-field="body" rows="3" placeholder="Keep it short — texts are read fast">${escHtmlWiz(e.body)}</textarea>
     <div class="wiz-pill-row" data-target-id="${bodyId}">${pillRowHtml()}</div>
+    <div class="wiz-tap-to-add">Tap to add.</div>
   </div>`;
 }
 
@@ -32526,75 +32746,113 @@ function attachWizStep2Handlers() {
 function renderWizStep3() {
   const def = WIZARD_STATE.def;
   const rows = [];
+  let emailNum = 0, smsNum = 0;
   (def.steps || []).forEach((s, i) => {
-    if (s.type !== "wait" && s.type !== "wait_until_appointment") return;
+    if (s.type !== "wait" && s.type !== "wait_until_appointment") {
+      if (s.type === "send_email") emailNum++;
+      if (s.type === "send_sms") smsNum++;
+      return;
+    }
     const w = WIZARD_STATE.waitEdits[i];
     const seconds = w.kind === "appt" ? w.offset : w.seconds;
     const { unit, value } = pickUnit(seconds);
     const nextSend = nextSendStepFrom(def.steps, i);
-    const labelText = nextSend
-      ? `Before "${escHtmlWiz((nextSend.subject || nextSend.body || "next message").slice(0, 50))}"`
-      : "Before the next part";
-    const isAppt = w.kind === "appt";
+    // Build plain-language heading based on what comes next
+    let headIcon = "⏱️", headTitle = "Wait before sending the next one", headSub = "";
+    if (nextSend) {
+      if (nextSend.type === "send_email") {
+        emailNum++;
+        headIcon = "📧";
+        headTitle = `Email #${emailNum}`;
+        headSub = `"${toFriendly(nextSend.subject || nextSend.body || "").slice(0, 60)}"`;
+      } else if (nextSend.type === "send_sms") {
+        smsNum++;
+        headIcon = "📱";
+        headTitle = `Text #${smsNum}`;
+        headSub = `"${toFriendly(nextSend.body || "").split(/[.\n]/)[0].trim().slice(0, 60)}"`;
+      } else if (nextSend.type === "owner_alert") {
+        headIcon = "🔔";
+        headTitle = "Reminder to you (text or email)";
+        headSub = "We ping your phone";
+      } else if (nextSend.type === "ai_conversation") {
+        headIcon = "🤖";
+        headTitle = "AI takes over";
+        headSub = "Only after you've gone silent";
+      }
+    }
+    const numericHidden = unit === "now" ? " hidden" : "";
+    const unitLabel = unit === "now" ? "minutes" : unit;
     rows.push(`<div class="wiz-time-row" data-step="${i}">
-      <div class="wiz-time-title">${labelText}</div>
-      <div class="wiz-time-sub">${isAppt ? "How long before the appointment?" : "How long should we wait?"}</div>
-      <div class="wiz-time-options">
-        ${unitOptionHtml(i, "now",     "Right away",           unit, value)}
-        ${unitOptionHtml(i, "seconds", "After a few seconds",  unit, value)}
-        ${unitOptionHtml(i, "minutes", "After a few minutes",  unit, value)}
-        ${unitOptionHtml(i, "hours",   "After a few hours",    unit, value)}
-        ${unitOptionHtml(i, "days",    "After a few days",     unit, value)}
+      <div class="wiz-time-card-head">
+        <span class="wiz-flow-icon">${headIcon}</span>
+        <span class="wiz-time-card-title">${escHtmlWiz(headTitle)}</span>
+      </div>
+      <div class="wiz-time-card-sub">${escHtmlWiz(headSub)}</div>
+      <div class="wiz-time-segments" role="radiogroup">
+        <button type="button" class="wiz-seg${unit==="now"?" is-active":""}" data-step="${i}" data-unit="now">Right away</button>
+        <button type="button" class="wiz-seg${unit==="seconds"?" is-active":""}" data-step="${i}" data-unit="seconds">A few seconds</button>
+        <button type="button" class="wiz-seg${unit==="minutes"?" is-active":""}" data-step="${i}" data-unit="minutes">A few minutes</button>
+        <button type="button" class="wiz-seg${unit==="hours"?" is-active":""}" data-step="${i}" data-unit="hours">A few hours</button>
+        <button type="button" class="wiz-seg${unit==="days"?" is-active":""}" data-step="${i}" data-unit="days">A few days</button>
+      </div>
+      <div class="wiz-time-numeric" data-step="${i}"${numericHidden}>
+        <input class="wiz-input wiz-time-input-inline" type="number" min="0" max="999" value="${value}" data-step="${i}">
+        <span class="wiz-time-unit-label">${escHtmlWiz(unitLabel)}</span>
       </div>
     </div>`);
   });
-  return `<div class="wiz-edit-tip">Most people leave these alone. Only change them if you have a specific reason.</div>
+  return `<div class="wiz-edit-tip">Most people leave these alone.</div>
           ${rows.join("")}`;
 }
 
 function nextSendStepFrom(steps, fromIdx) {
   for (let j = fromIdx + 1; j < steps.length; j++) {
-    if (["send_email","send_sms","owner_alert"].includes(steps[j].type)) return steps[j];
+    if (["send_email","send_sms","owner_alert","ai_conversation"].includes(steps[j].type)) return steps[j];
   }
   return null;
 }
 
-function unitOptionHtml(stepIdx, unit, label, currentUnit, currentValue) {
-  const checked   = unit === currentUnit ? "checked" : "";
-  const disabled  = (unit !== currentUnit && unit !== "now") ? "disabled" : "";
-  const invisible = (unit === "now") ? "" :
-    (unit !== currentUnit ? 'style="opacity:0;pointer-events:none;"' : '');
-  const input = (unit === "now") ? "" :
-    `<input class="wiz-time-input" type="number" min="0" max="999"
-            data-step="${stepIdx}" data-unit="${unit}"
-            value="${currentUnit === unit ? currentValue : ""}"
-            placeholder="0" ${unit !== currentUnit ? "disabled" : ""} ${invisible}>`;
-  return `<label class="wiz-time-opt">
-    <input type="radio" name="wiz-time-${stepIdx}" data-step="${stepIdx}" data-unit="${unit}" ${checked}>
-    <span class="wiz-time-label">${label}</span>
-    ${input}
-  </label>`;
-}
-
 function attachWizStep3Handlers() {
-  document.querySelectorAll(`input[type="radio"][name^="wiz-time-"]`).forEach(r => {
-    r.addEventListener("change", () => {
-      const stepIdx = Number(r.dataset.step);
-      const unit    = r.dataset.unit;
+  // Segmented button click handler
+  document.querySelectorAll(".wiz-seg").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const stepIdx = Number(btn.dataset.step);
+      const unit    = btn.dataset.unit;
       const w       = WIZARD_STATE.waitEdits[stepIdx];
-      const numInput = document.querySelector(
-        `input[type="number"][data-step="${stepIdx}"][data-unit="${unit}"]`);
-      const value = unit === "now" ? 0 : Number((numInput && numInput.value) || 0);
-      const seconds = unitToSeconds(unit, value);
-      if (w.kind === "appt") w.offset = seconds; else w.seconds = seconds;
-      goToWizardStep(3);
+
+      // Toggle active state
+      document.querySelectorAll(`.wiz-seg[data-step="${stepIdx}"]`).forEach(b => {
+        b.classList.toggle("is-active", b === btn);
+      });
+
+      // Show/hide numeric input and update unit label
+      const numericDiv = document.querySelector(`.wiz-time-numeric[data-step="${stepIdx}"]`);
+      if (numericDiv) {
+        if (unit === "now") {
+          numericDiv.hidden = true;
+        } else {
+          numericDiv.hidden = false;
+          const unitLabelEl = numericDiv.querySelector(".wiz-time-unit-label");
+          if (unitLabelEl) unitLabelEl.textContent = unit;
+          const numInput = numericDiv.querySelector("input[type='number']");
+          const value = numInput ? Number(numInput.value || 0) : 0;
+          const seconds = unitToSeconds(unit, value);
+          if (w.kind === "appt") w.offset = seconds; else w.seconds = seconds;
+        }
+        if (unit === "now") {
+          if (w.kind === "appt") w.offset = 0; else w.seconds = 0;
+        }
+      }
     });
   });
-  document.querySelectorAll(`input[type="number"][data-step]`).forEach(inp => {
+
+  // Numeric input handler
+  document.querySelectorAll(".wiz-time-input-inline").forEach(inp => {
     inp.addEventListener("input", () => {
       const stepIdx = Number(inp.dataset.step);
-      const unit    = inp.dataset.unit;
       const w       = WIZARD_STATE.waitEdits[stepIdx];
+      const activeBtn = document.querySelector(`.wiz-seg.is-active[data-step="${stepIdx}"]`);
+      const unit = activeBtn ? activeBtn.dataset.unit : "minutes";
       const seconds = unitToSeconds(unit, Number(inp.value || 0));
       if (w.kind === "appt") w.offset = seconds; else w.seconds = seconds;
     });
