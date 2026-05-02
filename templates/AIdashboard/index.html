@@ -3211,18 +3211,197 @@
         0 2px 6px rgba(15, 23, 42, 0.04);
       padding: 14px 16px;
     }
+    /* ── AI mode badge ─────────────────────────────────────────── */
+    #aiModeBadge {
+      padding: 4px 10px; font-size: 11.5px; background: #0a0a0a; color: #fff;
+      border: 0; border-radius: 6px; cursor: pointer; margin-right: 8px;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: background-color 0.12s ease;
+    }
+    #aiModeBadge:hover { background: #1f2937; }
+    #aiModeBadge:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
+    #aiModePanel {
+      position: absolute;
+      right: 16px;
+      background: #fff;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 10px; padding: 8px;
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.6) inset,
+        0 1px 2px rgba(15, 23, 42, 0.04),
+        0 8px 24px rgba(15, 23, 42, 0.10),
+        0 24px 48px -24px rgba(15, 23, 42, 0.16);
+      z-index: 1000; min-width: 280px;
+    }
     .ai-mode-opt {
       display: block; width: 100%; text-align: left;
-      padding: 8px 10px; font-size: 12px; background: #fff; color: #0a0a0a;
+      padding: 9px 10px; font-size: 12px; background: #fff; color: #0a0a0a;
       border: 0; border-radius: 6px; cursor: pointer;
+      transition: background-color 0.12s ease;
     }
     .ai-mode-opt:hover { background: #f5f5f5; }
     .ai-mode-opt.is-active { background: #0a0a0a; color: #fff; }
+    .ai-mode-opt.is-active .ai-mode-sub { color: rgba(255,255,255,0.6); }
+    .ai-mode-title { display: block; font-weight: 600; font-size: 12px; line-height: 1.3; }
+    .ai-mode-sub   { display: block; font-size: 10.5px; color: #71717a; margin-top: 2px; line-height: 1.3; }
+
+    /* ── Camp subtabs ──────────────────────────────────────────── */
     .camp-subtab {
       padding: 6px 14px; font-size: 12px; border-radius: 6px;
       border: 1px solid #e5e7eb; background: #fff; color: #374151; cursor: pointer;
+      transition: background-color 0.12s ease;
     }
+    .camp-subtab:not(.is-active):hover { background: #f5f5f5; }
     .camp-subtab.is-active { background: #0a0a0a; color: #fff; border-color: #0a0a0a; }
+
+    /* ── Sequence list rows ────────────────────────────────────── */
+    .sequence-row {
+      display: grid; grid-template-columns: 1fr auto; gap: 12px;
+      align-items: center; padding: 14px 16px;
+      background: #fff;
+      border: 1px solid rgba(15, 23, 42, 0.06);
+      border-radius: 10px;
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.6) inset,
+        0 1px 2px rgba(15, 23, 42, 0.04),
+        0 4px 12px rgba(15, 23, 42, 0.04);
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    .sequence-row:hover {
+      transform: translateY(-1px);
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.6) inset,
+        0 1px 2px rgba(15, 23, 42, 0.04),
+        0 6px 18px rgba(15, 23, 42, 0.08),
+        0 12px 24px -12px rgba(15, 23, 42, 0.10);
+    }
+    .sequence-row .name { font-weight: 600; color: #0a0a0a; font-size: 13.5px; }
+    .sequence-row .meta { font-size: 11.5px; color: #71717a; margin-top: 2px; }
+    .sequence-row .badge {
+      display: inline-block; font-size: 10px; padding: 2px 8px;
+      border-radius: 999px; font-weight: 600;
+    }
+    .sequence-row .badge-active  { background: #dcfce7; color: #15803d; }
+    .sequence-row .badge-paused  { background: #fee2e2; color: #b91c1c; }
+    .sequence-row .edit-link {
+      font-size: 12px; color: #185FA5; text-decoration: none;
+      padding: 6px 12px; border-radius: 6px;
+      transition: background-color 0.12s ease;
+    }
+    .sequence-row .edit-link:hover { background: #f0f9ff; }
+
+    /* ── Sequence list skeleton ────────────────────────────────── */
+    @keyframes seq-shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position: 400px 0; }
+    }
+    .seq-skeleton {
+      height: 62px; border-radius: 10px;
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 800px 100%;
+      animation: seq-shimmer 1.4s infinite linear;
+    }
+
+    /* ── Sequence empty state ──────────────────────────────────── */
+    .seq-empty {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 36px 20px; text-align: center;
+      border: 1px solid rgba(15, 23, 42, 0.06);
+      border-radius: 10px; background: #fafafa;
+    }
+    .seq-empty-icon { font-size: 28px; margin-bottom: 10px; opacity: 0.5; }
+    .seq-empty-title { font-size: 14px; font-weight: 600; color: #0a0a0a; margin: 0 0 4px; }
+    .seq-empty-sub   { font-size: 12px; color: #71717a; margin: 0; }
+
+    /* ── Sequence editor header ────────────────────────────────── */
+    .seq-edit-header {
+      background: #fff;
+      border: 1px solid rgba(15, 23, 42, 0.06);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.6) inset,
+        0 1px 2px rgba(15, 23, 42, 0.04),
+        0 4px 14px rgba(15, 23, 42, 0.05);
+      display: flex; justify-content: space-between; align-items: center; gap: 16px;
+    }
+    .seq-back-link {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12px; color: #185FA5; text-decoration: none;
+      margin-bottom: 12px;
+    }
+    .seq-back-link:hover { text-decoration: underline; }
+    .seq-save-btn {
+      padding: 6px 16px; font-size: 12px; font-weight: 600;
+      background: #0a0a0a; color: #fff;
+      border: 0; border-radius: 6px; cursor: pointer;
+      transition: background-color 0.12s ease, opacity 0.12s ease;
+      white-space: nowrap;
+    }
+    .seq-save-btn:hover:not(:disabled) { background: #1f2937; }
+    .seq-save-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .seq-save-btn.is-error { background: #dc2626; }
+
+    /* ── Sequence step cards ───────────────────────────────────── */
+    .seq-step-card {
+      position: relative;
+      background: #fff;
+      border: 1px solid rgba(15, 23, 42, 0.06);
+      border-radius: 10px;
+      padding: 14px 16px 14px 20px;
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.6) inset,
+        0 1px 2px rgba(15, 23, 42, 0.04),
+        0 4px 14px rgba(15, 23, 42, 0.05),
+        0 18px 36px -22px rgba(15, 23, 42, 0.10);
+    }
+    .seq-step-card::before {
+      content: "";
+      position: absolute; top: 0; left: 20px; right: 20px; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(15,23,42,0.06) 30%, rgba(15,23,42,0.06) 70%, transparent);
+      border-radius: 0 0 1px 1px;
+    }
+    .seq-step-header {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+    }
+    .seq-step-num {
+      flex-shrink: 0; width: 26px; height: 26px;
+      border-radius: 50%;
+      background: #0a0a0a; color: #fff;
+      font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .seq-step-icon { font-size: 14px; }
+    .seq-step-type {
+      font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: #52525b;
+      background: #f4f4f5; border-radius: 4px; padding: 2px 6px;
+    }
+    .seq-step-label { font-size: 12px; color: #71717a; margin-left: auto; }
+    .seq-step-fields { display: flex; flex-direction: column; gap: 8px; }
+    .seq-field-group { display: flex; flex-direction: column; gap: 3px; }
+    .seq-field-label { font-size: 11px; color: #52525b; font-weight: 500; }
+    .seq-input, .seq-textarea {
+      width: 100%; padding: 8px 10px; font-size: 12px;
+      border: 1px solid rgba(15, 23, 42, 0.10);
+      border-radius: 6px; font-family: inherit;
+      background: #fff;
+      transition: border-color 0.12s ease, box-shadow 0.12s ease;
+      box-sizing: border-box;
+    }
+    .seq-input:focus, .seq-textarea:focus {
+      outline: none;
+      border-color: #185FA5;
+      box-shadow: 0 0 0 3px rgba(24, 95, 165, 0.12);
+    }
+    .seq-token-hint {
+      font-size: 10.5px; color: #a1a1aa; margin-top: 4px; line-height: 1.4;
+    }
+    .seq-no-fields {
+      font-size: 12px; color: #71717a; font-style: italic;
+      background: #f9f9f9; border-radius: 6px; padding: 10px 12px;
+    }
   </style>
 </head>
 <body>
@@ -3696,22 +3875,25 @@
       <header class="app-topbar">
         <h1 class="app-topbar-title" id="appPageTitle">Phone numbers</h1>
         <div class="app-topbar-actions">
-          <button type="button" id="aiModeBadge"
-                  style="padding:4px 10px;font-size:11.5px;background:#0a0a0a;color:#fff;
-                         border:0;border-radius:6px;cursor:pointer;margin-right:8px;
-                         display:inline-flex;align-items:center;gap:6px;">
+          <button type="button" id="aiModeBadge">
             <span aria-hidden="true">🤖</span>
             <span id="aiModeLabel">…</span>
             <span style="opacity:0.7;font-size:9px;">▾</span>
           </button>
-          <div id="aiModePanel" hidden
-               style="position:absolute;background:#fff;border:1px solid #e5e7eb;
-                      border-radius:10px;padding:8px;box-shadow:0 8px 24px rgba(0,0,0,0.1);
-                      z-index:1000;min-width:280px;">
-            <p style="font-size:11px;color:#71717a;margin:4px 8px;">AI response policy</p>
-            <button type="button" data-mode="i_respond" class="ai-mode-opt">I respond myself</button>
-            <button type="button" data-mode="hybrid" class="ai-mode-opt">Hybrid (alert me, AI backs me up)</button>
-            <button type="button" data-mode="ai_always" class="ai-mode-opt">AI handles everything</button>
+          <div id="aiModePanel" hidden>
+            <p style="font-size:11px;color:#71717a;margin:4px 8px 6px;">AI response policy</p>
+            <button type="button" data-mode="i_respond" class="ai-mode-opt">
+              <span class="ai-mode-title">I respond myself</span>
+              <span class="ai-mode-sub">AI never replies to customers</span>
+            </button>
+            <button type="button" data-mode="hybrid" class="ai-mode-opt">
+              <span class="ai-mode-title">Hybrid (alert me, AI backs me up)</span>
+              <span class="ai-mode-sub">AI engages if I'm slow to respond</span>
+            </button>
+            <button type="button" data-mode="ai_always" class="ai-mode-opt">
+              <span class="ai-mode-title">AI handles everything</span>
+              <span class="ai-mode-sub">AI replies instantly, you can take over</span>
+            </button>
           </div>
           <span class="app-trial-pill" id="appTrialPill" hidden>
             <span class="dot"></span> TRIAL
@@ -6981,18 +7163,14 @@
         </div>
       </section>
       <section class="grid" id="sequenceEdit" data-route-section="sequenceEdit" hidden>
-        <div class="card" style="grid-column: span 12;">
-          <div class="card-header" style="margin-bottom: 8px; display:flex; justify-content:space-between; align-items:center;">
+        <div style="grid-column: span 12;">
+          <a href="#campaigns" class="seq-back-link" id="seqBackLink">← Back to Sequences</a>
+          <div class="seq-edit-header">
             <div>
               <h2 class="section-title" style="margin:0;" id="seqEditTitle">Sequence</h2>
-              <p class="section-note" id="seqEditSubtitle">Edit the steps, body copy, and timing.</p>
+              <p class="section-note" style="margin:4px 0 0;" id="seqEditSubtitle">Edit the steps, body copy, and timing.</p>
             </div>
-            <div style="display:flex;gap:8px;">
-              <button type="button" id="seqEditSave"
-                      style="padding:6px 12px;font-size:12px;background:#0a0a0a;color:#fff;border:0;border-radius:6px;cursor:pointer;">
-                Save
-              </button>
-            </div>
+            <button type="button" id="seqEditSave" class="seq-save-btn">Save</button>
           </div>
           <div id="seqEditSteps" style="display:flex;flex-direction:column;gap:10px;"></div>
         </div>
@@ -30825,7 +31003,9 @@
         if (!panel.hidden) {
           const r = badge.getBoundingClientRect();
           panel.style.top  = (r.bottom + 4) + "px";
-          panel.style.left = (r.left) + "px";
+          // Use right-anchor so panel doesn't run off narrow viewports;
+          // CSS sets right:16px as fallback; clear left to avoid conflict.
+          panel.style.left = "";
         }
       });
 
@@ -30866,22 +31046,41 @@
       async function loadSequences() {
         const list = document.getElementById("sequencesList");
         if (!list) return;
+        // Show skeleton while loading
+        list.innerHTML = `
+          <div class="seq-skeleton"></div>
+          <div class="seq-skeleton" style="opacity:0.6;"></div>`;
         try {
           const res = await fetch("/me/sequences", { credentials: "same-origin" });
-          if (!res.ok) return;
+          if (!res.ok) { list.innerHTML = ""; return; }
           const data = await res.json();
-          list.innerHTML = (data.sequences || []).map(s => `
-            <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;
-                        padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;">
-              <div>
-                <div style="font-weight:600;color:#0a0a0a;">${escHtml(s.name)}</div>
-                <div style="font-size:11px;color:#71717a;">${s.step_count} steps · ${s.active ? "active" : "paused"}</div>
-              </div>
-              <a href="#sequence-edit-${escHtml(s.id)}"
-                 style="font-size:11.5px;color:#185FA5;text-decoration:none;">Edit →</a>
-            </div>`).join("") ||
-            `<div style="color:#71717a;font-size:12px;">No sequences yet.</div>`;
-        } catch (_) {}
+          const seqs = data.sequences || [];
+          if (!seqs.length) {
+            list.innerHTML = `
+              <div class="seq-empty">
+                <div class="seq-empty-icon">🔗</div>
+                <p class="seq-empty-title">No sequences yet</p>
+                <p class="seq-empty-sub">Create a multi-step sequence to automatically nurture leads over time.</p>
+              </div>`;
+            return;
+          }
+          list.innerHTML = seqs.map(s => {
+            const isActive = !!s.active;
+            const badgeCls = isActive ? "badge-active" : "badge-paused";
+            const badgeTxt = isActive ? "Active" : "Paused";
+            const steps = s.step_count != null ? `${s.step_count} step${s.step_count !== 1 ? "s" : ""}` : "";
+            return `
+              <div class="sequence-row">
+                <div>
+                  <div class="name">${escHtml(s.name)}</div>
+                  <div class="meta">
+                    ${steps ? `${steps} · ` : ""}<span class="badge ${badgeCls}">${badgeTxt}</span>
+                  </div>
+                </div>
+                <a href="#sequence-edit-${escHtml(s.id)}" class="edit-link">Edit →</a>
+              </div>`;
+          }).join("");
+        } catch (_) { list.innerHTML = ""; }
       }
 
       subtabs.forEach(b => b.addEventListener("click", () => {
@@ -30898,6 +31097,49 @@ async function loadSequenceEdit(sequenceId) {
   const stepsEl = document.getElementById("seqEditSteps");
   const saveBtn = document.getElementById("seqEditSave");
   if (!stepsEl) return;
+
+  // Restore back-link to sequences sub-tab
+  const backLink = document.getElementById("seqBackLink");
+  if (backLink) {
+    backLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      // Navigate to campaigns section and activate Sequences subtab
+      const campSection = document.querySelector('[data-route-section="campaigns"]');
+      const seqEdit     = document.getElementById("sequenceEdit");
+      if (campSection) campSection.hidden = false;
+      if (seqEdit)     seqEdit.hidden = true;
+      const seqTab  = document.querySelector('[data-camp-tab="sequences"]');
+      const oneTab  = document.querySelector('[data-camp-tab="oneshot"]');
+      const seqPane = document.querySelector('[data-camp-pane="sequences"]');
+      const onePane = document.querySelector('[data-camp-pane="oneshot"]');
+      if (seqTab)  { seqTab.classList.add("is-active");    oneTab && oneTab.classList.remove("is-active"); }
+      if (seqPane) { seqPane.hidden = false;               onePane && (onePane.hidden = true); }
+      // Reload list
+      const list = document.getElementById("sequencesList");
+      if (list) list.dispatchEvent(new Event("reload"));
+    }, { once: true });
+  }
+
+  function setSaveState(state) {
+    if (!saveBtn) return;
+    saveBtn.classList.remove("is-error");
+    if (state === "saving") {
+      saveBtn.textContent = "Saving…";
+      saveBtn.disabled = true;
+    } else if (state === "saved") {
+      saveBtn.textContent = "Saved ✓";
+      saveBtn.disabled = true;
+      setTimeout(() => setSaveState("idle"), 2000);
+    } else if (state === "error") {
+      saveBtn.textContent = "Save failed — retry?";
+      saveBtn.classList.add("is-error");
+      saveBtn.disabled = false;
+    } else {
+      saveBtn.textContent = "Save";
+      saveBtn.disabled = false;
+    }
+  }
+
   let def = null;
   try {
     const res = await fetch(`/me/sequences/${encodeURIComponent(sequenceId)}`,
@@ -30907,14 +31149,22 @@ async function loadSequenceEdit(sequenceId) {
   } catch (_) { return; }
   if (titleEl) titleEl.textContent = def.name || sequenceId;
   stepsEl.innerHTML = (def.steps || []).map((s, i) => seqEditStepHtml(s, i)).join("");
+  setSaveState("idle");
   saveBtn.onclick = async () => {
-    const updated = seqEditCollect(def);
-    await fetch(`/me/sequences/${encodeURIComponent(sequenceId)}`, {
-      method: "POST",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updated),
-    });
+    setSaveState("saving");
+    try {
+      const updated = seqEditCollect(def);
+      const res = await fetch(`/me/sequences/${encodeURIComponent(sequenceId)}`, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updated),
+      });
+      if (!res.ok) throw new Error("server error");
+      setSaveState("saved");
+    } catch (_) {
+      setSaveState("error");
+    }
   };
 }
 
@@ -30923,34 +31173,61 @@ function seqEditStepHtml(step, idx) {
   const e = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
   }[c]));
+
+  const TYPE_META = {
+    send_email:     { icon: "✉",  label: "Email" },
+    send_sms:       { icon: "📱", label: "SMS" },
+    owner_alert:    { icon: "🔔", label: "Alert" },
+    wait:           { icon: "⏱", label: "Wait" },
+    ai_conversation:{ icon: "🤖", label: "AI" },
+  };
+  const meta = TYPE_META[step.type] || { icon: "◆", label: step.type };
+
+  const TOKEN_HINT = `<p class="seq-token-hint">Tokens: {first_name} · {last_name} · {service_type} · {phone}</p>`;
+
   let inner = "";
   if (step.type === "send_email") {
     inner = `
-      <label style="font-size:11px;color:#52525b;">Subject</label>
-      <input id="${id('subject')}" value="${e(step.subject || '')}"
-             style="width:100%;padding:6px 8px;font-size:12px;border:1px solid #e5e7eb;border-radius:4px;margin-bottom:8px;">
-      <label style="font-size:11px;color:#52525b;">Body</label>
-      <textarea id="${id('body')}" rows="4"
-             style="width:100%;padding:6px 8px;font-size:12px;border:1px solid #e5e7eb;border-radius:4px;font-family:inherit;">${e(step.body || '')}</textarea>`;
+      <div class="seq-step-fields">
+        <div class="seq-field-group">
+          <label class="seq-field-label" for="${id('subject')}">Subject</label>
+          <input class="seq-input" id="${id('subject')}" value="${e(step.subject || '')}">
+          ${TOKEN_HINT}
+        </div>
+        <div class="seq-field-group">
+          <label class="seq-field-label" for="${id('body')}">Body</label>
+          <textarea class="seq-textarea" id="${id('body')}" rows="4">${e(step.body || '')}</textarea>
+          ${TOKEN_HINT}
+        </div>
+      </div>`;
   } else if (step.type === "send_sms" || step.type === "owner_alert") {
     inner = `
-      <label style="font-size:11px;color:#52525b;">Body</label>
-      <textarea id="${id('body')}" rows="3"
-             style="width:100%;padding:6px 8px;font-size:12px;border:1px solid #e5e7eb;border-radius:4px;font-family:inherit;">${e(step.body || '')}</textarea>`;
+      <div class="seq-step-fields">
+        <div class="seq-field-group">
+          <label class="seq-field-label" for="${id('body')}">Body</label>
+          <textarea class="seq-textarea" id="${id('body')}" rows="3">${e(step.body || '')}</textarea>
+          ${TOKEN_HINT}
+        </div>
+      </div>`;
   } else if (step.type === "wait") {
     inner = `
-      <label style="font-size:11px;color:#52525b;">Wait (seconds)</label>
-      <input id="${id('seconds')}" type="number" value="${step.seconds || 0}"
-             style="width:100%;padding:6px 8px;font-size:12px;border:1px solid #e5e7eb;border-radius:4px;">`;
+      <div class="seq-step-fields">
+        <div class="seq-field-group">
+          <label class="seq-field-label" for="${id('seconds')}">Wait (seconds)</label>
+          <input class="seq-input" id="${id('seconds')}" type="number" value="${step.seconds || 0}" style="max-width:160px;">
+        </div>
+      </div>`;
   } else {
-    inner = `<div style="font-size:11px;color:#71717a;">No editable fields.</div>`;
+    inner = `<div class="seq-no-fields">This step activates the AI safety net — no fields to configure.</div>`;
   }
+
   return `
-    <div class="seq-step-card" data-step-idx="${idx}"
-         style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;background:#fff;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <strong style="font-size:13px;">Step ${idx + 1} · ${e(step.type)}</strong>
-        <span style="font-size:11px;color:#71717a;">${e(step.label || "")}</span>
+    <div class="seq-step-card" data-step-idx="${idx}">
+      <div class="seq-step-header">
+        <span class="seq-step-num">${idx + 1}</span>
+        <span class="seq-step-icon">${meta.icon}</span>
+        <span class="seq-step-type">${e(meta.label)}</span>
+        ${step.label ? `<span class="seq-step-label">${e(step.label)}</span>` : ""}
       </div>
       ${inner}
     </div>`;
