@@ -6325,121 +6325,111 @@
       </section>
 
       <section class="grid" id="leads" data-route-section="leads" hidden>
-        <!-- First-visit nudge for Leads. -->
-        <div class="page-nudge" data-nudge="leads" style="grid-column: span 12;" hidden>
-          <span class="page-nudge-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-          </span>
-          <div style="flex:1;min-width:0;">
-            <p class="page-nudge-text"><strong>Where every lead lives.</strong> Captured leads come from phone calls and your website widget. Imported leads come from CSVs you upload. Tap any lead to see their full story — every call, every email, every reply.</p>
-            <div class="page-nudge-actions">
-              <button type="button" class="page-nudge-dismiss" data-nudge-close>Got it</button>
-              <button type="button" class="page-nudge-tour" data-nudge-tour="leads">Show me around</button>
-            </div>
-          </div>
-          <button type="button" class="page-nudge-close" data-nudge-close aria-label="Dismiss">×</button>
-        </div>
+        <div class="grid" style="grid-column: 1 / -1;">
+          <div class="leads-page">
+            <header class="leads-page-head">
+              <h1 class="leads-page-title">Leads</h1>
+              <p class="leads-page-sub">Everyone who's reached out — captured by your AI or added by you.</p>
+            </header>
 
-        <div class="card" style="grid-column: span 12;">
-          <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-            <div>
-              <h2 class="section-title" style="margin:0;">
-                Your leads
-                <span data-help-icon="leads_captured"></span>
-              </h2>
-              <p class="section-note" style="margin:4px 0 0;">Customers who called you, chatted with your widget, or got uploaded from a CSV — all in one place.</p>
-            </div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-              <button class="btn secondary" type="button" id="leadsExportButton">Export CSV</button>
-            </div>
-          </div>
-
-          <!-- Tab bar -->
-          <div class="leads-tabbar">
-            <button type="button" class="leads-tab is-active" data-leads-tab="captured">
-              <span class="leads-tab-label">Captured</span>
-              <span class="leads-tab-sub">Phone &amp; widget</span>
-            </button>
-            <button type="button" class="leads-tab" data-leads-tab="imported">
-              <span class="leads-tab-label">Imported</span>
-              <span class="leads-tab-sub">CSV uploads</span>
-            </button>
-          </div>
-
-          <!-- Imported tab content (above captured to set styles up early in the DOM) -->
-          <div class="leads-pane" data-leads-pane="imported" hidden>
-            <div class="leads-imported-header">
-              <p class="section-note" style="margin:0;">Bring in a list (Excel/Sheets export) and run a campaign on it. Emails go through your own Gmail — your customers see your address.</p>
-              <button class="btn shiny" type="button" id="leadsImportBtn">⬆ Import CSV</button>
-            </div>
-            <div class="leads-imports-list" id="leadsImportsList">
-              <div class="leads-empty"><span class="leads-empty-icon">📥</span><span>No imports yet — upload a CSV to get started.</span></div>
-            </div>
-
-            <div class="leads-imported-leads-wrap" id="leadsImportedLeadsWrap" hidden>
-              <h3 class="leads-imported-title"><span id="leadsImportedTitle">Imported leads</span> <button type="button" class="btn-link" id="leadsImportedBack">← Back to imports</button></h3>
-              <div class="table-wrapper">
-                <table class="table" id="leadsImportedTable">
-                  <thead><tr><th><input type="checkbox" id="leadsImportedCheckAll"></th><th>Name</th><th>Email</th><th>Phone</th><th>Service</th><th>Status</th><th></th></tr></thead>
-                  <tbody id="leadsImportedTableBody"></tbody>
-                </table>
+            <!-- Toolbar row 1: search + import CTA -->
+            <div class="leads-toolbar-row">
+              <div class="leads-search-wrap">
+                <span class="leads-search-icon" aria-hidden="true">🔍</span>
+                <input id="leadsSearch" type="search"
+                       placeholder="Search by name, email, or phone…"
+                       class="leads-search-input">
+                <button type="button" class="leads-search-clear" id="leadsSearchClear" hidden aria-label="Clear search">×</button>
               </div>
-              <div class="leads-imported-actions">
-                <span class="leads-imported-count" id="leadsImportedSelected">0 selected</span>
-              </div>
+              <button type="button" class="leads-import-btn" id="leadsImportBtn">+ Import</button>
             </div>
-          </div>
 
-          <!-- Captured tab content (existing UI) -->
-          <div class="leads-pane is-active" data-leads-pane="captured">
-          <div class="leads-toolbar">
-            <div class="leads-filter">
-              <select id="leadsFilterColumn" aria-label="Filter column">
-                <option value="name">Name</option>
-                <option value="phone">Phone</option>
-                <option value="service">Service Requested</option>
-                <option value="address">Address</option>
-                <option value="created_at">Date Submitted</option>
-                <option value="note">Note</option>
-              </select>
-              <input type="text" id="leadsFilterValue" placeholder="Filter value..." />
-              <button class="btn secondary" type="button" id="leadsFilterClear">Clear</button>
-              <button class="leads-refresh" type="button" id="leadsRefreshButton" aria-label="Refresh leads">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                  <path d="M20 4v6h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+            <!-- Toolbar row 2: filter pills -->
+            <div class="leads-filter-row">
+              <button type="button" class="leads-filter-pill" data-filter="source" id="leadsFilterSource">
+                Source: <span class="leads-filter-value">All</span>
+              </button>
+              <button type="button" class="leads-filter-pill" data-filter="stage" id="leadsFilterStage">
+                Stage: <span class="leads-filter-value">All</span>
+              </button>
+              <button type="button" class="leads-filter-pill" data-filter="when" id="leadsFilterWhen">
+                When: <span class="leads-filter-value">All time</span>
+              </button>
+              <button type="button" class="leads-filter-pill" data-filter="more" id="leadsFilterMore">
+                More
               </button>
             </div>
-            <div class="leads-pagination">
-              <button class="btn secondary" type="button" id="leadsPrevPage">←</button>
-              <div class="leads-page-info" id="leadsPageInfo">Page 1 of 1</div>
-              <button class="btn secondary" type="button" id="leadsNextPage">→</button>
+
+            <!-- Active filter chips + clear-all -->
+            <div class="leads-active-filters" id="leadsActiveFilters" hidden></div>
+
+            <!-- Count + select-all toggle -->
+            <div class="leads-count-row">
+              <span class="leads-count" id="leadsCount">0 leads</span>
+              <label class="leads-select-toggle">
+                <input type="checkbox" id="leadsSelectMode">
+                <span>Select</span>
+              </label>
+            </div>
+
+            <!-- Bulk actions bar (shown when leads selected) -->
+            <div class="leads-bulk-bar" id="leadsBulkBar" hidden>
+              <span class="leads-bulk-count" id="leadsBulkCount">0 leads selected</span>
+              <button type="button" class="leads-bulk-btn" data-bulk-act="email">Send email</button>
+              <button type="button" class="leads-bulk-btn" data-bulk-act="stage">Move to stage ▾</button>
+              <button type="button" class="leads-bulk-btn" data-bulk-act="campaign">Add to campaign</button>
+              <button type="button" class="leads-bulk-btn" data-bulk-act="more">⋮ More</button>
+              <button type="button" class="leads-bulk-cancel" id="leadsBulkCancel">Cancel</button>
+            </div>
+
+            <!-- The table -->
+            <div class="leads-table-wrap" id="leadsTableWrap">
+              <table class="leads-table">
+                <thead id="leadsTableHead"></thead>
+                <tbody id="leadsTableBody"></tbody>
+              </table>
+              <div class="leads-loading" id="leadsLoading" hidden>Loading…</div>
+              <div class="leads-empty" id="leadsEmpty" hidden></div>
+              <div class="leads-show-more" id="leadsShowMore" hidden>Showing <span id="leadsShown">0</span> of <span id="leadsTotal">0</span> leads</div>
             </div>
           </div>
-          <div class="table-wrapper">
-            <table class="table" id="leadsTable">
-              <thead id="leadsTableHead"></thead>
-              <tbody id="leadsTableBody"></tbody>
-            </table>
+        </div>
+
+        <!-- Imports panel (hidden; surfaced via + Import button / loadImports) -->
+        <div class="leads-imports-panel" id="leadsImportsPanel" hidden style="grid-column: 1 / -1;">
+          <div class="leads-imports-list" id="leadsImportsList">
+            <div class="leads-empty"><span class="leads-empty-icon">📥</span><span>No imports yet — upload a CSV to get started.</span></div>
           </div>
-          <div class="transcript-modal" id="transcriptModal" aria-hidden="true">
-            <div class="transcript-dialog" role="dialog" aria-modal="true" aria-labelledby="transcriptTitle">
-              <div class="transcript-header">
-                <div class="transcript-title">
-                  <h3 id="transcriptTitle">Call Transcript</h3>
-                  <div class="transcript-meta" id="transcriptMeta">Loading...</div>
-                </div>
-                <div class="transcript-actions">
-                  <button class="transcript-summary-button" type="button" id="transcriptSummaryButton">Generate Summary</button>
-                  <button class="transcript-close" type="button" id="transcriptClose" aria-label="Close transcript">×</button>
-                </div>
+          <div class="leads-imported-leads-wrap" id="leadsImportedLeadsWrap" hidden>
+            <h3 class="leads-imported-title"><span id="leadsImportedTitle">Imported leads</span> <button type="button" class="btn-link" id="leadsImportedBack">← Back to imports</button></h3>
+            <div class="table-wrapper">
+              <table class="table" id="leadsImportedTable">
+                <thead><tr><th><input type="checkbox" id="leadsImportedCheckAll"></th><th>Name</th><th>Email</th><th>Phone</th><th>Service</th><th>Status</th><th></th></tr></thead>
+                <tbody id="leadsImportedTableBody"></tbody>
+              </table>
+            </div>
+            <div class="leads-imported-actions">
+              <span class="leads-imported-count" id="leadsImportedSelected">0 selected</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transcript modal (legacy — kept for inline JS that references these IDs) -->
+        <div class="transcript-modal" id="transcriptModal" aria-hidden="true">
+          <div class="transcript-dialog" role="dialog" aria-modal="true" aria-labelledby="transcriptTitle">
+            <div class="transcript-header">
+              <div class="transcript-title">
+                <h3 id="transcriptTitle">Call Transcript</h3>
+                <div class="transcript-meta" id="transcriptMeta">Loading...</div>
               </div>
-              <div class="transcript-summary" id="transcriptSummary"></div>
-              <div class="transcript-content" id="transcriptContent"></div>
+              <div class="transcript-actions">
+                <button class="transcript-summary-button" type="button" id="transcriptSummaryButton">Generate Summary</button>
+                <button class="transcript-close" type="button" id="transcriptClose" aria-label="Close transcript">×</button>
+              </div>
             </div>
+            <div class="transcript-summary" id="transcriptSummary"></div>
+            <div class="transcript-content" id="transcriptContent"></div>
           </div>
-          </div><!-- /.leads-pane[captured] -->
         </div>
       </section>
 
@@ -10813,6 +10803,172 @@
           margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2e8f0;
         }
         .leads-imported-count { font-size: 12.5px; color: #64748b; }
+
+        /* ─── Unified leads table ─────────────────────────────────── */
+        .leads-page { display:flex; flex-direction:column; gap:14px; padding:0 4px; }
+        .leads-page-head { display:flex; flex-direction:column; gap:4px; padding-bottom:8px; }
+        .leads-page-title { font-size:24px; font-weight:600; color:#0a0a0a; margin:0; }
+        .leads-page-sub { font-size:13px; color:#6b7280; margin:0; }
+
+        .leads-toolbar-row { display:flex; gap:10px; align-items:center; }
+        .leads-search-wrap { position:relative; flex:1; }
+        .leads-search-icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:14px; opacity:0.6; pointer-events:none; }
+        .leads-search-input {
+          width:100%; height:44px;
+          padding:0 38px 0 38px;
+          border:1px solid #e5e7eb;
+          border-radius:10px;
+          font-size:14px;
+          background:#fff;
+          font-family:inherit;
+          box-sizing:border-box;
+          transition:border-color 0.12s ease, box-shadow 0.12s ease;
+        }
+        .leads-search-input:focus { outline:none; border-color:#185FA5; box-shadow:0 0 0 3px rgba(24,95,165,0.12); }
+        .leads-search-clear { position:absolute; right:8px; top:50%; transform:translateY(-50%); width:24px; height:24px; border:0; background:#f3f4f6; border-radius:999px; cursor:pointer; font-size:14px; color:#6b7280; display:flex; align-items:center; justify-content:center; }
+
+        .leads-import-btn {
+          flex-shrink:0; height:44px; padding:0 18px;
+          background:linear-gradient(180deg,#1f2937,#0a0a0a);
+          color:#fff; border:0; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;
+          transition:transform 0.12s ease;
+        }
+        .leads-import-btn:hover { transform:translateY(-1px); }
+
+        .leads-filter-row { display:flex; gap:8px; flex-wrap:wrap; }
+        .leads-filter-pill {
+          display:inline-flex; align-items:center; gap:6px;
+          height:36px; padding:0 14px;
+          background:#fff; color:#0a0a0a;
+          border:1px solid #e5e7eb; border-radius:999px;
+          font-size:13px; font-weight:500; font-family:inherit;
+          cursor:pointer; transition:background 0.12s, border-color 0.12s;
+        }
+        .leads-filter-pill:hover { background:#f9fafb; border-color:#cbd5e1; }
+        .leads-filter-pill.is-active { background:#0a0a0a; color:#fff; border-color:#0a0a0a; }
+        .leads-filter-value { font-weight:600; }
+
+        .leads-active-filters { display:flex; gap:6px; flex-wrap:wrap; align-items:center; font-size:12px; color:#6b7280; }
+        .leads-active-chip {
+          display:inline-flex; align-items:center; gap:6px;
+          padding:4px 10px; background:#eef2ff; color:#3730a3;
+          border-radius:999px; font-size:11.5px; font-weight:500;
+        }
+        .leads-active-chip button { background:transparent; border:0; color:#3730a3; cursor:pointer; padding:0 0 0 4px; font-size:13px; }
+        .leads-active-clear-all { background:transparent; border:0; color:#185FA5; cursor:pointer; font-size:12px; font-family:inherit; }
+
+        .leads-count-row { display:flex; justify-content:space-between; align-items:center; }
+        .leads-count { font-size:13px; color:#6b7280; }
+        .leads-select-toggle { display:inline-flex; align-items:center; gap:6px; font-size:13px; color:#6b7280; cursor:pointer; }
+
+        .leads-bulk-bar {
+          position:sticky; top:8px; z-index:5;
+          display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+          padding:10px 14px;
+          background:#0a0a0a; color:#fff;
+          border-radius:12px;
+          box-shadow:0 8px 24px rgba(15,23,42,0.18);
+        }
+        .leads-bulk-count { font-size:13px; font-weight:600; flex:1; }
+        .leads-bulk-btn { padding:8px 14px; background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.18); border-radius:8px; font-size:12.5px; cursor:pointer; font-family:inherit; }
+        .leads-bulk-btn:hover { background:rgba(255,255,255,0.18); }
+        .leads-bulk-cancel { padding:8px 12px; background:transparent; color:#fff; border:1px solid rgba(255,255,255,0.3); border-radius:8px; font-size:12.5px; cursor:pointer; font-family:inherit; }
+
+        .leads-table-wrap { background:#fff; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; }
+        .leads-table { width:100%; border-collapse:collapse; font-size:14px; }
+        .leads-table thead th {
+          text-align:left; padding:12px 16px;
+          font-size:12px; font-weight:600; color:#6b7280;
+          text-transform:none; letter-spacing:0;
+          border-bottom:1px solid #e5e7eb;
+          background:#fafafa;
+          user-select:none;
+          white-space:nowrap;
+        }
+        .leads-table thead th[data-sortable="false"] { cursor:default; }
+        .leads-table thead th .sort-arrow { margin-left:4px; opacity:0.5; }
+        .leads-table thead th.is-sorted .sort-arrow { opacity:1; color:#0a0a0a; }
+        .leads-th-help {
+          display:inline-flex; align-items:center; justify-content:center;
+          width:14px; height:14px;
+          margin-left:4px; margin-right:2px;
+          background:#e5e7eb; color:#6b7280;
+          border-radius:50%; font-size:9px; font-weight:700;
+          cursor:help; vertical-align:middle;
+        }
+        .leads-table tbody tr {
+          border-bottom:1px solid #f3f4f6;
+          transition:background 0.08s;
+          cursor:pointer;
+        }
+        .leads-table tbody tr:hover { background:#fafafa; }
+        .leads-table tbody tr.is-selected { background:#eef2ff; }
+        .leads-table tbody td { padding:14px 16px; vertical-align:middle; }
+
+        .leads-name-cell { display:flex; align-items:center; gap:10px; }
+        .leads-avatar {
+          width:28px; height:28px;
+          border-radius:50%;
+          display:flex; align-items:center; justify-content:center;
+          color:#fff; font-size:11px; font-weight:700;
+          flex-shrink:0;
+        }
+        .leads-name { font-weight:500; color:#0a0a0a; }
+        .leads-name .match { background:rgba(99,102,241,0.18); color:#3730a3; padding:0 2px; border-radius:3px; }
+        .leads-name-secondary { font-size:11.5px; color:#6b7280; margin-top:2px; }
+
+        .leads-source-cell { font-size:16px; }
+
+        .leads-stage-chip {
+          display:inline-block; padding:3px 10px;
+          border-radius:999px; font-size:11px; font-weight:600;
+          background:#f3f4f6; color:#374151;
+        }
+        .leads-stage-chip.s-new { background:#f3f4f6; color:#374151; }
+        .leads-stage-chip.s-contacted { background:#dbeafe; color:#1e40af; }
+        .leads-stage-chip.s-engaged { background:#cffafe; color:#155e75; }
+        .leads-stage-chip.s-quoted { background:#dbeafe; color:#1d4ed8; }
+        .leads-stage-chip.s-scheduled { background:#fef3c7; color:#92400e; }
+        .leads-stage-chip.s-won { background:#dcfce7; color:#166534; }
+        .leads-stage-chip.s-lost { background:#fee2e2; color:#991b1b; }
+
+        .leads-reach-cell { display:inline-flex; gap:6px; font-size:14px; }
+        .leads-reach-icon { opacity:0.85; }
+        .leads-reach-icon.muted { opacity:0.25; }
+
+        .leads-empty { padding:60px 20px; text-align:center; }
+        .leads-empty-emoji { font-size:36px; margin-bottom:12px; }
+        .leads-empty-headline { font-size:16px; font-weight:600; color:#0a0a0a; margin-bottom:6px; }
+        .leads-empty-text { font-size:13px; color:#6b7280; margin-bottom:18px; max-width:380px; margin-left:auto; margin-right:auto; line-height:1.5; }
+        .leads-empty-cta { display:inline-block; padding:10px 18px; background:#0a0a0a; color:#fff; border-radius:10px; font-size:13px; font-weight:600; border:0; cursor:pointer; font-family:inherit; }
+
+        .leads-loading { padding:40px; text-align:center; color:#6b7280; font-size:13px; }
+        .leads-show-more { padding:14px; text-align:center; font-size:12px; color:#6b7280; border-top:1px solid #f3f4f6; }
+
+        /* Filter dropdown menu */
+        .leads-filter-menu {
+          position:fixed; z-index:1000;
+          background:#fff; border:1px solid rgba(15,23,42,0.08);
+          border-radius:12px; padding:6px;
+          box-shadow:0 8px 24px rgba(15,23,42,0.10), 0 1px 0 rgba(255,255,255,0.6) inset;
+          min-width:200px;
+        }
+        .leads-filter-opt {
+          display:block; width:100%; padding:8px 12px;
+          text-align:left; background:transparent; border:0; border-radius:8px;
+          font-size:13px; color:#0a0a0a; cursor:pointer; font-family:inherit;
+        }
+        .leads-filter-opt:hover { background:#f3f4f6; }
+        .leads-filter-opt.is-active { background:#0a0a0a; color:#fff; }
+
+        @media (max-width: 768px) {
+          .leads-table thead { display:none; }
+          .leads-table tbody tr { display:flex; flex-wrap:wrap; gap:8px; padding:14px; }
+          .leads-table tbody td { padding:0; display:block; flex:1 1 auto; }
+          .leads-name-cell { flex-basis:100%; }
+          .leads-bulk-bar { flex-direction:column; align-items:stretch; }
+        }
+
         /* CSV column-mapper — one row per CSV column, auto-mapped, with a
            dropdown to override and a trash icon to drop. Replaces the old
            hardcoded 8-field grid that hid columns from the user. */
@@ -18187,15 +18343,14 @@
         await window.__dashboardLoadRouteModule("activity");
         if (typeof window.loadActivitySection === "function") window.loadActivitySection();
       };
-      // Leads section: lazy-loads the leads bundle (tabs + CSV import wizard),
-      // then triggers the captured-leads data load via the inline loadLeads().
-      // The bundle's init() wires up tab switching and CSV import UI on first
-      // visit; subsequent visits are fast because the module is cached.
+      // Leads section: lazy-loads the leads bundle (unified table + CSV import
+      // wizard). The bundle's init() wires up event handlers on first visit;
+      // subsequent visits are fast because the module is cached.
       SECTION_ON_ENTER.leads = async function loadLeadsSection() {
         await window.__dashboardLoadRouteModule("leads");
-        // Captured-tab data load is still handled by the inline loadLeads()
-        // which has access to accountId / leadRecords from the outer scope.
-        if (typeof loadLeads === "function") loadLeads();
+        if (typeof window.loadUnifiedLeads === "function") {
+          return window.loadUnifiedLeads();
+        }
       };
       // KB bundle: lazy-loads web/src/routes/kb.js then calls window.loadKbSection.
       // Both "knowledge" and "kb" route names map to the same bundle.
@@ -21268,15 +21423,12 @@
         renderInsightsChat(activeKbType);
         loadBotConfig();
         loadDomains();
-        // loadLeads() is deferred — registered in SECTION_ON_ENTER.leads by
-        // the main DOMContentLoaded handler. Re-arm on accountId resolve so
-        // a revisit to Leads picks up fresh data with the real accountId.
+        // Invalidate leads so the unified table re-fetches on next visit with
+        // the real accountId. If Leads is already visible, trigger immediately.
         if (typeof invalidateSection === "function") invalidateSection("leads");
-        // If the Leads section is already visible (direct #leads hash on
-        // load), run it immediately since the accountId just became available.
         const leadsSec = document.getElementById("leads");
         if (leadsSec && leadsSec.classList.contains("is-active")) {
-          if (typeof loadLeads === "function") loadLeads();
+          if (typeof window.loadUnifiedLeads === "function") window.loadUnifiedLeads();
         }
         loadKnowledgeBase("client");
         loadKnowledgeBase("internal");
