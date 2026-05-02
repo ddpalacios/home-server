@@ -19,7 +19,7 @@
   <body>
     <main>
       <h1>Privacy Policy</h1>
-      <p class="meta">Just Got a Lead — last updated April 30, 2026.</p>
+      <p class="meta">Just Got a Lead — last updated May 2, 2026.</p>
 
       <h2>What we collect</h2>
       <p>
@@ -36,6 +36,89 @@
         scheduling a demo, and (if you opted in) send transactional SMS
         messages tied to that inquiry. We do not sell or share your contact
         information with third parties for their own marketing.
+      </p>
+
+      <h2>Instagram and Facebook data we receive</h2>
+      <p>
+        When you click "Connect Instagram" inside Just Got a Lead, you grant
+        our app permission, through Facebook Login for Business, to access
+        specific data from your Meta account. With your consent, we receive:
+      </p>
+      <ul>
+        <li>
+          Your Instagram profile basics — username, account ID, profile
+          picture, and account type (Business or Creator).
+        </li>
+        <li>
+          The list of Facebook Pages you manage and the Instagram Business
+          account linked to each Page.
+        </li>
+        <li>
+          Direct messages sent to and from your connected Instagram account,
+          so we can show them in your inbox and let you reply on your behalf.
+        </li>
+        <li>
+          A long-lived access token that lets us do the actions above on your
+          behalf without making you log in again every time.
+        </li>
+      </ul>
+      <p>
+        We never receive your Facebook password, payment information, or
+        content from any account you don't own.
+      </p>
+
+      <h2>How we use Instagram and Facebook data</h2>
+      <ul>
+        <li>
+          Show inbound DMs in your unified inbox so you can reply from one
+          place.
+        </li>
+        <li>
+          Send the replies you write inside our app from your connected
+          Instagram account. We only send messages you've typed and clicked
+          send on — never on your behalf without your action.
+        </li>
+        <li>
+          Detect customer-intent signals in DMs (keywords like "quote" or
+          "pricing") so the system can promote a conversation into a tracked
+          lead automatically.
+        </li>
+        <li>Schedule and publish Instagram posts you author in our scheduler.</li>
+        <li>
+          Display read-only stats about your account inside the dashboard.
+        </li>
+      </ul>
+      <p>
+        We do <strong>not</strong> use your Meta data for advertising. We do
+        not sell it. We do not share it with third parties for those parties'
+        own marketing. We do not use it to train AI models.
+      </p>
+
+      <h2>Where it's stored, how long, and how to delete it</h2>
+      <p>
+        Your access token is stored encrypted at rest using AES-256-GCM. The
+        encryption key lives in our server environment and is never stored
+        next to the ciphertext.
+      </p>
+      <p>
+        Your Instagram account metadata (username, account ID, linked
+        Facebook Page ID, Page name) is stored on Google Cloud Storage in a
+        private bucket scoped to your account. DM message threads are stored
+        as JSON files on the same private bucket, scoped to your account ID,
+        and only readable by your authenticated dashboard session.
+      </p>
+      <p>
+        We keep this data for as long as your Instagram account stays
+        connected. When you click "Disconnect" inside the dashboard, your
+        access token is deleted within 24 hours and your DM and post records
+        are deleted within 30 days.
+      </p>
+      <p>
+        Want everything deleted immediately, including any backups? Email
+        <a href="mailto:danieldario@palacios-solutions.com">danieldario@palacios-solutions.com</a>
+        with the subject <strong>"Data deletion request"</strong> and the
+        email address tied to your account. We confirm completion within 14
+        days.
       </p>
 
       <h2>SMS &amp; opt-out</h2>
