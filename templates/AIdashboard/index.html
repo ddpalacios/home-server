@@ -4862,14 +4862,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <span class="nav-tooltip">Schedule</span>
         </button>
-        <button class="app-nav-btn" type="button" data-route="engagement" id="appEngagementNavBtn" aria-label="Engagement">
-          <!-- Handshake icon (engagement = customer connection) -->
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></svg>
-          <span class="nav-tooltip">Engagement</span>
-        </button>
-        <button class="app-nav-btn" type="button" data-route="campaigns" aria-label="Campaigns" id="appCampaignsNavBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          <span class="nav-tooltip">Campaigns</span>
+        <button class="app-nav-btn" type="button" data-route="outreach" id="appOutreachNavBtn" aria-label="Outreach">
+          <!-- Send / paper-plane icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <span class="nav-tooltip">Outreach</span>
           <span class="app-nav-badge" id="appCampaignsBadge" hidden>0</span>
         </button>
         <button class="app-nav-btn" type="button" data-route="kb" aria-label="Knowledge base">
@@ -4884,11 +4880,6 @@
           <!-- Instagram camera icon -->
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg>
           <span class="nav-tooltip">Instagram</span>
-        </button>
-        <button class="app-nav-btn" type="button" data-route="inbox" id="appInboxNavBtn" aria-label="Inbox">
-          <!-- Inbox / message bubble icon -->
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          <span class="nav-tooltip">Inbox</span>
         </button>
         <button class="app-nav-btn" type="button" data-route="settings" aria-label="Settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -13236,6 +13227,42 @@
         .stg-top-tab.is-active { color: #0a0a0a; border-bottom-color: #0a0a0a; font-weight: 600; }
         .stg-top-pane[hidden] { display: none !important; }
 
+        /* ─── Outreach page (merged Engagement + Campaigns) ────────────────── */
+        .out-page {
+          display:flex; flex-direction:column; gap:24px;
+          padding:24px 0; max-width:1200px; margin:0 auto; width:100%;
+          box-sizing:border-box;
+        }
+        .out-page *, .out-page *::before, .out-page *::after { box-sizing:border-box; }
+        .out-page-head { padding-bottom:4px; display:flex; flex-direction:column; gap:4px; }
+        .out-page-title {
+          font-size:24px; font-weight:600; color:#0a0a0a; margin:0;
+          display:flex; align-items:center; gap:10px;
+          letter-spacing:-0.01em;
+        }
+        .out-page-sub { font-size:13px; color:#6b7280; margin:0; }
+
+        .out-section { display:flex; flex-direction:column; gap:14px; }
+        .out-section-head { display:flex; flex-direction:column; gap:2px; }
+        .out-section-titlewrap { display:flex; align-items:center; gap:8px; }
+        .out-section-icon { font-size:14px; line-height:1; opacity:0.75; }
+        .out-section-title {
+          font-size:11.5px; font-weight:700; color:#525252;
+          margin:0; letter-spacing:0.08em; text-transform:uppercase;
+        }
+        .out-section-help { width:18px; height:18px; font-size:10px; }
+        .out-section-sub { font-size:13px; color:#6b7280; margin:0; }
+
+        .out-divider {
+          height:1px; background:#f1f5f9; width:100%;
+        }
+
+        /* When the engagement list-card is mounted under outreach, drop its
+           top corners so it visually attaches to the section header. */
+        #outreachAutoMount > .eng-list-card { /* styles inherited */ }
+        #outreachOnDemandMount > .cmp-page { padding:0; }
+        #outreachOnDemandMount > .cmp-page .cmp-head { padding:0 0 14px; }
+
         /* ─── Engagement page (modern redesign) ───────────────────────────── */
         .eng-page {
           display:flex; flex-direction:column; gap:18px;
@@ -13863,6 +13890,45 @@
       <!-- ─── /Instagram DMs Inbox ────────────────────────────────────────── -->
 
       <!-- ─── Engagement ──────────────────────────────────────────────────── -->
+      <!-- ─────────── Outreach (merged Engagement + Campaigns) ───────────── -->
+      <section class="grid" id="outreach" data-route-section="outreach" hidden>
+        <div style="grid-column: 1 / -1; width: 100%;">
+          <div class="out-page">
+            <header class="out-page-head">
+              <h1 class="out-page-title">Outreach</h1>
+              <p class="out-page-sub">Everything your business sends to customers.</p>
+            </header>
+
+            <!-- AUTOMATIC sub-section -->
+            <section class="out-section">
+              <div class="out-section-head">
+                <div class="out-section-titlewrap">
+                  <span class="out-section-icon" aria-hidden="true">⚡</span>
+                  <h2 class="out-section-title">AUTOMATIC</h2>
+                </div>
+                <p class="out-section-sub">These send on their own when something happens.</p>
+              </div>
+              <div id="outreachAutoMount"></div>
+            </section>
+
+            <div class="out-divider" aria-hidden="true"></div>
+
+            <!-- ON-DEMAND sub-section -->
+            <section class="out-section">
+              <div class="out-section-head">
+                <div class="out-section-titlewrap">
+                  <span class="out-section-icon" aria-hidden="true">📨</span>
+                  <h2 class="out-section-title">ON-DEMAND</h2>
+                </div>
+                <p class="out-section-sub">You send these when you want — to a list you pick.</p>
+              </div>
+              <div id="outreachOnDemandMount"></div>
+            </section>
+          </div>
+        </div>
+      </section>
+      <!-- ─── /Outreach ──────────────────────────────────────────────────── -->
+
       <section class="grid" id="engagement" data-route-section="engagement" hidden>
         <div style="grid-column: 1 / -1; width: 100%;">
           <div class="eng-page">
@@ -18712,6 +18778,39 @@
         }
       };
 
+      // Outreach (merged Engagement + Campaigns). On first activation we
+      // mount the Engagement list-card and the Campaigns one-shot pane
+      // into the Outreach shell, then trigger both data loaders. Same
+      // pattern Settings uses for the Phone tab.
+      let _outreachMounted = false;
+      function ensureOutreachMounted() {
+        if (_outreachMounted) return;
+        const autoMount = document.getElementById("outreachAutoMount");
+        const onDemandMount = document.getElementById("outreachOnDemandMount");
+        if (!autoMount || !onDemandMount) return;
+        const engCard = document.querySelector("#engagement .eng-list-card");
+        if (engCard) autoMount.appendChild(engCard);
+        const cmpPane = document.querySelector('#campaigns [data-camp-pane="oneshot"] .cmp-page');
+        if (cmpPane) onDemandMount.appendChild(cmpPane);
+        _outreachMounted = true;
+      }
+      SECTION_ON_ENTER.outreach = async function loadOutreachSection() {
+        // Load both bundles in parallel, then mount + run their loaders.
+        await Promise.all([
+          window.__dashboardLoadRouteModule("engagement"),
+          window.__dashboardLoadRouteModule("campaigns"),
+        ]);
+        ensureOutreachMounted();
+        if (typeof window.loadEngagementSection === "function") {
+          window.loadEngagementSection();
+        }
+        if (typeof window.loadCampaignsSection === "function") {
+          window.loadCampaignsSection();
+        } else if (window.__campaignsRoute && typeof window.__campaignsRoute.load === "function") {
+          window.__campaignsRoute.load();
+        }
+      };
+
       initAppRouter();   // calls appShowRoute(initial) → _runSectionLoader(initial)
       initAppChrome();
       initMockUpgradeShortcut();
@@ -21006,6 +21105,7 @@
       leads:     { title: "Leads",         section: "leads" },
       replies:   { title: "Replies",       section: "replies" },
       campaigns: { title: "Campaigns",     section: "campaigns" },
+      outreach:  { title: "Outreach",      section: "outreach" },
       calendar:  { title: "Calendar",      section: "calendar" },
       activity:  { title: "Insights",      section: "activity" },
       knowledge: { title: "Knowledge base", section: "kb" },
@@ -21069,6 +21169,10 @@
           const phoneTab = document.querySelector('[data-settings-top-tab="phone"]');
           if (phoneTab) phoneTab.click();
         });
+      }
+      // engagement + campaigns merged into outreach. Old hashes still resolve.
+      if (route === "engagement" || route === "campaigns") {
+        route = "outreach";
       }
       if (route && route.startsWith("sequence-edit-")) {
         const sid = route.replace(/^sequence-edit-/, "");
@@ -23118,16 +23222,23 @@
       function schedulePolling() {
         clearTimeout(pollHandle);
         pollHandle = null;
-        const sec = document.querySelector('[data-route-section="campaigns"]');
-        const onPage = sec && sec.classList.contains("is-active");
+        // Campaign content lives under #outreach now (merged page) but the
+        // bare #campaigns section is still in the DOM as a fallback. Treat
+        // either as "on page" for polling purposes.
+        const _onCampaignSurface = () => {
+          const c = document.querySelector('[data-route-section="campaigns"]');
+          const o = document.querySelector('[data-route-section="outreach"]');
+          return (c && c.classList.contains("is-active")) ||
+                 (o && o.classList.contains("is-active"));
+        };
+        const onPage = _onCampaignSurface();
         const anySending = campaigns.some(c =>
           statusBucket(c.status) === "sending");
         if (!onPage || !anySending) return;
         pollHandle = setTimeout(() => {
           // Only re-fire if still on the page; otherwise the next visit
           // will call load() which re-arms the timer.
-          const s = document.querySelector('[data-route-section="campaigns"]');
-          if (s && s.classList.contains("is-active")) load();
+          if (_onCampaignSurface()) load();
         }, 8000);
       }
       function stopPolling() {
@@ -23176,6 +23287,10 @@
         await window.__dashboardLoadRouteModule("campaigns");
         return load();
       };
+      // Expose so the merged Outreach SECTION_ON_ENTER can re-trigger the
+      // campaign list refresh without going through SECTION_ON_ENTER's
+      // single-fire dedup.
+      window.loadCampaignsSection = load;
       window.addEventListener("accountIdReady", () => {
         // Re-arm so the first real accountId triggers a fresh load.
         invalidateSection("campaigns");
@@ -23198,11 +23313,15 @@
           _runSectionLoader("campaigns");
           maybeLoad();
         }, 80)));
-      // Stop polling when the user navigates to a different route.
-      document.querySelectorAll('.app-nav-btn:not([data-route="campaigns"])').forEach(btn =>
+      // Stop polling when the user navigates away from any campaign-content
+      // surface. With the merge, that's either #campaigns or #outreach.
+      document.querySelectorAll('.app-nav-btn:not([data-route="campaigns"]):not([data-route="outreach"])').forEach(btn =>
         btn.addEventListener("click", () => setTimeout(() => {
-          const s = document.querySelector('[data-route-section="campaigns"]');
-          if (!s || !s.classList.contains("is-active")) stopPolling();
+          const c = document.querySelector('[data-route-section="campaigns"]');
+          const o = document.querySelector('[data-route-section="outreach"]');
+          const onSurface = (c && c.classList.contains("is-active")) ||
+                            (o && o.classList.contains("is-active"));
+          if (!onSurface) stopPolling();
         }, 80)));
     })();
 
@@ -28850,8 +28969,6 @@ function escHtmlSeq(s) {
     const body = await r.json();
     if ((body.accounts || []).length > 0) {
       document.getElementById("appInstagramNavBtn")?.removeAttribute("hidden");
-      // Also unhide Inbox nav — it lives alongside Instagram DMs.
-      document.getElementById("appInboxNavBtn")?.removeAttribute("hidden");
     }
   } catch (_) { /* stay hidden */ }
 })();
