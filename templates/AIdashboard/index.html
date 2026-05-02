@@ -4900,7 +4900,8 @@
 
         <!-- Funnel + flat lead table. The KPI tiles that used to live
              here have been hoisted up under the insights box. -->
-        <div class="card" style="grid-column: span 12; margin-top: 16px;">
+        <div style="grid-column: span 12; display:grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-top: 16px;">
+          <div class="card">
           <div class="card-header" style="margin-bottom: 8px;">
             <h2 class="section-title" style="margin:0;">Funnel</h2>
           </div>
@@ -4941,6 +4942,14 @@
                 </button>
               </div>
             </div>
+          </div>
+          </div>
+          <div class="card" id="homeServicesCard">
+            <div class="card-header" style="margin-bottom: 8px;">
+              <h2 class="section-title" style="margin:0;">Services booked</h2>
+            </div>
+            <p class="section-note">What people are calling about, ranked.</p>
+            <div id="homeServicesList" style="display:flex;flex-direction:column;gap:8px;"></div>
           </div>
         </div>
       </section>
@@ -22365,6 +22374,21 @@
             <span><strong>${(cr.quoted_to_scheduled||0).toFixed(0)}%</strong> quoted → scheduled</span>
             <span><strong>${(cr.scheduled_to_won||0).toFixed(0)}%</strong> scheduled → won</span>
           `;
+        }
+        const svcEl = document.getElementById("homeServicesList");
+        if (svcEl) {
+          const svcRows = (hm.services_breakdown || []);
+          const max = Math.max(1, ...svcRows.map(r => r.count));
+          svcEl.innerHTML = svcRows.map(r => `
+            <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;font-size:12px;">
+              <div>
+                <div style="font-weight:500;color:#0a0a0a;">${esc(r.service_type)}</div>
+                <div style="height:4px;background:#e5e7eb;border-radius:2px;margin-top:4px;">
+                  <div style="height:100%;background:#185FA5;border-radius:2px;width:${(r.count / max * 100).toFixed(0)}%;"></div>
+                </div>
+              </div>
+              <div style="color:#71717a;">${r.count}</div>
+            </div>`).join("") || `<div style="color:#71717a;font-size:12px;">No services yet.</div>`;
         }
       }
 
