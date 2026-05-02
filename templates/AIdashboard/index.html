@@ -13489,7 +13489,6 @@
         <div class="stg-tabs-wrap" style="grid-column: span 12;">
           <nav class="stg-top-tabs" role="tablist" aria-label="Settings sections">
             <button type="button" class="stg-top-tab is-active" data-settings-top-tab="general" role="tab" aria-selected="true">General</button>
-            <button type="button" class="stg-top-tab" data-settings-top-tab="widget" role="tab">Widget</button>
             <button type="button" class="stg-top-tab" data-settings-top-tab="phone" role="tab">Phone</button>
           </nav>
         </div>
@@ -13528,11 +13527,6 @@
               <p class="pub-meta" id="wgtPublishMeta">Loading…</p>
             </div>
           </header>
-          <nav class="wgt-tabs" role="tablist" aria-label="Widget sections">
-            <button type="button" class="wgt-tab" data-wgt-tab="embed" role="tab">Install</button>
-            <button type="button" class="wgt-tab is-active" data-wgt-tab="settings" role="tab" aria-selected="true">Settings</button>
-          </nav>
-
           <div class="wgt-split">
             <div class="wgt-form" id="settingsCard">
               <span class="wgt-saved" id="wgtSavedPill" aria-live="polite">
@@ -13755,15 +13749,13 @@
               </div>
             </aside>
           </div>
+
+          <!-- Install snippet + approved domains, inline below the form. -->
+          <div id="stgWidgetInstallMount" style="margin-top:24px;">
+            <!-- #embed section content is moved here on first Settings activation. -->
+          </div>
         </div>
         </div><!-- /stg-top-pane general -->
-
-        <!-- Widget pane: install snippet + approved domains -->
-        <div class="stg-top-pane" data-settings-top-pane="widget" style="grid-column: span 12;" hidden>
-          <div id="stgWidgetMount">
-            <!-- #embed section content is moved here by initSettingsTopTabs() JS on first activation. -->
-          </div>
-        </div><!-- /stg-top-pane widget -->
 
         <!-- Phone pane: phone numbers and call analytics -->
         <div class="stg-top-pane" data-settings-top-pane="phone" style="grid-column: span 12;" hidden>
@@ -18902,24 +18894,26 @@
         }
       }
 
-      // Move #embed (the install snippet + approved domains) into the
-      // Widget tab on first activation. The dedicated Embed nav route was
-      // retired — install lives under Settings → Widget now.
-      let widgetMounted = false;
-      function ensureWidgetMounted() {
-        if (widgetMounted) return;
-        widgetMounted = true;
-        const mount = document.getElementById("stgWidgetMount");
+      // Move #embed (the install snippet + approved domains) inline into
+      // the General pane. The dedicated Embed nav route AND the separate
+      // Widget tab are both retired — everything about the chat widget
+      // lives on a single page now.
+      let widgetInstallMounted = false;
+      function ensureWidgetInstallMounted() {
+        if (widgetInstallMounted) return;
+        widgetInstallMounted = true;
+        const mount = document.getElementById("stgWidgetInstallMount");
         if (!mount) return;
         const embedSection = document.getElementById("embed");
         if (!embedSection) return;
         embedSection.removeAttribute("data-route-section");
         embedSection.removeAttribute("hidden");
         embedSection.classList.remove("grid");
-        // Drop the embed page's redundant internal "Install/Settings" tab
-        // strip — the outer Settings tabs already disambiguate.
+        // Drop the embed page's now-redundant header + internal tab strip.
         const innerTabs = embedSection.querySelector(".wgt-tabs");
         if (innerTabs) innerTabs.remove();
+        const innerHead = embedSection.querySelector(".wgt-head");
+        if (innerHead) innerHead.remove();
         mount.appendChild(embedSection);
         if (typeof window.__dashboardLoadRouteModule === "function") {
           window.__dashboardLoadRouteModule("embed");
@@ -18935,9 +18929,13 @@
           const isActive = p.dataset.settingsTopPane === name;
           p.hidden = !isActive;
         });
-        if (name === "phone")  ensurePhoneMounted();
-        if (name === "widget") ensureWidgetMounted();
+        if (name === "phone")   ensurePhoneMounted();
+        if (name === "general") ensureWidgetInstallMounted();
       }
+
+      // Default tab is General — mount the install block immediately so
+      // it's there on first paint, no first-click delay.
+      ensureWidgetInstallMounted();
 
       tabs.forEach(t => t.addEventListener("click", () => activateTopTab(t.dataset.settingsTopTab)));
     }
@@ -21223,14 +21221,10 @@
       if (route === "engagement" || route === "campaigns") {
         route = "outreach";
       }
-      // embed (widget install) is now a Settings tab — old hash routes
-      // jump to Settings and activate the Widget tab.
+      // embed (widget install) is now inline in the General Settings pane.
+      // Old hashes resolve to Settings.
       if (route === "embed") {
         route = "settings";
-        requestAnimationFrame(() => {
-          const widgetTab = document.querySelector('[data-settings-top-tab="widget"]');
-          if (widgetTab) widgetTab.click();
-        });
       }
       if (route && route.startsWith("sequence-edit-")) {
         const sid = route.replace(/^sequence-edit-/, "");
