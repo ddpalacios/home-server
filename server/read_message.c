@@ -537,7 +537,7 @@ void process_bytes(struct Socket *sockets, struct Socket *socket, char* buf, int
 				read_exact_bytes(socket->cSSL, content_length, body);
 				body[content_length] = '\0';
 			}
-			process_route(socket, http_header, body);
+			process_route(socket, http_header, body, (size_t)content_length);
 
 			if (peeked_http_header != NULL){
 				free(peeked_http_header);

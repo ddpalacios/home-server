@@ -151,7 +151,7 @@ static void send_twilio_voice_stream_response(SSL *ssl, const char *http_header)
     SSL_write(ssl, twiml, twiml_len);
 }
 
-void process_route(struct Socket *socket, char *http_header, char *body) {
+void process_route(struct Socket *socket, char *http_header, char *body, size_t body_len) {
     SSL *cSSL = socket->cSSL;
     if (!http_header) {
         return;
@@ -247,7 +247,7 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
     if (strcmp(request_type, "POST") == 0 &&
         (strcmp(route, "/twilio/voice") == 0 || strcmp(route, "/voice") == 0)) {
         printf("Twilio live voice webhook received — proxying to Flask for phone-to-account lookup.\n");
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/voice-legacy") == 0) {
         printf("Twilio Voice webhook received.\n");
         printf("Raw Headers:\n%s\n", http_header);
@@ -308,7 +308,7 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         if (!payload) {
             send_response_code(cSSL, 500);
         } else {
-            post_to_local(socket, http_header, payload, "/chat", "9000");
+            post_to_local(socket, http_header, payload, payload ? strlen(payload) : 0, "/chat", "9000");
             free(payload);
         }
 
@@ -389,7 +389,7 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         if (!payload) {
             send_response_code(cSSL, 500);
         } else {
-            post_to_local(socket, http_header, payload, "/chat", "9000");
+            post_to_local(socket, http_header, payload, payload ? strlen(payload) : 0, "/chat", "9000");
             free(payload);
         }
 
@@ -448,19 +448,19 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
     } else if (strcmp(request_type, "GET") == 0 && (strcmp(route, "/try") == 0 || strncmp(route, "/try/", 5) == 0)) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && (strcmp(route, "/try") == 0 || strncmp(route, "/try/", 5) == 0)) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/integrations/", 14) == 0) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/integrations/", 14) == 0) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/admin/") != NULL) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/admin/") != NULL) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/internal/reroute") != NULL) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/internal/reroute") != NULL) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/messages") == 0) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/messages/data") == 0) {
@@ -472,21 +472,21 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/auth/") != NULL) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/auth/") != NULL) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/onboarding/") != NULL) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/onboarding/") != NULL) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/me/") != NULL) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/me/") != NULL) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "DELETE") == 0 && strstr(route, "/me/") != NULL) {
         delete_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/unsubscribe/", 13) == 0) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/unsubscribe/", 13) == 0) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/track/open/", 12) == 0) {
         /* Email open-tracking pixel — public route hit by recipients'
          * email clients when they render the message. Always returns
@@ -495,13 +495,13 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/trial-phone/") != NULL) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/trial-phone/") != NULL) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/chat-reset") == 0) {
-        post_to_local(socket, http_header, body, route_with_query, "9000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "9000");
     } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/domains") == 0) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/voice-transcript") != NULL) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/widget.js") == 0) {
         get_to_local(socket, http_header, body, route_with_query, "9000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/widget.css") == 0) {
@@ -546,41 +546,41 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/instagram/images/") != NULL) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/chat") == 0) {
-        post_to_local(socket, http_header, body, route_with_query, "9000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "9000");
     } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/book-estimate") == 0) {
-        post_to_local(socket, http_header, body, route_with_query, "9000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "9000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/bot-config") != NULL) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/knowledege") != NULL) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/kb/", 4) == 0) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/prompt-save") != NULL) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/knowledege-embed") != NULL) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/publish-app") != NULL) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/leads-sync") != NULL) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/lead-sql") != NULL) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/demo-kb-ingest") == 0) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/demo-kb-save") == 0) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/demo-kb-share") == 0) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/demo-opened") == 0) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/voice-transcript-summary") != NULL) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/domains") != NULL) {
-        post_to_local(socket, http_header, body, route_with_query, "5000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/auth/") != NULL) {
-        post_to_local(socket, http_header, body, route, "5000");
+        post_to_local(socket, http_header, body, body_len, route, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/chat-reset") == 0) {
-        post_to_local(socket, http_header, body, route_with_query, "9000");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "9000");
     } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/blob-storage/", 14) == 0) {
         post_blob(socket, http_header, body, route);
     } else if (strcmp(request_type, "DELETE") == 0 && strstr(route, "/knowledege") != NULL) {

@@ -713,7 +713,7 @@ static void handle_client(int fd) {
         body[content_length] = '\0';
     }
 
-    process_route(&socket, http_header, body);
+    process_route(&socket, http_header, body, (size_t)content_length);
 
     free(peek_buf);
     free(peeked_http_header);

@@ -95,7 +95,7 @@ void post_generate_phrase(struct Socket* socket,char* http_header, char*body, ch
  }
 
  
-void post_to_local(struct Socket* socket,char* http_header, char*body, char* route, const char* port){
+void post_to_local(struct Socket* socket,char* http_header, char*body, size_t body_len, char* route, const char* port){
 	int sfd  = connect_to_local_server("127.0.0.1", port);
 	if (sfd < 0) {
 		send_response_code(socket->cSSL, 502);
@@ -106,6 +106,7 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, char* rou
 	setsockopt(sfd, SOL_SOCKET, SO_RCVTIMEO, &tv_recv, sizeof(tv_recv));
 	setsockopt(sfd, SOL_SOCKET, SO_SNDTIMEO, &tv_send, sizeof(tv_send));
 	const char *safe_body = body ? body : "";
+	if (!body) body_len = 0;
 
 	/* Forward incoming Cookie header so the upstream Flask session is
 	 * preserved (admin endpoints gate on session["user_email"]). */
@@ -206,12 +207,18 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, char* rou
 			fwd_host_value);
 	}
 
-	size_t req_size = strlen(safe_body) + 2048
+	/* Build the request HEADER as a string and send it, then send the
+	 * body bytes via a separate send(). The body may contain null bytes
+	 * (multipart binary uploads), so we cannot inline it via snprintf +
+	 * strlen — that would truncate at the first \0 and produce a body
+	 * shorter than Content-Length, hanging the upstream parser. */
+	size_t header_size = 2048
 		+ (cookie_value ? strlen(cookie_value) : 0)
 		+ strlen(content_type)
-		+ strlen(fwd_host_line);
-	char *request = malloc(req_size);
-	if (!request) {
+		+ strlen(fwd_host_line)
+		+ strlen(route);
+	char *header_buf = malloc(header_size);
+	if (!header_buf) {
 		perror("malloc failed");
 		if (cookie_value) free(cookie_value);
 		if (content_type_value) free(content_type_value);
@@ -220,8 +227,9 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, char* rou
 		return;
 	}
 
+	int header_written;
 	if (cookie_value) {
-		snprintf(request, req_size,
+		header_written = snprintf(header_buf, header_size,
 			"POST %s HTTP/1.1\r\n"
 			"Host: %s:%s\r\n"
 			"%s"
@@ -229,29 +237,41 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, char* rou
 			"Content-Length: %zu\r\n"
 			"Cookie: %s\r\n"
 			"Connection: close\r\n"
-			"\r\n"
-			"%s",
+			"\r\n",
 			route,
-			"127.0.0.1", port, fwd_host_line, content_type, strlen(safe_body), cookie_value, safe_body);
+			"127.0.0.1", port, fwd_host_line, content_type, body_len, cookie_value);
 		free(cookie_value);
 	} else {
-		snprintf(request, req_size,
+		header_written = snprintf(header_buf, header_size,
 			"POST %s HTTP/1.1\r\n"
 			"Host: %s:%s\r\n"
 			"%s"
 			"Content-Type: %s\r\n"
 			"Content-Length: %zu\r\n"
 			"Connection: close\r\n"
-			"\r\n"
-			"%s",
+			"\r\n",
 			route,
-			"127.0.0.1", port, fwd_host_line, content_type, strlen(safe_body), safe_body);
+			"127.0.0.1", port, fwd_host_line, content_type, body_len);
 	}
 	if (content_type_value) free(content_type_value);
 	if (fwd_host_value) free(fwd_host_value);
-	
-	send(sfd, request, strlen(request), 0);
-	free(request);
+
+	if (header_written < 0 || (size_t)header_written >= header_size) {
+		free(header_buf);
+		close(sfd);
+		send_response_code(socket->cSSL, 500);
+		return;
+	}
+	send(sfd, header_buf, (size_t)header_written, 0);
+	free(header_buf);
+	if (body_len > 0) {
+		size_t sent = 0;
+		while (sent < body_len) {
+			ssize_t n = send(sfd, safe_body + sent, body_len - sent, 0);
+			if (n <= 0) break;
+			sent += (size_t)n;
+		}
+	}
 	char buf[8192];
     char *response = NULL;
     size_t total = 0;
@@ -302,7 +322,7 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, char* rou
 		}
 		size_t header_len = (size_t)(header_end - response);
 		char *res_body = header_end + 4;
-		size_t body_len = total - (size_t)(res_body - response);
+		size_t res_body_len = total - (size_t)(res_body - response);
 
 		char *up_content_type = NULL;
 		char *header_block = malloc(header_len + 1);
@@ -335,10 +355,10 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, char* rou
 			"Connection: close\r\n"
 			"Content-Length: %zu\r\n"
 			"\r\n",
-			up_status, status_text, ctype, body_len);
+			up_status, status_text, ctype, res_body_len);
 		SSL_write(socket->cSSL, header_out, header_n);
-		if (body_len > 0) {
-			SSL_write(socket->cSSL, res_body, body_len);
+		if (res_body_len > 0) {
+			SSL_write(socket->cSSL, res_body, res_body_len);
 		}
 		if (up_content_type) free(up_content_type);
 
