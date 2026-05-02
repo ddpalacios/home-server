@@ -3218,6 +3218,11 @@
     }
     .ai-mode-opt:hover { background: #f5f5f5; }
     .ai-mode-opt.is-active { background: #0a0a0a; color: #fff; }
+    .camp-subtab {
+      padding: 6px 14px; font-size: 12px; border-radius: 6px;
+      border: 1px solid #e5e7eb; background: #fff; color: #374151; cursor: pointer;
+    }
+    .camp-subtab.is-active { background: #0a0a0a; color: #fff; border-color: #0a0a0a; }
   </style>
 </head>
 <body>
@@ -6911,51 +6916,68 @@
         }
       </style>
       <section class="grid" id="campaigns" data-route-section="campaigns" hidden>
-        <div class="cmp-page" style="grid-column: span 12;">
-          <!-- First-visit nudge for Campaigns. -->
-          <div class="page-nudge" data-nudge="campaigns" hidden>
-            <span class="page-nudge-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            </span>
-            <div style="flex:1;min-width:0;">
-              <p class="page-nudge-text"><strong>Send the same email to a group of people at once.</strong> Use this for follow-ups, reminders, new offers, or just keeping in touch. Emails go out from your own Gmail, so they look like you wrote them. Pick recipients from imports, captured leads, or both.</p>
-              <div class="page-nudge-actions">
-                <button type="button" class="page-nudge-dismiss" data-nudge-close>Got it</button>
-                <button type="button" class="page-nudge-tour" data-nudge-tour="campaigns">Show me around</button>
+        <div style="grid-column: span 12; display:flex; gap:8px; margin-bottom:12px;">
+          <button type="button" class="camp-subtab is-active" data-camp-tab="oneshot">One-shot</button>
+          <button type="button" class="camp-subtab" data-camp-tab="sequences">Sequences</button>
+        </div>
+
+        <div class="camp-tab-pane" data-camp-pane="oneshot">
+          <div class="cmp-page" style="grid-column: span 12;">
+            <!-- First-visit nudge for Campaigns. -->
+            <div class="page-nudge" data-nudge="campaigns" hidden>
+              <span class="page-nudge-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </span>
+              <div style="flex:1;min-width:0;">
+                <p class="page-nudge-text"><strong>Send the same email to a group of people at once.</strong> Use this for follow-ups, reminders, new offers, or just keeping in touch. Emails go out from your own Gmail, so they look like you wrote them. Pick recipients from imports, captured leads, or both.</p>
+                <div class="page-nudge-actions">
+                  <button type="button" class="page-nudge-dismiss" data-nudge-close>Got it</button>
+                  <button type="button" class="page-nudge-tour" data-nudge-tour="campaigns">Show me around</button>
+                </div>
               </div>
+              <button type="button" class="page-nudge-close" data-nudge-close aria-label="Dismiss">×</button>
             </div>
-            <button type="button" class="page-nudge-close" data-nudge-close aria-label="Dismiss">×</button>
-          </div>
 
-          <header class="cmp-head">
-            <div>
-              <h2 class="cmp-title">
-                Email campaigns
-                <span data-help-icon="campaigns"></span>
-              </h2>
-              <p class="cmp-sub">Send emails to your leads — once, on a schedule, or as drafts you finish later.</p>
+            <header class="cmp-head">
+              <div>
+                <h2 class="cmp-title">
+                  Email campaigns
+                  <span data-help-icon="campaigns"></span>
+                </h2>
+                <p class="cmp-sub">Send emails to your leads — once, on a schedule, or as drafts you finish later.</p>
+              </div>
+              <button type="button" class="cmp-new-btn" id="cmpNewBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                New campaign
+              </button>
+            </header>
+
+            <div class="cmp-search-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="cmpSearchInput" placeholder="Find a campaign by name…" autocomplete="off" />
             </div>
-            <button type="button" class="cmp-new-btn" id="cmpNewBtn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              New campaign
-            </button>
-          </header>
 
-          <div class="cmp-search-wrap">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" id="cmpSearchInput" placeholder="Find a campaign by name…" autocomplete="off" />
+            <div class="cmp-tabs" id="cmpTabs" role="tablist">
+              <button type="button" class="cmp-tab is-active" data-cmp-tab="all" role="tab">All <span class="cmp-tab-count" data-cmp-count="all">0</span></button>
+              <button type="button" class="cmp-tab" data-cmp-tab="draft" role="tab">Drafts <span class="cmp-tab-count" data-cmp-count="draft">0</span></button>
+              <button type="button" class="cmp-tab" data-cmp-tab="scheduled" role="tab">Scheduled <span class="cmp-tab-count" data-cmp-count="scheduled">0</span></button>
+              <button type="button" class="cmp-tab" data-cmp-tab="sending" role="tab">Sending <span class="cmp-tab-count" data-cmp-count="sending">0</span></button>
+              <button type="button" class="cmp-tab" data-cmp-tab="completed" role="tab">Completed <span class="cmp-tab-count" data-cmp-count="completed">0</span></button>
+              <button type="button" class="cmp-tab" data-cmp-tab="cancelled" role="tab">Cancelled <span class="cmp-tab-count" data-cmp-count="cancelled">0</span></button>
+            </div>
+
+            <div class="cmp-list" id="cmpList"></div>
           </div>
+        </div>
 
-          <div class="cmp-tabs" id="cmpTabs" role="tablist">
-            <button type="button" class="cmp-tab is-active" data-cmp-tab="all" role="tab">All <span class="cmp-tab-count" data-cmp-count="all">0</span></button>
-            <button type="button" class="cmp-tab" data-cmp-tab="draft" role="tab">Drafts <span class="cmp-tab-count" data-cmp-count="draft">0</span></button>
-            <button type="button" class="cmp-tab" data-cmp-tab="scheduled" role="tab">Scheduled <span class="cmp-tab-count" data-cmp-count="scheduled">0</span></button>
-            <button type="button" class="cmp-tab" data-cmp-tab="sending" role="tab">Sending <span class="cmp-tab-count" data-cmp-count="sending">0</span></button>
-            <button type="button" class="cmp-tab" data-cmp-tab="completed" role="tab">Completed <span class="cmp-tab-count" data-cmp-count="completed">0</span></button>
-            <button type="button" class="cmp-tab" data-cmp-tab="cancelled" role="tab">Cancelled <span class="cmp-tab-count" data-cmp-count="cancelled">0</span></button>
+        <div class="camp-tab-pane" data-camp-pane="sequences" hidden>
+          <div class="card" style="grid-column: span 12;">
+            <div class="card-header" style="margin-bottom: 8px;">
+              <h2 class="section-title" style="margin:0;">Sequences</h2>
+            </div>
+            <p class="section-note">Multi-step automations that walk a lead through the funnel.</p>
+            <div id="sequencesList" style="display:flex;flex-direction:column;gap:8px;"></div>
           </div>
-
-          <div class="cmp-list" id="cmpList"></div>
         </div>
       </section>
       <section class="grid" id="pipeline" data-route-section="pipeline" hidden>
@@ -30806,6 +30828,46 @@
       });
 
       load();
+    })();
+
+    (function campaignsSubtabInit() {
+      const subtabs = document.querySelectorAll(".camp-subtab");
+      const panes = document.querySelectorAll(".camp-tab-pane");
+      if (!subtabs.length) return;
+
+      function escHtml(s) {
+        return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({
+          "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+        }[c]));
+      }
+
+      async function loadSequences() {
+        const list = document.getElementById("sequencesList");
+        if (!list) return;
+        try {
+          const res = await fetch("/me/sequences", { credentials: "same-origin" });
+          if (!res.ok) return;
+          const data = await res.json();
+          list.innerHTML = (data.sequences || []).map(s => `
+            <div style="display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;
+                        padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;">
+              <div>
+                <div style="font-weight:600;color:#0a0a0a;">${escHtml(s.name)}</div>
+                <div style="font-size:11px;color:#71717a;">${s.step_count} steps · ${s.active ? "active" : "paused"}</div>
+              </div>
+              <a href="#sequence-edit-${escHtml(s.id)}"
+                 style="font-size:11.5px;color:#185FA5;text-decoration:none;">Edit →</a>
+            </div>`).join("") ||
+            `<div style="color:#71717a;font-size:12px;">No sequences yet.</div>`;
+        } catch (_) {}
+      }
+
+      subtabs.forEach(b => b.addEventListener("click", () => {
+        const target = b.dataset.campTab;
+        subtabs.forEach(x => x.classList.toggle("is-active", x === b));
+        panes.forEach(p => p.hidden = p.dataset.campPane !== target);
+        if (target === "sequences") loadSequences();
+      }));
     })();
   </script>
 </body>
