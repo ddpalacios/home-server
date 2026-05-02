@@ -3245,42 +3245,46 @@
       margin-right: 8px;
     }
 
-    /* Compact pill: white background, soft border, status dot, plain text. */
+    /* Visible, easy-to-find pill: tinted background, status dot, clear chevron. */
     #aiModeBadge {
       position: relative;
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      height: 38px;
-      padding: 0 14px;
-      background: #fff;
+      gap: 10px;
+      height: 44px;
+      padding: 0 18px;
+      background: #f1f5f9;
       color: #0a0a0a;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 500;
       font-family: inherit;
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
       cursor: pointer;
       white-space: nowrap;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.04);
       transition: border-color 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
     }
     #aiModeBadge:hover {
-      border-color: #cbd5e1;
-      background: #fafafa;
-    }
-    #aiModeBadge:active { background: #f3f4f6; }
-    #aiModeBadge[data-open="true"] {
       border-color: #94a3b8;
-      box-shadow: 0 0 0 3px rgba(148,163,184,0.18);
+      background: #e2e8f0;
+      box-shadow: 0 2px 6px rgba(15,23,42,0.08);
+    }
+    #aiModeBadge:active { background: #cbd5e1; }
+    #aiModeBadge[data-open="true"] {
+      border-color: #64748b;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(100,116,139,0.18);
     }
 
-    .ai-mode-prefix { color: #6b7280; font-weight: 500; }
+    .ai-mode-prefix { color: #475569; font-weight: 500; }
     #aiModeLabel    { color: #0a0a0a; font-weight: 600; }
 
     .ai-mode-dot {
-      width: 8px; height: 8px; border-radius: 50%;
+      width: 10px; height: 10px; border-radius: 50%;
       background: #9ca3af;
       flex-shrink: 0;
+      box-shadow: 0 0 0 2px #fff;
       transition: background 0.12s ease;
     }
     #aiModeBadge[data-mode="ai_always"] .ai-mode-dot { background: #16a34a; }
@@ -3288,8 +3292,8 @@
     #aiModeBadge[data-mode="i_respond"] .ai-mode-dot { background: #9ca3af; }
 
     .ai-mode-chevron {
-      font-size: 10px;
-      color: #9ca3af;
+      font-size: 11px;
+      color: #475569;
       transition: transform 0.18s ease;
       margin-left: 2px;
     }
@@ -4809,11 +4813,6 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           <span class="nav-tooltip">Outreach</span>
           <span class="app-nav-badge" id="appCampaignsBadge" hidden>0</span>
-        </button>
-        <button class="app-nav-btn" type="button" data-route="instagram" id="appInstagramNavBtn" aria-label="Instagram" hidden>
-          <!-- Instagram camera icon -->
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg>
-          <span class="nav-tooltip">Instagram</span>
         </button>
         <button class="app-nav-btn" type="button" data-route="settings" aria-label="Settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -6385,6 +6384,28 @@
       </section>
 
       <style>
+        /* ─────────── Schedule top-level tabs (Calendar / Instagram) ────── */
+        .sched-top-tabs {
+          display: flex; gap: 0;
+          margin: 0 0 18px;
+          border-bottom: 1px solid #e5e7eb;
+        }
+        .sched-top-tab {
+          padding: 10px 18px;
+          background: transparent; border: 0;
+          border-bottom: 2px solid transparent;
+          color: #71717a;
+          font-size: 13.5px; font-weight: 500; font-family: inherit;
+          cursor: pointer;
+          margin-bottom: -1px;
+          transition: color 0.12s ease, border-color 0.12s ease;
+        }
+        .sched-top-tab:hover { color: #0a0a0a; }
+        .sched-top-tab.is-active {
+          color: #0a0a0a; border-bottom-color: #0a0a0a; font-weight: 600;
+        }
+        .sched-top-pane[hidden] { display: none !important; }
+
         /* ─────────── Calendar page · scoped styles ─────────── */
         .cal-page {
           font-family: "Inter", "Space Grotesk", system-ui, -apple-system, sans-serif;
@@ -8517,27 +8538,48 @@
             <button type="button" class="page-nudge-close" data-nudge-close aria-label="Dismiss">×</button>
           </div>
 
-          <header class="cal-head">
-            <div>
-              <h2>
-                Schedule
-                <span data-help-icon="schedule"></span>
-              </h2>
-              <p class="cal-sub">Drag any customer onto a time. When you're done, hit Submit and we'll send them a Google Calendar invite by email.</p>
-            </div>
-            <div class="cal-head-actions" id="calHeadActions" hidden>
-              <span class="cal-status-pill" id="calStatusPill">Connected</span>
-              <button type="button" class="cal-btn-secondary" id="calRefreshBtn">Refresh</button>
-              <button type="button" class="cal-btn-danger" id="calDisconnectBtn">Disconnect</button>
-            </div>
-          </header>
+          <nav class="sched-top-tabs" role="tablist" aria-label="Schedule sections">
+            <button type="button" class="sched-top-tab is-active" data-sched-top-tab="calendar" role="tab" aria-selected="true">Calendar</button>
+            <button type="button" class="sched-top-tab" data-sched-top-tab="instagram" role="tab" aria-selected="false">Instagram</button>
+          </nav>
 
-          <div id="calBody">
-            <div class="cal-skeleton" aria-hidden="true">
-              <div class="cal-skeleton-row"></div>
-              <div class="cal-skeleton-row"></div>
-              <div class="cal-skeleton-row"></div>
-              <div class="cal-skeleton-row"></div>
+          <!-- Calendar tab pane (Google Calendar appointments) -->
+          <div class="sched-top-pane" data-sched-top-pane="calendar">
+            <header class="cal-head">
+              <div>
+                <h2>
+                  Schedule
+                  <span data-help-icon="schedule"></span>
+                </h2>
+                <p class="cal-sub">Drag any customer onto a time. When you're done, hit Submit and we'll send them a Google Calendar invite by email.</p>
+              </div>
+              <div class="cal-head-actions" id="calHeadActions" hidden>
+                <span class="cal-status-pill" id="calStatusPill">Connected</span>
+                <button type="button" class="cal-btn-secondary" id="calRefreshBtn">Refresh</button>
+                <button type="button" class="cal-btn-danger" id="calDisconnectBtn">Disconnect</button>
+              </div>
+            </header>
+
+            <div id="calBody">
+              <div class="cal-skeleton" aria-hidden="true">
+                <div class="cal-skeleton-row"></div>
+                <div class="cal-skeleton-row"></div>
+                <div class="cal-skeleton-row"></div>
+                <div class="cal-skeleton-row"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Instagram scheduling tab pane -->
+          <div class="sched-top-pane" data-sched-top-pane="instagram" hidden>
+            <header class="cal-head" style="margin-bottom:12px;">
+              <div>
+                <h2 style="margin:0;">Instagram posts</h2>
+                <p class="cal-sub">Plan and schedule posts to your connected Instagram accounts.</p>
+              </div>
+            </header>
+            <div id="schedIgMount">
+              <!-- #instagram section content is moved here on first activation. -->
             </div>
           </div>
         </div>
@@ -21215,6 +21257,15 @@
           if (kbTab) kbTab.click();
         });
       }
+      // instagram (scheduling) is now a Schedule tab — old hashes jump to
+      // Schedule and activate the Instagram tab.
+      if (route === "instagram") {
+        route = "calendar";
+        requestAnimationFrame(() => {
+          const igTab = document.querySelector('[data-sched-top-tab="instagram"]');
+          if (igTab) igTab.click();
+        });
+      }
       if (route && route.startsWith("sequence-edit-")) {
         const sid = route.replace(/^sequence-edit-/, "");
         // Lazy-load campaigns bundle, then open the wizard.
@@ -25230,8 +25281,51 @@
         try { await fetch("/me/calendar/disconnect", { method: "POST", credentials: "same-origin" }); } catch (_) {}
         renderDisconnectedState();
       });
+      // Schedule has two top tabs — Calendar (Google) + Instagram.
+      // Wire tab switching once; mount Instagram content on first activation
+      // of the Instagram tab (same runtime-mount pattern Settings uses for
+      // its Phone tab).
+      let _schedTabsWired = false;
+      let _schedIgMounted = false;
+      function ensureSchedTabsWired() {
+        if (_schedTabsWired) return;
+        _schedTabsWired = true;
+        const tabs  = document.querySelectorAll("[data-sched-top-tab]");
+        const panes = document.querySelectorAll("[data-sched-top-pane]");
+        function activate(name) {
+          tabs.forEach(t => {
+            const active = t.dataset.schedTopTab === name;
+            t.classList.toggle("is-active", active);
+            t.setAttribute("aria-selected", active ? "true" : "false");
+          });
+          panes.forEach(p => {
+            p.hidden = p.dataset.schedTopPane !== name;
+          });
+          if (name === "instagram") ensureSchedIgMounted();
+        }
+        tabs.forEach(t => t.addEventListener("click", () => activate(t.dataset.schedTopTab)));
+      }
+      function ensureSchedIgMounted() {
+        if (_schedIgMounted) return;
+        const mount = document.getElementById("schedIgMount");
+        if (!mount) return;
+        const igSection = document.getElementById("instagram");
+        if (!igSection) return;
+        igSection.removeAttribute("data-route-section");
+        igSection.removeAttribute("hidden");
+        igSection.classList.remove("grid");
+        mount.appendChild(igSection);
+        _schedIgMounted = true;
+        if (typeof window.__dashboardLoadRouteModule === "function") {
+          window.__dashboardLoadRouteModule("instagram").then(() => {
+            if (typeof window.loadInstagramSection === "function") window.loadInstagramSection();
+          });
+        }
+      }
+
       // Register in SECTION_ON_ENTER — deferred, fires on first navigation.
       SECTION_ON_ENTER.calendar = function loadCalendarSection() {
+        ensureSchedTabsWired();
         loadCalendar();
       };
       document.querySelectorAll('.app-nav-btn[data-route="calendar"]').forEach((btn) => {
@@ -28999,22 +29093,5 @@ function escHtmlSeq(s) {
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
 <script type="module" src="/dashboard/dist/main.js"></script>
-<script>
-// Instagram feature-flag bootstrap: unhide the nav button only when the
-// account has at least one connected Instagram account. A 404 means the
-// feature isn't enabled server-side; any other error keeps the button
-// hidden too (fail-closed).
-(async function bootstrapInstagramNav() {
-  try {
-    const r = await fetch("/me/instagram/accounts", { credentials: "include" });
-    if (r.status === 404) return; // feature not available
-    if (!r.ok) return;
-    const body = await r.json();
-    if ((body.accounts || []).length > 0) {
-      document.getElementById("appInstagramNavBtn")?.removeAttribute("hidden");
-    }
-  } catch (_) { /* stay hidden */ }
-})();
-</script>
 </body>
 </html>
