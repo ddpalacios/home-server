@@ -3244,6 +3244,8 @@
       position: relative;
       margin-right: 8px;
     }
+
+    /* Compact pill: white background, soft border, status dot, plain text. */
     #aiModeBadge {
       position: relative;
       display: inline-flex;
@@ -3251,148 +3253,143 @@
       gap: 8px;
       height: 38px;
       padding: 0 14px;
-      background: linear-gradient(180deg, #6366f1 0%, #4f46e5 100%);
-      color: #fff;
+      background: #fff;
+      color: #0a0a0a;
       font-size: 13px;
-      font-weight: 600;
-      border: 0;
-      border-radius: 999px;
-      box-shadow:
-        0 1px 0 rgba(255,255,255,0.15) inset,
-        0 -1px 0 rgba(0,0,0,0.18) inset,
-        0 1px 2px rgba(79,70,229,0.30),
-        0 4px 14px rgba(79,70,229,0.28);
+      font-weight: 500;
+      font-family: inherit;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
       cursor: pointer;
       white-space: nowrap;
-      transition:
-        transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1),
-        box-shadow 0.18s ease;
+      transition: border-color 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
     }
     #aiModeBadge:hover {
-      transform: translateY(-1px);
-      box-shadow:
-        0 1px 0 rgba(255,255,255,0.18) inset,
-        0 -1px 0 rgba(0,0,0,0.18) inset,
-        0 2px 4px rgba(79,70,229,0.32),
-        0 8px 22px rgba(79,70,229,0.32);
+      border-color: #cbd5e1;
+      background: #fafafa;
     }
-    #aiModeBadge:active {
-      transform: translateY(0) scale(0.96);
-      box-shadow:
-        0 1px 0 rgba(255,255,255,0.10) inset,
-        0 -1px 0 rgba(0,0,0,0.18) inset,
-        0 1px 2px rgba(79,70,229,0.28);
-      transition: transform 0.06s ease, box-shadow 0.06s ease;
-    }
+    #aiModeBadge:active { background: #f3f4f6; }
     #aiModeBadge[data-open="true"] {
-      transform: translateY(0);
-      box-shadow:
-        0 0 0 3px rgba(99,102,241,0.30),
-        0 1px 0 rgba(255,255,255,0.18) inset,
-        0 4px 14px rgba(79,70,229,0.32);
+      border-color: #94a3b8;
+      box-shadow: 0 0 0 3px rgba(148,163,184,0.18);
     }
-    #aiModeBadge .ai-mode-icon {
-      font-size: 16px;
-      display: inline-block;
-      animation: none;
+
+    .ai-mode-prefix { color: #6b7280; font-weight: 500; }
+    #aiModeLabel    { color: #0a0a0a; font-weight: 600; }
+
+    .ai-mode-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #9ca3af;
+      flex-shrink: 0;
+      transition: background 0.12s ease;
     }
-    #aiModeBadge[data-mode="ai_always"] .ai-mode-icon {
-      animation: ai-pulse 2s ease-in-out infinite;
+    #aiModeBadge[data-mode="ai_always"] .ai-mode-dot { background: #16a34a; }
+    #aiModeBadge[data-mode="hybrid"]    .ai-mode-dot { background: #d97706; }
+    #aiModeBadge[data-mode="i_respond"] .ai-mode-dot { background: #9ca3af; }
+
+    .ai-mode-chevron {
+      font-size: 10px;
+      color: #9ca3af;
+      transition: transform 0.18s ease;
+      margin-left: 2px;
     }
-    @keyframes ai-pulse {
-      0%, 100% { transform: scale(1);    filter: drop-shadow(0 0 0 rgba(99,102,241,0)); }
-      50%      { transform: scale(1.08); filter: drop-shadow(0 0 6px rgba(99,102,241,0.6)); }
-    }
-    #aiModeBadge .ai-mode-chevron {
-      transition: transform 0.2s ease;
-      font-size: 9px;
-      opacity: 0.7;
-    }
-    #aiModeBadge[data-open="true"] .ai-mode-chevron {
-      transform: rotate(180deg);
-    }
+    #aiModeBadge[data-open="true"] .ai-mode-chevron { transform: rotate(180deg); }
+
     @keyframes ai-mode-confirm {
       0%   { transform: scale(1); }
-      40%  { transform: scale(1.08); }
+      40%  { transform: scale(1.04); }
       100% { transform: scale(1); }
     }
     #aiModeBadge.is-confirming { animation: ai-mode-confirm 0.32s ease; }
+
+    /* Popover */
     #aiModePanel {
       position: absolute;
       top: calc(100% + 8px);
       right: 0;
-      min-width: 320px;
+      min-width: 300px;
       background: #fff;
-      border: 1px solid rgba(15,23,42,0.08);
-      border-radius: 14px;
-      padding: 10px;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 6px;
       box-shadow:
-        0 1px 0 rgba(255,255,255,0.6) inset,
-        0 1px 2px rgba(15,23,42,0.04),
-        0 8px 24px rgba(15,23,42,0.10),
-        0 24px 48px -24px rgba(15,23,42,0.16);
+        0 12px 32px rgba(15,23,42,0.12),
+        0 4px 12px rgba(15,23,42,0.06);
       opacity: 0;
-      transform: translateY(-4px) scale(0.98);
+      transform: translateY(-4px);
       pointer-events: none;
-      transition: opacity 0.15s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: opacity 0.15s ease, transform 0.18s ease;
       z-index: 1000;
     }
     #aiModePanel[data-open="true"] {
       opacity: 1;
-      transform: translateY(0) scale(1);
+      transform: translateY(0);
       pointer-events: auto;
     }
     .ai-mode-panel-label {
-      font-size: var(--seq-font-tag);
-      font-weight: 700;
-      letter-spacing: 0.07em;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
       text-transform: uppercase;
-      color: var(--seq-muted);
-      padding: 0 2px 10px;
+      color: #9ca3af;
+      padding: 8px 10px 6px;
       margin: 0;
     }
+
     .ai-mode-opt {
-      display: block;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
       width: 100%;
-      padding: 12px 14px;
+      padding: 10px 10px;
       background: transparent;
       color: #0a0a0a;
       border: 0;
-      border-radius: 10px;
+      border-radius: 8px;
       cursor: pointer;
       text-align: left;
-      transition: background 0.12s ease, transform 0.06s ease;
+      font-family: inherit;
+      transition: background 0.10s ease;
     }
-    .ai-mode-opt:hover { background: #f3f4f6; }
-    .ai-mode-opt:active { transform: scale(0.98); transition: transform 0.04s; }
-    .ai-mode-opt.is-active {
-      background: linear-gradient(180deg, #6366f1, #4f46e5);
-      color: #fff;
+    .ai-mode-opt:hover { background: #f9fafb; }
+    .ai-mode-opt.is-active { background: #f1f5f9; }
+
+    .ai-mode-opt .opt-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 6px;
+      background: #9ca3af;
     }
+    .ai-mode-opt .opt-dot[data-dot="ai_always"] { background: #16a34a; }
+    .ai-mode-opt .opt-dot[data-dot="hybrid"]    { background: #d97706; }
+    .ai-mode-opt .opt-dot[data-dot="i_respond"] { background: #9ca3af; }
+
+    .ai-mode-opt .opt-body { flex: 1; min-width: 0; }
     .ai-mode-opt .opt-title {
-      font-size: 13.5px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #0a0a0a;
+      display: block;
     }
+    .ai-mode-opt.is-active .opt-title { font-weight: 600; }
     .ai-mode-opt .opt-sub {
       font-size: 12px;
       color: #6b7280;
-      margin-top: 4px;
+      display: block;
+      margin-top: 2px;
       line-height: 1.45;
     }
-    .ai-mode-opt.is-active .opt-sub { color: rgba(255,255,255,0.72); }
     .ai-mode-opt .opt-check {
-      margin-left: auto;
+      flex-shrink: 0;
+      width: 18px; height: 18px;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #16a34a;
+      font-size: 13px; font-weight: 700;
       opacity: 0;
-      transform: scale(0.6);
-      transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: opacity 0.15s ease;
+      margin-top: 2px;
     }
-    .ai-mode-opt.is-active .opt-check {
-      opacity: 1;
-      transform: scale(1);
-    }
+    .ai-mode-opt.is-active .opt-check { opacity: 1; }
 
     /* ── Campaigns sub-tabs ── */
     .camp-subtab {
@@ -4854,32 +4851,36 @@
         <div class="app-topbar-actions">
           <div class="ai-mode-panel-wrap">
             <button type="button" id="aiModeBadge" aria-haspopup="true" aria-expanded="false">
-              <span class="ai-mode-icon" aria-hidden="true">🤖</span>
-              <span id="aiModeLabel">AI</span>
+              <span class="ai-mode-dot" aria-hidden="true"></span>
+              <span class="ai-mode-prefix">AI replies:</span>
+              <span id="aiModeLabel">When slow</span>
               <span class="ai-mode-chevron" aria-hidden="true">▾</span>
             </button>
             <div id="aiModePanel" role="menu">
-              <p class="ai-mode-panel-label">How should AI handle replies?</p>
-              <button type="button" data-mode="i_respond" class="ai-mode-opt" role="menuitem">
-                <div class="opt-title">
-                  <span>I respond myself</span>
-                  <span class="opt-check" aria-hidden="true">✓</span>
-                </div>
-                <div class="opt-sub">AI never replies for me — I'll handle every conversation.</div>
+              <p class="ai-mode-panel-label">How AI handles replies</p>
+              <button type="button" data-mode="ai_always" class="ai-mode-opt" role="menuitem">
+                <span class="opt-dot" data-dot="ai_always" aria-hidden="true"></span>
+                <span class="opt-body">
+                  <span class="opt-title">Always reply</span>
+                  <span class="opt-sub">AI responds to every customer message.</span>
+                </span>
+                <span class="opt-check" aria-hidden="true">✓</span>
               </button>
               <button type="button" data-mode="hybrid" class="ai-mode-opt" role="menuitem">
-                <div class="opt-title">
-                  <span>AI helps when I'm slow</span>
-                  <span class="opt-check" aria-hidden="true">✓</span>
-                </div>
-                <div class="opt-sub">You'll be alerted first; AI takes over only if you don't respond in time.</div>
+                <span class="opt-dot" data-dot="hybrid" aria-hidden="true"></span>
+                <span class="opt-body">
+                  <span class="opt-title">Reply when I'm slow</span>
+                  <span class="opt-sub">AI steps in if you don't reply within 30 min.</span>
+                </span>
+                <span class="opt-check" aria-hidden="true">✓</span>
               </button>
-              <button type="button" data-mode="ai_always" class="ai-mode-opt" role="menuitem">
-                <div class="opt-title">
-                  <span>AI handles all replies</span>
-                  <span class="opt-check" aria-hidden="true">✓</span>
-                </div>
-                <div class="opt-sub">AI replies to every customer; I'll be notified but not pressured.</div>
+              <button type="button" data-mode="i_respond" class="ai-mode-opt" role="menuitem">
+                <span class="opt-dot" data-dot="i_respond" aria-hidden="true"></span>
+                <span class="opt-body">
+                  <span class="opt-title">Never reply</span>
+                  <span class="opt-sub">AI doesn't reply. You handle them yourself.</span>
+                </span>
+                <span class="opt-check" aria-hidden="true">✓</span>
               </button>
             </div>
           </div>
@@ -28787,13 +28788,13 @@
       const MODE_CACHE_KEY = "dashboard.ai_mode";
 
       const LABELS = {
-        "i_respond": "I respond myself",
-        "hybrid":    "AI helps when slow",
-        "ai_always": "AI handles replies",
+        "ai_always": "Always",
+        "hybrid":    "When slow",
+        "i_respond": "Off",
       };
 
       function render(mode) {
-        label.textContent = LABELS[mode] || "AI helps when slow";
+        label.textContent = LABELS[mode] || "When slow";
         badge.dataset.mode = mode || "hybrid";
         panel.querySelectorAll(".ai-mode-opt").forEach(btn => {
           btn.classList.toggle("is-active", btn.dataset.mode === mode);
