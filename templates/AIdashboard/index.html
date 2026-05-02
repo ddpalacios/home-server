@@ -23045,6 +23045,7 @@
           // Re-render the header with full server data (more accurate stage / unsub flag).
           renderHeader(data.lead || {});
           renderBody(data);
+          loadLeadSequences(leadId);
           // If the caller asked for a specific draft kind to open
           // (Pipeline card "What to do next" button click), fire it now
           // that we have the journey context.
@@ -23078,6 +23079,10 @@
             ${timelineHtml}
           </div>
           ${suggestionsHtml ? `<div class="lm-section"><h3>What to do next</h3>${suggestionsHtml}</div>` : ""}
+          <div id="leadSequencesPanel" style="margin-top: 14px; display:none;">
+            <div style="font-size: 11px; font-weight: 600; color: #71717a; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px;">Active sequences</div>
+            <div id="leadSequencesPanelBody" style="display:flex; flex-direction:column; gap: 6px;"></div>
+          </div>
         `;
         bodyEl.querySelectorAll("[data-toggle-event]").forEach(el =>
           el.addEventListener("click", () => {
@@ -30978,6 +30983,64 @@ function seqEditCollect(originalDef) {
     if (seconds) s.seconds = parseInt(seconds.value || 0, 10);
   });
   return out;
+}
+  </script>
+  <script>
+async function loadLeadSequences(leadId) {
+  const panel = document.getElementById("leadSequencesPanel");
+  const body  = document.getElementById("leadSequencesPanelBody");
+  if (!panel || !body) return;
+  body.innerHTML = "";
+  panel.style.display = "none";
+  if (!leadId) return;
+  try {
+    const res = await fetch(`/me/leads/${encodeURIComponent(leadId)}/sequences`,
+                            { credentials: "same-origin" });
+    if (!res.ok) return;
+    const data = await res.json();
+    const enrs = data.enrollments || [];
+    if (!enrs.length) return;
+    panel.style.display = "block";
+    body.innerHTML = enrs.map(e => {
+      const stateLabel = e.state === "completed" ? "Done" :
+                         e.state === "in_progress" ? `Step ${e.current_step + 1} of ${e.step_count}` :
+                         e.state;
+      const stateColor = e.state === "completed" ? "#15803d" :
+                         e.state === "in_progress" ? "#185FA5" : "#71717a";
+      return `<div style="display:flex; justify-content:space-between; align-items:center;
+                          padding:8px 10px; border:1px solid #e5e7eb; border-radius:6px;
+                          background:#fff; font-size:12px;">
+        <div>
+          <div style="font-weight:600; color:#0a0a0a;">${escHtmlSeq(e.sequence_name)}</div>
+          <div style="color:${stateColor}; font-size:11px; margin-top:2px;">${stateLabel}</div>
+        </div>
+        <button type="button" data-enr-id="${escHtmlSeq(e.id)}" data-lead-id="${escHtmlSeq(leadId)}"
+                class="lead-seq-takeover"
+                style="font-size:11px; padding:4px 10px; background:#fff; color:#374151;
+                       border:1px solid #e5e7eb; border-radius:5px; cursor:pointer;">
+          Take over
+        </button>
+      </div>`;
+    }).join("");
+    body.querySelectorAll(".lead-seq-takeover").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const lid = btn.dataset.leadId;
+        try {
+          await fetch(`/me/leads/${encodeURIComponent(lid)}/ai-handoff`, {
+            method: "POST", credentials: "same-origin",
+          });
+          btn.textContent = "Handed off ✓";
+          btn.disabled = true;
+        } catch (_) {}
+      });
+    });
+  } catch (_) {}
+}
+
+function escHtmlSeq(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
 }
   </script>
 </body>
