@@ -22,7 +22,14 @@
 #include "route.h"
 #include "server.h"
 
-#define BUFFER_SIZE 8192
+/* Peek buffer size for the initial HTTP request read. Must be large
+ * enough to hold the full request line + every header up to the
+ * \r\n\r\n terminator; otherwise get_http_header fails and the
+ * connection is silently closed. 8KB was too tight for OAuth
+ * callbacks where a large Flask session cookie + a long
+ * authorization-code query string + ngrok-injected headers easily
+ * exceed 8KB. 32KB matches MAX_HEADER_SIZE/2 with headroom. */
+#define BUFFER_SIZE 32768
 #define WORKER_COUNT 16
 #define QUEUE_CAPACITY 1024
 #define MAX_WEBSOCKET_PAYLOAD (64 * 1024 * 1024)
