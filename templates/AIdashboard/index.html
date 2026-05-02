@@ -6980,6 +6980,23 @@
           </div>
         </div>
       </section>
+      <section class="grid" id="sequenceEdit" data-route-section="sequenceEdit" hidden>
+        <div class="card" style="grid-column: span 12;">
+          <div class="card-header" style="margin-bottom: 8px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <h2 class="section-title" style="margin:0;" id="seqEditTitle">Sequence</h2>
+              <p class="section-note" id="seqEditSubtitle">Edit the steps, body copy, and timing.</p>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button type="button" id="seqEditSave"
+                      style="padding:6px 12px;font-size:12px;background:#0a0a0a;color:#fff;border:0;border-radius:6px;cursor:pointer;">
+                Save
+              </button>
+            </div>
+          </div>
+          <div id="seqEditSteps" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+      </section>
       <section class="grid" id="pipeline" data-route-section="pipeline" hidden>
         <div class="pl-page">
           <!-- First-time landing nudge for the Pipeline. Hidden once dismissed. -->
@@ -19725,6 +19742,11 @@
 
     function appShowRoute(route) {
       if (route === "home") route = "activity";
+      if (route && route.startsWith("sequence-edit-")) {
+        const sid = route.replace(/^sequence-edit-/, "");
+        if (typeof loadSequenceEdit === "function") loadSequenceEdit(sid);
+        route = "sequenceEdit";
+      }
       let def = APP_ROUTES[route];
       if (!def) return;
       // Admin-only routes are off-limits to non-admins. If a non-admin
@@ -30869,6 +30891,83 @@
         if (target === "sequences") loadSequences();
       }));
     })();
+  </script>
+  <script>
+async function loadSequenceEdit(sequenceId) {
+  const titleEl = document.getElementById("seqEditTitle");
+  const stepsEl = document.getElementById("seqEditSteps");
+  const saveBtn = document.getElementById("seqEditSave");
+  if (!stepsEl) return;
+  let def = null;
+  try {
+    const res = await fetch(`/me/sequences/${encodeURIComponent(sequenceId)}`,
+                            { credentials: "same-origin" });
+    if (!res.ok) return;
+    def = await res.json();
+  } catch (_) { return; }
+  if (titleEl) titleEl.textContent = def.name || sequenceId;
+  stepsEl.innerHTML = (def.steps || []).map((s, i) => seqEditStepHtml(s, i)).join("");
+  saveBtn.onclick = async () => {
+    const updated = seqEditCollect(def);
+    await fetch(`/me/sequences/${encodeURIComponent(sequenceId)}`, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updated),
+    });
+  };
+}
+
+function seqEditStepHtml(step, idx) {
+  const id = (k) => `seqStep-${idx}-${k}`;
+  const e = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+  let inner = "";
+  if (step.type === "send_email") {
+    inner = `
+      <label style="font-size:11px;color:#52525b;">Subject</label>
+      <input id="${id('subject')}" value="${e(step.subject || '')}"
+             style="width:100%;padding:6px 8px;font-size:12px;border:1px solid #e5e7eb;border-radius:4px;margin-bottom:8px;">
+      <label style="font-size:11px;color:#52525b;">Body</label>
+      <textarea id="${id('body')}" rows="4"
+             style="width:100%;padding:6px 8px;font-size:12px;border:1px solid #e5e7eb;border-radius:4px;font-family:inherit;">${e(step.body || '')}</textarea>`;
+  } else if (step.type === "send_sms" || step.type === "owner_alert") {
+    inner = `
+      <label style="font-size:11px;color:#52525b;">Body</label>
+      <textarea id="${id('body')}" rows="3"
+             style="width:100%;padding:6px 8px;font-size:12px;border:1px solid #e5e7eb;border-radius:4px;font-family:inherit;">${e(step.body || '')}</textarea>`;
+  } else if (step.type === "wait") {
+    inner = `
+      <label style="font-size:11px;color:#52525b;">Wait (seconds)</label>
+      <input id="${id('seconds')}" type="number" value="${step.seconds || 0}"
+             style="width:100%;padding:6px 8px;font-size:12px;border:1px solid #e5e7eb;border-radius:4px;">`;
+  } else {
+    inner = `<div style="font-size:11px;color:#71717a;">No editable fields.</div>`;
+  }
+  return `
+    <div class="seq-step-card" data-step-idx="${idx}"
+         style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;background:#fff;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <strong style="font-size:13px;">Step ${idx + 1} · ${e(step.type)}</strong>
+        <span style="font-size:11px;color:#71717a;">${e(step.label || "")}</span>
+      </div>
+      ${inner}
+    </div>`;
+}
+
+function seqEditCollect(originalDef) {
+  const out = JSON.parse(JSON.stringify(originalDef));
+  (out.steps || []).forEach((s, i) => {
+    const subject = document.getElementById(`seqStep-${i}-subject`);
+    const body    = document.getElementById(`seqStep-${i}-body`);
+    const seconds = document.getElementById(`seqStep-${i}-seconds`);
+    if (subject) s.subject = subject.value;
+    if (body)    s.body    = body.value;
+    if (seconds) s.seconds = parseInt(seconds.value || 0, 10);
+  });
+  return out;
+}
   </script>
 </body>
 </html>
