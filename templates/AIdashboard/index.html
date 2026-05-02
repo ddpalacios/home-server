@@ -4868,10 +4868,6 @@
           <span class="nav-tooltip">Outreach</span>
           <span class="app-nav-badge" id="appCampaignsBadge" hidden>0</span>
         </button>
-        <button class="app-nav-btn" type="button" data-route="kb" aria-label="Knowledge base">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-          <span class="nav-tooltip">Knowledge base</span>
-        </button>
         <button class="app-nav-btn" type="button" data-route="instagram" id="appInstagramNavBtn" aria-label="Instagram" hidden>
           <!-- Instagram camera icon -->
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg>
@@ -13490,6 +13486,7 @@
           <nav class="stg-top-tabs" role="tablist" aria-label="Settings sections">
             <button type="button" class="stg-top-tab is-active" data-settings-top-tab="general" role="tab" aria-selected="true">General</button>
             <button type="button" class="stg-top-tab" data-settings-top-tab="phone" role="tab">Phone</button>
+            <button type="button" class="stg-top-tab" data-settings-top-tab="kb" role="tab">Knowledge base</button>
           </nav>
         </div>
 
@@ -13763,6 +13760,13 @@
             <!-- #phoneNumbers section content is moved here by initSettingsTopTabs() JS below -->
           </div>
         </div><!-- /stg-top-pane phone -->
+
+        <!-- Knowledge base pane: sources, articles, test-it -->
+        <div class="stg-top-pane" data-settings-top-pane="kb" style="grid-column: span 12;" hidden>
+          <div id="stgKbMount">
+            <!-- #kbSources section content is moved here by initSettingsTopTabs() JS below. -->
+          </div>
+        </div><!-- /stg-top-pane kb -->
 
       </section>
 
@@ -18920,6 +18924,29 @@
         }
       }
 
+      // Move #kbSources (the Knowledge base page) into the KB tab on first
+      // activation. The dedicated KB nav route was retired — KB lives under
+      // Settings now.
+      let kbMounted = false;
+      function ensureKbMounted() {
+        if (kbMounted) return;
+        kbMounted = true;
+        const mount = document.getElementById("stgKbMount");
+        if (!mount) return;
+        const kbSection = document.getElementById("kbSources");
+        if (!kbSection) return;
+        kbSection.removeAttribute("data-route-section");
+        kbSection.removeAttribute("hidden");
+        kbSection.classList.remove("grid");
+        mount.appendChild(kbSection);
+        // Lazy-load the KB bundle and fire its data loader once mounted.
+        if (typeof window.__dashboardLoadRouteModule === "function") {
+          window.__dashboardLoadRouteModule("kb").then(() => {
+            if (typeof window.loadKbSection === "function") window.loadKbSection();
+          });
+        }
+      }
+
       function activateTopTab(name) {
         tabs.forEach(t => {
           t.classList.toggle("is-active", t.dataset.settingsTopTab === name);
@@ -18931,6 +18958,7 @@
         });
         if (name === "phone")   ensurePhoneMounted();
         if (name === "general") ensureWidgetInstallMounted();
+        if (name === "kb")      ensureKbMounted();
       }
 
       // Default tab is General — mount the install block immediately so
@@ -21225,6 +21253,15 @@
       // Old hashes resolve to Settings.
       if (route === "embed") {
         route = "settings";
+      }
+      // kb / knowledge (Knowledge base) is now a Settings tab — old hashes
+      // jump to Settings and activate the KB tab.
+      if (route === "kb" || route === "knowledge") {
+        route = "settings";
+        requestAnimationFrame(() => {
+          const kbTab = document.querySelector('[data-settings-top-tab="kb"]');
+          if (kbTab) kbTab.click();
+        });
       }
       if (route && route.startsWith("sequence-edit-")) {
         const sid = route.replace(/^sequence-edit-/, "");
