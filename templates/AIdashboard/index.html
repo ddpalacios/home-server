@@ -3149,6 +3149,11 @@
       color: #2563eb;
       border-bottom-color: #2563eb;
     }
+    .home-chip {
+      padding: 6px 14px; font-size: 12px; border-radius: 999px;
+      border: 1px solid #e5e7eb; background: #fff; color: #374151; cursor: pointer;
+    }
+    .home-chip.is-active { background: #0a0a0a; color: #fff; border-color: #0a0a0a; }
   </style>
 </head>
 <body>
@@ -4804,6 +4809,14 @@
           <div class="ask-canvas-stage" id="insightsResponse">
             <div class="insights-chat" id="insightsChat"></div>
           </div>
+        </div>
+
+        <div class="home-date-chips" role="tablist" aria-label="Date range" style="grid-column: span 12; display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+          <button type="button" class="home-chip" data-range="today">Today</button>
+          <button type="button" class="home-chip" data-range="7d">7 days</button>
+          <button type="button" class="home-chip is-active" data-range="30d">30 days</button>
+          <button type="button" class="home-chip" data-range="90d">90 days</button>
+          <button type="button" class="home-chip" data-range="all">All time</button>
         </div>
 
         <!-- Top-of-page KPI snapshot. Mirrors the same #actPipelineStats
@@ -22230,11 +22243,23 @@
       let pageIdx = 0;
       const PAGE_SIZE = 5;
 
+      const HOME_CHIPS = document.querySelectorAll(".home-chip");
+      let homeRange = localStorage.getItem("home.range") || "30d";
+      HOME_CHIPS.forEach(btn => {
+        btn.classList.toggle("is-active", btn.dataset.range === homeRange);
+        btn.addEventListener("click", () => {
+          homeRange = btn.dataset.range;
+          localStorage.setItem("home.range", homeRange);
+          HOME_CHIPS.forEach(b => b.classList.toggle("is-active", b === btn));
+          load();
+        });
+      });
+
       async function load() {
         if (!statsEl || !funnelEl) return;
         try {
           const [pipeRes, leadsRes] = await Promise.all([
-            fetch("/me/pipeline?range=30", { credentials: "same-origin" }),
+            fetch("/me/pipeline?range=" + encodeURIComponent(homeRange), { credentials: "same-origin" }),
             fetch("/me/pipeline/leads?date_range=90&limit=1000", { credentials: "same-origin" }),
           ]);
           if (pipeRes.ok) {
