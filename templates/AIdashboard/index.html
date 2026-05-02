@@ -13234,35 +13234,6 @@
         }
         .eng-help-btn:hover { background:#f3f4f6; color:#0a0a0a; }
 
-        /* Status strip — 4 small cards, one per stage */
-        .eng-status-strip {
-          display:grid; grid-template-columns:repeat(4, minmax(0, 1fr));
-          gap:10px;
-        }
-        .eng-status-card {
-          background:#fff; border:1px solid #e5e7eb; border-radius:12px;
-          padding:14px 16px;
-          display:flex; flex-direction:column; gap:6px;
-          cursor:pointer;
-          transition:border-color 0.12s ease, box-shadow 0.12s ease, transform 0.06s ease;
-          font-family:inherit; text-align:left;
-        }
-        .eng-status-card:hover { border-color:#cbd5e1; box-shadow:0 2px 6px rgba(15,23,42,0.04); }
-        .eng-status-card:active { transform:translateY(1px); }
-        .eng-status-card[data-status="not-handled"] { cursor:help; }
-        .eng-status-name-row { display:flex; align-items:center; gap:6px; }
-        .eng-status-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
-        .eng-status-name { font-size:12px; font-weight:500; color:#6b7280; }
-        .eng-status-stat { font-size:14px; font-weight:600; color:#0a0a0a; line-height:1.35; }
-        .eng-status-stat.is-warning  { color:#b45309; }
-        .eng-status-stat.is-tertiary { color:#9ca3af; font-weight:500; }
-        .eng-status-stat-link {
-          background:transparent; border:0; padding:0;
-          color:#185FA5; font-size:13.5px; font-weight:500; cursor:pointer;
-          font-family:inherit; text-align:left;
-        }
-        .eng-status-stat-link:hover { text-decoration:underline; }
-
         /* Automations list card */
         .eng-list-card {
           background:#fff; border:1px solid #e5e7eb; border-radius:12px;
@@ -13466,7 +13437,6 @@
 
         /* Mobile */
         @media (max-width: 760px) {
-          .eng-status-strip { grid-template-columns:1fr 1fr; }
           .eng-search { max-width:none; margin-left:0; flex-basis:100%; order:99; }
           .eng-row { flex-direction:column; align-items:stretch; gap:10px; }
           .eng-row-edit { width:100%; }
@@ -13898,9 +13868,6 @@
                 <p class="eng-page-sub">How your AI talks to customers — automatically.</p>
               </div>
             </header>
-
-            <!-- Status strip: per-stage coverage at a glance -->
-            <div class="eng-status-strip" id="engStatusStrip"></div>
 
             <!-- Automations list -->
             <div class="eng-list-card">

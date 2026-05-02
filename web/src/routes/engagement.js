@@ -156,75 +156,6 @@ async function loadEngagementSection() {
   }
 }
 
-// ─── Render: status strip ───────────────────────────────────────────────────
-
-function computeStageCoverage() {
-  // Returns { interest: {total, running}, decision: {...}, ... }
-  const cov = {};
-  for (const s of STAGE_ORDER) cov[s] = { total: 0, running: 0 };
-  for (const a of _automations) {
-    const st = FUNNEL_MAP[a.id];
-    if (!st) continue;
-    cov[st].total += 1;
-    if (a.active) cov[st].running += 1;
-  }
-  return cov;
-}
-
-function renderStatusStrip() {
-  const root = document.getElementById("engStatusStrip");
-  if (!root) return;
-  const cov = computeStageCoverage();
-  root.innerHTML = STAGE_ORDER.map(stageId => {
-    const info = STAGE_INFO[stageId];
-    const c = cov[stageId];
-    let statHtml;
-    let dataAttr = "";
-    if (stageId === "awareness") {
-      statHtml = `<div class="eng-status-stat is-tertiary">Not handled</div>`;
-      dataAttr = ` data-status="not-handled"`;
-    } else if (c.total === 0) {
-      statHtml = `<button type="button" class="eng-status-stat-link" data-stage-add="${stageId}">Add your first</button>`;
-    } else if (c.running === 0) {
-      statHtml = `<div class="eng-status-stat is-warning">${c.running} of ${c.total} paused</div>`;
-    } else {
-      statHtml = `<div class="eng-status-stat">${c.running} of ${c.total} running</div>`;
-    }
-    return `
-      <button type="button" class="eng-status-card" data-stage-card="${stageId}"${dataAttr}>
-        <div class="eng-status-name-row">
-          <span class="eng-status-dot" style="background:${info.color}"></span>
-          <span class="eng-status-name">${escapeHtml(info.label)}</span>
-        </div>
-        ${statHtml}
-      </button>
-    `;
-  }).join("");
-
-  // Card click → filter to that stage (or tooltip for Awareness)
-  root.querySelectorAll("[data-stage-card]").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      // If the inner "Add your first" button was clicked, let its own handler run
-      if (e.target.closest("[data-stage-add]")) return;
-      const stage = btn.dataset.stageCard;
-      if (stage === "awareness") {
-        showPopover(btn, STAGE_HELP.awareness);
-        return;
-      }
-      _filters.stage = stage;
-      refreshFilters();
-    });
-  });
-
-  // "Add your first" links → open New dropdown pre-filtered to that stage
-  root.querySelectorAll("[data-stage-add]").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      openNewMenu(document.getElementById("engNewBtn"), btn.dataset.stageAdd);
-    });
-  });
-}
-
 // ─── Render: list ───────────────────────────────────────────────────────────
 
 function applyFiltersToList(list) {
@@ -352,7 +283,6 @@ function refreshFilters() {
   updateFilterPills();
   renderActiveFilters();
   renderList();
-  renderStatusStrip();
 }
 
 function clearAllFilters() {
@@ -599,7 +529,6 @@ function attachStaticHandlers() {
 // ─── Top-level render ───────────────────────────────────────────────────────
 
 function renderAll() {
-  renderStatusStrip();
   renderList();
   updateFilterPills();
   renderActiveFilters();
