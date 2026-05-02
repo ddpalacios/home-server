@@ -4872,10 +4872,6 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
           <span class="nav-tooltip">Knowledge base</span>
         </button>
-        <button class="app-nav-btn" type="button" data-route="embed" aria-label="Embed">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-          <span class="nav-tooltip">Embed widget</span>
-        </button>
         <button class="app-nav-btn" type="button" data-route="instagram" id="appInstagramNavBtn" aria-label="Instagram" hidden>
           <!-- Instagram camera icon -->
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg>
@@ -13493,6 +13489,7 @@
         <div class="stg-tabs-wrap" style="grid-column: span 12;">
           <nav class="stg-top-tabs" role="tablist" aria-label="Settings sections">
             <button type="button" class="stg-top-tab is-active" data-settings-top-tab="general" role="tab" aria-selected="true">General</button>
+            <button type="button" class="stg-top-tab" data-settings-top-tab="widget" role="tab">Widget</button>
             <button type="button" class="stg-top-tab" data-settings-top-tab="phone" role="tab">Phone</button>
           </nav>
         </div>
@@ -13760,6 +13757,13 @@
           </div>
         </div>
         </div><!-- /stg-top-pane general -->
+
+        <!-- Widget pane: install snippet + approved domains -->
+        <div class="stg-top-pane" data-settings-top-pane="widget" style="grid-column: span 12;" hidden>
+          <div id="stgWidgetMount">
+            <!-- #embed section content is moved here by initSettingsTopTabs() JS on first activation. -->
+          </div>
+        </div><!-- /stg-top-pane widget -->
 
         <!-- Phone pane: phone numbers and call analytics -->
         <div class="stg-top-pane" data-settings-top-pane="phone" style="grid-column: span 12;" hidden>
@@ -18898,6 +18902,30 @@
         }
       }
 
+      // Move #embed (the install snippet + approved domains) into the
+      // Widget tab on first activation. The dedicated Embed nav route was
+      // retired — install lives under Settings → Widget now.
+      let widgetMounted = false;
+      function ensureWidgetMounted() {
+        if (widgetMounted) return;
+        widgetMounted = true;
+        const mount = document.getElementById("stgWidgetMount");
+        if (!mount) return;
+        const embedSection = document.getElementById("embed");
+        if (!embedSection) return;
+        embedSection.removeAttribute("data-route-section");
+        embedSection.removeAttribute("hidden");
+        embedSection.classList.remove("grid");
+        // Drop the embed page's redundant internal "Install/Settings" tab
+        // strip — the outer Settings tabs already disambiguate.
+        const innerTabs = embedSection.querySelector(".wgt-tabs");
+        if (innerTabs) innerTabs.remove();
+        mount.appendChild(embedSection);
+        if (typeof window.__dashboardLoadRouteModule === "function") {
+          window.__dashboardLoadRouteModule("embed");
+        }
+      }
+
       function activateTopTab(name) {
         tabs.forEach(t => {
           t.classList.toggle("is-active", t.dataset.settingsTopTab === name);
@@ -18907,7 +18935,8 @@
           const isActive = p.dataset.settingsTopPane === name;
           p.hidden = !isActive;
         });
-        if (name === "phone") ensurePhoneMounted();
+        if (name === "phone")  ensurePhoneMounted();
+        if (name === "widget") ensureWidgetMounted();
       }
 
       tabs.forEach(t => t.addEventListener("click", () => activateTopTab(t.dataset.settingsTopTab)));
@@ -21193,6 +21222,15 @@
       // engagement + campaigns merged into outreach. Old hashes still resolve.
       if (route === "engagement" || route === "campaigns") {
         route = "outreach";
+      }
+      // embed (widget install) is now a Settings tab — old hash routes
+      // jump to Settings and activate the Widget tab.
+      if (route === "embed") {
+        route = "settings";
+        requestAnimationFrame(() => {
+          const widgetTab = document.querySelector('[data-settings-top-tab="widget"]');
+          if (widgetTab) widgetTab.click();
+        });
       }
       if (route && route.startsWith("sequence-edit-")) {
         const sid = route.replace(/^sequence-edit-/, "");
