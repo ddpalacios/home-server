@@ -1,103 +1,131 @@
 // web/src/routes/engagement.js
 //
-// Engagement page: customer-journey view of automations.
-// Awareness / Interest / Decision / Action stages, color-coded.
+// Engagement page (modern redesign):
+//   - Page header (title + subtitle).
+//   - Status strip: 4 small cards, one per stage, showing per-stage coverage.
+//   - Automations list: flat, scannable, filterable.
+//   - "+ New" dropdown surfaces pre-built templates the user hasn't added yet.
+//
+// The funnel framing is preserved as METADATA (stage chips + status strip),
+// not as the dominant visual.
 
-const FUNNEL_STAGES = [
-  {
-    id: "awareness",
-    number: 1,
-    name: "Awareness",
-    desc: "Getting noticed — attracting attention",
-    bg: "#fef2f2",        // red-50
-    bg2: "#fee2e2",       // red-100
-    accent: "#dc2626",    // red-600
-    accentDark: "#991b1b" // red-800
-  },
-  {
-    id: "interest",
-    number: 2,
-    name: "Interest",
-    desc: "Warming up — they know you exist",
-    bg: "#fffbeb",        // amber-50
-    bg2: "#fef3c7",       // amber-100
-    accent: "#d97706",    // amber-600
-    accentDark: "#92400e" // amber-800
-  },
-  {
-    id: "decision",
-    number: 3,
-    name: "Decision",
-    desc: "Evaluating — should they hire you?",
-    bg: "#f0fdf4",        // green-50
-    bg2: "#dcfce7",       // green-100
-    accent: "#16a34a",    // green-600
-    accentDark: "#166534" // green-800
-  },
-  {
-    id: "action",
-    number: 4,
-    name: "Action",
-    desc: "Converting and keeping — they hired you",
-    bg: "#eff6ff",        // blue-50
-    bg2: "#dbeafe",       // blue-100
-    accent: "#2563eb",    // blue-600
-    accentDark: "#1e40af" // blue-800
-  },
-];
+// ─── Constants ──────────────────────────────────────────────────────────────
+
+const STAGE_ORDER = ["interest", "decision", "action", "awareness"];
+const STAGE_INFO = {
+  interest:  { label: "Interest",  color: "#d97706", border: "#fde68a", chipBg: "#fffbeb" },
+  decision:  { label: "Decision",  color: "#16a34a", border: "#bbf7d0", chipBg: "#f0fdf4" },
+  action:    { label: "Action",    color: "#2563eb", border: "#bfdbfe", chipBg: "#eff6ff" },
+  awareness: { label: "Awareness", color: "#9ca3af", border: "#e5e7eb", chipBg: "#f9fafb" },
+};
 
 const FUNNEL_MAP = {
-  "first_contact":       "interest",
-  "win_back":            "interest",
-  "quote_followup":      "decision",
-  "estimate_onboarding": "decision",
-  "job_onboarding":      "action",
-  "during_job":          "action",
-  "after_job":           "action",
+  first_contact:       "interest",
+  win_back:            "interest",
+  quote_followup:      "decision",
+  estimate_onboarding: "decision",
+  job_onboarding:      "action",
+  during_job:          "action",
+  after_job:           "action",
 };
 
 const AUTOMATION_DESCRIPTIONS = {
-  "first_contact":       "Greets every new lead and pings you to follow up.",
-  "win_back":            "Reaches back to leads who went cold.",
-  "quote_followup":      "Chases quotes with friendly nudges over two weeks.",
-  "estimate_onboarding": "Confirms estimates and reminds before the visit.",
-  "job_onboarding":      "Confirms booking and sends prep reminders.",
-  "during_job":          "Reminds you to log notes and capture photos.",
-  "after_job":           "Says thanks and asks for a review.",
+  first_contact:       "Greets new leads and pings you to follow up.",
+  win_back:            "Reaches back to leads who went cold.",
+  quote_followup:      "Chases quotes with friendly nudges.",
+  estimate_onboarding: "Confirms estimates and reminds before the visit.",
+  job_onboarding:      "Confirms booking and sends prep reminders.",
+  during_job:          "Reminds you to log notes and capture photos.",
+  after_job:           "Says thanks and asks for a review.",
 };
 
-const AUTOMATION_ICONS = {
-  "first_contact":       "📩",
-  "win_back":            "🔄",
-  "quote_followup":      "💬",
-  "estimate_onboarding": "📋",
-  "job_onboarding":      "🛠️",
-  "during_job":          "📷",
-  "after_job":           "⭐",
-};
+// Templates surfaced in the "+ New" dropdown. Plain-language labels —
+// no "drip", "nurture", "lifecycle".
+const TEMPLATE_LIBRARY = [
+  { id: "first_contact",       icon: "📨", label: "Welcome new leads",        stage: "interest" },
+  { id: "win_back",            icon: "🔄", label: "Bring back cold leads",    stage: "interest" },
+  { id: "quote_followup",      icon: "💬", label: "Send a quote reminder",    stage: "decision" },
+  { id: "estimate_onboarding", icon: "📋", label: "Confirm estimates",        stage: "decision" },
+  { id: "job_onboarding",      icon: "🛠️", label: "Job kickoff prep",        stage: "action"   },
+  { id: "during_job",          icon: "📷", label: "During the job",           stage: "action"   },
+  { id: "after_job",           icon: "⭐", label: "Thank you after the job",  stage: "action"   },
+];
 
 const STAGE_HELP = {
-  awareness: "Awareness is the first time someone hears about you — through Google, social media, a friend, or an ad. Most small service businesses get awareness from word-of-mouth and reviews, not paid marketing. We don't help with this stage.",
-  interest:  "Interest is when someone has reached out — they called, filled out your widget, or replied to something. They know you exist. Now you need to keep their attention warm so they don't forget about you.",
-  decision:  "Decision is when they're actively choosing — comparing prices, weighing options, asking questions. The right follow-up here can make the difference between getting hired and being forgotten.",
-  action:    "Action is once they've committed — they're booking, they're showing up, they're paying. The work here isn't selling, it's keeping things smooth and turning them into a repeat customer.",
+  awareness: "Awareness comes from ads, social, or word-of-mouth. We pick up after a lead reaches you.",
+  interest:  "Interest is when someone has reached out. They know you exist — keep their attention warm so they don't forget about you.",
+  decision:  "Decision is when they're actively choosing — comparing prices, weighing options. The right follow-up here can win the job.",
+  action:    "Action is once they've committed. Keep things smooth and turn them into a repeat customer.",
 };
 
-const ENG_NUDGE_KEY = "dashboard.eng_nudge_dismissed";
+const PAGE_HELP = "Each automation runs on its own. Click any one to see what it does or change the words.";
+const LIST_HELP = "Each automation runs on its own. Click any one to see what it does or change the words.";
+
 const ENG_CACHE_KEY = "dashboard.eng_automations";
 
+// ─── Module state ───────────────────────────────────────────────────────────
+
 let _automations = [];
+let _filters = { status: null, stage: null, search: "" };
+let _openMenuEl = null;
+let _searchDebounce = null;
+let _initialized = false;
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+function escapeHtml(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+function showToast(msg) {
+  const old = document.querySelector(".eng-toast");
+  if (old) old.remove();
+  const el = document.createElement("div");
+  el.className = "eng-toast";
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2400);
+}
+
+function closeOpenMenu() {
+  if (_openMenuEl && _openMenuEl.parentNode) {
+    _openMenuEl.parentNode.removeChild(_openMenuEl);
+  }
+  _openMenuEl = null;
+}
+
+function positionMenu(menu, anchor, opts) {
+  opts = opts || {};
+  const r = anchor.getBoundingClientRect();
+  document.body.appendChild(menu);
+  const mw = menu.offsetWidth;
+  const mh = menu.offsetHeight;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  let left = opts.alignRight ? r.right - mw : r.left;
+  if (left + mw > vw - 8) left = vw - mw - 8;
+  if (left < 8) left = 8;
+  let top = r.bottom + 6;
+  if (top + mh > vh - 8) top = Math.max(8, r.top - mh - 6);
+  menu.style.position = "fixed";
+  menu.style.top = top + "px";
+  menu.style.left = left + "px";
+  _openMenuEl = menu;
+}
+
+// ─── Data load ──────────────────────────────────────────────────────────────
 
 async function loadEngagementSection() {
-  // Render from cache first (instant on revisit)
+  // Cache-first paint for instant revisit
   const cached = (() => {
     try { return JSON.parse(localStorage.getItem(ENG_CACHE_KEY) || "null"); }
     catch (_) { return null; }
   })();
   if (cached && Array.isArray(cached.automations)) {
     _automations = cached.automations;
-    render();
-    maybeShowNudge();
+    renderAll();
   }
 
   // Background refresh
@@ -110,127 +138,404 @@ async function loadEngagementSection() {
         localStorage.setItem(ENG_CACHE_KEY,
           JSON.stringify({ automations: _automations, ts: Date.now() }));
       } catch (_) {}
-      render();
+      renderAll();
     } else if (!cached) {
       _automations = [];
-      render();
+      renderAll();
     }
   } catch (_) {
     if (!cached) {
       _automations = [];
-      render();
+      renderAll();
     }
   }
 
-  if (!cached) maybeShowNudge();
-}
-
-function render() {
-  const root = document.getElementById("engFunnel");
-  if (!root) return;
-  root.innerHTML = FUNNEL_STAGES.map(stage => {
-    const automationsHere = _automations.filter(a => FUNNEL_MAP[a.id] === stage.id);
-    return renderStage(stage, automationsHere);
-  }).join("");
-  attachHandlers();
-}
-
-function renderStage(stage, automations) {
-  const cards = automations.length === 0 && stage.id === "awareness"
-    ? renderEmptyAwarenessCard()
-    : automations.map(a => renderAutomationCard(a, stage)).join("");
-
-  return `
-    <div class="eng-stage" style="background: linear-gradient(180deg, ${stage.bg} 0%, ${stage.bg2} 100%); border: 1px solid ${stage.bg2};">
-      <div class="eng-stage-head">
-        <div class="eng-stage-num" style="background:${stage.accent};">${stage.number}</div>
-        <div class="eng-stage-meta">
-          <div class="eng-stage-name" style="color:${stage.accentDark};">
-            ${stage.number}. ${stage.name}
-            <button type="button" class="eng-stage-help" data-stage="${stage.id}" aria-label="What is ${stage.name}?">?</button>
-          </div>
-          <div class="eng-stage-desc">${stage.desc}</div>
-        </div>
-      </div>
-      <div class="eng-stage-cards">${cards}</div>
-    </div>
-  `;
-}
-
-function renderAutomationCard(a, stage) {
-  const desc = AUTOMATION_DESCRIPTIONS[a.id] || "";
-  const icon = AUTOMATION_ICONS[a.id] || "⚙️";
-  const status = a.active ? "Running" : "Paused";
-  const statusClass = a.active ? "eng-card-status-running" : "eng-card-status-paused";
-  return `
-    <a class="eng-card" href="#sequence-edit-${a.id}"
-       style="border-color:${stage.bg2};"
-       data-stage-accent="${stage.accent}">
-      <div class="eng-card-head">
-        <span class="eng-card-icon">${icon}</span>
-        <span class="eng-card-name">${a.name || a.id}</span>
-      </div>
-      <div class="eng-card-desc">${desc}</div>
-      <div class="eng-card-status ${statusClass}">● ${status}</div>
-    </a>
-  `;
-}
-
-function renderEmptyAwarenessCard() {
-  return `
-    <div class="eng-empty-card">
-      <div class="eng-empty-h">We don't handle this part.</div>
-      <div class="eng-empty-text">
-        Awareness usually comes from ads, social media, Google reviews, or
-        word-of-mouth. We pick up the moment someone calls you or fills out
-        your widget.
-      </div>
-    </div>
-  `;
-}
-
-function attachHandlers() {
-  document.querySelectorAll(".eng-stage-help").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const stageId = btn.dataset.stage;
-      showStageHelp(stageId, btn);
-    });
-  });
-
-  // Hover border accent on cards
-  document.querySelectorAll(".eng-card").forEach(card => {
-    const accent = card.dataset.stageAccent;
-    const origBorder = card.style.borderColor;
-    card.addEventListener("mouseenter", () => {
-      if (accent) card.style.borderColor = accent;
-    });
-    card.addEventListener("mouseleave", () => {
-      card.style.borderColor = origBorder;
-    });
-  });
-
-  // Page-level help button
-  const helpBtn = document.getElementById("engHelpBtn");
-  if (helpBtn) {
-    helpBtn.addEventListener("click", () => {
-      showPageHelp(helpBtn);
-    });
+  if (!_initialized) {
+    attachStaticHandlers();
+    _initialized = true;
   }
 }
 
-function showStageHelp(stageId, anchor) {
-  const text = STAGE_HELP[stageId] || "";
-  showPopover(anchor, text);
+// ─── Render: status strip ───────────────────────────────────────────────────
+
+function computeStageCoverage() {
+  // Returns { interest: {total, running}, decision: {...}, ... }
+  const cov = {};
+  for (const s of STAGE_ORDER) cov[s] = { total: 0, running: 0 };
+  for (const a of _automations) {
+    const st = FUNNEL_MAP[a.id];
+    if (!st) continue;
+    cov[st].total += 1;
+    if (a.active) cov[st].running += 1;
+  }
+  return cov;
 }
 
-function showPageHelp(anchor) {
-  showPopover(anchor, "This is the journey every customer takes — from never having heard of you, to becoming a paying client. We've set up automations for the parts we handle. You can change the words, look around, or just feel good about the work happening on its own.");
+function renderStatusStrip() {
+  const root = document.getElementById("engStatusStrip");
+  if (!root) return;
+  const cov = computeStageCoverage();
+  root.innerHTML = STAGE_ORDER.map(stageId => {
+    const info = STAGE_INFO[stageId];
+    const c = cov[stageId];
+    let statHtml;
+    let dataAttr = "";
+    if (stageId === "awareness") {
+      statHtml = `<div class="eng-status-stat is-tertiary">Not handled</div>`;
+      dataAttr = ` data-status="not-handled"`;
+    } else if (c.total === 0) {
+      statHtml = `<button type="button" class="eng-status-stat-link" data-stage-add="${stageId}">Add your first</button>`;
+    } else if (c.running === 0) {
+      statHtml = `<div class="eng-status-stat is-warning">${c.running} of ${c.total} paused</div>`;
+    } else {
+      statHtml = `<div class="eng-status-stat">${c.running} of ${c.total} running</div>`;
+    }
+    return `
+      <button type="button" class="eng-status-card" data-stage-card="${stageId}"${dataAttr}>
+        <div class="eng-status-name-row">
+          <span class="eng-status-dot" style="background:${info.color}"></span>
+          <span class="eng-status-name">${escapeHtml(info.label)}</span>
+        </div>
+        ${statHtml}
+      </button>
+    `;
+  }).join("");
+
+  // Card click → filter to that stage (or tooltip for Awareness)
+  root.querySelectorAll("[data-stage-card]").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      // If the inner "Add your first" button was clicked, let its own handler run
+      if (e.target.closest("[data-stage-add]")) return;
+      const stage = btn.dataset.stageCard;
+      if (stage === "awareness") {
+        showPopover(btn, STAGE_HELP.awareness);
+        return;
+      }
+      _filters.stage = stage;
+      refreshFilters();
+    });
+  });
+
+  // "Add your first" links → open New dropdown pre-filtered to that stage
+  root.querySelectorAll("[data-stage-add]").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openNewMenu(document.getElementById("engNewBtn"), btn.dataset.stageAdd);
+    });
+  });
 }
+
+// ─── Render: list ───────────────────────────────────────────────────────────
+
+function applyFiltersToList(list) {
+  let out = list.slice();
+  if (_filters.status === "running") out = out.filter(a => a.active);
+  if (_filters.status === "paused")  out = out.filter(a => !a.active);
+  if (_filters.stage) out = out.filter(a => FUNNEL_MAP[a.id] === _filters.stage);
+  const q = (_filters.search || "").trim().toLowerCase();
+  if (q) {
+    out = out.filter(a => {
+      const name = (a.name || a.id || "").toLowerCase();
+      const desc = (AUTOMATION_DESCRIPTIONS[a.id] || "").toLowerCase();
+      return name.includes(q) || desc.includes(q);
+    });
+  }
+  // Sort: by stage in funnel order, then by name
+  const stageRank = {};
+  STAGE_ORDER.forEach((s, i) => stageRank[s] = i);
+  out.sort((a, b) => {
+    const sa = stageRank[FUNNEL_MAP[a.id]] ?? 99;
+    const sb = stageRank[FUNNEL_MAP[b.id]] ?? 99;
+    if (sa !== sb) return sa - sb;
+    return (a.name || a.id || "").localeCompare(b.name || b.id || "");
+  });
+  return out;
+}
+
+function renderList() {
+  const root = document.getElementById("engList");
+  if (!root) return;
+
+  if (_automations.length === 0) {
+    root.innerHTML = `
+      <div class="eng-empty">
+        <div class="eng-empty-emoji" aria-hidden="true">📨</div>
+        <div class="eng-empty-h">No automations yet.</div>
+        <div class="eng-empty-text">
+          Set up your first automation in 2 minutes. We'll pre-fill the words —
+          you just review and turn it on.
+        </div>
+        <button type="button" class="eng-empty-cta" id="engEmptyCta">+ Set up your first automation</button>
+      </div>
+    `;
+    const cta = document.getElementById("engEmptyCta");
+    if (cta) cta.addEventListener("click", () => openNewMenu(document.getElementById("engNewBtn")));
+    return;
+  }
+
+  const filtered = applyFiltersToList(_automations);
+  if (filtered.length === 0) {
+    root.innerHTML = `
+      <div class="eng-no-match">
+        No automations match those filters.
+        <div><button type="button" id="engClearFilters">Clear filters</button></div>
+      </div>
+    `;
+    const clr = document.getElementById("engClearFilters");
+    if (clr) clr.addEventListener("click", clearAllFilters);
+    return;
+  }
+
+  root.innerHTML = filtered.map(renderRow).join("");
+  // Wire row click → edit; Edit button → edit (avoid double-trigger)
+  root.querySelectorAll(".eng-row").forEach(row => {
+    row.addEventListener("click", (e) => {
+      if (e.target.closest(".eng-row-edit")) return;
+      const id = row.dataset.automationId;
+      if (id) navigateToEdit(id);
+    });
+  });
+  root.querySelectorAll(".eng-row-edit").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.automationId;
+      if (id) navigateToEdit(id);
+    });
+  });
+  // Stage chip hover/click → tooltip
+  root.querySelectorAll("[data-stage-chip]").forEach(chip => {
+    chip.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const stage = chip.dataset.stageChip;
+      showPopover(chip, STAGE_HELP[stage] || "");
+    });
+  });
+}
+
+function renderRow(a) {
+  const stageId = FUNNEL_MAP[a.id] || "interest";
+  const stage = STAGE_INFO[stageId];
+  const desc = AUTOMATION_DESCRIPTIONS[a.id] || "";
+  const status = a.active ? "running" : "paused";
+  const name = a.name || a.id || "Automation";
+  return `
+    <div class="eng-row" data-automation-id="${escapeHtml(a.id)}">
+      <div class="eng-row-main">
+        <div class="eng-row-name-line">
+          <span class="eng-row-status-dot is-${status}" aria-label="${a.active ? 'Running' : 'Paused'}"></span>
+          <span class="eng-row-name">${escapeHtml(name)}</span>
+        </div>
+        <div class="eng-row-meta">
+          <span class="eng-stage-chip" data-stage-chip="${stageId}"
+                style="border-color:${stage.border};color:${stage.color};background:${stage.chipBg};">
+            <span class="eng-stage-chip-dot" style="background:${stage.color}"></span>
+            ${escapeHtml(stage.label)}
+          </span>
+          <span style="color:#cbd5e1;">·</span>
+          <span class="eng-row-desc">${escapeHtml(desc)}</span>
+        </div>
+      </div>
+      <button type="button" class="eng-row-edit" data-automation-id="${escapeHtml(a.id)}">Edit</button>
+    </div>
+  `;
+}
+
+function navigateToEdit(automationId) {
+  // Reuses the existing edit wizard wired via the campaigns route bundle
+  // (#sequence-edit-<id> → appShowRoute → loadAutomationWizard).
+  window.location.hash = "sequence-edit-" + automationId;
+}
+
+// ─── Filters ────────────────────────────────────────────────────────────────
+
+function refreshFilters() {
+  updateFilterPills();
+  renderActiveFilters();
+  renderList();
+  renderStatusStrip();
+}
+
+function clearAllFilters() {
+  _filters = { status: null, stage: null, search: "" };
+  const inp = document.getElementById("engSearch");
+  if (inp) inp.value = "";
+  refreshFilters();
+}
+
+function updateFilterPills() {
+  const map = {
+    status: { all: "All",   running: "Running", paused: "Paused" },
+    stage:  { all: "All",   interest: "Interest", decision: "Decision",
+              action: "Action", awareness: "Awareness" },
+  };
+  document.querySelectorAll(".eng-filter-pill[data-eng-filter]").forEach(pill => {
+    const f = pill.dataset.engFilter;
+    const v = _filters[f];
+    const valEl = pill.querySelector(".eng-filter-value");
+    pill.classList.toggle("is-active", !!v);
+    if (valEl) valEl.textContent = v ? (map[f][v] || v) : map[f].all;
+  });
+}
+
+function renderActiveFilters() {
+  const wrap = document.getElementById("engActiveFilters");
+  if (!wrap) return;
+  const chips = [];
+  if (_filters.status) chips.push({ k: "status", label: `Status: ${_filters.status === "running" ? "Running" : "Paused"}` });
+  if (_filters.stage)  chips.push({ k: "stage",  label: `Stage: ${STAGE_INFO[_filters.stage]?.label || _filters.stage}` });
+  if (!chips.length) {
+    wrap.hidden = true;
+    wrap.innerHTML = "";
+    return;
+  }
+  wrap.hidden = false;
+  wrap.innerHTML = chips.map(c => `
+    <span class="eng-active-chip">${escapeHtml(c.label)}
+      <button type="button" data-remove="${c.k}" aria-label="Remove filter">×</button>
+    </span>
+  `).join("") + `<button type="button" class="eng-active-clear-all" id="engActiveClear">Clear all</button>`;
+  wrap.querySelectorAll("[data-remove]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      _filters[btn.dataset.remove] = null;
+      refreshFilters();
+    });
+  });
+  const clr = document.getElementById("engActiveClear");
+  if (clr) clr.addEventListener("click", clearAllFilters);
+}
+
+// ─── Filter dropdown menus ──────────────────────────────────────────────────
+
+function openStatusMenu(anchor) {
+  closeOpenMenu();
+  const opts = [
+    { v: null,      label: "All" },
+    { v: "running", label: "Running" },
+    { v: "paused",  label: "Paused" },
+  ];
+  const menu = document.createElement("div");
+  menu.className = "eng-menu";
+  menu.style.minWidth = "180px";
+  menu.innerHTML = opts.map(o => `
+    <button type="button" class="eng-menu-item ${_filters.status === o.v ? "is-active" : ""}" data-val="${o.v == null ? "" : escapeHtml(o.v)}">
+      <span class="eng-menu-item-main">${escapeHtml(o.label)}</span>
+    </button>
+  `).join("");
+  menu.querySelectorAll(".eng-menu-item").forEach(btn => {
+    btn.addEventListener("click", () => {
+      _filters.status = btn.dataset.val || null;
+      closeOpenMenu();
+      refreshFilters();
+    });
+  });
+  positionMenu(menu, anchor);
+}
+
+function openStageMenu(anchor) {
+  closeOpenMenu();
+  const opts = [
+    { v: null, label: "All" },
+    { v: "interest",  label: "Interest" },
+    { v: "decision",  label: "Decision" },
+    { v: "action",    label: "Action" },
+    { v: "awareness", label: "Awareness" },
+  ];
+  const menu = document.createElement("div");
+  menu.className = "eng-menu";
+  menu.style.minWidth = "180px";
+  menu.innerHTML = opts.map(o => `
+    <button type="button" class="eng-menu-item ${_filters.stage === o.v ? "is-active" : ""}" data-val="${o.v == null ? "" : escapeHtml(o.v)}">
+      <span class="eng-menu-item-main">${escapeHtml(o.label)}</span>
+    </button>
+  `).join("");
+  menu.querySelectorAll(".eng-menu-item").forEach(btn => {
+    btn.addEventListener("click", () => {
+      _filters.stage = btn.dataset.val || null;
+      closeOpenMenu();
+      refreshFilters();
+    });
+  });
+  positionMenu(menu, anchor);
+}
+
+// ─── "+ New" dropdown ───────────────────────────────────────────────────────
+
+function openNewMenu(anchor, preferStage) {
+  closeOpenMenu();
+  const haveIds = new Set(_automations.map(a => a.id));
+  let templates = TEMPLATE_LIBRARY.filter(t => !haveIds.has(t.id));
+  if (preferStage) {
+    // Preferred stage's templates first
+    templates = templates.slice().sort((a, b) => {
+      const ap = a.stage === preferStage ? 0 : 1;
+      const bp = b.stage === preferStage ? 0 : 1;
+      return ap - bp;
+    });
+  }
+
+  const menu = document.createElement("div");
+  menu.className = "eng-menu";
+
+  let prebuiltSection;
+  if (templates.length === 0) {
+    prebuiltSection = `
+      <div class="eng-menu-section">
+        <div class="eng-menu-title">Pre-built</div>
+        <div class="eng-menu-empty">
+          All built-in automations are already added. Open them in the list below to edit.
+        </div>
+      </div>`;
+  } else {
+    prebuiltSection = `
+      <div class="eng-menu-section">
+        <div class="eng-menu-title">Pick what to set up</div>
+        ${templates.map(t => {
+          const stage = STAGE_INFO[t.stage];
+          return `
+            <button type="button" class="eng-menu-item" data-template="${escapeHtml(t.id)}">
+              <span class="eng-menu-item-icon">${t.icon}</span>
+              <span class="eng-menu-item-main">
+                <div class="eng-menu-item-title">${escapeHtml(t.label)}</div>
+                <div class="eng-menu-item-stage">→ ${escapeHtml(stage.label)}</div>
+              </span>
+            </button>
+          `;
+        }).join("")}
+      </div>`;
+  }
+
+  const customSection = `
+    <div class="eng-menu-section">
+      <div class="eng-menu-title">Build from scratch</div>
+      <button type="button" class="eng-menu-item" data-template="__custom__">
+        <span class="eng-menu-item-icon">✨</span>
+        <span class="eng-menu-item-main">
+          <div class="eng-menu-item-title">Custom automation</div>
+          <div class="eng-menu-item-stage">Coming soon</div>
+        </span>
+      </button>
+    </div>`;
+
+  menu.innerHTML = prebuiltSection + customSection;
+
+  menu.querySelectorAll("[data-template]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.template;
+      closeOpenMenu();
+      if (id === "__custom__") {
+        showToast("Custom automation — coming soon.");
+        return;
+      }
+      navigateToEdit(id);
+    });
+  });
+
+  positionMenu(menu, anchor, { alignRight: true });
+}
+
+// ─── Help popovers ──────────────────────────────────────────────────────────
 
 function showPopover(anchor, text) {
-  // Remove any existing popover
   const old = document.getElementById("engPopover");
   if (old) old.remove();
   const pop = document.createElement("div");
@@ -241,7 +546,7 @@ function showPopover(anchor, text) {
   const r = anchor.getBoundingClientRect();
   pop.style.position = "fixed";
   pop.style.top = (r.bottom + 8) + "px";
-  pop.style.left = Math.max(12, r.left - 100) + "px";
+  pop.style.left = Math.max(12, Math.min(window.innerWidth - 360, r.left - 100)) + "px";
   pop.style.zIndex = "10000";
   setTimeout(() => {
     document.addEventListener("click", function dismiss(e) {
@@ -253,30 +558,54 @@ function showPopover(anchor, text) {
   }, 0);
 }
 
-function maybeShowNudge() {
-  if (localStorage.getItem(ENG_NUDGE_KEY) === "true") return;
-  const nudge = document.createElement("div");
-  nudge.className = "eng-nudge";
-  nudge.innerHTML = `
-    <div class="eng-nudge-emoji">✨</div>
-    <div class="eng-nudge-content">
-      <div class="eng-nudge-h">This is your customer's journey.</div>
-      <div class="eng-nudge-text">See where your AI is helping — and where it isn't. Click any automation to look at it or change the words.</div>
-      <button class="eng-nudge-dismiss" id="engNudgeDismiss">Got it, dismiss</button>
-    </div>
-  `;
-  const root = document.getElementById("engFunnel");
-  if (root && root.parentNode) {
-    root.parentNode.insertBefore(nudge, root);
-  }
-  const dismissBtn = document.getElementById("engNudgeDismiss");
-  if (dismissBtn) {
-    dismissBtn.addEventListener("click", () => {
-      localStorage.setItem(ENG_NUDGE_KEY, "true");
-      nudge.remove();
+// ─── Static (one-time) handlers ─────────────────────────────────────────────
+
+function attachStaticHandlers() {
+  // Page-level help
+  const helpBtn = document.getElementById("engHelpBtn");
+  if (helpBtn) helpBtn.addEventListener("click", () => showPopover(helpBtn, PAGE_HELP));
+
+  const listHelp = document.getElementById("engListHelpBtn");
+  if (listHelp) listHelp.addEventListener("click", (e) => { e.stopPropagation(); showPopover(listHelp, LIST_HELP); });
+
+  // Filter pills
+  const sBtn = document.getElementById("engFilterStatus");
+  const stBtn = document.getElementById("engFilterStage");
+  if (sBtn)  sBtn.addEventListener("click", (e) => { e.stopPropagation(); openStatusMenu(sBtn); });
+  if (stBtn) stBtn.addEventListener("click", (e) => { e.stopPropagation(); openStageMenu(stBtn); });
+
+  // Search (debounced 150ms)
+  const search = document.getElementById("engSearch");
+  if (search) {
+    search.addEventListener("input", () => {
+      clearTimeout(_searchDebounce);
+      _searchDebounce = setTimeout(() => {
+        _filters.search = search.value;
+        renderList();
+      }, 150);
     });
   }
+
+  // + New
+  const newBtn = document.getElementById("engNewBtn");
+  if (newBtn) newBtn.addEventListener("click", (e) => { e.stopPropagation(); openNewMenu(newBtn); });
+
+  // Close any open menu on outside click
+  document.addEventListener("click", (e) => {
+    if (_openMenuEl && !_openMenuEl.contains(e.target)) closeOpenMenu();
+  }, true);
 }
+
+// ─── Top-level render ───────────────────────────────────────────────────────
+
+function renderAll() {
+  renderStatusStrip();
+  renderList();
+  updateFilterPills();
+  renderActiveFilters();
+}
+
+// ─── Module init / public exports ───────────────────────────────────────────
 
 export function init() {}
 

@@ -13209,81 +13209,242 @@
         .stg-top-tab.is-active { color: #0a0a0a; border-bottom-color: #0a0a0a; font-weight: 600; }
         .stg-top-pane[hidden] { display: none !important; }
 
-        /* Engagement page */
-        .eng-page { display:flex; flex-direction:column; gap:18px; padding: 24px 0; }
-        .eng-page-head { display:flex; flex-direction:column; gap:4px; padding-bottom:8px; }
-        .eng-page-title-wrap { display:flex; align-items:center; gap:10px; }
-        .eng-page-title { font-size:24px; font-weight:600; color:#0a0a0a; margin:0; }
-        .eng-help-btn { width:24px; height:24px; border-radius:50%; border:1px solid #e5e7eb; background:#fff; color:#6b7280; font-size:13px; cursor:pointer; }
-        .eng-help-btn:hover { background:#f3f4f6; }
+        /* ─── Engagement page (modern redesign) ───────────────────────────── */
+        .eng-page {
+          display:flex; flex-direction:column; gap:18px;
+          padding:24px 0; max-width:1200px; margin:0 auto; width:100%;
+          box-sizing:border-box;
+        }
+        .eng-page *, .eng-page *::before, .eng-page *::after { box-sizing:border-box; }
+
+        .eng-page-head { padding-bottom:4px; }
+        .eng-page-titlewrap { display:flex; flex-direction:column; gap:4px; }
+        .eng-page-title {
+          font-size:24px; font-weight:600; color:#0a0a0a; margin:0;
+          display:flex; align-items:center; gap:10px;
+          letter-spacing:-0.01em;
+        }
         .eng-page-sub { font-size:13px; color:#6b7280; margin:0; }
-
-        .eng-section-h { font-size:16px; font-weight:600; color:#0a0a0a; margin:24px 0 16px; }
-
-        .eng-stage {
-          border-radius:14px; padding:24px;
-          margin-bottom:16px;
-          box-shadow:
-            0 1px 0 rgba(255, 255, 255, 0.6) inset,
-            0 1px 2px rgba(15, 23, 42, 0.04);
-        }
-        .eng-stage-head { display:flex; align-items:center; gap:14px; margin-bottom:18px; }
-        .eng-stage-num {
-          width:36px; height:36px; border-radius:50%;
-          display:flex; align-items:center; justify-content:center;
-          color:#fff; font-size:15px; font-weight:700;
-          flex-shrink:0;
-        }
-        .eng-stage-meta { flex:1; }
-        .eng-stage-name {
-          font-size:18px; font-weight:600;
-          display:flex; align-items:center; gap:6px;
-          margin-bottom:2px;
-        }
-        .eng-stage-help {
-          width:18px; height:18px; border-radius:50%;
-          border:0; background:rgba(0,0,0,0.06);
-          color:inherit; font-size:11px; cursor:pointer;
+        .eng-help-btn {
+          width:22px; height:22px; border-radius:50%;
+          border:1px solid #e5e7eb; background:#fff; color:#6b7280;
+          font-size:11px; font-weight:600; cursor:pointer;
           display:inline-flex; align-items:center; justify-content:center;
-          opacity:0.6;
+          padding:0; line-height:1;
         }
-        .eng-stage-help:hover { opacity:1; background:rgba(0,0,0,0.12); }
-        .eng-stage-desc { font-size:13px; color:#6b7280; }
-        .eng-stage-cards { display:flex; flex-wrap:wrap; gap:12px; }
+        .eng-help-btn:hover { background:#f3f4f6; color:#0a0a0a; }
 
-        .eng-card {
-          display:block;
-          background:#fff;
-          border:1px solid;
-          border-radius:10px;
+        /* Status strip — 4 small cards, one per stage */
+        .eng-status-strip {
+          display:grid; grid-template-columns:repeat(4, minmax(0, 1fr));
+          gap:10px;
+        }
+        .eng-status-card {
+          background:#fff; border:1px solid #e5e7eb; border-radius:12px;
           padding:14px 16px;
-          width:200px;
-          text-decoration:none;
-          color:inherit;
-          transition:transform 0.12s, border-color 0.12s, box-shadow 0.12s;
-          box-shadow:0 1px 2px rgba(15, 23, 42, 0.04);
+          display:flex; flex-direction:column; gap:6px;
+          cursor:pointer;
+          transition:border-color 0.12s ease, box-shadow 0.12s ease, transform 0.06s ease;
+          font-family:inherit; text-align:left;
         }
-        .eng-card:hover {
-          transform:translateY(-1px);
-          box-shadow:0 4px 12px rgba(15, 23, 42, 0.06);
+        .eng-status-card:hover { border-color:#cbd5e1; box-shadow:0 2px 6px rgba(15,23,42,0.04); }
+        .eng-status-card:active { transform:translateY(1px); }
+        .eng-status-card[data-status="not-handled"] { cursor:help; }
+        .eng-status-name-row { display:flex; align-items:center; gap:6px; }
+        .eng-status-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+        .eng-status-name { font-size:12px; font-weight:500; color:#6b7280; }
+        .eng-status-stat { font-size:14px; font-weight:600; color:#0a0a0a; line-height:1.35; }
+        .eng-status-stat.is-warning  { color:#b45309; }
+        .eng-status-stat.is-tertiary { color:#9ca3af; font-weight:500; }
+        .eng-status-stat-link {
+          background:transparent; border:0; padding:0;
+          color:#185FA5; font-size:13.5px; font-weight:500; cursor:pointer;
+          font-family:inherit; text-align:left;
         }
-        .eng-card-head { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
-        .eng-card-icon { font-size:18px; line-height:1; }
-        .eng-card-name { font-size:14px; font-weight:600; color:#0a0a0a; }
-        .eng-card-desc { font-size:12px; color:#6b7280; line-height:1.45; min-height:34px; margin-bottom:10px; }
-        .eng-card-status { font-size:11.5px; font-weight:500; }
-        .eng-card-status-running { color:#15803d; }
-        .eng-card-status-paused  { color:#9ca3af; }
+        .eng-status-stat-link:hover { text-decoration:underline; }
 
-        .eng-empty-card {
-          background:rgba(0,0,0,0.04);
-          border-radius:10px;
-          padding:16px;
-          max-width:480px;
+        /* Automations list card */
+        .eng-list-card {
+          background:#fff; border:1px solid #e5e7eb; border-radius:12px;
+          overflow:visible;
         }
-        .eng-empty-h { font-size:14px; font-weight:600; color:#374151; margin-bottom:6px; }
-        .eng-empty-text { font-size:13px; color:#4b5563; line-height:1.5; }
+        .eng-list-head {
+          display:flex; align-items:center; justify-content:space-between;
+          gap:12px; padding:14px 18px;
+          border-bottom:1px solid #f3f4f6;
+        }
+        .eng-list-titlewrap { display:flex; align-items:center; gap:8px; }
+        .eng-list-title { font-size:16px; font-weight:600; color:#0a0a0a; margin:0; }
+        .eng-list-help-btn { width:18px; height:18px; font-size:10px; }
+        .eng-list-actions { display:flex; gap:8px; }
+        .eng-new-btn {
+          padding:8px 16px;
+          background:linear-gradient(180deg,#1f2937,#0a0a0a);
+          color:#fff; border:0; border-radius:8px;
+          font-size:13px; font-weight:500; font-family:inherit;
+          cursor:pointer; display:inline-flex; align-items:center; gap:4px;
+          transition:transform 0.08s ease, box-shadow 0.12s ease;
+          white-space:nowrap;
+        }
+        .eng-new-btn:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(15,23,42,0.12); }
+        .eng-new-caret { font-size:10px; opacity:0.8; }
 
+        /* Filter row */
+        .eng-filter-row {
+          display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+          padding:12px 18px; border-bottom:1px solid #f3f4f6;
+        }
+        .eng-filter-pill {
+          display:inline-flex; align-items:center; gap:6px;
+          height:32px; padding:0 12px;
+          background:#fff; color:#0a0a0a;
+          border:1px solid #e5e7eb; border-radius:999px;
+          font-size:12.5px; font-weight:500; font-family:inherit;
+          cursor:pointer; transition:background 0.12s, border-color 0.12s;
+        }
+        .eng-filter-pill:hover { background:#f9fafb; border-color:#cbd5e1; }
+        .eng-filter-pill.is-active { background:#0a0a0a; color:#fff; border-color:#0a0a0a; }
+        .eng-filter-value { font-weight:600; }
+        .eng-search {
+          flex:1; min-width:160px; max-width:280px;
+          height:32px; padding:0 12px;
+          border:1px solid #e5e7eb; border-radius:8px;
+          font-size:12.5px; font-family:inherit;
+          background:#fff; box-sizing:border-box;
+          margin-left:auto;
+        }
+        .eng-search:focus { outline:none; border-color:#185FA5; box-shadow:0 0 0 3px rgba(24,95,165,0.10); }
+
+        .eng-active-filters {
+          display:flex; gap:6px; flex-wrap:wrap; align-items:center;
+          padding:10px 18px; border-bottom:1px solid #f3f4f6;
+          font-size:12px; color:#6b7280;
+        }
+        .eng-active-chip {
+          display:inline-flex; align-items:center; gap:6px;
+          padding:4px 10px; background:#eef2ff; color:#3730a3;
+          border-radius:999px; font-size:11.5px; font-weight:500;
+        }
+        .eng-active-chip button { background:transparent; border:0; color:#3730a3; cursor:pointer; padding:0 0 0 4px; font-size:13px; }
+        .eng-active-clear-all { background:transparent; border:0; color:#185FA5; cursor:pointer; font-size:12px; font-family:inherit; }
+
+        /* List + rows */
+        .eng-list {}
+        .eng-row {
+          display:flex; align-items:center; justify-content:space-between;
+          gap:12px; padding:16px 18px;
+          border-bottom:1px solid #f3f4f6;
+          cursor:pointer; transition:background 0.08s ease;
+          font-family:inherit;
+        }
+        .eng-row:last-child { border-bottom:0; }
+        .eng-row:hover { background:#fafafa; }
+        .eng-row-main { flex:1; min-width:0; }
+        .eng-row-name-line { display:flex; align-items:center; gap:8px; min-width:0; }
+        .eng-row-status-dot {
+          width:8px; height:8px; border-radius:50%; flex-shrink:0;
+        }
+        .eng-row-status-dot.is-running { background:#16a34a; }
+        .eng-row-status-dot.is-paused  { background:#9ca3af; }
+        .eng-row-status-dot.is-failed  { background:#dc2626; }
+        .eng-row-name {
+          font-size:15px; font-weight:500; color:#0a0a0a;
+          white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+        }
+        .eng-row-meta {
+          display:flex; align-items:center; gap:6px;
+          margin-top:5px; font-size:13px; color:#6b7280;
+          flex-wrap:wrap;
+        }
+        .eng-stage-chip {
+          display:inline-flex; align-items:center; gap:5px;
+          padding:2px 8px; font-size:11.5px; font-weight:500;
+          border:1px solid; border-radius:999px;
+          background:#fff;
+        }
+        .eng-stage-chip-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+        .eng-row-desc {
+          color:#6b7280;
+          overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+          flex:1; min-width:0;
+        }
+        .eng-row-edit {
+          padding:6px 14px;
+          background:#fff; color:#185FA5;
+          border:1px solid #e5e7eb; border-radius:6px;
+          font-size:12.5px; font-weight:500; font-family:inherit;
+          cursor:pointer; flex-shrink:0;
+          transition:background 0.08s ease, border-color 0.08s ease;
+        }
+        .eng-row-edit:hover { background:#f9fafb; border-color:#185FA5; }
+
+        /* Empty states */
+        .eng-empty {
+          padding:60px 24px; text-align:center;
+        }
+        .eng-empty-emoji { font-size:40px; line-height:1; }
+        .eng-empty-h { font-size:16px; font-weight:600; color:#0a0a0a; margin:14px 0 0; }
+        .eng-empty-text {
+          font-size:13.5px; color:#6b7280; line-height:1.55;
+          max-width:380px; margin:8px auto 0;
+        }
+        .eng-empty-cta {
+          margin-top:18px; padding:10px 22px;
+          background:linear-gradient(180deg,#1f2937,#0a0a0a);
+          color:#fff; border:0; border-radius:8px;
+          font-size:13px; font-weight:500; font-family:inherit;
+          cursor:pointer;
+        }
+        .eng-empty-cta:hover { transform:translateY(-1px); }
+        .eng-no-match {
+          padding:48px 24px; text-align:center; color:#6b7280; font-size:13.5px;
+        }
+        .eng-no-match button {
+          display:inline-block; margin-top:12px; padding:8px 16px;
+          background:#fff; color:#185FA5; border:1px solid #e5e7eb;
+          border-radius:6px; font-size:12.5px; font-family:inherit; cursor:pointer;
+        }
+
+        /* + New dropdown menu (and shared filter menus) */
+        .eng-menu {
+          position:fixed; z-index:10001;
+          background:#fff; border:1px solid #e5e7eb; border-radius:10px;
+          box-shadow:0 12px 32px rgba(15,23,42,0.16);
+          min-width:280px; padding:6px 0;
+          font-family:inherit;
+        }
+        .eng-menu-section { padding:6px 0; border-bottom:1px solid #f3f4f6; }
+        .eng-menu-section:last-child { border-bottom:0; }
+        .eng-menu-title {
+          padding:6px 14px 4px;
+          font-size:11px; font-weight:600; color:#9ca3af;
+          text-transform:uppercase; letter-spacing:0.04em;
+        }
+        .eng-menu-hint {
+          padding:0 14px 8px;
+          font-size:11.5px; color:#9ca3af; line-height:1.45;
+        }
+        .eng-menu-item {
+          display:flex; align-items:center; gap:10px;
+          padding:8px 14px; cursor:pointer;
+          font-size:13px; color:#0a0a0a;
+          background:transparent; border:0; width:100%;
+          font-family:inherit; text-align:left;
+        }
+        .eng-menu-item:hover { background:#fafafa; }
+        .eng-menu-item.is-active { background:#f1f5f9; font-weight:600; }
+        .eng-menu-item-icon { font-size:14px; flex-shrink:0; width:18px; text-align:center; }
+        .eng-menu-item-main { flex:1; min-width:0; }
+        .eng-menu-item-title { font-size:13px; }
+        .eng-menu-item-stage {
+          font-size:11px; color:#6b7280; margin-top:1px;
+        }
+        .eng-menu-empty {
+          padding:8px 14px 12px;
+          font-size:11.5px; color:#9ca3af; line-height:1.45;
+        }
+
+        /* Popover (help text) */
         .eng-popover {
           background:#0a0a0a; color:#fff;
           padding:10px 14px;
@@ -13293,21 +13454,22 @@
           box-shadow:0 8px 24px rgba(15,23,42,0.3);
         }
 
-        .eng-nudge {
-          display:flex; gap:14px; align-items:flex-start;
-          padding:14px 18px; margin-bottom:18px;
-          background:#fffbeb; border:1px solid #fde68a;
-          border-radius:12px;
+        /* Toast */
+        .eng-toast {
+          position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+          padding:10px 18px; border-radius:10px;
+          font-size:13px; font-weight:500;
+          background:#0a0a0a; color:#fff;
+          box-shadow:0 8px 24px rgba(0,0,0,0.18);
+          z-index:10002;
         }
-        .eng-nudge-emoji { font-size:24px; line-height:1; }
-        .eng-nudge-content { flex:1; }
-        .eng-nudge-h { font-size:14px; font-weight:600; color:#92400e; margin-bottom:4px; }
-        .eng-nudge-text { font-size:13px; color:#78350f; line-height:1.5; margin-bottom:10px; }
-        .eng-nudge-dismiss { padding:6px 14px; background:#fff; border:1px solid #fde68a; color:#92400e; border-radius:8px; font-size:12px; font-weight:500; cursor:pointer; }
 
-        @media (max-width: 640px) {
-          .eng-stage-cards { flex-direction:column; }
-          .eng-card { width:100%; }
+        /* Mobile */
+        @media (max-width: 760px) {
+          .eng-status-strip { grid-template-columns:1fr 1fr; }
+          .eng-search { max-width:none; margin-left:0; flex-basis:100%; order:99; }
+          .eng-row { flex-direction:column; align-items:stretch; gap:10px; }
+          .eng-row-edit { width:100%; }
         }
       </style>
       <!-- ─────────── Widget · Settings ─────────── -->
@@ -13728,16 +13890,46 @@
         <div style="grid-column: 1 / -1; width: 100%;">
           <div class="eng-page">
             <header class="eng-page-head">
-              <div class="eng-page-title-wrap">
-                <h1 class="eng-page-title">Engagement</h1>
-                <button type="button" class="eng-help-btn" id="engHelpBtn" aria-label="What is this?">?</button>
+              <div class="eng-page-titlewrap">
+                <h1 class="eng-page-title">
+                  Engagement
+                  <button type="button" class="eng-help-btn" id="engHelpBtn" aria-label="What is this?">?</button>
+                </h1>
+                <p class="eng-page-sub">How your AI talks to customers — automatically.</p>
               </div>
-              <p class="eng-page-sub">How your AI talks to customers — at every step of the journey.</p>
             </header>
 
-            <h2 class="eng-section-h">Your customer's journey</h2>
+            <!-- Status strip: per-stage coverage at a glance -->
+            <div class="eng-status-strip" id="engStatusStrip"></div>
 
-            <div id="engFunnel"></div>
+            <!-- Automations list -->
+            <div class="eng-list-card">
+              <div class="eng-list-head">
+                <div class="eng-list-titlewrap">
+                  <h2 class="eng-list-title">All automations</h2>
+                  <button type="button" class="eng-help-btn eng-list-help-btn" id="engListHelpBtn" aria-label="What is this?">?</button>
+                </div>
+                <div class="eng-list-actions">
+                  <button type="button" class="eng-new-btn" id="engNewBtn">
+                    + New <span class="eng-new-caret" aria-hidden="true">▾</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="eng-filter-row">
+                <button type="button" class="eng-filter-pill" data-eng-filter="status" id="engFilterStatus">
+                  Status: <span class="eng-filter-value">All</span>
+                </button>
+                <button type="button" class="eng-filter-pill" data-eng-filter="stage" id="engFilterStage">
+                  Stage: <span class="eng-filter-value">All</span>
+                </button>
+                <input type="search" id="engSearch" placeholder="Search automations…" class="eng-search">
+              </div>
+
+              <div class="eng-active-filters" id="engActiveFilters" hidden></div>
+
+              <div class="eng-list" id="engList"></div>
+            </div>
           </div>
         </div>
       </section>
