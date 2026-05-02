@@ -252,63 +252,6 @@
     }
     .app-topbar-btn:hover { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
 
-    .app-admin-phone {
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      padding: 8px 14px 8px 12px;
-      margin: 0 16px;
-      background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.6) inset,
-        0 1px 2px rgba(15, 23, 42, 0.04);
-    }
-    .app-admin-phone-icon {
-      font-size: 18px;
-      line-height: 1;
-    }
-    .app-admin-phone-content {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      line-height: 1.2;
-    }
-    .app-admin-phone-label {
-      font-size: 9.5px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      color: #64748b;
-      text-transform: uppercase;
-    }
-    .app-admin-phone-number {
-      background: transparent;
-      border: 0;
-      padding: 0;
-      font-family: "SF Mono", "Menlo", "Monaco", "Consolas", monospace;
-      font-size: 14px;
-      font-weight: 600;
-      color: #0f172a;
-      letter-spacing: 0.02em;
-      cursor: pointer;
-      transition: color 0.12s ease;
-    }
-    .app-admin-phone-number:hover {
-      color: #185FA5;
-    }
-    .app-admin-phone-number.is-copied {
-      color: #15803d;
-    }
-    .app-admin-phone-number.is-copied::after {
-      content: " ✓";
-    }
-
-    /* Hide on narrow viewports — top bar gets crowded */
-    @media (max-width: 768px) {
-      .app-admin-phone { display: none; }
-    }
-
     .app-body {
       padding: 28px;
       max-width: 1280px;
@@ -4908,15 +4851,6 @@
     <div class="app-main">
       <header class="app-topbar">
         <h1 class="app-topbar-title" id="appPageTitle">Phone numbers</h1>
-        <div class="app-admin-phone" id="adminPhoneHeader" hidden>
-          <span class="app-admin-phone-icon" aria-hidden="true">📞</span>
-          <div class="app-admin-phone-content">
-            <span class="app-admin-phone-label">YOUR NUMBER</span>
-            <button type="button" class="app-admin-phone-number" id="adminPhoneNumber" title="Click to copy">
-              —
-            </button>
-          </div>
-        </div>
         <div class="app-topbar-actions">
           <div class="ai-mode-panel-wrap">
             <button type="button" id="aiModeBadge" aria-haspopup="true" aria-expanded="false">
@@ -5393,6 +5327,20 @@
             <div class="pn-quota-track"><div class="pn-quota-fill" id="pnQuotaFill"></div></div>
           </div>
 
+          <!-- Owner's personal number (admin contact line). Appears as a
+               regular record above the rented numbers list. -->
+          <div class="pn-row pn-row-owner" id="pnOwnerRow" hidden>
+            <div class="pn-row-head">
+              <div class="pn-row-id">
+                <span class="pn-num" id="pnOwnerNum">—</span>
+                <span class="pn-meta">Your number</span>
+              </div>
+              <div class="pn-row-actions">
+                <button type="button" class="pn-copy" id="pnOwnerCopy">Copy</button>
+              </div>
+            </div>
+          </div>
+
           <div class="pn-list" id="pnList"></div>
           <div class="pn-summary-line" id="pnSummaryLine" hidden></div>
           <div class="pn-error" id="pnError" hidden></div>
@@ -5790,6 +5738,7 @@
           border: 1px solid #e2e8f0; background: #fff;
           transition: border-color .2s ease, box-shadow .2s ease;
         }
+        .pn-row-owner { margin-bottom: 12px; }
         .pn-row:hover { border-color: #cbd5e1; box-shadow: 0 6px 18px -8px rgba(15,23,42,.10); }
         .pn-row-head {
           display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
@@ -28924,39 +28873,47 @@
       load();
     })();
 
-    (function adminPhoneHeaderInit() {
-      const el = document.getElementById("adminPhoneHeader");
-      const numEl = document.getElementById("adminPhoneNumber");
-      if (!el || !numEl) return;
+    (function ownerPhoneRowInit() {
+      const row    = document.getElementById("pnOwnerRow");
+      const numEl  = document.getElementById("pnOwnerNum");
+      const copyEl = document.getElementById("pnOwnerCopy");
+      if (!row || !numEl || !copyEl) return;
 
-      // Cache (instant render on subsequent loads).
       const CACHE_KEY = "dashboard.admin_phone";
-      const cached = (() => {
-        try {
-          return JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
-        } catch (_) { return null; }
-      })();
-      if (cached && cached.is_admin && cached.phone_display) {
-        numEl.textContent = cached.phone_display;
-        numEl.dataset.phone = cached.phone || "";
-        el.hidden = false;
+      let currentPhone = "";
+
+      function paint(data) {
+        if (data && data.is_admin && data.phone_display) {
+          numEl.textContent = data.phone_display;
+          currentPhone = data.phone || "";
+          row.hidden = false;
+        } else {
+          row.hidden = true;
+        }
       }
 
-      // Click copies to clipboard with brief confirmation.
-      numEl.addEventListener("click", () => {
-        const phone = numEl.dataset.phone || "";
-        if (!phone) return;
+      // Cache-first paint (instant on subsequent loads).
+      try {
+        const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+        if (cached) paint(cached);
+      } catch (_) {}
+
+      // Copy-to-clipboard with brief confirmation.
+      copyEl.addEventListener("click", () => {
+        if (!currentPhone) return;
         try {
-          navigator.clipboard.writeText(phone).then(() => {
-            numEl.classList.add("is-copied");
-            setTimeout(() => numEl.classList.remove("is-copied"), 1400);
+          navigator.clipboard.writeText(currentPhone).then(() => {
+            copyEl.classList.add("is-copied");
+            const prev = copyEl.textContent;
+            copyEl.textContent = "Copied";
+            setTimeout(() => {
+              copyEl.classList.remove("is-copied");
+              copyEl.textContent = prev;
+            }, 1400);
           });
-        } catch (_) {
-          // Older browsers — fall back silently
-        }
+        } catch (_) {}
       });
 
-      // Background fetch.
       fetch("/me/admin-phone", { credentials: "same-origin" })
         .then(r => r.ok ? r.json() : null)
         .then(data => {
@@ -28968,13 +28925,7 @@
               is_admin: !!data.is_admin,
             }));
           } catch (_) {}
-          if (data.is_admin && data.phone_display) {
-            numEl.textContent = data.phone_display;
-            numEl.dataset.phone = data.phone || "";
-            el.hidden = false;
-          } else {
-            el.hidden = true;
-          }
+          paint(data);
         })
         .catch(() => {});
     })();
