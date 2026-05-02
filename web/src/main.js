@@ -16,7 +16,7 @@ window.__dashboardBundle = {
 // Dynamic route loaders. Each entry is a function that returns a promise
 // of the route module. Routes are loaded lazily on first navigation.
 const ROUTE_MODULE_LOADERS = {
-  // "leads": () => import("./routes/leads.js"),
+  "leads":     () => import("./routes/leads.js"),
   "campaigns": () => import("./routes/campaigns.js"),
   "replies":   () => import("./routes/replies.js"),
   "pipeline":  () => import("./routes/pipeline.js"),
