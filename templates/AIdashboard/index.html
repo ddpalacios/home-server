@@ -4908,41 +4908,6 @@
           <p class="section-note">How your leads are moving through each stage.</p>
           <div class="pl-funnel-row" id="actPipelineFunnel"></div>
           <div class="pl-conv-strip" id="actPipelineConv" style="margin-top: 8px;"></div>
-          <!-- Flat lead table — same columns the Pipeline page's Table
-               view shows. 5 rows per page with Prev/Next; CSV export
-               dumps the full sorted set (not just the visible page). -->
-          <div style="margin-top: 18px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
-              <h3 style="margin:0;font-size:14px;font-weight:600;color:#0a0a0a;">All leads</h3>
-              <div style="display:flex;align-items:center;gap:10px;">
-                <button type="button" id="actExportCsv"
-                        style="padding:6px 12px;font-size:12px;background:#0a0a0a;color:#fff;border:0;border-radius:6px;cursor:pointer;">
-                  Export to CSV
-                </button>
-                <a href="#pipeline" style="font-size:11.5px;color:#185FA5;text-decoration:none;" data-go-pipeline>View on the Pipeline →</a>
-              </div>
-            </div>
-            <div class="pl-table-wrap">
-              <table class="pl-table">
-                <thead><tr id="actLeadTableHead"></tr></thead>
-                <tbody id="actLeadTableBody"></tbody>
-              </table>
-            </div>
-            <div id="actTablePager"
-                 style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;font-size:12px;color:#71717a;">
-              <span id="actTableSummary">—</span>
-              <div style="display:flex;gap:6px;">
-                <button type="button" id="actTablePrev"
-                        style="padding:5px 12px;font-size:12px;background:#fff;color:#262626;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer;">
-                  ← Prev
-                </button>
-                <button type="button" id="actTableNext"
-                        style="padding:5px 12px;font-size:12px;background:#fff;color:#262626;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer;">
-                  Next →
-                </button>
-              </div>
-            </div>
-          </div>
           </div>
           <div class="card" id="homeServicesCard">
             <div class="card-header" style="margin-bottom: 8px;">
@@ -4962,6 +4927,54 @@
             <div class="chart-panel">
               <canvas id="homeStatusChart" class="leads-chart-canvas" aria-label="Lead status over time"></canvas>
               <div class="chart-empty" id="homeStatusChartEmpty" hidden>No data in this range yet.</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="grid-column: span 12; display:grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-top: 16px;">
+          <div class="card" id="homeTodosCard">
+            <div class="card-header" style="margin-bottom: 8px;">
+              <h2 class="section-title" style="margin:0;">Push the funnel</h2>
+            </div>
+            <p class="section-note">Stale leads — one suggested next action each.</p>
+            <div id="homeTodosList" style="display:flex;flex-direction:column;gap:8px;"></div>
+            <div id="homeTodosMore" style="margin-top:8px;font-size:12px;color:#71717a;" hidden></div>
+          </div>
+          <div class="card">
+            <!-- Flat lead table — same columns the Pipeline page's Table
+                 view shows. 5 rows per page with Prev/Next; CSV export
+                 dumps the full sorted set (not just the visible page). -->
+            <div style="margin-top: 18px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+                <h3 style="margin:0;font-size:14px;font-weight:600;color:#0a0a0a;">All leads</h3>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <button type="button" id="actExportCsv"
+                          style="padding:6px 12px;font-size:12px;background:#0a0a0a;color:#fff;border:0;border-radius:6px;cursor:pointer;">
+                    Export to CSV
+                  </button>
+                  <a href="#pipeline" style="font-size:11.5px;color:#185FA5;text-decoration:none;" data-go-pipeline>View on the Pipeline →</a>
+                </div>
+              </div>
+              <div class="pl-table-wrap">
+                <table class="pl-table">
+                  <thead><tr id="actLeadTableHead"></tr></thead>
+                  <tbody id="actLeadTableBody"></tbody>
+                </table>
+              </div>
+              <div id="actTablePager"
+                   style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;font-size:12px;color:#71717a;">
+                <span id="actTableSummary">—</span>
+                <div style="display:flex;gap:6px;">
+                  <button type="button" id="actTablePrev"
+                          style="padding:5px 12px;font-size:12px;background:#fff;color:#262626;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer;">
+                    ← Prev
+                  </button>
+                  <button type="button" id="actTableNext"
+                          style="padding:5px 12px;font-size:12px;background:#fff;color:#262626;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer;">
+                    Next →
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -6710,6 +6723,15 @@
           .pl-col { width: calc(100vw - 36px); scroll-snap-align: start; }
           .pl-board { scroll-snap-type: x mandatory; }
         }
+
+        .todo-row { display:grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center;
+          padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fff; }
+        .todo-row .todo-msg { font-size: 12.5px; color: #0a0a0a; }
+        .todo-row .todo-name { font-weight: 600; }
+        .todo-row .todo-action { padding: 4px 10px; font-size: 11.5px; background: #0a0a0a; color: #fff;
+          border: 0; border-radius: 5px; cursor: pointer; }
+        .todo-row .todo-snooze { padding: 4px 8px; font-size: 11.5px; background: #fff; color: #71717a;
+          border: 1px solid #e5e7eb; border-radius: 5px; cursor: pointer; }
       </style>
 
       <style>
@@ -22295,6 +22317,55 @@
           }
           lastLoadedAt = Date.now();
         } catch (_) {}
+        try {
+          const todosRes = await fetch(
+            "/me/home/todos?range=" + encodeURIComponent(homeRange),
+            { credentials: "same-origin" });
+          if (todosRes.ok) renderTodos(await todosRes.json());
+        } catch (_) {}
+      }
+
+      function renderTodos(data) {
+        const list = document.getElementById("homeTodosList");
+        const more = document.getElementById("homeTodosMore");
+        if (!list) return;
+        const todos = data.todos || [];
+        list.innerHTML = todos.map(t => `
+          <div class="todo-row" data-lead="${esc(t.lead_id)}" data-rule="${esc(t.rule_id)}">
+            <div class="todo-msg"><span class="todo-name">${esc(t.lead_name)}</span> — ${esc(t.message)}</div>
+            <button class="todo-action" data-route="${esc(t.action_route)}">${esc(t.action_label)}</button>
+            <button class="todo-snooze" aria-label="Snooze 7 days">×</button>
+          </div>`).join("") || `<div style="color:#71717a;font-size:12px;">Nothing to push right now.</div>`;
+        if (more) {
+          more.hidden = !data.more_count;
+          more.textContent = data.more_count ? `+${data.more_count} more not shown` : "";
+        }
+
+        list.querySelectorAll(".todo-action").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const r = btn.dataset.route || "";
+            const hash = r.split("#")[1] || "";
+            if (hash) window.location.hash = hash;
+          });
+        });
+        list.querySelectorAll(".todo-snooze").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const row = btn.closest(".todo-row");
+            const lead_id = row.dataset.lead;
+            const rule_id = row.dataset.rule;
+            row.style.opacity = "0.4";
+            try {
+              const res = await fetch("/me/home/todos/snooze", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ lead_id, rule_id }),
+              });
+              if (res.ok) row.remove();
+              else row.style.opacity = "";
+            } catch (_) { row.style.opacity = ""; }
+          });
+        });
       }
 
       function render(data) {
