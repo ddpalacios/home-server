@@ -42,9 +42,13 @@ let allCampaigns = [];
 let counts = { all: 0, unread: 0, needs_response: 0, resolved: 0 };
 let statusFilter = "all";       // all | unread | needs_response | resolved
 let campaignFilter = "";         // campaign_id or ""
+let channelFilter = "";          // ""(all) | "email" | "instagram"
 let pillFilter = "all";          // mirror of statusFilter — pills only set status
 let searchTerm = "";
 let selectedId = "";
+let igConnected = false;         // updated by checkInstagramConnection()
+let igConvCount = 0;             // count of Instagram conversations merged into the list
+const IG_CONNECT_DISMISS_KEY = "dashboard.rep_ig_connect_dismissed_until";
 let activeThread = null;        // { reply, campaign, lead, messages, thread_id }
 const threadCache = new Map();  // reply_id -> last fetched thread payload
 let readDebounce = null;        // setTimeout id for the 1s read-mark
@@ -87,6 +91,7 @@ function visibleItems() {
     items = items.filter(r => r.resolved_at);
   }
   if (campaignFilter) items = items.filter(r => r.campaign_id === campaignFilter);
+  if (channelFilter) items = items.filter(r => (r.channel || "email") === channelFilter);
   if (searchTerm) {
     const q = searchTerm.toLowerCase();
     items = items.filter(r => {
@@ -94,6 +99,7 @@ function visibleItems() {
       return (
         (r.from_name || "").toLowerCase().includes(q) ||
         (r.from_email || "").toLowerCase().includes(q) ||
+        (r.from_handle || "").toLowerCase().includes(q) ||
         (r.subject || "").toLowerCase().includes(q) ||
         (r.snippet || "").toLowerCase().includes(q) ||
         ((lead.first_name || "") + " " + (lead.last_name || "")).toLowerCase().includes(q)
@@ -125,6 +131,28 @@ function renderSidebar() {
     </div>
   `).join("");
 
+  // Channel rows. Email count = total items minus Instagram items.
+  const emailCount = Math.max(0, (counts.all || 0) - igConvCount);
+  const igRow = igConnected
+    ? `<div class="rep-filter-row ${channelFilter === "instagram" ? "is-active" : ""}" data-channel="instagram">
+         <span class="rep-row-channel">📷</span>
+         <span class="rep-filter-name">Instagram</span>
+         <span class="rep-filter-count">${igConvCount}</span>
+       </div>`
+    : `<div class="rep-filter-row" data-ig-connect="1" style="cursor:pointer;">
+         <span class="rep-row-channel">📷</span>
+         <span class="rep-filter-name">Connect Instagram</span>
+         <span class="rep-filter-count" style="color:#185FA5;">→</span>
+       </div>`;
+  const channelRows = `
+    <div class="rep-filter-row ${channelFilter === "email" ? "is-active" : ""}" data-channel="email">
+      <span class="rep-row-channel">📧</span>
+      <span class="rep-filter-name">Email</span>
+      <span class="rep-filter-count">${emailCount}</span>
+    </div>
+    ${igRow}
+  `;
+
   const campRows = allCampaigns.map(c => `
     <div class="rep-filter-row ${campaignFilter === c.id ? "is-active" : ""}" data-campaign-id="${escHtml(c.id)}">
       <span class="rep-filter-name">${escHtml(c.name)}</span>
@@ -132,9 +160,13 @@ function renderSidebar() {
     </div>
   `).join("") || `<div style="font-size:11.5px;color:#a1a1aa;padding:0 8px;">No replies yet.</div>`;
 
-  const showClear = statusFilter !== "all" || campaignFilter || searchTerm;
+  const showClear = statusFilter !== "all" || campaignFilter || channelFilter || searchTerm;
   sideEl.innerHTML = `
     <div class="rep-side-section">${filterRows}</div>
+    <div class="rep-side-section">
+      <h5>Channels</h5>
+      ${channelRows}
+    </div>
     <div class="rep-side-section">
       <h5>Campaigns</h5>
       ${campRows}
@@ -148,6 +180,15 @@ function renderSidebar() {
       renderAll();
     });
   });
+  sideEl.querySelectorAll("[data-channel]").forEach(el => {
+    el.addEventListener("click", () => {
+      channelFilter = (channelFilter === el.dataset.channel) ? "" : el.dataset.channel;
+      renderAll();
+    });
+  });
+  sideEl.querySelectorAll("[data-ig-connect]").forEach(el => {
+    el.addEventListener("click", () => openIgConnectModal());
+  });
   sideEl.querySelectorAll("[data-campaign-id]").forEach(el => {
     el.addEventListener("click", () => {
       campaignFilter = (campaignFilter === el.dataset.campaignId) ? "" : el.dataset.campaignId;
@@ -156,7 +197,7 @@ function renderSidebar() {
   });
   const clearBtn = document.getElementById("repClearFilters");
   if (clearBtn) clearBtn.addEventListener("click", () => {
-    statusFilter = "all"; campaignFilter = ""; searchTerm = "";
+    statusFilter = "all"; campaignFilter = ""; channelFilter = ""; searchTerm = "";
     searchEl.value = ""; pillFilter = "all"; renderAll();
   });
 }
@@ -204,6 +245,7 @@ function renderList(prevIds) {
       </div>
       <div class="rep-row-content">
         <div class="rep-row-top">
+          <span class="rep-row-channel" aria-label="${r.channel === "instagram" ? "Instagram" : "Email"}">${r.channel === "instagram" ? "📷" : "📧"}</span>
           <span class="rep-row-name">${escHtml(display)}</span>
           <span class="rep-row-time">${escHtml(relTime(r.received_at))}</span>
         </div>
@@ -599,6 +641,16 @@ function selectReply(id, opts) {
   const item = allItems.find(r => r.id === id);
   if (!item) return;
 
+  // Instagram threads have their dedicated thread view in the Inbox tab
+  // (full message bubbles, 24h-window enforcement, image/story replies).
+  // Pop the user over there with the conversation pre-selected via hash.
+  if (item.channel === "instagram") {
+    const convId = item.instagram_conversation_id || (item.id || "").replace(/^ig_/, "");
+    try { sessionStorage.setItem("dashboard.inbox_pending_conversation", convId); } catch (_) {}
+    window.location.hash = "inbox";
+    return;
+  }
+
   const cached = threadCache.get(id);
   if (cached) {
     activeThread = cached;
@@ -883,9 +935,66 @@ function toast(msg, isError) {
 
 // ── Loading ────────────────────────────────────────────
 async function _fetchListOnce() {
-  const res = await fetch("/me/replies", { credentials: "same-origin" });
-  if (!res.ok) return null;
-  return await res.json();
+  // Email replies + Instagram inbox in parallel; merge client-side. The
+  // unified-inbox feel doesn't need backend changes — both sources already
+  // expose JSON, and we tag each item with its channel here.
+  const emailReq = fetch("/me/replies", { credentials: "same-origin" })
+    .then(r => r.ok ? r.json() : null)
+    .catch(() => null);
+  const igReq = fetch("/me/instagram/inbox", { credentials: "same-origin" })
+    .then(r => r.ok ? r.json() : null)
+    .catch(() => null);
+  const [emailData, igData] = await Promise.all([emailReq, igReq]);
+  if (!emailData) return null;
+
+  // Tag email items so the channel filter and row icon can disambiguate.
+  (emailData.items || []).forEach(r => { if (r) r.channel = "email"; });
+
+  // Convert Instagram conversations into the same item shape the list
+  // expects: id, from_name/from_handle, snippet, received_at, etc.
+  const igConversations = (igData && igData.conversations) || [];
+  igConvCount = igConversations.length;
+  const igItems = igConversations.map(c => {
+    const handle = c.username ? "@" + String(c.username).replace(/^@/, "") : (c.profile_name || "Instagram user");
+    const last = (c.last_message && c.last_message.text) || c.last_message_preview || "";
+    return {
+      id: "ig_" + c.conversation_id,
+      channel: "instagram",
+      instagram_conversation_id: c.conversation_id,
+      from_handle: handle,
+      from_name: handle,
+      snippet: last,
+      received_at: c.last_message_at || 0,
+      read_at: c.unread_count ? null : (c.last_read_at || c.last_message_at || 0),
+      resolved_at: c.status === "resolved" ? (c.resolved_at || c.last_message_at) : null,
+      auto_unsubscribed: false,
+      needs_response: !!c.unread_count,
+      campaign_id: "",
+      campaign_name: "",
+      thread_message_count: c.message_count || 1,
+      lead: { first_name: handle, last_name: "" },
+    };
+  });
+
+  // Merge + sort by received_at desc.
+  const merged = (emailData.items || []).concat(igItems);
+  merged.sort((a, b) => (b.received_at || 0) - (a.received_at || 0));
+
+  // Recompute counts so the sidebar/header reflect the unified totals.
+  const c = emailData.counts || { all: 0, unread: 0, needs_response: 0, resolved: 0 };
+  const igUnread   = igItems.filter(r => !r.read_at && !r.resolved_at).length;
+  const igNeedsResp = igItems.filter(r => r.needs_response && !r.resolved_at).length;
+  const igResolved = igItems.filter(r => r.resolved_at).length;
+  return {
+    items: merged,
+    campaigns: emailData.campaigns || [],
+    counts: {
+      all: (c.all || 0) + igItems.length,
+      unread: (c.unread || 0) + igUnread,
+      needs_response: (c.needs_response || 0) + igNeedsResp,
+      resolved: (c.resolved || 0) + igResolved,
+    },
+  };
 }
 function _applyListPayload(data) {
   const prevIds = new Set(allItems.map(r => r.id));
@@ -893,7 +1002,10 @@ function _applyListPayload(data) {
   allCampaigns = data.campaigns || [];
   counts = data.counts || counts;
   if (!selectedId && allItems.length && allItems[0].id) {
-    selectedId = allItems[0].id;
+    // Prefer an email item as the auto-selection target — Instagram threads
+    // bounce to the Inbox tab, which would feel jarring on first load.
+    const firstEmail = allItems.find(r => (r.channel || "email") === "email");
+    selectedId = (firstEmail && firstEmail.id) || allItems[0].id;
     selectReply(selectedId, { skipReadMark: true });
   }
   return prevIds;
@@ -1026,6 +1138,60 @@ shortcutModal.addEventListener("click", (e) => {
   if (e.target === shortcutModal) shortcutModal.classList.remove("is-open");
 });
 
+// ── Connect Instagram card + pre-OAuth modal ───────────
+async function checkInstagramConnection() {
+  try {
+    const res = await fetch("/me/instagram/accounts", { credentials: "same-origin" });
+    if (res.status === 404) {
+      // Feature not enabled server-side — leave card hidden.
+      igConnected = false;
+      return;
+    }
+    if (!res.ok) { igConnected = false; return; }
+    const body = await res.json();
+    igConnected = ((body.accounts || []).length > 0);
+  } catch (_) { igConnected = false; }
+  refreshIgConnectCard();
+}
+
+function refreshIgConnectCard() {
+  const card = document.getElementById("repIgConnect");
+  if (!card) return;
+  if (igConnected) { card.hidden = true; return; }
+  // Honor the 30-day dismissal.
+  let dismissedUntil = 0;
+  try { dismissedUntil = parseInt(localStorage.getItem(IG_CONNECT_DISMISS_KEY) || "0", 10) || 0; }
+  catch (_) {}
+  if (Date.now() < dismissedUntil) { card.hidden = true; return; }
+  card.hidden = false;
+}
+
+function openIgConnectModal() {
+  const m = document.getElementById("repIgModal");
+  if (m) m.hidden = false;
+}
+function closeIgConnectModal() {
+  const m = document.getElementById("repIgModal");
+  if (m) m.hidden = true;
+}
+
+(function wireIgConnect() {
+  const btn = document.getElementById("repIgConnectBtn");
+  if (btn) btn.addEventListener("click", openIgConnectModal);
+  const dismiss = document.getElementById("repIgConnectDismiss");
+  if (dismiss) dismiss.addEventListener("click", () => {
+    try {
+      localStorage.setItem(IG_CONNECT_DISMISS_KEY,
+        String(Date.now() + 30 * 24 * 3600 * 1000));
+    } catch (_) {}
+    refreshIgConnectCard();
+  });
+  document.querySelectorAll("[data-ig-modal-close]").forEach(el => {
+    el.addEventListener("click", closeIgConnectModal);
+  });
+  // Continue button is an <a href="/me/instagram/oauth/start"> — no handler needed.
+})();
+
 // ── Boot ───────────────────────────────────────────────
 function boot() {
   // Data load deferred via SECTION_ON_ENTER.replies; always refresh
@@ -1097,6 +1263,7 @@ export function init() {
 
 window.loadRepliesSection = function () {
   loadAll();
+  checkInstagramConnection();
 };
 
 window.__repliesRoute = {

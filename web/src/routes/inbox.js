@@ -557,6 +557,20 @@ export async function loadInboxSection() {
   if (_hasDmAccounts) {
     renderConversationList();
 
+    // Honor a deep-link hand-off from Replies (`sessionStorage` set when
+    // the user clicked an Instagram thread in the unified inbox).
+    let pending = "";
+    try { pending = sessionStorage.getItem("dashboard.inbox_pending_conversation") || ""; }
+    catch (_) {}
+    if (pending) {
+      try { sessionStorage.removeItem("dashboard.inbox_pending_conversation"); } catch (_) {}
+      const match = _conversations.find(c => c.conversation_id === pending);
+      if (match) {
+        await _openConversation(match.conversation_id);
+        return;
+      }
+    }
+
     // Open first conversation automatically if any
     if (_conversations.length && !_activeId) {
       const first = _filterConversations()[0];

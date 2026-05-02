@@ -7492,6 +7492,96 @@
         .rep-filter-row .rep-filter-dot { width: 7px; height: 7px; border-radius: 50%; background: #2563eb; }
         .rep-filter-row[data-status="resolved"] { color: #71717a; }
         .rep-side-clear { font-size: 11.5px; color: #2563eb; cursor: pointer; padding: 6px 8px; margin-top: auto; align-self: flex-start; }
+
+        /* Channel icons inline with row name */
+        .rep-row-channel {
+          width: 14px; height: 14px; flex-shrink: 0;
+          display: inline-flex; align-items: center; justify-content: center;
+          font-size: 12px; line-height: 1;
+        }
+
+        /* Connect Instagram card (top of Replies page) */
+        .rep-ig-connect {
+          display: flex; align-items: center; gap: 14px;
+          margin: 12px 18px 0;
+          padding: 14px 18px;
+          background: linear-gradient(135deg, #fff5f9 0%, #fff8f5 100%);
+          border: 1px solid #fbcfe8;
+          border-radius: 12px;
+        }
+        .rep-ig-connect-icon { font-size: 28px; line-height: 1; flex-shrink: 0; }
+        .rep-ig-connect-body { flex: 1; min-width: 0; }
+        .rep-ig-connect-h { font-size: 14.5px; font-weight: 600; color: #0a0a0a; margin: 0; }
+        .rep-ig-connect-text { font-size: 13px; color: #525252; margin-top: 2px; }
+        .rep-ig-connect-btn {
+          flex-shrink: 0;
+          padding: 8px 16px;
+          background: linear-gradient(135deg, #d946ef 0%, #f97316 100%);
+          color: #fff; border: 0; border-radius: 8px;
+          font-size: 13px; font-weight: 600; font-family: inherit;
+          cursor: pointer;
+          box-shadow: 0 2px 8px rgba(217, 70, 239, 0.18);
+          transition: transform 0.08s ease, box-shadow 0.12s ease;
+        }
+        .rep-ig-connect-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(217, 70, 239, 0.24); }
+        .rep-ig-connect-dismiss {
+          flex-shrink: 0;
+          width: 26px; height: 26px;
+          background: transparent; border: 0;
+          color: #94a3b8; font-size: 18px; cursor: pointer;
+          border-radius: 6px; line-height: 1;
+        }
+        .rep-ig-connect-dismiss:hover { background: rgba(0,0,0,0.04); color: #525252; }
+
+        /* Pre-OAuth modal */
+        .rep-ig-modal {
+          position: fixed; inset: 0; z-index: 10001;
+          display: flex; align-items: center; justify-content: center;
+        }
+        .rep-ig-modal[hidden] { display: none; }
+        .rep-ig-modal-backdrop {
+          position: absolute; inset: 0;
+          background: rgba(10, 10, 10, 0.5);
+        }
+        .rep-ig-modal-card {
+          position: relative; z-index: 1;
+          background: #fff;
+          width: 480px; max-width: calc(100vw - 32px);
+          border-radius: 14px;
+          box-shadow: 0 24px 60px rgba(0,0,0,0.28);
+          padding: 28px 28px 22px;
+          font-family: inherit;
+        }
+        .rep-ig-modal-x {
+          position: absolute; top: 12px; right: 12px;
+          width: 32px; height: 32px; padding: 0; line-height: 1;
+          font-size: 20px; color: #71717a;
+          background: transparent; border: 0; border-radius: 50%; cursor: pointer;
+        }
+        .rep-ig-modal-x:hover { background: #f1f5f9; color: #0a0a0a; }
+        .rep-ig-modal-h { font-size: 18px; font-weight: 600; color: #0a0a0a; margin: 0 0 6px; }
+        .rep-ig-modal-sub { font-size: 13.5px; color: #525252; margin: 0 0 14px; line-height: 1.5; }
+        .rep-ig-modal-bullets { list-style: none; padding: 0; margin: 0 0 14px; display: flex; flex-direction: column; gap: 8px; }
+        .rep-ig-modal-bullets li { font-size: 13.5px; color: #0a0a0a; display: flex; align-items: center; gap: 10px; }
+        .rep-ig-modal-check {
+          width: 22px; height: 22px; flex-shrink: 0;
+          background: #ecfdf5; color: #15803d;
+          border-radius: 50%;
+          display: inline-flex; align-items: center; justify-content: center;
+          font-size: 13px; font-weight: 600;
+        }
+        .rep-ig-modal-reassure {
+          font-size: 13px; color: #525252; margin: 0 0 14px;
+          padding: 10px 14px; background: #f8fafc;
+          border-left: 3px solid #16a34a; border-radius: 4px;
+        }
+        .rep-ig-modal-note {
+          font-size: 12px; color: #6b7280; line-height: 1.55; margin: 0 0 18px;
+        }
+        .rep-ig-modal-note a { color: #185FA5; text-decoration: none; }
+        .rep-ig-modal-note a:hover { text-decoration: underline; }
+        .rep-ig-modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+        .rep-ig-modal-actions .btn { padding: 9px 16px; font-size: 13px; }
         .rep-side-clear:hover { text-decoration: underline; }
 
         .rep-mid { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid #f1f5f9; }
@@ -7755,9 +7845,22 @@
                 <span data-help-icon="replies"></span>
               </h2>
               <span class="rep-sub" id="repHeaderSub">Loading…</span>
+              <p class="rep-page-sub" style="font-size:13px;color:#6b7280;margin:4px 0 0;">Replies from your customers — emails and Instagram DMs in one place.</p>
             </div>
             <span class="rep-shortcut-hint">⌨ press <kbd>?</kbd> for shortcuts</span>
           </header>
+
+          <!-- Connect Instagram card (shows when no IG account is connected) -->
+          <div class="rep-ig-connect" id="repIgConnect" hidden>
+            <div class="rep-ig-connect-icon" aria-hidden="true">📷</div>
+            <div class="rep-ig-connect-body">
+              <div class="rep-ig-connect-h">Connect Instagram</div>
+              <div class="rep-ig-connect-text">See your Instagram DMs here too. One click to connect.</div>
+            </div>
+            <button type="button" class="rep-ig-connect-btn" id="repIgConnectBtn">Connect →</button>
+            <button type="button" class="rep-ig-connect-dismiss" id="repIgConnectDismiss" aria-label="Hide for 30 days" title="Hide for 30 days">×</button>
+          </div>
+
           <div class="rep-cols" id="repCols" data-mobile-pane="side">
             <aside class="rep-side" id="repSide"></aside>
             <div class="rep-mid">
@@ -7796,6 +7899,31 @@
               <tr><td>/</td><td>Focus search</td></tr>
               <tr><td>1 / 2 / 3 / 4</td><td>All / Unread / Needs reply / Resolved</td></tr>
             </table>
+          </div>
+        </div>
+
+        <!-- Pre-OAuth modal: explains permissions in plain English before
+             we redirect to Meta's auth screen. -->
+        <div class="rep-ig-modal" id="repIgModal" role="dialog" aria-modal="true" aria-labelledby="repIgModalTitle" hidden>
+          <div class="rep-ig-modal-backdrop" data-ig-modal-close></div>
+          <div class="rep-ig-modal-card">
+            <button type="button" class="rep-ig-modal-x" data-ig-modal-close aria-label="Close">×</button>
+            <h3 id="repIgModalTitle" class="rep-ig-modal-h">Connect Instagram</h3>
+            <p class="rep-ig-modal-sub">Next, you'll log into Instagram and approve these things:</p>
+            <ul class="rep-ig-modal-bullets">
+              <li><span class="rep-ig-modal-check">✓</span> See your Instagram profile</li>
+              <li><span class="rep-ig-modal-check">✓</span> See and reply to your DMs</li>
+            </ul>
+            <p class="rep-ig-modal-reassure">We never post anything without your permission.</p>
+            <p class="rep-ig-modal-note">
+              ℹ Your Instagram needs to be a Business or Creator account, linked to a Facebook Page.
+              Most contractors already have this — but if not,
+              <a href="https://help.instagram.com/502981923235522" target="_blank" rel="noopener">we'll show you how →</a>
+            </p>
+            <div class="rep-ig-modal-actions">
+              <button type="button" class="btn secondary" data-ig-modal-close>Cancel</button>
+              <a class="btn shiny" id="repIgModalContinue" href="/me/instagram/oauth/start">Continue to Instagram →</a>
+            </div>
           </div>
         </div>
       </section>
