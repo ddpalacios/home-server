@@ -76,25 +76,6 @@ async function loadPosts() {
   } catch (_) {}
 }
 
-let _livePosts = []; // [{ig_account_id, ig_username, posts:[{id,caption,thumbnail_url,permalink,timestamp,...}], error?}]
-
-async function loadLivePosts() {
-  try {
-    const url = _accountFilter
-      ? `/me/instagram/posts/live?account=${encodeURIComponent(_accountFilter)}`
-      : "/me/instagram/posts/live";
-    const r = await fetch(url, { credentials: "include" });
-    if (!r.ok) {
-      _livePosts = [];
-      return;
-    }
-    const body = await r.json();
-    _livePosts = body.accounts || [];
-  } catch (_) {
-    _livePosts = [];
-  }
-}
-
 // ─── Connection banner + disconnect ─────────────────────────────────────────
 
 function renderConnectionBanner() {
@@ -130,7 +111,6 @@ function renderConnectionBanner() {
           await loadAccounts();
           _updateEmptyState();
           renderConnectionBanner();
-          renderLivePosts();
           renderAccountFilter();
           renderCalendar();
         } else {
@@ -141,60 +121,6 @@ function renderConnectionBanner() {
       }
     };
   }
-}
-
-// ─── Live posts strip ───────────────────────────────────────────────────────
-
-function _fmtPostDate(iso) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return "";
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
-
-function renderLivePosts() {
-  const section = document.getElementById("igLiveSection");
-  const strip   = document.getElementById("igLiveStrip");
-  if (!section || !strip) return;
-  if (!_accounts.length) {
-    section.hidden = true;
-    return;
-  }
-  section.hidden = false;
-
-  // Flatten posts across all accounts.
-  const errors = [];
-  const cards = [];
-  for (const acc of _livePosts) {
-    if (acc.error) {
-      errors.push({ handle: acc.ig_username, error: acc.error });
-      continue;
-    }
-    for (const p of (acc.posts || [])) {
-      cards.push({ ...p, _handle: acc.ig_username });
-    }
-  }
-  cards.sort((a, b) => (b.timestamp || "").localeCompare(a.timestamp || ""));
-
-  if (cards.length === 0 && errors.length === 0) {
-    strip.innerHTML = `<div class="ig-live-empty">No posts yet — your published Instagram content will show up here once available.</div>`;
-    return;
-  }
-  if (cards.length === 0 && errors.length) {
-    strip.innerHTML = `<div class="ig-live-error">Couldn't load posts from Instagram: ${esc(errors[0].error)}</div>`;
-    return;
-  }
-  strip.innerHTML = cards.map(p => `
-    <a class="ig-live-card" href="${esc(p.permalink || '#')}" target="_blank" rel="noopener">
-      ${p.thumbnail_url
-        ? `<img class="ig-live-thumb" src="${esc(p.thumbnail_url)}" alt="" loading="lazy">`
-        : `<div class="ig-live-thumb" style="display:flex;align-items:center;justify-content:center;font-size:24px;">${emojiForType(p.media_type === 'VIDEO' ? 'reel' : p.media_type === 'CAROUSEL_ALBUM' ? 'carousel' : 'image')}</div>`}
-      <div class="ig-live-meta">
-        <div class="ig-live-cap">${esc(p.caption || '(no caption)')}</div>
-        <div class="ig-live-date">${esc(_fmtPostDate(p.timestamp))}</div>
-      </div>
-    </a>
-  `).join("");
 }
 
 // ─── Account filter + reconnect banner ────────────────────────────────────────
@@ -607,8 +533,6 @@ async function loadInstagramSection() {
   _updateEmptyState();
   if (_accounts.length) {
     renderCalendar();
-    // Pull live posts in the background — don't block calendar render.
-    loadLivePosts().then(() => renderLivePosts());
   }
 }
 
@@ -627,22 +551,11 @@ export function init() {
   document.getElementById("igAccountFilter")?.addEventListener("change", ev => {
     _accountFilter = ev.target.value || "";
     renderCalendar();
-    // Re-pull live posts when the account filter changes.
-    loadLivePosts().then(() => renderLivePosts());
   });
 
   // View toggle
   document.getElementById("igViewCalendar")?.addEventListener("click", () => _activateView("calendar"));
   document.getElementById("igViewList")?.addEventListener("click",     () => _activateView("list"));
-
-  // Live-posts refresh
-  document.getElementById("igLiveRefresh")?.addEventListener("click", async () => {
-    const btn = document.getElementById("igLiveRefresh");
-    if (btn) btn.disabled = true;
-    await loadLivePosts();
-    renderLivePosts();
-    if (btn) btn.disabled = false;
-  });
 
   // New post button
   document.getElementById("igNewPostBtn")?.addEventListener("click", () => openComposer({}));
