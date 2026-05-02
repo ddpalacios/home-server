@@ -4862,23 +4862,15 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <span class="nav-tooltip">Schedule</span>
         </button>
+        <button class="app-nav-btn" type="button" data-route="engagement" id="appEngagementNavBtn" aria-label="Engagement">
+          <!-- Handshake icon (engagement = customer connection) -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></svg>
+          <span class="nav-tooltip">Engagement</span>
+        </button>
         <button class="app-nav-btn" type="button" data-route="campaigns" aria-label="Campaigns" id="appCampaignsNavBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           <span class="nav-tooltip">Campaigns</span>
           <span class="app-nav-badge" id="appCampaignsBadge" hidden>0</span>
-        </button>
-        <button class="app-nav-btn" type="button" data-route="engagement" id="appEngagementNavBtn" aria-label="Engagement">
-          <!-- Reflective sparkle/engagement icon -->
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.4a3 3 0 0 0 1.8 1.8L21 12l-5.4 1.8a3 3 0 0 0-1.8 1.8L12 21l-1.8-5.4a3 3 0 0 0-1.8-1.8L3 12l5.4-1.8a3 3 0 0 0 1.8-1.8L12 3z"/></svg>
-          <span class="nav-tooltip">Engagement</span>
-        </button>
-        <button class="app-nav-btn" type="button" data-route="pipeline" aria-label="Pipeline" id="appPipelineNavBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="20" x2="21" y2="20"/><rect x="5" y="10" width="3" height="8"/><rect x="10.5" y="6" width="3" height="12"/><rect x="16" y="13" width="3" height="5"/></svg>
-          <span class="nav-tooltip">Pipeline</span>
-        </button>
-        <button class="app-nav-btn" type="button" data-route="voice" aria-label="Voice">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-          <span class="nav-tooltip">Voice</span>
         </button>
         <button class="app-nav-btn" type="button" data-route="kb" aria-label="Knowledge base">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
@@ -8288,99 +8280,6 @@
 
           <div class="wiz-toast" id="wizToast" role="status" aria-live="polite" hidden></div>
         </div>
-      </section>
-      <section class="grid" id="pipeline" data-route-section="pipeline" hidden>
-        <div class="pl-page">
-          <!-- First-time landing nudge for the Pipeline. Hidden once dismissed. -->
-          <div class="page-nudge" data-nudge="pipeline" hidden>
-            <span class="page-nudge-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="20" x2="21" y2="20"/><rect x="5" y="10" width="3" height="8"/><rect x="10.5" y="6" width="3" height="12"/><rect x="16" y="13" width="3" height="5"/></svg>
-            </span>
-            <div style="flex:1;min-width:0;">
-              <p class="page-nudge-text"><strong>Where each lead is in your buying journey.</strong> Every lead moves through stages — New → Contacted → Engaged → Quoted → Scheduled → Won. Drag a lead between stages on the Board view, or use Funnel for a quick overview.</p>
-              <div class="page-nudge-actions">
-                <button type="button" class="page-nudge-dismiss" data-nudge-close>Got it</button>
-                <button type="button" class="page-nudge-tour" data-nudge-tour="pipeline">Show me around</button>
-              </div>
-            </div>
-            <button type="button" class="page-nudge-close" data-nudge-close aria-label="Dismiss">×</button>
-          </div>
-
-          <div class="pl-head">
-            <h2>
-              Where each lead is in your pipeline
-              <span data-help-icon="pipeline"></span>
-              <small id="plLeadTotal">— leads tracked</small>
-            </h2>
-            <div class="pl-views" role="tablist">
-              <button type="button" class="pl-view-btn is-active" data-pl-view="funnel">Funnel</button>
-              <button type="button" class="pl-view-btn" data-pl-view="board">Board</button>
-              <button type="button" class="pl-view-btn" data-pl-view="table">Table</button>
-            </div>
-          </div>
-
-          <div class="pl-stat-row" id="plStatRow"></div>
-
-          <div class="pl-filters">
-            <input type="text" id="plSearch" placeholder="Search name, email, phone…">
-            <select id="plSource">
-              <option value="">All sources</option>
-              <option value="phone_call">Phone Call</option>
-              <option value="widget">Widget</option>
-              <option value="csv_import">CSV Import</option>
-            </select>
-            <select id="plCampaign"><option value="">All campaigns</option></select>
-            <select id="plRange">
-              <option value="7">Last 7 days</option>
-              <option value="30">Last 30 days</option>
-              <option value="90" selected>Last 90 days</option>
-              <option value="0">All time</option>
-            </select>
-            <a class="pl-reset" id="plReset" hidden>Reset filters</a>
-          </div>
-
-          <!-- Funnel view -->
-          <div data-pl-pane="funnel">
-            <div class="pl-funnel-row" id="plFunnelRow"></div>
-            <div class="pl-conv-strip" id="plConvStrip"></div>
-            <div class="pl-trend-card" style="margin-top: 14px;">
-              <div class="pl-trend-head">
-                <h3>Stage trends</h3>
-                <div class="pl-trend-range" id="plTrendRange">
-                  <button type="button" data-pl-range="30">30 days</button>
-                  <button type="button" data-pl-range="90" class="is-active">90 days</button>
-                </div>
-              </div>
-              <div id="plTrendChart"></div>
-              <div class="pl-trend-legend" id="plTrendLegend"></div>
-            </div>
-          </div>
-
-          <!-- Board view -->
-          <div data-pl-pane="board" hidden>
-            <div class="pl-board-wrap">
-              <div class="pl-board" id="plBoard"></div>
-            </div>
-          </div>
-
-          <!-- Table view -->
-          <div data-pl-pane="table" hidden>
-            <button type="button" class="pl-table-export" id="plExport">Export to CSV</button>
-            <div class="pl-table-wrap">
-              <table class="pl-table">
-                <thead><tr id="plTableHead"></tr></thead>
-                <tbody id="plTableBody"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <button type="button" class="pl-lost-pill" id="plLostPill" hidden>Lost · <span id="plLostCount">0</span> ↗</button>
-        <aside class="pl-lost-pane" id="plLostPane" aria-hidden="true">
-          <h3>Lost <button type="button" id="plLostClose" aria-label="Close">×</button></h3>
-          <div class="pl-lost-pane-body" id="plLostBody"></div>
-        </aside>
-        <div class="pl-confirm-pill" id="plConfirmPill" role="status"></div>
       </section>
 
       <!-- ─────────── Lead Detail modal (global, reused everywhere) ─────────── -->
@@ -13247,18 +13146,6 @@
         .eng-list-titlewrap { display:flex; align-items:center; gap:8px; }
         .eng-list-title { font-size:16px; font-weight:600; color:#0a0a0a; margin:0; }
         .eng-list-help-btn { width:18px; height:18px; font-size:10px; }
-        .eng-list-actions { display:flex; gap:8px; }
-        .eng-new-btn {
-          padding:8px 16px;
-          background:linear-gradient(180deg,#1f2937,#0a0a0a);
-          color:#fff; border:0; border-radius:8px;
-          font-size:13px; font-weight:500; font-family:inherit;
-          cursor:pointer; display:inline-flex; align-items:center; gap:4px;
-          transition:transform 0.08s ease, box-shadow 0.12s ease;
-          white-space:nowrap;
-        }
-        .eng-new-btn:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(15,23,42,0.12); }
-        .eng-new-caret { font-size:10px; opacity:0.8; }
 
         /* Filter row */
         .eng-filter-row {
@@ -13359,14 +13246,6 @@
           font-size:13.5px; color:#6b7280; line-height:1.55;
           max-width:380px; margin:8px auto 0;
         }
-        .eng-empty-cta {
-          margin-top:18px; padding:10px 22px;
-          background:linear-gradient(180deg,#1f2937,#0a0a0a);
-          color:#fff; border:0; border-radius:8px;
-          font-size:13px; font-weight:500; font-family:inherit;
-          cursor:pointer;
-        }
-        .eng-empty-cta:hover { transform:translateY(-1px); }
         .eng-no-match {
           padding:48px 24px; text-align:center; color:#6b7280; font-size:13.5px;
         }
@@ -13875,11 +13754,6 @@
                 <div class="eng-list-titlewrap">
                   <h2 class="eng-list-title">All automations</h2>
                   <button type="button" class="eng-help-btn eng-list-help-btn" id="engListHelpBtn" aria-label="What is this?">?</button>
-                </div>
-                <div class="eng-list-actions">
-                  <button type="button" class="eng-new-btn" id="engNewBtn">
-                    + New <span class="eng-new-caret" aria-hidden="true">▾</span>
-                  </button>
                 </div>
               </div>
 
@@ -18647,12 +18521,9 @@
         // Now fire the data load that was deferred.
         if (typeof window._phonesLoadList === "function") window._phonesLoadList();
       };
-      // Voice bundle: lazy-loads web/src/routes/voice.js then calls the
-      // exposed window.loadVoiceSettings to fetch /me/voice-settings etc.
-      SECTION_ON_ENTER.voice = async function loadVoiceSection() {
-        await window.__dashboardLoadRouteModule("voice");
-        if (typeof window.loadVoiceSettings === "function") window.loadVoiceSettings();
-      };
+      // Voice bundle is now lazy-loaded by initSettingsTopTabs() when the
+      // Phone tab is first activated — voice settings live there now,
+      // not on a dedicated nav route.
       // Embed bundle: no deferred data load — registers for pattern consistency.
       SECTION_ON_ENTER.embed = async function loadEmbedSection() {
         await window.__dashboardLoadRouteModule("embed");
@@ -18748,18 +18619,35 @@
       const panes = document.querySelectorAll("[data-settings-top-pane]");
       if (!tabs.length) return;
 
-      // Move #phoneNumbers section content into the phone mount on first load.
+      // Move #phoneNumbers + #voicePanel content into the phone mount on
+      // first activation. Voice now lives under the Phone tab — the dedicated
+      // Voice nav route was retired.
       let phoneMounted = false;
       function ensurePhoneMounted() {
         if (phoneMounted) return;
         phoneMounted = true;
         const mount = document.getElementById("stgPhoneMount");
+        if (!mount) return;
         const phoneSection = document.getElementById("phoneNumbers");
-        if (mount && phoneSection) {
-          // Remove route-section attr so router CSS doesn't hide it
+        if (phoneSection) {
           phoneSection.removeAttribute("data-route-section");
           phoneSection.removeAttribute("hidden");
           mount.appendChild(phoneSection);
+        }
+        const voiceSection = document.getElementById("voicePanel");
+        if (voiceSection) {
+          voiceSection.removeAttribute("data-route-section");
+          voiceSection.removeAttribute("hidden");
+          // Drop the .grid layout class so it inherits the phone pane's flow.
+          voiceSection.classList.remove("grid");
+          mount.appendChild(voiceSection);
+          // Lazy-load the voice bundle and fire its data loader once the
+          // section is in the DOM.
+          if (typeof window.__dashboardLoadRouteModule === "function") {
+            window.__dashboardLoadRouteModule("voice").then(() => {
+              if (typeof window.loadVoiceSettings === "function") window.loadVoiceSettings();
+            });
+          }
         }
       }
 
@@ -20990,9 +20878,7 @@
       leads:     { title: "Leads",         section: "leads" },
       replies:   { title: "Replies",       section: "replies" },
       campaigns: { title: "Campaigns",     section: "campaigns" },
-      pipeline:  { title: "Pipeline",      section: "pipeline" },
       calendar:  { title: "Calendar",      section: "calendar" },
-      voice:     { title: "Voice",         section: "voicePanel" },
       activity:  { title: "Insights",      section: "activity" },
       knowledge: { title: "Knowledge base", section: "kb" },
       kb:        { title: "Knowledge base", section: "kb" },
@@ -21047,10 +20933,10 @@
 
     function appShowRoute(route) {
       if (route === "home") route = "activity";
-      // phones is now a tab inside settings — redirect and activate the tab
-      if (route === "phones") {
+      // phones / voice both live as tabs inside settings — redirect and
+      // activate the Phone top tab after the section is shown.
+      if (route === "phones" || route === "voice") {
         route = "settings";
-        // Activate the phone top tab after the section is shown
         requestAnimationFrame(() => {
           const phoneTab = document.querySelector('[data-settings-top-tab="phone"]');
           if (phoneTab) phoneTab.click();

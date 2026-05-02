@@ -39,18 +39,6 @@ const AUTOMATION_DESCRIPTIONS = {
   after_job:           "Says thanks and asks for a review.",
 };
 
-// Templates surfaced in the "+ New" dropdown. Plain-language labels —
-// no "drip", "nurture", "lifecycle".
-const TEMPLATE_LIBRARY = [
-  { id: "first_contact",       icon: "📨", label: "Welcome new leads",        stage: "interest" },
-  { id: "win_back",            icon: "🔄", label: "Bring back cold leads",    stage: "interest" },
-  { id: "quote_followup",      icon: "💬", label: "Send a quote reminder",    stage: "decision" },
-  { id: "estimate_onboarding", icon: "📋", label: "Confirm estimates",        stage: "decision" },
-  { id: "job_onboarding",      icon: "🛠️", label: "Job kickoff prep",        stage: "action"   },
-  { id: "during_job",          icon: "📷", label: "During the job",           stage: "action"   },
-  { id: "after_job",           icon: "⭐", label: "Thank you after the job",  stage: "action"   },
-];
-
 const STAGE_HELP = {
   awareness: "Awareness comes from ads, social, or word-of-mouth. We pick up after a lead reaches you.",
   interest:  "Interest is when someone has reached out. They know you exist — keep their attention warm so they don't forget about you.",
@@ -77,16 +65,6 @@ function escapeHtml(s) {
   return String(s == null ? "" : s)
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-}
-
-function showToast(msg) {
-  const old = document.querySelector(".eng-toast");
-  if (old) old.remove();
-  const el = document.createElement("div");
-  el.className = "eng-toast";
-  el.textContent = msg;
-  document.body.appendChild(el);
-  setTimeout(() => el.remove(), 2400);
 }
 
 function closeOpenMenu() {
@@ -193,14 +171,10 @@ function renderList() {
         <div class="eng-empty-emoji" aria-hidden="true">📨</div>
         <div class="eng-empty-h">No automations yet.</div>
         <div class="eng-empty-text">
-          Set up your first automation in 2 minutes. We'll pre-fill the words —
-          you just review and turn it on.
+          Once your account has built-in automations, they'll show up here.
         </div>
-        <button type="button" class="eng-empty-cta" id="engEmptyCta">+ Set up your first automation</button>
       </div>
     `;
-    const cta = document.getElementById("engEmptyCta");
-    if (cta) cta.addEventListener("click", () => openNewMenu(document.getElementById("engNewBtn")));
     return;
   }
 
@@ -388,81 +362,6 @@ function openStageMenu(anchor) {
   positionMenu(menu, anchor);
 }
 
-// ─── "+ New" dropdown ───────────────────────────────────────────────────────
-
-function openNewMenu(anchor, preferStage) {
-  closeOpenMenu();
-  const haveIds = new Set(_automations.map(a => a.id));
-  let templates = TEMPLATE_LIBRARY.filter(t => !haveIds.has(t.id));
-  if (preferStage) {
-    // Preferred stage's templates first
-    templates = templates.slice().sort((a, b) => {
-      const ap = a.stage === preferStage ? 0 : 1;
-      const bp = b.stage === preferStage ? 0 : 1;
-      return ap - bp;
-    });
-  }
-
-  const menu = document.createElement("div");
-  menu.className = "eng-menu";
-
-  let prebuiltSection;
-  if (templates.length === 0) {
-    prebuiltSection = `
-      <div class="eng-menu-section">
-        <div class="eng-menu-title">Pre-built</div>
-        <div class="eng-menu-empty">
-          All built-in automations are already added. Open them in the list below to edit.
-        </div>
-      </div>`;
-  } else {
-    prebuiltSection = `
-      <div class="eng-menu-section">
-        <div class="eng-menu-title">Pick what to set up</div>
-        ${templates.map(t => {
-          const stage = STAGE_INFO[t.stage];
-          return `
-            <button type="button" class="eng-menu-item" data-template="${escapeHtml(t.id)}">
-              <span class="eng-menu-item-icon">${t.icon}</span>
-              <span class="eng-menu-item-main">
-                <div class="eng-menu-item-title">${escapeHtml(t.label)}</div>
-                <div class="eng-menu-item-stage">→ ${escapeHtml(stage.label)}</div>
-              </span>
-            </button>
-          `;
-        }).join("")}
-      </div>`;
-  }
-
-  const customSection = `
-    <div class="eng-menu-section">
-      <div class="eng-menu-title">Build from scratch</div>
-      <button type="button" class="eng-menu-item" data-template="__custom__">
-        <span class="eng-menu-item-icon">✨</span>
-        <span class="eng-menu-item-main">
-          <div class="eng-menu-item-title">Custom automation</div>
-          <div class="eng-menu-item-stage">Coming soon</div>
-        </span>
-      </button>
-    </div>`;
-
-  menu.innerHTML = prebuiltSection + customSection;
-
-  menu.querySelectorAll("[data-template]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const id = btn.dataset.template;
-      closeOpenMenu();
-      if (id === "__custom__") {
-        showToast("Custom automation — coming soon.");
-        return;
-      }
-      navigateToEdit(id);
-    });
-  });
-
-  positionMenu(menu, anchor, { alignRight: true });
-}
-
 // ─── Help popovers ──────────────────────────────────────────────────────────
 
 function showPopover(anchor, text) {
@@ -515,10 +414,6 @@ function attachStaticHandlers() {
       }, 150);
     });
   }
-
-  // + New
-  const newBtn = document.getElementById("engNewBtn");
-  if (newBtn) newBtn.addEventListener("click", (e) => { e.stopPropagation(); openNewMenu(newBtn); });
 
   // Close any open menu on outside click
   document.addEventListener("click", (e) => {
