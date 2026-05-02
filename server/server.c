@@ -451,18 +451,32 @@ static void log_twilio_websocket_event(const unsigned char *payload, uint64_t pa
     cJSON_Delete(root);
 }
 
-static int peek_http_header(SSL *ssl, char *buf, int buf_size) {
-    for (int i = 0; i < 8; i++) {
-        int nbytes = SSL_peek(ssl, buf, buf_size);
-        if (nbytes <= 0) {
+/* Read the HTTP request from the SSL stream into `buf` until the
+ * header terminator (\r\n\r\n) is found. Returns the total number of
+ * bytes read, or 0 on error/timeout/buffer-overflow.
+ *
+ * Replaces the old peek-only approach: SSL_peek can only return data
+ * already decrypted into a single TLS record (~16KB max). When
+ * headers span multiple records — common with browsers sending big
+ * cookies, ngrok-injected forwarding headers, and long OAuth-callback
+ * URLs — the peek loop spins on the same first-record data forever.
+ *
+ * This consumes the bytes; callers must not re-read the same range
+ * via SSL_read. Any bytes past the header terminator (i.e. body
+ * prefix for POST requests) live at &buf[total_read] minus the
+ * header length and need to be prepended to the body buffer. */
+static int read_http_header(SSL *ssl, char *buf, int buf_size) {
+    int total = 0;
+    while (total < buf_size - 1) {
+        int n = SSL_read(ssl, buf + total, buf_size - 1 - total);
+        if (n <= 0) {
             return 0;
         }
-        if (nbytes >= buf_size) {
-            return nbytes;
-        }
-        buf[nbytes] = '\0';
-        if (strstr(buf, "\r\n\r\n")) {
-            return nbytes;
+        total += n;
+        buf[total] = '\0';
+        /* memmem in case any embedded NULs would confuse strstr. */
+        if (memmem(buf, total, "\r\n\r\n", 4)) {
+            return total;
         }
     }
     return 0;
@@ -590,45 +604,59 @@ static void handle_client(int fd) {
         return;
     }
 
+    /* Read everything up to and including the \r\n\r\n header terminator
+     * (and possibly some body prefix bytes that arrived in the same
+     * SSL_read call) into peek_buf. */
     char *peek_buf = malloc(BUFFER_SIZE + 1);
-    int bytes_peeked = peek_http_header(cSSL, peek_buf, BUFFER_SIZE);
-    if (bytes_peeked <= 0) {
+    int total_read = read_http_header(cSSL, peek_buf, BUFFER_SIZE);
+    if (total_read <= 0) {
         free(peek_buf);
         SSL_shutdown(cSSL);
         SSL_free(cSSL);
         close(fd);
         return;
     }
-    if (bytes_peeked > BUFFER_SIZE) {
-        bytes_peeked = BUFFER_SIZE;
+    peek_buf[total_read] = '\0';
+
+    /* Locate the header/body boundary. */
+    char *header_end = memmem(peek_buf, total_read, "\r\n\r\n", 4);
+    if (!header_end) {
+        /* read_http_header guarantees \r\n\r\n was found before returning,
+         * so this is defensive only. */
+        free(peek_buf);
+        SSL_shutdown(cSSL);
+        SSL_free(cSSL);
+        close(fd);
+        return;
     }
-    peek_buf[bytes_peeked] = '\0';
+    size_t header_length = (size_t)(header_end - peek_buf);
 
     size_t header_buf_size = 65536;
     char *peeked_http_header = malloc(header_buf_size);
-    memset(peeked_http_header, 0, header_buf_size);
-    int header_length = get_http_header(peek_buf, peeked_http_header, header_buf_size);
-    if (header_length <= 0) {
+    if (header_length + 1 > header_buf_size) {
         free(peek_buf);
         free(peeked_http_header);
         SSL_shutdown(cSSL);
         SSL_free(cSSL);
-        close(fd);
         return;
     }
+    memcpy(peeked_http_header, peek_buf, header_length);
+    peeked_http_header[header_length] = '\0';
 
+    /* http_header is the headers PLUS the \r\n\r\n terminator (preserves
+     * the contract from the prior peek+read implementation). */
     char *http_header = malloc(header_length + 4 + 1);
-    int nbytes = read_exact_bytes(cSSL, header_length + 4, http_header);
-    if (nbytes <= 0) {
-        free(peek_buf);
-        free(peeked_http_header);
-        free(http_header);
-        SSL_shutdown(cSSL);
-        SSL_free(cSSL);
-        close(fd);
-        return;
+    memcpy(http_header, peek_buf, header_length + 4);
+    http_header[header_length + 4] = '\0';
+
+    /* Anything past the terminator is the start of the body, already
+     * consumed from the SSL stream. Stash it for the body-read step. */
+    size_t body_prefix_len = (size_t)total_read - (header_length + 4);
+    char *body_prefix = NULL;
+    if (body_prefix_len > 0) {
+        body_prefix = malloc(body_prefix_len);
+        memcpy(body_prefix, peek_buf + header_length + 4, body_prefix_len);
     }
-    http_header[nbytes] = '\0';
 
     struct Socket socket = {0};
     socket.fd = fd;
@@ -639,6 +667,7 @@ static void handle_client(int fd) {
         free(peek_buf);
         free(peeked_http_header);
         free(http_header);
+        if (body_prefix) free(body_prefix);
         SSL_shutdown(cSSL);
         SSL_free(cSSL);
         close(fd);
@@ -659,6 +688,7 @@ static void handle_client(int fd) {
         free(peek_buf);
         free(peeked_http_header);
         free(http_header);
+        if (body_prefix) free(body_prefix);
         const char *r413 = "HTTP/1.1 413 Content Too Large\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
         SSL_write(cSSL, r413, (int)strlen(r413));
         SSL_shutdown(cSSL);
@@ -670,7 +700,16 @@ static void handle_client(int fd) {
     char *body = NULL;
     if (content_length > 0) {
         body = malloc(content_length + 1);
-        read_exact_bytes(cSSL, content_length, body);
+        /* Copy any body bytes that arrived alongside the headers, then
+         * read the remainder from the SSL stream. */
+        size_t already = body_prefix_len;
+        if (already > (size_t)content_length) already = (size_t)content_length;
+        if (already > 0) {
+            memcpy(body, body_prefix, already);
+        }
+        if ((size_t)content_length > already) {
+            read_exact_bytes(cSSL, content_length - (int)already, body + already);
+        }
         body[content_length] = '\0';
     }
 
@@ -681,6 +720,9 @@ static void handle_client(int fd) {
     free(http_header);
     if (body) {
         free(body);
+    }
+    if (body_prefix) {
+        free(body_prefix);
     }
 
     SSL_shutdown(cSSL);
