@@ -422,11 +422,12 @@ function openComposer({ date, post_id } = {}) {
             ).join("")}
           </div>
 
-          <div class="ig-uploader" id="igUploader">
+          <label class="ig-uploader" for="igFileInput" id="igUploader">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="24" height="24" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
-            <span>Drop media here or click to upload</span>
-          </div>
-          <input id="igFileInput" type="file" accept="image/*,video/*" hidden />
+            <span>Click to choose an image or video</span>
+            <input id="igFileInput" type="file" accept="image/*,video/*"
+                   style="position:absolute;left:-9999px;opacity:0;width:1px;height:1px;overflow:hidden;" />
+          </label>
           <div class="ig-thumbs" id="igThumbs"></div>
 
           <textarea id="igCaption" rows="4" maxlength="2200" placeholder="Write a caption…"
@@ -471,26 +472,32 @@ function openComposer({ date, post_id } = {}) {
         b.setAttribute("aria-selected", b === btn ? "true" : "false"));
     });
 
-    // Media upload
+    // Media upload — the <label for="igFileInput"> wrapper triggers the
+    // file picker natively when the user clicks the uploader area, so we
+    // only need to handle the change event.
     const fileInput = document.getElementById("igFileInput");
-    document.getElementById("igUploader").addEventListener("click", () => fileInput.click());
     fileInput.addEventListener("change", async () => {
-      const file = fileInput.files[0];
+      const file = fileInput.files && fileInput.files[0];
       if (!file) return;
+      console.log("[ig-upload] file picked:", file.name, file.type, file.size);
       const fd = new FormData();
       fd.append("file", file);
       try {
         const r = await fetch("/me/instagram/posts/upload",
           { method: "POST", body: fd, credentials: "include" });
+        console.log("[ig-upload] response status:", r.status);
         if (!r.ok) {
-          const err = await r.json().catch(() => ({ error: "upload failed" }));
+          const err = await r.json().catch(() => ({ error: `upload failed (HTTP ${r.status})` }));
           _showModalError(err.error || "Upload failed");
           return;
         }
         const body = await r.json();
         state.media.push({ gcs_path: body.gcs_path, kind: body.kind, order: state.media.length });
         _renderThumbs(state.media);
+        // Reset input so picking the same file twice still triggers change.
+        fileInput.value = "";
       } catch (e) {
+        console.error("[ig-upload] failed:", e);
         _showModalError("Upload failed — check your connection");
       }
     });
