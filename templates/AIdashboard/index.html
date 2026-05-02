@@ -4887,6 +4887,11 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
           <span class="nav-tooltip">Embed widget</span>
         </button>
+        <button class="app-nav-btn" type="button" data-route="instagram" id="appInstagramNavBtn" aria-label="Instagram" hidden>
+          <!-- Instagram camera icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg>
+          <span class="nav-tooltip">Instagram</span>
+        </button>
         <button class="app-nav-btn" type="button" data-route="settings" aria-label="Settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           <span class="nav-tooltip">Settings</span>
@@ -13302,6 +13307,39 @@
         </div>
       </section>
 
+      <!-- ─────────── Instagram Scheduling ─────────── -->
+      <section class="grid" id="instagram" data-route-section="instagram" hidden>
+        <div class="ig-page" style="grid-column: span 12;">
+          <div id="igReconnectBanner" class="ig-banner" hidden></div>
+
+          <div class="ig-toolbar">
+            <select id="igAccountFilter" class="ig-account-filter"></select>
+            <div class="ig-month-controls">
+              <button class="ig-prev" type="button" aria-label="Previous month">&#8249;</button>
+              <span id="igMonthLabel" class="ig-month-label"></span>
+              <button class="ig-next" type="button" aria-label="Next month">&#8250;</button>
+              <button class="ig-today" type="button">Today</button>
+            </div>
+            <div class="ig-view-toggle" role="tablist" aria-label="View mode">
+              <button id="igViewCalendar" type="button" role="tab" aria-selected="true">Calendar</button>
+              <button id="igViewList"     type="button" role="tab" aria-selected="false">List</button>
+            </div>
+            <button id="igNewPostBtn" type="button" class="btn shiny">+ New post</button>
+          </div>
+
+          <div id="igCalendar" class="ig-calendar"></div>
+          <div id="igList" class="ig-list" hidden></div>
+
+          <div id="igEmpty" class="ig-empty" hidden>
+            <p>No Instagram account connected yet.</p>
+            <a href="/me/instagram/oauth/start" class="btn shiny">Connect Instagram</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Composer modal root (populated by instagram.js) -->
+      <div id="igModalRoot"></div>
+
 
       <div class="modal" id="confirmPublishModal" aria-hidden="true">
         <div class="modal-card confirm-card">
@@ -18062,6 +18100,14 @@
       SECTION_ON_ENTER.settings = async function loadSettingsSection() {
         await window.__dashboardLoadRouteModule("settings");
       };
+      // Instagram scheduling bundle: lazy-loads web/src/routes/instagram.js
+      // then calls window.loadInstagramSection to fetch accounts + posts.
+      SECTION_ON_ENTER.instagram = async function loadInstagramSection() {
+        await window.__dashboardLoadRouteModule("instagram");
+        if (typeof window.loadInstagramSection === "function") {
+          return window.loadInstagramSection();
+        }
+      };
       // activity / home share the same loader. initAppRouter calls
       // appShowRoute(initial) → _runSectionLoader("activity") at boot,
       // which fires this on the landing page automatically.
@@ -20337,6 +20383,7 @@
       campaign:  { title: "New campaign",   section: "campaign" },
       embed:     { title: "Widget",        section: "embed" },
       settings:  { title: "Widget",        section: "settings" },
+      instagram: { title: "Instagram",     section: "instagram" },
       sequenceEdit: { title: "Sequence",   section: "sequenceEdit" },
     };
 
@@ -25607,6 +25654,138 @@
       text-decoration: none;
     }
     .help-pop-foot a:hover { text-decoration: underline; }
+
+    /* ── Instagram scheduling ─────────────────────────────────────── */
+    .ig-page { padding: 0 4px; }
+    .ig-banner {
+      background: #fef2f2; color: #991b1b;
+      padding: 8px 14px; border-radius: 8px; margin-bottom: 10px;
+      font-size: 13px; cursor: pointer; border: 1px solid #fca5a5;
+    }
+    .ig-toolbar {
+      display: flex; gap: 10px; align-items: center;
+      padding: 10px 0 14px; flex-wrap: wrap;
+    }
+    .ig-account-filter {
+      padding: 6px 10px; border: 1px solid var(--border, #e5e7eb);
+      border-radius: 7px; font-size: 13px; background: white; cursor: pointer;
+    }
+    .ig-month-controls { display: flex; align-items: center; gap: 4px; }
+    .ig-month-controls button {
+      background: white; border: 1px solid var(--border, #e5e7eb);
+      padding: 5px 11px; border-radius: 7px; cursor: pointer;
+      font-size: 13px; transition: background 0.15s;
+    }
+    .ig-month-controls button:hover { background: #f0f4ff; }
+    .ig-month-label { font-weight: 600; font-size: 14px; min-width: 130px; text-align: center; }
+    .ig-view-toggle { display: flex; border: 1px solid var(--border, #e5e7eb); border-radius: 7px; overflow: hidden; }
+    .ig-view-toggle button {
+      padding: 5px 14px; border: none; background: white;
+      font-size: 13px; cursor: pointer; transition: background 0.15s, color 0.15s;
+    }
+    .ig-view-toggle button[aria-selected="true"] {
+      background: #eef4ff; color: #0d6efd; font-weight: 600;
+    }
+    .ig-calendar {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 1px; background: var(--border, #e5e7eb);
+      border: 1px solid var(--border, #e5e7eb); border-radius: 8px; overflow: hidden;
+    }
+    .ig-cal-hdr {
+      background: #f9fafb; padding: 6px 4px; text-align: center;
+      font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase;
+    }
+    .ig-cal-day {
+      background: white; min-height: 90px; padding: 6px 4px;
+      cursor: pointer; transition: background 0.1s;
+    }
+    .ig-cal-day:hover { background: #f5f8ff; }
+    .ig-cal-day--out { color: #cbd5e1; background: #fafafa; }
+    .ig-cal-day--today { background: #fff8e7; }
+    .ig-cal-num { display: block; font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+    .ig-chip {
+      display: block; font-size: 11px; padding: 2px 6px;
+      border-radius: 4px; margin-top: 2px; color: white;
+      cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .ig-chip--err { background: #dc2626 !important; }
+    .ig-list { padding: 8px 0; }
+    .ig-list-group-hdr { font-size: 13px; font-weight: 600; color: #374151; margin: 16px 0 6px; }
+    .ig-list-table {
+      width: 100%; border-collapse: collapse; font-size: 13px;
+    }
+    .ig-list-table th {
+      text-align: left; padding: 6px 10px; font-weight: 600; color: #6b7280;
+      border-bottom: 1px solid var(--border, #e5e7eb); font-size: 11px; text-transform: uppercase;
+    }
+    .ig-list-table td { padding: 8px 10px; border-bottom: 1px solid #f3f4f6; }
+    .ig-list-table tr:hover td { background: #f9fafb; }
+    .ig-list-caption { max-width: 260px; color: #374151; }
+    .ig-status {
+      display: inline-block; padding: 2px 8px; border-radius: 12px;
+      font-size: 11px; font-weight: 600; background: #e5e7eb; color: #374151;
+    }
+    .ig-status--err   { background: #fde8e8; color: #b91c1c; }
+    .ig-status--pub   { background: #dcfce7; color: #166534; }
+    .ig-status--sched { background: #dbeafe; color: #1d4ed8; }
+    .ig-empty { padding: 40px 20px; text-align: center; color: #6b7280; }
+    .ig-empty-msg { color: #6b7280; font-size: 14px; margin: 16px 0; }
+    /* Composer modal */
+    .ig-modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      display: flex; align-items: center; justify-content: center; z-index: 9999;
+    }
+    .ig-modal {
+      background: white; border-radius: 12px; padding: 22px 24px;
+      width: 530px; max-width: 96vw; max-height: 90vh; overflow: auto;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+    }
+    .ig-modal-title { margin: 0 0 16px; font-size: 17px; font-weight: 700; }
+    .ig-form-row {
+      display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap;
+    }
+    .ig-label { font-size: 13px; font-weight: 600; color: #374151; min-width: 70px; }
+    .ig-select, .ig-input {
+      padding: 7px 10px; border: 1px solid var(--border, #e5e7eb);
+      border-radius: 7px; font-size: 13px; background: white;
+    }
+    .ig-tabs { gap: 4px; margin-bottom: 12px; }
+    .ig-tabs button {
+      padding: 6px 14px; border: 1px solid var(--border, #e5e7eb);
+      background: white; border-radius: 7px; cursor: pointer; font-size: 13px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .ig-tabs button[aria-selected="true"] {
+      background: #eef4ff; border-color: #0d6efd; color: #0d6efd; font-weight: 600;
+    }
+    .ig-uploader {
+      border: 2px dashed #cbd5e1; border-radius: 8px; padding: 20px;
+      text-align: center; color: #64748b; cursor: pointer; font-size: 13px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .ig-uploader:hover { border-color: #0d6efd; background: #f5f8ff; }
+    .ig-thumbs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .ig-thumb {
+      width: 64px; height: 64px; object-fit: cover; border-radius: 6px;
+      background: #e5e7eb; display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .ig-textarea {
+      width: 100%; margin-top: 10px; padding: 9px 10px;
+      border: 1px solid var(--border, #e5e7eb); border-radius: 7px;
+      font-size: 13px; resize: vertical; box-sizing: border-box;
+    }
+    .ig-cap-count { text-align: right; font-size: 12px; color: #6b7280; margin-top: 2px; }
+    .ig-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+    .ig-error { color: #b91c1c; font-size: 13px; margin-top: 6px; padding: 6px 10px; background: #fef2f2; border-radius: 6px; }
+
+    @media (max-width: 760px) {
+      .ig-calendar { font-size: 11px; }
+      .ig-cal-day  { min-height: 60px; }
+      .ig-toolbar  { gap: 6px; }
+    }
+
     @media (max-width: 760px) {
       .help-pop {
         position: fixed;
@@ -27828,5 +28007,22 @@ function escHtmlSeq(s) {
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
 <script type="module" src="/dashboard/dist/main.js"></script>
+<script>
+// Instagram feature-flag bootstrap: unhide the nav button only when the
+// account has at least one connected Instagram account. A 404 means the
+// feature isn't enabled server-side; any other error keeps the button
+// hidden too (fail-closed).
+(async function bootstrapInstagramNav() {
+  try {
+    const r = await fetch("/me/instagram/accounts", { credentials: "include" });
+    if (r.status === 404) return; // feature not available
+    if (!r.ok) return;
+    const body = await r.json();
+    if ((body.accounts || []).length > 0) {
+      document.getElementById("appInstagramNavBtn")?.removeAttribute("hidden");
+    }
+  } catch (_) { /* stay hidden */ }
+})();
+</script>
 </body>
 </html>

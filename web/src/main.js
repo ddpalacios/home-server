@@ -27,6 +27,7 @@ const ROUTE_MODULE_LOADERS = {
   "knowledge": () => import("./routes/kb.js"),
   "embed":     () => import("./routes/embed.js"),
   "settings":  () => import("./routes/settings.js"),
+  "instagram": () => import("./routes/instagram.js"),
 };
 
 window.__dashboardLoadRouteModule = async function (route) {
