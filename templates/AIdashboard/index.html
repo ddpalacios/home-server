@@ -4892,6 +4892,11 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg>
           <span class="nav-tooltip">Instagram</span>
         </button>
+        <button class="app-nav-btn" type="button" data-route="inbox" id="appInboxNavBtn" aria-label="Inbox" hidden>
+          <!-- Inbox / message bubble icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span class="nav-tooltip">Inbox</span>
+        </button>
         <button class="app-nav-btn" type="button" data-route="settings" aria-label="Settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           <span class="nav-tooltip">Settings</span>
@@ -13340,6 +13345,63 @@
       <!-- Composer modal root (populated by instagram.js) -->
       <div id="igModalRoot"></div>
 
+      <!-- ─── Instagram DMs Inbox ─────────────────────────────────────────── -->
+      <section class="grid" id="inbox" data-route-section="inbox" hidden>
+        <div class="ibx-page" style="grid-column: span 12;">
+
+          <!-- Page header -->
+          <div class="ibx-page-header">
+            <h2 class="ibx-page-title">Inbox</h2>
+            <p class="ibx-page-sub">Customer DMs from your connected Instagram accounts.</p>
+          </div>
+
+          <!-- Empty state: no DM-enabled account connected -->
+          <div id="inboxEmpty" class="ibx-zero-state" hidden>
+            <div class="ibx-zero-icon">&#128247;&#x200D;&#128140;</div>
+            <h3 class="ibx-zero-title">Connect Instagram to see your DMs here</h3>
+            <p class="ibx-zero-body">Once you connect a Business or Creator IG account, we'll show every customer DM right here so you can reply without switching apps.</p>
+            <button id="inboxConnectBtn" type="button" class="btn shiny">Connect Instagram</button>
+          </div>
+
+          <!-- Reconnect state: accounts exist but DM scopes missing -->
+          <div id="inboxReconnect" class="ibx-reconnect-banner" hidden>
+            <div class="ibx-reconnect-inner">
+              <strong>&#9888; Reconnect to enable DMs</strong>
+              <p>We added DM access recently. Reconnect your account to grant the new permission.</p>
+              <button id="inboxReconnectBtn" type="button" class="btn secondary">Reconnect</button>
+            </div>
+          </div>
+
+          <!-- Main two-column layout -->
+          <div id="inboxLayout" class="ibx-layout" hidden>
+
+            <!-- Left rail: filter + conversation list -->
+            <div class="ibx-rail">
+              <div class="ibx-filters" role="tablist" aria-label="Filter conversations">
+                <button class="ibx-filter-chip" data-filter="all"       role="tab" aria-selected="true">All</button>
+                <button class="ibx-filter-chip" data-filter="new"       role="tab" aria-selected="false">New</button>
+                <button class="ibx-filter-chip" data-filter="awaiting"  role="tab" aria-selected="false">Awaiting reply</button>
+                <button class="ibx-filter-chip" data-filter="converted" role="tab" aria-selected="false">Converted</button>
+                <button class="ibx-filter-chip" data-filter="archived"  role="tab" aria-selected="false">Archived</button>
+              </div>
+              <div id="inboxList" class="ibx-conv-list"></div>
+            </div>
+
+            <!-- Right pane: thread + reply -->
+            <div class="ibx-thread-pane">
+              <!-- Mobile back button (hidden on desktop) -->
+              <button id="inboxBackBtn" type="button" class="ibx-back-btn" aria-label="Back to list">&#8592; Back</button>
+              <div id="inboxThread" class="ibx-thread-content">
+                <div class="ibx-thread-placeholder">Select a conversation to start.</div>
+              </div>
+            </div>
+
+          </div><!-- /ibx-layout -->
+
+        </div>
+      </section>
+      <!-- ─── /Instagram DMs Inbox ────────────────────────────────────────── -->
+
 
       <div class="modal" id="confirmPublishModal" aria-hidden="true">
         <div class="modal-card confirm-card">
@@ -18108,6 +18170,14 @@
           return window.loadInstagramSection();
         }
       };
+      // Instagram DMs Inbox bundle: lazy-loads web/src/routes/inbox.js
+      // then calls window.loadInboxSection to fetch conversations.
+      SECTION_ON_ENTER.inbox = async function loadInboxSection() {
+        await window.__dashboardLoadRouteModule("inbox");
+        if (typeof window.loadInboxSection === "function") {
+          return window.loadInboxSection();
+        }
+      };
       // activity / home share the same loader. initAppRouter calls
       // appShowRoute(initial) → _runSectionLoader("activity") at boot,
       // which fires this on the landing page automatically.
@@ -20384,6 +20454,7 @@
       embed:     { title: "Widget",        section: "embed" },
       settings:  { title: "Widget",        section: "settings" },
       instagram: { title: "Instagram",     section: "instagram" },
+      inbox:     { title: "Inbox",         section: "inbox" },
       sequenceEdit: { title: "Sequence",   section: "sequenceEdit" },
     };
 
@@ -25785,6 +25856,198 @@
       .ig-cal-day  { min-height: 60px; }
       .ig-toolbar  { gap: 6px; }
     }
+
+    /* ── Instagram DMs Inbox ─────────────────────────────────────────────── */
+    .ibx-page { padding: 0 4px; }
+
+    /* Page header */
+    .ibx-page-header { padding: 8px 0 18px; }
+    .ibx-page-title  { margin: 0 0 4px; font-size: 20px; font-weight: 700; color: #1e293b; }
+    .ibx-page-sub    { margin: 0; font-size: 13px; color: #6b7280; }
+
+    /* Zero / empty state */
+    .ibx-zero-state {
+      max-width: 480px; margin: 60px auto; text-align: center;
+      background: white; border-radius: 14px; padding: 44px 36px;
+      box-shadow: var(--shadow, 0 12px 30px rgba(15,23,42,0.08));
+      border: 1px solid var(--border, #e5e7eb);
+    }
+    .ibx-zero-icon  { font-size: 40px; margin-bottom: 16px; }
+    .ibx-zero-title { margin: 0 0 12px; font-size: 18px; font-weight: 700; color: #1e293b; }
+    .ibx-zero-body  { margin: 0 0 24px; font-size: 14px; color: #6b7280; line-height: 1.55; }
+
+    /* Reconnect banner */
+    .ibx-reconnect-banner {
+      max-width: 520px; margin: 40px auto;
+    }
+    .ibx-reconnect-inner {
+      background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px;
+      padding: 20px 22px;
+    }
+    .ibx-reconnect-inner strong { display: block; font-size: 14px; margin-bottom: 8px; color: #92400e; }
+    .ibx-reconnect-inner p { margin: 0 0 14px; font-size: 13px; color: #78350f; }
+
+    /* Two-column layout */
+    .ibx-layout {
+      display: flex; gap: 0;
+      border: 1px solid var(--border, #e5e7eb); border-radius: var(--radius, 12px);
+      overflow: hidden; background: white;
+      box-shadow: var(--shadow, 0 12px 30px rgba(15,23,42,0.08));
+      min-height: 560px;
+    }
+
+    /* Left rail */
+    .ibx-rail {
+      width: 320px; min-width: 280px; max-width: 320px; flex-shrink: 0;
+      border-right: 1px solid var(--border, #e5e7eb);
+      display: flex; flex-direction: column;
+    }
+    .ibx-filters {
+      display: flex; flex-wrap: wrap; gap: 4px; padding: 12px 10px 8px;
+      border-bottom: 1px solid var(--border, #e5e7eb);
+    }
+    .ibx-filter-chip {
+      padding: 4px 10px; border: 1px solid var(--border, #e5e7eb);
+      border-radius: 20px; background: white; cursor: pointer;
+      font-size: 12px; font-weight: 500; color: #374151;
+      transition: background 0.14s, border-color 0.14s, color 0.14s;
+    }
+    .ibx-filter-chip[aria-selected="true"] {
+      background: #eef4ff; border-color: #0d6efd; color: #0d6efd; font-weight: 600;
+    }
+    .ibx-filter-chip:hover { background: #f5f8ff; }
+    .ibx-conv-list { flex: 1; overflow-y: auto; padding: 4px 0; }
+    .ibx-conv-empty { padding: 24px 16px; text-align: center; color: #9ca3af; font-size: 13px; }
+
+    /* Conversation cards */
+    .ibx-conv-card {
+      padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #f3f4f6;
+      transition: background 0.1s; position: relative;
+    }
+    .ibx-conv-card:hover { background: #f5f8ff; }
+    .ibx-conv-card.is-active { background: #eef4ff; border-left: 3px solid #0d6efd; padding-left: 11px; }
+    .ibx-conv-card--archived { opacity: 0.6; }
+    .ibx-conv-handle { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+    .ibx-conv-username { font-size: 13px; font-weight: 600; color: #1e293b; }
+    .ibx-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #0d6efd; flex-shrink: 0;
+    }
+    .ibx-conv-preview { font-size: 12px; color: #6b7280; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ibx-conv-meta { display: flex; align-items: center; justify-content: space-between; }
+    .ibx-conv-status {
+      display: inline-block; padding: 1px 7px; border-radius: 10px;
+      font-size: 11px; font-weight: 600; background: #e5e7eb; color: #374151;
+    }
+    .ibx-conv-status--new       { background: #dbeafe; color: #1d4ed8; }
+    .ibx-conv-status--awaiting_reply { background: #fef3c7; color: #92400e; }
+    .ibx-conv-status--converted { background: #dcfce7; color: #166534; }
+    .ibx-conv-status--archived  { background: #f3f4f6; color: #6b7280; }
+    .ibx-conv-time { font-size: 11px; color: #9ca3af; }
+
+    /* Right pane */
+    .ibx-thread-pane {
+      flex: 1; display: flex; flex-direction: column; min-width: 0;
+    }
+    .ibx-back-btn {
+      display: none; /* shown on mobile only */
+      padding: 8px 14px; font-size: 13px; border: none; background: #f9fafb;
+      border-bottom: 1px solid var(--border, #e5e7eb); cursor: pointer; text-align: left;
+      color: #374151; font-weight: 500;
+    }
+    .ibx-thread-content { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+    .ibx-thread-placeholder {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      color: #9ca3af; font-size: 14px;
+    }
+    .ibx-thread-loading { padding: 24px; color: #9ca3af; font-size: 13px; text-align: center; }
+    .ibx-thread-empty   { padding: 24px; color: #9ca3af; font-size: 13px; text-align: center; }
+
+    /* Thread header */
+    .ibx-thread-header {
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+      padding: 12px 16px; border-bottom: 1px solid var(--border, #e5e7eb);
+      gap: 10px; background: #fafafa;
+    }
+    .ibx-thread-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .ibx-thread-handle { font-size: 15px; font-weight: 700; color: #1e293b; }
+    .ibx-thread-msgcount { font-size: 12px; color: #9ca3af; }
+    .ibx-thread-actions { display: flex; gap: 8px; align-items: center; }
+
+    /* Status pills */
+    .ibx-pill {
+      display: inline-block; padding: 2px 9px; border-radius: 12px;
+      font-size: 11px; font-weight: 600; background: #e5e7eb; color: #374151;
+    }
+    .ibx-pill--new       { background: #dbeafe; color: #1d4ed8; }
+    .ibx-pill--active    { background: #d1fae5; color: #065f46; }
+    .ibx-pill--converted { background: #dcfce7; color: #166534; }
+    .ibx-pill--archived  { background: #f3f4f6; color: #6b7280; }
+
+    /* Message bubbles */
+    .ibx-messages {
+      flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .ibx-bubble-wrap { display: flex; flex-direction: column; gap: 3px; max-width: 72%; }
+    .ibx-bubble-wrap--ours { align-self: flex-end; align-items: flex-end; }
+    .ibx-bubble {
+      background: #f3f4f6; color: #1e293b; padding: 9px 13px;
+      border-radius: 14px 14px 14px 4px; font-size: 14px; line-height: 1.45;
+      word-break: break-word;
+    }
+    .ibx-bubble--ours {
+      background: #0d6efd; color: white;
+      border-radius: 14px 14px 4px 14px;
+    }
+    .ibx-bubble-time { font-size: 11px; color: #9ca3af; }
+    .ibx-bubble-time--ours { text-align: right; }
+
+    /* Reply box */
+    .ibx-reply-wrap {
+      border-top: 1px solid var(--border, #e5e7eb); padding: 12px 14px; background: #fafafa;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .ibx-reply-box { display: flex; flex-direction: column; gap: 6px; }
+    .ibx-reply-textarea {
+      width: 100%; padding: 9px 11px; border: 1px solid var(--border, #e5e7eb);
+      border-radius: 8px; font-size: 13px; resize: none; box-sizing: border-box;
+      font-family: inherit; line-height: 1.45;
+      transition: border-color 0.14s, box-shadow 0.14s;
+    }
+    .ibx-reply-textarea:focus { outline: none; border-color: #0d6efd; box-shadow: 0 0 0 3px rgba(13,110,253,0.08); }
+    .ibx-reply-textarea--disabled { background: #f9fafb; color: #9ca3af; cursor: not-allowed; }
+    .ibx-reply-footer {
+      display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+    }
+
+    /* 24h window banner */
+    .ibx-window-banner {
+      font-size: 12px; padding: 5px 10px; border-radius: 6px; line-height: 1.4;
+    }
+    .ibx-window-banner--ok     { background: #f1f5f9; color: #64748b; }
+    .ibx-window-banner--warn   { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; font-weight: 500; }
+    .ibx-window-banner--closed { background: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; font-weight: 500; }
+
+    /* Error toast in thread */
+    .ibx-error {
+      color: #b91c1c; font-size: 13px; padding: 7px 11px;
+      background: #fef2f2; border-radius: 6px;
+      border: 1px solid #fca5a5; margin-bottom: 6px;
+    }
+
+    /* Mobile: single column */
+    @media (max-width: 700px) {
+      .ibx-layout { flex-direction: column; min-height: unset; }
+      .ibx-rail   { width: 100%; max-width: 100%; border-right: none; border-bottom: 1px solid var(--border, #e5e7eb); }
+      .ibx-thread-pane { min-height: 420px; }
+      .ibx-back-btn { display: block; }
+
+      /* When a conversation is open, show thread and hide list */
+      #inbox.ibx-thread-open .ibx-rail         { display: none; }
+      #inbox.ibx-thread-open .ibx-thread-pane  { display: flex; }
+      #inbox:not(.ibx-thread-open) .ibx-back-btn { display: none; }
+    }
+    /* ── /Instagram DMs Inbox ────────────────────────────────────────────── */
 
     @media (max-width: 760px) {
       .help-pop {

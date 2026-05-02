@@ -28,6 +28,7 @@ const ROUTE_MODULE_LOADERS = {
   "embed":     () => import("./routes/embed.js"),
   "settings":  () => import("./routes/settings.js"),
   "instagram": () => import("./routes/instagram.js"),
+  "inbox":     () => import("./routes/inbox.js"),
 };
 
 window.__dashboardLoadRouteModule = async function (route) {
