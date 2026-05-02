@@ -3238,38 +3238,107 @@
     }
 
     /* ── AI Mode Badge (top bar) ── */
+    .ai-mode-panel-wrap {
+      position: relative;
+      margin-right: 8px;
+    }
     #aiModeBadge {
-      height: 44px;
-      padding: 0 14px;
-      font-size: 13px;
-      font-weight: 600;
-      background: #0a0a0a;
-      color: #fff;
-      border: 0;
-      border-radius: 999px;
-      cursor: pointer;
+      position: relative;
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      margin-right: 8px;
+      height: 38px;
+      padding: 0 14px;
+      background: linear-gradient(180deg, #1f2937 0%, #0a0a0a 100%);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      border: 0;
+      border-radius: 999px;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.08) inset,
+        0 -1px 0 rgba(0,0,0,0.3) inset,
+        0 1px 2px rgba(0,0,0,0.2),
+        0 4px 14px rgba(0,0,0,0.18);
+      cursor: pointer;
       white-space: nowrap;
-      transition: opacity 0.15s;
+      transition:
+        transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.18s ease;
     }
-    #aiModeBadge:hover { opacity: 0.85; }
-    #aiModeBadge .ai-badge-chevron {
-      font-size: 10px;
-      opacity: 0.6;
-      transition: transform 0.15s;
+    #aiModeBadge:hover {
+      transform: translateY(-1px);
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.1) inset,
+        0 -1px 0 rgba(0,0,0,0.3) inset,
+        0 2px 4px rgba(0,0,0,0.2),
+        0 8px 22px rgba(0,0,0,0.22);
     }
+    #aiModeBadge:active {
+      transform: translateY(0) scale(0.96);
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.05) inset,
+        0 -1px 0 rgba(0,0,0,0.3) inset,
+        0 1px 2px rgba(0,0,0,0.18);
+      transition: transform 0.06s ease, box-shadow 0.06s ease;
+    }
+    #aiModeBadge[data-open="true"] {
+      transform: translateY(0);
+      box-shadow:
+        0 0 0 3px rgba(99,102,241,0.32),
+        0 1px 0 rgba(255,255,255,0.1) inset,
+        0 4px 14px rgba(0,0,0,0.22);
+    }
+    #aiModeBadge .ai-mode-icon {
+      font-size: 16px;
+      display: inline-block;
+      animation: none;
+    }
+    #aiModeBadge[data-mode="ai_always"] .ai-mode-icon {
+      animation: ai-pulse 2s ease-in-out infinite;
+    }
+    @keyframes ai-pulse {
+      0%, 100% { transform: scale(1);    filter: drop-shadow(0 0 0 rgba(99,102,241,0)); }
+      50%       { transform: scale(1.08); filter: drop-shadow(0 0 6px rgba(99,102,241,0.5)); }
+    }
+    #aiModeBadge .ai-mode-chevron {
+      transition: transform 0.2s ease;
+      font-size: 9px;
+      opacity: 0.7;
+    }
+    #aiModeBadge[data-open="true"] .ai-mode-chevron {
+      transform: rotate(180deg);
+    }
+    @keyframes ai-mode-confirm {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+    #aiModeBadge.is-confirming { animation: ai-mode-confirm 0.32s ease; }
     #aiModePanel {
       position: absolute;
-      background: #fff;
-      border: 1px solid var(--seq-line);
-      border-radius: 12px;
-      padding: 14px;
-      box-shadow: var(--seq-shadow);
-      z-index: 1000;
+      top: calc(100% + 8px);
+      right: 0;
       min-width: 320px;
+      background: #fff;
+      border: 1px solid rgba(15,23,42,0.08);
+      border-radius: 14px;
+      padding: 10px;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,0.6) inset,
+        0 1px 2px rgba(15,23,42,0.04),
+        0 8px 24px rgba(15,23,42,0.10),
+        0 24px 48px -24px rgba(15,23,42,0.16);
+      opacity: 0;
+      transform: translateY(-4px) scale(0.98);
+      pointer-events: none;
+      transition: opacity 0.15s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 1000;
+    }
+    #aiModePanel[data-open="true"] {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
     }
     .ai-mode-panel-label {
       font-size: var(--seq-font-tag);
@@ -3281,53 +3350,47 @@
       margin: 0;
     }
     .ai-mode-opt {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      display: block;
       width: 100%;
-      text-align: left;
-      min-height: 64px;
       padding: 12px 14px;
-      font-size: var(--seq-font-body);
-      background: #fff;
-      color: var(--seq-text);
+      background: transparent;
+      color: #0a0a0a;
       border: 0;
       border-radius: 10px;
       cursor: pointer;
-      transition: background 0.12s;
-      position: relative;
+      text-align: left;
+      transition: background 0.12s ease, transform 0.06s ease;
     }
-    .ai-mode-opt:hover { background: var(--seq-tint-cool); }
+    .ai-mode-opt:hover { background: #f3f4f6; }
+    .ai-mode-opt:active { transform: scale(0.98); transition: transform 0.04s; }
     .ai-mode-opt.is-active {
-      background: #0a0a0a;
+      background: linear-gradient(180deg, #1f2937, #0a0a0a);
       color: #fff;
     }
-    .ai-mode-opt-icon {
-      font-size: 22px;
-      flex-shrink: 0;
-      width: 36px;
-      text-align: center;
-    }
-    .ai-mode-opt-text { flex: 1; min-width: 0; }
-    .ai-mode-opt-title {
-      font-weight: 600;
+    .ai-mode-opt .opt-title {
       font-size: 13.5px;
-      line-height: 1.3;
-      margin: 0 0 2px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .ai-mode-opt-desc {
-      font-size: var(--seq-font-meta);
+    .ai-mode-opt .opt-sub {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 4px;
       line-height: 1.45;
-      opacity: 0.72;
-      margin: 0;
     }
-    .ai-mode-opt.is-active .ai-mode-opt-desc { opacity: 0.7; }
-    .ai-mode-opt-check {
-      flex-shrink: 0;
-      font-size: 16px;
-      display: none;
+    .ai-mode-opt.is-active .opt-sub { color: rgba(255,255,255,0.72); }
+    .ai-mode-opt .opt-check {
+      margin-left: auto;
+      opacity: 0;
+      transform: scale(0.6);
+      transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-    .ai-mode-opt.is-active .ai-mode-opt-check { display: block; }
+    .ai-mode-opt.is-active .opt-check {
+      opacity: 1;
+      transform: scale(1);
+    }
 
     /* ── Campaigns sub-tabs ── */
     .camp-subtab {
@@ -4801,37 +4864,36 @@
       <header class="app-topbar">
         <h1 class="app-topbar-title" id="appPageTitle">Phone numbers</h1>
         <div class="app-topbar-actions">
-          <button type="button" id="aiModeBadge" aria-haspopup="true" aria-expanded="false">
-            <span aria-hidden="true">🤖</span>
-            <span id="aiModeLabel">…</span>
-            <span class="ai-badge-chevron" aria-hidden="true">▾</span>
-          </button>
-          <div id="aiModePanel" hidden role="menu">
-            <p class="ai-mode-panel-label">How should AI handle replies?</p>
-            <button type="button" data-mode="i_respond" class="ai-mode-opt" role="menuitem">
-              <span class="ai-mode-opt-icon" aria-hidden="true">🙋</span>
-              <span class="ai-mode-opt-text">
-                <span class="ai-mode-opt-title">I respond to my leads myself</span>
-                <span class="ai-mode-opt-desc">AI never replies for me — I'll handle every conversation</span>
-              </span>
-              <span class="ai-mode-opt-check" aria-hidden="true">✓</span>
+          <div class="ai-mode-panel-wrap">
+            <button type="button" id="aiModeBadge" aria-haspopup="true" aria-expanded="false">
+              <span class="ai-mode-icon" aria-hidden="true">🤖</span>
+              <span id="aiModeLabel">AI</span>
+              <span class="ai-mode-chevron" aria-hidden="true">▾</span>
             </button>
-            <button type="button" data-mode="hybrid" class="ai-mode-opt" role="menuitem">
-              <span class="ai-mode-opt-icon" aria-hidden="true">⚡</span>
-              <span class="ai-mode-opt-text">
-                <span class="ai-mode-opt-title">AI helps when I'm slow</span>
-                <span class="ai-mode-opt-desc">You'll be alerted first; AI takes over only if you don't respond in time</span>
-              </span>
-              <span class="ai-mode-opt-check" aria-hidden="true">✓</span>
-            </button>
-            <button type="button" data-mode="ai_always" class="ai-mode-opt" role="menuitem">
-              <span class="ai-mode-opt-icon" aria-hidden="true">🤖</span>
-              <span class="ai-mode-opt-text">
-                <span class="ai-mode-opt-title">AI handles all replies</span>
-                <span class="ai-mode-opt-desc">AI replies to every customer; I'll be notified but not pressured</span>
-              </span>
-              <span class="ai-mode-opt-check" aria-hidden="true">✓</span>
-            </button>
+            <div id="aiModePanel" role="menu">
+              <p class="ai-mode-panel-label">How should AI handle replies?</p>
+              <button type="button" data-mode="i_respond" class="ai-mode-opt" role="menuitem">
+                <div class="opt-title">
+                  <span>I respond myself</span>
+                  <span class="opt-check" aria-hidden="true">✓</span>
+                </div>
+                <div class="opt-sub">AI never replies for me — I'll handle every conversation.</div>
+              </button>
+              <button type="button" data-mode="hybrid" class="ai-mode-opt" role="menuitem">
+                <div class="opt-title">
+                  <span>AI helps when I'm slow</span>
+                  <span class="opt-check" aria-hidden="true">✓</span>
+                </div>
+                <div class="opt-sub">You'll be alerted first; AI takes over only if you don't respond in time.</div>
+              </button>
+              <button type="button" data-mode="ai_always" class="ai-mode-opt" role="menuitem">
+                <div class="opt-title">
+                  <span>AI handles all replies</span>
+                  <span class="opt-check" aria-hidden="true">✓</span>
+                </div>
+                <div class="opt-sub">AI replies to every customer; I'll be notified but not pressured.</div>
+              </button>
+            </div>
           </div>
           <span class="app-trial-pill" id="appTrialPill" hidden>
             <span class="dot"></span> TRIAL
@@ -27488,6 +27550,8 @@
       const label = document.getElementById("aiModeLabel");
       if (!badge || !panel || !label) return;
 
+      const MODE_CACHE_KEY = "dashboard.ai_mode";
+
       const LABELS = {
         "i_respond": "I respond myself",
         "hybrid":    "AI helps when slow",
@@ -27496,34 +27560,52 @@
 
       function render(mode) {
         label.textContent = LABELS[mode] || "AI helps when slow";
+        badge.dataset.mode = mode || "hybrid";
         panel.querySelectorAll(".ai-mode-opt").forEach(btn => {
           btn.classList.toggle("is-active", btn.dataset.mode === mode);
         });
-        badge.setAttribute("aria-expanded", panel.hidden ? "false" : "true");
+        badge.setAttribute("aria-expanded", panel.dataset.open === "true" ? "true" : "false");
       }
+
+      function _renderModeFromCache() {
+        const cached = localStorage.getItem(MODE_CACHE_KEY);
+        if (cached) render(cached);
+      }
+
+      function _writeModeCache(mode) {
+        try { localStorage.setItem(MODE_CACHE_KEY, mode); } catch (_) {}
+      }
+
+      function setPanelOpen(open) {
+        const val = open ? "true" : "false";
+        panel.dataset.open = val;
+        badge.dataset.open = val;
+        badge.setAttribute("aria-expanded", val);
+      }
+
+      // Instantly render from cache (no "…" flash on repeat visits)
+      _renderModeFromCache();
 
       async function load() {
         try {
           const res = await fetch("/me/ai/policy", { credentials: "same-origin" });
           if (!res.ok) return;
           const p = await res.json();
-          render(p.mode || "hybrid");
+          const mode = p.mode || "hybrid";
+          render(mode);
+          _writeModeCache(mode);
         } catch (_) {}
       }
 
       badge.addEventListener("click", () => {
-        panel.hidden = !panel.hidden;
-        badge.setAttribute("aria-expanded", panel.hidden ? "false" : "true");
-        if (!panel.hidden) {
-          const r = badge.getBoundingClientRect();
-          panel.style.top  = (r.bottom + 4) + "px";
-          panel.style.right = "auto";
-          panel.style.left = Math.min(r.left, window.innerWidth - 340) + "px";
-        }
+        const isOpen = panel.dataset.open === "true";
+        setPanelOpen(!isOpen);
       });
 
       document.addEventListener("click", (e) => {
-        if (!panel.contains(e.target) && e.target !== badge) panel.hidden = true;
+        if (!panel.contains(e.target) && !badge.contains(e.target)) {
+          setPanelOpen(false);
+        }
       });
 
       panel.querySelectorAll(".ai-mode-opt").forEach(btn => {
@@ -27537,7 +27619,10 @@
               body: JSON.stringify({ mode }),
             });
             render(mode);
-            panel.hidden = true;
+            _writeModeCache(mode);
+            setPanelOpen(false);
+            badge.classList.add("is-confirming");
+            setTimeout(() => badge.classList.remove("is-confirming"), 350);
           } catch (_) {}
         });
       });
