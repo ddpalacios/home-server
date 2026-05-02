@@ -4,3 +4,9 @@ blob-storage/*
 
 # Large video assets exceeding GitHub's 100 MB limit
 templates/portfolio/videos/Freeman AI Chatbot.mp4
+
+# Vite build pipeline
+web/node_modules/
+web/dist/
+templates/AIdashboard/dist/
+.vite/

@@ -33027,5 +33027,10 @@ function escHtmlSeq(s) {
   }[c]));
 }
   </script>
+<!-- Dashboard JS bundle (Vite). In dev, points at the Vite dev server on
+     port 5173; in prod, served by the C server out of /dashboard/dist/.
+     Switching is a manual edit for v1; future enhancement: drive via a
+     server-rendered flag. -->
+<script type="module" src="/dashboard/dist/main.js"></script>
 </body>
 </html>

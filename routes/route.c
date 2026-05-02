@@ -422,6 +422,25 @@ void process_route(struct Socket *socket, char *http_header, char *body) {
         get_live_file_typed(cSSL, "landscaping/robots.txt", "text/plain; charset=utf-8");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/favicon.ico") != NULL) {
         get_image_file(cSSL, http_header, "/portfolio/images/favicon.ico");
+    } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/dashboard/dist/", 16) == 0) {
+        // Serve compiled bundle output from templates/AIdashboard/dist/.
+        // The bundle assets are produced by `npm run build` in /web.
+        // We map /dashboard/dist/<path> to AIdashboard/dist/<path>.
+        char rel_path[512];
+        snprintf(rel_path, sizeof(rel_path), "AIdashboard/dist/%s", route + 16);
+        // Detect MIME type by extension; default to application/octet-stream.
+        const char *mime = "application/octet-stream";
+        const char *ext = strrchr(route, '.');
+        if (ext) {
+            if (strcmp(ext, ".js") == 0)        mime = "application/javascript; charset=utf-8";
+            else if (strcmp(ext, ".css") == 0)  mime = "text/css; charset=utf-8";
+            else if (strcmp(ext, ".map") == 0)  mime = "application/json; charset=utf-8";
+            else if (strcmp(ext, ".json") == 0) mime = "application/json; charset=utf-8";
+            else if (strcmp(ext, ".svg") == 0)  mime = "image/svg+xml";
+            else if (strcmp(ext, ".woff2") == 0)mime = "font/woff2";
+            else if (strcmp(ext, ".woff") == 0) mime = "font/woff";
+        }
+        get_live_file_typed(cSSL, rel_path, mime);
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/dashboard") == 0) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/me") == 0) {
