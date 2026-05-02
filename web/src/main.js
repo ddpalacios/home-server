@@ -18,6 +18,8 @@ window.__dashboardBundle = {
 const ROUTE_MODULE_LOADERS = {
   // "leads": () => import("./routes/leads.js"),
   "campaigns": () => import("./routes/campaigns.js"),
+  "replies":   () => import("./routes/replies.js"),
+  "pipeline":  () => import("./routes/pipeline.js"),
 };
 
 window.__dashboardLoadRouteModule = async function (route) {
