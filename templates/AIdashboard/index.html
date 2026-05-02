@@ -19913,6 +19913,7 @@
       campaign:  { title: "New campaign",   section: "campaign" },
       embed:     { title: "Widget",        section: "embed" },
       settings:  { title: "Widget",        section: "settings" },
+      sequenceEdit: { title: "Sequence",   section: "sequenceEdit" },
     };
     // Tracked here so appShowRoute can gate admin-only routes even
     // before the /me round-trip completes (defaults to false).
@@ -19954,12 +19955,22 @@
       document.querySelectorAll(".app-nav-btn[data-route]").forEach(btn => {
         btn.addEventListener("click", () => appShowRoute(btn.dataset.route));
       });
+      // Listen for hash changes (e.g., a user clicking an <a href="#sequence-edit-...">)
+      // and re-route. The hash itself isn't normalized — appShowRoute handles aliases.
+      window.addEventListener("hashchange", () => {
+        const r = (location.hash || "").replace(/^#/, "");
+        if (r) appShowRoute(r);
+      });
       // Pick initial route: from hash, otherwise default to "home".
       if (!window.location.hash) {
         window.history.replaceState(null, "", "/dashboard#home");
       }
       const hashRoute = (location.hash || "").replace(/^#/, "");
-      const initial = APP_ROUTES[hashRoute] ? hashRoute : "phones";
+      // Recognize alias prefixes (sequence-edit-...) and the home alias.
+      const isKnown = APP_ROUTES[hashRoute] ||
+                      hashRoute === "home" ||
+                      hashRoute.startsWith("sequence-edit-");
+      const initial = isKnown ? hashRoute : "phones";
       appShowRoute(initial);
     }
 
