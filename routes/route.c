@@ -461,6 +461,11 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
         /* Meta webhook event delivery — Flask verifies X-Hub-Signature-256
          * with META_APP_SECRET before processing the JSON envelope. */
         post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/ig-media/", 10) == 0) {
+        /* Public passthrough: Meta fetches uploaded IG media here
+         * during media-container creation. Flask streams the blob from
+         * GCS via ADC. */
+        get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/admin/") != NULL) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strstr(route, "/admin/") != NULL) {
