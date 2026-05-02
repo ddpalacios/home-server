@@ -18134,13 +18134,39 @@
       maybeOpenWelcomeModal();
       wireWelcomeForm();
       pollKbStatus();
-      loadVoiceSettings();
+      // loadVoiceSettings() deferred — fires via SECTION_ON_ENTER.voice
       loadTrialBanner();
       // Poll trial status every 30s so the dashboard kicks a user out
       // immediately when an admin disconnects their trial.
       setInterval(loadTrialBanner, 30000);
-      initPhoneNumbersPanel();
-      initAppRouter();
+      initPhoneNumbersPanel();  // wires up UI; data load (loadList) deferred via SECTION_ON_ENTER.phones
+
+      // Register section-specific loaders BEFORE initAppRouter() so the
+      // loader for the initial route fires immediately on boot.
+      SECTION_ON_ENTER.phones = function loadPhonesSection() {
+        // initPhoneNumbersPanel() was already called above for UI wiring.
+        // Now fire the data load that was deferred.
+        if (typeof window._phonesLoadList === "function") window._phonesLoadList();
+      };
+      SECTION_ON_ENTER.voice = loadVoiceSettings;
+      // activity / home share the same loader. initAppRouter calls
+      // appShowRoute(initial) → _runSectionLoader("activity") at boot,
+      // which fires this on the landing page automatically.
+      SECTION_ON_ENTER.activity = function loadActivitySection() {
+        // Exposed by the activity IIFE further down in the file.
+        if (typeof window._activityLoad === "function") window._activityLoad();
+        if (typeof window._activityLoadPhone === "function") window._activityLoadPhone();
+      };
+      // Leads section: loadLeads() uses accountId from ensureAuthenticated().
+      // Registration here ensures the entry exists before appShowRoute runs;
+      // the function guards on accountId so it's a no-op if called too early
+      // (the accountIdReady listener in the ensureAuthenticated block handles
+      // re-arming once accountId is available).
+      SECTION_ON_ENTER.leads = function loadLeadsSection() {
+        if (typeof loadLeads === "function") loadLeads();
+      };
+
+      initAppRouter();   // calls appShowRoute(initial) → _runSectionLoader(initial)
       initAppChrome();
       initMockUpgradeShortcut();
       initAdminTrialsPanel();
@@ -18638,6 +18664,11 @@
             <div style="color:#475569;font-size:13.5px;">${body.inserted} new · ${body.updated} updated · ${body.skipped} skipped</div>`;
           window._lastImportId = body.import_id;
           setCsvStep(3);
+          // Invalidate so the leads & campaigns sections re-fetch on next visit.
+          if (typeof invalidateSection === "function") {
+            invalidateSection("leads");
+            invalidateSection("campaigns");
+          }
           loadImports();
         } catch (e) { alert("Network error."); }
       });
@@ -20734,6 +20765,38 @@
       settings:  { title: "Widget",        section: "settings" },
       sequenceEdit: { title: "Sequence",   section: "sequenceEdit" },
     };
+
+    // ─────────── Section-data loaders (lazy, memoized) ───────────
+    // Each entry runs at most once per page-load. To force-refresh a
+    // section's data (e.g. after a save), call invalidateSection("leads")
+    // and the next navigation re-runs that section's loader.
+    const _sectionLoaded = new Set();
+    const SECTION_ON_ENTER = {
+      // Populated below after the loader functions are defined.
+    };
+
+    function _runSectionLoader(route) {
+      if (_sectionLoaded.has(route)) return;
+      const fn = SECTION_ON_ENTER[route];
+      if (typeof fn !== "function") return;
+      _sectionLoaded.add(route);
+      // Loaders are async but must not throw; wrap so a slow loader can't
+      // block subsequent navigations.
+      try {
+        Promise.resolve(fn()).catch(err => {
+          console.warn(`[section ${route}] loader failed:`, err);
+          _sectionLoaded.delete(route); // allow retry on next navigation
+        });
+      } catch (err) {
+        console.warn(`[section ${route}] loader threw:`, err);
+        _sectionLoaded.delete(route);
+      }
+    }
+
+    function invalidateSection(route) {
+      _sectionLoaded.delete(route);
+    }
+
     // Tracked here so appShowRoute can gate admin-only routes even
     // before the /me round-trip completes (defaults to false).
     window.__appIsAdmin = false;
@@ -20769,6 +20832,11 @@
         btn.classList.toggle("is-active", btn.dataset.route === route);
       });
       try { history.replaceState(null, "", "#" + route); } catch (_) {}
+      // Fire the section's deferred data loader on first visit.
+      _runSectionLoader(route);
+      // "kb" and "knowledge" are aliases for the same section.
+      if (route === "kb") _runSectionLoader("knowledge");
+      if (route === "knowledge") _runSectionLoader("kb");
     }
     function initAppRouter() {
       document.querySelectorAll(".app-nav-btn[data-route]").forEach(btn => {
@@ -21464,7 +21532,9 @@
           .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
       }
 
-      loadList();
+      // Expose loadList so SECTION_ON_ENTER.phones can call it on first
+      // navigation instead of firing at boot for every page load.
+      window._phonesLoadList = loadList;
     }
 
     // Iframe self-reports its content height — keeps the section flush with the
@@ -21495,7 +21565,16 @@
         renderInsightsChat(activeKbType);
         loadBotConfig();
         loadDomains();
-        loadLeads();
+        // loadLeads() is deferred — registered in SECTION_ON_ENTER.leads by
+        // the main DOMContentLoaded handler. Re-arm on accountId resolve so
+        // a revisit to Leads picks up fresh data with the real accountId.
+        if (typeof invalidateSection === "function") invalidateSection("leads");
+        // If the Leads section is already visible (direct #leads hash on
+        // load), run it immediately since the accountId just became available.
+        const leadsSec = document.getElementById("leads");
+        if (leadsSec && leadsSec.classList.contains("is-active")) {
+          if (typeof loadLeads === "function") loadLeads();
+        }
         loadKnowledgeBase("client");
         loadKnowledgeBase("internal");
         checkAdminAndRevealPanel();
@@ -23342,9 +23421,15 @@
           stopPolling();
         }
       }
-      window.addEventListener("DOMContentLoaded", () => { load(); });
-      window.addEventListener("accountIdReady", load);
+      // Register in SECTION_ON_ENTER — deferred, fires on first navigation.
+      SECTION_ON_ENTER.campaigns = load;
+      window.addEventListener("accountIdReady", () => {
+        // Re-arm so the first real accountId triggers a fresh load.
+        invalidateSection("campaigns");
+        _runSectionLoader("campaigns");
+      });
       window.addEventListener("campaign:launched", () => {
+        invalidateSection("campaigns");
         load();
         setTimeout(load, 1500);
       });
@@ -23355,7 +23440,11 @@
         else maybeLoad();
       });
       document.querySelectorAll('.app-nav-btn[data-route="campaigns"]').forEach(btn =>
-        btn.addEventListener("click", () => setTimeout(maybeLoad, 80)));
+        btn.addEventListener("click", () => setTimeout(() => {
+          invalidateSection("campaigns");
+          _runSectionLoader("campaigns");
+          maybeLoad();
+        }, 80)));
       // Stop polling when the user navigates to a different route.
       document.querySelectorAll('.app-nav-btn:not([data-route="campaigns"])').forEach(btn =>
         btn.addEventListener("click", () => setTimeout(() => {
@@ -23855,19 +23944,20 @@
           e.preventDefault();
           if (typeof appShowRoute === "function") appShowRoute("leads");
         }));
-      window.addEventListener("DOMContentLoaded", () => {
-        maybeLoad();
-        loadPhoneActivity();
-      });
+      // Expose for SECTION_ON_ENTER.activity (registered in the main DCL).
+      window._activityLoad = load;
+      window._activityLoadPhone = loadPhoneActivity;
+
+      // Kept for accountIdReady (account resolves asynchronously after DCL).
       window.addEventListener("accountIdReady", () => {
         load();
         loadPhoneActivity();
       });
-      // Refresh on entering this route.
+      // Refresh on entering this route — invalidate so loader re-runs.
       document.querySelectorAll('.app-nav-btn[data-route="activity"]').forEach(btn =>
         btn.addEventListener("click", () => setTimeout(() => {
-          maybeLoad();
-          loadPhoneActivity();
+          invalidateSection("activity");
+          _runSectionLoader("activity");
         }, 80)));
     })();
 
@@ -25711,13 +25801,25 @@
 
       // ── Boot ───────────────────────────────────────────────────
       function boot() {
-        if (sec() && sec().classList.contains("is-active")) loadAll();
+        // Data load deferred via SECTION_ON_ENTER.pipeline; start the
+        // polling timer now so re-visits trigger a poll-cycle.
         startPolling();
       }
+      // Register in SECTION_ON_ENTER — deferred, fires on first navigation.
+      SECTION_ON_ENTER.pipeline = function loadPipelineSection() {
+        loadAll();
+      };
       window.addEventListener("DOMContentLoaded", boot);
-      window.addEventListener("accountIdReady", () => loadAll());
+      window.addEventListener("accountIdReady", () => {
+        invalidateSection("pipeline");
+        loadAll();
+      });
       const navBtn = document.getElementById("appPipelineNavBtn");
-      if (navBtn) navBtn.addEventListener("click", () => setTimeout(loadAll, 50));
+      if (navBtn) navBtn.addEventListener("click", () => setTimeout(() => {
+        invalidateSection("pipeline");
+        _runSectionLoader("pipeline");
+        loadAll();
+      }, 50));
 
       // Listen for lead-state changes broadcast by other views (lead
       // modal email send, etc.). When the backend promoted a lead's
@@ -26853,16 +26955,28 @@
 
       // ── Boot ───────────────────────────────────────────────────
       function boot() {
-        const sec = document.querySelector('[data-route-section="replies"]');
-        if (sec && sec.classList.contains("is-active")) loadAll();
-        else refreshNavBadge();
+        // Data load deferred via SECTION_ON_ENTER.replies; always refresh
+        // the nav badge at boot since it shows on every page.
+        refreshNavBadge();
         startPolling();
       }
+      // Register in SECTION_ON_ENTER — deferred, fires on first navigation.
+      SECTION_ON_ENTER.replies = function loadRepliesSection() {
+        loadAll();
+      };
       window.addEventListener("DOMContentLoaded", boot);
-      window.addEventListener("accountIdReady", () => { loadAll(); refreshNavBadge(); });
+      window.addEventListener("accountIdReady", () => {
+        invalidateSection("replies");
+        loadAll();
+        refreshNavBadge();
+      });
       // Reload list on entering the Replies route (no-op if already current).
       const repNavBtn = document.getElementById("appRepliesNavBtn");
-      if (repNavBtn) repNavBtn.addEventListener("click", () => setTimeout(loadAll, 50));
+      if (repNavBtn) repNavBtn.addEventListener("click", () => setTimeout(() => {
+        invalidateSection("replies");
+        _runSectionLoader("replies");
+        loadAll();
+      }, 50));
 
       // Public deep-link entry: navigate to Replies AND select the
       // thread for a specific lead. Called from the Lead Detail modal's
@@ -27935,17 +28049,30 @@
         try { await fetch("/me/calendar/disconnect", { method: "POST", credentials: "same-origin" }); } catch (_) {}
         renderDisconnectedState();
       });
+      // Register in SECTION_ON_ENTER — deferred, fires on first navigation.
+      SECTION_ON_ENTER.calendar = function loadCalendarSection() {
+        loadCalendar();
+      };
       document.querySelectorAll('.app-nav-btn[data-route="calendar"]').forEach((btn) => {
-        btn.addEventListener("click", () => { setTimeout(loadCalendar, 80); });
+        btn.addEventListener("click", () => {
+          setTimeout(() => {
+            invalidateSection("calendar");
+            _runSectionLoader("calendar");
+          }, 80);
+        });
       });
-      function onHashOrLoad() {
+      window.addEventListener("hashchange", () => {
         const hash = (location.hash || "").replace(/^#/, "");
-        if (hash === "calendar") setTimeout(loadCalendar, 100);
-      }
-      window.addEventListener("hashchange", onHashOrLoad);
-      window.addEventListener("DOMContentLoaded", onHashOrLoad);
+        if (hash === "calendar") {
+          invalidateSection("calendar");
+          _runSectionLoader("calendar");
+        }
+      });
       window.addEventListener("accountIdReady", () => {
-        if ((location.hash || "").replace(/^#/, "") === "calendar") loadCalendar();
+        if ((location.hash || "").replace(/^#/, "") === "calendar") {
+          invalidateSection("calendar");
+          _runSectionLoader("calendar");
+        }
       });
     })();
 
@@ -29375,13 +29502,33 @@
       checkDriveStatus();
       window.addEventListener("accountIdReady", checkDriveStatus);
 
-      // ─── Initial paint after accountId resolves ──────────────
-      if (getAccountId()) loadSources();
-      window.addEventListener("accountIdReady", loadSources);
-      // Also reload when the user navigates to this section, so freshly-saved
+      // Register in SECTION_ON_ENTER — deferred, fires on first navigation.
+      // "kb" and "knowledge" are both routes for this section; appShowRoute
+      // calls _runSectionLoader for both aliases.
+      SECTION_ON_ENTER.knowledge = function loadKbSection() {
+        loadSources();
+      };
+      SECTION_ON_ENTER.kb = SECTION_ON_ENTER.knowledge;
+      window.addEventListener("accountIdReady", () => {
+        // Re-arm so the loader re-runs with the resolved accountId if the
+        // KB section is already active (e.g. direct #kb hash on load).
+        const kbSec = document.getElementById("kb");
+        if (kbSec && kbSec.classList.contains("is-active")) {
+          invalidateSection("knowledge");
+          invalidateSection("kb");
+          loadSources();
+        }
+      });
+      // Reload when the user navigates to this section, so freshly-saved
       // sources from another tab show up promptly.
       document.querySelectorAll('.app-nav-btn[data-route="kb"]').forEach((btn) => {
-        btn.addEventListener("click", () => { setTimeout(loadSources, 80); });
+        btn.addEventListener("click", () => {
+          setTimeout(() => {
+            invalidateSection("knowledge");
+            invalidateSection("kb");
+            _runSectionLoader("knowledge");
+          }, 80);
+        });
       });
     })();
   </script>
@@ -32543,6 +32690,8 @@ async function saveWizardChanges() {
   next.textContent = "Saving…";
   try {
     await persistWizardEdits();
+    // Invalidate so the Campaigns list re-fetches sequences on next visit.
+    if (typeof invalidateSection === "function") invalidateSection("campaigns");
     const toast = document.getElementById("wizToast");
     toast.textContent = "Saved! Your customers will get the updated version starting now.";
     toast.hidden = false;
