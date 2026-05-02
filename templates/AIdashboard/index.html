@@ -4849,10 +4849,6 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9.66 17a2 2 0 0 0 4.68 0"/><path d="M12 3a7 7 0 0 0-5 11.9V17a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2.1A7 7 0 0 0 12 3z"/><line x1="9" y1="13" x2="15" y2="13"/></svg>
           <span class="nav-tooltip">Home</span>
         </button>
-        <button class="app-nav-btn" type="button" data-route="phones" aria-label="Phone numbers">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.86 19.86 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.86 19.86 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7a2 2 0 0 1 1.72 2z"/></svg>
-          <span class="nav-tooltip">Phone numbers</span>
-        </button>
         <button class="app-nav-btn" type="button" data-route="leads" aria-label="Leads">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           <span class="nav-tooltip">Leads</span>
@@ -4861,6 +4857,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           <span class="nav-tooltip"><span data-replies-tooltip>Replies</span></span>
           <span class="app-nav-badge" id="appRepliesBadge" hidden>0</span>
+        </button>
+        <button class="app-nav-btn" type="button" data-route="calendar" aria-label="Schedule">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span class="nav-tooltip">Schedule</span>
         </button>
         <button class="app-nav-btn" type="button" data-route="campaigns" aria-label="Campaigns" id="appCampaignsNavBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -4871,9 +4871,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="20" x2="21" y2="20"/><rect x="5" y="10" width="3" height="8"/><rect x="10.5" y="6" width="3" height="12"/><rect x="16" y="13" width="3" height="5"/></svg>
           <span class="nav-tooltip">Pipeline</span>
         </button>
-        <button class="app-nav-btn" type="button" data-route="calendar" aria-label="Schedule">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <span class="nav-tooltip">Schedule</span>
+        <button class="app-nav-btn" type="button" data-route="engagement" id="appEngagementNavBtn" aria-label="Engagement">
+          <!-- Reflective sparkle/engagement icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.4a3 3 0 0 0 1.8 1.8L21 12l-5.4 1.8a3 3 0 0 0-1.8 1.8L12 21l-1.8-5.4a3 3 0 0 0-1.8-1.8L3 12l5.4-1.8a3 3 0 0 0 1.8-1.8L12 3z"/></svg>
+          <span class="nav-tooltip">Engagement</span>
         </button>
         <button class="app-nav-btn" type="button" data-route="voice" aria-label="Voice">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
@@ -5378,8 +5379,8 @@
         }
       </style>
 
-      <!-- ─────────── Phone numbers (top of dashboard) ─────────── -->
-      <section class="grid" id="phoneNumbers" data-route-section="phones">
+      <!-- ─────────── Phone numbers (now inside Settings → Phone tab) ─────────── -->
+      <section class="grid" id="phoneNumbers" data-route-section="phones" hidden>
         <!-- First-visit nudge for Phone numbers. -->
         <div class="page-nudge" data-nudge="phones" style="grid-column: span 12;" hidden>
           <span class="page-nudge-icon" aria-hidden="true">
@@ -13163,9 +13164,137 @@
           .wgt-domain-row { flex-direction: column; align-items: stretch; }
           .wgt-domain-row .wgt-btn-secondary { width: 100%; }
         }
+
+        /* Settings top-level tabs (General / Phone) */
+        .stg-tabs-wrap { margin-bottom: 0; }
+        .stg-top-tabs {
+          display: flex; gap: 0; border-bottom: 1px solid #e5e7eb;
+          margin-bottom: 24px;
+        }
+        .stg-top-tab {
+          padding: 10px 20px; font-size: 14px; font-weight: 500;
+          color: #6b7280; background: none; border: none;
+          border-bottom: 2px solid transparent;
+          cursor: pointer; transition: color .15s, border-color .15s;
+          margin-bottom: -1px;
+        }
+        .stg-top-tab:hover { color: #0a0a0a; }
+        .stg-top-tab.is-active { color: #0a0a0a; border-bottom-color: #0a0a0a; font-weight: 600; }
+        .stg-top-pane[hidden] { display: none !important; }
+
+        /* Engagement page */
+        .eng-page { display:flex; flex-direction:column; gap:18px; padding: 24px 0; }
+        .eng-page-head { display:flex; flex-direction:column; gap:4px; padding-bottom:8px; }
+        .eng-page-title-wrap { display:flex; align-items:center; gap:10px; }
+        .eng-page-title { font-size:24px; font-weight:600; color:#0a0a0a; margin:0; }
+        .eng-help-btn { width:24px; height:24px; border-radius:50%; border:1px solid #e5e7eb; background:#fff; color:#6b7280; font-size:13px; cursor:pointer; }
+        .eng-help-btn:hover { background:#f3f4f6; }
+        .eng-page-sub { font-size:13px; color:#6b7280; margin:0; }
+
+        .eng-section-h { font-size:16px; font-weight:600; color:#0a0a0a; margin:24px 0 16px; }
+
+        .eng-stage {
+          border-radius:14px; padding:24px;
+          margin-bottom:16px;
+          box-shadow:
+            0 1px 0 rgba(255, 255, 255, 0.6) inset,
+            0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+        .eng-stage-head { display:flex; align-items:center; gap:14px; margin-bottom:18px; }
+        .eng-stage-num {
+          width:36px; height:36px; border-radius:50%;
+          display:flex; align-items:center; justify-content:center;
+          color:#fff; font-size:15px; font-weight:700;
+          flex-shrink:0;
+        }
+        .eng-stage-meta { flex:1; }
+        .eng-stage-name {
+          font-size:18px; font-weight:600;
+          display:flex; align-items:center; gap:6px;
+          margin-bottom:2px;
+        }
+        .eng-stage-help {
+          width:18px; height:18px; border-radius:50%;
+          border:0; background:rgba(0,0,0,0.06);
+          color:inherit; font-size:11px; cursor:pointer;
+          display:inline-flex; align-items:center; justify-content:center;
+          opacity:0.6;
+        }
+        .eng-stage-help:hover { opacity:1; background:rgba(0,0,0,0.12); }
+        .eng-stage-desc { font-size:13px; color:#6b7280; }
+        .eng-stage-cards { display:flex; flex-wrap:wrap; gap:12px; }
+
+        .eng-card {
+          display:block;
+          background:#fff;
+          border:1px solid;
+          border-radius:10px;
+          padding:14px 16px;
+          width:200px;
+          text-decoration:none;
+          color:inherit;
+          transition:transform 0.12s, border-color 0.12s, box-shadow 0.12s;
+          box-shadow:0 1px 2px rgba(15, 23, 42, 0.04);
+        }
+        .eng-card:hover {
+          transform:translateY(-1px);
+          box-shadow:0 4px 12px rgba(15, 23, 42, 0.06);
+        }
+        .eng-card-head { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+        .eng-card-icon { font-size:18px; line-height:1; }
+        .eng-card-name { font-size:14px; font-weight:600; color:#0a0a0a; }
+        .eng-card-desc { font-size:12px; color:#6b7280; line-height:1.45; min-height:34px; margin-bottom:10px; }
+        .eng-card-status { font-size:11.5px; font-weight:500; }
+        .eng-card-status-running { color:#15803d; }
+        .eng-card-status-paused  { color:#9ca3af; }
+
+        .eng-empty-card {
+          background:rgba(0,0,0,0.04);
+          border-radius:10px;
+          padding:16px;
+          max-width:480px;
+        }
+        .eng-empty-h { font-size:14px; font-weight:600; color:#374151; margin-bottom:6px; }
+        .eng-empty-text { font-size:13px; color:#4b5563; line-height:1.5; }
+
+        .eng-popover {
+          background:#0a0a0a; color:#fff;
+          padding:10px 14px;
+          border-radius:10px;
+          max-width:340px;
+          font-size:13px; line-height:1.55;
+          box-shadow:0 8px 24px rgba(15,23,42,0.3);
+        }
+
+        .eng-nudge {
+          display:flex; gap:14px; align-items:flex-start;
+          padding:14px 18px; margin-bottom:18px;
+          background:#fffbeb; border:1px solid #fde68a;
+          border-radius:12px;
+        }
+        .eng-nudge-emoji { font-size:24px; line-height:1; }
+        .eng-nudge-content { flex:1; }
+        .eng-nudge-h { font-size:14px; font-weight:600; color:#92400e; margin-bottom:4px; }
+        .eng-nudge-text { font-size:13px; color:#78350f; line-height:1.5; margin-bottom:10px; }
+        .eng-nudge-dismiss { padding:6px 14px; background:#fff; border:1px solid #fde68a; color:#92400e; border-radius:8px; font-size:12px; font-weight:500; cursor:pointer; }
+
+        @media (max-width: 640px) {
+          .eng-stage-cards { flex-direction:column; }
+          .eng-card { width:100%; }
+        }
       </style>
       <!-- ─────────── Widget · Settings ─────────── -->
       <section class="grid" id="settings" data-route-section="settings" hidden>
+        <!-- Top-level Settings tabs: General (widget) and Phone -->
+        <div class="stg-tabs-wrap" style="grid-column: span 12;">
+          <nav class="stg-top-tabs" role="tablist" aria-label="Settings sections">
+            <button type="button" class="stg-top-tab is-active" data-settings-top-tab="general" role="tab" aria-selected="true">General</button>
+            <button type="button" class="stg-top-tab" data-settings-top-tab="phone" role="tab">Phone</button>
+          </nav>
+        </div>
+
+        <!-- General pane: existing widget settings -->
+        <div class="stg-top-pane" data-settings-top-pane="general" style="grid-column: span 12;">
         <div class="wgt-page" style="grid-column: span 12;">
           <!-- First-visit nudge for the Widget. -->
           <div class="page-nudge" data-nudge="widget" hidden>
@@ -13426,6 +13555,15 @@
             </aside>
           </div>
         </div>
+        </div><!-- /stg-top-pane general -->
+
+        <!-- Phone pane: phone numbers and call analytics -->
+        <div class="stg-top-pane" data-settings-top-pane="phone" style="grid-column: span 12;" hidden>
+          <div id="stgPhoneMount">
+            <!-- #phoneNumbers section content is moved here by initSettingsTopTabs() JS below -->
+          </div>
+        </div><!-- /stg-top-pane phone -->
+
       </section>
 
       <!-- ─────────── Widget · Install ─────────── -->
@@ -13557,6 +13695,26 @@
         </div>
       </section>
       <!-- ─── /Instagram DMs Inbox ────────────────────────────────────────── -->
+
+      <!-- ─── Engagement ──────────────────────────────────────────────────── -->
+      <section class="grid" id="engagement" data-route-section="engagement" hidden>
+        <div class="grid" style="grid-column: 1 / -1;">
+          <div class="eng-page">
+            <header class="eng-page-head">
+              <div class="eng-page-title-wrap">
+                <h1 class="eng-page-title">Engagement</h1>
+                <button type="button" class="eng-help-btn" id="engHelpBtn" aria-label="What is this?">?</button>
+              </div>
+              <p class="eng-page-sub">How your AI talks to customers — at every step of the journey.</p>
+            </header>
+
+            <h2 class="eng-section-h">Your customer's journey</h2>
+
+            <div id="engFunnel"></div>
+          </div>
+        </div>
+      </section>
+      <!-- ─── /Engagement ─────────────────────────────────────────────────── -->
 
 
       <div class="modal" id="confirmPublishModal" aria-hidden="true">
@@ -18360,6 +18518,15 @@
       };
       SECTION_ON_ENTER.kb = SECTION_ON_ENTER.knowledge;
 
+      // Engagement page: lazy-loads web/src/routes/engagement.js then calls
+      // window.loadEngagementSection to fetch sequences + render funnel stages.
+      SECTION_ON_ENTER.engagement = async function loadEngagementSectionEntry() {
+        await window.__dashboardLoadRouteModule("engagement");
+        if (typeof window.loadEngagementSection === "function") {
+          return window.loadEngagementSection();
+        }
+      };
+
       initAppRouter();   // calls appShowRoute(initial) → _runSectionLoader(initial)
       initAppChrome();
       initMockUpgradeShortcut();
@@ -18369,6 +18536,7 @@
       initCampaignWizard();
       initPhoneAnalytics();
       initSettingsTabs();
+      initSettingsTopTabs();
     });
 
     // Settings tab switcher (Brand / Copy / Quick replies)
@@ -18385,6 +18553,43 @@
         });
       }
       tabs.forEach(t => t.addEventListener("click", () => activate(t.dataset.settingsTab)));
+    }
+
+    // Settings top-level tab switcher (General / Phone)
+    // Moves the #phoneNumbers section into the Phone pane on first activation.
+    function initSettingsTopTabs() {
+      const tabs = document.querySelectorAll("[data-settings-top-tab]");
+      const panes = document.querySelectorAll("[data-settings-top-pane]");
+      if (!tabs.length) return;
+
+      // Move #phoneNumbers section content into the phone mount on first load.
+      let phoneMounted = false;
+      function ensurePhoneMounted() {
+        if (phoneMounted) return;
+        phoneMounted = true;
+        const mount = document.getElementById("stgPhoneMount");
+        const phoneSection = document.getElementById("phoneNumbers");
+        if (mount && phoneSection) {
+          // Remove route-section attr so router CSS doesn't hide it
+          phoneSection.removeAttribute("data-route-section");
+          phoneSection.removeAttribute("hidden");
+          mount.appendChild(phoneSection);
+        }
+      }
+
+      function activateTopTab(name) {
+        tabs.forEach(t => {
+          t.classList.toggle("is-active", t.dataset.settingsTopTab === name);
+          t.setAttribute("aria-selected", t.dataset.settingsTopTab === name ? "true" : "false");
+        });
+        panes.forEach(p => {
+          const isActive = p.dataset.settingsTopPane === name;
+          p.hidden = !isActive;
+        });
+        if (name === "phone") ensurePhoneMounted();
+      }
+
+      tabs.forEach(t => t.addEventListener("click", () => activateTopTab(t.dataset.settingsTopTab)));
     }
 
     // ─────────── Phone analytics + transcript drawer ───────────
@@ -20595,7 +20800,7 @@
     // ─────────── App router (sidebar → main body) ───────────
     const APP_ROUTES = {
       adminTrials: { title: "Trial overview", section: "adminTrials", adminOnly: true },
-      phones:    { title: "Phone numbers", section: "phoneNumbers" },
+      phones:    { title: "Phone numbers", section: "settings" },   // now a tab inside Settings
       leads:     { title: "Leads",         section: "leads" },
       replies:   { title: "Replies",       section: "replies" },
       campaigns: { title: "Campaigns",     section: "campaigns" },
@@ -20607,10 +20812,11 @@
       kb:        { title: "Knowledge base", section: "kb" },
       campaign:  { title: "New campaign",   section: "campaign" },
       embed:     { title: "Widget",        section: "embed" },
-      settings:  { title: "Widget",        section: "settings" },
+      settings:  { title: "Settings",      section: "settings" },
       instagram: { title: "Instagram",     section: "instagram" },
       inbox:     { title: "Inbox",         section: "inbox" },
       sequenceEdit: { title: "Sequence",   section: "sequenceEdit" },
+      engagement: { title: "Engagement",   section: "engagement" },
     };
 
     // ─────────── Section-data loaders (lazy, memoized) ───────────
@@ -20655,6 +20861,15 @@
 
     function appShowRoute(route) {
       if (route === "home") route = "activity";
+      // phones is now a tab inside settings — redirect and activate the tab
+      if (route === "phones") {
+        route = "settings";
+        // Activate the phone top tab after the section is shown
+        requestAnimationFrame(() => {
+          const phoneTab = document.querySelector('[data-settings-top-tab="phone"]');
+          if (phoneTab) phoneTab.click();
+        });
+      }
       if (route && route.startsWith("sequence-edit-")) {
         const sid = route.replace(/^sequence-edit-/, "");
         // Lazy-load campaigns bundle, then open the wizard.
@@ -20715,7 +20930,7 @@
       const isKnown = APP_ROUTES[hashRoute] ||
                       hashRoute === "home" ||
                       hashRoute.startsWith("sequence-edit-");
-      const initial = isKnown ? hashRoute : "phones";
+      const initial = isKnown ? hashRoute : "activity";
       appShowRoute(initial);
     }
 
@@ -28435,6 +28650,8 @@ function escHtmlSeq(s) {
     const body = await r.json();
     if ((body.accounts || []).length > 0) {
       document.getElementById("appInstagramNavBtn")?.removeAttribute("hidden");
+      // Also unhide Inbox nav — it lives alongside Instagram DMs.
+      document.getElementById("appInboxNavBtn")?.removeAttribute("hidden");
     }
   } catch (_) { /* stay hidden */ }
 })();
