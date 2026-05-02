@@ -3350,6 +3350,19 @@
       border-color: #0a0a0a;
     }
 
+    /* ── Campaigns sub-tab panes ──
+       The parent <section id="campaigns"> is a 12-col grid. Each pane
+       must span the full row AND set up its own 12-col grid so that
+       children using `grid-column: span 12` render full-width. */
+    .camp-tab-pane {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 22px;
+      width: 100%;
+    }
+    .camp-tab-pane[hidden] { display: none; }
+
     /* ── Sequences list (card rows) ── */
     .seq-row-card {
       display: grid;
