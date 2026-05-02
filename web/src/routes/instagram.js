@@ -360,7 +360,12 @@ function openComposer({ date, post_id } = {}) {
             class="ig-textarea">${esc((rec && rec.caption) || "")}</textarea>
           <div class="ig-cap-count"><span id="igCapCount">0</span> / 2200</div>
 
-          <div class="ig-form-row">
+          <div class="ig-form-row ig-tabs" id="igWhenTabs" role="tablist" aria-label="When to publish">
+            <button type="button" data-when="now"  aria-selected="${rec ? "false" : "false"}">Publish now</button>
+            <button type="button" data-when="later" aria-selected="${rec ? "true" : "true"}">Schedule for later</button>
+          </div>
+
+          <div class="ig-form-row" id="igScheduleRow">
             <label class="ig-label">Schedule</label>
             <input id="igDate" type="date" value="${esc(initialDate)}" class="ig-input">
             <input id="igTime" type="time" value="${esc(initialTime)}" class="ig-input">
@@ -380,6 +385,7 @@ function openComposer({ date, post_id } = {}) {
       media:   (rec && rec.media)    || [],
       type:    initialType,
       post_id: rec ? rec.post_id : null,
+      when:    "later",   // "now" | "later" — toggled by the When tabs
     };
 
     // Caption counter
@@ -397,6 +403,29 @@ function openComposer({ date, post_id } = {}) {
       document.querySelectorAll("#igTypeTabs button").forEach(b =>
         b.setAttribute("aria-selected", b === btn ? "true" : "false"));
     });
+
+    // When-to-publish toggle. "Now" hides the date/time inputs and
+    // re-labels the primary action; "Later" restores both.
+    const scheduleRow   = document.getElementById("igScheduleRow");
+    const scheduleBtn   = document.getElementById("igSchedule");
+    const _applyWhenUI = () => {
+      const isNow = state.when === "now";
+      if (scheduleRow) scheduleRow.style.display = isNow ? "none" : "";
+      if (scheduleBtn) {
+        scheduleBtn.textContent = state.post_id
+          ? "Save changes"
+          : (isNow ? "Post now" : "Schedule post");
+      }
+    };
+    document.getElementById("igWhenTabs").addEventListener("click", ev => {
+      const btn = ev.target.closest("button[data-when]");
+      if (!btn) return;
+      state.when = btn.dataset.when;
+      document.querySelectorAll("#igWhenTabs button").forEach(b =>
+        b.setAttribute("aria-selected", b === btn ? "true" : "false"));
+      _applyWhenUI();
+    });
+    _applyWhenUI();
 
     // Media upload — the <label for="igFileInput"> wrapper triggers the
     // file picker natively when the user clicks the uploader area, so we
@@ -459,6 +488,13 @@ function openComposer({ date, post_id } = {}) {
       };
       if (action === "draft") {
         payload.status = "draft";
+      } else if (state.when === "now") {
+        // Publish-now: schedule for ~60s out so the publisher daemon
+        // (30s tick) picks it up immediately. Same shape as the
+        // /publish-now endpoint applies server-side.
+        const soon = new Date(Date.now() + 60 * 1000);
+        soon.setMilliseconds(0);
+        payload.scheduled_at = soon.toISOString();
       } else {
         payload.scheduled_at = isoFromInputs();
       }
