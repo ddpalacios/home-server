@@ -3154,6 +3154,63 @@
       border: 1px solid #e5e7eb; background: #fff; color: #374151; cursor: pointer;
     }
     .home-chip.is-active { background: #0a0a0a; color: #fff; border-color: #0a0a0a; }
+
+    /* ───────────── Home dashboard: subtle section depth ─────────────
+       Goal: card-to-card visual distinction without visual noise. Body
+       gets a softer backdrop than the global gradient; #activity cards
+       get a layered shadow so they "lift" off the page; alternating
+       data-tone attributes give consecutive sections a faint warm/cool
+       rhythm. Adjacent cards in the same row get OPPOSITE tones so the
+       pairing reads as two pieces, not one. */
+    #activity .card {
+      border-color: rgba(15, 23, 42, 0.06);
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.6) inset,
+        0 1px 2px rgba(15, 23, 42, 0.04),
+        0 4px 14px rgba(15, 23, 42, 0.05),
+        0 18px 36px -22px rgba(15, 23, 42, 0.10);
+    }
+    /* Cool tint — faint slate-blue cast, used for "informational" cards. */
+    #activity .card[data-tone="cool"] {
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0)) ,
+        linear-gradient(180deg, #f6f9fd 0%, #eef3fa 100%);
+    }
+    /* Warm tint — faint cream/sand cast, used for "actionable" cards. */
+    #activity .card[data-tone="warm"] {
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0)) ,
+        linear-gradient(180deg, #fdfaf3 0%, #f9f4e8 100%);
+    }
+    /* Sage tint — faint green cast for funnel/pipeline status feel. */
+    #activity .card[data-tone="sage"] {
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0)) ,
+        linear-gradient(180deg, #f6faf6 0%, #ecf3ec 100%);
+    }
+    /* Hairline accent strip on the top edge of every Home card.
+       Pulls each section apart visually without an explicit divider. */
+    #activity .card { position: relative; overflow: hidden; }
+    #activity .card::before {
+      content: "";
+      position: absolute; top: 0; left: 24px; right: 24px; height: 1px;
+      background: linear-gradient(90deg,
+        rgba(15, 23, 42, 0) 0%,
+        rgba(15, 23, 42, 0.10) 50%,
+        rgba(15, 23, 42, 0) 100%);
+      pointer-events: none;
+    }
+    /* KPI tiles inside the cool card: slightly elevated white panes. */
+    #activity .card[data-tone="cool"] .pl-stat,
+    #activity .card[data-tone="warm"] .pl-stat,
+    #activity .card[data-tone="sage"] .pl-stat {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow:
+        0 1px 1px rgba(15, 23, 42, 0.03),
+        0 2px 6px rgba(15, 23, 42, 0.04);
+      padding: 14px 16px;
+    }
   </style>
 </head>
 <body>
@@ -4822,7 +4879,7 @@
         <!-- Top-of-page KPI snapshot. Mirrors the same #actPipelineStats
              populated by /me/pipeline below; moved up so the totals are
              the first thing visible under the insights box. -->
-        <div class="card" style="grid-column: span 12; margin-top: 16px;">
+        <div class="card" data-tone="cool" style="grid-column: span 12; margin-top: 16px;">
           <div class="card-header" style="margin-bottom: 8px;">
             <h2 class="section-title" style="margin:0;">Where things are</h2>
           </div>
@@ -4901,7 +4958,7 @@
         <!-- Funnel + flat lead table. The KPI tiles that used to live
              here have been hoisted up under the insights box. -->
         <div style="grid-column: span 12; display:grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-top: 16px;">
-          <div class="card">
+          <div class="card" data-tone="sage">
           <div class="card-header" style="margin-bottom: 8px;">
             <h2 class="section-title" style="margin:0;">Funnel</h2>
           </div>
@@ -4909,7 +4966,7 @@
           <div class="pl-funnel-row" id="actPipelineFunnel"></div>
           <div class="pl-conv-strip" id="actPipelineConv" style="margin-top: 8px;"></div>
           </div>
-          <div class="card" id="homeServicesCard">
+          <div class="card" id="homeServicesCard" data-tone="warm">
             <div class="card-header" style="margin-bottom: 8px;">
               <h2 class="section-title" style="margin:0;">Services booked</h2>
             </div>
@@ -4918,7 +4975,7 @@
           </div>
         </div>
 
-        <div class="card chart-card" style="grid-column: span 12; margin-top: 16px;">
+        <div class="card chart-card" data-tone="cool" style="grid-column: span 12; margin-top: 16px;">
           <div class="card-header">
             <h2>Lead status over time</h2>
             <p class="chart-subtitle">Volume + composition. Each bar is a day; each color a stage.</p>
@@ -4932,7 +4989,7 @@
         </div>
 
         <div style="grid-column: span 12; display:grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-top: 16px;">
-          <div class="card" id="homeTodosCard">
+          <div class="card" id="homeTodosCard" data-tone="warm">
             <div class="card-header" style="margin-bottom: 8px;">
               <h2 class="section-title" style="margin:0;">Push the funnel</h2>
             </div>
@@ -4940,7 +4997,7 @@
             <div id="homeTodosList" style="display:flex;flex-direction:column;gap:8px;"></div>
             <div id="homeTodosMore" style="margin-top:8px;font-size:12px;color:#71717a;" hidden></div>
           </div>
-          <div class="card">
+          <div class="card" data-tone="cool">
             <!-- Flat lead table — same columns the Pipeline page's Table
                  view shows. 5 rows per page with Prev/Next; CSV export
                  dumps the full sorted set (not just the visible page). -->
