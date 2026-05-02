@@ -3722,6 +3722,402 @@
     .seq-test-send-btn:hover { opacity: 0.8; }
     .seq-test-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+    /* ── Automation Wizard ── */
+    .wiz-back {
+      font-size: 13px;
+      color: var(--seq-blue);
+      text-decoration: none;
+      display: inline-block;
+      margin-bottom: 24px;
+    }
+    .wiz-back:hover { text-decoration: underline; }
+    .wiz-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .wiz-icon {
+      width: 56px;
+      height: 56px;
+      flex-shrink: 0;
+      background: #f0f4ff;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+    .wiz-title {
+      font-size: 26px;
+      font-weight: 700;
+      color: #0a0a0a;
+      margin: 0 0 6px;
+      line-height: 1.2;
+    }
+    .wiz-subtitle {
+      font-size: 14px;
+      color: #6b7280;
+      line-height: 1.55;
+      margin: 0;
+    }
+    .wiz-progress {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .wiz-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #e5e7eb;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+      transition: background 0.18s;
+    }
+    .wiz-dot.is-active { background: #0a0a0a; }
+    .wiz-dot.is-done   { background: #6b7280; }
+    .wiz-bar {
+      width: 32px;
+      height: 2px;
+      background: #e5e7eb;
+      flex-shrink: 0;
+    }
+    .wiz-step-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #6b7280;
+      margin-top: 14px;
+      text-align: center;
+    }
+    .wiz-body {
+      background: #fff;
+      border-radius: 14px;
+      padding: 28px;
+      margin: 24px 0;
+      box-shadow: var(--seq-shadow);
+    }
+    .wiz-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .wiz-btn {
+      height: 44px;
+      padding: 0 18px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 10px;
+      border: 0;
+      cursor: pointer;
+      transition: opacity 0.12s, background 0.12s;
+      white-space: nowrap;
+    }
+    .wiz-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .wiz-btn-primary {
+      background: #0a0a0a;
+      color: #fff;
+    }
+    .wiz-btn-primary:hover:not(:disabled) { opacity: 0.82; }
+    .wiz-btn-secondary {
+      background: #fff;
+      color: #0a0a0a;
+      border: 1.5px solid #d1d5db !important;
+    }
+    .wiz-btn-secondary:hover:not(:disabled) { background: #f9fafb; }
+    .wiz-toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1a1a1a;
+      color: #fff;
+      padding: 14px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 9000;
+      animation: wizToastIn 0.22s ease;
+    }
+    @keyframes wizToastIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+    /* Step 1 — summary + preview */
+    .wiz-summary-card {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      background: #f8faff;
+      border: 1px solid #dde6f8;
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin-bottom: 28px;
+    }
+    .wiz-summary-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+    .wiz-summary-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #6b7280;
+      margin: 0 0 6px;
+    }
+    .wiz-summary-text {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #0a0a0a;
+      margin: 0;
+    }
+    .wiz-section-h {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #6b7280;
+      margin: 0 0 14px;
+    }
+    .wiz-preview-list { display: flex; flex-direction: column; gap: 0; }
+    .wiz-mail-divider {
+      font-size: 13px;
+      color: #9ca3af;
+      font-style: italic;
+      padding: 10px 0 6px;
+    }
+    .wiz-mail {
+      background: #fafafa;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 18px 20px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #0a0a0a;
+      margin-bottom: 4px;
+    }
+    .wiz-mail-internal { background: #fdf7f0; border-color: #f3e8d8; }
+    .wiz-mail-meta {
+      font-size: 11px;
+      color: #9ca3af;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+    .wiz-mail-subject {
+      font-weight: 700;
+      font-size: 13px;
+      color: #0a0a0a;
+      margin-bottom: 6px;
+    }
+    .wiz-mail-body {
+      font-size: 13px;
+      color: #374151;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+    /* Step 2 — edit cards */
+    .wiz-edit-tip {
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.55;
+      margin-bottom: 20px;
+      padding: 12px 16px;
+      background: #f9fafb;
+      border-radius: 8px;
+    }
+    .wiz-mail-edit-card {
+      border: 1.5px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      background: #fff;
+    }
+    .wiz-mail-edit-card:last-child { margin-bottom: 0; }
+    .wiz-mail-badge {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #6b7280;
+      margin-bottom: 16px;
+    }
+    .wiz-input-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #9ca3af;
+      margin-bottom: 6px;
+    }
+    .wiz-input {
+      width: 100%;
+      box-sizing: border-box;
+      height: 48px;
+      padding: 0 14px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #0a0a0a;
+      background: #fafafa;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 10px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      margin-bottom: 8px;
+    }
+    .wiz-input:focus {
+      border-color: var(--seq-blue);
+      box-shadow: 0 0 0 3px rgba(24,95,165,0.10);
+      background: #fff;
+    }
+    .wiz-textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      line-height: 1.6;
+      color: #0a0a0a;
+      background: #fafafa;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 10px;
+      outline: none;
+      resize: vertical;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      margin-bottom: 8px;
+    }
+    .wiz-textarea:focus {
+      border-color: var(--seq-blue);
+      box-shadow: 0 0 0 3px rgba(24,95,165,0.10);
+      background: #fff;
+    }
+    .wiz-pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .wiz-pill {
+      padding: 5px 10px;
+      font-size: 12px;
+      border: 1px solid #e5e7eb;
+      background: #fff;
+      color: #374151;
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.1s, border-color 0.1s;
+    }
+    .wiz-pill:hover { background: #f5f5f5; border-color: #d1d5db; }
+    .wiz-help-tip {
+      font-size: 12px;
+      font-style: italic;
+      color: #9ca3af;
+      margin-top: -4px;
+      margin-bottom: 12px;
+    }
+    .wiz-empty-card {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .wiz-empty-emoji { font-size: 36px; margin-bottom: 12px; }
+    .wiz-empty-text {
+      font-size: 14px;
+      color: #6b7280;
+      line-height: 1.55;
+      margin: 0;
+    }
+    /* Step 3 — timing */
+    .wiz-time-row {
+      border: 1.5px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin-bottom: 16px;
+    }
+    .wiz-time-row:last-child { margin-bottom: 0; }
+    .wiz-time-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0a0a0a;
+      margin-bottom: 4px;
+    }
+    .wiz-time-sub {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 14px;
+      font-style: italic;
+    }
+    .wiz-time-options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .wiz-time-opt {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #374151;
+    }
+    .wiz-time-label { flex: 1; }
+    .wiz-time-input {
+      width: 72px;
+      height: 36px;
+      padding: 0 10px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #0a0a0a;
+      background: #fafafa;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .wiz-time-input:focus {
+      border-color: var(--seq-blue);
+      background: #fff;
+    }
+    .wiz-time-input:disabled {
+      opacity: 0;
+      pointer-events: none;
+    }
+    /* Step 4 — test panel */
+    .wiz-test-card {
+      background: #fafafa;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 16px 0 0;
+    }
+    .wiz-test-status {
+      font-size: 13px;
+      margin-top: 10px;
+      min-height: 20px;
+    }
+    .wiz-test-status.ok  { color: var(--seq-green); }
+    .wiz-test-status.err { color: var(--seq-red); }
+    .wiz-helper-p {
+      font-size: 14px;
+      color: #6b7280;
+      line-height: 1.55;
+      margin: 0 0 16px;
+    }
+    /* Mobile */
+    @media (max-width: 640px) {
+      .wiz-shell { padding: 8px 16px 48px !important; }
+      .wiz-footer { flex-direction: column-reverse; align-items: stretch; }
+      .wiz-footer .wiz-btn { width: 100%; text-align: center; justify-content: center; }
+    }
+
     /* ── Lead detail: active sequences panel ── */
     .lead-seq-panel-card {
       margin-top: 16px;
@@ -7565,21 +7961,37 @@
         </div>
       </section>
       <section class="grid" id="sequenceEdit" data-route-section="sequenceEdit" hidden>
-        <div style="grid-column: span 12; padding: 4px 0;">
-          <div class="seq-edit-header">
-            <div style="flex:1; min-width:0;">
-              <button type="button" class="seq-edit-back" id="seqEditBack">
-                ← Back to automations
-              </button>
-              <h2 id="seqEditTitle">Sequence</h2>
-              <p id="seqEditSubtitle">Edit the steps, body copy, and timing.</p>
-            </div>
-            <div class="seq-edit-actions">
-              <button type="button" id="seqEditTest">Send a test email to me</button>
-              <button type="button" id="seqEditSave">Save changes</button>
+        <div class="wiz-shell" style="grid-column: 1 / -1; max-width: 760px; margin: 0 auto; padding: 8px 24px 64px;">
+          <a href="#campaigns" class="wiz-back" id="wizBackLink">← Back to automations</a>
+
+          <div class="wiz-header">
+            <div class="wiz-icon" id="wizIcon">📥</div>
+            <div>
+              <h1 class="wiz-title" id="wizTitle">Automation</h1>
+              <p class="wiz-subtitle" id="wizSubtitle"></p>
             </div>
           </div>
-          <div id="seqEditSteps" style="display:flex;flex-direction:column;gap:16px;"></div>
+
+          <div class="wiz-progress" role="tablist" aria-label="Wizard progress" id="wizProgress">
+            <div class="wiz-dot is-active" data-wiz-step="1" aria-current="step">1</div>
+            <div class="wiz-bar"></div>
+            <div class="wiz-dot" data-wiz-step="2">2</div>
+            <div class="wiz-bar"></div>
+            <div class="wiz-dot" data-wiz-step="3">3</div>
+            <div class="wiz-bar"></div>
+            <div class="wiz-dot" data-wiz-step="4">4</div>
+          </div>
+
+          <div class="wiz-step-label" id="wizStepLabel">Looking at it</div>
+
+          <div class="wiz-body" id="wizBody"><!-- step content rendered here --></div>
+
+          <div class="wiz-footer">
+            <button type="button" class="wiz-btn wiz-btn-secondary" id="wizBackBtn" hidden>Back</button>
+            <button type="button" class="wiz-btn wiz-btn-primary" id="wizNextBtn">Looks good, let me edit it</button>
+          </div>
+
+          <div class="wiz-toast" id="wizToast" role="status" aria-live="polite" hidden></div>
         </div>
       </section>
       <section class="grid" id="pipeline" data-route-section="pipeline" hidden>
@@ -20330,7 +20742,7 @@
       if (route === "home") route = "activity";
       if (route && route.startsWith("sequence-edit-")) {
         const sid = route.replace(/^sequence-edit-/, "");
-        if (typeof loadSequenceEdit === "function") loadSequenceEdit(sid);
+        if (typeof loadAutomationWizard === "function") loadAutomationWizard(sid);
         route = "sequenceEdit";
       }
       let def = APP_ROUTES[route];
@@ -31547,232 +31959,603 @@
     })();
   </script>
   <script>
-async function loadSequenceEdit(sequenceId) {
-  const titleEl  = document.getElementById("seqEditTitle");
-  const subtitleEl = document.getElementById("seqEditSubtitle");
-  const stepsEl  = document.getElementById("seqEditSteps");
-  const saveBtn  = document.getElementById("seqEditSave");
-  const backBtn  = document.getElementById("seqEditBack");
-  if (!stepsEl) return;
+// ── Friendly-name token transform ──
+// Storage keeps {first_name} etc.; the UI shows [first name].
+const TOKEN_DISPLAY_MAP = [
+  ["{first_name}",     "[first name]"],
+  ["{last_name}",      "[last name]"],
+  ["{service_type}",   "[their service]"],
+  ["{appointment_at}", "[appointment time]"],
+  ["{phone}",          "[their phone]"],
+  ["{address}",        "[their address]"],
+  ["{owner_name}",     "[your name]"],
+  ["{reschedule_link}","[reschedule link]"],
+  ["{review_link}",    "[review link]"],
+];
 
-  // Back button — go back to automations tab
-  if (backBtn) {
-    backBtn.onclick = () => {
-      window.location.hash = "campaigns";
-      // Switch to the Automations sub-tab after a tick
-      setTimeout(() => {
-        const automTab = document.querySelector('.camp-subtab[data-camp-tab="sequences"]');
-        if (automTab) automTab.click();
-      }, 60);
-    };
-  }
+function toFriendly(text) {
+  let out = String(text || "");
+  for (const [a, b] of TOKEN_DISPLAY_MAP) out = out.split(a).join(b);
+  return out;
+}
 
-  let def = null;
+function toInternal(text) {
+  let out = String(text || "");
+  for (const [a, b] of TOKEN_DISPLAY_MAP) out = out.split(b).join(a);
+  return out;
+}
+
+// ── Automation summaries ──
+const AUTOMATION_SUMMARIES = {
+  "first_contact": "When a new lead comes in, we wait 30 seconds, then send them a quick 'we got your message' email. After that, if you haven't responded yourself within 5 minutes, we text you a reminder so you don't miss it.",
+  "job_onboarding": "When you book a job with a customer, we send them a confirmation right away. The day before the job, we send a friendly reminder. The morning of, we ping you with the day's appointments so you know what to prep for.",
+  "estimate_onboarding": "When you book an estimate, we send a confirmation email to the customer. The day before, we send them a reminder so they remember you're coming.",
+  "quote_followup": "After you send a quote, we follow up with the customer twice over the next two weeks. First a friendly check-in, then a softer nudge if they still haven't replied.",
+  "during_job": "While the work is happening, we ping you periodically to remind you to write down notes and snap a few photos. This helps when the customer asks questions later or wants to leave a review.",
+  "after_job": "When the job's done, we send a thank-you email and ask the customer to leave you a review. Six months later, we reach back out to see if they need anything else.",
+  "win_back": "When a lead has gone cold, we reach back out about a month later with a soft check-in. About one in five replies."
+};
+
+const AUTOMATION_ICONS = {
+  "first_contact":       "📥",
+  "job_onboarding":      "🛠️",
+  "estimate_onboarding": "📋",
+  "quote_followup":      "💬",
+  "during_job":          "📷",
+  "after_job":           "⭐",
+  "win_back":            "🔄",
+};
+
+// ── Friendly time helpers ──
+function friendlyTime(seconds) {
+  const s = Math.max(0, Math.round(Number(seconds) || 0));
+  if (s === 0)    return "right away";
+  if (s < 60)    { const n = s;               return `${n} second${n === 1 ? "" : "s"}`; }
+  if (s < 3600)  { const m = Math.round(s/60);  return `${m} minute${m === 1 ? "" : "s"}`; }
+  if (s < 86400) { const h = Math.round(s/3600); return `${h} hour${h === 1 ? "" : "s"}`; }
+  const d = Math.round(s/86400); return `${d} day${d === 1 ? "" : "s"}`;
+}
+
+function pickUnit(seconds) {
+  const s = Math.max(0, Number(seconds) || 0);
+  if (s === 0)    return { unit: "now",     value: 0 };
+  if (s < 60)    return { unit: "seconds", value: s };
+  if (s < 3600)  return { unit: "minutes", value: Math.round(s/60) };
+  if (s < 86400) return { unit: "hours",   value: Math.round(s/3600) };
+  return { unit: "days", value: Math.round(s/86400) };
+}
+
+function unitToSeconds(unit, value) {
+  const v = Math.max(0, Number(value) || 0);
+  if (unit === "now")     return 0;
+  if (unit === "seconds") return v;
+  if (unit === "minutes") return v * 60;
+  if (unit === "hours")   return v * 3600;
+  if (unit === "days")    return v * 86400;
+  return v;
+}
+
+// ── HTML escaping helpers ──
+function escHtmlWiz(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+function escAttrWiz(s) { return escHtmlWiz(s); }
+
+// ── Wizard state ──
+let WIZARD_STATE = {
+  sequenceId: null,
+  def: null,
+  emailEdits: [],
+  smsEdits: [],
+  ownerEdits: [],
+  waitEdits: [],
+  step: 1,
+  hasEmailSteps: false,
+  hasWaits: false,
+};
+
+// ── Entry point ──
+async function loadAutomationWizard(sequenceId) {
+  WIZARD_STATE = {
+    sequenceId,
+    def: null,
+    emailEdits: [],
+    smsEdits: [],
+    ownerEdits: [],
+    waitEdits: [],
+    step: 1,
+    hasEmailSteps: false,
+    hasWaits: false,
+  };
   try {
     const res = await fetch(`/me/sequences/${encodeURIComponent(sequenceId)}`,
                             { credentials: "same-origin" });
     if (!res.ok) return;
-    def = await res.json();
+    WIZARD_STATE.def = await res.json();
   } catch (_) { return; }
 
-  if (titleEl)    titleEl.textContent    = def.name || sequenceId;
-  if (subtitleEl) subtitleEl.textContent = `${(def.steps || []).length} steps in this automation — edit the words, then save.`;
+  (WIZARD_STATE.def.steps || []).forEach((s, i) => {
+    if (s.type === "send_email") {
+      WIZARD_STATE.emailEdits[i] = {
+        subject: toFriendly(s.subject || ""),
+        body:    toFriendly(s.body    || ""),
+      };
+      WIZARD_STATE.hasEmailSteps = true;
+    } else if (s.type === "send_sms") {
+      WIZARD_STATE.smsEdits[i] = { body: toFriendly(s.body || "") };
+      WIZARD_STATE.hasEmailSteps = true;
+    } else if (s.type === "owner_alert") {
+      WIZARD_STATE.ownerEdits[i] = { body: toFriendly(s.body || "") };
+    } else if (s.type === "wait") {
+      WIZARD_STATE.waitEdits[i] = { kind: "elapsed", seconds: Number(s.seconds || 0) };
+      WIZARD_STATE.hasWaits = true;
+    } else if (s.type === "wait_until_appointment") {
+      WIZARD_STATE.waitEdits[i] = { kind: "appt", offset: Number(s.offset_seconds_before || 0) };
+      WIZARD_STATE.hasWaits = true;
+    }
+  });
 
-  stepsEl.innerHTML = (def.steps || []).map((s, i) => seqEditStepHtml(s, i)).join("");
+  renderWizardHeader();
+  goToWizardStep(1);
+}
 
-  // ── Save button ──
-  saveBtn.onclick = async () => {
-    saveBtn.textContent = "Saving…";
-    saveBtn.disabled = true;
-    saveBtn.classList.remove("is-error");
+// Back-compat alias
+function loadSequenceEdit(sid) { return loadAutomationWizard(sid); }
+
+function renderWizardHeader() {
+  const def = WIZARD_STATE.def;
+  document.getElementById("wizIcon").textContent    = AUTOMATION_ICONS[def.id] || "⚙️";
+  document.getElementById("wizTitle").textContent   = def.name || def.id;
+  document.getElementById("wizSubtitle").textContent =
+    AUTOMATION_SUMMARIES[def.id] || "An automation that runs for new leads.";
+}
+
+function goToWizardStep(n) {
+  WIZARD_STATE.step = n;
+  // Skip timing screen when nothing to adjust
+  if (n === 3 && !WIZARD_STATE.hasWaits) { goToWizardStep(4); return; }
+
+  // Progress dots
+  document.querySelectorAll(".wiz-dot").forEach(d => {
+    const sn = Number(d.dataset.wizStep);
+    d.classList.toggle("is-active", sn === n);
+    d.classList.toggle("is-done",   sn < n);
+    if (sn === n) d.setAttribute("aria-current", "step");
+    else          d.removeAttribute("aria-current");
+  });
+
+  const labels = { 1: "Looking at it", 2: "Change the words",
+                   3: "Change the timing", 4: "Try it before saving" };
+  document.getElementById("wizStepLabel").textContent = labels[n] || "";
+  document.getElementById("wizBody").innerHTML = renderWizardBody(n);
+  attachWizardBodyHandlers(n);
+  renderWizardFooter(n);
+}
+
+function renderWizardBody(n) {
+  if (n === 1) return renderWizStep1();
+  if (n === 2) return renderWizStep2();
+  if (n === 3) return renderWizStep3();
+  if (n === 4) return renderWizStep4();
+  return "";
+}
+
+function renderWizardFooter(n) {
+  const back = document.getElementById("wizBackBtn");
+  const next = document.getElementById("wizNextBtn");
+  back.hidden = (n === 1);
+  back.onclick = () => {
+    // If no waits, skip from 4 back to 2
+    const prev = (n === 4 && !WIZARD_STATE.hasWaits) ? 2 : Math.max(1, n - 1);
+    goToWizardStep(prev);
+  };
+  if (n === 1) {
+    next.textContent = "Looks good, let me edit it";
+    next.onclick = () => goToWizardStep(2);
+  } else if (n === 2) {
+    next.textContent = WIZARD_STATE.hasWaits ? "Continue to timing" : "Continue to test";
+    next.onclick = () => goToWizardStep(3);
+  } else if (n === 3) {
+    next.textContent = "Continue to test";
+    next.onclick = () => goToWizardStep(4);
+  } else if (n === 4) {
+    next.textContent = "Save changes";
+    next.onclick = saveWizardChanges;
+  }
+}
+
+// ── Step 1: read-only summary + preview ──
+function renderWizStep1() {
+  const def = WIZARD_STATE.def;
+  const summary = AUTOMATION_SUMMARIES[def.id] || "An automation that runs for new leads.";
+
+  const sampleLead = {
+    "{first_name}":      "Sample",
+    "{last_name}":       "Customer",
+    "{service_type}":    "yard cleanup",
+    "{appointment_at}":  "Friday at 2pm",
+    "{phone}":           "(555) 123-4567",
+    "{address}":         "123 Main St",
+    "{owner_name}":      "the team",
+    "{reschedule_link}": "https://example.com/reschedule",
+    "{review_link}":     "https://example.com/review",
+  };
+  function fillSample(text) {
+    let out = String(text || "");
+    for (const [k, v] of Object.entries(sampleLead)) out = out.split(k).join(v);
+    return out;
+  }
+
+  const blocks = [];
+  let lastWait = null;
+  (def.steps || []).forEach((s) => {
+    if (s.type === "wait") {
+      lastWait = `then about ${friendlyTime(Number(s.seconds || 0))} later`;
+    } else if (s.type === "wait_until_appointment") {
+      lastWait = `then about ${friendlyTime(Number(s.offset_seconds_before || 0))} before the appointment`;
+    } else if (s.type === "send_email") {
+      blocks.push({ kind: "email", wait: lastWait,
+                    subject: fillSample(s.subject || ""),
+                    body:    fillSample(s.body    || "") });
+      lastWait = null;
+    } else if (s.type === "send_sms") {
+      blocks.push({ kind: "sms", wait: lastWait, body: fillSample(s.body || "") });
+      lastWait = null;
+    } else if (s.type === "owner_alert") {
+      blocks.push({ kind: "owner", wait: lastWait });
+      lastWait = null;
+    } else if (s.type === "ai_conversation") {
+      blocks.push({ kind: "ai", wait: lastWait });
+      lastWait = null;
+    }
+  });
+
+  const blocksHtml = blocks.map((b, idx) => {
+    const waitLine = b.wait
+      ? `<div class="wiz-mail-divider">${escHtmlWiz(b.wait)}</div>`
+      : (idx === 0 ? `<div class="wiz-mail-divider">When a new lead comes in:</div>` : "");
+    if (b.kind === "email") {
+      return `${waitLine}
+        <div class="wiz-mail">
+          <div class="wiz-mail-meta">📧 Email to your customer</div>
+          <div class="wiz-mail-subject">${escHtmlWiz(b.subject)}</div>
+          <div class="wiz-mail-body">${escHtmlWiz(b.body).replace(/\n/g, "<br>")}</div>
+        </div>`;
+    }
+    if (b.kind === "sms") {
+      return `${waitLine}
+        <div class="wiz-mail">
+          <div class="wiz-mail-meta">📱 Text to your customer</div>
+          <div class="wiz-mail-body">${escHtmlWiz(b.body).replace(/\n/g, "<br>")}</div>
+        </div>`;
+    }
+    if (b.kind === "owner") {
+      return `${waitLine}
+        <div class="wiz-mail wiz-mail-internal">
+          <div class="wiz-mail-meta">🔔 Reminder to you</div>
+          <div class="wiz-mail-body">This is just a heads-up to your phone — your customer doesn't see this. We'll remind you that the lead is waiting.</div>
+        </div>`;
+    }
+    if (b.kind === "ai") {
+      return `${waitLine}
+        <div class="wiz-mail wiz-mail-internal">
+          <div class="wiz-mail-meta">🤖 AI takes over</div>
+          <div class="wiz-mail-body">If you still haven't replied, the AI takes over the conversation so the customer never feels ignored.</div>
+        </div>`;
+    }
+    return "";
+  }).join("");
+
+  return `
+    <div class="wiz-summary-card">
+      <div class="wiz-summary-icon">📋</div>
+      <div>
+        <div class="wiz-summary-title">Here's what this automation does today:</div>
+        <p class="wiz-summary-text">${escHtmlWiz(summary)}</p>
+      </div>
+    </div>
+    <h3 class="wiz-section-h">What your customer will get</h3>
+    <div class="wiz-preview-list">${blocksHtml}</div>
+  `;
+}
+
+// ── Step 2: editable email/SMS cards ──
+function renderWizStep2() {
+  const def = WIZARD_STATE.def;
+  if (!WIZARD_STATE.hasEmailSteps) {
+    return `<div class="wiz-empty-card">
+      <div class="wiz-empty-emoji">✏️</div>
+      <p class="wiz-empty-text">There's nothing to edit here — this automation just sends you reminders, not customer emails.</p>
+    </div>`;
+  }
+  const cards = [];
+  let lastWait = null;
+  let emailNum = 0, smsNum = 0;
+  (def.steps || []).forEach((s, i) => {
+    if (s.type === "wait") {
+      lastWait = friendlyTime(Number(s.seconds || 0));
+    } else if (s.type === "wait_until_appointment") {
+      lastWait = friendlyTime(Number(s.offset_seconds_before || 0)) + " before the appointment";
+    } else if (s.type === "send_email") {
+      emailNum += 1;
+      const e = WIZARD_STATE.emailEdits[i];
+      const when = lastWait ? `Sent ${lastWait} after the lead arrives` : "Sent right when the lead comes in";
+      cards.push(emailEditCardHtml(i, emailNum, when, e));
+      lastWait = null;
+    } else if (s.type === "send_sms") {
+      smsNum += 1;
+      const e = WIZARD_STATE.smsEdits[i];
+      const when = lastWait ? `Sent ${lastWait} after` : "Sent right when the lead comes in";
+      cards.push(smsEditCardHtml(i, smsNum, when, e));
+      lastWait = null;
+    } else if (s.type === "owner_alert" || s.type === "ai_conversation") {
+      lastWait = null;
+    }
+  });
+  return `<div class="wiz-edit-tip">💡 You can use the buttons below each field to add personal info that gets filled in for each customer.</div>
+          ${cards.join("")}`;
+}
+
+function emailEditCardHtml(stepIdx, num, when, e) {
+  const subjectId = `wizEmailSubject-${stepIdx}`;
+  const bodyId    = `wizEmailBody-${stepIdx}`;
+  return `<div class="wiz-mail-edit-card" data-step="${stepIdx}" data-kind="email">
+    <div class="wiz-mail-badge">Email #${num} · ${escHtmlWiz(when)}</div>
+    <label class="wiz-input-label" for="${subjectId}">Subject line</label>
+    <input class="wiz-input" id="${subjectId}" data-field="subject" value="${escAttrWiz(e.subject)}" placeholder="What appears in the inbox">
+    <div class="wiz-pill-row" data-target-id="${subjectId}">${pillRowHtml()}</div>
+    <label class="wiz-input-label" for="${bodyId}">Email body</label>
+    <textarea class="wiz-textarea" id="${bodyId}" data-field="body" rows="7" placeholder="What you want to say">${escHtmlWiz(e.body)}</textarea>
+    <div class="wiz-pill-row" data-target-id="${bodyId}">${pillRowHtml()}</div>
+  </div>`;
+}
+
+function smsEditCardHtml(stepIdx, num, when, e) {
+  const bodyId = `wizSmsBody-${stepIdx}`;
+  return `<div class="wiz-mail-edit-card" data-step="${stepIdx}" data-kind="sms">
+    <div class="wiz-mail-badge">Text #${num} · ${escHtmlWiz(when)}</div>
+    <label class="wiz-input-label" for="${bodyId}">Message</label>
+    <textarea class="wiz-textarea" id="${bodyId}" data-field="body" rows="3" placeholder="Keep it short — texts are read fast">${escHtmlWiz(e.body)}</textarea>
+    <div class="wiz-pill-row" data-target-id="${bodyId}">${pillRowHtml()}</div>
+  </div>`;
+}
+
+function pillRowHtml() {
+  const visible = ["[first name]","[their service]","[their phone]","[appointment time]"];
+  return TOKEN_DISPLAY_MAP
+    .filter(([, friendly]) => visible.includes(friendly))
+    .map(([, friendly]) =>
+      `<button type="button" class="wiz-pill" data-insert="${escAttrWiz(friendly)}">${escHtmlWiz(friendly)}</button>`)
+    .join("");
+}
+
+function attachWizardBodyHandlers(n) {
+  if (n === 2) attachWizStep2Handlers();
+  if (n === 3) attachWizStep3Handlers();
+  if (n === 4) attachWizStep4Handlers();
+}
+
+function attachWizStep2Handlers() {
+  document.querySelectorAll(".wiz-mail-edit-card").forEach(card => {
+    const stepIdx = Number(card.dataset.step);
+    const kind    = card.dataset.kind;
+
+    // Live-update WIZARD_STATE on every keystroke
+    card.querySelectorAll("[data-field]").forEach(input => {
+      input.addEventListener("input", () => {
+        const field = input.dataset.field;
+        if (kind === "email" && WIZARD_STATE.emailEdits[stepIdx]) {
+          WIZARD_STATE.emailEdits[stepIdx][field] = input.value;
+        } else if (kind === "sms" && WIZARD_STATE.smsEdits[stepIdx]) {
+          WIZARD_STATE.smsEdits[stepIdx][field] = input.value;
+        }
+      });
+    });
+
+    // Pill insertion — inserts at cursor or appends
+    card.querySelectorAll(".wiz-pill").forEach(pill => {
+      pill.addEventListener("click", () => {
+        const insert   = pill.dataset.insert;
+        const pillRow  = pill.closest(".wiz-pill-row");
+        const targetId = pillRow && pillRow.dataset.targetId;
+        const target   = (targetId && document.getElementById(targetId)) ||
+                         card.querySelector(":focus") ||
+                         card.querySelector("textarea[data-field='body']");
+        if (!target) return;
+        const start = target.selectionStart != null ? target.selectionStart : target.value.length;
+        const end   = target.selectionEnd   != null ? target.selectionEnd   : target.value.length;
+        target.value = target.value.slice(0, start) + insert + target.value.slice(end);
+        target.focus();
+        target.selectionStart = target.selectionEnd = start + insert.length;
+        target.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+    });
+  });
+}
+
+// ── Step 3: timing ──
+function renderWizStep3() {
+  const def = WIZARD_STATE.def;
+  const rows = [];
+  (def.steps || []).forEach((s, i) => {
+    if (s.type !== "wait" && s.type !== "wait_until_appointment") return;
+    const w = WIZARD_STATE.waitEdits[i];
+    const seconds = w.kind === "appt" ? w.offset : w.seconds;
+    const { unit, value } = pickUnit(seconds);
+    const nextSend = nextSendStepFrom(def.steps, i);
+    const labelText = nextSend
+      ? `Before "${escHtmlWiz((nextSend.subject || nextSend.body || "next message").slice(0, 50))}"`
+      : "Before the next part";
+    const isAppt = w.kind === "appt";
+    rows.push(`<div class="wiz-time-row" data-step="${i}">
+      <div class="wiz-time-title">${labelText}</div>
+      <div class="wiz-time-sub">${isAppt ? "How long before the appointment?" : "How long should we wait?"}</div>
+      <div class="wiz-time-options">
+        ${unitOptionHtml(i, "now",     "Right away",           unit, value)}
+        ${unitOptionHtml(i, "seconds", "After a few seconds",  unit, value)}
+        ${unitOptionHtml(i, "minutes", "After a few minutes",  unit, value)}
+        ${unitOptionHtml(i, "hours",   "After a few hours",    unit, value)}
+        ${unitOptionHtml(i, "days",    "After a few days",     unit, value)}
+      </div>
+    </div>`);
+  });
+  return `<div class="wiz-edit-tip">Most people leave these alone. Only change them if you have a specific reason.</div>
+          ${rows.join("")}`;
+}
+
+function nextSendStepFrom(steps, fromIdx) {
+  for (let j = fromIdx + 1; j < steps.length; j++) {
+    if (["send_email","send_sms","owner_alert"].includes(steps[j].type)) return steps[j];
+  }
+  return null;
+}
+
+function unitOptionHtml(stepIdx, unit, label, currentUnit, currentValue) {
+  const checked   = unit === currentUnit ? "checked" : "";
+  const disabled  = (unit !== currentUnit && unit !== "now") ? "disabled" : "";
+  const invisible = (unit === "now") ? "" :
+    (unit !== currentUnit ? 'style="opacity:0;pointer-events:none;"' : '');
+  const input = (unit === "now") ? "" :
+    `<input class="wiz-time-input" type="number" min="0" max="999"
+            data-step="${stepIdx}" data-unit="${unit}"
+            value="${currentUnit === unit ? currentValue : ""}"
+            placeholder="0" ${unit !== currentUnit ? "disabled" : ""} ${invisible}>`;
+  return `<label class="wiz-time-opt">
+    <input type="radio" name="wiz-time-${stepIdx}" data-step="${stepIdx}" data-unit="${unit}" ${checked}>
+    <span class="wiz-time-label">${label}</span>
+    ${input}
+  </label>`;
+}
+
+function attachWizStep3Handlers() {
+  document.querySelectorAll(`input[type="radio"][name^="wiz-time-"]`).forEach(r => {
+    r.addEventListener("change", () => {
+      const stepIdx = Number(r.dataset.step);
+      const unit    = r.dataset.unit;
+      const w       = WIZARD_STATE.waitEdits[stepIdx];
+      const numInput = document.querySelector(
+        `input[type="number"][data-step="${stepIdx}"][data-unit="${unit}"]`);
+      const value = unit === "now" ? 0 : Number((numInput && numInput.value) || 0);
+      const seconds = unitToSeconds(unit, value);
+      if (w.kind === "appt") w.offset = seconds; else w.seconds = seconds;
+      goToWizardStep(3);
+    });
+  });
+  document.querySelectorAll(`input[type="number"][data-step]`).forEach(inp => {
+    inp.addEventListener("input", () => {
+      const stepIdx = Number(inp.dataset.step);
+      const unit    = inp.dataset.unit;
+      const w       = WIZARD_STATE.waitEdits[stepIdx];
+      const seconds = unitToSeconds(unit, Number(inp.value || 0));
+      if (w.kind === "appt") w.offset = seconds; else w.seconds = seconds;
+    });
+  });
+}
+
+// ── Step 4: send-test ──
+function renderWizStep4() {
+  return `
+    <h3 class="wiz-section-h">Try it before you save</h3>
+    <p class="wiz-helper-p">Send a test email to yourself. You'll get every customer-facing message in this automation, prefixed with [TEST] in the subject.</p>
+    <div class="wiz-test-card">
+      <label class="wiz-input-label" for="wizTestEmail">Send test to</label>
+      <input class="wiz-input" id="wizTestEmail" placeholder="you@yourbusiness.com" type="email" autocomplete="email">
+      <button type="button" class="wiz-btn wiz-btn-secondary" id="wizTestSend">Send a test to me</button>
+      <div class="wiz-test-status" id="wizTestStatus"></div>
+    </div>
+    <p class="wiz-helper-p" style="margin-top:24px;">When you're happy, click <strong>Save changes</strong> below to make these updates live for new leads.</p>`;
+}
+
+function attachWizStep4Handlers() {
+  const btn    = document.getElementById("wizTestSend");
+  const status = document.getElementById("wizTestStatus");
+  if (!btn) return;
+  btn.onclick = async () => {
+    const to = (document.getElementById("wizTestEmail").value || "").trim();
+    if (!to) {
+      status.textContent = "Type your email above first.";
+      status.className   = "wiz-test-status err";
+      return;
+    }
+    btn.disabled = true; btn.textContent = "Sending…";
+    status.textContent = ""; status.className = "wiz-test-status";
     try {
-      const updated = seqEditCollect(def);
-      const res = await fetch(`/me/sequences/${encodeURIComponent(sequenceId)}`, {
+      await persistWizardEdits();
+      const res = await fetch(`/me/sequences/${encodeURIComponent(WIZARD_STATE.sequenceId)}/test`, {
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updated),
+        body: JSON.stringify({ to }),
       });
-      if (res.ok) {
-        saveBtn.textContent = "Saved ✓";
-        setTimeout(() => {
-          saveBtn.textContent = "Save changes";
-          saveBtn.disabled = false;
-        }, 2000);
+      const body = await res.json().catch(() => ({}));
+      if (res.ok && body.ok) {
+        status.textContent = "✅ Test sent! Check your inbox.";
+        status.className   = "wiz-test-status ok";
+      } else if (body.error === "no_send_email_step") {
+        status.textContent = "This automation has no email parts to test.";
+        status.className   = "wiz-test-status err";
       } else {
-        throw new Error("not ok");
+        status.textContent = "Couldn't send the test. Try again in a moment.";
+        status.className   = "wiz-test-status err";
       }
     } catch (_) {
-      saveBtn.textContent = "Couldn't save — try again";
-      saveBtn.classList.add("is-error");
-      saveBtn.disabled = false;
+      status.textContent = "Couldn't send the test. Try again in a moment.";
+      status.className   = "wiz-test-status err";
+    } finally {
+      btn.disabled = false; btn.textContent = "Send a test to me";
     }
   };
-
-  // ── Test button — inline modal ──
-  const testBtn = document.getElementById("seqEditTest");
-  if (testBtn) {
-    testBtn.onclick = () => {
-      // Build modal
-      const backdrop = document.createElement("div");
-      backdrop.className = "seq-test-backdrop";
-      backdrop.innerHTML = `
-        <div class="seq-test-modal" role="dialog" aria-modal="true" aria-labelledby="seqTestModalTitle">
-          <h3 class="seq-test-modal-title" id="seqTestModalTitle">Send a test email</h3>
-          <p class="seq-test-modal-sub">We'll fire off the first email step to make sure it looks right.</p>
-          <div class="seq-field-row">
-            <label class="seq-field-label" for="seqTestEmailInput">Your email address</label>
-            <input id="seqTestEmailInput" type="email" class="seq-field-input"
-                   placeholder="you@yourdomain.com" autocomplete="email" />
-          </div>
-          <div class="seq-test-modal-actions">
-            <button type="button" class="seq-test-cancel-btn" id="seqTestCancel">Cancel</button>
-            <button type="button" class="seq-test-send-btn" id="seqTestSend">Send test</button>
-          </div>
-        </div>`;
-      document.body.appendChild(backdrop);
-
-      const input   = backdrop.querySelector("#seqTestEmailInput");
-      const sendBtn = backdrop.querySelector("#seqTestSend");
-      const cancelBtn = backdrop.querySelector("#seqTestCancel");
-      input.focus();
-
-      function closeModal() { backdrop.remove(); }
-
-      cancelBtn.addEventListener("click", closeModal);
-      backdrop.addEventListener("click", (ev) => {
-        if (ev.target === backdrop) closeModal();
-      });
-
-      sendBtn.addEventListener("click", async () => {
-        const to = input.value.trim();
-        if (!to) { input.focus(); return; }
-        sendBtn.textContent = "Sending…";
-        sendBtn.disabled = true;
-        testBtn.textContent = "Sending…";
-        testBtn.disabled = true;
-        try {
-          const res = await fetch(`/me/sequences/${encodeURIComponent(sequenceId)}/test`, {
-            method: "POST",
-            credentials: "same-origin",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ to }),
-          });
-          const data = await res.json().catch(() => ({}));
-          closeModal();
-          if (res.ok && data.ok) {
-            testBtn.textContent = "Sent ✓ — check your inbox";
-            setTimeout(() => {
-              testBtn.textContent = "Send a test email to me";
-              testBtn.disabled = false;
-            }, 3000);
-          } else {
-            const errMsg = data.error === "no_send_email_step"
-              ? "This automation has no email steps to test"
-              : "Couldn't send — try again";
-            testBtn.textContent = errMsg;
-            testBtn.disabled = false;
-          }
-        } catch (_) {
-          closeModal();
-          testBtn.textContent = "Couldn't send — try again";
-          testBtn.disabled = false;
-        }
-      });
-    };
-  }
 }
 
-function seqEditStepHtml(step, idx) {
-  const id = (k) => `seqStep-${idx}-${k}`;
-  const e = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  }[c]));
-
-  // Plain-language type labels + icons
-  const TYPE_META = {
-    "send_email":  { icon: "✉️",  label: "Email",           desc: "Sends an email to the lead." },
-    "send_sms":    { icon: "💬",  label: "Text message",    desc: "Sends a text message to the lead." },
-    "owner_alert": { icon: "🔔",  label: "Alert me",        desc: "Sends you a reminder or heads-up." },
-    "wait":        { icon: "⏳",  label: "Wait",            desc: "Pauses before the next step goes out." },
-    "ai_handoff":  { icon: "🤖",  label: "AI takes over",   desc: "Passes the conversation to AI from here." },
-  };
-  const meta = TYPE_META[step.type] || { icon: "⚙️", label: e(step.type), desc: "" };
-
-  const TOKENS_HINT = `<p class="seq-field-tokens">You can use these in your message:
-    <code>{first_name}</code> <code>{service_type}</code>
-    <code>{appointment_at}</code> <code>{phone}</code></p>`;
-
-  let inner = "";
-  if (step.type === "send_email") {
-    inner = `
-      <div class="seq-field-row">
-        <label class="seq-field-label" for="${id('subject')}">Subject line</label>
-        <input id="${id('subject')}" type="text" class="seq-field-input"
-               value="${e(step.subject || '')}" autocomplete="off">
-        ${TOKENS_HINT}
-      </div>
-      <div class="seq-field-row">
-        <label class="seq-field-label" for="${id('body')}">Email body</label>
-        <textarea id="${id('body')}" rows="6" class="seq-field-textarea">${e(step.body || '')}</textarea>
-        ${TOKENS_HINT}
-      </div>`;
-  } else if (step.type === "send_sms") {
-    inner = `
-      <div class="seq-field-row">
-        <label class="seq-field-label" for="${id('body')}">Message text</label>
-        <textarea id="${id('body')}" rows="4" class="seq-field-textarea">${e(step.body || '')}</textarea>
-        ${TOKENS_HINT}
-      </div>`;
-  } else if (step.type === "owner_alert") {
-    inner = `
-      <div class="seq-field-row">
-        <label class="seq-field-label" for="${id('body')}">Alert message</label>
-        <textarea id="${id('body')}" rows="3" class="seq-field-textarea">${e(step.body || '')}</textarea>
-        ${TOKENS_HINT}
-      </div>`;
-  } else if (step.type === "wait") {
-    inner = `
-      <div class="seq-step-placeholder">⏳ This step waits before the next message goes out.</div>
-      <div class="seq-field-row" style="margin-top:14px;">
-        <label class="seq-field-label" for="${id('seconds')}">How long to wait (in seconds)</label>
-        <input id="${id('seconds')}" type="number" class="seq-field-input" style="max-width:200px;"
-               value="${e(step.seconds || 0)}" min="0">
-      </div>`;
-  } else if (step.type === "ai_handoff") {
-    inner = `<div class="seq-step-placeholder">🤖 This step doesn't need any wording — it activates the AI to take over the conversation from here.</div>`;
-  } else {
-    inner = `<div class="seq-step-placeholder">This step activates automatically — no wording needed.</div>`;
-  }
-
-  const userLabel = step.label ? `<span style="font-size:12px;color:var(--seq-muted);margin-left:6px;">${e(step.label)}</span>` : "";
-
-  return `
-    <div class="seq-step-card" data-step-idx="${idx}">
-      <div class="seq-step-num-col">
-        <div class="seq-step-num">${idx + 1}</div>
-      </div>
-      <div class="seq-step-content">
-        <div style="margin-bottom:6px;">
-          <span class="seq-step-type-badge">${meta.icon} ${meta.label}</span>${userLabel}
-        </div>
-        <p class="seq-step-label">${meta.desc}</p>
-        ${inner}
-      </div>
-    </div>`;
-}
-
-function seqEditCollect(originalDef) {
-  const out = JSON.parse(JSON.stringify(originalDef));
-  (out.steps || []).forEach((s, i) => {
-    const subject = document.getElementById(`seqStep-${i}-subject`);
-    const body    = document.getElementById(`seqStep-${i}-body`);
-    const seconds = document.getElementById(`seqStep-${i}-seconds`);
-    if (subject) s.subject = subject.value;
-    if (body)    s.body    = body.value;
-    if (seconds) s.seconds = parseInt(seconds.value || 0, 10);
+// ── Save ──
+async function persistWizardEdits() {
+  const def = JSON.parse(JSON.stringify(WIZARD_STATE.def));
+  (def.steps || []).forEach((s, i) => {
+    if (s.type === "send_email" && WIZARD_STATE.emailEdits[i]) {
+      s.subject = toInternal(WIZARD_STATE.emailEdits[i].subject);
+      s.body    = toInternal(WIZARD_STATE.emailEdits[i].body);
+    } else if (s.type === "send_sms" && WIZARD_STATE.smsEdits[i]) {
+      s.body = toInternal(WIZARD_STATE.smsEdits[i].body);
+    } else if (s.type === "owner_alert" && WIZARD_STATE.ownerEdits[i]) {
+      s.body = toInternal(WIZARD_STATE.ownerEdits[i].body);
+    } else if (s.type === "wait" && WIZARD_STATE.waitEdits[i]) {
+      s.seconds = WIZARD_STATE.waitEdits[i].seconds;
+    } else if (s.type === "wait_until_appointment" && WIZARD_STATE.waitEdits[i]) {
+      s.offset_seconds_before = WIZARD_STATE.waitEdits[i].offset;
+    }
   });
-  return out;
+  const res = await fetch(`/me/sequences/${encodeURIComponent(def.id)}`, {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(def),
+  });
+  if (!res.ok) throw new Error("save_failed");
+  WIZARD_STATE.def = def;
+  return def;
+}
+
+async function saveWizardChanges() {
+  const next = document.getElementById("wizNextBtn");
+  next.disabled = true;
+  next.textContent = "Saving…";
+  try {
+    await persistWizardEdits();
+    const toast = document.getElementById("wizToast");
+    toast.textContent = "Saved! Your customers will get the updated version starting now.";
+    toast.hidden = false;
+    setTimeout(() => { window.location.hash = "campaigns"; }, 1800);
+  } catch (_) {
+    next.textContent  = "Couldn't save — try again";
+    next.style.background = "#b91c1c";
+    setTimeout(() => {
+      next.disabled = false;
+      next.textContent = "Save changes";
+      next.style.background = "";
+    }, 2400);
+  }
 }
   </script>
   <script>
