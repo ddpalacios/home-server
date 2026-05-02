@@ -13809,27 +13809,37 @@
         <div class="ig-page" style="grid-column: span 12;">
           <div id="igReconnectBanner" class="ig-banner" hidden></div>
 
-          <div class="ig-toolbar">
-            <select id="igAccountFilter" class="ig-account-filter"></select>
-            <div class="ig-month-controls">
-              <button class="ig-prev" type="button" aria-label="Previous month">&#8249;</button>
-              <span id="igMonthLabel" class="ig-month-label"></span>
-              <button class="ig-next" type="button" aria-label="Next month">&#8250;</button>
-              <button class="ig-today" type="button">Today</button>
+          <!-- Connected state — toolbar + calendar/list. Hidden until at
+               least one Instagram account is linked. -->
+          <div id="igConnected" hidden>
+            <div class="ig-toolbar">
+              <select id="igAccountFilter" class="ig-account-filter"></select>
+              <div class="ig-month-controls">
+                <button class="ig-prev" type="button" aria-label="Previous month">&#8249;</button>
+                <span id="igMonthLabel" class="ig-month-label"></span>
+                <button class="ig-next" type="button" aria-label="Next month">&#8250;</button>
+                <button class="ig-today" type="button">Today</button>
+              </div>
+              <div class="ig-view-toggle" role="tablist" aria-label="View mode">
+                <button id="igViewCalendar" type="button" role="tab" aria-selected="true">Calendar</button>
+                <button id="igViewList"     type="button" role="tab" aria-selected="false">List</button>
+              </div>
+              <button id="igNewPostBtn" type="button" class="ig-primary-btn">+ New post</button>
             </div>
-            <div class="ig-view-toggle" role="tablist" aria-label="View mode">
-              <button id="igViewCalendar" type="button" role="tab" aria-selected="true">Calendar</button>
-              <button id="igViewList"     type="button" role="tab" aria-selected="false">List</button>
-            </div>
-            <button id="igNewPostBtn" type="button" class="btn shiny">+ New post</button>
+
+            <div id="igCalendar" class="ig-calendar"></div>
+            <div id="igList" class="ig-list" hidden></div>
           </div>
 
-          <div id="igCalendar" class="ig-calendar"></div>
-          <div id="igList" class="ig-list" hidden></div>
-
-          <div id="igEmpty" class="ig-empty" hidden>
-            <p>No Instagram account connected yet.</p>
-            <a href="/me/instagram/oauth/start" class="btn shiny">Connect Instagram</a>
+          <!-- Empty state — focused connect prompt when no IG account exists. -->
+          <div id="igEmpty" class="ig-empty-card" hidden>
+            <span class="ig-empty-accent" aria-hidden="true"></span>
+            <div class="ig-empty-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg>
+            </div>
+            <h3 class="ig-empty-h">Connect Instagram to start scheduling.</h3>
+            <p class="ig-empty-text">Plan posts ahead, see them in a calendar, and watch your engagement grow — all in one place.</p>
+            <a href="/me/instagram/oauth/start" class="ig-primary-btn">Connect Instagram</a>
           </div>
         </div>
       </section>
@@ -26554,30 +26564,85 @@
       padding: 8px 14px; border-radius: 8px; margin-bottom: 10px;
       font-size: 13px; cursor: pointer; border: 1px solid #fca5a5;
     }
+
+    /* Toolbar — single row, segmented controls match the rest of the app. */
     .ig-toolbar {
       display: flex; gap: 10px; align-items: center;
-      padding: 10px 0 14px; flex-wrap: wrap;
+      padding: 4px 0 16px; flex-wrap: wrap;
     }
+    .ig-toolbar .ig-spacer { flex: 1; }
     .ig-account-filter {
-      padding: 6px 10px; border: 1px solid var(--border, #e5e7eb);
-      border-radius: 7px; font-size: 13px; background: white; cursor: pointer;
+      height: 34px; padding: 0 28px 0 12px;
+      border: 1px solid #e5e7eb; border-radius: 8px;
+      font-size: 13px; font-family: inherit;
+      background: #fff; cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2364748b' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
     }
+    .ig-account-filter:hover { border-color: #cbd5e1; }
+    .ig-account-filter:focus { outline: none; border-color: #185FA5; box-shadow: 0 0 0 3px rgba(24,95,165,0.10); }
+
     .ig-month-controls { display: flex; align-items: center; gap: 4px; }
-    .ig-month-controls button {
-      background: white; border: 1px solid var(--border, #e5e7eb);
-      padding: 5px 11px; border-radius: 7px; cursor: pointer;
-      font-size: 13px; transition: background 0.15s;
+    .ig-month-controls .ig-prev,
+    .ig-month-controls .ig-next {
+      width: 34px; height: 34px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: #fff; color: #525252;
+      border: 1px solid #e5e7eb; border-radius: 8px;
+      font-size: 16px; line-height: 1; cursor: pointer;
+      font-family: inherit;
+      transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
     }
-    .ig-month-controls button:hover { background: #f0f4ff; }
+    .ig-month-controls .ig-prev:hover,
+    .ig-month-controls .ig-next:hover { background: #f9fafb; border-color: #cbd5e1; color: #0a0a0a; }
+    .ig-month-controls .ig-today {
+      height: 34px; padding: 0 14px;
+      background: transparent; color: #525252;
+      border: 1px solid #e5e7eb; border-radius: 8px;
+      font-size: 13px; font-weight: 500; font-family: inherit;
+      cursor: pointer;
+      transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+    }
+    .ig-month-controls .ig-today:hover { background: #f9fafb; border-color: #cbd5e1; color: #0a0a0a; }
     .ig-month-label { font-weight: 600; font-size: 14px; min-width: 130px; text-align: center; }
-    .ig-view-toggle { display: flex; border: 1px solid var(--border, #e5e7eb); border-radius: 7px; overflow: hidden; }
+
+    /* Segmented Calendar / List toggle — matches the existing pl-views pattern. */
+    .ig-view-toggle {
+      display: inline-flex; gap: 0;
+      border: 1px solid #e5e7eb; border-radius: 8px;
+      padding: 2px; background: #f4f4f5;
+    }
     .ig-view-toggle button {
-      padding: 5px 14px; border: none; background: white;
-      font-size: 13px; cursor: pointer; transition: background 0.15s, color 0.15s;
+      padding: 6px 14px;
+      font-size: 12.5px; font-weight: 500; font-family: inherit;
+      color: #525252; background: transparent;
+      border: 0; border-radius: 6px; cursor: pointer;
+      transition: background 0.12s ease, color 0.12s ease;
     }
+    .ig-view-toggle button:hover { color: #0a0a0a; }
     .ig-view-toggle button[aria-selected="true"] {
-      background: #eef4ff; color: #0d6efd; font-weight: 600;
+      background: #fff; color: #0a0a0a;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
     }
+
+    /* Primary "+ New post" / "Connect Instagram" button — same dark fill as
+       every other primary button in the app. No glow, no green, no underline. */
+    .ig-primary-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+      height: 34px; padding: 0 16px;
+      background: linear-gradient(180deg, #1f2937, #0a0a0a);
+      color: #fff; text-decoration: none;
+      border: 0; border-radius: 8px;
+      font-size: 13px; font-weight: 500; font-family: inherit;
+      cursor: pointer; white-space: nowrap;
+      transition: transform 0.08s ease, box-shadow 0.12s ease;
+    }
+    .ig-primary-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(15,23,42,0.16); }
+    .ig-primary-btn:active { transform: translateY(0); }
+    /* Push the New-post button to the far right of the toolbar. */
+    #igNewPostBtn { margin-left: auto; }
     .ig-calendar {
       display: grid; grid-template-columns: repeat(7, 1fr);
       gap: 1px; background: var(--border, #e5e7eb);
@@ -26620,8 +26685,35 @@
     .ig-status--err   { background: #fde8e8; color: #b91c1c; }
     .ig-status--pub   { background: #dcfce7; color: #166534; }
     .ig-status--sched { background: #dbeafe; color: #1d4ed8; }
-    .ig-empty { padding: 40px 20px; text-align: center; color: #6b7280; }
-    .ig-empty-msg { color: #6b7280; font-size: 14px; margin: 16px 0; }
+    /* Focused empty-state card. Centered, breathable, single primary action. */
+    .ig-empty-card {
+      position: relative;
+      max-width: 480px; margin: 24px auto;
+      padding: 64px 32px;
+      background: #fff;
+      border: 1px solid #e5e7eb; border-radius: 12px;
+      text-align: center;
+      overflow: hidden;
+    }
+    .ig-empty-accent {
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #d946ef 0%, #f97316 100%);
+    }
+    .ig-empty-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #94a3b8;
+      margin-bottom: 18px;
+    }
+    .ig-empty-h {
+      font-size: 16px; font-weight: 600; color: #0a0a0a;
+      margin: 0 0 8px;
+    }
+    .ig-empty-text {
+      font-size: 13.5px; color: #6b7280; line-height: 1.55;
+      margin: 0 auto 22px; max-width: 360px;
+    }
+    .ig-empty-card .ig-primary-btn { height: 38px; padding: 0 20px; font-size: 13px; }
     /* Composer modal */
     .ig-modal-backdrop {
       position: fixed; inset: 0; background: rgba(0,0,0,0.45);

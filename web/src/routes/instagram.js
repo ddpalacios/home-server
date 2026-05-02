@@ -456,15 +456,15 @@ function openComposer({ date, post_id } = {}) {
 // ─── Empty-state guard ────────────────────────────────────────────────────────
 
 function _updateEmptyState() {
-  const empty = document.getElementById("igEmpty");
-  const cal   = document.getElementById("igCalendar");
-  if (!empty) return;
+  const empty     = document.getElementById("igEmpty");
+  const connected = document.getElementById("igConnected");
+  if (!empty || !connected) return;
   if (!_accounts.length) {
     empty.removeAttribute("hidden");
-    cal?.setAttribute("hidden", "");
+    connected.setAttribute("hidden", "");
   } else {
     empty.setAttribute("hidden", "");
-    cal?.removeAttribute("hidden");
+    connected.removeAttribute("hidden");
   }
 }
 
