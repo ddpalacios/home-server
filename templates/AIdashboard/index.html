@@ -6988,6 +6988,12 @@
               <p class="section-note" id="seqEditSubtitle">Edit the steps, body copy, and timing.</p>
             </div>
             <div style="display:flex;gap:8px;">
+              <button type="button" id="seqEditTest"
+                      style="padding:6px 12px;font-size:12px;background:#fff;color:#374151;
+                             border:1px solid #e5e7eb;border-radius:6px;cursor:pointer;
+                             margin-right:8px;">
+                Send test
+              </button>
               <button type="button" id="seqEditSave"
                       style="padding:6px 12px;font-size:12px;background:#0a0a0a;color:#fff;border:0;border-radius:6px;cursor:pointer;">
                 Save
@@ -30932,6 +30938,39 @@ async function loadSequenceEdit(sequenceId) {
       body: JSON.stringify(updated),
     });
   };
+  const testBtn = document.getElementById("seqEditTest");
+  if (testBtn) {
+    testBtn.onclick = async () => {
+      const to = prompt("Send test to which email?",
+                        // best effort: the logged-in user's email if exposed in DOM
+                        "your-email@example.com");
+      if (!to) return;
+      testBtn.textContent = "Sending…";
+      testBtn.disabled = true;
+      try {
+        const res = await fetch(`/me/sequences/${encodeURIComponent(sequenceId)}/test`, {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ to }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.ok) {
+          testBtn.textContent = "Sent ✓";
+        } else {
+          testBtn.textContent = data.error === "no_send_email_step"
+            ? "No email step to test"
+            : "Send failed";
+        }
+      } catch (_) {
+        testBtn.textContent = "Send failed";
+      }
+      setTimeout(() => {
+        testBtn.textContent = "Send test";
+        testBtn.disabled = false;
+      }, 2000);
+    };
+  }
 }
 
 function seqEditStepHtml(step, idx) {
