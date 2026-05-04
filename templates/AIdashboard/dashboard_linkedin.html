@@ -9792,6 +9792,404 @@
       });
     }
 
+    /* ── Bulk media generation modal + progress UI ─────────────────── */
+    async function mgFetchPrefs(){
+      try {
+        var r = await fetch("/dashboard/linkedin/api/media/prefs",
+          { credentials: "same-origin" });
+        if (!r.ok) return null;
+        return await r.json();
+      } catch (e) { return null; }
+    }
+
+    async function mgSavePrefs(mix){
+      try {
+        await fetch("/dashboard/linkedin/api/media/prefs", {
+          method: "POST", credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mix_distribution: mix }),
+        });
+      } catch (e) { /* best-effort */ }
+    }
+
+    function _mgPctCounts(n, mix){
+      // Mirror the server distribution math so the modal preview matches.
+      var totalPct = (mix.image | 0) + (mix.carousel | 0) + (mix.video | 0);
+      if (totalPct === 0) return { image: n, carousel: 0, video: 0 };
+      var img = Math.round(n * mix.image    / totalPct);
+      var car = Math.round(n * mix.carousel / totalPct);
+      var vid = Math.round(n * mix.video    / totalPct);
+      var diff = n - (img + car + vid);
+      img = Math.max(0, img + diff);
+      return { image: img, carousel: car, video: vid };
+    }
+
+    function _mgEstimate(counts){
+      var rates = {
+        image:    { cost: 0.50, minutes: 1.0 },
+        carousel: { cost: 1.00, minutes: 1.5 },
+        video:    { cost: 2.00, minutes: 4.0 },
+      };
+      var cost = 0, totalMin = 0;
+      Object.keys(counts).forEach(k => {
+        cost     += counts[k] * rates[k].cost;
+        totalMin += counts[k] * rates[k].minutes;
+      });
+      // Five run in parallel, so wall-clock time ≈ totalMin / 5.
+      var wallMin = Math.max(1, Math.round(totalMin / 5));
+      return { cost: cost, wall_minutes: wallMin };
+    }
+
+    async function mgOpenBulkModal(kind, parent_id, post_ids){
+      _planCloseModal();
+      var n = post_ids.length;
+      // Load saved prefs (or default 60/30/10).
+      var pr = await mgFetchPrefs();
+      var savedMix = (pr && pr.prefs && pr.prefs.mix_distribution) || {
+        image: 60, carousel: 30, video: 10,
+      };
+      var state = {
+        n: n,
+        mix: { image: savedMix.image | 0,
+               carousel: savedMix.carousel | 0,
+               video: savedMix.video | 0 },
+        running_job: null,
+      };
+
+      var bg = document.createElement("div");
+      bg.id = "plan-modal-bg";
+      bg.className = "plan-modal-bg";
+      bg.innerHTML =
+          '<div class="plan-modal" role="dialog" aria-modal="true">'
+        +   '<div class="plan-modal-h">'
+        +     '<div class="plan-modal-title">Make media for ' + n + ' posts</div>'
+        +     '<button class="plan-modal-x" type="button" '
+        +       'aria-label="Close" id="mg-bulk-x">×</button>'
+        +   '</div>'
+        +   '<div class="plan-modal-body" id="mg-bulk-body">'
+        +     '<div class="plan-section-h" style="margin-bottom:10px">How should we split it?</div>'
+        +     mgSliderRow("image",    "Pictures")
+        +     mgSliderRow("carousel", "Carousels")
+        +     mgSliderRow("video",    "Short videos")
+        +     '<div style="display:flex;gap:8px;margin:10px 0 12px">'
+        +       '<button class="btn btn-ghost" type="button" id="mg-preset-mine">Use my mix</button>'
+        +       '<button class="btn btn-ghost" type="button" id="mg-preset-img">Just pictures</button>'
+        +     '</div>'
+        +     '<div class="plan-total-line" id="mg-est-total"></div>'
+        +     '<div class="mg-est-line" id="mg-est-cost"></div>'
+        +     '<div class="mg-est-line" id="mg-est-time"></div>'
+        +   '</div>'
+        +   '<div class="plan-modal-footer">'
+        +     '<button class="btn btn-ghost" type="button" id="mg-bulk-cancel">Cancel</button>'
+        +     '<button class="btn btn-primary" type="button" id="mg-bulk-go">Make all ' + n + '</button>'
+        +   '</div>'
+        + '</div>';
+      document.body.appendChild(bg);
+      document.getElementById("mg-bulk-x").onclick      = () => bg.remove();
+      document.getElementById("mg-bulk-cancel").onclick = () => bg.remove();
+
+      function refresh(){
+        var counts = _mgPctCounts(state.n, state.mix);
+        ["image","carousel","video"].forEach(k => {
+          var s   = bg.querySelector('input[data-mg-slider="' + k + '"]');
+          var pct = bg.querySelector('[data-mg-pct="' + k + '"]');
+          var cnt = bg.querySelector('[data-mg-cnt="' + k + '"]');
+          if (s)   s.value = state.mix[k];
+          if (pct) pct.textContent = state.mix[k] + "%";
+          if (cnt) cnt.textContent = "(" + counts[k] + " post"
+                    + (counts[k] === 1 ? "" : "s") + ")";
+        });
+        var est = _mgEstimate(counts);
+        var totalEl = document.getElementById("mg-est-total");
+        var costEl  = document.getElementById("mg-est-cost");
+        var timeEl  = document.getElementById("mg-est-time");
+        if (totalEl) totalEl.textContent = "Total: " + state.n + " posts.";
+        if (costEl)  costEl.textContent  = "Cost: about $" + est.cost.toFixed(2);
+        if (timeEl)  timeEl.textContent  = "Time: about " + est.wall_minutes
+          + " minute" + (est.wall_minutes === 1 ? "" : "s");
+      }
+      function autoBalance(changed){
+        // Sliders sum to 100. When user moves one, scale the others
+        // proportionally so total stays 100.
+        var others = ["image","carousel","video"].filter(k => k !== changed);
+        var leftover = 100 - state.mix[changed];
+        var sumOthers = state.mix[others[0]] + state.mix[others[1]];
+        if (sumOthers <= 0) {
+          // Both others are 0 — split leftover evenly.
+          state.mix[others[0]] = Math.round(leftover / 2);
+          state.mix[others[1]] = leftover - state.mix[others[0]];
+        } else {
+          state.mix[others[0]] = Math.round(leftover * state.mix[others[0]] / sumOthers);
+          state.mix[others[1]] = leftover - state.mix[others[0]];
+        }
+      }
+      bg.querySelectorAll("[data-mg-slider]").forEach(s =>
+        s.addEventListener("input", (e) => {
+          var key = s.dataset.mgSlider;
+          state.mix[key] = Number(s.value) || 0;
+          autoBalance(key);
+          refresh();
+        }));
+      document.getElementById("mg-preset-mine").onclick = () => {
+        state.mix = { image: savedMix.image | 0,
+                      carousel: savedMix.carousel | 0,
+                      video: savedMix.video | 0 };
+        refresh();
+      };
+      document.getElementById("mg-preset-img").onclick = () => {
+        state.mix = { image: 100, carousel: 0, video: 0 };
+        refresh();
+      };
+      document.getElementById("mg-bulk-go").onclick = async () => {
+        var btn = document.getElementById("mg-bulk-go");
+        btn.disabled = true; btn.textContent = "Starting…";
+        try {
+          var r = await fetch("/dashboard/linkedin/api/media/generate-bulk", {
+            method: "POST", credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              kind: kind, parent_id: parent_id,
+              post_ids: post_ids,
+              mix_distribution: state.mix,
+            }),
+          });
+          var d = await r.json().catch(()=>({}));
+          if (!r.ok || !d.ok) {
+            toast("Couldn't start: " + (d.error || ("HTTP " + r.status)));
+            btn.disabled = false; btn.textContent = "Make all " + n;
+            return;
+          }
+          mgSavePrefs(state.mix);
+          state.running_job = d.job;
+          mgRenderProgress(bg, kind, parent_id, d.job);
+          mgPollJob(kind, parent_id, d.job_id, bg);
+        } catch (e) {
+          toast("Network error: " + e.message);
+          btn.disabled = false; btn.textContent = "Make all " + n;
+        }
+      };
+
+      refresh();
+    }
+
+    function mgSliderRow(key, label){
+      return ''
+        + '<div class="mg-slider-row">'
+        +   '<div>' + esc(label) + '</div>'
+        +   '<input type="range" min="0" max="100" data-mg-slider="' + key + '" value="0"/>'
+        +   '<div class="mg-pct" data-mg-pct="' + key + '">0%</div>'
+        +   '<div class="mg-cnt" data-mg-cnt="' + key + '">(0 posts)</div>'
+        + '</div>';
+    }
+
+    function mgRenderProgress(bg, kind, parent_id, job){
+      var body = bg.querySelector("#mg-bulk-body");
+      var footer = bg.querySelector(".plan-modal-footer");
+      var n = job.total_posts || (job.post_ids || []).length || 0;
+      body.innerHTML =
+          '<div class="plan-section-h" style="margin-bottom:6px">'
+        +   '<span id="mg-prog-label">' + (job.completed_posts || 0)
+        +   ' of ' + n + ' done</span>'
+        + '</div>'
+        + '<div class="mg-progress-bar"><div class="mg-progress-fill" id="mg-prog-fill"></div></div>'
+        + '<div class="mg-progress-list" id="mg-prog-list"></div>'
+        + '<div class="mg-est-line" id="mg-prog-eta">Working on it…</div>';
+      footer.innerHTML =
+          '<button class="btn btn-ghost" type="button" id="mg-bulk-bg">Run in background</button>'
+        + '<button class="btn" type="button" id="mg-bulk-cancel-job">Cancel</button>';
+      bg.querySelector("#mg-bulk-bg").onclick = () => {
+        STATE.mg.bulk_minimized = true;
+        bg.remove();
+        mgShowBanner(kind, parent_id, job);
+      };
+      bg.querySelector("#mg-bulk-cancel-job").onclick = async () => {
+        if (!confirm("Cancel this run? In-flight posts may finish.")) return;
+        try {
+          await fetch("/dashboard/linkedin/api/media/job/"
+            + encodeURIComponent(job.job_id), {
+            method: "DELETE", credentials: "same-origin",
+          });
+        } catch (e) { /* ignore */ }
+      };
+      // Add an X-on-modal that minimizes too.
+      var x = bg.querySelector("#mg-bulk-x");
+      if (x) x.onclick = () => {
+        STATE.mg.bulk_minimized = true;
+        bg.remove();
+        mgShowBanner(kind, parent_id, job);
+      };
+    }
+
+    function mgUpdateProgress(bg, job){
+      if (!bg || !bg.parentNode) return;
+      var n = job.total_posts || 0;
+      var done = job.completed_posts || 0;
+      var lbl = bg.querySelector("#mg-prog-label");
+      var fill = bg.querySelector("#mg-prog-fill");
+      var list = bg.querySelector("#mg-prog-list");
+      var eta  = bg.querySelector("#mg-prog-eta");
+      if (lbl) lbl.textContent = done + " of " + n + " done";
+      if (fill) fill.style.width = (n > 0 ? Math.round(done * 100 / n) : 0) + "%";
+      var rows = (job.per_post || []).map((pp, i) => {
+        var st = ((pp.media_gen || {}).status) || "";
+        var label = "Post " + (i + 1);
+        var detail;
+        var rowCls = "mg-progress-row";
+        if (st === "ready") {
+          rowCls += " is-done";
+          detail = "✓ " + label + ": "
+            + (MG_LABELS[(pp.media_gen || {}).media_type] || "Media") + " ready";
+        } else if (st === "generating" || st === "queued") {
+          rowCls += " is-busy";
+          detail = "● " + label + ": Making "
+            + (((pp.media_gen || {}).media_type) || "media") + "…";
+        } else if (st === "failed") {
+          rowCls += " is-failed";
+          detail = "✗ " + label + ": Failed";
+        } else if (st === "cancelled") {
+          detail = "◯ " + label + ": Cancelled";
+        } else {
+          detail = "◯ " + label + ": Waiting";
+        }
+        return '<div class="' + rowCls + '"><div></div><div>'
+          + esc(detail) + '</div></div>';
+      }).join("");
+      if (list) list.innerHTML = rows;
+      if (eta) {
+        if (job.status === "done") {
+          eta.textContent = "All done.";
+        } else if (job.status === "cancelled") {
+          eta.textContent = "Cancelled.";
+        } else {
+          var remaining = Math.max(0, n - done);
+          // Heuristic: 1 minute per remaining post, capped at /5 parallel.
+          var mins = Math.max(1, Math.round(remaining / 5));
+          eta.textContent = "About " + mins + " minute"
+            + (mins === 1 ? "" : "s") + " left.";
+        }
+      }
+    }
+
+    async function mgPollJob(kind, parent_id, job_id, modalBg){
+      while (true) {
+        var r, d;
+        try {
+          r = await fetch("/dashboard/linkedin/api/media/job/"
+            + encodeURIComponent(job_id), {
+            credentials: "same-origin",
+          });
+          d = await r.json().catch(()=>({}));
+        } catch (e) { d = null; }
+        if (d && d.job) {
+          STATE.mg.bulk_job = d.job;
+          mgUpdateProgress(modalBg, d.job);
+          mgUpdateBanner(d.job);
+          // Also patch local AI draft posts so other UI matches.
+          if (kind === "ai_draft" && STATE.ai && STATE.ai.draft) {
+            (d.job.per_post || []).forEach(pp => {
+              var p = (STATE.ai.draft.posts || []).find(x => x.id === pp.post_id);
+              if (p) p.media_gen = pp.media_gen;
+              mgUpdateUiForPost(pp.post_id, pp.media_gen || {});
+            });
+          }
+          if (d.job.status === "done") {
+            mgOnJobComplete(d.job);
+            return;
+          }
+          if (d.job.status === "cancelled") {
+            mgRemoveBanner();
+            return;
+          }
+        }
+        await new Promise(res => setTimeout(res, 3000));
+      }
+    }
+
+    function mgShowBanner(kind, parent_id, job){
+      mgRemoveBanner();
+      var n = job.total_posts || 0;
+      var done = job.completed_posts || 0;
+      var b = document.createElement("div");
+      b.id = "mg-banner";
+      b.className = "mg-banner";
+      b.innerHTML =
+          '<span id="mg-banner-text">Making media: ' + done + ' of ' + n + ' done</span>'
+        + '<button type="button" id="mg-banner-show">Show me</button>'
+        + '<button type="button" id="mg-banner-x" aria-label="Dismiss">×</button>';
+      document.body.appendChild(b);
+      document.getElementById("mg-banner-show").onclick = () => {
+        STATE.mg.bulk_minimized = false;
+        var existing = STATE.mg.bulk_job || job;
+        var bg = document.createElement("div");
+        bg.id = "plan-modal-bg";
+        bg.className = "plan-modal-bg";
+        bg.innerHTML =
+            '<div class="plan-modal">'
+          +   '<div class="plan-modal-h">'
+          +     '<div class="plan-modal-title">Making media…</div>'
+          +     '<button class="plan-modal-x" type="button" id="mg-bulk-x">×</button>'
+          +   '</div>'
+          +   '<div class="plan-modal-body" id="mg-bulk-body"></div>'
+          +   '<div class="plan-modal-footer"></div>'
+          + '</div>';
+        document.body.appendChild(bg);
+        mgRenderProgress(bg, kind, parent_id, existing);
+        mgUpdateProgress(bg, existing);
+        // Hand polling onto the new modal too.
+        if (!STATE.mg.bulk_polling_visible) {
+          STATE.mg.bulk_polling_visible = true;
+        }
+      };
+      document.getElementById("mg-banner-x").onclick = () => {
+        mgRemoveBanner();
+      };
+    }
+
+    function mgUpdateBanner(job){
+      var b = document.getElementById("mg-banner");
+      if (!b) return;
+      var n = job.total_posts || 0;
+      var done = job.completed_posts || 0;
+      var t = document.getElementById("mg-banner-text");
+      if (t) {
+        if (job.status === "done") {
+          t.textContent = "All " + n + " are ready!";
+        } else if (job.status === "cancelled") {
+          t.textContent = "Cancelled.";
+        } else {
+          var remaining = Math.max(0, n - done);
+          var mins = Math.max(1, Math.round(remaining / 5));
+          t.textContent = "Making media: " + done + " of " + n
+            + " done — " + mins + " min left";
+        }
+      }
+    }
+
+    function mgRemoveBanner(){
+      var b = document.getElementById("mg-banner");
+      if (b) b.remove();
+    }
+
+    function mgOnJobComplete(job){
+      mgUpdateBanner(job);
+      // Notification (subtle): change the banner text + auto-dismiss after 6s.
+      var b = document.getElementById("mg-banner");
+      if (b) {
+        setTimeout(() => mgRemoveBanner(), 6000);
+      }
+      // Browser notification, if granted.
+      if (typeof Notification !== "undefined"
+          && Notification.permission === "granted") {
+        try {
+          new Notification("Your " + job.total_posts + " posts are ready to review.");
+        } catch (e) { /* ignore */ }
+      }
+      // Re-render the AI summary so the user sees the updated state.
+      if (typeof aiRenderSummary === "function" && STATE.ai && STATE.ai.draft) {
+        aiRenderSummary();
+      }
+    }
+
     function aiReviewMediaSection(p){
       var vc = p.visual_choice || {};
       var media = vc.media || null;
@@ -10587,14 +10985,46 @@
       // The Pick-visuals page is no longer in the flow — the summary
       // routes directly to scheduling.
       document.removeEventListener("keydown", STATE.ai._kh || (() => {}));
-      var posts = STATE.ai.draft.posts || [];
+      var draft = STATE.ai.draft;
+      var posts = draft.posts || [];
       var kept    = posts.filter(p => p.status === "kept").length;
       var skipped = posts.filter(p => p.status === "skipped").length;
       var withMedia = posts.filter(p =>
         p.status === "kept" && (p.visual_choice || {}).media_id).length;
+      // Count generated media (separate from library-attached media).
+      var keptPosts = posts.filter(p => p.status === "kept");
+      var keptIds   = keptPosts.map(p => p.id);
+      var withGen   = keptPosts.filter(p =>
+        ((p.media_gen || {}).status) === "ready").length;
+      var noGen     = keptPosts.filter(p =>
+        !p.media_gen || p.media_gen.status !== "ready");
+      var noGenIds  = noGen.map(p => p.id);
       var el = $("make-overview");
+      var bulkBar = "";
+      if (kept > 0 && noGenIds.length > 0) {
+        bulkBar =
+            '<div class="mg-bulk-bar">'
+          +   '<div>'
+          +     '<div class="mg-bulk-bar-h">Make AI media for all '
+          +       noGenIds.length + ' kept post'
+          +       (noGenIds.length === 1 ? "" : "s") + '</div>'
+          +     '<div class="helper" style="margin-top:2px;font-size:11.5px">'
+          +       'Pictures, carousels, or short videos — pick a mix.'
+          +     '</div>'
+          +   '</div>'
+          +   '<button class="btn btn-primary" type="button" id="ai-bulk-media">Make</button>'
+          + '</div>';
+      } else if (kept > 0 && withGen === kept) {
+        bulkBar =
+            '<div class="mg-bulk-bar">'
+          +   '<div class="mg-bulk-bar-h">All ' + kept
+          +     ' kept post' + (kept === 1 ? "" : "s")
+          +     ' have AI media ready.</div>'
+          + '</div>';
+      }
       el.innerHTML =
-          '<div style="text-align:center;padding:30px 20px">'
+          bulkBar
+        + '<div style="text-align:center;padding:30px 20px">'
         +   '<div style="font-size:36px;margin-bottom:8px">' + (kept ? '✓' : '🤔') + '</div>'
         +   '<div style="font-weight:600;font-size:16px;margin-bottom:6px">'
         +     (kept ? 'Ready to schedule' : 'Nothing kept')
@@ -10603,7 +11033,8 @@
         +     'Kept: ' + kept + ' · Skipped: ' + skipped
         +     (kept
                 ? ' · ' + withMedia + ' with media · '
-                  + (kept - withMedia) + ' text-only'
+                  + withGen + ' AI-generated · '
+                  + (kept - withMedia - withGen) + ' text-only'
                 : '')
         +   '</div>'
         +   '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'
@@ -10625,6 +11056,16 @@
       if (av) av.onclick = () => aiFinalize();
       var rs = $("ai-restart");
       if (rs) rs.onclick = () => makeRenderOverview();
+      var bm = $("ai-bulk-media");
+      if (bm) bm.onclick = () => {
+        // Ask for browser-notification permission so the completion
+        // notification fires later. No-op if user already decided.
+        if (typeof Notification !== "undefined"
+            && Notification.permission === "default") {
+          try { Notification.requestPermission(); } catch (e) {}
+        }
+        mgOpenBulkModal("ai_draft", draft.id, noGenIds);
+      };
     }
 
     // Re-open review by flipping every post back to pending_review.
