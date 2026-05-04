@@ -9672,6 +9672,14 @@
         }
       });
 
+      // Boot pdf.js for any preview card showing a carousel/PDF, so the
+      // pages flip horizontally with ‹ › buttons (and arrow keys) instead
+      // of scrolling vertically like an iframe.
+      if (typeof aiBootPdfCarousel === "function") {
+        document.querySelectorAll(".rev-preview-pdf[data-pdf-url]")
+          .forEach(host => aiBootPdfCarousel(host));
+      }
+
       // Restore scroll (after innerHTML wipe).
       window.scrollTo(0, savedScroll);
     }
@@ -9718,11 +9726,22 @@
           + '</div>';
       }
       if (t === "carousel" || t === "document") {
-        // PDFs render inline via <iframe>. The browser uses its built-in
-        // PDF viewer, including next/prev page controls — no extra lib.
-        return '<div class="rev-preview-media">'
-          + '<iframe src="' + esc(m.url) + '#view=FitH" '
-          +   'title="Carousel preview"></iframe>'
+        // Real LinkedIn-style swipeable carousel: pdf.js renders each
+        // page as a canvas in a horizontal scroll-snap track, and the
+        // ‹ › buttons + arrow keys flip pages left/right. NOT an iframe
+        // (which would scroll vertically like a normal PDF viewer).
+        return '<div class="vis-pdf rev-preview-pdf" data-pdf-url="'
+          +   esc(m.url) + '">'
+          +   '<div class="vis-pdf-track" data-pdf-track>'
+          +     '<div class="vis-pdf-loading">Loading pages…</div>'
+          +   '</div>'
+          +   '<div class="vis-pdf-controls">'
+          +     '<button class="vis-pdf-btn" type="button" data-pdf-prev '
+          +       'aria-label="Previous page">‹</button>'
+          +     '<span class="vis-pdf-counter" data-pdf-counter>—</span>'
+          +     '<button class="vis-pdf-btn" type="button" data-pdf-next '
+          +       'aria-label="Next page">›</button>'
+          +   '</div>'
           + '</div>';
       }
       return '<div class="rev-preview-empty">Media attached but the type'
