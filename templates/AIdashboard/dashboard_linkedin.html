@@ -1504,6 +1504,117 @@
       display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
     }
 
+    /* AI batch grid review — see all posts at a glance, edit inline,
+       keep/skip with one tap, add media per post or bulk. The CSS is
+       intentionally chunky — big tap targets, plain icons, no jargon. */
+    .rev-bar {
+      position: sticky; top: 0; z-index: 80;
+      background: rgba(255,255,255,.96);
+      -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+      padding: 14px 16px; margin-bottom: 14px;
+      border-radius: 12px; border: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      box-shadow: 0 2px 6px rgba(0,0,0,.04);
+    }
+    .rev-bar-h { font-weight: 700; font-size: 16px; color: var(--text); }
+    .rev-bar-counts {
+      font-size: 12.5px; color: var(--text-sub); display: flex; gap: 10px;
+    }
+    .rev-bar-counts span strong { color: var(--text); }
+    .rev-bar-counts .rev-count-kept    strong { color: #047857; }
+    .rev-bar-counts .rev-count-skipped strong { color: #B91C1C; }
+    .rev-bar-spacer { flex: 1; }
+    .rev-bar .btn { white-space: nowrap; }
+
+    .rev-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 14px; align-items: start;
+    }
+    @media (max-width: 720px) {
+      .rev-grid { grid-template-columns: 1fr; }
+    }
+
+    .rev-card {
+      border: 1px solid var(--border); border-radius: 14px;
+      background: #fff; padding: 14px;
+      display: flex; flex-direction: column; gap: 10px;
+      transition: opacity .12s, border-color .12s, box-shadow .12s;
+    }
+    .rev-card.is-kept {
+      border-color: #10B981;
+      box-shadow: 0 0 0 1px rgba(16,185,129,.18);
+    }
+    .rev-card.is-skipped {
+      opacity: 0.55; background: var(--bg-alt);
+    }
+    .rev-card-h {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .rev-card-num {
+      font-size: 12.5px; font-weight: 700; color: var(--text);
+    }
+    .rev-card-pill {
+      font-size: 11px; padding: 3px 9px; border-radius: 999px;
+      font-weight: 700; letter-spacing: 0.2px;
+    }
+    .rev-card-pill.is-pending {
+      background: var(--bg-alt); color: var(--text-sub);
+    }
+    .rev-card-pill.is-kept {
+      background: rgba(16,185,129,.14); color: #047857;
+    }
+    .rev-card-pill.is-skipped {
+      background: rgba(220,38,38,.10); color: #B91C1C;
+    }
+    .rev-card-text {
+      font-size: 13.5px; line-height: 1.55; white-space: pre-wrap;
+      padding: 8px; border-radius: 8px;
+      min-height: 90px; max-height: 260px; overflow-y: auto;
+      border: 1px solid transparent; cursor: text;
+    }
+    .rev-card-text:hover { background: var(--bg-alt); }
+    .rev-card-text:focus {
+      outline: none; border-color: var(--link);
+      background: #fff;
+    }
+    .rev-card-meta {
+      font-size: 11px; color: var(--text-sub);
+      display: flex; gap: 8px; flex-wrap: wrap;
+    }
+    .rev-card-actions {
+      display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+      padding-top: 10px; border-top: 1px solid var(--border);
+    }
+    .rev-card-actions .rev-spacer { flex: 1; }
+    .rev-card-actions .btn { padding: 6px 12px; font-size: 12.5px; }
+    .rev-iconbtn {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: var(--bg-alt); border: 1px solid var(--border);
+      cursor: pointer; font-size: 14px;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .rev-iconbtn:hover { background: var(--border); }
+    .rev-keep-btn {
+      background: #fff; border: 1px solid var(--border);
+      padding: 6px 14px; border-radius: 8px; cursor: pointer;
+      font-weight: 600; font-size: 12.5px;
+      color: var(--text-sub);
+    }
+    .rev-keep-btn.is-on {
+      background: #10B981; color: #fff; border-color: #10B981;
+    }
+    .rev-skip-btn {
+      background: #fff; border: 1px solid var(--border);
+      padding: 6px 14px; border-radius: 8px; cursor: pointer;
+      font-size: 12.5px; color: var(--text-sub);
+    }
+    .rev-skip-btn:hover { color: #B91C1C; border-color: #DC2626; }
+    .rev-skip-btn.is-on {
+      background: rgba(220,38,38,.08); color: #B91C1C;
+      border-color: rgba(220,38,38,.30);
+    }
+
     /* AI media generation — per-post button + popover + bulk modal.
        Uses the four colors specified in the brief: grey (default),
        brand yellow (generating), green (ready), red (failed). */
@@ -8345,33 +8456,29 @@
         +       'What\'s the post about?</h3>'
         +     '<div class="ai-field">'
         +       '<label for="ai-topic">Main topic</label>'
-        +       '<input id="ai-topic" type="text" '
+        +       '<textarea id="ai-topic" rows="3" '
         +         'data-ai-editable="true" data-ai-field-type="ai_batch_form" '
-        +         'maxlength="200" '
-        +         'placeholder="How we shipped our checkout redesign in 6 weeks"/>'
+        +         'placeholder="How we shipped our checkout redesign in 6 weeks"></textarea>'
         +       '<div class="ai-help">Be specific. "Product launch" is too vague — '
         +         'say what shipped, when, and why it matters.</div>'
         +     '</div>'
         +     '<div class="ai-field">'
         +       '<label for="ai-audience">Who\'s reading this?</label>'
-        +       '<input id="ai-audience" type="text" '
+        +       '<textarea id="ai-audience" rows="3" '
         +         'data-ai-editable="true" data-ai-field-type="ai_batch_form" '
-        +         'maxlength="200" '
-        +         'placeholder="B2B SaaS founders and product leaders"/>'
+        +         'placeholder="B2B SaaS founders and product leaders"></textarea>'
         +     '</div>'
         +     '<div class="ai-field">'
         +       '<label for="ai-role">What\'s your role / perspective?</label>'
-        +       '<input id="ai-role" type="text" '
+        +       '<textarea id="ai-role" rows="3" '
         +         'data-ai-editable="true" data-ai-field-type="ai_batch_form" '
-        +         'maxlength="300" '
-        +         'placeholder="Founder of a 15-person fintech, shipped with a team of 3"/>'
+        +         'placeholder="Founder of a 15-person fintech, shipped with a team of 3"></textarea>'
         +       '<div class="ai-help">Helps us write in first person from the right vantage.</div>'
         +     '</div>'
         +     '<div class="ai-field">'
         +       '<label for="ai-points">Key points</label>'
-        +       '<textarea id="ai-points" '
+        +       '<textarea id="ai-points" rows="6" '
         +         'data-ai-editable="true" data-ai-field-type="ai_batch_form" '
-        +         'maxlength="1500" '
         +         'placeholder="- We cut a personalization feature to ship faster&#10;'
         +         '- Conversion went up 23% after launch&#10;'
         +         '- Our QA caught a critical bug 2 days before launch"></textarea>'
@@ -9424,100 +9531,216 @@
       var draft = STATE.ai.draft;
       if (!draft) return;
       var posts = draft.posts || [];
-      var pending = posts.filter(p => p.status === "pending_review");
+      // Old keyboard handler is no longer right for grid view.
+      document.removeEventListener("keydown", STATE.ai._kh || (() => {}));
+      STATE.ai._kh = null;
       var kept    = posts.filter(p => p.status === "kept").length;
       var skipped = posts.filter(p => p.status === "skipped").length;
-      var totalDecided = kept + skipped;
-      if (!pending.length) {
-        aiRenderSummary();
-        return;
-      }
-      var p = pending[0];
-      var idx = posts.indexOf(p);
-      var upcoming = pending.slice(1, 6);
-      var regenBadge = (p.regen_count || 0) > 0
-        ? ' · <span style="color:var(--link)">Regenerated ' + p.regen_count + 'x</span>'
-        : '';
-      var hasEdits = (p.edits || []).length > 0;
+      var pending = posts.filter(p => p.status === "pending_review").length;
+      var withMedia = posts.filter(p =>
+        p.status !== "skipped"
+        && (((p.visual_choice || {}).media_id)
+            || ((p.media_gen || {}).status === "ready"))).length;
+      var noMediaIds = posts
+        .filter(p =>
+          p.status !== "skipped"
+          && !((p.visual_choice || {}).media_id)
+          && ((p.media_gen || {}).status !== "ready"))
+        .map(p => p.id);
+      // Posts the schedule step will actually publish: kept (or pending,
+      // which the scheduler treats as kept by default at finalize). Skip
+      // skipped.
+      var finalizableCount = posts.length - skipped;
+
+      // Save scroll so the keep/skip toggle doesn't jump the page.
+      var savedScroll = window.scrollY;
       var el = $("make-overview");
       var mgCtx = { kind: "ai_draft", parent_id: draft.id || "" };
-      el.innerHTML =
-          '<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">'
-        +   '<div style="font-weight:600;font-size:16px">Review your batch</div>'
-        +   '<div class="helper">Generated ' + posts.length + ' posts in ' + Math.round((draft.generation_time_ms || 0)/1000) + 's</div>'
-        + '</div>'
-        + '<div class="helper" style="margin-bottom:14px">' + (totalDecided) + ' of ' + posts.length + ' reviewed</div>'
-        + '<div class="lib-card" style="display:block" id="rv-card"'
-        +   ' data-mg-card data-mg-post="' + esc(p.id || "") + '">'
-        +   '<div class="helper" style="margin-bottom:6px">Post ' + (idx + 1) + ' of ' + posts.length + ' · ' + esc(p.angle || "")
-        +   regenBadge + (hasEdits ? ' · <span class="helper">Edited</span>' : '') + '</div>'
-        +   '<div class="lib-card-text vis-post-text" style="white-space:pre-wrap"'
-        +     ' contenteditable="true" spellcheck="true"'
-        +     ' data-ai-editable="true" data-ai-field-type="post_caption"'
-        +     ' data-post-text>' + esc(p.composed_caption || "") + '</div>'
-        +   '<div class="helper" style="margin-top:8px">Characters: ' + (p.char_count || 0) + ' / 3000</div>'
-        +   ((p.regen_count || 0) >= 3
-              ? '<div class="banner" style="margin-top:10px;background:var(--warn-bg);border-color:var(--warn-bd)">'
-                + '<span>Heavy editing — consider writing this one yourself or starting over.</span></div>'
+
+      var headerHtml =
+          '<div class="rev-bar">'
+        +   '<div>'
+        +     '<div class="rev-bar-h">Your ' + posts.length + ' posts</div>'
+        +     '<div class="rev-bar-counts">'
+        +       '<span class="rev-count-kept"><strong>' + kept + '</strong> kept</span>'
+        +       '<span class="rev-count-skipped"><strong>' + skipped + '</strong> skipped</span>'
+        +       (pending > 0
+                  ? '<span><strong>' + pending + '</strong> not decided</span>' : '')
+        +       '<span><strong>' + withMedia + '</strong> with picture</span>'
+        +     '</div>'
+        +   '</div>'
+        +   '<div class="rev-bar-spacer"></div>'
+        +   '<button class="btn btn-ghost" type="button" id="rev-back">'
+        +     '← Back</button>'
+        +   (noMediaIds.length > 0
+              ? ('<button class="btn" type="button" id="rev-bulk-media">'
+                + '✨ Add pictures to ' + noMediaIds.length + '</button>')
               : '')
-        +   aiReviewMediaSection(p)
-        +   '<div style="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap">'
+        +   (finalizableCount > 0
+              ? ('<button class="btn btn-primary" type="button" id="rev-schedule">'
+                + 'Schedule ' + finalizableCount + ' →</button>')
+              : '')
+        + '</div>';
+
+      var cardsHtml = posts.map((p, i) =>
+        renderReviewCard(p, i, posts.length, mgCtx)).join("");
+
+      el.innerHTML =
+          headerHtml
+        + '<div class="rev-grid" id="rev-grid">' + cardsHtml + '</div>';
+
+      // Wire top bar.
+      $("rev-back").onclick = () => makeRenderOverview();
+      var bulkBtn = $("rev-bulk-media");
+      if (bulkBtn) bulkBtn.onclick = () => {
+        // Ask for browser-notification permission so completion fires.
+        if (typeof Notification !== "undefined"
+            && Notification.permission === "default") {
+          try { Notification.requestPermission(); } catch (e) {}
+        }
+        mgOpenBulkModal("ai_draft", draft.id, noMediaIds);
+      };
+      var schBtn = $("rev-schedule");
+      if (schBtn) schBtn.onclick = () => {
+        // The schedule path publishes everything that's not "skipped",
+        // so any "pending_review" gets treated as kept by default.
+        // To keep the model consistent, flip those to kept first.
+        var toFlip = posts.filter(x => x.status === "pending_review");
+        if (!toFlip.length) {
+          aiFinalize();
+          return;
+        }
+        // Flip in parallel, then finalize.
+        Promise.all(toFlip.map(x =>
+          fetch("/dashboard/linkedin/api/ai-draft/"
+              + encodeURIComponent(draft.id) + "/decide", {
+            method:"POST", credentials:"same-origin",
+            headers:{"Content-Type":"application/json"},
+            body: JSON.stringify({ post_id: x.id, decision: "kept" }),
+          }).then(() => { x.status = "kept"; })
+            .catch(() => {})
+        )).then(() => aiFinalize());
+      };
+
+      // Wire each card's actions.
+      posts.forEach(p => wireReviewCard(p, mgCtx));
+
+      // Resume polling for any post mid-generation.
+      posts.forEach(p => {
+        var st = (p.media_gen || {}).status;
+        if (st === "queued" || st === "generating") {
+          mgPollPostStatus("ai_draft", draft.id, p.id);
+        }
+      });
+
+      // Restore scroll (after innerHTML wipe).
+      window.scrollTo(0, savedScroll);
+    }
+
+    function renderReviewCard(p, idx, total, mgCtx){
+      var st = p.status || "pending_review";
+      var pillCls = (st === "kept" ? "is-kept"
+                  : st === "skipped" ? "is-skipped"
+                  : "is-pending");
+      var pillTxt = (st === "kept" ? "Kept"
+                  : st === "skipped" ? "Skipped"
+                  : "Not decided");
+      var cardCls = "rev-card"
+        + (st === "kept"    ? " is-kept" : "")
+        + (st === "skipped" ? " is-skipped" : "");
+      var keepCls = "rev-keep-btn" + (st === "kept" ? " is-on" : "");
+      var keepLbl = (st === "kept" ? "✓ Keep" : "Keep");
+      var skipCls = "rev-skip-btn" + (st === "skipped" ? " is-on" : "");
+      var skipLbl = (st === "skipped" ? "✕ Skipped" : "Skip");
+      var caption = p.composed_caption || "";
+      var charCount = caption.length;
+      var charWarn = charCount > 3000
+        ? '<span style="color:var(--err-fg)">over limit</span>' : '';
+      var angle = (p.angle || "").trim();
+      var meta = [
+        'Post ' + (idx + 1) + ' of ' + total,
+        angle ? esc(angle) : null,
+        '<span>' + charCount + ' / 3000</span>',
+        charWarn || null,
+      ].filter(Boolean).join(' · ');
+
+      return ''
+        + '<div class="rev-card ' + cardCls + '" data-rev-card="' + esc(p.id) + '"'
+        +   ' data-mg-card data-mg-post="' + esc(p.id) + '">'
+        +   '<div class="rev-card-h">'
+        +     '<div class="rev-card-num">Post ' + (idx + 1) + '</div>'
+        +     '<div class="rev-card-pill ' + pillCls + '">' + pillTxt + '</div>'
+        +   '</div>'
+        +   (angle
+              ? '<div class="rev-card-meta"><span>'
+                + esc(angle) + '</span></div>'
+              : '')
+        +   '<div class="rev-card-text" contenteditable="true" spellcheck="true"'
+        +     ' data-ai-editable="true" data-ai-field-type="post_caption"'
+        +     ' data-rev-text>' + esc(caption) + '</div>'
+        +   '<div class="rev-card-meta">'
+        +     '<span data-rev-charcount>' + charCount + ' / 3000</span>'
+        +     (charWarn ? ' · ' + charWarn : '')
+        +   '</div>'
+        +   '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'
         +     mgButtonHTML(p, mgCtx)
-        +     '<span class="helper" style="font-size:11.5px">Generate a Picture, Carousel, or Short video for this post.</span>'
         +   '</div>'
         +   mgZoneHTML(p, mgCtx)
-        +   '<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">'
-        +     '<button class="btn" type="button" id="ai-edit">Edit</button>'
-        +     '<button class="btn" type="button" id="ai-regen">Regenerate</button>'
-        +     '<button class="btn" type="button" id="ai-skip" style="margin-left:auto">Skip ←</button>'
-        +     '<button class="btn btn-primary" type="button" id="ai-keep">Keep →</button>'
+        +   '<div class="rev-card-actions">'
+        +     '<button class="' + keepCls + '" type="button" data-rev-keep>'
+        +       esc(keepLbl) + '</button>'
+        +     '<button class="' + skipCls + '" type="button" data-rev-skip>'
+        +       esc(skipLbl) + '</button>'
+        +     '<div class="rev-spacer"></div>'
+        +     '<button class="rev-iconbtn" type="button" data-rev-edit '
+        +       'title="Edit this post in detail">✏️</button>'
+        +     '<button class="rev-iconbtn" type="button" data-rev-regen '
+        +       'title="Rewrite this post">↻</button>'
         +   '</div>'
-        + '</div>'
-        + (upcoming.length
-            ? '<div style="margin-top:14px">'
-              + '<div class="helper" style="font-weight:600;margin-bottom:6px">Coming up</div>'
-              + upcoming.map((u, i) =>
-                  '<div class="helper" style="padding:4px 0">Post ' + (posts.indexOf(u) + 1) + ': '
-                  + esc(u.angle || (u.composed_caption || "").slice(0, 80) + "…") + '</div>'
-                ).join("")
-              + '</div>'
-            : '');
-      $("ai-skip").onclick  = () => aiDecide(p.id, "skipped");
-      $("ai-keep").onclick  = () => aiDecide(p.id, "kept");
-      $("ai-edit").onclick  = () => aiOpenEditor(p);
-      $("ai-regen").onclick = () => aiRegenSection(p, "full");
-      // Wire the per-post AI media button + resume polling if this
-      // post was mid-generation last time we rendered.
-      mgWireButtons($("rv-card"), [p]);
-      var mgst = (p.media_gen || {}).status;
-      if (mgst === "queued" || mgst === "generating") {
-        mgPollPostStatus("ai_draft", draft.id, p.id);
-      }
-      // Keyboard shortcuts.
-      var keyHandler = (e) => {
-        if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
-        if (e.target.isContentEditable) return;
-        if (e.key === "ArrowRight" || e.key === "Enter") {
-          e.preventDefault(); aiDecide(p.id, "kept");
-        } else if (e.key === "ArrowLeft" || e.key === "s" || e.key === "S") {
-          e.preventDefault(); aiDecide(p.id, "skipped");
-        }
-      };
-      document.removeEventListener("keydown", STATE.ai._kh || (() => {}));
-      STATE.ai._kh = keyHandler;
-      document.addEventListener("keydown", keyHandler);
-      // Inline edit on the review-card post text (contenteditable above).
-      var rpt = el.querySelector("[data-post-text]");
-      if (rpt) {
-        rpt.addEventListener("blur", () => aiSaveInlinePostEdit(p, rpt));
-        rpt.addEventListener("keydown", (e) => {
+        + '</div>';
+    }
+
+    function wireReviewCard(p, mgCtx){
+      var sel = '[data-rev-card="' + p.id.replace(/"/g, '\\"') + '"]';
+      var card = document.querySelector(sel);
+      if (!card) return;
+      // Inline text edit — save on blur.
+      var txt = card.querySelector("[data-rev-text]");
+      if (txt) {
+        txt.addEventListener("blur", () => {
+          aiSaveInlinePostEdit(p, txt);
+          // Refresh char count after blur.
+          var cc = card.querySelector("[data-rev-charcount]");
+          if (cc) cc.textContent = (txt.textContent || "").length + " / 3000";
+        });
+        txt.addEventListener("keydown", (e) => {
           if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             document.execCommand("insertText", false, "\n");
           }
         });
+        // Live char count while typing.
+        txt.addEventListener("input", () => {
+          var cc = card.querySelector("[data-rev-charcount]");
+          if (cc) cc.textContent = (txt.textContent || "").length + " / 3000";
+        });
       }
-      aiReviewWireMedia(p);
+      var keepBtn = card.querySelector("[data-rev-keep]");
+      var skipBtn = card.querySelector("[data-rev-skip]");
+      if (keepBtn) keepBtn.onclick = () => {
+        var newStatus = (p.status === "kept") ? "pending_review" : "kept";
+        aiDecide(p.id, newStatus);
+      };
+      if (skipBtn) skipBtn.onclick = () => {
+        var newStatus = (p.status === "skipped") ? "pending_review" : "skipped";
+        aiDecide(p.id, newStatus);
+      };
+      var editBtn = card.querySelector("[data-rev-edit]");
+      var regenBtn = card.querySelector("[data-rev-regen]");
+      if (editBtn) editBtn.onclick = () => aiOpenEditor(p);
+      if (regenBtn) regenBtn.onclick = () => aiRegenSection(p, "full");
+      // Wire the per-post media button.
+      mgWireButtons(card, [p]);
     }
 
     // ────────────────────────────────────────────────────────────────
@@ -11002,91 +11225,12 @@
     }
 
     function aiRenderSummary(){
-      // Media now happens INLINE during review (Phase 1 of inline media).
-      // The Pick-visuals page is no longer in the flow — the summary
-      // routes directly to scheduling.
-      document.removeEventListener("keydown", STATE.ai._kh || (() => {}));
-      var draft = STATE.ai.draft;
-      var posts = draft.posts || [];
-      var kept    = posts.filter(p => p.status === "kept").length;
-      var skipped = posts.filter(p => p.status === "skipped").length;
-      var withMedia = posts.filter(p =>
-        p.status === "kept" && (p.visual_choice || {}).media_id).length;
-      // Count generated media (separate from library-attached media).
-      var keptPosts = posts.filter(p => p.status === "kept");
-      var keptIds   = keptPosts.map(p => p.id);
-      var withGen   = keptPosts.filter(p =>
-        ((p.media_gen || {}).status) === "ready").length;
-      var noGen     = keptPosts.filter(p =>
-        !p.media_gen || p.media_gen.status !== "ready");
-      var noGenIds  = noGen.map(p => p.id);
-      var el = $("make-overview");
-      var bulkBar = "";
-      if (kept > 0 && noGenIds.length > 0) {
-        bulkBar =
-            '<div class="mg-bulk-bar">'
-          +   '<div>'
-          +     '<div class="mg-bulk-bar-h">Make AI media for all '
-          +       noGenIds.length + ' kept post'
-          +       (noGenIds.length === 1 ? "" : "s") + '</div>'
-          +     '<div class="helper" style="margin-top:2px;font-size:11.5px">'
-          +       'Pictures, carousels, or short videos — pick a mix.'
-          +     '</div>'
-          +   '</div>'
-          +   '<button class="btn btn-primary" type="button" id="ai-bulk-media">Make</button>'
-          + '</div>';
-      } else if (kept > 0 && withGen === kept) {
-        bulkBar =
-            '<div class="mg-bulk-bar">'
-          +   '<div class="mg-bulk-bar-h">All ' + kept
-          +     ' kept post' + (kept === 1 ? "" : "s")
-          +     ' have AI media ready.</div>'
-          + '</div>';
-      }
-      el.innerHTML =
-          bulkBar
-        + '<div style="text-align:center;padding:30px 20px">'
-        +   '<div style="font-size:36px;margin-bottom:8px">' + (kept ? '✓' : '🤔') + '</div>'
-        +   '<div style="font-weight:600;font-size:16px;margin-bottom:6px">'
-        +     (kept ? 'Ready to schedule' : 'Nothing kept')
-        +   '</div>'
-        +   '<div class="helper" style="margin-bottom:18px">'
-        +     'Kept: ' + kept + ' · Skipped: ' + skipped
-        +     (kept
-                ? ' · ' + withMedia + ' with media · '
-                  + withGen + ' AI-generated · '
-                  + (kept - withMedia - withGen) + ' text-only'
-                : '')
-        +   '</div>'
-        +   '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'
-        +     '<button class="btn btn-ghost" type="button" id="ai-back-overview">'
-        +       'Save for later</button>'
-        +     '<button class="btn" type="button" id="ai-back-edit">'
-        +       '← Edit posts</button>'
-        +     (kept
-                ? '<button class="btn btn-primary" type="button" id="ai-vis-schedule">Schedule ' + kept + ' →</button>'
-                : '<button class="btn btn-primary" type="button" id="ai-restart">Try again</button>')
-        +   '</div>'
-        +   '<div class="helper" style="margin-top:10px;font-size:11.5px">'
-        +     'Edit posts walks you through every post again so you can change '
-        +     'text, add media, or skip differently.</div>'
-        + '</div>';
-      $("ai-back-overview").onclick = () => makeRenderOverview();
-      $("ai-back-edit").onclick     = () => aiReopenReview();
-      var av = $("ai-vis-schedule");
-      if (av) av.onclick = () => aiFinalize();
-      var rs = $("ai-restart");
-      if (rs) rs.onclick = () => makeRenderOverview();
-      var bm = $("ai-bulk-media");
-      if (bm) bm.onclick = () => {
-        // Ask for browser-notification permission so the completion
-        // notification fires later. No-op if user already decided.
-        if (typeof Notification !== "undefined"
-            && Notification.permission === "default") {
-          try { Notification.requestPermission(); } catch (e) {}
-        }
-        mgOpenBulkModal("ai_draft", draft.id, noGenIds);
-      };
+      // Legacy entry point. The grid review screen now shows all posts
+      // and their statuses at once, so it doubles as the summary too.
+      // Delegate so old callers (mgOnJobComplete, ai-vis-back, resume
+      // when all decided) end up at the right place.
+      if (STATE.ai && STATE.ai.draft) return aiRenderReview();
+      return makeRenderOverview();
     }
 
     // Re-open review by flipping every post back to pending_review.
