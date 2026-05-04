@@ -1650,6 +1650,14 @@
       display: flex; align-items: flex-start; gap: 10px;
       cursor: pointer; font-size: 13.5px;
     }
+    /* Provider radio group on the wizard. */
+    .strat-provider {
+      display: flex; gap: 14px; margin-top: 4px;
+    }
+    .strat-provider-opt {
+      display: inline-flex; align-items: center; gap: 6px;
+      cursor: pointer; font-size: 13px;
+    }
 
     /* Audience-voice panel — collapsible block above the review grid
        that surfaces the Reddit queries + distilled insights that fed
@@ -3235,6 +3243,7 @@
             <option value="90">Last 90 days</option>
             <option value="365">Last year</option>
           </select>
+          <button id="perf-import-csv" class="btn btn-ghost" type="button">⬆ Import CSV</button>
           <button id="perf-refresh" class="btn btn-ghost" type="button">↻ Refresh</button>
         </div>
         <div id="perf-ab" style="margin-bottom:14px"></div>
@@ -5024,6 +5033,11 @@
         refresh.addEventListener("click", () => loadPerformanceTab());
         refresh._wired = true;
       }
+      var imp = $("perf-import-csv");
+      if (imp && !imp._wired) {
+        imp.addEventListener("click", () => perfOpenCsvImport());
+        imp._wired = true;
+      }
       var days = (sel && sel.value) ? Number(sel.value) : 30;
 
       // Fetch posts + A/B results in parallel.
@@ -5208,6 +5222,54 @@
       } catch (e) {
         toast("Network error: " + e.message);
       }
+    }
+
+    /* CSV import for the Performance tab. Opens an OS file picker
+       (CSV only), POSTs to /metrics/import-csv, surfaces the
+       matched / missed counts in a toast and re-renders the table. */
+    function perfOpenCsvImport(){
+      var input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".csv,text/csv";
+      input.style.display = "none";
+      document.body.appendChild(input);
+      input.onchange = async () => {
+        var f = input.files && input.files[0];
+        document.body.removeChild(input);
+        if (!f) return;
+        if (f.size > 5 * 1024 * 1024) {
+          toast("CSV too large. Max 5 MB.");
+          return;
+        }
+        var fd = new FormData();
+        fd.append("file", f);
+        toast("Importing CSV…");
+        try {
+          var r = await fetch("/dashboard/linkedin/api/metrics/import-csv", {
+            method: "POST", credentials: "same-origin", body: fd,
+          });
+          var d = await r.json().catch(()=>({}));
+          if (!r.ok) {
+            toast("Import failed: " + (d.error || ("HTTP " + r.status)));
+            return;
+          }
+          var msg = "Imported " + d.matched + " of " + d.rows_total
+            + " rows.";
+          if (d.missed > 0) {
+            msg += " " + d.missed + " row" + (d.missed === 1 ? "" : "s")
+              + " didn’t match a post.";
+          }
+          toast(msg);
+          if (d.missed_samples && d.missed_samples.length) {
+            console.log("CSV missed-row samples:", d.missed_samples);
+          }
+          // Reload the table + A/B summary.
+          loadPerformanceTab();
+        } catch (e) {
+          toast("Network error: " + e.message);
+        }
+      };
+      input.click();
     }
 
     async function loadCommentsTab(){
@@ -9425,6 +9487,22 @@
         +         '</span>'
         +       '</label>'
         +     '</div>'
+        +     '<div class="ai-field strat-ab-row">'
+        +       '<label style="font-weight:600;font-size:13px">Model</label>'
+        +       '<div class="strat-provider">'
+        +         '<label class="strat-provider-opt">'
+        +           '<input type="radio" name="strat-provider" '
+        +             'value="openai"/> GPT (OpenAI)'
+        +         '</label>'
+        +         '<label class="strat-provider-opt">'
+        +           '<input type="radio" name="strat-provider" '
+        +             'value="anthropic"/> Claude (Anthropic)'
+        +         '</label>'
+        +       '</div>'
+        +       '<div class="helper" style="font-size:11.5px;margin-top:4px">'
+        +         'Which model writes your posts and the brief. Saved with your strategy.'
+        +       '</div>'
+        +     '</div>'
         +     '<div class="plan-cap-hint" id="strat-loading" hidden '
         +       'style="margin-top:10px">'
         +       '⏳ Filling in the details…'
@@ -9454,14 +9532,34 @@
           if (p.audience) document.getElementById("strat-audience").value = p.audience;
           if (p.problem)  document.getElementById("strat-problem").value  = p.problem;
           if (p.offer)    document.getElementById("strat-offer").value    = p.offer;
+          var prov = (p.model_provider || "openai");
+          var radio = document.querySelector(
+            'input[name="strat-provider"][value="' + prov + '"]');
+          if (radio) radio.checked = true;
+          else {
+            var def = document.querySelector(
+              'input[name="strat-provider"][value="openai"]');
+            if (def) def.checked = true;
+          }
+        } else {
+          var def = document.querySelector(
+            'input[name="strat-provider"][value="openai"]');
+          if (def) def.checked = true;
         }
-      } catch(e) { /* first-time user, leave blank */ }
+      } catch(e) {
+        var def = document.querySelector(
+          'input[name="strat-provider"][value="openai"]');
+        if (def) def.checked = true;
+      }
 
       function _readInputs(){
+        var prov = (document.querySelector('input[name="strat-provider"]:checked')
+                      || {}).value || "openai";
         return {
-          audience: (document.getElementById("strat-audience").value || "").trim(),
-          problem:  (document.getElementById("strat-problem").value  || "").trim(),
-          offer:    (document.getElementById("strat-offer").value    || "").trim(),
+          audience:       (document.getElementById("strat-audience").value || "").trim(),
+          problem:        (document.getElementById("strat-problem").value  || "").trim(),
+          offer:          (document.getElementById("strat-offer").value    || "").trim(),
+          model_provider: prov,
         };
       }
       function _validate(inputs){
@@ -9847,18 +9945,39 @@
       var vrLink = $("ai-voice-rules-edit");
       if (vrLink) vrLink.onclick = openVoiceRulesModal;
       loadVoiceRulesCount();
-      // If the strategy wizard just produced a brief, drop its values
-      // into the four form fields. Pop the brief off STATE so the user
-      // can re-edit without it snapping back next render.
-      if (STATE.ai_brief) {
-        var br = STATE.ai_brief;
-        STATE.ai_brief = null;
+      // Pre-fill priority:
+      //   1. STATE.ai_brief — fresh from the wizard / A/B compare,
+      //      consume-and-clear so re-edits stick.
+      //   2. Saved profile.last_brief — the user closed the form
+      //      previously; surface their last auto-fill so they don't
+      //      have to redo the wizard.
+      // The form fields stay editable; this is just hydration.
+      var fillBrief = (br) => {
+        if (!br) return;
         if (br.main_topic       && $("ai-topic"))    $("ai-topic").value    = br.main_topic;
         if (br.audience         && $("ai-audience")) $("ai-audience").value = br.audience;
         if (br.role_perspective && $("ai-role"))     $("ai-role").value     = br.role_perspective;
         if (Array.isArray(br.key_points) && $("ai-points")) {
           $("ai-points").value = br.key_points.map(k => "- " + k).join("\n");
         }
+      };
+      if (STATE.ai_brief) {
+        fillBrief(STATE.ai_brief);
+        STATE.ai_brief = null;
+      } else if (!($("ai-topic").value || "").trim()) {
+        // No fresh brief and the form is empty; try to hydrate from
+        // the saved profile's last_brief (if any).
+        fetch("/dashboard/linkedin/api/strategy-profile",
+          { credentials: "same-origin" })
+          .then(r => r.ok ? r.json() : null)
+          .then(d => {
+            var lb = d && d.profile && d.profile.last_brief;
+            if (lb && lb.brief && !($("ai-topic").value || "").trim()) {
+              fillBrief(lb.brief);
+              if (typeof aiCheckForm === "function") aiCheckForm();
+            }
+          })
+          .catch(()=>{});
       }
       aiCheckForm();
       $("ai-generate").onclick = () => aiGenerate();
@@ -10825,11 +10944,14 @@
       var av = draft.audience_voice || {};
       var insights = av.insights || [];
       var avHtml = "";
-      if (insights.length || (av.queries || []).length) {
+      if (insights.length || (av.queries || []).length
+          || (av.subreddits || []).length) {
         var insBullets = insights.map(s =>
           '<li>' + esc(s) + '</li>').join("");
         var queryPills = (av.queries || []).map(q =>
           '<span class="rev-av-query">' + esc(q) + '</span>').join("");
+        var subPills = (av.subreddits || []).map(s =>
+          '<span class="rev-av-query">r/' + esc(s) + '</span>').join("");
         avHtml =
             '<details class="rev-av">'
           +   '<summary class="rev-av-summary">'
@@ -10838,6 +10960,10 @@
           +       insights.length + ' insights)</span>'
           +   '</summary>'
           +   '<div class="rev-av-body">'
+          +     (subPills
+                  ? '<div class="rev-av-row"><strong>Listened in:</strong> '
+                    + subPills + '</div>'
+                  : '')
           +     (queryPills
                   ? '<div class="rev-av-row"><strong>Searched for:</strong> '
                     + queryPills + '</div>'
