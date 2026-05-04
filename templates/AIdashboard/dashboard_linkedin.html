@@ -1551,6 +1551,57 @@
       letter-spacing: 0.05em;
     }
 
+    /* A/B compare screen — two briefs side by side, identical layout. */
+    .ab-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; margin-bottom: 14px;
+      background: #fff; border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .ab-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    }
+    @media (max-width: 820px) {
+      .ab-grid { grid-template-columns: 1fr; }
+    }
+    .ab-card {
+      border: 2px solid var(--border); border-radius: 14px;
+      background: #fff; overflow: hidden;
+    }
+    .ab-card-h {
+      padding: 12px 16px; color: #fff;
+      font-weight: 700; font-size: 13px; letter-spacing: 0.5px;
+    }
+    .ab-card-body {
+      padding: 14px 16px; font-size: 13px; line-height: 1.55;
+      color: var(--text);
+    }
+    .ab-field { margin-bottom: 12px; }
+    .ab-field strong {
+      display: block; font-size: 11.5px; color: var(--text-sub);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .ab-field ul {
+      margin: 4px 0 0 18px; padding: 0; line-height: 1.5;
+    }
+    .ab-field ul li { margin-bottom: 4px; }
+    .ab-card-foot {
+      padding: 12px 16px; border-top: 1px solid var(--border);
+      background: var(--bg-alt);
+    }
+    .ab-card-foot .btn { width: 100%; }
+
+    /* Strategy wizard A/B toggle row. */
+    .strat-ab-row {
+      padding: 10px 12px;
+      background: var(--bg-alt); border-radius: 8px;
+    }
+    .strat-ab-label {
+      display: flex; align-items: flex-start; gap: 10px;
+      cursor: pointer; font-size: 13.5px;
+    }
+
     /* Audience-voice panel — collapsible block above the review grid
        that surfaces the Reddit queries + distilled insights that fed
        this batch's prompt. Lets the user audit Layer D quickly. */
@@ -9098,6 +9149,16 @@
         +         'placeholder="What you sell, how it works, who it\'s for, rough price '
         +         'range. Used to write from authority, not to pitch."></textarea>'
         +     '</div>'
+        +     '<div class="ai-field strat-ab-row">'
+        +       '<label class="strat-ab-label">'
+        +         '<input type="checkbox" id="strat-ab-test"/> '
+        +         '<strong>A/B test mode</strong>'
+        +         '<span class="helper" style="font-size:11.5px;display:block">'
+        +           'Generate two batches: one for relevance, one for problem-fit. '
+        +           'Compare which lands better.'
+        +         '</span>'
+        +       '</label>'
+        +     '</div>'
         +     '<div class="plan-cap-hint" id="strat-loading" hidden '
         +       'style="margin-top:10px">'
         +       '⏳ Filling in the details…'
@@ -9162,6 +9223,7 @@
         var loadingEl = document.getElementById("strat-loading");
         var goBtn = document.getElementById("strat-go");
         var nsBtn = document.getElementById("strat-no-save");
+        var abOn = document.getElementById("strat-ab-test").checked;
         loadingEl.hidden = false;
         goBtn.disabled = true; nsBtn.disabled = true;
 
@@ -9174,36 +9236,109 @@
               body: JSON.stringify(inputs),
             }).catch(()=>null)
           : Promise.resolve(null);
-        try {
+
+        async function _autoBrief(group){
+          var body = Object.assign({}, inputs, { num_posts: numPosts });
+          if (group) body.ab_group = group;
           var r = await fetch("/dashboard/linkedin/api/ai-draft/auto-brief", {
             method: "POST", credentials: "same-origin",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(Object.assign({}, inputs,
-                                                  { num_posts: numPosts })),
+            body: JSON.stringify(body),
           });
           var d = await r.json().catch(()=>({}));
           if (!r.ok) {
-            errEl.hidden = false;
-            errEl.textContent = "Couldn't fill the brief: "
-              + (d.error || ("HTTP " + r.status))
-              + (d.detail ? (" (" + d.detail + ")") : "");
-            loadingEl.hidden = true;
-            goBtn.disabled = false; nsBtn.disabled = false;
-            return;
+            throw new Error(d.error || ("HTTP " + r.status)
+              + (d.detail ? (" (" + d.detail + ")") : ""));
           }
-          STATE.ai_brief = d.brief || null;
-          await savePromise;
-          _planCloseModal();
-          if (typeof aiOpenForm === "function") aiOpenForm();
+          return d.brief;
+        }
+
+        try {
+          if (abOn) {
+            // Two parallel calls, one per group.
+            var [briefA, briefB] = await Promise.all([
+              _autoBrief("A"), _autoBrief("B"),
+            ]);
+            await savePromise;
+            STATE.ai_strategy_inputs = inputs;
+            _planCloseModal();
+            aiRenderAbCompare(briefA, briefB, inputs, numPosts);
+          } else {
+            STATE.ai_brief = await _autoBrief(null);
+            await savePromise;
+            STATE.ai_strategy_inputs = inputs;
+            _planCloseModal();
+            if (typeof aiOpenForm === "function") aiOpenForm();
+          }
         } catch (e) {
           errEl.hidden = false;
-          errEl.textContent = "Network error: " + e.message;
+          errEl.textContent = "Couldn't fill the brief: " + e.message;
           loadingEl.hidden = true;
           goBtn.disabled = false; nsBtn.disabled = false;
         }
       }
       document.getElementById("strat-go").onclick      = () => _runFlow(true);
       document.getElementById("strat-no-save").onclick = () => _runFlow(false);
+    }
+
+    /* A/B compare screen — two briefs side-by-side. The user picks one
+       (which sets the ab_group and routes to the existing AI form for
+       review and generate) or edits before generating. */
+    function aiRenderAbCompare(briefA, briefB, inputs, numPosts){
+      // Land on the Make tab.
+      _planLandOnMakeTab();
+      var el = $("make-overview");
+
+      function _renderBrief(brief, label, group, color){
+        var keyPoints = (brief.key_points || [])
+          .map(k => '<li>' + esc(k) + '</li>').join("");
+        return ''
+          + '<div class="ab-card" data-ab-group="' + group + '" '
+          +   'style="border-color:' + color + '">'
+          +   '<div class="ab-card-h" style="background:' + color + '">'
+          +     label
+          +   '</div>'
+          +   '<div class="ab-card-body">'
+          +     '<div class="ab-field"><strong>Topic:</strong>'
+          +       '<div>' + esc(brief.main_topic || "") + '</div></div>'
+          +     '<div class="ab-field"><strong>Audience:</strong>'
+          +       '<div>' + esc(brief.audience || "") + '</div></div>'
+          +     '<div class="ab-field"><strong>Role / perspective:</strong>'
+          +       '<div>' + esc(brief.role_perspective || "") + '</div></div>'
+          +     '<div class="ab-field"><strong>Key points:</strong>'
+          +       '<ul>' + keyPoints + '</ul></div>'
+          +   '</div>'
+          +   '<div class="ab-card-foot">'
+          +     '<button class="btn btn-primary" type="button" '
+          +       'data-ab-pick="' + group + '">Use this brief →</button>'
+          +   '</div>'
+          + '</div>';
+      }
+
+      el.innerHTML =
+          '<div class="ab-bar">'
+        +   '<div>'
+        +     '<div style="font-weight:700;font-size:16px">A/B compare</div>'
+        +     '<div class="helper" style="font-size:12px">'
+        +       'Two briefs from the same inputs. Pick one to take to Make posts.'
+        +     '</div>'
+        +   '</div>'
+        +   '<button class="btn btn-ghost" type="button" id="ab-back">← Back</button>'
+        + '</div>'
+        + '<div class="ab-grid">'
+        +   _renderBrief(briefA, "GROUP A · Relevance focus",  "A", "#0A66C2")
+        +   _renderBrief(briefB, "GROUP B · Problem focus",    "B", "#E63946")
+        + '</div>';
+
+      $("ab-back").onclick = () => makeRenderOverview();
+      el.querySelectorAll("[data-ab-pick]").forEach(b =>
+        b.addEventListener("click", () => {
+          var grp = b.dataset.abPick;
+          var chosen = grp === "A" ? briefA : briefB;
+          STATE.ai_brief         = chosen;
+          STATE.ai_test_group    = grp;
+          if (typeof aiOpenForm === "function") aiOpenForm();
+        }));
     }
 
     function aiOpenForm(){
@@ -10300,7 +10435,14 @@
         format_mix:             Object.assign({}, STATE.ai.format_pcts),
         cta_mix:                Object.assign({}, STATE.ai.cta_pcts),
         emotional_mix:          Object.assign({}, STATE.ai.emotional_pcts),
+        // A/B test plumbing — empty unless the user came through the
+        // wizard with A/B mode on. test_group tags posts + the draft;
+        // strategy_snapshot freezes the wizard inputs at gen time.
+        test_group:             STATE.ai_test_group || "",
+        strategy_snapshot:      STATE.ai_strategy_inputs || {},
       };
+      // Consume the one-shot A/B selection so re-runs don't carry it.
+      STATE.ai_test_group = null;
       var el = $("make-overview");
       el.innerHTML =
           '<div style="text-align:center;padding:60px 20px">'
