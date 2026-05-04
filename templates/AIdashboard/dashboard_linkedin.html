@@ -1504,6 +1504,165 @@
       display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
     }
 
+    /* AI media generation — per-post button + popover + bulk modal.
+       Uses the four colors specified in the brief: grey (default),
+       brand yellow (generating), green (ready), red (failed). */
+    .mg-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: 8px;
+      font-size: 12.5px; font-weight: 500; cursor: pointer;
+      border: 1px solid var(--border); background: #fff;
+      color: #64748B;
+      transition: all 0.15s;
+    }
+    .mg-btn:hover { background: var(--bg-alt); color: var(--text); }
+    .mg-btn.is-busy {
+      background: rgba(252, 211, 77, .12); border-color: #FCD34D;
+      color: #92400E; cursor: wait;
+    }
+    .mg-btn.is-busy::before {
+      content: ""; width: 8px; height: 8px; border-radius: 50%;
+      background: #FCD34D; animation: mg-pulse 1s infinite;
+    }
+    @keyframes mg-pulse {
+      0%, 100% { opacity: 0.4; transform: scale(0.85); }
+      50%      { opacity: 1.0; transform: scale(1); }
+    }
+    .mg-btn.is-ready {
+      background: rgba(16, 185, 129, .10); border-color: #10B981;
+      color: #047857;
+    }
+    .mg-btn.is-ready::before {
+      content: "✓"; font-weight: 700;
+    }
+    .mg-btn.is-failed {
+      background: rgba(220, 38, 38, .08); border-color: #DC2626;
+      color: #B91C1C;
+    }
+    .mg-btn.is-failed::before { content: "✗"; font-weight: 700; }
+
+    .mg-zone {
+      margin-top: 10px; padding: 10px 12px;
+      border: 1px dashed var(--border); border-radius: 10px;
+      background: var(--bg-alt);
+    }
+    .mg-zone-h {
+      font-size: 12px; font-weight: 600; color: var(--text);
+      margin-bottom: 8px;
+    }
+    .mg-replace {
+      font-size: 11px; color: var(--text-sub); cursor: pointer;
+      margin-left: 8px; text-decoration: underline;
+    }
+    .mg-replace:hover { color: var(--text); }
+    .mg-thumb {
+      width: 100%; max-width: 220px; height: auto;
+      border-radius: 8px; border: 1px solid var(--border);
+      display: block; margin-top: 4px;
+    }
+    .mg-err {
+      font-size: 11.5px; color: var(--err-fg, #B91C1C); margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    /* Popover (anchored under the button). */
+    .mg-pop-bg {
+      position: fixed; inset: 0; background: rgba(15,23,42,.30);
+      z-index: 9100;
+    }
+    .mg-pop {
+      position: absolute; min-width: 240px;
+      background: #fff; border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.18);
+    }
+    .mg-pop-h {
+      font-size: 12.5px; font-weight: 600; margin-bottom: 8px;
+      color: var(--text);
+    }
+    .mg-pop-opt {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px; border-radius: 8px; cursor: pointer;
+      font-size: 13px;
+    }
+    .mg-pop-opt:hover { background: var(--bg-alt); }
+    .mg-pop-opt.is-active {
+      background: rgba(10,102,194,.08); color: var(--link);
+    }
+    .mg-pop-opt input { accent-color: var(--link); }
+    .mg-pop-opt .mg-pop-hint {
+      margin-left: auto; font-size: 11px; color: var(--text-sub);
+    }
+    .mg-pop-actions {
+      display: flex; justify-content: flex-end; gap: 8px;
+      margin-top: 8px; padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Bulk modal (uses the same plan-modal-bg patterns). */
+    .mg-bulk-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; border: 1px solid var(--border);
+      border-radius: 10px; margin-bottom: 14px; background: #fff;
+    }
+    .mg-bulk-bar-h {
+      font-weight: 600; font-size: 13.5px; color: var(--text);
+    }
+    .mg-slider-row {
+      display: grid; grid-template-columns: 110px 1fr 60px 70px;
+      align-items: center; gap: 10px; margin-bottom: 8px;
+      font-size: 13px;
+    }
+    .mg-slider-row input[type="range"] { width: 100%; }
+    .mg-slider-row .mg-pct {
+      text-align: right; font-weight: 600; color: var(--text);
+    }
+    .mg-slider-row .mg-cnt {
+      text-align: right; font-size: 11.5px; color: var(--text-sub);
+    }
+    .mg-est-line {
+      font-size: 12.5px; color: var(--text-sub); margin: 8px 0 4px;
+    }
+    .mg-progress-list {
+      max-height: 320px; overflow-y: auto; display: grid; gap: 4px;
+      margin-top: 12px;
+    }
+    .mg-progress-row {
+      display: grid; grid-template-columns: 16px 1fr; gap: 8px;
+      padding: 6px 10px; border-radius: 6px; background: var(--bg-alt);
+      font-size: 12.5px;
+    }
+    .mg-progress-row.is-done { color: #047857; }
+    .mg-progress-row.is-busy { color: #92400E; }
+    .mg-progress-row.is-failed { color: #B91C1C; }
+    .mg-progress-bar {
+      width: 100%; height: 12px; background: #1E293B;
+      border-radius: 999px; overflow: hidden; margin: 8px 0;
+    }
+    .mg-progress-fill {
+      height: 100%; background: #FCD34D;
+      transition: width 300ms ease; width: 0%;
+    }
+    .mg-banner {
+      position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
+      background: #1E293B; color: #F8FAFC;
+      padding: 10px 16px; border-radius: 999px;
+      box-shadow: 0 8px 22px rgba(0,0,0,.30);
+      display: flex; align-items: center; gap: 14px;
+      font-size: 13px; z-index: 8500;
+    }
+    .mg-banner button {
+      background: rgba(255,255,255,.10); color: #F8FAFC;
+      border: 1px solid rgba(255,255,255,.20); border-radius: 6px;
+      padding: 4px 10px; font-size: 12px; cursor: pointer;
+    }
+    .mg-banner button:hover { background: rgba(255,255,255,.20); }
+    .mg-nav-dot {
+      display: inline-block; width: 8px; height: 8px;
+      border-radius: 50%; background: #FCD34D;
+      margin-left: 6px; vertical-align: middle;
+    }
+
     /* Activity tab. */
     .act-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
                   gap: 10px; margin-bottom: 18px; }
@@ -9281,13 +9440,15 @@
         : '';
       var hasEdits = (p.edits || []).length > 0;
       var el = $("make-overview");
+      var mgCtx = { kind: "ai_draft", parent_id: draft.id || "" };
       el.innerHTML =
           '<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">'
         +   '<div style="font-weight:600;font-size:16px">Review your batch</div>'
         +   '<div class="helper">Generated ' + posts.length + ' posts in ' + Math.round((draft.generation_time_ms || 0)/1000) + 's</div>'
         + '</div>'
         + '<div class="helper" style="margin-bottom:14px">' + (totalDecided) + ' of ' + posts.length + ' reviewed</div>'
-        + '<div class="lib-card" style="display:block" id="rv-card">'
+        + '<div class="lib-card" style="display:block" id="rv-card"'
+        +   ' data-mg-card data-mg-post="' + esc(p.id || "") + '">'
         +   '<div class="helper" style="margin-bottom:6px">Post ' + (idx + 1) + ' of ' + posts.length + ' · ' + esc(p.angle || "")
         +   regenBadge + (hasEdits ? ' · <span class="helper">Edited</span>' : '') + '</div>'
         +   '<div class="lib-card-text vis-post-text" style="white-space:pre-wrap"'
@@ -9300,6 +9461,11 @@
                 + '<span>Heavy editing — consider writing this one yourself or starting over.</span></div>'
               : '')
         +   aiReviewMediaSection(p)
+        +   '<div style="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap">'
+        +     mgButtonHTML(p, mgCtx)
+        +     '<span class="helper" style="font-size:11.5px">Generate a Picture, Carousel, or Short video for this post.</span>'
+        +   '</div>'
+        +   mgZoneHTML(p, mgCtx)
         +   '<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">'
         +     '<button class="btn" type="button" id="ai-edit">Edit</button>'
         +     '<button class="btn" type="button" id="ai-regen">Regenerate</button>'
@@ -9320,6 +9486,13 @@
       $("ai-keep").onclick  = () => aiDecide(p.id, "kept");
       $("ai-edit").onclick  = () => aiOpenEditor(p);
       $("ai-regen").onclick = () => aiRegenSection(p, "full");
+      // Wire the per-post AI media button + resume polling if this
+      // post was mid-generation last time we rendered.
+      mgWireButtons($("rv-card"), [p]);
+      var mgst = (p.media_gen || {}).status;
+      if (mgst === "queued" || mgst === "generating") {
+        mgPollPostStatus("ai_draft", draft.id, p.id);
+      }
       // Keyboard shortcuts.
       var keyHandler = (e) => {
         if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
@@ -9353,6 +9526,272 @@
     // The media auto-saves to the user's Media library AND is referenced
     // on the post via /posts/<id>/visual when Keep is clicked.
     // ────────────────────────────────────────────────────────────────
+    /* ── AI media generation (Claude code execution) ───────────────
+       Per-post button + popover that asks Claude to render a Picture,
+       Carousel, or Short video for the post. Status states animate
+       inline; thumbnails appear when ready. Bulk run is on the
+       AI summary screen.
+    */
+    var MG_TYPES = [
+      { key: "image",    label: "Picture",     hint: "fast" },
+      { key: "carousel", label: "Carousel",    hint: "more clicks" },
+      { key: "video",    label: "Short video", hint: "best for hooks" },
+    ];
+    var MG_LABELS = {
+      image:    "Picture",
+      carousel: "Carousel",
+      video:    "Short video",
+    };
+    STATE.mg = {
+      active_polls: {},   // post_id -> abort flag
+      bulk_job:     null, // running job snapshot (for the banner)
+      bulk_minimized: false,
+    };
+
+    function _mgSavedKindParent(){
+      // The AI batch flow runs inside the active draft. Return ids the
+      // backend understands. For combinator (saved batch) callers we
+      // accept overrides via the helper signatures.
+      var draft = (STATE.ai && STATE.ai.draft) || null;
+      return {
+        kind:      "ai_draft",
+        parent_id: draft ? draft.id : "",
+      };
+    }
+
+    function mgButtonHTML(p, ctx){
+      var mg = (p && p.media_gen) || {};
+      var st = mg.status || "";
+      var label, cls = "mg-btn";
+      if (st === "ready") {
+        cls += " is-ready";
+        label = (MG_LABELS[mg.media_type] || "Media") + " ready";
+      } else if (st === "queued" || st === "generating") {
+        cls += " is-busy";
+        label = "Making it…";
+      } else if (st === "failed") {
+        cls += " is-failed";
+        label = "Try again";
+      } else {
+        label = "+ Add image";
+      }
+      var pid = p.id || "";
+      var pp  = (ctx && ctx.parent_id) || "";
+      var k   = (ctx && ctx.kind)      || "ai_draft";
+      return ''
+        + '<button class="' + cls + '" type="button"'
+        +   ' data-mg-btn data-mg-post="' + esc(pid) + '"'
+        +   ' data-mg-parent="' + esc(pp) + '"'
+        +   ' data-mg-kind="' + esc(k) + '">'
+        +   esc(label)
+        + '</button>';
+    }
+
+    function mgZoneHTML(p, ctx){
+      var mg = (p && p.media_gen) || {};
+      var st = mg.status || "";
+      if (st !== "ready" && st !== "failed") return "";
+      if (st === "failed") {
+        var msg = (mg.error_message || "Something went wrong.").slice(0, 200);
+        return '<div class="mg-zone" data-mg-zone>'
+          +    '<div class="mg-err">' + esc(msg) + '</div>'
+          +    '</div>';
+      }
+      // Ready.
+      var t = mg.media_type || "image";
+      var thumb = mg.thumbnail_url || mg.url || "";
+      var pretty = MG_LABELS[t] || "Media";
+      return ''
+        + '<div class="mg-zone" data-mg-zone>'
+        +   '<div class="mg-zone-h">' + esc(pretty) + ' ready'
+        +     '<a class="mg-replace" data-mg-replace>Replace</a>'
+        +   '</div>'
+        +   (thumb
+              ? (t === "video"
+                  ? '<video class="mg-thumb" controls preload="metadata" '
+                    + 'src="' + esc(mg.url || "") + '"></video>'
+                  : (t === "carousel"
+                      ? '<a href="' + esc(mg.url || "") + '" target="_blank">'
+                        + '<img class="mg-thumb" src="' + esc(thumb) + '" alt="Carousel preview"/></a>'
+                      : '<img class="mg-thumb" src="' + esc(thumb) + '" alt="Generated picture"/>'))
+              : '<div class="helper">Saved.</div>')
+        + '</div>';
+    }
+
+    function mgWireButtons(rootEl, posts){
+      if (!rootEl) return;
+      rootEl.querySelectorAll("[data-mg-btn]").forEach(b => {
+        b.onclick = (e) => {
+          e.preventDefault();
+          mgOpenPopover(b, posts);
+        };
+      });
+      rootEl.querySelectorAll("[data-mg-replace]").forEach(a => {
+        a.onclick = (e) => {
+          e.preventDefault();
+          // Find the matching button so the popover anchors there.
+          var card = a.closest("[data-mg-card]") || rootEl;
+          var btn = card.querySelector("[data-mg-btn]");
+          if (btn) mgOpenPopover(btn, posts);
+        };
+      });
+    }
+
+    function mgOpenPopover(anchorBtn, posts){
+      // Close any existing popover first.
+      var existing = document.getElementById("mg-pop-bg");
+      if (existing) existing.remove();
+      var pid = anchorBtn.dataset.mgPost;
+      var ppid = anchorBtn.dataset.mgParent;
+      var kind = anchorBtn.dataset.mgKind || "ai_draft";
+      var post = (posts || []).find(p => p.id === pid);
+      var current = ((post || {}).media_gen || {}).media_type || "image";
+      var bg = document.createElement("div");
+      bg.id = "mg-pop-bg";
+      bg.className = "mg-pop-bg";
+      bg.innerHTML =
+          '<div class="mg-pop" id="mg-pop">'
+        +   '<div class="mg-pop-h">What kind?</div>'
+        +   MG_TYPES.map(t =>
+              '<label class="mg-pop-opt' + (t.key === current ? ' is-active' : '') + '">'
+              + '<input type="radio" name="mg-kind" value="' + esc(t.key) + '"'
+              +   (t.key === current ? ' checked' : '') + '/>'
+              + '<span>' + esc(t.label) + '</span>'
+              + '<span class="mg-pop-hint">' + esc(t.hint) + '</span>'
+              + '</label>').join("")
+        +   '<div class="mg-pop-actions">'
+        +     '<button class="btn btn-ghost" type="button" id="mg-pop-cancel">Cancel</button>'
+        +     '<button class="btn btn-primary" type="button" id="mg-pop-go">Make it</button>'
+        +   '</div>'
+        + '</div>';
+      document.body.appendChild(bg);
+      // Position the popover near the anchor button.
+      var pop = document.getElementById("mg-pop");
+      var rect = anchorBtn.getBoundingClientRect();
+      var top  = rect.bottom + 6 + window.scrollY;
+      var left = rect.left + window.scrollX;
+      pop.style.top  = top  + "px";
+      pop.style.left = left + "px";
+      // Clamp to viewport so it doesn't go off-screen.
+      requestAnimationFrame(() => {
+        var pr = pop.getBoundingClientRect();
+        var maxLeft = window.innerWidth - pr.width - 12;
+        if (pr.left > maxLeft) pop.style.left = (maxLeft + window.scrollX) + "px";
+      });
+      bg.addEventListener("click", (e) => {
+        if (e.target === bg) bg.remove();
+      });
+      document.getElementById("mg-pop-cancel").onclick = () => bg.remove();
+      document.getElementById("mg-pop-go").onclick = async () => {
+        var sel = bg.querySelector('input[name="mg-kind"]:checked');
+        var media_type = sel ? sel.value : "image";
+        bg.remove();
+        await mgKickoff(kind, ppid, pid, media_type, anchorBtn);
+      };
+    }
+
+    async function mgKickoff(kind, parent_id, post_id, media_type, anchorBtn){
+      // Optimistically flip the button to busy state.
+      if (anchorBtn) {
+        anchorBtn.className = "mg-btn is-busy";
+        anchorBtn.textContent = "Making it…";
+        anchorBtn.disabled = true;
+      }
+      try {
+        var r = await fetch("/dashboard/linkedin/api/media/generate", {
+          method: "POST", credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            kind: kind, parent_id: parent_id,
+            post_id: post_id, media_type: media_type,
+          }),
+        });
+        var d = await r.json().catch(()=>({}));
+        if (!r.ok) {
+          if (anchorBtn) {
+            anchorBtn.className = "mg-btn is-failed";
+            anchorBtn.textContent = "Try again";
+            anchorBtn.disabled = false;
+          }
+          toast("Couldn't start: " + (d.error || ("HTTP " + r.status)));
+          return;
+        }
+        // Begin polling status until ready/failed.
+        mgPollPostStatus(kind, parent_id, post_id);
+      } catch (e) {
+        if (anchorBtn) {
+          anchorBtn.className = "mg-btn is-failed";
+          anchorBtn.textContent = "Try again";
+          anchorBtn.disabled = false;
+        }
+        toast("Network error: " + e.message);
+      }
+    }
+
+    async function mgPollPostStatus(kind, parent_id, post_id){
+      var key = kind + ":" + parent_id + ":" + post_id;
+      STATE.mg.active_polls[key] = true;
+      while (STATE.mg.active_polls[key]) {
+        try {
+          var r = await fetch("/dashboard/linkedin/api/media/status?"
+            + "kind=" + encodeURIComponent(kind)
+            + "&parent_id=" + encodeURIComponent(parent_id)
+            + "&post_id="   + encodeURIComponent(post_id), {
+            credentials: "same-origin",
+          });
+          var d = await r.json().catch(()=>({}));
+          var mg = (d && d.media_gen) || {};
+          mgUpdateUiForPost(post_id, mg);
+          // Also patch the local AI draft copy so re-renders show right state.
+          if (kind === "ai_draft" && STATE.ai && STATE.ai.draft) {
+            var posts = STATE.ai.draft.posts || [];
+            var found = posts.find(x => x.id === post_id);
+            if (found) found.media_gen = mg;
+          }
+          if (mg.status === "ready" || mg.status === "failed"
+              || mg.status === "cancelled") {
+            delete STATE.mg.active_polls[key];
+            return;
+          }
+        } catch (e) { /* keep polling */ }
+        await new Promise(res => setTimeout(res, 3000));
+      }
+    }
+
+    function mgUpdateUiForPost(post_id, mg){
+      // Update any visible button + zone for this post.
+      document.querySelectorAll(
+        '[data-mg-btn][data-mg-post="' + post_id.replace(/"/g, '\\"') + '"]'
+      ).forEach(btn => {
+        var st = mg.status || "";
+        btn.disabled = (st === "queued" || st === "generating");
+        if (st === "ready") {
+          btn.className = "mg-btn is-ready";
+          btn.textContent = (MG_LABELS[mg.media_type] || "Media") + " ready";
+        } else if (st === "queued" || st === "generating") {
+          btn.className = "mg-btn is-busy";
+          btn.textContent = "Making it…";
+        } else if (st === "failed") {
+          btn.className = "mg-btn is-failed";
+          btn.textContent = "Try again";
+        } else {
+          btn.className = "mg-btn";
+          btn.textContent = "+ Add image";
+        }
+      });
+      // Replace the zone HTML if it's in the same card as a matching btn.
+      document.querySelectorAll(
+        '[data-mg-card][data-mg-post="' + post_id.replace(/"/g, '\\"') + '"]'
+      ).forEach(card => {
+        var oldZone = card.querySelector("[data-mg-zone]");
+        var html = mgZoneHTML({ id: post_id, media_gen: mg }, null);
+        if (oldZone) oldZone.outerHTML = html;
+        else if (html) card.insertAdjacentHTML("beforeend", html);
+        // Re-wire the new replace link.
+        mgWireButtons(card, [{ id: post_id, media_gen: mg }]);
+      });
+    }
+
     function aiReviewMediaSection(p){
       var vc = p.visual_choice || {};
       var media = vc.media || null;
