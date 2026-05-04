@@ -5526,6 +5526,8 @@
           '<div class="sch-month-bar">'
         +   '<div class="sch-month-bar-h">' + esc(monthName) + '</div>'
         +   '<div class="sch-month-bar-spacer"></div>'
+        +   '<button class="btn" type="button" id="sch-month-plan" '
+        +     'title="Plan the whole month at once">Plan the month</button>'
         +   '<button class="sch-icon-btn" type="button" id="sch-month-prev" '
         +     'title="Previous month" aria-label="Previous month">‹</button>'
         +   '<button class="btn btn-ghost" type="button" id="sch-month-today">Today</button>'
@@ -5550,6 +5552,8 @@
         _schMonthSetAnchor(new Date(n.getFullYear(), n.getMonth(), 1));
         renderScheduledList();
       };
+      var planBtn = $("sch-month-plan");
+      if (planBtn) planBtn.onclick = () => planOpenMonthModal();
       listEl.querySelectorAll("[data-month-edit]").forEach(b =>
         b.addEventListener("click", (e) => {
           e.stopPropagation();
@@ -5759,6 +5763,306 @@
         _planLandOnMakeTab();
         if (typeof aiOpenForm === "function") aiOpenForm();
       };
+    }
+
+    /* Plan-the-month modal — Phase 2 entry point. */
+    function planOpenMonthModal(){
+      _planCloseModal();
+      // Defaults: today → 4 weeks out, weekdays only, 3 posts/day.
+      var today = new Date();
+      var endD  = new Date(today); endD.setDate(today.getDate() + 27);
+      var startISO = today.toISOString().slice(0, 10);
+      var endISO   = endD.toISOString().slice(0, 10);
+      var DAY_LABELS = [
+        { key: "mon", label: "M", full: "Monday"   },
+        { key: "tue", label: "T", full: "Tuesday"  },
+        { key: "wed", label: "W", full: "Wednesday"},
+        { key: "thu", label: "T", full: "Thursday" },
+        { key: "fri", label: "F", full: "Friday"   },
+        { key: "sat", label: "S", full: "Saturday" },
+        { key: "sun", label: "S", full: "Sunday"   },
+      ];
+      var state = {
+        ppd: 3,
+        start: startISO,
+        end:   endISO,
+        active: ["mon","tue","wed","thu","fri"],
+        window: { start_h: 8, end_h: 18 },
+        total: 0,
+        capped: false,
+        capped_days: [],
+        loading: false,
+      };
+      var bg = document.createElement("div");
+      bg.id = "plan-modal-bg";
+      bg.className = "plan-modal-bg";
+      bg.innerHTML =
+          '<div class="plan-modal" role="dialog" aria-modal="true">'
+        +   '<div class="plan-modal-h">'
+        +     '<div class="plan-modal-title">Plan the month</div>'
+        +     '<button class="plan-modal-x" type="button" '
+        +       'aria-label="Close" id="plan-mo-x">×</button>'
+        +   '</div>'
+        +   '<div class="plan-modal-body">'
+        +     '<div class="plan-modal-section">'
+        +       '<div class="plan-section-h">Posts per day</div>'
+        +       '<div class="plan-count-row">'
+        +         '<input type="range" id="plan-mo-ppd" min="1" max="10" value="3"/>'
+        +         '<span class="plan-count-v" id="plan-mo-ppd-v">3 posts per day</span>'
+        +       '</div>'
+        +       '<div class="plan-cap-hint">'
+        +         'Your window (8 AM - 6 PM) fits up to 21 per day.'
+        +       '</div>'
+        +     '</div>'
+        +     '<div class="plan-modal-section">'
+        +       '<div class="plan-section-h">Date range</div>'
+        +       '<div class="plan-range-row">'
+        +         '<div><label for="plan-mo-start">Start</label>'
+        +           '<input type="date" id="plan-mo-start" value="' + startISO
+        +           '" min="' + startISO + '"/></div>'
+        +         '<div><label for="plan-mo-end">End</label>'
+        +           '<input type="date" id="plan-mo-end" value="' + endISO
+        +           '" min="' + startISO + '"/></div>'
+        +       '</div>'
+        +       '<div class="plan-summary-line" id="plan-mo-range-sum"></div>'
+        +     '</div>'
+        +     '<div class="plan-modal-section">'
+        +       '<div class="plan-section-h">Days to use</div>'
+        +       '<div class="plan-day-toggles" id="plan-mo-days">'
+        +         DAY_LABELS.map(d =>
+                    '<button class="plan-day-toggle' + (state.active.includes(d.key) ? ' is-active' : '')
+                    + '" type="button" data-day="' + d.key
+                    + '" title="' + d.full + '">' + d.label + '</button>').join("")
+        +       '</div>'
+        +       '<div class="plan-summary-line" id="plan-mo-days-sum"></div>'
+        +     '</div>'
+        +     '<div class="plan-total-line" id="plan-mo-total">Computing total…</div>'
+        +     '<div class="plan-topup-note" id="plan-mo-topup" hidden></div>'
+        +     '<div class="plan-cap-warn" id="plan-mo-warn" hidden></div>'
+        +     '<div class="plan-modal-section">'
+        +       '<div class="plan-section-h">How should we make them?</div>'
+        +       '<div class="plan-method-cards">'
+        +         '<div class="plan-method-card">'
+        +           '<div class="plan-method-h">📝 Mix from my library</div>'
+        +           '<div class="plan-method-sub">Use your hook lines, meat blocks, '
+        +             'and CTA lines.</div>'
+        +           '<button class="btn" type="button" id="plan-mo-go-lib" disabled>Continue →</button>'
+        +         '</div>'
+        +         '<div class="plan-method-card is-ai">'
+        +           '<div class="plan-method-h">✨ AI drafts them</div>'
+        +           '<div class="plan-method-sub">Tell us what to post about. '
+        +             'We\'ll write them.</div>'
+        +           '<button class="btn btn-primary" type="button" id="plan-mo-go-ai" disabled>Continue →</button>'
+        +         '</div>'
+        +       '</div>'
+        +     '</div>'
+        +   '</div>'
+        +   '<div class="plan-modal-footer">'
+        +     '<button class="btn btn-ghost" type="button" id="plan-mo-cancel">Cancel</button>'
+        +   '</div>'
+        + '</div>';
+      document.body.appendChild(bg);
+      document.getElementById("plan-mo-x").onclick      = _planCloseModal;
+      document.getElementById("plan-mo-cancel").onclick = _planCloseModal;
+
+      var ppd = document.getElementById("plan-mo-ppd");
+      var ppdV = document.getElementById("plan-mo-ppd-v");
+      var sIn = document.getElementById("plan-mo-start");
+      var eIn = document.getElementById("plan-mo-end");
+      var rangeSum = document.getElementById("plan-mo-range-sum");
+      var daysSum  = document.getElementById("plan-mo-days-sum");
+      var totalEl  = document.getElementById("plan-mo-total");
+      var topupEl  = document.getElementById("plan-mo-topup");
+      var warnEl   = document.getElementById("plan-mo-warn");
+      var goLib    = document.getElementById("plan-mo-go-lib");
+      var goAi     = document.getElementById("plan-mo-go-ai");
+
+      function daysBetween(a, b){
+        return Math.round(
+          (new Date(b + "T00:00:00") - new Date(a + "T00:00:00"))
+          / 86400000) + 1;
+      }
+      function activeCountInRange(){
+        if (!state.start || !state.end) return 0;
+        if (state.end < state.start) return 0;
+        var dowMap = { sun:0, mon:1, tue:2, wed:3, thu:4, fri:5, sat:6 };
+        var activeSet = new Set(state.active.map(d => dowMap[d]));
+        var count = 0;
+        var cur = new Date(state.start + "T00:00:00");
+        var endD = new Date(state.end + "T00:00:00");
+        while (cur <= endD) {
+          if (activeSet.has(cur.getDay())) count++;
+          cur.setDate(cur.getDate() + 1);
+        }
+        return count;
+      }
+      function refreshSummaries(){
+        // Range line.
+        if (state.start && state.end && state.end >= state.start) {
+          var totalDays = daysBetween(state.start, state.end);
+          var weeks = Math.round(totalDays / 7);
+          rangeSum.textContent = totalDays + " days · "
+            + weeks + " week" + (weeks === 1 ? "" : "s");
+        } else {
+          rangeSum.textContent = "Pick a valid date range.";
+        }
+        // Days line.
+        var act = activeCountInRange();
+        var skip = state.start && state.end && state.end >= state.start
+          ? Math.max(0, daysBetween(state.start, state.end) - act) : 0;
+        if (act === 0) {
+          daysSum.textContent = "No active days in this range.";
+        } else {
+          daysSum.textContent = act + " active day"
+            + (act === 1 ? "" : "s")
+            + (skip > 0
+                ? " · " + skip + " skipped"
+                : "");
+        }
+      }
+
+      var previewSeq = 0;
+      async function refreshPreview(){
+        refreshSummaries();
+        var act = activeCountInRange();
+        if (state.start > state.end || act === 0 || state.ppd === 0) {
+          totalEl.textContent = "Total: 0 posts.";
+          topupEl.hidden = true;
+          warnEl.hidden  = true;
+          goLib.disabled = true;
+          goAi.disabled  = true;
+          state.total = 0;
+          return;
+        }
+        var seq = ++previewSeq;
+        totalEl.textContent = "Total: …";
+        try {
+          var r = await fetch("/dashboard/linkedin/api/plan/preview", {
+            method: "POST", credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              scope: "month_plan",
+              start: state.start, end: state.end,
+              posts_per_day: state.ppd,
+              active_days: state.active,
+              window: state.window,
+            }),
+          });
+          if (seq !== previewSeq) return;  // stale
+          var d = await r.json().catch(()=>({}));
+          if (!r.ok) {
+            totalEl.textContent = "Couldn't compute total. Adjust the inputs.";
+            warnEl.hidden = true;
+            goLib.disabled = true;
+            goAi.disabled  = true;
+            return;
+          }
+          state.total = d.total_to_create || 0;
+          state.capped = !!d.capped;
+          state.capped_days = d.capped_days || [];
+          // Detect "any day in range already had posts" by comparing
+          // expected (ppd × active days) vs total_to_create.
+          var expected = state.ppd * act;
+          var topup = expected > state.total;
+          totalEl.innerHTML = 'Total: about <strong>' + state.total
+            + '</strong> post' + (state.total === 1 ? "" : "s") + '.'
+            + ' (' + state.ppd + '/day × ' + act + ' day'
+            + (act === 1 ? "" : "s") + ')';
+          if (topup && state.total > 0) {
+            topupEl.hidden = false;
+            topupEl.textContent = "Some days already have posts. We'll fill them in to "
+              + state.ppd + " per day, not replace what's there.";
+          } else {
+            topupEl.hidden = true;
+          }
+          if (state.capped && state.capped_days.length) {
+            warnEl.hidden = false;
+            warnEl.textContent = "Your window is too tight for "
+              + state.ppd + " posts on "
+              + state.capped_days.length + " day"
+              + (state.capped_days.length === 1 ? "" : "s")
+              + ". We'll cap those at what fits with 30-min between posts. "
+              + "Widen your window to fit more.";
+          } else {
+            warnEl.hidden = true;
+          }
+          goLib.disabled = state.total === 0;
+          goAi.disabled  = state.total === 0;
+          if (state.total === 0) {
+            totalEl.innerHTML += '<div class="helper" style="margin-top:6px">'
+              + 'Every day in this range is already at your rate. '
+              + 'Lower the rate or expand the range to add more.</div>';
+          }
+        } catch (e) {
+          if (seq !== previewSeq) return;
+          totalEl.textContent = "Network error: " + e.message;
+          goLib.disabled = true;
+          goAi.disabled  = true;
+        }
+      }
+
+      // Wire inputs.
+      ppd.addEventListener("input", () => {
+        state.ppd = Number(ppd.value) || 1;
+        ppdV.textContent = state.ppd + " post"
+          + (state.ppd === 1 ? "" : "s") + " per day";
+        refreshPreview();
+      });
+      sIn.addEventListener("input", () => {
+        state.start = sIn.value || startISO;
+        if (eIn.value < state.start) {
+          eIn.value = state.start;
+          state.end = state.start;
+        }
+        refreshPreview();
+      });
+      eIn.addEventListener("input", () => {
+        state.end = eIn.value || endISO;
+        refreshPreview();
+      });
+      bg.querySelectorAll("[data-day]").forEach(b =>
+        b.addEventListener("click", () => {
+          var k = b.dataset.day;
+          if (state.active.includes(k)) {
+            state.active = state.active.filter(x => x !== k);
+          } else {
+            state.active = state.active.concat([k]);
+          }
+          b.classList.toggle("is-active");
+          refreshPreview();
+        }));
+
+      goLib.onclick = () => {
+        STATE.plan = {
+          scope: "month_plan",
+          start: state.start, end: state.end,
+          posts_per_day: state.ppd,
+          active_days: state.active,
+          count: state.total,
+          window: state.window,
+          generation_method: "library",
+        };
+        _planCloseModal();
+        _planLandOnMakeTab();
+        if (typeof makeStep1Count === "function") makeStep1Count();
+      };
+      goAi.onclick = () => {
+        STATE.plan = {
+          scope: "month_plan",
+          start: state.start, end: state.end,
+          posts_per_day: state.ppd,
+          active_days: state.active,
+          count: state.total,
+          window: state.window,
+          generation_method: "ai",
+        };
+        _planCloseModal();
+        _planLandOnMakeTab();
+        if (typeof aiOpenForm === "function") aiOpenForm();
+      };
+
+      // Initial preview.
+      refreshPreview();
     }
 
     function _planLandOnMakeTab(){
