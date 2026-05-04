@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Studio render</title>
+  <style>
+    @font-face { font-family: "studio-bold-display"; src: local("Bebas Neue"), url("file:///home/dpalacios/home-server/studio-assets/fonts/bold_display.ttf") format("truetype"); }
+    @font-face { font-family: "studio-clean-sans"; src: local("Inter"), url("file:///home/dpalacios/home-server/studio-assets/fonts/clean_sans.woff2") format("woff2"); }
+    @font-face { font-family: "studio-clean-sans"; src: local("Inter Bold"), url("file:///home/dpalacios/home-server/studio-assets/fonts/clean_sans_bold.woff2") format("woff2"); font-weight:700; }
+    @font-face { font-family: "studio-serif"; src: local("Playfair Display"), url("file:///home/dpalacios/home-server/studio-assets/fonts/serif.ttf") format("truetype"); }
+    @font-face { font-family: "studio-handwritten"; src: local("Caveat"), url("file:///home/dpalacios/home-server/studio-assets/fonts/handwritten.ttf") format("truetype"); }
+    @font-face { font-family: "studio-mono"; src: local("JetBrains Mono"), url("file:///home/dpalacios/home-server/studio-assets/fonts/mono.ttf") format("truetype"); }
+    @font-face { font-family: "studio-condensed"; src: local("Oswald"), url("file:///home/dpalacios/home-server/studio-assets/fonts/condensed.ttf") format("truetype"); }
+    @font-face { font-family: "studio-slab"; src: local("Roboto Slab"), url("file:///home/dpalacios/home-server/studio-assets/fonts/slab.ttf") format("truetype"); }
+    @font-face { font-family: "studio-rounded"; src: local("Nunito"), url("file:///home/dpalacios/home-server/studio-assets/fonts/rounded.ttf") format("truetype"); }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin:0; padding:0; background:#000; }
+    body { width:1080px; height:1920px; }
+    #stage {
+      position:relative; width:1080px; height:1920px; overflow:hidden;
+      font-family: "studio-clean-sans", system-ui, sans-serif;
+    }
+    .el { position:absolute; user-select:none; }
+    .el-text { display:flex; align-items:center; justify-content:center; line-height:1.15; word-wrap:break-word; }
+    .el-shape { background:#000; }
+    .el-shape.is-rounded { border-radius:24px; }
+    .el-shape.is-circle  { border-radius:50%; }
+    .el-shape.is-bar     { border-radius:6px; }
+    .el-shape.is-banner  { border-radius:8px; }
+    .el-image  { background:#000; background-size:cover; background-position:center; }
+    .el-arrow svg { width:100%; height:100%; }
+  </style>
+</head>
+<body>
+  <div id="stage"></div>
+  <script src="/dashboard/instagram/studio/render.js"></script>
+</body>
+</html>

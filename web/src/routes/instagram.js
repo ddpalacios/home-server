@@ -558,6 +558,7 @@ function _updateEmptyState() {
   }
 }
 
+
 // ─── Section entry ────────────────────────────────────────────────────────────
 
 async function loadInstagramSection() {

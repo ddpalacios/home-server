@@ -4398,6 +4398,7 @@
 </head>
 <body>
 
+
   <!-- ─── Driver.js (CDN) for the dashboard tutorial ─── -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.css"/>
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.js"></script>
@@ -7806,17 +7807,6 @@
             <span class="rep-shortcut-hint">⌨ press <kbd>?</kbd> for shortcuts</span>
           </header>
 
-          <!-- Connect Instagram card (shows when no IG account is connected) -->
-          <div class="rep-ig-connect" id="repIgConnect" hidden>
-            <div class="rep-ig-connect-icon" aria-hidden="true">📷</div>
-            <div class="rep-ig-connect-body">
-              <div class="rep-ig-connect-h">Connect Instagram</div>
-              <div class="rep-ig-connect-text">See your Instagram DMs here too. One click to connect.</div>
-            </div>
-            <button type="button" class="rep-ig-connect-btn" id="repIgConnectBtn">Connect →</button>
-            <button type="button" class="rep-ig-connect-dismiss" id="repIgConnectDismiss" aria-label="Hide for 30 days" title="Hide for 30 days">×</button>
-          </div>
-
           <div class="rep-cols" id="repCols" data-mobile-pane="side">
             <aside class="rep-side" id="repSide"></aside>
             <div class="rep-mid">
@@ -7858,30 +7848,6 @@
           </div>
         </div>
 
-        <!-- Pre-OAuth modal: explains permissions in plain English before
-             we redirect to Meta's auth screen. -->
-        <div class="rep-ig-modal" id="repIgModal" role="dialog" aria-modal="true" aria-labelledby="repIgModalTitle" hidden>
-          <div class="rep-ig-modal-backdrop" data-ig-modal-close></div>
-          <div class="rep-ig-modal-card">
-            <button type="button" class="rep-ig-modal-x" data-ig-modal-close aria-label="Close">×</button>
-            <h3 id="repIgModalTitle" class="rep-ig-modal-h">Connect Instagram</h3>
-            <p class="rep-ig-modal-sub">Next, you'll log into Instagram and approve these things:</p>
-            <ul class="rep-ig-modal-bullets">
-              <li><span class="rep-ig-modal-check">✓</span> See your Instagram profile</li>
-              <li><span class="rep-ig-modal-check">✓</span> See and reply to your DMs</li>
-            </ul>
-            <p class="rep-ig-modal-reassure">We never post anything without your permission.</p>
-            <p class="rep-ig-modal-note">
-              ℹ Your Instagram needs to be a Business or Creator account, linked to a Facebook Page.
-              Most contractors already have this — but if not,
-              <a href="https://help.instagram.com/502981923235522" target="_blank" rel="noopener">we'll show you how →</a>
-            </p>
-            <div class="rep-ig-modal-actions">
-              <button type="button" class="btn secondary" data-ig-modal-close>Cancel</button>
-              <a class="btn shiny" id="repIgModalContinue" href="/me/instagram/oauth/start">Continue to Instagram →</a>
-            </div>
-          </div>
-        </div>
       </section>
 
       <!-- ─────────── Pipeline page ─────────── -->
@@ -8541,6 +8507,7 @@
           <nav class="sched-top-tabs" role="tablist" aria-label="Schedule sections">
             <button type="button" class="sched-top-tab is-active" data-sched-top-tab="calendar" role="tab" aria-selected="true">Calendar</button>
             <button type="button" class="sched-top-tab" data-sched-top-tab="instagram" role="tab" aria-selected="false">Instagram</button>
+            <button type="button" class="sched-top-tab" data-sched-top-tab="linkedin"  role="tab" aria-selected="false">LinkedIn</button>
           </nav>
 
           <!-- Calendar tab pane (Google Calendar appointments) -->
@@ -8580,6 +8547,26 @@
             </header>
             <div id="schedIgMount">
               <!-- #instagram section content is moved here on first activation. -->
+            </div>
+          </div>
+
+          <!-- LinkedIn tab pane -->
+          <div class="sched-top-pane" data-sched-top-pane="linkedin" hidden>
+            <header class="cal-head" style="margin-bottom:12px;">
+              <div>
+                <h2 style="margin:0;">LinkedIn posts</h2>
+                <p class="cal-sub">Publish and schedule to your LinkedIn profile or company pages.</p>
+              </div>
+            </header>
+            <div id="schedLiMount">
+              <iframe
+                id="liEmbedFrame"
+                src="about:blank"
+                title="LinkedIn"
+                loading="lazy"
+                style="width:100%;height:calc(100vh - 220px);min-height:760px;border:0;border-radius:10px;background:#fff;display:block"
+                data-src="/dashboard/linkedin"
+              ></iframe>
             </div>
           </div>
         </div>
@@ -13804,62 +13791,25 @@
         </div>
       </section>
 
-      <!-- ─────────── Instagram Scheduling ─────────── -->
+      <!-- ─────────── Instagram (embedded clean rebuild) ─────────── -->
+      <!-- The Instagram tab is the standalone /dashboard/instagram page,
+           embedded as an iframe so all login + posts/DMs/publish UX lives
+           in one place. The iframe uses target=_top on its OAuth links so
+           the FB consent flow happens at the top window (Facebook refuses
+           to render inside an iframe), then the callback returns to
+           /dashboard#instagram and the iframe re-loads with the new
+           connection state. -->
       <section class="grid" id="instagram" data-route-section="instagram" hidden>
-        <div class="ig-page" style="grid-column: span 12;">
-          <div id="igReconnectBanner" class="ig-banner" hidden></div>
-
-          <!-- Connected state — toolbar + calendar/list. Hidden until at
-               least one Instagram account is linked. -->
-          <div id="igConnected" hidden>
-            <!-- Connection status banner — shows the connected handle and
-                 a Disconnect button. -->
-            <div class="ig-conn-banner" id="igConnBanner">
-              <div class="ig-conn-status" aria-hidden="true">
-                <span class="ig-conn-dot"></span>
-                <span class="ig-conn-icon">📷</span>
-              </div>
-              <div class="ig-conn-meta">
-                <div class="ig-conn-title" id="igConnTitle">Connected</div>
-                <div class="ig-conn-sub" id="igConnSub">@instagram</div>
-              </div>
-              <button id="igDisconnectBtn" type="button" class="ig-conn-disconnect">Disconnect</button>
-            </div>
-
-            <div class="ig-toolbar">
-              <select id="igAccountFilter" class="ig-account-filter"></select>
-              <div class="ig-month-controls">
-                <button class="ig-prev" type="button" aria-label="Previous month">&#8249;</button>
-                <span id="igMonthLabel" class="ig-month-label"></span>
-                <button class="ig-next" type="button" aria-label="Next month">&#8250;</button>
-                <button class="ig-today" type="button">Today</button>
-              </div>
-              <div class="ig-view-toggle" role="tablist" aria-label="View mode">
-                <button id="igViewCalendar" type="button" role="tab" aria-selected="true">Calendar</button>
-                <button id="igViewList"     type="button" role="tab" aria-selected="false">List</button>
-              </div>
-              <button id="igNewPostBtn" type="button" class="ig-primary-btn">+ New post</button>
-            </div>
-
-            <div id="igCalendar" class="ig-calendar"></div>
-            <div id="igList" class="ig-list" hidden></div>
-          </div>
-
-          <!-- Empty state — focused connect prompt when no IG account exists. -->
-          <div id="igEmpty" class="ig-empty-card" hidden>
-            <span class="ig-empty-accent" aria-hidden="true"></span>
-            <div class="ig-empty-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg>
-            </div>
-            <h3 class="ig-empty-h">Connect Instagram to start scheduling.</h3>
-            <p class="ig-empty-text">Plan posts ahead, see them in a calendar, and watch your engagement grow — all in one place.</p>
-            <a href="/me/instagram/oauth/start" class="ig-primary-btn">Connect Instagram</a>
-          </div>
+        <div style="grid-column: span 12;">
+          <iframe
+            id="igEmbedFrame"
+            src="/dashboard/instagram"
+            title="Instagram"
+            loading="lazy"
+            style="width:100%;height:calc(100vh - 96px);min-height:760px;border:0;border-radius:10px;background:#fff;display:block"
+          ></iframe>
         </div>
       </section>
-
-      <!-- Composer modal root (populated by instagram.js) -->
-      <div id="igModalRoot"></div>
 
       <!-- ─── Instagram DMs Inbox ─────────────────────────────────────────── -->
       <section class="grid" id="inbox" data-route-section="inbox" hidden>
@@ -21207,6 +21157,7 @@
       embed:     { title: "Widget",        section: "embed" },
       settings:  { title: "Settings",      section: "settings" },
       instagram: { title: "Instagram",     section: "instagram" },
+      linkedin:  { title: "LinkedIn",      section: "calendar" },
       inbox:     { title: "Inbox",         section: "inbox" },
       sequenceEdit: { title: "Sequence",   section: "sequenceEdit" },
       engagement: { title: "Engagement",   section: "engagement" },
@@ -21288,6 +21239,14 @@
         requestAnimationFrame(() => {
           const igTab = document.querySelector('[data-sched-top-tab="instagram"]');
           if (igTab) igTab.click();
+        });
+      }
+      // linkedin lives next to instagram in the Schedule section.
+      if (route === "linkedin") {
+        route = "calendar";
+        requestAnimationFrame(() => {
+          const liTab = document.querySelector('[data-sched-top-tab="linkedin"]');
+          if (liTab) liTab.click();
         });
       }
       if (route && route.startsWith("sequence-edit-")) {
@@ -25326,8 +25285,18 @@
             p.hidden = p.dataset.schedTopPane !== name;
           });
           if (name === "instagram") ensureSchedIgMounted();
+          if (name === "linkedin")  ensureSchedLiMounted();
         }
         tabs.forEach(t => t.addEventListener("click", () => activate(t.dataset.schedTopTab)));
+      }
+      let _schedLiMounted = false;
+      function ensureSchedLiMounted() {
+        if (_schedLiMounted) return;
+        const frame = document.getElementById("liEmbedFrame");
+        if (!frame) return;
+        const src = frame.getAttribute("data-src");
+        if (src) frame.setAttribute("src", src);
+        _schedLiMounted = true;
       }
       function ensureSchedIgMounted() {
         if (_schedIgMounted) return;
@@ -26804,6 +26773,57 @@
       margin: 0 auto 22px; max-width: 360px;
     }
     .ig-empty-card .ig-primary-btn { height: 38px; padding: 0 20px; font-size: 13px; }
+    /* FB-Login content view — page picker + media grid */
+    [hidden]{display:none !important}
+    .ig-fb-status{padding:14px 16px;border-radius:8px;background:#f0f4ff;border:1px solid #cfd5da;color:#1a1a1a;font-size:13px;margin-bottom:14px}
+    .ig-fb-status.err{background:#fff5f5;border-color:#fbb;color:#7a1f1f}
+    .ig-fb-media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+    .ig-fb-media-card{background:#fff;border:1px solid #e3e5e8;border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+    .ig-fb-media-thumb{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:#f0f1f3}
+    .ig-fb-media-thumb-fallback{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:#f0f1f3;color:#999;font-size:32px}
+    .ig-fb-media-body{padding:10px;flex:1;display:flex;flex-direction:column}
+    .ig-fb-media-cap{font-size:12px;color:#1a1a1a;line-height:1.4;max-height:54px;overflow:hidden;margin:0 0 8px}
+    .ig-fb-media-meta{font-size:11px;color:#666;display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
+    .ig-fb-media-meta span{background:#f0f1f3;padding:2px 7px;border-radius:4px;white-space:nowrap}
+    .ig-fb-media-type-pill{background:#0d6efd!important;color:#fff!important;font-weight:600}
+    .ig-fb-media-link{display:inline-block;font-size:11px;color:#0d6efd;text-decoration:none;margin-top:auto;padding-top:6px}
+    .ig-fb-media-link:hover{text-decoration:underline}
+    .ig-fb-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px}
+    .ig-fb-modal-content{background:#fff;border-radius:12px;padding:24px;max-width:480px;width:100%;max-height:80vh;overflow:auto}
+    .ig-fb-modal-content h3{margin:0 0 14px;font-size:18px}
+    .ig-fb-page-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #d0d7de;border-radius:10px;margin-bottom:8px;cursor:pointer;transition:background .1s}
+    .ig-fb-page-row:hover{background:#f6f8fa}
+    .ig-fb-page-row .ig-fb-page-name{font-weight:600;font-size:14px}
+    .ig-fb-page-row .ig-fb-page-id{font-size:11px;color:#888;font-family:monospace;margin-top:2px}
+    .ig-fb-modal-close{margin-top:12px;background:#e9ecef;color:#1a1a1a;border:0;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600}
+    .ig-fb-modal-close:hover{background:#dee2e6}
+    /* Subtabs (Posts / Analytics) */
+    .ig-fb-subtabs{display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid #e3e5e8}
+    .ig-fb-subtab{background:transparent;border:0;border-bottom:2px solid transparent;padding:9px 14px;font-size:13px;font-weight:600;color:#666;cursor:pointer;margin-bottom:-1px}
+    .ig-fb-subtab:hover{color:#1a1a1a}
+    .ig-fb-subtab.is-active{color:#0d6efd;border-bottom-color:#0d6efd}
+    /* Analytics — KPI cards + funnel */
+    .ig-fb-analytics{display:flex;flex-direction:column;gap:18px}
+    .ig-fb-kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+    .ig-fb-kpi{background:#fff;border:1px solid #e3e5e8;border-radius:10px;padding:14px}
+    .ig-fb-kpi-label{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin:0 0 6px}
+    .ig-fb-kpi-value{font-size:24px;font-weight:700;color:#1a1a1a;line-height:1.1}
+    .ig-fb-kpi-sub{font-size:11px;color:#888;margin-top:4px}
+    .ig-fb-kpi.accent .ig-fb-kpi-value{color:#0d6efd}
+    .ig-fb-kpi.green .ig-fb-kpi-value{color:#198754}
+    .ig-fb-kpi.amber .ig-fb-kpi-value{color:#b58105}
+    .ig-fb-funnel{background:#fff;border:1px solid #e3e5e8;border-radius:10px;padding:18px}
+    .ig-fb-funnel h4{margin:0 0 14px;font-size:14px}
+    .ig-fb-funnel-row{margin-bottom:10px}
+    .ig-fb-funnel-row:last-child{margin-bottom:0}
+    .ig-fb-funnel-meta{display:flex;justify-content:space-between;font-size:12px;color:#444;margin-bottom:4px}
+    .ig-fb-funnel-meta b{color:#1a1a1a;font-size:13px}
+    .ig-fb-funnel-bar{height:24px;background:#f0f1f3;border-radius:6px;overflow:hidden;position:relative}
+    .ig-fb-funnel-fill{height:100%;background:linear-gradient(90deg,#0d6efd,#0a58ca);border-radius:6px;transition:width .4s}
+    .ig-fb-funnel-fill.t-hooked{background:linear-gradient(90deg,#198754,#157347)}
+    .ig-fb-funnel-fill.t-stayed{background:linear-gradient(90deg,#fa7e1e,#d6671a)}
+    .ig-fb-funnel-fill.t-finished{background:linear-gradient(90deg,#962fbf,#6e1f8d)}
+    .ig-fb-empty-analytics{padding:40px 20px;text-align:center;color:#888;font-size:13px;background:#fff;border:1px solid #e3e5e8;border-radius:10px}
     /* Composer modal */
     .ig-modal-backdrop {
       position: fixed; inset: 0; background: rgba(0,0,0,0.45);
@@ -29278,6 +29298,6 @@ function escHtmlSeq(s) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-03-igfb-iframe"></script>
 </body>
 </html>

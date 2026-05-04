@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Social OAuth Test — JustGotALead</title>
+  <style>
+    /* Re-assert the HTML hidden attr — needed because [hidden]'s default
+       display:none is set in the UA stylesheet and gets overridden by
+       any author-CSS display: rule (e.g. .modal-overlay {display:flex}). */
+    [hidden]{display:none !important}
+    body{font-family:system-ui,-apple-system,sans-serif;max-width:960px;margin:32px auto;padding:0 20px;color:#1a1a1a;background:#f7f7f8}
+    h1{font-size:22px;margin:0 0 6px}
+    p.lead{color:#555;margin:0 0 24px}
+    .card{background:#fff;border:1px solid #e3e5e8;border-radius:12px;padding:20px;margin-bottom:18px;box-shadow:0 1px 2px rgba(0,0,0,0.03)}
+    .card h2{font-size:16px;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+    .card .desc{font-size:13px;color:#777;margin:0 0 14px;line-height:1.5;word-break:break-all}
+    .btn{display:inline-block;padding:10px 18px;border-radius:8px;font-weight:600;font-size:14px;text-decoration:none;color:#fff;border:0;cursor:pointer}
+    .btn.fb{background:#1877f2}
+    .btn.fb:hover{background:#0c63d4}
+    .btn.ig{background:linear-gradient(135deg,#feda75,#fa7e1e,#d62976,#962fbf,#4f5bd5)}
+    pre{background:#0d1117;color:#e6edf3;padding:14px;border-radius:8px;font-size:12px;line-height:1.5;margin:14px 0 0;white-space:pre-wrap;word-break:break-all;max-height:240px;overflow:auto}
+    pre.empty{color:#888;background:#f0f1f3}
+    .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;margin-left:auto}
+    .pill.ok{background:#d4edda;color:#155724}
+    .pill.err{background:#f8d7da;color:#721c24}
+    .pill.idle{background:#e9ecef;color:#666}
+    .err-banner{margin-top:14px;padding:12px 14px;border-radius:8px;background:#fff5f5;border:1px solid #fbb;color:#7a1f1f;font-size:13px;line-height:1.5}
+    .selected{margin-top:12px;font-size:13px;color:#555;padding:10px 12px;background:#eef6ff;border-radius:8px;border:1px solid #cfe2ff}
+    .selected b{color:#1a1a1a}
+    /* Modal */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+    .modal-content{background:#fff;border-radius:12px;padding:24px;max-width:480px;width:100%;max-height:80vh;overflow:auto}
+    .modal-content h3{margin:0 0 14px;font-size:18px}
+    .page-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #d0d7de;border-radius:10px;margin-bottom:8px;cursor:pointer;transition:background .1s}
+    .page-row:hover{background:#f6f8fa}
+    .page-row .page-name{font-weight:600;font-size:14px}
+    .page-row .page-id{font-size:11px;color:#888;font-family:monospace;margin-top:2px}
+    .modal-close{margin-top:12px;background:#e9ecef;color:#1a1a1a;border:0;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600}
+    .modal-close:hover{background:#dee2e6}
+    /* Media grid */
+    .media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:16px}
+    .media-card{background:#fff;border:1px solid #e3e5e8;border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+    .media-thumb{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:#f0f1f3}
+    .media-thumb-fallback{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:#f0f1f3;color:#999;font-size:32px}
+    .media-body{padding:10px;flex:1;display:flex;flex-direction:column}
+    .media-cap{font-size:12px;color:#1a1a1a;line-height:1.4;max-height:54px;overflow:hidden;margin:0 0 8px;text-overflow:ellipsis}
+    .media-meta{font-size:11px;color:#666;display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
+    .media-meta span{background:#f0f1f3;padding:2px 7px;border-radius:4px;white-space:nowrap}
+    .media-type-pill{background:#0d6efd!important;color:#fff!important;font-weight:600}
+    .media-link{display:inline-block;font-size:11px;color:#0d6efd;text-decoration:none;margin-top:auto;padding-top:6px}
+    .media-link:hover{text-decoration:underline}
+    .grid-status{grid-column:1/-1;padding:24px;text-align:center;color:#666;font-size:13px}
+    /* DMs */
+    .convos-section{margin-top:18px}
+    .convos-section h3{font-size:14px;color:#444;margin:0 0 10px}
+    .convo-row{border:1px solid #e3e5e8;border-radius:10px;margin-bottom:8px;background:#fff;overflow:hidden}
+    .convo-head{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;transition:background .1s}
+    .convo-head:hover{background:#f6f8fa}
+    .convo-handle{font-weight:600;font-size:13px;flex:1;color:#1a1a1a}
+    .convo-meta{font-size:11px;color:#888}
+    .convo-toggle{font-size:14px;color:#666;transition:transform .15s}
+    .convo-row.open .convo-toggle{transform:rotate(180deg)}
+    .convo-body{display:none;padding:12px 14px;border-top:1px solid #e3e5e8;background:#fafbfc;max-height:420px;overflow:auto}
+    .convo-row.open .convo-body{display:block}
+    .msg{display:flex;margin-bottom:8px;align-items:flex-end;gap:6px}
+    .msg.us{justify-content:flex-end}
+    .msg-bubble{max-width:70%;padding:8px 12px;border-radius:14px;font-size:13px;line-height:1.4;word-wrap:break-word}
+    .msg.them .msg-bubble{background:#fff;border:1px solid #d0d7de;border-bottom-left-radius:4px;color:#1a1a1a}
+    .msg.us .msg-bubble{background:#0d6efd;color:#fff;border-bottom-right-radius:4px}
+    .msg-time{font-size:10px;color:#999;margin-top:2px}
+    .convo-loading{padding:14px;color:#888;font-size:12px;text-align:center}
+    .convo-composer{display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #e3e5e8}
+    .convo-composer input{flex:1;padding:8px 12px;border:1px solid #d0d7de;border-radius:18px;font-size:13px;outline:none;background:#fff}
+    .convo-composer input:focus{border-color:#0d6efd;box-shadow:0 0 0 2px rgba(13,110,253,.15)}
+    .convo-composer button{background:#0d6efd;color:#fff;border:0;border-radius:18px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer}
+    .convo-composer button:disabled{background:#9bb8d9;cursor:not-allowed}
+    .convo-composer button:hover:not(:disabled){background:#0a58ca}
+    .convo-send-error{margin-top:8px;font-size:11px;color:#7a1f1f}
+    /* FB header row */
+    .fb-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .btn.disconnect{background:#dc3545;font-size:13px;padding:8px 14px}
+    .btn.disconnect:hover{background:#bb2d3b}
+    .btn.diag{background:#6c757d;font-size:13px;padding:8px 14px}
+    .btn.diag:hover{background:#565e64}
+    /* Publish-to-IG */
+    .pub-section{margin-top:18px;border:1px solid #d0d7de;border-radius:10px;padding:16px;background:#fafbfc}
+    .pub-section h3{margin:0 0 12px;font-size:14px}
+    .pub-uploader{display:block;border:2px dashed #cfd5da;border-radius:10px;padding:18px;text-align:center;color:#666;font-size:13px;cursor:pointer;background:#fff;transition:border-color .1s}
+    .pub-uploader:hover{border-color:#0d6efd;color:#0d6efd}
+    .pub-uploader input[type=file]{position:absolute;left:-9999px;opacity:0;width:1px;height:1px}
+    .pub-preview{margin-top:10px;display:flex;gap:12px;align-items:flex-start}
+    .pub-preview img{max-width:140px;max-height:140px;border-radius:8px;border:1px solid #e3e5e8;background:#fff;display:block}
+    .pub-preview .pub-meta{font-size:11px;color:#666;font-family:monospace;flex:1;word-break:break-all}
+    .pub-section textarea{width:100%;margin-top:10px;padding:10px;border:1px solid #d0d7de;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;min-height:60px}
+    .pub-actions{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+    .btn.publish{background:#198754;color:#fff;font-size:13px;padding:9px 18px;font-weight:600;border:0;border-radius:8px;cursor:pointer}
+    .btn.publish:hover:not(:disabled){background:#157347}
+    .btn.publish:disabled{background:#9bc8a4;cursor:not-allowed}
+    .pub-status{font-size:13px}
+    .pub-status.ok{color:#198754;font-weight:600}
+    .pub-status.err{color:#7a1f1f}
+    .pub-status a{color:inherit;text-decoration:underline;margin-left:6px}
+    /* Diagnostics panel */
+    .diag-panel{margin-top:14px;border:1px solid #d0d7de;border-radius:10px;background:#fff;padding:14px}
+    .diag-panel h3{margin:0 0 10px;font-size:14px}
+    .diag-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid #f0f1f3}
+    .diag-row:last-child{border-bottom:0}
+    .diag-icon{font-size:16px;flex:0 0 auto;line-height:1}
+    .diag-text{flex:1}
+    .diag-label{font-size:13px;font-weight:600;color:#1a1a1a}
+    .diag-detail{font-size:11px;color:#666;margin-top:2px;font-family:monospace;word-break:break-all}
+    .diag-row.ok .diag-icon{color:#198754}
+    .diag-row.fail .diag-icon{color:#dc3545}
+  </style>
+</head>
+<body>
+  <h1>Social OAuth Test</h1>
+  <p class="lead">Click a button to start an OAuth round-trip. The provider's response shows below the corresponding card.</p>
+
+  <div class="card">
+    <h2>Facebook <span class="pill idle" id="fb-pill">idle</span></h2>
+    <p class="desc">v18.0 dialog · client_id=882770804786593 · scope=pages_show_list, instagram_basic, instagram_content_publish, pages_read_engagement, instagram_manage_messages, business_management</p>
+    <div class="fb-actions">
+      <a class="btn fb" href="https://www.facebook.com/v18.0/dialog/oauth?client_id=882770804786593&redirect_uri=https%3A%2F%2Finfallibly-nonbrutal-soila.ngrok-free.dev%2Fme%2Ffacebook%2Foauth%2Fcallback&scope=pages_show_list%2Cinstagram_basic%2Cinstagram_content_publish%2Cpages_read_engagement%2Cinstagram_manage_messages%2Cbusiness_management&response_type=code">Connect Facebook</a>
+      <button class="btn diag" id="fb-diag" hidden type="button">Run diagnostics</button>
+      <button class="btn disconnect" id="fb-disconnect" hidden type="button">Disconnect</button>
+    </div>
+    <div id="fb-diag-panel" class="diag-panel" hidden></div>
+    <div id="fb-error" class="err-banner" hidden></div>
+    <div id="fb-selected" class="selected" hidden></div>
+    <pre id="fb-response" class="empty">no response yet</pre>
+    <div id="fb-media-grid" class="media-grid" hidden></div>
+    <div id="fb-publish" class="pub-section" hidden>
+      <h3>Publish a new post</h3>
+      <label class="pub-uploader" for="pub-file" id="pub-uploader-label">
+        <span id="pub-uploader-text">Click to choose an image</span>
+        <input id="pub-file" type="file" accept="image/*" />
+      </label>
+      <div id="pub-preview" class="pub-preview" hidden>
+        <img id="pub-preview-img" alt="" />
+        <div id="pub-preview-meta" class="pub-meta"></div>
+      </div>
+      <textarea id="pub-caption" placeholder="Write a caption (optional)…" rows="3"></textarea>
+      <div class="pub-actions">
+        <button id="pub-go" class="btn publish" type="button" disabled>Publish to Instagram</button>
+        <div id="pub-status" class="pub-status"></div>
+      </div>
+    </div>
+    <div id="fb-convos" class="convos-section" hidden>
+      <h3>Direct Messages</h3>
+      <div id="fb-convos-list"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Instagram <span class="pill idle" id="ig-pill">idle</span></h2>
+    <p class="desc">instagram.com/oauth · client_id=1710344613734940 · scope=instagram_business_basic + manage_messages + manage_comments + content_publish + manage_insights</p>
+    <a class="btn ig" href="https://www.instagram.com/oauth/authorize?client_id=1710344613734940&redirect_uri=https%3A%2F%2Finfallibly-nonbrutal-soila.ngrok-free.dev%2Fme%2Finstagram%2Foauth%2Fcallback&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights&state=test">Connect Instagram</a>
+    <pre id="ig-response" class="empty">no response yet</pre>
+  </div>
+
+  <div id="page-picker-overlay" class="modal-overlay" hidden>
+    <div class="modal-content">
+      <h3>Pick a Facebook Page</h3>
+      <div id="page-list"></div>
+      <button id="modal-close" class="modal-close">Cancel</button>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+
+      function escapeHtml(s) {
+        return String(s ?? "").replace(/[&<>"']/g, ch => ({
+          "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+        }[ch]));
+      }
+      function setPill(id, state, text) {
+        const el = document.getElementById(id); if (!el) return;
+        el.className = "pill " + state; el.textContent = text;
+      }
+      function showError(prefix, msg) {
+        const el = document.getElementById(`${prefix}-error`);
+        if (el) { el.hidden = false; el.textContent = msg; }
+        setPill(`${prefix}-pill`, "err", "error");
+      }
+      function renderResponse(prefix, obj) {
+        const pre = document.getElementById(`${prefix}-response`);
+        if (!pre) return;
+        pre.classList.remove("empty");
+        pre.textContent = JSON.stringify(obj, null, 2);
+      }
+
+      // ── IG: render whatever bare OAuth params came back via /social?ig_*=...
+      (function renderIgRaw() {
+        const out = {};
+        ["code","error","error_reason","error_description","state","denied"].forEach(k => {
+          const v = params.get(`ig_${k}`); if (v !== null) out[k] = v;
+        });
+        if (Object.keys(out).length === 0) return;
+        renderResponse("ig", out);
+        const isErr = !!(out.error || out.denied);
+        setPill("ig-pill", isErr ? "err" : "ok", isErr ? "error" : "received");
+      })();
+
+      // ── FB: real flow drives off ?fb=connected (token in session) or ?fb_error=...
+      const fbConnected = params.get("fb") === "connected";
+      const fbError = params.get("fb_error");
+
+      if (fbError) {
+        const desc = params.get("fb_error_description") || "";
+        renderResponse("fb", { error: fbError, error_description: desc });
+        showError("fb", `${fbError}${desc ? ": " + desc : ""}`);
+      } else if (fbConnected) {
+        setPill("fb-pill", "ok", "connected");
+        document.getElementById("fb-disconnect").hidden = false;
+        loadPages();
+      }
+
+      // ── Publish-to-IG flow ────────────────────────────────────────────────
+      // Two-step: client uploads file → server returns image_url; client
+      // POSTs /social/publish with that URL + caption; server proxies the
+      // create-container + media_publish calls to Meta and returns the
+      // final media_id + permalink.
+      let _pubImageUrl = "";
+      const pubFile = document.getElementById("pub-file");
+      const pubGo = document.getElementById("pub-go");
+      const pubStatus = document.getElementById("pub-status");
+      const pubCaption = document.getElementById("pub-caption");
+      const pubPreview = document.getElementById("pub-preview");
+      const pubPreviewImg = document.getElementById("pub-preview-img");
+      const pubPreviewMeta = document.getElementById("pub-preview-meta");
+      const pubUploaderText = document.getElementById("pub-uploader-text");
+
+      pubFile?.addEventListener("change", async () => {
+        const file = pubFile.files && pubFile.files[0];
+        if (!file) return;
+        pubStatus.className = "pub-status";
+        pubStatus.textContent = `Uploading ${file.name}…`;
+        pubGo.disabled = true;
+        const fd = new FormData();
+        fd.append("file", file);
+        try {
+          const r = await fetch("/social/upload", { method: "POST", body: fd, credentials: "include" });
+          const data = await r.json().catch(() => ({}));
+          if (!r.ok) {
+            pubStatus.className = "pub-status err";
+            pubStatus.textContent = `Upload failed: ${data.error || r.status}`;
+            return;
+          }
+          _pubImageUrl = data.image_url;
+          pubPreview.hidden = false;
+          pubPreviewImg.src = data.image_url;
+          pubPreviewMeta.textContent = data.image_url;
+          pubUploaderText.textContent = "Click to choose a different image";
+          pubStatus.textContent = "Image uploaded. Add a caption (optional) and Publish.";
+          pubGo.disabled = false;
+        } catch (e) {
+          pubStatus.className = "pub-status err";
+          pubStatus.textContent = `Network error: ${e.message}`;
+        }
+      });
+
+      pubGo?.addEventListener("click", async () => {
+        if (!_pubImageUrl || !_ourIgId || !_selectedPageToken) return;
+        pubGo.disabled = true;
+        pubStatus.className = "pub-status";
+        pubStatus.textContent = "Publishing… (Meta is fetching the image and creating the post)";
+        try {
+          const r = await fetch("/social/publish", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ig_id:      _ourIgId,
+              page_token: _selectedPageToken,
+              image_url:  _pubImageUrl,
+              caption:    pubCaption.value || "",
+            }),
+          });
+          const data = await r.json().catch(() => ({}));
+          if (!r.ok) {
+            pubStatus.className = "pub-status err";
+            const detail = data.body || data.error || `HTTP ${r.status}`;
+            pubStatus.textContent = `Publish failed: ${detail}`;
+            pubGo.disabled = false;
+            return;
+          }
+          pubStatus.className = "pub-status ok";
+          const link = data.permalink
+            ? ` <a href="${data.permalink}" target="_blank" rel="noopener">View on Instagram →</a>`
+            : "";
+          pubStatus.innerHTML = `✓ Published — media_id=${escapeHtml(String(data.media_id || "?"))}${link}`;
+          // Reset so user can publish another without page reload.
+          _pubImageUrl = "";
+          pubFile.value = "";
+          pubCaption.value = "";
+          pubPreview.hidden = true;
+          pubUploaderText.textContent = "Click to choose an image";
+        } catch (e) {
+          pubStatus.className = "pub-status err";
+          pubStatus.textContent = `Network error: ${e.message}`;
+          pubGo.disabled = false;
+        }
+      });
+
+      document.getElementById("fb-diag")?.addEventListener("click", async () => {
+        if (!_selectedPageId || !_selectedPageToken) return;
+        const panel = document.getElementById("fb-diag-panel");
+        panel.hidden = false;
+        panel.innerHTML = `<div style="color:#888;font-size:13px">Running diagnostics…</div>`;
+        try {
+          const r = await fetch(
+            `/me/facebook/page/${encodeURIComponent(_selectedPageId)}/diagnostics?page_token=${encodeURIComponent(_selectedPageToken)}`,
+            { credentials: "include" }
+          );
+          const data = await r.json().catch(() => ({}));
+          if (!r.ok) {
+            panel.innerHTML = `<div style="color:#7a1f1f">Diagnostics failed: ${escapeHtml(data.error || r.status)}</div>`;
+            return;
+          }
+          renderDiagnostics(panel, data);
+        } catch (e) {
+          panel.innerHTML = `<div style="color:#7a1f1f">Network error: ${escapeHtml(e.message)}</div>`;
+        }
+      });
+
+      function renderDiagnostics(panel, data) {
+        const checks = data.checks || [];
+        const rows = checks.map(c => `
+          <div class="diag-row ${c.ok ? 'ok' : 'fail'}">
+            <div class="diag-icon">${c.ok ? '✓' : '✗'}</div>
+            <div class="diag-text">
+              <div class="diag-label">${escapeHtml(c.label)}</div>
+              <div class="diag-detail">${escapeHtml(c.detail || '')}</div>
+            </div>
+          </div>`).join("");
+        const allOk = checks.every(c => c.ok);
+        const summary = allOk
+          ? `<div style="color:#198754;font-weight:600;font-size:13px;margin-bottom:8px">✓ All checks passing — webhooks should fire on the next inbound DM.</div>`
+          : `<div style="color:#7a1f1f;font-weight:600;font-size:13px;margin-bottom:8px">✗ ${checks.filter(c=>!c.ok).length} check(s) failing — fix these before webhooks will fire.</div>`;
+        const rawJson = JSON.stringify(data.raw || {}, null, 2);
+        panel.innerHTML = `
+          <h3>Diagnostics</h3>
+          ${summary}
+          ${rows}
+          <details style="margin-top:14px">
+            <summary style="cursor:pointer;font-size:12px;color:#666">Raw responses</summary>
+            <pre style="margin-top:8px">${escapeHtml(rawJson)}</pre>
+          </details>`;
+      }
+
+      document.getElementById("fb-disconnect")?.addEventListener("click", async () => {
+        if (!confirm("Disconnect Facebook? You'll need to re-authorize to fetch Pages, media, or DMs again.")) return;
+        try {
+          await fetch("/me/facebook/disconnect", { method: "POST", credentials: "include" });
+        } catch (_) { /* ignore — we still want to reset the UI */ }
+        // Strip ?fb=connected from URL and reload to a clean state.
+        const u = new URL(window.location.href);
+        u.search = "";
+        window.location.replace(u.toString());
+      });
+
+      async function loadPages() {
+        try {
+          const r = await fetch("/me/facebook/pages", { credentials: "include" });
+          const data = await r.json().catch(() => ({}));
+          renderResponse("fb", data);
+          if (!r.ok) {
+            showError("fb", `Failed to load pages: ${data.error || r.status}${data.body ? "\n" + data.body : ""}`);
+            return;
+          }
+          const pages = data.data || [];
+          if (pages.length === 0) {
+            showError("fb", "No Pages found on this account.");
+            return;
+          }
+          showPagePicker(pages);
+        } catch (e) {
+          showError("fb", `Network error: ${e.message}`);
+        }
+      }
+
+      function showPagePicker(pages) {
+        const list = document.getElementById("page-list");
+        list.innerHTML = pages.map(p => `
+          <div class="page-row" data-id="${escapeHtml(p.id)}" data-token="${escapeHtml(p.access_token || "")}" data-name="${escapeHtml(p.name || "")}">
+            <div>
+              <div class="page-name">${escapeHtml(p.name || "Unnamed Page")}</div>
+              <div class="page-id">${escapeHtml(p.id)}</div>
+            </div>
+          </div>`).join("");
+        list.querySelectorAll(".page-row").forEach(row => {
+          row.addEventListener("click", () => {
+            hidePagePicker();
+            selectPage(row.dataset.id, row.dataset.token, row.dataset.name);
+          });
+        });
+        document.getElementById("page-picker-overlay").hidden = false;
+      }
+
+      function hidePagePicker() {
+        document.getElementById("page-picker-overlay").hidden = true;
+      }
+      document.getElementById("modal-close")?.addEventListener("click", hidePagePicker);
+      document.getElementById("page-picker-overlay")?.addEventListener("click", e => {
+        if (e.target.id === "page-picker-overlay") hidePagePicker();
+      });
+
+      async function selectPage(pageId, pageToken, pageName) {
+        const sel = document.getElementById("fb-selected");
+        sel.hidden = false;
+        sel.innerHTML = `Selected page: <b>${escapeHtml(pageName)}</b> &middot; <span style="font-family:monospace;color:#888">${escapeHtml(pageId)}</span>`;
+        document.getElementById("fb-error").hidden = true;
+
+        let igData;
+        try {
+          const r = await fetch(
+            `/me/facebook/page/${encodeURIComponent(pageId)}/instagram?page_token=${encodeURIComponent(pageToken)}`,
+            { credentials: "include" }
+          );
+          igData = await r.json().catch(() => ({}));
+          renderResponse("fb", igData);
+          if (!r.ok) {
+            showError("fb", `Page lookup failed: ${igData.body || igData.error || r.status}`);
+            return;
+          }
+        } catch (e) {
+          showError("fb", `Network error: ${e.message}`);
+          return;
+        }
+
+        const igAcct = igData.instagram_business_account;
+        if (!igAcct || !igAcct.id) {
+          showError("fb", "This page requires to be tied to a business page. Connect a Facebook Page that has a linked Instagram Business or Creator account.");
+          return;
+        }
+        // Track for the realtime poller — needed to refresh on incoming events.
+        _ourIgId = igAcct.id;
+        _selectedPageId = pageId;
+        _selectedPageToken = pageToken;
+        document.getElementById("fb-diag").hidden = false;
+        document.getElementById("fb-publish").hidden = false;
+        // Subscribe THIS Page to the app's webhooks (separate from the
+        // app-level subscription configured in developers.facebook.com —
+        // both are required for events to fire).
+        subscribePageToWebhooks(pageId, pageToken);
+        // Run media + conversations in parallel — independent calls.
+        await Promise.all([
+          loadMedia(igAcct.id, pageToken),
+          loadConversations(igAcct.id, pageToken),
+        ]);
+        startRealtimePoller();
+      }
+
+      async function subscribePageToWebhooks(pageId, pageToken) {
+        try {
+          const r = await fetch(
+            `/me/facebook/page/${encodeURIComponent(pageId)}/subscribe-webhooks?page_token=${encodeURIComponent(pageToken)}`,
+            { method: "POST", credentials: "include" }
+          );
+          const data = await r.json().catch(() => ({}));
+          const sel = document.getElementById("fb-selected");
+          if (r.ok && data.success) {
+            sel.innerHTML += ` <span style="color:#198754;font-weight:600">· webhook subscribed ✓</span>`;
+          } else {
+            sel.innerHTML += ` <span style="color:#7a1f1f">· webhook subscribe failed (${data.body || data.error || r.status})</span>`;
+          }
+        } catch (e) {
+          console.warn("subscribe-webhooks failed", e);
+        }
+      }
+
+      // ── Conversation polling (no webhook required) ────────────────────────
+      // Re-fetches the conversations list + the currently-open thread from
+      // Meta on a fixed interval. Webhooks are unreliable / Dev-mode-gated;
+      // polling sidesteps that entirely. Trade-off: up to CONVO_POLL_MS
+      // latency before a new DM appears. Fine for 1–3 clients (~30 calls/h
+      // per page, well under Meta's 200/h Page-token rate limit).
+      let _ourIgId = "";
+      let _selectedPageId = "";
+      let _selectedPageToken = "";
+      let _convoPollTimer = null;
+      const CONVO_POLL_MS = 30 * 1000;  // 30 seconds — 120 calls/hr per page,
+                                         // under Meta's 200/hr Page-token cap.
+
+      function startRealtimePoller() {
+        if (_convoPollTimer) return;
+        _convoPollTimer = setInterval(refreshConvosAndOpenThread, CONVO_POLL_MS);
+      }
+
+      async function refreshConvosAndOpenThread() {
+        if (!_selectedPageToken || !_ourIgId) return;
+
+        // 1. Fetch the conversation list and apply a diff — don't re-render
+        //    rows that haven't changed (avoids the full-list flash).
+        let convosData;
+        try {
+          const r = await fetch(
+            `/me/facebook/conversations?page_token=${encodeURIComponent(_selectedPageToken)}`,
+            { credentials: "include" }
+          );
+          if (!r.ok) return;
+          convosData = await r.json();
+        } catch (_) { return; }
+        applyConvosDiff(convosData.data || []);
+
+        // 2. If a row is open, fetch its messages and append only the new
+        //    ones to the bottom — leaves the existing bubbles + composer
+        //    input untouched (so the user keeps their typed text + focus).
+        const list = document.getElementById("fb-convos-list");
+        const openRow = list && list.querySelector(".convo-row.open");
+        if (!openRow) return;
+        const convoId = openRow.dataset.id;
+        const body = openRow.querySelector(".convo-body");
+
+        let msgsData;
+        try {
+          const r = await fetch(
+            `/me/facebook/conversation/${encodeURIComponent(convoId)}/messages?page_token=${encodeURIComponent(_selectedPageToken)}`,
+            { credentials: "include" }
+          );
+          if (!r.ok) return;
+          msgsData = await r.json();
+        } catch (_) { return; }
+        appendNewMessages(body, msgsData.data || []);
+      }
+
+      // Update the visible conversation list to match `convos` from Meta:
+      //   - Existing rows: update only the meta timestamp (no DOM swap)
+      //   - New rows: built fresh and inserted in returned order
+      //   - Gone rows: removed
+      // We only reorder via re-attach when Meta's order actually differs
+      // from current — avoids scroll/click-state thrash.
+      function applyConvosDiff(convos) {
+        const list = document.getElementById("fb-convos-list");
+        if (!list) return;
+
+        const existing = new Map();
+        list.querySelectorAll(".convo-row").forEach(r => existing.set(r.dataset.id, r));
+
+        const desiredRows = [];
+        for (const c of convos) {
+          const others = (c.participants && c.participants.data ? c.participants.data : [])
+            .filter(p => String(p.id) !== String(_ourIgId));
+          const handle = others.map(p => p.username || p.name || p.id).join(", ") || "(unknown)";
+          const recipientId = others.length ? String(others[0].id) : "";
+          const updated = c.updated_time
+            ? new Date(c.updated_time).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
+            : "";
+
+          let row = existing.get(c.id);
+          if (row) {
+            // Update timestamp in place if it changed.
+            const meta = row.querySelector(".convo-meta");
+            if (meta && meta.textContent !== updated) meta.textContent = updated;
+            existing.delete(c.id);
+          } else {
+            row = buildConvoRow(c.id, recipientId, handle, updated);
+          }
+          desiredRows.push(row);
+        }
+
+        // Remove rows Meta no longer returns.
+        existing.forEach(r => r.remove());
+
+        // Re-attach in desired order only if order actually changed.
+        const currentIds = Array.from(list.querySelectorAll(".convo-row")).map(r => r.dataset.id);
+        const desiredIds = desiredRows.map(r => r.dataset.id);
+        const orderDiffers = currentIds.length !== desiredIds.length
+          || currentIds.some((id, i) => id !== desiredIds[i]);
+        if (orderDiffers) {
+          // Detach + re-append preserves any classes (e.g. .open) on existing
+          // rows since we're moving the same DOM nodes, not re-creating them.
+          desiredRows.forEach(r => list.appendChild(r));
+        }
+      }
+
+      function buildConvoRow(convoId, recipientId, handle, updated) {
+        const row = document.createElement("div");
+        row.className = "convo-row";
+        row.dataset.id = convoId;
+        row.dataset.recipientId = recipientId;
+        row.innerHTML = `
+          <div class="convo-head">
+            <div class="convo-handle">@${escapeHtml(handle)}</div>
+            <div class="convo-meta">${escapeHtml(updated)}</div>
+            <div class="convo-toggle">▾</div>
+          </div>
+          <div class="convo-body" data-loaded="0"></div>`;
+        const list = document.getElementById("fb-convos-list");
+        row.querySelector(".convo-head").addEventListener("click", () => {
+          const wasOpen = row.classList.contains("open");
+          list.querySelectorAll(".convo-row.open").forEach(r => r.classList.remove("open"));
+          if (wasOpen) return;
+          row.classList.add("open");
+          const body = row.querySelector(".convo-body");
+          if (body.dataset.loaded === "0") {
+            loadMessages(row.dataset.id, body, _ourIgId, _selectedPageToken);
+            body.dataset.loaded = "1";
+          }
+        });
+        return row;
+      }
+
+      // Append messages newer than the latest one already rendered in `body`.
+      // Bubbles are stamped with data-time=<unix-ms> so we can find the cut.
+      // Composer + existing bubbles are untouched.
+      function appendNewMessages(body, messages) {
+        if (!messages.length) return;
+        const existingMsgs = body.querySelectorAll(".msg");
+        let latest = 0;
+        if (existingMsgs.length) {
+          const last = existingMsgs[existingMsgs.length - 1];
+          latest = parseInt(last.dataset.time || "0", 10) || 0;
+        }
+        // Meta returns newest-first; reverse for display order.
+        const ordered = messages.slice().reverse();
+        const fresh = ordered.filter(m => {
+          if (!m.created_time) return false;
+          return new Date(m.created_time).getTime() > latest;
+        });
+        if (!fresh.length) return;
+
+        const composer = body.querySelector(".convo-composer");
+        // Auto-scroll only when the user was already near the bottom.
+        const wasAtBottom = (body.scrollHeight - body.scrollTop - body.clientHeight) < 80;
+
+        for (const m of fresh) {
+          const isUs = m.from && String(m.from.id) === String(_ourIgId);
+          const text = m.message || "";
+          const tsMs = m.created_time ? new Date(m.created_time).getTime() : 0;
+          const tsLabel = m.created_time
+            ? new Date(m.created_time).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
+            : "";
+          const div = document.createElement("div");
+          div.className = `msg ${isUs ? "us" : "them"}`;
+          div.dataset.time = String(tsMs);
+          div.innerHTML = `
+            <div>
+              <div class="msg-bubble">${escapeHtml(text || "(empty)")}</div>
+              <div class="msg-time" style="text-align:${isUs ? "right" : "left"}">${escapeHtml(tsLabel)}</div>
+            </div>`;
+          if (composer) body.insertBefore(div, composer);
+          else body.appendChild(div);
+        }
+
+        if (wasAtBottom) body.scrollTop = body.scrollHeight;
+      }
+
+      async function loadConversations(igId, pageToken) {
+        const section = document.getElementById("fb-convos");
+        const list = document.getElementById("fb-convos-list");
+        section.hidden = false;
+        list.innerHTML = `<div class="convo-loading">Loading conversations…</div>`;
+
+        try {
+          const r = await fetch(
+            `/me/facebook/conversations?page_token=${encodeURIComponent(pageToken)}`,
+            { credentials: "include" }
+          );
+          const data = await r.json().catch(() => ({}));
+          if (!r.ok) {
+            list.innerHTML = `<div class="convo-loading">Couldn't load conversations: ${escapeHtml(data.body || data.error || String(r.status))}</div>`;
+            return;
+          }
+          const convos = data.data || [];
+          if (convos.length === 0) {
+            list.innerHTML = `<div class="convo-loading">No conversations on this account.</div>`;
+            return;
+          }
+          renderConvosList(convos, igId, pageToken);
+        } catch (e) {
+          list.innerHTML = `<div class="convo-loading">Network error: ${escapeHtml(e.message)}</div>`;
+        }
+      }
+
+      function renderConvosList(convos, ourIgId, pageToken) {
+        const list = document.getElementById("fb-convos-list");
+        list.innerHTML = convos.map(c => {
+          const others = (c.participants && c.participants.data ? c.participants.data : [])
+            .filter(p => String(p.id) !== String(ourIgId));
+          const handle = others.map(p => p.username || p.name || p.id).join(", ") || "(unknown)";
+          const recipientId = others.length ? String(others[0].id) : "";
+          const updated = c.updated_time
+            ? new Date(c.updated_time).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
+            : "";
+          return `
+            <div class="convo-row" data-id="${escapeHtml(c.id)}" data-recipient-id="${escapeHtml(recipientId)}">
+              <div class="convo-head">
+                <div class="convo-handle">@${escapeHtml(handle)}</div>
+                <div class="convo-meta">${escapeHtml(updated)}</div>
+                <div class="convo-toggle">▾</div>
+              </div>
+              <div class="convo-body" data-loaded="0"></div>
+            </div>`;
+        }).join("");
+        list.querySelectorAll(".convo-row").forEach(row => {
+          row.querySelector(".convo-head").addEventListener("click", () => {
+            const wasOpen = row.classList.contains("open");
+            // Close any other open rows for a tidy single-pane feel.
+            list.querySelectorAll(".convo-row.open").forEach(r => r.classList.remove("open"));
+            if (wasOpen) return;
+            row.classList.add("open");
+            const body = row.querySelector(".convo-body");
+            if (body.dataset.loaded === "0") {
+              loadMessages(row.dataset.id, body, ourIgId, pageToken);
+              body.dataset.loaded = "1";
+            }
+          });
+        });
+      }
+
+      async function loadMessages(convoId, body, ourIgId, pageToken) {
+        body.innerHTML = `<div class="convo-loading">Loading messages…</div>`;
+        try {
+          const r = await fetch(
+            `/me/facebook/conversation/${encodeURIComponent(convoId)}/messages?page_token=${encodeURIComponent(pageToken)}`,
+            { credentials: "include" }
+          );
+          const data = await r.json().catch(() => ({}));
+          if (!r.ok) {
+            body.innerHTML = `<div class="convo-loading">Couldn't load messages: ${escapeHtml(data.body || data.error || String(r.status))}</div>`;
+            return;
+          }
+          renderMessages(data.data || [], body, ourIgId);
+        } catch (e) {
+          body.innerHTML = `<div class="convo-loading">Network error: ${escapeHtml(e.message)}</div>`;
+        }
+      }
+
+      function renderMessages(messages, body, ourIgId) {
+        const row = body.closest(".convo-row");
+        const convoId = row?.dataset.id || "";
+        const recipientId = row?.dataset.recipientId || "";
+
+        // Meta returns newest-first — reverse so the conversation reads top-to-bottom.
+        const ordered = (messages || []).slice().reverse();
+        const bubblesHtml = ordered.length
+          ? ordered.map(m => {
+              const isUs = m.from && String(m.from.id) === String(ourIgId);
+              const text = m.message || "";
+              const tsMs = m.created_time ? new Date(m.created_time).getTime() : 0;
+              const ts = m.created_time
+                ? new Date(m.created_time).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
+                : "";
+              return `
+                <div class="msg ${isUs ? "us" : "them"}" data-time="${tsMs}">
+                  <div>
+                    <div class="msg-bubble">${escapeHtml(text || "(empty)")}</div>
+                    <div class="msg-time" style="text-align:${isUs ? "right" : "left"}">${escapeHtml(ts)}</div>
+                  </div>
+                </div>`;
+            }).join("")
+          : `<div class="convo-loading">(no messages)</div>`;
+
+        const composerHtml = recipientId ? `
+          <div class="convo-composer">
+            <input type="text" placeholder="Write a reply…" class="convo-input" autocomplete="off" />
+            <button type="button" class="convo-send">Send</button>
+          </div>
+          <div class="convo-send-error" hidden></div>` : "";
+
+        body.innerHTML = bubblesHtml + composerHtml;
+
+        if (recipientId) {
+          const input = body.querySelector(".convo-input");
+          const sendBtn = body.querySelector(".convo-send");
+          const errEl = body.querySelector(".convo-send-error");
+          const send = async () => {
+            const text = (input.value || "").trim();
+            if (!text) return;
+            sendBtn.disabled = true;
+            errEl.hidden = true;
+            try {
+              const r = await fetch(
+                `/me/facebook/conversation/${encodeURIComponent(convoId)}/reply`,
+                {
+                  method: "POST",
+                  credentials: "include",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    page_token:   _selectedPageToken,
+                    recipient_id: recipientId,
+                    text,
+                  }),
+                }
+              );
+              const data = await r.json().catch(() => ({}));
+              if (!r.ok) {
+                errEl.hidden = false;
+                errEl.textContent = `Send failed (${r.status}): ${data.body || data.error || ""}`;
+                return;
+              }
+              input.value = "";
+              // Re-fetch messages so the new outbound bubble shows up.
+              await loadMessages(convoId, body, ourIgId, _selectedPageToken);
+            } catch (e) {
+              errEl.hidden = false;
+              errEl.textContent = `Network error: ${e.message}`;
+            } finally {
+              sendBtn.disabled = false;
+            }
+          };
+          sendBtn.addEventListener("click", send);
+          input.addEventListener("keydown", e => {
+            if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+          });
+          // Auto-focus the input when a convo opens.
+          setTimeout(() => input.focus(), 50);
+        }
+      }
+
+      async function loadMedia(igId, pageToken) {
+        const grid = document.getElementById("fb-media-grid");
+        grid.hidden = false;
+        grid.innerHTML = `<div class="grid-status">Loading media for IG account ${escapeHtml(igId)}…</div>`;
+
+        try {
+          const r = await fetch(
+            `/me/facebook/instagram/${encodeURIComponent(igId)}/media?page_token=${encodeURIComponent(pageToken)}`,
+            { credentials: "include" }
+          );
+          const data = await r.json().catch(() => ({}));
+          renderResponse("fb", data);
+          if (!r.ok) {
+            grid.innerHTML = "";
+            grid.hidden = true;
+            showError("fb", `Media fetch failed (${r.status}): ${data.body || data.error || ""}`);
+            return;
+          }
+          renderMediaGrid(data);
+        } catch (e) {
+          grid.innerHTML = "";
+          grid.hidden = true;
+          showError("fb", `Network error: ${e.message}`);
+        }
+      }
+
+      function extractInsights(insights) {
+        const out = {};
+        for (const m of (insights && insights.data ? insights.data : [])) {
+          const v = m.values && m.values[0];
+          if (v && v.value !== undefined) out[m.name] = v.value;
+        }
+        return out;
+      }
+
+      function fmt(n) {
+        if (n === undefined || n === null) return "—";
+        if (typeof n === "number" && n >= 1000) {
+          return n >= 1e6 ? (n / 1e6).toFixed(1) + "M"
+               : n >= 1e3 ? (n / 1e3).toFixed(1) + "K"
+               : String(n);
+        }
+        return String(n);
+      }
+
+      function emojiForType(t) {
+        if (t === "VIDEO") return "🎬";
+        if (t === "CAROUSEL_ALBUM") return "🖼";
+        return "📷";
+      }
+
+      function renderMediaGrid(data) {
+        const grid = document.getElementById("fb-media-grid");
+        const items = data.data || [];
+        if (items.length === 0) {
+          grid.innerHTML = `<div class="grid-status">No media found on this account.</div>`;
+          return;
+        }
+        grid.innerHTML = items.map(m => {
+          const thumb = m.thumbnail_url || m.media_url || "";
+          const caption = (m.caption || "").slice(0, 220);
+          const ts = m.timestamp ? new Date(m.timestamp).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "";
+          const ins = extractInsights(m.insights);
+          const metricsRow = [];
+          if (m.like_count !== undefined)     metricsRow.push(`<span title="likes">❤ ${fmt(m.like_count)}</span>`);
+          if (m.comments_count !== undefined) metricsRow.push(`<span title="comments">💬 ${fmt(m.comments_count)}</span>`);
+          if (ins.views !== undefined)        metricsRow.push(`<span title="views">👁 ${fmt(ins.views)}</span>`);
+          if (ins.reach !== undefined)        metricsRow.push(`<span title="reach">📊 ${fmt(ins.reach)}</span>`);
+          if (ins.shares !== undefined)       metricsRow.push(`<span title="shares">🔄 ${fmt(ins.shares)}</span>`);
+          if (ins.saved !== undefined)        metricsRow.push(`<span title="saved">💾 ${fmt(ins.saved)}</span>`);
+          if (ins.total_interactions !== undefined) metricsRow.push(`<span title="total interactions">∑ ${fmt(ins.total_interactions)}</span>`);
+
+          return `
+            <div class="media-card">
+              ${thumb
+                ? `<img class="media-thumb" src="${escapeHtml(thumb)}" alt="" loading="lazy" onerror="this.outerHTML='<div class=&quot;media-thumb-fallback&quot;>${emojiForType(m.media_type)}</div>'">`
+                : `<div class="media-thumb-fallback">${emojiForType(m.media_type)}</div>`}
+              <div class="media-body">
+                <p class="media-cap">${escapeHtml(caption || "(no caption)")}</p>
+                <div class="media-meta">
+                  <span class="media-type-pill">${escapeHtml(m.media_type || "")}</span>
+                  ${ts ? `<span>${escapeHtml(ts)}</span>` : ""}
+                  ${metricsRow.join("")}
+                </div>
+                ${m.permalink ? `<a class="media-link" href="${escapeHtml(m.permalink)}" target="_blank" rel="noopener">View on Instagram →</a>` : ""}
+              </div>
+            </div>`;
+        }).join("");
+      }
+    })();
+  </script>
+</body>
+</html>

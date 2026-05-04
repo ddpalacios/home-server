@@ -113,6 +113,7 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, size_t bo
 	char *cookie_value = NULL;
 	char *content_type_value = NULL;
 	char *fwd_host_value = NULL;
+	char *hub_sig_value = NULL;  /* X-Hub-Signature-256 — Meta webhook HMAC */
 	if (http_header) {
 		const char *cookie_start = strstr(http_header, "\r\nCookie:");
 		if (!cookie_start && strncmp(http_header, "Cookie:", 7) == 0) {
@@ -128,6 +129,27 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, size_t bo
 				if (cookie_value) {
 					memcpy(cookie_value, cookie_start, len);
 					cookie_value[len] = '\0';
+				}
+			}
+		}
+
+		/* Forward the Meta webhook signature header — Flask uses this
+		 * to verify HMAC of the body against the app secret. Without
+		 * this forward, every webhook delivery 401s as invalid_signature. */
+		const char *sig_start = strstr(http_header, "\r\nX-Hub-Signature-256:");
+		if (!sig_start && strncasecmp(http_header, "X-Hub-Signature-256:", 20) == 0) {
+			sig_start = http_header;
+		}
+		if (sig_start) {
+			sig_start += (sig_start == http_header) ? 20 : 22;
+			while (*sig_start == ' ') sig_start++;
+			const char *sig_end = strstr(sig_start, "\r\n");
+			if (sig_end && sig_end > sig_start) {
+				size_t len = (size_t)(sig_end - sig_start);
+				hub_sig_value = malloc(len + 1);
+				if (hub_sig_value) {
+					memcpy(hub_sig_value, sig_start, len);
+					hub_sig_value[len] = '\0';
 				}
 			}
 		}
@@ -207,6 +229,17 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, size_t bo
 			fwd_host_value);
 	}
 
+	/* If the upstream request carries an X-Hub-Signature-256 header
+	 * (Meta webhook HMAC), forward it intact. Computed against the
+	 * raw body — must arrive at Flask byte-identical or verification
+	 * fails with 401 invalid_signature. */
+	char hub_sig_line[1024];
+	hub_sig_line[0] = '\0';
+	if (hub_sig_value) {
+		snprintf(hub_sig_line, sizeof(hub_sig_line),
+			"X-Hub-Signature-256: %s\r\n", hub_sig_value);
+	}
+
 	/* Build the request HEADER as a string and send it, then send the
 	 * body bytes via a separate send(). The body may contain null bytes
 	 * (multipart binary uploads), so we cannot inline it via snprintf +
@@ -216,6 +249,7 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, size_t bo
 		+ (cookie_value ? strlen(cookie_value) : 0)
 		+ strlen(content_type)
 		+ strlen(fwd_host_line)
+		+ strlen(hub_sig_line)
 		+ strlen(route);
 	char *header_buf = malloc(header_size);
 	if (!header_buf) {
@@ -223,6 +257,7 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, size_t bo
 		if (cookie_value) free(cookie_value);
 		if (content_type_value) free(content_type_value);
 		if (fwd_host_value) free(fwd_host_value);
+		if (hub_sig_value) free(hub_sig_value);
 		close(sfd);
 		return;
 	}
@@ -233,28 +268,33 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, size_t bo
 			"POST %s HTTP/1.1\r\n"
 			"Host: %s:%s\r\n"
 			"%s"
+			"%s"
 			"Content-Type: %s\r\n"
 			"Content-Length: %zu\r\n"
 			"Cookie: %s\r\n"
 			"Connection: close\r\n"
 			"\r\n",
 			route,
-			"127.0.0.1", port, fwd_host_line, content_type, body_len, cookie_value);
+			"127.0.0.1", port, fwd_host_line, hub_sig_line,
+			content_type, body_len, cookie_value);
 		free(cookie_value);
 	} else {
 		header_written = snprintf(header_buf, header_size,
 			"POST %s HTTP/1.1\r\n"
 			"Host: %s:%s\r\n"
 			"%s"
+			"%s"
 			"Content-Type: %s\r\n"
 			"Content-Length: %zu\r\n"
 			"Connection: close\r\n"
 			"\r\n",
 			route,
-			"127.0.0.1", port, fwd_host_line, content_type, body_len);
+			"127.0.0.1", port, fwd_host_line, hub_sig_line,
+			content_type, body_len);
 	}
 	if (content_type_value) free(content_type_value);
 	if (fwd_host_value) free(fwd_host_value);
+	if (hub_sig_value) free(hub_sig_value);
 
 	if (header_written < 0 || (size_t)header_written >= header_size) {
 		free(header_buf);

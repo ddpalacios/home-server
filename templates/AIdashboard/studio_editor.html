@@ -1,0 +1,1854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Studio — JustGotALead</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700&family=Playfair+Display:wght@400;700&family=Caveat:wght@400;700&family=JetBrains+Mono&family=Oswald:wght@400;700&family=Roboto+Slab:wght@400;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* In-browser font aliases match the names the render module uses, so
+       the live preview matches the saved PNG pixel-identically (the
+       headless renderer maps the same names → local font files). */
+    .ff-bold-display { font-family: "Bebas Neue", sans-serif; }
+    .ff-clean-sans   { font-family: "Inter", sans-serif; }
+    .ff-serif        { font-family: "Playfair Display", serif; }
+    .ff-handwritten  { font-family: "Caveat", cursive; }
+    .ff-mono         { font-family: "JetBrains Mono", monospace; }
+    .ff-condensed    { font-family: "Oswald", sans-serif; }
+    .ff-slab         { font-family: "Roboto Slab", serif; }
+    .ff-rounded      { font-family: "Nunito", sans-serif; }
+
+    :root {
+      --bg:#0f172a;
+      --panel:#1e293b;
+      --panel-2:#334155;
+      --border:#334155;
+      --text:#f1f5f9;
+      --text-muted:#94a3b8;
+      --brand:#7c5cff;
+      --brand-2:#06b6d4;
+      --green:#16a34a;
+      --red:#dc2626;
+    }
+    *, *::before, *::after { box-sizing:border-box; }
+    html, body { margin:0; padding:0; height:100%; background:var(--bg); color:var(--text);
+                 font-family:"Inter", system-ui, sans-serif; font-size:14px; }
+    [hidden]{ display:none !important; }
+    button { font-family:inherit; }
+
+    /* ── Layout shell (top / left / canvas / right / bottom) ─────────── */
+    .shell { display:grid; grid-template-rows:56px 1fr 56px; height:100vh; }
+    .top {
+      display:flex; align-items:center; gap:12px;
+      padding:0 16px; border-bottom:1px solid var(--border);
+      background:rgba(15,23,42,.92);
+    }
+    .top-h { font-size:15px; font-weight:600; flex:1 }
+    .top-name {
+      background:transparent; color:var(--text); border:0;
+      font-size:14px; font-weight:500; padding:6px 8px; border-radius:6px;
+    }
+    .top-name:hover{ background:rgba(255,255,255,.05); }
+    .top-name:focus{ background:rgba(255,255,255,.08); outline:0; }
+    .top-toggle {
+      display:inline-flex; gap:2px; padding:3px;
+      background:var(--panel); border-radius:8px;
+    }
+    .top-toggle button {
+      background:transparent; border:0; color:var(--text-muted);
+      padding:6px 14px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:500;
+    }
+    .top-toggle button.is-active{ background:var(--panel-2); color:var(--text); }
+    .top-toggle button:disabled{ opacity:.4; cursor:not-allowed; }
+    .top-close {
+      width:32px; height:32px; border-radius:8px; border:0;
+      background:transparent; color:var(--text-muted); cursor:pointer;
+      font-size:18px; line-height:1;
+    }
+    .top-close:hover{ background:rgba(255,255,255,.06); color:var(--text); }
+
+    .body { display:grid; grid-template-columns:64px 1fr 280px; min-height:0 }
+
+    /* Left rail */
+    .lrail {
+      display:flex; flex-direction:column; gap:6px;
+      padding:10px 8px; border-right:1px solid var(--border);
+      background:rgba(0,0,0,.18);
+    }
+    .lrail-btn {
+      width:48px; height:48px; border-radius:10px; border:0;
+      background:transparent; color:var(--text-muted); cursor:pointer;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:2px; font-size:9.5px; font-weight:500;
+      transition:background .12s, color .12s;
+    }
+    .lrail-btn-icon { font-size:18px; line-height:1 }
+    .lrail-btn:hover{ background:rgba(255,255,255,.06); color:var(--text); }
+    .lrail-btn.is-active{ background:var(--panel-2); color:var(--text); }
+    .lrail-btn:disabled{ opacity:.35; cursor:not-allowed; }
+
+    /* Canvas wrap */
+    .canvas-wrap {
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:8px; padding:24px; min-width:0; min-height:0;
+      background:#020617;
+    }
+    .canvas-label { font-size:11px; color:var(--text-muted); letter-spacing:.06em; text-transform:uppercase; }
+    .canvas-frame {
+      position:relative;
+      box-shadow:0 12px 40px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.08);
+      border-radius:8px; overflow:hidden;
+    }
+    .canvas-stage {
+      position:relative;
+      width:1080px; height:1920px;
+      transform-origin: top left;
+      background:#1d9e75; /* default — overridden by design.background */
+    }
+    .canvas-stage .el { position:absolute; user-select:none; }
+    .canvas-stage .el-text {
+      display:flex; align-items:center; justify-content:center;
+      line-height:1.15; word-wrap:break-word;
+    }
+    .canvas-stage .el-shape{ background:#000; }
+    .canvas-stage .el-shape.is-rounded{ border-radius:24px; }
+    .canvas-stage .el-shape.is-circle { border-radius:50%; }
+    .canvas-stage .el-shape.is-bar    { border-radius:6px; }
+    .canvas-stage .el-shape.is-banner { border-radius:8px; }
+    .canvas-stage .el-image{ background:#000; background-size:cover; background-position:center; }
+    .canvas-stage .el-arrow svg{ width:100%; height:100%; }
+
+    /* Big Preview button — only shown in Video mode */
+    .preview-btn{
+      margin-top:14px;
+      display:inline-flex; align-items:center; gap:10px;
+      padding:12px 24px;
+      background:linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
+      color:#fff; border:0; border-radius:999px;
+      font-family:inherit; font-size:14px; font-weight:600;
+      cursor:pointer;
+      box-shadow:0 8px 20px rgba(124,92,255,.35);
+      transition:transform .12s ease, filter .12s ease;
+    }
+    .preview-btn:hover{ transform:translateY(-1px); filter:brightness(1.08); }
+    .preview-btn-icon{ font-size:14px; line-height:1; }
+    .preview-btn.is-playing{
+      background:#ef4444; box-shadow:0 8px 20px rgba(239,68,68,.35);
+    }
+
+    /* Animation pills with descriptive sub-text */
+    .anim-pill-wrap{ display:flex; flex-direction:column; gap:8px; margin-top:8px; }
+    .anim-row{
+      display:flex; align-items:center; gap:10px;
+      padding:8px 10px; background:#0f172a;
+      border:1px solid var(--border); border-radius:8px;
+      cursor:pointer;
+    }
+    .anim-row:hover{ background:var(--panel); }
+    .anim-row.is-active{
+      border-color:var(--brand);
+      background:rgba(124,92,255,.12);
+    }
+    .anim-row-icon{
+      width:28px; height:28px; flex:0 0 auto; border-radius:50%;
+      background:rgba(124,92,255,.20); color:#fff;
+      display:flex; align-items:center; justify-content:center;
+      font-size:13px;
+    }
+    .anim-row.is-active .anim-row-icon{ background:var(--brand); }
+    .anim-row-text{ flex:1; min-width:0; }
+    .anim-row-label{ font-size:13px; font-weight:600; color:var(--text); }
+    .anim-row-sub{ font-size:11.5px; color:var(--text-muted); margin-top:1px; }
+
+    /* Selection chrome rendered by the editor (NOT in the saved PNG) */
+    .selection-frame {
+      position:absolute; pointer-events:none;
+      outline:2px solid var(--brand); outline-offset:0;
+    }
+    .sel-handle {
+      position:absolute; pointer-events:auto;
+      width:14px; height:14px; border-radius:50%;
+      background:#fff; border:2px solid var(--brand);
+      transform:translate(-50%, -50%);
+    }
+    .sel-handle.tl{ left:0;  top:0;  cursor:nwse-resize; }
+    .sel-handle.tr{ left:100%; top:0;  cursor:nesw-resize; }
+    .sel-handle.bl{ left:0;  top:100%; cursor:nesw-resize; }
+    .sel-handle.br{ left:100%; top:100%; cursor:nwse-resize; }
+    .sel-handle.tm{ left:50%; top:0;   cursor:ns-resize; }
+    .sel-handle.bm{ left:50%; top:100%; cursor:ns-resize; }
+    .sel-handle.lm{ left:0;   top:50%; cursor:ew-resize; }
+    .sel-handle.rm{ left:100%; top:50%; cursor:ew-resize; }
+    .sel-handle.rot{
+      left:50%; top:-44px; cursor:grab;
+      background:var(--brand); border-color:#fff;
+    }
+    .sel-handle.rot::before{
+      content:""; position:absolute; left:50%; top:14px; width:2px; height:30px;
+      background:var(--brand);
+    }
+    .sel-delete {
+      position:absolute; right:-12px; top:-44px;
+      width:28px; height:28px; border-radius:50%; border:0;
+      background:var(--red); color:#fff; cursor:pointer;
+      font-size:14px; line-height:1; pointer-events:auto;
+    }
+    .sel-delete:hover{ filter:brightness(1.1); }
+
+    /* Snap-zone hint (shown while dragging) */
+    .zone-hint {
+      position:absolute; pointer-events:none;
+      width:240px; height:240px;
+      border:2px dashed rgba(255,255,255,.5);
+      border-radius:12px;
+      transform:translate(-50%,-50%);
+      transition:opacity .15s;
+    }
+
+    /* Right rail */
+    .rrail {
+      display:flex; flex-direction:column;
+      border-left:1px solid var(--border);
+      background:rgba(0,0,0,.18); overflow-y:auto;
+    }
+    .rsection { padding:14px 16px; border-bottom:1px solid var(--border); }
+    .rsection-h {
+      font-size:11px; font-weight:600; color:var(--text-muted);
+      letter-spacing:.08em; text-transform:uppercase; margin:0 0 10px;
+    }
+    .field { display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+    .field-l { font-size:11px; color:var(--text-muted); }
+    .field-input, .field-textarea, .field-select {
+      width:100%; padding:8px 10px; font-size:13px;
+      background:#0f172a; color:var(--text);
+      border:1px solid var(--border); border-radius:6px; font-family:inherit;
+    }
+    .field-textarea{ min-height:64px; resize:vertical; }
+    .field-input:focus, .field-textarea:focus, .field-select:focus{
+      outline:0; border-color:var(--brand); box-shadow:0 0 0 2px rgba(124,92,255,.25);
+    }
+    .seg { display:flex; gap:4px; }
+    .seg button {
+      flex:1; background:#0f172a; color:var(--text-muted);
+      border:1px solid var(--border); border-radius:6px; padding:6px 0;
+      font-size:12px; font-weight:500; cursor:pointer;
+    }
+    .seg button:hover{ color:var(--text); }
+    .seg button.is-active{ background:var(--panel-2); color:var(--text); border-color:var(--panel-2); }
+
+    .swatch-grid { display:grid; grid-template-columns:repeat(6, 1fr); gap:6px; }
+    .swatch {
+      aspect-ratio:1/1; border-radius:6px; cursor:pointer;
+      border:2px solid transparent;
+    }
+    .swatch.is-active{ border-color:var(--text); }
+
+    .shape-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; }
+    .shape-pick {
+      aspect-ratio:1/1; background:#0f172a; border:1px solid var(--border);
+      border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+      color:var(--text); font-size:11px; flex-direction:column; gap:4px;
+    }
+    .shape-pick:hover{ background:var(--panel); }
+    .shape-pick svg{ width:24px; height:24px; }
+
+    .layout-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; }
+    .layout-pick {
+      aspect-ratio:9/16; background:#0f172a; border:1px solid var(--border);
+      border-radius:6px; cursor:pointer; position:relative; overflow:hidden;
+    }
+    .layout-pick.is-active{ border-color:var(--brand); box-shadow:0 0 0 2px rgba(124,92,255,.3); }
+    .layout-pick:hover{ border-color:var(--panel-2); }
+    .layout-pick svg{ width:100%; height:100%; }
+
+    .palette-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
+    .palette-pick {
+      aspect-ratio:1/1; border-radius:8px; cursor:pointer;
+      border:2px solid transparent; overflow:hidden; position:relative;
+    }
+    .palette-pick.is-active{ border-color:var(--text); }
+    .palette-pick-bg{ position:absolute; inset:0; }
+    .palette-pick-stripes{ position:absolute; left:6px; bottom:6px; right:6px; height:14px; display:flex; gap:3px; }
+    .palette-pick-stripes span{ flex:1; border-radius:2px; }
+    .palette-pick-x{
+      position:absolute; right:4px; top:4px;
+      width:18px; height:18px; border-radius:50%; border:0;
+      background:rgba(0,0,0,.55); color:#fff;
+      cursor:pointer; font-size:11px; line-height:1;
+      display:none; align-items:center; justify-content:center;
+      padding:0;
+    }
+    .palette-pick:hover .palette-pick-x{ display:flex; }
+
+    /* Custom palette modal */
+    .studio-modal{
+      position:fixed; inset:0; z-index:90;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(0,0,0,.6);
+    }
+    .studio-modal-card{
+      background:var(--panel); color:var(--text);
+      border:1px solid var(--border); border-radius:14px;
+      padding:24px; width:420px; max-width:calc(100% - 32px);
+      box-shadow:0 24px 60px rgba(0,0,0,.5);
+    }
+    .studio-modal-h{font-size:16px; font-weight:600; margin:0 0 16px}
+    .studio-modal-row{
+      display:flex; align-items:center; gap:10px; margin-bottom:12px;
+    }
+    .studio-modal-row label{
+      width:90px; font-size:12px; color:var(--text-muted); flex:0 0 auto;
+    }
+    .studio-modal-row input[type="color"]{
+      width:36px; height:36px; padding:0; border:1px solid var(--border);
+      border-radius:6px; background:transparent; cursor:pointer;
+    }
+    .studio-modal-row input[type="text"]{
+      flex:1; padding:7px 10px; font-size:13px;
+      background:#0f172a; color:var(--text);
+      border:1px solid var(--border); border-radius:6px; font-family:inherit;
+    }
+    .studio-modal-warn{
+      font-size:12px; color:#fbbf24; margin:6px 0 0; line-height:1.4;
+    }
+    .studio-modal-foot{
+      display:flex; gap:10px; justify-content:flex-end; margin-top:18px;
+      padding-top:14px; border-top:1px solid var(--border);
+    }
+
+    .anim-grid { display:flex; gap:6px; flex-wrap:wrap; }
+    .anim-pill {
+      padding:6px 10px; background:#0f172a; color:var(--text-muted);
+      border:1px solid var(--border); border-radius:999px;
+      font-size:12px; cursor:pointer;
+    }
+    .anim-pill.is-active{ background:var(--brand); color:#fff; border-color:var(--brand); }
+
+    .row-buttons { display:flex; gap:6px; }
+    .btn {
+      padding:8px 14px; font-size:13px; font-weight:500; cursor:pointer;
+      border:0; border-radius:6px; font-family:inherit;
+      display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    }
+    .btn-primary{ background:linear-gradient(135deg, var(--brand), var(--brand-2)); color:#fff; }
+    .btn-primary:hover{ filter:brightness(1.08); }
+    .btn-primary:disabled{ opacity:.5; cursor:not-allowed; filter:grayscale(.3); }
+    .btn-ghost{ background:transparent; color:var(--text); border:1px solid var(--border); }
+    .btn-ghost:hover{ background:rgba(255,255,255,.05); }
+
+    /* Bottom bar */
+    .bottom {
+      display:flex; align-items:center; gap:12px;
+      padding:0 16px; border-top:1px solid var(--border);
+      background:rgba(15,23,42,.92);
+    }
+    .bottom-info { flex:1; font-size:12px; color:var(--text-muted); }
+    .bottom-status { font-size:11.5px; color:var(--text-muted); }
+    .bottom-status.is-saving{ color:var(--brand-2); }
+    .bottom-status.is-saved { color:var(--green); }
+    .bottom-status.is-error { color:var(--red); }
+
+    /* Toast */
+    .toast {
+      position:fixed; left:50%; bottom:88px; transform:translateX(-50%);
+      background:#0f172a; color:#fff; padding:10px 16px; border-radius:999px;
+      font-size:13px; box-shadow:0 8px 24px rgba(0,0,0,.4); z-index:80;
+    }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <input id="design-name" class="top-name" type="text" value="Untitled CTA" maxlength="80" />
+    <div class="top-h" id="top-h">Make a CTA</div>
+    <div class="top-toggle" role="tablist" aria-label="Output format">
+      <button id="fmt-image" class="is-active" type="button">Image</button>
+      <button id="fmt-video" type="button">Video</button>
+    </div>
+    <button id="top-close" class="top-close" type="button" aria-label="Close">×</button>
+  </header>
+
+  <div class="body">
+    <!-- Left rail -->
+    <aside class="lrail" role="tablist" aria-label="Tools">
+      <button class="lrail-btn is-active" data-tool="text" type="button">
+        <span class="lrail-btn-icon">T</span><span>Text</span>
+      </button>
+      <button class="lrail-btn" data-tool="color" type="button">
+        <span class="lrail-btn-icon">●</span><span>Color</span>
+      </button>
+      <button class="lrail-btn" data-tool="shape" type="button">
+        <span class="lrail-btn-icon">▢</span><span>Shape</span>
+      </button>
+      <button class="lrail-btn" data-tool="image" type="button">
+        <span class="lrail-btn-icon">🖼</span><span>Image</span>
+      </button>
+      <button class="lrail-btn" data-tool="anim" type="button">
+        <span class="lrail-btn-icon">⚡</span><span>Animate</span>
+      </button>
+    </aside>
+
+    <!-- Canvas -->
+    <div class="canvas-wrap">
+      <div class="canvas-label">1080 × 1920</div>
+      <div id="canvas-frame" class="canvas-frame">
+        <div id="canvas-stage" class="canvas-stage"></div>
+      </div>
+      <div id="canvas-foot-label" class="canvas-label">Layout: none</div>
+      <!-- Big preview button — shows when format is Video. Plays the
+           animation live in the editor using the same engine the saved
+           MP4 will use. -->
+      <button id="preview-btn" class="preview-btn" type="button" hidden>
+        <span class="preview-btn-icon" id="preview-btn-icon">▶</span>
+        <span class="preview-btn-label" id="preview-btn-label">Preview animation</span>
+      </button>
+    </div>
+
+    <!-- Right rail -->
+    <aside class="rrail">
+      <!-- Tool-specific section (changes with active tool) -->
+      <section class="rsection" id="rsection-tool">
+        <h3 class="rsection-h" id="tool-title">Text</h3>
+        <div id="tool-body"></div>
+      </section>
+
+      <!-- Layout (Phase 2) -->
+      <section class="rsection">
+        <h3 class="rsection-h">Layout</h3>
+        <div id="layout-grid" class="layout-grid">
+          <!-- populated by JS -->
+        </div>
+      </section>
+
+      <!-- Palette (Phase 2) -->
+      <section class="rsection">
+        <h3 class="rsection-h">Palette</h3>
+        <div id="palette-grid" class="palette-grid">
+          <!-- populated by JS -->
+        </div>
+      </section>
+
+      <!-- Animation (Phase 3 — populated by JS when format=video) -->
+      <section class="rsection" id="rsection-anim">
+        <h3 class="rsection-h">Animation</h3>
+        <div id="anim-body">
+          <p style="font-size:12px; color:var(--text-muted); margin:0">Switch to Video to add animations.</p>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <footer class="bottom">
+    <div class="bottom-info">
+      <span id="bottom-name">Untitled CTA</span> ·
+      <span id="bottom-status" class="bottom-status">draft</span>
+    </div>
+    <button id="save-variants" class="btn btn-ghost" type="button">Save 5 variants</button>
+    <button id="save-go" class="btn btn-primary" type="button">Save to <span id="save-go-tab">CTAs</span> →</button>
+  </footer>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="/dashboard/instagram/studio/render.js"></script>
+<script>
+"use strict";
+// ── State ────────────────────────────────────────────────────────────────
+var DESTINATION = (new URLSearchParams(location.search).get("dest") || "cta").toLowerCase();
+if (!["hook","meat","cta"].includes(DESTINATION)) DESTINATION = "cta";
+var DEST_LABEL = { hook:"Hook", meat:"Meat", cta:"CTA" }[DESTINATION];
+var DEST_TAB_PLURAL = { hook:"Hooks", meat:"Meats", cta:"CTAs" }[DESTINATION];
+document.getElementById("top-h").textContent = "Make a " + DEST_LABEL;
+document.getElementById("design-name").value = "Untitled " + DEST_LABEL;
+document.getElementById("save-go-tab").textContent = DEST_TAB_PLURAL;
+
+var DEFAULT_PALETTE = {
+  id: "palette_forest",
+  bg: "#1d9e75", accent: "#04342C",
+  text: "#E1F5EE", text_alt: "#9FE1CB", tint: "#9FE1CB"
+};
+var design = {
+  id: "draft_" + Math.random().toString(36).slice(2, 10),
+  destination_tab: DESTINATION,
+  name: "Untitled " + DEST_LABEL,
+  format: "image",
+  duration_seconds: 3,
+  background: { type:"solid", color: DEFAULT_PALETTE.bg },
+  palette: DEFAULT_PALETTE,
+  palette_id: DEFAULT_PALETTE.id,
+  layout_template: null,
+  elements: [],
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+};
+var selectedId = null;
+var activeTool = "text";
+
+// Undo stack — 50 deep.
+var undoStack = [];
+function snapshot() {
+  undoStack.push(JSON.stringify(design.elements));
+  if (undoStack.length > 50) undoStack.shift();
+}
+function undo() {
+  if (!undoStack.length) return;
+  var prev = undoStack.pop();
+  design.elements = JSON.parse(prev);
+  selectedId = null;
+  rerender();
+}
+
+// ── Canvas scaling (fit-to-viewport) ──────────────────────────────────────
+function fitCanvas() {
+  var wrap = document.querySelector(".canvas-wrap");
+  var frame = document.getElementById("canvas-frame");
+  var stage = document.getElementById("canvas-stage");
+  // Available size = wrap minus padding & label rows.
+  var availW = wrap.clientWidth - 48;
+  var availH = wrap.clientHeight - 80;
+  var scale = Math.min(availW / 1080, availH / 1920);
+  if (!isFinite(scale) || scale <= 0) scale = 0.3;
+  stage.style.transform = "scale(" + scale + ")";
+  frame.style.width = (1080 * scale) + "px";
+  frame.style.height = (1920 * scale) + "px";
+  stage.dataset.scale = String(scale);
+}
+window.addEventListener("resize", fitCanvas);
+new MutationObserver(fitCanvas).observe(document.body, { attributes:true });
+
+// ── Rendering ────────────────────────────────────────────────────────────
+function rerender() {
+  var stage = document.getElementById("canvas-stage");
+  window.__studio.renderDesign(stage, design);
+  // After render, attach click handlers + selection chrome.
+  stage.querySelectorAll(".el").forEach(function (n) {
+    n.addEventListener("mousedown", function (e) {
+      e.stopPropagation();
+      selectElement(n.dataset.elementId);
+      beginDrag(n, e);
+    });
+  });
+  drawSelection();
+  updateRightRail();
+  updateBottom();
+}
+
+function findEl(id) {
+  return design.elements.find(function (e) { return e.id === id; });
+}
+
+function selectElement(id) {
+  selectedId = id;
+  drawSelection();
+  updateRightRail();
+}
+function deselect() {
+  selectedId = null; drawSelection(); updateRightRail();
+}
+
+document.getElementById("canvas-stage").addEventListener("mousedown", function (e) {
+  if (e.target.id === "canvas-stage") deselect();
+});
+
+// ── Selection chrome ─────────────────────────────────────────────────────
+function drawSelection() {
+  // Strip any prior chrome
+  document.querySelectorAll(".selection-frame, .sel-delete, .zone-hint").forEach(function (n) {
+    n.remove();
+  });
+  if (!selectedId) return;
+  var el = findEl(selectedId); if (!el) return;
+  var stage = document.getElementById("canvas-stage");
+  var node = stage.querySelector('[data-element-id="' + el.id + '"]');
+  if (!node) return;
+  var frame = document.createElement("div");
+  frame.className = "selection-frame";
+  frame.style.left = node.style.left;
+  frame.style.top = node.style.top;
+  frame.style.width = node.style.width;
+  frame.style.height = node.style.height;
+  if (el.rotation) {
+    frame.style.transform = "rotate(" + el.rotation + "deg)";
+    frame.style.transformOrigin = "center center";
+  }
+  ["tl","tr","bl","br","tm","bm","lm","rm"].forEach(function (cls) {
+    var h = document.createElement("div");
+    h.className = "sel-handle " + cls;
+    h.dataset.handle = cls;
+    h.addEventListener("mousedown", function (e) {
+      e.stopPropagation(); beginResize(node, el, cls, e);
+    });
+    frame.appendChild(h);
+  });
+  // Rotation handle for non-text elements.
+  if (el.type !== "text") {
+    var r = document.createElement("div");
+    r.className = "sel-handle rot";
+    r.title = "Rotate";
+    r.addEventListener("mousedown", function (e) {
+      e.stopPropagation(); cycleRotation(el);
+    });
+    frame.appendChild(r);
+  }
+  // Delete button
+  var del = document.createElement("button");
+  del.className = "sel-delete";
+  del.innerHTML = "×";
+  del.title = "Delete";
+  del.addEventListener("click", function (e) { e.stopPropagation(); deleteSelected(); });
+  frame.appendChild(del);
+  stage.appendChild(frame);
+}
+
+function cycleRotation(el) {
+  var seq = [0, -15, 15, 90];
+  var i = seq.indexOf(el.rotation || 0);
+  snapshot();
+  el.rotation = seq[(i + 1) % seq.length];
+  rerender();
+}
+
+function deleteSelected() {
+  if (!selectedId) return;
+  snapshot();
+  design.elements = design.elements.filter(function (e) { return e.id !== selectedId; });
+  selectedId = null;
+  rerender();
+}
+
+// ── Drag ─────────────────────────────────────────────────────────────────
+function beginDrag(node, downEvent) {
+  var stage = document.getElementById("canvas-stage");
+  var scale = parseFloat(stage.dataset.scale) || 1;
+  var el = findEl(node.dataset.elementId); if (!el) return;
+  snapshot();
+  var startX = downEvent.clientX, startY = downEvent.clientY;
+  var origPos = el.position || { zone:"center", offset_x:0, offset_y:0 };
+  var anchor = window.__studio.ZONES[origPos.zone] || window.__studio.ZONES.center;
+  var origAnchorX = anchor.x + (origPos.offset_x || 0);
+  var origAnchorY = anchor.y + (origPos.offset_y || 0);
+  var disableSnap = downEvent.altKey;
+  function onMove(e) {
+    var dx = (e.clientX - startX) / scale;
+    var dy = (e.clientY - startY) / scale;
+    var newX = origAnchorX + dx;
+    var newY = origAnchorY + dy;
+    if (e.altKey) disableSnap = true;
+    if (disableSnap || e.altKey) {
+      // Free positioning — keep current zone, update offset.
+      el.position = {
+        zone: origPos.zone,
+        offset_x: newX - anchor.x,
+        offset_y: newY - anchor.y,
+      };
+      hideZoneHint();
+    } else {
+      // Snap: find nearest zone, set offset to the residual delta.
+      var nearest = nearestZone(newX, newY);
+      el.position = {
+        zone: nearest,
+        offset_x: newX - window.__studio.ZONES[nearest].x,
+        offset_y: newY - window.__studio.ZONES[nearest].y,
+      };
+      showZoneHint(nearest);
+    }
+    rerender();
+  }
+  function onUp() {
+    document.removeEventListener("mousemove", onMove);
+    document.removeEventListener("mouseup", onUp);
+    hideZoneHint();
+    rerender();
+  }
+  document.addEventListener("mousemove", onMove);
+  document.addEventListener("mouseup", onUp);
+}
+function nearestZone(x, y) {
+  var best = "center", bestD = Infinity;
+  Object.keys(window.__studio.ZONES).forEach(function (z) {
+    var p = window.__studio.ZONES[z];
+    var d = Math.hypot(p.x - x, p.y - y);
+    if (d < bestD) { bestD = d; best = z; }
+  });
+  return best;
+}
+function showZoneHint(zone) {
+  hideZoneHint();
+  var stage = document.getElementById("canvas-stage");
+  var p = window.__studio.ZONES[zone];
+  var hint = document.createElement("div");
+  hint.className = "zone-hint";
+  hint.style.left = p.x + "px";
+  hint.style.top = p.y + "px";
+  stage.appendChild(hint);
+}
+function hideZoneHint() {
+  var h = document.querySelector(".zone-hint"); if (h) h.remove();
+}
+
+// ── Resize ───────────────────────────────────────────────────────────────
+function beginResize(node, el, handle, downEvent) {
+  var stage = document.getElementById("canvas-stage");
+  var scale = parseFloat(stage.dataset.scale) || 1;
+  snapshot();
+  var startX = downEvent.clientX, startY = downEvent.clientY;
+  var orig = { w: el.size_px.width, h: el.size_px.height };
+  var keepAspect = downEvent.shiftKey;
+  function onMove(e) {
+    var dx = (e.clientX - startX) / scale;
+    var dy = (e.clientY - startY) / scale;
+    var w = orig.w, h = orig.h;
+    if (handle.includes("r")) w = orig.w + dx * 2;
+    if (handle.includes("l")) w = orig.w - dx * 2;
+    if (handle.includes("b")) h = orig.h + dy * 2;
+    if (handle.includes("t")) h = orig.h - dy * 2;
+    if (handle === "tm" || handle === "bm") w = orig.w;
+    if (handle === "lm" || handle === "rm") h = orig.h;
+    if (keepAspect || e.shiftKey) {
+      var ratio = orig.w / orig.h;
+      h = w / ratio;
+    }
+    el.size_px.width  = Math.max(20, Math.round(w));
+    el.size_px.height = Math.max(20, Math.round(h));
+    rerender();
+  }
+  function onUp() {
+    document.removeEventListener("mousemove", onMove);
+    document.removeEventListener("mouseup", onUp);
+    rerender();
+  }
+  document.addEventListener("mousemove", onMove);
+  document.addEventListener("mouseup", onUp);
+}
+
+// ── Right rail (tool-specific section) ───────────────────────────────────
+function updateRightRail() {
+  var body = document.getElementById("tool-body");
+  var title = document.getElementById("tool-title");
+  // If an element is selected, the tool section reflects that element's
+  // type (overrides the active tool).
+  var sel = selectedId ? findEl(selectedId) : null;
+  if (sel) {
+    if (sel.type === "text")  return renderTextTool(body, title, sel);
+    if (sel.type === "shape") return renderShapeTool(body, title, sel);
+    if (sel.type === "image") return renderImageTool(body, title, sel);
+  }
+  if (activeTool === "text")  return renderTextToolEmpty(body, title);
+  if (activeTool === "color") return renderColorToolEmpty(body, title);
+  if (activeTool === "shape") return renderShapeToolEmpty(body, title);
+  if (activeTool === "image") return renderImageToolEmpty(body, title);
+  body.innerHTML = "";
+}
+function paletteSwatchHtml(activeColor){
+  var p = design.palette || DEFAULT_PALETTE;
+  var keys = ["bg","accent","text","text_alt","tint"];
+  return keys.map(function (k) {
+    return '<div class="swatch ' + (p[k] === activeColor ? "is-active" : "") + '" '
+      + 'style="background:' + p[k] + '" '
+      + 'data-swatch="' + k + '" title="' + k + ': ' + p[k] + '"></div>';
+  }).join("");
+}
+
+function renderTextToolEmpty(body, title) {
+  title.textContent = "Text";
+  body.innerHTML = '<button id="tool-add-text" class="btn btn-primary" style="width:100%">+ Add text</button>';
+  document.getElementById("tool-add-text").addEventListener("click", addText);
+}
+function renderTextTool(body, title, el) {
+  title.textContent = "Text — selected";
+  body.innerHTML =
+      '<div class="field"><span class="field-l">Content</span>'
+    + '<textarea id="tx-content" class="field-textarea">' + (el.content||"") + '</textarea></div>'
+    + '<div class="field"><span class="field-l">Font</span>'
+    + '<select id="tx-font" class="field-select">'
+    + ['bold_display','clean_sans','serif','handwritten','mono','condensed','slab','rounded']
+        .map(function (f) {
+          return '<option value="' + f + '" ' + (el.font === f ? "selected" : "") + '>'
+            + ({bold_display:"Bold display",clean_sans:"Clean sans",serif:"Serif",handwritten:"Handwritten",mono:"Mono",condensed:"Condensed",slab:"Slab",rounded:"Rounded"})[f]
+            + '</option>';
+        }).join("")
+    + '</select></div>'
+    + '<div class="field"><span class="field-l">Size</span><div class="seg" id="tx-size">'
+    + ['S','M','L','XL'].map(function(s){
+        return '<button data-v="' + s + '" class="' + (el.size===s?"is-active":"") + '">' + s + '</button>';
+      }).join("") + '</div></div>'
+    + '<div class="field"><span class="field-l">Style</span><div class="seg" id="tx-style">'
+    +   '<button data-v="bold" class="' + (el.weight==="bold"?"is-active":"") + '"><b>B</b></button>'
+    +   '<button data-v="italic" class="' + (el.italic?"is-active":"") + '"><i>I</i></button>'
+    + '</div></div>'
+    + '<div class="field"><span class="field-l">Align</span><div class="seg" id="tx-align">'
+    +   ['left','center','right'].map(function(a){
+          return '<button data-v="' + a + '" class="' + (el.align===a?"is-active":"") + '">' + a + '</button>';
+        }).join("")
+    + '</div></div>'
+    + '<div class="field"><span class="field-l">Color</span>'
+    + '<div class="swatch-grid">' + paletteSwatchHtml(el.color) + '</div></div>';
+  document.getElementById("tx-content").addEventListener("input", function (e) {
+    snapshot(); el.content = e.target.value; rerender();
+  });
+  document.getElementById("tx-font").addEventListener("change", function (e) {
+    snapshot(); el.font = e.target.value; rerender();
+  });
+  document.querySelectorAll("#tx-size button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      snapshot(); el.size = b.dataset.v; rerender();
+    });
+  });
+  document.querySelectorAll("#tx-style button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      snapshot();
+      if (b.dataset.v === "bold") el.weight = el.weight === "bold" ? "normal" : "bold";
+      if (b.dataset.v === "italic") el.italic = !el.italic;
+      rerender();
+    });
+  });
+  document.querySelectorAll("#tx-align button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      snapshot(); el.align = b.dataset.v; rerender();
+    });
+  });
+  document.querySelectorAll(".swatch[data-swatch]").forEach(function (s) {
+    s.addEventListener("click", function () {
+      snapshot();
+      el.color = (design.palette || {})[s.dataset.swatch];
+      delete el.color_role;
+      rerender();
+    });
+  });
+}
+function renderShapeToolEmpty(body, title) {
+  title.textContent = "Shape";
+  body.innerHTML =
+      '<div class="shape-grid">'
+    + ['rectangle','rounded','circle','arrow','bar','banner']
+        .map(function(s){
+          return '<button class="shape-pick" data-shape="' + s + '" type="button">'
+            + shapeIcon(s) + '<span>' + ({rectangle:"Rect",rounded:"Rounded",circle:"Circle",arrow:"Arrow",bar:"Bar",banner:"Banner"})[s] + '</span></button>';
+        }).join("")
+    + '</div>';
+  body.querySelectorAll("[data-shape]").forEach(function (b) {
+    b.addEventListener("click", function () { addShape(b.dataset.shape); });
+  });
+}
+function renderShapeTool(body, title, el) {
+  title.textContent = "Shape — selected";
+  body.innerHTML =
+      '<div class="field"><span class="field-l">Rotation</span><div class="seg" id="sh-rot">'
+    + [0,-15,15,90].map(function(r){
+        return '<button data-v="' + r + '" class="' + ((el.rotation||0)===r?"is-active":"") + '">' + r + '°</button>';
+      }).join("") + '</div></div>'
+    + '<div class="field"><span class="field-l">Color</span>'
+    + '<div class="swatch-grid">' + paletteSwatchHtml(el.color) + '</div></div>'
+    + '<div class="field"><span class="field-l">Opacity</span>'
+    + '<input id="sh-op" type="range" min="0" max="100" step="10" value="' + Math.round((el.opacity||1)*100) + '" style="width:100%"></div>';
+  document.querySelectorAll("#sh-rot button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      snapshot(); el.rotation = parseInt(b.dataset.v, 10); rerender();
+    });
+  });
+  document.querySelectorAll(".swatch[data-swatch]").forEach(function (s) {
+    s.addEventListener("click", function () {
+      snapshot(); el.color = (design.palette || {})[s.dataset.swatch];
+      delete el.color_role; rerender();
+    });
+  });
+  document.getElementById("sh-op").addEventListener("input", function (e) {
+    el.opacity = parseInt(e.target.value, 10) / 100;
+    document.querySelector('[data-element-id="' + el.id + '"]').style.opacity = el.opacity;
+  });
+  document.getElementById("sh-op").addEventListener("change", function () {
+    snapshot(); rerender();
+  });
+}
+function renderImageToolEmpty(body, title) {
+  title.textContent = "Image";
+  body.innerHTML =
+      '<button id="tool-upload-img" class="btn btn-primary" style="width:100%">Upload image</button>'
+    + '<input id="tool-img-file" type="file" accept="image/png,image/jpeg" hidden>'
+    + '<p style="font-size:11px;color:var(--text-muted);margin:10px 0 0">PNG or JPG, up to 10 MB.</p>';
+  document.getElementById("tool-upload-img").addEventListener("click", function () {
+    document.getElementById("tool-img-file").click();
+  });
+  document.getElementById("tool-img-file").addEventListener("change", onImagePicked);
+}
+function renderImageTool(body, title, el) {
+  title.textContent = "Image — selected";
+  body.innerHTML =
+      '<div class="field"><span class="field-l">Opacity</span>'
+    + '<input id="im-op" type="range" min="0" max="100" step="10" value="' + Math.round((el.opacity||1)*100) + '" style="width:100%"></div>'
+    + '<button id="im-bg" class="btn btn-ghost" style="width:100%" disabled>Remove background <small>(soon)</small></button>';
+  document.getElementById("im-op").addEventListener("input", function (e) {
+    el.opacity = parseInt(e.target.value, 10) / 100;
+    document.querySelector('[data-element-id="' + el.id + '"]').style.opacity = el.opacity;
+  });
+  document.getElementById("im-op").addEventListener("change", function () {
+    snapshot(); rerender();
+  });
+}
+function renderColorToolEmpty(body, title) {
+  title.textContent = "Background";
+  body.innerHTML =
+      '<div class="field"><span class="field-l">Background color</span>'
+    + '<div class="swatch-grid">' + paletteSwatchHtml(design.background.color) + '</div></div>';
+  document.querySelectorAll(".swatch[data-swatch]").forEach(function (s) {
+    s.addEventListener("click", function () {
+      snapshot();
+      design.background = { type:"solid", color: (design.palette || {})[s.dataset.swatch] };
+      rerender();
+    });
+  });
+}
+function shapeIcon(s) {
+  var map = {
+    rectangle: '<svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" fill="currentColor"/></svg>',
+    rounded:   '<svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="3" fill="currentColor"/></svg>',
+    circle:    '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="currentColor"/></svg>',
+    arrow:     '<svg viewBox="0 0 24 24"><path d="M4 12 L18 12 M14 7 L18 12 L14 17" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    bar:       '<svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="2" rx="1" fill="currentColor"/></svg>',
+    banner:    '<svg viewBox="0 0 24 24"><path d="M4 8 L20 8 L18 12 L20 16 L4 16 Z" fill="currentColor"/></svg>',
+  };
+  return map[s] || map.rectangle;
+}
+
+// ── Element creation ─────────────────────────────────────────────────────
+function uid() { return "el_" + Math.random().toString(36).slice(2, 10); }
+function addText() {
+  snapshot();
+  var p = design.palette || DEFAULT_PALETTE;
+  var el = {
+    id: uid(), type:"text", content:"Your text",
+    font:"bold_display", size:"L", weight:"normal", italic:false, align:"center",
+    color: p.text,
+    position: { zone:"center", offset_x:0, offset_y:0 },
+    size_px: { width: 720, height: 200 },
+    rotation: 0, opacity: 1,
+  };
+  design.elements.push(el);
+  selectedId = el.id;
+  rerender();
+}
+function addShape(shape) {
+  snapshot();
+  var p = design.palette || DEFAULT_PALETTE;
+  var el = {
+    id: uid(), type:"shape", shape: shape,
+    color: p.accent,
+    position: { zone:"center", offset_x:0, offset_y:0 },
+    size_px: shape === "circle" ? { width: 240, height: 240 }
+           : shape === "bar"    ? { width: 600, height: 24 }
+           : shape === "banner" ? { width: 800, height: 240 }
+           : { width: 480, height: 240 },
+    rotation: 0, opacity: 1,
+  };
+  design.elements.push(el);
+  selectedId = el.id;
+  rerender();
+}
+function onImagePicked() {
+  var f = document.getElementById("tool-img-file").files && document.getElementById("tool-img-file").files[0];
+  if (!f) return;
+  if (f.size > 10 * 1024 * 1024) { toast("Image too large — max 10 MB."); return; }
+  var reader = new FileReader();
+  reader.onload = function () {
+    snapshot();
+    var el = {
+      id: uid(), type:"image", src: reader.result,
+      position: { zone:"center", offset_x:0, offset_y:0 },
+      size_px: { width: 600, height: 600 },
+      rotation: 0, opacity: 1,
+    };
+    design.elements.push(el);
+    selectedId = el.id;
+    rerender();
+  };
+  reader.readAsDataURL(f);
+}
+
+// ── Tool switching ───────────────────────────────────────────────────────
+document.querySelectorAll(".lrail-btn[data-tool]").forEach(function (b) {
+  b.addEventListener("click", function () {
+    if (b.disabled) return;
+    activeTool = b.dataset.tool;
+    document.querySelectorAll(".lrail-btn").forEach(function (x) {
+      x.classList.toggle("is-active", x === b);
+    });
+    deselect();
+    updateRightRail();
+  });
+});
+
+// ── Save → POST /api/studio/render → library ──────────────────────────────
+document.getElementById("save-go").addEventListener("click", saveDesign);
+async function saveDesign() {
+  var btn = document.getElementById("save-go");
+  if (btn.disabled) return;
+  btn.disabled = true;
+  setStatus("Saving…", "is-saving");
+  // Strip transient runtime state.
+  var payload = JSON.parse(JSON.stringify(design));
+  try {
+    var r = await fetch("/dashboard/instagram/api/studio/render", {
+      method:"POST", credentials:"same-origin",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        design: payload,
+        destination_tab: DESTINATION,
+        label: document.getElementById("design-name").value || payload.name,
+      }),
+    });
+    var d = await r.json().catch(()=>({}));
+    if (!r.ok) {
+      setStatus(d.detail || d.error || ("HTTP " + r.status), "is-error");
+      btn.disabled = false; return;
+    }
+    setStatus("Saved!", "is-saved");
+    toast(DEST_LABEL + " saved to library.");
+    setTimeout(function () {
+      // Bounce back to the library page.
+      window.location.href = "/dashboard/instagram#library";
+    }, 700);
+  } catch (e) {
+    setStatus("Network error: " + e.message, "is-error");
+    btn.disabled = false;
+  }
+}
+
+function setStatus(msg, cls) {
+  var s = document.getElementById("bottom-status");
+  s.textContent = msg;
+  s.className = "bottom-status " + (cls || "");
+}
+function updateBottom() {
+  document.getElementById("bottom-name").textContent =
+    document.getElementById("design-name").value || "Untitled";
+}
+document.getElementById("design-name").addEventListener("input", updateBottom);
+
+function toast(msg) {
+  var t = document.getElementById("toast");
+  t.textContent = msg; t.hidden = false;
+  setTimeout(function () { t.hidden = true; }, 2500);
+}
+
+// Top close → go back to dashboard.
+document.getElementById("top-close").addEventListener("click", function () {
+  if (design.elements.length > 0 && !confirm("Discard this design?")) return;
+  window.location.href = "/dashboard/instagram#library";
+});
+
+// Keyboard
+document.addEventListener("keydown", function (e) {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
+    e.preventDefault(); undo(); return;
+  }
+  if (e.key === "Delete" || e.key === "Backspace") {
+    if (selectedId) { e.preventDefault(); deleteSelected(); }
+  }
+});
+
+// ── Layout / Palette panels (Phase 2 placeholders rendered now) ─────────
+var PALETTES = {
+  palette_forest:   { id:"palette_forest",   bg:"#1d9e75", accent:"#04342C", text:"#E1F5EE", text_alt:"#9FE1CB", tint:"#9FE1CB" },
+  palette_sunset:   { id:"palette_sunset",   bg:"#D85A30", accent:"#4A1B0C", text:"#FAECE7", text_alt:"#F5C4B3", tint:"#F5C4B3" },
+  palette_ocean:    { id:"palette_ocean",    bg:"#185FA5", accent:"#042C53", text:"#E6F1FB", text_alt:"#B5D4F4", tint:"#B5D4F4" },
+  palette_lavender: { id:"palette_lavender", bg:"#534AB7", accent:"#26215C", text:"#EEEDFE", text_alt:"#CECBF6", tint:"#CECBF6" },
+  palette_carbon:   { id:"palette_carbon",   bg:"#2C2C2A", accent:"#5F5E5A", text:"#F1EFE8", text_alt:"#D3D1C7", tint:"#D3D1C7" },
+};
+// Custom palettes loaded from the server (per-customer, ≤10).
+var CUSTOM_PALETTES = {};
+async function loadCustomPalettes() {
+  try {
+    var r = await fetch("/dashboard/instagram/api/studio/palettes",
+      {credentials:"same-origin"});
+    if (!r.ok) return;
+    var d = await r.json().catch(()=>({}));
+    (d.items || []).forEach(p => { CUSTOM_PALETTES[p.id] = p; });
+    renderPalettePicker();
+  } catch (e) {}
+}
+
+function renderPalettePicker() {
+  var grid = document.getElementById("palette-grid");
+  var pre = Object.values(PALETTES).map(function (p) {
+    var stripes = ["bg","accent","text"].map(function (k) {
+      return '<span style="background:' + p[k] + '"></span>';
+    }).join("");
+    return '<div class="palette-pick ' + (design.palette_id === p.id ? "is-active" : "") + '" '
+      + 'data-pal="' + p.id + '" title="' + p.id.replace("palette_","") + '">'
+      + '<div class="palette-pick-bg" style="background:' + p.bg + '"></div>'
+      + '<div class="palette-pick-stripes">' + stripes + '</div></div>';
+  }).join("");
+  var customs = Object.values(CUSTOM_PALETTES).map(function (p) {
+    var stripes = ["bg","accent","text"].map(function (k) {
+      return '<span style="background:' + p[k] + '"></span>';
+    }).join("");
+    return '<div class="palette-pick ' + (design.palette_id === p.id ? "is-active" : "") + '" '
+      + 'data-pal="' + p.id + '" title="' + (p.name || "Custom") + '">'
+      + '<div class="palette-pick-bg" style="background:' + p.bg + '"></div>'
+      + '<div class="palette-pick-stripes">' + stripes + '</div>'
+      + '<button class="palette-pick-x" data-pal-del="' + p.id + '" title="Delete">×</button>'
+      + '</div>';
+  }).join("");
+  var atLimit = Object.keys(CUSTOM_PALETTES).length >= 10;
+  var customSlot = atLimit
+    ? '<div class="palette-pick" data-pal-manage style="display:flex;align-items:center;justify-content:center;background:#0f172a;border:1px dashed var(--border);color:var(--text-muted);font-size:10.5px;text-align:center;padding:8px">Manage<br/>palettes</div>'
+    : '<div class="palette-pick" data-pal-custom title="Add custom palette" style="display:flex;align-items:center;justify-content:center;background:#0f172a;border:1px dashed var(--border);color:var(--text-muted);font-size:18px">+</div>';
+  grid.innerHTML = pre + customs + customSlot;
+  grid.querySelectorAll("[data-pal]").forEach(function (n) {
+    n.addEventListener("click", function (e) {
+      if (e.target.dataset.palDel) return;
+      applyPalette(n.dataset.pal);
+    });
+  });
+  grid.querySelectorAll("[data-pal-del]").forEach(function (b) {
+    b.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (!confirm("Delete this palette?")) return;
+      var pid = b.dataset.palDel;
+      fetch("/dashboard/instagram/api/studio/palettes/" + encodeURIComponent(pid),
+        {method:"DELETE", credentials:"same-origin"}).then(function () {
+        delete CUSTOM_PALETTES[pid];
+        renderPalettePicker();
+      });
+    });
+  });
+  if (grid.querySelector("[data-pal-custom]")) {
+    grid.querySelector("[data-pal-custom]").addEventListener("click", openCustomPaletteEditor);
+  }
+  if (grid.querySelector("[data-pal-manage]")) {
+    grid.querySelector("[data-pal-manage]").addEventListener("click", function () {
+      toast("Delete a custom palette (× on its tile) to free a slot.");
+    });
+  }
+}
+
+// Ratio between two relative luminance values, per WCAG 2.0.
+function _hexToRgb(hex) {
+  var m = /^#?([0-9a-fA-F]{6})$/.exec(hex || ""); if (!m) return null;
+  var n = parseInt(m[1], 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+function _luminance(rgb) {
+  return rgb.map(function (c) {
+    c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  }).reduce(function (a, w, i) { return a + w * [0.2126, 0.7152, 0.0722][i]; }, 0);
+}
+function _contrast(a, b) {
+  var ra = _hexToRgb(a), rb = _hexToRgb(b);
+  if (!ra || !rb) return 0;
+  var la = _luminance(ra), lb = _luminance(rb);
+  var [hi, lo] = la > lb ? [la, lb] : [lb, la];
+  return (hi + 0.05) / (lo + 0.05);
+}
+// Lighten a hex color by mixing toward white by `amount` (0..1).
+function _lighten(hex, amount) {
+  var rgb = _hexToRgb(hex); if (!rgb) return hex;
+  var out = rgb.map(function (c) {
+    return Math.round(c + (255 - c) * amount);
+  });
+  return "#" + out.map(function (c) {
+    return c.toString(16).padStart(2, "0");
+  }).join("");
+}
+function _darken(hex, amount) {
+  var rgb = _hexToRgb(hex); if (!rgb) return hex;
+  var out = rgb.map(function (c) {
+    return Math.max(0, Math.round(c * (1 - amount)));
+  });
+  return "#" + out.map(function (c) {
+    return c.toString(16).padStart(2, "0");
+  }).join("");
+}
+
+function openCustomPaletteEditor() {
+  var bgC = "#1d9e75", accC = "#04342C", textC = "#E1F5EE";
+  var modal = document.createElement("div");
+  modal.id = "studio-modal";
+  modal.className = "studio-modal";
+  modal.innerHTML =
+      '<div class="studio-modal-card">'
+    +   '<div class="studio-modal-h">Custom palette</div>'
+    +   '<div class="studio-modal-row">'
+    +     '<label>Background</label>'
+    +     '<input id="cp-bg" type="color" value="' + bgC + '">'
+    +     '<input id="cp-bg-hex" type="text" value="' + bgC + '" maxlength="7">'
+    +   '</div>'
+    +   '<div class="studio-modal-row">'
+    +     '<label>Accent</label>'
+    +     '<input id="cp-acc" type="color" value="' + accC + '">'
+    +     '<input id="cp-acc-hex" type="text" value="' + accC + '" maxlength="7">'
+    +   '</div>'
+    +   '<div class="studio-modal-row">'
+    +     '<label>Text</label>'
+    +     '<input id="cp-txt" type="color" value="' + textC + '">'
+    +     '<input id="cp-txt-hex" type="text" value="' + textC + '" maxlength="7">'
+    +   '</div>'
+    +   '<div class="studio-modal-row">'
+    +     '<label>Name</label>'
+    +     '<input id="cp-name" type="text" placeholder="Forest custom" maxlength="80" style="flex:1">'
+    +   '</div>'
+    +   '<p id="cp-warn" class="studio-modal-warn" hidden></p>'
+    +   '<div class="studio-modal-foot">'
+    +     '<button id="cp-cancel" class="btn btn-ghost" type="button">Cancel</button>'
+    +     '<button id="cp-save" class="btn btn-primary" type="button">Save palette</button>'
+    +   '</div>'
+    + '</div>';
+  document.body.appendChild(modal);
+  // Sync color picker ↔ hex text inputs.
+  function syncPair(colorId, hexId) {
+    var color = document.getElementById(colorId);
+    var hex = document.getElementById(hexId);
+    color.addEventListener("input", function () { hex.value = color.value; refresh(); });
+    hex.addEventListener("input", function () {
+      var v = hex.value.trim();
+      if (!v.startsWith("#")) v = "#" + v;
+      if (/^#[0-9a-fA-F]{6}$/.test(v)) { color.value = v; refresh(); }
+    });
+  }
+  syncPair("cp-bg", "cp-bg-hex");
+  syncPair("cp-acc","cp-acc-hex");
+  syncPair("cp-txt","cp-txt-hex");
+  function refresh() {
+    var bg = document.getElementById("cp-bg").value;
+    var ac = document.getElementById("cp-acc").value;
+    var tx = document.getElementById("cp-txt").value;
+    var bgL = _luminance(_hexToRgb(bg) || [0,0,0]);
+    var acL = _luminance(_hexToRgb(ac) || [0,0,0]);
+    var lightnessDiff = Math.abs(bgL - acL);
+    var textContrast = _contrast(bg, tx);
+    var msgs = [];
+    if (lightnessDiff < 0.30) msgs.push("Background and accent are too close in tone. Try more contrast.");
+    if (textContrast < 4.5)  msgs.push("Text isn't very readable on the background (contrast " + textContrast.toFixed(1) + ":1).");
+    var warn = document.getElementById("cp-warn");
+    if (msgs.length) {
+      warn.textContent = "⚠ " + msgs.join(" ");
+      warn.hidden = false;
+    } else warn.hidden = true;
+  }
+  refresh();
+  document.getElementById("cp-cancel").addEventListener("click", function () { modal.remove(); });
+  document.getElementById("cp-save").addEventListener("click", async function () {
+    var bg = document.getElementById("cp-bg").value;
+    var ac = document.getElementById("cp-acc").value;
+    var tx = document.getElementById("cp-txt").value;
+    // Auto-derive text_alt + tint from accent + bg lightness.
+    var accL = _luminance(_hexToRgb(ac) || [0,0,0]);
+    var text_alt = accL > 0.5 ? _darken(ac, 0.4) : _lighten(ac, 0.5);
+    var tint = _lighten(bg, 0.55);
+    var name = (document.getElementById("cp-name").value || "Custom palette").trim() || "Custom palette";
+    try {
+      var r = await fetch("/dashboard/instagram/api/studio/palettes", {
+        method:"POST", credentials:"same-origin",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          name: name, bg: bg, accent: ac, text: tx,
+          text_alt: text_alt, tint: tint,
+        }),
+      });
+      var d = await r.json().catch(()=>({}));
+      if (!r.ok) {
+        if (d.error === "limit_reached") {
+          toast("You've hit the 10-palette limit. Delete one to add another.");
+        } else {
+          toast("Couldn't save: " + (d.error || ("HTTP " + r.status)));
+        }
+        return;
+      }
+      CUSTOM_PALETTES[d.palette.id] = d.palette;
+      modal.remove();
+      renderPalettePicker();
+      applyPalette(d.palette.id);
+      toast("Palette saved.");
+    } catch (e) { toast("Network error: " + e.message); }
+  });
+}
+
+function getPalette(id) {
+  return PALETTES[id] || CUSTOM_PALETTES[id] || null;
+}
+function applyPalette(id) {
+  var p = getPalette(id); if (!p) return;
+  snapshot();
+  design.palette = p; design.palette_id = id;
+  // Re-color elements that referenced palette roles.
+  design.elements.forEach(function (el) {
+    if (el.color_role && p[el.color_role]) el.color = p[el.color_role];
+  });
+  design.background = { type:"solid", color: p.bg };
+  rerender();
+  renderPalettePicker();
+}
+
+// ── 8 layout templates ───────────────────────────────────────────────────
+//
+// Each layout describes a starting design — a background plus N elements
+// positioned in named zones. Elements use `color_role` (not absolute
+// hex) so palette swaps re-theme the entire layout.
+//
+// Coordinates assume the canvas is 1080×1920 with 9 zones (top-left,
+// top-center, …, bottom-right). The render module's applyPositionAndSize
+// places each element at its zone's anchor + per-element offset.
+var LAYOUT_TEMPLATES = {
+  bottom_banner: {
+    name: "Bottom banner",
+    background: { type:"solid", role:"bg" },
+    elements: [
+      { type:"shape", shape:"rectangle", color_role:"accent",
+        position:{ zone:"bottom-center", offset_x:0, offset_y:160 },
+        size_px:{ width:1080, height:480 }, rotation:0, opacity:1 },
+      { type:"text", content:"YOUR HEADLINE", font:"bold_display", size:"L",
+        weight:"bold", italic:false, align:"center", color_role:"text_alt",
+        position:{ zone:"bottom-center", offset_x:0, offset_y:140 },
+        size_px:{ width:900, height:160 }, rotation:0, opacity:1 },
+      { type:"shape", shape:"circle", color_role:"tint",
+        position:{ zone:"top-right", offset_x:-40, offset_y:60 },
+        size_px:{ width:200, height:200 }, rotation:0, opacity:1 },
+    ],
+  },
+  centered_title: {
+    name: "Centered title",
+    background: { type:"solid", role:"bg" },
+    elements: [
+      { type:"text", content:"YOUR\nTITLE", font:"bold_display", size:"XL",
+        weight:"bold", italic:false, align:"center", color_role:"text",
+        position:{ zone:"center", offset_x:0, offset_y:0 },
+        size_px:{ width:900, height:600 }, rotation:0, opacity:1 },
+    ],
+  },
+  sticker: {
+    name: "Sticker",
+    background: { type:"solid", role:"bg" },
+    elements: [
+      { type:"shape", shape:"rounded", color_role:"accent",
+        position:{ zone:"center", offset_x:0, offset_y:0 },
+        size_px:{ width:760, height:560 }, rotation:-4, opacity:1 },
+      { type:"text", content:"DM YARD", font:"bold_display", size:"XL",
+        weight:"bold", italic:false, align:"center", color_role:"text_alt",
+        position:{ zone:"center", offset_x:0, offset_y:0 },
+        size_px:{ width:680, height:200 }, rotation:-4, opacity:1 },
+    ],
+  },
+  top_tab: {
+    name: "Top tab",
+    background: { type:"solid", role:"bg" },
+    elements: [
+      { type:"shape", shape:"rectangle", color_role:"accent",
+        position:{ zone:"top-center", offset_x:0, offset_y:-65 },
+        size_px:{ width:1080, height:350 }, rotation:0, opacity:1 },
+      { type:"text", content:"NEW", font:"bold_display", size:"L",
+        weight:"bold", italic:false, align:"center", color_role:"text_alt",
+        position:{ zone:"top-center", offset_x:0, offset_y:-65 },
+        size_px:{ width:900, height:200 }, rotation:0, opacity:1 },
+      { type:"text", content:"Your message here", font:"clean_sans", size:"M",
+        weight:"bold", italic:false, align:"center", color_role:"text",
+        position:{ zone:"center", offset_x:0, offset_y:0 },
+        size_px:{ width:900, height:240 }, rotation:0, opacity:1 },
+    ],
+  },
+  lower_third: {
+    name: "Lower-third",
+    background: { type:"solid", role:"bg" },
+    elements: [
+      { type:"shape", shape:"bar", color_role:"accent",
+        position:{ zone:"bottom-center", offset_x:0, offset_y:60 },
+        size_px:{ width:240, height:18 }, rotation:0, opacity:1 },
+      { type:"text", content:"Your\nstatement\nhere", font:"slab", size:"L",
+        weight:"bold", italic:false, align:"left", color_role:"text",
+        position:{ zone:"bottom-center", offset_x:-40, offset_y:200 },
+        size_px:{ width:900, height:380 }, rotation:0, opacity:1 },
+    ],
+  },
+  full_bleed: {
+    name: "Full-bleed text",
+    background: { type:"solid", role:"bg" },
+    elements: [
+      { type:"text", content:"BIG\nWORDS\nHIT", font:"bold_display", size:"XL",
+        weight:"bold", italic:false, align:"left", color_role:"text",
+        position:{ zone:"center", offset_x:0, offset_y:0 },
+        size_px:{ width:1000, height:1400 }, rotation:0, opacity:1 },
+    ],
+  },
+  frame: {
+    name: "Frame and fill",
+    background: { type:"solid", role:"bg" },
+    elements: [
+      { type:"shape", shape:"rectangle", color_role:"accent",
+        position:{ zone:"center", offset_x:0, offset_y:0 },
+        size_px:{ width:1020, height:1860 }, rotation:0, opacity:1 },
+      { type:"shape", shape:"rectangle", color_role:"bg",
+        position:{ zone:"center", offset_x:0, offset_y:0 },
+        size_px:{ width:900, height:1740 }, rotation:0, opacity:1 },
+      { type:"text", content:"YOUR\nMOMENT", font:"serif", size:"XL",
+        weight:"bold", italic:false, align:"center", color_role:"text",
+        position:{ zone:"center", offset_x:0, offset_y:0 },
+        size_px:{ width:800, height:600 }, rotation:0, opacity:1 },
+    ],
+  },
+  quote: {
+    name: "Quote block",
+    background: { type:"solid", role:"bg" },
+    elements: [
+      { type:"text", content:"“", font:"serif", size:"XL",
+        weight:"bold", italic:false, align:"left", color_role:"accent",
+        position:{ zone:"top-left", offset_x:60, offset_y:60 },
+        size_px:{ width:300, height:300 }, rotation:0, opacity:1 },
+      { type:"text", content:"Your quote\ngoes here.", font:"serif", size:"L",
+        weight:"normal", italic:true, align:"center", color_role:"text",
+        position:{ zone:"center", offset_x:0, offset_y:0 },
+        size_px:{ width:900, height:600 }, rotation:0, opacity:1 },
+      { type:"text", content:"”", font:"serif", size:"XL",
+        weight:"bold", italic:false, align:"right", color_role:"accent",
+        position:{ zone:"bottom-right", offset_x:-60, offset_y:-60 },
+        size_px:{ width:300, height:300 }, rotation:0, opacity:1 },
+    ],
+  },
+};
+
+function uidEl() { return "el_" + Math.random().toString(36).slice(2, 10); }
+function applyLayout(layoutId) {
+  var tmpl = LAYOUT_TEMPLATES[layoutId];
+  if (!tmpl) return;
+  if (design.elements.length > 0) {
+    if (!confirm("Switch to " + tmpl.name + "? Your current design will be replaced.")) return;
+  }
+  snapshot();
+  // Deep-clone the template's elements + assign fresh ids.
+  design.elements = (tmpl.elements || []).map(function (e) {
+    var clone = JSON.parse(JSON.stringify(e));
+    clone.id = uidEl();
+    return clone;
+  });
+  design.layout_template = layoutId;
+  design.layout_edited = false;
+  // Re-apply background per the template's role.
+  var role = (tmpl.background && tmpl.background.role) || "bg";
+  if (design.palette && design.palette[role]) {
+    design.background = { type:"solid", color: design.palette[role] };
+  }
+  selectedId = null;
+  rerender();
+  renderLayoutPicker();
+  refreshLayoutLabel();
+}
+
+function refreshLayoutLabel() {
+  var lbl = document.getElementById("canvas-foot-label");
+  if (!lbl) return;
+  if (!design.layout_template) {
+    lbl.textContent = "Layout: none";
+  } else {
+    var tmpl = LAYOUT_TEMPLATES[design.layout_template];
+    var name = tmpl ? tmpl.name : design.layout_template;
+    lbl.textContent = "Layout: " + name + (design.layout_edited ? " (edited)" : "");
+  }
+}
+
+// Track manual edits after a layout is picked.
+var _origRerender = rerender;
+rerender = function () {
+  _origRerender();
+  // After any rerender, mark the layout as edited if the user has
+  // changed the elements compared to the template snapshot.
+  if (design.layout_template && !design.layout_edited && undoStack.length > 0) {
+    // Approximate signal: if the user has done any undo-able action since
+    // applying the layout, consider it edited.
+    // (The precise diff would require a snapshot; this is good enough for v1.)
+    design.layout_edited = true;
+    refreshLayoutLabel();
+  }
+};
+
+function renderLayoutPicker() {
+  var grid = document.getElementById("layout-grid");
+  // 8 thumbnail SVG mockups (just shapes — text shown as bars).
+  var layouts = [
+    { id:"bottom_banner",  name:"Bottom banner",
+      svg:'<rect width="100" height="180" fill="#0f172a"/><rect y="135" width="100" height="45" fill="#7c5cff"/><rect x="20" y="148" width="60" height="5" fill="#fff"/><rect x="20" y="158" width="50" height="5" fill="#fff"/>' },
+    { id:"centered_title", name:"Centered title",
+      svg:'<rect width="100" height="180" fill="#0f172a"/><rect x="15" y="80" width="70" height="14" fill="#fff"/>' },
+    { id:"sticker",        name:"Sticker",
+      svg:'<rect width="100" height="180" fill="#0f172a"/><g transform="rotate(-4 50 90)"><rect x="15" y="65" width="70" height="50" rx="6" fill="#7c5cff"/><rect x="22" y="84" width="56" height="6" fill="#fff"/></g>' },
+    { id:"top_tab",        name:"Top tab",
+      svg:'<rect width="100" height="180" fill="#0f172a"/><rect width="100" height="32" fill="#7c5cff"/><rect x="15" y="13" width="70" height="6" fill="#fff"/>' },
+    { id:"lower_third",    name:"Lower-third",
+      svg:'<rect width="100" height="180" fill="#0f172a"/><rect x="15" y="125" width="70" height="3" fill="#7c5cff"/><rect x="15" y="135" width="60" height="6" fill="#fff"/>' },
+    { id:"full_bleed",     name:"Full-bleed text",
+      svg:'<rect width="100" height="180" fill="#0f172a"/><rect x="8" y="40" width="84" height="20" fill="#fff"/><rect x="8" y="65" width="60" height="20" fill="#fff"/>' },
+    { id:"frame",          name:"Frame and fill",
+      svg:'<rect width="100" height="180" fill="#0f172a"/><rect x="8" y="8" width="84" height="164" fill="none" stroke="#7c5cff" stroke-width="6"/><rect x="25" y="80" width="50" height="6" fill="#fff"/>' },
+    { id:"quote",          name:"Quote block",
+      svg:'<rect width="100" height="180" fill="#0f172a"/><text x="10" y="40" font-size="20" fill="#7c5cff">“</text><rect x="20" y="80" width="60" height="6" fill="#fff"/><text x="80" y="160" font-size="20" fill="#7c5cff">”</text>' },
+  ];
+  grid.innerHTML = layouts.map(function (l) {
+    var active = design.layout_template === l.id;
+    return '<div class="layout-pick ' + (active ? "is-active" : "") + '" '
+      + 'data-layout="' + l.id + '" title="' + l.name + '">'
+      + '<svg viewBox="0 0 100 180" preserveAspectRatio="none">' + l.svg + '</svg></div>';
+  }).join("");
+  grid.querySelectorAll("[data-layout]").forEach(function (n) {
+    n.addEventListener("click", function () { applyLayout(n.dataset.layout); });
+  });
+}
+
+// ── Animation panel + Video toggle + multi-variant ─────────────────────
+//
+// Phase 3 layered on top of Phase 1/2. The Animation panel shows when
+// format === "video"; otherwise it explains the toggle. Per-element
+// animation state lives on `el.animation = {type, appears_at_sec}`.
+
+// Preset list with friendly descriptions so a non-designer knows what
+// each one does without having to test all four.
+var ANIM_PRESETS = [
+  { id:"none",   label:"None",    icon:"–", sub:"This element doesn't move." },
+  { id:"fade",   label:"Fade in", icon:"◐", sub:"Gently appears." },
+  { id:"slide",  label:"Slide up",icon:"↑", sub:"Slides up from below." },
+  { id:"pulse",  label:"Pulse",   icon:"♥", sub:"Beats softly the whole time." },
+  { id:"bounce", label:"Bounce",  icon:"●", sub:"Pops in with a little spring." },
+];
+
+function renderAnimationPanel(){
+  var body = document.getElementById("anim-body");
+  if (!body) return;
+  if (design.format !== "video") {
+    body.innerHTML = '<p style="font-size:12px;color:var(--text-muted);margin:0">'
+      + 'Switch to Video at the top to add animations.</p>';
+    return;
+  }
+  var sel = selectedId ? findEl(selectedId) : null;
+  if (!sel) {
+    body.innerHTML =
+        '<p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;line-height:1.4">'
+      +   'Pick a piece of text or shape, then choose how it should move.'
+      + '</p>'
+      + '<div class="field">'
+      +   '<span class="field-l">How long is the video?</span>'
+      +   '<input id="dur-slider" type="range" min="1" max="5" step="0.5" value="' + (design.duration_seconds || 3) + '" style="width:100%">'
+      +   '<div style="font-size:11.5px;color:var(--text-muted);text-align:center;margin-top:4px">'
+      +     '<span id="dur-display">' + (design.duration_seconds || 3) + '</span> sec'
+      +   '</div>'
+      + '</div>';
+    var ds = document.getElementById("dur-slider");
+    if (ds) ds.addEventListener("input", function () {
+      design.duration_seconds = parseFloat(ds.value);
+      document.getElementById("dur-display").textContent = ds.value;
+    });
+    return;
+  }
+  var current = (sel.animation && sel.animation.type) || "none";
+  var appears = (sel.animation && sel.animation.appears_at_sec != null)
+                  ? sel.animation.appears_at_sec : 0;
+  var rowsHtml = ANIM_PRESETS.map(function (p) {
+    return '<button type="button" data-anim="' + p.id + '" '
+      + 'class="anim-row ' + (current === p.id ? "is-active" : "") + '">'
+      + '<span class="anim-row-icon">' + p.icon + '</span>'
+      + '<span class="anim-row-text">'
+      +   '<span class="anim-row-label">' + p.label + '</span>'
+      +   '<span class="anim-row-sub">' + p.sub + '</span>'
+      + '</span>'
+      + '</button>';
+  }).join("");
+  body.innerHTML =
+      '<div class="anim-pill-wrap">' + rowsHtml + '</div>'
+    + (current !== "none"
+        ? '<div class="field" style="margin-top:14px">'
+          +   '<span class="field-l">Starts at</span>'
+          +   '<input id="anim-appears" type="range" min="0" max="' + (design.duration_seconds || 3) + '" step="0.1" value="' + appears + '" style="width:100%">'
+          +   '<div style="font-size:11.5px;color:var(--text-muted);text-align:center;margin-top:4px">'
+          +     '<span id="anim-appears-display">' + appears + '</span> seconds in'
+          +   '</div>'
+          + '</div>'
+        : '')
+    + '<div class="field" style="margin-top:14px">'
+    +   '<span class="field-l">How long is the video?</span>'
+    +   '<input id="dur-slider" type="range" min="1" max="5" step="0.5" value="' + (design.duration_seconds || 3) + '" style="width:100%">'
+    +   '<div style="font-size:11.5px;color:var(--text-muted);text-align:center;margin-top:4px">'
+    +     '<span id="dur-display">' + (design.duration_seconds || 3) + '</span> sec'
+    +   '</div>'
+    + '</div>';
+  body.querySelectorAll("[data-anim]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      snapshot();
+      var t = b.dataset.anim;
+      sel.animation = (t === "none")
+        ? null
+        : { type: t, appears_at_sec: appears };
+      renderAnimationPanel();
+      rerender();
+    });
+  });
+  var aSlider = document.getElementById("anim-appears");
+  if (aSlider) aSlider.addEventListener("input", function () {
+    var v = parseFloat(aSlider.value);
+    if (!sel.animation) sel.animation = { type: "fade", appears_at_sec: v };
+    else sel.animation.appears_at_sec = v;
+    document.getElementById("anim-appears-display").textContent = v;
+  });
+  var ds = document.getElementById("dur-slider");
+  if (ds) ds.addEventListener("input", function () {
+    design.duration_seconds = parseFloat(ds.value);
+    document.getElementById("dur-display").textContent = ds.value;
+  });
+}
+
+// Hook the animation panel into the existing rerender + selection flow.
+var _origUpdateRightRail = updateRightRail;
+updateRightRail = function () {
+  _origUpdateRightRail();
+  renderAnimationPanel();
+};
+
+// Wire the Image / Video segmented toggle.
+function _setFormat(fmt){
+  design.format = fmt;
+  document.getElementById("fmt-image").classList.toggle("is-active", fmt === "image");
+  document.getElementById("fmt-video").classList.toggle("is-active", fmt === "video");
+  if (fmt === "video" && !design.duration_seconds) design.duration_seconds = 3;
+  // Show / hide the big preview button.
+  var pb = document.getElementById("preview-btn");
+  if (pb) pb.hidden = (fmt !== "video");
+  renderAnimationPanel();
+  // If we left video while previewing, stop the loop.
+  if (fmt !== "video") _stopPreview();
+}
+document.getElementById("fmt-image").addEventListener("click", function () {
+  if (design.format === "image") return; _setFormat("image");
+});
+document.getElementById("fmt-video").addEventListener("click", function () {
+  if (design.format === "video") return; _setFormat("video");
+});
+
+// ── Preview animation playback ──────────────────────────────────────────
+//
+// Plays the design's animations in real time inside the editor canvas
+// using the same renderDesignAtTime() function the headless renderer
+// will call. Loops for the configured duration once, then resets to
+// the at-end frame so the user sees the final composition.
+var _previewRAF = null;
+var _previewStart = 0;
+
+function _stopPreview(){
+  if (_previewRAF) {
+    cancelAnimationFrame(_previewRAF);
+    _previewRAF = null;
+  }
+  var btn = document.getElementById("preview-btn");
+  if (btn) {
+    btn.classList.remove("is-playing");
+    document.getElementById("preview-btn-icon").textContent = "▶";
+    document.getElementById("preview-btn-label").textContent = "Preview animation";
+  }
+  // Snap back to the final composition (t = duration) so what the user
+  // sees in the editor matches the saved video's last frame.
+  rerender();
+}
+
+function _startPreview(){
+  if (design.format !== "video") return;
+  var dur = design.duration_seconds || 3;
+  var stage = document.getElementById("canvas-stage");
+  // Strip selection chrome during preview so handles don't bob with the
+  // animation — they'll come back when preview ends + rerender runs.
+  document.querySelectorAll(".selection-frame, .sel-delete").forEach(function (n) {
+    n.remove();
+  });
+  _previewStart = performance.now();
+  var btn = document.getElementById("preview-btn");
+  if (btn) {
+    btn.classList.add("is-playing");
+    document.getElementById("preview-btn-icon").textContent = "■";
+    document.getElementById("preview-btn-label").textContent = "Stop preview";
+  }
+  function tick(now){
+    var t = (now - _previewStart) / 1000;
+    if (t >= dur) {
+      // Final frame, then auto-stop.
+      window.__studio.renderDesignAtTime(stage, design, dur);
+      _stopPreview();
+      return;
+    }
+    window.__studio.renderDesignAtTime(stage, design, t);
+    _previewRAF = requestAnimationFrame(tick);
+  }
+  _previewRAF = requestAnimationFrame(tick);
+}
+
+document.getElementById("preview-btn").addEventListener("click", function () {
+  if (_previewRAF) _stopPreview();
+  else _startPreview();
+});
+
+// Stop preview if the user touches anything else (selecting, dragging,
+// changing a control). Hooks into the existing rerender flow.
+var _prevRerender = rerender;
+rerender = function () {
+  if (_previewRAF) _stopPreview();
+  _prevRerender();
+};
+
+// ── Save now sends format with the request ──────────────────────────────
+// (overrides the Phase-1 save handler, but keeps the same UX shape).
+var _saveBtn = document.getElementById("save-go");
+_saveBtn.replaceWith(_saveBtn.cloneNode(true));   // strip the Phase-1 listener
+document.getElementById("save-go").addEventListener("click", saveDesignV3);
+
+async function saveDesignV3() {
+  var btn = document.getElementById("save-go");
+  if (btn.disabled) return;
+  btn.disabled = true;
+  setStatus(design.format === "video" ? "Rendering video…" : "Saving…", "is-saving");
+  var payload = JSON.parse(JSON.stringify(design));
+  // Strip data-URL images from animation captures — they bloat the
+  // request and are never needed at render time (the renderer can read
+  // them from the page's existing src attributes).
+  try {
+    var r = await fetch("/dashboard/instagram/api/studio/render", {
+      method:"POST", credentials:"same-origin",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        design:           payload,
+        destination_tab:  DESTINATION,
+        format:           design.format || "image",
+        label:            document.getElementById("design-name").value || payload.name,
+      }),
+    });
+    var d = await r.json().catch(()=>({}));
+    if (!r.ok) {
+      setStatus(d.detail || d.error || ("HTTP " + r.status), "is-error");
+      btn.disabled = false; return;
+    }
+    setStatus("Saved!", "is-saved");
+    toast(DEST_LABEL + " saved to library.");
+    setTimeout(function () {
+      window.location.href = "/dashboard/instagram#library";
+    }, 700);
+  } catch (e) {
+    setStatus("Network error: " + e.message, "is-error");
+    btn.disabled = false;
+  }
+}
+
+// ── Multi-variant export (Save 5 variants) ──────────────────────────────
+//
+// Fires up to five render calls in parallel, one per palette. Frontend
+// progresses a small modal as variants come back. For custom palettes,
+// pick the four pre-built palettes whose bg is most distant in HSL.
+function _hexToHsl(hex){
+  var rgb = _hexToRgb(hex); if (!rgb) return [0,0,0];
+  var r = rgb[0]/255, g = rgb[1]/255, b = rgb[2]/255;
+  var mx = Math.max(r,g,b), mn = Math.min(r,g,b);
+  var l = (mx + mn) / 2;
+  var s = 0, h = 0;
+  if (mx !== mn) {
+    var d = mx - mn;
+    s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+    switch(mx){
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h /= 6;
+  }
+  return [h*360, s, l];
+}
+function _hueDistance(a, b){
+  var d = Math.abs(a - b);
+  return d > 180 ? 360 - d : d;
+}
+function _pickVariantPalettes(){
+  var preBuilt = Object.values(PALETTES);
+  var current = design.palette || PALETTES.palette_forest;
+  // If current is one of the pre-builts, the variants ARE the 5 pre-builts.
+  if (PALETTES[current.id]) return preBuilt.slice();
+  // Otherwise (custom palette): keep current + the 4 most-contrasting pre-builts.
+  var curHsl = _hexToHsl(current.bg);
+  var ranked = preBuilt
+    .map(function (p) {
+      var pHsl = _hexToHsl(p.bg);
+      return { p: p, dist: _hueDistance(curHsl[0], pHsl[0]) +
+                          Math.abs(curHsl[2] - pHsl[2]) * 200 };
+    })
+    .sort(function (a,b) { return b.dist - a.dist; })
+    .slice(0, 4)
+    .map(function (x) { return x.p; });
+  return [current].concat(ranked);
+}
+
+document.getElementById("save-variants").addEventListener("click", saveFiveVariants);
+
+async function saveFiveVariants(){
+  var btn = document.getElementById("save-variants");
+  if (btn.disabled) return;
+  btn.disabled = true;
+  var palettes = _pickVariantPalettes();
+  setStatus("Making 5 variants — 0 of " + palettes.length + " done", "is-saving");
+  var done = 0, failed = 0;
+  // Snapshot the current palette so we can restore.
+  var origPalette = design.palette;
+  var origPaletteId = design.palette_id;
+  var jobs = palettes.map(function (p) {
+    // Deep-clone the design and re-theme it with this palette.
+    var variant = JSON.parse(JSON.stringify(design));
+    variant.palette = p;
+    variant.palette_id = p.id;
+    (variant.elements || []).forEach(function (el) {
+      if (el.color_role && p[el.color_role]) el.color = p[el.color_role];
+    });
+    if (variant.background && variant.background.type === "solid") {
+      variant.background = { type:"solid", color: p.bg };
+    }
+    return variant;
+  });
+  var labelBase = (document.getElementById("design-name").value || design.name || "Design");
+  function runOne(variant, palette){
+    var lbl = labelBase + " (" + palette.id.replace("palette_","") + ")";
+    return fetch("/dashboard/instagram/api/studio/render", {
+      method:"POST", credentials:"same-origin",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        design:          variant,
+        destination_tab: DESTINATION,
+        format:          variant.format || "image",
+        label:           lbl,
+      }),
+    }).then(function (r) {
+      if (!r.ok) failed++;
+      done++;
+      setStatus("Making " + palettes.length + " variants — " + done + " of " + palettes.length + " done", "is-saving");
+      return r.ok;
+    }).catch(function () {
+      failed++; done++;
+      setStatus("Making " + palettes.length + " variants — " + done + " of " + palettes.length + " done", "is-saving");
+      return false;
+    });
+  }
+  await Promise.all(jobs.map(function (v, i) { return runOne(v, palettes[i]); }));
+  // Restore the original palette in the editor.
+  design.palette = origPalette; design.palette_id = origPaletteId;
+  if (failed === 0) {
+    setStatus(palettes.length + " variants saved.", "is-saved");
+    toast(palettes.length + " variants added.");
+  } else {
+    setStatus((palettes.length - failed) + " of " + palettes.length + " saved · " + failed + " failed.", "is-error");
+  }
+  setTimeout(function () {
+    if (failed === 0) window.location.href = "/dashboard/instagram#library";
+    else btn.disabled = false;
+  }, 1200);
+}
+
+// ── Boot ─────────────────────────────────────────────────────────────────
+renderPalettePicker();
+renderLayoutPicker();
+loadCustomPalettes();
+rerender();
+renderAnimationPanel();
+fitCanvas();
+setTimeout(fitCanvas, 100);
+refreshLayoutLabel();
+setStatus("ready", "");
+</script>
+</body>
+</html>

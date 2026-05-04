@@ -441,8 +441,45 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
             else if (strcmp(ext, ".woff") == 0) mime = "font/woff";
         }
         get_live_file_typed(cSSL, rel_path, mime);
+    } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/dashboard/static/", 18) == 0) {
+        /* Hand-written reusable client modules — Flask serves them. */
+        get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/dashboard") == 0) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/social") == 0) {
+        get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/social/", 8) == 0) {
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/dashboard/instagram", 20) == 0) {
+        /* New Instagram integration — page + OAuth start + status/pages/media/DM API. */
+        get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/dashboard/linkedin", 19) == 0) {
+        /* LinkedIn-as-its-own-tab — page + JSON status/posts/rate APIs. */
+        get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/api/ai/", 8) == 0) {
+        /* Inline AI editor — rewrite-selection endpoint + hooks +
+         * preview + voice rules. Auth-gated server-side. */
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/api/ai/", 8) == 0) {
+        /* GET endpoints under /api/ai/ — voice rules, etc. */
+        get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/dashboard/linkedin/", 20) == 0) {
+        /* LinkedIn composer publish + image upload + library + AI drafts. */
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
+    } else if (strcmp(request_type, "DELETE") == 0 && strncmp(route, "/dashboard/linkedin/", 20) == 0) {
+        /* Library item deletion + AI draft deletion + account disconnect. */
+        delete_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "PATCH") == 0 && strncmp(route, "/dashboard/linkedin/", 20) == 0) {
+        /* Library item edit. Forwarded as POST since the underlying
+         * proxy helper bridges PATCH→POST for the upstream Flask app. */
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/oauth/linkedin/", 16) == 0) {
+        /* LinkedIn OAuth callback. */
+        get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/dashboard/instagram/", 21) == 0) {
+        /* /dashboard/instagram/api/pick-page (JSON), /publish (multipart),
+         * /disconnect (no body). */
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/me") == 0) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && (strcmp(route, "/try") == 0 || strncmp(route, "/try/", 5) == 0)) {
@@ -465,6 +502,14 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
         /* Public passthrough: Meta fetches uploaded IG media here
          * during media-container creation. Flask streams the blob from
          * GCS via ADC. */
+        get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/li-media/", 10) == 0) {
+        /* Public passthrough: LinkedIn fetches composer-uploaded
+         * images here during the registerUpload step. */
+        get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/li-lib/", 8) == 0) {
+        /* Public passthrough for LinkedIn library media (combinator
+         * Phase 1). Path-unguessable so no auth gate. */
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/admin/") != NULL) {
         get_to_local(socket, http_header, body, route_with_query, "5000");

@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Manage Instagram accounts — JustGotALead</title>
+  <style>
+    :root{
+      --text-primary:#0f172a;
+      --text-secondary:#6b7280;
+      --text-tertiary:#94a3b8;
+      --border:#e5e7eb;
+      --border-strong:#d1d5db;
+      --bg-hover:#f8fafc;
+      --brand:#2563eb;
+      --brand-2:#06b6d4;
+      --green:#16a34a;
+      --green-bg:#dcfce7;
+      --red:#dc2626;
+      --red-bg:#fee2e2;
+      --warn-bg:#fef3c7;
+      --warn-fg:#92400e;
+    }
+    *,*::before,*::after{box-sizing:border-box}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+      margin:0; background:#fff; color:var(--text-primary);
+      font-size:14px; line-height:1.5;
+    }
+    .page{max-width:760px; margin:0 auto; padding:32px 24px 60px}
+    .head{display:flex; align-items:center; gap:14px; margin-bottom:8px}
+    .back{
+      width:32px; height:32px; border-radius:8px; border:1px solid var(--border);
+      background:#fff; color:var(--text-secondary); cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      font-size:16px; line-height:1; text-decoration:none;
+    }
+    .back:hover{background:var(--bg-hover)}
+    .title{font-size:24px; font-weight:600; margin:0; letter-spacing:-.01em}
+    .sub{font-size:14px; color:var(--text-secondary); margin:4px 0 32px}
+
+    .card{
+      border:1px solid var(--border); border-radius:14px;
+      padding:18px 20px; margin-bottom:14px;
+      transition:border-color .12s, box-shadow .12s;
+    }
+    .card:hover{ border-color:var(--border-strong); box-shadow:0 2px 8px rgba(15,23,42,.05); }
+    .card-head{display:flex; align-items:flex-start; gap:14px}
+    .avatar{
+      width:48px; height:48px; flex:0 0 auto; border-radius:50%;
+      background:linear-gradient(135deg,#fbbf24,#ec4899,#8b5cf6);
+      color:#fff; font-weight:700; font-size:14px;
+      display:flex; align-items:center; justify-content:center;
+      letter-spacing:.02em;
+    }
+    .name-block{flex:1; min-width:0}
+    .nickname-row{display:flex; align-items:center; gap:8px}
+    .nickname{
+      font-size:16px; font-weight:600; color:var(--text-primary);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .edit-pencil{
+      background:transparent; border:0; color:var(--text-tertiary);
+      font-size:13px; cursor:pointer; padding:4px 6px; border-radius:6px;
+    }
+    .edit-pencil:hover{background:var(--bg-hover); color:var(--text-primary)}
+    .nickname-input{
+      font-size:16px; font-weight:600; color:var(--text-primary);
+      padding:4px 8px; border:1px solid var(--brand);
+      border-radius:6px; outline:0; font-family:inherit;
+    }
+    .handle{font-size:13px; color:var(--text-tertiary); margin-top:2px}
+    .meta-row{
+      font-size:12px; color:var(--text-secondary); margin-top:6px;
+      display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    }
+    .meta-pill{
+      padding:1px 8px; border-radius:999px;
+      font-size:11px; font-weight:600;
+    }
+    .meta-pill.is-active{ background:var(--green-bg); color:#166534 }
+    .meta-pill.is-paused{ background:#e5e7eb; color:#374151 }
+    .meta-pill.is-warn  { background:var(--warn-bg); color:var(--warn-fg) }
+    .meta-pill.is-error { background:var(--red-bg); color:#991b1b }
+
+    .actions{
+      display:flex; flex-wrap:wrap; gap:8px;
+      margin-top:14px; padding-top:14px;
+      border-top:1px solid var(--border);
+    }
+    .btn{
+      padding:7px 14px; font-size:13px; font-weight:500; cursor:pointer;
+      border:1px solid var(--border-strong); border-radius:8px;
+      background:#fff; color:var(--text-primary); font-family:inherit;
+    }
+    .btn:hover{background:var(--bg-hover)}
+    .btn:disabled{opacity:.5; cursor:not-allowed}
+    .btn-primary{
+      background:linear-gradient(135deg,var(--brand),var(--brand-2));
+      color:#fff; border-color:transparent;
+    }
+    .btn-primary:hover{filter:brightness(1.06)}
+    .btn-danger{ color:var(--red); border-color:#fecaca }
+    .btn-danger:hover{background:#fef2f2}
+
+    .add-card{
+      display:block; margin-top:18px; text-align:center;
+      padding:16px; border:1px dashed var(--border-strong);
+      border-radius:14px; color:var(--brand); font-weight:500;
+      text-decoration:none; cursor:pointer;
+    }
+    .add-card:hover{background:var(--bg-hover); border-color:var(--brand)}
+    .add-card.is-disabled{
+      color:var(--text-tertiary); border-color:var(--border);
+      cursor:not-allowed; pointer-events:none;
+    }
+
+    .loading{text-align:center; padding:48px; color:var(--text-secondary)}
+    .empty{
+      text-align:center; padding:48px 24px;
+      border:1px solid var(--border); border-radius:14px;
+    }
+    .empty-icon{font-size:32px; margin-bottom:12px}
+    .empty-h{font-size:18px; font-weight:600; margin:0 0 6px}
+    .empty-p{font-size:13.5px; color:var(--text-secondary); margin:0 0 18px}
+
+    .toast{
+      position:fixed; left:50%; bottom:32px; transform:translateX(-50%);
+      background:#0f172a; color:#fff; padding:12px 18px;
+      border-radius:999px; font-size:13px; font-weight:500;
+      box-shadow:0 8px 24px rgba(15,23,42,.32);
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="head">
+      <a class="back" href="/dashboard/instagram" aria-label="Back to Instagram">←</a>
+      <div>
+        <h1 class="title">Manage Instagram accounts</h1>
+      </div>
+    </div>
+    <p class="sub">Switch between accounts, edit nicknames, or disconnect.</p>
+
+    <div id="li-rate-chip" class="meta-pill" hidden style="margin:0 0 14px 0;display:inline-flex;align-items:center;gap:6px"></div>
+
+    <div id="list" class="loading">Loading…</div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <!-- Disconnect-with-choice modal -->
+  <style>.dis-modal{position:fixed;inset:0;background:rgba(15,23,42,.4);align-items:center;justify-content:center;z-index:50;padding:20px;display:flex}.dis-modal[hidden]{display:none !important}</style>
+  <div id="dis-modal" class="dis-modal" hidden>
+    <div style="background:#fff;border-radius:14px;max-width:520px;width:100%;padding:24px;box-shadow:0 20px 50px rgba(15,23,42,.25)">
+      <h3 style="margin:0 0 8px;font-size:18px;font-weight:600" id="dis-h">Disconnect this account?</h3>
+      <p id="dis-sub" style="margin:0 0 18px;font-size:13.5px;color:var(--text-secondary)">—</p>
+      <div id="dis-options" style="display:grid;gap:8px;margin-bottom:20px"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button id="dis-cancel" class="btn" type="button">Cancel</button>
+        <button id="dis-confirm" class="btn btn-danger" type="button">Disconnect</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+    var ACCOUNT_LIMIT = 10;
+
+    function $(id){return document.getElementById(id);}
+    function esc(s){
+      return String(s == null ? "" : s).replace(/[&<>"']/g, c =>
+        ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+    }
+    function initials(s){
+      s = (s || "").replace(/^@/, "").trim();
+      if (!s) return "··";
+      var parts = s.split(/\s+/).filter(Boolean);
+      if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+      return s.slice(0, 2).toUpperCase();
+    }
+    function fmtDate(epoch){
+      if (!epoch) return "";
+      var d = new Date(epoch * 1000);
+      return d.toLocaleDateString(undefined, {month:"short", day:"numeric", year:"numeric"});
+    }
+    function tokenValidity(connected_at){
+      if (!connected_at) return null;
+      // Long-lived FB tokens last ~60 days. Approximate from connected_at.
+      var expiresAt = connected_at + 60 * 86400;
+      var daysLeft = Math.floor((expiresAt - Date.now()/1000) / 86400);
+      if (daysLeft <= 0)  return { label:"Reconnect needed", cls:"is-error" };
+      if (daysLeft <= 7)  return { label:"Token valid " + daysLeft + " more days", cls:"is-warn" };
+      return { label:"Token valid " + daysLeft + " more days", cls:"" };
+    }
+    function toast(msg){
+      var t = $("toast");
+      t.textContent = msg; t.hidden = false;
+      setTimeout(() => { t.hidden = true; }, 3000);
+    }
+
+    async function load(){
+      var listEl = $("list");
+      try {
+        var r = await fetch("/dashboard/instagram/api/accounts",
+          {credentials:"same-origin"});
+        if (!r.ok) {
+          listEl.innerHTML = '<div class="empty"><p>Couldn\'t load your accounts. Refresh the page.</p></div>';
+          return;
+        }
+        var data = await r.json().catch(()=>({}));
+        var accounts = data.accounts || [];
+        if (!accounts.length) {
+          listEl.innerHTML =
+              '<div class="empty">'
+            +   '<div class="empty-icon">📷</div>'
+            +   '<h3 class="empty-h">No accounts connected.</h3>'
+            +   '<p class="empty-p">Connect your first Instagram account to start scheduling.</p>'
+            +   '<a class="btn btn-primary" href="/dashboard/instagram/api/accounts/add">Connect Instagram</a>'
+            + '</div>';
+          return;
+        }
+        listEl.innerHTML = accounts.map(renderCard).join("") + renderAddCard(accounts.length);
+        accounts.forEach(wireCard);
+      } catch (e) {
+        listEl.innerHTML = '<div class="empty"><p>Network error: ' + esc(e.message) + '</p></div>';
+      }
+    }
+
+    function renderCard(a){
+      var isLi = (a.platform || "").indexOf("linkedin_") === 0;
+      // Stable per-card id used for DOM lookups (rename input, etc.).
+      var cardId = isLi ? (a.platform + ":" + a.account_id) : a.ig_account_id;
+      var displayName, subLine, iconChar, accountLabel;
+      if (isLi) {
+        displayName  = a.user_nickname || a.display_name || "LinkedIn";
+        subLine      = (a.platform === "linkedin_company") ? "Company Page" : "Personal profile";
+        iconChar     = "in";
+        accountLabel = displayName;
+      } else {
+        displayName  = a.user_nickname || ("@" + (a.ig_username || ""));
+        subLine      = "@" + (a.ig_username || "instagram");
+        iconChar     = initials(a.user_nickname || a.ig_username);
+        accountLabel = displayName;
+      }
+      var status;
+      if ((a.status || "active") !== "active" && a.status !== "") {
+        status = { label: a.status === "expired" ? "Reconnect" : "Issue", cls:"is-paused" };
+      } else if (a.is_active) {
+        status = { label:"Active", cls:"is-active" };
+      } else if (a.queue_active === false) {
+        status = { label:"Paused", cls:"is-paused" };
+      } else {
+        status = { label:"Connected", cls:"" };
+      }
+      // Token validity only applies to IG (FB long-lived). LinkedIn
+      // tokens are reported via a separate health endpoint.
+      var token = isLi ? null : tokenValidity(a.connected_at);
+      var connectedDate = fmtDate(a.connected_at);
+      var actions = [];
+      if (!a.is_active) {
+        actions.push('<button class="btn" data-action="switch" data-card="'+esc(cardId)+'">Switch to this</button>');
+      }
+      actions.push('<button class="btn" data-action="rename" data-card="'+esc(cardId)+'">Edit nickname</button>');
+      // Pause/Resume — multi-account namespace only (LI always has _meta).
+      var supportsQueue = isLi || !a._legacy;
+      if (supportsQueue) {
+        var queueLabel = (a.queue_active === false) ? "Resume queue" : "Pause queue";
+        var queueAction = (a.queue_active === false) ? "resume" : "pause";
+        actions.push('<button class="btn" data-action="'+queueAction+'" data-card="'+esc(cardId)+'">'+queueLabel+'</button>');
+      }
+      // Reconnect button when expired/revoked.
+      if ((a.status || "active") !== "active" && a.status !== "") {
+        var reconnectHref = isLi
+          ? "/dashboard/instagram/api/linkedin/oauth/start"
+          : "/dashboard/instagram/oauth/start";
+        actions.push('<a class="btn btn-primary" href="'+reconnectHref+'">Reconnect</a>');
+      }
+      actions.push('<button class="btn btn-danger" data-action="disconnect" data-card="'+esc(cardId)+'">Disconnect</button>');
+      return '<div class="card" data-card="'+esc(cardId)+'">'
+        + '<div class="card-head">'
+        +   '<div class="avatar">' + esc(iconChar) + '</div>'
+        +   '<div class="name-block">'
+        +     '<div class="nickname-row">'
+        +       '<span class="nickname" data-nick="'+esc(cardId)+'">' + esc(displayName) + '</span>'
+        +       '<button class="edit-pencil" data-action="rename" data-card="'+esc(cardId)+'" title="Edit nickname">✎</button>'
+        +     '</div>'
+        +     '<div class="handle">' + esc(subLine) + '</div>'
+        +     '<div class="meta-row">'
+        +       '<span class="meta-pill ' + status.cls + '">' + esc(status.label) + '</span>'
+        +       (connectedDate ? '<span>Connected ' + esc(connectedDate) + '</span>' : '')
+        +       (token ? '<span class="meta-pill ' + token.cls + '">' + esc(token.label) + '</span>' : '')
+        +     '</div>'
+        +   '</div>'
+        + '</div>'
+        + '<div class="actions">' + actions.join("") + '</div>'
+        + '</div>';
+    }
+
+    function renderAddCard(count){
+      if (count >= ACCOUNT_LIMIT) {
+        return '<div class="add-card is-disabled" title="Account limit reached (10). Disconnect an account to add another.">'
+          + 'Account limit reached (' + ACCOUNT_LIMIT + ').'
+          + '</div>';
+      }
+      return '<a class="add-card" href="/dashboard/instagram/api/accounts/add">+ Add another account</a>';
+    }
+
+    function wireCard(a){
+      var isLi = (a.platform || "").indexOf("linkedin_") === 0;
+      var cardId = isLi ? (a.platform + ":" + a.account_id) : a.ig_account_id;
+      var card = document.querySelector('[data-card="' + CSS.escape(cardId) + '"]');
+      if (!card) return;
+      card.querySelectorAll("[data-action]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          var act = btn.dataset.action;
+          if (act === "switch")     return doSwitch(a);
+          if (act === "rename")     return doRename(a);
+          if (act === "pause")      return doPauseResume(a, false);
+          if (act === "resume")     return doPauseResume(a, true);
+          if (act === "disconnect") return doDisconnect(a, btn);
+        });
+      });
+    }
+
+    async function doSwitch(a){
+      var isLi = (a.platform || "").indexOf("linkedin_") === 0;
+      var body = isLi
+        ? { platform: a.platform, account_id: a.account_id }
+        : { ig_account_id: a.ig_account_id };
+      try {
+        var r = await fetch("/dashboard/instagram/api/accounts/switch", {
+          method:"POST", credentials:"same-origin",
+          headers:{"Content-Type":"application/json"},
+          body: JSON.stringify(body),
+        });
+        if (!r.ok) { toast("Couldn't switch."); return; }
+        window.location.href = isLi ? "/dashboard/linkedin" : "/dashboard/instagram";
+      } catch (e) { toast("Network error: " + e.message); }
+    }
+
+    function doRename(a){
+      var isLi = (a.platform || "").indexOf("linkedin_") === 0;
+      var cardId = isLi ? (a.platform + ":" + a.account_id) : a.ig_account_id;
+      var nickEl = document.querySelector('[data-nick="' + CSS.escape(cardId) + '"]');
+      if (!nickEl) return;
+      var current = nickEl.textContent;
+      var input = document.createElement("input");
+      input.className = "nickname-input";
+      input.type = "text";
+      input.maxLength = 80;
+      input.value = current.startsWith("@") ? "" : current;
+      input.placeholder = "Give this account a nickname";
+      nickEl.replaceWith(input);
+      input.focus(); input.select();
+      var saved = false;
+      async function commit(){
+        if (saved) return; saved = true;
+        var v = input.value.trim();
+        try {
+          var url, body;
+          if (isLi) {
+            url = "/dashboard/linkedin/api/accounts/"
+                + encodeURIComponent(a.platform) + "/"
+                + encodeURIComponent(a.account_id) + "/edit";
+            body = { user_nickname: v };
+          } else {
+            url = "/dashboard/instagram/api/accounts/"
+                + encodeURIComponent(a.ig_account_id) + "/edit";
+            body = { user_nickname: v };
+          }
+          await fetch(url, {
+            method:"POST", credentials:"same-origin",
+            headers:{"Content-Type":"application/json"},
+            body: JSON.stringify(body),
+          });
+          toast(v ? "Nickname saved." : "Nickname removed.");
+        } catch (e) { toast("Couldn't save."); }
+        load();
+      }
+      input.addEventListener("blur", commit);
+      input.addEventListener("keydown", e => {
+        if (e.key === "Enter") { e.preventDefault(); commit(); }
+        if (e.key === "Escape") { saved = true; load(); }
+      });
+    }
+
+    async function doPauseResume(a, active){
+      var isLi = (a.platform || "").indexOf("linkedin_") === 0;
+      var url = isLi
+        ? "/dashboard/linkedin/api/accounts/"
+            + encodeURIComponent(a.platform) + "/"
+            + encodeURIComponent(a.account_id) + "/queue"
+        : "/dashboard/instagram/api/accounts/"
+            + encodeURIComponent(a.ig_account_id) + "/queue";
+      try {
+        var r = await fetch(url, {
+          method:"POST", credentials:"same-origin",
+          headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({active: active}),
+        });
+        if (!r.ok) { toast("Couldn't update."); return; }
+        toast(active ? "Queue resumed." : "Queue paused.");
+        load();
+      } catch (e) { toast("Network error: " + e.message); }
+    }
+
+    async function doDisconnect(a, btn){
+      var isLi = (a.platform || "").indexOf("linkedin_") === 0;
+      var name = isLi
+        ? (a.user_nickname || a.display_name || "this LinkedIn account")
+        : (a.user_nickname || ("@" + (a.ig_username || "this account")));
+
+      // Look up pending count first so the modal can show "you have N
+      // pending posts on this account."
+      var countUrl = isLi
+        ? "/dashboard/linkedin/api/accounts/"
+            + encodeURIComponent(a.platform) + "/"
+            + encodeURIComponent(a.account_id) + "/scheduled-count"
+        : "/dashboard/instagram/api/accounts/"
+            + encodeURIComponent(a.ig_account_id) + "/scheduled-count";
+      var pending = 0;
+      try {
+        var cr = await fetch(countUrl, { credentials:"same-origin" });
+        if (cr.ok) pending = (await cr.json()).count || 0;
+      } catch(_) {}
+
+      openDisconnectModal(a, name, pending, btn);
+    }
+
+    function openDisconnectModal(a, name, pending, btn){
+      var isLi = (a.platform || "").indexOf("linkedin_") === 0;
+      var modal = $("dis-modal");
+      $("dis-h").textContent = "Disconnect " + name + "?";
+      var subParts = [];
+      if (pending > 0) {
+        subParts.push("You have " + pending + " pending scheduled post"
+          + (pending === 1 ? "" : "s") + " on this account.");
+      } else {
+        subParts.push("This account has no pending scheduled posts.");
+      }
+      $("dis-sub").textContent = subParts.join(" ");
+
+      // Build the option rows.
+      var opts = [];
+      if (pending > 0) {
+        opts.push({
+          id: "cancel",
+          label: "Disconnect and cancel the " + pending + " pending post"
+            + (pending === 1 ? "" : "s"),
+          sub: "Default. Posts won't fire and won't show up as failures.",
+          checked: true,
+        });
+        opts.push({
+          id: "pause",
+          label: "Pause queue but keep the account connected",
+          sub: "Posts stay queued. Resume the queue later to fire them.",
+          checked: false,
+        });
+        opts.push({
+          id: "anyway",
+          label: "Disconnect anyway — let the posts fail",
+          sub: "Posts will be marked failed when the worker tries them.",
+          checked: false,
+        });
+      } else {
+        opts.push({
+          id: "cancel",
+          label: "Disconnect this account",
+          sub: "",
+          checked: true,
+        });
+      }
+      $("dis-options").innerHTML = opts.map(o =>
+        '<label style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--border);border-radius:10px;cursor:pointer">'
+        + '<input type="radio" name="dis-opt" value="' + esc(o.id) + '"'
+        + (o.checked ? ' checked' : '') + ' style="margin-top:3px"/>'
+        + '<span><div style="font-weight:500">' + esc(o.label) + '</div>'
+        + (o.sub ? '<div class="handle">' + esc(o.sub) + '</div>' : '')
+        + '</span></label>').join("");
+
+      $("dis-cancel").onclick = () => { modal.hidden = true; };
+      $("dis-confirm").onclick = async () => {
+        var pick = (document.querySelector('input[name="dis-opt"]:checked') || {}).value;
+        $("dis-confirm").disabled = true;
+        $("dis-confirm").textContent = "Working…";
+        try {
+          var url = isLi
+            ? "/dashboard/linkedin/api/accounts/"
+                + encodeURIComponent(a.platform) + "/"
+                + encodeURIComponent(a.account_id)
+            : "/dashboard/instagram/api/accounts/"
+                + encodeURIComponent(a.ig_account_id);
+          var qs = "";
+          if (pick === "cancel") qs = "?cancel_pending=1";
+          else if (pick === "pause") qs = "?pause_only=1";
+          var method = (pick === "pause") ? "DELETE" : "DELETE";
+          var r = await fetch(url + qs, {
+            method: method, credentials:"same-origin",
+          });
+          if (!r.ok) {
+            toast("Couldn't disconnect.");
+            $("dis-confirm").disabled = false;
+            $("dis-confirm").textContent = "Disconnect";
+            return;
+          }
+          var d = await r.json().catch(()=>({}));
+          if (pick === "pause") {
+            toast("Queue paused. Posts will resume when you reconnect.");
+          } else if (d.cancelled) {
+            toast("Disconnected. " + d.cancelled + " post"
+              + (d.cancelled === 1 ? "" : "s") + " cancelled.");
+          } else {
+            toast("Disconnected.");
+          }
+          modal.hidden = true;
+          load();
+        } catch (e) {
+          toast("Network error: " + e.message);
+          $("dis-confirm").disabled = false;
+          $("dis-confirm").textContent = "Disconnect";
+        }
+      };
+      modal.hidden = false;
+    }
+
+    async function loadLinkedInRate(){
+      var chip = document.getElementById("li-rate-chip");
+      if (!chip) return;
+      try {
+        var r = await fetch("/dashboard/instagram/api/linkedin/rate",
+          { credentials:"same-origin" });
+        if (!r.ok) { chip.hidden = true; return; }
+        var d = await r.json().catch(()=>({}));
+        if (!d.limit) { chip.hidden = true; return; }
+        var used = Number(d.used || 0), limit = Number(d.limit || 0);
+        var pct = limit > 0 ? (used / limit) : 0;
+        var cls = pct >= 1 ? "is-paused" : pct >= 0.8 ? "" : "is-active";
+        chip.className = "meta-pill " + cls;
+        chip.style.display = "inline-flex";
+        chip.textContent = "LinkedIn today: " + used + " / " + limit + " posts";
+        chip.hidden = false;
+      } catch(_){ chip.hidden = true; }
+    }
+
+    load();
+    loadLinkedInRate();
+  </script>
+</body>
+</html>

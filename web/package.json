@@ -10,5 +10,8 @@
   },
   "devDependencies": {
     "vite": "^8.0.10"
+  },
+  "dependencies": {
+    "puppeteer": "^23.11.1"
   }
 }

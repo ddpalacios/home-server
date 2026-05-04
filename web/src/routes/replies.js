@@ -641,16 +641,9 @@ function selectReply(id, opts) {
   const item = allItems.find(r => r.id === id);
   if (!item) return;
 
-  // Instagram threads have their dedicated thread view in the Inbox tab
-  // (full message bubbles, 24h-window enforcement, image/story replies).
-  // Pop the user over there with the conversation pre-selected via hash.
-  if (item.channel === "instagram") {
-    const convId = item.instagram_conversation_id || (item.id || "").replace(/^ig_/, "");
-    try { sessionStorage.setItem("dashboard.inbox_pending_conversation", convId); } catch (_) {}
-    window.location.hash = "inbox";
-    return;
-  }
-
+  // Instagram threads now render inline in the Replies right pane —
+  // unified inbox UX. fetchThread() routes to the FB-session endpoint
+  // for IG items.
   const cached = threadCache.get(id);
   if (cached) {
     activeThread = cached;
@@ -679,6 +672,18 @@ function selectReply(id, opts) {
 
 async function fetchThread(id) {
   if (!id || id === "undefined") throw new Error("missing reply id");
+  // IG items have ids of the form "ig_<conversation_id>" — route them to
+  // the FB-Login session-aware thread endpoint, which returns the same
+  // {reply, campaign, lead, messages, thread_id} shape as the email path.
+  if (typeof id === "string" && id.startsWith("ig_")) {
+    const convId = id.slice(3);
+    const res = await fetch(
+      `/me/replies/instagram/${encodeURIComponent(convId)}/thread`,
+      { credentials: "same-origin" }
+    );
+    if (!res.ok) throw new Error("ig thread fetch failed");
+    return await res.json();
+  }
   const res = await fetch(`/me/replies/${encodeURIComponent(id)}/thread`,
     { credentials: "same-origin" });
   if (!res.ok) throw new Error("thread fetch failed");
@@ -855,10 +860,19 @@ async function sendReply(markResolved) {
   renderThread();
   sendBtn.disabled = true; caret.disabled = true;
   try {
-    const res = await fetch(`/me/replies/${encodeURIComponent(selectedId)}/send`,
-      { method: "POST", credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body, mark_resolved: !!markResolved }) });
+    // IG items send via the FB-Login-session-aware DM reply endpoint;
+    // emails use the existing reply pipeline. Same UX, same composer,
+    // different transport under the hood.
+    const isIg = typeof selectedId === "string" && selectedId.startsWith("ig_");
+    const res = isIg
+      ? await fetch(`/me/replies/instagram/${encodeURIComponent(selectedId.slice(3))}/reply`,
+          { method: "POST", credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: body }) })
+      : await fetch(`/me/replies/${encodeURIComponent(selectedId)}/send`,
+          { method: "POST", credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ body, mark_resolved: !!markResolved }) });
     if (!res.ok) {
       activeThread.messages = activeThread.messages.filter(m => m.id !== optimistic.id);
       const data = await res.json().catch(() => ({}));
@@ -869,7 +883,22 @@ async function sendReply(markResolved) {
       return;
     }
     const data = await res.json();
-    activeThread.messages = activeThread.messages.map(m => m.id === optimistic.id ? Object.assign({}, m, data.message, { id: data.message.id }) : m);
+    if (isIg) {
+      // Meta returns { recipient_id, message_id } — no full message
+      // object. Stamp the optimistic bubble with the real message id
+      // and re-fetch the thread in the background to pull any other
+      // server-side state (timestamps, read receipts).
+      activeThread.messages = activeThread.messages.map(m =>
+        m.id === optimistic.id ? Object.assign({}, m, { id: data.message_id || m.id }) : m);
+      fetchThread(selectedId).then(payload => {
+        if (selectedId !== payload.thread_id && !payload.reply?.id?.endsWith(selectedId.slice(3))) return;
+        activeThread = payload;
+        threadCache.set(selectedId, payload);
+        renderThread();
+      }).catch(() => {});
+    } else {
+      activeThread.messages = activeThread.messages.map(m => m.id === optimistic.id ? Object.assign({}, m, data.message, { id: data.message.id }) : m);
+    }
     threadCache.set(selectedId, activeThread);
     if (markResolved) {
       const item = allItems.find(r => r.id === selectedId);
@@ -941,9 +970,19 @@ async function _fetchListOnce() {
   const emailReq = fetch("/me/replies", { credentials: "same-origin" })
     .then(r => r.ok ? r.json() : null)
     .catch(() => null);
-  const igReq = fetch("/me/instagram/inbox", { credentials: "same-origin" })
+  // Prefer the FB-Login session-aware endpoint (live from Meta via the
+  // page token in session). Falls back to the legacy /me/instagram/inbox
+  // route (per-customer GCS storage fed by webhooks) if the FB selection
+  // hasn't been set up yet.
+  const igReq = fetch("/me/replies/instagram/conversations", { credentials: "same-origin" })
     .then(r => r.ok ? r.json() : null)
-    .catch(() => null);
+    .catch(() => null)
+    .then(d => {
+      if (d && d.connected) return d;  // FB-Login path supplied data.
+      return fetch("/me/instagram/inbox", { credentials: "same-origin" })
+        .then(r => r.ok ? r.json() : null)
+        .catch(() => null);
+    });
   const [emailData, igData] = await Promise.all([emailReq, igReq]);
   if (!emailData) return null;
 
@@ -1140,19 +1179,33 @@ shortcutModal.addEventListener("click", (e) => {
 
 // ── Connect Instagram card + pre-OAuth modal ───────────
 async function checkInstagramConnection() {
+  // "Connected" means we have a usable FB user token in session — even
+  // if the user hasn't picked a Page yet, the connection is established.
+  // /me/facebook/selection returns has_token, which doesn't depend on a
+  // saved Page selection. Falls back to the legacy IG-Login accounts
+  // list only if neither the FB token nor any IG-Login record exists.
+  igConnected = false;
   try {
-    const res = await fetch("/me/instagram/accounts", { credentials: "same-origin" });
-    if (res.status === 404) {
-      // Feature not enabled server-side — leave card hidden.
-      igConnected = false;
-      return;
+    const r = await fetch("/me/facebook/selection", { credentials: "same-origin" });
+    if (r.ok) {
+      const body = await r.json();
+      if (body && (body.has_token || (body.selected && body.selected.ig_id))) {
+        igConnected = true;
+      }
     }
-    if (!res.ok) { igConnected = false; return; }
-    const body = await res.json();
-    igConnected = ((body.accounts || []).length > 0);
-  } catch (_) { igConnected = false; }
+  } catch (_) {}
+  if (!igConnected) {
+    try {
+      const r = await fetch("/me/instagram/accounts", { credentials: "same-origin" });
+      if (r.ok) {
+        const body = await r.json();
+        igConnected = ((body.accounts || []).length > 0);
+      }
+    } catch (_) {}
+  }
   refreshIgConnectCard();
 }
+
 
 function refreshIgConnectCard() {
   const card = document.getElementById("repIgConnect");
