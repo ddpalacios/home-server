@@ -1551,6 +1551,37 @@
       letter-spacing: 0.05em;
     }
 
+    /* Audience-voice panel — collapsible block above the review grid
+       that surfaces the Reddit queries + distilled insights that fed
+       this batch's prompt. Lets the user audit Layer D quickly. */
+    .rev-av {
+      border: 1px solid var(--border); border-radius: 12px;
+      background: #fff; margin-bottom: 14px;
+    }
+    .rev-av-summary {
+      cursor: pointer; padding: 12px 16px;
+      font-weight: 600; font-size: 13.5px;
+      color: var(--text); user-select: none;
+    }
+    .rev-av-summary:hover { background: var(--bg-alt); border-radius: 12px 12px 0 0; }
+    .rev-av-body {
+      padding: 0 16px 14px; border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+    .rev-av-row { font-size: 12.5px; margin-bottom: 10px; line-height: 1.5; }
+    .rev-av-query {
+      display: inline-block; padding: 2px 10px;
+      border-radius: 999px; background: var(--bg-alt);
+      border: 1px solid var(--border);
+      font-size: 11.5px; margin-right: 6px; margin-bottom: 4px;
+      color: var(--text-sub);
+    }
+    .rev-av-list {
+      margin: 0; padding-left: 22px; line-height: 1.55;
+      font-size: 13px; color: var(--text);
+    }
+    .rev-av-list li { margin-bottom: 6px; }
+
     /* AI batch grid review — see all posts at a glance, edit inline,
        keep/skip with one tap, add media per post or bulk. The CSS is
        intentionally chunky — big tap targets, plain icons, no jargon. */
@@ -8979,12 +9010,30 @@
       direct:        { open_question: 15, save_this: 25, direct_invitation: 45, bold_statement: 15 },
     };
 
+    // Phase 1 fifth dimension — emotional register. Validate (name a
+    // feeling rarely admitted), inspire (specific better-state + step),
+    // provoke_curiosity (open an information gap the body resolves).
+    var EMOTIONAL_TYPES = [
+      { key: "validate",          name: "Validate",
+        def: "Name a feeling readers know is theirs but rarely see admitted out loud." },
+      { key: "inspire",           name: "Inspire",
+        def: "Paint a specific, modest, believable better state and the first step toward it." },
+      { key: "provoke_curiosity", name: "Provoke curiosity",
+        def: "Open an information gap. The hook promises a reveal; the body delivers it." },
+    ];
+    var EMOTIONAL_PRESETS = {
+      balanced:   { validate: 40, inspire: 30, provoke_curiosity: 30 },
+      validating: { validate: 60, inspire: 20, provoke_curiosity: 20 },
+      curious:    { validate: 20, inspire: 20, provoke_curiosity: 60 },
+    };
+
     // Now the presets are defined, finish populating STATE.ai with the
-    // four mix defaults. CTA defaults to Save-optimized per the spec.
-    STATE.ai.hook_pcts   = Object.assign({}, HOOK_PRESETS.balanced);
-    STATE.ai.tone_pcts   = Object.assign({}, TONE_PRESETS.balanced);
-    STATE.ai.format_pcts = Object.assign({}, FORMAT_PRESETS.balanced);
-    STATE.ai.cta_pcts    = Object.assign({}, CTA_PRESETS.saveOptimized);
+    // five mix defaults. CTA defaults to Save-optimized per the spec.
+    STATE.ai.hook_pcts      = Object.assign({}, HOOK_PRESETS.balanced);
+    STATE.ai.tone_pcts      = Object.assign({}, TONE_PRESETS.balanced);
+    STATE.ai.format_pcts    = Object.assign({}, FORMAT_PRESETS.balanced);
+    STATE.ai.cta_pcts       = Object.assign({}, CTA_PRESETS.saveOptimized);
+    STATE.ai.emotional_pcts = Object.assign({}, EMOTIONAL_PRESETS.balanced);
 
     /* ── Strategy wizard (Phase 2 of prompt upgrade) ─────────────────
        A 3-input modal (audience / problem / offer) that runs BEFORE
@@ -9340,6 +9389,18 @@
                     { id: "direct",        label: "Direct invitation" },
                   ],
                 })
+        +       mixSection({
+                  prefix:   "em", stateKey: "emotional_pcts",
+                  title:    "Emotional register mix",
+                  subtitle: "What each post does to the reader: validate, "
+                          + "inspire, or open an information gap.",
+                  options:  EMOTIONAL_TYPES,
+                  presets:  [
+                    { id: "balanced",   label: "Balanced" },
+                    { id: "validating", label: "Validate-heavy" },
+                    { id: "curious",    label: "Curiosity-heavy" },
+                  ],
+                })
         +     '</div>'
         +   '</details>'
 
@@ -9374,9 +9435,10 @@
             x.classList.toggle("is-active", x === b));
         }));
       // Register all four mixes (hook now uses the same generic flow).
-      registerMix("hk", "hook_pcts",   HOOK_TYPES,   HOOK_PRESETS);
-      registerMix("tn", "tone_pcts",   TONE_TYPES,   TONE_PRESETS);
-      registerMix("fm", "format_pcts", FORMAT_TYPES, FORMAT_PRESETS);
+      registerMix("hk", "hook_pcts",      HOOK_TYPES,      HOOK_PRESETS);
+      registerMix("tn", "tone_pcts",      TONE_TYPES,      TONE_PRESETS);
+      registerMix("fm", "format_pcts",    FORMAT_TYPES,    FORMAT_PRESETS);
+      registerMix("em", "emotional_pcts", EMOTIONAL_TYPES, EMOTIONAL_PRESETS);
       registerMix("ct", "cta_pcts",    CTA_TYPES,    CTA_PRESETS);
       wireMixHandlers();
       // Voice rules link → opens the modal. Fetch saved rules so the
@@ -10237,6 +10299,7 @@
         tone_mix:               Object.assign({}, STATE.ai.tone_pcts),
         format_mix:             Object.assign({}, STATE.ai.format_pcts),
         cta_mix:                Object.assign({}, STATE.ai.cta_pcts),
+        emotional_mix:          Object.assign({}, STATE.ai.emotional_pcts),
       };
       var el = $("make-overview");
       el.innerHTML =
@@ -10348,8 +10411,43 @@
       var cardsHtml = posts.map((p, i) =>
         renderReviewCard(p, i, posts.length, mgCtx)).join("");
 
+      // Audience-voice panel: collapses by default. Shows the Reddit
+      // queries + distilled insights that fed Layer D of this batch's
+      // prompt, so the user can audit "did the right voices show up?"
+      var av = draft.audience_voice || {};
+      var insights = av.insights || [];
+      var avHtml = "";
+      if (insights.length || (av.queries || []).length) {
+        var insBullets = insights.map(s =>
+          '<li>' + esc(s) + '</li>').join("");
+        var queryPills = (av.queries || []).map(q =>
+          '<span class="rev-av-query">' + esc(q) + '</span>').join("");
+        avHtml =
+            '<details class="rev-av">'
+          +   '<summary class="rev-av-summary">'
+          +     '🎤 Audience voice for this batch '
+          +     '<span class="helper" style="font-size:11.5px">('
+          +       insights.length + ' insights)</span>'
+          +   '</summary>'
+          +   '<div class="rev-av-body">'
+          +     (queryPills
+                  ? '<div class="rev-av-row"><strong>Searched for:</strong> '
+                    + queryPills + '</div>'
+                  : '')
+          +     (insBullets
+                  ? '<ul class="rev-av-list">' + insBullets + '</ul>'
+                  : '<div class="helper">No insights this batch '
+                    + (av.error
+                        ? '(' + esc(av.error) + ')'
+                        : '— Reddit had nothing relevant.')
+                    + '</div>')
+          +   '</div>'
+          + '</details>';
+      }
+
       el.innerHTML =
           headerHtml
+        + avHtml
         + '<div class="rev-grid" id="rev-grid">' + cardsHtml + '</div>';
 
       // Wire top bar.
