@@ -18,7 +18,11 @@
 #include <unistd.h>
 #include <sys/time.h>
 #define IPSTRLEN INET6_ADDRSTRLEN
-#define LOCAL_RECV_TIMEOUT_SEC 30
+/* OpenAI/Anthropic full-post previews and AI batch generations can run
+ * 60-120s on the upstream side. The proxy used to give up at 30s and
+ * surface a 502/503 to the browser even though Flask was still working;
+ * 180s here matches the 120s OpenAI ceiling with headroom for retries. */
+#define LOCAL_RECV_TIMEOUT_SEC 180
 #define LOCAL_SEND_TIMEOUT_SEC 10
 #define MAX_LOCAL_RESPONSE (50 * 1024 * 1024)
 int connect_to_local_server(const char* host, const char* port){

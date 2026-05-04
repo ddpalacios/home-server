@@ -11,7 +11,9 @@
 #include "Socket.h"
 
 #define IPSTRLEN INET6_ADDRSTRLEN
-#define LOCAL_RECV_TIMEOUT_SEC 30
+/* GET endpoints occasionally call upstream AI/network too (voice rules,
+ * activity rollups). Match the POST proxy's 180s recv timeout. */
+#define LOCAL_RECV_TIMEOUT_SEC 180
 #define LOCAL_SEND_TIMEOUT_SEC 10
 #define MAX_LOCAL_RESPONSE (50 * 1024 * 1024)
 
