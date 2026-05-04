@@ -10184,9 +10184,30 @@
           new Notification("Your " + job.total_posts + " posts are ready to review.");
         } catch (e) { /* ignore */ }
       }
-      // Re-render the AI summary so the user sees the updated state.
-      if (typeof aiRenderSummary === "function" && STATE.ai && STATE.ai.draft) {
-        aiRenderSummary();
+      // Yellow dot on the Make-tab when the user is somewhere else.
+      var activeTab = document.querySelector(".tab[data-tab].is-active");
+      var activeName = activeTab ? activeTab.dataset.tab : "";
+      if (activeName !== "make") {
+        var t = document.querySelector(".tab[data-tab='make']");
+        if (t && !t.querySelector(".mg-nav-dot")) {
+          var dot = document.createElement("span");
+          dot.className = "mg-nav-dot";
+          t.appendChild(dot);
+          // Clear the dot the first time the user clicks Make.
+          var clearer = () => {
+            var d = t.querySelector(".mg-nav-dot");
+            if (d) d.remove();
+            t.removeEventListener("click", clearer);
+          };
+          t.addEventListener("click", clearer);
+        }
+      } else {
+        // User is on Make tab; re-render the summary so they see the
+        // updated state.
+        if (typeof aiRenderSummary === "function"
+            && STATE.ai && STATE.ai.draft) {
+          aiRenderSummary();
+        }
       }
     }
 
