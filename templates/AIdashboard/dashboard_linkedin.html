@@ -1317,6 +1317,29 @@
     .sch-month-pill:hover { filter: brightness(1.1); }
     .sch-month-pill.is-failed     { background: var(--err-fg); }
     .sch-month-pill.is-publishing { background: #f59e0b; }
+    /* Drag-to-reschedule on Month view. Same conventions as Week view:
+       grab cursor, placeholder fade for the source pill, floating clone
+       at body level, blue/red drop-target highlight on cells. */
+    .sch-month-pill { cursor: grab; user-select: none; touch-action: none; }
+    .sch-month-pill.is-grabbing { cursor: grabbing; }
+    .sch-month-pill.is-placeholder {
+      opacity: .30;
+      border: 1px dashed rgba(255,255,255,.65);
+    }
+    .sch-month-pill.sch-drag-clone {
+      position: fixed; z-index: 999; pointer-events: none;
+      transform: scale(1.04) rotate(1.5deg);
+      box-shadow: 0 8px 22px rgba(15,23,42,.20);
+      max-width: 200px;
+    }
+    .sch-month-cell.sch-drop-target {
+      background: rgba(10,102,194,.14) !important;
+      box-shadow: inset 0 0 0 2px var(--link);
+    }
+    .sch-month-cell.sch-drop-target-invalid {
+      background: rgba(239,68,68,.06) !important;
+      box-shadow: inset 0 0 0 2px rgba(239,68,68,.5);
+    }
     .sch-month-more {
       font-size: 10.5px; color: var(--text-sub); font-weight: 600;
       cursor: pointer; padding: 1px 6px;
@@ -1502,6 +1525,30 @@
     }
     .plan-complete-actions {
       display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+    }
+
+    /* Combinator preview — media attach row at the bottom of each card. */
+    .pc-attach-row {
+      margin-top: 10px; padding-top: 10px;
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .pc-attach-btns {
+      display: flex; gap: 6px; flex-wrap: wrap; flex: 1;
+    }
+    .pc-attach-btn {
+      padding: 4px 10px; font-size: 11.5px; font-weight: 500;
+    }
+    .pc-attach-btn.pc-rm { color: var(--err-fg, #B91C1C); }
+    .pc-thumb {
+      width: 60px; height: 60px; border-radius: 8px;
+      object-fit: cover; border: 1px solid var(--border);
+      background: var(--bg-alt);
+    }
+    .pc-thumb-doc {
+      display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 11px; color: var(--text-sub);
+      letter-spacing: 0.05em;
     }
 
     /* AI batch grid review — see all posts at a glance, edit inline,
@@ -1748,6 +1795,118 @@
       margin-top: 8px; padding-top: 8px;
       border-top: 1px solid var(--border);
     }
+    /* Upload group (top of the popover) — three big tappable buttons,
+       icon + label, no jargon. */
+    .mg-pop-uploads {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px; margin-bottom: 12px;
+    }
+    .mg-pop-up-btn {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 4px; padding: 12px 8px;
+      border: 1px solid var(--border); border-radius: 10px;
+      background: #fff; cursor: pointer; text-align: center;
+      font: inherit; font-size: 12px; color: var(--text);
+    }
+    .mg-pop-up-btn:hover {
+      background: rgba(10,102,194,.06); border-color: var(--link);
+    }
+    .mg-pop-up-ico {
+      font-size: 22px; line-height: 1;
+    }
+    .mg-pop-up-btn strong {
+      display: block; font-weight: 600;
+    }
+    .mg-pop-divider {
+      display: flex; align-items: center; gap: 8px;
+      margin: 4px 0 10px; color: var(--text-sub); font-size: 11px;
+    }
+    .mg-pop-divider::before,
+    .mg-pop-divider::after {
+      content: ""; flex: 1; border-top: 1px solid var(--border);
+    }
+    .rev-card { position: relative; }
+
+    /* Drop-zone box per card. Visible by default — shows "Drop a file
+       here" with a dashed border. Click anywhere in the box to open
+       the file picker. Drag-over highlights. When media is attached
+       the box collapses into a compact preview with Replace/Remove. */
+    .mg-drop {
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; padding: 18px;
+      border: 2px dashed var(--border); border-radius: 12px;
+      background: var(--bg-alt);
+      color: var(--text-sub); cursor: pointer;
+      text-align: center; font-size: 12.5px; line-height: 1.4;
+      transition: all 0.15s;
+    }
+    .mg-drop:hover {
+      border-color: var(--link); background: rgba(10,102,194,.04);
+      color: var(--text);
+    }
+    .mg-drop.is-over {
+      border-color: var(--link); border-style: solid;
+      background: rgba(10,102,194,.10); color: var(--link);
+    }
+    .mg-drop-ico {
+      font-size: 24px; line-height: 1;
+    }
+    .mg-drop-h {
+      font-weight: 600; color: var(--text);
+    }
+    .mg-drop-sub {
+      font-size: 11px; color: var(--text-sub);
+    }
+    .mg-drop-busy {
+      pointer-events: none; opacity: 0.7;
+    }
+
+    /* Compact attached-media preview — replaces the drop-zone once
+       a file is attached. */
+    .mg-attached {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px; border: 1px solid var(--border);
+      border-radius: 10px; background: #fff;
+    }
+    .mg-attached-thumb {
+      width: 56px; height: 56px; border-radius: 8px;
+      object-fit: cover; background: var(--bg-alt);
+      border: 1px solid var(--border); flex-shrink: 0;
+    }
+    .mg-attached-thumb-doc {
+      display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 11px; color: var(--text-sub);
+      letter-spacing: 0.05em;
+    }
+    .mg-attached-body {
+      flex: 1; min-width: 0;
+    }
+    .mg-attached-name {
+      font-weight: 600; font-size: 12.5px; color: var(--text);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .mg-attached-meta {
+      font-size: 11px; color: var(--text-sub); margin-top: 2px;
+    }
+    .mg-attached-actions {
+      display: flex; flex-direction: column; gap: 4px; flex-shrink: 0;
+    }
+    .mg-attached-actions button {
+      font-size: 11px; padding: 4px 8px; border-radius: 6px;
+      border: 1px solid var(--border); background: #fff; cursor: pointer;
+      color: var(--text-sub);
+    }
+    .mg-attached-actions button:hover { color: var(--text); }
+    .mg-attached-actions .mg-rm:hover { color: var(--err-fg, #B91C1C); }
+
+    /* Tiny AI-gen affordance under the drop zone — kept available but
+       deemphasized so the upload path is clearly the primary action. */
+    .mg-ai-link {
+      display: inline-block; margin-top: 8px;
+      font-size: 11.5px; color: var(--text-sub);
+      cursor: pointer; text-decoration: underline;
+    }
+    .mg-ai-link:hover { color: var(--link); }
 
     /* Bulk modal (uses the same plan-modal-bg patterns). */
     .mg-bulk-bar {
@@ -4465,6 +4624,28 @@
     }
 
     STATE.scheduled_cache = [];   // last-known list, also used by the Scheduled tab.
+    // Records currently being rescheduled — qid → { expected_epoch, until }.
+    // pollNextUp uses this to keep the optimistic position when a poll
+    // response arrives BEFORE the server has applied a recent edit
+    // (which made fast drag-moves flicker back to the old slot until
+    // the next poll cycle).
+    STATE.scheduled_inflight = new Map();
+
+    function _schMarkInflight(qid, expectedEpoch, ttlMs){
+      STATE.scheduled_inflight.set(qid, {
+        expected_epoch: expectedEpoch,
+        until: Date.now() + (ttlMs || 12000),
+      });
+    }
+    function _schClearInflight(qid){
+      STATE.scheduled_inflight.delete(qid);
+    }
+    function _schPruneInflight(){
+      var now = Date.now();
+      STATE.scheduled_inflight.forEach((info, qid) => {
+        if (info.until <= now) STATE.scheduled_inflight.delete(qid);
+      });
+    }
 
     async function pollNextUp(){
       if (!STATE.active) return;
@@ -4477,6 +4658,26 @@
           (rec.platform || "").startsWith("linkedin_")
           && rec.account_id === STATE.active.account_id
           && rec.platform   === STATE.active.platform);
+        // Drop expired in-flight entries first.
+        _schPruneInflight();
+        // Reconcile poll vs in-flight: for any qid we've optimistically
+        // moved, keep the optimistic scheduled_at on the rec UNLESS the
+        // server has already caught up (its scheduled_at matches).
+        if (STATE.scheduled_inflight.size > 0) {
+          all = all.map(rec => {
+            var info = STATE.scheduled_inflight.get(rec.queue_id);
+            if (!info) return rec;
+            if (rec.scheduled_at === info.expected_epoch) {
+              // Server caught up — clear the protection.
+              STATE.scheduled_inflight.delete(rec.queue_id);
+              return rec;
+            }
+            // Still in-flight → preserve our optimistic time so the
+            // pill doesn't flicker back to the old slot.
+            return Object.assign({}, rec,
+              { scheduled_at: info.expected_epoch });
+          });
+        }
         STATE.scheduled_cache = all;
         renderNextUpBanner(all);
         renderScheduledBadge(all);
@@ -5691,6 +5892,9 @@
     }
 
     async function schWeekSave(qid, newEpoch, oldEpoch, rec, snap){
+      // Same in-flight protection as Month view: prevents poll-vs-save
+      // race from snapping the pill back to its old slot.
+      _schMarkInflight(qid, newEpoch);
       try {
         var r = await fetch("/dashboard/linkedin/api/scheduled/"
           + encodeURIComponent(qid) + "/edit", {
@@ -5700,6 +5904,7 @@
         });
         var d = await r.json().catch(()=>({}));
         if (!r.ok) {
+          _schClearInflight(qid);
           rec.scheduled_at = oldEpoch;
           renderScheduledList();
           var msg;
@@ -5719,6 +5924,7 @@
                 { hour:"numeric", minute:"2-digit" }) + ".");
         }
       } catch (e) {
+        _schClearInflight(qid);
         rec.scheduled_at = oldEpoch;
         renderScheduledList();
         toast("Couldn't reschedule. Network error: " + e.message);
@@ -5902,6 +6108,208 @@
           var key = c.dataset.monthKey;
           if (key) planOpenDayModal(key);
         }));
+      // Drag-to-reschedule on the Month view. Each pill becomes a
+      // drag handle; dropping it onto another day cell moves the post
+      // to that day at the same time-of-day. Past days are rejected.
+      schMonthWireDrag(listEl);
+    }
+
+    /* ── Month-view drag-to-reschedule ───────────────────────────── */
+    function schMonthWireDrag(listEl){
+      var pills = listEl.querySelectorAll(".sch-month-pill[data-month-edit]");
+      pills.forEach(pill => {
+        var qid = pill.dataset.monthEdit;
+        var rec = (STATE.scheduled_cache || []).find(r => r.queue_id === qid);
+        var status = (rec && rec.status) || "pending";
+        // Only pending / errored posts can be rescheduled. Publishing
+        // and published are frozen.
+        if (status !== "pending" && status !== "errored"
+            && status !== "failed" && status !== "") {
+          return;
+        }
+        pill.addEventListener("pointerdown", (ev) => {
+          if (ev.button !== 0) return;
+          ev.preventDefault();
+          var startX = ev.clientX, startY = ev.clientY;
+          var dragging = false;
+          var ctx = null;
+          var clickSuppressed = false;
+          function onMove(ev2){
+            if (!dragging) {
+              var dx = ev2.clientX - startX, dy = ev2.clientY - startY;
+              if (Math.hypot(dx, dy) > 4) {
+                dragging = true;
+                ctx = schMonthStartDrag(pill, listEl, qid, ev2);
+              }
+            }
+            if (dragging && ctx) schMonthUpdateDrag(ctx, ev2);
+          }
+          function onUp(ev2){
+            document.removeEventListener("pointermove", onMove);
+            document.removeEventListener("pointerup", onUp);
+            document.removeEventListener("pointercancel", onCancel);
+            if (dragging && ctx) {
+              clickSuppressed = true;
+              schMonthFinishDrag(ctx, ev2, qid, false);
+              // Eat the click that follows the pointerup.
+              var killClick = (e) => {
+                e.stopPropagation(); e.preventDefault();
+                document.removeEventListener("click", killClick, true);
+              };
+              document.addEventListener("click", killClick, true);
+            }
+          }
+          function onCancel(){
+            document.removeEventListener("pointermove", onMove);
+            document.removeEventListener("pointerup", onUp);
+            document.removeEventListener("pointercancel", onCancel);
+            if (dragging && ctx) schMonthFinishDrag(ctx, null, qid, true);
+          }
+          document.addEventListener("pointermove", onMove);
+          document.addEventListener("pointerup", onUp);
+          document.addEventListener("pointercancel", onCancel);
+        });
+      });
+    }
+
+    function schMonthStartDrag(pill, listEl, qid, ev){
+      var rect = pill.getBoundingClientRect();
+      var clone = pill.cloneNode(true);
+      clone.classList.add("sch-drag-clone");
+      clone.classList.remove("is-placeholder");
+      clone.style.left = rect.left + "px";
+      clone.style.top  = rect.top  + "px";
+      clone.style.width = rect.width + "px";
+      document.body.appendChild(clone);
+      pill.classList.add("is-placeholder");
+      return {
+        pill:        pill,
+        clone:       clone,
+        listEl:      listEl,
+        offsetX:     ev.clientX - rect.left,
+        offsetY:     ev.clientY - rect.top,
+        currentCell: null,
+        targetKey:   null,
+        valid:       false,
+      };
+    }
+
+    function schMonthUpdateDrag(ctx, ev){
+      ctx.clone.style.left = (ev.clientX - ctx.offsetX) + "px";
+      ctx.clone.style.top  = (ev.clientY - ctx.offsetY) + "px";
+      // Use elementFromPoint, but hide the clone briefly so it doesn't
+      // block hit-testing on the cell underneath.
+      ctx.clone.style.pointerEvents = "none";
+      var below = document.elementFromPoint(ev.clientX, ev.clientY);
+      var cell = below ? below.closest(".sch-month-cell") : null;
+      if (cell !== ctx.currentCell) {
+        if (ctx.currentCell) {
+          ctx.currentCell.classList.remove(
+            "sch-drop-target", "sch-drop-target-invalid");
+        }
+        ctx.currentCell = cell;
+        ctx.targetKey   = null;
+        ctx.valid       = false;
+        if (cell) {
+          var key = cell.dataset.monthKey;
+          if (key) {
+            var now = new Date();
+            var todayKey = now.getFullYear() + "-"
+              + String(now.getMonth() + 1).padStart(2, "0") + "-"
+              + String(now.getDate()).padStart(2, "0");
+            ctx.targetKey = key;
+            ctx.valid = key >= todayKey;
+            cell.classList.add(ctx.valid
+              ? "sch-drop-target" : "sch-drop-target-invalid");
+          }
+        }
+      }
+    }
+
+    function schMonthFinishDrag(ctx, ev, qid, cancelled){
+      function teardown(){
+        if (ctx.clone && ctx.clone.parentNode) {
+          ctx.clone.parentNode.removeChild(ctx.clone);
+        }
+        if (ctx.currentCell) ctx.currentCell.classList.remove(
+          "sch-drop-target", "sch-drop-target-invalid");
+        if (ctx.pill) ctx.pill.classList.remove("is-placeholder");
+      }
+      if (cancelled || !ctx.valid || !ctx.targetKey) {
+        teardown();
+        return;
+      }
+      var rec = (STATE.scheduled_cache || []).find(r => r.queue_id === qid);
+      if (!rec) { teardown(); return; }
+      var oldEpoch = rec.scheduled_at;
+      // Combine target date with the post's existing time-of-day so
+      // a Tuesday 9:30 AM post stays at 9:30 AM when dragged to Friday.
+      var oldDt = new Date(oldEpoch * 1000);
+      var parts = ctx.targetKey.split("-").map(Number);
+      var newDt = new Date(parts[0], parts[1] - 1, parts[2],
+                            oldDt.getHours(), oldDt.getMinutes(), 0, 0);
+      var newEpoch = Math.floor(newDt.getTime() / 1000);
+      var nowEpoch = Math.floor(Date.now() / 1000);
+      if (newEpoch < nowEpoch - 30) {
+        teardown();
+        toast("Can't schedule into the past.");
+        return;
+      }
+      if (newEpoch === oldEpoch) {
+        teardown();
+        return;
+      }
+      // Optimistic update.
+      rec.scheduled_at = newEpoch;
+      teardown();
+      renderScheduledList();
+      schMonthSave(qid, newEpoch, oldEpoch, rec);
+      // Reuse the Week view's same-account 30-min spacing check.
+      if (typeof schWeekConflictCheck === "function") {
+        schWeekConflictCheck(qid, newEpoch, oldEpoch);
+      }
+    }
+
+    async function schMonthSave(qid, newEpoch, oldEpoch, rec){
+      // Mark the record in-flight so concurrent polls don't overwrite
+      // our optimistic scheduled_at with the server's stale snapshot.
+      _schMarkInflight(qid, newEpoch);
+      try {
+        var r = await fetch("/dashboard/linkedin/api/scheduled/"
+          + encodeURIComponent(qid) + "/edit", {
+          method: "POST", credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ scheduled_at: newEpoch }),
+        });
+        var d = await r.json().catch(()=>({}));
+        if (!r.ok) {
+          _schClearInflight(qid);
+          rec.scheduled_at = oldEpoch;
+          renderScheduledList();
+          var msg;
+          if (d.error === "scheduled_in_past")  msg = "Can't schedule into the past.";
+          else if (d.error === "not_editable")  msg = "This post can't be rescheduled.";
+          else if (d.error === "not_found")     msg = "This post no longer exists.";
+          else                                   msg = d.error || ("HTTP " + r.status);
+          toast("Couldn't reschedule: " + msg);
+          return;
+        }
+        var newDay = new Date(newEpoch * 1000).toDateString();
+        var oldDay = new Date(oldEpoch * 1000).toDateString();
+        if (newDay !== oldDay) {
+          var label = new Date(newEpoch * 1000).toLocaleDateString(undefined,
+            { weekday: "short", month: "short", day: "numeric" });
+          toast("Rescheduled to " + label + ".");
+        }
+        // Keep the in-flight marker until the next poll confirms the
+        // server returns the new scheduled_at; pollNextUp clears it
+        // automatically when the server catches up.
+      } catch (e) {
+        _schClearInflight(qid);
+        rec.scheduled_at = oldEpoch;
+        renderScheduledList();
+        toast("Couldn't reschedule. Network error: " + e.message);
+      }
     }
 
     /* ── Plan-from-the-Calendar ──────────────────────────────────────
@@ -6084,7 +6492,7 @@
         };
         _planCloseModal();
         _planLandOnMakeTab();
-        if (typeof aiOpenForm === "function") aiOpenForm();
+        if (typeof aiStartFlow === "function") aiStartFlow();
       };
     }
 
@@ -6381,7 +6789,7 @@
         };
         _planCloseModal();
         _planLandOnMakeTab();
-        if (typeof aiOpenForm === "function") aiOpenForm();
+        if (typeof aiStartFlow === "function") aiStartFlow();
       };
 
       // Initial preview.
@@ -7411,7 +7819,7 @@
       if (ms) ms.onclick = () => makeStep1Count();
       var ml = $("make-go-lib");
       if (ml) ml.onclick = () => document.querySelector(".tab[data-tab='library']").click();
-      $("make-ai-start").onclick = () => aiOpenForm();
+      $("make-ai-start").onclick = () => aiStartFlow();
       // Wire saved-draft resume, delete, and mine (View hooks/meats/CTAs).
       el.querySelectorAll("[data-resume-draft]").forEach(b =>
         b.addEventListener("click", (e) => {
@@ -8013,11 +8421,30 @@
     }
 
     function previewCard(c, idx){
-      var mediaTag = c.media_id
-        ? (c.media_type === "article"
-            ? '🔗 ' + esc(c.media_label || c.media_url || "")
-            : (c.media_type === "video" ? '🎥 ' : '📷 ') + esc(c.media_label || ""))
-        : 'text only';
+      var mediaTag;
+      var thumb = "";
+      if (c.media_id) {
+        if (c.media_type === "article") {
+          mediaTag = '🔗 ' + (c.media_label || c.media_url || "");
+        } else if (c.media_type === "video") {
+          mediaTag = '🎥 ' + (c.media_label || "Video");
+        } else if (c.media_type === "document" || c.media_type === "carousel") {
+          mediaTag = '📄 ' + (c.media_label || "Document");
+        } else {
+          mediaTag = '📷 ' + (c.media_label || "Image");
+        }
+        // Tiny thumbnail preview when public_url available (image only).
+        if (c.media_type === "image" && c.media_public_url) {
+          thumb = '<img class="pc-thumb" src="' + esc(c.media_public_url) + '" alt=""/>';
+        } else if (c.media_type === "video" && c.media_public_url) {
+          thumb = '<video class="pc-thumb" src="' + esc(c.media_public_url)
+                + '" muted preload="metadata"></video>';
+        } else if ((c.media_type === "document" || c.media_type === "carousel")) {
+          thumb = '<div class="pc-thumb pc-thumb-doc">PDF</div>';
+        }
+      } else {
+        mediaTag = 'text only';
+      }
       var over = c.char_count > 3000;
       return '<div class="lib-card" data-i="' + idx + '">'
         + '<div class="lib-card-body">'
@@ -8029,6 +8456,25 @@
         +   '<div class="lib-card-meta" style="margin-top:6px">'
         +     'Total: ' + (c.char_count || 0) + ' / 3000 characters'
         +     (over ? ' <span style="color:var(--err-fg)">— over limit, re-roll</span>' : '')
+        +   '</div>'
+        +   '<div class="pc-attach-row">'
+        +     thumb
+        +     '<div class="pc-attach-btns">'
+        +       '<button class="btn btn-ghost pc-attach-btn" type="button" '
+        +         'data-pc-up="image" data-pc-i="' + idx + '" '
+        +         'title="Upload an image">📷 Image</button>'
+        +       '<button class="btn btn-ghost pc-attach-btn" type="button" '
+        +         'data-pc-up="video" data-pc-i="' + idx + '" '
+        +         'title="Upload a video">🎬 Video</button>'
+        +       '<button class="btn btn-ghost pc-attach-btn" type="button" '
+        +         'data-pc-up="document" data-pc-i="' + idx + '" '
+        +         'title="Upload a PDF">📄 PDF</button>'
+        +       (c.media_id
+                  ? ('<button class="btn btn-ghost pc-attach-btn pc-rm" type="button" '
+                    + 'data-pc-rm="' + idx + '" title="Remove attached media">'
+                    + '✕ Remove</button>')
+                  : '')
+        +     '</div>'
         +   '</div>'
         + '</div>'
         + '<div class="lib-card-actions">'
@@ -8043,6 +8489,100 @@
       $("m-save").onclick = () => saveBatch();
       document.querySelectorAll("[data-reroll]").forEach(b =>
         b.addEventListener("click", () => rerollOne(Number(b.dataset.reroll))));
+      document.querySelectorAll("[data-pc-up]").forEach(b =>
+        b.addEventListener("click", () => pcAttachUpload(
+          Number(b.dataset.pcI), b.dataset.pcUp)));
+      document.querySelectorAll("[data-pc-rm]").forEach(b =>
+        b.addEventListener("click", () => pcAttachRemove(
+          Number(b.dataset.pcRm))));
+    }
+
+    /* Attach media to a combinator preview card. The combos are in-
+       memory until saveBatch, so we mutate STATE.make.combinations
+       locally and re-render. The library upload endpoint stores the
+       file; we keep its returned item id on the combo so saveBatch
+       writes the right reference into the batch JSON. */
+    function pcAttachUpload(idx, kind){
+      var input = document.createElement("input");
+      input.type = "file";
+      var accept = kind === "image"    ? "image/jpeg,image/png,image/gif,image/webp"
+                 : kind === "video"    ? "video/mp4,video/quicktime"
+                 :                       "application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-powerpoint,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      input.accept = accept;
+      input.style.display = "none";
+      document.body.appendChild(input);
+      input.onchange = async () => {
+        var f = input.files && input.files[0];
+        document.body.removeChild(input);
+        if (!f) return;
+        await pcDoUpload(idx, f, kind);
+      };
+      input.click();
+    }
+
+    async function pcDoUpload(idx, file, kind){
+      var maxMb = (kind === "video")    ? 200
+               :  (kind === "document") ? 100
+               :                          10;
+      if (file.size > maxMb * 1024 * 1024) {
+        var noun = kind === "video" ? "Video"
+                 : kind === "document" ? "Document"
+                 : "Image";
+        toast(noun + " too large. Max " + maxMb + " MB.");
+        return;
+      }
+      if (kind === "document"
+          && !/\.(pdf|pptx?|docx?)$/i.test(file.name || "")) {
+        toast("Only PDF, PPT/PPTX, or DOC/DOCX files.");
+        return;
+      }
+      var card = document.querySelector('[data-i="' + idx + '"]');
+      var btns = card ? card.querySelectorAll(".pc-attach-btn") : [];
+      btns.forEach(b => { b.disabled = true; });
+      var fd = new FormData();
+      fd.append("file", file);
+      fd.append("media_type", kind);
+      fd.append("created_via", "from_combinator_preview");
+      try {
+        var r = await fetch("/dashboard/linkedin/api/library/media/upload", {
+          method: "POST", credentials: "same-origin", body: fd,
+        });
+        var d = await r.json().catch(()=>({}));
+        if (!r.ok || !d.item) {
+          toast("Upload failed: " + (d.error || ("HTTP " + r.status)));
+          btns.forEach(b => { b.disabled = false; });
+          return;
+        }
+        var item = d.item;
+        var combo = STATE.make.combinations[idx];
+        combo.media_id         = item.id;
+        combo.media_type       = item.media_type || kind;
+        combo.media_label      = item.label || item.title || item.filename || "";
+        combo.media_public_url = item.public_url || "";
+        combo.media_url        = item.url || "";
+        combo.media_image      = item.image || "";
+        // Invalidate the library cache so the Library tab reflects
+        // this new item next time.
+        if (STATE.lib_cache) STATE.lib_cache.media = null;
+        renderPreview();
+        toast(((kind === "image" ? "Image" : kind === "video" ? "Video" : "PDF"))
+              + " attached.");
+      } catch (e) {
+        toast("Network error: " + e.message);
+        btns.forEach(b => { b.disabled = false; });
+      }
+    }
+
+    function pcAttachRemove(idx){
+      var combo = STATE.make.combinations[idx];
+      if (!combo) return;
+      combo.media_id         = null;
+      combo.media_type       = null;
+      combo.media_label      = null;
+      combo.media_public_url = null;
+      combo.media_url        = null;
+      combo.media_image      = null;
+      renderPreview();
     }
 
     async function rerollOne(idx){
@@ -8446,6 +8986,177 @@
     STATE.ai.format_pcts = Object.assign({}, FORMAT_PRESETS.balanced);
     STATE.ai.cta_pcts    = Object.assign({}, CTA_PRESETS.saveOptimized);
 
+    /* ── Strategy wizard (Phase 2 of prompt upgrade) ─────────────────
+       A 3-input modal (audience / problem / offer) that runs BEFORE
+       the AI form. On continue, the meta-prompt fills the four BRIEF
+       fields automatically. The user lands on the existing AI form
+       with everything pre-filled and editable.
+
+       aiStartFlow() is the new entry point — call this instead of
+       aiOpenForm() from any "start a batch" button. aiOpenForm()
+       itself stays unchanged so internal "back to form" loops don't
+       re-trigger the wizard.
+    */
+    STATE.ai_brief = STATE.ai_brief || null;   // last auto-filled brief
+
+    async function aiStartFlow(){
+      // If the user just came from a plan modal that auto-filled count
+      // via STATE.plan, that count flows into the wizard's meta call so
+      // the brief produces enough raw material.
+      var n = (STATE.plan && STATE.plan.count) || 10;
+      aiOpenStrategyWizard(n);
+    }
+
+    async function aiOpenStrategyWizard(numPosts){
+      // Tear down any leftover plan modal that share the .plan-modal-bg
+      // class so we don't stack overlays.
+      _planCloseModal();
+      var bg = document.createElement("div");
+      bg.id = "plan-modal-bg";
+      bg.className = "plan-modal-bg";
+      bg.innerHTML =
+          '<div class="plan-modal" role="dialog" aria-modal="true" '
+        +   'style="max-width:640px">'
+        +   '<div class="plan-modal-h">'
+        +     '<div>'
+        +       '<div class="plan-modal-title">Tell me about this batch</div>'
+        +       '<div class="helper" style="margin-top:4px;font-size:12px">'
+        +         'Three questions. We use them to write the brief for you.'
+        +       '</div>'
+        +     '</div>'
+        +     '<button class="plan-modal-x" type="button" '
+        +       'aria-label="Close" id="strat-x">×</button>'
+        +   '</div>'
+        +   '<div class="plan-modal-body">'
+        +     '<div class="ai-field">'
+        +       '<label for="strat-audience">Target audience</label>'
+        +       '<textarea id="strat-audience" rows="3" '
+        +         'placeholder="Who specifically should this batch reach? Role, stage, '
+        +         'situation, what they\'re struggling with right now."></textarea>'
+        +       '<div class="helper" style="font-size:11.5px">'
+        +         'Specific over breadth. "B2B SaaS founders 18-36 months in, '
+        +         'still running their own sales calls" beats "founders".</div>'
+        +     '</div>'
+        +     '<div class="ai-field">'
+        +       '<label for="strat-problem">The problem you solve</label>'
+        +       '<textarea id="strat-problem" rows="3" '
+        +         'placeholder="The pain they have that you specifically know how to fix. '
+        +         'The thing they\'d recognize when they read it."></textarea>'
+        +     '</div>'
+        +     '<div class="ai-field">'
+        +       '<label for="strat-offer">Your offer</label>'
+        +       '<textarea id="strat-offer" rows="3" '
+        +         'placeholder="What you sell, how it works, who it\'s for, rough price '
+        +         'range. Used to write from authority, not to pitch."></textarea>'
+        +     '</div>'
+        +     '<div class="plan-cap-hint" id="strat-loading" hidden '
+        +       'style="margin-top:10px">'
+        +       '⏳ Filling in the details…'
+        +     '</div>'
+        +     '<div class="plan-cap-warn" id="strat-error" hidden '
+        +       'style="margin-top:10px"></div>'
+        +   '</div>'
+        +   '<div class="plan-modal-footer">'
+        +     '<button class="btn btn-ghost" type="button" id="strat-cancel">Cancel</button>'
+        +     '<button class="btn btn-ghost" type="button" id="strat-no-save">'
+        +       'Continue without saving</button>'
+        +     '<button class="btn btn-primary" type="button" id="strat-go">'
+        +       'Save and continue</button>'
+        +   '</div>'
+        + '</div>';
+      document.body.appendChild(bg);
+      document.getElementById("strat-x").onclick      = _planCloseModal;
+      document.getElementById("strat-cancel").onclick = _planCloseModal;
+
+      // Pre-fill from saved profile.
+      try {
+        var r = await fetch("/dashboard/linkedin/api/strategy-profile",
+          { credentials: "same-origin" });
+        if (r.ok) {
+          var d = await r.json();
+          var p = (d && d.profile) || {};
+          if (p.audience) document.getElementById("strat-audience").value = p.audience;
+          if (p.problem)  document.getElementById("strat-problem").value  = p.problem;
+          if (p.offer)    document.getElementById("strat-offer").value    = p.offer;
+        }
+      } catch(e) { /* first-time user, leave blank */ }
+
+      function _readInputs(){
+        return {
+          audience: (document.getElementById("strat-audience").value || "").trim(),
+          problem:  (document.getElementById("strat-problem").value  || "").trim(),
+          offer:    (document.getElementById("strat-offer").value    || "").trim(),
+        };
+      }
+      function _validate(inputs){
+        if (inputs.audience.length < 10) {
+          return "Tell us a bit more about your audience (at least 10 chars).";
+        }
+        if (inputs.problem.length < 10) {
+          return "Tell us a bit more about the problem you solve.";
+        }
+        if (inputs.offer.length < 10) {
+          return "Tell us a bit more about your offer.";
+        }
+        return null;
+      }
+      async function _runFlow(save){
+        var inputs = _readInputs();
+        var err = _validate(inputs);
+        var errEl = document.getElementById("strat-error");
+        if (err) {
+          errEl.hidden = false;
+          errEl.textContent = err;
+          return;
+        }
+        errEl.hidden = true;
+        var loadingEl = document.getElementById("strat-loading");
+        var goBtn = document.getElementById("strat-go");
+        var nsBtn = document.getElementById("strat-no-save");
+        loadingEl.hidden = false;
+        goBtn.disabled = true; nsBtn.disabled = true;
+
+        // Save (optional) + auto-brief in parallel; auto-brief is the
+        // critical path. Save failures are non-fatal.
+        var savePromise = save
+          ? fetch("/dashboard/linkedin/api/strategy-profile", {
+              method: "POST", credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(inputs),
+            }).catch(()=>null)
+          : Promise.resolve(null);
+        try {
+          var r = await fetch("/dashboard/linkedin/api/ai-draft/auto-brief", {
+            method: "POST", credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(Object.assign({}, inputs,
+                                                  { num_posts: numPosts })),
+          });
+          var d = await r.json().catch(()=>({}));
+          if (!r.ok) {
+            errEl.hidden = false;
+            errEl.textContent = "Couldn't fill the brief: "
+              + (d.error || ("HTTP " + r.status))
+              + (d.detail ? (" (" + d.detail + ")") : "");
+            loadingEl.hidden = true;
+            goBtn.disabled = false; nsBtn.disabled = false;
+            return;
+          }
+          STATE.ai_brief = d.brief || null;
+          await savePromise;
+          _planCloseModal();
+          if (typeof aiOpenForm === "function") aiOpenForm();
+        } catch (e) {
+          errEl.hidden = false;
+          errEl.textContent = "Network error: " + e.message;
+          loadingEl.hidden = true;
+          goBtn.disabled = false; nsBtn.disabled = false;
+        }
+      }
+      document.getElementById("strat-go").onclick      = () => _runFlow(true);
+      document.getElementById("strat-no-save").onclick = () => _runFlow(false);
+    }
+
     function aiOpenForm(){
       var el = $("make-overview");
       // Plan-from-calendar context (if set) drives the count and banner.
@@ -8673,6 +9384,19 @@
       var vrLink = $("ai-voice-rules-edit");
       if (vrLink) vrLink.onclick = openVoiceRulesModal;
       loadVoiceRulesCount();
+      // If the strategy wizard just produced a brief, drop its values
+      // into the four form fields. Pop the brief off STATE so the user
+      // can re-edit without it snapping back next render.
+      if (STATE.ai_brief) {
+        var br = STATE.ai_brief;
+        STATE.ai_brief = null;
+        if (br.main_topic       && $("ai-topic"))    $("ai-topic").value    = br.main_topic;
+        if (br.audience         && $("ai-audience")) $("ai-audience").value = br.audience;
+        if (br.role_perspective && $("ai-role"))     $("ai-role").value     = br.role_perspective;
+        if (Array.isArray(br.key_points) && $("ai-points")) {
+          $("ai-points").value = br.key_points.map(k => "- " + k).join("\n");
+        }
+      }
       aiCheckForm();
       $("ai-generate").onclick = () => aiGenerate();
       var btnPP = $("ai-preview-post");
@@ -9684,6 +10408,92 @@
       window.scrollTo(0, savedScroll);
     }
 
+    /* Render the per-card media slot. Two states:
+       1. No media yet → big dashed drop-zone with a click-to-upload
+          fallback and a small "or let AI make one" link below.
+       2. Media attached → compact preview tile with Replace + Remove.
+    */
+    function revMediaSlotHTML(p, ctx){
+      var mg = (p && p.media_gen) || {};
+      var hasGen = mg.status === "ready" && mg.url;
+      var hasLib = !!((p.visual_choice || {}).media_id);
+
+      // Generating / queued / failed all treated as "in flight" so the
+      // drop zone shows a status, not a dead button.
+      if (mg.status === "queued" || mg.status === "generating") {
+        return '<div class="mg-drop mg-drop-busy" data-rev-mediaslot>'
+          +    '<span class="mg-drop-ico">✨</span>'
+          +    '<div><div class="mg-drop-h">Making it…</div>'
+          +    '<div class="mg-drop-sub">Hang tight.</div></div>'
+          +    '</div>';
+      }
+      if (mg.status === "failed") {
+        return '<div class="mg-drop" data-rev-mediaslot data-rev-droprow>'
+          +    '<span class="mg-drop-ico">⚠️</span>'
+          +    '<div><div class="mg-drop-h">That didn\'t work.</div>'
+          +    '<div class="mg-drop-sub">Drop a file here or click to upload.</div></div>'
+          +    '</div>';
+      }
+
+      if (hasGen || hasLib) {
+        // Compact attached preview.
+        var media = hasGen
+          ? { type: mg.media_type || "image",
+              url:  mg.url,
+              thumb: mg.thumbnail_url || mg.url,
+              name: "AI-generated " + (mg.media_type || "image"),
+              source: "ai" }
+          : (function(){
+              var m = (p.visual_choice || {}).media || {};
+              return { type:  (m.media_type || "image").toLowerCase(),
+                       url:   m.public_url,
+                       thumb: m.public_url,
+                       name:  m.filename || m.label || "Attached",
+                       source: "library" };
+            })();
+        var thumbHtml;
+        if (media.type === "image") {
+          thumbHtml = '<img class="mg-attached-thumb" src="'
+            + esc(media.thumb) + '" alt=""/>';
+        } else if (media.type === "video") {
+          thumbHtml = '<video class="mg-attached-thumb" src="'
+            + esc(media.thumb) + '" muted preload="metadata"></video>';
+        } else {
+          thumbHtml = '<div class="mg-attached-thumb mg-attached-thumb-doc">'
+            + 'PDF</div>';
+        }
+        var typeLabel = media.type === "image"   ? "Picture"
+                       : media.type === "video"   ? "Video"
+                       : media.type === "carousel" ? "Carousel"
+                       : "Document";
+        return ''
+          + '<div class="mg-attached" data-rev-mediaslot>'
+          +   thumbHtml
+          +   '<div class="mg-attached-body">'
+          +     '<div class="mg-attached-name">' + esc(media.name) + '</div>'
+          +     '<div class="mg-attached-meta">' + typeLabel + ' · attached</div>'
+          +   '</div>'
+          +   '<div class="mg-attached-actions">'
+          +     '<button type="button" data-rev-replace>Replace</button>'
+          +     '<button type="button" class="mg-rm" data-rev-remove>Remove</button>'
+          +   '</div>'
+          + '</div>';
+      }
+
+      // Empty state — big drop zone.
+      return ''
+        + '<div data-rev-mediawrap>'
+        +   '<div class="mg-drop" data-rev-mediaslot data-rev-droprow>'
+        +     '<span class="mg-drop-ico">📎</span>'
+        +     '<div>'
+        +       '<div class="mg-drop-h">Drop a file here</div>'
+        +       '<div class="mg-drop-sub">Image, video, or PDF · or click to pick one</div>'
+        +     '</div>'
+        +   '</div>'
+        +   '<a class="mg-ai-link" data-rev-aigen>or let AI make one</a>'
+        + '</div>';
+    }
+
     function _revPickPostMedia(p){
       // Choose the "primary" media for this post: prefer AI-generated
       // (most recent intent), fall back to library/upload (visual_choice).
@@ -9800,10 +10610,7 @@
           +   '<span data-rev-charcount>' + charCount + ' / 3000</span>'
           +   (charWarn ? ' · ' + charWarn : '')
           + '</div>'
-          + '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'
-          +   mgButtonHTML(p, mgCtx)
-          + '</div>'
-          + mgZoneHTML(p, mgCtx);
+          + revMediaSlotHTML(p, mgCtx);
       }
 
       return ''
@@ -9876,8 +10683,6 @@
       if (editBtn) editBtn.onclick = () => aiOpenEditor(p);
       if (regenBtn) regenBtn.onclick = () => aiRegenSection(p, "full");
       // Preview toggle: flip this card's mode and re-render the grid.
-      // (Re-rendering preserves scroll position via aiRenderReview's
-      // saved scrollY restore.)
       var prevBtn = card.querySelector("[data-rev-toggle-preview]");
       if (prevBtn) prevBtn.onclick = () => {
         if (!STATE.ai.preview_ids) STATE.ai.preview_ids = new Set();
@@ -9888,8 +10693,171 @@
         }
         aiRenderReview();
       };
-      // Wire the per-post media button.
-      mgWireButtons(card, [p]);
+
+      // ── Media slot wiring ────────────────────────────────────────
+      var slot = card.querySelector("[data-rev-mediaslot]");
+      var dropRow = card.querySelector("[data-rev-droprow]");
+
+      // Drop zone: click → file picker, drag-drop → upload.
+      if (dropRow) {
+        dropRow.addEventListener("click", () => revMediaPick(p, dropRow));
+        dropRow.addEventListener("dragenter", (e) => {
+          if (!(e.dataTransfer && (e.dataTransfer.types || []).includes("Files"))) return;
+          e.preventDefault();
+          dropRow.classList.add("is-over");
+        });
+        dropRow.addEventListener("dragover", (e) => {
+          if (!(e.dataTransfer && (e.dataTransfer.types || []).includes("Files"))) return;
+          e.preventDefault();
+          dropRow.classList.add("is-over");
+        });
+        dropRow.addEventListener("dragleave", (e) => {
+          if (e.target !== dropRow) return;
+          dropRow.classList.remove("is-over");
+        });
+        dropRow.addEventListener("drop", async (e) => {
+          if (!(e.dataTransfer && e.dataTransfer.files
+                && e.dataTransfer.files.length)) return;
+          e.preventDefault();
+          dropRow.classList.remove("is-over");
+          await revMediaUpload(p, e.dataTransfer.files[0], dropRow);
+        });
+      }
+
+      // Whole-card drag-drop too — so users don't have to aim at the
+      // small box. Same upload path.
+      card.addEventListener("dragover", (e) => {
+        if (!(e.dataTransfer && (e.dataTransfer.types || []).includes("Files"))) return;
+        e.preventDefault();
+        if (dropRow) dropRow.classList.add("is-over");
+      });
+      card.addEventListener("dragleave", (e) => {
+        if (e.target !== card) return;
+        if (dropRow) dropRow.classList.remove("is-over");
+      });
+      card.addEventListener("drop", async (e) => {
+        if (!(e.dataTransfer && e.dataTransfer.files
+              && e.dataTransfer.files.length)) return;
+        e.preventDefault();
+        if (dropRow) dropRow.classList.remove("is-over");
+        await revMediaUpload(p, e.dataTransfer.files[0], dropRow);
+      });
+
+      // Replace / Remove on attached preview.
+      var rep = card.querySelector("[data-rev-replace]");
+      if (rep) rep.onclick = () => revMediaPick(p, slot);
+      var rm = card.querySelector("[data-rev-remove]");
+      if (rm) rm.onclick = () => revMediaRemove(p);
+
+      // "or let AI make one" link.
+      var aigen = card.querySelector("[data-rev-aigen]");
+      if (aigen) aigen.onclick = () => {
+        // Open the existing AI gen popover anchored on the slot.
+        var anchor = slot || card;
+        // Synthesize the data attrs the popover expects.
+        anchor.dataset.mgPost   = p.id;
+        anchor.dataset.mgParent = (STATE.ai.draft || {}).id || "";
+        anchor.dataset.mgKind   = "ai_draft";
+        mgOpenPopover(anchor, [p]);
+      };
+    }
+
+    function revMediaPick(p, slot){
+      var input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*,video/*,application/pdf,"
+        + "application/vnd.openxmlformats-officedocument.presentationml.presentation,"
+        + "application/vnd.ms-powerpoint,"
+        + "application/msword,"
+        + "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      input.style.display = "none";
+      document.body.appendChild(input);
+      input.onchange = async () => {
+        var f = input.files && input.files[0];
+        document.body.removeChild(input);
+        if (!f) return;
+        await revMediaUpload(p, f, slot);
+      };
+      input.click();
+    }
+
+    async function revMediaUpload(p, file, slot){
+      // Auto-detect kind from MIME / extension. The /library/media/upload
+      // endpoint accepts image / video / document.
+      var t = (file.type || "").toLowerCase();
+      var name = (file.name || "").toLowerCase();
+      var kind = "document";
+      if (t.startsWith("image/"))      kind = "image";
+      else if (t.startsWith("video/")) kind = "video";
+      else if (t === "application/pdf"
+                || /\.(pdf|pptx?|docx?)$/i.test(name)) kind = "document";
+      else if (/\.(jpe?g|png|gif|webp)$/i.test(name)) kind = "image";
+      else if (/\.(mp4|mov|m4v)$/i.test(name))         kind = "video";
+
+      var maxMb = kind === "video"    ? 200
+                : kind === "document" ? 100
+                :                        10;
+      if (file.size > maxMb * 1024 * 1024) {
+        toast(({ image:"Image", video:"Video", document:"Document" }[kind])
+              + " too large. Max " + maxMb + " MB.");
+        return;
+      }
+      if (kind === "document"
+          && !/\.(pdf|pptx?|docx?)$/i.test(file.name || "")) {
+        toast("Only PDF, PPT, or DOC files.");
+        return;
+      }
+
+      // Visual feedback in the slot.
+      if (slot) {
+        slot.classList.add("mg-drop-busy");
+        slot.innerHTML =
+            '<span class="mg-drop-ico">⏳</span>'
+          + '<div><div class="mg-drop-h">Uploading…</div>'
+          + '<div class="mg-drop-sub">' + esc(file.name) + '</div></div>';
+      }
+
+      var fd = new FormData();
+      fd.append("file", file);
+      fd.append("media_type", kind);
+      fd.append("created_via", "from_ai_review_drop");
+      try {
+        var r = await fetch("/dashboard/linkedin/api/library/media/upload", {
+          method: "POST", credentials: "same-origin", body: fd,
+        });
+        var d = await r.json().catch(()=>({}));
+        if (!r.ok || !d.item) {
+          toast("Upload failed: " + (d.error || ("HTTP " + r.status)));
+          if (typeof aiRenderReview === "function") aiRenderReview();
+          return;
+        }
+        await aiReviewAttachMediaId(p, d.item);
+        if (STATE.lib_cache) STATE.lib_cache.media = null;
+        toast("Attached.");
+        if (typeof aiRenderReview === "function") aiRenderReview();
+      } catch (e) {
+        toast("Network error: " + e.message);
+        if (typeof aiRenderReview === "function") aiRenderReview();
+      }
+    }
+
+    async function revMediaRemove(p){
+      try {
+        await fetch("/dashboard/linkedin/api/ai-draft/"
+            + encodeURIComponent(STATE.ai.draft.id) + "/posts/"
+            + encodeURIComponent(p.id) + "/visual", {
+          method:"POST", credentials:"same-origin",
+          headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({ type: "none" }),
+        });
+        p.visual_choice = { type: "none" };
+        // Clear AI-gen reference too if the user chose to remove.
+        if (p.media_gen) p.media_gen = {};
+        toast("Removed.");
+        if (typeof aiRenderReview === "function") aiRenderReview();
+      } catch (e) {
+        toast("Network error: " + e.message);
+      }
     }
 
     // ────────────────────────────────────────────────────────────────
@@ -9934,6 +10902,7 @@
     function mgButtonHTML(p, ctx){
       var mg = (p && p.media_gen) || {};
       var st = mg.status || "";
+      var hasLibraryMedia = !!((p.visual_choice || {}).media_id);
       var label, cls = "mg-btn";
       if (st === "ready") {
         cls += " is-ready";
@@ -9944,8 +10913,11 @@
       } else if (st === "failed") {
         cls += " is-failed";
         label = "Try again";
+      } else if (hasLibraryMedia) {
+        cls += " is-ready";
+        label = "Media attached";
       } else {
-        label = "+ Add image";
+        label = "+ Add media";
       }
       var pid = p.id || "";
       var pp  = (ctx && ctx.parent_id) || "";
@@ -10023,7 +10995,22 @@
       bg.className = "mg-pop-bg";
       bg.innerHTML =
           '<div class="mg-pop" id="mg-pop">'
-        +   '<div class="mg-pop-h">What kind?</div>'
+        +   '<div class="mg-pop-h">Upload your own</div>'
+        +   '<div class="mg-pop-uploads">'
+        +     '<button class="mg-pop-up-btn" type="button" data-mg-up="image">'
+        +       '<span class="mg-pop-up-ico">📷</span>'
+        +       '<span><strong>Image</strong><div class="mg-pop-hint">JPG · PNG · GIF</div></span>'
+        +     '</button>'
+        +     '<button class="mg-pop-up-btn" type="button" data-mg-up="video">'
+        +       '<span class="mg-pop-up-ico">🎬</span>'
+        +       '<span><strong>Video</strong><div class="mg-pop-hint">MP4 · MOV</div></span>'
+        +     '</button>'
+        +     '<button class="mg-pop-up-btn" type="button" data-mg-up="document">'
+        +       '<span class="mg-pop-up-ico">📄</span>'
+        +       '<span><strong>PDF</strong><div class="mg-pop-hint">PDF · PPT · DOC</div></span>'
+        +     '</button>'
+        +   '</div>'
+        +   '<div class="mg-pop-divider"><span>or let AI make one</span></div>'
         +   MG_TYPES.map(t =>
               '<label class="mg-pop-opt' + (t.key === current ? ' is-active' : '') + '">'
               + '<input type="radio" name="mg-kind" value="' + esc(t.key) + '"'
@@ -10033,7 +11020,7 @@
               + '</label>').join("")
         +   '<div class="mg-pop-actions">'
         +     '<button class="btn btn-ghost" type="button" id="mg-pop-cancel">Cancel</button>'
-        +     '<button class="btn btn-primary" type="button" id="mg-pop-go">Make it</button>'
+        +     '<button class="btn btn-primary" type="button" id="mg-pop-go">✨ Make with AI</button>'
         +   '</div>'
         + '</div>';
       document.body.appendChild(bg);
@@ -10049,6 +11036,9 @@
         var pr = pop.getBoundingClientRect();
         var maxLeft = window.innerWidth - pr.width - 12;
         if (pr.left > maxLeft) pop.style.left = (maxLeft + window.scrollX) + "px";
+        // Also clamp top so the popover doesn't run off the bottom.
+        var maxTop = window.innerHeight + window.scrollY - pr.height - 12;
+        if (pr.top > maxTop) pop.style.top = (maxTop) + "px";
       });
       bg.addEventListener("click", (e) => {
         if (e.target === bg) bg.remove();
@@ -10060,6 +11050,100 @@
         bg.remove();
         await mgKickoff(kind, ppid, pid, media_type, anchorBtn);
       };
+      // Wire the three upload buttons.
+      bg.querySelectorAll("[data-mg-up]").forEach(b =>
+        b.addEventListener("click", () => {
+          var mediaKind = b.dataset.mgUp;
+          bg.remove();
+          mgPickAndUpload(post, mediaKind, anchorBtn);
+        }));
+    }
+
+    /* Open the OS file picker for `mediaKind` (image / video / document),
+       upload to the user's library, then attach the resulting item to
+       this AI-draft post. Re-renders the review grid so the card flips
+       to "Media attached" with a thumbnail. */
+    function mgPickAndUpload(post, mediaKind, anchorBtn){
+      var input = document.createElement("input");
+      input.type = "file";
+      input.accept = (mediaKind === "image")
+          ? "image/jpeg,image/png,image/gif,image/webp"
+          : (mediaKind === "video")
+              ? "video/mp4,video/quicktime"
+              : "application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-powerpoint,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      input.style.display = "none";
+      document.body.appendChild(input);
+      input.onchange = async () => {
+        var f = input.files && input.files[0];
+        document.body.removeChild(input);
+        if (!f) return;
+        await mgUploadAndAttach(post, f, mediaKind, anchorBtn);
+      };
+      input.click();
+    }
+
+    async function mgUploadAndAttach(post, file, mediaKind, anchorBtn){
+      // Auto-detect the kind from MIME if caller didn't pass one (used
+      // by the drag-drop path).
+      if (!mediaKind) {
+        if ((file.type || "").startsWith("video/"))      mediaKind = "video";
+        else if ((file.type || "").startsWith("image/")) mediaKind = "image";
+        else                                              mediaKind = "document";
+      }
+      var maxMb = mediaKind === "video"    ? 200
+                : mediaKind === "document" ? 100
+                :                             10;
+      if (file.size > maxMb * 1024 * 1024) {
+        var noun = mediaKind === "video" ? "Video"
+                 : mediaKind === "document" ? "Document"
+                 : "Image";
+        toast(noun + " too large. Max " + maxMb + " MB.");
+        return;
+      }
+      if (mediaKind === "document"
+          && !/\.(pdf|pptx?|docx?)$/i.test(file.name || "")) {
+        toast("Only PDF, PPT/PPTX, or DOC/DOCX files.");
+        return;
+      }
+      if (anchorBtn) {
+        anchorBtn.className = "mg-btn is-busy";
+        anchorBtn.textContent = "Uploading…";
+        anchorBtn.disabled = true;
+      }
+      var fd = new FormData();
+      fd.append("file", file);
+      fd.append("media_type", mediaKind);
+      fd.append("created_via", "from_ai_review_grid");
+      try {
+        var r = await fetch("/dashboard/linkedin/api/library/media/upload", {
+          method: "POST", credentials: "same-origin", body: fd,
+        });
+        var d = await r.json().catch(()=>({}));
+        if (!r.ok || !d.item) {
+          toast("Upload failed: " + (d.error || ("HTTP " + r.status)));
+          if (anchorBtn) {
+            anchorBtn.className = "mg-btn";
+            anchorBtn.textContent = "+ Add media";
+            anchorBtn.disabled = false;
+          }
+          return;
+        }
+        // Attach the new library item to this AI-draft post via the
+        // existing /visual endpoint. aiReviewAttachMediaId hydrates
+        // p.visual_choice locally and persists server-side.
+        await aiReviewAttachMediaId(post, d.item);
+        if (STATE.lib_cache) STATE.lib_cache.media = null;
+        toast("Attached.");
+        // Re-render the grid so the card shows the new attachment.
+        if (typeof aiRenderReview === "function") aiRenderReview();
+      } catch (e) {
+        toast("Network error: " + e.message);
+        if (anchorBtn) {
+          anchorBtn.className = "mg-btn";
+          anchorBtn.textContent = "+ Add media";
+          anchorBtn.disabled = false;
+        }
+      }
     }
 
     async function mgKickoff(kind, parent_id, post_id, media_type, anchorBtn){
