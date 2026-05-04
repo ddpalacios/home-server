@@ -1614,6 +1614,45 @@
       background: rgba(220,38,38,.08); color: #B91C1C;
       border-color: rgba(220,38,38,.30);
     }
+    .rev-preview-btn {
+      background: var(--bg-alt); border: 1px solid var(--border);
+      padding: 4px 10px; border-radius: 6px; cursor: pointer;
+      font-size: 11.5px; color: var(--text-sub); font-weight: 600;
+    }
+    .rev-preview-btn:hover { color: var(--text); }
+    .rev-preview-btn.is-on {
+      background: var(--link); color: #fff; border-color: var(--link);
+    }
+    /* When in preview mode, the card simulates a feed post: text first,
+       big media block underneath. Padding is tighter so it reads like
+       a real preview rather than an editor row. */
+    .rev-preview-block {
+      display: flex; flex-direction: column; gap: 10px;
+      padding: 4px;
+    }
+    .rev-preview-text {
+      font-size: 14px; line-height: 1.55; white-space: pre-wrap;
+      color: var(--text);
+    }
+    .rev-preview-media {
+      border-radius: 10px; overflow: hidden;
+      border: 1px solid var(--border); background: #000;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .rev-preview-media img,
+    .rev-preview-media video {
+      display: block; width: 100%; height: auto;
+      max-height: 420px; object-fit: contain;
+      background: #000;
+    }
+    .rev-preview-media iframe {
+      width: 100%; height: 360px; border: 0; background: #fff;
+    }
+    .rev-preview-empty {
+      font-size: 12.5px; color: var(--text-sub);
+      padding: 30px 10px; text-align: center;
+      border: 1px dashed var(--border); border-radius: 10px;
+    }
 
     /* AI media generation — per-post button + popover + bulk modal.
        Uses the four colors specified in the brief: grey (default),
@@ -9637,6 +9676,59 @@
       window.scrollTo(0, savedScroll);
     }
 
+    function _revPickPostMedia(p){
+      // Choose the "primary" media for this post: prefer AI-generated
+      // (most recent intent), fall back to library/upload (visual_choice).
+      var mg = p.media_gen || {};
+      if (mg.status === "ready" && mg.url) {
+        return {
+          source: "ai",
+          media_type: mg.media_type || "image",
+          url:        mg.url,
+          thumbnail_url: mg.thumbnail_url || mg.url,
+        };
+      }
+      var vc = p.visual_choice || {};
+      var media = vc.media || null;
+      if (media && media.public_url) {
+        return {
+          source: "library",
+          media_type: (media.media_type || "image").toLowerCase(),
+          url: media.public_url,
+          thumbnail_url: media.public_url,
+          page_count: media.page_count || 0,
+          extension: media.extension || "",
+          filename: media.filename || "",
+        };
+      }
+      return null;
+    }
+
+    function _revPreviewMediaHtml(m){
+      if (!m) return '';
+      var t = m.media_type || "image";
+      if (t === "image") {
+        return '<div class="rev-preview-media">'
+          + '<img src="' + esc(m.url) + '" alt="Picture preview"/>'
+          + '</div>';
+      }
+      if (t === "video") {
+        return '<div class="rev-preview-media">'
+          + '<video src="' + esc(m.url) + '" controls preload="metadata"></video>'
+          + '</div>';
+      }
+      if (t === "carousel" || t === "document") {
+        // PDFs render inline via <iframe>. The browser uses its built-in
+        // PDF viewer, including next/prev page controls — no extra lib.
+        return '<div class="rev-preview-media">'
+          + '<iframe src="' + esc(m.url) + '#view=FitH" '
+          +   'title="Carousel preview"></iframe>'
+          + '</div>';
+      }
+      return '<div class="rev-preview-empty">Media attached but the type'
+        + ' isn\'t previewable here.</div>';
+    }
+
     function renderReviewCard(p, idx, total, mgCtx){
       var st = p.status || "pending_review";
       var pillCls = (st === "kept" ? "is-kept"
@@ -9657,35 +9749,60 @@
       var charWarn = charCount > 3000
         ? '<span style="color:var(--err-fg)">over limit</span>' : '';
       var angle = (p.angle || "").trim();
-      var meta = [
-        'Post ' + (idx + 1) + ' of ' + total,
-        angle ? esc(angle) : null,
-        '<span>' + charCount + ' / 3000</span>',
-        charWarn || null,
-      ].filter(Boolean).join(' · ');
+
+      // Preview-mode toggle. STATE.ai.preview_ids tracks per-card mode.
+      if (!STATE.ai.preview_ids) STATE.ai.preview_ids = new Set();
+      var media = _revPickPostMedia(p);
+      var inPreview = STATE.ai.preview_ids.has(p.id);
+      // The toggle is always offered. If there's no media yet, the
+      // button still flips so the user can see the post-text-only
+      // mock and tap "Add picture" from there.
+      var prevCls = "rev-preview-btn" + (inPreview ? " is-on" : "");
+      var prevLbl = inPreview ? "← Edit text" : "👁 Preview";
+
+      var bodyHtml;
+      if (inPreview) {
+        var mediaHtml = media
+          ? _revPreviewMediaHtml(media)
+          : '<div class="rev-preview-empty">No picture yet. '
+            + 'Tap "← Edit text" to go back, then "+ Add image" '
+            + 'to make one.</div>';
+        bodyHtml = ''
+          + '<div class="rev-preview-block">'
+          +   '<div class="rev-preview-text">' + esc(caption) + '</div>'
+          +   mediaHtml
+          + '</div>';
+      } else {
+        bodyHtml = ''
+          + '<div class="rev-card-text" contenteditable="true" spellcheck="true"'
+          +   ' data-ai-editable="true" data-ai-field-type="post_caption"'
+          +   ' data-rev-text>' + esc(caption) + '</div>'
+          + '<div class="rev-card-meta">'
+          +   '<span data-rev-charcount>' + charCount + ' / 3000</span>'
+          +   (charWarn ? ' · ' + charWarn : '')
+          + '</div>'
+          + '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'
+          +   mgButtonHTML(p, mgCtx)
+          + '</div>'
+          + mgZoneHTML(p, mgCtx);
+      }
 
       return ''
         + '<div class="rev-card ' + cardCls + '" data-rev-card="' + esc(p.id) + '"'
         +   ' data-mg-card data-mg-post="' + esc(p.id) + '">'
         +   '<div class="rev-card-h">'
         +     '<div class="rev-card-num">Post ' + (idx + 1) + '</div>'
-        +     '<div class="rev-card-pill ' + pillCls + '">' + pillTxt + '</div>'
+        +     '<div style="display:flex;gap:8px;align-items:center">'
+        +       '<button class="' + prevCls + '" type="button" data-rev-toggle-preview>'
+        +         esc(prevLbl) + '</button>'
+        +       '<div class="rev-card-pill ' + pillCls + '">' + pillTxt + '</div>'
+        +     '</div>'
         +   '</div>'
         +   (angle
               ? '<div class="rev-card-meta"><span>'
                 + esc(angle) + '</span></div>'
               : '')
-        +   '<div class="rev-card-text" contenteditable="true" spellcheck="true"'
-        +     ' data-ai-editable="true" data-ai-field-type="post_caption"'
-        +     ' data-rev-text>' + esc(caption) + '</div>'
-        +   '<div class="rev-card-meta">'
-        +     '<span data-rev-charcount>' + charCount + ' / 3000</span>'
-        +     (charWarn ? ' · ' + charWarn : '')
-        +   '</div>'
-        +   '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'
-        +     mgButtonHTML(p, mgCtx)
-        +   '</div>'
-        +   mgZoneHTML(p, mgCtx)
+        +   bodyHtml
         +   '<div class="rev-card-actions">'
         +     '<button class="' + keepCls + '" type="button" data-rev-keep>'
         +       esc(keepLbl) + '</button>'
@@ -9739,6 +9856,19 @@
       var regenBtn = card.querySelector("[data-rev-regen]");
       if (editBtn) editBtn.onclick = () => aiOpenEditor(p);
       if (regenBtn) regenBtn.onclick = () => aiRegenSection(p, "full");
+      // Preview toggle: flip this card's mode and re-render the grid.
+      // (Re-rendering preserves scroll position via aiRenderReview's
+      // saved scrollY restore.)
+      var prevBtn = card.querySelector("[data-rev-toggle-preview]");
+      if (prevBtn) prevBtn.onclick = () => {
+        if (!STATE.ai.preview_ids) STATE.ai.preview_ids = new Set();
+        if (STATE.ai.preview_ids.has(p.id)) {
+          STATE.ai.preview_ids.delete(p.id);
+        } else {
+          STATE.ai.preview_ids.add(p.id);
+        }
+        aiRenderReview();
+      };
       // Wire the per-post media button.
       mgWireButtons(card, [p]);
     }
