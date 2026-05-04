@@ -5439,6 +5439,18 @@
     function renderScheduledMonth(rows){
       var listEl = $("sch-list");
       if (!listEl) return;
+      // Pull "fresh from a plan" queue ids from sessionStorage so we
+      // can flash a 5s highlight on the pills the user just created.
+      // Consume-and-clear: re-rendering the same view shouldn't keep
+      // the animation looping forever.
+      var freshIds = null;
+      try {
+        var raw = sessionStorage.getItem("dblinkedin.freshPlanIds");
+        if (raw) {
+          freshIds = new Set(raw.split(",").filter(Boolean));
+          sessionStorage.removeItem("dblinkedin.freshPlanIds");
+        }
+      } catch(_) {}
       var anchor = _schMonthAnchor();
       var monthName = anchor.toLocaleDateString(undefined,
         { month: "long", year: "numeric" });
@@ -5496,9 +5508,11 @@
         var more    = bucket.length - visible.length;
         var pillsHtml = visible.map(p => {
           var status = (p.status || "pending").toLowerCase();
+          var fresh = freshIds && freshIds.has(p.queue_id);
           var cls = "sch-month-pill"
             + (status === "errored" || status === "failed" ? " is-failed" : "")
-            + (status === "publishing" ? " is-publishing" : "");
+            + (status === "publishing" ? " is-publishing" : "")
+            + (fresh ? " is-fresh-plan" : "");
           var t = new Date((p.scheduled_at || 0) * 1000);
           var clock = t.toLocaleTimeString(undefined,
             { hour: "numeric", minute: "2-digit" });
@@ -6204,19 +6218,21 @@
         +     '<button class="btn btn-primary" type="button" id="plan-c-cal">View calendar</button>'
         +   '</div>'
         + '</div>';
-      $("plan-c-done").onclick = () => {
-        // Stash newly-scheduled queue ids so the Month view can flash
-        // them once the user navigates back.
+      function _stashFreshIds(){
         try {
           var ids = (result.queue_ids || []).slice(0, 200);
           if (ids.length) {
             sessionStorage.setItem("dblinkedin.freshPlanIds", ids.join(","));
           }
         } catch(_) {}
+      }
+      $("plan-c-done").onclick = () => {
+        _stashFreshIds();
         _planClearContext();
         makeRenderOverview();
       };
       $("plan-c-cal").onclick = () => {
+        _stashFreshIds();
         _planClearContext();
         // Switch to Scheduled tab in Month view, anchored on the plan's
         // first day so the user lands where their new posts are.
