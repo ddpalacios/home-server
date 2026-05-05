@@ -3395,6 +3395,70 @@
     }
     .ai-mode-opt.is-active .opt-check { opacity: 1; }
 
+    /* Phase 1 — reminder cadence inputs in the AI mode dropdown */
+    .ai-mode-divider {
+      height: 1px; background: #f1f5f9;
+      margin: 6px 4px;
+    }
+    .ai-mode-cadence { padding: 8px 10px 6px; }
+    .ai-mode-cadence h4 {
+      margin: 0 0 8px;
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      color: #9ca3af;
+    }
+    .ai-mode-cadence-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 10px; padding: 5px 0;
+      font-size: 12.5px; color: #374151;
+    }
+    .ai-mode-cadence-row select {
+      font-size: 12.5px; padding: 4px 6px;
+      border: 1px solid #e5e7eb; border-radius: 6px;
+      background: #fff; color: #0a0a0a;
+      font-family: inherit; min-width: 96px;
+    }
+    .ai-mode-config-link {
+      display: block; width: 100%;
+      padding: 9px 10px; margin-top: 4px;
+      background: transparent; border: 0;
+      border-top: 1px solid #f1f5f9;
+      color: #2563eb; font-size: 12.5px; font-weight: 500;
+      text-align: left; cursor: pointer;
+      border-radius: 0 0 8px 8px; font-family: inherit;
+    }
+    .ai-mode-config-link:hover { background: #f8fafc; }
+
+    /* Phase 1 — confirmation modal for escalating to Always reply */
+    #aiModeConfirmModal {
+      position: fixed; inset: 0; z-index: 11000;
+      display: none; align-items: center; justify-content: center;
+    }
+    #aiModeConfirmModal.is-open { display: flex; }
+    #aiModeConfirmModal .amc-backdrop {
+      position: absolute; inset: 0; background: rgba(10,10,10,0.45);
+    }
+    #aiModeConfirmModal .amc-card {
+      position: relative; background: #fff;
+      width: 440px; max-width: calc(100vw - 32px);
+      border-radius: 14px; padding: 22px 24px 20px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+    }
+    #aiModeConfirmModal h3 { margin: 0 0 10px; font-size: 17px; font-weight: 600; color: #0a0a0a; }
+    #aiModeConfirmModal p  { margin: 0 0 14px; font-size: 13.5px; color: #475569; line-height: 1.5; }
+    #aiModeConfirmModal .amc-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+    #aiModeConfirmModal .amc-btn {
+      padding: 8px 14px; font-size: 13px; font-weight: 500;
+      border-radius: 8px; border: 1px solid #e5e7eb;
+      background: #fff; color: #0a0a0a;
+      cursor: pointer; font-family: inherit;
+    }
+    #aiModeConfirmModal .amc-btn:hover { background: #f8fafc; }
+    #aiModeConfirmModal .amc-btn.is-primary {
+      background: #16a34a; color: #fff; border-color: #16a34a;
+    }
+    #aiModeConfirmModal .amc-btn.is-primary:hover { background: #15803d; }
+
     /* ── Campaigns sub-tabs ── */
     .camp-subtab {
       height: 38px;
@@ -5266,11 +5330,11 @@
           <span class="nav-tooltip">Outreach</span>
           <span class="app-nav-badge" id="appCampaignsBadge" hidden>0</span>
         </button>
-        <a class="app-nav-btn" href="/dashboard/lead-intake" aria-label="Lead intake" style="display:flex;align-items:center;justify-content:center;text-decoration:none;color:inherit;">
+        <button class="app-nav-btn" type="button" data-route="leadIntake" aria-label="Lead intake">
           <!-- Inbox / arrow-down icon -->
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
           <span class="nav-tooltip">Lead intake</span>
-        </a>
+        </button>
         <button class="app-nav-btn" type="button" data-route="settings" aria-label="Settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           <span class="nav-tooltip">Settings</span>
@@ -5338,6 +5402,55 @@
                 </span>
                 <span class="opt-check" aria-hidden="true">✓</span>
               </button>
+              <div class="ai-mode-divider" role="separator"></div>
+              <div class="ai-mode-cadence">
+                <h4>Reminder cadence (when "Reply when I'm slow")</h4>
+                <label class="ai-mode-cadence-row">
+                  <span>Send me a reminder after:</span>
+                  <select id="amcFirst" data-cadence="first_reminder_minutes">
+                    <option value="15">15 min</option>
+                    <option value="30" selected>30 min</option>
+                    <option value="60">1 hour</option>
+                    <option value="120">2 hours</option>
+                    <option value="360">6 hours</option>
+                  </select>
+                </label>
+                <label class="ai-mode-cadence-row">
+                  <span>Then again after:</span>
+                  <select id="amcSecond" data-cadence="second_reminder_minutes">
+                    <option value="30">30 min</option>
+                    <option value="60">1 hour</option>
+                    <option value="120" selected>2 hours</option>
+                    <option value="360">6 hours</option>
+                    <option value="720">12 hours</option>
+                  </select>
+                </label>
+                <label class="ai-mode-cadence-row">
+                  <span>Then AI takes over after:</span>
+                  <select id="amcTakeover" data-cadence="ai_takeover_minutes">
+                    <option value="120">2 hours</option>
+                    <option value="360" selected>6 hours</option>
+                    <option value="720">12 hours</option>
+                    <option value="1440">1 day</option>
+                  </select>
+                </label>
+              </div>
+              <button type="button" id="aiModeConfigLink" class="ai-mode-config-link">
+                Configure AI →
+              </button>
+            </div>
+          </div>
+          <!-- Phase 1: confirmation modal when escalating to "Always reply" -->
+          <div id="aiModeConfirmModal" role="dialog" aria-modal="true" aria-labelledby="amcTitle">
+            <div class="amc-backdrop" data-amc-close></div>
+            <div class="amc-card">
+              <h3 id="amcTitle">Turn on Always reply?</h3>
+              <p>The AI will respond to every customer message immediately — about 1 minute after they send. You won't get reminders.</p>
+              <p>You can switch back to "When slow" or "Never" anytime.</p>
+              <div class="amc-actions">
+                <button type="button" class="amc-btn" data-amc-close>Cancel</button>
+                <button type="button" class="amc-btn is-primary" id="aiModeConfirmYes">Turn it on</button>
+              </div>
             </div>
           </div>
           <span class="app-trial-pill" id="appTrialPill" hidden>
@@ -6489,6 +6602,39 @@
       </style>
 
       <section class="grid" id="activity" data-route-section="activity" hidden>
+        <!-- Onboarding nudge: shows when no lead intake channel is set up.
+             Hidden by default; shown by JS only when /me/intake/channels
+             reports nothing ready. -->
+        <a id="intakeOnboardNudge" href="#leadIntake"
+           style="display:none;grid-column:span 12;text-decoration:none;color:inherit;
+                  background:linear-gradient(135deg,#eaf3fc 0%,#f5f7fa 100%);
+                  border:1px solid #cdd7e3;border-radius:14px;padding:20px 22px;
+                  align-items:center;gap:18px;flex-wrap:wrap;
+                  transition:transform .15s ease, box-shadow .15s ease;">
+          <span style="font-size:36px;line-height:1;flex:0 0 auto">📥</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;font-size:17px;margin:0 0 2px;color:#0a0a0a;">Get your first lead</div>
+            <div style="color:#5a6470;font-size:13.5px;">Pick how people contact you. Takes 1 minute.</div>
+          </div>
+          <span style="background:#185fa5;color:#fff;font-weight:600;
+                       padding:9px 16px;border-radius:8px;font-size:14px;
+                       white-space:nowrap;flex:0 0 auto">Set it up →</span>
+        </a>
+        <script>
+          (function(){
+            fetch("/me/intake/channels", { credentials:"same-origin" })
+              .then(function(r){ return r.ok ? r.json() : null; })
+              .then(function(d){
+                var ch = (d && d.channels) || {};
+                var anyReady = !!((ch.form  && ch.form.ready)
+                               || (ch.email && ch.email.ready)
+                               || (ch.phone && ch.phone.ready));
+                var nudge = document.getElementById("intakeOnboardNudge");
+                if (nudge && !anyReady) nudge.style.display = "flex";
+              })
+              .catch(function(){});
+          })();
+        </script>
         <!-- First-visit nudge for Insights. -->
         <div class="page-nudge" data-nudge="activity" style="grid-column: span 12;" hidden>
           <span class="page-nudge-icon" aria-hidden="true">
@@ -6564,7 +6710,7 @@
         <div class="card" style="grid-column: span 12; margin-top: 16px;">
           <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
             <h2 class="section-title" style="margin:0;">Recent leads</h2>
-            <a href="/dashboard/lead-intake" style="font-size:12.5px;color:#185FA5;text-decoration:none;">Manage intake →</a>
+            <a href="#leadIntake" style="font-size:12.5px;color:#185FA5;text-decoration:none;">Manage intake →</a>
           </div>
           <p class="section-note">Live feed of every lead from your website form, connected email, and tracked phone number.</p>
           <div id="intakeRecent" style="margin-top:8px;">
@@ -14415,6 +14561,138 @@
         </div>
       </section>
 
+      <!-- ─── Lead intake — iframed standalone page so it can be reached
+           directly OR routed to via #leadIntake. ───────────────────── -->
+      <section class="grid" id="leadIntake" data-route-section="leadIntake" hidden>
+        <div style="grid-column: span 12;">
+          <iframe
+            id="leadIntakeFrame"
+            src="about:blank"
+            title="Lead intake"
+            loading="lazy"
+            style="width:100%;height:calc(100vh - 96px);min-height:760px;border:0;border-radius:10px;background:#fff;display:block"
+            data-src="/dashboard/lead-intake"
+          ></iframe>
+        </div>
+      </section>
+
+      <!-- ─── AI Settings (Phase 1) ───────────────────────────────────────── -->
+      <section class="grid" id="aiSettings" data-route-section="aiSettings" hidden>
+        <div class="ais-page" style="grid-column: 1 / -1; max-width: 760px; margin: 0 auto; padding: 8px 24px 64px;">
+          <style>
+            .ais-page h1 { font-size: 22px; font-weight: 700; color: #0a0a0a; margin: 0 0 6px; }
+            .ais-page .ais-sub { font-size: 13.5px; color: #6b7280; margin: 0 0 22px; }
+            .ais-card {
+              background: #fff; border: 1px solid #eef0f3; border-radius: 14px;
+              padding: 20px 22px; margin-bottom: 18px;
+            }
+            .ais-card h2 { font-size: 15px; font-weight: 600; color: #0a0a0a; margin: 0 0 6px; }
+            .ais-card .ais-card-sub { font-size: 12.5px; color: #6b7280; margin: 0 0 14px; }
+            .ais-tone-row { display: flex; gap: 8px; flex-wrap: wrap; }
+            .ais-tone-opt {
+              padding: 8px 16px; font-size: 13px; font-weight: 500;
+              border-radius: 999px; border: 1px solid #e5e7eb;
+              background: #fff; color: #374151; cursor: pointer;
+              transition: background 0.10s, border-color 0.10s, color 0.10s;
+              font-family: inherit;
+            }
+            .ais-tone-opt:hover { background: #f9fafb; }
+            .ais-tone-opt.is-active { background: #0f172a; color: #fff; border-color: #0f172a; }
+            .ais-textarea {
+              width: 100%; min-height: 120px;
+              padding: 11px 13px;
+              font-size: 13px; color: #0a0a0a;
+              font-family: inherit; line-height: 1.55;
+              border: 1px solid #e5e7eb; border-radius: 10px;
+              box-sizing: border-box; resize: vertical;
+            }
+            .ais-textarea:focus {
+              outline: 0; border-color: #2563eb;
+              box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
+            }
+            .ais-test-row { display: flex; gap: 8px; align-items: stretch; }
+            .ais-test-input {
+              flex: 1; padding: 10px 13px;
+              font-size: 13px; color: #0a0a0a;
+              border: 1px solid #e5e7eb; border-radius: 10px;
+              font-family: inherit;
+            }
+            .ais-test-input:focus {
+              outline: 0; border-color: #2563eb;
+              box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
+            }
+            .ais-btn {
+              padding: 9px 16px; font-size: 13px; font-weight: 500;
+              border-radius: 10px; border: 1px solid #0f172a;
+              background: #0f172a; color: #fff;
+              cursor: pointer; font-family: inherit;
+            }
+            .ais-btn:hover { background: #1e293b; }
+            .ais-btn:disabled { opacity: 0.6; cursor: progress; }
+            .ais-btn.is-secondary { background: #fff; color: #0a0a0a; }
+            .ais-btn.is-secondary:hover { background: #f8fafc; }
+            .ais-preview {
+              margin-top: 12px; padding: 14px 16px;
+              background: #f8fafc; border: 1px solid #eef0f3; border-radius: 10px;
+              font-size: 13px; line-height: 1.55; color: #0a0a0a;
+              white-space: pre-wrap; min-height: 36px;
+            }
+            .ais-preview[data-state="declined"] {
+              background: #fff7ed; border-color: #fed7aa; color: #9a3412;
+            }
+            .ais-preview[data-state="empty"] { color: #9ca3af; font-style: italic; }
+            .ais-save-bar {
+              display: flex; gap: 8px; align-items: center; justify-content: flex-end;
+              margin-top: 4px;
+            }
+            .ais-save-status { font-size: 12px; color: #16a34a; }
+          </style>
+
+          <h1>AI Settings</h1>
+          <p class="ais-sub">How the AI talks when it replies on your behalf.</p>
+
+          <div class="ais-card">
+            <h2>Tone</h2>
+            <p class="ais-card-sub">How the AI sounds in customer replies.</p>
+            <div class="ais-tone-row" id="aisToneRow">
+              <button type="button" class="ais-tone-opt is-active" data-tone="friendly">Friendly</button>
+              <button type="button" class="ais-tone-opt" data-tone="professional">Professional</button>
+              <button type="button" class="ais-tone-opt" data-tone="brief">Brief</button>
+            </div>
+          </div>
+
+          <div class="ais-card">
+            <h2>Things to know</h2>
+            <p class="ais-card-sub">Tell the AI about your business so it can answer customer questions correctly.</p>
+            <textarea id="aisThingsToKnow" class="ais-textarea"
+              placeholder="We're open Mon-Fri 9am-5pm, closed weekends.&#10;Our service area is 30 miles from downtown.&#10;Standard estimates take 30 min and are free."></textarea>
+          </div>
+
+          <div class="ais-card">
+            <h2>Things the AI should NEVER do</h2>
+            <p class="ais-card-sub">Hard rules the AI will not break.</p>
+            <textarea id="aisThingsToAvoid" class="ais-textarea" style="min-height:96px;"
+              placeholder="Never quote a specific price.&#10;Never schedule a job without me confirming first.&#10;Never promise a specific arrival time."></textarea>
+          </div>
+
+          <div class="ais-card">
+            <h2>Test the AI</h2>
+            <p class="ais-card-sub">Type a message and see how the AI would reply.</p>
+            <div class="ais-test-row">
+              <input id="aisTestInput" type="text" class="ais-test-input"
+                placeholder="How much do you charge for a kitchen sink repair?" />
+              <button type="button" id="aisTestBtn" class="ais-btn">Try it →</button>
+            </div>
+            <div id="aisTestPreview" class="ais-preview" data-state="empty">AI's reply will appear here.</div>
+          </div>
+
+          <div class="ais-save-bar">
+            <span id="aisSaveStatus" class="ais-save-status" hidden>Saved</span>
+            <button type="button" id="aisSaveBtn" class="ais-btn">Save settings</button>
+          </div>
+        </div>
+      </section>
+
       <!-- ─── Instagram DMs Inbox ─────────────────────────────────────────── -->
       <section class="grid" id="inbox" data-route-section="inbox" hidden>
         <div class="ibx-page" style="grid-column: span 12;">
@@ -19376,6 +19654,15 @@
       };
       SECTION_ON_ENTER.kb = SECTION_ON_ENTER.knowledge;
 
+      // Lead intake — lazy-mount the iframe on first visit so we don't
+      // pay the request on every dashboard load. data-src → src.
+      SECTION_ON_ENTER.leadIntake = function loadLeadIntakeSection() {
+        var fr = document.getElementById("leadIntakeFrame");
+        if (!fr) return;
+        var src = fr.getAttribute("data-src");
+        if (src && fr.getAttribute("src") !== src) fr.setAttribute("src", src);
+      };
+
       // Engagement page: lazy-loads web/src/routes/engagement.js then calls
       // window.loadEngagementSection to fetch sequences + render funnel stages.
       SECTION_ON_ENTER.engagement = async function loadEngagementSectionEntry() {
@@ -21810,6 +22097,8 @@
       inbox:     { title: "Inbox",         section: "inbox" },
       sequenceEdit: { title: "Sequence",   section: "sequenceEdit" },
       engagement: { title: "Engagement",   section: "engagement" },
+      aiSettings: { title: "AI Settings",  section: "aiSettings" },
+      leadIntake: { title: "Lead intake",  section: "leadIntake" },
     };
 
     // ─────────── Section-data loaders (lazy, memoized) ───────────
@@ -29735,11 +30024,18 @@
       if (!badge || !panel || !label) return;
 
       const MODE_CACHE_KEY = "dashboard.ai_mode";
+      const CADENCE_CACHE_KEY = "dashboard.ai_cadence";
 
       const LABELS = {
         "ai_always": "Always",
         "hybrid":    "When slow",
         "i_respond": "Off",
+      };
+
+      const cadenceEls = {
+        first_reminder_minutes:  document.getElementById("amcFirst"),
+        second_reminder_minutes: document.getElementById("amcSecond"),
+        ai_takeover_minutes:     document.getElementById("amcTakeover"),
       };
 
       function render(mode) {
@@ -29751,13 +30047,33 @@
         badge.setAttribute("aria-expanded", panel.dataset.open === "true" ? "true" : "false");
       }
 
+      function renderCadence(c) {
+        if (!c) return;
+        Object.keys(cadenceEls).forEach(k => {
+          const el = cadenceEls[k];
+          if (!el) return;
+          const v = String(c[k] || "");
+          // Only set if option exists; else closest match.
+          const exists = Array.from(el.options).some(o => o.value === v);
+          if (exists) el.value = v;
+        });
+      }
+
       function _renderModeFromCache() {
         const cached = localStorage.getItem(MODE_CACHE_KEY);
         if (cached) render(cached);
+        try {
+          const c = JSON.parse(localStorage.getItem(CADENCE_CACHE_KEY) || "null");
+          if (c) renderCadence(c);
+        } catch (_) {}
       }
 
       function _writeModeCache(mode) {
         try { localStorage.setItem(MODE_CACHE_KEY, mode); } catch (_) {}
+      }
+
+      function _writeCadenceCache(c) {
+        try { localStorage.setItem(CADENCE_CACHE_KEY, JSON.stringify(c)); } catch (_) {}
       }
 
       function setPanelOpen(open) {
@@ -29767,7 +30083,6 @@
         badge.setAttribute("aria-expanded", val);
       }
 
-      // Instantly render from cache (no "…" flash on repeat visits)
       _renderModeFromCache();
 
       async function load() {
@@ -29778,6 +30093,10 @@
           const mode = p.mode || "hybrid";
           render(mode);
           _writeModeCache(mode);
+          if (p.reminder_cadence) {
+            renderCadence(p.reminder_cadence);
+            _writeCadenceCache(p.reminder_cadence);
+          }
         } catch (_) {}
       }
 
@@ -29787,16 +30106,63 @@
       });
 
       document.addEventListener("click", (e) => {
-        if (!panel.contains(e.target) && !badge.contains(e.target)) {
+        const modal = document.getElementById("aiModeConfirmModal");
+        const inModal = modal && modal.contains(e.target);
+        if (!panel.contains(e.target) && !badge.contains(e.target) && !inModal) {
           setPanelOpen(false);
         }
       });
 
+      // Confirm modal helpers — Promise that resolves true/false.
+      const modal = document.getElementById("aiModeConfirmModal");
+      function showConfirm() {
+        return new Promise(resolve => {
+          if (!modal) return resolve(true);
+          modal.classList.add("is-open");
+          const cleanup = (val) => {
+            modal.classList.remove("is-open");
+            modal.querySelectorAll("[data-amc-close]").forEach(b =>
+              b.removeEventListener("click", onCancel));
+            const yes = document.getElementById("aiModeConfirmYes");
+            if (yes) yes.removeEventListener("click", onYes);
+            resolve(val);
+          };
+          const onCancel = () => cleanup(false);
+          const onYes    = () => cleanup(true);
+          modal.querySelectorAll("[data-amc-close]").forEach(b =>
+            b.addEventListener("click", onCancel));
+          const yes = document.getElementById("aiModeConfirmYes");
+          if (yes) yes.addEventListener("click", onYes);
+        });
+      }
+
+      async function persist(mode) {
+        const cadence = {
+          first_reminder_minutes:  parseInt(cadenceEls.first_reminder_minutes?.value || "30", 10),
+          second_reminder_minutes: parseInt(cadenceEls.second_reminder_minutes?.value || "120", 10),
+          ai_takeover_minutes:     parseInt(cadenceEls.ai_takeover_minutes?.value || "360", 10),
+        };
+        const res = await fetch("/me/ai/policy", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mode, reminder_cadence: cadence }),
+        });
+        if (!res.ok) throw new Error("save_failed");
+        _writeCadenceCache(cadence);
+      }
+
       panel.querySelectorAll(".ai-mode-opt").forEach(btn => {
         btn.addEventListener("click", async () => {
           const mode = btn.dataset.mode;
-          // Optimistic — render immediately, persist in background.
           const prev = (badge.dataset.mode || "hybrid");
+
+          // Confirmation: only when escalating TO ai_always from a less-aggressive mode.
+          if (mode === "ai_always" && prev !== "ai_always") {
+            const ok = await showConfirm();
+            if (!ok) return;  // user cancelled; leave UI as-is.
+          }
+
           render(mode);
           _writeModeCache(mode);
           panel.dataset.open = "false";
@@ -29805,22 +30171,153 @@
           setTimeout(() => badge.classList.remove("is-confirming"), 350);
 
           try {
-            const res = await fetch("/me/ai/policy", {
-              method: "POST",
-              credentials: "same-origin",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ mode }),
-            });
-            if (!res.ok) throw new Error("save_failed");
+            await persist(mode);
           } catch (_) {
-            // Revert on failure — rare, but the UI shouldn't lie.
             render(prev);
             _writeModeCache(prev);
           }
         });
       });
 
+      // Cadence change → save in background under current mode.
+      Object.values(cadenceEls).forEach(el => {
+        if (!el) return;
+        el.addEventListener("change", async () => {
+          try { await persist(badge.dataset.mode || "hybrid"); } catch (_) {}
+        });
+      });
+
+      // Configure AI → navigate to the AI Settings page.
+      const cfgLink = document.getElementById("aiModeConfigLink");
+      if (cfgLink) {
+        cfgLink.addEventListener("click", () => {
+          setPanelOpen(false);
+          window.location.hash = "#aiSettings";
+        });
+      }
+
       load();
+    })();
+
+    (function aiSettingsPageInit() {
+      const sec = document.getElementById("aiSettings");
+      if (!sec) return;
+      const toneRow   = sec.querySelector("#aisToneRow");
+      const ttKnow    = sec.querySelector("#aisThingsToKnow");
+      const ttAvoid   = sec.querySelector("#aisThingsToAvoid");
+      const testInput = sec.querySelector("#aisTestInput");
+      const testBtn   = sec.querySelector("#aisTestBtn");
+      const preview   = sec.querySelector("#aisTestPreview");
+      const saveBtn   = sec.querySelector("#aisSaveBtn");
+      const saveStatus= sec.querySelector("#aisSaveStatus");
+      if (!toneRow || !ttKnow || !ttAvoid || !testBtn || !saveBtn) return;
+
+      let _loaded = false;
+      let _selectedTone = "friendly";
+
+      function setTone(tone) {
+        _selectedTone = tone || "friendly";
+        toneRow.querySelectorAll(".ais-tone-opt").forEach(b => {
+          b.classList.toggle("is-active", b.dataset.tone === _selectedTone);
+        });
+      }
+
+      toneRow.querySelectorAll(".ais-tone-opt").forEach(b => {
+        b.addEventListener("click", () => setTone(b.dataset.tone));
+      });
+
+      async function loadPolicy() {
+        if (_loaded) return;
+        try {
+          const res = await fetch("/me/ai/policy", { credentials: "same-origin" });
+          if (!res.ok) return;
+          const p = await res.json();
+          setTone(p.tone || "friendly");
+          ttKnow.value  = p.things_to_know  || "";
+          ttAvoid.value = p.things_to_avoid || "";
+          _loaded = true;
+        } catch (_) {}
+      }
+
+      async function saveSettings() {
+        saveBtn.disabled = true;
+        saveStatus.hidden = true;
+        try {
+          const res = await fetch("/me/ai/policy", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              tone:            _selectedTone,
+              things_to_know:  ttKnow.value || "",
+              things_to_avoid: ttAvoid.value || "",
+            }),
+          });
+          if (!res.ok) throw new Error("save_failed");
+          saveStatus.textContent = "Saved";
+          saveStatus.style.color = "#16a34a";
+          saveStatus.hidden = false;
+          setTimeout(() => { saveStatus.hidden = true; }, 2400);
+        } catch (_) {
+          saveStatus.textContent = "Couldn't save — try again";
+          saveStatus.style.color = "#dc2626";
+          saveStatus.hidden = false;
+        } finally {
+          saveBtn.disabled = false;
+        }
+      }
+      saveBtn.addEventListener("click", saveSettings);
+
+      async function runTest() {
+        const msg = (testInput.value || "").trim();
+        if (!msg) {
+          preview.dataset.state = "empty";
+          preview.textContent = "Type a message above first.";
+          return;
+        }
+        // Save current settings first so the test reflects unsaved edits.
+        try { await saveSettings(); } catch (_) {}
+        testBtn.disabled = true;
+        preview.dataset.state = "loading";
+        preview.textContent = "Generating…";
+        try {
+          const res = await fetch("/me/ai/test-reply", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: msg }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            preview.dataset.state = "declined";
+            preview.textContent = "Couldn't generate a reply: " + (data.error || res.status);
+            return;
+          }
+          if (data.declined) {
+            preview.dataset.state = "declined";
+            preview.textContent = "AI declined — it would send this one to you to handle.";
+            return;
+          }
+          preview.dataset.state = "ok";
+          preview.textContent = data.reply || "(empty reply — try again)";
+        } catch (e) {
+          preview.dataset.state = "declined";
+          preview.textContent = "Network error — try again.";
+        } finally {
+          testBtn.disabled = false;
+        }
+      }
+      testBtn.addEventListener("click", runTest);
+      testInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); runTest(); }
+      });
+
+      // Lazy-load when the section first becomes visible (hash routing).
+      window.addEventListener("hashchange", () => {
+        if ((location.hash || "").replace(/^#/, "") === "aiSettings") loadPolicy();
+      });
+      // Cold-load case: page loaded directly at #aiSettings.
+      if ((location.hash || "").replace(/^#/, "") === "aiSettings") loadPolicy();
     })();
 
     (function ownerPhoneRowInit() {

@@ -100,45 +100,45 @@
 <body>
 <div class="wrap">
   <div class="hero">
-    <h1>How do customers reach you?</h1>
-    <p>Pick how leads come in &mdash; a form on your site, your email, your phone, or all three. Every new lead gets a welcome message right away, automatically.</p>
+    <h1>Where do leads come from?</h1>
+    <p>Pick one. We do the rest.</p>
   </div>
 
   <div class="channels">
     <div class="ch" data-tone="form" id="ch-form">
       <div class="icon" aria-hidden="true">📝</div>
-      <h3>Website form</h3>
-      <p>People fill out a form on your site or a link you share.</p>
+      <h3>Form</h3>
+      <p>People fill it out. You get the lead.</p>
       <span class="pill pill-on" id="ch-form-pill" hidden><span class="dot"></span><span id="ch-form-pill-text">Ready</span></span>
-      <span class="pill pill-off" id="ch-form-pill-off"><span class="dot"></span>Not set up yet</span>
-      <button class="cta" id="ch-form-cta">Set up form</button>
+      <span class="pill pill-off" id="ch-form-pill-off"><span class="dot"></span>Not set up</span>
+      <button class="cta" id="ch-form-cta">Make a form</button>
       <div class="stat" id="ch-form-meta"></div>
     </div>
 
     <div class="ch" data-tone="email" id="ch-email">
       <div class="icon" aria-hidden="true">✉️</div>
       <h3>Email</h3>
-      <p>People email you. We&rsquo;ll watch your inbox and turn each one into a lead.</p>
+      <p>People email you. We catch it.</p>
       <span class="pill pill-on" id="ch-email-pill" hidden><span class="dot"></span>Connected</span>
       <span class="pill pill-off" id="ch-email-pill-off"><span class="dot"></span>Not connected</span>
-      <button class="cta" id="ch-email-cta">Connect Gmail</button>
+      <button class="cta" id="ch-email-cta">Connect</button>
       <div class="stat" id="ch-email-meta"></div>
     </div>
 
     <div class="ch" data-tone="phone" id="ch-phone">
       <div class="icon" aria-hidden="true">📱</div>
-      <h3>Phone (text)</h3>
-      <p>People text your business number. We grab the message and start your flow.</p>
+      <h3>Texts</h3>
+      <p>People text you. You get the lead.</p>
       <span class="pill pill-on" id="ch-phone-pill" hidden><span class="dot"></span>Ready</span>
-      <span class="pill pill-off" id="ch-phone-pill-off"><span class="dot"></span>Not connected</span>
-      <button class="cta" id="ch-phone-cta">Set up phone</button>
+      <span class="pill pill-off" id="ch-phone-pill-off"><span class="dot"></span>Not set up</span>
+      <button class="cta" id="ch-phone-cta">Set up</button>
       <div class="stat" id="ch-phone-meta"></div>
     </div>
 
     <div class="ch" data-tone="dm" aria-disabled="true">
       <div class="icon" aria-hidden="true">💬</div>
-      <h3>Instagram / Facebook DM</h3>
-      <p>Coming soon. People who DM your social account will become leads.</p>
+      <h3>DMs</h3>
+      <p>Soon!</p>
       <span class="pill pill-soon"><span class="dot"></span>Coming soon</span>
     </div>
   </div>
@@ -146,16 +146,15 @@
   <div class="section-h">
     <div>
       <h2>Your forms</h2>
-      <p class="sub">Each form gets its own link you can paste anywhere.</p>
     </div>
-    <button class="btn btn-primary" id="top-create" hidden>+ New form</button>
+    <button class="btn btn-primary" id="top-create" hidden>+ New</button>
   </div>
   <div class="panel" id="forms-panel">
     <div id="forms-empty" class="empty" hidden>
       <div class="big">📝</div>
       <h3>No forms yet</h3>
-      <p>Create your first form. It takes about a minute.</p>
-      <button class="btn btn-primary" id="empty-create">Create your first form</button>
+      <p>Make one. It's quick.</p>
+      <button class="btn btn-primary" id="empty-create">Make a form</button>
     </div>
     <div id="forms-list" hidden></div>
   </div>
@@ -199,9 +198,10 @@
         topCreate.hidden = !ready;
         topCreate.onclick = function(){ openBuilder(); };
       }
+      var totalLeads = forms.reduce(function(a,f){ return a + (f.lead_count || 0); }, 0);
       $("ch-form-meta").textContent = ready
-        ? ((forms.reduce(function(a,f){ return a + (f.lead_count || 0); }, 0)) + " leads captured")
-        : "Each form gets its own link to share.";
+        ? (totalLeads + " lead" + (totalLeads === 1 ? "" : "s"))
+        : "";
       if (forms.length === 0) { $("forms-empty").hidden = false; $("forms-list").hidden = true; renderEmpty(); }
       else { $("forms-empty").hidden = true; $("forms-list").hidden = false; renderList(forms); }
     });
@@ -223,21 +223,21 @@
           emCta.onclick = function(ev){ ev.stopPropagation(); openEmailModal(em); };
         }
         $("ch-email-meta").textContent = em.ready
-          ? (em.connected_email + " · " + (em.leads_30d || 0) + " leads / 30d")
-          : "Takes 10 seconds.";
+          ? (em.connected_email + " · " + (em.leads_30d || 0) + " lead" + (em.leads_30d === 1 ? "" : "s"))
+          : "";
         $("ch-email").onclick = function(){ openEmailModal(em); };
 
         // Phone card
         setPill("ch-phone-pill", "ch-phone-pill-off", !!ph.ready, "Ready");
         var phCta = $("ch-phone-cta");
         if (phCta) {
-          phCta.textContent = ph.ready ? "Show webhook" : "Set up phone";
+          phCta.textContent = ph.ready ? "Show link" : "Set up";
           phCta.classList.toggle("cta-secondary", !!ph.ready);
           phCta.onclick = function(ev){ ev.stopPropagation(); openPhoneModal(ph); };
         }
         $("ch-phone-meta").textContent = ph.ready
-          ? ((ph.phone_number || "") + " · " + (ph.leads_30d || 0) + " leads / 30d")
-          : "Needs a Twilio number on your account.";
+          ? ((ph.phone_number || "") + " · " + (ph.leads_30d || 0) + " lead" + (ph.leads_30d === 1 ? "" : "s"))
+          : "";
         $("ch-phone").onclick = function(){ openPhoneModal(ph); };
       })
       .catch(function(){
@@ -249,15 +249,15 @@
     var bg = document.createElement("div");
     bg.style = "position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9000;padding:20px";
     var body = em.ready
-      ? '<p>Connected as <strong>' + esc(em.connected_email) + '</strong>.</p>'
-        + '<p class="meta" style="color:var(--sub)">When someone emails this address, we capture them as a lead within 30 seconds and your First Hello flow runs automatically. Polling rides on the same Gmail integration you already use for outreach.</p>'
-        + '<p class="meta" style="color:var(--sub)">No setup needed. To stop receiving leads from this channel, disconnect Gmail in your account settings.</p>'
-      : '<p>Connect your Gmail account to capture inbound emails as leads. We use the same OAuth integration as outbound email — no extra config.</p>'
-        + '<p style="margin-top:14px"><a class="btn btn-primary" href="' + esc(em.connect_url || '/auth/google/start') + '">Connect Gmail</a></p>';
-    bg.innerHTML = '<div style="background:#fff;border-radius:12px;max-width:520px;width:100%;padding:22px">'
-      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
-      +   '<h2 style="margin:0;font-size:18px">Email lead intake</h2>'
-      +   '<button data-x style="border:0;background:transparent;font-size:22px;cursor:pointer">&times;</button>'
+      ? '<div style="font-size:36px;text-align:center;margin-bottom:8px">✅</div>'
+        + '<p style="text-align:center;margin:0 0 4px;font-size:16px"><strong>' + esc(em.connected_email) + '</strong></p>'
+        + '<p style="text-align:center;color:var(--sub);margin:0">New emails turn into leads automatically.</p>'
+      : '<div style="font-size:36px;text-align:center;margin-bottom:8px">📧</div>'
+        + '<p style="text-align:center;margin:0 0 14px">Sign in with Gmail. We catch new emails as leads.</p>'
+        + '<div style="text-align:center"><a class="btn btn-primary" target="_top" href="' + esc(em.connect_url || '/auth/google/start') + '">Sign in with Google</a></div>';
+    bg.innerHTML = '<div style="background:#fff;border-radius:14px;max-width:440px;width:100%;padding:24px">'
+      + '<div style="display:flex;justify-content:flex-end;margin-bottom:-8px">'
+      +   '<button data-x style="border:0;background:transparent;font-size:24px;cursor:pointer;color:#888;line-height:1">&times;</button>'
       + '</div>' + body + '</div>';
     document.body.appendChild(bg);
     var close = function(){ try { document.body.removeChild(bg); } catch(_){} };
@@ -269,24 +269,29 @@
     bg.style = "position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9000;padding:20px";
     var body;
     if (!ph.ready) {
-      body = '<p>No Twilio number is assigned to your account yet. Once one is provisioned, return here and we\'ll show the webhook URL to paste into Twilio.</p>';
+      body = '<div style="font-size:36px;text-align:center;margin-bottom:8px">📱</div>'
+        + '<p style="text-align:center;margin:0">You need a phone number first.</p>'
+        + '<p style="text-align:center;color:var(--sub);margin:6px 0 0;font-size:13px">Talk to your admin to get one.</p>';
     } else {
       var url = ph.webhook_url || (location.origin + "/twilio/sms");
-      body = '<p>Your number: <strong>' + esc(ph.phone_number) + '</strong></p>'
-        + '<p>Paste this webhook URL into Twilio so inbound SMS becomes leads:</p>'
-        + '<div style="background:#f7f7f8;border:1px solid var(--line);border-radius:8px;padding:10px;font-family:Menlo,monospace;font-size:13px;word-break:break-all">' + esc(url) + '</div>'
-        + '<button class="btn btn-primary" data-cp style="margin-top:10px">Copy URL</button>'
-        + '<ol class="meta" style="color:var(--sub);margin-top:14px;padding-left:18px;line-height:1.6">'
-        +   '<li>Twilio Console → Phone Numbers → Active numbers → click <strong>' + esc(ph.phone_number) + '</strong></li>'
-        +   '<li>Scroll to <strong>Messaging</strong> → <em>A MESSAGE COMES IN</em> → set Webhook to the URL above</li>'
-        +   '<li>Method: <strong>HTTP POST</strong> · Save</li>'
-        +   '<li>Send a test text to your number — it should appear in your dashboard within seconds.</li>'
-        + '</ol>';
+      body = '<div style="font-size:36px;text-align:center;margin-bottom:8px">📱</div>'
+        + '<p style="text-align:center;margin:0 0 4px;font-size:16px"><strong>' + esc(ph.phone_number) + '</strong></p>'
+        + '<p style="text-align:center;color:var(--sub);margin:0 0 18px">Paste this link in Twilio so we get the texts:</p>'
+        + '<div style="background:#f5f7fa;border:1px solid var(--line);border-radius:10px;padding:12px;font-family:Menlo,monospace;font-size:12.5px;word-break:break-all;text-align:center">' + esc(url) + '</div>'
+        + '<div style="text-align:center;margin-top:12px"><button class="btn btn-primary" data-cp>Copy link</button></div>'
+        + '<details style="margin-top:18px"><summary style="cursor:pointer;color:var(--accent);font-size:13px;font-weight:600">How? Step by step</summary>'
+        +   '<ol style="color:var(--sub);margin-top:10px;padding-left:20px;line-height:1.7;font-size:13px">'
+        +     '<li>Open Twilio. Click your number.</li>'
+        +     '<li>Find <strong>Messaging</strong>.</li>'
+        +     '<li>In <em>A message comes in</em>, paste the link.</li>'
+        +     '<li>Pick <strong>HTTP POST</strong>. Save.</li>'
+        +     '<li>Text your number to test it.</li>'
+        +   '</ol>'
+        + '</details>';
     }
-    bg.innerHTML = '<div style="background:#fff;border-radius:12px;max-width:560px;width:100%;padding:22px">'
-      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
-      +   '<h2 style="margin:0;font-size:18px">Phone (SMS) lead intake</h2>'
-      +   '<button data-x style="border:0;background:transparent;font-size:22px;cursor:pointer">&times;</button>'
+    bg.innerHTML = '<div style="background:#fff;border-radius:14px;max-width:480px;width:100%;padding:24px">'
+      + '<div style="display:flex;justify-content:flex-end;margin-bottom:-8px">'
+      +   '<button data-x style="border:0;background:transparent;font-size:24px;cursor:pointer;color:#888;line-height:1">&times;</button>'
       + '</div>' + body + '</div>';
     document.body.appendChild(bg);
     var close = function(){ try { document.body.removeChild(bg); } catch(_){} };
@@ -331,20 +336,20 @@
     $("row-create").onclick = function(){ openBuilder(); };
   }
   function deleteForm(f){
-    if (!confirm("Delete \"" + f.name + "\"? Existing leads stay; the public link will 404.")) return;
+    if (!confirm("Delete \"" + f.name + "\"?")) return;
     fetch("/me/forms/" + f.id, { method:"DELETE", credentials:"same-origin" })
       .then(function(){ toast("Deleted"); loadForms(); });
   }
   var BUILTINS = [
-    {key:"name",        label:"Your name",    type:"text"},
-    {key:"email",       label:"Email",        type:"email"},
-    {key:"phone",       label:"Phone",        type:"phone"},
-    {key:"address",     label:"Address",      type:"address"},
-    {key:"message",     label:"Message",      type:"textarea"},
-    {key:"service",     label:"Service type", type:"select", options:["Service A","Service B"]},
-    {key:"date_needed", label:"Date needed",  type:"date"},
+    {key:"name",        label:"Their name",   type:"text"},
+    {key:"email",       label:"Their email",  type:"email"},
+    {key:"phone",       label:"Their phone",  type:"phone"},
+    {key:"address",     label:"Their address",type:"address"},
+    {key:"message",     label:"What they need",type:"textarea"},
+    {key:"service",     label:"What service", type:"select", options:["Service A","Service B"]},
+    {key:"date_needed", label:"When",         type:"date"},
     {key:"budget",      label:"Budget",       type:"text"},
-    {key:"company",     label:"Company",      type:"text"},
+    {key:"company",     label:"Their company",type:"text"},
   ];
 
   function openBuilder(form){
@@ -375,26 +380,20 @@
     function renderControls(){
       var c = $("b-controls");
       c.innerHTML =
-        '<h2 style="margin:0 0 12px">' + (editing ? "Edit form" : "New form") + '</h2>'
-        + '<label>Form name</label><input id="b-name" value="' + esc(state.name) + '" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px"/>'
-        + '<label style="display:block;margin-top:12px">When this form is submitted, run:</label>'
-        + '<select id="b-flow" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px">'
-        +   '<option value="default">Default flow</option>'
-        + '</select>'
-        + '<h3 style="margin:18px 0 6px;font-size:14px">Built-in fields</h3>'
+        '<h2 style="margin:0 0 14px">' + (editing ? "Edit form" : "New form") + '</h2>'
+        + '<label>Name it</label><input id="b-name" value="' + esc(state.name) + '" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px"/>'
+        + '<h3 style="margin:18px 0 6px;font-size:14px">What to ask</h3>'
         + '<div id="b-builtins"></div>'
-        + '<h3 style="margin:18px 0 6px;font-size:14px">Custom fields</h3>'
-        + '<div id="b-customs"></div>'
-        + '<button class="btn" id="b-add-custom" style="margin-top:8px">+ Add custom field</button>'
-        + '<label style="display:block;margin-top:18px">Submit button text</label>'
+        + '<div id="b-customs" style="margin-top:8px"></div>'
+        + '<button class="btn" id="b-add-custom" style="margin-top:8px">+ Add my own</button>'
+        + '<label style="display:block;margin-top:18px">Button text</label>'
         + '<input id="b-submit-text" value="' + esc(state.submit_text) + '" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px"/>'
-        + '<label style="display:block;margin-top:12px">Thank-you message</label>'
-        + '<textarea id="b-thanks" rows="3" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px">' + esc(state.thank_you) + '</textarea>'
+        + '<label style="display:block;margin-top:12px">Thank-you note</label>'
+        + '<textarea id="b-thanks" rows="2" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px">' + esc(state.thank_you) + '</textarea>'
         + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px">'
         +   '<button class="btn" id="b-cancel">Cancel</button>'
-        +   '<button class="btn btn-primary" id="b-save">' + (editing ? "Save" : "Create form") + '</button>'
+        +   '<button class="btn btn-primary" id="b-save">' + (editing ? "Save" : "Make it") + '</button>'
         + '</div>';
-      $("b-flow").value = state.flow_id;
 
       // Built-in toggles
       var bi = $("b-builtins");
@@ -458,19 +457,19 @@
       });
 
       $("b-add-custom").onclick = function(){
-        var label = prompt("Field label?");
+        var label = prompt("What do you want to ask?");
         if (!label) return;
-        var t = prompt("Type? (text or select)", "text");
-        if (t !== "text" && t !== "select") return;
+        var multi = confirm("Do they pick from a list?\n\nOK = list of choices.\nCancel = they type an answer.");
         var options = [];
-        if (t === "select") {
-          var raw = prompt("Options? (comma-separated)", "Option A, Option B");
-          options = (raw || "").split(",").map(function(s){ return s.trim(); }).filter(Boolean);
+        if (multi) {
+          var raw = prompt("List the choices, one per line:", "Choice A\nChoice B\nChoice C");
+          options = (raw || "").split(/[,\n]+/).map(function(s){ return s.trim(); }).filter(Boolean);
           if (options.length === 0) return;
         }
         state.fields.push({
           key: "custom_" + Math.random().toString(36).slice(2,8),
-          label: label, type: t, required: false, builtin: false,
+          label: label, type: multi ? "select" : "text",
+          required: false, builtin: false,
           options: options,
         });
         renderAll();
@@ -483,7 +482,6 @@
       $("b-name").oninput        = function(){ state.name        = $("b-name").value;        renderPreview(); };
       $("b-submit-text").oninput = function(){ state.submit_text = $("b-submit-text").value; renderPreview(); };
       $("b-thanks").oninput      = function(){ state.thank_you   = $("b-thanks").value;      renderPreview(); };
-      $("b-flow").onchange       = function(){ state.flow_id     = $("b-flow").value; };
     }
 
     function renderPreview(){
@@ -556,48 +554,38 @@
   }
 
   function showFlowPrompt(form, onContinue){
-    // Friendly post-save modal: explains what the form does on submit
-    // and lets the user pick the default flow or jump to the flow
-    // builder to customize. v1 has just one option ("Default flow")
-    // since multiple flows aren't yet exposed; the second card is a
-    // link to /dashboard#outreach where the Flow Builder lives.
+    // Post-save modal: confirms what happens next in plain words.
+    // v1 has one flow ("welcome flow"); the "Pick a different one"
+    // card links to /dashboard#outreach for the Flow Builder.
     var bg = document.createElement("div");
     bg.style = "position:fixed;inset:0;background:rgba(10,15,25,.55);display:flex;align-items:center;justify-content:center;z-index:9000;padding:20px";
     bg.innerHTML = ''
-      + '<div style="background:#fff;border-radius:14px;max-width:560px;width:100%;padding:26px">'
-      +   '<div style="font-size:36px;text-align:center;margin-bottom:8px">🎉</div>'
-      +   '<h2 style="margin:0 0 4px;text-align:center;font-size:20px">Your form is ready!</h2>'
-      +   '<p style="margin:0 0 18px;text-align:center;color:var(--sub);font-size:14px">'
-      +     'When someone fills out <strong>' + esc(form.name) + '</strong>, what should happen?'
+      + '<div style="background:#fff;border-radius:14px;max-width:480px;width:100%;padding:26px">'
+      +   '<div style="font-size:42px;text-align:center;margin-bottom:6px">🎉</div>'
+      +   '<h2 style="margin:0 0 6px;text-align:center;font-size:22px">Done!</h2>'
+      +   '<p style="margin:0 0 20px;text-align:center;color:var(--sub);font-size:14px">'
+      +     'When someone fills it out, what next?'
       +   '</p>'
-      +   '<div data-fp-card style="border:2px solid var(--accent);background:#f1f7fd;border-radius:12px;padding:14px 16px;cursor:pointer;margin-bottom:10px;">'
-      +     '<div style="display:flex;align-items:center;gap:12px">'
-      +       '<div style="font-size:24px">⚡</div>'
-      +       '<div style="flex:1">'
-      +         '<div style="font-weight:600;font-size:15px;margin-bottom:2px">Send my welcome flow <span style="color:var(--accent);font-size:11px;background:#dbe8f7;padding:2px 8px;border-radius:99px;margin-left:4px">Recommended</span></div>'
-      +         '<div style="color:var(--sub);font-size:12.5px">A welcome text or email goes out right away. We&rsquo;ll handle quiet hours and pick the best channel automatically.</div>'
-      +       '</div>'
+      +   '<div data-fp-card style="border:2px solid var(--accent);background:#f1f7fd;border-radius:12px;padding:16px;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;gap:14px">'
+      +     '<div style="font-size:28px">💬</div>'
+      +     '<div style="flex:1">'
+      +       '<div style="font-weight:600;font-size:15px">Say hi back</div>'
+      +       '<div style="color:var(--sub);font-size:12.5px;margin-top:2px">We text or email them. Right away.</div>'
       +     '</div>'
+      +     '<div style="color:var(--accent);font-weight:600;font-size:12px">Pick this</div>'
       +   '</div>'
-      +   '<a data-fp-customize href="/dashboard#outreach" style="display:block;border:1px solid var(--line);background:#fff;border-radius:12px;padding:14px 16px;text-decoration:none;color:inherit;cursor:pointer;">'
-      +     '<div style="display:flex;align-items:center;gap:12px">'
-      +       '<div style="font-size:24px">🛠️</div>'
-      +       '<div style="flex:1">'
-      +         '<div style="font-weight:600;font-size:15px;margin-bottom:2px">I want something different</div>'
-      +         '<div style="color:var(--sub);font-size:12.5px">Open the Flow Builder and customize what happens (wait, ask, branch, send specific messages).</div>'
-      +       '</div>'
+      +   '<a data-fp-customize href="/dashboard#outreach" target="_top" style="border:1px solid var(--line);background:#fff;border-radius:12px;padding:16px;text-decoration:none;color:inherit;cursor:pointer;display:flex;align-items:center;gap:14px">'
+      +     '<div style="font-size:28px">🛠️</div>'
+      +     '<div style="flex:1">'
+      +       '<div style="font-weight:600;font-size:15px">I&rsquo;ll pick later</div>'
+      +       '<div style="color:var(--sub);font-size:12.5px;margin-top:2px">Open Flow Builder.</div>'
       +     '</div>'
       +   '</a>'
-      +   '<div style="display:flex;justify-content:flex-end;margin-top:16px">'
-      +     '<button class="btn" data-fp-skip>Skip for now</button>'
-      +   '</div>'
       + '</div>';
     document.body.appendChild(bg);
     var done = function(){ try { document.body.removeChild(bg); } catch(_){} if (onContinue) onContinue(); };
     bg.querySelector("[data-fp-card]").onclick = done;
-    bg.querySelector("[data-fp-skip]").onclick = done;
-    // The "customize" anchor navigates to /dashboard#outreach naturally.
-    // Don't intercept its click.
+    // The "customize" anchor navigates naturally.
     bg.addEventListener("click", function(e){ if (e.target === bg) done(); });
   }
 
@@ -605,18 +593,19 @@
     var url = location.origin + "/f/" + form.slug;
     var bg = document.createElement("div");
     bg.style = "position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9000;padding:20px";
-    bg.innerHTML = '<div style="background:#fff;border-radius:12px;max-width:520px;width:100%;padding:22px">'
-      + '<h2 style="margin:0 0 6px">Form ready</h2>'
-      + '<p class="meta" style="color:var(--sub);margin:0 0 14px">Share this link in your Google listing, Facebook page, or text it to customers.</p>'
-      + '<div style="background:#f7f7f8;border:1px solid var(--line);border-radius:8px;padding:10px;font-family:Menlo,monospace;font-size:13px;word-break:break-all">' + esc(url) + '</div>'
+    bg.innerHTML = '<div style="background:#fff;border-radius:14px;max-width:480px;width:100%;padding:24px">'
+      + '<div style="font-size:36px;text-align:center;margin-bottom:6px">🔗</div>'
+      + '<h2 style="margin:0 0 4px;text-align:center">Here\'s your link</h2>'
+      + '<p style="text-align:center;color:var(--sub);margin:0 0 16px;font-size:13.5px">Share it. Text it. Put it on your site.</p>'
+      + '<div style="background:#f5f7fa;border:1px solid var(--line);border-radius:10px;padding:12px;font-family:Menlo,monospace;font-size:12.5px;word-break:break-all;text-align:center">' + esc(url) + '</div>'
       + '<div style="display:flex;gap:8px;margin-top:14px">'
-      +   '<button class="btn btn-primary" id="ss-copy">Copy link</button>'
-      +   '<button class="btn" id="ss-open">Open preview</button>'
-      +   '<button class="btn" style="margin-left:auto" id="ss-close">Done</button>'
+      +   '<button class="btn btn-primary" id="ss-copy" style="flex:1">Copy</button>'
+      +   '<button class="btn" id="ss-open" style="flex:1">Open</button>'
+      +   '<button class="btn" id="ss-close" style="flex:1">Done</button>'
       + '</div>'
-      + '<details style="margin-top:14px"><summary style="cursor:pointer">Embed on your website</summary>'
-      +   '<p class="meta" style="color:var(--sub);margin:8px 0 4px">Paste this iframe wherever you want the form to appear:</p>'
-      +   '<pre style="background:#f7f7f8;border:1px solid var(--line);border-radius:6px;padding:8px;overflow:auto;font-size:12px">'
+      + '<details style="margin-top:18px"><summary style="cursor:pointer;color:var(--accent);font-size:13px;font-weight:600">Put it on your website</summary>'
+      +   '<p style="color:var(--sub);margin:10px 0 6px;font-size:13px">Send this to your web person:</p>'
+      +   '<pre style="background:#f5f7fa;border:1px solid var(--line);border-radius:6px;padding:8px;overflow:auto;font-size:11.5px">'
       +     esc('<iframe src="' + url + '" width="100%" height="600" style="border:0"></iframe>')
       +   '</pre>'
       + '</details>'
