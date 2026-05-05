@@ -695,14 +695,10 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
     data.fallback || activity.defaultFallback || "ai");
   const [globalAiMode, setGlobalAiMode] = React.useState(null);
   const [globalCadence, setGlobalCadence] = React.useState(null);
-  // Nudge config — also lives in ai_policy.json. Editing here saves
-  // to the global policy (same single source of truth as the top-right).
-  const [nudgeChannel,    setNudgeChannel]    = React.useState("sms");
-  const [firstNudgeBody,  setFirstNudgeBody]  = React.useState("");
-  const [secondNudgeBody, setSecondNudgeBody] = React.useState("");
   React.useEffect(() => {
     if (!isReply) return;
     let cancelled = false;
+    // Initial fetch when the drawer opens.
     (async () => {
       try {
         const r = await fetch("/me/ai/policy", { credentials: "same-origin" });
@@ -711,18 +707,16 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
         if (cancelled) return;
         setGlobalAiMode((p && p.mode) || "hybrid");
         setGlobalCadence((p && p.reminder_cadence) || null);
-        if (p && p.nudge_channel) setNudgeChannel(p.nudge_channel);
-        if (p && typeof p.first_nudge_body  === "string") setFirstNudgeBody(p.first_nudge_body);
-        if (p && typeof p.second_nudge_body === "string") setSecondNudgeBody(p.second_nudge_body);
       } catch (_) {}
     })();
+    // Live updates: the top-right control fires `ai-policy:changed`
+    // whenever the user picks a new mode or edits a cadence dropdown.
+    // We update state so the cadence card / preview reflect the change
+    // immediately without a refetch.
     function onPolicyChanged(ev) {
       const d = (ev && ev.detail) || {};
       if (d.mode) setGlobalAiMode(d.mode);
       if (d.reminder_cadence) setGlobalCadence(d.reminder_cadence);
-      if (d.nudge_channel) setNudgeChannel(d.nudge_channel);
-      if (typeof d.first_nudge_body  === "string") setFirstNudgeBody(d.first_nudge_body);
-      if (typeof d.second_nudge_body === "string") setSecondNudgeBody(d.second_nudge_body);
     }
     window.addEventListener("ai-policy:changed", onPolicyChanged);
     return () => {
@@ -730,27 +724,6 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
       window.removeEventListener("ai-policy:changed", onPolicyChanged);
     };
   }, [isReply]);
-
-  // Save nudge config. Channel = immediate; textarea edits debounce.
-  const _nudgeSaveTimer = React.useRef(null);
-  const persistNudge = React.useCallback((payload, immediate) => {
-    if (_nudgeSaveTimer.current) clearTimeout(_nudgeSaveTimer.current);
-    const fire = async () => {
-      try {
-        const r = await fetch("/me/ai/policy", {
-          method: "POST", credentials: "same-origin",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!r.ok) return;
-        try {
-          window.dispatchEvent(new CustomEvent("ai-policy:changed", { detail: payload }));
-        } catch (_) {}
-      } catch (_) {}
-    };
-    if (immediate) fire();
-    else _nudgeSaveTimer.current = setTimeout(fire, 600);
-  }, []);
 
   const taRef = React.useRef(null);
   const subjRef = React.useRef(null);
@@ -2038,54 +2011,6 @@ const STYLES = `
     0%, 100% { opacity: .4; transform: scale(.85); }
     50%      { opacity: 1;  transform: scale(1.05); }
   }
-
-  /* Pinned trigger banner — top-center of the canvas, always visible
-     so the user never loses sight of "this is what kicks off the
-     flow." Click to recenter the canvas on the trigger node. */
-  .fb-trigger-pin {
-    position: absolute;
-    top: 14px; left: 50%;
-    transform: translateX(-50%);
-    display: inline-flex; align-items: center; gap: 10px;
-    padding: 8px 16px 8px 12px;
-    background: linear-gradient(135deg,#ecfdf5 0%,#f0fdf4 100%);
-    border: 1.5px solid #10b981;
-    border-radius: 999px;
-    box-shadow: 0 6px 20px rgba(16,185,129,.18),
-                0 1px 2px rgba(15,23,42,.06);
-    color: #065f46;
-    font-family: inherit; font-size: 12.5px;
-    cursor: pointer;
-    z-index: 6;
-    transition: transform .15s ease, box-shadow .15s ease;
-  }
-  .fb-trigger-pin:hover {
-    transform: translateX(-50%) translateY(-1px);
-    box-shadow: 0 10px 28px rgba(16,185,129,.24),
-                0 1px 2px rgba(15,23,42,.06);
-  }
-  .fb-trigger-pin-dot {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 22px; height: 22px;
-    background: #10b981; color: #fff;
-    border-radius: 50%;
-    font-size: 10px;
-    flex-shrink: 0;
-  }
-  .fb-trigger-pin-text {
-    display: inline-flex; align-items: baseline; gap: 8px;
-    min-width: 0;
-  }
-  .fb-trigger-pin-label {
-    font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
-    font-size: 10.5px; color: #047857;
-  }
-  .fb-trigger-pin-source {
-    font-weight: 600; color: #065f46;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    max-width: 360px;
-  }
-  .fb-canvas.is-modal-open .fb-trigger-pin { opacity: .25; pointer-events: none; }
 
   /* Subtle hint when the user is dragging over the canvas. */
   .fb-canvas.is-drop-target::before {
@@ -3513,38 +3438,6 @@ function TourReplayButton() {
 // here via a form's "Add more steps" button. Tapping it returns to
 // the lead-intake page; the breadcrumb (still in localStorage) makes
 // the form-builder modal re-open at the form they were editing.
-// Pinned banner that always shows the user "this is what kicks off
-// the flow." Stays anchored to the top-center of the canvas viewport
-// regardless of pan/zoom so the trigger never reads as ambiguous.
-// Click-jumps the canvas to recenter on the trigger node.
-function TriggerPin({ formId, triggerNode, rfInstance }) {
-  if (!triggerNode) return null;
-  const triggerLabel = triggerNode.data?.title || "When this trigger fires";
-  const sourceLabel = formId
-    ? "When someone submits your form"
-    : triggerLabel;
-  const onJump = () => {
-    if (!rfInstance || typeof rfInstance.setCenter !== "function") return;
-    const cx = (triggerNode.position?.x || 0) + 180;
-    const cy = (triggerNode.position?.y || 0) + 140;
-    rfInstance.setCenter(cx, cy, { zoom: 0.9, duration: 280 });
-  };
-  return (
-    <button
-      type="button"
-      className="fb-trigger-pin"
-      onClick={onJump}
-      title="Jump back to the trigger"
-    >
-      <span className="fb-trigger-pin-dot" aria-hidden="true">▶</span>
-      <span className="fb-trigger-pin-text">
-        <span className="fb-trigger-pin-label">Trigger</span>
-        <span className="fb-trigger-pin-source">{sourceLabel}</span>
-      </span>
-    </button>
-  );
-}
-
 function ReturnToFormBanner() {
   const [show, setShow] = React.useState(false);
   React.useEffect(() => {
@@ -3790,33 +3683,6 @@ export default function FlowBuilder() {
     ? ACTIVITY_BY_ID[selectedNode.data?.activityId] || null
     : null;
 
-  // The trigger node is the entry point of the flow — the activity
-  // fired by the form (or whatever input source). The user must always
-  // know "this is what kicks off the flow," so we (1) pin a banner
-  // about it to the top of the canvas, and (2) anchor the viewport on
-  // it the first time the flow hydrates so it's the first thing on
-  // screen — not centered alongside the rest of the chain.
-  const triggerNode = React.useMemo(
-    () => nodes.find(n => n.data && n.data.kind === "trigger") || null,
-    [nodes]);
-  // Re-anchor whenever the trigger's identity changes (e.g. switching
-  // templates), not just once. Tracking the id (not a one-shot bool)
-  // keeps the trigger as the first thing on screen even after the
-  // user wipes the canvas and picks a new template.
-  const [anchoredTriggerId, setAnchoredTriggerId] = React.useState(null);
-  React.useEffect(() => {
-    if (!hydrated || !rfInstance || !triggerNode) return;
-    if (anchoredTriggerId === triggerNode.id) return;
-    if (typeof rfInstance.setCenter !== "function") return;
-    // Card is ~360w × 100h. Bias the center down/right of the card's
-    // top-left so the trigger sits in the upper-left of the viewport
-    // and the rest of the chain is visible to its right and below.
-    const cx = (triggerNode.position?.x || 0) + 180;
-    const cy = (triggerNode.position?.y || 0) + 140;
-    rfInstance.setCenter(cx, cy, { zoom: 0.9, duration: 0 });
-    setAnchoredTriggerId(triggerNode.id);
-  }, [hydrated, rfInstance, triggerNode, anchoredTriggerId]);
-
   const onNodesChange = React.useCallback(
     (changes) => setNodes((ns) => applyNodeChanges(changes, ns)), []);
   const onEdgesChange = React.useCallback(
@@ -4028,11 +3894,6 @@ export default function FlowBuilder() {
           {saveStatus === "idle" && hydrated && <>Don't worry, we save as you go</>}
         </div>
         <ReturnToFormBanner />
-        <TriggerPin
-          formId={formId}
-          triggerNode={triggerNode}
-          rfInstance={rfInstance}
-        />
 
         <ReactFlow
           nodes={nodes}
@@ -4043,6 +3904,7 @@ export default function FlowBuilder() {
           onConnect={onConnect}
           onNodeClick={onNodeClick}
           onInit={setRfInstance}
+          fitView
           fitViewOptions={{ padding: 0.25 }}
           snapToGrid
           snapGrid={[40, 40]}
