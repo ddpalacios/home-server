@@ -7812,14 +7812,21 @@
         }
         .sched-rail-when.is-scheduled { color: #2563eb; font-weight: 500; }
 
-        /* Booked block on the grid (drag-source AND clickable for remove). */
+        /* Booked block on the grid (drag-source AND clickable for remove).
+           Phase 1 redesign: stage-colored card with type icon, full name,
+           time + duration, type · stage. Color comes from --stage-color
+           (set inline from the lead's stage); the spine on the left is the
+           one-and-only stage cue. The other three borders are the same
+           stage color at 40% opacity so the card reads as a unit without
+           feeling boxed-in. */
         .sched-block {
           position: absolute;
           left: 4px; right: 4px;
-          background: rgba(37, 99, 235, 0.16);
-          border-left: 3px solid #2563eb;
-          border-radius: 6px;
-          padding: 4px 8px;
+          background: var(--stage-fill, rgba(37, 99, 235, 0.12));
+          border: 1px solid var(--stage-border, rgba(37, 99, 235, 0.40));
+          border-left: 4px solid var(--stage-color, #2563eb);
+          border-radius: 8px;
+          padding: 8px 10px;
           font-size: 12px;
           color: #0a0a0a;
           line-height: 1.3;
@@ -7827,19 +7834,78 @@
           cursor: pointer;
           z-index: 2;
           transition: filter 120ms ease, transform 120ms ease;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
         }
         .sched-block:hover { filter: brightness(0.96); transform: translateX(1px); }
-        .sched-block-name {
-          font-weight: 600;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
+        /* Row 1 — type icon + customer name. Wraps so long names don't
+           get truncated; the calendar's whole point is "who is at 9am". */
+        .sched-block-row1 {
+          display: flex;
+          align-items: flex-start;
+          gap: 6px;
+          min-width: 0;
         }
+        .sched-block-icon {
+          flex: 0 0 auto;
+          font-size: 13px;
+          line-height: 1.2;
+          margin-top: 1px;
+        }
+        .sched-block-name {
+          flex: 1 1 auto;
+          font-weight: 600;
+          font-size: 12.5px;
+          color: #0a0a0a;
+          white-space: normal;
+          word-wrap: break-word;
+          overflow-wrap: anywhere;
+          min-width: 0;
+        }
+        /* Row 2 — time range + duration. */
         .sched-block-time {
           font-size: 11px;
           color: #475569;
           margin-top: 1px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
+        /* Row 3 — type · stage labels. */
+        .sched-block-meta {
+          font-size: 10.5px;
+          color: #64748b;
+          font-weight: 500;
+          letter-spacing: 0.01em;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .sched-block-meta strong {
+          color: var(--stage-color, #2563eb);
+          font-weight: 600;
+        }
+        /* Compressed pill (≤15 min, height < 36px): only Row 1, name on a
+           single line with ellipsis. Hover/click in later phases reveals
+           the rest. */
+        .sched-block.is-compressed {
+          padding: 4px 8px 4px 10px;
+          gap: 0;
+        }
+        .sched-block.is-compressed .sched-block-name {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          font-size: 11.5px;
+        }
+        .sched-block.is-compressed .sched-block-time,
+        .sched-block.is-compressed .sched-block-meta { display: none; }
+        /* Mid pill (16–50px tall): show Row 1 + Row 2, suppress Row 3. */
+        .sched-block.is-mid {
+          padding: 5px 10px;
+        }
+        .sched-block.is-mid .sched-block-meta { display: none; }
         .sched-block-pending {
           display: inline-block;
           font-size: 9.5px;
@@ -7866,13 +7932,16 @@
             #e2e8f0 4px,
             #e2e8f0 8px
           );
-          border-left: 3px solid #94a3b8;
+          border: 1px solid #cbd5e1;
+          border-left: 4px solid #94a3b8;
           color: #475569;
           cursor: default;
         }
         .sched-block.sched-block--external:hover { filter: none; transform: none; }
         .sched-block.sched-block--external .sched-block-name { color: #334155; }
         .sched-block.sched-block--external .sched-block-time { color: #64748b; }
+        .sched-block.sched-block--external .sched-block-meta { color: #64748b; }
+        .sched-block.sched-block--external .sched-block-meta strong { color: #475569; }
 
         /* Busy block — read-only existing GCal event the owner already has. */
         .sched-busy {
@@ -25728,6 +25797,61 @@
         if (!m) return `rgba(100,100,100,${a})`;
         return `rgba(${parseInt(m[1],16)}, ${parseInt(m[2],16)}, ${parseInt(m[3],16)}, ${a})`;
       }
+      // Stage palette — must match leads.js STAGE_COLORS verbatim and the
+      // .pl-stage-card CSS at the top of this file. Don't pick new colors;
+      // the calendar block must match the lead's pipeline column color so
+      // the contractor learns "amber = quoted" once and trusts it.
+      const SCHED_STAGE_COLORS = {
+        new:       "#888780",
+        contacted: "#378ADD",
+        engaged:   "#7F77DD",
+        quoted:    "#BA7517",
+        scheduled: "#1D9E75",
+        won:       "#639922",
+        lost:      "#A32D2D",
+      };
+      const SCHED_STAGE_LABELS = {
+        new: "New", contacted: "Contacted", engaged: "Engaged",
+        quoted: "Quoted", scheduled: "Scheduled", won: "Won", lost: "Lost",
+      };
+      function stageColor(stage) {
+        return SCHED_STAGE_COLORS[stage] || SCHED_STAGE_COLORS.scheduled;
+      }
+      function stageLabel(stage) {
+        return SCHED_STAGE_LABELS[stage] || SCHED_STAGE_LABELS.scheduled;
+      }
+      // Type icons + labels. Until the backend carries appointment_type,
+      // every event falls back to "other" → ⚙️ Appointment. Phase 3 adds
+      // the field at booking time + a picker in the click-to-edit panel.
+      const SCHED_APPT_ICONS = {
+        call:     "📞",
+        estimate: "📋",
+        visit:    "🏠",
+        meeting:  "🤝",
+        job:      "🔧",
+        other:    "⚙️",
+      };
+      const SCHED_APPT_LABELS = {
+        call: "Call", estimate: "Estimate", visit: "Visit",
+        meeting: "Meeting", job: "Job", other: "Appointment",
+      };
+      function apptTypeIcon(t) {
+        return SCHED_APPT_ICONS[t] || SCHED_APPT_ICONS.other;
+      }
+      function apptTypeLabel(t) {
+        return SCHED_APPT_LABELS[t] || SCHED_APPT_LABELS.other;
+      }
+      // Human duration: "30 min", "1 hour", "1 hr 30 min", "2 hr 15 min".
+      function fmtDurationSched(startDate, endDate) {
+        const ms = endDate - startDate;
+        if (!Number.isFinite(ms) || ms <= 0) return "";
+        const mins = Math.round(ms / 60000);
+        if (mins < 60) return `${mins} min`;
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        if (m === 0) return h === 1 ? "1 hour" : `${h} hours`;
+        return `${h} hr ${m} min`;
+      }
       function leadName(l) {
         const n = ((l.first_name || "") + " " + (l.last_name || "")).trim();
         return n || l.email || l.phone || "Customer";
@@ -25961,32 +26085,72 @@
             const isHour = (m % 60) === 0;
             inner += `<div class="sched-cell ${isHour ? "" : "half"}" data-day="${dayIso}" data-slot-min="${m}"></div>`;
           }
-          // Overlay booked blocks — both lead-linked AND external GCal events
+          // Overlay booked blocks — both lead-linked AND external GCal events.
+          // Phase 1 redesign: each pill carries (1) a type icon + full
+          // customer name (no truncation in the full-size variant), (2)
+          // time range + human duration, (3) "Type · Stage" meta line.
+          // Pill color comes from the lead's stage so the calendar mirrors
+          // the pipeline columns; external events stay hatched grey.
           for (const b of bookings) {
             if (isoDateSched(b.start) !== dayIso) continue;
             const startMin = b.start.getHours() * 60 + b.start.getMinutes();
             const endMin   = b.end.getHours()   * 60 + b.end.getMinutes();
-            const top  = Math.max(0, (startMin - DAY_START_MIN) / SLOT_MIN) * SLOT_PX;
-            const hght = Math.max(SLOT_PX, ((endMin - startMin) / SLOT_MIN) * SLOT_PX);
+            const rawTop = Math.max(0, (startMin - DAY_START_MIN) / SLOT_MIN) * SLOT_PX;
+            const rawHght = Math.max(SLOT_PX, ((endMin - startMin) / SLOT_MIN) * SLOT_PX);
+            // 2px vertical breathing room between adjacent events so the
+            // grid line shows through and back-to-back appointments don't
+            // visually merge into one giant block.
+            const top  = rawTop + 1;
+            const hght = Math.max(20, rawHght - 2);
+            // Variant by height — short events get a single line, mid get
+            // two, full pills get all three rows. Cutoffs chosen so the
+            // text never overflows the pill: a 30-min event is 32px tall
+            // (mid), 60-min is 64px (full), 15-min is 16px (compressed).
+            let sizeClass = "";
+            if (hght < 36)      sizeClass = "is-compressed";
+            else if (hght <= 50) sizeClass = "is-mid";
+            const timeRange = `${fmtTimeSched(b.start)} – ${fmtTimeSched(b.end)}`;
+            const dur = fmtDurationSched(b.start, b.end);
+            const timeLine = dur ? `${timeRange} · ${dur}` : timeRange;
             if (b.external) {
               // External event — manually added in Google Calendar. Read-only,
               // grey hatched style so the user sees their calendar reality
               // without being able to edit it from here.
               const title = (b.title || "Calendar event").trim();
-              inner += `<div class="sched-block sched-block--external"
+              inner += `<div class="sched-block sched-block--external ${sizeClass}"
                             style="top:${top}px; height:${hght}px;">
-                         <div class="sched-block-name">${escapeHtml(title)}</div>
-                         <div class="sched-block-time">${escapeHtml(fmtTimeSched(b.start))} – ${escapeHtml(fmtTimeSched(b.end))}</div>
+                         <div class="sched-block-row1">
+                           <span class="sched-block-icon" aria-hidden="true">📅</span>
+                           <div class="sched-block-name">${escapeHtml(title)}</div>
+                         </div>
+                         <div class="sched-block-time">${escapeHtml(timeLine)}</div>
+                         <div class="sched-block-meta">External · Calendar</div>
                        </div>`;
               continue;
             }
-            const c = colorForLead(b.lead.id);
-            const fillBg = colorFillSched(c, 0.16);
-            const pendingBadge = b.pending ? `<span class="sched-block-pending">pending</span>` : "";
-            inner += `<div class="sched-block" style="top:${top}px; height:${hght}px; background:${fillBg}; border-left-color:${c};"
-                          data-lead-id="${escapeHtml(b.lead.id)}" draggable="true">
-                       <div class="sched-block-name">${escapeHtml(leadName(b.lead))} ${pendingBadge}</div>
-                       <div class="sched-block-time">${escapeHtml(fmtTimeSched(b.start))} – ${escapeHtml(fmtTimeSched(b.end))}</div>
+            // Stage-derived color (matches the lead's pipeline column).
+            // If the lead has no stage we fall back to "scheduled" — a
+            // booked event almost always belongs in that bucket anyway.
+            const stage = (b.lead && b.lead.stage) || "scheduled";
+            const c = stageColor(stage);
+            const fillBg = colorFillSched(c, 0.12);
+            const borderRgba = colorFillSched(c, 0.40);
+            const pendingBadge = b.pending ? ` <span class="sched-block-pending">pending</span>` : "";
+            // appointment_type isn't carried on lead/event payloads yet —
+            // every pill uses the "other" icon (⚙️) + "Appointment" label
+            // until Phase 3 adds the field at booking time.
+            const apptType = (b.lead && b.lead.appointment_type) || (b.appointment_type) || "other";
+            const icon = apptTypeIcon(apptType);
+            const typeLabel = apptTypeLabel(apptType);
+            const stageLab = stageLabel(stage);
+            inner += `<div class="sched-block ${sizeClass}" style="top:${top}px; height:${hght}px; --stage-color:${c}; --stage-fill:${fillBg}; --stage-border:${borderRgba};"
+                          data-lead-id="${escapeHtml(b.lead.id)}" data-stage="${escapeHtml(stage)}" draggable="true">
+                       <div class="sched-block-row1">
+                         <span class="sched-block-icon" aria-hidden="true">${icon}</span>
+                         <div class="sched-block-name">${escapeHtml(leadName(b.lead))}${pendingBadge}</div>
+                       </div>
+                       <div class="sched-block-time">${escapeHtml(timeLine)}</div>
+                       <div class="sched-block-meta">${escapeHtml(typeLabel)} · <strong>${escapeHtml(stageLab)}</strong></div>
                      </div>`;
           }
           dayCells += `<div class="sched-day-col">${inner}</div>`;
