@@ -1210,12 +1210,18 @@ const STYLES = `
   .fb-canvas .fb-save {
     transition: opacity .15s ease, visibility 0s linear .15s;
   }
-  .fb-canvas.is-modal-open .fb-tour-panel,
+  .fb-canvas.is-modal-open .fb-tour-panel:not([data-sub="1"]),
   .fb-canvas.is-modal-open .fb-return-pill,
   .fb-canvas.is-modal-open .fb-save {
     opacity: 0;
     pointer-events: none;
     visibility: hidden;
+  }
+  /* Sub-path tour panels stay visible during modals — they're the
+     guidance INSIDE the modal. Float them on top of everything. */
+  .fb-tour-panel[data-sub="1"] {
+    z-index: 60 !important;
+    box-shadow: 0 12px 32px rgba(20,40,80,.22) !important;
   }
 
   /* Tour highlight — soft warm yellow/gold halo around whatever
@@ -2053,82 +2059,156 @@ const STYLES = `
 // `target` is a CSS selector. The tour effect adds a temporary
 // .fb-tour-highlight class to the matching element, which gives it a
 // glowing ring (CSS keyframe). null target = no highlight (intro).
-const TOUR_STEPS = [
-  {
-    icon: "👋",
-    title: "This is your flow.",
-    body: (
-      <>
-        Each card is something that happens automatically when someone
-        fills out your form. Right now it just says hi to them.
-      </>
-    ),
-    target: ".fb-card",
-  },
-  {
-    icon: "➕",
-    title: "Add a step here.",
-    body: (
-      <>
-        See the green <strong style={{ color: "#0a8a3a" }}>+ Next</strong>{" "}
-        button on the card? Tap it to add what comes next — a text, an
-        email, an AI reply, or saving the lead somewhere.
-      </>
-    ),
-    target: ".fb-next-btn",
-    // The "Show me" button programmatically clicks the +Next button
-    // so the user actually SEES the chooser open. v2 of the tour.
-    demoSelector: ".fb-next-btn",
-    demoLabel: "Show me what's inside",
-  },
-  {
-    icon: "✏️",
-    title: "Tap a card to change it.",
-    body: (
-      <>
-        Click any card and a panel slides in to edit its message,
-        wait time, or what it does.
-      </>
-    ),
-    target: ".fb-card",
-    demoSelector: ".fb-card",
-    demoLabel: "Show me",
-  },
-  {
-    icon: "💾",
-    title: "We save as you build.",
-    body: (
-      <>
-        Don't worry about losing work. When you're done, tap{" "}
-        <strong>← Back to your form</strong> (top right) to keep
-        building your form.
-      </>
-    ),
-    target: ".fb-return-pill",
-  },
-];
+// Tour is path-based. Each path has its own ordered steps. The "main"
+// path is the canvas overview. Sub-paths (e.g. "chooser") are entered
+// via a step's `enterPath` directive — the demo button clicks the
+// target AND switches to the sub-path. When the sub-path runs out of
+// steps, the tour returns to the main path one step PAST where it
+// branched (so the user moves forward, not in circles).
+const TOUR_PATHS = {
+  main: [
+    {
+      icon: "👋",
+      title: "This is your flow.",
+      body: (
+        <>
+          Each card is something that happens automatically when someone
+          fills out your form. Right now it just says hi to them.
+        </>
+      ),
+      target: ".fb-card",
+    },
+    {
+      icon: "➕",
+      title: "Add a step here.",
+      body: (
+        <>
+          See the green <strong style={{ color: "#0a8a3a" }}>+ Next</strong>{" "}
+          button on the card? Tap it to open a list of things you can add.
+        </>
+      ),
+      target: ".fb-next-btn",
+      demoSelector: ".fb-next-btn",
+      demoLabel: "Show me what's inside",
+      // After the demo click opens the chooser modal, branch into the
+      // chooser sub-path so the tour keeps guiding through what's there.
+      enterPath: "chooser",
+    },
+    {
+      icon: "✏️",
+      title: "Tap a card to change it.",
+      body: (
+        <>
+          Click any card and a panel slides in to edit its message,
+          wait time, or what it does.
+        </>
+      ),
+      target: ".fb-card",
+    },
+    {
+      icon: "💾",
+      title: "We save as you build.",
+      body: (
+        <>
+          Don't worry about losing work. When you're done, tap{" "}
+          <strong>← Back to your form</strong> (top right) to keep
+          building your form.
+        </>
+      ),
+      target: ".fb-return-pill",
+    },
+  ],
+  // Sub-path: "What comes next?" chooser modal. Tour stays visible
+  // INSIDE the modal because data-sub="1" exempts the panel from
+  // hide-during-modal. Targets are scoped to elements inside the modal.
+  chooser: [
+    {
+      icon: "🎯",
+      title: "Pick what happens next.",
+      body: (
+        <>
+          Each row is a kind of step. A text, an email, a wait, an AI
+          reply — pick the one that fits what you want to happen.
+        </>
+      ),
+      target: ".fb-chooser-card",
+    },
+    {
+      icon: "🖱️",
+      title: "Tap any row to add it.",
+      body: (
+        <>
+          Click a row and that step shows up in your flow. Don't worry —
+          you can change the message later by tapping the card.
+        </>
+      ),
+      target: ".fb-chooser-row",
+    },
+    {
+      icon: "✨",
+      title: "When you're done picking…",
+      body: (
+        <>
+          Close this list with the X (top right) and come back here for
+          more tips on your flow.
+        </>
+      ),
+      target: ".fb-chooser-x, [aria-label='Close']",
+    },
+  ],
+};
 
 function FirstTimeGuide() {
   const [show, setShow] = React.useState(false);
-  const [step, setStep] = React.useState(0);
+  // Path-based state. `path` is a key into TOUR_PATHS. `pathHistory`
+  // is the breadcrumb for "where to return when this sub-path ends."
+  const [tour, setTour] = React.useState({ path: "main", step: 0, pathHistory: [] });
   React.useEffect(() => {
     try {
-      // Always show during a form round-trip — the user is being
-      // guided into the canvas and needs the orientation regardless of
-      // whether they dismissed the strip in a past session.
       const fromForm = !!localStorage.getItem("intake_return_form_id");
-      const dismissed = localStorage.getItem("fb_tour_dismissed_v2") === "1";
-      const savedStep = parseInt(localStorage.getItem("fb_tour_step") || "0", 10) || 0;
-      setStep(Math.max(0, Math.min(savedStep, TOUR_STEPS.length - 1)));
+      const dismissed = localStorage.getItem("fb_tour_dismissed_v3") === "1";
+      const savedRaw = localStorage.getItem("fb_tour_state_v3");
+      const savedTs  = parseInt(localStorage.getItem("fb_tour_ts_v3") || "0", 10);
+      let restored = null;
+      if (savedRaw && savedTs && (Date.now() - savedTs) < 7*24*60*60*1000) {
+        try { restored = JSON.parse(savedRaw); } catch(_){}
+      }
+      if (restored && TOUR_PATHS[restored.path]) {
+        const max = (TOUR_PATHS[restored.path].length || 1) - 1;
+        setTour({
+          path: restored.path,
+          step: Math.max(0, Math.min(restored.step|0, max)),
+          pathHistory: Array.isArray(restored.pathHistory) ? restored.pathHistory : [],
+        });
+      }
       setShow(fromForm || !dismissed);
     } catch (_) { setShow(true); }
   }, []);
-  // Apply / remove the .fb-tour-highlight class to the current step's
-  // target. We retry briefly because ReactFlow may not have rendered
-  // the cards yet at first paint.
+  const persistTour = React.useCallback((t) => {
+    try {
+      localStorage.setItem("fb_tour_state_v3", JSON.stringify(t));
+      localStorage.setItem("fb_tour_ts_v3", String(Date.now()));
+    } catch (_) {}
+  }, []);
+  const dismiss = React.useCallback(() => {
+    try {
+      localStorage.setItem("fb_tour_dismissed_v3", "1");
+      localStorage.removeItem("fb_tour_state_v3");
+      localStorage.removeItem("fb_tour_ts_v3");
+    } catch (_) {}
+    setShow(false);
+  }, []);
+  // Resolve the active step from the current path.
+  const steps = TOUR_PATHS[tour.path] || TOUR_PATHS.main;
+  const cur = steps[tour.step] || steps[0];
+  const isLastInPath = tour.step >= steps.length - 1;
+  const isOnSubPath = tour.path !== "main";
+  // Highlight effect — applies the .fb-tour-highlight class to the
+  // current step's target. Retries because ReactFlow / chooser modal
+  // may not have painted yet.
   React.useEffect(() => {
     if (!show) return;
-    const sel = TOUR_STEPS[step] && TOUR_STEPS[step].target;
+    const sel = cur && cur.target;
     if (!sel) return;
     const cleanup = [];
     let attempts = 0;
@@ -2141,72 +2221,113 @@ function FirstTimeGuide() {
         cleanup.push(() => el.classList.remove("fb-tour-highlight"));
         return;
       }
-      if (attempts++ < 8) setTimeout(apply, 120);
+      if (attempts++ < 12) setTimeout(apply, 120);
     };
     apply();
     return () => {
       stop = true;
       cleanup.forEach((fn) => { try { fn(); } catch (_) {} });
-      // Defensive sweep in case the element id changed mid-step.
       document.querySelectorAll(".fb-tour-highlight").forEach(
         (n) => n.classList.remove("fb-tour-highlight"));
     };
-  }, [show, step]);
-  const persistStep = React.useCallback((s) => {
-    try { localStorage.setItem("fb_tour_step", String(s)); } catch (_) {}
-  }, []);
-  const dismiss = React.useCallback(() => {
-    try {
-      localStorage.setItem("fb_tour_dismissed_v2", "1");
-      localStorage.removeItem("fb_tour_step");
-    } catch (_) {}
-    setShow(false);
-  }, []);
+  }, [show, tour.path, tour.step, cur]);
+  // If the user is on a sub-path and the modal closes (the underlying
+  // element vanishes), gracefully pop back to the main path. Watch
+  // for the chooser disappearing.
+  React.useEffect(() => {
+    if (!show || !isOnSubPath) return;
+    const checker = setInterval(() => {
+      if (!document.querySelector(".fb-chooser-card") &&
+          !document.querySelector(".fb-template-picker") &&
+          !document.querySelector(".fb-drawer")) {
+        // Modal closed — pop back to main path at the saved return step.
+        setTour((t) => {
+          if (t.path === "main") return t;
+          const popped = (t.pathHistory || []).slice();
+          const ret = popped.pop() || { path: "main", returnStep: 0 };
+          const next = { path: ret.path, step: ret.returnStep, pathHistory: popped };
+          persistTour(next);
+          return next;
+        });
+      }
+    }, 300);
+    return () => clearInterval(checker);
+  }, [show, isOnSubPath, persistTour]);
   const next = React.useCallback(() => {
-    setStep((s) => {
-      const ns = s + 1;
-      if (ns >= TOUR_STEPS.length) { dismiss(); return s; }
-      persistStep(ns); return ns;
+    setTour((t) => {
+      const list = TOUR_PATHS[t.path] || TOUR_PATHS.main;
+      const ns = t.step + 1;
+      if (ns >= list.length) {
+        // Path complete. Pop history if any, else dismiss.
+        if (t.pathHistory && t.pathHistory.length > 0) {
+          const popped = t.pathHistory.slice();
+          const ret = popped.pop();
+          const next = { path: ret.path, step: ret.returnStep, pathHistory: popped };
+          persistTour(next); return next;
+        }
+        dismiss(); return t;
+      }
+      const next = { ...t, step: ns };
+      persistTour(next); return next;
     });
-  }, [dismiss, persistStep]);
+  }, [dismiss, persistTour]);
   const back = React.useCallback(() => {
-    setStep((s) => {
-      const ns = Math.max(0, s - 1);
-      persistStep(ns); return ns;
+    setTour((t) => {
+      const ns = Math.max(0, t.step - 1);
+      const next = { ...t, step: ns };
+      persistTour(next); return next;
     });
-  }, [persistStep]);
-  // "Show me" — programmatically click the highlighted element so the
-  // user SEES what tapping it does. Defensive: not all steps have a
-  // demoSelector, and the element may not be in the DOM yet (retry
-  // pattern matches the highlight effect).
-  const showMe = React.useCallback((sel) => {
+  }, [persistTour]);
+  // Click the demo target AND, if the step has enterPath, branch into
+  // the sub-path so the tour continues guiding inside the modal.
+  const showMe = React.useCallback((sel, enterPathName) => {
     if (!sel) return;
     let attempts = 0;
     const tryClick = () => {
       const el = document.querySelector(sel);
       if (el) {
         try { el.click(); } catch (_) {}
+        if (enterPathName && TOUR_PATHS[enterPathName]) {
+          // Push the current main-path position so we can return to
+          // (currentStep + 1) when the sub-path ends.
+          setTour((t) => {
+            const next = {
+              path: enterPathName,
+              step: 0,
+              pathHistory: (t.pathHistory || []).concat([
+                { path: t.path, returnStep: Math.min(t.step + 1,
+                  (TOUR_PATHS[t.path] || []).length - 1) },
+              ]),
+            };
+            persistTour(next); return next;
+          });
+        }
         return;
       }
       if (attempts++ < 6) setTimeout(tryClick, 100);
     };
     tryClick();
-  }, []);
+  }, [persistTour]);
   if (!show) return null;
-  const cur = TOUR_STEPS[step] || TOUR_STEPS[0];
-  const isLast = step === TOUR_STEPS.length - 1;
+  // For sub-paths the panel stays VISIBLE even when a modal is open —
+  // it's intentionally guiding through the modal. data-sub="1" tells
+  // the hide-during-modal CSS to leave us alone.
+  const isLast = isLastInPath && (tour.pathHistory || []).length === 0;
   return (
     <div
       className="fb-tour-panel"
+      data-sub={isOnSubPath ? "1" : "0"}
       style={{
-        // Top-LEFT (not centered) so the Back-to-form pill in the
-        // top-right has a guaranteed exclusion zone — no overlap on
-        // any viewport width.
-        position: "absolute",
+        // Sub-path tours center themselves at top so they sit ABOVE
+        // the active modal. Main path stays top-left so the Back-pill
+        // never overlaps. zIndex 60 elevates the panel above the
+        // chooser's 14 / drawer's 11 so we render in front of modals.
+        position: "fixed",
         top: 14,
-        left: 14,
+        left: isOnSubPath ? "50%" : 14,
         right: "auto",
-        zIndex: 45,
+        transform: isOnSubPath ? "translateX(-50%)" : "none",
+        zIndex: 60,
         background: "linear-gradient(135deg,#eaf3fc 0%,#f0e8fb 100%)",
         border: "1.5px solid #b6c8e0",
         borderRadius: 14,
@@ -2215,7 +2336,8 @@ function FirstTimeGuide() {
         display: "flex",
         flexDirection: "column",
         gap: 10,
-        width: "min(440px, calc(100% - 240px))",
+        width: "min(480px, calc(100% - 32px))",
+        maxWidth: 480,
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -2258,25 +2380,33 @@ function FirstTimeGuide() {
         >Skip</button>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        {/* Progress dots */}
+        {/* Progress dots — for current path only. Sub-paths show their
+            own little progress so the user has a sense of "almost done
+            with this side trip." */}
         <div style={{ display: "flex", gap: 5, flex: 1 }}>
-          {TOUR_STEPS.map((_t, i) => (
+          {steps.map((_t, i) => (
             <span
               key={i}
               style={{
-                width: i === step ? 22 : 6,
+                width: i === tour.step ? 22 : 6,
                 height: 6,
                 borderRadius: 99,
-                background: i <= step ? "#185fa5" : "#cdd7e3",
+                background: i <= tour.step ? "#185fa5" : "#cdd7e3",
                 transition: "width .18s ease, background .18s ease",
               }}
             />
           ))}
+          {isOnSubPath && (
+            <span style={{
+              fontSize: 11, color: "#5a6470", fontWeight: 600,
+              marginLeft: 6, alignSelf: "center",
+            }}>side trip</span>
+          )}
         </div>
         {cur.demoSelector && (
           <button
             type="button"
-            onClick={() => showMe(cur.demoSelector)}
+            onClick={() => showMe(cur.demoSelector, cur.enterPath)}
             style={{
               background: "#fff8db",
               color: "#7a5a00",
@@ -2294,7 +2424,7 @@ function FirstTimeGuide() {
             title="Show me what this does"
           >✨ {cur.demoLabel || "Show me"}</button>
         )}
-        {step > 0 && (
+        {tour.step > 0 && (
           <button
             type="button"
             onClick={back}
