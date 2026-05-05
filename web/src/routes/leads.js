@@ -2463,15 +2463,78 @@ function _beEnsureDialog() {
       #leadsBulkEmailDlg .be-close { background:none;border:none;font-size:22px;cursor:pointer;color:#6b7280;line-height:1;padding:0 4px; }
       #leadsBulkEmailDlg .be-body { flex:1;overflow:auto;padding:18px 22px; }
       #leadsBulkEmailDlg .be-foot { padding:14px 22px;border-top:1px solid #e5e7eb;background:#fafafa;flex-shrink:0;display:flex;gap:8px;justify-content:flex-end;align-items:center; }
-      #leadsBulkEmailDlg .be-recip { font-size:13.5px;color:#374151;margin-bottom:14px; }
-      #leadsBulkEmailDlg .be-recip-toggle { background:none;border:none;color:#0a0a0a;font-size:13px;cursor:pointer;text-decoration:underline;padding:0 0 0 6px; }
-      #leadsBulkEmailDlg .be-recip-list { margin-top:6px;padding:8px 12px;background:#f9fafb;border-radius:8px;font-size:12.5px;color:#475569;max-height:160px;overflow:auto; }
-      #leadsBulkEmailDlg .be-grid { display:grid;grid-template-columns:repeat(3, 1fr);gap:10px; }
-      #leadsBulkEmailDlg .be-card { padding:14px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:6px;transition:border-color 120ms; }
-      #leadsBulkEmailDlg .be-card:hover { border-color:#0a0a0a; }
-      #leadsBulkEmailDlg .be-card .be-icon { font-size:22px;line-height:1; }
-      #leadsBulkEmailDlg .be-card .be-name { font-size:13.5px;font-weight:600;color:#0a0a0a; }
-      #leadsBulkEmailDlg .be-card .be-desc { font-size:12px;color:#6b7280;line-height:1.4; }
+      #leadsBulkEmailDlg .be-recip { position:relative;margin-bottom:16px; }
+      #leadsBulkEmailDlg .be-recip-pill {
+        display:inline-flex;align-items:center;gap:8px;
+        padding:7px 12px;
+        background:#f1f5f9;color:#0f172a;
+        border:1px solid #e2e8f0;border-radius:999px;
+        font-family:inherit;font-size:12.5px;font-weight:500;
+        cursor:pointer;
+        transition:background 120ms,border-color 120ms;
+      }
+      #leadsBulkEmailDlg .be-recip-pill:hover { background:#e2e8f0;border-color:#cbd5e1; }
+      #leadsBulkEmailDlg .be-recip-pill[aria-expanded="true"] { background:#0f172a;color:#fff;border-color:#0f172a; }
+      #leadsBulkEmailDlg .be-recip-pill[aria-expanded="true"] .be-recip-pill-chev { transform:rotate(180deg); }
+      #leadsBulkEmailDlg .be-recip-pill-ico { font-size:14px;line-height:1; }
+      #leadsBulkEmailDlg .be-recip-pill-text strong { font-weight:700; }
+      #leadsBulkEmailDlg .be-recip-pill-chev { font-size:10px;transition:transform 160ms ease;line-height:1; }
+      #leadsBulkEmailDlg .be-recip-pop {
+        position:absolute;top:calc(100% + 6px);left:0;z-index:3;
+        min-width:240px;max-width:360px;max-height:240px;overflow:auto;
+        padding:8px;
+        background:#fff;border:1px solid #e2e8f0;border-radius:10px;
+        box-shadow:0 12px 30px rgba(15,23,42,.14),0 0 0 1px rgba(15,23,42,.04);
+        font-size:12.5px;color:#0f172a;
+      }
+      #leadsBulkEmailDlg .be-recip-pop[hidden] { display:none; }
+      #leadsBulkEmailDlg .be-recip-pop-row {
+        padding:5px 8px;border-radius:6px;
+      }
+      #leadsBulkEmailDlg .be-recip-pop-row:hover { background:#f8fafc; }
+      #leadsBulkEmailDlg .be-recip-pop-more { padding:6px 8px;color:#64748b;font-size:12px; }
+      #leadsBulkEmailDlg .be-recip-hint {
+        margin-top:8px;padding:8px 12px;
+        background:#f1f5f9;border-radius:8px;
+        font-size:12px;color:#475569;line-height:1.45;
+      }
+      #leadsBulkEmailDlg .be-recip-hint-warn {
+        background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;
+      }
+      #leadsBulkEmailDlg .be-grid {
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:12px;
+      }
+      #leadsBulkEmailDlg .be-card {
+        padding:16px 16px;
+        border:1.5px solid #e5e7eb;border-radius:12px;
+        background:#fff;cursor:pointer;text-align:left;
+        display:flex;flex-direction:column;gap:8px;
+        font-family:inherit;
+        transition:border-color 120ms,box-shadow 120ms,transform 120ms;
+        min-height:0;
+      }
+      #leadsBulkEmailDlg .be-card:hover {
+        border-color:#0a0a0a;
+        box-shadow:0 6px 18px rgba(15,23,42,.08);
+        transform:translateY(-1px);
+      }
+      #leadsBulkEmailDlg .be-card .be-icon {
+        font-size:26px;line-height:1;
+        width:42px;height:42px;
+        display:inline-flex;align-items:center;justify-content:center;
+        background:#f1f5f9;border-radius:10px;
+        flex-shrink:0;
+      }
+      #leadsBulkEmailDlg .be-card .be-name {
+        font-size:14px;font-weight:700;color:#0a0a0a;
+        line-height:1.25;
+      }
+      #leadsBulkEmailDlg .be-card .be-desc {
+        font-size:12.5px;color:#475569;line-height:1.5;
+        word-break:break-word;
+      }
       #leadsBulkEmailDlg .be-back { background:none;border:none;color:#0a0a0a;font-size:13px;cursor:pointer;padding:0;margin-bottom:12px;text-decoration:underline; }
       #leadsBulkEmailDlg .be-field { margin-bottom:12px; }
       #leadsBulkEmailDlg .be-label { display:block;font-size:12.5px;font-weight:600;color:#374151;margin-bottom:6px; }
@@ -2684,21 +2747,27 @@ function _beRecipientHeader() {
   // Phase 3: surface opt-out count so users aren't surprised at "skipped".
   const optedOut = _beState.recipients.filter(l => l && l.email_opted_out === true).length;
   const optHint = optedOut > 0
-    ? `<div style="margin-top:6px;font-size:12px;color:#9a3412;">${optedOut} lead${optedOut !== 1 ? "s" : ""} opted out of email — they'll be skipped.</div>`
+    ? `<div class="be-recip-hint be-recip-hint-warn">${optedOut} lead${optedOut !== 1 ? "s" : ""} opted out of email — they'll be skipped.</div>`
     : "";
   // When the user has selected leads that aren't in the current filter, we
   // act on visible+selected only and tell them why the count is what it is.
   const hidden = Number(_beState.hiddenByFilter || 0);
   const filterHint = hidden > 0
-    ? `<div style="margin-top:6px;font-size:12px;color:#475569;">${hidden} other selected lead${hidden !== 1 ? "s are" : " is"} hidden by your current filter — clear filters to include ${hidden !== 1 ? "them" : "it"}.</div>`
+    ? `<div class="be-recip-hint">${hidden} other selected lead${hidden !== 1 ? "s are" : " is"} hidden by your current filter — clear filters to include ${hidden !== 1 ? "them" : "it"}.</div>`
     : "";
+  // Compact pill in the top toolbar. The expanded list lives in a floating
+  // popover (positioned just below the pill) so it never pushes templates
+  // off-screen.
   return `
     <div class="be-recip">
-      <strong>To:</strong> ${n} lead${n !== 1 ? "s" : ""}
-      <button type="button" class="be-recip-toggle" data-be-act="toggle-recip">Show recipients ▾</button>
-      <div class="be-recip-list" id="beRecipList" style="display:none;">
-        ${first10.map(n => escapeHtml(n)).join("<br>")}
-        ${more ? `<div style="margin-top:6px;color:#6b7280;">…and ${more} more</div>` : ""}
+      <button type="button" class="be-recip-pill" data-be-act="toggle-recip" aria-expanded="false">
+        <span class="be-recip-pill-ico" aria-hidden="true">📨</span>
+        <span class="be-recip-pill-text">Sending to <strong>${n}</strong> lead${n !== 1 ? "s" : ""}</span>
+        <span class="be-recip-pill-chev" aria-hidden="true">▾</span>
+      </button>
+      <div class="be-recip-pop" id="beRecipList" hidden>
+        ${first10.map(name => `<div class="be-recip-pop-row">${escapeHtml(name)}</div>`).join("")}
+        ${more ? `<div class="be-recip-pop-more">…and ${more} more</div>` : ""}
       </div>
       ${filterHint}
       ${optHint}
@@ -3867,10 +3936,23 @@ function _beWireRecipToggle() {
   const btn = dlg.querySelector("[data-be-act='toggle-recip']");
   const list = dlg.querySelector("#beRecipList");
   if (!btn || !list) return;
-  btn.addEventListener("click", () => {
-    const open = list.style.display !== "none";
-    list.style.display = open ? "none" : "block";
-    btn.textContent = open ? "Show recipients ▾" : "Hide recipients ▴";
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const open = !list.hasAttribute("hidden");
+    if (open) {
+      list.setAttribute("hidden", "");
+      btn.setAttribute("aria-expanded", "false");
+    } else {
+      list.removeAttribute("hidden");
+      btn.setAttribute("aria-expanded", "true");
+    }
+  });
+  // Click anywhere outside the popover or pill closes it.
+  document.addEventListener("click", (e) => {
+    if (list.hasAttribute("hidden")) return;
+    if (list.contains(e.target) || btn.contains(e.target)) return;
+    list.setAttribute("hidden", "");
+    btn.setAttribute("aria-expanded", "false");
   });
 }
 
