@@ -522,6 +522,8 @@
       id: editing ? form.id : null,
       name: editing ? form.name : "Contact form",
       flow_id: editing ? (form.flow_id || "default") : "default",
+      attached_flow_id:   editing ? (form.attached_flow_id   || "first_contact") : "first_contact",
+      attached_flow_name: editing ? (form.attached_flow_name || "First Hello")   : "First Hello",
       submit_text: editing ? form.submit_text || "Submit" : "Submit",
       thank_you:   editing ? form.thank_you   || "Thanks — we'll be in touch." : "Thanks — we'll be in touch.",
       // Initialize fields: when editing, take from form. When creating, start with name+phone+message ON.
@@ -585,6 +587,8 @@
               + '<button class="fld-del" data-fld-del="' + i + '" title="Remove field" aria-label="Remove">&times;</button>'
               + '</div>';
           }).join("");
+      var attachedName = state.attached_flow_name || "First Hello";
+      var attachedIcon = (state.attached_flow_id === "default") ? "🛠️" : "💬";
       c.innerHTML = ''
         + '<div class="b-section-h" style="margin-top:0">Form name</div>'
         + '<input id="b-name" class="b-input" value="' + esc(state.name) + '" placeholder="Contact form"/>'
@@ -593,6 +597,16 @@
         + '<div class="add-fld-wrap">'
         +   '<button class="btn" id="b-add-fld" type="button">+ Add field <span style="color:#9aa4b2;margin-left:4px">▾</span></button>'
         +   '<div class="add-fld-menu" id="b-add-menu" hidden></div>'
+        + '</div>'
+        + '<div class="b-section-h">When someone submits this form…</div>'
+        + '<div style="border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px;background:#f5f7fa">'
+        +   '<span style="font-size:22px">' + attachedIcon + '</span>'
+        +   '<div style="flex:1;min-width:0">'
+        +     '<div style="font-weight:600;font-size:14px">' + esc(attachedName) + '</div>'
+        +     '<div style="color:var(--sub);font-size:12.5px">Currently attached</div>'
+        +   '</div>'
+        +   '<button class="btn" id="b-change-flow" type="button">Change ▾</button>'
+        +   '<a class="btn" target="_top" href="/dashboard#outreach" title="Open Flow Builder">Edit messages →</a>'
         + '</div>'
         + '<div class="b-section-h">Button text</div>'
         + '<input id="b-submit-text" class="b-input" value="' + esc(state.submit_text) + '"/>'
@@ -695,6 +709,14 @@
       $("b-name").oninput        = function(){ state.name        = $("b-name").value;        renderPreview(); };
       $("b-submit-text").oninput = function(){ state.submit_text = $("b-submit-text").value; renderPreview(); };
       $("b-thanks").oninput      = function(){ state.thank_you   = $("b-thanks").value;      renderPreview(); };
+
+      // Change-flow.
+      var chFl = $("b-change-flow");
+      if (chFl) chFl.onclick = function(){ openChangeFlowModal(state, function(picked){
+        state.attached_flow_id   = picked.id;
+        state.attached_flow_name = picked.name;
+        renderAll();
+      }); };
 
       // Save handler.
       $("b-save").onclick = saveForm;
@@ -840,6 +862,8 @@
       var btn = $("b-save"); btn.disabled = true; btn.textContent = "Saving…";
       var payload = {
         name: state.name, flow_id: state.flow_id,
+        attached_flow_id:   state.attached_flow_id,
+        attached_flow_name: state.attached_flow_name,
         fields: state.fields, submit_text: state.submit_text,
         thank_you: state.thank_you,
       };
@@ -878,6 +902,70 @@
     }
 
     renderAll();
+  }
+
+  function openChangeFlowModal(state, onPick){
+    var bg = document.createElement("div");
+    bg.style = "position:fixed;inset:0;background:rgba(10,15,25,.55);display:flex;align-items:center;justify-content:center;z-index:9050;padding:20px";
+    bg.innerHTML = '<div style="background:#fff;border-radius:14px;max-width:480px;width:100%;padding:22px">'
+      + '<div style="display:flex;align-items:center;margin-bottom:6px">'
+      +   '<h3 style="margin:0;font-size:18px;font-weight:600;flex:1">Pick a flow for this form</h3>'
+      +   '<button data-cf-x style="border:0;background:transparent;cursor:pointer;font-size:22px;color:#9aa4b2;line-height:1">&times;</button>'
+      + '</div>'
+      + '<div id="cf-list" style="margin-top:14px;color:var(--sub);font-size:13px;text-align:center;padding:18px 0">Loading flows…</div>'
+      + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">'
+      +   '<button class="btn" data-cf-x>Cancel</button>'
+      +   '<button class="btn btn-primary" id="cf-save" disabled>Use this flow</button>'
+      + '</div>'
+      + '</div>';
+    document.body.appendChild(bg);
+    var close = function(){ try { document.body.removeChild(bg); } catch(_){} };
+    Array.prototype.forEach.call(bg.querySelectorAll("[data-cf-x]"), function(b){ b.onclick = close; });
+    bg.addEventListener("click", function(e){ if (e.target === bg) close(); });
+
+    var picked = state.attached_flow_id;
+    fetch("/me/flows", { credentials:"same-origin" })
+      .then(function(r){ return r.ok ? r.json() : { flows: [] }; })
+      .then(function(d){
+        var flows = (d && d.flows) || [];
+        var list = bg.querySelector("#cf-list");
+        if (flows.length === 0) {
+          list.innerHTML = '<div>No flows available yet.</div>';
+          return;
+        }
+        list.style.padding = "0"; list.style.color = "inherit"; list.style.textAlign = "left";
+        list.innerHTML = flows.map(function(f){
+          var sel = (f.id === picked);
+          return '<label style="display:flex;align-items:center;gap:12px;padding:12px;border:'
+            + (sel ? '2px solid var(--accent);background:#f1f7fd' : '1px solid var(--line);background:#fff')
+            + ';border-radius:10px;cursor:pointer;margin-bottom:8px">'
+            + '<input type="radio" name="cf-pick" value="' + esc(f.id) + '"' + (sel ? ' checked' : '') + ' style="flex:0 0 auto"/>'
+            + '<span style="font-size:22px">' + esc(f.icon || "✨") + '</span>'
+            + '<span style="flex:1;min-width:0">'
+            +   '<div style="font-weight:600;font-size:14px">' + esc(f.name) + '</div>'
+            +   '<div style="color:var(--sub);font-size:12.5px">' + esc(f.description || "") + '</div>'
+            + '</span>'
+            + '</label>';
+        }).join("");
+        Array.prototype.forEach.call(list.querySelectorAll('input[name="cf-pick"]'), function(r){
+          r.addEventListener("change", function(){
+            picked = r.value;
+            // Re-render selection state.
+            list.querySelectorAll("label").forEach(function(lb){
+              var rd = lb.querySelector('input[name="cf-pick"]');
+              var sel = rd && rd.value === picked;
+              lb.style.border = sel ? "2px solid var(--accent)" : "1px solid var(--line)";
+              lb.style.background = sel ? "#f1f7fd" : "#fff";
+            });
+            $("cf-save").disabled = (picked === state.attached_flow_id);
+          });
+        });
+        $("cf-save").onclick = function(){
+          var chosen = flows.find(function(f){ return f.id === picked; });
+          if (chosen) onPick({ id: chosen.id, name: chosen.name });
+          close();
+        };
+      });
   }
 
   function showFlowPrompt(form, onContinue){
