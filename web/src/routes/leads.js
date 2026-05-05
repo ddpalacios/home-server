@@ -2938,6 +2938,9 @@ const _BE_CAL_NUM_SLOTS     = Math.round((_BE_CAL_DAY_END_MIN - _BE_CAL_DAY_STAR
 
 // Card colors — deterministic per lead_id, mirrors the existing palette
 // strategy (hash → index). 8 colors keep the popup uncluttered.
+// Kept for backward compat with any caller that wants per-id deterministic
+// color; the mini-cal cards now derive color from stage instead (so colors
+// carry meaning, matching the leads list / pipeline / dashboard calendar).
 const _BE_CAL_PALETTE = [
   "#2563eb", "#16a34a", "#dc2626", "#ea580c",
   "#7c3aed", "#0891b2", "#be185d", "#65a30d",
@@ -2947,6 +2950,48 @@ function _beCalLeadColor(leadId) {
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (h + s.charCodeAt(i)) | 0;
   return _BE_CAL_PALETTE[Math.abs(h) % _BE_CAL_PALETTE.length];
+}
+
+// Stage-derived color for mini-cal cards. Reuses STAGE_COLORS (the same
+// palette the leads list uses) so the calendar reads as the same product
+// surface — Quoted=amber, Scheduled=green, Won=lime, Lost=red, etc.
+// Falls back to "scheduled" since most leads on the calendar are booked.
+function _beCalStageColor(lead) {
+  const stage = String((lead && lead.stage) || "scheduled").toLowerCase();
+  return STAGE_COLORS[stage] || STAGE_COLORS.scheduled || "#1D9E75";
+}
+
+// Type icon mirroring the main dashboard calendar's set.
+const _BE_CAL_TYPE_ICONS = {
+  call: "📞", estimate: "📋", visit: "🏠",
+  meeting: "🤝", job: "🔧", other: "⚙️",
+};
+function _beCalTypeIcon(lead) {
+  const t = String((lead && lead.appointment_type) || "other").toLowerCase();
+  return _BE_CAL_TYPE_ICONS[t] || _BE_CAL_TYPE_ICONS.other;
+}
+
+// Pretty duration for the card's second row: "30 min", "1 hour",
+// "1 hr 30 min", etc. Matches the main calendar's vocabulary.
+function _beCalDurationLabel(minutes) {
+  const m = Number(minutes);
+  if (!isFinite(m) || m <= 0) return "";
+  if (m < 60) return `${m} min`;
+  const h = Math.floor(m / 60);
+  const rem = m % 60;
+  if (rem === 0) return h === 1 ? "1 hour" : `${h} hours`;
+  return `${h} hr ${rem} min`;
+}
+
+// Tinted background for the stage color — produces a pale fill matching
+// the spine. Hex → rgba with the given alpha (0..1).
+function _beCalTint(hex, alpha) {
+  const h = String(hex || "").replace("#", "");
+  if (h.length !== 6) return `rgba(29, 158, 117, ${alpha})`;  // scheduled fallback
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 // Add N days to a Date (returns a new Date). Stays in local-clock time.
@@ -3247,14 +3292,30 @@ function _beRenderSlotPanel() {
           const top = ((startMin - _BE_CAL_DAY_START_MIN) / _BE_CAL_SLOT_MIN) * _BE_CAL_SLOT_PX;
           const widthPct = 100 / n;
           const leftPct  = idx * widthPct;
-          const color = _beCalLeadColor(lead.id);
+          const color = _beCalStageColor(lead);
+          const fill  = _beCalTint(color, 0.14);
+          const icon  = _beCalTypeIcon(lead);
           const nm = fullName(lead) || lead.email || lead.id;
           const tLabel = _beCalIsoTimeLabel(assignment.start_iso);
-          cardsHtml.push(`<div class="be-cal-card" draggable="true"
+          const durLabel = _beCalDurationLabel(slotMin);
+          // Compressed (≤24px) → icon + name only. Mid (≤48px) adds time.
+          // Full (>48px) adds duration. Always uses stage palette so the
+          // color carries meaning, not random per-id rainbow.
+          let sizeClass = "is-full";
+          if (slotHeightPx <= 26) sizeClass = "is-compressed";
+          else if (slotHeightPx <= 50) sizeClass = "is-mid";
+          const timeLine = sizeClass === "is-full"
+            ? `${tLabel} · ${durLabel}`
+            : tLabel;
+          cardsHtml.push(`<div class="be-cal-card ${sizeClass}" draggable="true"
             data-be-lead-id="${escapeHtml(lead.id)}"
-            style="top:${top}px; height:${slotHeightPx}px; left:calc(${leftPct}% + 2px); width:calc(${widthPct}% - 4px); --be-card-color:${color};">
-            <div class="be-cal-card-name">${escapeHtml(nm)}</div>
-            <div class="be-cal-card-time">${escapeHtml(tLabel)}</div>
+            title="${escapeHtml(nm + " — " + tLabel + " · " + durLabel)}"
+            style="top:${top}px; height:${slotHeightPx}px; left:calc(${leftPct}% + 2px); width:calc(${widthPct}% - 4px); --be-card-color:${color}; --be-card-fill:${fill};">
+            <div class="be-cal-card-row1">
+              <span class="be-cal-card-icon" aria-hidden="true">${icon}</span>
+              <span class="be-cal-card-name">${escapeHtml(nm)}</span>
+            </div>
+            <div class="be-cal-card-time">${escapeHtml(timeLine)}</div>
           </div>`);
         });
       }
@@ -3396,11 +3457,31 @@ function _beRenderSlotPanel() {
       #leadsBulkEmailDlg .be-cal-busy { position:absolute;left:3px;right:3px;background:repeating-linear-gradient(-45deg,#f1f5f9 0,#f1f5f9 4px,#e2e8f0 4px,#e2e8f0 8px);border:1px solid #cbd5e1;border-radius:5px;font-size:10px;color:#64748b;padding:2px 5px;line-height:1.2;overflow:hidden;pointer-events:none;font-style:italic;z-index:1; }
       #leadsBulkEmailDlg .be-cal-busy-title { font-weight:600;font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
       #leadsBulkEmailDlg .be-cal-busy-time { opacity:0.85; }
-      #leadsBulkEmailDlg .be-cal-card { position:absolute;background:var(--be-card-color, #2563eb);color:#fff;border-radius:5px;padding:3px 5px;font-size:10.5px;line-height:1.2;overflow:hidden;cursor:grab;box-shadow:0 1px 4px rgba(0,0,0,0.18);z-index:2;user-select:none; }
-      #leadsBulkEmailDlg .be-cal-card:hover { box-shadow:0 2px 8px rgba(0,0,0,0.28); }
+      /* Mini-cal card mirrors Phase 1's main-calendar pill: stage-tinted
+         fill, 3px stage-color spine on the left, dark text. Compressed /
+         mid / full size classes hide rows progressively as height shrinks
+         (≤26px = icon + name only; ≤50px = adds time; >50px = adds duration). */
+      #leadsBulkEmailDlg .be-cal-card {
+        position:absolute;background:var(--be-card-fill, rgba(29,158,117,0.14));
+        color:#0a0a0a;border-radius:6px;
+        padding:3px 5px 3px 7px;
+        border:1px solid var(--be-card-color, #1D9E75);
+        border-left:3px solid var(--be-card-color, #1D9E75);
+        font-size:11px;line-height:1.2;overflow:hidden;cursor:grab;
+        box-shadow:0 1px 2px rgba(0,0,0,0.06);z-index:2;user-select:none;
+        transition:box-shadow 120ms ease,border-width 120ms ease;
+      }
+      #leadsBulkEmailDlg .be-cal-card:hover { box-shadow:0 2px 6px rgba(0,0,0,0.16); }
       #leadsBulkEmailDlg .be-cal-card.is-dragging { opacity:0.55;cursor:grabbing; }
-      #leadsBulkEmailDlg .be-cal-card-name { font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-      #leadsBulkEmailDlg .be-cal-card-time { opacity:0.92;font-size:10px; }
+      #leadsBulkEmailDlg .be-cal-card-row1 { display:flex;align-items:flex-start;gap:4px;min-width:0; }
+      #leadsBulkEmailDlg .be-cal-card-icon { font-size:11px;line-height:1.2;flex-shrink:0; }
+      #leadsBulkEmailDlg .be-cal-card-name { font-weight:600;color:#0a0a0a;min-width:0;flex:1;
+        white-space:normal;word-break:break-word;overflow:hidden; }
+      #leadsBulkEmailDlg .be-cal-card-time { color:#475569;font-size:10px;margin-top:1px; }
+      #leadsBulkEmailDlg .be-cal-card.is-compressed { padding:2px 5px 2px 7px;font-size:10.5px; }
+      #leadsBulkEmailDlg .be-cal-card.is-compressed .be-cal-card-name {
+        white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+      #leadsBulkEmailDlg .be-cal-card.is-compressed .be-cal-card-time { display:none; }
       #leadsBulkEmailDlg .be-cal-empty-hint { margin:10px 0 0;padding:10px 12px;background:#fffbeb;border:1px solid #fcd34d;color:#78350f;border-radius:8px;font-size:12.5px;text-align:center; }
       #leadsBulkEmailDlg .be-cal-help { margin:8px 0 0;font-size:11.5px;color:#6b7280;text-align:center; }
     </style>
