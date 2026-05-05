@@ -60,12 +60,16 @@ function ActivityCard({ id, data }) {
     e.stopPropagation();
     ctx.openChooser({ sourceId: id });
   };
+  // Pill content lives next to the text block (not at the right edge)
+  // so it can never collide with the drag knob or + button.
+  const pill = isInputNode
+    ? <span className="fb-card-pill fb-card-pill-input">START</span>
+    : <span className={`fb-card-pill ${isOn ? "is-on" : ""}`}>{isOn ? "ON" : "OFF"}</span>;
   return (
     <div className={`fb-card fb-kind-${kind} ${isOn ? "is-on" : ""} ${isInputNode ? "fb-card-input" : ""}`}>
       {!isInputNode && (
-        <Handle type="target" position={Position.Left} id="in" className="fb-handle" />
+        <Handle type="target" position={Position.Left} id="in" className="fb-handle fb-handle-target" />
       )}
-      <Handle type="source" position={Position.Right} id="out" className="fb-handle" />
       <div className="fb-card-stripe" aria-hidden="true" />
       <div className="fb-card-row">
         <div className="fb-card-icoring" aria-hidden="true">
@@ -76,24 +80,34 @@ function ActivityCard({ id, data }) {
           {data.cardSub ? (
             <div className="fb-card-sub">{data.cardSub}</div>
           ) : null}
+          <div className="fb-card-meta">{pill}</div>
         </div>
-        {isInputNode ? (
-          <span className="fb-card-pill fb-card-pill-input">START</span>
-        ) : (
-          <span className={`fb-card-pill ${isOn ? "is-on" : ""}`}>
-            {isOn ? "ON" : "OFF"}
-          </span>
-        )}
       </div>
+      {/* Drag knob — right-edge mid. Wraps React Flow's source Handle
+          so the icon IS the connection-port (mousedown starts a
+          drag-to-connect). Click does nothing; click-to-add lives on
+          the separate + button below. */}
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="out"
+        className="fb-handle fb-knob"
+        title="Drag to connect"
+      >
+        <span className="fb-knob-arrow" aria-hidden="true">→</span>
+        <span className="fb-knob-tip" aria-hidden="true">Drag to connect</span>
+      </Handle>
+      {/* + Add button — bottom-right corner, click-only. Adds a new
+          step right after this one via the existing chooser. */}
       <button
         type="button"
-        className="fb-next-btn nodrag nopan"
+        className="fb-add-btn fb-next-btn nodrag nopan"
         onClick={onAddNext}
-        aria-label="Add the next step"
-        title="Add the next step"
+        aria-label="Add a step"
+        title="Add a step"
       >
         <span aria-hidden="true">+</span>
-        <span className="fb-next-btn-l">Next</span>
+        <span className="fb-add-btn-tip" aria-hidden="true">Add a step</span>
       </button>
     </div>
   );
@@ -1978,11 +1992,18 @@ const STYLES = `
     font-size: 13.5px; font-weight: 500; color: var(--kind-deep);
     line-height: 1.3;
   }
+  /* Pill row sits BELOW the subtitle — own line, never crowds the
+     drag knob or + Add button on the right edge. */
+  .fb-card-meta {
+    margin-top: 8px;
+    display: inline-flex;
+  }
   .fb-card-pill {
     flex-shrink: 0;
-    padding: 5px 11px; border-radius: 999px;
+    padding: 4px 10px; border-radius: 999px;
     background: #f3f4f6; color: #6b7280;
-    font-size: 11px; font-weight: 800; letter-spacing: .05em;
+    font-size: 10.5px; font-weight: 800; letter-spacing: .06em;
+    text-transform: uppercase;
   }
   .fb-card-pill.is-on {
     background: var(--kind-color); color: #fff;
@@ -1994,36 +2015,117 @@ const STYLES = `
     background: #10b981; color: #fff;
     box-shadow: 0 0 0 3px rgba(16,185,129,.20);
   }
-  /* "+ Next" connector button — sticks out the right edge of every
-     activity card so adding the next step never requires hunting for
-     a tiny port handle. */
-  .fb-card { /* position:relative already set above; keep next-btn anchored */ }
-  .fb-next-btn {
-    /* Anchored to the card's right edge with its own center on the
-       border so it reads as a "port" rather than a free-floating chip.
-       Translate-X moves half its width past the edge — exactly the
-       look the user asked for, no clipping. */
+
+  /* ── Right-edge drag knob ───────────────────────────────────────────
+     Wraps React Flow's source Handle so the visible knob IS the port
+     the user drags from. Single purpose: drag-to-connect. Click does
+     nothing here. Click-to-add lives on the separate + button below. */
+  .fb-knob.react-flow__handle {
+    width: 28px; height: 28px;
+    right: -14px;                 /* center on the card's right edge */
+    top: 50%;
+    transform: translateY(-50%);
+    background: #fff;
+    border: 2px solid var(--fb-green);
+    box-shadow: 0 2px 6px rgba(15,23,42,.10),
+                0 0 0 0 rgba(22,163,74,0);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: grab;
+    transition: transform .12s, box-shadow .12s, background .12s, border-color .12s;
+    z-index: 3;
+  }
+  .fb-knob.react-flow__handle:hover {
+    background: var(--fb-green);
+    border-color: var(--fb-green);
+    transform: translateY(-50%) scale(1.12);
+    box-shadow: 0 4px 12px rgba(15,23,42,.18),
+                0 0 0 4px rgba(22,163,74,.20);
+  }
+  .fb-knob.react-flow__handle:hover .fb-knob-arrow { color: #fff; }
+  .fb-knob.react-flow__handle:active { cursor: grabbing; }
+  .fb-knob-arrow {
+    color: var(--fb-green);
+    font-size: 14px; font-weight: 900; line-height: 1;
+    pointer-events: none;
+    transition: color .12s;
+  }
+  /* Hover-only "Drag to connect" tooltip — no flash on first paint. */
+  .fb-knob-tip {
     position: absolute;
-    right: 0; top: 50%;
-    transform: translate(50%, -50%);
+    left: 50%; top: -34px;
+    transform: translateX(-50%) translateY(4px);
+    padding: 5px 10px; border-radius: 8px;
+    background: #0f172a; color: #fff;
+    font-size: 11.5px; font-weight: 600; white-space: nowrap;
+    opacity: 0; pointer-events: none;
+    transition: opacity .15s ease, transform .15s ease;
+    box-shadow: 0 4px 12px rgba(15,23,42,.20);
+  }
+  .fb-knob.react-flow__handle:hover .fb-knob-tip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    transition-delay: .35s;
+  }
+
+  /* Tame the default left-edge target handle — small, subtle dot.
+     Stays grabbable but reads as a passive port, not an action. */
+  .fb-handle-target.react-flow__handle {
+    width: 12px; height: 12px;
+    background: #fff;
+    border: 2px solid var(--fb-green);
+    box-shadow: 0 0 0 2px rgba(22,163,74,.18);
+  }
+  .fb-handle-target.react-flow__handle:hover {
+    background: var(--fb-green);
+    transform: scale(1.2);
+  }
+
+  /* ── + Add button — bottom-right corner, click-only ─────────────────
+     Lives slightly outside the card's bottom-right corner so it reads
+     as an action that PRODUCES a new card, not a port that connects
+     to one. Solid green fill = "do this." Distinct from the outlined
+     drag knob = "drag from this." */
+  .fb-add-btn {
+    position: absolute;
+    right: -12px; bottom: -12px;
     z-index: 2;
-    display: inline-flex; align-items: center; gap: 6px;
-    height: 36px; padding: 0 14px;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px;
     background: var(--fb-green); color: #fff;
-    border: 2px solid #fff; border-radius: 999px;
-    font: 700 13px -apple-system, BlinkMacSystemFont, "Segoe UI",
+    border: 2px solid #fff; border-radius: 50%;
+    font: 800 18px -apple-system, BlinkMacSystemFont, "Segoe UI",
           Roboto, sans-serif;
+    line-height: 1;
     box-shadow: 0 4px 12px rgba(15,23,42,.18),
                 0 0 0 1px rgba(22,163,74,.25);
     cursor: pointer;
     white-space: nowrap;
     transition: transform .12s, box-shadow .12s, background .12s;
   }
-  .fb-next-btn:hover {
+  .fb-add-btn:hover {
     background: #15803d;
-    transform: translate(50%, -50%) scale(1.05);
+    transform: scale(1.1);
     box-shadow: 0 6px 16px rgba(15,23,42,.22),
                 0 0 0 2px rgba(22,163,74,.35);
+  }
+  .fb-add-btn-tip {
+    position: absolute;
+    right: 0; bottom: calc(100% + 8px);
+    padding: 5px 10px; border-radius: 8px;
+    background: #0f172a; color: #fff;
+    font: 600 11.5px -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+    letter-spacing: 0;
+    white-space: nowrap;
+    opacity: 0; pointer-events: none;
+    transition: opacity .15s ease, transform .15s ease;
+    transform: translateY(4px);
+    box-shadow: 0 4px 12px rgba(15,23,42,.20);
+  }
+  .fb-add-btn:hover .fb-add-btn-tip {
+    opacity: 1; transform: translateY(0);
+    transition-delay: .35s;
   }
   /* ── Layered UI z-index scale ──────────────────────────────────────
      Codified so future components don't pick arbitrary values.
