@@ -132,14 +132,9 @@ export const ACTIVITY_CATALOG = [
     description: "Nudges you. If you don't reply, AI or your message goes out.",
     trigger: "REPLY",
     defaultMode: "reply",
-    // Cadence: use the account's global reminder_cadence by default.
-    defaultUseGlobalCadence: true,
-    defaultFirstReminderMinutes:  30,
-    defaultSecondReminderMinutes: 120,
-    defaultTakeoverMinutes:       360,
-    // Fallback: 'ai' (uses the global AI mode) or 'custom' (sends the
-    // body below with token substitution).
-    defaultFallback: "ai",
+    // Cadence is always driven by the global reminder_cadence in the
+    // account's AI policy — no per-step override. See ReplyWidgetEditor.
+    defaultFallback: "ai",   // 'ai' or 'custom'
     defaultBody: "Hey {first_name}, sorry I missed you — just following up about {service_type}. I'll be in touch shortly.\n— {owner_name}",
   },
 

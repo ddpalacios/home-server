@@ -600,17 +600,15 @@ function _fmtMinutes(m) {
 }
 
 function ReplyPhonePreview({
-  fallback, useGlobalCadence,
-  firstReminderMinutes, secondReminderMinutes, takeoverMinutes,
-  customBody, globalAiMode,
+  fallback, customBody, globalAiMode, globalCadence,
 }) {
   const finalLabel = fallback === "ai"
     ? (globalAiMode === "i_respond" ? "AI off — stops" : "AI replies")
     : "My message sends";
   const renderedBody = applyMergeTags(customBody || "");
-  const r1 = useGlobalCadence ? "global" : _fmtMinutes(firstReminderMinutes);
-  const r2 = useGlobalCadence ? "global" : _fmtMinutes(secondReminderMinutes);
-  const rT = useGlobalCadence ? "global" : _fmtMinutes(takeoverMinutes);
+  const r1 = globalCadence ? _fmtMinutes(globalCadence.first_reminder_minutes) : "—";
+  const r2 = globalCadence ? _fmtMinutes(globalCadence.second_reminder_minutes) : "—";
+  const rT = globalCadence ? _fmtMinutes(globalCadence.ai_takeover_minutes) : "—";
   return (
     <div className="fb-rwprev">
       <div className="fb-rwprev-h">How this plays out</div>
@@ -678,24 +676,13 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
     data.waitDays != null ? data.waitDays : (activity.defaultDurationDays || 1));
   const [conditionId, setConditionId] = React.useState(
     data.conditionId || activity.defaultConditionId || BRANCH_CONDITIONS[0].id);
-  // Reply Widget state — only meaningful when isReply.
+  // Reply Widget state — only meaningful when isReply. Cadence is
+  // always driven by the global setting (top-right control), so we
+  // don't track per-step overrides — we just read and display them.
   const [fallback, setFallback] = React.useState(
     data.fallback || activity.defaultFallback || "ai");
-  const [useGlobalCadence, setUseGlobalCadence] = React.useState(
-    data.useGlobalCadence != null ? !!data.useGlobalCadence
-      : (activity.defaultUseGlobalCadence !== false));
-  const [firstReminderMinutes, setFirstReminderMinutes] = React.useState(
-    data.firstReminderMinutes != null ? data.firstReminderMinutes
-      : (activity.defaultFirstReminderMinutes || 30));
-  const [secondReminderMinutes, setSecondReminderMinutes] = React.useState(
-    data.secondReminderMinutes != null ? data.secondReminderMinutes
-      : (activity.defaultSecondReminderMinutes || 120));
-  const [takeoverMinutes, setTakeoverMinutes] = React.useState(
-    data.takeoverMinutes != null ? data.takeoverMinutes
-      : (activity.defaultTakeoverMinutes || 360));
-  // Live mirror of the account's global AI mode for the helper line in
-  // the drawer ("AI replies: When slow"). Single fetch on open.
   const [globalAiMode, setGlobalAiMode] = React.useState(null);
+  const [globalCadence, setGlobalCadence] = React.useState(null);
   React.useEffect(() => {
     if (!isReply) return;
     let cancelled = false;
@@ -704,7 +691,9 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
         const r = await fetch("/me/ai/policy", { credentials: "same-origin" });
         if (!r.ok) return;
         const p = await r.json();
-        if (!cancelled) setGlobalAiMode((p && p.mode) || "hybrid");
+        if (cancelled) return;
+        setGlobalAiMode((p && p.mode) || "hybrid");
+        setGlobalCadence((p && p.reminder_cadence) || null);
       } catch (_) {}
     })();
     return () => { cancelled = true; };
@@ -719,13 +708,10 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
   React.useEffect(() => {
     onChange(node.id, {
       mode, subject, body, waitDays, conditionId,
-      fallback, useGlobalCadence,
-      firstReminderMinutes, secondReminderMinutes, takeoverMinutes,
+      fallback,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, subject, body, waitDays, conditionId,
-      fallback, useGlobalCadence,
-      firstReminderMinutes, secondReminderMinutes, takeoverMinutes]);
+  }, [mode, subject, body, waitDays, conditionId, fallback]);
 
   // Esc closes the drawer.
   React.useEffect(() => {
@@ -822,18 +808,11 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
             ) : isReply ? (
               <ReplyWidgetEditor
                 fallback={fallback} setFallback={setFallback}
-                useGlobalCadence={useGlobalCadence}
-                setUseGlobalCadence={setUseGlobalCadence}
-                firstReminderMinutes={firstReminderMinutes}
-                setFirstReminderMinutes={setFirstReminderMinutes}
-                secondReminderMinutes={secondReminderMinutes}
-                setSecondReminderMinutes={setSecondReminderMinutes}
-                takeoverMinutes={takeoverMinutes}
-                setTakeoverMinutes={setTakeoverMinutes}
                 body={body} setBody={setBody}
                 taRef={taRef}
                 onActiveField={() => setActiveField("body")}
                 globalAiMode={globalAiMode}
+                globalCadence={globalCadence}
               />
             ) : (
               <>
@@ -934,12 +913,9 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
             ) : isReply ? (
               <ReplyPhonePreview
                 fallback={fallback}
-                useGlobalCadence={useGlobalCadence}
-                firstReminderMinutes={firstReminderMinutes}
-                secondReminderMinutes={secondReminderMinutes}
-                takeoverMinutes={takeoverMinutes}
                 customBody={body}
                 globalAiMode={globalAiMode}
+                globalCadence={globalCadence}
               />
             ) : (
               <>
@@ -1040,14 +1016,48 @@ const GLOBAL_MODE_LABEL = {
 
 function ReplyWidgetEditor({
   fallback, setFallback,
-  useGlobalCadence, setUseGlobalCadence,
-  firstReminderMinutes, setFirstReminderMinutes,
-  secondReminderMinutes, setSecondReminderMinutes,
-  takeoverMinutes, setTakeoverMinutes,
   body, setBody, taRef, onActiveField,
-  globalAiMode,
+  globalAiMode, globalCadence,
 }) {
   const aiOff = globalAiMode === "i_respond";
+
+  // Inline AI tester — same /me/ai/test-reply endpoint the AI Settings
+  // page uses, just rendered in the drawer so users can sanity-check
+  // without leaving the flow.
+  const [testInput, setTestInput] = React.useState("");
+  const [testReply, setTestReply] = React.useState({
+    state: "empty",
+    text: "Reply shows here. Nothing gets sent.",
+  });
+  const [testing, setTesting] = React.useState(false);
+
+  async function runTest() {
+    const msg = (testInput || "").trim();
+    if (!msg) return;
+    setTesting(true);
+    setTestReply({ state: "loading", text: "Generating…" });
+    try {
+      const r = await fetch("/me/ai/test-reply", {
+        method: "POST", credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: msg }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        setTestReply({ state: "declined",
+          text: "Couldn't generate: " + (d.error || r.status) });
+      } else if (d.declined) {
+        setTestReply({ state: "declined",
+          text: "AI declined — would hand back to you." });
+      } else {
+        setTestReply({ state: "ok", text: d.reply || "(empty reply)" });
+      }
+    } catch (_) {
+      setTestReply({ state: "declined", text: "Network error." });
+    } finally {
+      setTesting(false);
+    }
+  }
 
   function insertChip(token) {
     onActiveField && onActiveField();
@@ -1056,58 +1066,7 @@ function ReplyWidgetEditor({
 
   return (
     <div>
-      <div className="fb-replywidget-section">
-        <label className="fb-drawer-l">Remind me</label>
-        <div className="fb-replywidget-cadence-toggle">
-          <label className="fb-replywidget-radio">
-            <input
-              type="radio"
-              name="rwCadenceMode"
-              checked={useGlobalCadence}
-              onChange={() => setUseGlobalCadence(true)}
-            />
-            <span>My usual times</span>
-          </label>
-          <label className="fb-replywidget-radio">
-            <input
-              type="radio"
-              name="rwCadenceMode"
-              checked={!useGlobalCadence}
-              onChange={() => setUseGlobalCadence(false)}
-            />
-            <span>Set for this step</span>
-          </label>
-        </div>
-        {!useGlobalCadence && (
-          <div className="fb-replywidget-cadence-grid">
-            <label>
-              <span>First nudge</span>
-              <select className="fb-input"
-                value={firstReminderMinutes}
-                onChange={(e) => setFirstReminderMinutes(parseInt(e.target.value, 10))}>
-                {REMINDER_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
-            </label>
-            <label>
-              <span>Again</span>
-              <select className="fb-input"
-                value={secondReminderMinutes}
-                onChange={(e) => setSecondReminderMinutes(parseInt(e.target.value, 10))}>
-                {REMINDER_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
-            </label>
-            <label>
-              <span>Take over</span>
-              <select className="fb-input"
-                value={takeoverMinutes}
-                onChange={(e) => setTakeoverMinutes(parseInt(e.target.value, 10))}>
-                {REMINDER_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
-            </label>
-          </div>
-        )}
-      </div>
-
+      {/* "If I don't reply" — primary choice, top of drawer */}
       <div className="fb-replywidget-section">
         <label className="fb-drawer-l">If I don't reply</label>
         <div className="fb-replywidget-fallback">
@@ -1140,8 +1099,39 @@ function ReplyWidgetEditor({
         </div>
       </div>
 
+      {/* AI test panel — shown when fallback is AI */}
+      {fallback === "ai" && (
+        <div className="fb-replywidget-section">
+          <label className="fb-drawer-l">Try it</label>
+          <div className="fb-rwtest-row">
+            <input
+              type="text"
+              className="fb-rwtest-input"
+              placeholder="Ask anything a customer might ask."
+              value={testInput}
+              onChange={(e) => setTestInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") { e.preventDefault(); runTest(); }
+              }}
+            />
+            <button
+              type="button"
+              className="fb-rwtest-btn"
+              onClick={runTest}
+              disabled={testing}
+            >{testing ? "…" : "Try →"}</button>
+          </div>
+          <div
+            className="fb-rwtest-preview"
+            data-state={testReply.state}
+          >{testReply.text}</div>
+        </div>
+      )}
+
+      {/* Custom body — shown when fallback is custom */}
       {fallback === "custom" && (
         <div className="fb-replywidget-section">
+          <label className="fb-drawer-l">Your message</label>
           <textarea
             id="fb-rw-body"
             ref={taRef}
@@ -1168,6 +1158,25 @@ function ReplyWidgetEditor({
           </div>
         </div>
       )}
+
+      {/* Reminders — read-only summary, driven by the global setting */}
+      <div className="fb-replywidget-cadinfo">
+        <div className="fb-replywidget-cadinfo-h">Reminders before takeover</div>
+        <div className="fb-replywidget-cadinfo-times">
+          {globalCadence ? (
+            <>
+              <span>{_fmtMinutes(globalCadence.first_reminder_minutes)}</span>
+              <span className="fb-replywidget-cadinfo-sep">·</span>
+              <span>{_fmtMinutes(globalCadence.second_reminder_minutes)}</span>
+              <span className="fb-replywidget-cadinfo-sep">·</span>
+              <span>{_fmtMinutes(globalCadence.ai_takeover_minutes)} (takeover)</span>
+            </>
+          ) : <span style={{ color: "#94a3b8" }}>Loading…</span>}
+        </div>
+        <div className="fb-replywidget-cadinfo-link">
+          Change in top-right ↗
+        </div>
+      </div>
     </div>
   );
 }
@@ -2048,53 +2057,81 @@ const STYLES = `
     letter-spacing: -0.01em; margin-bottom: 14px;
   }
 
-  /* Segmented toggle (My usual times / Set for this step) */
-  .fb-replywidget-cadence-toggle {
-    display: flex; gap: 0; padding: 4px;
-    background: #f1f5f9; border-radius: 12px;
-    margin-top: 4px;
+  /* Inline AI test panel — visible when fallback="ai" */
+  .fb-rwtest-row {
+    display: flex; gap: 12px; align-items: stretch;
   }
-  .fb-replywidget-radio {
-    flex: 1; display: inline-flex; align-items: center; justify-content: center;
-    gap: 6px; padding: 12px 16px;
-    font-size: 14px; font-weight: 600; color: #475569;
-    cursor: pointer; border-radius: 8px;
-    transition: all 0.16s ease;
+  .fb-rwtest-input {
+    flex: 1; padding: 14px 16px;
+    font-size: 15px; color: #0a0a0a;
+    border: 1.5px solid #e5e7eb; border-radius: 12px;
+    background: #fff; font-family: inherit;
+    transition: border-color 0.14s ease, box-shadow 0.14s ease;
   }
-  .fb-replywidget-radio:has(input:checked) {
-    background: #fff; color: #0a0a0a;
-    box-shadow: 0 1px 3px rgba(15,23,42,0.10),
-                0 1px 1px rgba(15,23,42,0.06);
+  .fb-rwtest-input:focus {
+    outline: 0; border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37,99,235,0.12);
   }
+  .fb-rwtest-btn {
+    padding: 0 22px; min-width: 92px;
+    font-size: 14.5px; font-weight: 600;
+    border-radius: 12px; border: 1.5px solid #0f172a;
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+    color: #fff; cursor: pointer; font-family: inherit;
+    transition: all 0.14s ease;
+    box-shadow: 0 2px 8px rgba(15,23,42,0.16);
+  }
+  .fb-rwtest-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(15,23,42,0.24);
+  }
+  .fb-rwtest-btn:disabled { opacity: 0.6; cursor: progress; transform: none; }
+  .fb-rwtest-preview {
+    margin-top: 14px; padding: 18px 20px;
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1.5px solid #e2e8f0; border-radius: 14px;
+    font-size: 14.5px; line-height: 1.6; color: #0a0a0a;
+    white-space: pre-wrap; min-height: 56px;
+  }
+  .fb-rwtest-preview[data-state="empty"] {
+    color: #94a3b8; font-style: italic;
+  }
+  .fb-rwtest-preview[data-state="loading"] {
+    color: #6b7280; font-style: italic;
+  }
+  .fb-rwtest-preview[data-state="declined"] {
+    background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
+    border-color: #fdba74; color: #9a3412;
+  }
+
+  /* Read-only cadence summary (driven by the global setting) */
+  .fb-replywidget-cadinfo {
+    margin-top: 8px;
+    padding: 16px 18px;
+    background: #f8fafc;
+    border: 1.5px dashed #e2e8f0; border-radius: 12px;
+  }
+  .fb-replywidget-cadinfo-h {
+    font-size: 11.5px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: #6b7280; margin-bottom: 8px;
+  }
+  .fb-replywidget-cadinfo-times {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    align-items: baseline;
+    font-size: 15px; font-weight: 600; color: #0a0a0a;
+  }
+  .fb-replywidget-cadinfo-sep { color: #cbd5e1; }
+  .fb-replywidget-cadinfo-link {
+    margin-top: 8px;
+    font-size: 12.5px; color: #2563eb; font-weight: 500;
+  }
+
+  /* Hidden native radio inside fallback cards */
   .fb-replywidget-radio input {
     appearance: none; -webkit-appearance: none;
     width: 0; height: 0; margin: 0; padding: 0; opacity: 0;
     position: absolute;
-  }
-
-  .fb-replywidget-cadence-grid {
-    display: grid; grid-template-columns: 1fr; gap: 12px;
-    margin-top: 16px;
-    padding: 16px 18px;
-    background: #f8fafc; border-radius: 12px;
-  }
-  .fb-replywidget-cadence-grid label {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 14px; font-size: 15px; font-weight: 500; color: #1f2937;
-  }
-  .fb-replywidget-cadence-grid select {
-    min-width: 140px; height: 42px;
-    font-size: 14px; font-weight: 500;
-    padding: 0 14px;
-    border: 1.5px solid #e2e8f0; border-radius: 10px;
-    background: #fff; color: #0a0a0a;
-    cursor: pointer; font-family: inherit;
-    transition: border-color 0.14s ease;
-  }
-  .fb-replywidget-cadence-grid select:hover { border-color: #cbd5e1; }
-  .fb-replywidget-cadence-grid select:focus {
-    outline: 0; border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
   }
 
   /* Fallback choice cards (AI replies / Send this) */
