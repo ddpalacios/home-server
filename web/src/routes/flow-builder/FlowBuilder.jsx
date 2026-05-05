@@ -2565,6 +2565,13 @@ export default function FlowBuilder() {
     ? `/me/forms/${encodeURIComponent(formId)}/flow`
     : "/me/flows/default";
 
+  // Canvas state machine — three explicit entry-path states:
+  //   STATE A (blank): no formId AND no saved flow → leave canvas
+  //     empty so the TemplatePicker overlay shows. No fake seed.
+  //   STATE B (loaded): saved flow exists → load and display verbatim.
+  //   STATE C (form-attached): formId set and no saved flow yet →
+  //     seed first_contact AND persist immediately so a refresh
+  //     returns the saved flow (idempotent — never duplicates).
   React.useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -2576,6 +2583,7 @@ export default function FlowBuilder() {
         if (r.ok) {
           const d = await r.json().catch(() => ({}));
           if (d && d.flow && Array.isArray(d.flow.nodes) && d.flow.nodes.length > 0) {
+            // STATE B / form-attached-already-saved
             setNodes(d.flow.nodes);
             setEdges(Array.isArray(d.flow.edges) ? d.flow.edges : []);
             setPickerDismissed(true);
@@ -2583,14 +2591,26 @@ export default function FlowBuilder() {
           }
         }
       } catch (_) { /* swallow — work offline */ }
-      // First-time arrival via form round-trip — seed the first_contact
-      // trigger so the canvas reflects what the form already does.
       if (!cancelled && !hasSavedFlow && formId) {
+        // STATE C — auto-create the form-attached flow and persist
+        // immediately so subsequent loads see it as "saved." The
+        // debounced autosave covers later edits; this initial save
+        // makes the auto-create idempotent.
         const seed = buildFromTemplate({ activityIds: ["first_contact"] });
         setNodes(seed.nodes);
         setEdges(seed.edges);
         setPickerDismissed(true);
+        try {
+          await fetch(flowEndpoint, {
+            method: "POST", credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nodes: seed.nodes, edges: seed.edges }),
+          });
+        } catch (_) { /* the autosave will pick this up next edit */ }
       }
+      // STATE A is implicit: nodes stays empty, pickerDismissed stays
+      // false, so the TemplatePicker overlay renders the "build your
+      // first flow" choices.
       if (!cancelled) setHydrated(true);
     })();
     return () => { cancelled = true; };
