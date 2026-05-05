@@ -2166,6 +2166,7 @@ let _beState = {
   slotMinutes: 30,                // dropdown value
   slotsLoading: false,            // spinner state for the Find times button
   slotsError: "",                 // user-visible message ("", or reason key)
+  slotsDiagnostics: null,         // { calendar_id, working_hours_keys, ... } from server when slots fail
   slotAssignments: {},            // { lead_id: { start_iso, end_iso, label, epoch } }
   slotTimeZone: "",               // working-hours tz from /find-slots response
 };
@@ -2907,6 +2908,27 @@ function _beRenderSlotPanel() {
     errHtml = `<div class="be-slot-warn">Only found ${found} open time${found !== 1 ? "s" : ""} — ${total - found} lead${(total - found) !== 1 ? "s" : ""} still need a slot. Try a longer window.</div>`;
   }
 
+  // When the helper can't find slots, surface diagnostics so the user can
+  // see what was actually checked (calendar id, weekday keys it found in
+  // working hours, freebusy result). Plain English, no code-jargon.
+  if (errHtml && _beState.slotsDiagnostics) {
+    const d = _beState.slotsDiagnostics;
+    const lines = [];
+    if (d.calendar_id) lines.push(`Calendar checked: ${escapeHtml(d.calendar_id)}`);
+    if (d.calendar_time_zone) lines.push(`Calendar time zone: ${escapeHtml(d.calendar_time_zone)}`);
+    if (d.working_hours_time_zone) lines.push(`Working-hours time zone: ${escapeHtml(d.working_hours_time_zone)}`);
+    if (d.working_hours_used_default) lines.push(`Working hours: using Mon-Fri 9-5 default (yours weren't readable)`);
+    else if (Array.isArray(d.working_hours_keys)) lines.push(`Working-hours days configured: ${d.working_hours_keys.join(", ") || "(none)"}`);
+    if (d.search_start_local) lines.push(`Window starts: ${escapeHtml(String(d.search_start_local))}`);
+    if (typeof d.horizon_days === "number") lines.push(`Window length: ${d.horizon_days} day${d.horizon_days === 1 ? "" : "s"}`);
+    if (typeof d.freebusy_busy_count === "number") lines.push(`Busy events found in window: ${d.freebusy_busy_count}`);
+    if (d.freebusy_ok === false) lines.push(`Calendar lookup failed: ${escapeHtml(String(d.freebusy_error || "unknown"))}`);
+    if (typeof d.slot_minutes === "number") lines.push(`Slot length: ${d.slot_minutes} minutes`);
+    if (lines.length) {
+      errHtml += `<details class="be-slot-diag"><summary>Why?</summary><div>${lines.map(l => `<div>${l}</div>`).join("")}</div></details>`;
+    }
+  }
+
   const btnLabel = _beState.slotsLoading
     ? "Finding times…"
     : `Find times for these ${total} lead${total !== 1 ? "s" : ""}`;
@@ -2934,6 +2956,10 @@ function _beRenderSlotPanel() {
       #leadsBulkEmailDlg .be-slot-err { padding:9px 12px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:8px;font-size:12.5px;margin-top:10px; }
       #leadsBulkEmailDlg .be-slot-warn { padding:9px 12px;background:#fffbeb;border:1px solid #fcd34d;color:#78350f;border-radius:8px;font-size:12.5px;margin-top:10px; }
       #leadsBulkEmailDlg .be-slot-err-link { color:#991b1b;text-decoration:underline;font-weight:600;margin-left:6px; }
+      #leadsBulkEmailDlg .be-slot-diag { margin-top:8px;font-size:11.5px;color:#475569; }
+      #leadsBulkEmailDlg .be-slot-diag summary { cursor:pointer;color:#64748b;text-decoration:underline;font-weight:500;font-size:11.5px;list-style:none;padding:2px 0; }
+      #leadsBulkEmailDlg .be-slot-diag summary::-webkit-details-marker { display:none; }
+      #leadsBulkEmailDlg .be-slot-diag div div { padding:2px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px; }
     </style>
     <div class="be-slot-panel" id="beSlotPanel">
       <div class="be-slot-title">Find available times</div>
@@ -3065,6 +3091,9 @@ async function _beFindSlots() {
   let data = {};
   try { data = await res.json(); } catch (_) { data = {}; }
   _beState.slotsLoading = false;
+  // Stash diagnostics so the user can expand them when the helper can't
+  // find slots — debugging in the wild without server logs.
+  _beState.slotsDiagnostics = data.diagnostics || null;
   if (!res.ok) {
     _beState.slotsError = data.reason || "no_slots_available";
     _beState.slotAssignments = {};
