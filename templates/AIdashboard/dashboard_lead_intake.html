@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lead intake</title>
+<style>
+  :root { --fg:#111; --sub:#555; --bg:#f7f7f8; --card:#fff; --line:#e6e6ea; --accent:#0a66c2; --err:#c0392b; --ok:#0a8a3a; --soft:#f0f2f5; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14.5px/1.45 -apple-system,Segoe UI,Roboto,sans-serif; color:var(--fg); background:var(--bg); }
+  .wrap { max-width:920px; margin:0 auto; padding:20px 16px 60px; }
+  h1 { font-size:22px; margin:0 0 4px; }
+  .sub { color:var(--sub); margin:0 0 18px; }
+  .channels { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:24px; }
+  .ch { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px; cursor:pointer; }
+  .ch[disabled] { opacity:.55; cursor:not-allowed; }
+  .ch h3 { margin:0 0 4px; font-size:15px; }
+  .ch .meta { color:var(--sub); font-size:12.5px; }
+  .panel { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:18px; }
+  .row { display:flex; align-items:center; padding:10px 0; border-bottom:1px solid var(--line); }
+  .row:last-child { border-bottom:0; }
+  .row .name { font-weight:600; }
+  .row .url { color:var(--sub); font-size:12.5px; word-break:break-all; }
+  .actions { margin-left:auto; display:flex; gap:6px; }
+  .btn { background:var(--card); border:1px solid var(--line); border-radius:6px; padding:6px 10px; cursor:pointer; font:inherit; }
+  .btn-primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .empty { text-align:center; padding:40px 12px; color:var(--sub); }
+  .empty .btn-primary { margin-top:12px; }
+  .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#222; color:#fff; padding:10px 14px; border-radius:6px; opacity:0; transition:opacity .2s; }
+  .toast.show { opacity:1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Lead intake</h1>
+  <p class="sub">How leads reach you. They all fire your saved flows automatically.</p>
+
+  <div class="channels">
+    <div class="ch" id="ch-form">
+      <h3>Website form</h3>
+      <div class="meta" id="ch-form-meta">Loading…</div>
+    </div>
+    <div class="ch" disabled><h3>Email</h3><div class="meta">Coming soon</div></div>
+    <div class="ch" disabled><h3>Phone (call &amp; text)</h3><div class="meta">Coming soon</div></div>
+    <div class="ch" disabled><h3>Instagram / Facebook DM</h3><div class="meta">Coming soon</div></div>
+  </div>
+
+  <div class="panel" id="forms-panel">
+    <div id="forms-empty" class="empty" hidden>
+      <div>No forms yet.</div>
+      <button class="btn btn-primary" id="empty-create">Create form</button>
+    </div>
+    <div id="forms-list" hidden></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+    return ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[c]; }); }
+  function toast(msg){ var t = $("toast"); t.textContent = msg; t.classList.add("show");
+    setTimeout(function(){ t.classList.remove("show"); }, 1800); }
+  function hostBase(){ return location.origin; }
+  function copy(text){
+    if (navigator.clipboard) { navigator.clipboard.writeText(text).then(function(){ toast("Copied"); }); }
+    else { var i = document.createElement("input"); i.value = text; document.body.appendChild(i); i.select();
+      try { document.execCommand("copy"); toast("Copied"); } catch(_){}
+      document.body.removeChild(i); }
+  }
+  function loadForms(){
+    fetch("/me/forms", { credentials:"same-origin" }).then(function(r){ return r.json(); }).then(function(d){
+      var forms = (d && d.forms) || [];
+      $("ch-form-meta").textContent = forms.length === 0
+        ? "Not set up yet"
+        : forms.length + " form" + (forms.length === 1 ? "" : "s");
+      if (forms.length === 0) { $("forms-empty").hidden = false; $("forms-list").hidden = true; renderEmpty(); }
+      else { $("forms-empty").hidden = true; $("forms-list").hidden = false; renderList(forms); }
+    });
+  }
+  function renderEmpty(){
+    $("empty-create").onclick = openBuilder;
+  }
+  function renderList(forms){
+    var el = $("forms-list");
+    el.innerHTML = forms.map(function(f){
+      var url = hostBase() + "/f/" + f.slug;
+      return '<div class="row" data-id="' + f.id + '">'
+        +   '<div>'
+        +     '<div class="name">' + esc(f.name) + '</div>'
+        +     '<div class="url">' + esc(url) + '</div>'
+        +     '<div class="meta" style="color:var(--sub);font-size:12.5px">'
+        +       (f.lead_count || 0) + ' leads · last used ' + (f.last_used_at ? new Date(f.last_used_at*1000).toLocaleDateString() : "never")
+        +     '</div>'
+        +   '</div>'
+        +   '<div class="actions">'
+        +     '<button class="btn" data-act="copy">Copy link</button>'
+        +     '<button class="btn" data-act="open">Open</button>'
+        +     '<button class="btn" data-act="edit">Edit</button>'
+        +     '<button class="btn" data-act="del">Delete</button>'
+        +   '</div>'
+        + '</div>';
+    }).join("") + '<div style="padding:12px 0 0"><button class="btn btn-primary" id="row-create">Create form</button></div>';
+    Array.prototype.forEach.call(el.querySelectorAll("[data-act]"), function(b){
+      b.addEventListener("click", function(){
+        var row = b.closest(".row"); var id = row.getAttribute("data-id");
+        var f = forms.find(function(x){ return x.id === id; });
+        if (b.dataset.act === "copy") copy(hostBase() + "/f/" + f.slug);
+        if (b.dataset.act === "open") window.open("/f/" + f.slug, "_blank");
+        if (b.dataset.act === "edit") openBuilder(f);
+        if (b.dataset.act === "del") deleteForm(f);
+      });
+    });
+    $("row-create").onclick = function(){ openBuilder(); };
+  }
+  function deleteForm(f){
+    if (!confirm("Delete \"" + f.name + "\"? Existing leads stay; the public link will 404.")) return;
+    fetch("/me/forms/" + f.id, { method:"DELETE", credentials:"same-origin" })
+      .then(function(){ toast("Deleted"); loadForms(); });
+  }
+  function openBuilder(form){ /* implemented in Task 13 */
+    alert("Form builder coming in next task.");
+  }
+  loadForms();
+</script>
+</body>
+</html>
