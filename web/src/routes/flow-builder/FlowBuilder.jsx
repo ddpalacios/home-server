@@ -1981,27 +1981,94 @@ const STYLES = `
   .fb-drawer-done:hover { background: #15803d; }
 `;
 
-// Friendly first-time intro strip at the top of the canvas. Reads as
-// "what is this and what do I do?" — the bar a 2nd-grader needs to
-// know they can't break anything and that adding a step is just a tap.
-// Dismissed via localStorage so a returning user doesn't see it again.
+// Step-by-step tour strip at the top of the canvas. Each step explains
+// one feature in plain language; user clicks Next → to advance. Tour
+// state persists in localStorage so a refresh keeps your place.
+const TOUR_STEPS = [
+  {
+    icon: "👋",
+    title: "This is your flow.",
+    body: (
+      <>
+        Each card is something that happens automatically when someone
+        fills out your form. Right now it just says hi to them.
+      </>
+    ),
+  },
+  {
+    icon: "➕",
+    title: "Add a step with the green +Next button.",
+    body: (
+      <>
+        See the <strong style={{ color: "#0a8a3a" }}>+ Next</strong>{" "}
+        button next to your card? Tap it to add what happens next —
+        a follow-up text, an AI reply, or saving the lead somewhere.
+      </>
+    ),
+  },
+  {
+    icon: "✏️",
+    title: "Tap a card to edit it.",
+    body: (
+      <>
+        Click any card to change the message, the wait time, or what it
+        does. A panel slides in on the right.
+      </>
+    ),
+  },
+  {
+    icon: "💾",
+    title: "We save as you build.",
+    body: (
+      <>
+        Don't worry about losing work. When you're done, tap{" "}
+        <strong>← Back to your form</strong> in the top right.
+      </>
+    ),
+  },
+];
+
 function FirstTimeGuide() {
   const [show, setShow] = React.useState(false);
+  const [step, setStep] = React.useState(0);
   React.useEffect(() => {
     try {
       // Always show during a form round-trip — the user is being
       // guided into the canvas and needs the orientation regardless of
       // whether they dismissed the strip in a past session.
       const fromForm = !!localStorage.getItem("intake_return_form_id");
-      const dismissed = localStorage.getItem("fb_intro_dismissed_v1") === "1";
+      const dismissed = localStorage.getItem("fb_tour_dismissed_v2") === "1";
+      const savedStep = parseInt(localStorage.getItem("fb_tour_step") || "0", 10) || 0;
+      setStep(Math.max(0, Math.min(savedStep, TOUR_STEPS.length - 1)));
       setShow(fromForm || !dismissed);
     } catch (_) { setShow(true); }
   }, []);
+  const persistStep = React.useCallback((s) => {
+    try { localStorage.setItem("fb_tour_step", String(s)); } catch (_) {}
+  }, []);
   const dismiss = React.useCallback(() => {
-    try { localStorage.setItem("fb_intro_dismissed_v1", "1"); } catch (_) {}
+    try {
+      localStorage.setItem("fb_tour_dismissed_v2", "1");
+      localStorage.removeItem("fb_tour_step");
+    } catch (_) {}
     setShow(false);
   }, []);
+  const next = React.useCallback(() => {
+    setStep((s) => {
+      const ns = s + 1;
+      if (ns >= TOUR_STEPS.length) { dismiss(); return s; }
+      persistStep(ns); return ns;
+    });
+  }, [dismiss, persistStep]);
+  const back = React.useCallback(() => {
+    setStep((s) => {
+      const ns = Math.max(0, s - 1);
+      persistStep(ns); return ns;
+    });
+  }, [persistStep]);
   if (!show) return null;
+  const cur = TOUR_STEPS[step] || TOUR_STEPS[0];
+  const isLast = step === TOUR_STEPS.length - 1;
   return (
     <div
       style={{
@@ -2013,54 +2080,103 @@ function FirstTimeGuide() {
         background: "linear-gradient(135deg,#eaf3fc 0%,#f0e8fb 100%)",
         border: "1.5px solid #b6c8e0",
         borderRadius: 14,
-        padding: "12px 16px 12px 14px",
+        padding: "14px 16px 12px 14px",
         boxShadow: "0 6px 18px rgba(20,40,80,.10)",
         display: "flex",
-        alignItems: "center",
-        gap: 12,
-        maxWidth: 640,
+        flexDirection: "column",
+        gap: 10,
+        maxWidth: 660,
         width: "calc(100% - 32px)",
       }}
     >
-      <div
-        style={{
-          fontSize: 26,
-          flex: "0 0 auto",
-          background: "#fff",
-          width: 38,
-          height: 38,
-          borderRadius: 10,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          boxShadow: "0 1px 3px rgba(20,40,80,.08)",
-        }}
-      >👋</div>
-      <div style={{ flex: 1, minWidth: 0, lineHeight: 1.35 }}>
-        <div style={{ fontWeight: 700, fontSize: 14, color: "#0a0a0a" }}>
-          This is your flow.
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div
+          style={{
+            fontSize: 26,
+            flex: "0 0 auto",
+            background: "#fff",
+            width: 42,
+            height: 42,
+            borderRadius: 11,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 1px 3px rgba(20,40,80,.08)",
+          }}
+        >{cur.icon}</div>
+        <div style={{ flex: 1, minWidth: 0, lineHeight: 1.4 }}>
+          <div style={{ fontWeight: 700, fontSize: 14.5, color: "#0a0a0a", marginBottom: 2 }}>
+            {cur.title}
+          </div>
+          <div style={{ fontSize: 13, color: "#5a6470" }}>
+            {cur.body}
+          </div>
         </div>
-        <div style={{ fontSize: 12.5, color: "#5a6470", marginTop: 1 }}>
-          Each card is something that happens automatically. Tap the green
-          <strong style={{ color: "#0a8a3a" }}> + Next </strong>
-          button on any card to add the next step.
-        </div>
+        <button
+          type="button"
+          onClick={dismiss}
+          style={{
+            background: "transparent",
+            border: 0,
+            color: "#5a6470",
+            cursor: "pointer",
+            fontSize: 12.5,
+            fontWeight: 600,
+            padding: "6px 8px",
+            flex: "0 0 auto",
+          }}
+          aria-label="Skip the tour"
+        >Skip</button>
       </div>
-      <button
-        type="button"
-        onClick={dismiss}
-        style={{
-          background: "#185fa5",
-          color: "#fff",
-          border: 0,
-          borderRadius: 8,
-          padding: "7px 14px",
-          fontWeight: 700,
-          fontSize: 13,
-          cursor: "pointer",
-          flex: "0 0 auto",
-        }}
-      >Got it</button>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {/* Progress dots */}
+        <div style={{ display: "flex", gap: 5, flex: 1 }}>
+          {TOUR_STEPS.map((_t, i) => (
+            <span
+              key={i}
+              style={{
+                width: i === step ? 22 : 6,
+                height: 6,
+                borderRadius: 99,
+                background: i <= step ? "#185fa5" : "#cdd7e3",
+                transition: "width .18s ease, background .18s ease",
+              }}
+            />
+          ))}
+        </div>
+        {step > 0 && (
+          <button
+            type="button"
+            onClick={back}
+            style={{
+              background: "transparent",
+              color: "#185fa5",
+              border: "1px solid #cdd7e3",
+              borderRadius: 8,
+              padding: "6px 12px",
+              fontWeight: 600,
+              fontSize: 13,
+              cursor: "pointer",
+              flex: "0 0 auto",
+            }}
+          >← Back</button>
+        )}
+        <button
+          type="button"
+          onClick={next}
+          style={{
+            background: isLast ? "#0a8a3a" : "#185fa5",
+            color: "#fff",
+            border: 0,
+            borderRadius: 8,
+            padding: "7px 16px",
+            fontWeight: 700,
+            fontSize: 13,
+            cursor: "pointer",
+            flex: "0 0 auto",
+          }}
+        >{isLast ? "Got it ✓" : "Next →"}</button>
+      </div>
     </div>
   );
 }
