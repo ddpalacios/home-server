@@ -595,6 +595,49 @@ function PhonePreview({ mode, subject, body, fromName }) {
   );
 }
 
+// ── Reply Widget recipient list (chip-style add/remove) ────────────────
+// Used under the channel pills to manage phones and emails. Compact:
+// chips for current values, an inline input for adding via Enter.
+function RecipientList({ icon, values, placeholder, onAdd, onRemove }) {
+  const [input, setInput] = React.useState("");
+  function commit() {
+    const v = input.trim();
+    if (!v) return;
+    onAdd(v);
+    setInput("");
+  }
+  return (
+    <div className="fb-rwprev-recip">
+      <span className="fb-rwprev-recip-ico" aria-hidden="true">{icon}</span>
+      <div className="fb-rwprev-recip-chips">
+        {(values || []).map((v, i) => (
+          <span key={`${v}-${i}`} className="fb-rwprev-recip-chip">
+            <span className="fb-rwprev-recip-chip-text">{v}</span>
+            <button
+              type="button"
+              className="fb-rwprev-recip-x"
+              onClick={() => onRemove(i)}
+              aria-label={`Remove ${v}`}
+              title={`Remove ${v}`}
+            >×</button>
+          </span>
+        ))}
+        <input
+          type="text"
+          className="fb-rwprev-recip-input"
+          placeholder={placeholder}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") { e.preventDefault(); commit(); }
+          }}
+          onBlur={commit}
+        />
+      </div>
+    </div>
+  );
+}
+
 // ── Reply Widget preview (right side of drawer) ────────────────────────
 // Shows the timeline visually so the user can sanity-check what they
 // configured: 3 reminders followed by AI or custom takeover.
@@ -616,6 +659,8 @@ function ReplyPhonePreview({
   nudgeChannel, setNudgeChannel,
   firstNudgeBody, setFirstNudgeBody,
   secondNudgeBody, setSecondNudgeBody,
+  nudgePhones, setNudgePhones,
+  nudgeEmails, setNudgeEmails,
   persistNudge,
 }) {
   const isAlways = globalAiMode === "ai_always";
@@ -644,6 +689,32 @@ function ReplyPhonePreview({
   function pickChannel(ch) {
     setNudgeChannel && setNudgeChannel(ch);
     persistNudge && persistNudge({ nudge_channel: ch }, true);
+  }
+  function addPhone(v) {
+    const s = (v || "").trim();
+    if (!s) return;
+    if ((nudgePhones || []).includes(s)) return;
+    const next = [...(nudgePhones || []), s];
+    setNudgePhones && setNudgePhones(next);
+    persistNudge && persistNudge({ nudge_phones: next }, true);
+  }
+  function removePhone(i) {
+    const next = (nudgePhones || []).filter((_, idx) => idx !== i);
+    setNudgePhones && setNudgePhones(next);
+    persistNudge && persistNudge({ nudge_phones: next }, true);
+  }
+  function addEmail(v) {
+    const s = (v || "").trim();
+    if (!s) return;
+    if ((nudgeEmails || []).includes(s)) return;
+    const next = [...(nudgeEmails || []), s];
+    setNudgeEmails && setNudgeEmails(next);
+    persistNudge && persistNudge({ nudge_emails: next }, true);
+  }
+  function removeEmail(i) {
+    const next = (nudgeEmails || []).filter((_, idx) => idx !== i);
+    setNudgeEmails && setNudgeEmails(next);
+    persistNudge && persistNudge({ nudge_emails: next }, true);
   }
   const editable = !isAlways && !isOff;
   const channelLabel =
@@ -759,6 +830,24 @@ function ReplyPhonePreview({
           </div>
         </div>
       )}
+      {editable && (nudgeChannel === "sms" || nudgeChannel === "both") && (
+        <RecipientList
+          icon="📱"
+          values={nudgePhones || []}
+          placeholder="Add phone…"
+          onAdd={addPhone}
+          onRemove={removePhone}
+        />
+      )}
+      {editable && (nudgeChannel === "email" || nudgeChannel === "both") && (
+        <RecipientList
+          icon="📧"
+          values={nudgeEmails || []}
+          placeholder="Add email…"
+          onAdd={addEmail}
+          onRemove={removeEmail}
+        />
+      )}
       <p className="fb-helper" style={{ textAlign: "center", marginTop: 12 }}>
         {isAlways ? "AI replies right away — no nudges."
           : isOff ? "AI is off — you'll get the message in your inbox."
@@ -801,6 +890,8 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
   const [nudgeChannel,    setNudgeChannel]    = React.useState("sms");
   const [firstNudgeBody,  setFirstNudgeBody]  = React.useState("");
   const [secondNudgeBody, setSecondNudgeBody] = React.useState("");
+  const [nudgePhones,     setNudgePhones]     = React.useState([]);
+  const [nudgeEmails,     setNudgeEmails]     = React.useState([]);
   React.useEffect(() => {
     if (!isReply) return;
     let cancelled = false;
@@ -815,6 +906,8 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
         if (p && p.nudge_channel) setNudgeChannel(p.nudge_channel);
         if (p && typeof p.first_nudge_body  === "string") setFirstNudgeBody(p.first_nudge_body);
         if (p && typeof p.second_nudge_body === "string") setSecondNudgeBody(p.second_nudge_body);
+        if (p && Array.isArray(p.nudge_phones)) setNudgePhones(p.nudge_phones);
+        if (p && Array.isArray(p.nudge_emails)) setNudgeEmails(p.nudge_emails);
       } catch (_) {}
     })();
     // Live updates: any subscriber editing the global policy fires
@@ -826,6 +919,8 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
       if (d.nudge_channel) setNudgeChannel(d.nudge_channel);
       if (typeof d.first_nudge_body  === "string") setFirstNudgeBody(d.first_nudge_body);
       if (typeof d.second_nudge_body === "string") setSecondNudgeBody(d.second_nudge_body);
+      if (Array.isArray(d.nudge_phones)) setNudgePhones(d.nudge_phones);
+      if (Array.isArray(d.nudge_emails)) setNudgeEmails(d.nudge_emails);
     }
     window.addEventListener("ai-policy:changed", onPolicyChanged);
     return () => {
@@ -1092,6 +1187,10 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                 setFirstNudgeBody={setFirstNudgeBody}
                 secondNudgeBody={secondNudgeBody}
                 setSecondNudgeBody={setSecondNudgeBody}
+                nudgePhones={nudgePhones}
+                setNudgePhones={setNudgePhones}
+                nudgeEmails={nudgeEmails}
+                setNudgeEmails={setNudgeEmails}
                 persistNudge={persistNudge}
               />
             ) : (
@@ -2431,6 +2530,56 @@ const STYLES = `
   .fb-rwprev-cpill.is-active {
     background: #0f172a; color: #fff; border-color: #0f172a;
     box-shadow: 0 2px 6px rgba(15,23,42,0.18);
+  }
+
+  /* Recipient lists — chip-style under the channel pills */
+  .fb-rwprev-recip {
+    margin-top: 10px;
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+  .fb-rwprev-recip-ico {
+    font-size: 14px; line-height: 26px;
+    flex-shrink: 0;
+  }
+  .fb-rwprev-recip-chips {
+    flex: 1; display: flex; flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px;
+    background: #f8fafc;
+    border: 1.5px dashed #e2e8f0; border-radius: 10px;
+    min-height: 38px;
+  }
+  .fb-rwprev-recip-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 4px 4px 10px;
+    background: #fff;
+    border: 1px solid #e5e7eb; border-radius: 999px;
+    font-size: 12.5px; color: #0a0a0a;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+    max-width: 100%;
+  }
+  .fb-rwprev-recip-chip-text {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    max-width: 200px;
+  }
+  .fb-rwprev-recip-x {
+    width: 18px; height: 18px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 0; border-radius: 50%;
+    background: #f1f5f9; color: #475569;
+    font-size: 13px; font-weight: 700; line-height: 1; cursor: pointer;
+    transition: background 0.12s ease, color 0.12s ease;
+  }
+  .fb-rwprev-recip-x:hover { background: #fee2e2; color: #b91c1c; }
+  .fb-rwprev-recip-input {
+    flex: 1; min-width: 110px;
+    padding: 4px 8px;
+    font: inherit; font-size: 13px;
+    border: 0; outline: 0; background: transparent;
+    color: #0a0a0a;
+  }
+  .fb-rwprev-recip-input::placeholder {
+    color: #94a3b8; font-style: italic;
   }
 
   /* Inline AI test panel — visible when fallback="ai" */
