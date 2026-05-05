@@ -6728,29 +6728,83 @@
           <button type="button" class="home-chip" data-range="all">All time</button>
         </div>
 
-        <!-- Top-of-page KPI snapshot. Mirrors the same #actPipelineStats
-             populated by /me/pipeline below; moved up so the totals are
-             the first thing visible under the insights box. -->
-        <div class="card" data-tone="cool" style="grid-column: span 12; margin-top: 16px;">
+        <!-- ─── KPI strip (4 cards across) ────────────────────────────
+             At-a-glance metrics. Each card shows a big number + label
+             + small trend hint. Sourced live from /me/intake/events. -->
+        <div id="homeKpis" style="grid-column: span 12; display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-top:16px">
+          <div class="hkpi" data-kpi="leads"
+               style="background:linear-gradient(135deg,#eaf3fc 0%,#f5f7fa 100%);border:1px solid #cdd7e3;border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:6px;min-height:120px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:22px">📬</span>
+              <span style="color:#5a6470;font-size:12.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">New leads</span>
+            </div>
+            <div style="font-size:32px;font-weight:700;color:#0a0a0a;line-height:1.1" data-kpi-num="leads">—</div>
+            <div style="color:#5a6470;font-size:12.5px" data-kpi-sub="leads">last 30 days</div>
+            <div data-kpi-spark="leads" style="margin-top:auto"></div>
+          </div>
+          <div class="hkpi" data-kpi="today"
+               style="background:linear-gradient(135deg,#eaf7ee 0%,#f5fbf6 100%);border:1px solid #b8d9c2;border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:6px;min-height:120px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:22px">⚡</span>
+              <span style="color:#0a8a3a;font-size:12.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Today</span>
+            </div>
+            <div style="font-size:32px;font-weight:700;color:#0a0a0a;line-height:1.1" data-kpi-num="today">—</div>
+            <div style="color:#5a6470;font-size:12.5px" data-kpi-sub="today">leads in the last 24 hours</div>
+            <div data-kpi-spark="today" style="margin-top:auto"></div>
+          </div>
+          <div class="hkpi" data-kpi="flows"
+               style="background:linear-gradient(135deg,#fef5e7 0%,#fcf9f3 100%);border:1px solid #f0c419;border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:6px;min-height:120px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:22px">⚙️</span>
+              <span style="color:#a86200;font-size:12.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Flows fired</span>
+            </div>
+            <div style="font-size:32px;font-weight:700;color:#0a0a0a;line-height:1.1" data-kpi-num="flows">—</div>
+            <div style="color:#5a6470;font-size:12.5px" data-kpi-sub="flows">welcomes sent / 30 days</div>
+            <div data-kpi-spark="flows" style="margin-top:auto"></div>
+          </div>
+          <div class="hkpi" data-kpi="channels"
+               style="background:linear-gradient(135deg,#f3e7fb 0%,#faf5ff 100%);border:1px solid #c8a2e0;border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:6px;min-height:120px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:22px">📡</span>
+              <span style="color:#6b3a99;font-size:12.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Channels</span>
+            </div>
+            <div style="font-size:32px;font-weight:700;color:#0a0a0a;line-height:1.1" data-kpi-num="channels">—</div>
+            <div style="color:#5a6470;font-size:12.5px" data-kpi-sub="channels">connected to receive leads</div>
+            <div data-kpi-spark="channels" style="margin-top:auto"></div>
+          </div>
+        </div>
+
+        <!-- ─── Two-column split: leads channels chart + recent feed ── -->
+        <div class="card" style="grid-column: span 5; margin-top: 16px;">
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+            <h2 class="section-title" style="margin:0;">Where leads come from</h2>
+            <a href="#leadIntake" style="font-size:12.5px;color:#185FA5;text-decoration:none;">Manage →</a>
+          </div>
+          <div id="homeChannelsBars" style="display:flex;flex-direction:column;gap:12px;padding:6px 0">
+            <div style="color:#888;font-size:13px;padding:14px 0;text-align:center">Loading…</div>
+          </div>
+        </div>
+
+        <div class="card" style="grid-column: span 7; margin-top: 16px;">
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+            <h2 class="section-title" style="margin:0;">Recent leads</h2>
+            <a href="#leadIntake" style="font-size:12.5px;color:#185FA5;text-decoration:none;">Manage intake →</a>
+          </div>
+          <p class="section-note" style="margin:0 0 8px">Live feed of every lead from your form, email, or phone.</p>
+          <div id="intakeRecent" style="margin-top:8px;">
+            <div style="padding:18px 0;color:#888;font-size:13px;text-align:center;">Loading…</div>
+          </div>
+        </div>
+
+        <!-- Pipeline section preserved below for reference; sourced
+             from /me/pipeline like before. Hidden until we redesign it
+             to fit alongside the new top KPI strip. -->
+        <div class="card" data-tone="cool" style="grid-column: span 12; margin-top: 16px;" hidden>
           <div class="card-header" style="margin-bottom: 8px;">
             <h2 class="section-title" style="margin:0;">Where things are</h2>
           </div>
           <p class="section-note">A quick look at how your leads are moving.</p>
           <div class="pl-stat-row" id="actPipelineStats"></div>
-        </div>
-
-        <!-- Recent lead intake — surfaces the last 10 leads captured
-             across web form / email / phone, plus whether First Hello
-             fired. Source: /me/intake/events. -->
-        <div class="card" style="grid-column: span 12; margin-top: 16px;">
-          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
-            <h2 class="section-title" style="margin:0;">Recent leads</h2>
-            <a href="#leadIntake" style="font-size:12.5px;color:#185FA5;text-decoration:none;">Manage intake →</a>
-          </div>
-          <p class="section-note">Live feed of every lead from your website form, connected email, and tracked phone number.</p>
-          <div id="intakeRecent" style="margin-top:8px;">
-            <div style="padding:18px 0;color:#888;font-size:13px;text-align:center;">Loading…</div>
-          </div>
         </div>
         <script>
           (function(){
@@ -6822,6 +6876,131 @@
             }
             window.addEventListener("hashchange", function(){
               if (location.hash === "#activity" || location.hash === "") load();
+            });
+          })();
+        </script>
+
+        <!-- KPI strip + channel bars renderer ─────────────────────────
+             Computes 30-day counts from /me/intake/events and channel
+             readiness from /me/intake/channels. Pure client-side
+             aggregation; no new endpoints. -->
+        <script>
+          (function(){
+            function setNum(key, val) {
+              var el = document.querySelector('[data-kpi-num="' + key + '"]');
+              if (el) el.textContent = String(val);
+            }
+            function setSub(key, val) {
+              var el = document.querySelector('[data-kpi-sub="' + key + '"]');
+              if (el) el.textContent = val;
+            }
+            // Lightweight inline sparkline (SVG, 7 daily buckets).
+            function spark(key, buckets, color) {
+              var host = document.querySelector('[data-kpi-spark="' + key + '"]');
+              if (!host) return;
+              var max = Math.max(1, Math.max.apply(null, buckets));
+              var w = 100, h = 22, n = buckets.length;
+              var dx = w / (n - 1 || 1);
+              var pts = buckets.map(function(v, i){
+                var y = h - (v / max) * h;
+                return (i * dx).toFixed(1) + "," + y.toFixed(1);
+              }).join(" ");
+              host.innerHTML = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" style="width:100%;height:22px;display:block">'
+                + '<polyline fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="' + pts + '"/>'
+                + '</svg>';
+            }
+            function dayBuckets(events, days) {
+              var now = Math.floor(Date.now() / 1000);
+              var out = new Array(days).fill(0);
+              events.forEach(function(e){
+                var ts = Number(e.ts || 0);
+                if (!ts) return;
+                var dayAgo = Math.floor((now - ts) / 86400);
+                if (dayAgo >= 0 && dayAgo < days) out[days - 1 - dayAgo] += 1;
+              });
+              return out;
+            }
+            async function loadKpis() {
+              var events = [];
+              try {
+                var r = await fetch("/me/intake/events?limit=500", { credentials: "same-origin" });
+                if (r.ok) {
+                  var d = await r.json();
+                  events = (d && d.events) || [];
+                }
+              } catch (_) {}
+              var now = Math.floor(Date.now() / 1000);
+              var inWindow = function(secs) {
+                return events.filter(function(e){ return (now - Number(e.ts || 0)) <= secs; });
+              };
+              var leads30 = inWindow(30 * 86400);
+              var leads24 = inWindow(86400);
+              var fired30 = leads30.filter(function(e){ return e.fired === "first_contact"; });
+              setNum("leads", leads30.length);
+              setNum("today", leads24.length);
+              setNum("flows", fired30.length);
+              spark("leads", dayBuckets(leads30, 14), "#185fa5");
+              spark("today", dayBuckets(leads24, 24), "#0a8a3a");
+              spark("flows", dayBuckets(fired30, 14), "#a86200");
+
+              // Channel breakdown for the bars card.
+              var byCh = { form: 0, email: 0, phone: 0 };
+              leads30.forEach(function(e){
+                var c = e.channel;
+                if (byCh[c] != null) byCh[c] += 1;
+              });
+              var totalCh = byCh.form + byCh.email + byCh.phone;
+              var bars = document.getElementById("homeChannelsBars");
+              if (bars) {
+                if (totalCh === 0) {
+                  bars.innerHTML = '<div style="padding:24px 0;color:#888;font-size:13px;text-align:center">'
+                    + 'No leads yet — once they start coming in we\'ll show where each one came from.'
+                    + '</div>';
+                } else {
+                  var rows = [
+                    { k: "form",  label: "📝 Web form", color: "#185fa5", n: byCh.form },
+                    { k: "email", label: "✉️ Email",    color: "#a86200", n: byCh.email },
+                    { k: "phone", label: "📱 Texts",    color: "#0a8a3a", n: byCh.phone },
+                  ];
+                  bars.innerHTML = rows.map(function(r){
+                    var pct = Math.round((r.n / totalCh) * 100);
+                    return '<div>'
+                      + '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:5px">'
+                      +   '<span>' + r.label + '</span>'
+                      +   '<span style="color:#5a6470;font-weight:500">' + r.n + ' lead' + (r.n === 1 ? "" : "s") + ' · ' + pct + '%</span>'
+                      + '</div>'
+                      + '<div style="height:10px;background:#f0f4f9;border-radius:99px;overflow:hidden">'
+                      +   '<div style="width:' + pct + '%;height:100%;background:' + r.color + ';border-radius:99px;transition:width .3s ease"></div>'
+                      + '</div>'
+                      + '</div>';
+                  }).join("");
+                }
+              }
+
+              // Channels-connected count (from intake/channels).
+              try {
+                var rc = await fetch("/me/intake/channels", { credentials: "same-origin" });
+                if (rc.ok) {
+                  var dc = await rc.json();
+                  var ch = (dc && dc.channels) || {};
+                  var ready = 0;
+                  if (ch.form  && ch.form.ready)  ready++;
+                  if (ch.email && ch.email.ready) ready++;
+                  if (ch.phone && ch.phone.ready) ready++;
+                  setNum("channels", ready + " / 3");
+                  if (ready === 0) setSub("channels", "click set up to receive leads");
+                  else if (ready === 3) setSub("channels", "all channels active");
+                  else setSub("channels", (3 - ready) + " more to set up");
+                }
+              } catch (_) {}
+            }
+            if (document.readyState === "loading") {
+              document.addEventListener("DOMContentLoaded", loadKpis);
+            } else {
+              loadKpis();
+            }
+            window.addEventListener("hashchange", function(){
+              if (location.hash === "#activity" || location.hash === "") loadKpis();
             });
           })();
         </script>
