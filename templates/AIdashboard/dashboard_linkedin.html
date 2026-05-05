@@ -2102,6 +2102,19 @@
       cursor: pointer; text-decoration: underline;
     }
     .mg-ai-link:hover { color: var(--link); }
+    .mg-ai-row {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 8px;
+    }
+    .mg-ai-label {
+      font-size: 11.5px; color: var(--text-sub);
+    }
+    .mg-ai-select {
+      padding: 4px 8px; font-size: 11.5px;
+      border: 1px solid var(--border); border-radius: 6px;
+      background: #fff; color: var(--text); cursor: pointer;
+    }
+    .mg-ai-select:hover { border-color: var(--link); }
 
     /* Bulk modal (uses the same plan-modal-bg patterns). */
     .mg-bulk-bar {
@@ -11211,7 +11224,13 @@
         +       '<div class="mg-drop-sub">Image, video, or PDF · or click to pick one</div>'
         +     '</div>'
         +   '</div>'
-        +   '<a class="mg-ai-link" data-rev-aigen>or let AI make one</a>'
+        +   '<div class="mg-ai-row">'
+        +     '<span class="mg-ai-label">or let AI make one:</span>'
+        +     '<select class="mg-ai-select" data-rev-aigen-select>'
+        +       '<option value="">Choose…</option>'
+        +       '<option value="carousel">📄 Carousel</option>'
+        +     '</select>'
+        +   '</div>'
         + '</div>';
     }
 
@@ -11511,17 +11530,21 @@
       var rm = card.querySelector("[data-rev-remove]");
       if (rm) rm.onclick = () => revMediaRemove(p);
 
-      // "or let AI make one" link.
-      var aigen = card.querySelector("[data-rev-aigen]");
-      if (aigen) aigen.onclick = () => {
-        // Open the existing AI gen popover anchored on the slot.
+      // "or let AI make one" → dropdown. One option for now (Carousel);
+      // selecting it kicks the AI media pipeline directly with that
+      // type, no intermediate popover. Easy to add more options later
+      // (Picture, Short video) when the user wants them in this slot.
+      var aigenSel = card.querySelector("[data-rev-aigen-select]");
+      if (aigenSel) aigenSel.addEventListener("change", () => {
+        var v = aigenSel.value;
+        aigenSel.value = "";        // reset for next round
+        if (!v) return;
         var anchor = slot || card;
-        // Synthesize the data attrs the popover expects.
-        anchor.dataset.mgPost   = p.id;
-        anchor.dataset.mgParent = (STATE.ai.draft || {}).id || "";
-        anchor.dataset.mgKind   = "ai_draft";
-        mgOpenPopover(anchor, [p]);
-      };
+        var draftId = (STATE.ai.draft || {}).id || "";
+        // Reuse mgKickoff which handles the queued / generating /
+        // ready / failed UI states the same way the popover did.
+        mgKickoff("ai_draft", draftId, p.id, v, anchor);
+      });
     }
 
     function revMediaPick(p, slot){
