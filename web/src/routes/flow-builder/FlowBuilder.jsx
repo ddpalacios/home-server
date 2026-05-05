@@ -1498,7 +1498,7 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
           >×</button>
         </header>
 
-        <div className="fb-drawer-body">
+        <div className={`fb-drawer-body ${isInput ? "is-no-preview" : ""}`}>
           <div className="fb-drawer-edit">
             {isInput ? (
               <InputChannelPanel
@@ -1646,6 +1646,7 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
             )}
           </div>
 
+          {!isInput && (
           <div className="fb-drawer-preview">
             <div className="fb-drawer-preview-l">Live preview</div>
             {isBranch ? (
@@ -1698,6 +1699,7 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
               </>
             )}
           </div>
+          )}
         </div>
 
         <footer className="fb-drawer-foot">
@@ -2904,6 +2906,11 @@ const STYLES = `
     grid-template-columns: minmax(0, 1fr) 320px;
     gap: 18px;
     padding: 18px 22px;
+  }
+  /* Input drawer doesn't render a preview pane — collapse the grid
+     so the channel picker uses the full drawer width. */
+  .fb-drawer-body.is-no-preview {
+    grid-template-columns: minmax(0, 1fr);
   }
   @media (max-width: 880px) {
     .fb-drawer-body {
