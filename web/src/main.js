@@ -30,6 +30,7 @@ const ROUTE_MODULE_LOADERS = {
   "instagram":  () => import("./routes/instagram.js"),
   "inbox":      () => import("./routes/inbox.js"),
   "engagement": () => import("./routes/engagement.js"),
+  "flow-builder": () => import("./routes/flow-builder.js"),
 };
 
 window.__dashboardLoadRouteModule = async function (route) {

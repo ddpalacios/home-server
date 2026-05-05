@@ -4186,12 +4186,463 @@
     }
     .wiz-test-status.ok  { color: var(--seq-green); }
     .wiz-test-status.err { color: var(--seq-red); }
+    /* Step 4 — Gmail connect card. Yellow when not connected, green
+       when connected. Sits above the test card so the user can't miss
+       the prerequisite. */
+    .wiz-conn-card {
+      background: #fff8e1;
+      border: 1.5px solid #f5d27a;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+    .wiz-conn-card.is-ok {
+      background: #ecfdf5;
+      border-color: #34d399;
+    }
+    .wiz-conn-row {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .wiz-conn-ico {
+      font-size: 24px; line-height: 1;
+      flex-shrink: 0;
+    }
+    .wiz-conn-body { flex: 1; min-width: 0; }
+    .wiz-conn-h {
+      font-weight: 700; font-size: 14px; color: #111;
+    }
+    .wiz-conn-sub {
+      font-size: 12.5px; color: #555; margin-top: 4px;
+      line-height: 1.45;
+    }
     .wiz-helper-p {
       font-size: 14px;
       color: #6b7280;
       line-height: 1.55;
       margin: 0 0 16px;
     }
+    /* ── Customer-journey timeline (Outreach > Automatic) ────────────── */
+    .seq-timeline {
+      display: flex; flex-direction: column;
+      max-width: 760px; margin: 0 auto;
+    }
+    .seq-tl-head {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 16px; margin-bottom: 14px; flex-wrap: wrap;
+    }
+    .seq-tl-head-text { flex: 1; min-width: 0; }
+    .seq-tl-title {
+      font-size: 18px; font-weight: 700; color: #0a0a0a;
+      margin: 0 0 4px;
+    }
+    .seq-tl-sub {
+      font-size: 13.5px; color: #6b7280; margin: 0;
+      line-height: 1.45;
+    }
+    .seq-tl-head-meta {
+      display: flex; align-items: center; gap: 10px;
+      flex-shrink: 0;
+    }
+    .seq-tl-count {
+      font-size: 13px; color: #4b5563;
+      background: #f3f4f6; padding: 6px 12px; border-radius: 999px;
+    }
+    .seq-tl-count strong { color: #0a0a0a; font-weight: 700; }
+    .seq-tl-quick {
+      background: #185FA5; color: #fff; border: 0;
+      padding: 8px 14px; border-radius: 999px;
+      font-weight: 600; font-size: 13px; cursor: pointer;
+      font-family: inherit;
+    }
+    .seq-tl-quick:hover { background: #0a4f8a; }
+    .seq-tl-preview {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 7px 12px; border-radius: 999px;
+      background: #fef3c7; color: #92400e;
+      border: 1px solid #fde68a;
+      font-size: 12.5px; font-weight: 600;
+      text-decoration: none; cursor: pointer;
+    }
+    .seq-tl-preview:hover { background: #fde68a; color: #78350f; }
+
+    /* Each "station" = bullet on the rail + card to its right */
+    .seq-tl-row {
+      display: flex; gap: 14px; align-items: stretch;
+      min-height: 96px;
+    }
+    .seq-tl-rail {
+      width: 32px; display: flex; flex-direction: column;
+      align-items: center; flex-shrink: 0;
+    }
+    .seq-tl-bullet {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: #fff; border: 2px solid #e5e7eb;
+      color: #9ca3af; font-weight: 700; font-size: 12.5px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all .15s;
+    }
+    .seq-tl-row.is-on .seq-tl-bullet {
+      background: #16a34a; border-color: #16a34a; color: #fff;
+    }
+    .seq-tl-line {
+      width: 2px; flex: 1; background: #e5e7eb;
+      margin-top: 4px; min-height: 16px;
+    }
+    .seq-tl-row.is-on + .seq-tl-row .seq-tl-line,
+    .seq-tl-row.is-on .seq-tl-line {
+      background: #bbf7d0;
+    }
+    .seq-tl-card {
+      flex: 1; background: #fff;
+      border: 1px solid rgba(15, 23, 42, .08);
+      border-radius: 12px; padding: 12px 14px 10px;
+      margin-bottom: 12px;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .seq-tl-row.is-on .seq-tl-card {
+      border-color: #bbf7d0;
+      box-shadow: 0 0 0 1px #bbf7d0 inset;
+    }
+    .seq-tl-trigger {
+      font-size: 11.5px; font-weight: 600; color: #6b7280;
+      letter-spacing: .03em; text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .seq-tl-card-body {
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .seq-tl-ico {
+      font-size: 22px; line-height: 1; flex-shrink: 0; margin-top: 2px;
+    }
+    .seq-tl-card-text { flex: 1; min-width: 0; }
+    .seq-tl-card-name {
+      font-size: 15px; font-weight: 600; color: #0a0a0a;
+      margin: 0 0 3px;
+    }
+    .seq-tl-card-desc {
+      font-size: 13px; color: #6b7280; line-height: 1.45; margin: 0;
+    }
+    /* The toggle: a clean checkbox-driven track-and-thumb pill */
+    .seq-tl-toggle {
+      display: inline-block; position: relative;
+      width: 42px; height: 24px; flex-shrink: 0; cursor: pointer;
+      margin-top: 2px;
+    }
+    .seq-tl-toggle input {
+      position: absolute; opacity: 0; pointer-events: none;
+    }
+    .seq-tl-toggle-track {
+      position: absolute; inset: 0; border-radius: 999px;
+      background: #d1d5db; transition: background .15s;
+    }
+    .seq-tl-toggle-track::after {
+      content: ""; position: absolute;
+      top: 2px; left: 2px; width: 20px; height: 20px;
+      background: #fff; border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,.18);
+      transition: transform .15s;
+    }
+    .seq-tl-toggle input:checked + .seq-tl-toggle-track {
+      background: #16a34a;
+    }
+    .seq-tl-toggle input:checked + .seq-tl-toggle-track::after {
+      transform: translateX(18px);
+    }
+    .seq-tl-card-foot {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 10px; margin-top: 8px;
+      padding-top: 8px; border-top: 1px dashed #e5e7eb;
+    }
+    .seq-tl-state {
+      font-size: 12px; font-weight: 600; color: #9ca3af;
+      letter-spacing: .04em; text-transform: uppercase;
+    }
+    .seq-tl-row.is-on .seq-tl-state { color: #16a34a; }
+    .seq-tl-edit {
+      background: none; border: 0; color: #185FA5;
+      font-weight: 600; font-size: 13px; cursor: pointer;
+      padding: 0; font-family: inherit;
+    }
+    .seq-tl-edit:hover { text-decoration: underline; }
+
+    /* First-run overlay ("Let's get the basics on") */
+    .seq-fr-bg {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, .55);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9000; padding: 20px;
+      animation: seqfrFade .15s ease-out;
+    }
+    @keyframes seqfrFade { from { opacity: 0; } to { opacity: 1; } }
+    .seq-fr-card {
+      background: #fff; border-radius: 16px;
+      max-width: 520px; width: 100%;
+      max-height: calc(100vh - 40px); overflow-y: auto;
+      box-shadow: 0 24px 60px rgba(0,0,0,.25);
+    }
+    .seq-fr-h {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 16px; padding: 20px 22px 8px;
+    }
+    .seq-fr-title {
+      font-size: 18px; font-weight: 700; color: #0a0a0a;
+      margin: 0 0 4px;
+    }
+    .seq-fr-sub {
+      font-size: 13.5px; color: #6b7280; margin: 0;
+      line-height: 1.5;
+    }
+    .seq-fr-x {
+      background: none; border: 0; font-size: 24px;
+      color: #9ca3af; cursor: pointer; padding: 0 4px; line-height: 1;
+      flex-shrink: 0;
+    }
+    .seq-fr-x:hover { color: #0a0a0a; }
+    .seq-fr-body { padding: 12px 22px; display: flex; flex-direction: column; gap: 10px; }
+    .seq-fr-pick {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 14px; border-radius: 12px;
+      border: 2px solid #bbf7d0; background: #f0fdf4;
+      cursor: pointer; transition: border-color .15s, background .15s;
+    }
+    .seq-fr-pick:hover { border-color: #86efac; }
+    .seq-fr-pick input { position: absolute; opacity: 0; pointer-events: none; }
+    .seq-fr-pick-body { flex: 1; min-width: 0; }
+    .seq-fr-pick-h {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 15px; font-weight: 600; color: #0a0a0a;
+      margin-bottom: 4px; flex-wrap: wrap;
+    }
+    .seq-fr-pick-ico { font-size: 18px; line-height: 1; }
+    .seq-fr-pick-rec {
+      font-size: 11px; font-weight: 600; color: #166534;
+      background: #dcfce7; padding: 2px 8px; border-radius: 999px;
+      letter-spacing: .03em; text-transform: uppercase;
+    }
+    .seq-fr-pick-sub {
+      font-size: 13px; color: #4b5563; line-height: 1.45; margin: 0;
+    }
+    .seq-fr-pick-check {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: #16a34a; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; flex-shrink: 0;
+      transition: opacity .15s, transform .15s;
+    }
+    .seq-fr-pick input:not(:checked) ~ .seq-fr-pick-check {
+      opacity: 0; transform: scale(.5);
+    }
+    .seq-fr-pick:has(input:not(:checked)) {
+      border-color: #e5e7eb; background: #fff;
+    }
+    .seq-fr-foot {
+      display: flex; gap: 10px; justify-content: flex-end;
+      padding: 12px 22px 22px; border-top: 1px solid #f3f4f6;
+      margin-top: 4px;
+    }
+    .seq-fr-skip {
+      background: none; border: 0; color: #6b7280;
+      font-weight: 500; font-size: 14px; cursor: pointer;
+      font-family: inherit; padding: 9px 14px;
+    }
+    .seq-fr-skip:hover { color: #0a0a0a; }
+    .seq-fr-go {
+      background: #16a34a; color: #fff; border: 0;
+      padding: 10px 18px; border-radius: 999px;
+      font-weight: 700; font-size: 14px; cursor: pointer;
+      font-family: inherit;
+    }
+    .seq-fr-go:hover { background: #15803d; }
+    .seq-fr-go:disabled { opacity: .6; cursor: not-allowed; }
+
+    /* Wizard step-4 "next up" suggestion card */
+    .wiz-next-card {
+      margin-top: 24px;
+      background: #eff6ff; border: 1px solid #bfdbfe;
+      border-radius: 12px; padding: 14px 16px;
+    }
+    .wiz-next-row {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .wiz-next-ico { font-size: 22px; line-height: 1; flex-shrink: 0; }
+    .wiz-next-body { flex: 1; min-width: 0; }
+    .wiz-next-eyebrow {
+      font-size: 11.5px; font-weight: 600; color: #1e40af;
+      letter-spacing: .04em; text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+    .wiz-next-h {
+      font-size: 14px; color: #0a0a0a; line-height: 1.4;
+    }
+    .wiz-next-go {
+      background: #fff; border: 1px solid #bfdbfe;
+      color: #185FA5; font-weight: 600; font-size: 13px;
+      padding: 8px 14px; border-radius: 999px;
+      cursor: pointer; font-family: inherit; flex-shrink: 0;
+    }
+    .wiz-next-go:hover { background: #dbeafe; }
+
+    /* ── Step 1: playbook ("when does this run / why use it / how to hook it up") ── */
+    .wiz-pb {
+      background: #fbfbfd;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin: 4px 0 12px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .wiz-pb-when {
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 15px; color: #0a0a0a; line-height: 1.45;
+      font-weight: 500;
+    }
+    .wiz-pb-when-ico { font-size: 18px; line-height: 1; flex-shrink: 0; }
+    .wiz-pb-section-h {
+      font-size: 12.5px; font-weight: 600; color: #6b7280;
+      letter-spacing: .03em; text-transform: uppercase;
+      margin-bottom: -4px;
+    }
+    .wiz-pb-trigs {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    @media (max-width: 600px) {
+      .wiz-pb-trigs { grid-template-columns: 1fr; }
+    }
+    .wiz-pb-trig {
+      display: flex; gap: 10px; align-items: flex-start;
+      background: #fff; border: 1px solid rgba(15,23,42,.07);
+      border-radius: 10px; padding: 10px 12px;
+    }
+    .wiz-pb-trig-ico { font-size: 18px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+    .wiz-pb-trig-h {
+      font-size: 13.5px; font-weight: 600; color: #0a0a0a;
+      line-height: 1.3; margin-bottom: 2px;
+    }
+    .wiz-pb-trig-sub {
+      font-size: 12.5px; color: #6b7280; line-height: 1.4;
+    }
+    .wiz-pb-why {
+      background: #eff6ff; border: 1px solid #bfdbfe;
+      border-radius: 10px; padding: 12px 14px;
+    }
+    .wiz-pb-why-h {
+      font-size: 13px; font-weight: 600; color: #1e40af;
+      margin-bottom: 4px;
+    }
+    .wiz-pb-why p {
+      margin: 0; font-size: 13.5px; color: #0a0a0a; line-height: 1.5;
+    }
+    .wiz-pb-fit {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    @media (max-width: 600px) {
+      .wiz-pb-fit { grid-template-columns: 1fr; }
+    }
+    .wiz-pb-fit-row {
+      display: flex; gap: 10px; align-items: flex-start;
+      padding: 10px 12px; border-radius: 10px;
+      border: 1px solid rgba(15,23,42,.07); background: #fff;
+    }
+    .wiz-pb-fit-row.is-good { background: #f0fdf4; border-color: #bbf7d0; }
+    .wiz-pb-fit-row.is-skip { background: #f9fafb; }
+    .wiz-pb-fit-ico { font-size: 18px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+    .wiz-pb-fit-h {
+      font-size: 13px; font-weight: 600; color: #0a0a0a;
+      margin-bottom: 2px;
+    }
+    .wiz-pb-fit-row p {
+      margin: 0; font-size: 13px; color: #4b5563; line-height: 1.45;
+    }
+    .wiz-pb-integrate {
+      display: flex; gap: 12px; align-items: flex-start;
+      background: #fffbeb; border: 1px solid #fde68a;
+      border-radius: 10px; padding: 12px 14px;
+    }
+    .wiz-pb-integrate-ico { font-size: 20px; line-height: 1; flex-shrink: 0; }
+    .wiz-pb-integrate-body { flex: 1; min-width: 0; }
+    .wiz-pb-integrate-h {
+      font-size: 13.5px; font-weight: 600; color: #92400e;
+      margin-bottom: 4px;
+    }
+    .wiz-pb-integrate-sub {
+      font-size: 13px; color: #4b5563; line-height: 1.45;
+      margin-bottom: 8px;
+    }
+    .wiz-pb-integrate-cta {
+      background: #fff; border: 1px solid #fcd34d;
+      color: #92400e; font-weight: 600; font-size: 13px;
+      padding: 7px 12px; border-radius: 8px;
+      cursor: pointer; font-family: inherit;
+    }
+    .wiz-pb-integrate-cta:hover { background: #fffbeb; border-color: #f59e0b; }
+    .wiz-pb-divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 16px 0 6px;
+    }
+    .wiz-pb-divider::before,
+    .wiz-pb-divider::after {
+      content: ""; flex: 1; height: 1px; background: rgba(15,23,42,.08);
+    }
+    .wiz-pb-divider-l {
+      font-size: 12px; font-weight: 600; color: #6b7280;
+      letter-spacing: .04em; text-transform: uppercase;
+    }
+
+    /* Form-hookup help modal (opened by the "Connect your form" CTA) */
+    .wiz-help-bg {
+      position: fixed; inset: 0; background: rgba(15,23,42,.55);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9000; padding: 20px;
+    }
+    .wiz-help-card {
+      background: #fff; border-radius: 14px;
+      max-width: 560px; width: 100%;
+      max-height: calc(100vh - 40px); overflow-y: auto;
+      box-shadow: 0 24px 60px rgba(0,0,0,.25);
+    }
+    .wiz-help-h {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid #e5e7eb;
+      font-size: 16px; font-weight: 700; color: #0a0a0a;
+    }
+    .wiz-help-x {
+      background: none; border: 0; font-size: 22px;
+      color: #6b7280; cursor: pointer; padding: 4px 8px; line-height: 1;
+    }
+    .wiz-help-x:hover { color: #0a0a0a; }
+    .wiz-help-body { padding: 16px 20px 20px; }
+    .wiz-help-lead {
+      font-size: 14px; color: #4b5563; margin: 0 0 14px; line-height: 1.5;
+    }
+    .wiz-help-step {
+      border: 1px solid #e5e7eb; border-radius: 10px;
+      padding: 0; margin-bottom: 8px; background: #fff;
+    }
+    .wiz-help-step summary {
+      list-style: none; cursor: pointer;
+      padding: 12px 14px; font-weight: 600; color: #0a0a0a;
+      font-size: 14px;
+    }
+    .wiz-help-step summary::-webkit-details-marker { display: none; }
+    .wiz-help-step summary::after {
+      content: "▾"; float: right; color: #9ca3af; transition: transform .15s;
+    }
+    .wiz-help-step[open] summary::after { transform: rotate(180deg); }
+    .wiz-help-step ol, .wiz-help-step p {
+      margin: 0 14px 14px; padding-left: 18px;
+      font-size: 13.5px; color: #374151; line-height: 1.5;
+    }
+    .wiz-help-step p { padding-left: 0; }
+    .wiz-help-step li { margin-bottom: 6px; }
+    .wiz-help-code {
+      background: #f3f4f6; padding: 2px 6px; border-radius: 4px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px; color: #0a66c2; word-break: break-all;
+    }
+    .wiz-help-foot {
+      font-size: 12.5px; color: #6b7280; margin-top: 8px;
+      font-style: italic;
+    }
+
     /* ── Step 1: visual card flow ── */
     .wiz-flow {
       display: flex;
@@ -13206,6 +13657,14 @@
           padding:24px 0; max-width:1200px; margin:0 auto; width:100%;
           box-sizing:border-box;
         }
+        /* Flow builder needs every pixel of horizontal space. Drop the
+           1200px cap and shrink the side padding so the canvas + library
+           panel fill the main-content column edge-to-edge. */
+        .out-page.is-flow-builder {
+          max-width: none;
+          padding: 16px 12px;
+          gap: 12px;
+        }
         .out-page *, .out-page *::before, .out-page *::after { box-sizing:border-box; }
         .out-page-head { padding-bottom:4px; display:flex; flex-direction:column; gap:4px; }
         .out-page-title {
@@ -13324,6 +13783,59 @@
         }
         .eng-active-chip button { background:transparent; border:0; color:#3730a3; cursor:pointer; padding:0 0 0 4px; font-size:13px; }
         .eng-active-clear-all { background:transparent; border:0; color:#185FA5; cursor:pointer; font-size:12px; font-family:inherit; }
+
+        /* Engagement tabs (Automations / History) */
+        .eng-tabs {
+          display:flex; gap:4px; border-bottom:1px solid #e5e7eb;
+          margin-bottom:0;
+        }
+        .eng-tab {
+          background:transparent; border:0; padding:10px 14px;
+          font-size:13.5px; font-weight:500; color:#6b7280;
+          cursor:pointer; font-family:inherit;
+          border-bottom:2px solid transparent;
+          margin-bottom:-1px;
+        }
+        .eng-tab:hover { color:#0a0a0a; }
+        .eng-tab.is-active { color:#0a0a0a; border-bottom-color:#0a0a0a; }
+        .eng-tab-pane[hidden] { display:none; }
+
+        /* History list */
+        .eng-history-select {
+          height:32px; padding:0 28px 0 12px;
+          border:1px solid #e5e7eb; border-radius:8px;
+          font-size:12.5px; font-family:inherit;
+          background:#fff; cursor:pointer; box-sizing:border-box;
+        }
+        .eng-history-select:focus { outline:none; border-color:#185FA5; box-shadow:0 0 0 3px rgba(24,95,165,0.10); }
+        .eng-history { padding:6px 0; }
+        .eng-hist-row {
+          display:grid; grid-template-columns:130px 1fr auto; gap:12px;
+          align-items:center; padding:10px 18px;
+          border-bottom:1px solid #f3f4f6;
+          font-size:13px;
+        }
+        .eng-hist-row:last-child { border-bottom:0; }
+        .eng-hist-time { color:#6b7280; font-size:12px; white-space:nowrap; }
+        .eng-hist-body { min-width:0; }
+        .eng-hist-body-line {
+          display:flex; align-items:center; gap:8px; min-width:0;
+        }
+        .eng-hist-seq { font-weight:500; color:#0a0a0a; }
+        .eng-hist-lead { color:#6b7280; }
+        .eng-hist-step { color:#6b7280; font-size:12.5px; margin-top:2px; }
+        .eng-hist-status {
+          display:inline-flex; align-items:center; gap:5px;
+          padding:2px 8px; border-radius:999px; font-size:11.5px;
+          font-weight:500; border:1px solid;
+        }
+        .eng-hist-status.is-sent     { background:#f0fdf4; color:#16a34a; border-color:#bbf7d0; }
+        .eng-hist-status.is-skipped  { background:#fffbeb; color:#d97706; border-color:#fde68a; }
+        .eng-hist-status.is-failed   { background:#fef2f2; color:#dc2626; border-color:#fecaca; }
+        .eng-hist-status.is-deferred { background:#f3f4f6; color:#6b7280; border-color:#e5e7eb; }
+        .eng-hist-empty {
+          padding:32px 18px; text-align:center; color:#6b7280; font-size:13px;
+        }
 
         /* List + rows */
         .eng-list {}
@@ -13916,29 +14428,58 @@
               </div>
             </header>
 
+            <div id="engShell">
+            <nav class="eng-tabs" role="tablist" aria-label="Engagement view">
+              <button type="button" class="eng-tab is-active" data-eng-tab="automations" role="tab" aria-selected="true">Automations</button>
+              <button type="button" class="eng-tab" data-eng-tab="history" role="tab" aria-selected="false">History</button>
+            </nav>
+
             <!-- Automations list -->
-            <div class="eng-list-card">
-              <div class="eng-list-head">
-                <div class="eng-list-titlewrap">
-                  <h2 class="eng-list-title">All automations</h2>
-                  <button type="button" class="eng-help-btn eng-list-help-btn" id="engListHelpBtn" aria-label="What is this?">?</button>
+            <div class="eng-tab-pane" data-eng-pane="automations">
+              <div class="eng-list-card">
+                <div class="eng-list-head">
+                  <div class="eng-list-titlewrap">
+                    <h2 class="eng-list-title">All automations</h2>
+                    <button type="button" class="eng-help-btn eng-list-help-btn" id="engListHelpBtn" aria-label="What is this?">?</button>
+                  </div>
                 </div>
+
+                <div class="eng-filter-row">
+                  <button type="button" class="eng-filter-pill" data-eng-filter="status" id="engFilterStatus">
+                    Status: <span class="eng-filter-value">All</span>
+                  </button>
+                  <button type="button" class="eng-filter-pill" data-eng-filter="stage" id="engFilterStage">
+                    Stage: <span class="eng-filter-value">All</span>
+                  </button>
+                  <input type="search" id="engSearch" placeholder="Search automations…" class="eng-search">
+                </div>
+
+                <div class="eng-active-filters" id="engActiveFilters" hidden></div>
+
+                <div class="eng-list" id="engList"></div>
               </div>
-
-              <div class="eng-filter-row">
-                <button type="button" class="eng-filter-pill" data-eng-filter="status" id="engFilterStatus">
-                  Status: <span class="eng-filter-value">All</span>
-                </button>
-                <button type="button" class="eng-filter-pill" data-eng-filter="stage" id="engFilterStage">
-                  Stage: <span class="eng-filter-value">All</span>
-                </button>
-                <input type="search" id="engSearch" placeholder="Search automations…" class="eng-search">
-              </div>
-
-              <div class="eng-active-filters" id="engActiveFilters" hidden></div>
-
-              <div class="eng-list" id="engList"></div>
             </div>
+
+            <!-- History panel -->
+            <div class="eng-tab-pane" data-eng-pane="history" hidden>
+              <div class="eng-list-card">
+                <div class="eng-list-head">
+                  <div class="eng-list-titlewrap">
+                    <h2 class="eng-list-title">Recent activity</h2>
+                  </div>
+                </div>
+
+                <div class="eng-filter-row">
+                  <select id="engHistorySeq" class="eng-history-select">
+                    <option value="">All automations</option>
+                  </select>
+                  <input type="search" id="engHistorySearch" placeholder="Search by lead name…" class="eng-search">
+                </div>
+
+                <div class="eng-history" id="engHistory"></div>
+              </div>
+            </div>
+            </div><!-- /#engShell -->
           </div>
         </div>
       </section>
@@ -18752,18 +19293,31 @@
         }
       };
 
-      // Outreach (merged Engagement + Campaigns). On first activation we
-      // mount the Engagement list-card and the Campaigns one-shot pane
-      // into the Outreach shell, then trigger both data loaders. Same
-      // pattern Settings uses for the Phone tab.
+      // Outreach (merged On-demand + Automatic). The Automatic pane is
+      // now the drag-and-drop flow builder (React island) instead of
+      // the old Automations / History tabs. The On-demand pane keeps
+      // the existing Campaigns one-shot wizard.
       let _outreachMounted = false;
       function ensureOutreachMounted() {
         if (_outreachMounted) return;
         const autoMount = document.getElementById("outreachAutoMount");
         const onDemandMount = document.getElementById("outreachOnDemandMount");
         if (!autoMount || !onDemandMount) return;
-        const engCard = document.querySelector("#engagement .eng-list-card");
-        if (engCard) autoMount.appendChild(engCard);
+        // Drop the React mount root into the Automatic pane. The
+        // flow-builder bundle's mountFlowBuilder() picks this up by id.
+        if (!document.getElementById("flowBuilderRoot")) {
+          const fbRoot = document.createElement("div");
+          fbRoot.id = "flowBuilderRoot";
+          fbRoot.style.width = "100%";
+          autoMount.appendChild(fbRoot);
+        }
+        // Let the canvas use the full width of the main content area
+        // by overriding the .out-page max-width while flow-builder is
+        // the active pane content. Ungated CSS class — removed when
+        // the user navigates away from Outreach (no need; the page
+        // unmounts the section).
+        const outPage = document.querySelector("#outreach .out-page");
+        if (outPage) outPage.classList.add("is-flow-builder");
         const cmpPane = document.querySelector('#campaigns [data-camp-pane="oneshot"] .cmp-page');
         if (cmpPane) onDemandMount.appendChild(cmpPane);
         // Wire tab switching once content is in place.
@@ -18783,14 +19337,17 @@
         _outreachMounted = true;
       }
       SECTION_ON_ENTER.outreach = async function loadOutreachSection() {
-        // Load both bundles in parallel, then mount + run their loaders.
+        // Automatic = flow builder (React island), On-demand = campaigns
+        // wizard. Engagement bundle is no longer loaded here — the old
+        // Automations / History tabs UI is retired in favor of the
+        // drag-and-drop canvas.
         await Promise.all([
-          window.__dashboardLoadRouteModule("engagement"),
+          window.__dashboardLoadRouteModule("flow-builder"),
           window.__dashboardLoadRouteModule("campaigns"),
         ]);
         ensureOutreachMounted();
-        if (typeof window.loadEngagementSection === "function") {
-          window.loadEngagementSection();
+        if (typeof window.loadFlowBuilderSection === "function") {
+          window.loadFlowBuilderSection();
         }
         if (typeof window.loadCampaignsSection === "function") {
           window.loadCampaignsSection();
@@ -29299,5 +29856,9 @@ function escHtmlSeq(s) {
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
 <script type="module" src="/dashboard/dist/main.js?v=2026-05-03-igfb-iframe"></script>
+<!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
+     textarea / input / contenteditable on the page. Used by the flow
+     builder's message editor drawer (and shared with the LinkedIn page). -->
+<script src="/dashboard/static/ai-rewrite.js" async></script>
 </body>
 </html>

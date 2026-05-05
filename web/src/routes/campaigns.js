@@ -47,6 +47,101 @@ const AUTOMATION_ICONS = {
   "win_back":            "🔄",
 };
 
+// Per-template playbook content shown at the top of Step 1 ("Looking
+// at it"). Plain language, 2nd-grade reading level. Each entry has:
+//   when     – one short sentence describing exactly when it fires
+//   triggers – list of {ico, h, sub} cards: places leads come from
+//   why      – the case for using this template
+//   bestFor  – who should turn it on
+//   skipIf   – be honest about who shouldn't
+//   integrate (optional) – a tiny "how do I connect…?" hint card
+const AUTOMATION_PLAYBOOKS = {
+  "first_contact": {
+    when: "It runs the second a new lead shows up — before they wonder if you saw them.",
+    triggers: [
+      { ico: "📝", h: "Someone fills out your form",
+        sub: "Like a 'Get a quote' form on your website." },
+      { ico: "💬", h: "Someone DMs your Instagram",
+        sub: "If your IG is connected to JustGotALead." },
+      { ico: "📞", h: "A missed call comes in",
+        sub: "We turn the missed call into a lead." },
+      { ico: "✋", h: "You add a lead by hand",
+        sub: "When you tap 'New lead' yourself." },
+    ],
+    why: "Most people who reach out cool off if they don't hear back fast. This sends a quick 'we got it!' so they feel heard, then pings you so you can call back before they go shop someone else.",
+    bestFor: "Turn this on if leads come in faster than you can answer, or you want to look super responsive without lifting a finger.",
+    skipIf: "Skip it if you only get a couple of leads a week and like to write each first message yourself.",
+    integrate: {
+      h: "Connect your form",
+      sub: "Most users paste a link to their form and we listen for new submissions automatically. You can also drop our small snippet onto your site so the form sends leads straight into JustGotALead.",
+      cta: "Show me how to hook it up →",
+      cta_id: "wiz-pb-form-help",
+    },
+  },
+  "job_onboarding": {
+    when: "It runs when you book a job with a customer.",
+    triggers: [
+      { ico: "📅", h: "You move a lead to 'Booked'",
+        sub: "Either by hand or after a 'Yes' reply." },
+      { ico: "🗓️", h: "A calendar invite is accepted",
+        sub: "If your calendar is connected." },
+    ],
+    why: "Customers worry between 'yes' and the day of the visit. A confirmation right away and a friendly reminder the day before keeps them excited and cuts no-shows.",
+    bestFor: "Turn this on if you ever have customers no-show or call to ask 'are we still on?' the day before.",
+    skipIf: "Skip it if every booking is same-day or your customers already get reminders from another tool.",
+  },
+  "estimate_onboarding": {
+    when: "It runs when you book an estimate / site visit.",
+    triggers: [
+      { ico: "📅", h: "You schedule the estimate",
+        sub: "From a lead's profile or your calendar." },
+    ],
+    why: "Estimates fall through when the customer forgets you're coming. One confirmation and one day-before reminder fixes most of that.",
+    bestFor: "Turn this on if you do site visits or in-person estimates and want fewer wasted trips.",
+    skipIf: "Skip it if your estimates happen over the phone with no scheduled visit.",
+  },
+  "quote_followup": {
+    when: "It runs after you send a quote and the customer hasn't replied.",
+    triggers: [
+      { ico: "💲", h: "You mark a lead as 'Quoted'",
+        sub: "Either by hand or after sending a quote." },
+    ],
+    why: "Most customers forget to reply, not because they said no. Two friendly nudges over two weeks brings back about one in three deals you'd have lost.",
+    bestFor: "Turn this on if you send written quotes and ever wonder 'did they ever get back to me?'",
+    skipIf: "Skip it if you handle every follow-up by phone yourself and don't want auto-texts going out.",
+  },
+  "during_job": {
+    when: "It runs while a job is happening.",
+    triggers: [
+      { ico: "🏗️", h: "A lead's stage is 'In progress'",
+        sub: "Set this when work actually starts." },
+    ],
+    why: "Notes and photos taken during the job make answering the customer later (or asking for a review) so much easier. This nudges you so you don't forget while you're busy.",
+    bestFor: "Turn this on if you'd love better notes and pictures but never remember in the moment.",
+    skipIf: "Skip it if you already document jobs in another app or don't need this kind of reminder.",
+  },
+  "after_job": {
+    when: "It runs the moment a job is marked done.",
+    triggers: [
+      { ico: "✅", h: "You mark a job as 'Done'",
+        sub: "From a lead's profile." },
+    ],
+    why: "A thank-you within a day, plus a review request when the customer's still happy, is the best time to ask. Six months later we check back in to see if they need anything else.",
+    bestFor: "Turn this on if you want more reviews on Google or repeat business — it's basically free reviews.",
+    skipIf: "Skip it if you'd rather ask for reviews face-to-face or already use a review tool.",
+  },
+  "win_back": {
+    when: "It runs about a month after a lead has gone cold.",
+    triggers: [
+      { ico: "❄️", h: "A lead goes 'Lost' or stops replying",
+        sub: "We wait, then check back in once." },
+    ],
+    why: "About one in five cold leads will reply if you send a soft check-in a few weeks later. Cheap money — they already know who you are.",
+    bestFor: "Turn this on if you have leads that ghost you and you'd rather not chase them by hand.",
+    skipIf: "Skip it if the cold leads on your list aren't really potential customers anymore.",
+  },
+};
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function toFriendly(text) {
@@ -136,31 +231,12 @@ async function loadSequences() {
         </div>`;
       return;
     }
-    list.innerHTML = seqs.map(s => {
-      const isRunning = s.active;
-      const desc = SEQ_DESCRIPTIONS[s.id] || (s.step_count + " steps in this automation.");
-      const statusClass = isRunning ? "is-running" : "is-paused";
-      const statusLabel = isRunning ? "● Running" : "Paused";
-      return `
-        <div class="seq-row-card">
-          <div class="seq-row-icon" aria-hidden="true">📩</div>
-          <div>
-            <p class="seq-row-name">${_escHtml(s.name)}</p>
-            <p class="seq-row-desc">${_escHtml(desc)}</p>
-          </div>
-          <span class="seq-status-pill ${statusClass}">${statusLabel}</span>
-          <button type="button" class="seq-edit-btn"
-                  data-seq-edit="${_escHtml(s.id)}">Edit</button>
-        </div>`;
-    }).join("");
-    // wire edit buttons
-    list.querySelectorAll("[data-seq-edit]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const sid = btn.dataset.seqEdit;
-        // use the same routing mechanism as hash links
-        window.location.hash = "sequence-edit-" + sid;
-      });
-    });
+    // Render the customer-journey timeline (top → bottom). The order is
+    // the lead's actual path through the business, so the structure
+    // teaches itself: New lead → Estimate → Quote → Booked → Working →
+    // Done → Cold. Each station has a clear ON/OFF toggle that flips
+    // the automation in one click without entering the wizard.
+    _renderSequencesTimeline(list, seqs);
   } catch (_) {
     list.innerHTML = `
       <div class="seq-empty-card">
@@ -169,6 +245,250 @@ async function loadSequences() {
         <p class="seq-empty-sub">Check your connection and try refreshing.</p>
       </div>`;
   }
+}
+
+// Customer-journey order: the lead walks through these stations
+// top-to-bottom. When a sequence isn't returned by the server (newly
+// added template not yet exposed) it's skipped silently.
+const JOURNEY_ORDER = [
+  { id: "first_contact",       trigger: "When a new lead comes in" },
+  { id: "estimate_onboarding", trigger: "When you book an estimate" },
+  { id: "quote_followup",      trigger: "After you send a quote"     },
+  { id: "job_onboarding",      trigger: "When the job is booked"     },
+  { id: "during_job",          trigger: "While the work is happening" },
+  { id: "after_job",           trigger: "When the job is done"        },
+  { id: "win_back",             trigger: "When a lead has gone cold"   },
+];
+
+const FIRST_RUN_DISMISS_KEY = "automations.firstRunDismissed";
+const FIRST_RUN_RECOMMENDED = ["first_contact", "after_job"];
+
+// "After you save / turn on X, you might want Y next." Pure
+// suggestion — drives the wizard step-4 link only.
+const NEXT_UP_BY_SEQUENCE = {
+  first_contact:       "after_job",
+  estimate_onboarding: "quote_followup",
+  quote_followup:      "job_onboarding",
+  job_onboarding:      "during_job",
+  during_job:          "after_job",
+  after_job:           "win_back",
+  win_back:             "first_contact",
+};
+
+function _renderSequencesTimeline(root, seqs) {
+  const byId = Object.fromEntries(seqs.map(s => [s.id, s]));
+  const stations = JOURNEY_ORDER
+    .map(j => ({ ...j, seq: byId[j.id] }))
+    .filter(j => !!j.seq);
+
+  const onCount = stations.filter(j => j.seq.active).length;
+  const headerHtml = `
+    <div class="seq-tl-head">
+      <div class="seq-tl-head-text">
+        <h2 class="seq-tl-title">Your customer's path</h2>
+        <p class="seq-tl-sub">Each step turns on automatically when something happens with a lead. Flip on the ones you want.</p>
+      </div>
+      <div class="seq-tl-head-meta">
+        <div class="seq-tl-count" id="seqTlCount">
+          <strong>${onCount}</strong> of ${stations.length} on
+        </div>
+        ${onCount === 0
+            ? `<button type="button" class="seq-tl-quick" id="seqTlQuickStart">Quick setup →</button>`
+            : ""}
+      </div>
+    </div>`;
+
+  const stationsHtml = stations.map((j, i) => {
+    const s = j.seq;
+    const desc = SEQ_DESCRIPTIONS[s.id]
+      || (s.step_count + " steps in this automation.");
+    const ico = AUTOMATION_ICONS[s.id] || "📩";
+    const isOn = !!s.active;
+    return `
+      <div class="seq-tl-row${isOn ? " is-on" : ""}" data-station="${_escHtml(s.id)}">
+        <div class="seq-tl-rail">
+          <div class="seq-tl-bullet">${i + 1}</div>
+          ${i < stations.length - 1 ? `<div class="seq-tl-line"></div>` : ""}
+        </div>
+        <div class="seq-tl-card">
+          <div class="seq-tl-trigger">${_escHtml(j.trigger)}</div>
+          <div class="seq-tl-card-body">
+            <span class="seq-tl-ico" aria-hidden="true">${ico}</span>
+            <div class="seq-tl-card-text">
+              <p class="seq-tl-card-name">${_escHtml(s.name)}</p>
+              <p class="seq-tl-card-desc">${_escHtml(desc)}</p>
+            </div>
+            <label class="seq-tl-toggle" title="${isOn ? "Turn off" : "Turn on"}">
+              <input type="checkbox" data-seq-toggle="${_escHtml(s.id)}"
+                     ${isOn ? "checked" : ""}>
+              <span class="seq-tl-toggle-track"></span>
+            </label>
+          </div>
+          <div class="seq-tl-card-foot">
+            <span class="seq-tl-state">${isOn ? "On" : "Off"}</span>
+            <button type="button" class="seq-tl-edit"
+                    data-seq-edit="${_escHtml(s.id)}">Edit the words →</button>
+          </div>
+        </div>
+      </div>`;
+  }).join("");
+
+  root.innerHTML = `
+    <div class="seq-timeline">
+      ${headerHtml}
+      ${stationsHtml}
+    </div>`;
+
+  // Edit → wizard.
+  root.querySelectorAll("[data-seq-edit]").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      window.location.hash = "sequence-edit-" + btn.dataset.seqEdit;
+    });
+  });
+  // Toggle → POST /toggle, optimistic flip + revert on failure.
+  root.querySelectorAll("[data-seq-toggle]").forEach(input => {
+    input.addEventListener("change", () => _toggleSequence(input));
+  });
+  // Quick setup pill (visible only when zero are on).
+  const quick = root.querySelector("#seqTlQuickStart");
+  if (quick) quick.addEventListener("click", _showFirstRunOverlay);
+
+  // First-run overlay: only show on a true blank slate AND only once.
+  // "Blank slate" = zero automations on. Dismiss flag in localStorage.
+  let dismissed = false;
+  try { dismissed = localStorage.getItem(FIRST_RUN_DISMISS_KEY) === "1"; }
+  catch (_) {}
+  if (onCount === 0 && !dismissed) {
+    setTimeout(_showFirstRunOverlay, 250);
+  }
+}
+
+async function _toggleSequence(input) {
+  const id = input.dataset.seqToggle;
+  const want = input.checked;
+  const row = input.closest(".seq-tl-row");
+  const stateLabel = row && row.querySelector(".seq-tl-state");
+  // Optimistic UI.
+  if (row) row.classList.toggle("is-on", want);
+  if (stateLabel) stateLabel.textContent = want ? "On" : "Off";
+  try {
+    const res = await fetch(
+      `/me/sequences/${encodeURIComponent(id)}/toggle`,
+      { method: "POST", credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active: want }) });
+    if (!res.ok) throw new Error("toggle_failed");
+    _updateOnCount();
+  } catch (_) {
+    input.checked = !want;
+    if (row) row.classList.toggle("is-on", !want);
+    if (stateLabel) stateLabel.textContent = !want ? "On" : "Off";
+  }
+}
+
+function _updateOnCount() {
+  const root = document.getElementById("sequencesList");
+  if (!root) return;
+  const total = root.querySelectorAll(".seq-tl-row").length;
+  const on    = root.querySelectorAll(".seq-tl-row.is-on").length;
+  const el = document.getElementById("seqTlCount");
+  if (el) el.innerHTML = `<strong>${on}</strong> of ${total} on`;
+  // Show / hide the Quick setup pill on the fly.
+  const head = root.querySelector(".seq-tl-head-meta");
+  let quick = root.querySelector("#seqTlQuickStart");
+  if (on === 0 && !quick && head) {
+    quick = document.createElement("button");
+    quick.type = "button";
+    quick.className = "seq-tl-quick";
+    quick.id = "seqTlQuickStart";
+    quick.textContent = "Quick setup →";
+    quick.addEventListener("click", _showFirstRunOverlay);
+    head.appendChild(quick);
+  } else if (on > 0 && quick) {
+    quick.remove();
+  }
+}
+
+function _showFirstRunOverlay() {
+  // No-op if it's already up.
+  if (document.getElementById("seqFirstRunBg")) return;
+  const root = document.getElementById("sequencesList");
+  const seqs = root ? Array.from(root.querySelectorAll(".seq-tl-row"))
+                          .map(r => r.dataset.station) : [];
+  const recommended = FIRST_RUN_RECOMMENDED.filter(id => seqs.includes(id));
+  if (!recommended.length) return; // shouldn't happen, but guard.
+
+  const cardsHtml = recommended.map(id => {
+    const ico = AUTOMATION_ICONS[id] || "📩";
+    const headline = AUTOMATION_HEADLINES[id] || "";
+    const summary  = AUTOMATION_SUMMARIES[id] || "";
+    return `
+      <label class="seq-fr-pick">
+        <input type="checkbox" data-seq-fr="${_escHtml(id)}" checked>
+        <div class="seq-fr-pick-body">
+          <div class="seq-fr-pick-h">
+            <span class="seq-fr-pick-ico" aria-hidden="true">${ico}</span>
+            <span>${_escHtml(headline)}</span>
+            <span class="seq-fr-pick-rec">Recommended</span>
+          </div>
+          <p class="seq-fr-pick-sub">${_escHtml(summary)}</p>
+        </div>
+        <span class="seq-fr-pick-check">✓</span>
+      </label>`;
+  }).join("");
+
+  const bg = document.createElement("div");
+  bg.id = "seqFirstRunBg";
+  bg.className = "seq-fr-bg";
+  bg.innerHTML = `
+    <div class="seq-fr-card" role="dialog" aria-modal="true">
+      <div class="seq-fr-h">
+        <div>
+          <h2 class="seq-fr-title">Let's get the basics on</h2>
+          <p class="seq-fr-sub">We picked the two automations that help every business. Tap "Turn these on" — you can change the words later.</p>
+        </div>
+        <button type="button" class="seq-fr-x" aria-label="Close">×</button>
+      </div>
+      <div class="seq-fr-body">
+        ${cardsHtml}
+      </div>
+      <div class="seq-fr-foot">
+        <button type="button" class="seq-fr-skip">I'll pick later</button>
+        <button type="button" class="seq-fr-go">Turn these on →</button>
+      </div>
+    </div>`;
+  document.body.appendChild(bg);
+
+  function close() {
+    if (bg.parentNode) bg.parentNode.removeChild(bg);
+    document.removeEventListener("keydown", onKey);
+  }
+  function onKey(e) { if (e.key === "Escape") close(); }
+  document.addEventListener("keydown", onKey);
+  bg.addEventListener("click", e => { if (e.target === bg) close(); });
+  bg.querySelector(".seq-fr-x").addEventListener("click", close);
+  bg.querySelector(".seq-fr-skip").addEventListener("click", () => {
+    try { localStorage.setItem(FIRST_RUN_DISMISS_KEY, "1"); } catch (_) {}
+    close();
+  });
+  bg.querySelector(".seq-fr-go").addEventListener("click", async () => {
+    const picks = Array.from(bg.querySelectorAll("[data-seq-fr]"))
+                      .filter(c => c.checked)
+                      .map(c => c.dataset.seqFr);
+    const goBtn = bg.querySelector(".seq-fr-go");
+    goBtn.disabled = true;
+    goBtn.textContent = "Turning on…";
+    await Promise.all(picks.map(id => fetch(
+      `/me/sequences/${encodeURIComponent(id)}/toggle`,
+      { method: "POST", credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active: true }) })
+    ));
+    try { localStorage.setItem(FIRST_RUN_DISMISS_KEY, "1"); } catch (_) {}
+    close();
+    loadSequences();
+  });
 }
 
 // ─── Campaigns sub-tabs ──────────────────────────────────────────────────────
@@ -366,6 +686,10 @@ function renderWizardFooter(n) {
 function renderWizStep1() {
   const def = WIZARD_STATE.def;
   const steps = def.steps || [];
+  // Plain-language playbook (when it runs / why use it / how to plug
+  // into your existing workflow). Rendered at the top of Step 1 so the
+  // user sees the "why" before the "how" of the flow diagram below.
+  const pb = AUTOMATION_PLAYBOOKS[def.id];
 
   // Build raw items list: { type, seconds (for waits), subject, body (for messages) }
   // Then apply owner_alert collapse logic
@@ -516,7 +840,134 @@ function renderWizStep1() {
     </div>`;
   }).join("");
 
-  return `<div class="wiz-flow">${html}</div>`;
+  // Playbook (plain-language "what is this and should I use it" card).
+  let playbookHtml = "";
+  if (pb) {
+    const triggersHtml = (pb.triggers || []).map(t => `
+      <div class="wiz-pb-trig">
+        <span class="wiz-pb-trig-ico" aria-hidden="true">${escHtmlWiz(t.ico)}</span>
+        <div class="wiz-pb-trig-body">
+          <div class="wiz-pb-trig-h">${escHtmlWiz(t.h)}</div>
+          <div class="wiz-pb-trig-sub">${escHtmlWiz(t.sub)}</div>
+        </div>
+      </div>`).join("");
+    const integrateHtml = pb.integrate ? `
+      <div class="wiz-pb-integrate">
+        <div class="wiz-pb-integrate-ico" aria-hidden="true">🔌</div>
+        <div class="wiz-pb-integrate-body">
+          <div class="wiz-pb-integrate-h">${escHtmlWiz(pb.integrate.h)}</div>
+          <div class="wiz-pb-integrate-sub">${escHtmlWiz(pb.integrate.sub)}</div>
+          <button type="button" class="wiz-pb-integrate-cta"
+                  id="${escAttrWiz(pb.integrate.cta_id || "wiz-pb-help")}">
+            ${escHtmlWiz(pb.integrate.cta)}
+          </button>
+        </div>
+      </div>` : "";
+    playbookHtml = `
+      <div class="wiz-pb">
+        <div class="wiz-pb-when">
+          <span class="wiz-pb-when-ico" aria-hidden="true">⏱️</span>
+          <span>${escHtmlWiz(pb.when)}</span>
+        </div>
+        <div class="wiz-pb-section-h">It kicks off when…</div>
+        <div class="wiz-pb-trigs">${triggersHtml}</div>
+        <div class="wiz-pb-why">
+          <div class="wiz-pb-why-h">Why this helps</div>
+          <p>${escHtmlWiz(pb.why)}</p>
+        </div>
+        <div class="wiz-pb-fit">
+          <div class="wiz-pb-fit-row is-good">
+            <span class="wiz-pb-fit-ico" aria-hidden="true">✅</span>
+            <div><div class="wiz-pb-fit-h">Good fit if…</div>
+              <p>${escHtmlWiz(pb.bestFor)}</p></div>
+          </div>
+          <div class="wiz-pb-fit-row is-skip">
+            <span class="wiz-pb-fit-ico" aria-hidden="true">⏭️</span>
+            <div><div class="wiz-pb-fit-h">You can skip it if…</div>
+              <p>${escHtmlWiz(pb.skipIf)}</p></div>
+          </div>
+        </div>
+        ${integrateHtml}
+      </div>
+      <div class="wiz-pb-divider">
+        <span class="wiz-pb-divider-l">Here's what happens, step by step</span>
+      </div>
+    `;
+  }
+
+  return `${playbookHtml}<div class="wiz-flow">${html}</div>`;
+}
+
+// Plain-language modal explaining how to wire up a contact form so the
+// First-contact automation captures every submission. Triggered by the
+// "Show me how to hook it up →" CTA inside the playbook card.
+function _wizShowFormHookHelp() {
+  const html = `
+    <div class="wiz-help-bg" id="wizHelpBg">
+      <div class="wiz-help-card" role="dialog" aria-modal="true">
+        <div class="wiz-help-h">
+          <span>🔌 Hook your form into JustGotALead</span>
+          <button type="button" class="wiz-help-x" aria-label="Close">×</button>
+        </div>
+        <div class="wiz-help-body">
+          <p class="wiz-help-lead">Pick the way you already collect leads. We'll show you what to do.</p>
+          <details open class="wiz-help-step">
+            <summary>📝 I already have a form on my website</summary>
+            <ol>
+              <li>Open your form's settings (Wix, Squarespace, WordPress, etc.).</li>
+              <li>Look for "<b>Send submissions to</b>" or "<b>Webhook</b>" or "<b>Email notifications</b>".</li>
+              <li>Paste this address: <code class="wiz-help-code" data-wiz-copy>https://your-account.justgotalead.com/lead-in</code></li>
+              <li>Save. Send yourself a test submission and watch a new lead pop into your Leads tab.</li>
+            </ol>
+          </details>
+          <details class="wiz-help-step">
+            <summary>📨 I'd rather forward emails</summary>
+            <ol>
+              <li>Set your form to email leads to <code class="wiz-help-code" data-wiz-copy>leads@your-account.justgotalead.com</code>.</li>
+              <li>Most form builders let you add this in 2 clicks.</li>
+              <li>We'll parse the email and create a new lead automatically.</li>
+            </ol>
+          </details>
+          <details class="wiz-help-step">
+            <summary>💬 My leads come from Instagram DMs</summary>
+            <p>Connect your IG account on the <b>Instagram</b> page. Every new DM becomes a lead and triggers this automation.</p>
+          </details>
+          <details class="wiz-help-step">
+            <summary>📞 My leads come from missed calls</summary>
+            <p>Set up forwarding on the <b>Phone</b> page. Missed calls turn into leads and fire this automation.</p>
+          </details>
+          <details class="wiz-help-step">
+            <summary>✋ I just want to add leads by hand</summary>
+            <p>You're already set. Tap the <b>+ New lead</b> button in the Leads tab — this automation runs every time.</p>
+          </details>
+          <p class="wiz-help-foot">Not sure which one fits? Pick the first option — it works for almost any form builder.</p>
+        </div>
+      </div>
+    </div>`;
+  const wrap = document.createElement("div");
+  wrap.innerHTML = html;
+  const node = wrap.firstElementChild;
+  document.body.appendChild(node);
+  function close() {
+    if (node.parentNode) node.parentNode.removeChild(node);
+    document.removeEventListener("keydown", onEsc);
+  }
+  function onEsc(e) { if (e.key === "Escape") close(); }
+  node.addEventListener("click", e => { if (e.target === node) close(); });
+  node.querySelector(".wiz-help-x").addEventListener("click", close);
+  document.addEventListener("keydown", onEsc);
+  // Click-to-copy on the code blocks.
+  node.querySelectorAll("[data-wiz-copy]").forEach(el => {
+    el.style.cursor = "pointer";
+    el.title = "Click to copy";
+    el.addEventListener("click", () => {
+      const t = el.textContent;
+      try { navigator.clipboard.writeText(t); } catch (_) {}
+      const orig = el.textContent;
+      el.textContent = "Copied!";
+      setTimeout(() => { el.textContent = orig; }, 1200);
+    });
+  });
 }
 
 // ── Step 2: editable email/SMS cards ──
@@ -705,22 +1156,147 @@ function attachWizStep3Handlers() {
 
 // ── Step 4: send-test ──
 function renderWizStep4() {
+  // "Once this is set, here's the next one most people turn on."
+  // Hardcoded mapping per template; the link routes the user straight
+  // into the next wizard so they keep moving through the journey.
+  const def = WIZARD_STATE.def || {};
+  const nextId = NEXT_UP_BY_SEQUENCE[def.id];
+  const nextHeadline = nextId ? AUTOMATION_HEADLINES[nextId] : "";
+  const nextIco = nextId ? (AUTOMATION_ICONS[nextId] || "📩") : "";
+  const nextHtml = (nextId && nextHeadline) ? `
+    <div class="wiz-next-card">
+      <div class="wiz-next-row">
+        <span class="wiz-next-ico" aria-hidden="true">${nextIco}</span>
+        <div class="wiz-next-body">
+          <div class="wiz-next-eyebrow">After you save this…</div>
+          <div class="wiz-next-h">${escHtmlWiz(nextHeadline)}</div>
+        </div>
+        <button type="button" class="wiz-next-go" data-wiz-next="${escAttrWiz(nextId)}">
+          Set it up →
+        </button>
+      </div>
+    </div>` : "";
+
   return `
     <h3 class="wiz-section-h">Try it before you save</h3>
     <p class="wiz-helper-p">Send a test email to yourself. You'll get every customer-facing message in this automation, prefixed with [TEST] in the subject.</p>
+
+    <div class="wiz-conn-card" id="wizConnCard" hidden>
+      <div class="wiz-conn-row">
+        <span class="wiz-conn-ico">📬</span>
+        <div class="wiz-conn-body">
+          <div class="wiz-conn-h" id="wizConnH">Connect a Gmail account</div>
+          <div class="wiz-conn-sub" id="wizConnSub">
+            We send your test (and your real campaigns) from your own Gmail.
+            Connect it once and you're set.
+          </div>
+        </div>
+        <button type="button" class="wiz-btn wiz-btn-primary" id="wizConnBtn">
+          Connect Gmail
+        </button>
+      </div>
+    </div>
+
     <div class="wiz-test-card">
       <label class="wiz-input-label" for="wizTestEmail">Send test to</label>
       <input class="wiz-input" id="wizTestEmail" placeholder="you@yourbusiness.com" type="email" autocomplete="email">
       <button type="button" class="wiz-btn wiz-btn-secondary" id="wizTestSend">Send a test to me</button>
       <div class="wiz-test-status" id="wizTestStatus"></div>
     </div>
-    <p class="wiz-helper-p" style="margin-top:24px;">When you're happy, click <strong>Save changes</strong> below to make these updates live for new leads.</p>`;
+    <p class="wiz-helper-p" style="margin-top:24px;">When you're happy, click <strong>Save changes</strong> below to make these updates live for new leads.</p>
+    ${nextHtml}`;
+}
+
+// Probe /me/email-connections and show the Connect-Gmail card if the
+// user has none. Returns the list (so other code can react too).
+async function loadEmailConnectionsForWizard() {
+  const card    = document.getElementById("wizConnCard");
+  const headEl  = document.getElementById("wizConnH");
+  const subEl   = document.getElementById("wizConnSub");
+  const sendBtn = document.getElementById("wizTestSend");
+  if (!card) return [];
+  try {
+    const r = await fetch("/me/email-connections", { credentials: "same-origin" });
+    if (!r.ok) {
+      card.hidden = false;
+      headEl.textContent = "Connect a Gmail account";
+      return [];
+    }
+    const d = await r.json().catch(() => ({}));
+    const conns = d.connections || [];
+    if (!d.ready) {
+      card.hidden = false;
+      headEl.textContent = "Email outreach not configured";
+      subEl.textContent = "Ask the admin to set EMAIL_TOKEN_ENCRYPTION_KEY on the server.";
+      const btn = document.getElementById("wizConnBtn");
+      if (btn) btn.hidden = true;
+      if (sendBtn) sendBtn.disabled = true;
+      return [];
+    }
+    if (conns.length === 0) {
+      card.hidden = false;
+      headEl.textContent = "Connect a Gmail account";
+      subEl.textContent = "We send your test (and your real campaigns) from your own Gmail. Connect it once and you're set.";
+      if (sendBtn) sendBtn.disabled = true;
+    } else {
+      // Already connected — show a tiny confirmation row instead of hiding.
+      card.hidden = false;
+      card.classList.add("is-ok");
+      headEl.textContent = "✓ Connected as " + (conns[0].email_address || "your Gmail");
+      subEl.textContent = "Tests will send from this address. To swap accounts, disconnect from Settings.";
+      const btn = document.getElementById("wizConnBtn");
+      if (btn) btn.hidden = true;
+      if (sendBtn) sendBtn.disabled = false;
+    }
+    return conns;
+  } catch (_) {
+    card.hidden = false;
+    headEl.textContent = "Couldn't check your Gmail connection";
+    subEl.textContent = "Try refreshing the page.";
+    return [];
+  }
 }
 
 function attachWizStep4Handlers() {
   const btn    = document.getElementById("wizTestSend");
   const status = document.getElementById("wizTestStatus");
   if (!btn) return;
+
+  // Probe + render the Gmail connection state up top.
+  loadEmailConnectionsForWizard();
+
+  // "Connect Gmail" — opens the Google OAuth start URL in a popup.
+  // When the popup closes, we re-probe; if connected, the card flips
+  // to the "✓ Connected as X" state and the test-send button enables.
+  const connBtn = document.getElementById("wizConnBtn");
+  if (connBtn) {
+    connBtn.onclick = () => {
+      const w = 520, h = 640;
+      const dx = (window.screen.availWidth  - w) / 2;
+      const dy = (window.screen.availHeight - h) / 2;
+      const popup = window.open(
+        "/auth/google/connect-email",
+        "gmail_connect",
+        "width=" + w + ",height=" + h
+        + ",left=" + Math.max(0, Math.round(dx))
+        + ",top="  + Math.max(0, Math.round(dy))
+        + ",resizable,scrollbars,status,toolbar=no,menubar=no");
+      if (!popup) {
+        // Popup blocked — fall back to a same-tab redirect.
+        window.location.href = "/auth/google/connect-email";
+        return;
+      }
+      // Re-probe every 2s until the popup closes (the OAuth callback
+      // redirects to /dashboard?email_connect=ok inside the popup).
+      const pollClosed = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(pollClosed);
+          loadEmailConnectionsForWizard();
+        }
+      }, 1000);
+    };
+  }
+
   btn.onclick = async () => {
     const to = (document.getElementById("wizTestEmail").value || "").trim();
     if (!to) {
@@ -745,12 +1321,24 @@ function attachWizStep4Handlers() {
       } else if (body.error === "no_send_email_step") {
         status.textContent = "This automation has no email parts to test.";
         status.className   = "wiz-test-status err";
+      } else if (body.error === "connection_not_found"
+                  || body.error === "no_email_connection") {
+        status.textContent = "Connect a Gmail account first (Settings → Email).";
+        status.className   = "wiz-test-status err";
+      } else if ((body.error || "").startsWith("token_refresh_failed")) {
+        status.textContent = "Your Gmail connection expired — reconnect it (Settings → Email).";
+        status.className   = "wiz-test-status err";
+      } else if (body.error || body.reason) {
+        // Surface the real backend reason instead of the generic toast.
+        status.textContent = "Couldn't send: " + (body.error || body.reason);
+        status.className   = "wiz-test-status err";
       } else {
         status.textContent = "Couldn't send the test. Try again in a moment.";
         status.className   = "wiz-test-status err";
       }
-    } catch (_) {
-      status.textContent = "Couldn't send the test. Try again in a moment.";
+    } catch (e) {
+      status.textContent = "Couldn't send the test: "
+        + (e && e.message ? e.message : "network error");
       status.className   = "wiz-test-status err";
     } finally {
       btn.disabled = false; btn.textContent = "Send a test to me";
@@ -759,9 +1347,31 @@ function attachWizStep4Handlers() {
 }
 
 function attachWizardBodyHandlers(n) {
+  if (n === 1) attachWizStep1Handlers();
   if (n === 2) attachWizStep2Handlers();
   if (n === 3) attachWizStep3Handlers();
-  if (n === 4) attachWizStep4Handlers();
+  if (n === 4) { attachWizStep4Handlers(); _wireWizStep4NextUp(); }
+}
+
+function attachWizStep1Handlers() {
+  // Wire the "Show me how to hook it up →" link inside the playbook
+  // card. Only present for templates whose AUTOMATION_PLAYBOOKS entry
+  // includes an `integrate` block (e.g. first_contact).
+  const helpBtn = document.getElementById("wiz-pb-form-help");
+  if (helpBtn) helpBtn.addEventListener("click", _wizShowFormHookHelp);
+  const helpBtn2 = document.getElementById("wiz-pb-help");
+  if (helpBtn2) helpBtn2.addEventListener("click", _wizShowFormHookHelp);
+}
+
+function _wireWizStep4NextUp() {
+  // "Set it up →" jumps straight to the next sequence's wizard via the
+  // existing hash-based router.
+  document.querySelectorAll("[data-wiz-next]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.wizNext;
+      if (id) window.location.hash = "sequence-edit-" + id;
+    });
+  });
 }
 
 // ── Save ──

@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 import path from "node:path";
 
 // Build output goes adjacent to the dashboard's Jinja template so the
@@ -8,6 +9,9 @@ const OUT_DIR = path.resolve(__dirname, "../templates/AIdashboard/dist");
 export default defineConfig({
   // Project root is the web/ folder.
   root: __dirname,
+  // React plugin only fires for files matching its include glob; the
+  // rest of the dashboard (vanilla ESM routes) is unaffected.
+  plugins: [react()],
 
   // In dev, Vite serves modules from /; in prod, the C server serves
   // from /dashboard/dist/. The base path is set at build time so generated

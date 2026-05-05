@@ -30,6 +30,16 @@
       --radius-pill:999px;
       --shadow-card:0 1px 2px rgba(15,23,42,.04);
       --shadow-btn:0 6px 14px rgba(37,99,235,.22);
+      /* Aliases for the ported LinkedIn scheduled-view CSS so .sch-week-* /
+         .sch-month-* rules resolve without rewriting every var() call.
+         --link uses the Instagram brand pink so calendar pills, drop
+         highlights, and "today" cells render in IG pink instead of
+         LinkedIn blue. */
+      --text:var(--text-primary);
+      --text-sub:var(--text-secondary);
+      --link:#E1306C;
+      --err-fg:var(--red);
+      --bg-alt:var(--bg-soft);
     }
     *,*::before,*::after{box-sizing:border-box}
     [hidden]{display:none !important}
@@ -688,6 +698,613 @@
     .publish-ok-actions{display:flex; gap:12px; justify-content:center; flex-wrap:wrap}
 
     /* ── Scheduled tab ────────────────────────────────────────────────── */
+    /* View-toggle (List / Week / Month) — ported from dashboard_linkedin.html.
+       Keep these rule blocks in sync with that file. They use a few CSS vars
+       (--bg-alt, --text-sub, --link, --border, --text, --err-fg) — Instagram's
+       theme already defines these. */
+    .sch-segs {
+      display: inline-flex; gap: 0; padding: 2px;
+      background: var(--bg-alt); border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .sch-seg {
+      padding: 5px 11px; border: 0; background: transparent; cursor: pointer;
+      font: inherit; font-size: 12.5px; color: var(--text-sub);
+      border-radius: 6px;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: color .12s;
+    }
+    .sch-seg:hover { color: var(--text); }
+    .sch-seg.is-active {
+      background: #fff; color: var(--link); font-weight: 600;
+      box-shadow: 0 1px 2px rgba(15,23,42,.10);
+    }
+
+    /* Week calendar view. */
+    .sch-week-grid {
+      display: grid; grid-template-columns: 60px repeat(7, 1fr);
+      gap: 2px; background: var(--border); padding: 2px;
+      border-radius: 12px; overflow: hidden; min-height: 600px;
+    }
+    .sch-week-corner { background: var(--bg-alt); }
+    .sch-week-day-h {
+      background: var(--bg-alt); padding: 8px 6px;
+      font-size: 12px; font-weight: 600; color: var(--text);
+      text-align: center;
+    }
+    .sch-week-day-h-sub { font-size: 11px; color: var(--text-sub); font-weight: 400; }
+    .sch-week-day-h.is-today { color: var(--link); }
+    .sch-week-hour-l {
+      background: var(--bg-alt); padding: 4px 6px;
+      font-size: 10px; color: var(--text-sub); font-weight: 500;
+      text-align: right;
+    }
+    .sch-week-cell {
+      background: #fff; min-height: 28px; padding: 2px 4px;
+      position: relative;
+      min-width: 0; overflow: hidden;
+    }
+    .sch-week-cell.is-today { background: rgba(225,48,108,.03); }
+    .sch-week-pill {
+      display: block; padding: 3px 6px; margin-bottom: 2px;
+      background: var(--link); color: #fff;
+      border-radius: 4px; font-size: 10.5px; font-weight: 500;
+      cursor: pointer; line-height: 1.3;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 100%;
+    }
+    .sch-week-pill:hover { filter: brightness(1.1); }
+    .sch-week-pill.is-failed     { background: var(--err-fg); }
+    .sch-week-pill.is-publishing { background: #f59e0b; }
+    .sch-week-pill { cursor: grab; user-select: none; touch-action: none; }
+    .sch-week-pill.is-grabbing { cursor: grabbing; }
+    .sch-week-pill.is-placeholder {
+      opacity: .30;
+      border: 1px dashed rgba(255,255,255,.65);
+      background: var(--link) !important;
+      transition: opacity .2s ease;
+    }
+    .sch-week-pill.is-placeholder.is-fading { opacity: 0; }
+    .sch-week-pill.sch-drag-clone {
+      position: fixed; z-index: 999; pointer-events: none;
+      transform: scale(1.02) rotate(1.2deg);
+      box-shadow: 0 8px 22px rgba(15,23,42,.20);
+      max-width: 260px;
+    }
+    .sch-week-pill.sch-drag-clone.is-saving {
+      box-shadow: 0 8px 22px rgba(15,23,42,.20),
+                  0 0 0 2px rgba(245,158,11,.55);
+    }
+    .sch-week-cell.sch-drop-target {
+      background: rgba(225,48,108,.10);
+      box-shadow: inset 0 0 0 1px var(--link);
+    }
+    .sch-week-cell.sch-drop-target-invalid {
+      background: rgba(239,68,68,.06);
+      box-shadow: inset 0 0 0 1px rgba(239,68,68,.4);
+    }
+    .sch-drag-label {
+      position: fixed; z-index: 1000; pointer-events: none;
+      background: var(--text); color: #fff;
+      padding: 5px 9px; border-radius: 6px;
+      font-size: 12px; font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0,0,0,.20);
+      white-space: nowrap;
+    }
+    .sch-drag-label.is-invalid { background: var(--err-fg); }
+    .sch-week-pill.sch-drag-clone.is-dropping {
+      transition: left .15s cubic-bezier(.2,.8,.2,1),
+                  top  .15s cubic-bezier(.2,.8,.2,1),
+                  transform .15s cubic-bezier(.2,.8,.2,1);
+      transform: scale(1.0) rotate(0deg);
+    }
+    @keyframes schConflictFlash {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
+      30%, 70% { box-shadow: 0 0 0 2px rgba(245,158,11,.85); }
+    }
+    .sch-week-pill.is-conflict-flash {
+      animation: schConflictFlash 1s ease-in-out;
+    }
+    .sch-conflict-bar {
+      position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+      max-width: 480px; width: calc(100% - 32px);
+      background: #fff; color: var(--text);
+      border: 1px solid rgba(245,158,11,.45);
+      border-left: 4px solid #f59e0b;
+      border-radius: 12px; padding: 12px 14px;
+      box-shadow: 0 10px 30px rgba(15,23,42,.18);
+      z-index: 95;
+      animation: schConflictIn .22s cubic-bezier(.2,.8,.2,1);
+    }
+    @keyframes schConflictIn {
+      from { opacity: 0; transform: translate(-50%, 8px); }
+      to   { opacity: 1; transform: translate(-50%, 0); }
+    }
+    .sch-conflict-msg { font-size: 13px; line-height: 1.45; margin-bottom: 8px; }
+    .sch-conflict-msg strong { color: var(--text); font-weight: 600; }
+    .sch-conflict-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .sch-conflict-actions .btn { font-size: 12.5px; padding: 6px 12px; }
+    .sch-week-empty { text-align: center; padding: 60px 20px; color: var(--text-sub); }
+
+    /* Month calendar view. */
+    .sch-month-bar {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 12px; flex-wrap: wrap;
+    }
+    .sch-month-bar-h { font-size: 16px; font-weight: 700; color: var(--text); }
+    .sch-month-bar-spacer { flex: 1; }
+    .sch-month-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 1px; background: var(--border);
+      border: 1px solid var(--border); border-radius: 12px;
+      overflow: hidden;
+    }
+    .sch-month-day-h {
+      background: var(--bg-alt); padding: 8px 6px;
+      font-size: 11.5px; font-weight: 600; color: var(--text-sub);
+      text-align: center; letter-spacing: .04em; text-transform: uppercase;
+    }
+    .sch-month-cell {
+      background: #fff; min-height: 96px; padding: 6px;
+      display: flex; flex-direction: column; gap: 4px;
+      position: relative;
+      min-width: 0; overflow: hidden;
+    }
+    .sch-month-cell.is-today { background: rgba(225,48,108,.05); }
+    .sch-month-cell.is-other-month { background: var(--bg-alt); }
+    .sch-month-cell.is-other-month .sch-month-num,
+    .sch-month-cell.is-other-month .sch-month-pill { opacity: .55; }
+    .sch-month-num {
+      font-size: 12px; font-weight: 600; color: var(--text);
+      text-align: right;
+    }
+    .sch-month-cell.is-today .sch-month-num { color: var(--link); font-weight: 700; }
+    .sch-month-pills {
+      display: flex; flex-direction: column; gap: 2px;
+      min-width: 0; min-height: 0; overflow: hidden;
+    }
+    .sch-month-pill {
+      display: block; padding: 2px 6px;
+      background: var(--link); color: #fff;
+      border-radius: 4px; font-size: 10.5px; font-weight: 500;
+      line-height: 1.35;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 100%;
+      cursor: pointer;
+    }
+    .sch-month-pill:hover { filter: brightness(1.1); }
+    .sch-month-pill.is-failed     { background: var(--err-fg); }
+    .sch-month-pill.is-publishing { background: #f59e0b; }
+    .sch-month-pill { cursor: grab; user-select: none; touch-action: none; }
+    .sch-month-pill.is-grabbing { cursor: grabbing; }
+    .sch-month-pill.is-placeholder {
+      opacity: .30;
+      border: 1px dashed rgba(255,255,255,.65);
+    }
+    .sch-month-pill.sch-drag-clone {
+      position: fixed; z-index: 999; pointer-events: none;
+      transform: scale(1.04) rotate(1.5deg);
+      box-shadow: 0 8px 22px rgba(15,23,42,.20);
+      max-width: 200px;
+    }
+    .sch-month-cell.sch-drop-target {
+      background: rgba(225,48,108,.14) !important;
+      box-shadow: inset 0 0 0 2px var(--link);
+    }
+    .sch-month-cell.sch-drop-target-invalid {
+      background: rgba(239,68,68,.06) !important;
+      box-shadow: inset 0 0 0 2px rgba(239,68,68,.5);
+    }
+    .sch-month-more {
+      font-size: 10.5px; color: var(--text-sub); font-weight: 600;
+      cursor: pointer; padding: 1px 6px;
+    }
+    .sch-month-more:hover { color: var(--text); text-decoration: underline; }
+    @media (max-width: 720px) {
+      .sch-month-cell { min-height: 70px; padding: 4px; }
+      .sch-month-pill { font-size: 10px; padding: 1px 4px; }
+    }
+
+    /* Plan-from-the-calendar — plannable day cells get a subtle hover lift
+       and a "+" affordance in the empty area below the pills. Past cells
+       stay static. */
+    .sch-month-cell.is-plannable { cursor: pointer; }
+    .sch-month-cell.is-plannable:hover {
+      background: rgba(225,48,108,.08);
+      box-shadow: inset 0 0 0 1px var(--link);
+    }
+    .sch-month-cell.is-today.is-plannable:hover {
+      background: rgba(225,48,108,.14);
+    }
+    .sch-month-cell.is-past .sch-month-num { color: var(--text-sub); }
+    .sch-month-plan-add {
+      font-size: 18px; font-weight: 600; color: var(--link);
+      opacity: 0; align-self: center; line-height: 1;
+      transition: opacity .12s;
+      pointer-events: none;
+    }
+    .sch-month-cell.is-plannable:hover .sch-month-plan-add { opacity: .6; }
+
+    /* ── Day-detail sidebar ─────────────────────────────────────────── */
+    .ds-bg {
+      position: fixed; inset: 0; background: rgba(15,23,42,.45);
+      z-index: 9100; display: flex; justify-content: flex-end;
+      animation: dsFade .15s ease-out;
+    }
+    @keyframes dsFade { from { opacity: 0; } to { opacity: 1; } }
+    .ds-panel {
+      width: min(440px, 100%); background: #fff;
+      display: flex; flex-direction: column;
+      box-shadow: -16px 0 40px rgba(15,23,42,.18);
+      animation: dsSlide .2s cubic-bezier(.2,.8,.2,1);
+    }
+    @keyframes dsSlide {
+      from { transform: translateX(100%); opacity: 0; }
+      to   { transform: translateX(0);     opacity: 1; }
+    }
+    .ds-h {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 12px; padding: 18px 22px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .ds-h-eyebrow {
+      font-size: 11px; font-weight: 700; color: var(--text-secondary);
+      letter-spacing: .04em; margin-bottom: 4px;
+    }
+    .ds-h-title {
+      font-size: 18px; font-weight: 700; color: var(--text-primary);
+      line-height: 1.3;
+    }
+    .ds-x {
+      background: none; border: 0; font-size: 24px;
+      color: var(--text-tertiary); cursor: pointer;
+      padding: 0 6px; line-height: 1;
+    }
+    .ds-x:hover { color: var(--text-primary); }
+    .ds-add-row { padding: 12px 22px; border-bottom: 1px solid var(--border); }
+    .ds-add-btn {
+      width: 100%; padding: 10px 14px;
+      background: #E1306C; color: #fff; border: 0;
+      border-radius: 999px;
+      font: 700 13px inherit; cursor: pointer;
+    }
+    .ds-add-btn:hover { background: #c91e5c; }
+    .ds-list {
+      flex: 1; overflow-y: auto; padding: 8px 22px 22px;
+    }
+    .ds-list-h {
+      display: flex; justify-content: space-between;
+      font-size: 11px; font-weight: 700; color: var(--text-secondary);
+      letter-spacing: .04em; text-transform: uppercase;
+      padding: 10px 0 8px;
+    }
+    .ds-row {
+      display: grid;
+      grid-template-columns: 64px 64px 1fr auto;
+      gap: 10px; align-items: center;
+      padding: 10px 0; border-top: 1px solid #f3f4f6;
+    }
+    .ds-row:first-of-type { border-top: 0; }
+    .ds-time {
+      display: flex; flex-direction: column; gap: 2px; align-items: flex-start;
+      font-size: 13px; font-weight: 700; color: var(--text-primary);
+    }
+    .ds-time-clock { font-size: 13px; line-height: 1.2; }
+    .ds-time-status {
+      font-size: 10px; font-weight: 700; letter-spacing: .04em;
+      text-transform: uppercase; padding: 2px 6px; border-radius: 999px;
+      background: #f3f4f6; color: var(--text-secondary);
+    }
+    .ds-time-status.is-publishing { background: #fef3c7; color: #92400e; }
+    .ds-time-status.is-failed,
+    .ds-time-status.is-errored    { background: #fee2e2; color: #991b1b; }
+    .ds-time-status.is-published  { background: #d1fae5; color: #065f46; }
+    .ds-thumb {
+      position: relative;
+      width: 64px; height: 64px; border-radius: 8px; overflow: hidden;
+      background: #f3f4f6; flex-shrink: 0;
+      border: 0; padding: 0;
+      transition: transform .12s, box-shadow .12s;
+    }
+    .ds-thumb.is-clickable { cursor: zoom-in; }
+    .ds-thumb.is-clickable:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(15,23,42,.18);
+    }
+    .ds-thumb img,
+    .ds-thumb video {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .ds-thumb-play {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      color: #fff; font-size: 16px;
+      background: rgba(0,0,0,.5); border-radius: 50%;
+      width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+    .ds-thumb-fb {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; color: var(--text-tertiary);
+    }
+    .ds-body { min-width: 0; }
+    .ds-kind {
+      font-size: 11px; font-weight: 700; color: var(--text-secondary);
+      letter-spacing: .04em; margin-bottom: 3px;
+    }
+    .ds-cap {
+      font-size: 12.5px; line-height: 1.4; color: var(--text-primary);
+    }
+    .ds-cap-empty { color: var(--text-tertiary); font-style: italic; }
+    .ds-actions { flex-shrink: 0; }
+    .ds-btn {
+      background: none; border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 6px 12px; border-radius: 999px;
+      font: 600 12.5px inherit; cursor: pointer;
+    }
+    .ds-btn:hover { background: var(--bg-hover); }
+    .ds-empty {
+      text-align: center; padding: 50px 20px; color: var(--text-secondary);
+    }
+    .ds-empty-ico { font-size: 36px; margin-bottom: 8px; }
+    .ds-empty-h {
+      font-size: 14px; font-weight: 700; color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    .ds-empty-p { font-size: 13px; }
+
+    /* Media lightbox — full-size preview when a thumb is clicked. */
+    .ds-lb-bg {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.85);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9300; padding: 20px;
+      animation: dsFade .15s ease-out;
+    }
+    .ds-lb-media {
+      max-width: 92vw; max-height: 92vh;
+      object-fit: contain; border-radius: 8px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    }
+    .ds-lb-x {
+      position: absolute; top: 18px; right: 22px;
+      background: rgba(255,255,255,.18); color: #fff;
+      border: 0; border-radius: 50%;
+      width: 38px; height: 38px;
+      font-size: 24px; cursor: pointer; line-height: 1;
+    }
+    .ds-lb-x:hover { background: rgba(255,255,255,.32); }
+
+    /* Plan modals (click-a-day + plan-the-month). Ported from
+       dashboard_linkedin.html. The .plan-method-card.is-ai gradient uses IG
+       pink instead of LinkedIn blue. */
+    .plan-modal-bg {
+      position: fixed; inset: 0; background: rgba(15,23,42,.55);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9000; padding: 20px;
+    }
+    .plan-modal {
+      background: #fff; border-radius: 14px; max-width: 560px; width: 100%;
+      max-height: calc(100vh - 40px); overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    }
+    .plan-modal-h {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 22px 14px; border-bottom: 1px solid var(--border);
+    }
+    .plan-modal-title { font-size: 18px; font-weight: 700; color: var(--text); }
+    .plan-modal-x {
+      background: none; border: 0; font-size: 22px; line-height: 1;
+      color: var(--text-sub); cursor: pointer; padding: 4px 8px;
+    }
+    .plan-modal-x:hover { color: var(--text); }
+    .plan-modal-body { padding: 18px 22px; }
+    .plan-modal-section { margin-bottom: 18px; }
+    .plan-section-h {
+      font-size: 13px; font-weight: 600; color: var(--text);
+      margin-bottom: 8px;
+    }
+    .plan-day-existing {
+      font-size: 13px; color: var(--text-sub); margin-bottom: 14px;
+    }
+    .plan-count-row {
+      display: flex; align-items: center; gap: 14px; margin-bottom: 6px;
+    }
+    .plan-count-row input[type="range"] { flex: 1; }
+    .plan-count-v {
+      font-weight: 700; font-size: 18px; min-width: 88px;
+      text-align: right; color: var(--text);
+    }
+    .plan-cap-hint {
+      font-size: 12px; color: var(--text-sub); line-height: 1.4;
+    }
+    .plan-cap-warn {
+      background: rgba(245, 158, 11, .12);
+      border: 1px solid rgba(245, 158, 11, .35);
+      border-radius: 8px; padding: 10px 12px;
+      font-size: 12.5px; color: var(--text); line-height: 1.4;
+      margin-top: 8px;
+    }
+    .plan-method-cards {
+      display: grid; grid-template-columns: 1fr; gap: 10px;
+    }
+    .plan-method-card {
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px; display: flex; flex-direction: column; gap: 8px;
+      background: #fff; text-align: left;
+    }
+    .plan-method-card.is-ai {
+      background: linear-gradient(135deg, rgba(225,48,108,.04),
+                                            rgba(225,48,108,.10));
+    }
+    .plan-method-h { font-weight: 600; font-size: 14px; color: var(--text); }
+    .plan-method-sub {
+      font-size: 12px; color: var(--text-sub); line-height: 1.4; flex: 1;
+    }
+    .plan-method-card .btn { width: 100%; }
+    .plan-modal-footer {
+      display: flex; justify-content: flex-end; gap: 10px;
+      padding: 14px 22px 18px; border-top: 1px solid var(--border);
+    }
+    .plan-range-row { display: flex; gap: 10px; }
+    .plan-range-row > div { flex: 1; }
+    .plan-range-row label {
+      display: block; font-size: 11.5px; color: var(--text-sub);
+      margin-bottom: 4px; font-weight: 500;
+    }
+    .plan-range-row input[type="date"] {
+      width: 100%; padding: 8px 10px;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 13.5px;
+    }
+    .plan-day-toggles { display: flex; gap: 6px; flex-wrap: wrap; }
+    .plan-day-toggle {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: var(--bg-alt); color: var(--text-sub);
+      border: 1px solid var(--border); cursor: pointer;
+      font-weight: 600; font-size: 12.5px;
+    }
+    .plan-day-toggle.is-active {
+      background: var(--link); color: #fff; border-color: var(--link);
+    }
+    .plan-summary-line {
+      font-size: 13px; color: var(--text-sub); margin-top: 6px;
+      line-height: 1.4;
+    }
+    .plan-total-line {
+      font-size: 14px; font-weight: 600; color: var(--text);
+      padding: 10px 0 6px; border-top: 1px solid var(--border);
+    }
+    .plan-topup-note {
+      font-size: 12.5px; color: var(--text-sub); margin: 4px 0 12px;
+      line-height: 1.4;
+    }
+    /* Piece picker (3 columns of checkboxes inside a modal) */
+    .plan-pp-grid {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px; margin: 14px 0 8px;
+    }
+    .plan-pp-col {
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 10px 10px 8px; background: var(--bg-soft);
+      display: flex; flex-direction: column; min-height: 0;
+    }
+    .plan-pp-col-h {
+      font-size: 13px; font-weight: 700; color: var(--text);
+      margin-bottom: 4px;
+    }
+    .plan-pp-count { color: var(--text-sub); font-weight: 500; font-size: 12px; }
+    .plan-pp-col-actions {
+      display: flex; gap: 8px; margin-bottom: 6px; font-size: 11.5px;
+    }
+    .plan-pp-col-actions .link-btn {
+      background: none; border: 0; padding: 0; cursor: pointer;
+      color: var(--link); font: inherit; font-size: 11.5px;
+    }
+    .plan-pp-list {
+      max-height: 260px; overflow-y: auto;
+      padding: 2px 2px 2px 0;
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .plan-pp-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 6px; border-radius: 6px; cursor: pointer;
+      font-size: 12.5px; line-height: 1.3;
+    }
+    .plan-pp-row:hover { background: rgba(225,48,108,.06); }
+    .plan-pp-row input[type="checkbox"] { flex-shrink: 0; }
+    .plan-pp-mt { flex-shrink: 0; font-size: 13px; }
+    .plan-pp-label {
+      flex: 1; min-width: 0;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .plan-pp-empty {
+      font-size: 12px; color: var(--text-sub); padding: 14px 4px;
+      text-align: center;
+    }
+    .plan-pp-summary {
+      font-size: 12.5px; color: var(--text-sub);
+      padding: 8px 0; border-top: 1px solid var(--border);
+      margin-top: 4px;
+    }
+    .plan-pp-warn { color: var(--err-fg); font-weight: 500; }
+    @media (max-width: 720px) {
+      .plan-pp-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Plan confirmation card (shown after batch preview when _igPlan is active) */
+    .plan-confirm-card {
+      border: 1px solid var(--border); border-radius: 10px;
+      background: var(--bg-soft);
+      padding: 4px 14px; margin-top: 8px;
+    }
+    .plan-confirm-row {
+      display: flex; gap: 14px; align-items: baseline;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .plan-confirm-row:last-child { border-bottom: 0; }
+    .plan-confirm-k {
+      color: var(--text-sub); flex-shrink: 0; min-width: 110px;
+      font-size: 12px; font-weight: 500;
+    }
+    .plan-confirm-v {
+      flex: 1; color: var(--text); font-weight: 500;
+      word-break: break-word;
+    }
+
+    /* Non-blocking progress strip (shown while the server writes records) */
+    .plan-progress-strip {
+      position: fixed; bottom: 18px; left: 50%;
+      transform: translateX(-50%);
+      width: min(440px, calc(100vw - 32px));
+      background: #fff; border: 1px solid var(--border);
+      border-radius: 14px; padding: 12px 14px;
+      box-shadow: 0 12px 32px rgba(15,23,42,.18);
+      z-index: 95;
+      animation: planProgressIn .22s cubic-bezier(.2,.8,.2,1);
+    }
+    @keyframes planProgressIn {
+      from { opacity: 0; transform: translate(-50%, 12px); }
+      to   { opacity: 1; transform: translate(-50%, 0); }
+    }
+    .plan-progress-strip.is-done { border-color: #16a34a; }
+    .plan-progress-row {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .plan-progress-icon { font-size: 22px; line-height: 1; flex-shrink: 0; }
+    .plan-progress-text { flex: 1; min-width: 0; }
+    .plan-progress-label {
+      font-size: 13px; color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+    .plan-progress-label strong { font-weight: 700; }
+    .plan-progress-track {
+      height: 6px; background: var(--bg-soft);
+      border-radius: 4px; overflow: hidden;
+    }
+    .plan-progress-fill {
+      height: 100%; width: 0%;
+      background: var(--link);
+      transition: width .35s ease;
+    }
+    .plan-progress-strip.is-done .plan-progress-fill { background: #16a34a; }
+    .plan-progress-x {
+      background: none; border: 0; color: var(--text-sub);
+      font-size: 18px; line-height: 1; cursor: pointer;
+      padding: 4px 6px; flex-shrink: 0;
+    }
+    .plan-progress-x:hover { color: var(--text-primary); }
+
+    .plan-complete { text-align: center; padding: 28px 20px; }
+    .plan-complete-h { font-weight: 700; font-size: 18px; margin-bottom: 6px; }
+    .plan-complete-sub {
+      font-size: 13px; color: var(--text-sub); margin-bottom: 18px;
+    }
+
     .scheduled-list{display:flex; flex-direction:column; gap:10px}
     .sched-row{
       display:grid; grid-template-columns:64px 1fr auto auto;
@@ -1727,6 +2344,14 @@
       <!-- Scheduled -->
       <div class="pane" data-pane="scheduled" hidden>
         <div id="sched-status" class="loading"><span class="spinner" aria-hidden="true"></span> Loading scheduled posts…</div>
+        <!-- View toggle: List / Week / Month (ported from dashboard_linkedin.html — keep in sync) -->
+        <div id="sched-view-bar" style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap" hidden>
+          <div class="sch-segs" id="sched-view-toggle">
+            <button class="sch-seg is-active" type="button" data-sch-view="list">List</button>
+            <button class="sch-seg"            type="button" data-sch-view="week">Week</button>
+            <button class="sch-seg"            type="button" data-sch-view="month">Month</button>
+          </div>
+        </div>
         <!-- Countdown header (5 visual states managed by JS) -->
         <div id="sched-header" class="sched-header" hidden></div>
         <!-- Filter pills (Phase 3) -->
@@ -2132,6 +2757,7 @@
         _checkLinkedInPending();
         loadPosts();
         loadScheduled(); // populates badge in nav
+        _planResumeActiveJobs(); // reattach progress strip if a schedule-plan is still running
         return;
       }
       if (status.has_pending_user_token) { showState("picker"); loadPages(); return; }
@@ -3848,7 +4474,8 @@
       return '<div class="sched-condensed">'
         + '<div class="sched-condensed-thumb">'
         +   (thumb
-              ? '<img src="' + esc(thumb) + '" alt="" loading="lazy" />'
+              ? '<img src="' + esc(thumb) + '" alt="" loading="lazy" '
+                + 'onerror="this.outerHTML=\'<div class=&quot;sched-thumb-fb&quot;>📷</div>\'">'
               : '<div class="sched-thumb-fb">📷</div>')
         + '</div>'
         + '<div class="sched-condensed-meta">'
@@ -4603,18 +5230,2050 @@
       }
     });
 
+    /* ─── View toggle + Week/Month renderers ──────────────────────────────
+       Ported from dashboard_linkedin.html. The drag-to-reschedule
+       behaviour, conflict warnings, and snap-during-drag are kept 1:1.
+       Backend endpoints (/dashboard/instagram/api/scheduled[/<id>/edit])
+       are shared with LinkedIn — only the URL prefix differs. */
+    var _schView = "list";
+    try {
+      var _persistedView = localStorage.getItem("dbig.schView");
+      if (_persistedView === "week" || _persistedView === "month"
+          || _persistedView === "list") _schView = _persistedView;
+    } catch(_) {}
+
+    // Optimistic-reschedule protection: keep the optimistic scheduled_at
+    // until the next poll confirms the server caught up.
+    var _schInflight = new Map();
+    function _schMarkInflight(qid, expectedEpoch, ttlMs){
+      _schInflight.set(qid, {
+        expected_epoch: expectedEpoch,
+        until: Date.now() + (ttlMs || 12000),
+      });
+    }
+    function _schClearInflight(qid){ _schInflight.delete(qid); }
+    function _schPruneInflight(){
+      var now = Date.now();
+      _schInflight.forEach((info, qid) => {
+        if (info.until <= now) _schInflight.delete(qid);
+      });
+    }
+    function _schApplyInflight(list){
+      _schPruneInflight();
+      if (_schInflight.size === 0) return list;
+      return list.map(rec => {
+        var info = _schInflight.get(rec.queue_id);
+        if (!info) return rec;
+        if (rec.scheduled_at === info.expected_epoch) {
+          _schInflight.delete(rec.queue_id);
+          return rec;
+        }
+        return Object.assign({}, rec, { scheduled_at: info.expected_epoch });
+      });
+    }
+
+    // Kind-based whitelist so we catch the source-of-truth field
+    // instead of the (sometimes wrong) `platform` field. IG-style
+    // kinds are: single / carousel / reel / library_combo. Records
+    // with no `kind` set are legacy single-photo entries — keep those
+    // too. Anything with a linkedin_* kind belongs on the LinkedIn
+    // calendar, not here.
+    var _IG_KINDS = ["single", "carousel", "carousel_mixed", "reel",
+                     "library_combo"];
+    function _schFilterToInstagram(list){
+      return (list || []).filter(rec => {
+        var kind = (rec.kind || "").toLowerCase();
+        if (!kind) return true;                   // legacy IG records
+        if (kind.indexOf("linkedin_") === 0) return false;
+        return _IG_KINDS.indexOf(kind) >= 0;
+      });
+    }
+
+    function _schWireViewToggle(){
+      document.querySelectorAll("[data-sch-view]").forEach(b => {
+        b.classList.toggle("is-active", b.dataset.schView === _schView);
+        if (b._schWired) return;
+        b._schWired = true;
+        b.addEventListener("click", () => {
+          _schView = b.dataset.schView;
+          try { localStorage.setItem("dbig.schView", _schView); } catch(_) {}
+          document.querySelectorAll("[data-sch-view]").forEach(x =>
+            x.classList.toggle("is-active", x === b));
+          _schRender();
+        });
+      });
+    }
+
+    var DAY_NAMES_SHORT = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+
+    function renderScheduledWeek(rows){
+      var listEl = $("sched-buckets");
+      if (!listEl) return;
+      var now = new Date();
+      var monday = new Date(now);
+      var dow = (monday.getDay() + 6) % 7;  // 0=Mon, 6=Sun
+      monday.setDate(monday.getDate() - dow);
+      monday.setHours(0, 0, 0, 0);
+      var weekEnd = new Date(monday);
+      weekEnd.setDate(weekEnd.getDate() + 7);
+      var inWeek = rows.filter(r => {
+        var t = (r.scheduled_at || 0) * 1000;
+        return t >= monday.getTime() && t < weekEnd.getTime();
+      });
+      var minHour = 8, maxHour = 20;
+      inWeek.forEach(r => {
+        var d = new Date((r.scheduled_at || 0) * 1000);
+        if (d.getHours() < minHour) minHour = Math.max(0, d.getHours());
+        if (d.getHours() > maxHour) maxHour = Math.min(23, d.getHours());
+      });
+      var cells = {};
+      inWeek.forEach(r => {
+        var d = new Date((r.scheduled_at || 0) * 1000);
+        var dow_i = (d.getDay() + 6) % 7;
+        var key = dow_i + ":" + d.getHours();
+        if (!cells[key]) cells[key] = [];
+        cells[key].push(r);
+      });
+      var dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+      var todayDow = (now.getDay() + 6) % 7;
+      var dayHeaders = dayNames.map((name, i) => {
+        var d = new Date(monday);
+        d.setDate(d.getDate() + i);
+        var dateStr = d.toLocaleDateString(undefined, { month:"short", day:"numeric" });
+        return '<div class="sch-week-day-h ' + (i === todayDow ? "is-today" : "") + '">'
+          + esc(name) + '<div class="sch-week-day-h-sub">' + esc(dateStr) + '</div></div>';
+      }).join("");
+      var rowsHtml = "";
+      for (var h = minHour; h <= maxHour; h++) {
+        var hLabel = (h === 0) ? "12 AM"
+                    : (h < 12) ? (h + " AM")
+                    : (h === 12) ? "12 PM"
+                    : (h - 12) + " PM";
+        rowsHtml += '<div class="sch-week-hour-l">' + esc(hLabel) + '</div>';
+        for (var dwi = 0; dwi < 7; dwi++) {
+          var cellKey = dwi + ":" + h;
+          var pCells = cells[cellKey] || [];
+          var isToday = (dwi === todayDow) ? " is-today" : "";
+          rowsHtml += '<div class="sch-week-cell' + isToday + '">';
+          pCells.forEach(p => {
+            var status = (p.status || "pending").toLowerCase();
+            var pillCls = "sch-week-pill"
+              + (status === "errored" || status === "failed" ? " is-failed" : "")
+              + (status === "publishing" ? " is-publishing" : "");
+            var t = new Date((p.scheduled_at || 0) * 1000);
+            var clock = t.toLocaleTimeString(undefined, { hour:"numeric", minute:"2-digit" });
+            var snippet = (p.caption || "").trim().slice(0, 50);
+            rowsHtml += '<span class="' + pillCls + '" data-week-edit="' + esc(p.queue_id) + '" title="' + esc(snippet) + '">'
+              + esc(clock) + ' · ' + esc(snippet || "(no caption)")
+              + '</span>';
+          });
+          rowsHtml += '</div>';
+        }
+      }
+      var headerHtml = '<div class="sch-week-corner"></div>' + dayHeaders;
+      listEl.innerHTML =
+          (inWeek.length ? "" : '<div class="sched-empty-p" style="margin-bottom:14px;color:var(--text-secondary)">No posts this week.</div>')
+        + '<div class="sch-week-grid" data-week-monday="' + monday.toISOString() + '"'
+        +   ' data-week-min-hour="' + minHour + '" data-week-max-hour="' + maxHour + '">'
+        +   headerHtml + rowsHtml + '</div>';
+      var grid = listEl.querySelector(".sch-week-grid");
+      if (grid) {
+        var gcells = grid.querySelectorAll(".sch-week-cell");
+        var ci = 0;
+        for (var hr = minHour; hr <= maxHour; hr++) {
+          for (var di = 0; di < 7; di++) {
+            var c = gcells[ci++];
+            if (c) { c.dataset.dow = di; c.dataset.hour = hr; }
+          }
+        }
+      }
+      listEl.querySelectorAll("[data-week-edit]").forEach(pill =>
+        schWeekWirePill(pill, listEl, monday, minHour));
+    }
+
+    function schWeekWirePill(pill, listEl, monday, minHour){
+      var grid = listEl.querySelector(".sch-week-grid");
+      var qid  = pill.dataset.weekEdit;
+      pill.addEventListener("pointerdown", (ev) => {
+        if (ev.button !== 0) return;
+        if (ev.target.closest("a")) return;
+        ev.preventDefault();
+        var startX = ev.clientX, startY = ev.clientY;
+        var dragging = false;
+        var ctx = null;
+        function onMove(ev2){
+          var dx = ev2.clientX - startX, dy = ev2.clientY - startY;
+          if (!dragging && (dx*dx + dy*dy) >= 16) {
+            dragging = true;
+            ctx = schWeekStartDrag(pill, listEl, grid, monday, minHour, ev2);
+          }
+          if (dragging && ctx) schWeekUpdateDrag(ctx, ev2);
+        }
+        function onUp(ev2){
+          window.removeEventListener("pointermove", onMove);
+          window.removeEventListener("pointerup", onUp);
+          window.removeEventListener("keydown", onKey);
+          if (!dragging) { _schOpenEditModal(qid); return; }
+          schWeekFinishDrag(ctx, ev2, qid, false);
+        }
+        function onKey(ev2){
+          if (ev2.key === "Escape" && dragging) {
+            window.removeEventListener("pointermove", onMove);
+            window.removeEventListener("pointerup", onUp);
+            window.removeEventListener("keydown", onKey);
+            schWeekFinishDrag(ctx, ev2, qid, true);
+          }
+        }
+        window.addEventListener("pointermove", onMove);
+        window.addEventListener("pointerup",   onUp);
+        window.addEventListener("keydown",     onKey);
+      });
+    }
+
+    function schWeekStartDrag(pill, listEl, grid, monday, minHour, ev){
+      var rect = pill.getBoundingClientRect();
+      var clone = pill.cloneNode(true);
+      clone.classList.add("sch-drag-clone", "is-grabbing");
+      clone.removeAttribute("data-week-edit");
+      clone.style.left = rect.left + "px";
+      clone.style.top  = rect.top  + "px";
+      clone.style.width = rect.width + "px";
+      document.body.appendChild(clone);
+      pill.classList.add("is-placeholder");
+      var ax = ev.clientX - rect.left;
+      var ay = ev.clientY - rect.top;
+      var label = document.createElement("div");
+      label.className = "sch-drag-label";
+      label.textContent = "—";
+      document.body.appendChild(label);
+      var cellsByKey = {};
+      grid.querySelectorAll(".sch-week-cell").forEach(c => {
+        cellsByKey[c.dataset.dow + ":" + c.dataset.hour] = c;
+      });
+      return {
+        pill: pill, clone: clone, label: label,
+        anchor: { x: ax, y: ay },
+        grid: grid, listEl: listEl,
+        monday: monday, minHour: minHour,
+        cellsByKey: cellsByKey,
+        currentCell: null, currentSnap: null, savedRect: rect,
+      };
+    }
+
+    function schWeekUpdateDrag(ctx, ev){
+      var x = ev.clientX, y = ev.clientY;
+      var hit = null;
+      for (var k in ctx.cellsByKey) {
+        var c = ctx.cellsByKey[k];
+        var r = c.getBoundingClientRect();
+        if (x >= r.left && x < r.right && y >= r.top && y < r.bottom) {
+          hit = { cell: c, rect: r, dow: Number(c.dataset.dow),
+                  hour: Number(c.dataset.hour) };
+          break;
+        }
+      }
+      if (ctx.currentCell && ctx.currentCell !== (hit && hit.cell)) {
+        ctx.currentCell.classList.remove(
+          "sch-drop-target", "sch-drop-target-invalid");
+      }
+      var validHit = false;
+      var snap = null;
+      var snapY = null;
+      if (hit) {
+        var ratio = (y - hit.rect.top) / Math.max(1, hit.rect.height);
+        ratio = Math.max(0, Math.min(0.999, ratio));
+        var quarter = Math.floor(ratio * 4);
+        var minute = [0, 15, 30, 45][quarter];
+        snapY = hit.rect.top + (quarter / 4) * hit.rect.height;
+        var candidate = new Date(ctx.monday);
+        candidate.setDate(candidate.getDate() + hit.dow);
+        candidate.setHours(hit.hour, minute, 0, 0);
+        var nowMs = Date.now();
+        validHit = candidate.getTime() > nowMs;
+        snap = {
+          dow: hit.dow, hour: hit.hour, minute: minute,
+          epoch: Math.floor(candidate.getTime() / 1000),
+          valid: validHit, when: candidate,
+          rect: hit.rect, snapY: snapY,
+        };
+        hit.cell.classList.add(validHit
+          ? "sch-drop-target" : "sch-drop-target-invalid");
+        ctx.currentCell = hit.cell;
+      } else {
+        ctx.currentCell = null;
+      }
+      ctx.currentSnap = snap;
+      ctx.clone.style.left = (x - ctx.anchor.x) + "px";
+      if (snap && snap.valid) {
+        ctx.clone.style.top = (snap.snapY - 1) + "px";
+      } else {
+        ctx.clone.style.top = (y - ctx.anchor.y) + "px";
+      }
+      ctx.label.style.left = (x + 14) + "px";
+      ctx.label.style.top  = (y + 18) + "px";
+      if (snap) {
+        ctx.label.textContent = DAY_NAMES_SHORT[snap.dow] + " "
+          + snap.when.toLocaleTimeString(undefined,
+              { hour:"numeric", minute:"2-digit" });
+        ctx.label.classList.toggle("is-invalid", !snap.valid);
+      } else {
+        ctx.label.textContent = "Drop on the grid";
+        ctx.label.classList.add("is-invalid");
+      }
+      var vp = ctx.listEl.getBoundingClientRect();
+      var topMargin    = vp.top + 40;
+      var bottomMargin = vp.bottom - 40;
+      if (y < topMargin)    ctx.listEl.scrollTop -= 12;
+      if (y > bottomMargin) ctx.listEl.scrollTop += 12;
+    }
+
+    /* Enforce a minimum gap between posts on the same day during a
+       drag-and-drop reschedule. If the drop's target time lands within
+       MIN_GAP_MIN minutes of another pending post on that day, push the
+       new time forward in 15-minute increments until it doesn't. If we
+       can't find a clean slot in the day, return the original target
+       and let the existing conflict-warning toast fire. */
+    var SCH_MIN_GAP_MIN = 30;
+    function _schSnapAwayFromConflicts(targetEpoch, qidSelf){
+      var minSec = SCH_MIN_GAP_MIN * 60;
+      var sameDay = (_scheduled || []).filter(p => {
+        if (!p || p.queue_id === qidSelf) return false;
+        if (!p.scheduled_at) return false;
+        var d = new Date(p.scheduled_at * 1000);
+        var t = new Date(targetEpoch * 1000);
+        return d.toDateString() === t.toDateString();
+      });
+      var t = targetEpoch;
+      // Try the requested slot, then walk forward by 15-min increments
+      // up to 8 hours (32 tries) before giving up.
+      for (var i = 0; i < 32; i++) {
+        var conflict = sameDay.some(p =>
+          Math.abs((p.scheduled_at || 0) - t) < minSec);
+        if (!conflict) return t;
+        t += 15 * 60;
+      }
+      return targetEpoch;
+    }
+
+    function schWeekFinishDrag(ctx, ev, qid, cancelled){
+      function teardown(){
+        if (ctx.clone && ctx.clone.parentNode) ctx.clone.parentNode.removeChild(ctx.clone);
+        if (ctx.label && ctx.label.parentNode) ctx.label.parentNode.removeChild(ctx.label);
+        if (ctx.currentCell) ctx.currentCell.classList.remove(
+          "sch-drop-target", "sch-drop-target-invalid");
+        if (ctx.pill) ctx.pill.classList.remove("is-placeholder");
+      }
+      if (cancelled || !ctx.currentSnap || !ctx.currentSnap.valid) {
+        teardown();
+        return;
+      }
+      var snap = ctx.currentSnap;
+      var rec = (_scheduled || []).find(r => r.queue_id === qid);
+      if (!rec) { teardown(); _libToast("Couldn't find that post."); return; }
+      var oldEpoch = rec.scheduled_at;
+      // Snap forward if the requested slot is within 30 min of another
+      // post on the same day. Keeps drag-and-drop from accidentally
+      // creating posts that are too close together.
+      var snappedEpoch = _schSnapAwayFromConflicts(snap.epoch, qid);
+      if (snappedEpoch !== snap.epoch) {
+        snap.epoch = snappedEpoch;
+        snap.when  = new Date(snappedEpoch * 1000);
+        _libToast("Posts have to be 30 min apart — moved this one forward to fit.");
+      }
+      ctx.clone.classList.add("is-dropping");
+      ctx.clone.style.left = snap.rect.left + "px";
+      ctx.clone.style.top  = snap.snapY + "px";
+      ctx.clone.style.width = snap.rect.width + "px";
+      if (ctx.currentCell) ctx.currentCell.classList.remove(
+        "sch-drop-target", "sch-drop-target-invalid");
+      if (ctx.label && ctx.label.parentNode) ctx.label.parentNode.removeChild(ctx.label);
+      rec.scheduled_at = snap.epoch;
+      var dropFinished = false;
+      function commitDrop(){
+        if (dropFinished) return;
+        dropFinished = true;
+        teardown();
+        _schRender();
+        schWeekConflictCheck(qid, snap.epoch, oldEpoch);
+      }
+      setTimeout(commitDrop, 160);
+      schWeekSave(qid, snap.epoch, oldEpoch, rec, snap);
+    }
+
+    function schWeekConflictCheck(qid, newEpoch, oldEpoch){
+      var WINDOW = 30 * 60;
+      var rows = (_scheduled || []).filter(r =>
+        r.queue_id !== qid
+        && (r.status === "pending" || r.status === "publishing")
+        && Math.abs((r.scheduled_at || 0) - newEpoch) < WINDOW);
+      if (!rows.length) return;
+      rows.sort((a, b) =>
+        Math.abs(a.scheduled_at - newEpoch) - Math.abs(b.scheduled_at - newEpoch));
+      var nb = rows[0];
+      var deltaMin = Math.round((newEpoch - nb.scheduled_at) / 60);
+      var direction = deltaMin > 0 ? "before" : "after";
+      var minsAbs = Math.abs(deltaMin);
+      var nbTime = new Date(nb.scheduled_at * 1000)
+        .toLocaleTimeString(undefined, { hour:"numeric", minute:"2-digit" });
+      schWeekShowConflictBar(qid, oldEpoch, nbTime, minsAbs, direction);
+      schWeekFlashConflict(qid);
+      schWeekFlashConflict(nb.queue_id);
+    }
+
+    function schWeekFlashConflict(queueId){
+      requestAnimationFrame(() => {
+        var p = document.querySelector(
+          '.sch-week-pill[data-week-edit="' + (queueId || "").replace(/"/g, '\\"') + '"]')
+          || document.querySelector(
+          '.sch-month-pill[data-month-edit="' + (queueId || "").replace(/"/g, '\\"') + '"]');
+        if (!p) return;
+        p.classList.remove("is-conflict-flash");
+        void p.offsetWidth;
+        p.classList.add("is-conflict-flash");
+        setTimeout(() => p.classList.remove("is-conflict-flash"), 1100);
+      });
+    }
+
+    var _schConflictBarEl  = null;
+    var _schConflictTimer  = null;
+
+    function schWeekShowConflictBar(qid, oldEpoch, nbTime, mins, direction){
+      if (_schConflictBarEl && _schConflictBarEl.parentNode) {
+        _schConflictBarEl.parentNode.removeChild(_schConflictBarEl);
+      }
+      if (_schConflictTimer) clearTimeout(_schConflictTimer);
+      var bar = document.createElement("div");
+      bar.className = "sch-conflict-bar";
+      bar.innerHTML =
+          '<div class="sch-conflict-msg">'
+        +   'Heads up: another post is scheduled at <strong>' + esc(nbTime)
+        +   '</strong> — ' + mins + ' minute' + (mins === 1 ? "" : "s")
+        +   ' ' + esc(direction) + ' this one. '
+        +   'Instagram may rate-limit if posts are too close.'
+        + '</div>'
+        + '<div class="sch-conflict-actions">'
+        +   '<button class="btn" type="button" data-sch-cf-back>Move it back</button>'
+        +   '<button class="btn btn-primary" type="button" data-sch-cf-keep>Keep where it is</button>'
+        + '</div>';
+      document.body.appendChild(bar);
+      _schConflictBarEl = bar;
+      function dismiss(){
+        if (bar.parentNode) bar.parentNode.removeChild(bar);
+        if (_schConflictBarEl === bar) _schConflictBarEl = null;
+        if (_schConflictTimer) { clearTimeout(_schConflictTimer); _schConflictTimer = null; }
+      }
+      bar.querySelector("[data-sch-cf-keep]").onclick = dismiss;
+      bar.querySelector("[data-sch-cf-back]").onclick = () => {
+        dismiss();
+        schWeekRevertTo(qid, oldEpoch);
+      };
+      _schConflictTimer = setTimeout(dismiss, 8000);
+    }
+
+    async function schWeekRevertTo(qid, oldEpoch){
+      var rec = (_scheduled || []).find(r => r.queue_id === qid);
+      if (!rec) return;
+      var prev = rec.scheduled_at;
+      rec.scheduled_at = oldEpoch;
+      _schRender();
+      try {
+        var r = await fetch("/dashboard/instagram/api/scheduled/"
+          + encodeURIComponent(qid) + "/edit", {
+          method:"POST", credentials:"same-origin",
+          headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({ scheduled_at: oldEpoch }),
+        });
+        if (!r.ok) {
+          rec.scheduled_at = prev;
+          _schRender();
+          _libToast("Couldn't move it back. The new time stands.");
+          return;
+        }
+        _libToast("Moved back to its original time.");
+      } catch (e) {
+        rec.scheduled_at = prev;
+        _schRender();
+        _libToast("Network error: " + e.message);
+      }
+    }
+
+    async function schWeekSave(qid, newEpoch, oldEpoch, rec, snap){
+      _schMarkInflight(qid, newEpoch);
+      try {
+        var r = await fetch("/dashboard/instagram/api/scheduled/"
+          + encodeURIComponent(qid) + "/edit", {
+          method:"POST", credentials:"same-origin",
+          headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({ scheduled_at: newEpoch }),
+        });
+        var d = await r.json().catch(()=>({}));
+        if (!r.ok) {
+          _schClearInflight(qid);
+          rec.scheduled_at = oldEpoch;
+          _schRender();
+          var msg;
+          if (d.error === "scheduled_in_past")    msg = "Can't schedule into the past.";
+          else if (d.error === "not_editable")    msg = "This post can't be rescheduled — it's already publishing or published.";
+          else if (d.error === "not_found")       msg = "This post no longer exists.";
+          else                                     msg = d.error || ("HTTP " + r.status);
+          _libToast("Couldn't reschedule: " + msg);
+          return;
+        }
+        var oldDay = new Date(oldEpoch * 1000).toDateString();
+        var newDay = snap.when.toDateString();
+        if (oldDay !== newDay) {
+          _libToast("Rescheduled to " + DAY_NAMES_SHORT[snap.dow] + " "
+            + snap.when.toLocaleTimeString(undefined,
+                { hour:"numeric", minute:"2-digit" }) + ".");
+        }
+      } catch (e) {
+        _schClearInflight(qid);
+        rec.scheduled_at = oldEpoch;
+        _schRender();
+        _libToast("Couldn't reschedule. Network error: " + e.message);
+      }
+    }
+
+    /* ── Month view ──────────────────────────────────────────────────── */
+    var _schMonthAnchorISO = null;
+    function _schMonthAnchor(){
+      if (_schMonthAnchorISO) return new Date(_schMonthAnchorISO);
+      var n = new Date();
+      var d = new Date(n.getFullYear(), n.getMonth(), 1);
+      d.setHours(0, 0, 0, 0);
+      _schMonthAnchorISO = d.toISOString();
+      return d;
+    }
+    function _schMonthSetAnchor(d){
+      _schMonthAnchorISO = new Date(
+        d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0).toISOString();
+    }
+
+    /* ── Day detail sidebar ──────────────────────────────────────────
+       Slides in from the right when the user clicks any day cell on
+       the Month view. Shows every post for that day in chronological
+       order with a media preview, time, caption, and edit / delete
+       actions. A "+ Add posts" button at the top routes to the
+       planOpenDayModal for plannable (today/future) days. */
+    function _openDaySidebar(dayKey){
+      // Tear down any existing sidebar first.
+      var old = document.getElementById("daySidebarBg");
+      if (old) old.remove();
+
+      // Library-combo records pull their thumbnail from the hook
+      // piece via _libCache. If the user opened the calendar without
+      // ever visiting the Library tab, that cache is empty and thumbs
+      // come back blank. Kick off a load now and re-render the
+      // sidebar's rows once it resolves so previews actually show up.
+      var needsLibLoad = (!_libCache.hooks.length
+                          && !_libCache.meats.length
+                          && !_libCache.ctas.length);
+
+      // Filter scheduled posts to this day, sort chronologically.
+      var dayPosts = (_scheduled || []).filter(p => {
+        if (!p.scheduled_at) return false;
+        var d = new Date(p.scheduled_at * 1000);
+        var k = d.getFullYear() + "-"
+          + String(d.getMonth() + 1).padStart(2, "0") + "-"
+          + String(d.getDate()).padStart(2, "0");
+        return k === dayKey;
+      }).sort((a, b) => (a.scheduled_at || 0) - (b.scheduled_at || 0));
+
+      var dateLabel = (function(){
+        try {
+          var d = new Date(dayKey + "T12:00:00");
+          return d.toLocaleDateString(undefined,
+            { weekday: "long", month: "long", day: "numeric" });
+        } catch(_) { return dayKey; }
+      })();
+
+      // Plannable check: today or later.
+      var now = new Date();
+      var todayKey = now.getFullYear() + "-"
+        + String(now.getMonth() + 1).padStart(2, "0") + "-"
+        + String(now.getDate()).padStart(2, "0");
+      var isPlannable = dayKey >= todayKey;
+
+      function rowHtml(p){
+        var t = new Date((p.scheduled_at || 0) * 1000);
+        var clock = t.toLocaleTimeString(undefined,
+          { hour: "numeric", minute: "2-digit" });
+        var thumb = _schPickThumb ? _schPickThumb(p) : (p.thumb_url || "");
+        // For library-combo records the thumb comes from the hook
+        // piece's media. If the cache hasn't loaded yet, fall back to
+        // the public_url on the hook directly (we do a fresh lookup
+        // here so the row works even before _libLoadAll resolves).
+        if (!thumb && p.hook_id) {
+          var hk = (_libCache.hooks || []).find(x => x.id === p.hook_id);
+          if (hk) thumb = hk.thumb_url || hk.public_url || "";
+        }
+        var isVideo = false;
+        if (p.hook_id) {
+          var hkv = (_libCache.hooks || []).find(x => x.id === p.hook_id);
+          if (hkv && hkv.media_type === "video") isVideo = true;
+        }
+        if ((p.media_type || "").toLowerCase() === "video") isVideo = true;
+        var caption = (p.caption || "").trim();
+        var snippet = caption.length > 120
+          ? caption.slice(0, 120) + "…" : caption;
+        var kindLabel = (function(){
+          var k = (p.kind || "single").toLowerCase();
+          if (k === "single")        return "Photo";
+          if (k === "carousel")      return "Carousel";
+          if (k === "reel")          return "Reel";
+          if (k === "library_combo") return isVideo ? "Video" : "Image";
+          return k;
+        })();
+        var statusCls = (p.status || "pending").toLowerCase();
+        var mediaInner = thumb
+          ? (isVideo
+              ? '<video src="' + esc(thumb) + '" muted preload="metadata" '
+                + 'onerror="this.outerHTML=\'<div class=&quot;ds-thumb-fb&quot;>🎬</div>\'"></video>'
+                + '<span class="ds-thumb-play" aria-hidden="true">▶</span>'
+              : '<img src="' + esc(thumb) + '" alt="" loading="lazy" '
+                + 'onerror="this.outerHTML=\'<div class=&quot;ds-thumb-fb&quot;>📷</div>\'">')
+          : '<div class="ds-thumb-fb">' + (isVideo ? "🎬" : "📷") + '</div>';
+        var thumbHtml = '<button type="button" class="ds-thumb '
+          + (thumb ? "is-clickable" : "") + '" '
+          + 'data-act="preview" '
+          + 'data-thumb="' + esc(thumb) + '" '
+          + 'data-video="' + (isVideo ? "1" : "0") + '">'
+          + mediaInner
+          + '</button>';
+        return '<div class="ds-row" data-q="' + esc(p.queue_id || "") + '">'
+          + '<div class="ds-time">'
+          +   '<div class="ds-time-clock">' + esc(clock) + '</div>'
+          +   '<div class="ds-time-status is-' + esc(statusCls) + '">'
+          +     esc(p.status || "pending") + '</div>'
+          + '</div>'
+          + thumbHtml
+          + '<div class="ds-body">'
+          +   '<div class="ds-kind">' + esc(kindLabel) + '</div>'
+          +   '<div class="ds-cap">'
+          +     (snippet ? esc(snippet)
+                          : '<span class="ds-cap-empty">No caption</span>')
+          +   '</div>'
+          + '</div>'
+          + '<div class="ds-actions">'
+          +   '<button type="button" class="ds-btn" data-act="edit">Edit</button>'
+          + '</div>'
+          + '</div>';
+      }
+
+      var orderHtml = dayPosts.length
+        ? dayPosts.map(rowHtml).join("")
+        : '<div class="ds-empty">'
+          + '<div class="ds-empty-ico">📅</div>'
+          + '<div class="ds-empty-h">Nothing scheduled here yet.</div>'
+          + '<div class="ds-empty-p">'
+          +   (isPlannable
+                ? "Tap '+ Add posts' to fill this day."
+                : "This day is in the past.")
+          + '</div></div>';
+
+      var bg = document.createElement("div");
+      bg.id = "daySidebarBg";
+      bg.className = "ds-bg";
+      bg.innerHTML =
+          '<aside class="ds-panel" role="dialog" aria-modal="true">'
+        +   '<header class="ds-h">'
+        +     '<div>'
+        +       '<div class="ds-h-eyebrow">SCHEDULED FOR</div>'
+        +       '<div class="ds-h-title">' + esc(dateLabel) + '</div>'
+        +     '</div>'
+        +     '<button type="button" class="ds-x" aria-label="Close">×</button>'
+        +   '</header>'
+        +   (isPlannable
+              ? '<div class="ds-add-row">'
+                + '<button type="button" class="ds-add-btn">+ Add posts to this day</button>'
+                + '</div>'
+              : '')
+        +   '<div class="ds-list">'
+        +     '<div class="ds-list-h">'
+        +       '<span>Order</span>'
+        +       '<span>' + dayPosts.length + ' post'
+        +         + (dayPosts.length === 1 ? "" : "s") + '</span>'
+        +     '</div>'
+        +     orderHtml
+        +   '</div>'
+        + '</aside>';
+      document.body.appendChild(bg);
+
+      function close() {
+        if (bg.parentNode) bg.parentNode.removeChild(bg);
+        document.removeEventListener("keydown", onKey);
+      }
+      function onKey(e){ if (e.key === "Escape") close(); }
+      document.addEventListener("keydown", onKey);
+      bg.addEventListener("click", e => { if (e.target === bg) close(); });
+      bg.querySelector(".ds-x").addEventListener("click", close);
+      var addBtn = bg.querySelector(".ds-add-btn");
+      if (addBtn) addBtn.addEventListener("click", () => {
+        close();
+        if (typeof planOpenDayModal === "function") planOpenDayModal(dayKey);
+      });
+      bg.querySelectorAll('[data-act="edit"]').forEach(b => {
+        b.addEventListener("click", () => {
+          var row = b.closest(".ds-row");
+          var qid = row && row.dataset.q;
+          if (!qid) return;
+          close();
+          if (typeof _schOpenEditModal === "function") _schOpenEditModal(qid);
+        });
+      });
+      // Click the thumb → open a full-size media lightbox so the user
+      // can actually see the post's media.
+      bg.querySelectorAll('[data-act="preview"]').forEach(b => {
+        b.addEventListener("click", () => {
+          var url = b.dataset.thumb;
+          if (!url) return;
+          _openMediaLightbox(url, b.dataset.video === "1");
+        });
+      });
+
+      // If the library cache hadn't loaded yet, fetch it now and
+      // re-render the rows so library-combo thumbs surface. Empty body
+      // re-renders are cheap; the user sees the previews fill in.
+      function rerender() {
+        var listEl = bg.querySelector(".ds-list");
+        if (!listEl || !document.body.contains(bg)) return;
+        var freshOrder = (_scheduled || []).filter(p => {
+          if (!p.scheduled_at) return false;
+          var d = new Date(p.scheduled_at * 1000);
+          var k = d.getFullYear() + "-"
+            + String(d.getMonth() + 1).padStart(2, "0") + "-"
+            + String(d.getDate()).padStart(2, "0");
+          return k === dayKey;
+        }).sort((a, b) => (a.scheduled_at || 0) - (b.scheduled_at || 0));
+        var freshRows = freshOrder.length
+          ? freshOrder.map(rowHtml).join("")
+          : '<div class="ds-empty">'
+            + '<div class="ds-empty-ico">📅</div>'
+            + '<div class="ds-empty-h">Nothing scheduled here yet.</div></div>';
+        listEl.innerHTML =
+            '<div class="ds-list-h">'
+          +   '<span>Order</span>'
+          +   '<span>' + freshOrder.length + ' post'
+          +     + (freshOrder.length === 1 ? "" : "s") + '</span>'
+          + '</div>' + freshRows;
+        bg.querySelectorAll('[data-act="edit"]').forEach(b => {
+          b.addEventListener("click", () => {
+            var row = b.closest(".ds-row");
+            var qid = row && row.dataset.q;
+            if (!qid) return;
+            close();
+            if (typeof _schOpenEditModal === "function") _schOpenEditModal(qid);
+          });
+        });
+        bg.querySelectorAll('[data-act="preview"]').forEach(b => {
+          b.addEventListener("click", () => {
+            var url = b.dataset.thumb;
+            if (!url) return;
+            _openMediaLightbox(url, b.dataset.video === "1");
+          });
+        });
+      }
+      if (needsLibLoad && typeof _libLoadAll === "function") {
+        _libLoadAll().then(rerender);
+      }
+    }
+
+    // Full-size media lightbox — opens when the user taps a thumbnail
+    // in the day sidebar. Centered on a dark backdrop, click outside or
+    // press Esc to close.
+    function _openMediaLightbox(url, isVideo){
+      var old = document.getElementById("dsLightboxBg");
+      if (old) old.remove();
+      var bg = document.createElement("div");
+      bg.id = "dsLightboxBg";
+      bg.className = "ds-lb-bg";
+      bg.innerHTML = isVideo
+        ? '<video src="' + esc(url) + '" controls autoplay muted '
+          + 'class="ds-lb-media"></video>'
+          + '<button type="button" class="ds-lb-x" aria-label="Close">×</button>'
+        : '<img src="' + esc(url) + '" alt="" class="ds-lb-media" />'
+          + '<button type="button" class="ds-lb-x" aria-label="Close">×</button>';
+      document.body.appendChild(bg);
+      function close(){
+        if (bg.parentNode) bg.parentNode.removeChild(bg);
+        document.removeEventListener("keydown", onKey);
+      }
+      function onKey(e){ if (e.key === "Escape") close(); }
+      document.addEventListener("keydown", onKey);
+      bg.addEventListener("click", e => { if (e.target === bg) close(); });
+      bg.querySelector(".ds-lb-x").addEventListener("click", close);
+    }
+
+    function renderScheduledMonth(rows){
+      var listEl = $("sched-buckets");
+      if (!listEl) return;
+      var anchor = _schMonthAnchor();
+      var monthName = anchor.toLocaleDateString(undefined,
+        { month: "long", year: "numeric" });
+      var first = new Date(anchor);
+      var firstDow = (first.getDay() + 6) % 7;
+      var gridStart = new Date(first);
+      gridStart.setDate(gridStart.getDate() - firstDow);
+      var totalCells = 42;
+      var gridEnd = new Date(gridStart);
+      gridEnd.setDate(gridEnd.getDate() + totalCells);
+      var inWindow = (rows || []).filter(r => {
+        var t = (r.scheduled_at || 0) * 1000;
+        return t >= gridStart.getTime() && t < gridEnd.getTime();
+      });
+      var byDay = {};
+      inWindow.forEach(r => {
+        var d = new Date((r.scheduled_at || 0) * 1000);
+        var key = d.getFullYear() + "-"
+          + String(d.getMonth() + 1).padStart(2, "0") + "-"
+          + String(d.getDate()).padStart(2, "0");
+        (byDay[key] = byDay[key] || []).push(r);
+      });
+      Object.keys(byDay).forEach(k =>
+        byDay[k].sort((a, b) => (a.scheduled_at || 0) - (b.scheduled_at || 0)));
+      var nowStr = (() => {
+        var d = new Date();
+        return d.getFullYear() + "-"
+          + String(d.getMonth() + 1).padStart(2, "0") + "-"
+          + String(d.getDate()).padStart(2, "0");
+      })();
+      var dayNames = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
+      var headerCells = dayNames.map(n =>
+        '<div class="sch-month-day-h">' + esc(n) + '</div>').join("");
+      var cellsHtml = "";
+      var cursor = new Date(gridStart);
+      for (var i = 0; i < totalCells; i++) {
+        var key = cursor.getFullYear() + "-"
+          + String(cursor.getMonth() + 1).padStart(2, "0") + "-"
+          + String(cursor.getDate()).padStart(2, "0");
+        var bucket = byDay[key] || [];
+        var isOther = (cursor.getMonth() !== first.getMonth());
+        var isToday = (key === nowStr);
+        var isPast = (key < nowStr);
+        var cellCls = "sch-month-cell"
+          + (isOther ? " is-other-month" : "")
+          + (isToday ? " is-today" : "")
+          + (isPast  ? " is-past" : " is-plannable");
+        var maxPills = 3;
+        var visible = bucket.slice(0, maxPills);
+        var more    = bucket.length - visible.length;
+        var pillsHtml = visible.map(p => {
+          var status = (p.status || "pending").toLowerCase();
+          var cls = "sch-month-pill"
+            + (status === "errored" || status === "failed" ? " is-failed" : "")
+            + (status === "publishing" ? " is-publishing" : "");
+          var t = new Date((p.scheduled_at || 0) * 1000);
+          var clock = t.toLocaleTimeString(undefined,
+            { hour: "numeric", minute: "2-digit" });
+          var snippet = (p.caption || "").trim().slice(0, 28);
+          return '<span class="' + cls + '" data-month-edit="'
+            + esc(p.queue_id) + '" title="' + esc((p.caption || "").trim().slice(0, 120)) + '">'
+            + esc(clock) + ' · ' + esc(snippet || "(no caption)") + '</span>';
+        }).join("");
+        var moreHtml = (more > 0)
+          ? '<span class="sch-month-more" data-month-jump="' + esc(key) + '">+'
+              + more + ' more</span>'
+          : "";
+        var addAffordance = (!isPast && bucket.length === 0)
+          ? '<div class="sch-month-plan-add">+</div>'
+          : '';
+        cellsHtml +=
+            '<div class="' + cellCls + '" data-month-key="' + esc(key) + '">'
+          +   '<div class="sch-month-num">' + cursor.getDate() + '</div>'
+          +   '<div class="sch-month-pills">' + pillsHtml + moreHtml + '</div>'
+          +   addAffordance
+          + '</div>';
+        cursor.setDate(cursor.getDate() + 1);
+      }
+      listEl.innerHTML =
+          '<div class="sch-month-bar">'
+        +   '<div class="sch-month-bar-h">' + esc(monthName) + '</div>'
+        +   '<div class="sch-month-bar-spacer"></div>'
+        +   '<button class="btn" type="button" id="sch-month-redist" '
+        +     'title="Spread posts evenly across the month">Redistribute</button>'
+        +   '<button class="btn" type="button" id="sch-month-plan" '
+        +     'title="Plan the whole month at once">Plan the month</button>'
+        +   '<button class="btn" type="button" id="sch-month-prev" '
+        +     'aria-label="Previous month">‹</button>'
+        +   '<button class="btn" type="button" id="sch-month-today">Today</button>'
+        +   '<button class="btn" type="button" id="sch-month-next" '
+        +     'aria-label="Next month">›</button>'
+        + '</div>'
+        + '<div class="sch-month-grid">' + headerCells + cellsHtml + '</div>';
+      $("sch-month-prev").onclick = () => {
+        var d = _schMonthAnchor();
+        d.setMonth(d.getMonth() - 1);
+        _schMonthSetAnchor(d);
+        _schRender();
+      };
+      $("sch-month-next").onclick = () => {
+        var d = _schMonthAnchor();
+        d.setMonth(d.getMonth() + 1);
+        _schMonthSetAnchor(d);
+        _schRender();
+      };
+      $("sch-month-today").onclick = () => {
+        var n = new Date();
+        _schMonthSetAnchor(new Date(n.getFullYear(), n.getMonth(), 1));
+        _schRender();
+      };
+      var planBtn = $("sch-month-plan");
+      if (planBtn) planBtn.onclick = () => planOpenMonthModal();
+      var redistBtn = $("sch-month-redist");
+      if (redistBtn) redistBtn.onclick = () => {
+        if (!window.fbRedistribute) {
+          _libToast("Redistribute tool isn't loaded yet — try again in a sec.");
+          return;
+        }
+        var anchor = _schMonthAnchor();
+        window.fbRedistribute.openModal({
+          platform: "instagram",
+          monthAnchor: anchor,
+          posts: (_scheduled || []).map(s => ({
+            id:           s.queue_id,
+            scheduled_at: s.scheduled_at,
+            status:       s.status,
+            locked:       !!s.locked,
+          })),
+          onApply: (result) => {
+            // Optimistic local update — the user sees the calendar
+            // change instantly. The background loadScheduled() call is
+            // a safety reconcile for anything the server tweaked.
+            (result.moves || []).forEach(mv => {
+              var rec = (_scheduled || []).find(r => r.queue_id === mv.id);
+              if (rec) rec.scheduled_at = mv.newAt;
+            });
+            if (typeof _schRender === "function") _schRender();
+            _libToast(`Moved ${result.moves.length} post${
+              result.moves.length === 1 ? "" : "s"}.`);
+            // Brief delay before reconcile — gives GCS a beat to settle
+            // so the fetch picks up the new scheduled_at values.
+            setTimeout(() => {
+              if (typeof loadScheduled === "function") loadScheduled();
+            }, 400);
+          },
+        });
+      };
+      listEl.querySelectorAll("[data-month-edit]").forEach(b =>
+        b.addEventListener("click", (e) => {
+          e.stopPropagation();
+          _schOpenEditModal(b.dataset.monthEdit);
+        }));
+      listEl.querySelectorAll("[data-month-jump]").forEach(b =>
+        b.addEventListener("click", (e) => {
+          e.stopPropagation();
+          _schView = "week";
+          try { localStorage.setItem("dbig.schView", "week"); } catch(_) {}
+          document.querySelectorAll("[data-sch-view]").forEach(x =>
+            x.classList.toggle("is-active", x.dataset.schView === "week"));
+          _schRender();
+        }));
+      // Click on ANY day cell (past or plannable) opens the day-detail
+      // sidebar showing every post on that day. The sidebar has a
+      // "+ Add posts" button that re-routes to the planOpenDayModal
+      // for plannable days.
+      listEl.querySelectorAll(".sch-month-cell").forEach(c =>
+        c.addEventListener("click", (e) => {
+          if (e.target.closest("[data-month-edit]")) return;
+          if (e.target.closest("[data-month-jump]")) return;
+          var key = c.dataset.monthKey;
+          if (key) _openDaySidebar(key);
+        }));
+      schMonthWireDrag(listEl);
+    }
+
+    function schMonthWireDrag(listEl){
+      var pills = listEl.querySelectorAll(".sch-month-pill[data-month-edit]");
+      pills.forEach(pill => {
+        var qid = pill.dataset.monthEdit;
+        var rec = (_scheduled || []).find(r => r.queue_id === qid);
+        var status = (rec && rec.status) || "pending";
+        if (status !== "pending" && status !== "errored"
+            && status !== "failed" && status !== "") {
+          return;
+        }
+        pill.addEventListener("pointerdown", (ev) => {
+          if (ev.button !== 0) return;
+          ev.preventDefault();
+          var startX = ev.clientX, startY = ev.clientY;
+          var dragging = false;
+          var ctx = null;
+          function onMove(ev2){
+            if (!dragging) {
+              var dx = ev2.clientX - startX, dy = ev2.clientY - startY;
+              if (Math.hypot(dx, dy) > 4) {
+                dragging = true;
+                ctx = schMonthStartDrag(pill, listEl, qid, ev2);
+              }
+            }
+            if (dragging && ctx) schMonthUpdateDrag(ctx, ev2);
+          }
+          function onUp(ev2){
+            document.removeEventListener("pointermove", onMove);
+            document.removeEventListener("pointerup", onUp);
+            document.removeEventListener("pointercancel", onCancel);
+            if (dragging && ctx) {
+              schMonthFinishDrag(ctx, ev2, qid, false);
+              var killClick = (e) => {
+                e.stopPropagation(); e.preventDefault();
+                document.removeEventListener("click", killClick, true);
+              };
+              document.addEventListener("click", killClick, true);
+            }
+          }
+          function onCancel(){
+            document.removeEventListener("pointermove", onMove);
+            document.removeEventListener("pointerup", onUp);
+            document.removeEventListener("pointercancel", onCancel);
+            if (dragging && ctx) schMonthFinishDrag(ctx, null, qid, true);
+          }
+          document.addEventListener("pointermove", onMove);
+          document.addEventListener("pointerup", onUp);
+          document.addEventListener("pointercancel", onCancel);
+        });
+      });
+    }
+
+    function schMonthStartDrag(pill, listEl, qid, ev){
+      var rect = pill.getBoundingClientRect();
+      var clone = pill.cloneNode(true);
+      clone.classList.add("sch-drag-clone");
+      clone.classList.remove("is-placeholder");
+      clone.style.left = rect.left + "px";
+      clone.style.top  = rect.top  + "px";
+      clone.style.width = rect.width + "px";
+      document.body.appendChild(clone);
+      pill.classList.add("is-placeholder");
+      return {
+        pill: pill, clone: clone, listEl: listEl,
+        offsetX: ev.clientX - rect.left,
+        offsetY: ev.clientY - rect.top,
+        currentCell: null, targetKey: null, valid: false,
+      };
+    }
+
+    function schMonthUpdateDrag(ctx, ev){
+      ctx.clone.style.left = (ev.clientX - ctx.offsetX) + "px";
+      ctx.clone.style.top  = (ev.clientY - ctx.offsetY) + "px";
+      ctx.clone.style.pointerEvents = "none";
+      var below = document.elementFromPoint(ev.clientX, ev.clientY);
+      var cell = below ? below.closest(".sch-month-cell") : null;
+      if (cell !== ctx.currentCell) {
+        if (ctx.currentCell) {
+          ctx.currentCell.classList.remove(
+            "sch-drop-target", "sch-drop-target-invalid");
+        }
+        ctx.currentCell = cell;
+        ctx.targetKey   = null;
+        ctx.valid       = false;
+        if (cell) {
+          var key = cell.dataset.monthKey;
+          if (key) {
+            var now = new Date();
+            var todayKey = now.getFullYear() + "-"
+              + String(now.getMonth() + 1).padStart(2, "0") + "-"
+              + String(now.getDate()).padStart(2, "0");
+            ctx.targetKey = key;
+            ctx.valid = key >= todayKey;
+            cell.classList.add(ctx.valid
+              ? "sch-drop-target" : "sch-drop-target-invalid");
+          }
+        }
+      }
+    }
+
+    function schMonthFinishDrag(ctx, ev, qid, cancelled){
+      function teardown(){
+        if (ctx.clone && ctx.clone.parentNode) {
+          ctx.clone.parentNode.removeChild(ctx.clone);
+        }
+        if (ctx.currentCell) ctx.currentCell.classList.remove(
+          "sch-drop-target", "sch-drop-target-invalid");
+        if (ctx.pill) ctx.pill.classList.remove("is-placeholder");
+      }
+      if (cancelled || !ctx.valid || !ctx.targetKey) {
+        teardown();
+        return;
+      }
+      var rec = (_scheduled || []).find(r => r.queue_id === qid);
+      if (!rec) { teardown(); return; }
+      var oldEpoch = rec.scheduled_at;
+      var oldDt = new Date(oldEpoch * 1000);
+      var parts = ctx.targetKey.split("-").map(Number);
+      var newDt = new Date(parts[0], parts[1] - 1, parts[2],
+                            oldDt.getHours(), oldDt.getMinutes(), 0, 0);
+      var newEpoch = Math.floor(newDt.getTime() / 1000);
+      var nowEpoch = Math.floor(Date.now() / 1000);
+      if (newEpoch < nowEpoch - 30) {
+        teardown();
+        _libToast("Can't schedule into the past.");
+        return;
+      }
+      // Same min-30-min gap rule as the week-view drag.
+      var snappedEpoch = _schSnapAwayFromConflicts(newEpoch, qid);
+      if (snappedEpoch !== newEpoch) {
+        newEpoch = snappedEpoch;
+        _libToast("Posts have to be 30 min apart — moved this one forward to fit.");
+      }
+      if (newEpoch === oldEpoch) { teardown(); return; }
+      rec.scheduled_at = newEpoch;
+      teardown();
+      _schRender();
+      schMonthSave(qid, newEpoch, oldEpoch, rec);
+      schWeekConflictCheck(qid, newEpoch, oldEpoch);
+    }
+
+    async function schMonthSave(qid, newEpoch, oldEpoch, rec){
+      _schMarkInflight(qid, newEpoch);
+      try {
+        var r = await fetch("/dashboard/instagram/api/scheduled/"
+          + encodeURIComponent(qid) + "/edit", {
+          method: "POST", credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ scheduled_at: newEpoch }),
+        });
+        var d = await r.json().catch(()=>({}));
+        if (!r.ok) {
+          _schClearInflight(qid);
+          rec.scheduled_at = oldEpoch;
+          _schRender();
+          var msg;
+          if (d.error === "scheduled_in_past")  msg = "Can't schedule into the past.";
+          else if (d.error === "not_editable")  msg = "This post can't be rescheduled.";
+          else if (d.error === "not_found")     msg = "This post no longer exists.";
+          else                                   msg = d.error || ("HTTP " + r.status);
+          _libToast("Couldn't reschedule: " + msg);
+          return;
+        }
+        var newDay = new Date(newEpoch * 1000).toDateString();
+        var oldDay = new Date(oldEpoch * 1000).toDateString();
+        if (newDay !== oldDay) {
+          var label = new Date(newEpoch * 1000).toLocaleDateString(undefined,
+            { weekday: "short", month: "short", day: "numeric" });
+          _libToast("Rescheduled to " + label + ".");
+        }
+      } catch (e) {
+        _schClearInflight(qid);
+        rec.scheduled_at = oldEpoch;
+        _schRender();
+        _libToast("Couldn't reschedule. Network error: " + e.message);
+      }
+    }
+
+    /* ── Plan-from-the-Calendar (ported from dashboard_linkedin.html) ──
+       Two entry points:
+       - planOpenDayModal(key)    : click a day cell → "add N posts here"
+       - planOpenMonthModal()      : "Plan the month" button → date range
+                                     × posts-per-day distribution
+       Both stash a planning context in `_igPlan`, then route through the
+       Library "Make Posts" combinator. After the batch is created, the
+       commit step calls /api/batches/<id>/schedule-plan instead of the
+       manual schedule wizard, so the server distributes one combo per
+       planner-computed timestamp. */
+    var _igPlan = null;
+    function _planClearContext(){ _igPlan = null; }
+
+    /* Re-attach the progress strip to any in-flight schedule-plan job
+       on page boot. The job runs in a background thread on the server,
+       so a refresh / nav-away doesn't stop it — we just need to find
+       it and resume polling. Done jobs surface for ~60s afterwards so
+       a "✓ Scheduled" flash reaches users who land on the page right
+       as the job finished. */
+    async function _planResumeActiveJobs(){
+      try {
+        var r = await fetch("/dashboard/instagram/api/jobs/active",
+          { credentials: "same-origin" });
+        if (!r.ok) return;
+        var d = await r.json().catch(()=>({}));
+        var jobs = d.jobs || [];
+        // Show the most recent active (or just-finished) job.
+        var current = jobs[0];
+        if (!current) return;
+        _planShowProgressBar(current.job_id, current.total || 0, 0);
+      } catch (_) { /* best-effort */ }
+    }
+
+    /* Non-blocking progress strip — shown after the user kicks off a
+       schedule-plan job. Polls /api/jobs/<id> for live progress so the
+       user can keep using the dashboard while 200+ records get written
+       in parallel on the server. Idempotent: if a strip with this
+       jobId is already showing (e.g. boot-time resume after refresh),
+       it returns early and lets the existing one keep polling. */
+    function _planShowProgressBar(jobId, total, leftover){
+      var old = document.getElementById("plan-progress");
+      if (old) {
+        // Same job already on screen → leave it alone. Different job →
+        // replace (back-to-back schedules shouldn't stack).
+        if (old.dataset.jobId === jobId) return;
+        old.remove();
+      }
+      var bar = document.createElement("div");
+      bar.id = "plan-progress";
+      bar.className = "plan-progress-strip";
+      bar.dataset.jobId = jobId;
+      bar.innerHTML =
+          '<div class="plan-progress-row">'
+        +   '<div class="plan-progress-icon" aria-hidden="true">📅</div>'
+        +   '<div class="plan-progress-text">'
+        +     '<div class="plan-progress-label" id="plan-progress-label">'
+        +       'Putting posts on your calendar… '
+        +       '<strong id="plan-progress-n">0</strong> of '
+        +       '<strong>' + total + '</strong>'
+        +     '</div>'
+        +     '<div class="plan-progress-track">'
+        +       '<div class="plan-progress-fill" id="plan-progress-fill" style="width:0%"></div>'
+        +     '</div>'
+        +   '</div>'
+        +   '<button type="button" class="plan-progress-x" id="plan-progress-x" aria-label="Hide">×</button>'
+        + '</div>';
+      document.body.appendChild(bar);
+      $("plan-progress-x").addEventListener("click", () => bar.remove());
+
+      var pollMs = 700;
+      var poll = setInterval(async () => {
+        if (!document.body.contains(bar)) { clearInterval(poll); return; }
+        try {
+          var r = await fetch(
+            "/dashboard/instagram/api/jobs/" + encodeURIComponent(jobId),
+            { credentials: "same-origin" });
+          if (!r.ok) return;
+          var d = await r.json().catch(()=>({}));
+          var n = d.scheduled || 0;
+          var t = d.total || total || 1;
+          var pct = Math.min(100, Math.round(n / t * 100));
+          var nEl = document.getElementById("plan-progress-n");
+          var fEl = document.getElementById("plan-progress-fill");
+          if (nEl) nEl.textContent = n;
+          if (fEl) fEl.style.width = pct + "%";
+          if (d.done) {
+            clearInterval(poll);
+            if (fEl) fEl.style.width = "100%";
+            bar.classList.add("is-done");
+            var lbl = document.getElementById("plan-progress-label");
+            if (lbl) {
+              var msg = "✓ Scheduled " + n + " post" + (n === 1 ? "" : "s") + ".";
+              if (leftover) msg += " (" + leftover + " left over.)";
+              lbl.textContent = msg;
+            }
+            // Refresh the calendar view so the new posts show up.
+            if (typeof loadScheduled === "function") loadScheduled();
+            // Auto-dismiss in 4s once finished.
+            setTimeout(() => {
+              if (document.body.contains(bar)) bar.remove();
+            }, 4000);
+          }
+        } catch (_) { /* poll again */ }
+      }, pollMs);
+    }
+
+    function _planFmtDate(key){
+      var d = new Date(key + "T12:00:00");
+      return d.toLocaleDateString(undefined,
+        { weekday: "long", month: "long", day: "numeric" });
+    }
+    function _planFmtHour(h){
+      // h=24 happens when "Latest" is 23:30+ and gets rounded up to
+      // end-of-day. The naive math (24 % 12 = 0; 0 || 12 = 12; 24 >= 12
+      // → PM) renders that as "12 PM" — which is noon, the opposite of
+      // what the user picked. Map h=24 (and h=0) to "midnight" so the
+      // boundary is unambiguous, and h=12 to "noon" while we're at it.
+      if (h >= 24 || h === 0) return "midnight";
+      if (h === 12) return "noon";
+      var h12 = h % 12 || 12;
+      return h12 + " " + (h < 12 ? "AM" : "PM");
+    }
+    function _planCloseModal(){
+      var bg = document.getElementById("plan-modal-bg");
+      if (bg) bg.remove();
+      if (_planEscBound) {
+        document.removeEventListener("keydown", _planEscHandler);
+        _planEscBound = false;
+      }
+    }
+    var _planEscBound = false;
+    function _planEscHandler(e){ if (e.key === "Escape") _planCloseModal(); }
+    function _planBindClose(bg){
+      // Click on the dim backdrop (but not on the modal card itself)
+      // closes the plan modal.
+      bg.addEventListener("click", e => {
+        if (e.target === bg) _planCloseModal();
+      });
+      if (!_planEscBound) {
+        document.addEventListener("keydown", _planEscHandler);
+        _planEscBound = true;
+      }
+    }
+    async function _planFetchDayInfo(key, win){
+      try {
+        var qs = "date=" + encodeURIComponent(key);
+        if (win && Number.isFinite(win.start_h)) qs += "&start_h=" + win.start_h;
+        if (win && Number.isFinite(win.end_h))   qs += "&end_h="   + win.end_h;
+        var r = await fetch("/dashboard/instagram/api/plan/day-info?" + qs,
+          { credentials: "same-origin" });
+        if (!r.ok) return null;
+        return await r.json();
+      } catch (e) { return null; }
+    }
+
+    /* Click-a-day modal — pick a count for this single day. */
+    async function planOpenDayModal(dateKey){
+      _planCloseModal();
+      var bg = document.createElement("div");
+      bg.id = "plan-modal-bg";
+      bg.className = "plan-modal-bg";
+      bg.innerHTML =
+          '<div class="plan-modal" role="dialog" aria-modal="true">'
+        +   '<div class="plan-modal-h">'
+        +     '<div class="plan-modal-title">Plan ' + esc(_planFmtDate(dateKey)) + '</div>'
+        +     '<button class="plan-modal-x" type="button" '
+        +       'aria-label="Close" id="plan-day-x">×</button>'
+        +   '</div>'
+        +   '<div class="plan-modal-body">'
+        +     '<div class="plan-day-existing" id="plan-day-existing">Loading…</div>'
+        +     '<div class="plan-modal-section">'
+        +       '<div class="plan-section-h">How many posts do you want to add?</div>'
+        +       '<div class="plan-count-row">'
+        +         '<input type="range" id="plan-day-count" min="1" max="10" value="3"/>'
+        +         '<span class="plan-count-v" id="plan-day-count-v">3 posts</span>'
+        +       '</div>'
+        +       '<div class="plan-cap-hint" id="plan-day-cap-hint"></div>'
+        +     '</div>'
+        +     '<div class="plan-modal-section">'
+        +       '<div class="plan-section-h">Posting window</div>'
+        +       '<div class="plan-range-row">'
+        +         '<div><label for="plan-day-win-start">Earliest</label>'
+        +           '<input type="time" id="plan-day-win-start" value="08:00" step="3600"/></div>'
+        +         '<div><label for="plan-day-win-end">Latest</label>'
+        +           '<input type="time" id="plan-day-win-end" value="18:00" step="3600"/></div>'
+        +       '</div>'
+        +       '<div class="plan-summary-line" id="plan-day-win-sum"></div>'
+        +     '</div>'
+        +     '<div class="plan-modal-section">'
+        +       '<div class="plan-section-h">How should we make them?</div>'
+        +       '<div class="plan-method-cards">'
+        +         '<div class="plan-method-card">'
+        +           '<div class="plan-method-h">📝 Mix from my library</div>'
+        +           '<div class="plan-method-sub">Use your hooks, meats, '
+        +             'and CTAs to build the posts.</div>'
+        +           '<button class="btn btn-primary" type="button" id="plan-day-go-lib" disabled>Continue →</button>'
+        +         '</div>'
+        +       '</div>'
+        +     '</div>'
+        +   '</div>'
+        +   '<div class="plan-modal-footer">'
+        +     '<button class="btn btn-ghost" type="button" id="plan-day-cancel">Cancel</button>'
+        +   '</div>'
+        + '</div>';
+      document.body.appendChild(bg);
+      _planBindClose(bg);
+      document.getElementById("plan-day-x").onclick      = _planCloseModal;
+      document.getElementById("plan-day-cancel").onclick = _planCloseModal;
+
+      var slider = document.getElementById("plan-day-count");
+      var sv     = document.getElementById("plan-day-count-v");
+      slider.addEventListener("input", () => {
+        sv.textContent = slider.value
+          + " post" + (slider.value === "1" ? "" : "s");
+      });
+
+      // Posting-window state (whole hours; minute > 0 on the End rounds up
+      // to the next hour). Defaults to 8 AM – 6 PM, mirroring the server
+      // _PLAN_WINDOW defaults.
+      var dayWin = { start_h: 8, end_h: 18 };
+      var winStartEl = document.getElementById("plan-day-win-start");
+      var winEndEl   = document.getElementById("plan-day-win-end");
+      var winSumEl   = document.getElementById("plan-day-win-sum");
+      function _planParseHour(val, isEnd){
+        var parts = (val || "").split(":");
+        var h = parseInt(parts[0] || "0", 10);
+        var m = parseInt(parts[1] || "0", 10);
+        if (isEnd && m > 0) h += 1;
+        return Math.max(0, Math.min(isEnd ? 24 : 23, h));
+      }
+      function _planFmtWinSummary(w){
+        var hours = Math.max(0, w.end_h - w.start_h);
+        var slots = Math.max(1, Math.floor(hours * 60 / 30));
+        return _planFmtHour(w.start_h) + " – " + _planFmtHour(w.end_h)
+          + " · fits up to " + slots + " posts at 30-min spacing";
+      }
+      function _planRefetchDay(){
+        // When the window changes, we need new capacity info from the
+        // server. Re-render the existing-posts line + slider bound.
+        return _planFetchDayInfo(dateKey, dayWin).then(refreshDayInfo);
+      }
+      winStartEl.addEventListener("change", () => {
+        dayWin.start_h = _planParseHour(winStartEl.value, false);
+        if (dayWin.end_h <= dayWin.start_h) {
+          dayWin.end_h = Math.min(24, dayWin.start_h + 1);
+          winEndEl.value = String(dayWin.end_h).padStart(2, "0") + ":00";
+        }
+        winSumEl.textContent = _planFmtWinSummary(dayWin);
+        _planRefetchDay();
+      });
+      winEndEl.addEventListener("change", () => {
+        dayWin.end_h = _planParseHour(winEndEl.value, true);
+        if (dayWin.end_h <= dayWin.start_h) {
+          dayWin.start_h = Math.max(0, dayWin.end_h - 1);
+          winStartEl.value = String(dayWin.start_h).padStart(2, "0") + ":00";
+        }
+        winSumEl.textContent = _planFmtWinSummary(dayWin);
+        _planRefetchDay();
+      });
+      winSumEl.textContent = _planFmtWinSummary(dayWin);
+
+      var existingEl = document.getElementById("plan-day-existing");
+      var hintEl     = document.getElementById("plan-day-cap-hint");
+      var goLib      = document.getElementById("plan-day-go-lib");
+      function refreshDayInfo(info){
+        // Guard against the modal having been closed mid-fetch.
+        if (!existingEl || !document.body.contains(existingEl)) return;
+        if (!info) {
+          existingEl.textContent = "Couldn't load this day's schedule. Try again.";
+          return;
+        }
+        // Server returns its OWN window; we override with the user's
+        // chosen window for the slider/hint math but keep ex/rem from
+        // the server (they reflect existing posts on this day).
+        var ex  = info.existing_count || 0;
+        var rem = Math.max(0, info.remaining_capacity || 0);
+        if (ex === 0) {
+          existingEl.textContent = "This day has 0 posts so far.";
+        } else {
+          existingEl.textContent = ex + " post" + (ex === 1 ? "" : "s")
+            + " so far. New ones will fit around them.";
+        }
+        var maxN = Math.max(1, rem);
+        var def  = Math.min(3, maxN);
+        slider.max   = maxN;
+        slider.value = def;
+        sv.textContent = def + " post" + (def === 1 ? "" : "s");
+        var winLabel = _planFmtHour(dayWin.start_h) + " - " + _planFmtHour(dayWin.end_h);
+        if (ex === 0) {
+          hintEl.textContent = "Your window (" + winLabel
+            + ") fits up to " + rem + " posts with 30-min between posts.";
+        } else {
+          hintEl.textContent = "Your window has room for " + rem
+            + " more post" + (rem === 1 ? "" : "s") + " on this day.";
+        }
+        var existingNote = hintEl.parentNode.querySelector(".plan-cap-warn");
+        if (existingNote) existingNote.remove();
+        if (rem === 0) {
+          slider.disabled = true;
+          var note = document.createElement("div");
+          note.className = "plan-cap-warn";
+          note.textContent = "This day is already at capacity. "
+            + "Pick another day or widen the posting window.";
+          hintEl.parentNode.appendChild(note);
+          goLib.disabled = true;
+        } else {
+          slider.disabled = false;
+          goLib.disabled = false;
+        }
+      }
+
+      var info = await _planFetchDayInfo(dateKey, dayWin);
+      // Initial render with the day-info we already fetched.
+      refreshDayInfo(info);
+
+      goLib.onclick = () => {
+        var c = Number(slider.value) || 1;
+        _igPlan = {
+          scope: "single_day",
+          date: dateKey,
+          count: c,
+          window: { start_h: dayWin.start_h, end_h: dayWin.end_h },
+          generation_method: "library",
+        };
+        _planCloseModal();
+        _planLandOnLibraryMakeTab(c);
+      };
+    }
+
+    /* Plan-the-month modal — date range + days + posts/day with a live
+       capacity preview. */
+    function planOpenMonthModal(){
+      _planCloseModal();
+      var today = new Date();
+      var endD  = new Date(today); endD.setDate(today.getDate() + 27);
+      var startISO = today.toISOString().slice(0, 10);
+      var endISO   = endD.toISOString().slice(0, 10);
+      var DAY_LABELS = [
+        { key: "mon", label: "M", full: "Monday"   },
+        { key: "tue", label: "T", full: "Tuesday"  },
+        { key: "wed", label: "W", full: "Wednesday"},
+        { key: "thu", label: "T", full: "Thursday" },
+        { key: "fri", label: "F", full: "Friday"   },
+        { key: "sat", label: "S", full: "Saturday" },
+        { key: "sun", label: "S", full: "Sunday"   },
+      ];
+      var state = {
+        ppd: 3,
+        start: startISO,
+        end:   endISO,
+        active: ["mon","tue","wed","thu","fri"],
+        window: { start_h: 8, end_h: 18 },
+        total: 0,
+        capped: false,
+        capped_days: [],
+      };
+      var bg = document.createElement("div");
+      bg.id = "plan-modal-bg";
+      bg.className = "plan-modal-bg";
+      bg.innerHTML =
+          '<div class="plan-modal" role="dialog" aria-modal="true">'
+        +   '<div class="plan-modal-h">'
+        +     '<div class="plan-modal-title">Plan the month</div>'
+        +     '<button class="plan-modal-x" type="button" '
+        +       'aria-label="Close" id="plan-mo-x">×</button>'
+        +   '</div>'
+        +   '<div class="plan-modal-body">'
+        +     '<div class="plan-modal-section">'
+        +       '<div class="plan-section-h">Posts per day</div>'
+        +       '<div class="plan-count-row">'
+        +         '<input type="range" id="plan-mo-ppd" min="1" max="10" value="3"/>'
+        +         '<span class="plan-count-v" id="plan-mo-ppd-v">3 posts per day</span>'
+        +       '</div>'
+        +       '<div class="plan-cap-hint" id="plan-mo-ppd-hint">'
+        +         'Your window (8 AM - 6 PM) fits up to 21 per day.'
+        +       '</div>'
+        +     '</div>'
+        +     '<div class="plan-modal-section">'
+        +       '<div class="plan-section-h">Posting window</div>'
+        +       '<div class="plan-range-row">'
+        +         '<div><label for="plan-mo-win-start">Earliest</label>'
+        +           '<input type="time" id="plan-mo-win-start" value="08:00" step="3600"/></div>'
+        +         '<div><label for="plan-mo-win-end">Latest</label>'
+        +           '<input type="time" id="plan-mo-win-end" value="18:00" step="3600"/></div>'
+        +       '</div>'
+        +       '<div class="plan-summary-line" id="plan-mo-win-sum"></div>'
+        +     '</div>'
+        +     '<div class="plan-modal-section">'
+        +       '<div class="plan-section-h">Date range</div>'
+        +       '<div class="plan-range-row">'
+        +         '<div><label for="plan-mo-start">Start</label>'
+        +           '<input type="date" id="plan-mo-start" value="' + startISO
+        +           '" min="' + startISO + '"/></div>'
+        +         '<div><label for="plan-mo-end">End</label>'
+        +           '<input type="date" id="plan-mo-end" value="' + endISO
+        +           '" min="' + startISO + '"/></div>'
+        +       '</div>'
+        +       '<div class="plan-summary-line" id="plan-mo-range-sum"></div>'
+        +     '</div>'
+        +     '<div class="plan-modal-section">'
+        +       '<div class="plan-section-h">Days to use</div>'
+        +       '<div class="plan-day-toggles" id="plan-mo-days">'
+        +         DAY_LABELS.map(d =>
+                    '<button class="plan-day-toggle' + (state.active.includes(d.key) ? ' is-active' : '')
+                    + '" type="button" data-day="' + d.key
+                    + '" title="' + d.full + '">' + d.label + '</button>').join("")
+        +       '</div>'
+        +       '<div class="plan-summary-line" id="plan-mo-days-sum"></div>'
+        +     '</div>'
+        +     '<div class="plan-total-line" id="plan-mo-total">Computing total…</div>'
+        +     '<div class="plan-topup-note" id="plan-mo-topup" hidden></div>'
+        +     '<div class="plan-cap-warn" id="plan-mo-warn" hidden></div>'
+        +     '<div class="plan-modal-section">'
+        +       '<div class="plan-section-h">How should we make them?</div>'
+        +       '<div class="plan-method-cards">'
+        +         '<div class="plan-method-card">'
+        +           '<div class="plan-method-h">📝 Mix from my library</div>'
+        +           '<div class="plan-method-sub">Use your hooks, meats, '
+        +             'and CTAs to build the posts.</div>'
+        +           '<button class="btn btn-primary" type="button" id="plan-mo-go-lib" disabled>Continue →</button>'
+        +         '</div>'
+        +       '</div>'
+        +     '</div>'
+        +   '</div>'
+        +   '<div class="plan-modal-footer">'
+        +     '<button class="btn btn-ghost" type="button" id="plan-mo-cancel">Cancel</button>'
+        +   '</div>'
+        + '</div>';
+      document.body.appendChild(bg);
+      _planBindClose(bg);
+      document.getElementById("plan-mo-x").onclick      = _planCloseModal;
+      document.getElementById("plan-mo-cancel").onclick = _planCloseModal;
+
+      var ppd  = document.getElementById("plan-mo-ppd");
+      var ppdV = document.getElementById("plan-mo-ppd-v");
+      var sIn  = document.getElementById("plan-mo-start");
+      var eIn  = document.getElementById("plan-mo-end");
+      var rangeSum = document.getElementById("plan-mo-range-sum");
+      var daysSum  = document.getElementById("plan-mo-days-sum");
+      var totalEl  = document.getElementById("plan-mo-total");
+      var topupEl  = document.getElementById("plan-mo-topup");
+      var warnEl   = document.getElementById("plan-mo-warn");
+      var goLib    = document.getElementById("plan-mo-go-lib");
+      var winStartEl = document.getElementById("plan-mo-win-start");
+      var winEndEl   = document.getElementById("plan-mo-win-end");
+      var winSumEl   = document.getElementById("plan-mo-win-sum");
+      var ppdHintEl  = document.getElementById("plan-mo-ppd-hint");
+
+      function _planParseHourMo(val, isEnd){
+        var parts = (val || "").split(":");
+        var h = parseInt(parts[0] || "0", 10);
+        var m = parseInt(parts[1] || "0", 10);
+        if (isEnd && m > 0) h += 1;
+        return Math.max(0, Math.min(isEnd ? 24 : 23, h));
+      }
+      function _planRefreshWinUI(){
+        var hours = Math.max(0, state.window.end_h - state.window.start_h);
+        var slots = Math.max(1, Math.floor(hours * 60 / 30));
+        winSumEl.textContent = _planFmtHour(state.window.start_h) + " – "
+          + _planFmtHour(state.window.end_h) + " · fits up to " + slots
+          + " posts at 30-min spacing";
+        if (ppdHintEl) {
+          ppdHintEl.textContent = "Your window ("
+            + _planFmtHour(state.window.start_h) + " – "
+            + _planFmtHour(state.window.end_h) + ") fits up to "
+            + slots + " per day.";
+        }
+      }
+      winStartEl.addEventListener("change", () => {
+        state.window.start_h = _planParseHourMo(winStartEl.value, false);
+        if (state.window.end_h <= state.window.start_h) {
+          state.window.end_h = Math.min(24, state.window.start_h + 1);
+          winEndEl.value = String(state.window.end_h).padStart(2, "0") + ":00";
+        }
+        _planRefreshWinUI();
+        refreshPreview();
+      });
+      winEndEl.addEventListener("change", () => {
+        state.window.end_h = _planParseHourMo(winEndEl.value, true);
+        if (state.window.end_h <= state.window.start_h) {
+          state.window.start_h = Math.max(0, state.window.end_h - 1);
+          winStartEl.value = String(state.window.start_h).padStart(2, "0") + ":00";
+        }
+        _planRefreshWinUI();
+        refreshPreview();
+      });
+      _planRefreshWinUI();
+
+      function daysBetween(a, b){
+        return Math.round(
+          (new Date(b + "T00:00:00") - new Date(a + "T00:00:00"))
+          / 86400000) + 1;
+      }
+      function activeCountInRange(){
+        if (!state.start || !state.end) return 0;
+        if (state.end < state.start) return 0;
+        var dowMap = { sun:0, mon:1, tue:2, wed:3, thu:4, fri:5, sat:6 };
+        var activeSet = new Set(state.active.map(d => dowMap[d]));
+        var count = 0;
+        var cur = new Date(state.start + "T00:00:00");
+        var endD = new Date(state.end + "T00:00:00");
+        while (cur <= endD) {
+          if (activeSet.has(cur.getDay())) count++;
+          cur.setDate(cur.getDate() + 1);
+        }
+        return count;
+      }
+      function refreshSummaries(){
+        if (state.start && state.end && state.end >= state.start) {
+          var totalDays = daysBetween(state.start, state.end);
+          var weeks = Math.round(totalDays / 7);
+          rangeSum.textContent = totalDays + " days · "
+            + weeks + " week" + (weeks === 1 ? "" : "s");
+        } else {
+          rangeSum.textContent = "Pick a valid date range.";
+        }
+        var act = activeCountInRange();
+        var skip = state.start && state.end && state.end >= state.start
+          ? Math.max(0, daysBetween(state.start, state.end) - act) : 0;
+        if (act === 0) {
+          daysSum.textContent = "No active days in this range.";
+        } else {
+          daysSum.textContent = act + " active day"
+            + (act === 1 ? "" : "s")
+            + (skip > 0 ? " · " + skip + " skipped" : "");
+        }
+      }
+
+      function _localEstimate(){
+        var act = activeCountInRange();
+        if (state.start > state.end || act === 0 || state.ppd === 0) return 0;
+        return state.ppd * act;
+      }
+
+      function _setLocalTotal(){
+        // Render an immediate optimistic total so the user never has to
+        // wait on /preview. The server-side response (when it arrives)
+        // refines this with capacity-aware capping; in the meantime
+        // Continue is always clickable.
+        var act = activeCountInRange();
+        if (state.start > state.end || act === 0 || state.ppd === 0) {
+          totalEl.textContent = "Total: 0 posts.";
+          topupEl.hidden = true;
+          warnEl.hidden  = true;
+          state.total = 0;
+          goLib.disabled = true;     // genuinely zero — nothing to schedule
+          return;
+        }
+        var est = _localEstimate();
+        state.total = est;       // optimistic; server may refine downward
+        totalEl.innerHTML = 'Total: about <strong>' + est
+          + '</strong> post' + (est === 1 ? "" : "s") + '.'
+          + ' (' + state.ppd + '/day × ' + act + ' day'
+          + (act === 1 ? "" : "s") + ')'
+          + ' <span class="helper" id="plan-mo-refining" style="color:var(--text-sub);font-weight:400">…refining</span>';
+        topupEl.hidden = true;
+        warnEl.hidden  = true;
+        goLib.disabled = false;
+      }
+
+      var previewSeq = 0;
+      async function refreshPreview(){
+        refreshSummaries();
+        // Optimistic total + Continue enabled immediately. The server
+        // call below only refines (capped days, top-up note) without
+        // ever re-disabling Continue.
+        _setLocalTotal();
+        if (state.total === 0) return;
+        var seq = ++previewSeq;
+        try {
+          var r = await fetch("/dashboard/instagram/api/plan/preview", {
+            method: "POST", credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              scope: "month_plan",
+              start: state.start, end: state.end,
+              posts_per_day: state.ppd,
+              active_days: state.active,
+              window: state.window,
+            }),
+          });
+          if (seq !== previewSeq) return;
+          var d = await r.json().catch(()=>({}));
+          if (!r.ok) {
+            // Keep the optimistic total visible — the user can still hit
+            // Continue. Just drop the "refining" tag.
+            var refining = document.getElementById("plan-mo-refining");
+            if (refining) refining.remove();
+            return;
+          }
+          state.total = d.total_to_create || 0;
+          state.capped = !!d.capped;
+          state.capped_days = d.capped_days || [];
+          var act2 = activeCountInRange();
+          var expected = state.ppd * act2;
+          var topup = expected > state.total;
+          totalEl.innerHTML = 'Total: about <strong>' + state.total
+            + '</strong> post' + (state.total === 1 ? "" : "s") + '.'
+            + ' (' + state.ppd + '/day × ' + act2 + ' day'
+            + (act2 === 1 ? "" : "s") + ')';
+          if (topup && state.total > 0) {
+            topupEl.hidden = false;
+            topupEl.textContent = "Some days already have posts. We'll fill them in to "
+              + state.ppd + " per day, not replace what's there.";
+          } else {
+            topupEl.hidden = true;
+          }
+          if (state.capped && state.capped_days.length) {
+            warnEl.hidden = false;
+            warnEl.textContent = "Your window is too tight for "
+              + state.ppd + " posts on "
+              + state.capped_days.length + " day"
+              + (state.capped_days.length === 1 ? "" : "s")
+              + ". We'll cap those at what fits with 30-min between posts. "
+              + "Widen your window to fit more.";
+          } else {
+            warnEl.hidden = true;
+          }
+          // Only flip Continue off if the SERVER says zero (every day
+          // already at capacity). Don't gate on missing preview.
+          goLib.disabled = state.total === 0;
+        } catch (e) {
+          if (seq !== previewSeq) return;
+          var refining2 = document.getElementById("plan-mo-refining");
+          if (refining2) refining2.remove();
+          // Network blip — keep optimistic total + Continue clickable.
+        }
+      }
+
+      ppd.addEventListener("input", () => {
+        state.ppd = Number(ppd.value) || 1;
+        ppdV.textContent = state.ppd + " post"
+          + (state.ppd === 1 ? "" : "s") + " per day";
+        refreshPreview();
+      });
+      sIn.addEventListener("input", () => {
+        state.start = sIn.value || startISO;
+        if (eIn.value < state.start) {
+          eIn.value = state.start;
+          state.end = state.start;
+        }
+        refreshPreview();
+      });
+      eIn.addEventListener("input", () => {
+        state.end = eIn.value || endISO;
+        refreshPreview();
+      });
+      bg.querySelectorAll("[data-day]").forEach(b =>
+        b.addEventListener("click", () => {
+          var k = b.dataset.day;
+          if (state.active.includes(k)) {
+            state.active = state.active.filter(x => x !== k);
+          } else {
+            state.active = state.active.concat([k]);
+          }
+          b.classList.toggle("is-active");
+          refreshPreview();
+        }));
+
+      goLib.onclick = () => {
+        _igPlan = {
+          scope: "month_plan",
+          start: state.start, end: state.end,
+          posts_per_day: state.ppd,
+          active_days: state.active,
+          count: state.total,
+          window: state.window,
+          generation_method: "library",
+        };
+        _planCloseModal();
+        _planLandOnLibraryMakeTab(state.total);
+      };
+
+      refreshPreview();
+    }
+
+    /* After "Mix from my library" in the plan modal, open a method picker
+       so the user can choose between an auto random mix or hand-picking
+       the hooks / meats / CTAs to draw from. Either path ends up in the
+       existing _libCreateBatchAndPreview flow with _igPlan still set,
+       so the eventual schedule step routes through /schedule-plan. */
+    function _planLandOnLibraryMakeTab(count){
+      if (!_libCache.hooks.length && !_libCache.meats.length
+          && !_libCache.ctas.length) {
+        // Library not loaded yet — fetch then re-open. _libLoadAll calls
+        // _libRenderAll/_libUpdateMakeSummary internally.
+        _libLoadAll().then(() => _planOpenMethodPicker(count));
+        return;
+      }
+      _planOpenMethodPicker(count);
+    }
+
+    function _planOpenMethodPicker(count){
+      _libOpenModal(
+          '<h3 class="modal-h">Plan saved — ' + count + ' post'
+        +   (count === 1 ? '' : 's') + ' to fill</h3>'
+        + '<p class="modal-sub">How should we build them from your library?</p>'
+        + '<div class="plan-method-cards" style="grid-template-columns:1fr 1fr">'
+        +   '<div class="plan-method-card">'
+        +     '<div class="plan-method-h">🎲 Auto mix &amp; match</div>'
+        +     '<div class="plan-method-sub">We pick a random mix from your '
+        +       'whole library. Fastest. You can shuffle / re-roll '
+        +       'individual posts before scheduling.</div>'
+        +     '<button class="btn btn-primary" type="button" id="plan-fill-auto">Auto mix →</button>'
+        +   '</div>'
+        +   '<div class="plan-method-card">'
+        +     '<div class="plan-method-h">✋ Pick the pieces myself</div>'
+        +     '<div class="plan-method-sub">Choose which hooks, meats, and '
+        +       'CTAs we should pull from. We\'ll mix them together.</div>'
+        +     '<button class="btn" type="button" id="plan-fill-pick">Pick pieces →</button>'
+        +   '</div>'
+        + '</div>'
+        + '<div class="modal-foot">'
+        +   '<button class="btn btn-ghost" type="button" id="plan-fill-cancel">Cancel</button>'
+        + '</div>'
+      );
+      $("plan-fill-auto").onclick = () => _libCreateBatchAndPreview(count);
+      $("plan-fill-pick").onclick = () => _planOpenPiecePicker(count);
+      $("plan-fill-cancel").onclick = () => {
+        _libCloseModal();
+        _planClearContext();
+      };
+    }
+
+    /* Multi-select piece picker for the "pick myself" path. Shows
+       hooks / meats / CTAs as checkbox lists; user picks any subset
+       (defaults to all checked) and we build a batch from that subset. */
+    function _planOpenPiecePicker(count){
+      var hooks = _libCache.hooks || [];
+      var meats = _libCache.meats || [];
+      var ctas  = _libCache.ctas  || [];
+      // All-checked by default — same shape as auto mix until they trim.
+      var picked = {
+        hooks: new Set(hooks.map(p => p.id)),
+        meats: new Set(meats.map(p => p.id)),
+        ctas:  new Set(ctas.map(p => p.id)),
+      };
+
+      function pieceLabel(p){
+        return (p.label || p.id || "").trim() || "(untitled)";
+      }
+      function renderColumn(kind, items){
+        if (!items.length) {
+          return '<div class="plan-pp-empty">No ' + kind + ' yet. '
+            + 'Add some on the Library tab first.</div>';
+        }
+        return items.map(p => {
+          var checked = picked[kind].has(p.id) ? " checked" : "";
+          var mt = (p.media_type || "image");
+          var mtIcon = mt === "video" ? "🎬" : "🖼";
+          return '<label class="plan-pp-row">'
+            + '<input type="checkbox" data-pp-kind="' + kind + '" '
+            +   'data-pp-id="' + esc(p.id) + '"' + checked + '>'
+            + '<span class="plan-pp-mt" aria-hidden="true">' + mtIcon + '</span>'
+            + '<span class="plan-pp-label">' + esc(pieceLabel(p)) + '</span>'
+            + '</label>';
+        }).join("");
+      }
+
+      _libOpenModal(
+          '<h3 class="modal-h">Pick the pieces to mix</h3>'
+        + '<p class="modal-sub">Tick the hooks, meats, and CTAs you want '
+        +   'us to draw from. We\'ll randomly mix them into ' + count
+        +   ' post' + (count === 1 ? '' : 's') + '.</p>'
+        + '<div class="plan-pp-grid">'
+        +   '<div class="plan-pp-col">'
+        +     '<div class="plan-pp-col-h">Hooks <span id="plan-pp-h-count" class="plan-pp-count"></span></div>'
+        +     '<div class="plan-pp-col-actions">'
+        +       '<button type="button" class="link-btn" data-pp-all="hooks">Select all</button>'
+        +       '<button type="button" class="link-btn" data-pp-none="hooks">Clear</button>'
+        +     '</div>'
+        +     '<div class="plan-pp-list" data-pp-list="hooks">' + renderColumn("hooks", hooks) + '</div>'
+        +   '</div>'
+        +   '<div class="plan-pp-col">'
+        +     '<div class="plan-pp-col-h">Meats <span id="plan-pp-m-count" class="plan-pp-count"></span></div>'
+        +     '<div class="plan-pp-col-actions">'
+        +       '<button type="button" class="link-btn" data-pp-all="meats">Select all</button>'
+        +       '<button type="button" class="link-btn" data-pp-none="meats">Clear</button>'
+        +     '</div>'
+        +     '<div class="plan-pp-list" data-pp-list="meats">' + renderColumn("meats", meats) + '</div>'
+        +   '</div>'
+        +   '<div class="plan-pp-col">'
+        +     '<div class="plan-pp-col-h">CTAs <span id="plan-pp-c-count" class="plan-pp-count"></span></div>'
+        +     '<div class="plan-pp-col-actions">'
+        +       '<button type="button" class="link-btn" data-pp-all="ctas">Select all</button>'
+        +       '<button type="button" class="link-btn" data-pp-none="ctas">Clear</button>'
+        +     '</div>'
+        +     '<div class="plan-pp-list" data-pp-list="ctas">' + renderColumn("ctas", ctas) + '</div>'
+        +   '</div>'
+        + '</div>'
+        + '<div class="plan-pp-summary" id="plan-pp-summary"></div>'
+        + '<div class="modal-foot">'
+        +   '<button class="btn btn-ghost" type="button" id="plan-pp-back">Back</button>'
+        +   '<button class="btn btn-primary" type="button" id="plan-pp-go">Mix ' + count + ' post' + (count === 1 ? '' : 's') + ' →</button>'
+        + '</div>'
+      );
+
+      function refreshSummary(){
+        var nh = picked.hooks.size, nm = picked.meats.size, nc = picked.ctas.size;
+        $("plan-pp-h-count").textContent = "(" + nh + "/" + hooks.length + ")";
+        $("plan-pp-m-count").textContent = "(" + nm + "/" + meats.length + ")";
+        $("plan-pp-c-count").textContent = "(" + nc + "/" + ctas.length + ")";
+        var maxCombos = nh * nm * nc;
+        var sumEl = $("plan-pp-summary");
+        if (nh === 0 || nm === 0 || nc === 0) {
+          sumEl.innerHTML = '<span class="plan-pp-warn">Pick at least 1 in '
+            + 'each column to make a post.</span>';
+          $("plan-pp-go").disabled = true;
+          return;
+        }
+        if (maxCombos < count) {
+          sumEl.innerHTML = '<span class="plan-pp-warn">Your selection only '
+            + 'mixes into ' + maxCombos + ' unique post'
+            + (maxCombos === 1 ? '' : 's') + '. We\'ll fill what we can.</span>';
+        } else {
+          sumEl.innerHTML = nh + ' hooks × ' + nm + ' meats × ' + nc
+            + ' CTAs = ' + maxCombos + ' possible mixes. We\'ll pick '
+            + count + ' at random.';
+        }
+        $("plan-pp-go").disabled = false;
+      }
+      refreshSummary();
+
+      var bodyEl = $("modal-body");
+      bodyEl.querySelectorAll('input[type="checkbox"][data-pp-kind]').forEach(cb => {
+        cb.addEventListener("change", () => {
+          var k = cb.dataset.ppKind, id = cb.dataset.ppId;
+          if (cb.checked) picked[k].add(id);
+          else            picked[k].delete(id);
+          refreshSummary();
+        });
+      });
+      bodyEl.querySelectorAll("[data-pp-all]").forEach(b => {
+        b.addEventListener("click", () => {
+          var k = b.dataset.ppAll;
+          var src = (k === "hooks" ? hooks : k === "meats" ? meats : ctas);
+          picked[k] = new Set(src.map(p => p.id));
+          bodyEl.querySelectorAll(
+            'input[data-pp-kind="'+k+'"]').forEach(cb => cb.checked = true);
+          refreshSummary();
+        });
+      });
+      bodyEl.querySelectorAll("[data-pp-none]").forEach(b => {
+        b.addEventListener("click", () => {
+          var k = b.dataset.ppNone;
+          picked[k] = new Set();
+          bodyEl.querySelectorAll(
+            'input[data-pp-kind="'+k+'"]').forEach(cb => cb.checked = false);
+          refreshSummary();
+        });
+      });
+      $("plan-pp-back").onclick = () => _planOpenMethodPicker(count);
+      $("plan-pp-go").onclick = () => _libCreateBatchAndPreviewFiltered(
+        count,
+        Array.from(picked.hooks),
+        Array.from(picked.meats),
+        Array.from(picked.ctas));
+    }
+
+    async function _libCreateBatchAndPreviewFiltered(count, hookIds, meatIds, ctaIds){
+      $("modal-body").innerHTML = '<div class="loading"><span class="spinner"></span> Mixing your picks…</div>';
+      try {
+        var r = await fetch("/dashboard/instagram/api/batches", {
+          method:"POST", credentials:"same-origin",
+          headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({
+            count: count,
+            hook_ids: hookIds,
+            meat_ids: meatIds,
+            cta_ids:  ctaIds,
+          }),
+        });
+        var d = await r.json().catch(()=>({}));
+        if (!r.ok) {
+          $("modal-body").innerHTML = '<div class="error-text">'
+            + esc(d.error || ("HTTP " + r.status)) + '</div>'
+            + '<div class="modal-foot"><button class="btn btn-primary" '
+            + 'onclick="_libCloseModal && _libCloseModal()">OK</button></div>';
+          return;
+        }
+        _libCurrentBatch = d.batch;
+        _libRenderBatchPreview();
+      } catch (e) {
+        $("modal-body").innerHTML = '<div class="error-text">Network error: '
+          + esc(e.message) + '</div>';
+      }
+    }
+
     function _schRender(){
       var statusEl = $("sched-status");
       var bucketsEl = $("sched-buckets");
       var emptyEl = $("sched-empty");
       var headerEl = $("sched-header");
+      var viewBar = $("sched-view-bar");
       if (!statusEl || !bucketsEl || !emptyEl || !headerEl) return;
       statusEl.hidden = true;
+      // Show the view toggle whenever we have data.
+      if (viewBar) viewBar.hidden = !_scheduled.length;
+      _schWireViewToggle();
       if (!_scheduled.length) {
         bucketsEl.hidden = true;
         headerEl.hidden = true;
         emptyEl.hidden = false;
         var fEl = $("sched-filters"); if (fEl) fEl.hidden = true;
+        _schRenderMultibar();
+      } else if (_schView === "week" || _schView === "month") {
+        // Calendar views — render into #sched-buckets, hide list-only chrome.
+        emptyEl.hidden = true;
+        bucketsEl.hidden = false;
+        headerEl.hidden = true;
+        var fEl2 = $("sched-filters"); if (fEl2) fEl2.hidden = true;
+        var rows = _scheduled.slice();
+        if (_schView === "week") renderScheduledWeek(rows);
+        else                      renderScheduledMonth(rows);
         _schRenderMultibar();
       } else {
         emptyEl.hidden = true;
@@ -4623,7 +7282,6 @@
         _schRenderFilters();
         _schRenderBuckets();
         _schRenderMultibar();
-        // If filters hide everything, surface a clear-filters affordance.
         if (bucketsEl.innerHTML === "") {
           bucketsEl.innerHTML =
               '<div class="sched-empty">'
@@ -4633,10 +7291,8 @@
             + '</div>';
         }
       }
-      // Keep the legacy flat list hidden (we use the new buckets).
       var legacy = $("sched-list");
       if (legacy) legacy.hidden = true;
-      // Update the nav badge.
       var pending = _scheduled.filter(s => s.status === "pending" || s.status === "publishing").length;
       var badge = $("sched-count");
       if (badge) {
@@ -4667,7 +7323,11 @@
           {credentials:"same-origin"});
         if (!r.ok) return;
         var data = await r.json().catch(()=>({}));
-        var fresh = data.scheduled || [];
+        var fresh = _schFilterToInstagram(data.scheduled || []);
+        // Reconcile any in-flight optimistic reschedules (Week / Month
+        // drag) so the pill doesn't flicker back to its old slot before
+        // the server acknowledges the edit.
+        fresh = _schApplyInflight(fresh);
         // Detect changes by id+status — if no change, skip re-render.
         var sigOld = _scheduled.map(s => s.queue_id+"|"+(s.status||"")+"|"+(s.scheduled_at||0)).join(",");
         var sigNew = fresh.map(s => s.queue_id+"|"+(s.status||"")+"|"+(s.scheduled_at||0)).join(",");
@@ -4698,7 +7358,7 @@
           }
           return;
         }
-        _scheduled = data.scheduled || [];
+        _scheduled = _schApplyInflight(_schFilterToInstagram(data.scheduled || []));
         // Library cache may not be populated yet (Scheduled tab opened
         // before Library tab). Lazy-load it so the row thumbnails work.
         if (!_libCache.hooks.length && !_libCache.meats.length && !_libCache.ctas.length) {
@@ -4746,6 +7406,22 @@
       $("modal").hidden = true;
       $("modal-body").innerHTML = "";
     }
+
+    // Modal-close wiring used to live inside _libWire() (which only runs
+    // after the user opens the Library tab). The Plan-from-Calendar flow
+    // can pop _libOpenModal-based modals from the Scheduled tab without
+    // ever visiting Library, so wire the X / backdrop / Escape close
+    // handlers up-front and idempotently.
+    (function _wireModalCloseEarly(){
+      var modal = document.getElementById("modal");
+      if (!modal || modal._closeWired) return;
+      modal._closeWired = true;
+      modal.querySelectorAll("[data-modal-close]").forEach(el =>
+        el.addEventListener("click", _libCloseModal));
+      document.addEventListener("keydown", e => {
+        if (e.key === "Escape" && !modal.hidden) _libCloseModal();
+      });
+    })();
 
     async function _libLoadAll(){
       var kinds = ["hooks", "meats", "ctas"];
@@ -5471,7 +8147,75 @@
           _libRenderBatchPreview();
         });
       });
-      $("make-good").addEventListener("click", _libOpenScheduleWizard);
+      // When _igPlan is active, the schedule details (date(s), posts-per-day,
+      // window, active days) are already chosen in the plan modal — we
+      // should NOT re-ask for them. Surface a confirmation card instead so
+      // the user can review the plan settings, then go straight to commit.
+      $("make-good").addEventListener("click", () => {
+        if (_igPlan) _libOpenPlanConfirm();
+        else         _libOpenScheduleWizard();
+      });
+    }
+
+    function _libOpenPlanConfirm(){
+      var b = _libCurrentBatch; if (!b) return;
+      var p = _igPlan || {};
+      var win = p.window || { start_h: 8, end_h: 18 };
+      var winLabel = _planFmtHour(win.start_h) + " – " + _planFmtHour(win.end_h);
+      var DAY_FULL = { mon:"Mon", tue:"Tue", wed:"Wed", thu:"Thu",
+                       fri:"Fri", sat:"Sat", sun:"Sun" };
+      var rangeLine, ppdLine, daysLine;
+      if (p.scope === "single_day") {
+        rangeLine = '<strong>' + esc(_planFmtDate(p.date)) + '</strong>';
+        ppdLine   = (p.count || 0) + ' post' + (p.count === 1 ? '' : 's')
+          + ' on this day';
+        daysLine  = '';
+      } else {
+        rangeLine = '<strong>' + esc(p.start) + '</strong> → '
+          + '<strong>' + esc(p.end) + '</strong>';
+        ppdLine   = (p.posts_per_day || 0) + ' post'
+          + (p.posts_per_day === 1 ? '' : 's')
+          + ' per active day · ' + (p.count || b.post_count) + ' total';
+        var dayList = (p.active_days || [])
+          .map(k => DAY_FULL[k] || k).join(", ") || "—";
+        daysLine = '<div class="plan-confirm-row">'
+          + '<span class="plan-confirm-k">Active days</span>'
+          + '<span class="plan-confirm-v">' + esc(dayList) + '</span>'
+          + '</div>';
+      }
+      _libOpenModal(
+          '<h3 class="modal-h">Confirm your plan</h3>'
+        + '<p class="modal-sub">We\'ll schedule ' + b.post_count
+        +   ' post' + (b.post_count === 1 ? '' : 's') + ' using these settings:</p>'
+        + '<div class="plan-confirm-card">'
+        +   '<div class="plan-confirm-row">'
+        +     '<span class="plan-confirm-k">When</span>'
+        +     '<span class="plan-confirm-v">' + rangeLine + '</span>'
+        +   '</div>'
+        +   '<div class="plan-confirm-row">'
+        +     '<span class="plan-confirm-k">Cadence</span>'
+        +     '<span class="plan-confirm-v">' + esc(ppdLine) + '</span>'
+        +   '</div>'
+        +   daysLine
+        +   '<div class="plan-confirm-row">'
+        +     '<span class="plan-confirm-k">Posting window</span>'
+        +     '<span class="plan-confirm-v">' + esc(winLabel) + '</span>'
+        +   '</div>'
+        + '</div>'
+        + '<p class="sched-helper" style="margin-top:14px">'
+        +   'Times will be spread evenly inside your window with at least '
+        +   '30 min between posts.</p>'
+        + '<div class="modal-foot">'
+        +   '<button id="plan-confirm-edit" class="btn btn-ghost" type="button">Edit plan</button>'
+        +   '<button id="plan-confirm-go" class="btn btn-primary" type="button">Schedule ' + b.post_count + ' →</button>'
+        + '</div>'
+      );
+      $("plan-confirm-edit").onclick = () => {
+        _libCloseModal();
+        if (p.scope === "single_day") planOpenDayModal(p.date);
+        else                          planOpenMonthModal();
+      };
+      $("plan-confirm-go").onclick = () => _libCommitSchedule();
     }
 
     // ── Schedule wizard ────────────────────────────────────────────────
@@ -5663,6 +8407,61 @@
     async function _libCommitSchedule(){
       var s = _schSettings, b = _libCurrentBatch;
       $("modal-body").innerHTML = '<div class="loading"><span class="spinner"></span> Putting it on the calendar…</div>';
+      // Plan-from-the-Calendar path: when _igPlan is set we use the
+      // planner-distribution endpoint. The server now writes records
+      // asynchronously and returns a job_id immediately so the user
+      // doesn't sit in a blocking modal for 200+ writes.
+      if (_igPlan) {
+        try {
+          var planBody = Object.assign({}, _igPlan);
+          delete planBody.generation_method;
+          var rp = await fetch(
+            "/dashboard/instagram/api/batches/"+b.id+"/schedule-plan", {
+            method: "POST", credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(planBody),
+          });
+          var dp = await rp.json().catch(()=>({}));
+          if (!rp.ok) {
+            $("modal-body").innerHTML = '<div class="error-text">'
+              + esc(dp.error || ("HTTP " + rp.status)) + '</div>'
+              + '<div class="modal-foot"><button class="btn btn-primary" '
+              + 'onclick="_libCloseModal && _libCloseModal()">OK</button></div>';
+            return;
+          }
+          var total = dp.total || 0;
+          var leftover = dp.leftover_combos || 0;
+          if (total === 0) {
+            // The planner couldn't fit any posts (every day already at
+            // capacity for the chosen window). Tell the user honestly
+            // instead of celebrating.
+            _libOpenModal(
+                '<div class="plan-complete">'
+              + '<div class="plan-complete-h">No posts could be scheduled.</div>'
+              + '<p class="plan-complete-sub">Every day in your window is '
+              +   'already at capacity. Widen the posting window, lower '
+              +   'posts-per-day, or extend the date range.</p>'
+              + '<div class="publish-ok-actions">'
+              +   '<button class="btn btn-primary" type="button" '
+              +     'onclick="(function(){var m=document.getElementById(\'modal\');m&&(m.hidden=true)})()">OK</button>'
+              + '</div>'
+              + '</div>'
+            );
+            return;
+          }
+          // Async path: close the modal immediately and show a small
+          // progress strip while the server writes records in parallel.
+          _libCloseModal();
+          _libCurrentBatch = null;
+          var savedPlan = _igPlan;
+          _planClearContext();
+          _planShowProgressBar(dp.job_id, total, leftover);
+        } catch (e) {
+          $("modal-body").innerHTML = '<div class="error-text">Network error: '
+            + esc(e.message) + '</div>';
+        }
+        return;
+      }
       try {
         var r = await fetch("/dashboard/instagram/api/batches/"+b.id+"/schedule", {
           method:"POST", credentials:"same-origin",
@@ -5723,12 +8522,9 @@
       $("make-go").addEventListener("click", _libOpenMakeWizard);
       // Tab-level folder drop
       ["hooks","meats","ctas"].forEach(_libWireDropForPanel);
-      // Modal close (overlay click + ✕)
-      document.querySelectorAll("[data-modal-close]").forEach(el =>
-        el.addEventListener("click", _libCloseModal));
-      document.addEventListener("keydown", e => {
-        if (e.key === "Escape" && !$("modal").hidden) _libCloseModal();
-      });
+      // Modal close (overlay click + ✕) is now wired up-front in
+      // _wireModalCloseEarly so the Plan-from-Calendar flow works even
+      // when Library hasn't been opened yet.
       // Quick Sort entry-card wiring
       _qsWire();
     }
@@ -6173,5 +8969,6 @@
     };
   </script>
   <script src="/dashboard/static/ai-rewrite.js" async></script>
+  <script src="/dashboard/static/redistribute.js"></script>
 </body>
 </html>

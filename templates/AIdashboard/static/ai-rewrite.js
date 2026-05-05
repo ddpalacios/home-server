@@ -163,20 +163,96 @@
     return null;
   }
 
-  // Position the floating button above the selection.
+  // Position the floating button above the selection. The button uses
+  // `position: fixed`, so coordinates are viewport-relative — DON'T add
+  // window.scroll{X,Y} here or the button drifts down/right by the
+  // current scroll amount on every scrolled page (visible as "the
+  // button shows up at the far bottom").
   function positionButtonAbove(rect) {
-    var top  = window.scrollY + rect.top - 38;     // 38px above
-    var left = window.scrollX + rect.left + (rect.width / 2);
-    if (top < 8) top = window.scrollY + rect.bottom + 8;  // flip below if no room
+    var top  = rect.top - 38;                       // 38px above the selection
+    var left = rect.left + (rect.width / 2);
+    if (top < 8) top = rect.bottom + 8;             // flip below if no room above
+    if (top > window.innerHeight - 40) top = window.innerHeight - 40;
     btnEl.style.top  = Math.max(8, top) + "px";
     btnEl.style.left = left + "px";
     btnEl.style.transform = "translateX(-50%)";
   }
 
-  // For inputs/textareas we don't have an exact selection rect — use the
-  // bounding rect of the field and place the button above the field's
-  // right edge. Imprecise but always reachable.
+  // For inputs/textareas the browser doesn't expose the selection's
+  // pixel rect natively, so we render a hidden mirror element that
+  // copies the field's text-layout-affecting styles, set its content to
+  // the value up to selectionEnd, and read the marker span's bounding
+  // rect. That gives a real cursor position, so the floating button
+  // anchors next to the highlight instead of at the top of the field.
+  // Falls back to the field's top edge if the mirror approach fails.
+  var MIRROR_PROPS = [
+    "boxSizing", "width", "height",
+    "borderTopWidth", "borderRightWidth",
+    "borderBottomWidth", "borderLeftWidth",
+    "paddingTop", "paddingRight", "paddingBottom", "paddingLeft",
+    "fontStyle", "fontVariant", "fontWeight", "fontStretch", "fontSize",
+    "fontSizeAdjust", "lineHeight", "fontFamily",
+    "textAlign", "textTransform", "textIndent", "textDecoration",
+    "letterSpacing", "wordSpacing", "tabSize",
+    "whiteSpace", "wordWrap", "wordBreak", "overflowWrap",
+    "direction"
+  ];
+  function _mirrorSelectionRect(el, selPos) {
+    try {
+      var tag = (el.tagName || "").toLowerCase();
+      if (tag !== "textarea" && tag !== "input") return null;
+      var cs = window.getComputedStyle(el);
+      var mirror = document.createElement("div");
+      MIRROR_PROPS.forEach(function (p) { mirror.style[p] = cs[p]; });
+      mirror.style.position = "absolute";
+      mirror.style.visibility = "hidden";
+      mirror.style.top = "0";
+      mirror.style.left = "-9999px";
+      mirror.style.overflow = "hidden";
+      // Inputs render single-line; textareas wrap.
+      if (tag === "input") {
+        mirror.style.whiteSpace = "pre";
+      } else {
+        mirror.style.whiteSpace = "pre-wrap";
+        mirror.style.wordWrap = "break-word";
+      }
+      var value = (el.value != null ? String(el.value) : "");
+      var before = value.substring(0, selPos);
+      // Replace trailing newline so the marker doesn't collapse.
+      mirror.textContent = before.replace(/\n$/, "\n ");
+      var marker = document.createElement("span");
+      marker.textContent = "."; // any zero-width-ish glyph would also work
+      mirror.appendChild(marker);
+      mirror.appendChild(document.createTextNode(value.substring(selPos) || "."));
+      document.body.appendChild(mirror);
+      var mRect = marker.getBoundingClientRect();
+      var bRect = mirror.getBoundingClientRect();
+      var elRect = el.getBoundingClientRect();
+      // Marker's offset within the mirror, mapped back to the textarea's
+      // viewport position (minus the textarea's scroll).
+      var top  = elRect.top  + (mRect.top  - bRect.top)  - el.scrollTop;
+      var left = elRect.left + (mRect.left - bRect.left) - el.scrollLeft;
+      var height = mRect.height || parseFloat(cs.lineHeight) || 18;
+      document.body.removeChild(mirror);
+      // Clamp to field bounds so the button never floats outside.
+      if (top  < elRect.top)    top  = elRect.top;
+      if (top  > elRect.bottom) top  = elRect.bottom - height;
+      if (left < elRect.left)   left = elRect.left;
+      if (left > elRect.right)  left = elRect.right;
+      return { top: top, bottom: top + height, left: left, width: 0 };
+    } catch (_) {
+      return null;
+    }
+  }
+
   function rectForFieldSelection(el) {
+    // Prefer the END of the selection so the button sits where the
+    // user's cursor finished dragging — feels more natural than the start.
+    var selPos = (el.selectionEnd != null ? el.selectionEnd
+                 : (el.selectionStart != null ? el.selectionStart : 0));
+    var r = _mirrorSelectionRect(el, selPos);
+    if (r) return r;
+    // Fallback: place above the field's top-center.
     var br = el.getBoundingClientRect();
     return {
       top:    br.top,
@@ -187,8 +263,12 @@
   }
 
   function rectForCEditable(range) {
+    // For multi-line selections, anchor next to the end of the
+    // selection (where the cursor naturally sits after dragging) rather
+    // than the first line — feels more like the button is following
+    // the user's cursor.
     var rects = range.getClientRects();
-    if (rects && rects.length) return rects[0];
+    if (rects && rects.length) return rects[rects.length - 1];
     return range.getBoundingClientRect();
   }
 

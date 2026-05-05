@@ -1379,6 +1379,193 @@
       animation: sch-plan-fade 5s ease-out forwards;
     }
 
+    /* Non-blocking progress strip for async schedule-plan jobs. */
+    .plan-progress-strip {
+      position: fixed; bottom: 18px; left: 50%;
+      transform: translateX(-50%);
+      width: min(440px, calc(100vw - 32px));
+      background: #fff; border: 1px solid var(--border);
+      border-radius: 14px; padding: 12px 14px;
+      box-shadow: 0 12px 32px rgba(15,23,42,.18);
+      z-index: 95;
+      animation: planProgressIn .22s cubic-bezier(.2,.8,.2,1);
+    }
+    @keyframes planProgressIn {
+      from { opacity: 0; transform: translate(-50%, 12px); }
+      to   { opacity: 1; transform: translate(-50%, 0); }
+    }
+    .plan-progress-strip.is-done { border-color: #16a34a; }
+    .plan-progress-row {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .plan-progress-icon { font-size: 22px; line-height: 1; flex-shrink: 0; }
+    .plan-progress-text { flex: 1; min-width: 0; }
+    .plan-progress-label {
+      font-size: 13px; color: var(--text);
+      margin-bottom: 6px;
+    }
+    .plan-progress-label strong { font-weight: 700; }
+    .plan-progress-track {
+      height: 6px; background: var(--bg-alt);
+      border-radius: 4px; overflow: hidden;
+    }
+    .plan-progress-fill {
+      height: 100%; width: 0%;
+      background: var(--link);
+      transition: width .35s ease;
+    }
+    .plan-progress-strip.is-done .plan-progress-fill { background: #16a34a; }
+    .plan-progress-x {
+      background: none; border: 0; color: var(--text-sub);
+      font-size: 18px; line-height: 1; cursor: pointer;
+      padding: 4px 6px; flex-shrink: 0;
+    }
+    .plan-progress-x:hover { color: var(--text); }
+
+    /* ── Day-detail sidebar (Month view click → posts for that day) ─ */
+    .ds-bg {
+      position: fixed; inset: 0; background: rgba(15,23,42,.45);
+      z-index: 9100; display: flex; justify-content: flex-end;
+      animation: dsFade .15s ease-out;
+    }
+    @keyframes dsFade { from { opacity: 0; } to { opacity: 1; } }
+    .ds-panel {
+      width: min(440px, 100%); background: #fff;
+      display: flex; flex-direction: column;
+      box-shadow: -16px 0 40px rgba(15,23,42,.18);
+      animation: dsSlide .2s cubic-bezier(.2,.8,.2,1);
+    }
+    @keyframes dsSlide {
+      from { transform: translateX(100%); opacity: 0; }
+      to   { transform: translateX(0);     opacity: 1; }
+    }
+    .ds-h {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 12px; padding: 18px 22px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .ds-h-eyebrow {
+      font-size: 11px; font-weight: 700; color: var(--text-sub);
+      letter-spacing: .04em; margin-bottom: 4px;
+    }
+    .ds-h-title {
+      font-size: 18px; font-weight: 700; color: var(--text);
+      line-height: 1.3;
+    }
+    .ds-x {
+      background: none; border: 0; font-size: 24px;
+      color: var(--text-sub); cursor: pointer;
+      padding: 0 6px; line-height: 1;
+    }
+    .ds-x:hover { color: var(--text); }
+    .ds-add-row { padding: 12px 22px; border-bottom: 1px solid var(--border); }
+    .ds-add-btn {
+      width: 100%; padding: 10px 14px;
+      background: var(--link); color: #fff; border: 0;
+      border-radius: 999px;
+      font: 700 13px inherit; cursor: pointer;
+    }
+    .ds-add-btn:hover { filter: brightness(.92); }
+    .ds-list {
+      flex: 1; overflow-y: auto; padding: 8px 22px 22px;
+    }
+    .ds-list-h {
+      display: flex; justify-content: space-between;
+      font-size: 11px; font-weight: 700; color: var(--text-sub);
+      letter-spacing: .04em; text-transform: uppercase;
+      padding: 10px 0 8px;
+    }
+    .ds-row {
+      display: grid;
+      grid-template-columns: 64px 64px 1fr auto;
+      gap: 10px; align-items: center;
+      padding: 10px 0; border-top: 1px solid #f3f4f6;
+    }
+    .ds-row:first-of-type { border-top: 0; }
+    .ds-time { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; }
+    .ds-time-clock { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.2; }
+    .ds-time-status {
+      font-size: 10px; font-weight: 700; letter-spacing: .04em;
+      text-transform: uppercase; padding: 2px 6px; border-radius: 999px;
+      background: #f3f4f6; color: var(--text-sub);
+    }
+    .ds-time-status.is-publishing { background: #fef3c7; color: #92400e; }
+    .ds-time-status.is-failed,
+    .ds-time-status.is-errored    { background: #fee2e2; color: #991b1b; }
+    .ds-time-status.is-published  { background: #d1fae5; color: #065f46; }
+    .ds-thumb {
+      position: relative;
+      width: 64px; height: 64px; border-radius: 8px; overflow: hidden;
+      background: #f3f4f6; flex-shrink: 0;
+      border: 0; padding: 0;
+      transition: transform .12s, box-shadow .12s;
+    }
+    .ds-thumb.is-clickable { cursor: zoom-in; }
+    .ds-thumb.is-clickable:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(15,23,42,.18);
+    }
+    .ds-thumb img,
+    .ds-thumb video {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .ds-thumb-play {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      color: #fff; font-size: 16px;
+      background: rgba(0,0,0,.5); border-radius: 50%;
+      width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+    .ds-thumb-fb {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; color: var(--text-sub);
+    }
+    .ds-body { min-width: 0; }
+    .ds-cap { font-size: 12.5px; line-height: 1.4; color: var(--text); }
+    .ds-cap-empty { color: var(--text-sub); font-style: italic; }
+    .ds-actions { flex-shrink: 0; }
+    .ds-btn {
+      background: none; border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 12px; border-radius: 999px;
+      font: 600 12.5px inherit; cursor: pointer;
+    }
+    .ds-btn:hover { background: var(--bg-alt); }
+    .ds-empty {
+      text-align: center; padding: 50px 20px; color: var(--text-sub);
+    }
+    .ds-empty-ico { font-size: 36px; margin-bottom: 8px; }
+    .ds-empty-h {
+      font-size: 14px; font-weight: 700; color: var(--text);
+      margin-bottom: 4px;
+    }
+    .ds-empty-p { font-size: 13px; }
+
+    /* Media lightbox — full-size preview when a thumb is clicked. */
+    .ds-lb-bg {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.85);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9300; padding: 20px;
+      animation: dsFade .15s ease-out;
+    }
+    .ds-lb-media {
+      max-width: 92vw; max-height: 92vh;
+      object-fit: contain; border-radius: 8px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    }
+    .ds-lb-x {
+      position: absolute; top: 18px; right: 22px;
+      background: rgba(255,255,255,.18); color: #fff;
+      border: 0; border-radius: 50%;
+      width: 38px; height: 38px;
+      font-size: 24px; cursor: pointer; line-height: 1;
+    }
+    .ds-lb-x:hover { background: rgba(255,255,255,.32); }
+
     /* Plan modals (click-a-day + plan-the-month). */
     .plan-modal-bg {
       position: fixed; inset: 0; background: rgba(15,23,42,.55);
@@ -4846,6 +5033,9 @@
       stopNextUpPoll();
       pollNextUp();
       _nxtTimer = setInterval(pollNextUp, NXT_POLL_MS);
+      // Reattach the progress strip if a schedule-plan job is still
+      // running on the server. Survives page refreshes.
+      _planResumeActiveJobs();
     }
     function stopNextUpPoll(){
       if (_nxtTimer) { clearInterval(_nxtTimer); _nxtTimer = null; }
@@ -4882,10 +5072,22 @@
           { credentials:"same-origin" });
         if (!r.ok) return;
         var d = await r.json().catch(()=>({}));
-        var all = (d.scheduled || []).filter(rec =>
-          (rec.platform || "").startsWith("linkedin_")
-          && rec.account_id === STATE.active.account_id
-          && rec.platform   === STATE.active.platform);
+        // Filter by KIND, not just platform. The platform field is set
+        // from the active session at schedule time, and IG batches that
+        // were scheduled while a LinkedIn account was active got tagged
+        // platform=linkedin_* even though their `kind` is single /
+        // carousel / reel / library_combo. Kind is the source-of-truth
+        // (set at record creation by the LinkedIn-specific endpoints to
+        // linkedin_text / linkedin_image / linkedin_combo / etc.) so
+        // anything without a linkedin_ kind doesn't belong on this
+        // calendar.
+        var all = (d.scheduled || []).filter(rec => {
+          var kind = (rec.kind || "").toLowerCase();
+          if (!kind.startsWith("linkedin_")) return false;
+          if (!(rec.platform || "").startsWith("linkedin_")) return false;
+          return rec.account_id === STATE.active.account_id
+              && rec.platform   === STATE.active.platform;
+        });
         // Drop expired in-flight entries first.
         _schPruneInflight();
         // Reconcile poll vs in-flight: for any qid we've optimistically
@@ -6220,6 +6422,30 @@
       if (y > bottomMargin) ctx.listEl.scrollTop += 12;
     }
 
+    /* Minimum-30-min spacing enforcement for drag-and-drop reschedules.
+       Pushes the drop forward in 15-min increments until it doesn't
+       conflict with any pending post on the same day. */
+    var SCH_MIN_GAP_MIN = 30;
+    function _schSnapAwayFromConflicts(targetEpoch, qidSelf){
+      var minSec = SCH_MIN_GAP_MIN * 60;
+      var cache = STATE.scheduled_cache || [];
+      var t = new Date(targetEpoch * 1000);
+      var sameDay = cache.filter(p => {
+        if (!p || p.queue_id === qidSelf) return false;
+        if (!p.scheduled_at) return false;
+        var d = new Date(p.scheduled_at * 1000);
+        return d.toDateString() === t.toDateString();
+      });
+      var cur = targetEpoch;
+      for (var i = 0; i < 32; i++) {
+        var conflict = sameDay.some(p =>
+          Math.abs((p.scheduled_at || 0) - cur) < minSec);
+        if (!conflict) return cur;
+        cur += 15 * 60;
+      }
+      return targetEpoch;
+    }
+
     function schWeekFinishDrag(ctx, ev, qid, cancelled){
       // Tear-down helper — used by all exit paths.
       function teardown(){
@@ -6237,6 +6463,13 @@
       var rec = (STATE.scheduled_cache || []).find(r => r.queue_id === qid);
       if (!rec) { teardown(); toast("Couldn't find that post."); return; }
       var oldEpoch = rec.scheduled_at;
+      // Snap forward if within 30 min of another post on the same day.
+      var snappedEpoch = _schSnapAwayFromConflicts(snap.epoch, qid);
+      if (snappedEpoch !== snap.epoch) {
+        snap.epoch = snappedEpoch;
+        snap.when  = new Date(snappedEpoch * 1000);
+        toast("Posts have to be 30 min apart — moved this one forward to fit.");
+      }
       // Phase-2 polish: animate the clone to the snapped slot's top-left
       // before tearing it down + re-rendering. Looks like the pill is
       // settling into place rather than disappearing/reappearing.
@@ -6430,6 +6663,183 @@
         d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0).toISOString();
     }
 
+    /* Day-detail sidebar — shows every scheduled LinkedIn post on the
+       clicked day in chronological order with thumb + caption + edit
+       action. "+ Add posts" routes back to planOpenDayModal for
+       plannable (today/future) days. */
+    function _liOpenDaySidebar(dayKey){
+      var old = document.getElementById("daySidebarBg");
+      if (old) old.remove();
+
+      var dayPosts = ((STATE.scheduled_cache) || []).filter(p => {
+        if (!p.scheduled_at) return false;
+        var d = new Date(p.scheduled_at * 1000);
+        var k = d.getFullYear() + "-"
+          + String(d.getMonth() + 1).padStart(2, "0") + "-"
+          + String(d.getDate()).padStart(2, "0");
+        return k === dayKey;
+      }).sort((a, b) => (a.scheduled_at || 0) - (b.scheduled_at || 0));
+
+      var dateLabel = (function(){
+        try {
+          var d = new Date(dayKey + "T12:00:00");
+          return d.toLocaleDateString(undefined,
+            { weekday: "long", month: "long", day: "numeric" });
+        } catch(_) { return dayKey; }
+      })();
+
+      var now = new Date();
+      var todayKey = now.getFullYear() + "-"
+        + String(now.getMonth() + 1).padStart(2, "0") + "-"
+        + String(now.getDate()).padStart(2, "0");
+      var isPlannable = dayKey >= todayKey;
+
+      function pickThumb(p){
+        // LinkedIn records carry article/document/media URLs in different
+        // fields based on type. Use the first available.
+        return p.media_url
+            || p.document_url
+            || p.article_thumbnail_url
+            || p.thumb_url
+            || "";
+      }
+      function rowHtml(p){
+        var t = new Date((p.scheduled_at || 0) * 1000);
+        var clock = t.toLocaleTimeString(undefined,
+          { hour: "numeric", minute: "2-digit" });
+        var thumb = pickThumb(p);
+        var isVideo = (p.kind === "linkedin_video"
+                       || (p.media_type || "").toLowerCase() === "video"
+                       || /\.mp4($|\?)/i.test(thumb || ""));
+        var caption = (p.caption || "").trim();
+        var snippet = caption.length > 120
+          ? caption.slice(0, 120) + "…" : caption;
+        var statusCls = (p.status || "pending").toLowerCase();
+        var mediaInner = thumb
+          ? (isVideo
+              ? '<video src="' + esc(thumb) + '" muted preload="metadata" '
+                + 'onerror="this.outerHTML=\'<div class=&quot;ds-thumb-fb&quot;>🎬</div>\'"></video>'
+                + '<span class="ds-thumb-play" aria-hidden="true">▶</span>'
+              : '<img src="' + esc(thumb) + '" alt="" loading="lazy" '
+                + 'onerror="this.outerHTML=\'<div class=&quot;ds-thumb-fb&quot;>📄</div>\'">')
+          : '<div class="ds-thumb-fb">📄</div>';
+        var thumbHtml = '<button type="button" class="ds-thumb '
+          + (thumb ? "is-clickable" : "") + '" '
+          + 'data-act="preview" '
+          + 'data-thumb="' + esc(thumb || "") + '" '
+          + 'data-video="' + (isVideo ? "1" : "0") + '">'
+          + mediaInner + '</button>';
+        return '<div class="ds-row" data-q="' + esc(p.queue_id || "") + '">'
+          + '<div class="ds-time">'
+          +   '<div class="ds-time-clock">' + esc(clock) + '</div>'
+          +   '<div class="ds-time-status is-' + esc(statusCls) + '">'
+          +     esc(p.status || "pending") + '</div>'
+          + '</div>'
+          + thumbHtml
+          + '<div class="ds-body">'
+          +   '<div class="ds-cap">'
+          +     (snippet ? esc(snippet)
+                          : '<span class="ds-cap-empty">No caption</span>')
+          +   '</div>'
+          + '</div>'
+          + '<div class="ds-actions">'
+          +   '<button type="button" class="ds-btn" data-act="edit">Edit</button>'
+          + '</div>'
+          + '</div>';
+      }
+      var orderHtml = dayPosts.length
+        ? dayPosts.map(rowHtml).join("")
+        : '<div class="ds-empty">'
+          + '<div class="ds-empty-ico">📅</div>'
+          + '<div class="ds-empty-h">Nothing scheduled here yet.</div>'
+          + '<div class="ds-empty-p">'
+          +   (isPlannable
+                ? "Tap '+ Add posts' to fill this day."
+                : "This day is in the past.")
+          + '</div></div>';
+
+      var bg = document.createElement("div");
+      bg.id = "daySidebarBg";
+      bg.className = "ds-bg";
+      bg.innerHTML =
+          '<aside class="ds-panel" role="dialog" aria-modal="true">'
+        +   '<header class="ds-h">'
+        +     '<div>'
+        +       '<div class="ds-h-eyebrow">SCHEDULED FOR</div>'
+        +       '<div class="ds-h-title">' + esc(dateLabel) + '</div>'
+        +     '</div>'
+        +     '<button type="button" class="ds-x" aria-label="Close">×</button>'
+        +   '</header>'
+        +   (isPlannable
+              ? '<div class="ds-add-row">'
+                + '<button type="button" class="ds-add-btn">+ Add posts to this day</button>'
+                + '</div>'
+              : '')
+        +   '<div class="ds-list">'
+        +     '<div class="ds-list-h">'
+        +       '<span>Order</span>'
+        +       '<span>' + dayPosts.length + ' post'
+        +         + (dayPosts.length === 1 ? "" : "s") + '</span>'
+        +     '</div>'
+        +     orderHtml
+        +   '</div>'
+        + '</aside>';
+      document.body.appendChild(bg);
+
+      function close(){
+        if (bg.parentNode) bg.parentNode.removeChild(bg);
+        document.removeEventListener("keydown", onKey);
+      }
+      function onKey(e){ if (e.key === "Escape") close(); }
+      document.addEventListener("keydown", onKey);
+      bg.addEventListener("click", e => { if (e.target === bg) close(); });
+      bg.querySelector(".ds-x").addEventListener("click", close);
+      var addBtn = bg.querySelector(".ds-add-btn");
+      if (addBtn) addBtn.addEventListener("click", () => {
+        close();
+        if (typeof planOpenDayModal === "function") planOpenDayModal(dayKey);
+      });
+      bg.querySelectorAll('[data-act="edit"]').forEach(b => {
+        b.addEventListener("click", () => {
+          var row = b.closest(".ds-row");
+          var qid = row && row.dataset.q;
+          if (!qid) return;
+          close();
+          if (typeof schEdit === "function") schEdit(qid);
+        });
+      });
+      bg.querySelectorAll('[data-act="preview"]').forEach(b => {
+        b.addEventListener("click", () => {
+          var url = b.dataset.thumb;
+          if (!url) return;
+          _liOpenMediaLightbox(url, b.dataset.video === "1");
+        });
+      });
+    }
+
+    function _liOpenMediaLightbox(url, isVideo){
+      var old = document.getElementById("dsLightboxBg");
+      if (old) old.remove();
+      var bg = document.createElement("div");
+      bg.id = "dsLightboxBg";
+      bg.className = "ds-lb-bg";
+      bg.innerHTML = isVideo
+        ? '<video src="' + esc(url) + '" controls autoplay muted '
+          + 'class="ds-lb-media"></video>'
+          + '<button type="button" class="ds-lb-x" aria-label="Close">×</button>'
+        : '<img src="' + esc(url) + '" alt="" class="ds-lb-media" />'
+          + '<button type="button" class="ds-lb-x" aria-label="Close">×</button>';
+      document.body.appendChild(bg);
+      function close(){
+        if (bg.parentNode) bg.parentNode.removeChild(bg);
+        document.removeEventListener("keydown", onKey);
+      }
+      function onKey(e){ if (e.key === "Escape") close(); }
+      document.addEventListener("keydown", onKey);
+      bg.addEventListener("click", e => { if (e.target === bg) close(); });
+      bg.querySelector(".ds-lb-x").addEventListener("click", close);
+    }
+
     function renderScheduledMonth(rows){
       var listEl = $("sch-list");
       if (!listEl) return;
@@ -6534,6 +6944,8 @@
           '<div class="sch-month-bar">'
         +   '<div class="sch-month-bar-h">' + esc(monthName) + '</div>'
         +   '<div class="sch-month-bar-spacer"></div>'
+        +   '<button class="btn" type="button" id="sch-month-redist" '
+        +     'title="Spread posts evenly across the month">Redistribute</button>'
         +   '<button class="btn" type="button" id="sch-month-plan" '
         +     'title="Plan the whole month at once">Plan the month</button>'
         +   '<button class="sch-icon-btn" type="button" id="sch-month-prev" '
@@ -6562,6 +6974,39 @@
       };
       var planBtn = $("sch-month-plan");
       if (planBtn) planBtn.onclick = () => planOpenMonthModal();
+      var redistBtn = $("sch-month-redist");
+      if (redistBtn) redistBtn.onclick = () => {
+        if (!window.fbRedistribute) {
+          toast("Redistribute tool isn't loaded yet — try again in a sec.");
+          return;
+        }
+        var anchor = _schMonthAnchor();
+        window.fbRedistribute.openModal({
+          platform: "linkedin",
+          monthAnchor: anchor,
+          posts: ((STATE.scheduled_cache) || []).map(s => ({
+            id:           s.queue_id,
+            scheduled_at: s.scheduled_at,
+            status:       s.status,
+            locked:       !!s.locked,
+          })),
+          onApply: (result) => {
+            // Optimistic local update so the calendar reflects the
+            // new times immediately; the next pollNextUp reconciles.
+            (result.moves || []).forEach(mv => {
+              var rec = (STATE.scheduled_cache || [])
+                .find(r => r.queue_id === mv.id);
+              if (rec) rec.scheduled_at = mv.newAt;
+            });
+            if (typeof renderScheduledList === "function") renderScheduledList();
+            toast("Moved " + result.moves.length + " post"
+              + (result.moves.length === 1 ? "" : "s") + ".");
+            setTimeout(() => {
+              if (typeof pollNextUp === "function") pollNextUp();
+            }, 400);
+          },
+        });
+      };
       listEl.querySelectorAll("[data-month-edit]").forEach(b =>
         b.addEventListener("click", (e) => {
           e.stopPropagation();
@@ -6578,14 +7023,16 @@
             x.classList.toggle("is-active", x.dataset.schView === "week"));
           renderScheduledList();
         }));
-      // Click on the cell itself (not a pill or +N-more) opens the
-      // click-a-day modal for plannable (today/future) cells.
-      listEl.querySelectorAll(".sch-month-cell.is-plannable").forEach(c =>
+      // Click on ANY day cell opens the day-detail sidebar showing
+      // every post on that day in chronological order. Sidebar has a
+      // "+ Add posts" button that routes back to planOpenDayModal for
+      // plannable days.
+      listEl.querySelectorAll(".sch-month-cell").forEach(c =>
         c.addEventListener("click", (e) => {
           if (e.target.closest("[data-month-edit]")) return;
           if (e.target.closest("[data-month-jump]")) return;
           var key = c.dataset.monthKey;
-          if (key) planOpenDayModal(key);
+          if (key) _liOpenDaySidebar(key);
         }));
       // Drag-to-reschedule on the Month view. Each pill becomes a
       // drag handle; dropping it onto another day cell moves the post
@@ -6734,6 +7181,12 @@
         toast("Can't schedule into the past.");
         return;
       }
+      // Same min-30-min spacing rule as Week-view drag.
+      var snappedEpoch = _schSnapAwayFromConflicts(newEpoch, qid);
+      if (snappedEpoch !== newEpoch) {
+        newEpoch = snappedEpoch;
+        toast("Posts have to be 30 min apart — moved this one forward to fit.");
+      }
       if (newEpoch === oldEpoch) {
         teardown();
         return;
@@ -6803,6 +7256,89 @@
 
     function _planClearContext(){ STATE.plan = null; }
 
+    /* Non-blocking progress strip for async schedule-plan jobs. Mirror
+       of the IG implementation. Fixed-bottom; idempotent on jobId so a
+       boot-time resume after refresh doesn't stack a second strip. */
+    function _planShowProgressBar(jobId, total, leftover){
+      var old = document.getElementById("plan-progress");
+      if (old) {
+        if (old.dataset.jobId === jobId) return;
+        old.remove();
+      }
+      var bar = document.createElement("div");
+      bar.id = "plan-progress";
+      bar.className = "plan-progress-strip";
+      bar.dataset.jobId = jobId;
+      bar.innerHTML =
+          '<div class="plan-progress-row">'
+        +   '<div class="plan-progress-icon" aria-hidden="true">📅</div>'
+        +   '<div class="plan-progress-text">'
+        +     '<div class="plan-progress-label" id="plan-progress-label">'
+        +       'Putting posts on your calendar… '
+        +       '<strong id="plan-progress-n">0</strong> of '
+        +       '<strong>' + total + '</strong>'
+        +     '</div>'
+        +     '<div class="plan-progress-track">'
+        +       '<div class="plan-progress-fill" id="plan-progress-fill" style="width:0%"></div>'
+        +     '</div>'
+        +   '</div>'
+        +   '<button type="button" class="plan-progress-x" id="plan-progress-x" aria-label="Hide">×</button>'
+        + '</div>';
+      document.body.appendChild(bar);
+      $("plan-progress-x").addEventListener("click", () => bar.remove());
+
+      var pollMs = 700;
+      var poll = setInterval(async () => {
+        if (!document.body.contains(bar)) { clearInterval(poll); return; }
+        try {
+          var r = await fetch(
+            "/dashboard/linkedin/api/jobs/" + encodeURIComponent(jobId),
+            { credentials: "same-origin" });
+          if (!r.ok) return;
+          var d = await r.json().catch(()=>({}));
+          var n = d.scheduled || 0;
+          var t = d.total || total || 1;
+          var pct = Math.min(100, Math.round(n / t * 100));
+          var nEl = document.getElementById("plan-progress-n");
+          var fEl = document.getElementById("plan-progress-fill");
+          if (nEl) nEl.textContent = n;
+          if (fEl) fEl.style.width = pct + "%";
+          if (d.done) {
+            clearInterval(poll);
+            if (fEl) fEl.style.width = "100%";
+            bar.classList.add("is-done");
+            var lbl = document.getElementById("plan-progress-label");
+            if (lbl) {
+              var msg = "✓ Scheduled " + n + " post" + (n === 1 ? "" : "s") + ".";
+              if (leftover) msg += " (" + leftover + " left over.)";
+              lbl.textContent = msg;
+            }
+            // Refresh the LinkedIn scheduled feed so the new posts show up.
+            if (typeof pollNextUp === "function") pollNextUp();
+            setTimeout(() => {
+              if (document.body.contains(bar)) bar.remove();
+            }, 4000);
+          }
+        } catch (_) {}
+      }, pollMs);
+    }
+
+    /* Boot-time resume — re-attach the progress strip if a
+       schedule-plan job is still running (or just finished within
+       the 60s grace window) on the server. Survives page refreshes. */
+    async function _planResumeActiveJobs(){
+      try {
+        var r = await fetch("/dashboard/linkedin/api/jobs/active",
+          { credentials: "same-origin" });
+        if (!r.ok) return;
+        var d = await r.json().catch(()=>({}));
+        var jobs = d.jobs || [];
+        var current = jobs[0];
+        if (!current) return;
+        _planShowProgressBar(current.job_id, current.total || 0, 0);
+      } catch (_) {}
+    }
+
     function _planFmtDate(key){
       // "2026-05-12" → "Tuesday, May 12"
       var d = new Date(key + "T12:00:00");
@@ -6819,6 +7355,8 @@
         { hour: "numeric", minute: "2-digit" });
     }
     function _planFmtHour(h){
+      if (h >= 24 || h === 0) return "midnight";
+      if (h === 12) return "noon";
       var h12 = h % 12 || 12;
       return h12 + " " + (h < 12 ? "AM" : "PM");
     }
@@ -6902,6 +7440,10 @@
       var hintEl     = document.getElementById("plan-day-cap-hint");
       var goLib      = document.getElementById("plan-day-go-lib");
       var goAi       = document.getElementById("plan-day-go-ai");
+      // The modal may have been closed (Escape, click-outside, or the
+      // user opened a different modal) while we awaited the fetch.
+      // Bail out cleanly instead of throwing on null DOM nodes.
+      if (!existingEl) return;
       if (!info) {
         existingEl.textContent = "Couldn't load this day's schedule. Try again.";
         return;
@@ -7331,9 +7873,19 @@
           };
           return;
         }
-        // Success — render the summary. STATE.plan has the scope; the
-        // server returns times_by_day so we can list real fire times.
-        _planRenderSuccess(batch, d, plan);
+        // Server now writes records asynchronously and returns a
+        // job_id immediately. Render the time-by-day summary right
+        // away (since we know the slots already), then attach a small
+        // progress strip that polls /api/jobs/<id> for write progress.
+        // Treat `total` (sync) as the scheduled_count for the summary.
+        var summary = Object.assign({}, d, {
+          scheduled_count: d.total || d.scheduled_count || 0,
+        });
+        _planRenderSuccess(batch, summary, plan);
+        if (d.job_id && summary.scheduled_count > 0) {
+          _planShowProgressBar(d.job_id, summary.scheduled_count,
+                                d.leftover_combos || 0);
+        }
       } catch (e) {
         el.innerHTML =
             '<div class="plan-complete">'
@@ -8510,6 +9062,7 @@
       var safeText = esc(originalText).replace(/"/g, "&quot;");
       textEl.outerHTML =
           '<textarea class="mine-edit-area" data-mine-edit-area '
+        +   'data-ai-editable="true" data-ai-field-type="library_text" '
         +   'maxlength="' + soft + '">' + esc(originalText) + '</textarea>'
         + '<div class="mine-edit-counter" data-mine-edit-counter>'
         +   originalText.length + ' / ' + soft + ' characters</div>';
@@ -14187,5 +14740,6 @@
     boot();
   </script>
   <script src="/dashboard/static/ai-rewrite.js" async></script>
+  <script src="/dashboard/static/redistribute.js"></script>
 </body>
 </html>

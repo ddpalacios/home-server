@@ -33,7 +33,9 @@
 #define WORKER_COUNT 16
 #define QUEUE_CAPACITY 1024
 #define MAX_WEBSOCKET_PAYLOAD (64 * 1024 * 1024)
-#define MAX_BODY_SIZE (10 * 1024 * 1024)
+/* 250 MB. Enough headroom for the 200 MB video cap and 100 MB
+ * document/PDF uploads enforced at the Flask layer. */
+#define MAX_BODY_SIZE (250L * 1024L * 1024L)
 #define MAX_HEADER_SIZE (65536)
 #define VOICE_BRIDGE_HOST "127.0.0.1"
 #define VOICE_BRIDGE_PORT "7001"
