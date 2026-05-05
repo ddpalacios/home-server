@@ -2552,6 +2552,47 @@ const STYLES = `
     50%      { opacity: 1;  transform: scale(1.05); }
   }
 
+  /* ✕ button at the midpoint of every edge. Hidden by default;
+     fades in when the user hovers the 32×32 wrap area sitting on
+     top of the edge midpoint. Click → the edge is removed and the
+     autosave fires. */
+  .fb-edge-x-wrap {
+    display: flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px;
+  }
+  .fb-edge-x {
+    width: 22px; height: 22px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #fff;
+    color: #b91c1c;
+    border: 1.5px solid #ef4444;
+    border-radius: 50%;
+    font-size: 14px; font-weight: 700; line-height: 1;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(15,23,42,.12);
+    opacity: 0;
+    transform: scale(.7);
+    transition: opacity .12s ease, transform .12s ease, background .12s, color .12s;
+    padding: 0;
+  }
+  .fb-edge-x-wrap.is-hovered .fb-edge-x {
+    opacity: 1;
+    transform: scale(1);
+  }
+  /* Selected edges (clicked once) thicken so keyboard-only users see
+     which edge will be removed when they press Delete/Backspace. The
+     ✕ also stays visible on selected edges. */
+  .react-flow__edge.selected .react-flow__edge-path {
+    stroke-width: 3;
+  }
+  .fb-edge-x:hover {
+    background: #ef4444;
+    color: #fff;
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(239,68,68,.30);
+  }
+
   /* "That would create a loop." toast — slides up from the bottom
      when the user drops a connection that would cycle back to its
      own source. Subtle, not alarming. */
@@ -4399,8 +4440,14 @@ export default function FlowBuilder() {
   const openChooser = React.useCallback((info) => setChooser(info), []);
   const closeChooser = React.useCallback(() => setChooser(null), []);
 
+  // Used by the custom DeletableEdge (✕ button at midpoint).
+  const deleteEdge = React.useCallback((edgeId) => {
+    setEdges(es => es.filter(e => e.id !== edgeId));
+  }, []);
+
   const flowContextValue = React.useMemo(
-    () => ({ openChooser }), [openChooser]);
+    () => ({ openChooser, deleteEdge }),
+    [openChooser, deleteEdge]);
 
   const applyTemplate = React.useCallback((tpl) => {
     const { nodes: tNodes, edges: tEdges } = buildFromTemplate(tpl);
@@ -4788,6 +4835,8 @@ export default function FlowBuilder() {
           onConnect={onConnect}
           onConnectEnd={onConnectEnd}
           isValidConnection={isValidConnection}
+          edgeTypes={EDGE_TYPES}
+          deleteKeyCode={["Delete", "Backspace"]}
           onNodeClick={onNodeClick}
           onInit={setRfInstance}
           fitView
