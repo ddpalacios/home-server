@@ -604,58 +604,55 @@ function ReplyPhonePreview({
   firstReminderMinutes, secondReminderMinutes, takeoverMinutes,
   customBody, globalAiMode,
 }) {
-  const cadenceLabel = useGlobalCadence
-    ? "Using your global cadence"
-    : "Custom cadence";
   const finalLabel = fallback === "ai"
-    ? (globalAiMode === "i_respond"
-        ? "AI is OFF — flow stops here"
-        : "AI replies to the customer")
-    : "Your custom message goes out";
+    ? (globalAiMode === "i_respond" ? "AI off — stops" : "AI replies")
+    : "My message sends";
   const renderedBody = applyMergeTags(customBody || "");
+  const r1 = useGlobalCadence ? "global" : _fmtMinutes(firstReminderMinutes);
+  const r2 = useGlobalCadence ? "global" : _fmtMinutes(secondReminderMinutes);
+  const rT = useGlobalCadence ? "global" : _fmtMinutes(takeoverMinutes);
   return (
     <div className="fb-rwprev">
-      <div className="fb-rwprev-h">{cadenceLabel}</div>
+      <div className="fb-rwprev-h">How this plays out</div>
       <ol className="fb-rwprev-timeline">
         <li>
           <span className="fb-rwprev-dot is-cust" />
           <div>
-            <strong>Customer replies</strong>
-            <span>Step starts here</span>
+            <strong>They write back</strong>
           </div>
         </li>
         <li>
           <span className="fb-rwprev-dot" />
           <div>
-            <strong>Reminder 1</strong>
-            <span>{useGlobalCadence ? "After your global first reminder" : "After " + _fmtMinutes(firstReminderMinutes)}</span>
+            <strong>Nudge 1</strong>
+            <span>{r1}</span>
           </div>
         </li>
         <li>
           <span className="fb-rwprev-dot" />
           <div>
-            <strong>Reminder 2</strong>
-            <span>{useGlobalCadence ? "Per your global second reminder" : "After " + _fmtMinutes(secondReminderMinutes)}</span>
+            <strong>Nudge 2</strong>
+            <span>{r2}</span>
           </div>
         </li>
         <li>
           <span className={`fb-rwprev-dot ${fallback === "ai" ? "is-ai" : "is-custom"}`} />
           <div>
             <strong>{finalLabel}</strong>
-            <span>{useGlobalCadence ? "At your global takeover time" : "After " + _fmtMinutes(takeoverMinutes)}</span>
+            <span>{rT}</span>
           </div>
         </li>
       </ol>
       {fallback === "custom" && (
         <div className="fb-rwprev-custom">
-          <div className="fb-rwprev-custom-h">Custom message preview</div>
+          <div className="fb-rwprev-custom-h">Preview</div>
           <div className="fb-rwprev-custom-body">
-            {renderedBody || <span className="fb-phone-empty">(type your message)</span>}
+            {renderedBody || <span className="fb-phone-empty">(write your message)</span>}
           </div>
         </div>
       )}
       <p className="fb-helper" style={{ textAlign: "center", marginTop: 12 }}>
-        If you reply yourself before takeover, reminders cancel automatically.
+        Reply yourself anytime → nudges stop.
       </p>
     </div>
   );
@@ -1052,17 +1049,15 @@ function ReplyWidgetEditor({
 }) {
   const aiOff = globalAiMode === "i_respond";
 
+  function insertChip(token) {
+    onActiveField && onActiveField();
+    insertTokenAtCursor(taRef, body, setBody, token);
+  }
+
   return (
     <div>
       <div className="fb-replywidget-section">
-        <label className="fb-drawer-l">When the customer replies</label>
-        <p className="fb-helper" style={{ marginTop: 4 }}>
-          This step waits for the customer's response, then sends you reminders so you can reply yourself. If you don't, it falls back to the choice below.
-        </p>
-      </div>
-
-      <div className="fb-replywidget-section">
-        <label className="fb-drawer-l">Reminder schedule</label>
+        <label className="fb-drawer-l">Remind me</label>
         <div className="fb-replywidget-cadence-toggle">
           <label className="fb-replywidget-radio">
             <input
@@ -1071,7 +1066,7 @@ function ReplyWidgetEditor({
               checked={useGlobalCadence}
               onChange={() => setUseGlobalCadence(true)}
             />
-            <span>Use my global setting</span>
+            <span>My usual times</span>
           </label>
           <label className="fb-replywidget-radio">
             <input
@@ -1080,17 +1075,13 @@ function ReplyWidgetEditor({
               checked={!useGlobalCadence}
               onChange={() => setUseGlobalCadence(false)}
             />
-            <span>Override for this step</span>
+            <span>Set for this step</span>
           </label>
         </div>
-        {useGlobalCadence ? (
-          <p className="fb-helper">
-            Uses the cadence from the top-right "AI replies" control. Change it once, applies everywhere.
-          </p>
-        ) : (
+        {!useGlobalCadence && (
           <div className="fb-replywidget-cadence-grid">
             <label>
-              <span>First reminder after</span>
+              <span>First nudge</span>
               <select className="fb-input"
                 value={firstReminderMinutes}
                 onChange={(e) => setFirstReminderMinutes(parseInt(e.target.value, 10))}>
@@ -1098,7 +1089,7 @@ function ReplyWidgetEditor({
               </select>
             </label>
             <label>
-              <span>Then again after</span>
+              <span>Again</span>
               <select className="fb-input"
                 value={secondReminderMinutes}
                 onChange={(e) => setSecondReminderMinutes(parseInt(e.target.value, 10))}>
@@ -1106,7 +1097,7 @@ function ReplyWidgetEditor({
               </select>
             </label>
             <label>
-              <span>Then take over after</span>
+              <span>Take over</span>
               <select className="fb-input"
                 value={takeoverMinutes}
                 onChange={(e) => setTakeoverMinutes(parseInt(e.target.value, 10))}>
@@ -1118,7 +1109,7 @@ function ReplyWidgetEditor({
       </div>
 
       <div className="fb-replywidget-section">
-        <label className="fb-drawer-l">If you don't reply, then…</label>
+        <label className="fb-drawer-l">If I don't reply</label>
         <div className="fb-replywidget-fallback">
           <label className={`fb-replywidget-fbcard ${fallback === "ai" ? "is-active" : ""}`}>
             <input
@@ -1128,12 +1119,9 @@ function ReplyWidgetEditor({
               onChange={() => setFallback("ai")}
             />
             <div>
-              <div className="fb-replywidget-fbtitle">🤖 Let AI reply</div>
+              <div className="fb-replywidget-fbtitle">🤖 AI replies</div>
               <div className="fb-replywidget-fbsub">
-                Uses the global setting <strong>AI replies: {GLOBAL_MODE_LABEL[globalAiMode] || "loading…"}</strong>.
-                {aiOff
-                  ? " Right now it's off — turn it on in the top-right to use this option."
-                  : " Reads your Knowledge Base, tone, and rules from AI Settings."}
+                {aiOff ? "AI is off — turn on in top-right" : "Uses my Knowledge Base"}
               </div>
             </div>
           </label>
@@ -1145,10 +1133,8 @@ function ReplyWidgetEditor({
               onChange={() => setFallback("custom")}
             />
             <div>
-              <div className="fb-replywidget-fbtitle">✏️ Send my custom message</div>
-              <div className="fb-replywidget-fbsub">
-                Sends the exact text below. Same channel the customer used (text or email).
-              </div>
+              <div className="fb-replywidget-fbtitle">✏️ Send this</div>
+              <div className="fb-replywidget-fbsub">My own words</div>
             </div>
           </label>
         </div>
@@ -1156,7 +1142,6 @@ function ReplyWidgetEditor({
 
       {fallback === "custom" && (
         <div className="fb-replywidget-section">
-          <label className="fb-drawer-l" htmlFor="fb-rw-body">Your message</label>
           <textarea
             id="fb-rw-body"
             ref={taRef}
@@ -1165,11 +1150,22 @@ function ReplyWidgetEditor({
             value={body}
             onFocus={onActiveField}
             onChange={(e) => setBody(e.target.value)}
-            placeholder="Hey {first_name}, thanks for reaching out about {service_type}. I'll get back to you shortly."
+            placeholder="Hey {first_name}, sorry I missed you — I'll be in touch soon."
           />
-          <p className="fb-helper">
-            Use <code>{"{first_name}"}</code>, <code>{"{last_name}"}</code>, <code>{"{phone}"}</code>, <code>{"{email}"}</code>, <code>{"{service_type}"}</code>, <code>{"{stage}"}</code>, <code>{"{owner_name}"}</code>. They get filled in per lead.
-          </p>
+          <div className="fb-chips-row">
+            <div className="fb-chips-l">Tap to add:</div>
+            <div className="fb-chips">
+              {MERGE_TAGS.map(t => (
+                <button
+                  key={t.token}
+                  type="button"
+                  className="fb-chip"
+                  onClick={() => insertChip(t.token)}
+                  title={`Adds ${t.token}`}
+                >{t.label}</button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -1188,9 +1184,7 @@ function ListStepCard({ index, node, onEdit }) {
     sub = `Wait ${d} day${d === 1 ? "" : "s"}`;
   } else if (activity.defaultMode === "reply") {
     const fb = data.fallback || "ai";
-    sub = fb === "ai"
-      ? "Reminders → AI replies"
-      : "Reminders → custom message";
+    sub = fb === "ai" ? "Nudges → AI" : "Nudges → my message";
   } else if (data.body) {
     const firstLine = applyMergeTags(data.body || "").split("\n")[0];
     sub = firstLine.length > 96 ? firstLine.slice(0, 96) + "…" : firstLine;

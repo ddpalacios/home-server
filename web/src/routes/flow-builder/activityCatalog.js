@@ -128,9 +128,9 @@ export const ACTIVITY_CATALOG = [
   {
     id: "reply", kind: "action",
     icon: "🔁", title: "Reply",
-    cardSub: "Remind me, then reply",
-    description: "Pings you to reply. If you don't, AI takes over OR sends a custom message you wrote.",
-    trigger: "REPLY ON YOUR BEHALF",
+    cardSub: "Nudge me, then reply",
+    description: "Nudges you. If you don't reply, AI or your message goes out.",
+    trigger: "REPLY",
     defaultMode: "reply",
     // Cadence: use the account's global reminder_cadence by default.
     defaultUseGlobalCadence: true,

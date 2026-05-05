@@ -5382,7 +5382,7 @@
                 <span class="opt-dot" data-dot="ai_always" aria-hidden="true"></span>
                 <span class="opt-body">
                   <span class="opt-title">Always reply</span>
-                  <span class="opt-sub">AI responds to every customer message.</span>
+                  <span class="opt-sub">AI replies right away.</span>
                 </span>
                 <span class="opt-check" aria-hidden="true">✓</span>
               </button>
@@ -5390,7 +5390,7 @@
                 <span class="opt-dot" data-dot="hybrid" aria-hidden="true"></span>
                 <span class="opt-body">
                   <span class="opt-title">Reply when I'm slow</span>
-                  <span class="opt-sub">AI steps in if you don't reply within 30 min.</span>
+                  <span class="opt-sub">AI steps in if you don't.</span>
                 </span>
                 <span class="opt-check" aria-hidden="true">✓</span>
               </button>
@@ -5398,15 +5398,15 @@
                 <span class="opt-dot" data-dot="i_respond" aria-hidden="true"></span>
                 <span class="opt-body">
                   <span class="opt-title">Never reply</span>
-                  <span class="opt-sub">AI doesn't reply. You handle them yourself.</span>
+                  <span class="opt-sub">I handle them.</span>
                 </span>
                 <span class="opt-check" aria-hidden="true">✓</span>
               </button>
               <div class="ai-mode-divider" role="separator"></div>
               <div class="ai-mode-cadence">
-                <h4>Reminder cadence (when "Reply when I'm slow")</h4>
+                <h4>Nudges</h4>
                 <label class="ai-mode-cadence-row">
-                  <span>Send me a reminder after:</span>
+                  <span>First nudge</span>
                   <select id="amcFirst" data-cadence="first_reminder_minutes">
                     <option value="15">15 min</option>
                     <option value="30" selected>30 min</option>
@@ -5416,7 +5416,7 @@
                   </select>
                 </label>
                 <label class="ai-mode-cadence-row">
-                  <span>Then again after:</span>
+                  <span>Again</span>
                   <select id="amcSecond" data-cadence="second_reminder_minutes">
                     <option value="30">30 min</option>
                     <option value="60">1 hour</option>
@@ -5426,7 +5426,7 @@
                   </select>
                 </label>
                 <label class="ai-mode-cadence-row">
-                  <span>Then AI takes over after:</span>
+                  <span>AI takes over</span>
                   <select id="amcTakeover" data-cadence="ai_takeover_minutes">
                     <option value="120">2 hours</option>
                     <option value="360" selected>6 hours</option>
@@ -5448,8 +5448,7 @@
             <div class="amc-backdrop" data-amc-close></div>
             <div class="amc-card">
               <h3 id="amcTitle">Turn on Always reply?</h3>
-              <p>The AI will respond to every customer message immediately — about 1 minute after they send. You won't get reminders.</p>
-              <p>You can switch back to "When slow" or "Never" anytime.</p>
+              <p>AI will reply to everyone right away. You can switch back anytime.</p>
               <div class="amc-actions">
                 <button type="button" class="amc-btn" data-amc-close>Cancel</button>
                 <button type="button" class="amc-btn is-primary" id="aiModeConfirmYes">Turn it on</button>
@@ -15142,11 +15141,10 @@
           </style>
 
           <h1>AI Settings</h1>
-          <p class="ais-sub">How the AI talks when it replies on your behalf.</p>
+          <p class="ais-sub">How the AI talks for you.</p>
 
           <div class="ais-card">
-            <h2>Tone</h2>
-            <p class="ais-card-sub">How the AI sounds in customer replies.</p>
+            <h2>Voice</h2>
             <div class="ais-tone-row" id="aisToneRow">
               <button type="button" class="ais-tone-opt is-active" data-tone="friendly">Friendly</button>
               <button type="button" class="ais-tone-opt" data-tone="professional">Professional</button>
@@ -15155,46 +15153,39 @@
           </div>
 
           <div class="ais-card">
-            <h2>What the AI knows</h2>
-            <p class="ais-card-sub">The AI answers from your <strong>Knowledge Base</strong> — the same one your widget uses. To change what the AI knows about your business, edit it there.</p>
-            <div id="aisKbSummary" style="margin-top:8px;">
-              <div id="aisKbCount" style="font-size:13px;color:#475569;line-height:1.55;">Loading your knowledge base…</div>
+            <h2>What it knows</h2>
+            <div id="aisKbSummary" style="margin-top:4px;">
+              <div id="aisKbCount" style="font-size:13px;color:#475569;line-height:1.55;">Loading…</div>
               <ul id="aisKbList" style="margin:8px 0 0;padding-left:18px;font-size:12.5px;color:#374151;line-height:1.7;"></ul>
               <div id="aisKbEmpty" hidden style="margin-top:10px;padding:10px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:12.5px;color:#92400e;">
-                You haven't added anything to your Knowledge Base yet. The AI won't have facts about your business until you do.
+                Knowledge Base is empty. Add a few entries first.
               </div>
             </div>
             <div style="margin-top:14px;">
-              <a id="aisKbManageLink" href="#knowledge" class="ais-btn is-secondary" style="text-decoration:none;display:inline-block;">Manage Knowledge Base →</a>
+              <a id="aisKbManageLink" href="#knowledge" class="ais-btn is-secondary" style="text-decoration:none;display:inline-block;">Edit Knowledge Base →</a>
             </div>
           </div>
 
           <div class="ais-card">
-            <h2>Anything else?</h2>
-            <p class="ais-card-sub">Optional. Quick facts the AI should know that aren't worth a full Knowledge Base entry. Most folks leave this empty.</p>
+            <h2>Extra notes</h2>
             <textarea id="aisThingsToKnow" class="ais-textarea" style="min-height:80px;"
-              placeholder="My direct line is 555-0142 if customers ask.&#10;We don't do emergency same-day work."></textarea>
+              placeholder="Quick stuff the AI should know."></textarea>
           </div>
 
           <div class="ais-card">
-            <h2>Things the AI should NEVER do</h2>
-            <p class="ais-card-sub">Hard rules the AI will not break.</p>
+            <h2>Never do</h2>
             <textarea id="aisThingsToAvoid" class="ais-textarea" style="min-height:96px;"
-              placeholder="Never quote a specific price.&#10;Never schedule a job without me confirming first.&#10;Never promise a specific arrival time."></textarea>
+              placeholder="Never quote a price.&#10;Never promise a time."></textarea>
           </div>
 
           <div class="ais-card" id="aisTestCard">
-            <h2>Test the AI</h2>
-            <p class="ais-card-sub">Type a customer-style message and see exactly what the AI would send. Uses your real Knowledge Base, current tone, and rules — no message is sent to anyone.</p>
+            <h2>Try it</h2>
             <div class="ais-test-row">
               <input id="aisTestInput" type="text" class="ais-test-input"
-                placeholder="How much do you charge for a kitchen sink repair?" />
-              <button type="button" id="aisTestBtn" class="ais-btn">Try it →</button>
+                placeholder="Ask anything a customer might ask." />
+              <button type="button" id="aisTestBtn" class="ais-btn">Try →</button>
             </div>
-            <div id="aisTestPreview" class="ais-preview" data-state="empty">AI's reply will appear here.</div>
-            <p style="margin:10px 0 0;font-size:11.5px;color:#94a3b8;">
-              Tip: try the questions your customers actually ask — pricing, hours, service area, scheduling, what you don't do. If the AI declines or hallucinates, fix the gap in your Knowledge Base or add a rule above.
-            </p>
+            <div id="aisTestPreview" class="ais-preview" data-state="empty">Reply shows here. Nothing gets sent.</div>
           </div>
 
           <div class="ais-save-bar">
