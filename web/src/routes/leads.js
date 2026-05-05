@@ -3292,7 +3292,10 @@ function _beRenderSlotPanel() {
           const top = ((startMin - _BE_CAL_DAY_START_MIN) / _BE_CAL_SLOT_MIN) * _BE_CAL_SLOT_PX;
           const widthPct = 100 / n;
           const leftPct  = idx * widthPct;
-          const color = _beCalStageColor(lead);
+          // Per-lead color (deterministic hash of lead.id) — easier to scan
+          // a packed week and tell two booked leads apart. Stage info still
+          // shows up in the type-icon + name; the color carries identity.
+          const color = _beCalLeadColor(lead.id);
           const fill  = _beCalTint(color, 0.14);
           const icon  = _beCalTypeIcon(lead);
           const nm = fullName(lead) || lead.email || lead.id;
