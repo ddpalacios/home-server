@@ -15078,74 +15078,126 @@
 
       <!-- ─── AI Settings (Phase 1) ───────────────────────────────────────── -->
       <section class="grid" id="aiSettings" data-route-section="aiSettings" hidden>
-        <div class="ais-page" style="grid-column: 1 / -1; max-width: 760px; margin: 0 auto; padding: 8px 24px 64px;">
+        <div class="ais-page" style="grid-column: 1 / -1; max-width: 880px; margin: 0 auto; padding: 24px 28px 80px;">
           <style>
-            .ais-page h1 { font-size: 22px; font-weight: 700; color: #0a0a0a; margin: 0 0 6px; }
-            .ais-page .ais-sub { font-size: 13.5px; color: #6b7280; margin: 0 0 22px; }
+            .ais-page h1 {
+              font-size: 36px; font-weight: 700; color: #0a0a0a;
+              margin: 0 0 10px; letter-spacing: -0.02em;
+            }
+            .ais-page .ais-sub {
+              font-size: 17px; color: #6b7280;
+              margin: 0 0 36px; line-height: 1.5;
+            }
             .ais-card {
-              background: #fff; border: 1px solid #eef0f3; border-radius: 14px;
-              padding: 20px 22px; margin-bottom: 18px;
+              background: #fff;
+              border: 1px solid #eef0f3; border-radius: 18px;
+              padding: 32px 36px;
+              margin-bottom: 22px;
+              box-shadow: 0 1px 2px rgba(15,23,42,0.04),
+                          0 4px 16px rgba(15,23,42,0.04);
+              transition: box-shadow 0.18s ease, border-color 0.18s ease;
             }
-            .ais-card h2 { font-size: 15px; font-weight: 600; color: #0a0a0a; margin: 0 0 6px; }
-            .ais-card .ais-card-sub { font-size: 12.5px; color: #6b7280; margin: 0 0 14px; }
-            .ais-tone-row { display: flex; gap: 8px; flex-wrap: wrap; }
+            .ais-card:hover {
+              border-color: #e2e8f0;
+              box-shadow: 0 1px 2px rgba(15,23,42,0.04),
+                          0 8px 24px rgba(15,23,42,0.06);
+            }
+            .ais-card h2 {
+              font-size: 22px; font-weight: 700; color: #0a0a0a;
+              margin: 0 0 18px; letter-spacing: -0.01em;
+            }
+            .ais-card .ais-card-sub {
+              font-size: 14.5px; color: #6b7280; margin: -8px 0 18px;
+              line-height: 1.5;
+            }
+            .ais-tone-row { display: flex; gap: 12px; flex-wrap: wrap; }
             .ais-tone-opt {
-              padding: 8px 16px; font-size: 13px; font-weight: 500;
-              border-radius: 999px; border: 1px solid #e5e7eb;
+              flex: 1; min-width: 140px;
+              padding: 18px 24px; font-size: 16px; font-weight: 600;
+              border-radius: 14px; border: 2px solid #e5e7eb;
               background: #fff; color: #374151; cursor: pointer;
-              transition: background 0.10s, border-color 0.10s, color 0.10s;
-              font-family: inherit;
+              transition: all 0.14s ease; font-family: inherit;
             }
-            .ais-tone-opt:hover { background: #f9fafb; }
-            .ais-tone-opt.is-active { background: #0f172a; color: #fff; border-color: #0f172a; }
+            .ais-tone-opt:hover {
+              background: #f9fafb; border-color: #cbd5e1;
+              transform: translateY(-1px);
+            }
+            .ais-tone-opt.is-active {
+              background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+              color: #fff; border-color: #0f172a;
+              box-shadow: 0 4px 12px rgba(15,23,42,0.20);
+              transform: translateY(-1px);
+            }
             .ais-textarea {
-              width: 100%; min-height: 120px;
-              padding: 11px 13px;
-              font-size: 13px; color: #0a0a0a;
-              font-family: inherit; line-height: 1.55;
-              border: 1px solid #e5e7eb; border-radius: 10px;
+              width: 100%; min-height: 140px;
+              padding: 16px 18px;
+              font-size: 15px; color: #0a0a0a;
+              font-family: inherit; line-height: 1.6;
+              border: 1.5px solid #e5e7eb; border-radius: 12px;
               box-sizing: border-box; resize: vertical;
+              transition: border-color 0.14s ease, box-shadow 0.14s ease;
             }
             .ais-textarea:focus {
               outline: 0; border-color: #2563eb;
-              box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
+              box-shadow: 0 0 0 4px rgba(37,99,235,0.12);
             }
-            .ais-test-row { display: flex; gap: 8px; align-items: stretch; }
+            .ais-test-row { display: flex; gap: 12px; align-items: stretch; }
             .ais-test-input {
-              flex: 1; padding: 10px 13px;
-              font-size: 13px; color: #0a0a0a;
-              border: 1px solid #e5e7eb; border-radius: 10px;
+              flex: 1; padding: 16px 18px;
+              font-size: 15px; color: #0a0a0a;
+              border: 1.5px solid #e5e7eb; border-radius: 12px;
               font-family: inherit;
+              transition: border-color 0.14s ease, box-shadow 0.14s ease;
             }
             .ais-test-input:focus {
               outline: 0; border-color: #2563eb;
-              box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
+              box-shadow: 0 0 0 4px rgba(37,99,235,0.12);
             }
             .ais-btn {
-              padding: 9px 16px; font-size: 13px; font-weight: 500;
-              border-radius: 10px; border: 1px solid #0f172a;
-              background: #0f172a; color: #fff;
-              cursor: pointer; font-family: inherit;
+              padding: 14px 24px;
+              font-size: 15px; font-weight: 600;
+              border-radius: 12px; border: 1.5px solid #0f172a;
+              background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+              color: #fff; cursor: pointer; font-family: inherit;
+              transition: all 0.14s ease;
+              box-shadow: 0 2px 8px rgba(15,23,42,0.16);
             }
-            .ais-btn:hover { background: #1e293b; }
-            .ais-btn:disabled { opacity: 0.6; cursor: progress; }
-            .ais-btn.is-secondary { background: #fff; color: #0a0a0a; }
-            .ais-btn.is-secondary:hover { background: #f8fafc; }
+            .ais-btn:hover {
+              transform: translateY(-1px);
+              box-shadow: 0 4px 14px rgba(15,23,42,0.24);
+            }
+            .ais-btn:disabled { opacity: 0.6; cursor: progress; transform: none; }
+            .ais-btn.is-secondary {
+              background: #fff; color: #0a0a0a; border-color: #e5e7eb;
+              box-shadow: 0 1px 3px rgba(15,23,42,0.06);
+            }
+            .ais-btn.is-secondary:hover {
+              background: #f8fafc; border-color: #cbd5e1;
+              box-shadow: 0 4px 12px rgba(15,23,42,0.10);
+            }
             .ais-preview {
-              margin-top: 12px; padding: 14px 16px;
-              background: #f8fafc; border: 1px solid #eef0f3; border-radius: 10px;
-              font-size: 13px; line-height: 1.55; color: #0a0a0a;
-              white-space: pre-wrap; min-height: 36px;
+              margin-top: 16px; padding: 20px 22px;
+              background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+              border: 1.5px solid #e2e8f0; border-radius: 14px;
+              font-size: 15px; line-height: 1.6; color: #0a0a0a;
+              white-space: pre-wrap; min-height: 60px;
             }
             .ais-preview[data-state="declined"] {
-              background: #fff7ed; border-color: #fed7aa; color: #9a3412;
+              background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
+              border-color: #fdba74; color: #9a3412;
             }
-            .ais-preview[data-state="empty"] { color: #9ca3af; font-style: italic; }
+            .ais-preview[data-state="empty"] {
+              color: #94a3b8; font-style: italic;
+            }
             .ais-save-bar {
-              display: flex; gap: 8px; align-items: center; justify-content: flex-end;
-              margin-top: 4px;
+              display: flex; gap: 14px; align-items: center; justify-content: flex-end;
+              margin-top: 8px;
             }
-            .ais-save-status { font-size: 12px; color: #16a34a; }
+            .ais-save-status {
+              font-size: 14px; font-weight: 500; color: #16a34a;
+            }
+            #aisKbCount { font-size: 15px !important; line-height: 1.6 !important; }
+            #aisKbList  { font-size: 14.5px !important; line-height: 1.9 !important; }
           </style>
 
           <h1>AI Settings</h1>
