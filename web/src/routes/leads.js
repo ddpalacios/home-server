@@ -2105,6 +2105,8 @@ const _BE_DEFAULT_FALLBACKS = {
   quote_date: "recently",
   appointment_date: "your scheduled time",
   job_date: "the work date",
+  recommended_slot: "your scheduled time",
+  recommended_slot_iso: "",
 };
 
 const _BE_TOKEN_RE = /\{([a-zA-Z_][a-zA-Z0-9_]*)\}/g;
@@ -2115,9 +2117,25 @@ const _BE_VAR_CHIPS = [
   { token: "quote_amount",     label: "Quote amount" },
   { token: "quote_date",       label: "Quote date" },
   { token: "appointment_date", label: "Appointment" },
+  { token: "recommended_slot", label: "Recommended slot" },
   { token: "your_name",        label: "Your name" },
   { token: "business_name",    label: "Business name" },
   { token: "phone",            label: "Phone" },
+];
+
+// Phase 4: window picker options for the find-times panel. Keys must match
+// server/lead_bulk_email.py:_window_to_offsets.
+const _BE_SLOT_WINDOWS = [
+  { value: "tomorrow",    label: "Tomorrow only" },
+  { value: "in_3_days",   label: "Within 3 days" },
+  { value: "in_1_week",   label: "Within 1 week" },
+  { value: "in_2_weeks",  label: "Within 2 weeks" },
+  { value: "in_1_month",  label: "Within 1 month" },
+];
+const _BE_SLOT_DURATIONS = [
+  { value: 30, label: "30 min" },
+  { value: 60, label: "60 min" },
+  { value: 90, label: "90 min" },
 ];
 
 let _beState = {
@@ -2143,6 +2161,13 @@ let _beState = {
   editingScheduledId: "",   // when set, "Schedule it" hits /update instead of POST
   scheduledForEpoch: 0,     // current intended schedule time (for editing flow)
   openSchedulePickerOnLoad: false,
+  // Phase 4 — calendar slot recommendations:
+  slotWindow: "in_1_week",       // dropdown value
+  slotMinutes: 30,                // dropdown value
+  slotsLoading: false,            // spinner state for the Find times button
+  slotsError: "",                 // user-visible message ("", or reason key)
+  slotAssignments: {},            // { lead_id: { start_iso, end_iso, label, epoch } }
+  slotTimeZone: "",               // working-hours tz from /find-slots response
 };
 
 function _beFmtCurrency(value) {
@@ -2227,6 +2252,9 @@ function _beResolveProfileValue(token, profile) {
 const _BE_LEAD_TOKEN_FIELDS = new Set([
   "first_name","name","service_type","quote_amount","quote_date",
   "appointment_date","job_date","email","phone",
+  // Phase 4: orchestrator-injected, but we list them here so the chip-row
+  // and substituteClientSide branches treat them as known tokens.
+  "recommended_slot","recommended_slot_iso",
 ]);
 const _BE_PROFILE_TOKEN_FIELDS = new Set([
   "your_name","business_name","phone","business_address",
@@ -2236,6 +2264,18 @@ function substituteClientSide(template, lead, profile, fallbacks) {
   if (!template) return template || "";
   const fb = { ..._BE_DEFAULT_FALLBACKS, ...(fallbacks || {}) };
   return template.replace(_BE_TOKEN_RE, (full, token) => {
+    // Phase 4: orchestrator-injected calendar slot tokens. The mirror in
+    // the composer reads from _beState.slotAssignments using the lead.id.
+    if (token === "recommended_slot") {
+      const a = (lead && _beState.slotAssignments) ? _beState.slotAssignments[lead.id] : null;
+      if (a && a.label) return a.label;
+      return fb.recommended_slot || "your scheduled time";
+    }
+    if (token === "recommended_slot_iso") {
+      const a = (lead && _beState.slotAssignments) ? _beState.slotAssignments[lead.id] : null;
+      if (a && a.start_iso) return a.start_iso;
+      return "";
+    }
     if (_BE_LEAD_TOKEN_FIELDS.has(token)) {
       const v = _beResolveLeadValue(token, lead);
       if (v) return v;
@@ -2261,6 +2301,11 @@ function _beTokensIn(text) {
   return out;
 }
 
+// Phase 4: tokens the bulk-send orchestrator injects per recipient. These
+// are ALWAYS considered satisfied at validate-time — the user supplies them
+// via the find-times panel, not the lead record.
+const _BE_ORCHESTRATOR_INJECTED = new Set(["recommended_slot", "recommended_slot_iso"]);
+
 function _beValidate() {
   const tokens = Array.from(new Set([..._beTokensIn(_beState.subject),
                                      ..._beTokensIn(_beState.body)]));
@@ -2268,6 +2313,8 @@ function _beValidate() {
   for (const lead of _beState.recipients) {
     const missing = [];
     for (const tok of tokens) {
+      // Orchestrator-injected tokens (recommended_slot*) are always OK.
+      if (_BE_ORCHESTRATOR_INJECTED.has(tok)) continue;
       // Lead-sourced tokens
       if (_BE_LEAD_TOKEN_FIELDS.has(tok)) {
         if (_beResolveLeadValue(tok, lead)) continue;
@@ -2286,6 +2333,23 @@ function _beValidate() {
     missingByLead,
     missingCount: Object.keys(missingByLead).length,
   };
+}
+
+// Phase 4: returns true if the user wrote {recommended_slot} into either
+// the subject or body. Used to gate the find-times panel and the Send
+// button until slots have been allocated.
+function _beUsesRecommendedSlot() {
+  const txt = (_beState.subject || "") + "\n" + (_beState.body || "");
+  return /\{recommended_slot(_iso)?\}/.test(txt);
+}
+
+function _beAllRecipientsHaveSlots() {
+  if (!_beState.recipients.length) return false;
+  for (const l of _beState.recipients) {
+    const a = _beState.slotAssignments[l.id];
+    if (!a || !a.label) return false;
+  }
+  return true;
 }
 
 async function _beFetchSenderProfile() {
@@ -2317,9 +2381,9 @@ const _BE_INLINE_TEMPLATES = [
     subject: "Quick follow-up on your quote, {first_name}",
     body: "Hi {first_name},\n\nWanted to follow up on the quote we sent on {quote_date} for {service_type}.\n\nAny questions I can answer? Happy to walk through anything that's unclear or adjust the scope.\n\n— {your_name}" },
   { id: "reschedule_reminder", name: "Reschedule reminder", icon: "⏰",
-    description: "Remind a lead to confirm or reschedule their booking.",
-    subject: "Need to move {appointment_date}, {first_name}?",
-    body: "Hi {first_name},\n\nJust checking in on your appointment scheduled for {appointment_date}. If that time still works, no need to reply — we'll see you then.\n\nIf you need to move it, reply with a window that works better and we'll lock something in.\n\n— {your_name}\n{business_name}" },
+    description: "Propose a new appointment time per lead from your calendar.",
+    subject: "Let's find a new time, {first_name}",
+    body: "Hi {first_name},\n\nWe need to move your appointment. Based on my calendar, would {recommended_slot} work?\n\nReply YES to confirm or suggest a different time and I'll lock it in.\n\n— {your_name}\n{business_name}" },
   { id: "winback", name: "Win-back", icon: "🔁",
     description: "Re-engage a lead who's gone quiet.",
     subject: "Still interested, {first_name}?",
@@ -2482,6 +2546,13 @@ async function openBulkEmailComposer(opts) {
   _beState.editingScheduledId = "";
   _beState.scheduledForEpoch = 0;
   _beState.openSchedulePickerOnLoad = !!opts.openSchedulePicker;
+  // Phase 4: reset slot recommendations.
+  _beState.slotWindow = "in_1_week";
+  _beState.slotMinutes = 30;
+  _beState.slotsLoading = false;
+  _beState.slotsError = "";
+  _beState.slotAssignments = {};
+  _beState.slotTimeZone = "";
 
   _beRender({ loading: true });
 
@@ -2654,6 +2725,7 @@ function _beRenderEditor() {
       </div>
       <p class="be-chip-help">Click any chip to add it. Each one fills with that lead's info when we send.</p>
     </div>
+    ${_beRenderSlotPanel()}
     ${warnHtml}
     <div class="be-field">
       <label class="be-label" for="bePreviewLead">Preview as</label>
@@ -2676,10 +2748,16 @@ function _beRenderEditor() {
   // When editing an already-scheduled batch, the send-now button doesn't
   // make sense — just "Save changes" via /update. Otherwise show both.
   const editingExisting = !!_beState.editingScheduledId;
+  // Phase 4: gate Send / Schedule when the template uses {recommended_slot}
+  // but the user hasn't run "Find times" yet (or coverage isn't complete).
+  const needsSlots = _beUsesRecommendedSlot();
+  const haveSlots = _beAllRecipientsHaveSlots();
+  const slotGateActive = needsSlots && !haveSlots;
+  const slotGateAttr = slotGateActive ? `disabled title="Find available times first."` : "";
   const primaryBtn = editingExisting
-    ? `<button type="button" class="be-btn-primary" data-be-act="open-schedule">Update schedule</button>`
-    : `<button type="button" class="be-btn-secondary" data-be-act="open-schedule">Schedule for later →</button>
-       <button type="button" class="be-btn-primary"   data-be-act="send-now">Send now</button>`;
+    ? `<button type="button" class="be-btn-primary" data-be-act="open-schedule" ${slotGateAttr}>Update schedule</button>`
+    : `<button type="button" class="be-btn-secondary" data-be-act="open-schedule" ${slotGateAttr}>Schedule for later →</button>
+       <button type="button" class="be-btn-primary"   data-be-act="send-now"      ${slotGateAttr}>Send now</button>`;
   foot.innerHTML = `
     <span style="margin-right:auto;font-size:12px;color:#6b7280;">About ${eta} second${eta !== 1 ? "s" : ""} to send ${total} email${total !== 1 ? "s" : ""}</span>
     ${primaryBtn}
@@ -2694,11 +2772,13 @@ function _beRenderEditor() {
     _beState.subject = subj.value;
     _beUpdatePreview();
     _beUpdateWarn();
+    _beTogglePanelOnTokenChange();
   });
   bod.addEventListener("input", () => {
     _beState.body = bod.value;
     _beUpdatePreview();
     _beUpdateWarn();
+    _beTogglePanelOnTokenChange();
   });
   body.querySelectorAll(".be-chip").forEach(c => {
     c.addEventListener("click", () => _beInsertToken(c.dataset.beToken));
@@ -2716,6 +2796,7 @@ function _beRenderEditor() {
   });
   _beWireRecipToggle();
   _beWireFooter();
+  _beWireSlotPanel();
 
   // If the user clicked "Schedule for later" on the bulk bar, OR we're
   // editing an existing scheduled batch, drop them straight into the
@@ -2770,6 +2851,275 @@ function _beUpdateWarn() {
   }
 }
 
+// ─── Phase 4: Find available times panel ─────────────────────────────────────
+//
+// Shows whenever the editor body or subject contains {recommended_slot}.
+// User picks a window + slot duration, clicks Find times, and we POST to
+// /me/leads/bulk-email/find-slots. The returned slots are matched 1:1 to
+// the recipient list in chronological order. The [↺] button on each row
+// rotates the assignment with the next lead (circular reassignment for v1
+// — Phase 5 can add a per-lead picker).
+
+function _beRenderSlotPanel() {
+  if (!_beUsesRecommendedSlot()) return "";
+  const total = _beState.recipients.length;
+  const haveSlots = Object.keys(_beState.slotAssignments).length > 0;
+  const winOpts = _BE_SLOT_WINDOWS.map(w =>
+    `<option value="${escapeHtml(w.value)}" ${w.value === _beState.slotWindow ? "selected" : ""}>${escapeHtml(w.label)}</option>`
+  ).join("");
+  const durOpts = _BE_SLOT_DURATIONS.map(d =>
+    `<option value="${d.value}" ${Number(d.value) === Number(_beState.slotMinutes) ? "selected" : ""}>${escapeHtml(d.label)}</option>`
+  ).join("");
+
+  let assignmentsHtml = "";
+  if (haveSlots) {
+    const rows = _beState.recipients.map(l => {
+      const a = _beState.slotAssignments[l.id];
+      const nm = fullName(l) || l.email || l.id;
+      const slot = a && a.label ? a.label : "(no slot assigned)";
+      const slotColor = a && a.label ? "#0a0a0a" : "#9ca3af";
+      return `
+        <div class="be-slot-row">
+          <span class="be-slot-name">${escapeHtml(nm)}</span>
+          <span class="be-slot-arrow">→</span>
+          <span class="be-slot-time" style="color:${slotColor};">${escapeHtml(slot)}</span>
+          <button type="button" class="be-slot-rotate" data-be-rotate="${escapeHtml(l.id)}" title="Swap with next lead's time" aria-label="Swap with next lead's time">↺</button>
+        </div>`;
+    }).join("");
+    assignmentsHtml = `
+      <div class="be-slot-divider">Your calendar suggested these times</div>
+      <div class="be-slot-list">${rows}</div>
+      <p class="be-slot-help">We'll send each lead their unique time.</p>
+    `;
+  }
+
+  let errHtml = "";
+  if (_beState.slotsError === "no_calendar") {
+    errHtml = `<div class="be-slot-err">Connect Google Calendar first. <a href="/dashboard/settings#integrations" class="be-slot-err-link">Open integrations →</a></div>`;
+  } else if (_beState.slotsError === "no_working_hours") {
+    errHtml = `<div class="be-slot-err">Set your working hours first. <a href="/dashboard/settings#integrations" class="be-slot-err-link">Open integrations →</a></div>`;
+  } else if (_beState.slotsError === "no_slots_available") {
+    errHtml = `<div class="be-slot-err">No open slots in that window. Try a longer one.</div>`;
+  } else if (_beState.slotsError === "network") {
+    errHtml = `<div class="be-slot-err">Couldn't reach the server. Try again.</div>`;
+  } else if (_beState.slotsError === "partial") {
+    const found = Object.keys(_beState.slotAssignments).length;
+    errHtml = `<div class="be-slot-warn">Only found ${found} open time${found !== 1 ? "s" : ""} — ${total - found} lead${(total - found) !== 1 ? "s" : ""} still need a slot. Try a longer window.</div>`;
+  }
+
+  const btnLabel = _beState.slotsLoading
+    ? "Finding times…"
+    : `Find times for these ${total} lead${total !== 1 ? "s" : ""}`;
+  const btnDisabled = _beState.slotsLoading ? "disabled" : "";
+
+  return `
+    <style>
+      #leadsBulkEmailDlg .be-slot-panel { padding:14px;border:1px solid #e5e7eb;border-radius:10px;background:#fafafa;margin:14px 0; }
+      #leadsBulkEmailDlg .be-slot-title { font-size:13.5px;font-weight:600;color:#0a0a0a;margin-bottom:10px;display:flex;align-items:center;gap:6px; }
+      #leadsBulkEmailDlg .be-slot-controls { display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap; }
+      #leadsBulkEmailDlg .be-slot-control { display:flex;flex-direction:column;gap:4px;font-size:11.5px;color:#475569;flex:1;min-width:130px; }
+      #leadsBulkEmailDlg .be-slot-control select { padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;background:#fff;color:#0a0a0a; }
+      #leadsBulkEmailDlg .be-slot-find-btn { width:100%;padding:9px 14px;background:#0a0a0a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer; }
+      #leadsBulkEmailDlg .be-slot-find-btn[disabled] { opacity:0.6;cursor:not-allowed; }
+      #leadsBulkEmailDlg .be-slot-divider { font-size:11.5px;color:#64748b;text-transform:uppercase;letter-spacing:0.04em;margin:14px 0 8px;text-align:center;position:relative; }
+      #leadsBulkEmailDlg .be-slot-list { background:#fff;border:1px solid #e5e7eb;border-radius:8px;max-height:240px;overflow:auto; }
+      #leadsBulkEmailDlg .be-slot-row { display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid #f1f5f9;font-size:13px; }
+      #leadsBulkEmailDlg .be-slot-row:last-child { border-bottom:none; }
+      #leadsBulkEmailDlg .be-slot-name { color:#0a0a0a;font-weight:500;flex:0 0 35%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+      #leadsBulkEmailDlg .be-slot-arrow { color:#9ca3af;font-size:12px; }
+      #leadsBulkEmailDlg .be-slot-time { flex:1;color:#0a0a0a; }
+      #leadsBulkEmailDlg .be-slot-rotate { background:none;border:1px solid #e5e7eb;border-radius:6px;padding:3px 8px;font-size:13px;color:#475569;cursor:pointer; }
+      #leadsBulkEmailDlg .be-slot-rotate:hover { background:#f3f4f6;border-color:#0a0a0a;color:#0a0a0a; }
+      #leadsBulkEmailDlg .be-slot-help { margin:8px 0 0;font-size:11.5px;color:#6b7280;text-align:center; }
+      #leadsBulkEmailDlg .be-slot-err { padding:9px 12px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:8px;font-size:12.5px;margin-top:10px; }
+      #leadsBulkEmailDlg .be-slot-warn { padding:9px 12px;background:#fffbeb;border:1px solid #fcd34d;color:#78350f;border-radius:8px;font-size:12.5px;margin-top:10px; }
+      #leadsBulkEmailDlg .be-slot-err-link { color:#991b1b;text-decoration:underline;font-weight:600;margin-left:6px; }
+    </style>
+    <div class="be-slot-panel" id="beSlotPanel">
+      <div class="be-slot-title">Find available times</div>
+      <div class="be-slot-controls">
+        <label class="be-slot-control">
+          <span>Look in</span>
+          <select id="beSlotWindow">${winOpts}</select>
+        </label>
+        <label class="be-slot-control">
+          <span>Per slot</span>
+          <select id="beSlotMinutes">${durOpts}</select>
+        </label>
+      </div>
+      <button type="button" class="be-slot-find-btn" id="beSlotFindBtn" ${btnDisabled}>${escapeHtml(btnLabel)}</button>
+      ${errHtml}
+      ${assignmentsHtml}
+    </div>
+  `;
+}
+
+function _beWireSlotPanel() {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  if (!dlg) return;
+  const panel = dlg.querySelector("#beSlotPanel");
+  if (!panel) return;
+  const winSel = panel.querySelector("#beSlotWindow");
+  const durSel = panel.querySelector("#beSlotMinutes");
+  if (winSel) winSel.addEventListener("change", (e) => { _beState.slotWindow = e.target.value; });
+  if (durSel) durSel.addEventListener("change", (e) => { _beState.slotMinutes = Number(e.target.value) || 30; });
+  const findBtn = panel.querySelector("#beSlotFindBtn");
+  if (findBtn) findBtn.addEventListener("click", () => _beFindSlots());
+  panel.querySelectorAll("[data-be-rotate]").forEach(b => {
+    b.addEventListener("click", () => _beRotateSlot(b.dataset.beRotate));
+  });
+}
+
+function _beRefreshSlotPanel() {
+  // Re-render JUST the slot panel area (and the footer button gating).
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  if (!dlg) return;
+  const old = dlg.querySelector("#beSlotPanel");
+  if (!old) {
+    // Editor isn't showing the panel yet — full render.
+    _beRender();
+    return;
+  }
+  const tmp = document.createElement("div");
+  tmp.innerHTML = _beRenderSlotPanel();
+  const fresh = tmp.querySelector("#beSlotPanel");
+  if (fresh) {
+    old.replaceWith(fresh);
+    _beWireSlotPanel();
+  }
+  // Re-render the footer so the gate state stays in sync.
+  _beRefreshFooterGate();
+  _beUpdatePreview();
+}
+
+function _beTogglePanelOnTokenChange() {
+  // The find-times panel only shows when {recommended_slot} is in subject
+  // or body. When the user adds or removes the token, swap the panel in/out
+  // without re-rendering the whole editor (which would lose textarea focus).
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  if (!dlg) return;
+  const existing = dlg.querySelector("#beSlotPanel");
+  const wantPanel = _beUsesRecommendedSlot();
+  if (wantPanel && !existing) {
+    // Insert before the warn / preview-as field — find the chip-help para.
+    const chipHelp = dlg.querySelector(".be-chip-help");
+    if (chipHelp) {
+      const tmp = document.createElement("div");
+      tmp.innerHTML = _beRenderSlotPanel();
+      const fresh = tmp.querySelector("#beSlotPanel");
+      if (fresh) {
+        chipHelp.parentElement.insertAdjacentElement("afterend", fresh);
+        _beWireSlotPanel();
+      }
+    }
+  } else if (!wantPanel && existing) {
+    existing.remove();
+  }
+  _beRefreshFooterGate();
+}
+
+function _beRefreshFooterGate() {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  if (!dlg) return;
+  const foot = dlg.querySelector("#beFoot");
+  if (!foot) return;
+  const needsSlots = _beUsesRecommendedSlot();
+  const haveSlots = _beAllRecipientsHaveSlots();
+  const gate = needsSlots && !haveSlots;
+  foot.querySelectorAll("[data-be-act='send-now'], [data-be-act='open-schedule']").forEach(b => {
+    if (gate) {
+      b.setAttribute("disabled", "");
+      b.setAttribute("title", "Find available times first.");
+    } else {
+      b.removeAttribute("disabled");
+      b.removeAttribute("title");
+    }
+  });
+}
+
+async function _beFindSlots() {
+  const total = _beState.recipients.length;
+  if (!total) return;
+  _beState.slotsLoading = true;
+  _beState.slotsError = "";
+  _beRefreshSlotPanel();
+
+  let res;
+  try {
+    res = await fetch("/me/leads/bulk-email/find-slots", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lead_count:   total,
+        window:       _beState.slotWindow,
+        slot_minutes: _beState.slotMinutes,
+      }),
+    });
+  } catch (_) {
+    _beState.slotsLoading = false;
+    _beState.slotsError = "network";
+    _beRefreshSlotPanel();
+    return;
+  }
+  let data = {};
+  try { data = await res.json(); } catch (_) { data = {}; }
+  _beState.slotsLoading = false;
+  if (!res.ok) {
+    _beState.slotsError = data.reason || "no_slots_available";
+    _beState.slotAssignments = {};
+    _beRefreshSlotPanel();
+    return;
+  }
+  if (!data.ok) {
+    _beState.slotsError = data.reason || "no_slots_available";
+    _beState.slotAssignments = {};
+    _beRefreshSlotPanel();
+    return;
+  }
+  const slots = Array.isArray(data.slots) ? data.slots : [];
+  _beState.slotTimeZone = data.time_zone || "";
+  // Match each slot 1:1 with a recipient, in order. If the server returned
+  // fewer slots than recipients, the trailing recipients have no assignment
+  // and the partial-warning surfaces.
+  const assignments = {};
+  for (let i = 0; i < _beState.recipients.length && i < slots.length; i++) {
+    const lead = _beState.recipients[i];
+    const s = slots[i] || {};
+    assignments[lead.id] = {
+      start_iso: s.start_iso || "",
+      end_iso:   s.end_iso   || "",
+      label:     s.label     || "",
+      epoch:     s.epoch     || 0,
+    };
+  }
+  _beState.slotAssignments = assignments;
+  if (slots.length < _beState.recipients.length) {
+    _beState.slotsError = "partial";
+  } else {
+    _beState.slotsError = "";
+  }
+  _beRefreshSlotPanel();
+}
+
+function _beRotateSlot(leadId) {
+  // Circular reassignment for v1: swap this lead's slot with the next
+  // lead's slot in recipient order. Phase 5 can add a per-lead picker.
+  const ids = _beState.recipients.map(l => l.id);
+  const idx = ids.indexOf(leadId);
+  if (idx < 0) return;
+  const nextIdx = (idx + 1) % ids.length;
+  const a = _beState.slotAssignments[ids[idx]];
+  const b = _beState.slotAssignments[ids[nextIdx]];
+  if (!a && !b) return;
+  _beState.slotAssignments[ids[idx]]     = b || null;
+  _beState.slotAssignments[ids[nextIdx]] = a || null;
+  // Drop nulls so _beAllRecipientsHaveSlots checks correctly.
+  if (!_beState.slotAssignments[ids[idx]])     delete _beState.slotAssignments[ids[idx]];
+  if (!_beState.slotAssignments[ids[nextIdx]]) delete _beState.slotAssignments[ids[nextIdx]];
+  _beRefreshSlotPanel();
+}
+
 function _beInsertToken(token) {
   const dlg = document.getElementById("leadsBulkEmailDlg");
   const target = (_beState.lastFocused === "subject")
@@ -2788,6 +3138,7 @@ function _beInsertToken(token) {
   else _beState.body = target.value;
   _beUpdatePreview();
   _beUpdateWarn();
+  _beTogglePanelOnTokenChange();
 }
 
 function _beWireRecipToggle() {
@@ -2899,6 +3250,10 @@ async function _beSendNow(opts) {
         template_id:         _beState.templateLoaded ? _beState.templateLoaded.id : null,
         send_now:            true,
         override_duplicate:  !!opts.overrideDuplicate,
+        // Phase 4: per-lead calendar slot assignments (omit when empty so
+        // pre-Phase-4 batches send identical payloads).
+        lead_slot_assignments:
+          (Object.keys(_beState.slotAssignments).length ? _beState.slotAssignments : undefined),
       }),
     });
   } catch (_) {
@@ -3057,6 +3412,9 @@ async function _beSubmitNewSchedule(epoch, opts) {
         send_now:            false,
         scheduled_for:       epoch,
         override_duplicate:  !!opts.overrideDuplicate,
+        // Phase 4: per-lead calendar slot assignments.
+        lead_slot_assignments:
+          (Object.keys(_beState.slotAssignments).length ? _beState.slotAssignments : undefined),
       }),
     });
   } catch (_) {
