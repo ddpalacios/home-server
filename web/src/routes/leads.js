@@ -2602,9 +2602,25 @@ function _beRender(opts) {
       <div class="be-cta-empty">
         <p style="margin:0 0 12px;font-size:14px;font-weight:600;">We need your name before sending.</p>
         <p style="margin:0 0 16px;font-size:13px;color:#6b7280;">Add your first and last name in Profile, then come back and pick a template.</p>
-        <a href="/dashboard/settings" style="display:inline-block;padding:9px 16px;background:#0a0a0a;color:#fff;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;">Open Profile</a>
+        <button type="button" id="beOpenProfileBtn" style="padding:9px 16px;background:#0a0a0a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">Open Profile</button>
       </div>`;
     foot.innerHTML = `<button type="button" class="be-btn-secondary" data-be-act="close">Close</button>`;
+    const btn = body.querySelector("#beOpenProfileBtn");
+    btn.addEventListener("click", () => {
+      // The dashboard owns the profile editor as a JS modal (no separate
+      // /dashboard/settings page). Close the composer first so the modal
+      // gets the foreground; reopen on save so the user can continue.
+      _beClose();
+      if (typeof window.openProfileModal === "function") {
+        window.openProfileModal(() => {
+          // Reopen the composer for the same selection.
+          openBulkEmailComposer();
+        });
+      } else {
+        // Fallback for any deploy where the modal isn't loaded yet.
+        window.location.href = "/dashboard#home";
+      }
+    });
     _beWireFooter();
     return;
   }
@@ -2896,9 +2912,9 @@ function _beRenderSlotPanel() {
 
   let errHtml = "";
   if (_beState.slotsError === "no_calendar") {
-    errHtml = `<div class="be-slot-err">Connect Google Calendar first. <a href="/dashboard/settings#integrations" class="be-slot-err-link">Open integrations →</a></div>`;
+    errHtml = `<div class="be-slot-err">Connect Google Calendar first. <a href="/auth/google/connect-calendar" class="be-slot-err-link">Connect calendar →</a></div>`;
   } else if (_beState.slotsError === "no_working_hours") {
-    errHtml = `<div class="be-slot-err">Set your working hours first. <a href="/dashboard/settings#integrations" class="be-slot-err-link">Open integrations →</a></div>`;
+    errHtml = `<div class="be-slot-err">Set your working hours first. <a href="/try/setup" class="be-slot-err-link">Open setup →</a></div>`;
   } else if (_beState.slotsError === "no_slots_available") {
     errHtml = `<div class="be-slot-err">No open slots in that window. Try a longer one.</div>`;
   } else if (_beState.slotsError === "network") {
