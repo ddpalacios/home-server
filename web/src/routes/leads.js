@@ -3301,12 +3301,15 @@ function _beRenderSlotPanel() {
           const nm = fullName(lead) || lead.email || lead.id;
           const tLabel = _beCalIsoTimeLabel(assignment.start_iso);
           const durLabel = _beCalDurationLabel(slotMin);
-          // Compressed (≤24px) → icon + name only. Mid (≤48px) adds time.
-          // Full (>48px) adds duration. Always uses stage palette so the
-          // color carries meaning, not random per-id rainbow.
+          // Compressed (≤24px) → icon + name only. Mid (≤48px) adds the
+          // time below. Full (>48px) shows time + duration. Time stamp is
+          // its own centered row at the bottom — bigger and bolder than
+          // before so it reads at a glance even on narrow split columns.
           let sizeClass = "is-full";
           if (slotHeightPx <= 26) sizeClass = "is-compressed";
           else if (slotHeightPx <= 50) sizeClass = "is-mid";
+          // Drop the duration suffix on mid (no room) — height already
+          // tells the user how long it is. Full-size keeps the suffix.
           const timeLine = sizeClass === "is-full"
             ? `${tLabel} · ${durLabel}`
             : tLabel;
@@ -3466,24 +3469,47 @@ function _beRenderSlotPanel() {
          fill, 3px stage-color spine on the left, dark text. Compressed /
          mid / full size classes hide rows progressively as height shrinks
          (≤26px = icon + name only; ≤50px = adds time; >50px = adds duration). */
+      /* Card uses flex column so name + time stack and the time can be
+         pinned to the bottom. Both rows are CENTER-aligned so the time
+         stamp reads clearly against the tinted fill. */
       #leadsBulkEmailDlg .be-cal-card {
         position:absolute;background:var(--be-card-fill, rgba(29,158,117,0.14));
         color:#0a0a0a;border-radius:6px;
-        padding:3px 5px 3px 7px;
+        padding:4px 4px;
         border:1px solid var(--be-card-color, #1D9E75);
         border-left:3px solid var(--be-card-color, #1D9E75);
         font-size:11px;line-height:1.2;overflow:hidden;cursor:grab;
         box-shadow:0 1px 2px rgba(0,0,0,0.06);z-index:2;user-select:none;
         transition:box-shadow 120ms ease,border-width 120ms ease;
+        display:flex;flex-direction:column;align-items:stretch;
       }
       #leadsBulkEmailDlg .be-cal-card:hover { box-shadow:0 2px 6px rgba(0,0,0,0.16); }
       #leadsBulkEmailDlg .be-cal-card.is-dragging { opacity:0.55;cursor:grabbing; }
-      #leadsBulkEmailDlg .be-cal-card-row1 { display:flex;align-items:flex-start;gap:4px;min-width:0; }
+      #leadsBulkEmailDlg .be-cal-card-row1 {
+        display:flex;align-items:flex-start;gap:3px;min-width:0;
+        justify-content:center;text-align:center;
+      }
       #leadsBulkEmailDlg .be-cal-card-icon { font-size:11px;line-height:1.2;flex-shrink:0; }
-      #leadsBulkEmailDlg .be-cal-card-name { font-weight:600;color:#0a0a0a;min-width:0;flex:1;
-        white-space:normal;word-break:break-word;overflow:hidden; }
-      #leadsBulkEmailDlg .be-cal-card-time { color:#475569;font-size:10px;margin-top:1px; }
-      #leadsBulkEmailDlg .be-cal-card.is-compressed { padding:2px 5px 2px 7px;font-size:10.5px; }
+      #leadsBulkEmailDlg .be-cal-card-name {
+        font-weight:600;color:#0a0a0a;min-width:0;flex:0 1 auto;
+        white-space:normal;word-break:break-word;overflow:hidden;
+        font-size:11.5px;line-height:1.15;
+      }
+      /* Time stamp — centered, big enough to read, bold, fits any column
+         width by allowing single-line ellipsis only as a last resort. */
+      #leadsBulkEmailDlg .be-cal-card-time {
+        color:#0a0a0a;font-size:13px;font-weight:700;
+        text-align:center;margin-top:auto;padding-top:2px;
+        font-variant-numeric:tabular-nums;
+        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+      }
+      /* Mid (≤50px slot) — name shrinks slightly, time still readable. */
+      #leadsBulkEmailDlg .be-cal-card.is-mid .be-cal-card-name { font-size:11px; }
+      #leadsBulkEmailDlg .be-cal-card.is-mid .be-cal-card-time { font-size:12px; }
+      /* Full (>50px slot) — give the time room to breathe. */
+      #leadsBulkEmailDlg .be-cal-card.is-full .be-cal-card-time { font-size:13.5px; }
+      /* Compressed (≤26px) — only icon + truncated name; time hidden. */
+      #leadsBulkEmailDlg .be-cal-card.is-compressed { padding:2px 4px;font-size:10.5px; }
       #leadsBulkEmailDlg .be-cal-card.is-compressed .be-cal-card-name {
         white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
       #leadsBulkEmailDlg .be-cal-card.is-compressed .be-cal-card-time { display:none; }
