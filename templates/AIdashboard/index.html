@@ -6553,6 +6553,93 @@
           <div class="pl-stat-row" id="actPipelineStats"></div>
         </div>
 
+        <!-- Recent lead intake — surfaces the last 10 leads captured
+             across web form / email / phone, plus whether First Hello
+             fired. Source: /me/intake/events. -->
+        <div class="card" style="grid-column: span 12; margin-top: 16px;">
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+            <h2 class="section-title" style="margin:0;">Recent leads</h2>
+            <a href="/dashboard/lead-intake" style="font-size:12.5px;color:#185FA5;text-decoration:none;">Manage intake →</a>
+          </div>
+          <p class="section-note">Live feed of every lead from your website form, connected email, and tracked phone number.</p>
+          <div id="intakeRecent" style="margin-top:8px;">
+            <div style="padding:18px 0;color:#888;font-size:13px;text-align:center;">Loading…</div>
+          </div>
+        </div>
+        <script>
+          (function(){
+            function escIR(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+              return ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[c]; }); }
+            function timeAgo(ts){
+              var s = Math.max(0, Math.floor(Date.now()/1000) - (Number(ts) || 0));
+              if (s < 60)    return s + "s ago";
+              if (s < 3600)  return Math.floor(s/60) + "m ago";
+              if (s < 86400) return Math.floor(s/3600) + "h ago";
+              return Math.floor(s/86400) + "d ago";
+            }
+            function chBadge(channel){
+              var label = ({form:"Form", email:"Email", phone:"SMS"}[channel]) || channel;
+              return '<span style="display:inline-block;font-size:11px;padding:1px 8px;border-radius:99px;background:#eef2f7;color:#3b4a5a;margin-right:6px">' + escIR(label) + '</span>';
+            }
+            function renderEvent(e){
+              var status, dot;
+              if (e.fired === "first_contact") {
+                dot = "#10b981"; status = "First Hello flow started";
+              } else if (e.deduped) {
+                dot = "#9ca3af"; status = "Deduped — already contacted recently";
+              } else if (e.over_cap) {
+                dot = "#f59e0b"; status = "Over daily cap — flow not fired";
+              } else {
+                dot = "#9ca3af"; status = "Lead captured (no flow)";
+              }
+              // Identity: phone first, then dedupe_key (email or phone), else lead_id.
+              var identity = e.phone || e.dedupe_key || e.lead_id || "";
+              return '<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #eef0f3;align-items:flex-start;">'
+                + '<span style="display:inline-block;width:8px;height:8px;border-radius:99px;margin-top:7px;background:' + dot + '"></span>'
+                + '<div style="flex:1;min-width:0;">'
+                +   '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline;">'
+                +     '<div style="font-size:13.5px;font-weight:600;color:#0a0a0a;">'
+                +       chBadge(e.channel) + escIR(identity)
+                +     '</div>'
+                +     '<div style="font-size:11.5px;color:#888;">' + escIR(timeAgo(e.ts)) + '</div>'
+                +   '</div>'
+                +   '<div style="font-size:12.5px;color:#3b4a5a;margin-top:2px;">' + escIR(status) + '</div>'
+                + '</div>'
+                + '</div>';
+            }
+            function load(){
+              fetch("/me/intake/events?limit=10", { credentials:"same-origin" })
+                .then(function(r){ return r.ok ? r.json() : { events: [] }; })
+                .then(function(d){
+                  var evs = (d && d.events) || [];
+                  var host = document.getElementById("intakeRecent");
+                  if (!host) return;
+                  if (evs.length === 0) {
+                    host.innerHTML = '<div style="padding:24px 0;color:#888;font-size:13px;text-align:center;">'
+                      + 'No leads yet. Once someone fills your form, texts your number, or emails you, they\'ll show up here.'
+                      + '</div>';
+                    return;
+                  }
+                  host.innerHTML = evs.map(renderEvent).join("");
+                })
+                .catch(function(){
+                  var host = document.getElementById("intakeRecent");
+                  if (host) host.innerHTML = '<div style="padding:18px 0;color:#b91c1c;font-size:13px;text-align:center;">Couldn\'t load recent leads.</div>';
+                });
+            }
+            // Run on first DOM ready, then again whenever the activity
+            // route is shown (to refresh after the user has been away).
+            if (document.readyState === "loading") {
+              document.addEventListener("DOMContentLoaded", load);
+            } else {
+              load();
+            }
+            window.addEventListener("hashchange", function(){
+              if (location.hash === "#activity" || location.hash === "") load();
+            });
+          })();
+        </script>
+
         <!-- Phone activity — at-a-glance read of the AI receptionist's
              call volume, what callers ask about, and recent calls. Data
              comes from /me/insights/phone-activity. -->
