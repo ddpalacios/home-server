@@ -52,13 +52,19 @@ function ActivityCard({ id, data }) {
   // Look up theme by activity kind. The catalog has the canonical kind;
   // node.data.kind is a snapshot copied at create time.
   const kind = data.kind || (ACTIVITY_BY_ID[data.activityId]?.kind) || "action";
+  // The Input card is the flow's entry point — by definition it has
+  // no incoming connection, only an outgoing one. Skip the target
+  // handle so nothing in the canvas can ever connect TO it.
+  const isInputNode = data.activityId === "input";
   const onAddNext = (e) => {
     e.stopPropagation();
     ctx.openChooser({ sourceId: id });
   };
   return (
-    <div className={`fb-card fb-kind-${kind} ${isOn ? "is-on" : ""}`}>
-      <Handle type="target" position={Position.Left}  id="in"  className="fb-handle" />
+    <div className={`fb-card fb-kind-${kind} ${isOn ? "is-on" : ""} ${isInputNode ? "fb-card-input" : ""}`}>
+      {!isInputNode && (
+        <Handle type="target" position={Position.Left} id="in" className="fb-handle" />
+      )}
       <Handle type="source" position={Position.Right} id="out" className="fb-handle" />
       <div className="fb-card-stripe" aria-hidden="true" />
       <div className="fb-card-row">
@@ -71,9 +77,13 @@ function ActivityCard({ id, data }) {
             <div className="fb-card-sub">{data.cardSub}</div>
           ) : null}
         </div>
-        <span className={`fb-card-pill ${isOn ? "is-on" : ""}`}>
-          {isOn ? "ON" : "OFF"}
-        </span>
+        {isInputNode ? (
+          <span className="fb-card-pill fb-card-pill-input">START</span>
+        ) : (
+          <span className={`fb-card-pill ${isOn ? "is-on" : ""}`}>
+            {isOn ? "ON" : "OFF"}
+          </span>
+        )}
       </div>
       <button
         type="button"
@@ -601,6 +611,10 @@ function _fmtMinutes(m) {
 
 function ReplyPhonePreview({
   fallback, customBody, globalAiMode, globalCadence,
+  nudgeChannel, setNudgeChannel,
+  firstNudgeBody, setFirstNudgeBody,
+  secondNudgeBody, setSecondNudgeBody,
+  persistNudge,
 }) {
   const isAlways = globalAiMode === "ai_always";
   const isOff    = globalAiMode === "i_respond";
@@ -612,6 +626,28 @@ function ReplyPhonePreview({
   const r1 = isAlways ? "1 min grace" : (globalCadence ? _fmtMinutes(globalCadence.first_reminder_minutes) : "—");
   const r2 = isAlways ? "—"           : (globalCadence ? _fmtMinutes(globalCadence.second_reminder_minutes) : "—");
   const rT = isAlways ? "right away"  : (globalCadence ? _fmtMinutes(globalCadence.ai_takeover_minutes) : "—");
+
+  // Inline edit state — only one nudge open at a time.
+  const [openNudge, setOpenNudge] = React.useState(null); // null | 1 | 2
+  function toggleNudge(n) { setOpenNudge(prev => prev === n ? null : n); }
+  function changeNudge(which, v) {
+    if (which === 1) {
+      setFirstNudgeBody && setFirstNudgeBody(v);
+      persistNudge && persistNudge({ first_nudge_body: v }, false);
+    } else {
+      setSecondNudgeBody && setSecondNudgeBody(v);
+      persistNudge && persistNudge({ second_nudge_body: v }, false);
+    }
+  }
+  function pickChannel(ch) {
+    setNudgeChannel && setNudgeChannel(ch);
+    persistNudge && persistNudge({ nudge_channel: ch }, true);
+  }
+  const editable = !isAlways && !isOff;
+  const channelLabel =
+    nudgeChannel === "email" ? "📧 Email" :
+    nudgeChannel === "both"  ? "📱+📧 Both" :
+    "📱 Text";
   return (
     <div className="fb-rwprev">
       <div className="fb-rwprev-h">How this plays out</div>
@@ -624,18 +660,64 @@ function ReplyPhonePreview({
         </li>
         {!isAlways && !isOff && (
           <>
-            <li>
+            <li className={`fb-rwprev-nudge ${openNudge === 1 ? "is-open" : ""}`}>
               <span className="fb-rwprev-dot" />
               <div>
-                <strong>Nudge 1</strong>
-                <span>{r1}</span>
+                <button
+                  type="button"
+                  className="fb-rwprev-nudge-head"
+                  onClick={() => toggleNudge(1)}
+                  aria-expanded={openNudge === 1}
+                  aria-controls="fb-rwprev-nudge-body-1"
+                  title="Click to edit"
+                >
+                  <strong>Nudge 1</strong>
+                  <span>{r1}</span>
+                  <span className="fb-rwprev-edit-ico" aria-hidden="true">✏️</span>
+                </button>
+                {openNudge === 1 && (
+                  <div id="fb-rwprev-nudge-body-1" className="fb-rwprev-nudge-body">
+                    <textarea
+                      className="fb-rwprev-nudge-ta"
+                      rows={3}
+                      value={firstNudgeBody || ""}
+                      onChange={(e) => changeNudge(1, e.target.value)}
+                      placeholder="{first_name} is waiting for a reply."
+                      autoFocus
+                      data-ai-editable="true" data-ai-field-type="general"
+                    />
+                  </div>
+                )}
               </div>
             </li>
-            <li>
+            <li className={`fb-rwprev-nudge ${openNudge === 2 ? "is-open" : ""}`}>
               <span className="fb-rwprev-dot" />
               <div>
-                <strong>Nudge 2</strong>
-                <span>{r2}</span>
+                <button
+                  type="button"
+                  className="fb-rwprev-nudge-head"
+                  onClick={() => toggleNudge(2)}
+                  aria-expanded={openNudge === 2}
+                  aria-controls="fb-rwprev-nudge-body-2"
+                  title="Click to edit"
+                >
+                  <strong>Nudge 2</strong>
+                  <span>{r2}</span>
+                  <span className="fb-rwprev-edit-ico" aria-hidden="true">✏️</span>
+                </button>
+                {openNudge === 2 && (
+                  <div id="fb-rwprev-nudge-body-2" className="fb-rwprev-nudge-body">
+                    <textarea
+                      className="fb-rwprev-nudge-ta"
+                      rows={3}
+                      value={secondNudgeBody || ""}
+                      onChange={(e) => changeNudge(2, e.target.value)}
+                      placeholder="Still waiting on {first_name}. AI will take over soon if you don't reply."
+                      autoFocus
+                      data-ai-editable="true" data-ai-field-type="general"
+                    />
+                  </div>
+                )}
               </div>
             </li>
           </>
@@ -659,6 +741,22 @@ function ReplyPhonePreview({
       </ol>
       {/* Custom message preview lives inline next to the textarea on the
           editor side now (fb-rwbody-grid). No duplicate here. */}
+      {editable && (
+        <div className="fb-rwprev-channel">
+          <span className="fb-rwprev-channel-l">Send nudges via</span>
+          <div className="fb-rwprev-channel-pills">
+            <button type="button"
+              className={`fb-rwprev-cpill ${nudgeChannel === "sms" ? "is-active" : ""}`}
+              onClick={() => pickChannel("sms")}>📱 Text</button>
+            <button type="button"
+              className={`fb-rwprev-cpill ${nudgeChannel === "email" ? "is-active" : ""}`}
+              onClick={() => pickChannel("email")}>📧 Email</button>
+            <button type="button"
+              className={`fb-rwprev-cpill ${nudgeChannel === "both" ? "is-active" : ""}`}
+              onClick={() => pickChannel("both")}>Both</button>
+          </div>
+        </div>
+      )}
       <p className="fb-helper" style={{ textAlign: "center", marginTop: 12 }}>
         {isAlways ? "AI replies right away — no nudges."
           : isOff ? "AI is off — you'll get the message in your inbox."
@@ -853,13 +951,6 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                 onActiveField={() => setActiveField("body")}
                 globalAiMode={globalAiMode}
                 globalCadence={globalCadence}
-                nudgeChannel={nudgeChannel}
-                setNudgeChannel={setNudgeChannel}
-                firstNudgeBody={firstNudgeBody}
-                setFirstNudgeBody={setFirstNudgeBody}
-                secondNudgeBody={secondNudgeBody}
-                setSecondNudgeBody={setSecondNudgeBody}
-                persistNudge={persistNudge}
               />
             ) : (
               <>
@@ -963,6 +1054,13 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                 customBody={body}
                 globalAiMode={globalAiMode}
                 globalCadence={globalCadence}
+                nudgeChannel={nudgeChannel}
+                setNudgeChannel={setNudgeChannel}
+                firstNudgeBody={firstNudgeBody}
+                setFirstNudgeBody={setFirstNudgeBody}
+                secondNudgeBody={secondNudgeBody}
+                setSecondNudgeBody={setSecondNudgeBody}
+                persistNudge={persistNudge}
               />
             ) : (
               <>
@@ -1065,10 +1163,6 @@ function ReplyWidgetEditor({
   fallback, setFallback,
   body, setBody, taRef, onActiveField,
   globalAiMode, globalCadence,
-  nudgeChannel, setNudgeChannel,
-  firstNudgeBody, setFirstNudgeBody,
-  secondNudgeBody, setSecondNudgeBody,
-  persistNudge,
 }) {
   const aiOff = globalAiMode === "i_respond";
 
@@ -1079,19 +1173,6 @@ function ReplyWidgetEditor({
     if (aiOff && fallback === "ai") setFallback("custom");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aiOff]);
-
-  function pickNudgeChannel(ch) {
-    setNudgeChannel(ch);
-    persistNudge && persistNudge({ nudge_channel: ch }, true);
-  }
-  function changeFirstNudge(v) {
-    setFirstNudgeBody(v);
-    persistNudge && persistNudge({ first_nudge_body: v }, false);
-  }
-  function changeSecondNudge(v) {
-    setSecondNudgeBody(v);
-    persistNudge && persistNudge({ second_nudge_body: v }, false);
-  }
 
   // Inline AI tester — same /me/ai/test-reply endpoint the AI Settings
   // page uses, just rendered in the drawer so users can sanity-check
@@ -1262,55 +1343,9 @@ function ReplyWidgetEditor({
         </div>
       )}
 
-      {/* Nudges — channel + custom messages. Saved to the global
-          ai_policy.json so changing here applies to every Reply step
-          (and is reflected in the top-right control's mental model). */}
-      <div className="fb-replywidget-section">
-        <label className="fb-drawer-l">Nudge me</label>
-        <div className="fb-rwnudge-block">
-          <div className="fb-rwnudge-row">
-            <span className="fb-rwnudge-row-l">Send to</span>
-            <div className="fb-rwnudge-channel">
-              <button type="button"
-                className={`fb-rwnudge-pill ${nudgeChannel === "sms" ? "is-active" : ""}`}
-                onClick={() => pickNudgeChannel("sms")}>📱 Text</button>
-              <button type="button"
-                className={`fb-rwnudge-pill ${nudgeChannel === "email" ? "is-active" : ""}`}
-                onClick={() => pickNudgeChannel("email")}>📧 Email</button>
-              <button type="button"
-                className={`fb-rwnudge-pill ${nudgeChannel === "both" ? "is-active" : ""}`}
-                onClick={() => pickNudgeChannel("both")}>Both</button>
-            </div>
-          </div>
-          <div className="fb-rwnudge-bodies">
-            <label>
-              <span>First nudge</span>
-              <textarea
-                className="fb-input fb-textarea fb-rwnudge-ta"
-                rows={2}
-                value={firstNudgeBody}
-                onChange={(e) => changeFirstNudge(e.target.value)}
-                placeholder="{first_name} is waiting for a reply."
-                data-ai-editable="true" data-ai-field-type="general"
-              />
-            </label>
-            <label>
-              <span>Second nudge</span>
-              <textarea
-                className="fb-input fb-textarea fb-rwnudge-ta"
-                rows={2}
-                value={secondNudgeBody}
-                onChange={(e) => changeSecondNudge(e.target.value)}
-                placeholder="Still waiting on {first_name}. AI will take over soon if you don't reply."
-                data-ai-editable="true" data-ai-field-type="general"
-              />
-            </label>
-          </div>
-          <p className="fb-rwnudge-helper">
-            Use <code>{"{first_name}"}</code> to drop in the customer's name. Saved to your global setting.
-          </p>
-        </div>
-      </div>
+      {/* Nudge messages + channel are edited on the right-side timeline.
+          Click the ✏️ icon next to Nudge 1 / Nudge 2 to open a small
+          inline editor. The channel pill sits below the timeline. */}
 
       {/* Read-only summary of the global AI mode. Only relevant when
           the fallback is AI — for "Send this" the user has chosen
@@ -2278,59 +2313,86 @@ const STYLES = `
     white-space: pre-wrap; word-wrap: break-word;
   }
 
-  /* Nudges block — channel pills + two body textareas.
-     Lives in the editor column under the cadence info. Auto-saves to
-     the global ai_policy on change. */
-  .fb-rwnudge-block {
-    padding: 18px 20px;
+  /* Click-to-edit nudge rows in the right-side timeline. The row's
+     content becomes a button so the whole strong+time+✏️ icon is the
+     hit target. Click → expands an inline textarea below. */
+  .fb-rwprev-nudge .fb-rwprev-nudge-head {
+    display: flex; align-items: baseline; gap: 8px;
+    width: 100%; padding: 0; margin: 0;
+    background: transparent; border: 0; cursor: pointer;
+    text-align: left; font: inherit;
+    border-radius: 6px;
+    transition: background 0.12s ease;
+  }
+  .fb-rwprev-nudge .fb-rwprev-nudge-head:hover {
+    background: rgba(15,23,42,0.04);
+  }
+  .fb-rwprev-nudge .fb-rwprev-nudge-head strong {
+    font-size: 16px; font-weight: 700; color: #0a0a0a;
+  }
+  .fb-rwprev-nudge .fb-rwprev-nudge-head span {
+    font-size: 13.5px; color: #6b7280; font-weight: 500;
+  }
+  .fb-rwprev-edit-ico {
+    margin-left: auto;
+    font-size: 13px;
+    opacity: 0.55;
+    transition: opacity 0.12s ease, transform 0.12s ease;
+  }
+  .fb-rwprev-nudge .fb-rwprev-nudge-head:hover .fb-rwprev-edit-ico {
+    opacity: 1; transform: scale(1.08);
+  }
+  .fb-rwprev-nudge.is-open .fb-rwprev-edit-ico {
+    opacity: 1;
+  }
+  .fb-rwprev-nudge-body {
+    margin-top: 10px;
+    animation: fbRwExpand 0.16s ease-out;
+  }
+  @keyframes fbRwExpand {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: none; }
+  }
+  .fb-rwprev-nudge-ta {
+    width: 100%; box-sizing: border-box;
+    padding: 12px 14px;
+    font-size: 14px; line-height: 1.5; font-family: inherit;
+    color: #0a0a0a;
     background: #fff;
-    border: 1.5px solid #e5e7eb; border-radius: 14px;
+    border: 1.5px solid #cbd5e1; border-radius: 10px;
+    resize: vertical; min-height: 70px;
+    transition: border-color 0.14s ease, box-shadow 0.14s ease;
   }
-  .fb-rwnudge-row {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 16px; margin-bottom: 18px;
+  .fb-rwprev-nudge-ta:focus {
+    outline: 0; border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
   }
-  .fb-rwnudge-row-l {
-    font-size: 14px; font-weight: 600; color: #1f2937;
+
+  /* Channel pill row below the timeline */
+  .fb-rwprev-channel {
+    margin-top: 22px;
+    padding-top: 16px;
+    border-top: 1px solid #f1f5f9;
+    display: flex; align-items: center; gap: 10px;
+    flex-wrap: wrap;
   }
-  .fb-rwnudge-channel { display: flex; gap: 8px; flex-wrap: wrap; }
-  .fb-rwnudge-pill {
-    padding: 8px 14px; font: inherit;
-    font-size: 13.5px; font-weight: 600;
+  .fb-rwprev-channel-l {
+    font-size: 12.5px; font-weight: 500; color: #6b7280;
+  }
+  .fb-rwprev-channel-pills {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .fb-rwprev-cpill {
+    padding: 6px 11px; font: inherit;
+    font-size: 12.5px; font-weight: 600;
     border-radius: 999px; border: 1.5px solid #e5e7eb;
     background: #fff; color: #374151; cursor: pointer;
-    transition: all 0.14s ease;
+    transition: all 0.12s ease;
   }
-  .fb-rwnudge-pill:hover {
-    background: #f9fafb; border-color: #cbd5e1;
-    transform: translateY(-1px);
-  }
-  .fb-rwnudge-pill.is-active {
-    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-    color: #fff; border-color: #0f172a;
-    box-shadow: 0 3px 8px rgba(15,23,42,0.18);
-  }
-  .fb-rwnudge-bodies {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
-  }
-  @media (max-width: 980px) {
-    .fb-rwnudge-bodies { grid-template-columns: 1fr; }
-  }
-  .fb-rwnudge-bodies label {
-    display: flex; flex-direction: column; gap: 6px;
-    font-size: 13px; font-weight: 600; color: #475569;
-  }
-  .fb-rwnudge-ta {
-    min-height: 64px; padding: 12px 14px;
-    font-size: 14px; line-height: 1.55; resize: vertical;
-  }
-  .fb-rwnudge-helper {
-    margin: 14px 0 0; font-size: 12.5px; color: #6b7280;
-  }
-  .fb-rwnudge-helper code {
-    padding: 1px 6px; border-radius: 5px;
-    background: #f1f5f9; color: #0f172a;
-    font-size: 12px; font-family: ui-monospace, Menlo, Consolas, monospace;
+  .fb-rwprev-cpill:hover { background: #f9fafb; border-color: #cbd5e1; }
+  .fb-rwprev-cpill.is-active {
+    background: #0f172a; color: #fff; border-color: #0f172a;
+    box-shadow: 0 2px 6px rgba(15,23,42,0.18);
   }
 
   /* Inline AI test panel — visible when fallback="ai" */
