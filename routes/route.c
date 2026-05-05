@@ -248,6 +248,9 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
         (strcmp(route, "/twilio/voice") == 0 || strcmp(route, "/voice") == 0)) {
         printf("Twilio live voice webhook received — proxying to Flask for phone-to-account lookup.\n");
         post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/twilio/sms") == 0) {
+        printf("Twilio SMS webhook received — proxying to Flask for lead-intake.\n");
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strcmp(route, "/voice-legacy") == 0) {
         printf("Twilio Voice webhook received.\n");
         printf("Raw Headers:\n%s\n", http_header);
