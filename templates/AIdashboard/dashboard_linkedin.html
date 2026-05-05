@@ -1551,6 +1551,21 @@
       letter-spacing: 0.05em;
     }
 
+    /* Export dropdown on the review grid top bar. */
+    .rev-export-wrap { position: relative; }
+    .rev-export-menu {
+      position: absolute; right: 0; top: calc(100% + 6px);
+      z-index: 90; min-width: 200px;
+      background: #fff; border: 1px solid var(--border);
+      border-radius: 10px; padding: 6px;
+      box-shadow: 0 8px 22px rgba(0,0,0,.10);
+    }
+    .rev-export-menu a {
+      display: block; padding: 8px 12px; border-radius: 6px;
+      font-size: 13px; color: var(--text); text-decoration: none;
+    }
+    .rev-export-menu a:hover { background: var(--bg-alt); }
+
     /* Performance tab — table + A/B summary card. */
     .perf-table {
       width: 100%; border-collapse: collapse;
@@ -10925,6 +10940,15 @@
         +   '<div class="rev-bar-spacer"></div>'
         +   '<button class="btn btn-ghost" type="button" id="rev-back">'
         +     '← Back</button>'
+        +   '<div class="rev-export-wrap">'
+        +     '<button class="btn btn-ghost" type="button" id="rev-export">'
+        +       '⬇ Export</button>'
+        +     '<div class="rev-export-menu" id="rev-export-menu" hidden>'
+        +       '<a id="rev-export-csv-all"  href="#">CSV · all posts</a>'
+        +       '<a id="rev-export-csv-kept" href="#">CSV · kept only</a>'
+        +       '<a id="rev-export-json"     href="#">JSON · full draft</a>'
+        +     '</div>'
+        +   '</div>'
         +   (noMediaIds.length > 0
               ? ('<button class="btn" type="button" id="rev-bulk-media">'
                 + '✨ Add pictures to ' + noMediaIds.length + '</button>')
@@ -10986,6 +11010,30 @@
 
       // Wire top bar.
       $("rev-back").onclick = () => makeRenderOverview();
+      var expBtn  = $("rev-export");
+      var expMenu = $("rev-export-menu");
+      if (expBtn && expMenu) {
+        var toggleMenu = (show) => {
+          expMenu.hidden = (show === false ? true
+            : (show === true ? false : !expMenu.hidden));
+        };
+        expBtn.addEventListener("click", (e) => {
+          e.stopPropagation(); toggleMenu();
+        });
+        document.addEventListener("click", (e) => {
+          if (!expMenu.hidden && !expMenu.contains(e.target)
+              && e.target !== expBtn) toggleMenu(false);
+        });
+        var dlBase = "/dashboard/linkedin/api/ai-draft/"
+          + encodeURIComponent(draft.id || "") + "/export";
+        $("rev-export-csv-all").href  = dlBase;
+        $("rev-export-csv-kept").href = dlBase + "?status=kept";
+        $("rev-export-json").href     = dlBase + "?format=json";
+        // Hide the menu after a click — the browser starts the download
+        // even though we never navigated away.
+        expMenu.querySelectorAll("a").forEach(a =>
+          a.addEventListener("click", () => toggleMenu(false)));
+      }
       var bulkBtn = $("rev-bulk-media");
       if (bulkBtn) bulkBtn.onclick = () => {
         // Ask for browser-notification permission so completion fires.
