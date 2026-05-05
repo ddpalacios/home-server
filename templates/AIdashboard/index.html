@@ -7812,14 +7812,21 @@
         }
         .sched-rail-when.is-scheduled { color: #2563eb; font-weight: 500; }
 
-        /* Booked block on the grid (drag-source AND clickable for remove). */
+        /* Booked block on the grid (drag-source AND clickable for remove).
+           Phase 1 redesign: stage-colored card with type icon, full name,
+           time + duration, type · stage. Color comes from --stage-color
+           (set inline from the lead's stage); the spine on the left is the
+           one-and-only stage cue. The other three borders are the same
+           stage color at 40% opacity so the card reads as a unit without
+           feeling boxed-in. */
         .sched-block {
           position: absolute;
           left: 4px; right: 4px;
-          background: rgba(37, 99, 235, 0.16);
-          border-left: 3px solid #2563eb;
-          border-radius: 6px;
-          padding: 4px 8px;
+          background: var(--stage-fill, rgba(37, 99, 235, 0.12));
+          border: 1px solid var(--stage-border, rgba(37, 99, 235, 0.40));
+          border-left: 4px solid var(--stage-color, #2563eb);
+          border-radius: 8px;
+          padding: 8px 10px;
           font-size: 12px;
           color: #0a0a0a;
           line-height: 1.3;
@@ -7827,19 +7834,499 @@
           cursor: pointer;
           z-index: 2;
           transition: filter 120ms ease, transform 120ms ease;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
         }
         .sched-block:hover { filter: brightness(0.96); transform: translateX(1px); }
-        .sched-block-name {
-          font-weight: 600;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
+        /* Phase 2 hover affordance — pill border thickens slightly to signal
+           clickability. Spine (4px left border) stays; the three thin sides
+           bump 1px → 1.5px and we offset the padding 0.5px so the inner
+           content doesn't shift on hover. */
+        .sched-block:not(.sched-block--external):hover,
+        .sched-block:not(.sched-block--external):focus-visible {
+          border-top-width: 1.5px;
+          border-right-width: 1.5px;
+          border-bottom-width: 1.5px;
+          padding-top: 7.5px;
+          padding-bottom: 7.5px;
+          padding-right: 9.5px;
+          outline: none;
         }
+        .sched-block { transition: filter 120ms ease, transform 120ms ease, border-width 50ms ease, padding 50ms ease; }
+        /* Phase 2 hover-peek tooltip — appears 300ms after the cursor lands
+           on a pill (or the pill is focused). Single shared element, edge-
+           aware positioning, fades in 150ms, fades out after a 100ms grace
+           period so the user can travel from pill into the tooltip. */
+        .sched-tooltip {
+          position: absolute;
+          top: 0; left: 0;
+          z-index: 60;
+          pointer-events: auto;
+          background: #fff;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          padding: 12px 16px;
+          min-width: 240px;
+          max-width: 320px;
+          font-size: 13px;
+          color: #0a0a0a;
+          line-height: 1.4;
+          opacity: 0;
+          transition: opacity 150ms ease;
+          will-change: opacity, transform;
+        }
+        .sched-tooltip.is-open { opacity: 1; }
+        .sched-tooltip-head {
+          display: flex;
+          align-items: flex-start;
+          gap: 8px;
+          font-size: 14px;
+          font-weight: 700;
+          color: #0a0a0a;
+          line-height: 1.3;
+        }
+        .sched-tooltip-head-icon {
+          flex: 0 0 auto;
+          font-size: 14px;
+          line-height: 1.2;
+          margin-top: 1px;
+        }
+        .sched-tooltip-head-name {
+          flex: 1 1 auto;
+          word-wrap: break-word;
+          overflow-wrap: anywhere;
+        }
+        .sched-tooltip-contact {
+          font-size: 12.5px;
+          color: #475569;
+          margin-top: 4px;
+          word-wrap: break-word;
+          overflow-wrap: anywhere;
+        }
+        .sched-tooltip-divider {
+          height: 1px;
+          background: #f1f5f9;
+          margin: 8px 0;
+          border: 0;
+        }
+        .sched-tooltip-when {
+          font-size: 12.5px;
+          color: #0a0a0a;
+        }
+        .sched-tooltip-when-time {
+          font-size: 12.5px;
+          color: #0a0a0a;
+          margin-top: 2px;
+        }
+        .sched-tooltip-notes-label {
+          font-size: 11.5px;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: #71717a;
+          margin-top: 8px;
+        }
+        .sched-tooltip-notes-body {
+          font-size: 13px;
+          color: #0a0a0a;
+          margin-top: 2px;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+          overflow-wrap: anywhere;
+        }
+        .sched-tooltip-stage {
+          font-size: 13px;
+          color: #475569;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .sched-tooltip-stage-dot {
+          display: inline-block;
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          flex: 0 0 auto;
+        }
+        .sched-tooltip-stage-name {
+          color: #0a0a0a;
+          font-weight: 700;
+        }
+        .sched-tooltip-hint {
+          margin-top: 10px;
+          font-size: 11.5px;
+          font-style: italic;
+          color: #9ca3af;
+        }
+        /* ─── Phase 3 click-to-edit appointment panel ───────────────────
+           Slides in from the right of the viewport with a dimmed backdrop.
+           Replaces the legacy single-click "Remove this appointment?"
+           confirm dialog with a richer multi-field editor (type, date,
+           time, duration, notes) plus a Cancel-this-appointment surface
+           that keeps the previous flow as one option inside it. */
+        .sched-edit-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 990;
+          background: rgba(15, 23, 42, 0.30);
+          opacity: 0;
+          transition: opacity 180ms ease;
+        }
+        .sched-edit-backdrop.is-open { opacity: 1; }
+        .sched-edit-panel {
+          position: fixed;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          width: 520px;
+          max-width: 92vw;
+          z-index: 1000;
+          background: #fff;
+          box-shadow: -16px 0 40px rgba(15, 23, 42, 0.14);
+          display: flex;
+          flex-direction: column;
+          font-family: "Inter", "Space Grotesk", system-ui, -apple-system, sans-serif;
+          color: #0a0a0a;
+          transform: translateX(100%);
+          transition: transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+        }
+        .sched-edit-panel.is-open { transform: translateX(0); }
+        .sched-edit-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 18px 22px 14px;
+          border-bottom: 1px solid #e5e7eb;
+          flex: 0 0 auto;
+        }
+        .sched-edit-title {
+          font-size: 17px;
+          font-weight: 700;
+          margin: 0;
+        }
+        .sched-edit-close {
+          appearance: none;
+          background: transparent;
+          border: 0;
+          font-size: 22px;
+          line-height: 1;
+          color: #64748b;
+          cursor: pointer;
+          padding: 4px 8px;
+          border-radius: 6px;
+        }
+        .sched-edit-close:hover { background: #f1f5f9; color: #0a0a0a; }
+        .sched-edit-body {
+          flex: 1 1 auto;
+          overflow-y: auto;
+          padding: 18px 22px 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        .sched-edit-summary {
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 10px;
+          padding: 14px 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .sched-edit-summary-name {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 16px;
+          font-weight: 700;
+          color: #0a0a0a;
+        }
+        .sched-edit-summary-icon {
+          font-size: 16px;
+          line-height: 1;
+        }
+        .sched-edit-summary-email {
+          font-size: 13px;
+          color: #475569;
+          word-wrap: break-word;
+          overflow-wrap: anywhere;
+        }
+        .sched-edit-summary-stage {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 13px;
+          color: #475569;
+          margin-top: 2px;
+        }
+        .sched-edit-summary-stage-dot {
+          display: inline-block;
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+        }
+        .sched-edit-summary-stage-name {
+          font-weight: 700;
+          color: #0a0a0a;
+        }
+        .sched-edit-profile-link {
+          appearance: none;
+          background: transparent;
+          border: 0;
+          padding: 4px 0 0;
+          font-size: 12.5px;
+          color: #2563eb;
+          font-weight: 600;
+          cursor: pointer;
+          align-self: flex-start;
+        }
+        .sched-edit-profile-link:hover { text-decoration: underline; }
+        .sched-edit-field {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        .sched-edit-field > label {
+          font-size: 12px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: #64748b;
+        }
+        .sched-edit-field > input[type="date"],
+        .sched-edit-field > input[type="time"],
+        .sched-edit-field > input[type="number"],
+        .sched-edit-field > select,
+        .sched-edit-field > textarea {
+          font-family: inherit;
+          font-size: 14px;
+          color: #0a0a0a;
+          background: #fff;
+          border: 1px solid #cbd5e1;
+          border-radius: 8px;
+          padding: 9px 11px;
+          outline: 0;
+          transition: border-color 120ms ease, box-shadow 120ms ease;
+        }
+        .sched-edit-field > input:focus,
+        .sched-edit-field > select:focus,
+        .sched-edit-field > textarea:focus {
+          border-color: #2563eb;
+          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+        }
+        .sched-edit-time-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .sched-edit-time-row > input[type="time"] {
+          flex: 1 1 0;
+          min-width: 0;
+        }
+        .sched-edit-time-sep {
+          color: #94a3b8;
+          font-weight: 600;
+        }
+        .sched-edit-custom-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-top: 6px;
+        }
+        .sched-edit-custom-row > input[type="number"] {
+          width: 110px;
+        }
+        .sched-edit-custom-row > span {
+          font-size: 13px;
+          color: #475569;
+        }
+        .sched-edit-divider {
+          height: 1px;
+          background: #e5e7eb;
+          margin: 4px 0 0;
+          border: 0;
+        }
+        .sched-edit-cancel-block {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        .sched-edit-cancel-btn {
+          appearance: none;
+          background: #fff;
+          border: 1px solid #fecaca;
+          color: #b91c1c;
+          font-weight: 600;
+          padding: 10px 14px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 14px;
+          align-self: flex-start;
+          transition: background 120ms ease, border-color 120ms ease;
+        }
+        .sched-edit-cancel-btn:hover {
+          background: #fef2f2;
+          border-color: #fca5a5;
+        }
+        .sched-edit-warn {
+          background: #fffbeb;
+          border: 1px solid #fde68a;
+          color: #92400e;
+          padding: 12px 14px;
+          border-radius: 8px;
+          font-size: 13px;
+          line-height: 1.45;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .sched-edit-warn-title {
+          font-weight: 700;
+          color: #78350f;
+        }
+        .sched-edit-warn-list {
+          margin: 0;
+          padding-left: 18px;
+        }
+        .sched-edit-warn-actions {
+          display: flex;
+          gap: 8px;
+          margin-top: 4px;
+        }
+        .sched-edit-warn-actions > button {
+          appearance: none;
+          font-family: inherit;
+          font-size: 13px;
+          font-weight: 600;
+          padding: 7px 12px;
+          border-radius: 6px;
+          cursor: pointer;
+        }
+        .sched-edit-warn-actions > button.is-primary {
+          background: #b45309;
+          border: 1px solid #b45309;
+          color: #fff;
+        }
+        .sched-edit-warn-actions > button.is-primary:hover { background: #92400e; }
+        .sched-edit-warn-actions > button.is-secondary {
+          background: #fff;
+          border: 1px solid #fde68a;
+          color: #78350f;
+        }
+        .sched-edit-warn-actions > button.is-secondary:hover { background: #fef3c7; }
+        .sched-edit-foot {
+          display: flex;
+          justify-content: flex-end;
+          gap: 10px;
+          padding: 14px 22px 18px;
+          border-top: 1px solid #e5e7eb;
+          flex: 0 0 auto;
+        }
+        .sched-edit-foot > button {
+          appearance: none;
+          font-family: inherit;
+          font-size: 14px;
+          font-weight: 600;
+          padding: 9px 16px;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: background 120ms ease, border-color 120ms ease;
+        }
+        .sched-edit-foot-cancel {
+          background: #fff;
+          border: 1px solid #cbd5e1;
+          color: #0a0a0a;
+        }
+        .sched-edit-foot-cancel:hover { background: #f1f5f9; }
+        .sched-edit-foot-save {
+          background: #2563eb;
+          border: 1px solid #2563eb;
+          color: #fff;
+        }
+        .sched-edit-foot-save:hover { background: #1d4ed8; }
+        .sched-edit-foot-save:disabled {
+          background: #93c5fd;
+          border-color: #93c5fd;
+          cursor: not-allowed;
+        }
+        .sched-edit-empty {
+          padding: 28px 16px;
+          text-align: center;
+          color: #64748b;
+          font-size: 14px;
+          line-height: 1.5;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .sched-edit-panel, .sched-edit-backdrop { transition: none; }
+        }
+        /* Row 1 — type icon + customer name. Wraps so long names don't
+           get truncated; the calendar's whole point is "who is at 9am". */
+        .sched-block-row1 {
+          display: flex;
+          align-items: flex-start;
+          gap: 6px;
+          min-width: 0;
+        }
+        .sched-block-icon {
+          flex: 0 0 auto;
+          font-size: 13px;
+          line-height: 1.2;
+          margin-top: 1px;
+        }
+        .sched-block-name {
+          flex: 1 1 auto;
+          font-weight: 600;
+          font-size: 12.5px;
+          color: #0a0a0a;
+          white-space: normal;
+          word-wrap: break-word;
+          overflow-wrap: anywhere;
+          min-width: 0;
+        }
+        /* Row 2 — time range + duration. */
         .sched-block-time {
           font-size: 11px;
           color: #475569;
           margin-top: 1px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
+        /* Row 3 — type · stage labels. */
+        .sched-block-meta {
+          font-size: 10.5px;
+          color: #64748b;
+          font-weight: 500;
+          letter-spacing: 0.01em;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .sched-block-meta strong {
+          color: var(--stage-color, #2563eb);
+          font-weight: 600;
+        }
+        /* Compressed pill (≤15 min, height < 36px): only Row 1, name on a
+           single line with ellipsis. Hover/click in later phases reveals
+           the rest. */
+        .sched-block.is-compressed {
+          padding: 4px 8px 4px 10px;
+          gap: 0;
+        }
+        .sched-block.is-compressed .sched-block-name {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          font-size: 11.5px;
+        }
+        .sched-block.is-compressed .sched-block-time,
+        .sched-block.is-compressed .sched-block-meta { display: none; }
+        /* Mid pill (16–50px tall): show Row 1 + Row 2, suppress Row 3. */
+        .sched-block.is-mid {
+          padding: 5px 10px;
+        }
+        .sched-block.is-mid .sched-block-meta { display: none; }
         .sched-block-pending {
           display: inline-block;
           font-size: 9.5px;
@@ -7866,13 +8353,16 @@
             #e2e8f0 4px,
             #e2e8f0 8px
           );
-          border-left: 3px solid #94a3b8;
+          border: 1px solid #cbd5e1;
+          border-left: 4px solid #94a3b8;
           color: #475569;
           cursor: default;
         }
         .sched-block.sched-block--external:hover { filter: none; transform: none; }
         .sched-block.sched-block--external .sched-block-name { color: #334155; }
         .sched-block.sched-block--external .sched-block-time { color: #64748b; }
+        .sched-block.sched-block--external .sched-block-meta { color: #64748b; }
+        .sched-block.sched-block--external .sched-block-meta strong { color: #475569; }
 
         /* Busy block — read-only existing GCal event the owner already has. */
         .sched-busy {
@@ -25728,6 +26218,61 @@
         if (!m) return `rgba(100,100,100,${a})`;
         return `rgba(${parseInt(m[1],16)}, ${parseInt(m[2],16)}, ${parseInt(m[3],16)}, ${a})`;
       }
+      // Stage palette — must match leads.js STAGE_COLORS verbatim and the
+      // .pl-stage-card CSS at the top of this file. Don't pick new colors;
+      // the calendar block must match the lead's pipeline column color so
+      // the contractor learns "amber = quoted" once and trusts it.
+      const SCHED_STAGE_COLORS = {
+        new:       "#888780",
+        contacted: "#378ADD",
+        engaged:   "#7F77DD",
+        quoted:    "#BA7517",
+        scheduled: "#1D9E75",
+        won:       "#639922",
+        lost:      "#A32D2D",
+      };
+      const SCHED_STAGE_LABELS = {
+        new: "New", contacted: "Contacted", engaged: "Engaged",
+        quoted: "Quoted", scheduled: "Scheduled", won: "Won", lost: "Lost",
+      };
+      function stageColor(stage) {
+        return SCHED_STAGE_COLORS[stage] || SCHED_STAGE_COLORS.scheduled;
+      }
+      function stageLabel(stage) {
+        return SCHED_STAGE_LABELS[stage] || SCHED_STAGE_LABELS.scheduled;
+      }
+      // Type icons + labels. Until the backend carries appointment_type,
+      // every event falls back to "other" → ⚙️ Appointment. Phase 3 adds
+      // the field at booking time + a picker in the click-to-edit panel.
+      const SCHED_APPT_ICONS = {
+        call:     "📞",
+        estimate: "📋",
+        visit:    "🏠",
+        meeting:  "🤝",
+        job:      "🔧",
+        other:    "⚙️",
+      };
+      const SCHED_APPT_LABELS = {
+        call: "Call", estimate: "Estimate", visit: "Visit",
+        meeting: "Meeting", job: "Job", other: "Appointment",
+      };
+      function apptTypeIcon(t) {
+        return SCHED_APPT_ICONS[t] || SCHED_APPT_ICONS.other;
+      }
+      function apptTypeLabel(t) {
+        return SCHED_APPT_LABELS[t] || SCHED_APPT_LABELS.other;
+      }
+      // Human duration: "30 min", "1 hour", "1 hr 30 min", "2 hr 15 min".
+      function fmtDurationSched(startDate, endDate) {
+        const ms = endDate - startDate;
+        if (!Number.isFinite(ms) || ms <= 0) return "";
+        const mins = Math.round(ms / 60000);
+        if (mins < 60) return `${mins} min`;
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        if (m === 0) return h === 1 ? "1 hour" : `${h} hours`;
+        return `${h} hr ${m} min`;
+      }
       function leadName(l) {
         const n = ((l.first_name || "") + " " + (l.last_name || "")).trim();
         return n || l.email || l.phone || "Customer";
@@ -25882,10 +26427,243 @@
         });
       }
 
+      // ─── Phase 2: hover-peek tooltip ──────────────────────────────────
+      // Single shared tooltip element re-rendered per hover (cheap; one
+      // node lives in <body> for the lifetime of the page). Wired via
+      // event delegation on the calendar host so listeners survive every
+      // re-render — no per-pill listeners that need rebinding.
+      // Show after 300ms hover/focus, hide 100ms after the cursor leaves
+      // both the pill AND the tooltip (grace period lets the cursor travel
+      // from pill into the tooltip without flicker).
+      let _schedTipEl = null;        // the shared tooltip DOM node
+      let _schedTipPill = null;       // the pill the tooltip is currently anchored to
+      let _schedTipShowTimer = null;  // 300ms debounce
+      let _schedTipHideTimer = null;  // 100ms grace
+      function _schedTipEnsureEl() {
+        if (_schedTipEl) return _schedTipEl;
+        const el = document.createElement("div");
+        el.className = "sched-tooltip";
+        el.setAttribute("role", "tooltip");
+        el.style.display = "none";
+        el.addEventListener("mouseenter", () => {
+          // Cursor entered the tooltip — cancel any pending hide so the
+          // user can read it for as long as they want.
+          if (_schedTipHideTimer) { clearTimeout(_schedTipHideTimer); _schedTipHideTimer = null; }
+        });
+        el.addEventListener("mouseleave", () => {
+          _schedTipScheduleHide();
+        });
+        document.body.appendChild(el);
+        _schedTipEl = el;
+        return el;
+      }
+      function _schedTipBuildHtml(lead, b) {
+        const stage = (lead && lead.stage) || "scheduled";
+        const stageC = stageColor(stage);
+        const stageLab = stageLabel(stage);
+        const apptType = (lead && lead.appointment_type) || (b && b.appointment_type) || "other";
+        const icon = apptTypeIcon(apptType);
+        const typeLab = apptTypeLabel(apptType);
+        const name = leadName(lead);
+        // Backend currently sends notes under .appointment_notes (Phase 3
+        // booking flow) but the older lead pipeline uses .notes / .note;
+        // accept any of them so the tooltip works today AND after Phase 3.
+        const notes = (lead && (lead.appointment_notes || lead.notes || lead.note) || "").trim();
+        const email = (lead && lead.email) || "";
+        const phone = (lead && lead.phone) || "";
+        const dateLab = b.start.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+        const timeRange = `${fmtTimeSched(b.start)} — ${fmtTimeSched(b.end)}`;
+        const dur = fmtDurationSched(b.start, b.end);
+        const timeLine = dur ? `${timeRange} (${dur})` : timeRange;
+        let html = "";
+        html += `<div class="sched-tooltip-head">`;
+        html += `<span class="sched-tooltip-head-icon" aria-hidden="true">${icon}</span>`;
+        html += `<span class="sched-tooltip-head-name">${escapeHtml(name)}</span>`;
+        html += `</div>`;
+        if (email) html += `<div class="sched-tooltip-contact">${escapeHtml(email)}</div>`;
+        if (phone) html += `<div class="sched-tooltip-contact">${escapeHtml(phone)}</div>`;
+        html += `<hr class="sched-tooltip-divider" />`;
+        html += `<div class="sched-tooltip-when">${escapeHtml(typeLab)} · ${escapeHtml(dateLab)}</div>`;
+        html += `<div class="sched-tooltip-when-time">${escapeHtml(timeLine)}</div>`;
+        if (notes) {
+          html += `<div class="sched-tooltip-notes-label">Notes:</div>`;
+          html += `<div class="sched-tooltip-notes-body">${escapeHtml(notes)}</div>`;
+        }
+        html += `<hr class="sched-tooltip-divider" />`;
+        html += `<div class="sched-tooltip-stage">Stage: `
+              + `<span class="sched-tooltip-stage-dot" style="background:${stageC};"></span>`
+              + `<span class="sched-tooltip-stage-name">${escapeHtml(stageLab)}</span>`
+              + `</div>`;
+        html += `<div class="sched-tooltip-hint">Click to edit →</div>`;
+        return html;
+      }
+      function _schedTipPosition(pill, el) {
+        // Edge-aware: prefer right of pill, vertically centered. If the
+        // tooltip would clip past any viewport edge, flip to the opposite
+        // side. Falls back to clamped-on-screen if the viewport is so
+        // small that no side fits.
+        const GAP = 8;
+        const pad = 8; // viewport edge padding
+        const pillRect = pill.getBoundingClientRect();
+        // Read tooltip dimensions AFTER it's in the DOM and laid out.
+        // We render it at top:0 left:0 first to measure, then translate.
+        const tipRect = el.getBoundingClientRect();
+        const tipW = tipRect.width;
+        const tipH = tipRect.height;
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+        // Default: right side, vertically centered on the pill.
+        let left = pillRect.right + GAP;
+        let top  = pillRect.top + (pillRect.height - tipH) / 2;
+        // Right would clip → flip to left of pill.
+        if (left + tipW > vw - pad) {
+          const leftAlt = pillRect.left - GAP - tipW;
+          if (leftAlt >= pad) {
+            left = leftAlt;
+          } else {
+            // Neither side fits — drop below or above the pill instead.
+            const belowTop = pillRect.bottom + GAP;
+            const aboveTop = pillRect.top - GAP - tipH;
+            if (belowTop + tipH <= vh - pad) {
+              top = belowTop;
+              left = Math.max(pad, Math.min(pillRect.left, vw - pad - tipW));
+            } else if (aboveTop >= pad) {
+              top = aboveTop;
+              left = Math.max(pad, Math.min(pillRect.left, vw - pad - tipW));
+            } else {
+              // Last resort: clamp to viewport.
+              left = Math.max(pad, Math.min(pillRect.left, vw - pad - tipW));
+              top  = Math.max(pad, Math.min(top, vh - pad - tipH));
+            }
+          }
+        }
+        // Vertical clip → nudge up (or anchor below pill if anchoring above
+        // would clip the top instead).
+        if (top + tipH > vh - pad) {
+          const aboveTop = pillRect.top - GAP - tipH;
+          if (aboveTop >= pad) top = aboveTop;
+          else top = Math.max(pad, vh - pad - tipH);
+        }
+        if (top < pad) {
+          const belowTop = pillRect.bottom + GAP;
+          if (belowTop + tipH <= vh - pad) top = belowTop;
+          else top = pad;
+        }
+        el.style.left = (left + scrollX) + "px";
+        el.style.top  = (top + scrollY) + "px";
+      }
+      function _schedTipShowFor(pill) {
+        const id = pill.dataset.leadId;
+        if (!id) return;
+        const lead = schedLeads.find(x => x.id === id);
+        if (!lead) return;
+        // Find the booking record for this pill so we have start/end.
+        // We iterate schedEvents (the source of truth) and the staged
+        // pending changes, mirroring renderSchedBoard's bookings build.
+        const pending = schedPending.get(id);
+        let start = null, end = null, apptType = null;
+        if (pending && pending.action === "book") {
+          start = new Date(pending.start_iso);
+          end = new Date(start.getTime() + (pending.duration_min || 60) * 60000);
+        } else {
+          const ev = schedEvents.find(e => e.lead_id === id && !e.all_day && e.start);
+          if (ev) {
+            start = new Date(ev.start);
+            end = new Date(ev.end || (start.getTime() + 60*60000));
+          }
+        }
+        if (!start || !end || Number.isNaN(start.getTime())) return;
+        const b = { lead, start, end, appointment_type: apptType };
+        const el = _schedTipEnsureEl();
+        el.innerHTML = _schedTipBuildHtml(lead, b);
+        // Pre-position offscreen so we can measure without the user seeing
+        // a flash, then run the edge-aware positioner.
+        el.style.display = "block";
+        el.style.left = "-9999px";
+        el.style.top = "0px";
+        el.classList.remove("is-open");
+        // Force layout, then position + fade in.
+        // (Reading offsetHeight forces a synchronous reflow.)
+        void el.offsetHeight;
+        _schedTipPosition(pill, el);
+        // Next frame so the opacity transition runs smoothly.
+        requestAnimationFrame(() => { el.classList.add("is-open"); });
+        _schedTipPill = pill;
+      }
+      function _schedTipScheduleShow(pill) {
+        // Reset any stale state — moving cursor pill A → pill B should
+        // restart the 300ms timer for B and cancel any pending hide.
+        if (_schedTipShowTimer) { clearTimeout(_schedTipShowTimer); _schedTipShowTimer = null; }
+        if (_schedTipHideTimer) { clearTimeout(_schedTipHideTimer); _schedTipHideTimer = null; }
+        _schedTipShowTimer = setTimeout(() => {
+          _schedTipShowTimer = null;
+          _schedTipShowFor(pill);
+        }, 300);
+      }
+      function _schedTipScheduleHide() {
+        if (_schedTipShowTimer) { clearTimeout(_schedTipShowTimer); _schedTipShowTimer = null; }
+        if (_schedTipHideTimer) clearTimeout(_schedTipHideTimer);
+        _schedTipHideTimer = setTimeout(() => {
+          _schedTipHideTimer = null;
+          _schedTipForceHide();
+        }, 100);
+      }
+      function _schedTipForceHide() {
+        if (_schedTipShowTimer) { clearTimeout(_schedTipShowTimer); _schedTipShowTimer = null; }
+        if (_schedTipHideTimer) { clearTimeout(_schedTipHideTimer); _schedTipHideTimer = null; }
+        if (!_schedTipEl) return;
+        _schedTipEl.classList.remove("is-open");
+        _schedTipEl.style.display = "none";
+        _schedTipPill = null;
+      }
+      // Event delegation on document — captures hover/focus for any
+      // .sched-block[data-lead-id] regardless of how many times the board
+      // re-renders. Lookups are cheap because we filter inside the handler.
+      function _schedTipPillFromEvent(e) {
+        const t = e.target;
+        if (!t || !t.closest) return null;
+        return t.closest(".sched-block[data-lead-id]:not(.sched-block--external)");
+      }
+      document.addEventListener("mouseenter", (e) => {
+        const pill = _schedTipPillFromEvent(e);
+        if (!pill) return;
+        _schedTipScheduleShow(pill);
+      }, true);
+      document.addEventListener("mouseleave", (e) => {
+        const pill = _schedTipPillFromEvent(e);
+        if (!pill) return;
+        // Cursor leaving the pill — start grace period so the tooltip
+        // survives the hop from pill → tooltip.
+        _schedTipScheduleHide();
+      }, true);
+      document.addEventListener("focusin", (e) => {
+        const pill = _schedTipPillFromEvent(e);
+        if (!pill) return;
+        _schedTipScheduleShow(pill);
+      });
+      document.addEventListener("focusout", (e) => {
+        const pill = _schedTipPillFromEvent(e);
+        if (!pill) return;
+        _schedTipScheduleHide();
+      });
+      // Click on a pill — kill the tooltip immediately so it doesn't
+      // float over the "Remove this appointment?" confirm dialog (or, in
+      // Phase 3, the edit panel that replaces it).
+      document.addEventListener("mousedown", (e) => {
+        const pill = _schedTipPillFromEvent(e);
+        if (pill) _schedTipForceHide();
+      }, true);
+
       function renderSchedBoard() {
         const host = document.getElementById("schedBoard");
         const label = document.getElementById("schedWeekLabel");
         if (!host) return;
+        // Tear down any open hover-peek so a re-render (drop, cancel, week
+        // nav, refresh) can't leave an orphan tooltip pointing at a pill
+        // that no longer exists.
+        if (typeof _schedTipForceHide === "function") _schedTipForceHide();
         if (label) label.textContent = fmtWeekSched(schedWeekStart);
         const days = []; for (let i = 0; i < 7; i++) days.push(addDaysSched(schedWeekStart, i));
         const today = new Date(); today.setHours(0,0,0,0);
@@ -25961,32 +26739,72 @@
             const isHour = (m % 60) === 0;
             inner += `<div class="sched-cell ${isHour ? "" : "half"}" data-day="${dayIso}" data-slot-min="${m}"></div>`;
           }
-          // Overlay booked blocks — both lead-linked AND external GCal events
+          // Overlay booked blocks — both lead-linked AND external GCal events.
+          // Phase 1 redesign: each pill carries (1) a type icon + full
+          // customer name (no truncation in the full-size variant), (2)
+          // time range + human duration, (3) "Type · Stage" meta line.
+          // Pill color comes from the lead's stage so the calendar mirrors
+          // the pipeline columns; external events stay hatched grey.
           for (const b of bookings) {
             if (isoDateSched(b.start) !== dayIso) continue;
             const startMin = b.start.getHours() * 60 + b.start.getMinutes();
             const endMin   = b.end.getHours()   * 60 + b.end.getMinutes();
-            const top  = Math.max(0, (startMin - DAY_START_MIN) / SLOT_MIN) * SLOT_PX;
-            const hght = Math.max(SLOT_PX, ((endMin - startMin) / SLOT_MIN) * SLOT_PX);
+            const rawTop = Math.max(0, (startMin - DAY_START_MIN) / SLOT_MIN) * SLOT_PX;
+            const rawHght = Math.max(SLOT_PX, ((endMin - startMin) / SLOT_MIN) * SLOT_PX);
+            // 2px vertical breathing room between adjacent events so the
+            // grid line shows through and back-to-back appointments don't
+            // visually merge into one giant block.
+            const top  = rawTop + 1;
+            const hght = Math.max(20, rawHght - 2);
+            // Variant by height — short events get a single line, mid get
+            // two, full pills get all three rows. Cutoffs chosen so the
+            // text never overflows the pill: a 30-min event is 32px tall
+            // (mid), 60-min is 64px (full), 15-min is 16px (compressed).
+            let sizeClass = "";
+            if (hght < 36)      sizeClass = "is-compressed";
+            else if (hght <= 50) sizeClass = "is-mid";
+            const timeRange = `${fmtTimeSched(b.start)} – ${fmtTimeSched(b.end)}`;
+            const dur = fmtDurationSched(b.start, b.end);
+            const timeLine = dur ? `${timeRange} · ${dur}` : timeRange;
             if (b.external) {
               // External event — manually added in Google Calendar. Read-only,
               // grey hatched style so the user sees their calendar reality
               // without being able to edit it from here.
               const title = (b.title || "Calendar event").trim();
-              inner += `<div class="sched-block sched-block--external"
+              inner += `<div class="sched-block sched-block--external ${sizeClass}"
                             style="top:${top}px; height:${hght}px;">
-                         <div class="sched-block-name">${escapeHtml(title)}</div>
-                         <div class="sched-block-time">${escapeHtml(fmtTimeSched(b.start))} – ${escapeHtml(fmtTimeSched(b.end))}</div>
+                         <div class="sched-block-row1">
+                           <span class="sched-block-icon" aria-hidden="true">📅</span>
+                           <div class="sched-block-name">${escapeHtml(title)}</div>
+                         </div>
+                         <div class="sched-block-time">${escapeHtml(timeLine)}</div>
+                         <div class="sched-block-meta">External · Calendar</div>
                        </div>`;
               continue;
             }
-            const c = colorForLead(b.lead.id);
-            const fillBg = colorFillSched(c, 0.16);
-            const pendingBadge = b.pending ? `<span class="sched-block-pending">pending</span>` : "";
-            inner += `<div class="sched-block" style="top:${top}px; height:${hght}px; background:${fillBg}; border-left-color:${c};"
-                          data-lead-id="${escapeHtml(b.lead.id)}" draggable="true">
-                       <div class="sched-block-name">${escapeHtml(leadName(b.lead))} ${pendingBadge}</div>
-                       <div class="sched-block-time">${escapeHtml(fmtTimeSched(b.start))} – ${escapeHtml(fmtTimeSched(b.end))}</div>
+            // Stage-derived color (matches the lead's pipeline column).
+            // If the lead has no stage we fall back to "scheduled" — a
+            // booked event almost always belongs in that bucket anyway.
+            const stage = (b.lead && b.lead.stage) || "scheduled";
+            const c = stageColor(stage);
+            const fillBg = colorFillSched(c, 0.12);
+            const borderRgba = colorFillSched(c, 0.40);
+            const pendingBadge = b.pending ? ` <span class="sched-block-pending">pending</span>` : "";
+            // appointment_type isn't carried on lead/event payloads yet —
+            // every pill uses the "other" icon (⚙️) + "Appointment" label
+            // until Phase 3 adds the field at booking time.
+            const apptType = (b.lead && b.lead.appointment_type) || (b.appointment_type) || "other";
+            const icon = apptTypeIcon(apptType);
+            const typeLabel = apptTypeLabel(apptType);
+            const stageLab = stageLabel(stage);
+            inner += `<div class="sched-block ${sizeClass}" style="top:${top}px; height:${hght}px; --stage-color:${c}; --stage-fill:${fillBg}; --stage-border:${borderRgba};"
+                          data-lead-id="${escapeHtml(b.lead.id)}" data-stage="${escapeHtml(stage)}" draggable="true" tabindex="0" aria-label="${escapeHtml(leadName(b.lead))} — ${escapeHtml(typeLabel)} — ${escapeHtml(timeLine)}">
+                       <div class="sched-block-row1">
+                         <span class="sched-block-icon" aria-hidden="true">${icon}</span>
+                         <div class="sched-block-name">${escapeHtml(leadName(b.lead))}${pendingBadge}</div>
+                       </div>
+                       <div class="sched-block-time">${escapeHtml(timeLine)}</div>
+                       <div class="sched-block-meta">${escapeHtml(typeLabel)} · <strong>${escapeHtml(stageLab)}</strong></div>
                      </div>`;
           }
           dayCells += `<div class="sched-day-col">${inner}</div>`;
@@ -26061,25 +26879,18 @@
             schedDrag = null;
           });
           blk.addEventListener("click", () => {
-            // Don't open the remove dialog if the click is the tail end
+            // Don't open the edit panel if the click is the tail end
             // of a drag — the drop handler already moved the block.
             if (dragOccurred) return;
             const id = blk.dataset.leadId;
             const lead = schedLeads.find(x => x.id === id);
             if (!lead) return;
-            window.confirmDialog({
-              title:       "Remove this appointment?",
-              message:     `${leadName(lead)} will be moved back to the unscheduled list. The Google Calendar event won't be deleted until you click Submit changes.`,
-              confirmText: "Remove from calendar",
-              cancelText:  "Keep it",
-              tone:        "warn",
-            }).then(ok => {
-              if (!ok) return;
-              schedPending.set(id, { action: "cancel" });
-              renderSchedRail();
-              renderSchedBoard();
-              updatePendingBar();
-            });
+            // Phase 3: kill the hover-peek synchronously, then open the
+            // click-to-edit panel. Cancel-this-appointment now lives as
+            // one option INSIDE the panel rather than as a single-purpose
+            // confirm dialog at this entry point.
+            if (typeof _schedTipForceHide === "function") _schedTipForceHide();
+            openSchedEditPanel(id);
           });
         });
       }
@@ -26301,6 +27112,546 @@
           _runSectionLoader("calendar");
         }
       });
+
+      // ─── Phase 3: click-to-edit appointment panel ─────────────────────
+      // Replaces the legacy single-click "Remove this appointment?" confirm
+      // with a slide-in side panel that can edit type / date / time /
+      // duration / notes and exposes Cancel-this-appointment as ONE option
+      // inside it (instead of the previous flow's only option).
+      //
+      // DOM: lazily appended to <body> on first open (one set of nodes
+      // reused across opens). Backdrop dims the calendar; panel slides in
+      // from the right; ESC + outside-click + the ✕ button all dismiss.
+      // Dirty-tracking compares a snapshot taken at open-time against the
+      // current field values, so closing without changes skips the
+      // discard-prompt.
+      //
+      // Linked time/duration interplay (the trickiest piece):
+      //   Start time changes → keep duration constant, shift end time.
+      //   End   time changes → keep start fixed, recompute duration.
+      //   Duration changes   → keep start fixed, shift end time.
+      //   Date  changes      → keep H:M of start/end intact (just the
+      //                        calendar-day moves).
+      const _SCHED_TYPE_OPTIONS = [
+        { v: "call",     label: "Call" },
+        { v: "estimate", label: "Estimate" },
+        { v: "visit",    label: "Visit" },
+        { v: "meeting",  label: "Meeting" },
+        { v: "job",      label: "Job" },
+        { v: "other",    label: "Other" },
+      ];
+      const _SCHED_DURATION_PRESETS = [15, 30, 45, 60, 90, 120];
+
+      let _schedEditEls = null;          // {backdrop, panel, ...field refs}
+      let _schedEditState = null;        // {leadId, snapshot, current, conflicts?}
+
+      function _schedEditEnsureEls() {
+        if (_schedEditEls) return _schedEditEls;
+        const backdrop = document.createElement("div");
+        backdrop.className = "sched-edit-backdrop";
+        backdrop.hidden = true;
+        backdrop.addEventListener("click", () => _schedEditAttemptClose());
+
+        const panel = document.createElement("aside");
+        panel.className = "sched-edit-panel";
+        panel.setAttribute("role", "dialog");
+        panel.setAttribute("aria-modal", "true");
+        panel.setAttribute("aria-labelledby", "schedEditTitle");
+        panel.hidden = true;
+        panel.innerHTML = `
+          <header class="sched-edit-head">
+            <p class="sched-edit-title" id="schedEditTitle">Edit appointment</p>
+            <button type="button" class="sched-edit-close" data-act="close" aria-label="Close">×</button>
+          </header>
+          <div class="sched-edit-body" data-role="body"></div>
+          <footer class="sched-edit-foot" data-role="foot">
+            <button type="button" class="sched-edit-foot-cancel" data-act="cancel">Cancel</button>
+            <button type="button" class="sched-edit-foot-save" data-act="save">Save changes</button>
+          </footer>
+        `;
+        // Stop the panel itself from bubbling click into the backdrop.
+        panel.addEventListener("click", (e) => e.stopPropagation());
+        document.body.appendChild(backdrop);
+        document.body.appendChild(panel);
+
+        panel.querySelector('[data-act="close"]').addEventListener("click", () => _schedEditAttemptClose());
+        panel.querySelector('[data-act="cancel"]').addEventListener("click", () => _schedEditAttemptClose());
+        panel.querySelector('[data-act="save"]').addEventListener("click", () => _schedEditSave());
+
+        _schedEditEls = {
+          backdrop,
+          panel,
+          body: panel.querySelector('[data-role="body"]'),
+          foot: panel.querySelector('[data-role="foot"]'),
+          saveBtn: panel.querySelector('[data-act="save"]'),
+          cancelBtn: panel.querySelector('[data-act="cancel"]'),
+        };
+        return _schedEditEls;
+      }
+
+      // ESC closes the panel (with dirty-prompt). Wired once at the doc
+      // level so the listener survives the panel's lazy DOM creation.
+      document.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape") return;
+        if (!_schedEditEls || _schedEditEls.panel.hidden) return;
+        e.stopPropagation();
+        _schedEditAttemptClose();
+      });
+
+      function _schedEditFmtDate(d) {
+        // Local-tz YYYY-MM-DD for <input type="date">.
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const da = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${da}`;
+      }
+      function _schedEditFmtTime(d) {
+        // Local-tz HH:MM for <input type="time">.
+        return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+      }
+      function _schedEditDateTimeToDate(dateStr, timeStr) {
+        // Parse YYYY-MM-DD + HH:MM in local tz → Date.
+        if (!dateStr || !timeStr) return null;
+        const [y, mo, d] = dateStr.split("-").map(n => parseInt(n, 10));
+        const [h, m] = timeStr.split(":").map(n => parseInt(n, 10));
+        if ([y, mo, d, h, m].some(n => Number.isNaN(n))) return null;
+        return new Date(y, mo - 1, d, h, m, 0);
+      }
+
+      function openSchedEditPanel(leadId) {
+        const els = _schedEditEnsureEls();
+        const lead = schedLeads.find(l => l.id === leadId);
+        // Edge case: lead vanished (deleted in another tab). Show a stub
+        // with only a Close button so the user isn't trapped.
+        if (!lead) {
+          els.body.innerHTML = `<div class="sched-edit-empty">This appointment's lead is no longer available.</div>`;
+          els.foot.innerHTML = `<button type="button" class="sched-edit-foot-cancel" data-act="close-only">Close</button>`;
+          els.foot.querySelector('[data-act="close-only"]').addEventListener("click", () => _schedEditClose(true));
+          _schedEditState = { leadId: null, snapshot: null, current: null };
+          _schedEditShow();
+          return;
+        }
+        // Determine current start/end. Prefer the live GCal event for
+        // this lead (source of truth on the rendered grid); fall back to
+        // appt_start_iso/appt_end_iso on the lead record.
+        const ev = _eventForLead(leadId);
+        let startDate = null, endDate = null;
+        if (ev && ev.start) {
+          startDate = new Date(ev.start);
+          endDate = ev.end ? new Date(ev.end) : new Date(startDate.getTime() + 60 * 60000);
+        } else if (lead.scheduled_start) {
+          startDate = new Date(lead.scheduled_start);
+          endDate = lead.scheduled_end ? new Date(lead.scheduled_end) : new Date(startDate.getTime() + 60 * 60000);
+        } else {
+          startDate = new Date();
+          startDate.setMinutes(0, 0, 0);
+          endDate = new Date(startDate.getTime() + 60 * 60000);
+        }
+        const apptType = (lead.appointment_type || "other").toLowerCase();
+        const apptNotes = lead.appointment_notes || lead.notes || lead.note || "";
+        const durationMin = Math.max(15, Math.round((endDate - startDate) / 60000) || 60);
+        const stage = (lead.stage || "scheduled").toLowerCase();
+        const snapshot = {
+          type:        apptType,
+          dateStr:     _schedEditFmtDate(startDate),
+          startStr:    _schedEditFmtTime(startDate),
+          endStr:      _schedEditFmtTime(endDate),
+          durationMin: durationMin,
+          notes:       apptNotes,
+        };
+        _schedEditState = {
+          leadId: leadId,
+          snapshot: snapshot,
+          current: { ...snapshot },
+        };
+        const stageC = stageColor(stage);
+        const stageLab = stageLabel(stage);
+        const icon = apptTypeIcon(apptType);
+        const name = leadName(lead);
+        const email = lead.email || "";
+        const hasProfileOpener = (typeof window.openLeadDetailModal === "function");
+
+        // Build duration <option> list. If durationMin doesn't match a
+        // preset, the picker starts on "Custom..." with the number visible.
+        const isCustomDur = !_SCHED_DURATION_PRESETS.includes(durationMin);
+        const durOpts = _SCHED_DURATION_PRESETS.map(m => {
+          const lab = _schedDurationLabel(m);
+          const sel = (!isCustomDur && m === durationMin) ? " selected" : "";
+          return `<option value="${m}"${sel}>${escapeHtml(lab)}</option>`;
+        }).join("") + `<option value="custom"${isCustomDur ? " selected" : ""}>Custom…</option>`;
+        const typeOpts = _SCHED_TYPE_OPTIONS.map(o => {
+          const sel = (o.v === apptType) ? " selected" : "";
+          return `<option value="${o.v}"${sel}>${escapeHtml(o.label)}</option>`;
+        }).join("");
+
+        els.body.innerHTML = `
+          <div class="sched-edit-summary">
+            <div class="sched-edit-summary-name">
+              <span class="sched-edit-summary-icon" data-role="sumIcon" aria-hidden="true">${icon}</span>
+              <span data-role="sumName">${escapeHtml(name)}</span>
+            </div>
+            ${email ? `<div class="sched-edit-summary-email">${escapeHtml(email)}</div>` : ""}
+            <div class="sched-edit-summary-stage">
+              <span>Stage:</span>
+              <span class="sched-edit-summary-stage-dot" style="background:${stageC};"></span>
+              <span class="sched-edit-summary-stage-name">${escapeHtml(stageLab)}</span>
+            </div>
+            ${hasProfileOpener ? `<button type="button" class="sched-edit-profile-link" data-act="open-profile">Open lead profile →</button>` : ""}
+          </div>
+          <div class="sched-edit-field">
+            <label for="schedEditType">Type</label>
+            <select id="schedEditType" data-field="type">${typeOpts}</select>
+          </div>
+          <div class="sched-edit-field">
+            <label for="schedEditDate">Date</label>
+            <input type="date" id="schedEditDate" data-field="date" value="${snapshot.dateStr}" />
+          </div>
+          <div class="sched-edit-field">
+            <label>Time</label>
+            <div class="sched-edit-time-row">
+              <input type="time" data-field="start" value="${snapshot.startStr}" step="900" aria-label="Start time" />
+              <span class="sched-edit-time-sep" aria-hidden="true">—</span>
+              <input type="time" data-field="end" value="${snapshot.endStr}" step="900" aria-label="End time" />
+            </div>
+          </div>
+          <div class="sched-edit-field">
+            <label for="schedEditDur">Duration</label>
+            <select id="schedEditDur" data-field="duration">${durOpts}</select>
+            <div class="sched-edit-custom-row" data-role="customDurRow" ${isCustomDur ? "" : "hidden"}>
+              <input type="number" min="5" max="480" step="5" data-field="customDur" value="${durationMin}" />
+              <span>minutes</span>
+            </div>
+          </div>
+          <div class="sched-edit-field">
+            <label for="schedEditNotes">Notes</label>
+            <textarea id="schedEditNotes" data-field="notes" rows="6" maxlength="4000" placeholder="Anything the customer mentioned…">${escapeHtml(snapshot.notes)}</textarea>
+          </div>
+          <hr class="sched-edit-divider" />
+          <div class="sched-edit-cancel-block">
+            <button type="button" class="sched-edit-cancel-btn" data-act="cancel-appt">Cancel this appointment</button>
+          </div>
+          <div data-role="warnSlot"></div>
+        `;
+
+        // Reset the footer (in case a previous open replaced it for the
+        // missing-lead stub).
+        els.foot.innerHTML = `
+          <button type="button" class="sched-edit-foot-cancel" data-act="cancel">Cancel</button>
+          <button type="button" class="sched-edit-foot-save" data-act="save">Save changes</button>
+        `;
+        els.saveBtn = els.foot.querySelector('[data-act="save"]');
+        els.cancelBtn = els.foot.querySelector('[data-act="cancel"]');
+        els.foot.querySelector('[data-act="cancel"]').addEventListener("click", () => _schedEditAttemptClose());
+        els.foot.querySelector('[data-act="save"]').addEventListener("click", () => _schedEditSave());
+
+        // Wire body interactions.
+        const profileBtn = els.body.querySelector('[data-act="open-profile"]');
+        if (profileBtn) {
+          profileBtn.addEventListener("click", () => {
+            try { window.openLeadDetailModal(lead.id, lead); } catch (_) {}
+          });
+        }
+        const typeSel = els.body.querySelector('[data-field="type"]');
+        const dateInp = els.body.querySelector('[data-field="date"]');
+        const startInp = els.body.querySelector('[data-field="start"]');
+        const endInp = els.body.querySelector('[data-field="end"]');
+        const durSel = els.body.querySelector('[data-field="duration"]');
+        const customDurInp = els.body.querySelector('[data-field="customDur"]');
+        const customDurRow = els.body.querySelector('[data-role="customDurRow"]');
+        const notesInp = els.body.querySelector('[data-field="notes"]');
+        const cancelApptBtn = els.body.querySelector('[data-act="cancel-appt"]');
+
+        typeSel.addEventListener("change", () => {
+          _schedEditState.current.type = typeSel.value;
+          // Live-update the summary icon so the user sees the change.
+          const newIcon = apptTypeIcon(typeSel.value);
+          const sumIcon = els.body.querySelector('[data-role="sumIcon"]');
+          if (sumIcon) sumIcon.textContent = newIcon;
+        });
+        dateInp.addEventListener("change", () => {
+          _schedEditState.current.dateStr = dateInp.value;
+        });
+        startInp.addEventListener("change", () => {
+          // Start moves → preserve duration, shift end forward by the
+          // delta. Falls back to recomputing if parsing fails.
+          const oldStart = _schedEditDateTimeToDate(_schedEditState.current.dateStr, _schedEditState.current.startStr);
+          const newStart = _schedEditDateTimeToDate(_schedEditState.current.dateStr, startInp.value);
+          if (oldStart && newStart) {
+            const delta = newStart - oldStart;
+            const oldEnd = _schedEditDateTimeToDate(_schedEditState.current.dateStr, _schedEditState.current.endStr);
+            if (oldEnd) {
+              const newEnd = new Date(oldEnd.getTime() + delta);
+              endInp.value = _schedEditFmtTime(newEnd);
+              _schedEditState.current.endStr = endInp.value;
+            }
+          }
+          _schedEditState.current.startStr = startInp.value;
+        });
+        endInp.addEventListener("change", () => {
+          // End moves → recompute duration. If end <= start, snap end to
+          // start + 15min so duration stays positive.
+          const start = _schedEditDateTimeToDate(_schedEditState.current.dateStr, _schedEditState.current.startStr);
+          let end = _schedEditDateTimeToDate(_schedEditState.current.dateStr, endInp.value);
+          if (start && end) {
+            if (end <= start) {
+              end = new Date(start.getTime() + 15 * 60000);
+              endInp.value = _schedEditFmtTime(end);
+            }
+            const newDur = Math.max(15, Math.round((end - start) / 60000));
+            _schedEditState.current.endStr = endInp.value;
+            _schedEditState.current.durationMin = newDur;
+            // Reflect in the duration picker.
+            if (_SCHED_DURATION_PRESETS.includes(newDur)) {
+              durSel.value = String(newDur);
+              customDurRow.hidden = true;
+            } else {
+              durSel.value = "custom";
+              customDurInp.value = newDur;
+              customDurRow.hidden = false;
+            }
+          }
+        });
+        durSel.addEventListener("change", () => {
+          if (durSel.value === "custom") {
+            customDurRow.hidden = false;
+            const v = parseInt(customDurInp.value, 10) || 60;
+            _schedEditApplyDuration(v, startInp, endInp);
+          } else {
+            customDurRow.hidden = true;
+            const v = parseInt(durSel.value, 10) || 60;
+            _schedEditApplyDuration(v, startInp, endInp);
+          }
+        });
+        customDurInp.addEventListener("input", () => {
+          const v = parseInt(customDurInp.value, 10);
+          if (!Number.isFinite(v) || v <= 0) return;
+          _schedEditApplyDuration(Math.max(5, Math.min(480, v)), startInp, endInp);
+        });
+        notesInp.addEventListener("input", () => {
+          _schedEditState.current.notes = notesInp.value;
+        });
+        cancelApptBtn.addEventListener("click", () => _schedEditCancelAppt(lead));
+
+        _schedEditShow();
+        // Defer focus so the slide-in animation isn't fighting the
+        // browser's auto-scroll-into-view on focus.
+        setTimeout(() => { try { typeSel.focus(); } catch (_) {} }, 50);
+      }
+
+      function _schedDurationLabel(m) {
+        if (m < 60) return `${m} min`;
+        const h = Math.floor(m / 60), rem = m % 60;
+        if (rem === 0) return h === 1 ? "1 hour" : `${h} hours`;
+        return `${h} hr ${rem} min`;
+      }
+
+      function _schedEditApplyDuration(durationMin, startInp, endInp) {
+        // Duration changes → keep start fixed, shift end. Mirror the
+        // change into both the field-level state and the visible end input.
+        _schedEditState.current.durationMin = durationMin;
+        const start = _schedEditDateTimeToDate(_schedEditState.current.dateStr, startInp.value);
+        if (!start) return;
+        const newEnd = new Date(start.getTime() + durationMin * 60000);
+        endInp.value = _schedEditFmtTime(newEnd);
+        _schedEditState.current.endStr = endInp.value;
+      }
+
+      function _schedEditShow() {
+        const els = _schedEditEnsureEls();
+        els.backdrop.hidden = false;
+        els.panel.hidden = false;
+        // Force reflow so the transition fires.
+        // eslint-disable-next-line no-unused-expressions
+        els.panel.offsetHeight;
+        els.backdrop.classList.add("is-open");
+        els.panel.classList.add("is-open");
+      }
+
+      function _schedEditClose(force) {
+        const els = _schedEditEls;
+        if (!els) return;
+        els.backdrop.classList.remove("is-open");
+        els.panel.classList.remove("is-open");
+        // Hide after the transition so a fast re-open doesn't see a
+        // stale aria-hidden node.
+        setTimeout(() => {
+          if (!els.panel.classList.contains("is-open")) {
+            els.panel.hidden = true;
+            els.backdrop.hidden = true;
+          }
+        }, 240);
+        _schedEditState = null;
+      }
+
+      function _schedEditIsDirty() {
+        if (!_schedEditState || !_schedEditState.snapshot) return false;
+        const a = _schedEditState.snapshot;
+        const b = _schedEditState.current;
+        return (a.type !== b.type) || (a.dateStr !== b.dateStr)
+            || (a.startStr !== b.startStr) || (a.endStr !== b.endStr)
+            || (a.durationMin !== b.durationMin) || (a.notes !== b.notes);
+      }
+
+      function _schedEditAttemptClose() {
+        if (!_schedEditIsDirty()) { _schedEditClose(); return; }
+        Promise.resolve(window.confirmDialog({
+          title:       "Discard changes?",
+          message:     "You have unsaved changes. Close without saving?",
+          confirmText: "Discard",
+          cancelText:  "Keep editing",
+          tone:        "warn",
+        })).then(ok => { if (ok) _schedEditClose(); });
+      }
+
+      async function _schedEditSave(opts) {
+        const els = _schedEditEnsureEls();
+        if (!_schedEditState || !_schedEditState.leadId) { _schedEditClose(); return; }
+        const cur = _schedEditState.current;
+        const start = _schedEditDateTimeToDate(cur.dateStr, cur.startStr);
+        if (!start) {
+          showSchedToast("Please pick a valid date and start time.", "error");
+          return;
+        }
+        const durationMin = Math.max(5, Math.min(480, parseInt(cur.durationMin, 10) || 60));
+        const body = {
+          lead_id:           _schedEditState.leadId,
+          start_iso:         start.toISOString(),
+          duration_min:      durationMin,
+          appointment_type:  cur.type || "other",
+          appointment_notes: cur.notes || "",
+          check_overlap:     true,
+        };
+        if (opts && opts.override) body.override_overlap = true;
+        els.saveBtn.disabled = true;
+        const prevSaveLabel = els.saveBtn.textContent;
+        els.saveBtn.textContent = "Saving…";
+        try {
+          const res = await fetch("/me/appointments/book", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          if (res.status === 409) {
+            const data = await res.json().catch(() => ({}));
+            if (data && data.error === "overlap_conflict" && Array.isArray(data.conflicts)) {
+              _schedEditRenderOverlapWarning(data.conflicts);
+              els.saveBtn.disabled = false;
+              els.saveBtn.textContent = prevSaveLabel;
+              return;
+            }
+            // Legacy "conflict" shape from the same endpoint — surface
+            // generically so the user isn't stuck.
+            showSchedToast("This slot conflicts with another appointment.", "error");
+            els.saveBtn.disabled = false;
+            els.saveBtn.textContent = prevSaveLabel;
+            return;
+          }
+          if (!res.ok) {
+            showSchedToast("Couldn't save. Try again.", "error");
+            els.saveBtn.disabled = false;
+            els.saveBtn.textContent = prevSaveLabel;
+            return;
+          }
+          const out = await res.json().catch(() => ({}));
+          // Mirror the persisted record into local state so the next
+          // re-render shows the saved values without a refetch race.
+          if (out && out.lead) {
+            const idx = schedLeads.findIndex(l => l.id === out.lead.id);
+            if (idx >= 0) {
+              schedLeads[idx] = Object.assign({}, schedLeads[idx], {
+                appointment_type:  out.lead.appointment_type || "",
+                appointment_notes: out.lead.appointment_notes || "",
+                appointment_date:  out.lead.appointment_date || "",
+                appointment_time:  out.lead.appointment_time || "",
+                scheduled_start:   out.lead.appt_start_iso || "",
+                scheduled_end:     out.lead.appt_end_iso || "",
+                duration_min:      out.lead.appt_duration_min || 0,
+              });
+            }
+            // Optional cross-surface notification — leads list / lead
+            // detail modal can listen and re-render. No-op if no listener.
+            try {
+              window.dispatchEvent(new CustomEvent("lead:updated", {
+                detail: { lead_id: out.lead.id, lead: out.lead },
+              }));
+            } catch (_) {}
+          }
+          showSchedToast("Saved.", "success");
+          _schedEditClose(true);
+          // Reload from the server so the calendar grid + GCal events
+          // reflect the new time/duration without a stale-frame flash.
+          loadSchedulerData();
+        } catch (_) {
+          showSchedToast("Network error — try again.", "error");
+          els.saveBtn.disabled = false;
+          els.saveBtn.textContent = prevSaveLabel;
+        }
+      }
+
+      function _schedEditRenderOverlapWarning(conflicts) {
+        const els = _schedEditEnsureEls();
+        const slot = els.body.querySelector('[data-role="warnSlot"]');
+        if (!slot) return;
+        const items = conflicts.slice(0, 5).map(c => {
+          let when = "";
+          try {
+            const s = new Date(c.start_iso);
+            if (!Number.isNaN(s.getTime())) {
+              when = ` — ${s.toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}`;
+            }
+          } catch (_) {}
+          return `<li>${escapeHtml(c.lead_name || "Customer")}${escapeHtml(when)}</li>`;
+        }).join("");
+        slot.innerHTML = `
+          <div class="sched-edit-warn">
+            <div class="sched-edit-warn-title">This overlaps with another appointment</div>
+            <ul class="sched-edit-warn-list">${items}</ul>
+            <div class="sched-edit-warn-actions">
+              <button type="button" class="is-secondary" data-act="warn-back">Move it back</button>
+              <button type="button" class="is-primary" data-act="warn-force">Save anyway</button>
+            </div>
+          </div>
+        `;
+        slot.querySelector('[data-act="warn-back"]').addEventListener("click", () => {
+          slot.innerHTML = "";
+        });
+        slot.querySelector('[data-act="warn-force"]').addEventListener("click", () => {
+          slot.innerHTML = "";
+          _schedEditSave({ override: true });
+        });
+      }
+
+      function _schedEditCancelAppt(lead) {
+        Promise.resolve(window.confirmDialog({
+          title:       "Cancel this appointment?",
+          message:     `Cancel this appointment with ${leadName(lead)}? This won't delete the lead — just clears the appointment.`,
+          confirmText: "Cancel appointment",
+          cancelText:  "Keep it",
+          tone:        "warn",
+        })).then(async (ok) => {
+          if (!ok) return;
+          try {
+            const r = await fetch("/me/appointments/cancel", {
+              method: "POST",
+              credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ lead_id: lead.id }),
+            });
+            if (!r.ok) { showSchedToast("Couldn't cancel — try again.", "error"); return; }
+            showSchedToast(`Appointment with ${leadName(lead)} canceled.`, "success");
+            try {
+              window.dispatchEvent(new CustomEvent("lead:updated", {
+                detail: { lead_id: lead.id, lead: lead },
+              }));
+            } catch (_) {}
+            _schedEditClose(true);
+            loadSchedulerData();
+          } catch (_) {
+            showSchedToast("Network error — try again.", "error");
+          }
+        });
+      }
     })();
 
     // The schedule-board IIFE that used to drive #calendar's drag-and-drop
