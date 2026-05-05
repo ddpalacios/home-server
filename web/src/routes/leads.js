@@ -2953,6 +2953,65 @@ function _beCalIsoDate(d) {
   x.setHours(0, 0, 0, 0);
   return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`;
 }
+// Pull YYYY-MM-DD straight out of an ISO that already carries the working-tz
+// offset (e.g. "2026-05-06T09:00:00-04:00"). Bypasses browser-local date
+// math, which would shift the day for users whose browser tz differs from
+// the working tz — that mismatch is what blanked the calendar before.
+function _beCalIsoDayPart(isoStr) {
+  if (!isoStr || typeof isoStr !== "string") return "";
+  return isoStr.slice(0, 10);
+}
+// Pull minute-of-day (0..1439) straight out of the same ISO format.
+function _beCalIsoMinutesPart(isoStr) {
+  if (!isoStr || typeof isoStr !== "string" || isoStr.length < 16) return -1;
+  const hh = parseInt(isoStr.slice(11, 13), 10);
+  const mm = parseInt(isoStr.slice(14, 16), 10);
+  if (!isFinite(hh) || !isFinite(mm)) return -1;
+  return hh * 60 + mm;
+}
+// "9:00a"-style label from working-tz ISO without crossing browser-local.
+function _beCalIsoTimeLabel(isoStr) {
+  const m = _beCalIsoMinutesPart(isoStr);
+  if (m < 0) return "";
+  let h = Math.floor(m / 60);
+  const mm = m % 60;
+  const ampm = h >= 12 ? "p" : "a";
+  h = h % 12; if (h === 0) h = 12;
+  return `${h}:${String(mm).padStart(2,"0")}${ampm}`;
+}
+// "Wed May 12, 9:00 AM" label from working-tz ISO (mirrors backend label).
+function _beCalIsoBackendLabel(isoStr) {
+  const day = _beCalIsoDayPart(isoStr);
+  if (!day || day.length !== 10) return "";
+  const [y, mo, d] = day.split("-").map(Number);
+  // Anchor at noon to dodge DST edge cases when picking a weekday.
+  const dt = new Date(y, mo - 1, d, 12, 0, 0);
+  const ds = dt.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+  const m = _beCalIsoMinutesPart(isoStr);
+  if (m < 0) return ds;
+  let h = Math.floor(m / 60);
+  const mm = m % 60;
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12; if (h === 0) h = 12;
+  return `${ds}, ${h}:${String(mm).padStart(2,"0")} ${ampm}`;
+}
+// Add N days to a YYYY-MM-DD string, returning a YYYY-MM-DD string.
+function _beCalAddIsoDay(dayStr, n) {
+  if (!dayStr || dayStr.length !== 10) return dayStr;
+  const [y, m, d] = dayStr.split("-").map(Number);
+  const x = new Date(y, m - 1, d, 12, 0, 0);
+  x.setDate(x.getDate() + n);
+  return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`;
+}
+// Days between two YYYY-MM-DD strings (inclusive of start, exclusive of end).
+function _beCalDaysBetween(startStr, endStr) {
+  if (!startStr || !endStr) return 0;
+  const [ys, ms, ds] = startStr.split("-").map(Number);
+  const [ye, me, de] = endStr.split("-").map(Number);
+  const a = new Date(ys, ms - 1, ds, 12, 0, 0).getTime();
+  const b = new Date(ye, me - 1, de, 12, 0, 0).getTime();
+  return Math.max(0, Math.round((b - a) / 86400000));
+}
 function _beCalFmtTime(d) {
   // "9:00a", "10:30a", "1:30p" — matches the popup's compact style.
   let h = d.getHours();
@@ -2974,30 +3033,29 @@ function _beCalFmtBackendLabel(d) {
   return `${day}, ${h}:${String(m).padStart(2,"0")} ${ampm}`;
 }
 
-// The visible 3-day window (Date[] of length up to slotCalDayCount), starting
-// from slotSearchStart + slotCalDayOffset and capped at slotSearchEnd.
+// The visible 3-day window — returns YYYY-MM-DD strings in the WORKING tz
+// (parsed straight off the search-window ISOs, not via Date math). This is
+// what makes cards line up with day columns regardless of browser tz.
 function _beCalVisibleDays() {
-  const start = _toDate(_beState.slotSearchStart);
-  if (!start) return [];
-  const end = _toDate(_beState.slotSearchEnd);
-  const firstDay = _beCalAddDays(start, _beState.slotCalDayOffset);
-  firstDay.setHours(0, 0, 0, 0);
+  const startStr = _beCalIsoDayPart(_beState.slotSearchStart);
+  if (!startStr) return [];
+  const endStr = _beCalIsoDayPart(_beState.slotSearchEnd);
   const days = [];
   for (let i = 0; i < _beState.slotCalDayCount; i++) {
-    const d = _beCalAddDays(firstDay, i);
-    if (end && d.getTime() > end.getTime()) break;
-    days.push(d);
+    const dStr = _beCalAddIsoDay(startStr, _beState.slotCalDayOffset + i);
+    if (endStr && dStr >= endStr) break;   // ISO date strings sort lexicographically
+    days.push(dStr);
   }
   return days;
 }
 // Can the user page forward? True if slotCalDayOffset + slotCalDayCount < total
 // available days in the search window.
 function _beCalCanPageForward() {
-  const start = _toDate(_beState.slotSearchStart);
-  const end   = _toDate(_beState.slotSearchEnd);
-  if (!start || !end) return false;
-  const totalDays = Math.round((end.getTime() - start.getTime()) / 86400000);
-  return (_beState.slotCalDayOffset + _beState.slotCalDayCount) < totalDays;
+  const startStr = _beCalIsoDayPart(_beState.slotSearchStart);
+  const endStr   = _beCalIsoDayPart(_beState.slotSearchEnd);
+  if (!startStr || !endStr) return false;
+  return (_beState.slotCalDayOffset + _beState.slotCalDayCount)
+       < _beCalDaysBetween(startStr, endStr);
 }
 function _beCalCanPageBack() {
   return _beState.slotCalDayOffset > 0;
@@ -3083,15 +3141,20 @@ function _beRenderSlotPanel() {
     const slotHeightPx = (slotMin / _BE_CAL_SLOT_MIN) * _BE_CAL_SLOT_PX;
     const today = new Date(); today.setHours(0, 0, 0, 0);
 
-    // Day-header row
+    // Day-header row. `days` is now an array of YYYY-MM-DD strings in the
+    // working tz; render labels by parsing the string at noon-local so the
+    // weekday/day-num come out right regardless of browser tz.
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
     const dayHeaderHtml = `
       <div class="be-cal-day-header">
         <div class="be-cal-time-spacer"></div>
-        ${days.map(d => {
-          const isToday = d.getTime() === today.getTime();
+        ${days.map(dStr => {
+          const [yy, mm, dd] = dStr.split("-").map(Number);
+          const dt = new Date(yy, mm - 1, dd, 12, 0, 0);
+          const isToday = dStr === todayStr;
           return `<div class="${isToday ? "is-today" : ""}">
-            <span>${escapeHtml(d.toLocaleDateString([], { weekday: "short" }))}</span>
-            <span class="be-cal-day-num">${d.getDate()}</span>
+            <span>${escapeHtml(dt.toLocaleDateString([], { weekday: "short" }))}</span>
+            <span class="be-cal-day-num">${dd}</span>
           </div>`;
         }).join("")}
       </div>
@@ -3115,8 +3178,11 @@ function _beRenderSlotPanel() {
     // Per-day cells + busy + cards. Cards are stacked HORIZONTALLY on the
     // same slot (split width by N), so multiple leads at the same time
     // stay readable instead of disappearing under a vertical stack.
-    const dayColsHtml = days.map(d => {
-      const dateIso = _beCalIsoDate(d);
+    // Day matching is done on the YYYY-MM-DD string parsed straight from
+    // the working-tz ISO — never via JS Date round-trip — so cards always
+    // land on the column the backend intended, regardless of browser tz.
+    const dayColsHtml = days.map(dStr => {
+      const dateIso = dStr;
       let cells = "";
       for (let i = 0; i < _BE_CAL_NUM_SLOTS; i++) {
         const m = _BE_CAL_DAY_START_MIN + i * _BE_CAL_SLOT_MIN;
@@ -3124,22 +3190,29 @@ function _beRenderSlotPanel() {
         cells += `<div class="be-cal-cell ${isHour ? "is-hour" : ""}" data-date="${dateIso}" data-min="${m}"></div>`;
       }
 
-      // Busy overlays for this day.
+      // Busy overlays for this day. The backend's busy items have
+      // start/end as ISO strings. We compare day strings directly.
       const busyHtml = [];
       for (const b of _beState.slotBusy || []) {
-        const bs = _beCalDateOf(b.start);
-        const be = _beCalDateOf(b.end);
-        if (!bs || !be) continue;
-        if (_beCalIsoDate(bs) !== dateIso && _beCalIsoDate(be) !== dateIso) {
-          // Multi-day busy events: only render when one end touches this day.
-          // Cross-day spans are rare and clipping is fine.
-          if (!(bs < d && be > _beCalAddDays(d, 1))) continue;
-        }
-        const layout = _beCalSlotLayout(bs, be);
-        if (!layout) continue;
-        busyHtml.push(`<div class="be-cal-busy" style="top:${layout.top}px; height:${layout.height}px;" aria-hidden="true">
+        const bsDay = _beCalIsoDayPart(b.start);
+        const beDay = _beCalIsoDayPart(b.end);
+        if (!bsDay || !beDay) continue;
+        // Render the block on this day if it starts here OR ends here OR
+        // strictly straddles it.
+        const touchesDay = (bsDay === dateIso) || (beDay === dateIso)
+                        || (bsDay < dateIso && beDay > dateIso);
+        if (!touchesDay) continue;
+        // Layout from minute-of-day, clipped to the visible 8a-8p window.
+        const startMin = (bsDay === dateIso) ? _beCalIsoMinutesPart(b.start) : 0;
+        const endMin   = (beDay === dateIso) ? _beCalIsoMinutesPart(b.end)   : 24 * 60;
+        const visStart = Math.max(_BE_CAL_DAY_START_MIN, startMin);
+        const visEnd   = Math.min(_BE_CAL_DAY_END_MIN,   endMin);
+        if (visEnd <= visStart) continue;
+        const top = ((visStart - _BE_CAL_DAY_START_MIN) / _BE_CAL_SLOT_MIN) * _BE_CAL_SLOT_PX;
+        const height = ((visEnd - visStart) / _BE_CAL_SLOT_MIN) * _BE_CAL_SLOT_PX;
+        busyHtml.push(`<div class="be-cal-busy" style="top:${top}px; height:${height}px;" aria-hidden="true">
           <div class="be-cal-busy-title">Busy</div>
-          <div class="be-cal-busy-time">${escapeHtml(_beCalFmtTime(bs))}-${escapeHtml(_beCalFmtTime(be))}</div>
+          <div class="be-cal-busy-time">${escapeHtml(_beCalIsoTimeLabel(b.start))}-${escapeHtml(_beCalIsoTimeLabel(b.end))}</div>
         </div>`);
       }
 
@@ -3149,10 +3222,9 @@ function _beRenderSlotPanel() {
       for (const lead of _beState.recipients) {
         const a = _beState.slotAssignments[lead.id];
         if (!a || !a.start_iso) continue;
-        const sd = _beCalDateOf(a.start_iso);
-        if (!sd) continue;
-        if (_beCalIsoDate(sd) !== dateIso) continue;
-        const startMin = sd.getHours() * 60 + sd.getMinutes();
+        const slotDay = _beCalIsoDayPart(a.start_iso);
+        if (slotDay !== dateIso) continue;
+        const startMin = _beCalIsoMinutesPart(a.start_iso);
         if (startMin < _BE_CAL_DAY_START_MIN || startMin >= _BE_CAL_DAY_END_MIN) continue;
         const key = String(startMin);
         if (!cardsByMin.has(key)) cardsByMin.set(key, []);
@@ -3168,8 +3240,7 @@ function _beRenderSlotPanel() {
           const leftPct  = idx * widthPct;
           const color = _beCalLeadColor(lead.id);
           const nm = fullName(lead) || lead.email || lead.id;
-          const sd = _beCalDateOf(assignment.start_iso);
-          const tLabel = sd ? _beCalFmtTime(sd) : "";
+          const tLabel = _beCalIsoTimeLabel(assignment.start_iso);
           cardsHtml.push(`<div class="be-cal-card" draggable="true"
             data-be-lead-id="${escapeHtml(lead.id)}"
             style="top:${top}px; height:${slotHeightPx}px; left:calc(${leftPct}% + 2px); width:calc(${widthPct}% - 4px); --be-card-color:${color};">
@@ -3186,13 +3257,20 @@ function _beRenderSlotPanel() {
       </div>`;
     }).join("");
 
-    // Day-nav toolbar
+    // Day-nav toolbar — `days` is YYYY-MM-DD strings; render labels by
+    // parsing each at noon-local so the weekday/day are stable.
+    const _navLabel = (dStr) => {
+      if (!dStr || dStr.length !== 10) return "—";
+      const [y, m, d] = dStr.split("-").map(Number);
+      const dt = new Date(y, m - 1, d, 12, 0, 0);
+      return dt.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+    };
     const first = days[0];
     const last  = days[days.length - 1];
     const navLabel = (first && last)
       ? (days.length === 1
-          ? _beCalFmtDayShort(first)
-          : `${_beCalFmtDayShort(first)} → ${_beCalFmtDayShort(last)}`)
+          ? _navLabel(first)
+          : `${_navLabel(first)} → ${_navLabel(last)}`)
       : "—";
     const prevDis = _beCalCanPageBack() ? "" : "disabled";
     const nextDis = _beCalCanPageForward() ? "" : "disabled";
