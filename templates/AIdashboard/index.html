@@ -5438,6 +5438,9 @@
               <button type="button" id="aiModeConfigLink" class="ai-mode-config-link">
                 Configure AI →
               </button>
+              <button type="button" id="aiModeTestLink" class="ai-mode-config-link" style="border-top:0;color:#0f172a;">
+                Test the AI →
+              </button>
             </div>
           </div>
           <!-- Phase 1: confirmation modal when escalating to "Always reply" -->
@@ -14690,15 +14693,18 @@
               placeholder="Never quote a specific price.&#10;Never schedule a job without me confirming first.&#10;Never promise a specific arrival time."></textarea>
           </div>
 
-          <div class="ais-card">
+          <div class="ais-card" id="aisTestCard">
             <h2>Test the AI</h2>
-            <p class="ais-card-sub">Type a message and see how the AI would reply.</p>
+            <p class="ais-card-sub">Type a customer-style message and see exactly what the AI would send. Uses your real Knowledge Base, current tone, and rules — no message is sent to anyone.</p>
             <div class="ais-test-row">
               <input id="aisTestInput" type="text" class="ais-test-input"
                 placeholder="How much do you charge for a kitchen sink repair?" />
               <button type="button" id="aisTestBtn" class="ais-btn">Try it →</button>
             </div>
             <div id="aisTestPreview" class="ais-preview" data-state="empty">AI's reply will appear here.</div>
+            <p style="margin:10px 0 0;font-size:11.5px;color:#94a3b8;">
+              Tip: try the questions your customers actually ask — pricing, hours, service area, scheduling, what you don't do. If the AI declines or hallucinates, fix the gap in your Knowledge Base or add a rule above.
+            </p>
           </div>
 
           <div class="ais-save-bar">
@@ -30210,6 +30216,14 @@
           window.location.hash = "#aiSettings";
         });
       }
+      // Test the AI → jump straight to the test panel and focus the input.
+      const testLink = document.getElementById("aiModeTestLink");
+      if (testLink) {
+        testLink.addEventListener("click", () => {
+          setPanelOpen(false);
+          window.location.hash = "#aiSettings/test";
+        });
+      }
 
       load();
     })();
@@ -30374,10 +30388,21 @@
 
       // Lazy-load when the section first becomes visible (hash routing).
       window.addEventListener("hashchange", () => {
-        if ((location.hash || "").replace(/^#/, "") === "aiSettings") loadPolicy();
+        const h = (location.hash || "").replace(/^#/, "");
+        if (h === "aiSettings" || h === "aiSettings/test") {
+          loadPolicy();
+          if (h === "aiSettings/test") {
+            // Scroll test card into view + focus the input.
+            requestAnimationFrame(() => {
+              const card = sec.querySelector("#aisTestCard");
+              if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
+              if (testInput) testInput.focus();
+            });
+          }
+        }
       });
-      // Cold-load case: page loaded directly at #aiSettings.
-      if ((location.hash || "").replace(/^#/, "") === "aiSettings") loadPolicy();
+      const initial = (location.hash || "").replace(/^#/, "");
+      if (initial === "aiSettings" || initial === "aiSettings/test") loadPolicy();
     })();
 
     (function ownerPhoneRowInit() {
