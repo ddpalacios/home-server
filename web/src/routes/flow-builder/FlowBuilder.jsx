@@ -1966,6 +1966,50 @@ const STYLES = `
   .fb-drawer-done:hover { background: #15803d; }
 `;
 
+// Pill that appears in the canvas top-right when the user arrived
+// here via a form's "Add more steps" button. Tapping it returns to
+// the lead-intake page; the breadcrumb (still in localStorage) makes
+// the form-builder modal re-open at the form they were editing.
+function ReturnToFormBanner() {
+  const [show, setShow] = React.useState(false);
+  React.useEffect(() => {
+    try {
+      const fid = localStorage.getItem("intake_return_form_id");
+      const ts  = parseInt(localStorage.getItem("intake_return_form_ts") || "0", 10);
+      if (fid && ts && (Date.now() - ts) < 30 * 60 * 1000) {
+        setShow(true);
+      }
+    } catch (_) {}
+  }, []);
+  if (!show) return null;
+  return (
+    <a
+      href="/dashboard#leadIntake"
+      style={{
+        position: "absolute",
+        top: 12,
+        right: 14,
+        zIndex: 50,
+        background: "linear-gradient(135deg,#fff7e0 0%,#fef0c8 100%)",
+        border: "1.5px solid #f0c419",
+        color: "#7a5a00",
+        textDecoration: "none",
+        padding: "8px 14px",
+        borderRadius: 99,
+        fontSize: 13,
+        fontWeight: 600,
+        boxShadow: "0 4px 14px rgba(40,30,0,.14)",
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+      }}
+      title="Return to the form you were editing"
+    >
+      <span>← Done? Back to your form</span>
+    </a>
+  );
+}
+
 export default function FlowBuilder() {
   const [nodes, setNodes] = React.useState(INITIAL_NODES);
   const [edges, setEdges] = React.useState(INITIAL_EDGES);
@@ -2007,20 +2051,38 @@ export default function FlowBuilder() {
   React.useEffect(() => {
     let cancelled = false;
     (async () => {
+      let hasSavedFlow = false;
       try {
         const r = await fetch("/me/flows/default",
           { credentials: "same-origin" });
         if (cancelled) return;
         if (r.ok) {
           const d = await r.json().catch(() => ({}));
-          if (d && d.flow && Array.isArray(d.flow.nodes)) {
+          if (d && d.flow && Array.isArray(d.flow.nodes) && d.flow.nodes.length > 0) {
             setNodes(d.flow.nodes);
             setEdges(Array.isArray(d.flow.edges) ? d.flow.edges : []);
             // We have a saved flow — skip the first-run template picker.
             setPickerDismissed(true);
+            hasSavedFlow = true;
           }
         }
       } catch (_) { /* swallow — work offline */ }
+      // Form round-trip: when the user clicked "Add more steps" on a
+      // form, the lead-intake page set localStorage.intake_return_form_id.
+      // If they land here with no saved flow, auto-seed a First Hello
+      // node so the canvas isn't blank — they came here to add steps to
+      // the form's existing flow, not to start from scratch.
+      if (!cancelled && !hasSavedFlow) {
+        try {
+          const fid = localStorage.getItem("intake_return_form_id");
+          if (fid) {
+            const seed = buildFromTemplate({ activityIds: ["first_contact"] });
+            setNodes(seed.nodes);
+            setEdges(seed.edges);
+            setPickerDismissed(true);
+          }
+        } catch (_) { /* localStorage may be blocked */ }
+      }
       if (!cancelled) setHydrated(true);
     })();
     return () => { cancelled = true; };
@@ -2325,6 +2387,8 @@ export default function FlowBuilder() {
           {saveStatus === "error"  && <>⚠ Couldn't save — will retry</>}
           {saveStatus === "idle" && hydrated && <>Auto-saves as you build</>}
         </div>
+        <ReturnToFormBanner />
+
         <ReactFlow
           nodes={nodes}
           edges={edges}
