@@ -866,6 +866,13 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                 onActiveField={() => setActiveField("body")}
                 globalAiMode={globalAiMode}
                 globalCadence={globalCadence}
+                nudgeChannel={nudgeChannel}
+                setNudgeChannel={setNudgeChannel}
+                firstNudgeBody={firstNudgeBody}
+                setFirstNudgeBody={setFirstNudgeBody}
+                secondNudgeBody={secondNudgeBody}
+                setSecondNudgeBody={setSecondNudgeBody}
+                persistNudge={persistNudge}
               />
             ) : (
               <>
@@ -1071,6 +1078,10 @@ function ReplyWidgetEditor({
   fallback, setFallback,
   body, setBody, taRef, onActiveField,
   globalAiMode, globalCadence,
+  nudgeChannel, setNudgeChannel,
+  firstNudgeBody, setFirstNudgeBody,
+  secondNudgeBody, setSecondNudgeBody,
+  persistNudge,
 }) {
   const aiOff = globalAiMode === "i_respond";
 
@@ -1081,6 +1092,19 @@ function ReplyWidgetEditor({
     if (aiOff && fallback === "ai") setFallback("custom");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aiOff]);
+
+  function pickNudgeChannel(ch) {
+    setNudgeChannel(ch);
+    persistNudge && persistNudge({ nudge_channel: ch }, true);
+  }
+  function changeFirstNudge(v) {
+    setFirstNudgeBody(v);
+    persistNudge && persistNudge({ first_nudge_body: v }, false);
+  }
+  function changeSecondNudge(v) {
+    setSecondNudgeBody(v);
+    persistNudge && persistNudge({ second_nudge_body: v }, false);
+  }
 
   // Inline AI tester — same /me/ai/test-reply endpoint the AI Settings
   // page uses, just rendered in the drawer so users can sanity-check
@@ -1250,6 +1274,56 @@ function ReplyWidgetEditor({
           </div>
         </div>
       )}
+
+      {/* Nudges — channel + custom messages. Saved to the global
+          ai_policy.json so changing here applies to every Reply step
+          (and is reflected in the top-right control's mental model). */}
+      <div className="fb-replywidget-section">
+        <label className="fb-drawer-l">Nudge me</label>
+        <div className="fb-rwnudge-block">
+          <div className="fb-rwnudge-row">
+            <span className="fb-rwnudge-row-l">Send to</span>
+            <div className="fb-rwnudge-channel">
+              <button type="button"
+                className={`fb-rwnudge-pill ${nudgeChannel === "sms" ? "is-active" : ""}`}
+                onClick={() => pickNudgeChannel("sms")}>📱 Text</button>
+              <button type="button"
+                className={`fb-rwnudge-pill ${nudgeChannel === "email" ? "is-active" : ""}`}
+                onClick={() => pickNudgeChannel("email")}>📧 Email</button>
+              <button type="button"
+                className={`fb-rwnudge-pill ${nudgeChannel === "both" ? "is-active" : ""}`}
+                onClick={() => pickNudgeChannel("both")}>Both</button>
+            </div>
+          </div>
+          <div className="fb-rwnudge-bodies">
+            <label>
+              <span>First nudge</span>
+              <textarea
+                className="fb-input fb-textarea fb-rwnudge-ta"
+                rows={2}
+                value={firstNudgeBody}
+                onChange={(e) => changeFirstNudge(e.target.value)}
+                placeholder="{first_name} is waiting for a reply."
+                data-ai-editable="true" data-ai-field-type="general"
+              />
+            </label>
+            <label>
+              <span>Second nudge</span>
+              <textarea
+                className="fb-input fb-textarea fb-rwnudge-ta"
+                rows={2}
+                value={secondNudgeBody}
+                onChange={(e) => changeSecondNudge(e.target.value)}
+                placeholder="Still waiting on {first_name}. AI will take over soon if you don't reply."
+                data-ai-editable="true" data-ai-field-type="general"
+              />
+            </label>
+          </div>
+          <p className="fb-rwnudge-helper">
+            Use <code>{"{first_name}"}</code> to drop in the customer's name. Saved to your global setting.
+          </p>
+        </div>
+      </div>
 
       {/* Read-only summary of the global AI mode. Only relevant when
           the fallback is AI — for "Send this" the user has chosen
@@ -2247,6 +2321,61 @@ const STYLES = `
   .fb-rwbody-preview-body {
     font-size: 15.5px; line-height: 1.65; color: #0a0a0a;
     white-space: pre-wrap; word-wrap: break-word;
+  }
+
+  /* Nudges block — channel pills + two body textareas.
+     Lives in the editor column under the cadence info. Auto-saves to
+     the global ai_policy on change. */
+  .fb-rwnudge-block {
+    padding: 18px 20px;
+    background: #fff;
+    border: 1.5px solid #e5e7eb; border-radius: 14px;
+  }
+  .fb-rwnudge-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; margin-bottom: 18px;
+  }
+  .fb-rwnudge-row-l {
+    font-size: 14px; font-weight: 600; color: #1f2937;
+  }
+  .fb-rwnudge-channel { display: flex; gap: 8px; flex-wrap: wrap; }
+  .fb-rwnudge-pill {
+    padding: 8px 14px; font: inherit;
+    font-size: 13.5px; font-weight: 600;
+    border-radius: 999px; border: 1.5px solid #e5e7eb;
+    background: #fff; color: #374151; cursor: pointer;
+    transition: all 0.14s ease;
+  }
+  .fb-rwnudge-pill:hover {
+    background: #f9fafb; border-color: #cbd5e1;
+    transform: translateY(-1px);
+  }
+  .fb-rwnudge-pill.is-active {
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+    color: #fff; border-color: #0f172a;
+    box-shadow: 0 3px 8px rgba(15,23,42,0.18);
+  }
+  .fb-rwnudge-bodies {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  }
+  @media (max-width: 980px) {
+    .fb-rwnudge-bodies { grid-template-columns: 1fr; }
+  }
+  .fb-rwnudge-bodies label {
+    display: flex; flex-direction: column; gap: 6px;
+    font-size: 13px; font-weight: 600; color: #475569;
+  }
+  .fb-rwnudge-ta {
+    min-height: 64px; padding: 12px 14px;
+    font-size: 14px; line-height: 1.55; resize: vertical;
+  }
+  .fb-rwnudge-helper {
+    margin: 14px 0 0; font-size: 12.5px; color: #6b7280;
+  }
+  .fb-rwnudge-helper code {
+    padding: 1px 6px; border-radius: 5px;
+    background: #f1f5f9; color: #0f172a;
+    font-size: 12px; font-family: ui-monospace, Menlo, Consolas, monospace;
   }
 
   /* Inline AI test panel — visible when fallback="ai" */

@@ -15567,30 +15567,6 @@
           </div>
 
           <div class="ais-card">
-            <h2>Nudges</h2>
-            <p class="ais-card-sub">When and how I get pinged before AI takes over.</p>
-
-            <label class="ais-sub-label">Send to</label>
-            <div class="ais-tone-row" id="aisNudgeChannelRow">
-              <button type="button" class="ais-tone-opt is-active" data-channel="sms">📱 Text</button>
-              <button type="button" class="ais-tone-opt" data-channel="email">📧 Email</button>
-              <button type="button" class="ais-tone-opt" data-channel="both">Both</button>
-            </div>
-
-            <label class="ais-sub-label" for="aisFirstNudge">First nudge</label>
-            <textarea id="aisFirstNudge" class="ais-textarea" style="min-height:72px;"
-              data-ai-editable="true" data-ai-field-type="general"
-              placeholder="{first_name} is waiting for a reply."></textarea>
-
-            <label class="ais-sub-label" for="aisSecondNudge">Second nudge</label>
-            <textarea id="aisSecondNudge" class="ais-textarea" style="min-height:72px;"
-              data-ai-editable="true" data-ai-field-type="general"
-              placeholder="Still waiting on {first_name}. AI will take over soon if you don't reply."></textarea>
-
-            <p class="ais-helper">Use <code>{first_name}</code> to drop in the customer's name.</p>
-          </div>
-
-          <div class="ais-card">
             <h2>Never do</h2>
             <textarea id="aisThingsToAvoid" class="ais-textarea" style="min-height:96px;"
               data-ai-editable="true" data-ai-field-type="general"
@@ -32175,22 +32151,18 @@
     (function aiSettingsPageInit() {
       const sec = document.getElementById("aiSettings");
       if (!sec) return;
-      const toneRow      = sec.querySelector("#aisToneRow");
-      const ttKnow       = sec.querySelector("#aisThingsToKnow");
-      const ttAvoid      = sec.querySelector("#aisThingsToAvoid");
-      const nudgeChanRow = sec.querySelector("#aisNudgeChannelRow");
-      const firstNudge   = sec.querySelector("#aisFirstNudge");
-      const secondNudge  = sec.querySelector("#aisSecondNudge");
-      const testInput    = sec.querySelector("#aisTestInput");
-      const testBtn      = sec.querySelector("#aisTestBtn");
-      const preview      = sec.querySelector("#aisTestPreview");
-      const saveBtn      = sec.querySelector("#aisSaveBtn");
-      const saveStatus   = sec.querySelector("#aisSaveStatus");
+      const toneRow   = sec.querySelector("#aisToneRow");
+      const ttKnow    = sec.querySelector("#aisThingsToKnow");
+      const ttAvoid   = sec.querySelector("#aisThingsToAvoid");
+      const testInput = sec.querySelector("#aisTestInput");
+      const testBtn   = sec.querySelector("#aisTestBtn");
+      const preview   = sec.querySelector("#aisTestPreview");
+      const saveBtn   = sec.querySelector("#aisSaveBtn");
+      const saveStatus= sec.querySelector("#aisSaveStatus");
       if (!toneRow || !ttKnow || !ttAvoid || !testBtn || !saveBtn) return;
 
       let _loaded = false;
       let _selectedTone = "friendly";
-      let _selectedNudgeChannel = "sms";
 
       function setTone(tone) {
         _selectedTone = tone || "friendly";
@@ -32198,22 +32170,10 @@
           b.classList.toggle("is-active", b.dataset.tone === _selectedTone);
         });
       }
-      function setNudgeChannel(channel) {
-        _selectedNudgeChannel = channel || "sms";
-        if (!nudgeChanRow) return;
-        nudgeChanRow.querySelectorAll(".ais-tone-opt").forEach(b => {
-          b.classList.toggle("is-active", b.dataset.channel === _selectedNudgeChannel);
-        });
-      }
 
       toneRow.querySelectorAll(".ais-tone-opt").forEach(b => {
         b.addEventListener("click", () => setTone(b.dataset.tone));
       });
-      if (nudgeChanRow) {
-        nudgeChanRow.querySelectorAll(".ais-tone-opt").forEach(b => {
-          b.addEventListener("click", () => setNudgeChannel(b.dataset.channel));
-        });
-      }
 
       async function loadKbSummary() {
         const countEl = sec.querySelector("#aisKbCount");
@@ -32269,9 +32229,6 @@
           setTone(p.tone || "friendly");
           ttKnow.value  = p.things_to_know  || "";
           ttAvoid.value = p.things_to_avoid || "";
-          setNudgeChannel(p.nudge_channel || "sms");
-          if (firstNudge)  firstNudge.value  = p.first_nudge_body  || "";
-          if (secondNudge) secondNudge.value = p.second_nudge_body || "";
           _loaded = true;
         } catch (_) {}
       }
@@ -32285,12 +32242,9 @@
             credentials: "same-origin",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              tone:              _selectedTone,
-              things_to_know:    ttKnow.value || "",
-              things_to_avoid:   ttAvoid.value || "",
-              nudge_channel:     _selectedNudgeChannel,
-              first_nudge_body:  firstNudge  ? (firstNudge.value  || "") : "",
-              second_nudge_body: secondNudge ? (secondNudge.value || "") : "",
+              tone:            _selectedTone,
+              things_to_know:  ttKnow.value || "",
+              things_to_avoid: ttAvoid.value || "",
             }),
           });
           if (!res.ok) throw new Error("save_failed");
@@ -32495,7 +32449,7 @@ function escHtmlSeq(s) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-05-nudge-config"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-05-nudge-config-in-reply-drawer"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
