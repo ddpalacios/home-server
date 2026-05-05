@@ -1623,8 +1623,8 @@ async function _handleBulkAction(act) {
   }
 
   if (act === "schedule") {
-    console.log("[leads] bulk schedule — Phase 3", ids);
-    _showLeadsToast("Coming in Phase 3.", "info");
+    sessionStorage.setItem("leadsSelectedIds", JSON.stringify(ids));
+    openBulkEmailComposer({ openSchedulePicker: true });
     return;
   }
 
@@ -2119,6 +2119,10 @@ let _beState = {
   batchId: "",
   pollTimer: null,
   lastBatch: null,
+  // Phase 3:
+  editingScheduledId: "",   // when set, "Schedule it" hits /update instead of POST
+  scheduledForEpoch: 0,     // current intended schedule time (for editing flow)
+  openSchedulePickerOnLoad: false,
 };
 
 function _beFmtCurrency(value) {
@@ -2387,7 +2391,8 @@ function _beClose() {
   _beState.open = false;
 }
 
-async function openBulkEmailComposer() {
+async function openBulkEmailComposer(opts) {
+  opts = opts || {};
   if (!_selectedIds.size) return;
   const ids = Array.from(_selectedIds);
   // Snapshot recipients from the current list (selection persists across
@@ -2412,6 +2417,9 @@ async function openBulkEmailComposer() {
   _beState.skipMissing = false;
   _beState.batchId = "";
   _beState.lastBatch = null;
+  _beState.editingScheduledId = "";
+  _beState.scheduledForEpoch = 0;
+  _beState.openSchedulePickerOnLoad = !!opts.openSchedulePicker;
 
   _beRender({ loading: true });
 
@@ -2488,6 +2496,11 @@ function _beRecipientHeader() {
   const n = _beState.recipients.length;
   const first10 = _beState.recipients.slice(0, 10).map(l => fullName(l) || l.email || "(no name)");
   const more = Math.max(0, n - 10);
+  // Phase 3: surface opt-out count so users aren't surprised at "skipped".
+  const optedOut = _beState.recipients.filter(l => l && l.email_opted_out === true).length;
+  const optHint = optedOut > 0
+    ? `<div style="margin-top:6px;font-size:12px;color:#9a3412;">${optedOut} lead${optedOut !== 1 ? "s" : ""} opted out of email — they'll be skipped.</div>`
+    : "";
   return `
     <div class="be-recip">
       <strong>To:</strong> ${n} lead${n !== 1 ? "s" : ""}
@@ -2496,6 +2509,7 @@ function _beRecipientHeader() {
         ${first10.map(n => escapeHtml(n)).join("<br>")}
         ${more ? `<div style="margin-top:6px;color:#6b7280;">…and ${more} more</div>` : ""}
       </div>
+      ${optHint}
     </div>`;
 }
 
@@ -2597,10 +2611,16 @@ function _beRenderEditor() {
 
   const total = _beState.recipients.length;
   const eta = Math.max(1, total);
+  // When editing an already-scheduled batch, the send-now button doesn't
+  // make sense — just "Save changes" via /update. Otherwise show both.
+  const editingExisting = !!_beState.editingScheduledId;
+  const primaryBtn = editingExisting
+    ? `<button type="button" class="be-btn-primary" data-be-act="open-schedule">Update schedule</button>`
+    : `<button type="button" class="be-btn-secondary" data-be-act="open-schedule">Schedule for later →</button>
+       <button type="button" class="be-btn-primary"   data-be-act="send-now">Send now</button>`;
   foot.innerHTML = `
     <span style="margin-right:auto;font-size:12px;color:#6b7280;">About ${eta} second${eta !== 1 ? "s" : ""} to send ${total} email${total !== 1 ? "s" : ""}</span>
-    <button type="button" class="be-btn-secondary" disabled title="Coming in Phase 3">Schedule for later →</button>
-    <button type="button" class="be-btn-primary" data-be-act="send-now">Send now</button>
+    ${primaryBtn}
   `;
 
   // Wiring
@@ -2634,6 +2654,14 @@ function _beRenderEditor() {
   });
   _beWireRecipToggle();
   _beWireFooter();
+
+  // If the user clicked "Schedule for later" on the bulk bar, OR we're
+  // editing an existing scheduled batch, drop them straight into the
+  // schedule picker once the editor has rendered.
+  if (_beState.openSchedulePickerOnLoad) {
+    _beState.openSchedulePickerOnLoad = false;
+    setTimeout(() => _beOpenSchedulePicker(), 0);
+  }
 }
 
 function _beUpdatePreview() {
@@ -2726,6 +2754,7 @@ function _beHandleAct(act) {
   if (act === "back-to-grid")    { _beState.view = "grid"; _beRender(); return; }
   if (act === "send-now")        return _beSendNow();
   if (act === "see-missing")     return _beShowMissingModal();
+  if (act === "open-schedule")   return _beOpenSchedulePicker();
 }
 
 function _beShowMissingModal() {
@@ -2774,7 +2803,8 @@ function _beShowMissingModal() {
   });
 }
 
-async function _beSendNow() {
+async function _beSendNow(opts) {
+  opts = opts || {};
   if (!_beState.subject.trim() || !_beState.body.trim()) {
     _showLeadsToast("Add a subject and body first.", "error");
     return;
@@ -2800,18 +2830,26 @@ async function _beSendNow() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         lead_ids,
-        subject:            _beState.subject,
-        body:               _beState.body,
-        from_connection_id: _beState.fromConnectionId,
-        fallbacks:          _beState.fallbackOverrides,
-        template_id:        _beState.templateLoaded ? _beState.templateLoaded.id : null,
-        send_now:           true,
+        subject:             _beState.subject,
+        body:                _beState.body,
+        from_connection_id:  _beState.fromConnectionId,
+        fallbacks:           _beState.fallbackOverrides,
+        template_id:         _beState.templateLoaded ? _beState.templateLoaded.id : null,
+        send_now:            true,
+        override_duplicate:  !!opts.overrideDuplicate,
       }),
     });
   } catch (_) {
     _showLeadsToast("Network error.", "error");
     _beState.view = "editor";
     _beRender();
+    return;
+  }
+  if (res.status === 409) {
+    const err = await res.json().catch(() => ({}));
+    _beState.view = "editor";
+    _beRender();
+    _beShowDuplicateConfirm(err.details || {}, () => _beSendNow({ overrideDuplicate: true }));
     return;
   }
   if (!res.ok) {
@@ -2825,6 +2863,214 @@ async function _beSendNow() {
   _beState.batchId = data.batch_id;
   _beState.lastBatch.total_count = data.total_count;
   _bePollProgress();
+}
+
+// ─── Schedule picker (Phase 3) ───────────────────────────────────────────────
+
+function _beDefaultScheduleEpoch() {
+  // Tomorrow 9:00 AM in user's local timezone.
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  d.setHours(9, 0, 0, 0);
+  return Math.floor(d.getTime() / 1000);
+}
+
+function _beEpochToLocalDateTimeParts(epochSec) {
+  const d = new Date((epochSec || _beDefaultScheduleEpoch()) * 1000);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mn = String(d.getMinutes()).padStart(2, "0");
+  return { date: `${yyyy}-${mm}-${dd}`, time: `${hh}:${mn}` };
+}
+
+function _beFormatLocalEpoch(epochSec) {
+  const d = new Date((epochSec || 0) * 1000);
+  const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  let h = d.getHours();
+  const m = String(d.getMinutes()).padStart(2, "0");
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12; if (h === 0) h = 12;
+  return `${days[d.getDay()]} ${_BE_MONTHS[d.getMonth()]} ${d.getDate()}, ${h}:${m} ${ampm}`;
+}
+
+function _beOpenSchedulePicker() {
+  if (!_beState.subject.trim() || !_beState.body.trim()) {
+    _showLeadsToast("Add a subject and body first.", "error");
+    return;
+  }
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  if (!dlg) return;
+  const initEpoch = _beState.scheduledForEpoch || _beDefaultScheduleEpoch();
+  const parts = _beEpochToLocalDateTimeParts(initEpoch);
+  const total = _beState.recipients.length;
+  const conn = _beState.connections.find(c => c.id === _beState.fromConnectionId)
+             || _beState.connections[0] || {};
+  const senderEmail = conn.email_address || "";
+  const isEditing = !!_beState.editingScheduledId;
+
+  const overlay = document.createElement("div");
+  overlay.className = "be-mini-modal";
+  overlay.id = "beSchedulePicker";
+  overlay.innerHTML = `
+    <div class="be-mini-card" style="max-width:420px;">
+      <h3 style="margin:0 0 12px;font-size:15px;">${isEditing ? "Update schedule" : "When should we send this?"}</h3>
+      <div style="display:flex;gap:10px;margin-bottom:14px;">
+        <div style="flex:1;">
+          <label style="display:block;font-size:12px;color:#475569;margin-bottom:4px;">Date</label>
+          <input type="date" id="beSchedDate" value="${parts.date}" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;" />
+        </div>
+        <div style="flex:1;">
+          <label style="display:block;font-size:12px;color:#475569;margin-bottom:4px;">Time</label>
+          <input type="time" id="beSchedTime" value="${parts.time}" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;" />
+        </div>
+      </div>
+      <div style="font-size:12.5px;color:#475569;line-height:1.6;margin-bottom:14px;">
+        We'll send all ${total} email${total !== 1 ? "s" : ""} starting then.<br>
+        Sending takes about ${total} second${total !== 1 ? "s" : ""}.<br>
+        Sending from: <strong>${escapeHtml(senderEmail)}</strong>
+      </div>
+      <div id="beSchedError" style="display:none;color:#b91c1c;font-size:12.5px;margin-bottom:10px;"></div>
+      <div class="be-mini-actions">
+        <button type="button" class="be-btn-secondary" data-sched="cancel">Cancel</button>
+        <button type="button" class="be-btn-primary"   data-sched="confirm">${isEditing ? "Save changes" : "Schedule it"}</button>
+      </div>
+    </div>`;
+  dlg.appendChild(overlay);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+  overlay.querySelector("[data-sched='cancel']").addEventListener("click", () => overlay.remove());
+  overlay.querySelector("[data-sched='confirm']").addEventListener("click", async () => {
+    const dateVal = overlay.querySelector("#beSchedDate").value;
+    const timeVal = overlay.querySelector("#beSchedTime").value;
+    const errEl   = overlay.querySelector("#beSchedError");
+    if (!dateVal || !timeVal) {
+      errEl.textContent = "Pick a date and time.";
+      errEl.style.display = "block";
+      return;
+    }
+    // Build a local Date and convert to UTC epoch.
+    const local = new Date(`${dateVal}T${timeVal}:00`);
+    const epoch = Math.floor(local.getTime() / 1000);
+    const minFuture = Math.floor(Date.now() / 1000) + 5 * 60;
+    if (epoch < minFuture) {
+      errEl.textContent = "Pick a time at least 5 minutes from now.";
+      errEl.style.display = "block";
+      return;
+    }
+    overlay.remove();
+    _beState.scheduledForEpoch = epoch;
+    if (isEditing) {
+      await _beSubmitScheduleUpdate(epoch);
+    } else {
+      await _beSubmitNewSchedule(epoch, { overrideDuplicate: false });
+    }
+  });
+}
+
+async function _beSubmitNewSchedule(epoch, opts) {
+  opts = opts || {};
+  let lead_ids = _beState.recipients.map(l => l.id);
+  if (_beState.skipMissing) {
+    const valid = _beValidate();
+    lead_ids = lead_ids.filter(id => !valid.missingByLead[id]);
+  }
+  if (!lead_ids.length) {
+    _showLeadsToast("No leads to send to after skipping.", "error");
+    return;
+  }
+  let res;
+  try {
+    res = await fetch("/me/leads/bulk-email", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lead_ids,
+        subject:             _beState.subject,
+        body:                _beState.body,
+        from_connection_id:  _beState.fromConnectionId,
+        fallbacks:           _beState.fallbackOverrides,
+        template_id:         _beState.templateLoaded ? _beState.templateLoaded.id : null,
+        send_now:            false,
+        scheduled_for:       epoch,
+        override_duplicate:  !!opts.overrideDuplicate,
+      }),
+    });
+  } catch (_) {
+    _showLeadsToast("Network error.", "error");
+    return;
+  }
+  if (res.status === 409) {
+    const err = await res.json().catch(() => ({}));
+    _beShowDuplicateConfirm(err.details || {},
+      () => _beSubmitNewSchedule(epoch, { overrideDuplicate: true }));
+    return;
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    _showLeadsToast(err.hint || err.error || "Couldn't schedule.", "error");
+    return;
+  }
+  _beClose();
+  _showLeadsToast(`Scheduled for ${_beFormatLocalEpoch(epoch)}.`, "success");
+  if (typeof _leadsRefreshHistory === "function") _leadsRefreshHistory();
+}
+
+async function _beSubmitScheduleUpdate(epoch) {
+  const sid = _beState.editingScheduledId;
+  if (!sid) return;
+  let res;
+  try {
+    res = await fetch(`/me/leads/bulk-email/${encodeURIComponent(sid)}/update`, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        subject:       _beState.subject,
+        body:          _beState.body,
+        scheduled_for: epoch,
+        fallbacks:     _beState.fallbackOverrides,
+      }),
+    });
+  } catch (_) {
+    _showLeadsToast("Network error.", "error");
+    return;
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    _showLeadsToast(err.hint || err.error || "Couldn't save.", "error");
+    return;
+  }
+  _beClose();
+  _showLeadsToast(`Updated schedule for ${_beFormatLocalEpoch(epoch)}.`, "success");
+  if (typeof _leadsRefreshHistory === "function") _leadsRefreshHistory();
+}
+
+function _beShowDuplicateConfirm(details, onConfirm) {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  if (!dlg) return;
+  const overlay = document.createElement("div");
+  overlay.className = "be-mini-modal";
+  const overlapPct = (details && details.overlap_pct != null) ? `${details.overlap_pct}%` : "most";
+  overlay.innerHTML = `
+    <div class="be-mini-card" style="max-width:420px;">
+      <h3 style="margin:0 0 10px;font-size:15px;">Send the same email again?</h3>
+      <p style="margin:0 0 14px;font-size:13px;color:#475569;line-height:1.5;">
+        You sent or scheduled this same template to ${escapeHtml(overlapPct)} of these leads in the last hour. Send it again anyway?
+      </p>
+      <div class="be-mini-actions">
+        <button type="button" class="be-btn-secondary" data-dup="cancel">Cancel</button>
+        <button type="button" class="be-btn-primary"   data-dup="confirm">Send again</button>
+      </div>
+    </div>`;
+  dlg.appendChild(overlay);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+  overlay.querySelector("[data-dup='cancel']").addEventListener("click", () => overlay.remove());
+  overlay.querySelector("[data-dup='confirm']").addEventListener("click", () => {
+    overlay.remove();
+    onConfirm();
+  });
 }
 
 function _bePollProgress() {
@@ -2899,6 +3145,316 @@ function _beRenderDone() {
 // Expose for debugging / tests.
 window.openBulkEmailComposer = openBulkEmailComposer;
 
+// ─── Email history view (Phase 3) ────────────────────────────────────────────
+//
+// A dedicated panel shown above the leads table that lists scheduled,
+// in-flight, completed, canceled and failed bulk-email batches. Polls
+// /me/leads/bulk-email/history every 30s while visible. Cancel and Edit
+// actions are surfaced inline for scheduled rows; live progress updates
+// for sending rows. Details modal opens via /history/<id>.
+
+let _historyState = {
+  injected: false,
+  visible: true,
+  timer: null,
+  loading: false,
+  batches: [],
+  detail: null,        // { id, rec } when details modal open
+};
+
+function _leadsEnsureHistoryPanel() {
+  if (_historyState.injected) return;
+  const tableWrap = document.getElementById("leadsTableWrap");
+  if (!tableWrap) return;
+  // Insert AFTER the table wrap so the table stays the primary element.
+  const panel = document.createElement("section");
+  panel.id = "leadsEmailHistoryPanel";
+  panel.style.cssText = "margin-top:24px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;overflow:hidden;";
+  panel.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #e5e7eb;background:#f9fafb;">
+      <strong style="font-size:14px;color:#0f172a;">Email history</strong>
+      <span id="lehCount" style="font-size:12px;color:#6b7280;"></span>
+      <span style="margin-left:auto;display:flex;gap:8px;">
+        <button type="button" id="lehRefresh" style="padding:5px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;font-size:12px;cursor:pointer;">Refresh</button>
+        <button type="button" id="lehToggle"  style="padding:5px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;font-size:12px;cursor:pointer;">Hide</button>
+      </span>
+    </div>
+    <div id="lehList" style="padding:8px 0;"></div>`;
+  tableWrap.parentElement.insertAdjacentElement("afterend", panel);
+  _historyState.injected = true;
+
+  document.getElementById("lehRefresh").addEventListener("click", () => _leadsRefreshHistory());
+  document.getElementById("lehToggle").addEventListener("click", () => {
+    _historyState.visible = !_historyState.visible;
+    document.getElementById("lehList").style.display = _historyState.visible ? "" : "none";
+    document.getElementById("lehToggle").textContent = _historyState.visible ? "Hide" : "Show";
+    if (_historyState.visible) {
+      _leadsRefreshHistory();
+      _leadsStartHistoryPolling();
+    } else {
+      _leadsStopHistoryPolling();
+    }
+  });
+}
+
+function _leadsStartHistoryPolling() {
+  _leadsStopHistoryPolling();
+  _historyState.timer = setInterval(() => {
+    if (!_historyState.visible) return;
+    _leadsRefreshHistory();
+  }, 30000);
+}
+
+function _leadsStopHistoryPolling() {
+  if (_historyState.timer) {
+    clearInterval(_historyState.timer);
+    _historyState.timer = null;
+  }
+}
+
+async function _leadsRefreshHistory() {
+  if (_historyState.loading) return;
+  _historyState.loading = true;
+  try {
+    const res = await fetch("/me/leads/bulk-email/history", { credentials: "same-origin" });
+    if (!res.ok) {
+      _historyState.batches = [];
+    } else {
+      const data = await res.json();
+      _historyState.batches = data.batches || [];
+    }
+  } catch (_) {
+    _historyState.batches = [];
+  } finally {
+    _historyState.loading = false;
+  }
+  _leadsRenderHistory();
+}
+
+function _leadsHistoryStatusLabel(b) {
+  const s = b.status || "";
+  if (s === "scheduled") return `Scheduled ${_beFormatLocalEpoch(b.scheduled_for || 0)}`;
+  if (s === "sending")   return `Sending ${b.sent_count || 0} of ${b.total_count || 0}…`;
+  if (s === "completed") {
+    const ts = b.completed_at || b.created_at || 0;
+    const sent = b.sent_count || 0;
+    const failed = b.failed_count || 0;
+    const skipped = b.skipped_count || 0;
+    const extras = [];
+    if (failed)  extras.push(`${failed} failed`);
+    if (skipped) extras.push(`${skipped} skipped`);
+    return `${sent} sent${extras.length ? ", " + extras.join(", ") : ""} · ${_beFormatLocalEpoch(ts)}`;
+  }
+  if (s === "canceled")  return `Canceled · ${_beFormatLocalEpoch(b.created_at || 0)}`;
+  if (s === "failed")    return `Failed · ${_beFormatLocalEpoch(b.completed_at || b.created_at || 0)}`;
+  if (s === "queued")    return `Starting…`;
+  return s || "—";
+}
+
+function _leadsHistoryActions(b) {
+  const id = b.id || "";
+  const s = b.status || "";
+  const parts = [];
+  if (s === "scheduled") {
+    parts.push(`<button type="button" class="leh-act" data-leh-edit="${escapeHtml(id)}"   style="padding:5px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;font-size:12px;cursor:pointer;">Edit</button>`);
+    parts.push(`<button type="button" class="leh-act" data-leh-cancel="${escapeHtml(id)}" style="padding:5px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#b91c1c;font-size:12px;cursor:pointer;">Cancel</button>`);
+  }
+  parts.push(`<button type="button" class="leh-act" data-leh-detail="${escapeHtml(id)}" style="padding:5px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;font-size:12px;cursor:pointer;">See details</button>`);
+  return parts.join(" ");
+}
+
+function _leadsTemplateLabel(tplId) {
+  if (!tplId) return "Custom email";
+  const map = {
+    quote_followup:        "Quote follow-up",
+    reschedule_reminder:   "Reschedule reminder",
+    winback:               "Win-back",
+    review_request:        "Review request",
+    first_hello:           "First hello",
+    appointment_reminder:  "Appointment reminder",
+    thank_you_after_job:   "Thank you after job",
+    blank:                 "Custom email",
+  };
+  return map[tplId] || tplId;
+}
+
+function _leadsRenderHistory() {
+  const list = document.getElementById("lehList");
+  const countEl = document.getElementById("lehCount");
+  if (!list) return;
+  const batches = _historyState.batches || [];
+  if (countEl) countEl.textContent = batches.length ? `· ${batches.length} recent` : "";
+  if (!batches.length) {
+    list.innerHTML = `<div style="padding:18px 16px;font-size:13px;color:#6b7280;">No bulk emails sent yet.</div>`;
+    return;
+  }
+  list.innerHTML = batches.map(b => {
+    const tpl = _leadsTemplateLabel(b.template_id);
+    const total = b.total_count || 0;
+    const subj = b.subject_template || "";
+    const status = _leadsHistoryStatusLabel(b);
+    const error = (b.status === "failed" && b.error_message) ? `<div style="margin-top:4px;font-size:12px;color:#b91c1c;">${escapeHtml(b.error_message)}</div>` : "";
+    return `
+      <div style="display:flex;align-items:flex-start;gap:14px;padding:10px 16px;border-bottom:1px solid #f1f5f9;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13.5px;color:#0f172a;font-weight:600;">${escapeHtml(tpl)} <span style="font-weight:400;color:#6b7280;">· ${total} lead${total !== 1 ? "s" : ""}</span></div>
+          <div style="margin-top:2px;font-size:12.5px;color:#475569;">${escapeHtml(status)}</div>
+          ${subj ? `<div style="margin-top:2px;font-size:12px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:560px;">${escapeHtml(subj)}</div>` : ""}
+          ${error}
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          ${_leadsHistoryActions(b)}
+        </div>
+      </div>`;
+  }).join("");
+  list.querySelectorAll("[data-leh-detail]").forEach(b =>
+    b.addEventListener("click", () => _leadsHistoryShowDetail(b.getAttribute("data-leh-detail"))));
+  list.querySelectorAll("[data-leh-cancel]").forEach(b =>
+    b.addEventListener("click", () => _leadsHistoryCancel(b.getAttribute("data-leh-cancel"))));
+  list.querySelectorAll("[data-leh-edit]").forEach(b =>
+    b.addEventListener("click", () => _leadsHistoryEdit(b.getAttribute("data-leh-edit"))));
+}
+
+async function _leadsHistoryShowDetail(sendId) {
+  if (!sendId) return;
+  let rec;
+  try {
+    const res = await fetch(`/me/leads/bulk-email/history/${encodeURIComponent(sendId)}`,
+                            { credentials: "same-origin" });
+    if (!res.ok) {
+      _showLeadsToast("Couldn't load details.", "error");
+      return;
+    }
+    rec = await res.json();
+  } catch (_) {
+    _showLeadsToast("Network error.", "error");
+    return;
+  }
+  // Build a modal directly in the document body — independent of composer dlg.
+  let modal = document.getElementById("lehDetailModal");
+  if (modal) modal.remove();
+  modal = document.createElement("div");
+  modal.id = "lehDetailModal";
+  modal.style.cssText = "position:fixed;inset:0;background:rgba(15,23,42,0.4);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;";
+  const tpl = _leadsTemplateLabel(rec.template_id);
+  const sent = rec.sent_count || 0;
+  const failed = rec.failed_count || 0;
+  const skipped = rec.skipped_count || 0;
+  const total = rec.total_count || 0;
+  const status = _leadsHistoryStatusLabel({
+    status: rec.status, scheduled_for: rec.scheduled_for,
+    sent_count: sent, total_count: total,
+    completed_at: rec.completed_at, created_at: rec.created_at,
+    failed_count: failed, skipped_count: skipped,
+  });
+  const subj = rec.subject_template || "";
+  const body = rec.body_template || "";
+  const results = rec.lead_results || [];
+  const byId = new Map((window._allLeads || []).map(l => [l.id, l]));
+  // Use _allLeads if exposed; otherwise fall back to id-only.
+  const allLeads = (typeof _allLeads !== "undefined") ? _allLeads : [];
+  const lookup = new Map(allLeads.map(l => [l.id, l]));
+  const rows = results.slice(0, 200).map(r => {
+    const lead = lookup.get(r.lead_id) || {};
+    const nm = (typeof fullName === "function" ? fullName(lead) : "") || lead.email || r.lead_id;
+    let badge;
+    if (r.status === "sent")     badge = `<span style="color:#15803d;">sent</span>`;
+    else if (r.status === "failed")  badge = `<span style="color:#b91c1c;">failed</span>`;
+    else if (r.status === "skipped") badge = `<span style="color:#6b7280;">skipped (${escapeHtml(r.reason || "n/a")})</span>`;
+    else badge = `<span style="color:#6b7280;">${escapeHtml(r.status || "—")}</span>`;
+    const why = r.error ? ` <span style="color:#9ca3af;">— ${escapeHtml(r.error)}</span>` : "";
+    return `<tr><td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;">${escapeHtml(nm)}</td><td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;font-size:12px;">${badge}${why}</td></tr>`;
+  }).join("");
+  const more = results.length > 200 ? `<div style="padding:8px;color:#6b7280;font-size:12px;">…and ${results.length - 200} more</div>` : "";
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:12px;max-width:680px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;">
+      <div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #e5e7eb;">
+        <strong style="font-size:15px;">${escapeHtml(tpl)}</strong>
+        <span style="margin-left:auto;color:#6b7280;font-size:12px;">${escapeHtml(status)}</span>
+        <button type="button" id="lehDetailClose" style="margin-left:8px;background:transparent;border:0;font-size:18px;cursor:pointer;color:#6b7280;">×</button>
+      </div>
+      <div style="padding:14px 18px;overflow:auto;">
+        <div style="font-size:12px;color:#475569;margin-bottom:4px;">Subject</div>
+        <div style="font-size:13.5px;color:#0f172a;margin-bottom:14px;">${escapeHtml(subj || "(no subject)")}</div>
+        <div style="font-size:12px;color:#475569;margin-bottom:4px;">Body</div>
+        <pre style="font-family:inherit;white-space:pre-wrap;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;font-size:13px;color:#0f172a;margin:0 0 14px;max-height:220px;overflow:auto;">${escapeHtml(body || "(empty)")}</pre>
+        <div style="font-size:12px;color:#475569;margin-bottom:6px;">Per-lead results — ${sent} sent, ${failed} failed, ${skipped} skipped</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+          <thead><tr><th style="text-align:left;padding:6px 8px;border-bottom:1px solid #e5e7eb;color:#475569;font-weight:500;">Lead</th><th style="text-align:left;padding:6px 8px;border-bottom:1px solid #e5e7eb;color:#475569;font-weight:500;">Status</th></tr></thead>
+          <tbody>${rows || `<tr><td colspan="2" style="padding:14px 8px;color:#9ca3af;">No per-lead results yet.</td></tr>`}</tbody>
+        </table>
+        ${more}
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener("click", (e) => { if (e.target === modal) modal.remove(); });
+  modal.querySelector("#lehDetailClose").addEventListener("click", () => modal.remove());
+}
+
+async function _leadsHistoryCancel(sendId) {
+  if (!sendId) return;
+  if (!window.confirm("Cancel this scheduled email?")) return;
+  let res;
+  try {
+    res = await fetch(`/me/leads/bulk-email/${encodeURIComponent(sendId)}/cancel`, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (_) {
+    _showLeadsToast("Network error.", "error");
+    return;
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    _showLeadsToast(err.error || "Couldn't cancel.", "error");
+    return;
+  }
+  _showLeadsToast("Canceled.", "success");
+  _leadsRefreshHistory();
+}
+
+async function _leadsHistoryEdit(sendId) {
+  if (!sendId) return;
+  let rec;
+  try {
+    const res = await fetch(`/me/leads/bulk-email/history/${encodeURIComponent(sendId)}`,
+                            { credentials: "same-origin" });
+    if (!res.ok) {
+      _showLeadsToast("Couldn't load that scheduled email.", "error");
+      return;
+    }
+    rec = await res.json();
+  } catch (_) {
+    _showLeadsToast("Network error.", "error");
+    return;
+  }
+  if ((rec.status || "") !== "scheduled") {
+    _showLeadsToast("This batch already started — it can't be edited.", "info");
+    return;
+  }
+  // Pre-load selection from the snapshot lead_ids so the composer's
+  // recipient list shows the same set the user originally picked.
+  const ids = rec.lead_ids || [];
+  if (typeof _selectedIds !== "undefined") {
+    _selectedIds.clear();
+    for (const id of ids) _selectedIds.add(id);
+  }
+  // Open composer in editor view directly with the existing values.
+  await openBulkEmailComposer({ openSchedulePicker: false });
+  _beState.subject = rec.subject_template || "";
+  _beState.body = rec.body_template || "";
+  _beState.fallbackOverrides = rec.fallbacks || {};
+  _beState.editingScheduledId = rec.id || "";
+  _beState.scheduledForEpoch = rec.scheduled_for || 0;
+  if (rec.template_id) {
+    _beState.templateLoaded = (_beState.templates || []).find(t => t.id === rec.template_id) || null;
+  }
+  if (rec.from_connection_id) _beState.fromConnectionId = rec.from_connection_id;
+  _beState.view = "editor";
+  _beRender();
+}
+
 // ─── Module init ─────────────────────────────────────────────────────────────
 
 let _initialized = false;
@@ -2909,6 +3465,15 @@ export function init() {
   attachEventHandlers();
   initCsvImport();
   _wireImportedBack();
+  // Inject the email history panel and start polling. The panel hides
+  // itself if the table view isn't currently visible (Funnel/Board don't
+  // need it cluttering the screen) — for v1 we keep it visible and let
+  // the user toggle.
+  setTimeout(() => {
+    _leadsEnsureHistoryPanel();
+    _leadsRefreshHistory();
+    _leadsStartHistoryPolling();
+  }, 0);
 }
 
 // ─── Expose globals ───────────────────────────────────────────────────────────
