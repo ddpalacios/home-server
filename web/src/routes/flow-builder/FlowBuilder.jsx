@@ -1183,35 +1183,55 @@ function ReplyWidgetEditor({
 
       {/* Custom body — shown when fallback is custom */}
       {fallback === "custom" && (
-        <div className="fb-replywidget-section">
-          <label className="fb-drawer-l">Your message</label>
-          <textarea
-            id="fb-rw-body"
-            ref={taRef}
-            className="fb-input fb-textarea"
-            data-ai-editable="true"
-            data-ai-field-type="reply_body"
-            rows={6}
-            value={body}
-            onFocus={onActiveField}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder="Hey {first_name}, sorry I missed you — I'll be in touch soon."
-          />
-          <div className="fb-chips-row">
-            <div className="fb-chips-l">Tap to add:</div>
-            <div className="fb-chips">
-              {MERGE_TAGS.map(t => (
-                <button
-                  key={t.token}
-                  type="button"
-                  className="fb-chip"
-                  onClick={() => insertChip(t.token)}
-                  title={`Adds ${t.token}`}
-                >{t.label}</button>
-              ))}
+        <>
+          <div className="fb-replywidget-section">
+            <label className="fb-drawer-l">Your message</label>
+            <textarea
+              id="fb-rw-body"
+              ref={taRef}
+              className="fb-input fb-textarea fb-rwbody-ta"
+              data-ai-editable="true"
+              data-ai-field-type="reply_body"
+              rows={7}
+              value={body}
+              onFocus={onActiveField}
+              onChange={(e) => setBody(e.target.value)}
+              placeholder="Hey {first_name}, sorry I missed you — I'll be in touch soon."
+            />
+            <div className="fb-chips-row fb-rwbody-chips">
+              <div className="fb-chips-l">Tap to add:</div>
+              <div className="fb-chips">
+                {MERGE_TAGS.map(t => (
+                  <button
+                    key={t.token}
+                    type="button"
+                    className="fb-chip"
+                    onClick={() => insertChip(t.token)}
+                    title={`Adds ${t.token}`}
+                  >{t.label}</button>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+
+          {/* Inline rendered preview — same style as the AI test reply
+              card, so the two fallback paths look symmetric. Merge tags
+              get filled in with sample values so the user reads a
+              real-feeling message instead of {first_name} placeholders. */}
+          <div className="fb-replywidget-section">
+            <label className="fb-drawer-l">Preview</label>
+            <div className="fb-rwbody-preview">
+              <div className="fb-rwbody-preview-eye">As your customer would see it</div>
+              <div className="fb-rwbody-preview-body">
+                {applyMergeTags(body) || (
+                  <span style={{ color: "#94a3b8", fontStyle: "italic" }}>
+                    Write a message above and it'll appear here.
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Read-only summary that adapts to the global AI mode (the
@@ -2124,10 +2144,29 @@ const STYLES = `
   .fb-phone-wait-p { font-size: 12px; margin-top: 4px; }
 
   /* ── Reply Widget editor + preview ────────────────────────────────── */
-  .fb-replywidget-section { margin-bottom: 32px; }
+  .fb-replywidget-section { margin-bottom: 40px; }
+  .fb-replywidget-section:last-child { margin-bottom: 0; }
   .fb-replywidget-section .fb-drawer-l {
     font-size: 17px; font-weight: 700; color: #0a0a0a;
-    letter-spacing: -0.01em; margin-bottom: 14px;
+    letter-spacing: -0.01em; margin-bottom: 16px; display: block;
+  }
+
+  /* Custom body — taller textarea + spaced chip row + inline preview */
+  .fb-rwbody-ta { min-height: 160px; padding: 18px 20px; font-size: 15px; line-height: 1.6; }
+  .fb-rwbody-chips { margin-top: 16px; gap: 10px; }
+  .fb-rwbody-preview {
+    padding: 22px 24px;
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1.5px solid #e2e8f0; border-radius: 16px;
+  }
+  .fb-rwbody-preview-eye {
+    font-size: 11.5px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: #6b7280; margin-bottom: 12px;
+  }
+  .fb-rwbody-preview-body {
+    font-size: 15.5px; line-height: 1.65; color: #0a0a0a;
+    white-space: pre-wrap; word-wrap: break-word;
   }
 
   /* Inline AI test panel — visible when fallback="ai" */
@@ -2160,11 +2199,11 @@ const STYLES = `
   }
   .fb-rwtest-btn:disabled { opacity: 0.6; cursor: progress; transform: none; }
   .fb-rwtest-preview {
-    margin-top: 14px; padding: 18px 20px;
+    margin-top: 16px; padding: 22px 24px;
     background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-    border: 1.5px solid #e2e8f0; border-radius: 14px;
-    font-size: 14.5px; line-height: 1.6; color: #0a0a0a;
-    white-space: pre-wrap; min-height: 56px;
+    border: 1.5px solid #e2e8f0; border-radius: 16px;
+    font-size: 15.5px; line-height: 1.65; color: #0a0a0a;
+    white-space: pre-wrap; min-height: 76px;
   }
   .fb-rwtest-preview[data-state="empty"] {
     color: #94a3b8; font-style: italic;
@@ -2365,16 +2404,16 @@ const STYLES = `
     font-size: 13.5px; color: #6b7280; font-weight: 500;
   }
   .fb-rwprev-custom {
-    margin-top: 22px; padding: 18px 20px;
+    margin-top: 26px; padding: 22px 24px;
     background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
-    border: 1.5px solid #fde68a; border-radius: 12px;
+    border: 1.5px solid #fde68a; border-radius: 14px;
   }
   .fb-rwprev-custom-h {
-    font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
-    text-transform: uppercase; color: #92400e; margin-bottom: 8px;
+    font-size: 11.5px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #92400e; margin-bottom: 12px;
   }
   .fb-rwprev-custom-body {
-    font-size: 14.5px; color: #0a0a0a; line-height: 1.6;
+    font-size: 15px; color: #0a0a0a; line-height: 1.65;
     white-space: pre-wrap; word-wrap: break-word;
   }
 
