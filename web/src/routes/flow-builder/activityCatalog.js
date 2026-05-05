@@ -9,9 +9,22 @@
 // Actions can repeat freely.
 export const ACTIVITY_CATALOG = [
   // ── Triggers ─────────────────────────────────────────────────────────
-  // Each trigger seeds the editor with a default email so users have
-  // something to react to instead of an empty box. Plain language, no
-  // jargon — these match the tone of the existing First-Contact backend.
+  // Every flow starts with a single trigger card — the "input" — so
+  // the user can see at a glance what kicks the flow off and how each
+  // downstream action connects back to it. The other triggers below
+  // are lifecycle-specific entry points the user can pick INSTEAD of
+  // (or in addition to) the generic Input.
+  {
+    id: "input", kind: "trigger", oneOfAKind: true,
+    icon: "🟢", title: "Input",
+    cardSub: "Where this flow starts",
+    description: "The starting point of the flow. Connect every other step back to this card. Auto-added when you build a flow from a form, ad, or other lead source.",
+    trigger: "WHEN A LEAD ENTERS THIS FLOW",
+    defaultMode: "noop",
+    defaultSubject: "",
+    defaultBody: "",
+    isInput: true,
+  },
   {
     id: "first_contact", kind: "trigger", oneOfAKind: true,
     icon: "📥", title: "First hello",

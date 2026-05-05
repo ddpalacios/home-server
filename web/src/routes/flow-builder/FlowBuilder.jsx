@@ -677,6 +677,7 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
   const isWait = activity.defaultMode === "wait";
   const isBranch = activity.kind === "logic";
   const isReply = activity.defaultMode === "reply";
+  const isInput = !!activity.isInput;
 
   const [mode, setMode] = React.useState(
     data.mode || activity.defaultMode || "email");
@@ -776,7 +777,20 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
 
         <div className="fb-drawer-body">
           <div className="fb-drawer-edit">
-            {isBranch ? (
+            {isInput ? (
+              <div className="fb-input-panel">
+                <p className="fb-input-panel-h">This is where your flow starts.</p>
+                <p className="fb-input-panel-body">
+                  Every other step you add will run after this card. Connect
+                  the next thing you want to happen by clicking the
+                  <strong> + Next</strong> button on the right edge.
+                </p>
+                <p className="fb-helper">
+                  You can't edit or delete this card — it's the entry point
+                  for the whole flow.
+                </p>
+              </div>
+            ) : isBranch ? (
               <div>
                 <label className="fb-drawer-l" htmlFor="fb-edit-condition">
                   Pick the question
@@ -2126,6 +2140,22 @@ const STYLES = `
     font-size: 12px; color: #6b7280; margin: 8px 0 0;
     line-height: 1.45;
   }
+  /* Input drawer panel — friendly read-only message instead of a
+     message composer when the user clicks the Input card. */
+  .fb-input-panel {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .fb-input-panel-h {
+    margin: 0 0 6px;
+    font-size: 14.5px; font-weight: 700; color: #065f46;
+  }
+  .fb-input-panel-body {
+    margin: 0; font-size: 13px; color: #064e3b; line-height: 1.55;
+  }
+  .fb-input-panel strong { font-weight: 700; color: #047857; }
   .fb-wait-row {
     display: flex; align-items: center; gap: 10px;
   }
@@ -3569,7 +3599,10 @@ export default function FlowBuilder() {
         // immediately so subsequent loads see it as "saved." The
         // debounced autosave covers later edits; this initial save
         // makes the auto-create idempotent.
-        const seed = buildFromTemplate({ activityIds: ["first_contact"] });
+        // Seed with the generic "Input" trigger so the user sees a
+        // concrete entry-point card on the canvas — every other step
+        // they add will visibly connect back to it.
+        const seed = buildFromTemplate({ activityIds: ["input"] });
         setNodes(seed.nodes);
         setEdges(seed.edges);
         setPickerDismissed(true);
@@ -3955,7 +3988,10 @@ export default function FlowBuilder() {
             // Don't let the user delete the demo nodes — they're seeded
             // examples. Real, user-dropped nodes have ids ending with a
             // short hash; demo nodes end with "_demo".
+            // Also lock the Input card — it's the flow's entry point;
+            // every other step is meant to descend from it.
             selectedNodeId && !selectedNodeId.endsWith("_demo")
+              && selectedNode?.data?.activityId !== "input"
               ? deleteNode : null
           }
         />
