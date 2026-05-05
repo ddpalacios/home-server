@@ -254,7 +254,7 @@
         + '<p style="text-align:center;color:var(--sub);margin:0">New emails turn into leads automatically.</p>'
       : '<div style="font-size:36px;text-align:center;margin-bottom:8px">📧</div>'
         + '<p style="text-align:center;margin:0 0 14px">Sign in with Gmail. We catch new emails as leads.</p>'
-        + '<div style="text-align:center"><a class="btn btn-primary" href="' + esc(em.connect_url || '/auth/google/start') + '">Sign in with Google</a></div>';
+        + '<div style="text-align:center"><a class="btn btn-primary" target="_top" href="' + esc(em.connect_url || '/auth/google/start') + '">Sign in with Google</a></div>';
     bg.innerHTML = '<div style="background:#fff;border-radius:14px;max-width:440px;width:100%;padding:24px">'
       + '<div style="display:flex;justify-content:flex-end;margin-bottom:-8px">'
       +   '<button data-x style="border:0;background:transparent;font-size:24px;cursor:pointer;color:#888;line-height:1">&times;</button>'
@@ -574,7 +574,7 @@
       +     '</div>'
       +     '<div style="color:var(--accent);font-weight:600;font-size:12px">Pick this</div>'
       +   '</div>'
-      +   '<a data-fp-customize href="/dashboard#outreach" style="border:1px solid var(--line);background:#fff;border-radius:12px;padding:16px;text-decoration:none;color:inherit;cursor:pointer;display:flex;align-items:center;gap:14px">'
+      +   '<a data-fp-customize href="/dashboard#outreach" target="_top" style="border:1px solid var(--line);background:#fff;border-radius:12px;padding:16px;text-decoration:none;color:inherit;cursor:pointer;display:flex;align-items:center;gap:14px">'
       +     '<div style="font-size:28px">🛠️</div>'
       +     '<div style="flex:1">'
       +       '<div style="font-weight:600;font-size:15px">I&rsquo;ll pick later</div>'
