@@ -3200,7 +3200,7 @@ function _beRenderSlotPanel() {
     // weekday/day-num come out right regardless of browser tz.
     const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
     const dayHeaderHtml = `
-      <div class="be-cal-day-header" style="grid-template-columns: 48px repeat(${days.length}, minmax(0, 1fr));">
+      <div class="be-cal-day-header" style="grid-template-columns: 56px repeat(${days.length}, minmax(0, 1fr));">
         <div class="be-cal-time-spacer"></div>
         ${days.map(dStr => {
           const [yy, mm, dd] = dStr.split("-").map(Number);
@@ -3362,7 +3362,7 @@ function _beRenderSlotPanel() {
       </div>
       <div class="be-cal-grid-wrap">
         ${dayHeaderHtml}
-        <div class="be-cal-grid" style="grid-template-columns: 48px repeat(${days.length}, minmax(0, 1fr));">
+        <div class="be-cal-grid" style="grid-template-columns: 56px repeat(${days.length}, minmax(0, 1fr));">
           <div class="be-cal-time-col">${timeCellsHtml}</div>
           ${dayColsHtml}
         </div>
@@ -3438,7 +3438,7 @@ function _beRenderSlotPanel() {
       #leadsBulkEmailDlg .be-cal-today-btn:hover { background:#f3f4f6;border-color:#0a0a0a;color:#0a0a0a; }
       #leadsBulkEmailDlg .be-cal-nav-label { flex:1;text-align:center;font-size:13px;font-weight:600;color:#0a0a0a;font-variant-numeric:tabular-nums; }
       #leadsBulkEmailDlg .be-cal-grid-wrap { background:#fff;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.04); }
-      #leadsBulkEmailDlg .be-cal-day-header { display:grid;grid-template-columns:48px repeat(auto-fit, minmax(0, 1fr));background:#fafafa;border-bottom:1px solid #e5e7eb; }
+      #leadsBulkEmailDlg .be-cal-day-header { display:grid;grid-template-columns:56px repeat(auto-fit, minmax(0, 1fr));background:#fafafa;border-bottom:1px solid #e5e7eb; }
       #leadsBulkEmailDlg .be-cal-day-header > div { padding:8px 6px;font-size:11px;font-weight:600;color:#525252;text-align:center;border-left:1px solid #f4f4f5; }
       #leadsBulkEmailDlg .be-cal-day-header > div:first-child { border-left:0; }
       #leadsBulkEmailDlg .be-cal-day-header .be-cal-day-num { display:block;font-size:16px;font-weight:700;color:#0a0a0a;margin-top:2px;font-variant-numeric:tabular-nums; }
@@ -3446,9 +3446,11 @@ function _beRenderSlotPanel() {
       #leadsBulkEmailDlg .be-cal-day-header .is-today .be-cal-day-num { color:#2563eb; }
       #leadsBulkEmailDlg .be-cal-day-header > .be-cal-time-spacer { background:transparent; }
       #leadsBulkEmailDlg .be-cal-grid { display:grid;position:relative;max-height:480px;overflow-y:auto; }
-      #leadsBulkEmailDlg .be-cal-time-col { display:flex;flex-direction:column;background:#fff;border-right:1px solid #e5e7eb; }
-      #leadsBulkEmailDlg .be-cal-time-cell { height:24px;padding:0 5px;font-size:10px;color:#a1a1aa;text-align:right;border-bottom:1px solid #f4f4f5;font-variant-numeric:tabular-nums;line-height:24px; }
-      #leadsBulkEmailDlg .be-cal-time-cell.half { color:transparent; }
+      #leadsBulkEmailDlg .be-cal-time-col { display:flex;flex-direction:column;background:#fafafa;border-right:1px solid #d4d4d8; }
+      /* Hour labels render at the top edge of each hour-block (2 cells tall);
+         lifted to 13px bold + dark ink so the y-axis reads at a glance. */
+      #leadsBulkEmailDlg .be-cal-time-cell { height:24px;padding:0 6px 0 4px;font-size:13px;font-weight:700;color:#0a0a0a;text-align:right;border-bottom:1px solid #f4f4f5;font-variant-numeric:tabular-nums;line-height:24px; }
+      #leadsBulkEmailDlg .be-cal-time-cell.half { color:transparent;font-weight:400; }
       #leadsBulkEmailDlg .be-cal-day-col { position:relative;border-left:1px solid #f4f4f5; }
       #leadsBulkEmailDlg .be-cal-day-col:first-of-type { border-left:0; }
       #leadsBulkEmailDlg .be-cal-cell { height:24px;border-bottom:1px solid #f4f4f5; }
