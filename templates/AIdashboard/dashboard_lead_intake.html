@@ -95,6 +95,133 @@
   .empty .btn-primary { margin-top:6px; }
   .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#222; color:#fff; padding:10px 14px; border-radius:6px; opacity:0; transition:opacity .2s; z-index:10000; }
   .toast.show { opacity:1; }
+
+  /* Form-row status badges */
+  .row-status {
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:11.5px; font-weight:600; padding:3px 9px;
+    border-radius:99px; margin-left:8px;
+    vertical-align:middle;
+  }
+  .row-status .dot { width:6px; height:6px; border-radius:99px; background:currentColor; }
+  .rs-active   { background:#e6f6ec; color:#0a8a3a; }
+  .rs-no-flow  { background:#fef5e7; color:#a86200; }
+  .rs-draft    { background:#eef0f3; color:#5a6470; }
+
+  /* Field cards in the builder */
+  .fld-card {
+    background:#fff; border:1px solid var(--line);
+    border-radius:10px; padding:10px 12px; margin-bottom:10px;
+    display:flex; align-items:center; gap:10px;
+    transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+    position:relative;
+  }
+  .fld-card:hover { border-color:#bcc7d4; }
+  .fld-card.is-dragging {
+    opacity:.4;
+  }
+  .fld-card.is-drop-target {
+    border-color:var(--accent);
+    box-shadow:0 0 0 2px rgba(24,95,165,.18);
+  }
+  .fld-handle {
+    color:#9aa4b2; cursor:grab; user-select:none;
+    font-size:14px; line-height:1;
+    padding:4px 2px;
+  }
+  .fld-handle:active { cursor:grabbing; }
+  .fld-icon {
+    width:28px; height:28px; border-radius:8px; flex:0 0 auto;
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; line-height:1; background:#f0f4f9;
+  }
+  .fld-label {
+    flex:1; font-size:14px; font-weight:500; color:var(--fg);
+    cursor:text; padding:4px 6px; border-radius:5px;
+    border:1px solid transparent; min-width:0;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .fld-label:hover { background:#f5f7fa; }
+  .fld-label-input {
+    flex:1; font:inherit; font-size:14px; font-weight:500;
+    padding:4px 6px; border:1px solid var(--accent); border-radius:5px;
+    outline:none; min-width:0;
+  }
+  .fld-req-pill {
+    background:transparent; border:0; cursor:pointer; font:inherit;
+    font-size:11.5px; font-weight:600; padding:3px 9px;
+    border-radius:99px; flex:0 0 auto;
+    display:inline-flex; align-items:center; gap:5px;
+  }
+  .fld-req-pill .dot { width:5px; height:5px; border-radius:99px; background:currentColor; }
+  .fld-req-pill.is-req { background:#e6f6ec; color:#0a8a3a; }
+  .fld-req-pill.is-opt { background:#eef0f3; color:#5a6470; }
+  .fld-del {
+    border:0; background:transparent; cursor:pointer; padding:4px 8px;
+    color:#9aa4b2; font-size:18px; line-height:1;
+    opacity:0; transition:opacity .12s;
+  }
+  .fld-card:hover .fld-del { opacity:1; }
+  .fld-del:hover { color:var(--err); }
+
+  /* Add-field dropdown menu */
+  .add-fld-wrap { position:relative; margin-top:6px; }
+  .add-fld-menu {
+    position:absolute; top:calc(100% + 4px); left:0;
+    background:#fff; border:1px solid var(--line); border-radius:10px;
+    box-shadow:0 6px 20px rgba(20,40,80,.10);
+    min-width:240px; padding:8px 0; z-index:50;
+    max-height:60vh; overflow:auto;
+  }
+  .add-fld-section {
+    font-size:11px; font-weight:700; color:#9aa4b2;
+    text-transform:uppercase; letter-spacing:.04em;
+    padding:6px 14px;
+  }
+  .add-fld-item {
+    display:flex; align-items:center; gap:10px;
+    padding:8px 14px; cursor:pointer; font-size:13.5px;
+  }
+  .add-fld-item:hover { background:#f5f7fa; }
+  .add-fld-divider { height:1px; background:var(--line); margin:6px 0; }
+
+  /* Builder modal frame */
+  .builder-bg {
+    position:fixed; inset:0; background:rgba(10,15,25,.55);
+    display:flex; align-items:flex-start; justify-content:center;
+    z-index:9000; padding:24px; overflow:auto;
+  }
+  .builder-card {
+    background:#fff; border-radius:14px; max-width:980px;
+    width:100%; display:flex; flex-direction:column;
+    overflow:hidden; box-shadow:0 20px 60px rgba(20,40,80,.18);
+  }
+  .builder-head {
+    display:flex; align-items:center; gap:10px;
+    padding:14px 18px; border-bottom:1px solid var(--line);
+  }
+  .builder-head h2 { margin:0; font-size:17px; font-weight:600; }
+  .builder-body {
+    display:grid; grid-template-columns:1fr 1fr; gap:0;
+    min-height:480px; max-height:78vh;
+  }
+  .builder-controls { padding:18px 22px; overflow:auto; }
+  .builder-preview  { padding:18px 22px; background:#f5f7fa; overflow:auto;
+                       border-left:1px solid var(--line); }
+  .builder-foot {
+    display:flex; gap:10px; justify-content:space-between; align-items:center;
+    padding:14px 18px; border-top:1px solid var(--line);
+  }
+  .b-section-h {
+    font-size:11px; font-weight:700; color:#9aa4b2;
+    text-transform:uppercase; letter-spacing:.05em;
+    margin:18px 0 8px;
+  }
+  .b-input { width:100%; padding:9px 11px; border:1px solid var(--line);
+              border-radius:7px; font:inherit; font-size:14px;
+              background:#fff; }
+  .b-input:focus { outline:none; border-color:var(--accent);
+                    box-shadow:0 0 0 3px rgba(24,95,165,.12); }
 </style>
 </head>
 <body>
@@ -110,7 +237,7 @@
       <h3>Form</h3>
       <p>People fill it out. You get the lead.</p>
       <span class="pill pill-on" id="ch-form-pill" hidden><span class="dot"></span><span id="ch-form-pill-text">Ready</span></span>
-      <span class="pill pill-off" id="ch-form-pill-off"><span class="dot"></span>Not set up</span>
+      <span class="pill pill-off" id="ch-form-pill-off"><span class="dot"></span><span>Not set up</span></span>
       <button class="cta" id="ch-form-cta">Make a form</button>
       <div class="stat" id="ch-form-meta"></div>
     </div>
@@ -185,9 +312,23 @@
   function loadForms(){
     fetch("/me/forms", { credentials:"same-origin" }).then(function(r){ return r.json(); }).then(function(d){
       var forms = (d && d.forms) || [];
-      var ready = forms.length > 0;
-      setPill("ch-form-pill", "ch-form-pill-off", ready,
-              ready ? (forms.length + " form" + (forms.length === 1 ? "" : "s")) : "");
+      var hasForms = forms.length > 0;
+      var hasFlowAttached = forms.some(function(f){ return !!f.attached_flow_id; });
+      var ready = hasForms && hasFlowAttached;
+      // Three states for the form-channel pill:
+      //   none      → "Not set up"        (red pill)
+      //   no-flow   → "Needs flow"        (red pill, custom text)
+      //   ready     → "Ready · N form(s)" (green pill)
+      var label = ready
+        ? (forms.length + " form" + (forms.length === 1 ? "" : "s"))
+        : (hasForms ? "Needs flow" : "");
+      setPill("ch-form-pill", "ch-form-pill-off", ready, label);
+      // Override the "Not set up" pill text when forms exist but no flow.
+      var offEl = $("ch-form-pill-off");
+      if (offEl) {
+        var offText = offEl.querySelector("span:last-child");
+        if (offText) offText.textContent = hasForms ? "Needs flow" : "Not set up";
+      }
       var formCta = $("ch-form-cta");
       if (formCta) {
         formCta.textContent = ready ? "+ New form" : "Create your first form";
@@ -307,22 +448,33 @@
     var el = $("forms-list");
     el.innerHTML = forms.map(function(f){
       var url = hostBase() + "/f/" + f.slug;
+      // Status: 🟢 Active iff form has an attached_flow_id; 🟡 No flow otherwise.
+      var hasFlow = !!(f.attached_flow_id || (f.flow_id && f.flow_id !== ""));
+      var badge = hasFlow
+        ? '<span class="row-status rs-active"><span class="dot"></span>Active</span>'
+        : '<span class="row-status rs-no-flow"><span class="dot"></span>No flow</span>';
+      var flowLine = f.attached_flow_name
+        ? '<div class="meta" style="color:var(--sub);font-size:12.5px;margin-top:2px">Sends: <strong style="color:var(--fg)">' + esc(f.attached_flow_name) + '</strong></div>'
+        : (hasFlow
+            ? '<div class="meta" style="color:var(--sub);font-size:12.5px;margin-top:2px">Sends: <strong style="color:var(--fg)">First Hello</strong></div>'
+            : '<div class="meta" style="color:#a86200;font-size:12.5px;margin-top:2px">⚠️ No flow attached. Submissions create a lead but no messages send.</div>');
       return '<div class="row" data-id="' + f.id + '">'
-        +   '<div>'
-        +     '<div class="name">' + esc(f.name) + '</div>'
+        +   '<div style="flex:1;min-width:0">'
+        +     '<div class="name">' + esc(f.name) + badge + '</div>'
         +     '<div class="url">' + esc(url) + '</div>'
-        +     '<div class="meta" style="color:var(--sub);font-size:12.5px">'
+        +     '<div class="meta" style="color:var(--sub);font-size:12.5px;margin-top:2px">'
         +       (f.lead_count || 0) + ' leads · last used ' + (f.last_used_at ? new Date(f.last_used_at*1000).toLocaleDateString() : "never")
         +     '</div>'
+        +     flowLine
         +   '</div>'
         +   '<div class="actions">'
         +     '<button class="btn" data-act="copy">Copy link</button>'
-        +     '<button class="btn" data-act="open">Open</button>'
+        +     '<button class="btn" data-act="test" title="Open form in test mode">Test it</button>'
         +     '<button class="btn" data-act="edit">Edit</button>'
-        +     '<button class="btn" data-act="del">Delete</button>'
+        +     '<button class="btn" data-act="del" style="color:#c0392b">&times;</button>'
         +   '</div>'
         + '</div>';
-    }).join("") + '<div style="padding:12px 0 0"><button class="btn btn-primary" id="row-create">Create form</button></div>';
+    }).join("") + '<div style="padding:14px 0 0"><button class="btn btn-primary" id="row-create">+ New form</button></div>';
     Array.prototype.forEach.call(el.querySelectorAll("[data-act]"), function(b){
       b.addEventListener("click", function(){
         var row = b.closest(".row"); var id = row.getAttribute("data-id");
@@ -330,7 +482,8 @@
         if (b.dataset.act === "copy") copy(hostBase() + "/f/" + f.slug);
         if (b.dataset.act === "open") window.open("/f/" + f.slug, "_blank");
         if (b.dataset.act === "edit") openBuilder(f);
-        if (b.dataset.act === "del") deleteForm(f);
+        if (b.dataset.act === "del")  deleteForm(f);
+        if (b.dataset.act === "test") window.open("/f/" + f.slug + "?test=1", "_blank");
       });
     });
     $("row-create").onclick = function(){ openBuilder(); };
@@ -341,16 +494,27 @@
       .then(function(){ toast("Deleted"); loadForms(); });
   }
   var BUILTINS = [
-    {key:"name",        label:"Their name",   type:"text"},
-    {key:"email",       label:"Their email",  type:"email"},
-    {key:"phone",       label:"Their phone",  type:"phone"},
-    {key:"address",     label:"Their address",type:"address"},
-    {key:"message",     label:"What they need",type:"textarea"},
+    {key:"name",        label:"Name",         type:"text"},
+    {key:"email",       label:"Email",        type:"email"},
+    {key:"phone",       label:"Phone",        type:"phone"},
+    {key:"address",     label:"Address",      type:"address"},
+    {key:"message",     label:"What they need", type:"textarea"},
     {key:"service",     label:"What service", type:"select", options:["Service A","Service B"]},
     {key:"date_needed", label:"When",         type:"date"},
     {key:"budget",      label:"Budget",       type:"text"},
-    {key:"company",     label:"Their company",type:"text"},
+    {key:"company",     label:"Company",      type:"text"},
   ];
+
+  // Field type → emoji icon (used in field cards + add-field dropdown).
+  var FIELD_ICON = {
+    text:"📝", email:"📧", phone:"📞", address:"🏠",
+    textarea:"💬", select:"📋", date:"⏰", number:"🔢",
+  };
+  var FIELD_TYPE_LABEL = {
+    text:"Short text", email:"Email", phone:"Phone",
+    address:"Address", textarea:"Long text", select:"Pick from a list",
+    date:"Date", number:"Number",
+  };
 
   function openBuilder(form){
     var editing = !!form;
@@ -369,142 +533,305 @@
     };
 
     var bg = document.createElement("div");
-    bg.style = "position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-start;justify-content:center;z-index:9000;padding:24px;overflow:auto";
-    bg.innerHTML = '<div style="background:#fff;border-radius:12px;max-width:920px;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:0;overflow:hidden">'
-      + '<div id="b-controls" style="padding:18px;border-right:1px solid var(--line);max-height:80vh;overflow:auto"></div>'
-      + '<div id="b-preview" style="padding:18px;background:#f7f7f8;max-height:80vh;overflow:auto"></div>'
+    bg.className = "builder-bg";
+    bg.innerHTML = ''
+      + '<div class="builder-card">'
+      +   '<div class="builder-head">'
+      +     '<h2>' + (editing ? "Edit form" : "New form") + '</h2>'
+      +     '<button id="b-close" style="margin-left:auto;border:0;background:transparent;cursor:pointer;font-size:22px;color:#9aa4b2;line-height:1;padding:4px 8px" aria-label="Close">&times;</button>'
+      +   '</div>'
+      +   '<div class="builder-body">'
+      +     '<div class="builder-controls" id="b-controls"></div>'
+      +     '<div class="builder-preview"  id="b-preview"></div>'
+      +   '</div>'
+      +   '<div class="builder-foot">'
+      +     '<div id="b-foot-left">'
+      +       (editing ? '<button class="btn-ghost" id="b-delete" style="background:transparent;border:0;color:var(--err);cursor:pointer;font:inherit;font-weight:600">Delete form</button>' : '')
+      +     '</div>'
+      +     '<div style="display:flex;gap:8px">'
+      +       '<button class="btn" id="b-cancel">Cancel</button>'
+      +       '<button class="btn btn-primary" id="b-save">' + (editing ? "Save" : "Save form") + '</button>'
+      +     '</div>'
+      +   '</div>'
       + '</div>';
     document.body.appendChild(bg);
     bg.addEventListener("click", function(e){ if (e.target === bg) document.body.removeChild(bg); });
+    bg.querySelector("#b-close").onclick = function(){ document.body.removeChild(bg); };
+    bg.querySelector("#b-cancel").onclick = function(){ document.body.removeChild(bg); };
+    var delBtn = bg.querySelector("#b-delete");
+    if (delBtn) delBtn.onclick = function(){
+      if (!confirm("Delete \"" + state.name + "\"?")) return;
+      fetch("/me/forms/" + state.id, { method:"DELETE", credentials:"same-origin" })
+        .then(function(){ toast("Deleted"); document.body.removeChild(bg); loadForms(); });
+    };
+
+    // Drag-and-drop support — track which field index is being dragged.
+    var dragIdx = null;
 
     function renderControls(){
       var c = $("b-controls");
-      c.innerHTML =
-        '<h2 style="margin:0 0 14px">' + (editing ? "Edit form" : "New form") + '</h2>'
-        + '<label>Name it</label><input id="b-name" value="' + esc(state.name) + '" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px"/>'
-        + '<h3 style="margin:18px 0 6px;font-size:14px">What to ask</h3>'
-        + '<div id="b-builtins"></div>'
-        + '<div id="b-customs" style="margin-top:8px"></div>'
-        + '<button class="btn" id="b-add-custom" style="margin-top:8px">+ Add my own</button>'
-        + '<label style="display:block;margin-top:18px">Button text</label>'
-        + '<input id="b-submit-text" value="' + esc(state.submit_text) + '" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px"/>'
-        + '<label style="display:block;margin-top:12px">Thank-you note</label>'
-        + '<textarea id="b-thanks" rows="2" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px">' + esc(state.thank_you) + '</textarea>'
-        + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px">'
-        +   '<button class="btn" id="b-cancel">Cancel</button>'
-        +   '<button class="btn btn-primary" id="b-save">' + (editing ? "Save" : "Make it") + '</button>'
-        + '</div>';
-
-      // Built-in toggles
-      var bi = $("b-builtins");
-      bi.innerHTML = BUILTINS.map(function(f){
-        var on = state.fields.some(function(x){ return x.key === f.key && x.builtin !== false; });
-        var fld = state.fields.find(function(x){ return x.key === f.key; });
-        var req = on && fld ? fld.required : false;
-        return '<div style="display:flex;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)">'
-          + '<label style="flex:1;display:flex;align-items:center;gap:8px;font-weight:500">'
-          +   '<input type="checkbox" data-bi-toggle="' + f.key + '"' + (on ? " checked" : "") + '/>'
-          +   esc(f.label)
-          + '</label>'
-          + '<label style="font-size:12px;color:var(--sub)">'
-          +   '<input type="checkbox" data-bi-req="' + f.key + '"' + (req ? " checked" : "") + '/> required'
-          + '</label>'
-          + '</div>';
-      }).join("");
-
-      Array.prototype.forEach.call(bi.querySelectorAll("[data-bi-toggle]"), function(cb){
-        cb.addEventListener("change", function(){
-          var key = cb.getAttribute("data-bi-toggle");
-          var spec = BUILTINS.find(function(x){ return x.key === key; });
-          if (cb.checked) {
-            if (!state.fields.some(function(x){ return x.key === key; })) {
-              state.fields.push(Object.assign({}, spec, {required:false, builtin:true}));
-            }
-          } else {
-            state.fields = state.fields.filter(function(x){ return !(x.key === key && x.builtin !== false); });
-          }
-          renderAll();
-        });
-      });
-      Array.prototype.forEach.call(bi.querySelectorAll("[data-bi-req]"), function(cb){
-        cb.addEventListener("change", function(){
-          var key = cb.getAttribute("data-bi-req");
-          var f = state.fields.find(function(x){ return x.key === key; });
-          if (f) f.required = cb.checked;
-          renderAll();
-        });
-      });
-
-      // Custom fields list
-      var cu = $("b-customs");
-      var customs = state.fields.filter(function(f){ return f.builtin === false; });
-      cu.innerHTML = customs.length === 0
-        ? '<div class="meta" style="color:var(--sub);font-size:12.5px">None yet.</div>'
-        : customs.map(function(f, i){
-            return '<div style="display:flex;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);gap:8px">'
-              + '<div style="flex:1">' + esc(f.label) + ' <span class="meta" style="color:var(--sub)">(' + f.type + ')</span></div>'
-              + '<button class="btn" data-cu-rm="' + i + '">Remove</button>'
+      var fieldCardsHtml = state.fields.length === 0
+        ? '<div style="text-align:center;padding:20px 12px;color:var(--sub);font-size:13px;border:1px dashed var(--line);border-radius:10px">No fields yet — add one below.</div>'
+        : state.fields.map(function(f, i){
+            var icon = FIELD_ICON[f.type] || "📝";
+            var reqOn = !!f.required;
+            return '<div class="fld-card" draggable="true" data-fld-idx="' + i + '">'
+              + '<span class="fld-handle" aria-hidden="true">&#x22EE;&#x22EE;</span>'
+              + '<span class="fld-icon" aria-hidden="true">' + icon + '</span>'
+              + '<span class="fld-label" data-fld-edit="' + i + '" tabindex="0" title="Click to rename">' + esc(f.label) + '</span>'
+              + '<button class="fld-req-pill ' + (reqOn ? "is-req" : "is-opt") + '" data-fld-req="' + i + '" type="button">'
+              +   '<span class="dot"></span>' + (reqOn ? "Required" : "Optional")
+              + '</button>'
+              + '<button class="fld-del" data-fld-del="' + i + '" title="Remove field" aria-label="Remove">&times;</button>'
               + '</div>';
           }).join("");
-      Array.prototype.forEach.call(cu.querySelectorAll("[data-cu-rm]"), function(b){
-        b.addEventListener("click", function(){
-          var n = parseInt(b.getAttribute("data-cu-rm"), 10);
-          var customs2 = state.fields.filter(function(f){ return f.builtin === false; });
-          var key = customs2[n] && customs2[n].key;
-          state.fields = state.fields.filter(function(f){ return f.key !== key; });
+      c.innerHTML = ''
+        + '<div class="b-section-h" style="margin-top:0">Form name</div>'
+        + '<input id="b-name" class="b-input" value="' + esc(state.name) + '" placeholder="Contact form"/>'
+        + '<div class="b-section-h">Fields</div>'
+        + '<div id="b-fields">' + fieldCardsHtml + '</div>'
+        + '<div class="add-fld-wrap">'
+        +   '<button class="btn" id="b-add-fld" type="button">+ Add field <span style="color:#9aa4b2;margin-left:4px">▾</span></button>'
+        +   '<div class="add-fld-menu" id="b-add-menu" hidden></div>'
+        + '</div>'
+        + '<div class="b-section-h">Button text</div>'
+        + '<input id="b-submit-text" class="b-input" value="' + esc(state.submit_text) + '"/>'
+        + '<div class="b-section-h">Thank-you note</div>'
+        + '<textarea id="b-thanks" class="b-input" rows="2" style="resize:vertical">' + esc(state.thank_you) + '</textarea>';
+
+      // Inline label editing.
+      Array.prototype.forEach.call(c.querySelectorAll("[data-fld-edit]"), function(span){
+        var commit = function(newVal){
+          var i = parseInt(span.getAttribute("data-fld-edit"), 10);
+          var trimmed = (newVal || "").trim();
+          if (trimmed && state.fields[i]) state.fields[i].label = trimmed;
+          renderAll();
+        };
+        var startEdit = function(){
+          var i = parseInt(span.getAttribute("data-fld-edit"), 10);
+          var input = document.createElement("input");
+          input.type = "text"; input.className = "fld-label-input";
+          input.value = state.fields[i] ? state.fields[i].label : "";
+          span.replaceWith(input);
+          input.focus(); input.select();
+          var done = function(){ commit(input.value); };
+          input.addEventListener("blur", done);
+          input.addEventListener("keydown", function(ev){
+            if (ev.key === "Enter") { ev.preventDefault(); input.blur(); }
+            else if (ev.key === "Escape") { input.value = state.fields[i].label; input.blur(); }
+          });
+        };
+        span.addEventListener("click", startEdit);
+        span.addEventListener("keydown", function(ev){
+          if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); startEdit(); }
+        });
+      });
+
+      // Required/Optional pill toggle.
+      Array.prototype.forEach.call(c.querySelectorAll("[data-fld-req]"), function(btn){
+        btn.addEventListener("click", function(){
+          var i = parseInt(btn.getAttribute("data-fld-req"), 10);
+          if (!state.fields[i]) return;
+          state.fields[i].required = !state.fields[i].required;
           renderAll();
         });
       });
 
-      $("b-add-custom").onclick = function(){
-        var label = prompt("What do you want to ask?");
-        if (!label) return;
-        var multi = confirm("Do they pick from a list?\n\nOK = list of choices.\nCancel = they type an answer.");
-        var options = [];
-        if (multi) {
-          var raw = prompt("List the choices, one per line:", "Choice A\nChoice B\nChoice C");
-          options = (raw || "").split(/[,\n]+/).map(function(s){ return s.trim(); }).filter(Boolean);
-          if (options.length === 0) return;
-        }
-        state.fields.push({
-          key: "custom_" + Math.random().toString(36).slice(2,8),
-          label: label, type: multi ? "select" : "text",
-          required: false, builtin: false,
-          options: options,
+      // Delete a field.
+      Array.prototype.forEach.call(c.querySelectorAll("[data-fld-del]"), function(btn){
+        btn.addEventListener("click", function(){
+          var i = parseInt(btn.getAttribute("data-fld-del"), 10);
+          state.fields.splice(i, 1);
+          renderAll();
         });
-        renderAll();
+      });
+
+      // Drag-and-drop reorder.
+      Array.prototype.forEach.call(c.querySelectorAll(".fld-card"), function(card){
+        card.addEventListener("dragstart", function(){
+          dragIdx = parseInt(card.getAttribute("data-fld-idx"), 10);
+          card.classList.add("is-dragging");
+        });
+        card.addEventListener("dragend", function(){
+          card.classList.remove("is-dragging");
+          Array.prototype.forEach.call(c.querySelectorAll(".fld-card"), function(x){
+            x.classList.remove("is-drop-target");
+          });
+          dragIdx = null;
+        });
+        card.addEventListener("dragover", function(ev){
+          ev.preventDefault();
+          if (dragIdx == null) return;
+          card.classList.add("is-drop-target");
+        });
+        card.addEventListener("dragleave", function(){
+          card.classList.remove("is-drop-target");
+        });
+        card.addEventListener("drop", function(ev){
+          ev.preventDefault();
+          var dst = parseInt(card.getAttribute("data-fld-idx"), 10);
+          if (dragIdx == null || dst === dragIdx) return;
+          var moved = state.fields.splice(dragIdx, 1)[0];
+          state.fields.splice(dst, 0, moved);
+          dragIdx = null;
+          renderAll();
+        });
+      });
+
+      // Add-field dropdown.
+      var addBtn = $("b-add-fld"), addMenu = $("b-add-menu");
+      addBtn.onclick = function(ev){
+        ev.stopPropagation();
+        addMenu.hidden = !addMenu.hidden;
+        if (!addMenu.hidden) renderAddMenu();
       };
+      document.addEventListener("click", function _outside(ev){
+        if (addMenu && !addMenu.contains(ev.target) && ev.target !== addBtn) {
+          addMenu.hidden = true;
+        }
+      });
 
-      $("b-cancel").onclick = function(){ document.body.removeChild(bg); };
-      $("b-save").onclick = saveForm;
-
-      // Live updates from name / submit / thanks
+      // Live updates from name / submit / thanks.
       $("b-name").oninput        = function(){ state.name        = $("b-name").value;        renderPreview(); };
       $("b-submit-text").oninput = function(){ state.submit_text = $("b-submit-text").value; renderPreview(); };
       $("b-thanks").oninput      = function(){ state.thank_you   = $("b-thanks").value;      renderPreview(); };
+
+      // Save handler.
+      $("b-save").onclick = saveForm;
+    }
+
+    function renderAddMenu(){
+      var m = $("b-add-menu");
+      var usedKeys = state.fields.map(function(f){ return f.key; });
+      var available = BUILTINS.filter(function(b){ return usedKeys.indexOf(b.key) < 0; });
+      var quickHtml = available.length === 0
+        ? '<div style="padding:8px 14px;color:var(--sub);font-size:12.5px">All quick adds are in your form.</div>'
+        : available.map(function(b){
+            return '<div class="add-fld-item" data-add-builtin="' + b.key + '">'
+              + '<span style="font-size:18px">' + (FIELD_ICON[b.type] || "📝") + '</span>'
+              + '<span>' + esc(b.label) + '</span>'
+              + '</div>';
+          }).join("");
+      m.innerHTML = ''
+        + '<div class="add-fld-section">Quick adds</div>'
+        + quickHtml
+        + '<div class="add-fld-divider"></div>'
+        + '<div class="add-fld-section">Custom</div>'
+        + ['text','textarea','select','number','date'].map(function(t){
+            return '<div class="add-fld-item" data-add-custom="' + t + '">'
+              + '<span style="font-size:18px">' + (FIELD_ICON[t] || "📝") + '</span>'
+              + '<span>+ ' + esc(FIELD_TYPE_LABEL[t]) + '</span>'
+              + '</div>';
+          }).join("");
+      Array.prototype.forEach.call(m.querySelectorAll("[data-add-builtin]"), function(item){
+        item.onclick = function(){
+          var key = item.getAttribute("data-add-builtin");
+          var spec = BUILTINS.find(function(x){ return x.key === key; });
+          if (!spec) return;
+          state.fields.push(Object.assign({}, spec, {required:false, builtin:true}));
+          $("b-add-menu").hidden = true;
+          renderAll();
+        };
+      });
+      Array.prototype.forEach.call(m.querySelectorAll("[data-add-custom]"), function(item){
+        item.onclick = function(){
+          $("b-add-menu").hidden = true;
+          openAddCustomModal(item.getAttribute("data-add-custom"));
+        };
+      });
+    }
+
+    function openAddCustomModal(fieldType){
+      var bg2 = document.createElement("div");
+      bg2.style = "position:fixed;inset:0;background:rgba(10,15,25,.55);display:flex;align-items:center;justify-content:center;z-index:9050;padding:20px";
+      var typeLabel = FIELD_TYPE_LABEL[fieldType] || fieldType;
+      var icon = FIELD_ICON[fieldType] || "📝";
+      var optionsBlock = fieldType === "select"
+        ? '<div class="b-section-h" style="margin-top:14px">Choices (one per line)</div>'
+          + '<textarea id="acm-options" class="b-input" rows="4" placeholder="Choice A&#10;Choice B&#10;Choice C"></textarea>'
+        : "";
+      bg2.innerHTML = ''
+        + '<div style="background:#fff;border-radius:14px;max-width:440px;width:100%;padding:22px">'
+        +   '<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">'
+        +     '<span style="font-size:24px">' + icon + '</span>'
+        +     '<h3 style="margin:0;font-size:16px;font-weight:600">Add a ' + esc(typeLabel.toLowerCase()) + ' field</h3>'
+        +     '<button data-acm-x style="margin-left:auto;border:0;background:transparent;cursor:pointer;font-size:22px;color:#9aa4b2;line-height:1">&times;</button>'
+        +   '</div>'
+        +   '<div class="b-section-h" style="margin-top:14px">Label</div>'
+        +   '<input id="acm-label" class="b-input" placeholder="What do you want to ask?" autofocus/>'
+        +   optionsBlock
+        +   '<div style="display:flex;gap:14px;margin-top:14px">'
+        +     '<label style="cursor:pointer"><input type="radio" name="acm-req" value="opt" checked/> Optional</label>'
+        +     '<label style="cursor:pointer"><input type="radio" name="acm-req" value="req"/> Required</label>'
+        +   '</div>'
+        +   '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px">'
+        +     '<button class="btn" data-acm-x>Cancel</button>'
+        +     '<button class="btn btn-primary" id="acm-add">Add</button>'
+        +   '</div>'
+        + '</div>';
+      document.body.appendChild(bg2);
+      var close2 = function(){ try { document.body.removeChild(bg2); } catch(_){} };
+      Array.prototype.forEach.call(bg2.querySelectorAll("[data-acm-x]"), function(b){ b.onclick = close2; });
+      bg2.addEventListener("click", function(e){ if (e.target === bg2) close2(); });
+      setTimeout(function(){ var el = document.getElementById("acm-label"); if (el) el.focus(); }, 30);
+      bg2.querySelector("#acm-add").onclick = function(){
+        var label = (document.getElementById("acm-label").value || "").trim();
+        if (!label) { toast("Please give it a label."); return; }
+        var req = (bg2.querySelector('input[name="acm-req"]:checked') || {}).value === "req";
+        var options = [];
+        if (fieldType === "select") {
+          var raw = (document.getElementById("acm-options").value || "");
+          options = raw.split(/\n+/).map(function(s){ return s.trim(); }).filter(Boolean);
+          if (options.length === 0) { toast("Add at least one choice."); return; }
+        }
+        state.fields.push({
+          key: "custom_" + Math.random().toString(36).slice(2,8),
+          label: label, type: fieldType,
+          required: req, builtin: false,
+          options: options,
+        });
+        close2(); renderAll();
+      };
     }
 
     function renderPreview(){
       var p = $("b-preview");
-      var fieldsHtml = state.fields.map(function(f){
-        var input;
-        if (f.type === "textarea") {
-          input = '<textarea rows="3" style="width:100%;padding:8px;border:1px solid #e6e6ea;border-radius:6px" disabled placeholder="' + esc(f.label) + '"></textarea>';
-        } else if (f.type === "select") {
-          input = '<select style="width:100%;padding:8px;border:1px solid #e6e6ea;border-radius:6px" disabled>'
-            + '<option>' + (f.options && f.options[0] ? esc(f.options[0]) : "Choose…") + '</option></select>';
-        } else {
-          input = '<input style="width:100%;padding:8px;border:1px solid #e6e6ea;border-radius:6px" disabled placeholder="' + esc(f.label) + '"/>';
-        }
-        return '<div style="margin-bottom:10px"><label style="display:block;font-size:12.5px;font-weight:600;margin-bottom:4px">' + esc(f.label)
-          + (f.required ? ' <span style="color:#c0392b">*</span>' : '') + '</label>' + input + '</div>';
-      }).join("");
-      p.innerHTML = '<div style="font-size:12px;color:var(--sub);margin-bottom:8px">Live preview</div>'
-        + '<div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px">'
-        + '<h3 style="margin:0 0 10px">' + esc(state.name) + '</h3>'
-        + fieldsHtml
-        + '<button style="width:100%;padding:10px;background:var(--accent);color:#fff;border:0;border-radius:6px;font-weight:600;margin-top:6px">' + esc(state.submit_text) + '</button>'
-        + '</div>';
+      // Mirror the public hosted_form.html input styles so the preview
+      // matches the rendered form pixel-for-pixel.
+      var inStyle = "width:100%;padding:10px 12px;border:1px solid #e6e6ea;border-radius:8px;font-size:14px;background:#fff;color:#777";
+      var fieldsHtml = state.fields.length === 0
+        ? '<div style="color:#aaa;font-size:13px;text-align:center;padding:24px 12px;border:1px dashed var(--line);border-radius:8px">Fields you add show here.</div>'
+        : state.fields.map(function(f){
+            var input;
+            if (f.type === "textarea") {
+              input = '<textarea rows="3" style="' + inStyle + ';resize:vertical" disabled></textarea>';
+            } else if (f.type === "select") {
+              input = '<select style="' + inStyle + '" disabled>'
+                + '<option>' + (f.options && f.options[0] ? esc(f.options[0]) : "Choose…") + '</option></select>';
+            } else if (f.type === "date") {
+              input = '<input type="date" style="' + inStyle + '" disabled/>';
+            } else if (f.type === "number") {
+              input = '<input type="number" style="' + inStyle + '" disabled/>';
+            } else {
+              input = '<input style="' + inStyle + '" disabled/>';
+            }
+            return '<div style="margin-bottom:14px"><label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">'
+              + esc(f.label)
+              + (f.required ? ' <span style="color:#c0392b">*</span>' : '')
+              + '</label>' + input + '</div>';
+          }).join("");
+      p.innerHTML = ''
+        + '<div style="font-size:11px;font-weight:700;color:#9aa4b2;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Live preview</div>'
+        + '<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:0 1px 3px rgba(20,40,80,.04)">'
+        +   '<h3 style="margin:0 0 4px;font-size:18px">' + esc(state.name || "Untitled form") + '</h3>'
+        +   fieldsHtml
+        +   '<button style="width:100%;padding:11px;background:var(--accent);color:#fff;border:0;border-radius:8px;font-weight:600;font-size:14px;margin-top:6px;cursor:not-allowed" title="This is a preview" disabled>' + esc(state.submit_text || "Submit") + '</button>'
+        + '</div>'
+        + (state.thank_you ?
+            '<div style="margin-top:14px;padding:12px 14px;background:#fff;border:1px dashed var(--line);border-radius:10px">'
+              + '<div style="font-size:11px;font-weight:700;color:#9aa4b2;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">After they submit</div>'
+              + '<div style="font-size:13.5px;color:var(--fg);font-style:italic">' + esc(state.thank_you) + '</div>'
+            + '</div>' : "");
     }
 
     function renderAll(){ renderControls(); renderPreview(); }
