@@ -1194,6 +1194,30 @@ const STYLES = `
     box-shadow: 0 6px 16px rgba(15,23,42,.22),
                 0 0 0 2px rgba(22,163,74,.35);
   }
+  /* ── Layered UI z-index scale ──────────────────────────────────────
+     Codified so future components don't pick arbitrary values.
+        20  persistent UI (save status, return-pill, intro strip)
+        30  popovers, dropdowns
+        40  modals (chooser, template picker, message drawer)
+        45  tour panel (above modals so it can guide through them)
+        50  toasts
+        70  return-pill RAISED state — but only when no modal is open
+     The pill defaults to 20; we elevate it to 70 only when there's no
+     competing modal. When a modal opens (.fb-canvas.is-modal-open),
+     persistent UI fades out so it can't visually intrude. */
+  .fb-canvas .fb-tour-panel,
+  .fb-canvas .fb-return-pill,
+  .fb-canvas .fb-save {
+    transition: opacity .15s ease, visibility 0s linear .15s;
+  }
+  .fb-canvas.is-modal-open .fb-tour-panel,
+  .fb-canvas.is-modal-open .fb-return-pill,
+  .fb-canvas.is-modal-open .fb-save {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+  }
+
   /* Tour highlight — soft warm yellow/gold halo around whatever
      element the active tour step is describing. Reads as a "look
      here!" hint, not an error.
@@ -2730,7 +2754,9 @@ export default function FlowBuilder() {
       ) : (
       <>
       <div
-        className={`fb-canvas ${isDropTarget ? "is-drop-target" : ""}`}
+        className={`fb-canvas ${isDropTarget ? "is-drop-target" : ""} ${
+          (!!chooser || showPicker || !!selectedNodeId) ? "is-modal-open" : ""
+        }`}
         data-pulse-next={nodes.length === 1 && nodes[0]?.data?.kind === "trigger" ? "1" : "0"}
         onDrop={onDrop}
         onDragOver={onDragOver}
