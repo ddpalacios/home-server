@@ -56,9 +56,10 @@ const SOURCE_LABELS = {
 let _allLeads = [];
 let _filteredLeads = [];
 let _selectedIds = new Set();
-let _selectModeOn = false;
+let _selectModeOn = true;  // Phase 1: checkboxes always visible
+let _expandedIds = new Set();  // Lead IDs whose inline detail panel is open
 let _sortBy = { key: "created_at", dir: "desc" };
-let _filters = { source: null, stage: null, when: null, search: "" };
+let _filters = { source: null, stage: null, when: null, search: "", advanced: [] };
 let _moreFilters = { hasPhone: false, hasEmail: false, replied: false, unsubscribed: false };
 let _openMenuEl = null;
 let _view = "table";  // "table" | "funnel" | "board"
@@ -118,6 +119,227 @@ function whenThreshold(filterVal) {
   return 0;
 }
 
+// ─── Stage-aware "Details" column ────────────────────────────────────────────
+
+const CHANNEL_ICONS = { email: "📧", sms: "💬", call: "📞", phone: "📞", instagram: "📷" };
+const CHANNEL_LABELS = { email: "Email", sms: "SMS", call: "Call", phone: "Phone", instagram: "Instagram" };
+
+function _fmtMoney(amount) {
+  const n = Number(amount);
+  if (!isFinite(n)) return "";
+  return "$" + n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+}
+
+function _fmtAppt(unixSecs) {
+  if (!unixSecs) return "";
+  const d = new Date(Number(unixSecs) * 1000);
+  if (isNaN(d)) return "";
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  let h = d.getHours();
+  const m = d.getMinutes();
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12; if (h === 0) h = 12;
+  return `${months[d.getMonth()]} ${d.getDate()}, ${h}:${String(m).padStart(2,"0")} ${ampm}`;
+}
+
+function _fmtShortDate(unixSecs) {
+  if (!unixSecs) return "";
+  const d = new Date(Number(unixSecs) * 1000);
+  if (isNaN(d)) return "";
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return `${months[d.getMonth()]} ${d.getDate()}`;
+}
+
+function _truncate(s, n) {
+  s = String(s || "");
+  if (s.length <= n) return s;
+  return s.slice(0, n - 1).trimEnd() + "…";
+}
+
+function stageDetailsFor(lead) {
+  // Returns { text, full } where text is short for the cell, full is the title attr.
+  // Falls back to "—" gracefully for missing fields.
+  const stage = lead.stage || "new";
+  if (stage === "new") return { text: "", full: "" };
+
+  if (stage === "contacted") {
+    const ch = lead.last_contact_channel || lead.last_channel;
+    const t  = lead.last_contacted_at || lead.last_activity_at;
+    if (!ch && !t) return { text: "—", full: "" };
+    const icon = CHANNEL_ICONS[ch] || "📧";
+    const lbl  = CHANNEL_LABELS[ch] || (ch ? String(ch) : "Email");
+    const when = t ? relativeTime(t) : "—";
+    const text = `${icon} ${lbl} · ${when}`;
+    return { text, full: text };
+  }
+
+  if (stage === "engaged") {
+    const note = lead.last_response || lead.last_note || lead.last_reply || lead.notes;
+    if (!note) return { text: "—", full: "" };
+    const full = String(note);
+    return { text: _truncate(full, 30), full };
+  }
+
+  if (stage === "quoted") {
+    const amt = lead.quote_amount;
+    const sent = lead.quote_sent_at;
+    if (amt == null && !sent) return { text: "—", full: "" };
+    const parts = [];
+    if (amt != null) parts.push(_fmtMoney(amt));
+    if (sent) parts.push("sent " + relativeTime(sent));
+    if (!parts.length) return { text: "—", full: "" };
+    const text = parts.join(" · ");
+    return { text, full: text };
+  }
+
+  if (stage === "scheduled") {
+    const t = lead.appointment_time || lead.appointment_at;
+    if (!t) return { text: "—", full: "" };
+    const text = "📅 " + _fmtAppt(t);
+    return { text, full: text };
+  }
+
+  if (stage === "won") {
+    const date = lead.job_complete_date || lead.won_at;
+    const val  = lead.job_value || lead.quote_amount;
+    if (!date && val == null) return { text: "—", full: "" };
+    const parts = ["✓ Job done"];
+    if (date) parts[0] = "✓ Job done " + _fmtShortDate(date);
+    if (val != null) parts.push(_fmtMoney(val));
+    const text = parts.join(" · ");
+    return { text, full: text };
+  }
+
+  if (stage === "lost") {
+    const reason = lead.lost_reason;
+    const at = lead.lost_at;
+    if (!reason && !at) return { text: "—", full: "" };
+    const parts = [];
+    if (reason) parts.push(String(reason));
+    if (at) parts.push(_fmtShortDate(at));
+    const text = parts.join(" · ");
+    return { text, full: text };
+  }
+
+  return { text: "—", full: "" };
+}
+
+// ─── Advanced filter evaluation ──────────────────────────────────────────────
+
+const ADV_FIELDS = {
+  stage:            { type: "stage",  label: "Stage" },
+  source:           { type: "text",   label: "Source", reader: (l) => l.source || "" },
+  last_contacted:   { type: "date",   label: "Last contacted", reader: (l) => l.last_contacted_at || l.last_activity_at || 0 },
+  last_activity:    { type: "date",   label: "Last activity",  reader: (l) => l.last_activity_at || l.updated_at || l.created_at || 0 },
+  quote_amount:     { type: "number", label: "Quote amount",   reader: (l) => (l.quote_amount != null ? Number(l.quote_amount) : null) },
+  appointment_time: { type: "date",   label: "Appointment time", reader: (l) => l.appointment_time || l.appointment_at || 0 },
+  job_date:         { type: "date",   label: "Job date",       reader: (l) => l.job_complete_date || l.won_at || 0 },
+};
+
+const ADV_OPS_BY_TYPE = {
+  text:   ["is","is not","contains","doesn't contain"],
+  date:   ["is more than X days ago","is less than X days ago","is between X and Y","was today","was yesterday"],
+  number: ["is greater than","is less than","equals"],
+  stage:  ["is","is not","is one of"],
+};
+
+function _daysAgoUnix(days) {
+  return Math.floor(Date.now() / 1000) - Number(days) * 86400;
+}
+function _startOfDayUnix(daysOffset) {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + (daysOffset || 0));
+  return Math.floor(d.getTime() / 1000);
+}
+function _endOfDayUnix(daysOffset) {
+  const d = new Date();
+  d.setHours(23, 59, 59, 999);
+  d.setDate(d.getDate() + (daysOffset || 0));
+  return Math.floor(d.getTime() / 1000);
+}
+
+function _evalAdvCondition(lead, cond) {
+  const f = ADV_FIELDS[cond.field];
+  if (!f) return true;
+  const op = cond.op;
+  const v  = cond.value;
+
+  if (f.type === "text") {
+    const lv = String(f.reader(lead) || "").toLowerCase();
+    const rv = String(v || "").toLowerCase();
+    if (!rv) return true;
+    if (op === "is")             return lv === rv;
+    if (op === "is not")         return lv !== rv;
+    if (op === "contains")       return lv.includes(rv);
+    if (op === "doesn't contain")return !lv.includes(rv);
+    return true;
+  }
+
+  if (f.type === "stage") {
+    const lv = lead.stage || "new";
+    if (op === "is")        return lv === v;
+    if (op === "is not")    return lv !== v;
+    if (op === "is one of") return Array.isArray(v) && v.includes(lv);
+    return true;
+  }
+
+  if (f.type === "number") {
+    const lv = f.reader(lead);
+    const rv = Number(v);
+    if (lv == null || isNaN(rv)) return false;
+    if (op === "is greater than") return lv > rv;
+    if (op === "is less than")    return lv < rv;
+    if (op === "equals")          return lv === rv;
+    return true;
+  }
+
+  if (f.type === "date") {
+    const lv = Number(f.reader(lead) || 0);
+    if (op === "is more than X days ago") {
+      const days = Number(v); if (!isFinite(days)) return true;
+      if (!lv) return false;
+      return lv < _daysAgoUnix(days);
+    }
+    if (op === "is less than X days ago") {
+      const days = Number(v); if (!isFinite(days)) return true;
+      if (!lv) return false;
+      const cutoff = _daysAgoUnix(days);
+      return lv >= cutoff && lv <= Math.floor(Date.now()/1000);
+    }
+    if (op === "is between X and Y") {
+      // value is { from, to } where from/to are day offsets relative to today,
+      // OR ISO date strings. We accept both — saved views use offsets, manual UI uses dates.
+      if (!v) return true;
+      let fromTs, toTs;
+      if (typeof v.fromOffset === "number" && typeof v.toOffset === "number") {
+        fromTs = _startOfDayUnix(v.fromOffset);
+        toTs   = _endOfDayUnix(v.toOffset);
+      } else {
+        const fd = v.from ? new Date(v.from) : null;
+        const td = v.to   ? new Date(v.to)   : null;
+        if (!fd || !td || isNaN(fd) || isNaN(td)) return true;
+        fd.setHours(0,0,0,0); td.setHours(23,59,59,999);
+        fromTs = Math.floor(fd.getTime()/1000);
+        toTs   = Math.floor(td.getTime()/1000);
+      }
+      if (!lv) return false;
+      return lv >= fromTs && lv <= toTs;
+    }
+    if (op === "was today") {
+      if (!lv) return false;
+      return lv >= _startOfDayUnix(0) && lv <= _endOfDayUnix(0);
+    }
+    if (op === "was yesterday") {
+      if (!lv) return false;
+      return lv >= _startOfDayUnix(-1) && lv <= _endOfDayUnix(-1);
+    }
+    return true;
+  }
+
+  return true;
+}
+
 function _showLeadsToast(msg, kind) {
   let host = document.getElementById("leadsToastHost");
   if (!host) {
@@ -174,6 +396,11 @@ function applyFilters() {
   if (_moreFilters.replied)       data = data.filter(l => l.has_reply);
   if (_moreFilters.unsubscribed)  data = data.filter(l => l.unsubscribed);
 
+  // Advanced conditions (combined with AND, AND-with primary filters)
+  if (Array.isArray(_filters.advanced) && _filters.advanced.length) {
+    data = data.filter(l => _filters.advanced.every(c => _evalAdvCondition(l, c)));
+  }
+
   // Sort
   const { key, dir } = _sortBy;
   data.sort((a, b) => {
@@ -199,6 +426,7 @@ const COLUMNS = [
   { key: "name",       label: "Name",          sortable: true },
   { key: "source",     label: "How",            sortable: true, helpText: "How this lead first reached out — phone call, website widget, or imported list." },
   { key: "stage",      label: "Stage",          sortable: true, helpText: "Where this lead is in your sales process." },
+  { key: "details",    label: "Details",        sortable: false, helpText: "What's happening with this lead right now — depends on the stage." },
   { key: "reach",      label: "Reach",          sortable: false, helpText: "Ways you can contact this person — email and/or phone." },
   { key: "created_at", label: "Added",          sortable: true },
   { key: "last_activity", label: "Last activity", sortable: true },
@@ -209,7 +437,7 @@ function renderTableHead() {
   if (!thead) return;
   const { key: sortKey, dir: sortDir } = _sortBy;
   thead.innerHTML = `<tr>
-    ${_selectModeOn ? `<th data-sortable="false" style="width:40px;"><input type="checkbox" id="leadsSelectAll" aria-label="Select all"></th>` : ""}
+    ${_selectModeOn ? `<th data-sortable="false" style="width:40px;"><input type="checkbox" id="leadsSelectAll" aria-label="Select all visible"></th>` : ""}
     ${COLUMNS.map(col => {
       const isSorted = sortKey === col.key;
       const arrow = col.sortable
@@ -223,15 +451,30 @@ function renderTableHead() {
   </tr>`;
 
   if (_selectModeOn) {
-    thead.querySelector("#leadsSelectAll").addEventListener("change", (e) => {
-      if (e.target.checked) {
-        _filteredLeads.forEach(l => _selectedIds.add(l.id));
+    const cbAll = thead.querySelector("#leadsSelectAll");
+    if (cbAll) {
+      // Compute checked / indeterminate state from current filtered set
+      const visibleIds = _filteredLeads.map(l => l.id);
+      const visibleSelected = visibleIds.filter(id => _selectedIds.has(id)).length;
+      if (visibleSelected === 0) {
+        cbAll.checked = false; cbAll.indeterminate = false;
+      } else if (visibleSelected === visibleIds.length) {
+        cbAll.checked = true;  cbAll.indeterminate = false;
       } else {
-        _selectedIds.clear();
+        cbAll.checked = false; cbAll.indeterminate = true;
       }
-      renderTableBody();
-      updateBulkBar();
-    });
+      cbAll.addEventListener("change", () => {
+        if (cbAll.checked) {
+          _filteredLeads.forEach(l => _selectedIds.add(l.id));
+        } else {
+          _filteredLeads.forEach(l => _selectedIds.delete(l.id));
+        }
+        renderTableBody();
+        renderSelectAllAcrossLink();
+        updateBulkBar();
+        renderTableHead();
+      });
+    }
   }
 
   thead.querySelectorAll("th[data-sortable='true']").forEach(th => {
@@ -263,6 +506,7 @@ function renderRow(lead) {
   const sourceLabel = SOURCE_LABELS[lead.source] || (lead.source || "Unknown");
   const lastActTime = lead.last_activity_at || lead.updated_at || lead.created_at;
   const isSelected = _selectedIds.has(lead.id);
+  const isExpanded = _expandedIds.has(lead.id);
 
   const reachHtml = `
     <span class="leads-reach-cell">
@@ -271,10 +515,13 @@ function renderRow(lead) {
     </span>`;
 
   const selectCell = _selectModeOn
-    ? `<td style="width:40px;"><input type="checkbox" class="leads-row-cb" data-id="${escapeHtml(lead.id)}" ${isSelected ? "checked" : ""}></td>`
+    ? `<td style="width:40px;" data-no-expand="1"><input type="checkbox" class="leads-row-cb" data-id="${escapeHtml(lead.id)}" ${isSelected ? "checked" : ""}></td>`
     : "";
 
-  return `<tr data-lead-id="${escapeHtml(lead.id)}" class="${isSelected ? "is-selected" : ""}">
+  const det = stageDetailsFor(lead);
+  const detailsCell = `<td class="leads-details-cell" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#374151;font-size:13px;" title="${escapeHtml(det.full || "")}">${escapeHtml(det.text || "")}</td>`;
+
+  const mainRow = `<tr data-lead-id="${escapeHtml(lead.id)}" class="${isSelected ? "is-selected" : ""} ${isExpanded ? "is-expanded" : ""}">
     ${selectCell}
     <td>
       <div class="leads-name-cell">
@@ -287,9 +534,85 @@ function renderRow(lead) {
     </td>
     <td class="leads-source-cell" title="${escapeHtml(sourceLabel)}">${sourceIcon}</td>
     <td><span class="${stageClass}">${escapeHtml(stageLabel)}</span></td>
-    <td>${reachHtml}</td>
+    ${detailsCell}
+    <td data-no-expand="1">${reachHtml}</td>
     <td style="color:#6b7280;font-size:13px;">${relativeTime(lead.created_at)}</td>
     <td style="color:#6b7280;font-size:13px;">${relativeTime(lastActTime)}</td>
+  </tr>`;
+
+  const expandedRow = isExpanded ? renderExpandedPanelRow(lead) : "";
+  return mainRow + expandedRow;
+}
+
+function renderExpandedPanelRow(lead) {
+  const colSpan = COLUMNS.length + (_selectModeOn ? 1 : 0);
+  const stage = lead.stage || "new";
+
+  // Collect every interesting field, only show non-empty ones.
+  const fields = [];
+  const push = (label, value) => {
+    if (value == null || value === "") return;
+    fields.push({ label, value: String(value) });
+  };
+  push("Email", lead.email);
+  push("Phone", lead.phone);
+  push("Company", lead.company);
+  push("Source", SOURCE_LABELS[lead.source] || lead.source);
+  push("Stage", STAGE_LABELS[stage] || stage);
+  push("Service type", lead.service_type);
+  // Stage-specific
+  if (stage === "contacted" || stage === "engaged") {
+    push("Last contacted", lead.last_contacted_at ? relativeTime(lead.last_contacted_at) : null);
+    push("Last channel", CHANNEL_LABELS[lead.last_contact_channel] || lead.last_contact_channel);
+  }
+  if (stage === "engaged") {
+    push("Last response", lead.last_response || lead.last_reply);
+  }
+  if (stage === "quoted") {
+    push("Quote amount", lead.quote_amount != null ? _fmtMoney(lead.quote_amount) : null);
+    push("Quote sent", lead.quote_sent_at ? relativeTime(lead.quote_sent_at) : null);
+  }
+  if (stage === "scheduled") {
+    push("Appointment", lead.appointment_time ? _fmtAppt(lead.appointment_time) : (lead.appointment_at ? _fmtAppt(lead.appointment_at) : null));
+  }
+  if (stage === "won") {
+    push("Job complete", lead.job_complete_date ? _fmtShortDate(lead.job_complete_date) : null);
+    push("Job value", (lead.job_value != null ? _fmtMoney(lead.job_value) : null));
+  }
+  if (stage === "lost") {
+    push("Lost reason", lead.lost_reason);
+    push("Lost on", lead.lost_at ? _fmtShortDate(lead.lost_at) : null);
+  }
+  push("Added", lead.created_at ? relativeTime(lead.created_at) : null);
+  push("Last activity", lead.last_activity_at ? relativeTime(lead.last_activity_at) : null);
+  push("Notes", lead.notes);
+  push("Has reply", lead.has_reply ? "Yes" : null);
+  push("Unsubscribed", lead.unsubscribed ? "Yes" : null);
+
+  const fieldsHtml = fields.map(f => `
+    <div style="display:flex;gap:8px;padding:4px 0;border-bottom:1px solid #f1f5f9;">
+      <span style="min-width:130px;color:#6b7280;font-size:12px;font-weight:500;">${escapeHtml(f.label)}</span>
+      <span style="color:#111827;font-size:13px;flex:1;word-break:break-word;">${escapeHtml(f.value)}</span>
+    </div>
+  `).join("");
+
+  // "Open full profile" wired to existing single-lead modal if present
+  const hasProfile = (typeof window !== "undefined" && typeof window.openLeadDetailModal === "function");
+  const openBtn = hasProfile
+    ? `<button type="button" class="leads-expanded-btn primary" data-act="open-profile" data-lead-id="${escapeHtml(lead.id)}" style="padding:7px 14px;border-radius:8px;border:1px solid #0a0a0a;background:#0a0a0a;color:#fff;font-size:13px;cursor:pointer;">Open full profile</button>`
+    : "";
+
+  return `<tr class="leads-expanded-row" data-expanded-for="${escapeHtml(lead.id)}">
+    <td colspan="${colSpan}" style="padding:0;background:#fafafa;border-top:1px solid #e5e7eb;">
+      <div style="padding:14px 18px;display:flex;flex-direction:column;gap:12px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;">${fieldsHtml || '<div style="color:#9ca3af;font-size:13px;">No additional details available for this lead.</div>'}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid #e5e7eb;padding-top:12px;">
+          ${openBtn}
+          <button type="button" class="leads-expanded-btn" data-act="send-email" data-lead-id="${escapeHtml(lead.id)}" style="padding:7px 14px;border-radius:8px;border:1px solid #d1d5db;background:#fff;color:#0a0a0a;font-size:13px;cursor:pointer;">Send single email</button>
+          <button type="button" class="leads-expanded-btn" data-act="edit" data-lead-id="${escapeHtml(lead.id)}" style="padding:7px 14px;border-radius:8px;border:1px solid #d1d5db;background:#fff;color:#0a0a0a;font-size:13px;cursor:pointer;">Edit details</button>
+        </div>
+      </div>
+    </td>
   </tr>`;
 }
 
@@ -302,37 +625,58 @@ function renderTableBody() {
   }
   tbody.innerHTML = _filteredLeads.map(renderRow).join("");
 
-  // Row click → open lead detail
+  // Row click → toggle expanded panel
+  // Excludes the checkbox cell (data-no-expand), the reach cell (data-no-expand),
+  // and any explicit links/buttons inside cells.
   tbody.querySelectorAll("tr[data-lead-id]").forEach(row => {
     row.addEventListener("click", (e) => {
-      if (e.target.type === "checkbox") return;
-      if (_selectModeOn) {
-        const id = row.dataset.leadId;
-        if (_selectedIds.has(id)) _selectedIds.delete(id);
-        else _selectedIds.add(id);
-        row.classList.toggle("is-selected", _selectedIds.has(id));
-        updateBulkBar();
-        return;
-      }
+      const t = e.target;
+      if (!t) return;
+      if (t.tagName === "INPUT" || t.tagName === "BUTTON" || t.tagName === "A") return;
+      if (t.closest && t.closest("[data-no-expand]")) return;
       const id = row.dataset.leadId;
-      const lead = _allLeads.find(l => l.id === id) || null;
-      if (typeof window.openLeadDetailModal === "function") {
-        window.openLeadDetailModal(id, lead);
-      }
+      if (_expandedIds.has(id)) _expandedIds.delete(id);
+      else _expandedIds.add(id);
+      renderTableBody();
     });
   });
 
-  // Checkbox clicks in select mode
+  // Per-row checkbox change
   if (_selectModeOn) {
     tbody.querySelectorAll(".leads-row-cb").forEach(cb => {
-      cb.addEventListener("change", () => {
+      cb.addEventListener("change", (e) => {
+        e.stopPropagation();
         if (cb.checked) _selectedIds.add(cb.dataset.id);
         else _selectedIds.delete(cb.dataset.id);
-        cb.closest("tr").classList.toggle("is-selected", cb.checked);
+        const row = cb.closest("tr");
+        if (row) row.classList.toggle("is-selected", cb.checked);
+        renderTableHead();
+        renderSelectAllAcrossLink();
         updateBulkBar();
       });
+      // Also stop click bubbling so cell click on the checkbox cell doesn't toggle expand
+      cb.addEventListener("click", (e) => e.stopPropagation());
     });
   }
+
+  // Expanded-panel action buttons
+  tbody.querySelectorAll(".leads-expanded-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const act = btn.dataset.act;
+      const id = btn.dataset.leadId;
+      const lead = _allLeads.find(l => l.id === id) || null;
+      if (act === "open-profile") {
+        if (typeof window.openLeadDetailModal === "function") {
+          window.openLeadDetailModal(id, lead);
+        }
+      } else if (act === "send-email") {
+        _showLeadsToast("Single-email sending lands in Phase 2.", "info");
+      } else if (act === "edit") {
+        _showLeadsToast("Inline editing lands in Phase 2.", "info");
+      }
+    });
+  });
 }
 
 function renderTable() {
@@ -357,6 +701,8 @@ function renderTable() {
     renderTableHead();
     renderTableBody();
     updateCountRow();
+    renderSelectAllAcrossLink();
+    updateBulkBar();
     if (showMoreEl) showMoreEl.hidden = true;
     return;
   }
@@ -365,6 +711,8 @@ function renderTable() {
   renderTableHead();
   renderTableBody();
   updateCountRow();
+  renderSelectAllAcrossLink();
+  updateBulkBar();
 
   if (showMoreEl) {
     showMoreEl.hidden = false;
@@ -373,6 +721,38 @@ function renderTable() {
     if (shownEl) shownEl.textContent = _filteredLeads.length;
     if (totalEl) totalEl.textContent = _allLeads.length;
   }
+}
+
+function renderSelectAllAcrossLink() {
+  const wrap = document.getElementById("leadsTableWrap");
+  if (!wrap) return;
+  let link = document.getElementById("leadsSelectAllAcross");
+  const visibleIds = _filteredLeads.map(l => l.id);
+  const visibleSelected = visibleIds.filter(id => _selectedIds.has(id)).length;
+  const indeterminate = visibleSelected > 0 && visibleSelected < visibleIds.length;
+
+  if (!indeterminate) {
+    if (link && link.parentNode) link.parentNode.removeChild(link);
+    return;
+  }
+  if (!link) {
+    link = document.createElement("div");
+    link.id = "leadsSelectAllAcross";
+    link.style.cssText = "padding:8px 12px;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;margin-top:8px;font-size:13px;color:#374151;display:flex;align-items:center;gap:8px;";
+    wrap.appendChild(link);
+  }
+  link.innerHTML = `<span>${visibleSelected} selected on this view.</span>
+    <button type="button" id="leadsSelectAllAcrossBtn" style="background:none;border:none;color:#1d4ed8;font-weight:600;cursor:pointer;padding:0;font-size:13px;">
+      Select all ${_filteredLeads.length} leads
+    </button>`;
+  const btn = link.querySelector("#leadsSelectAllAcrossBtn");
+  if (btn) btn.addEventListener("click", () => {
+    _filteredLeads.forEach(l => _selectedIds.add(l.id));
+    renderTableHead();
+    renderTableBody();
+    renderSelectAllAcrossLink();
+    updateBulkBar();
+  });
 }
 
 function renderEmptyState() {
@@ -410,14 +790,36 @@ function updateCountRow() {
 
 function updateBulkBar() {
   const bar = document.getElementById("leadsBulkBar");
-  const countEl = document.getElementById("leadsBulkCount");
   if (!bar) return;
-  if (_selectedIds.size > 0 && _selectModeOn) {
-    bar.hidden = false;
-    if (countEl) countEl.textContent = `${_selectedIds.size} lead${_selectedIds.size !== 1 ? "s" : ""} selected`;
-  } else {
+  if (_selectedIds.size === 0) {
     bar.hidden = true;
+    return;
   }
+  bar.hidden = false;
+  // Re-render bar contents so we control layout & button labels for Phase 1.
+  bar.style.cssText = "position:sticky;top:0;z-index:20;display:flex;flex-direction:column;gap:10px;background:#0a0a0a;color:#fff;padding:12px 16px;border-radius:10px;margin:8px 0;box-shadow:0 6px 20px rgba(0,0,0,0.18);";
+  bar.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <span class="leads-bulk-count" id="leadsBulkCount" style="font-size:14px;font-weight:600;">${_selectedIds.size} lead${_selectedIds.size !== 1 ? "s" : ""} selected</span>
+      <button type="button" id="leadsBulkClearAll" style="background:none;border:none;color:#cbd5e1;font-size:13px;cursor:pointer;text-decoration:underline;padding:0;">Clear</button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button type="button" class="leads-bulk-btn" data-bulk-act="email" style="padding:8px 14px;border-radius:8px;border:1px solid #fff;background:#fff;color:#0a0a0a;font-size:13px;font-weight:600;cursor:pointer;">✉️ Send email</button>
+      <button type="button" class="leads-bulk-btn" data-bulk-act="schedule" style="padding:8px 14px;border-radius:8px;border:1px solid #475569;background:transparent;color:#fff;font-size:13px;font-weight:500;cursor:pointer;">📅 Schedule for later</button>
+      <button type="button" class="leads-bulk-btn" data-bulk-act="stage" disabled title="Coming soon" style="padding:8px 14px;border-radius:8px;border:1px solid #475569;background:transparent;color:#94a3b8;font-size:13px;font-weight:500;cursor:not-allowed;">🏷️ Change stage</button>
+    </div>
+  `;
+  const clearBtn = bar.querySelector("#leadsBulkClearAll");
+  if (clearBtn) clearBtn.addEventListener("click", () => {
+    _selectedIds.clear();
+    renderTableHead();
+    renderTableBody();
+    renderSelectAllAcrossLink();
+    updateBulkBar();
+  });
+  bar.querySelectorAll("[data-bulk-act]").forEach(btn => {
+    btn.addEventListener("click", () => _handleBulkAction(btn.dataset.bulkAct));
+  });
 }
 
 function renderActiveFilterChips() {
@@ -435,7 +837,16 @@ function renderActiveFilterChips() {
   if (_moreFilters.replied)      chips.push({ key: "more_replied",      label: "Replied" });
   if (_moreFilters.unsubscribed) chips.push({ key: "more_unsubscribed", label: "Unsubscribed" });
 
-  if (!chips.length) {
+  // Advanced "More: N filters" chip — click chip to edit, ✕ to clear all
+  const advCount = (_filters.advanced || []).length;
+  const advChipHtml = advCount
+    ? `<span class="leads-active-chip" data-adv-chip="1" style="cursor:pointer;">
+         <span data-adv-edit="1">More: ${advCount} filter${advCount !== 1 ? "s" : ""}</span>
+         <button type="button" data-adv-clear="1" aria-label="Clear advanced filters">×</button>
+       </span>`
+    : "";
+
+  if (!chips.length && !advCount) {
     wrap.hidden = true;
     wrap.innerHTML = "";
     return;
@@ -446,7 +857,7 @@ function renderActiveFilterChips() {
       ${escapeHtml(chip.label)}
       <button type="button" data-remove-filter="${escapeHtml(chip.key)}" aria-label="Remove filter">×</button>
     </span>
-  `).join("") + `<button type="button" class="leads-active-clear-all" id="leadsActiveClearAll">Clear all</button>`;
+  `).join("") + advChipHtml + `<button type="button" class="leads-active-clear-all" id="leadsActiveClearAll">Clear all</button>`;
 
   wrap.querySelectorAll("[data-remove-filter]").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -456,6 +867,19 @@ function renderActiveFilterChips() {
       _refreshFiltersAndRender();
     });
   });
+  const advChip = wrap.querySelector('[data-adv-chip="1"]');
+  if (advChip) {
+    advChip.addEventListener("click", (e) => {
+      if (e.target.closest("[data-adv-clear]")) return;
+      openMoreFiltersModal();
+    });
+    const clearAdv = wrap.querySelector('[data-adv-clear="1"]');
+    if (clearAdv) clearAdv.addEventListener("click", (e) => {
+      e.stopPropagation();
+      _filters.advanced = [];
+      _refreshFiltersAndRender();
+    });
+  }
   const clearAllBtn = wrap.querySelector("#leadsActiveClearAll");
   if (clearAllBtn) clearAllBtn.addEventListener("click", clearAllFilters);
 }
@@ -465,6 +889,7 @@ function clearAllFilters() {
   _filters.stage = null;
   _filters.when = null;
   _filters.search = "";
+  _filters.advanced = [];
   _moreFilters = { hasPhone: false, hasEmail: false, replied: false, unsubscribed: false };
   const search = document.getElementById("leadsSearch");
   if (search) search.value = "";
@@ -492,8 +917,10 @@ function updateFilterPills() {
       pill.classList.toggle("is-active", isActive);
       if (valEl) valEl.textContent = isActive ? (whenLabels[_filters.when] || _filters.when) : "All time";
     } else if (f === "more") {
-      const hasMore = _moreFilters.hasPhone || _moreFilters.hasEmail || _moreFilters.replied || _moreFilters.unsubscribed;
-      pill.classList.toggle("is-active", hasMore);
+      // Phase 1: pill is now "+ More filters" — modal-driven advanced conditions
+      pill.textContent = "+ More filters";
+      const advCount = (_filters.advanced || []).length;
+      pill.classList.toggle("is-active", advCount > 0);
     }
   });
 }
@@ -791,27 +1218,311 @@ function openWhenMenu(anchor) {
 }
 
 function openMoreMenu(anchor) {
-  _closeOpenMenu();
-  const opts = [
-    { key: "hasPhone",    label: "Has phone number" },
-    { key: "hasEmail",    label: "Has email address" },
-    { key: "replied",     label: "Has replied" },
-    { key: "unsubscribed",label: "Unsubscribed" },
-  ];
-  const menu = document.createElement("div");
-  menu.className = "leads-filter-menu";
-  menu.innerHTML = opts.map(o => `
-    <button type="button" class="leads-filter-opt ${_moreFilters[o.key] ? "is-active" : ""}" data-key="${escapeHtml(o.key)}">
-      ${escapeHtml(o.label)}
-    </button>`).join("");
-  menu.querySelectorAll(".leads-filter-opt").forEach(btn => {
+  // Phase 1: anchor unused — modal opens centered. Kept for call-site compat.
+  openMoreFiltersModal();
+}
+
+// ─── "+ More filters" modal ──────────────────────────────────────────────────
+
+const SAVED_VIEWS = [
+  {
+    id: "quoted-followup",
+    label: "Quoted leads needing follow-up",
+    conditions: [
+      { field: "stage",          op: "is",                       value: "quoted" },
+      { field: "last_contacted", op: "is more than X days ago",  value: 3 },
+    ],
+  },
+  {
+    id: "scheduled-week",
+    label: "Scheduled this week",
+    conditions: [
+      { field: "stage",            op: "is",                value: "scheduled" },
+      { field: "appointment_time", op: "is between X and Y",value: { fromOffset: 0, toOffset: 7 } },
+    ],
+  },
+  {
+    id: "won-last-month",
+    label: "Won jobs from last month",
+    conditions: [
+      { field: "stage",    op: "is",                 value: "won" },
+      { field: "job_date", op: "is between X and Y", value: { fromOffset: -30, toOffset: 0 } },
+    ],
+  },
+  {
+    id: "cold-leads",
+    label: "Cold leads (90+ days)",
+    conditions: [
+      { field: "last_activity", op: "is more than X days ago", value: 90 },
+      { field: "stage",         op: "is not",                  value: "won" },
+      { field: "stage",         op: "is not",                  value: "lost" },
+    ],
+  },
+];
+
+let _moreModalDraft = null;  // working copy while modal is open
+
+function _ensureMoreFiltersModal() {
+  let dlg = document.getElementById("leadsMoreFiltersDlg");
+  if (dlg) return dlg;
+  dlg = document.createElement("dialog");
+  dlg.id = "leadsMoreFiltersDlg";
+  dlg.style.cssText = "padding:0;border:none;border-radius:14px;max-width:680px;width:92vw;box-shadow:0 30px 80px rgba(0,0,0,0.25);";
+  dlg.innerHTML = `
+    <style>
+      #leadsMoreFiltersDlg::backdrop { background: rgba(15,23,42,0.45); }
+      #leadsMoreFiltersDlg .lmf-wrap { display:flex;flex-direction:column;max-height:88vh; }
+      #leadsMoreFiltersDlg .lmf-head { display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #e5e7eb; }
+      #leadsMoreFiltersDlg .lmf-head h2 { margin:0;font-size:17px;font-weight:700;color:#0a0a0a; }
+      #leadsMoreFiltersDlg .lmf-close { background:none;border:none;font-size:22px;cursor:pointer;color:#6b7280;line-height:1;padding:0 4px; }
+      #leadsMoreFiltersDlg .lmf-body { padding:18px 22px;overflow:auto;flex:1; }
+      #leadsMoreFiltersDlg .lmf-section-h { font-size:13px;font-weight:600;color:#374151;margin:0 0 10px;text-transform:none;letter-spacing:0; }
+      #leadsMoreFiltersDlg .lmf-cond-row { display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap; }
+      #leadsMoreFiltersDlg .lmf-cond-row select,
+      #leadsMoreFiltersDlg .lmf-cond-row input { padding:7px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;background:#fff;color:#0a0a0a; }
+      #leadsMoreFiltersDlg .lmf-cond-row select { min-width:140px; }
+      #leadsMoreFiltersDlg .lmf-cond-row input[type="text"] { min-width:160px; }
+      #leadsMoreFiltersDlg .lmf-cond-row input[type="number"] { width:90px; }
+      #leadsMoreFiltersDlg .lmf-cond-row .lmf-rm { background:none;border:none;color:#9ca3af;font-size:18px;cursor:pointer;padding:2px 6px;border-radius:6px; }
+      #leadsMoreFiltersDlg .lmf-cond-row .lmf-rm:hover { color:#dc2626;background:#fee2e2; }
+      #leadsMoreFiltersDlg .lmf-add { margin-top:6px;padding:7px 12px;border:1px dashed #94a3b8;background:transparent;border-radius:8px;color:#374151;font-size:13px;font-weight:500;cursor:pointer; }
+      #leadsMoreFiltersDlg .lmf-add[disabled] { opacity:0.4;cursor:not-allowed; }
+      #leadsMoreFiltersDlg .lmf-saved { display:flex;flex-direction:column;gap:6px;margin-top:18px;padding-top:18px;border-top:1px solid #e5e7eb; }
+      #leadsMoreFiltersDlg .lmf-saved button { text-align:left;padding:10px 12px;border:1px solid #e5e7eb;background:#fff;border-radius:8px;cursor:pointer;font-size:13px;color:#0a0a0a; }
+      #leadsMoreFiltersDlg .lmf-saved button:hover { background:#f9fafb;border-color:#94a3b8; }
+      #leadsMoreFiltersDlg .lmf-foot { display:flex;justify-content:space-between;gap:8px;padding:14px 22px;border-top:1px solid #e5e7eb;background:#fafafa;border-radius:0 0 14px 14px; }
+      #leadsMoreFiltersDlg .lmf-btn-primary { padding:9px 16px;background:#0a0a0a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer; }
+      #leadsMoreFiltersDlg .lmf-btn-secondary { padding:9px 16px;background:#fff;color:#0a0a0a;border:1px solid #d1d5db;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer; }
+    </style>
+    <form method="dialog" class="lmf-wrap">
+      <div class="lmf-head">
+        <h2>More filters</h2>
+        <button type="button" class="lmf-close" id="leadsMoreFiltersClose" aria-label="Close">×</button>
+      </div>
+      <div class="lmf-body">
+        <h3 class="lmf-section-h">Show me leads that match ALL of these:</h3>
+        <div id="leadsMoreFiltersConds"></div>
+        <button type="button" class="lmf-add" id="leadsMoreFiltersAdd">+ Add a filter</button>
+        <div class="lmf-saved">
+          <h3 class="lmf-section-h">Or pick a saved view:</h3>
+          <div id="leadsMoreFiltersSaved"></div>
+        </div>
+      </div>
+      <div class="lmf-foot">
+        <button type="button" class="lmf-btn-secondary" id="leadsMoreFiltersClear">Clear</button>
+        <button type="button" class="lmf-btn-primary" id="leadsMoreFiltersApply">Apply filters →</button>
+      </div>
+    </form>
+  `;
+  document.body.appendChild(dlg);
+
+  dlg.querySelector("#leadsMoreFiltersClose").addEventListener("click", () => _closeDlg(dlg));
+  dlg.querySelector("#leadsMoreFiltersAdd").addEventListener("click", () => {
+    if (_moreModalDraft.length >= 5) return;
+    _moreModalDraft.push({ field: "stage", op: "is", value: "new" });
+    _renderMoreFiltersConds();
+  });
+  dlg.querySelector("#leadsMoreFiltersClear").addEventListener("click", () => {
+    _moreModalDraft = [];
+    _renderMoreFiltersConds();
+  });
+  dlg.querySelector("#leadsMoreFiltersApply").addEventListener("click", () => {
+    _filters.advanced = _moreModalDraft.filter(c => c && c.field && c.op);
+    _closeDlg(dlg);
+    _refreshFiltersAndRender();
+  });
+  return dlg;
+}
+
+function _defaultValueFor(field, op) {
+  const f = ADV_FIELDS[field];
+  if (!f) return "";
+  if (f.type === "stage") {
+    if (op === "is one of") return ["new"];
+    return "new";
+  }
+  if (f.type === "text")   return "";
+  if (f.type === "number") return 0;
+  if (f.type === "date") {
+    if (op === "is more than X days ago" || op === "is less than X days ago") return 7;
+    if (op === "is between X and Y") {
+      const today = new Date(); today.setHours(0,0,0,0);
+      const iso = today.toISOString().slice(0,10);
+      return { from: iso, to: iso };
+    }
+    return null;
+  }
+  return "";
+}
+
+function _renderCondValueControl(idx, c) {
+  const f = ADV_FIELDS[c.field];
+  if (!f) return "";
+  if (f.type === "stage") {
+    if (c.op === "is one of") {
+      const sel = Array.isArray(c.value) ? c.value : [];
+      return `<select class="lmf-val" data-idx="${idx}" multiple style="min-width:160px;height:auto;">
+        ${STAGE_ORDER.map(s => `<option value="${s}" ${sel.includes(s) ? "selected" : ""}>${escapeHtml(STAGE_LABELS[s])}</option>`).join("")}
+      </select>`;
+    }
+    return `<select class="lmf-val" data-idx="${idx}">
+      ${STAGE_ORDER.map(s => `<option value="${s}" ${c.value === s ? "selected" : ""}>${escapeHtml(STAGE_LABELS[s])}</option>`).join("")}
+    </select>`;
+  }
+  if (f.type === "text") {
+    return `<input class="lmf-val" data-idx="${idx}" type="text" value="${escapeHtml(c.value || "")}" placeholder="value">`;
+  }
+  if (f.type === "number") {
+    return `<input class="lmf-val" data-idx="${idx}" type="number" value="${escapeHtml(String(c.value ?? 0))}">`;
+  }
+  if (f.type === "date") {
+    if (c.op === "is between X and Y") {
+      const v = c.value || {};
+      // If saved view used offsets, render as derived ISO dates for display.
+      let fromStr = v.from || "", toStr = v.to || "";
+      if (typeof v.fromOffset === "number") {
+        const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() + v.fromOffset);
+        fromStr = d.toISOString().slice(0,10);
+      }
+      if (typeof v.toOffset === "number") {
+        const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() + v.toOffset);
+        toStr = d.toISOString().slice(0,10);
+      }
+      return `<input class="lmf-val lmf-val-from" data-idx="${idx}" type="date" value="${escapeHtml(fromStr)}">
+              <span style="font-size:12px;color:#6b7280;">and</span>
+              <input class="lmf-val lmf-val-to" data-idx="${idx}" type="date" value="${escapeHtml(toStr)}">`;
+    }
+    if (c.op === "was today" || c.op === "was yesterday") {
+      return "";  // no value control
+    }
+    // X-days operators
+    return `<input class="lmf-val" data-idx="${idx}" type="number" min="0" value="${escapeHtml(String(c.value ?? 7))}" style="width:80px;">
+            <span style="font-size:12px;color:#6b7280;">days</span>`;
+  }
+  return "";
+}
+
+function _renderMoreFiltersConds() {
+  const dlg = document.getElementById("leadsMoreFiltersDlg");
+  if (!dlg) return;
+  const root = dlg.querySelector("#leadsMoreFiltersConds");
+  if (!_moreModalDraft.length) {
+    root.innerHTML = `<div style="color:#9ca3af;font-size:13px;padding:8px 0;">No filters yet. Add one or pick a saved view below.</div>`;
+  } else {
+    root.innerHTML = _moreModalDraft.map((c, idx) => {
+      const f = ADV_FIELDS[c.field];
+      const ops = f ? ADV_OPS_BY_TYPE[f.type] : [];
+      const fieldOpts = Object.entries(ADV_FIELDS).map(([k, v]) =>
+        `<option value="${k}" ${k === c.field ? "selected" : ""}>${escapeHtml(v.label)}</option>`
+      ).join("");
+      const opOpts = ops.map(o =>
+        `<option value="${escapeHtml(o)}" ${o === c.op ? "selected" : ""}>${escapeHtml(o)}</option>`
+      ).join("");
+      return `<div class="lmf-cond-row" data-idx="${idx}">
+        <select class="lmf-field" data-idx="${idx}">${fieldOpts}</select>
+        <select class="lmf-op" data-idx="${idx}">${opOpts}</select>
+        ${_renderCondValueControl(idx, c)}
+        <button type="button" class="lmf-rm" data-idx="${idx}" aria-label="Remove">×</button>
+      </div>`;
+    }).join("");
+  }
+
+  const addBtn = dlg.querySelector("#leadsMoreFiltersAdd");
+  if (addBtn) addBtn.disabled = _moreModalDraft.length >= 5;
+
+  // Wire control changes
+  root.querySelectorAll(".lmf-field").forEach(sel => {
+    sel.addEventListener("change", () => {
+      const i = Number(sel.dataset.idx);
+      const c = _moreModalDraft[i];
+      const newField = sel.value;
+      const newType = ADV_FIELDS[newField].type;
+      // Reset op + value to first valid op for the new type
+      c.field = newField;
+      c.op    = ADV_OPS_BY_TYPE[newType][0];
+      c.value = _defaultValueFor(newField, c.op);
+      _renderMoreFiltersConds();
+    });
+  });
+  root.querySelectorAll(".lmf-op").forEach(sel => {
+    sel.addEventListener("change", () => {
+      const i = Number(sel.dataset.idx);
+      const c = _moreModalDraft[i];
+      c.op = sel.value;
+      c.value = _defaultValueFor(c.field, c.op);
+      _renderMoreFiltersConds();
+    });
+  });
+  root.querySelectorAll(".lmf-val").forEach(inp => {
+    inp.addEventListener("change", () => {
+      const i = Number(inp.dataset.idx);
+      const c = _moreModalDraft[i];
+      const f = ADV_FIELDS[c.field];
+      if (!f) return;
+      if (f.type === "stage" && c.op === "is one of") {
+        c.value = Array.from(inp.selectedOptions).map(o => o.value);
+      } else if (f.type === "date" && c.op === "is between X and Y") {
+        // Read both date inputs in this row
+        const row = inp.closest(".lmf-cond-row");
+        const from = row.querySelector(".lmf-val-from").value;
+        const to   = row.querySelector(".lmf-val-to").value;
+        c.value = { from, to };
+      } else if (f.type === "number" || (f.type === "date" && (c.op === "is more than X days ago" || c.op === "is less than X days ago"))) {
+        c.value = Number(inp.value);
+      } else {
+        c.value = inp.value;
+      }
+    });
+  });
+  root.querySelectorAll(".lmf-rm").forEach(btn => {
     btn.addEventListener("click", () => {
-      _moreFilters[btn.dataset.key] = !_moreFilters[btn.dataset.key];
-      btn.classList.toggle("is-active", _moreFilters[btn.dataset.key]);
+      const i = Number(btn.dataset.idx);
+      _moreModalDraft.splice(i, 1);
+      _renderMoreFiltersConds();
+    });
+  });
+}
+
+function _renderMoreFiltersSaved() {
+  const dlg = document.getElementById("leadsMoreFiltersDlg");
+  if (!dlg) return;
+  const root = dlg.querySelector("#leadsMoreFiltersSaved");
+  root.innerHTML = SAVED_VIEWS.map(v =>
+    `<button type="button" data-saved-id="${escapeHtml(v.id)}">${escapeHtml(v.label)}</button>`
+  ).join("");
+  root.querySelectorAll("[data-saved-id]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const view = SAVED_VIEWS.find(v => v.id === btn.dataset.savedId);
+      if (!view) return;
+      // Deep clone the conditions so the modal can edit without mutating SAVED_VIEWS
+      _moreModalDraft = view.conditions.map(c => ({
+        field: c.field,
+        op:    c.op,
+        value: (c.value && typeof c.value === "object" && !Array.isArray(c.value))
+                 ? { ...c.value }
+                 : (Array.isArray(c.value) ? [...c.value] : c.value),
+      }));
+      // Apply immediately, close the modal
+      _filters.advanced = _moreModalDraft.slice();
+      _closeDlg(dlg);
       _refreshFiltersAndRender();
     });
   });
-  _positionMenu(menu, anchor);
+}
+
+function openMoreFiltersModal() {
+  const dlg = _ensureMoreFiltersModal();
+  // Seed working draft from currently-applied advanced filters (deep clone)
+  _moreModalDraft = (_filters.advanced || []).map(c => ({
+    field: c.field,
+    op:    c.op,
+    value: (c.value && typeof c.value === "object" && !Array.isArray(c.value))
+             ? { ...c.value }
+             : (Array.isArray(c.value) ? [...c.value] : c.value),
+  }));
+  _renderMoreFiltersConds();
+  _renderMoreFiltersSaved();
+  _openDlg(dlg);
 }
 
 // ─── Event handlers ──────────────────────────────────────────────────────────
@@ -882,35 +1593,18 @@ function attachEventHandlers() {
     freshBtn.addEventListener("click", _openImport);
   }
 
-  // Select-mode toggle
+  // Phase 1: select-mode is always on (per-row checkboxes always visible).
+  // Hide the legacy "Select" toggle so it doesn't confuse the new flow.
   const selectModeChk = document.getElementById("leadsSelectMode");
   if (selectModeChk) {
-    selectModeChk.addEventListener("change", () => {
-      _selectModeOn = selectModeChk.checked;
-      if (!_selectModeOn) {
-        _selectedIds.clear();
-        updateBulkBar();
-      }
-      renderTable();
-    });
+    const lbl = selectModeChk.closest("label");
+    if (lbl) lbl.style.display = "none";
+    selectModeChk.checked = true;
   }
 
-  // Bulk actions
-  const bulkCancel = document.getElementById("leadsBulkCancel");
-  if (bulkCancel) {
-    bulkCancel.addEventListener("click", () => {
-      _selectModeOn = false;
-      _selectedIds.clear();
-      const selectModeEl = document.getElementById("leadsSelectMode");
-      if (selectModeEl) selectModeEl.checked = false;
-      updateBulkBar();
-      renderTable();
-    });
-  }
-
-  document.querySelectorAll("[data-bulk-act]").forEach(btn => {
-    btn.addEventListener("click", () => _handleBulkAction(btn.dataset.bulkAct));
-  });
+  // The legacy "Cancel" button inside the bulk bar — bulk bar is re-rendered
+  // by updateBulkBar() with its own Clear button, so the original is replaced.
+  // We also wire bulk-act buttons via updateBulkBar(); no static wiring needed.
 }
 
 function _openImport() {
@@ -924,17 +1618,24 @@ async function _handleBulkAction(act) {
 
   if (act === "email") {
     sessionStorage.setItem("leadsSelectedIds", JSON.stringify(ids));
-    _showLeadsToast("Campaigns: Select leads from your imported lists. (Full bulk-email wiring coming in v1.5)", "info");
+    openBulkEmailComposer();
+    return;
+  }
+
+  if (act === "schedule") {
+    sessionStorage.setItem("leadsSelectedIds", JSON.stringify(ids));
+    openBulkEmailComposer({ openSchedulePicker: true });
     return;
   }
 
   if (act === "stage") {
+    // Out of Phase 1 scope — kept disabled in the new bulk bar.
     _openBulkStageDropdown(ids);
     return;
   }
 
   if (act === "campaign" || act === "more") {
-    _showLeadsToast("Coming soon — bulk campaign enroll and more actions landing in v1.5.", "info");
+    _showLeadsToast("Coming soon.", "info");
     return;
   }
 }
@@ -965,9 +1666,7 @@ function _openBulkStageDropdown(ids) {
         } catch (_) {}
       }));
       _selectedIds.clear();
-      _selectModeOn = false;
-      const selectModeEl = document.getElementById("leadsSelectMode");
-      if (selectModeEl) selectModeEl.checked = false;
+      // _selectModeOn stays true in Phase 1 (checkboxes always visible).
       updateBulkBar();
       applyFilters();
       renderTable();
@@ -1371,6 +2070,1391 @@ function initCsvImport() {
   });
 }
 
+// ─── Bulk-email composer (Phase 2) ───────────────────────────────────────────
+//
+// Two-state slide-in panel. State A is the template grid; State B is the
+// editor (subject + body + chips + preview). On Send Now we POST
+// /me/leads/bulk-email and poll /me/leads/bulk-email/<batch_id> every 2s for
+// progress. Schedule for later stays disabled here — Phase 3.
+
+const _BE_DEFAULT_FALLBACKS = {
+  first_name: "there",
+  name: "there",
+  service_type: "your service",
+  quote_amount: "the quote",
+  quote_date: "recently",
+  appointment_date: "your scheduled time",
+  job_date: "the work date",
+};
+
+const _BE_TOKEN_RE = /\{([a-zA-Z_][a-zA-Z0-9_]*)\}/g;
+
+const _BE_VAR_CHIPS = [
+  { token: "first_name",       label: "First name" },
+  { token: "service_type",     label: "Service" },
+  { token: "quote_amount",     label: "Quote amount" },
+  { token: "quote_date",       label: "Quote date" },
+  { token: "appointment_date", label: "Appointment" },
+  { token: "your_name",        label: "Your name" },
+  { token: "business_name",    label: "Business name" },
+  { token: "phone",            label: "Phone" },
+];
+
+let _beState = {
+  open: false,
+  view: "grid",          // "grid" | "editor" | "sending" | "done" | "no-connection"
+  templates: [],
+  templateLoaded: null,
+  subject: "",
+  body: "",
+  recipients: [],        // array of lead objects (snapshot at open time)
+  senderProfile: null,
+  connections: [],
+  fromConnectionId: "",
+  previewLeadId: "",
+  fallbacks: { ...{}, ..._BE_DEFAULT_FALLBACKS },
+  fallbackOverrides: {}, // user-supplied per-token replacements
+  skipMissing: false,    // if true, skip leads with any missing token
+  lastFocused: "body",
+  batchId: "",
+  pollTimer: null,
+  lastBatch: null,
+  // Phase 3:
+  editingScheduledId: "",   // when set, "Schedule it" hits /update instead of POST
+  scheduledForEpoch: 0,     // current intended schedule time (for editing flow)
+  openSchedulePickerOnLoad: false,
+};
+
+function _beFmtCurrency(value) {
+  if (value == null || value === "") return null;
+  const n = Number(value);
+  if (!isFinite(n)) return null;
+  return "$" + n.toLocaleString(undefined, { maximumFractionDigits: 0 });
+}
+
+function _beCoerceDate(value) {
+  if (value == null || value === "") return null;
+  if (value instanceof Date) return value;
+  if (typeof value === "number") {
+    let v = value;
+    if (v > 1e12) v = v / 1000;
+    const dt = new Date(v * 1000);
+    return isNaN(dt.getTime()) ? null : dt;
+  }
+  if (typeof value === "string") {
+    const s = value.trim();
+    if (!s) return null;
+    if (/^\d+$/.test(s)) return _beCoerceDate(Number(s));
+    const dt = new Date(s);
+    return isNaN(dt.getTime()) ? null : dt;
+  }
+  return null;
+}
+
+const _BE_MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+function _beFmtDate(value) {
+  const dt = _beCoerceDate(value);
+  if (!dt) return null;
+  return `${_BE_MONTHS[dt.getMonth()]} ${dt.getDate()}`;
+}
+function _beFmtDateTime(value) {
+  const dt = _beCoerceDate(value);
+  if (!dt) return null;
+  let h = dt.getHours();
+  const m = String(dt.getMinutes()).padStart(2, "0");
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12; if (h === 0) h = 12;
+  return `${_BE_MONTHS[dt.getMonth()]} ${dt.getDate()}, ${h}:${m} ${ampm}`;
+}
+
+function _beResolveLeadValue(token, lead) {
+  if (!lead) return null;
+  if (token === "first_name") {
+    const fn = (lead.first_name || "").trim();
+    if (fn) return fn;
+    const nm = (lead.name || "").trim();
+    if (nm) return nm.split(/\s+/)[0];
+    return null;
+  }
+  if (token === "name") {
+    const nm = (lead.name || "").trim();
+    if (nm) return nm;
+    const both = [(lead.first_name || "").trim(), (lead.last_name || "").trim()]
+      .filter(Boolean).join(" ");
+    return both || null;
+  }
+  if (token === "service_type") return (lead.service_type || "").trim() || null;
+  if (token === "quote_amount") return _beFmtCurrency(lead.quote_amount);
+  if (token === "quote_date") return _beFmtDate(lead.quote_sent_at || lead.quote_date);
+  if (token === "appointment_date")
+    return _beFmtDateTime(lead.appointment_time || lead.appointment_date);
+  if (token === "job_date") return _beFmtDate(lead.job_complete_date || lead.job_date);
+  if (token === "email") return (lead.email || "").trim() || null;
+  if (token === "phone") return (lead.phone || "").trim() || null;
+  return null;
+}
+
+function _beResolveProfileValue(token, profile) {
+  if (!profile) return null;
+  if (token === "your_name")        return (profile.your_name || "").trim() || null;
+  if (token === "business_name")    return (profile.business_name || "").trim() || null;
+  if (token === "phone")            return (profile.business_phone || "").trim() || null;
+  if (token === "business_address") return (profile.business_address || "").trim() || null;
+  return null;
+}
+
+const _BE_LEAD_TOKEN_FIELDS = new Set([
+  "first_name","name","service_type","quote_amount","quote_date",
+  "appointment_date","job_date","email","phone",
+]);
+const _BE_PROFILE_TOKEN_FIELDS = new Set([
+  "your_name","business_name","phone","business_address",
+]);
+
+function substituteClientSide(template, lead, profile, fallbacks) {
+  if (!template) return template || "";
+  const fb = { ..._BE_DEFAULT_FALLBACKS, ...(fallbacks || {}) };
+  return template.replace(_BE_TOKEN_RE, (full, token) => {
+    if (_BE_LEAD_TOKEN_FIELDS.has(token)) {
+      const v = _beResolveLeadValue(token, lead);
+      if (v) return v;
+    }
+    if (_BE_PROFILE_TOKEN_FIELDS.has(token)) {
+      const v = _beResolveProfileValue(token, profile);
+      if (v) return v;
+    }
+    if (fb[token]) return fb[token];
+    return full; // leave intact
+  });
+}
+
+function _beTokensIn(text) {
+  if (!text) return [];
+  const seen = new Set();
+  const out = [];
+  let m;
+  _BE_TOKEN_RE.lastIndex = 0;
+  while ((m = _BE_TOKEN_RE.exec(text)) !== null) {
+    if (!seen.has(m[1])) { seen.add(m[1]); out.push(m[1]); }
+  }
+  return out;
+}
+
+function _beValidate() {
+  const tokens = Array.from(new Set([..._beTokensIn(_beState.subject),
+                                     ..._beTokensIn(_beState.body)]));
+  const missingByLead = {};
+  for (const lead of _beState.recipients) {
+    const missing = [];
+    for (const tok of tokens) {
+      // Lead-sourced tokens
+      if (_BE_LEAD_TOKEN_FIELDS.has(tok)) {
+        if (_beResolveLeadValue(tok, lead)) continue;
+      }
+      if (_BE_PROFILE_TOKEN_FIELDS.has(tok)) {
+        if (_beResolveProfileValue(tok, _beState.senderProfile)) continue;
+      }
+      // If the token has a default fallback we treat it as covered.
+      if (_BE_DEFAULT_FALLBACKS.hasOwnProperty(tok)) continue;
+      missing.push(tok);
+    }
+    if (missing.length) missingByLead[lead.id] = missing;
+  }
+  return {
+    tokens,
+    missingByLead,
+    missingCount: Object.keys(missingByLead).length,
+  };
+}
+
+async function _beFetchSenderProfile() {
+  // /me returns first_name + last_name + business_name. business_phone /
+  // business_address are not in the user record today — fall through to
+  // empty strings (the unsubscribe footer skips empty pieces).
+  try {
+    const r = await fetch("/me", { credentials: "same-origin" });
+    if (!r.ok) return null;
+    const d = await r.json();
+    const yn = [(d.first_name || "").trim(), (d.last_name || "").trim()]
+                 .filter(Boolean).join(" ");
+    return {
+      your_name:         yn,
+      business_name:     d.business_name || "",
+      business_phone:    d.business_phone || "",
+      business_address:  d.business_address || "",
+    };
+  } catch (_) { return null; }
+}
+
+async function _beFetchTemplates() {
+  try {
+    const r = await fetch("/me/leads/email-templates", { credentials: "same-origin" });
+    if (!r.ok) return [];
+    const d = await r.json();
+    return Array.isArray(d.templates) ? d.templates : [];
+  } catch (_) { return []; }
+}
+
+async function _beFetchConnections() {
+  try {
+    const r = await fetch("/me/email-connections", { credentials: "same-origin" });
+    if (!r.ok) return [];
+    const d = await r.json();
+    const arr = d.connections || d || [];
+    return Array.isArray(arr) ? arr.filter(c => (c.status || "active") === "active") : [];
+  } catch (_) { return []; }
+}
+
+function _beEnsureDialog() {
+  let dlg = document.getElementById("leadsBulkEmailDlg");
+  if (dlg) return dlg;
+  dlg = document.createElement("div");
+  dlg.id = "leadsBulkEmailDlg";
+  dlg.style.cssText = "display:none;position:fixed;inset:0;z-index:90;";
+  dlg.innerHTML = `
+    <style>
+      #leadsBulkEmailDlg .be-backdrop { position:absolute;inset:0;background:rgba(15,23,42,0.45);transition:opacity 160ms ease; }
+      #leadsBulkEmailDlg .be-panel {
+        position:absolute;top:0;right:0;bottom:0;width:min(640px, 100vw);
+        background:#fff;display:flex;flex-direction:column;
+        box-shadow:-12px 0 36px rgba(0,0,0,0.16);
+        animation: beSlideIn 180ms ease;
+      }
+      @keyframes beSlideIn { from { transform: translateX(24px); opacity:0.6; } to { transform: translateX(0); opacity:1; } }
+      #leadsBulkEmailDlg .be-head { display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid #e5e7eb;flex-shrink:0; }
+      #leadsBulkEmailDlg .be-head h2 { margin:0;font-size:17px;font-weight:700;color:#0a0a0a; }
+      #leadsBulkEmailDlg .be-close { background:none;border:none;font-size:22px;cursor:pointer;color:#6b7280;line-height:1;padding:0 4px; }
+      #leadsBulkEmailDlg .be-body { flex:1;overflow:auto;padding:18px 22px; }
+      #leadsBulkEmailDlg .be-foot { padding:14px 22px;border-top:1px solid #e5e7eb;background:#fafafa;flex-shrink:0;display:flex;gap:8px;justify-content:flex-end;align-items:center; }
+      #leadsBulkEmailDlg .be-recip { font-size:13.5px;color:#374151;margin-bottom:14px; }
+      #leadsBulkEmailDlg .be-recip-toggle { background:none;border:none;color:#0a0a0a;font-size:13px;cursor:pointer;text-decoration:underline;padding:0 0 0 6px; }
+      #leadsBulkEmailDlg .be-recip-list { margin-top:6px;padding:8px 12px;background:#f9fafb;border-radius:8px;font-size:12.5px;color:#475569;max-height:160px;overflow:auto; }
+      #leadsBulkEmailDlg .be-grid { display:grid;grid-template-columns:repeat(3, 1fr);gap:10px; }
+      #leadsBulkEmailDlg .be-card { padding:14px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:6px;transition:border-color 120ms; }
+      #leadsBulkEmailDlg .be-card:hover { border-color:#0a0a0a; }
+      #leadsBulkEmailDlg .be-card .be-icon { font-size:22px;line-height:1; }
+      #leadsBulkEmailDlg .be-card .be-name { font-size:13.5px;font-weight:600;color:#0a0a0a; }
+      #leadsBulkEmailDlg .be-card .be-desc { font-size:12px;color:#6b7280;line-height:1.4; }
+      #leadsBulkEmailDlg .be-back { background:none;border:none;color:#0a0a0a;font-size:13px;cursor:pointer;padding:0;margin-bottom:12px;text-decoration:underline; }
+      #leadsBulkEmailDlg .be-field { margin-bottom:12px; }
+      #leadsBulkEmailDlg .be-label { display:block;font-size:12.5px;font-weight:600;color:#374151;margin-bottom:6px; }
+      #leadsBulkEmailDlg .be-input { width:100%;padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:13.5px;background:#fff;color:#0a0a0a;font-family:inherit;box-sizing:border-box; }
+      #leadsBulkEmailDlg .be-textarea { width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:13.5px;background:#fff;color:#0a0a0a;font-family:inherit;min-height:200px;resize:vertical;line-height:1.5;box-sizing:border-box; }
+      #leadsBulkEmailDlg .be-chips { display:flex;flex-wrap:wrap;gap:6px;margin-top:8px; }
+      #leadsBulkEmailDlg .be-chip { padding:5px 10px;border:1px solid #e5e7eb;background:#fff;border-radius:999px;font-size:12px;color:#0a0a0a;cursor:pointer; }
+      #leadsBulkEmailDlg .be-chip:hover { border-color:#0a0a0a;background:#f3f4f6; }
+      #leadsBulkEmailDlg .be-chip-help { font-size:11.5px;color:#6b7280;margin:6px 0 0; }
+      #leadsBulkEmailDlg .be-warn { padding:10px 12px;border:1px solid #fcd34d;background:#fffbeb;border-radius:8px;font-size:12.5px;color:#78350f;margin:10px 0; }
+      #leadsBulkEmailDlg .be-warn .be-warn-link { background:none;border:none;color:#78350f;text-decoration:underline;cursor:pointer;padding:0;font-weight:600;font-size:12.5px; }
+      #leadsBulkEmailDlg .be-preview-pane { padding:12px 14px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;font-size:13px;color:#0a0a0a;white-space:pre-wrap;font-family:inherit;line-height:1.5;max-height:240px;overflow:auto; }
+      #leadsBulkEmailDlg .be-preview-subj { font-weight:700;margin-bottom:8px;font-size:13.5px; }
+      #leadsBulkEmailDlg .be-from { font-size:12.5px;color:#475569;margin:10px 0; }
+      #leadsBulkEmailDlg .be-btn-primary { padding:9px 16px;background:#0a0a0a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer; }
+      #leadsBulkEmailDlg .be-btn-primary[disabled] { opacity:0.5;cursor:not-allowed; }
+      #leadsBulkEmailDlg .be-btn-secondary { padding:9px 16px;background:#fff;color:#0a0a0a;border:1px solid #d1d5db;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer; }
+      #leadsBulkEmailDlg .be-btn-secondary[disabled] { opacity:0.5;cursor:not-allowed; }
+      #leadsBulkEmailDlg .be-progress { padding:14px 0; }
+      #leadsBulkEmailDlg .be-progress-track { height:8px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin:10px 0; }
+      #leadsBulkEmailDlg .be-progress-bar { height:100%;background:#0a0a0a;width:0%;transition:width 160ms ease; }
+      #leadsBulkEmailDlg .be-cta-empty { padding:24px;text-align:center;border:1px dashed #d1d5db;border-radius:10px;color:#374151; }
+      #leadsBulkEmailDlg .be-mini-modal { position:absolute;inset:0;background:rgba(15,23,42,0.55);display:flex;align-items:center;justify-content:center;z-index:5; }
+      #leadsBulkEmailDlg .be-mini-modal .be-mini-card { background:#fff;border-radius:12px;padding:18px 20px;width:min(420px,92%);box-shadow:0 30px 60px rgba(0,0,0,0.3); }
+      #leadsBulkEmailDlg .be-mini-card h3 { margin:0 0 8px;font-size:15px;font-weight:700;color:#0a0a0a; }
+      #leadsBulkEmailDlg .be-mini-card p { margin:0 0 12px;font-size:13px;color:#374151;line-height:1.5; }
+      #leadsBulkEmailDlg .be-mini-list { font-size:12.5px;color:#475569;max-height:160px;overflow:auto;background:#f9fafb;border-radius:8px;padding:8px 12px;margin-bottom:12px; }
+      #leadsBulkEmailDlg .be-mini-actions { display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap; }
+    </style>
+    <div class="be-backdrop" data-be-backdrop></div>
+    <div class="be-panel" role="dialog" aria-label="Send email">
+      <div class="be-head">
+        <h2 id="beTitle">Send email</h2>
+        <button type="button" class="be-close" id="beClose" aria-label="Close">×</button>
+      </div>
+      <div class="be-body" id="beBody"></div>
+      <div class="be-foot" id="beFoot"></div>
+    </div>
+  `;
+  document.body.appendChild(dlg);
+  dlg.querySelector("#beClose").addEventListener("click", _beClose);
+  dlg.querySelector("[data-be-backdrop]").addEventListener("click", _beClose);
+  return dlg;
+}
+
+function _beClose() {
+  if (_beState.pollTimer) {
+    clearInterval(_beState.pollTimer);
+    _beState.pollTimer = null;
+  }
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  if (dlg) dlg.style.display = "none";
+  _beState.open = false;
+}
+
+async function openBulkEmailComposer(opts) {
+  opts = opts || {};
+  if (!_selectedIds.size) return;
+  const ids = Array.from(_selectedIds);
+  // Snapshot recipients from the current list (selection persists across
+  // filter changes — selected ids may not all be in _filteredLeads).
+  const recipients = [];
+  const byId = new Map(_allLeads.map(l => [l.id, l]));
+  for (const id of ids) {
+    const l = byId.get(id);
+    if (l) recipients.push(l);
+  }
+
+  _beEnsureDialog();
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  dlg.style.display = "block";
+  _beState.open = true;
+  _beState.recipients = recipients;
+  _beState.previewLeadId = recipients[0] ? recipients[0].id : "";
+  _beState.subject = "";
+  _beState.body = "";
+  _beState.templateLoaded = null;
+  _beState.fallbackOverrides = {};
+  _beState.skipMissing = false;
+  _beState.batchId = "";
+  _beState.lastBatch = null;
+  _beState.editingScheduledId = "";
+  _beState.scheduledForEpoch = 0;
+  _beState.openSchedulePickerOnLoad = !!opts.openSchedulePicker;
+
+  _beRender({ loading: true });
+
+  const [profile, templates, connections] = await Promise.all([
+    _beFetchSenderProfile(),
+    _beFetchTemplates(),
+    _beFetchConnections(),
+  ]);
+  _beState.senderProfile = profile;
+  _beState.templates = templates || [];
+  _beState.connections = connections || [];
+
+  if (!profile || !profile.your_name) {
+    _beState.view = "no-profile";
+    _beRender();
+    return;
+  }
+  if (!_beState.connections.length) {
+    _beState.view = "no-connection";
+    _beRender();
+    return;
+  }
+  // Default to most-recently-used.
+  _beState.connections.sort((a, b) => (b.last_used_at || 0) - (a.last_used_at || 0));
+  _beState.fromConnectionId = _beState.connections[0].id;
+
+  _beState.view = "grid";
+  _beRender();
+}
+
+function _beRender(opts) {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  if (!dlg) return;
+  const body = dlg.querySelector("#beBody");
+  const foot = dlg.querySelector("#beFoot");
+  const title = dlg.querySelector("#beTitle");
+  if (opts && opts.loading) {
+    title.textContent = "Send email";
+    body.innerHTML = `<div style="padding:40px;text-align:center;color:#6b7280;font-size:13px;">Loading…</div>`;
+    foot.innerHTML = "";
+    return;
+  }
+  if (_beState.view === "no-profile") {
+    title.textContent = "Set your profile first";
+    body.innerHTML = `
+      <div class="be-cta-empty">
+        <p style="margin:0 0 12px;font-size:14px;font-weight:600;">We need your name before sending.</p>
+        <p style="margin:0 0 16px;font-size:13px;color:#6b7280;">Add your first and last name in Profile, then come back and pick a template.</p>
+        <a href="/dashboard/settings" style="display:inline-block;padding:9px 16px;background:#0a0a0a;color:#fff;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;">Open Profile</a>
+      </div>`;
+    foot.innerHTML = `<button type="button" class="be-btn-secondary" data-be-act="close">Close</button>`;
+    _beWireFooter();
+    return;
+  }
+  if (_beState.view === "no-connection") {
+    title.textContent = "Connect Gmail to send";
+    body.innerHTML = `
+      <div class="be-cta-empty">
+        <p style="margin:0 0 12px;font-size:14px;font-weight:600;">Connect Gmail to send these emails.</p>
+        <p style="margin:0 0 16px;font-size:13px;color:#6b7280;">We send through your own Gmail so replies land in your inbox and the From address is yours.</p>
+        <a href="/auth/google/connect-email" style="display:inline-block;padding:9px 16px;background:#0a0a0a;color:#fff;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;">Connect Gmail</a>
+      </div>`;
+    foot.innerHTML = `<button type="button" class="be-btn-secondary" data-be-act="close">Close</button>`;
+    _beWireFooter();
+    return;
+  }
+  if (_beState.view === "grid")    return _beRenderGrid();
+  if (_beState.view === "editor")  return _beRenderEditor();
+  if (_beState.view === "sending") return _beRenderSending();
+  if (_beState.view === "done")    return _beRenderDone();
+}
+
+function _beRecipientHeader() {
+  const n = _beState.recipients.length;
+  const first10 = _beState.recipients.slice(0, 10).map(l => fullName(l) || l.email || "(no name)");
+  const more = Math.max(0, n - 10);
+  // Phase 3: surface opt-out count so users aren't surprised at "skipped".
+  const optedOut = _beState.recipients.filter(l => l && l.email_opted_out === true).length;
+  const optHint = optedOut > 0
+    ? `<div style="margin-top:6px;font-size:12px;color:#9a3412;">${optedOut} lead${optedOut !== 1 ? "s" : ""} opted out of email — they'll be skipped.</div>`
+    : "";
+  return `
+    <div class="be-recip">
+      <strong>To:</strong> ${n} lead${n !== 1 ? "s" : ""}
+      <button type="button" class="be-recip-toggle" data-be-act="toggle-recip">Show recipients ▾</button>
+      <div class="be-recip-list" id="beRecipList" style="display:none;">
+        ${first10.map(n => escapeHtml(n)).join("<br>")}
+        ${more ? `<div style="margin-top:6px;color:#6b7280;">…and ${more} more</div>` : ""}
+      </div>
+      ${optHint}
+    </div>`;
+}
+
+function _beRenderGrid() {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  dlg.querySelector("#beTitle").textContent = "Pick a template";
+  const body = dlg.querySelector("#beBody");
+  const foot = dlg.querySelector("#beFoot");
+  body.innerHTML = `
+    ${_beRecipientHeader()}
+    <div class="be-grid">
+      ${_beState.templates.map(t => `
+        <button type="button" class="be-card" data-be-tpl="${escapeHtml(t.id)}">
+          <span class="be-icon">${escapeHtml(t.icon || "✉️")}</span>
+          <span class="be-name">${escapeHtml(t.name)}</span>
+          <span class="be-desc">${escapeHtml(t.description || "")}</span>
+        </button>`).join("")}
+    </div>`;
+  foot.innerHTML = `<button type="button" class="be-btn-secondary" data-be-act="close">Cancel</button>`;
+  body.querySelectorAll(".be-card").forEach(c => {
+    c.addEventListener("click", () => _bePickTemplate(c.dataset.beTpl));
+  });
+  _beWireRecipToggle();
+  _beWireFooter();
+}
+
+function _bePickTemplate(id) {
+  const tpl = _beState.templates.find(t => t.id === id);
+  if (!tpl) return;
+  _beState.templateLoaded = tpl;
+  _beState.subject = tpl.subject || "";
+  _beState.body = tpl.body || "";
+  _beState.view = "editor";
+  _beRender();
+}
+
+function _beRenderEditor() {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  dlg.querySelector("#beTitle").textContent = "Send email";
+  const body = dlg.querySelector("#beBody");
+  const foot = dlg.querySelector("#beFoot");
+
+  const valid = _beValidate();
+  const previewLead = _beState.recipients.find(l => l.id === _beState.previewLeadId)
+                     || _beState.recipients[0] || {};
+  const fb = { ..._BE_DEFAULT_FALLBACKS, ..._beState.fallbackOverrides };
+  const previewSubj = substituteClientSide(_beState.subject, previewLead, _beState.senderProfile, fb);
+  const previewBody = substituteClientSide(_beState.body, previewLead, _beState.senderProfile, fb);
+
+  const conn = _beState.connections.find(c => c.id === _beState.fromConnectionId)
+             || _beState.connections[0];
+  const fromBlock = _beState.connections.length > 1
+    ? `<div class="be-from"><strong>Sending from:</strong>
+         <select id="beFromSel" style="margin-left:6px;padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:12.5px;">
+           ${_beState.connections.map(c => `<option value="${escapeHtml(c.id)}" ${c.id === _beState.fromConnectionId ? "selected" : ""}>${escapeHtml(c.email_address || c.id)}</option>`).join("")}
+         </select> (Connected Gmail)
+       </div>`
+    : `<div class="be-from"><strong>Sending from:</strong> ${escapeHtml(conn ? (conn.email_address || "") : "")} (Connected Gmail)</div>`;
+
+  const warnHtml = (valid.missingCount > 0)
+    ? `<div class="be-warn">
+         ⚠️ ${valid.missingCount} lead${valid.missingCount !== 1 ? "s are" : " is"} missing data.
+         We'll skip ${valid.missingCount === 1 ? "it" : "them"} unless you fix this.
+         <button type="button" class="be-warn-link" data-be-act="see-missing">See which leads</button>
+       </div>`
+    : "";
+
+  body.innerHTML = `
+    <button type="button" class="be-back" data-be-act="back-to-grid">← Back to templates</button>
+    ${_beRecipientHeader()}
+    <div class="be-field">
+      <label class="be-label" for="beSubject">Subject</label>
+      <input type="text" class="be-input" id="beSubject" value="${escapeHtml(_beState.subject)}" placeholder="Subject…" />
+    </div>
+    <div class="be-field">
+      <label class="be-label" for="beBody">Body</label>
+      <textarea class="be-textarea" id="beBodyEdit" placeholder="Write your message…">${escapeHtml(_beState.body)}</textarea>
+      <div class="be-chips" id="beChips">
+        ${_BE_VAR_CHIPS.map(c => `<button type="button" class="be-chip" data-be-token="${escapeHtml(c.token)}">${escapeHtml(c.label)}</button>`).join("")}
+      </div>
+      <p class="be-chip-help">Click any chip to add it. Each one fills with that lead's info when we send.</p>
+    </div>
+    ${warnHtml}
+    <div class="be-field">
+      <label class="be-label" for="bePreviewLead">Preview as</label>
+      <select id="bePreviewLead" class="be-input">
+        ${_beState.recipients.map(l => `<option value="${escapeHtml(l.id)}" ${l.id === _beState.previewLeadId ? "selected" : ""}>${escapeHtml(fullName(l) || l.email || l.id)}</option>`).join("")}
+      </select>
+    </div>
+    <div class="be-field">
+      <label class="be-label">Preview</label>
+      <div class="be-preview-pane">
+        <div class="be-preview-subj">${escapeHtml(previewSubj || "(no subject)")}</div>
+        <div>${escapeHtml(previewBody || "(no body)")}</div>
+      </div>
+    </div>
+    ${fromBlock}
+  `;
+
+  const total = _beState.recipients.length;
+  const eta = Math.max(1, total);
+  // When editing an already-scheduled batch, the send-now button doesn't
+  // make sense — just "Save changes" via /update. Otherwise show both.
+  const editingExisting = !!_beState.editingScheduledId;
+  const primaryBtn = editingExisting
+    ? `<button type="button" class="be-btn-primary" data-be-act="open-schedule">Update schedule</button>`
+    : `<button type="button" class="be-btn-secondary" data-be-act="open-schedule">Schedule for later →</button>
+       <button type="button" class="be-btn-primary"   data-be-act="send-now">Send now</button>`;
+  foot.innerHTML = `
+    <span style="margin-right:auto;font-size:12px;color:#6b7280;">About ${eta} second${eta !== 1 ? "s" : ""} to send ${total} email${total !== 1 ? "s" : ""}</span>
+    ${primaryBtn}
+  `;
+
+  // Wiring
+  const subj = body.querySelector("#beSubject");
+  const bod  = body.querySelector("#beBodyEdit");
+  subj.addEventListener("focus", () => { _beState.lastFocused = "subject"; });
+  bod.addEventListener("focus",  () => { _beState.lastFocused = "body"; });
+  subj.addEventListener("input", () => {
+    _beState.subject = subj.value;
+    _beUpdatePreview();
+    _beUpdateWarn();
+  });
+  bod.addEventListener("input", () => {
+    _beState.body = bod.value;
+    _beUpdatePreview();
+    _beUpdateWarn();
+  });
+  body.querySelectorAll(".be-chip").forEach(c => {
+    c.addEventListener("click", () => _beInsertToken(c.dataset.beToken));
+  });
+  body.querySelector("#bePreviewLead").addEventListener("change", (e) => {
+    _beState.previewLeadId = e.target.value;
+    _beUpdatePreview();
+  });
+  const fromSel = body.querySelector("#beFromSel");
+  if (fromSel) fromSel.addEventListener("change", (e) => {
+    _beState.fromConnectionId = e.target.value;
+  });
+  body.querySelectorAll("[data-be-act]").forEach(b => {
+    b.addEventListener("click", () => _beHandleAct(b.dataset.beAct));
+  });
+  _beWireRecipToggle();
+  _beWireFooter();
+
+  // If the user clicked "Schedule for later" on the bulk bar, OR we're
+  // editing an existing scheduled batch, drop them straight into the
+  // schedule picker once the editor has rendered.
+  if (_beState.openSchedulePickerOnLoad) {
+    _beState.openSchedulePickerOnLoad = false;
+    setTimeout(() => _beOpenSchedulePicker(), 0);
+  }
+}
+
+function _beUpdatePreview() {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  if (!dlg) return;
+  const pane = dlg.querySelector(".be-preview-pane");
+  if (!pane) return;
+  const previewLead = _beState.recipients.find(l => l.id === _beState.previewLeadId)
+                     || _beState.recipients[0] || {};
+  const fb = { ..._BE_DEFAULT_FALLBACKS, ..._beState.fallbackOverrides };
+  const previewSubj = substituteClientSide(_beState.subject, previewLead, _beState.senderProfile, fb);
+  const previewBody = substituteClientSide(_beState.body, previewLead, _beState.senderProfile, fb);
+  pane.innerHTML = `
+    <div class="be-preview-subj">${escapeHtml(previewSubj || "(no subject)")}</div>
+    <div>${escapeHtml(previewBody || "(no body)")}</div>
+  `;
+}
+
+function _beUpdateWarn() {
+  // Re-render the editor body to refresh the warn strip — cheap, and keeps
+  // the editor logic in one place.
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  if (!dlg) return;
+  const valid = _beValidate();
+  const existing = dlg.querySelector(".be-warn");
+  if (valid.missingCount > 0) {
+    const html = `⚠️ ${valid.missingCount} lead${valid.missingCount !== 1 ? "s are" : " is"} missing data. We'll skip ${valid.missingCount === 1 ? "it" : "them"} unless you fix this. <button type="button" class="be-warn-link" data-be-act="see-missing">See which leads</button>`;
+    if (existing) {
+      existing.innerHTML = html;
+      existing.querySelector("[data-be-act]").addEventListener("click", () => _beHandleAct("see-missing"));
+    } else {
+      // Insert before the preview-as field — find chip help and insert after.
+      const pane = dlg.querySelector(".be-chip-help");
+      if (pane) {
+        const div = document.createElement("div");
+        div.className = "be-warn";
+        div.innerHTML = html;
+        pane.parentElement.insertAdjacentElement("afterend", div);
+        div.querySelector("[data-be-act]").addEventListener("click", () => _beHandleAct("see-missing"));
+      }
+    }
+  } else if (existing) {
+    existing.remove();
+  }
+}
+
+function _beInsertToken(token) {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  const target = (_beState.lastFocused === "subject")
+    ? dlg.querySelector("#beSubject")
+    : dlg.querySelector("#beBodyEdit");
+  if (!target) return;
+  const tok = `{${token}}`;
+  const start = target.selectionStart != null ? target.selectionStart : target.value.length;
+  const end   = target.selectionEnd   != null ? target.selectionEnd   : target.value.length;
+  const v = target.value;
+  target.value = v.slice(0, start) + tok + v.slice(end);
+  const pos = start + tok.length;
+  target.focus();
+  if (target.setSelectionRange) target.setSelectionRange(pos, pos);
+  if (target.id === "beSubject") _beState.subject = target.value;
+  else _beState.body = target.value;
+  _beUpdatePreview();
+  _beUpdateWarn();
+}
+
+function _beWireRecipToggle() {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  if (!dlg) return;
+  const btn = dlg.querySelector("[data-be-act='toggle-recip']");
+  const list = dlg.querySelector("#beRecipList");
+  if (!btn || !list) return;
+  btn.addEventListener("click", () => {
+    const open = list.style.display !== "none";
+    list.style.display = open ? "none" : "block";
+    btn.textContent = open ? "Show recipients ▾" : "Hide recipients ▴";
+  });
+}
+
+function _beWireFooter() {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  if (!dlg) return;
+  dlg.querySelector("#beFoot").querySelectorAll("[data-be-act]").forEach(b => {
+    b.addEventListener("click", () => _beHandleAct(b.dataset.beAct));
+  });
+}
+
+function _beHandleAct(act) {
+  if (act === "close")           return _beClose();
+  if (act === "back-to-grid")    { _beState.view = "grid"; _beRender(); return; }
+  if (act === "send-now")        return _beSendNow();
+  if (act === "see-missing")     return _beShowMissingModal();
+  if (act === "open-schedule")   return _beOpenSchedulePicker();
+}
+
+function _beShowMissingModal() {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  if (!dlg) return;
+  const valid = _beValidate();
+  const ids = Object.keys(valid.missingByLead);
+  const byId = new Map(_allLeads.map(l => [l.id, l]));
+  const lines = ids.slice(0, 50).map(id => {
+    const l = byId.get(id) || {};
+    const nm = fullName(l) || l.email || id;
+    const tokens = (valid.missingByLead[id] || []).join(", ");
+    return `${escapeHtml(nm)} <span style="color:#9ca3af;">— missing ${escapeHtml(tokens)}</span>`;
+  }).join("<br>");
+  const more = ids.length > 50 ? `<br><span style="color:#6b7280;">…and ${ids.length - 50} more</span>` : "";
+
+  const overlay = document.createElement("div");
+  overlay.className = "be-mini-modal";
+  overlay.innerHTML = `
+    <div class="be-mini-card">
+      <h3>${ids.length} lead${ids.length !== 1 ? "s" : ""} missing data</h3>
+      <p>Pick how to handle these:</p>
+      <div class="be-mini-list">${lines}${more}</div>
+      <div class="be-mini-actions">
+        <button type="button" class="be-btn-secondary" data-mini="cancel">Cancel</button>
+        <button type="button" class="be-btn-secondary" data-mini="fallback">Use fallback</button>
+        <button type="button" class="be-btn-primary"   data-mini="skip">Skip them</button>
+      </div>
+    </div>`;
+  dlg.appendChild(overlay);
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) overlay.remove();
+  });
+  overlay.querySelector("[data-mini='cancel']").addEventListener("click", () => overlay.remove());
+  overlay.querySelector("[data-mini='fallback']").addEventListener("click", () => {
+    _beState.skipMissing = false;
+    overlay.remove();
+    _beUpdatePreview();
+    _beUpdateWarn();
+  });
+  overlay.querySelector("[data-mini='skip']").addEventListener("click", () => {
+    _beState.skipMissing = true;
+    overlay.remove();
+    _beUpdatePreview();
+    _beUpdateWarn();
+  });
+}
+
+async function _beSendNow(opts) {
+  opts = opts || {};
+  if (!_beState.subject.trim() || !_beState.body.trim()) {
+    _showLeadsToast("Add a subject and body first.", "error");
+    return;
+  }
+  let lead_ids = _beState.recipients.map(l => l.id);
+  if (_beState.skipMissing) {
+    const valid = _beValidate();
+    lead_ids = lead_ids.filter(id => !valid.missingByLead[id]);
+  }
+  if (!lead_ids.length) {
+    _showLeadsToast("No leads to send to after skipping.", "error");
+    return;
+  }
+  _beState.view = "sending";
+  _beState.lastBatch = { sent_count: 0, failed_count: 0, skipped_count: 0,
+                         total_count: lead_ids.length, status: "queued" };
+  _beRender();
+  let res;
+  try {
+    res = await fetch("/me/leads/bulk-email", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lead_ids,
+        subject:             _beState.subject,
+        body:                _beState.body,
+        from_connection_id:  _beState.fromConnectionId,
+        fallbacks:           _beState.fallbackOverrides,
+        template_id:         _beState.templateLoaded ? _beState.templateLoaded.id : null,
+        send_now:            true,
+        override_duplicate:  !!opts.overrideDuplicate,
+      }),
+    });
+  } catch (_) {
+    _showLeadsToast("Network error.", "error");
+    _beState.view = "editor";
+    _beRender();
+    return;
+  }
+  if (res.status === 409) {
+    const err = await res.json().catch(() => ({}));
+    _beState.view = "editor";
+    _beRender();
+    _beShowDuplicateConfirm(err.details || {}, () => _beSendNow({ overrideDuplicate: true }));
+    return;
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    _showLeadsToast(err.hint || err.error || "Couldn't start sending.", "error");
+    _beState.view = "editor";
+    _beRender();
+    return;
+  }
+  const data = await res.json();
+  _beState.batchId = data.batch_id;
+  _beState.lastBatch.total_count = data.total_count;
+  _bePollProgress();
+}
+
+// ─── Schedule picker (Phase 3) ───────────────────────────────────────────────
+
+function _beDefaultScheduleEpoch() {
+  // Tomorrow 9:00 AM in user's local timezone.
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  d.setHours(9, 0, 0, 0);
+  return Math.floor(d.getTime() / 1000);
+}
+
+function _beEpochToLocalDateTimeParts(epochSec) {
+  const d = new Date((epochSec || _beDefaultScheduleEpoch()) * 1000);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mn = String(d.getMinutes()).padStart(2, "0");
+  return { date: `${yyyy}-${mm}-${dd}`, time: `${hh}:${mn}` };
+}
+
+function _beFormatLocalEpoch(epochSec) {
+  const d = new Date((epochSec || 0) * 1000);
+  const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  let h = d.getHours();
+  const m = String(d.getMinutes()).padStart(2, "0");
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12; if (h === 0) h = 12;
+  return `${days[d.getDay()]} ${_BE_MONTHS[d.getMonth()]} ${d.getDate()}, ${h}:${m} ${ampm}`;
+}
+
+function _beOpenSchedulePicker() {
+  if (!_beState.subject.trim() || !_beState.body.trim()) {
+    _showLeadsToast("Add a subject and body first.", "error");
+    return;
+  }
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  if (!dlg) return;
+  const initEpoch = _beState.scheduledForEpoch || _beDefaultScheduleEpoch();
+  const parts = _beEpochToLocalDateTimeParts(initEpoch);
+  const total = _beState.recipients.length;
+  const conn = _beState.connections.find(c => c.id === _beState.fromConnectionId)
+             || _beState.connections[0] || {};
+  const senderEmail = conn.email_address || "";
+  const isEditing = !!_beState.editingScheduledId;
+
+  const overlay = document.createElement("div");
+  overlay.className = "be-mini-modal";
+  overlay.id = "beSchedulePicker";
+  overlay.innerHTML = `
+    <div class="be-mini-card" style="max-width:420px;">
+      <h3 style="margin:0 0 12px;font-size:15px;">${isEditing ? "Update schedule" : "When should we send this?"}</h3>
+      <div style="display:flex;gap:10px;margin-bottom:14px;">
+        <div style="flex:1;">
+          <label style="display:block;font-size:12px;color:#475569;margin-bottom:4px;">Date</label>
+          <input type="date" id="beSchedDate" value="${parts.date}" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;" />
+        </div>
+        <div style="flex:1;">
+          <label style="display:block;font-size:12px;color:#475569;margin-bottom:4px;">Time</label>
+          <input type="time" id="beSchedTime" value="${parts.time}" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;" />
+        </div>
+      </div>
+      <div style="font-size:12.5px;color:#475569;line-height:1.6;margin-bottom:14px;">
+        We'll send all ${total} email${total !== 1 ? "s" : ""} starting then.<br>
+        Sending takes about ${total} second${total !== 1 ? "s" : ""}.<br>
+        Sending from: <strong>${escapeHtml(senderEmail)}</strong>
+      </div>
+      <div id="beSchedError" style="display:none;color:#b91c1c;font-size:12.5px;margin-bottom:10px;"></div>
+      <div class="be-mini-actions">
+        <button type="button" class="be-btn-secondary" data-sched="cancel">Cancel</button>
+        <button type="button" class="be-btn-primary"   data-sched="confirm">${isEditing ? "Save changes" : "Schedule it"}</button>
+      </div>
+    </div>`;
+  dlg.appendChild(overlay);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+  overlay.querySelector("[data-sched='cancel']").addEventListener("click", () => overlay.remove());
+  overlay.querySelector("[data-sched='confirm']").addEventListener("click", async () => {
+    const dateVal = overlay.querySelector("#beSchedDate").value;
+    const timeVal = overlay.querySelector("#beSchedTime").value;
+    const errEl   = overlay.querySelector("#beSchedError");
+    if (!dateVal || !timeVal) {
+      errEl.textContent = "Pick a date and time.";
+      errEl.style.display = "block";
+      return;
+    }
+    // Build a local Date and convert to UTC epoch.
+    const local = new Date(`${dateVal}T${timeVal}:00`);
+    const epoch = Math.floor(local.getTime() / 1000);
+    const minFuture = Math.floor(Date.now() / 1000) + 5 * 60;
+    if (epoch < minFuture) {
+      errEl.textContent = "Pick a time at least 5 minutes from now.";
+      errEl.style.display = "block";
+      return;
+    }
+    overlay.remove();
+    _beState.scheduledForEpoch = epoch;
+    if (isEditing) {
+      await _beSubmitScheduleUpdate(epoch);
+    } else {
+      await _beSubmitNewSchedule(epoch, { overrideDuplicate: false });
+    }
+  });
+}
+
+async function _beSubmitNewSchedule(epoch, opts) {
+  opts = opts || {};
+  let lead_ids = _beState.recipients.map(l => l.id);
+  if (_beState.skipMissing) {
+    const valid = _beValidate();
+    lead_ids = lead_ids.filter(id => !valid.missingByLead[id]);
+  }
+  if (!lead_ids.length) {
+    _showLeadsToast("No leads to send to after skipping.", "error");
+    return;
+  }
+  let res;
+  try {
+    res = await fetch("/me/leads/bulk-email", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lead_ids,
+        subject:             _beState.subject,
+        body:                _beState.body,
+        from_connection_id:  _beState.fromConnectionId,
+        fallbacks:           _beState.fallbackOverrides,
+        template_id:         _beState.templateLoaded ? _beState.templateLoaded.id : null,
+        send_now:            false,
+        scheduled_for:       epoch,
+        override_duplicate:  !!opts.overrideDuplicate,
+      }),
+    });
+  } catch (_) {
+    _showLeadsToast("Network error.", "error");
+    return;
+  }
+  if (res.status === 409) {
+    const err = await res.json().catch(() => ({}));
+    _beShowDuplicateConfirm(err.details || {},
+      () => _beSubmitNewSchedule(epoch, { overrideDuplicate: true }));
+    return;
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    _showLeadsToast(err.hint || err.error || "Couldn't schedule.", "error");
+    return;
+  }
+  _beClose();
+  _showLeadsToast(`Scheduled for ${_beFormatLocalEpoch(epoch)}.`, "success");
+  if (typeof _leadsRefreshHistory === "function") _leadsRefreshHistory();
+}
+
+async function _beSubmitScheduleUpdate(epoch) {
+  const sid = _beState.editingScheduledId;
+  if (!sid) return;
+  let res;
+  try {
+    res = await fetch(`/me/leads/bulk-email/${encodeURIComponent(sid)}/update`, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        subject:       _beState.subject,
+        body:          _beState.body,
+        scheduled_for: epoch,
+        fallbacks:     _beState.fallbackOverrides,
+      }),
+    });
+  } catch (_) {
+    _showLeadsToast("Network error.", "error");
+    return;
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    _showLeadsToast(err.hint || err.error || "Couldn't save.", "error");
+    return;
+  }
+  _beClose();
+  _showLeadsToast(`Updated schedule for ${_beFormatLocalEpoch(epoch)}.`, "success");
+  if (typeof _leadsRefreshHistory === "function") _leadsRefreshHistory();
+}
+
+function _beShowDuplicateConfirm(details, onConfirm) {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  if (!dlg) return;
+  const overlay = document.createElement("div");
+  overlay.className = "be-mini-modal";
+  const overlapPct = (details && details.overlap_pct != null) ? `${details.overlap_pct}%` : "most";
+  overlay.innerHTML = `
+    <div class="be-mini-card" style="max-width:420px;">
+      <h3 style="margin:0 0 10px;font-size:15px;">Send the same email again?</h3>
+      <p style="margin:0 0 14px;font-size:13px;color:#475569;line-height:1.5;">
+        You sent or scheduled this same template to ${escapeHtml(overlapPct)} of these leads in the last hour. Send it again anyway?
+      </p>
+      <div class="be-mini-actions">
+        <button type="button" class="be-btn-secondary" data-dup="cancel">Cancel</button>
+        <button type="button" class="be-btn-primary"   data-dup="confirm">Send again</button>
+      </div>
+    </div>`;
+  dlg.appendChild(overlay);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+  overlay.querySelector("[data-dup='cancel']").addEventListener("click", () => overlay.remove());
+  overlay.querySelector("[data-dup='confirm']").addEventListener("click", () => {
+    overlay.remove();
+    onConfirm();
+  });
+}
+
+function _bePollProgress() {
+  if (_beState.pollTimer) clearInterval(_beState.pollTimer);
+  _beState.pollTimer = setInterval(async () => {
+    if (!_beState.batchId || !_beState.open) {
+      clearInterval(_beState.pollTimer);
+      _beState.pollTimer = null;
+      return;
+    }
+    try {
+      const r = await fetch(`/me/leads/bulk-email/${encodeURIComponent(_beState.batchId)}`,
+                            { credentials: "same-origin" });
+      if (!r.ok) return;
+      const d = await r.json();
+      _beState.lastBatch = d;
+      if (d.status === "completed" || d.status === "failed") {
+        clearInterval(_beState.pollTimer);
+        _beState.pollTimer = null;
+        _beState.view = "done";
+        _beRender();
+      } else {
+        _beRenderSending();
+      }
+    } catch (_) { /* keep polling */ }
+  }, 2000);
+}
+
+function _beRenderSending() {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  dlg.querySelector("#beTitle").textContent = "Sending…";
+  const body = dlg.querySelector("#beBody");
+  const foot = dlg.querySelector("#beFoot");
+  const b = _beState.lastBatch || {};
+  const total = b.total_count || 0;
+  const done = (b.sent_count || 0) + (b.failed_count || 0) + (b.skipped_count || 0);
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  body.innerHTML = `
+    <div class="be-progress">
+      <div style="font-size:14px;font-weight:600;color:#0a0a0a;">Sending email ${done} of ${total}…</div>
+      <div class="be-progress-track"><div class="be-progress-bar" style="width:${pct}%;"></div></div>
+      <div style="font-size:12.5px;color:#6b7280;">
+        ${b.sent_count || 0} sent · ${b.failed_count || 0} failed · ${b.skipped_count || 0} skipped
+      </div>
+    </div>
+  `;
+  foot.innerHTML = `<button type="button" class="be-btn-secondary" data-be-act="close">Close</button>`;
+  _beWireFooter();
+}
+
+function _beRenderDone() {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  dlg.querySelector("#beTitle").textContent = "All done";
+  const body = dlg.querySelector("#beBody");
+  const foot = dlg.querySelector("#beFoot");
+  const b = _beState.lastBatch || {};
+  const sent = b.sent_count || 0;
+  const failed = b.failed_count || 0;
+  const skipped = b.skipped_count || 0;
+  body.innerHTML = `
+    <div style="padding:18px 0;">
+      <div style="font-size:18px;font-weight:700;color:#0a0a0a;margin-bottom:6px;">${sent} sent${failed ? `, ${failed} failed` : ""}${skipped ? `, ${skipped} skipped` : ""}.</div>
+      ${b.status === "failed" ? `<div style="color:#b91c1c;font-size:13px;">Send stopped early.</div>` : ""}
+      ${(failed || skipped)
+         ? `<div style="margin-top:10px;font-size:12.5px;color:#475569;">${failed ? `${failed} couldn't be sent — check those addresses.` : ""}${failed && skipped ? " " : ""}${skipped ? `${skipped} were skipped (missing email or unsubscribed).` : ""}</div>`
+         : ""}
+    </div>`;
+  foot.innerHTML = `<button type="button" class="be-btn-primary" data-be-act="close">Close</button>`;
+  _beWireFooter();
+}
+
+// Expose for debugging / tests.
+window.openBulkEmailComposer = openBulkEmailComposer;
+
+// ─── Email history view (Phase 3) ────────────────────────────────────────────
+//
+// A dedicated panel shown above the leads table that lists scheduled,
+// in-flight, completed, canceled and failed bulk-email batches. Polls
+// /me/leads/bulk-email/history every 30s while visible. Cancel and Edit
+// actions are surfaced inline for scheduled rows; live progress updates
+// for sending rows. Details modal opens via /history/<id>.
+
+let _historyState = {
+  injected: false,
+  visible: true,
+  timer: null,
+  loading: false,
+  batches: [],
+  detail: null,        // { id, rec } when details modal open
+};
+
+function _leadsEnsureHistoryPanel() {
+  if (_historyState.injected) return;
+  const tableWrap = document.getElementById("leadsTableWrap");
+  if (!tableWrap) return;
+  // Insert AFTER the table wrap so the table stays the primary element.
+  const panel = document.createElement("section");
+  panel.id = "leadsEmailHistoryPanel";
+  panel.style.cssText = "margin-top:24px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;overflow:hidden;";
+  panel.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #e5e7eb;background:#f9fafb;">
+      <strong style="font-size:14px;color:#0f172a;">Email history</strong>
+      <span id="lehCount" style="font-size:12px;color:#6b7280;"></span>
+      <span style="margin-left:auto;display:flex;gap:8px;">
+        <button type="button" id="lehRefresh" style="padding:5px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;font-size:12px;cursor:pointer;">Refresh</button>
+        <button type="button" id="lehToggle"  style="padding:5px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;font-size:12px;cursor:pointer;">Hide</button>
+      </span>
+    </div>
+    <div id="lehList" style="padding:8px 0;"></div>`;
+  tableWrap.parentElement.insertAdjacentElement("afterend", panel);
+  _historyState.injected = true;
+
+  document.getElementById("lehRefresh").addEventListener("click", () => _leadsRefreshHistory());
+  document.getElementById("lehToggle").addEventListener("click", () => {
+    _historyState.visible = !_historyState.visible;
+    document.getElementById("lehList").style.display = _historyState.visible ? "" : "none";
+    document.getElementById("lehToggle").textContent = _historyState.visible ? "Hide" : "Show";
+    if (_historyState.visible) {
+      _leadsRefreshHistory();
+      _leadsStartHistoryPolling();
+    } else {
+      _leadsStopHistoryPolling();
+    }
+  });
+}
+
+function _leadsStartHistoryPolling() {
+  _leadsStopHistoryPolling();
+  _historyState.timer = setInterval(() => {
+    if (!_historyState.visible) return;
+    _leadsRefreshHistory();
+  }, 30000);
+}
+
+function _leadsStopHistoryPolling() {
+  if (_historyState.timer) {
+    clearInterval(_historyState.timer);
+    _historyState.timer = null;
+  }
+}
+
+async function _leadsRefreshHistory() {
+  if (_historyState.loading) return;
+  _historyState.loading = true;
+  try {
+    const res = await fetch("/me/leads/bulk-email/history", { credentials: "same-origin" });
+    if (!res.ok) {
+      _historyState.batches = [];
+    } else {
+      const data = await res.json();
+      _historyState.batches = data.batches || [];
+    }
+  } catch (_) {
+    _historyState.batches = [];
+  } finally {
+    _historyState.loading = false;
+  }
+  _leadsRenderHistory();
+}
+
+function _leadsHistoryStatusLabel(b) {
+  const s = b.status || "";
+  if (s === "scheduled") return `Scheduled ${_beFormatLocalEpoch(b.scheduled_for || 0)}`;
+  if (s === "sending")   return `Sending ${b.sent_count || 0} of ${b.total_count || 0}…`;
+  if (s === "completed") {
+    const ts = b.completed_at || b.created_at || 0;
+    const sent = b.sent_count || 0;
+    const failed = b.failed_count || 0;
+    const skipped = b.skipped_count || 0;
+    const extras = [];
+    if (failed)  extras.push(`${failed} failed`);
+    if (skipped) extras.push(`${skipped} skipped`);
+    return `${sent} sent${extras.length ? ", " + extras.join(", ") : ""} · ${_beFormatLocalEpoch(ts)}`;
+  }
+  if (s === "canceled")  return `Canceled · ${_beFormatLocalEpoch(b.created_at || 0)}`;
+  if (s === "failed")    return `Failed · ${_beFormatLocalEpoch(b.completed_at || b.created_at || 0)}`;
+  if (s === "queued")    return `Starting…`;
+  return s || "—";
+}
+
+function _leadsHistoryActions(b) {
+  const id = b.id || "";
+  const s = b.status || "";
+  const parts = [];
+  if (s === "scheduled") {
+    parts.push(`<button type="button" class="leh-act" data-leh-edit="${escapeHtml(id)}"   style="padding:5px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;font-size:12px;cursor:pointer;">Edit</button>`);
+    parts.push(`<button type="button" class="leh-act" data-leh-cancel="${escapeHtml(id)}" style="padding:5px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;color:#b91c1c;font-size:12px;cursor:pointer;">Cancel</button>`);
+  }
+  parts.push(`<button type="button" class="leh-act" data-leh-detail="${escapeHtml(id)}" style="padding:5px 10px;border:1px solid #d1d5db;border-radius:6px;background:#fff;font-size:12px;cursor:pointer;">See details</button>`);
+  return parts.join(" ");
+}
+
+function _leadsTemplateLabel(tplId) {
+  if (!tplId) return "Custom email";
+  const map = {
+    quote_followup:        "Quote follow-up",
+    reschedule_reminder:   "Reschedule reminder",
+    winback:               "Win-back",
+    review_request:        "Review request",
+    first_hello:           "First hello",
+    appointment_reminder:  "Appointment reminder",
+    thank_you_after_job:   "Thank you after job",
+    blank:                 "Custom email",
+  };
+  return map[tplId] || tplId;
+}
+
+function _leadsRenderHistory() {
+  const list = document.getElementById("lehList");
+  const countEl = document.getElementById("lehCount");
+  if (!list) return;
+  const batches = _historyState.batches || [];
+  if (countEl) countEl.textContent = batches.length ? `· ${batches.length} recent` : "";
+  if (!batches.length) {
+    list.innerHTML = `<div style="padding:18px 16px;font-size:13px;color:#6b7280;">No bulk emails sent yet.</div>`;
+    return;
+  }
+  list.innerHTML = batches.map(b => {
+    const tpl = _leadsTemplateLabel(b.template_id);
+    const total = b.total_count || 0;
+    const subj = b.subject_template || "";
+    const status = _leadsHistoryStatusLabel(b);
+    const error = (b.status === "failed" && b.error_message) ? `<div style="margin-top:4px;font-size:12px;color:#b91c1c;">${escapeHtml(b.error_message)}</div>` : "";
+    return `
+      <div style="display:flex;align-items:flex-start;gap:14px;padding:10px 16px;border-bottom:1px solid #f1f5f9;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13.5px;color:#0f172a;font-weight:600;">${escapeHtml(tpl)} <span style="font-weight:400;color:#6b7280;">· ${total} lead${total !== 1 ? "s" : ""}</span></div>
+          <div style="margin-top:2px;font-size:12.5px;color:#475569;">${escapeHtml(status)}</div>
+          ${subj ? `<div style="margin-top:2px;font-size:12px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:560px;">${escapeHtml(subj)}</div>` : ""}
+          ${error}
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          ${_leadsHistoryActions(b)}
+        </div>
+      </div>`;
+  }).join("");
+  list.querySelectorAll("[data-leh-detail]").forEach(b =>
+    b.addEventListener("click", () => _leadsHistoryShowDetail(b.getAttribute("data-leh-detail"))));
+  list.querySelectorAll("[data-leh-cancel]").forEach(b =>
+    b.addEventListener("click", () => _leadsHistoryCancel(b.getAttribute("data-leh-cancel"))));
+  list.querySelectorAll("[data-leh-edit]").forEach(b =>
+    b.addEventListener("click", () => _leadsHistoryEdit(b.getAttribute("data-leh-edit"))));
+}
+
+async function _leadsHistoryShowDetail(sendId) {
+  if (!sendId) return;
+  let rec;
+  try {
+    const res = await fetch(`/me/leads/bulk-email/history/${encodeURIComponent(sendId)}`,
+                            { credentials: "same-origin" });
+    if (!res.ok) {
+      _showLeadsToast("Couldn't load details.", "error");
+      return;
+    }
+    rec = await res.json();
+  } catch (_) {
+    _showLeadsToast("Network error.", "error");
+    return;
+  }
+  // Build a modal directly in the document body — independent of composer dlg.
+  let modal = document.getElementById("lehDetailModal");
+  if (modal) modal.remove();
+  modal = document.createElement("div");
+  modal.id = "lehDetailModal";
+  modal.style.cssText = "position:fixed;inset:0;background:rgba(15,23,42,0.4);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;";
+  const tpl = _leadsTemplateLabel(rec.template_id);
+  const sent = rec.sent_count || 0;
+  const failed = rec.failed_count || 0;
+  const skipped = rec.skipped_count || 0;
+  const total = rec.total_count || 0;
+  const status = _leadsHistoryStatusLabel({
+    status: rec.status, scheduled_for: rec.scheduled_for,
+    sent_count: sent, total_count: total,
+    completed_at: rec.completed_at, created_at: rec.created_at,
+    failed_count: failed, skipped_count: skipped,
+  });
+  const subj = rec.subject_template || "";
+  const body = rec.body_template || "";
+  const results = rec.lead_results || [];
+  const byId = new Map((window._allLeads || []).map(l => [l.id, l]));
+  // Use _allLeads if exposed; otherwise fall back to id-only.
+  const allLeads = (typeof _allLeads !== "undefined") ? _allLeads : [];
+  const lookup = new Map(allLeads.map(l => [l.id, l]));
+  const rows = results.slice(0, 200).map(r => {
+    const lead = lookup.get(r.lead_id) || {};
+    const nm = (typeof fullName === "function" ? fullName(lead) : "") || lead.email || r.lead_id;
+    let badge;
+    if (r.status === "sent")     badge = `<span style="color:#15803d;">sent</span>`;
+    else if (r.status === "failed")  badge = `<span style="color:#b91c1c;">failed</span>`;
+    else if (r.status === "skipped") badge = `<span style="color:#6b7280;">skipped (${escapeHtml(r.reason || "n/a")})</span>`;
+    else badge = `<span style="color:#6b7280;">${escapeHtml(r.status || "—")}</span>`;
+    const why = r.error ? ` <span style="color:#9ca3af;">— ${escapeHtml(r.error)}</span>` : "";
+    return `<tr><td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;">${escapeHtml(nm)}</td><td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;font-size:12px;">${badge}${why}</td></tr>`;
+  }).join("");
+  const more = results.length > 200 ? `<div style="padding:8px;color:#6b7280;font-size:12px;">…and ${results.length - 200} more</div>` : "";
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:12px;max-width:680px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;">
+      <div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #e5e7eb;">
+        <strong style="font-size:15px;">${escapeHtml(tpl)}</strong>
+        <span style="margin-left:auto;color:#6b7280;font-size:12px;">${escapeHtml(status)}</span>
+        <button type="button" id="lehDetailClose" style="margin-left:8px;background:transparent;border:0;font-size:18px;cursor:pointer;color:#6b7280;">×</button>
+      </div>
+      <div style="padding:14px 18px;overflow:auto;">
+        <div style="font-size:12px;color:#475569;margin-bottom:4px;">Subject</div>
+        <div style="font-size:13.5px;color:#0f172a;margin-bottom:14px;">${escapeHtml(subj || "(no subject)")}</div>
+        <div style="font-size:12px;color:#475569;margin-bottom:4px;">Body</div>
+        <pre style="font-family:inherit;white-space:pre-wrap;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;font-size:13px;color:#0f172a;margin:0 0 14px;max-height:220px;overflow:auto;">${escapeHtml(body || "(empty)")}</pre>
+        <div style="font-size:12px;color:#475569;margin-bottom:6px;">Per-lead results — ${sent} sent, ${failed} failed, ${skipped} skipped</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+          <thead><tr><th style="text-align:left;padding:6px 8px;border-bottom:1px solid #e5e7eb;color:#475569;font-weight:500;">Lead</th><th style="text-align:left;padding:6px 8px;border-bottom:1px solid #e5e7eb;color:#475569;font-weight:500;">Status</th></tr></thead>
+          <tbody>${rows || `<tr><td colspan="2" style="padding:14px 8px;color:#9ca3af;">No per-lead results yet.</td></tr>`}</tbody>
+        </table>
+        ${more}
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener("click", (e) => { if (e.target === modal) modal.remove(); });
+  modal.querySelector("#lehDetailClose").addEventListener("click", () => modal.remove());
+}
+
+async function _leadsHistoryCancel(sendId) {
+  if (!sendId) return;
+  if (!window.confirm("Cancel this scheduled email?")) return;
+  let res;
+  try {
+    res = await fetch(`/me/leads/bulk-email/${encodeURIComponent(sendId)}/cancel`, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (_) {
+    _showLeadsToast("Network error.", "error");
+    return;
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    _showLeadsToast(err.error || "Couldn't cancel.", "error");
+    return;
+  }
+  _showLeadsToast("Canceled.", "success");
+  _leadsRefreshHistory();
+}
+
+async function _leadsHistoryEdit(sendId) {
+  if (!sendId) return;
+  let rec;
+  try {
+    const res = await fetch(`/me/leads/bulk-email/history/${encodeURIComponent(sendId)}`,
+                            { credentials: "same-origin" });
+    if (!res.ok) {
+      _showLeadsToast("Couldn't load that scheduled email.", "error");
+      return;
+    }
+    rec = await res.json();
+  } catch (_) {
+    _showLeadsToast("Network error.", "error");
+    return;
+  }
+  if ((rec.status || "") !== "scheduled") {
+    _showLeadsToast("This batch already started — it can't be edited.", "info");
+    return;
+  }
+  // Pre-load selection from the snapshot lead_ids so the composer's
+  // recipient list shows the same set the user originally picked.
+  const ids = rec.lead_ids || [];
+  if (typeof _selectedIds !== "undefined") {
+    _selectedIds.clear();
+    for (const id of ids) _selectedIds.add(id);
+  }
+  // Open composer in editor view directly with the existing values.
+  await openBulkEmailComposer({ openSchedulePicker: false });
+  _beState.subject = rec.subject_template || "";
+  _beState.body = rec.body_template || "";
+  _beState.fallbackOverrides = rec.fallbacks || {};
+  _beState.editingScheduledId = rec.id || "";
+  _beState.scheduledForEpoch = rec.scheduled_for || 0;
+  if (rec.template_id) {
+    _beState.templateLoaded = (_beState.templates || []).find(t => t.id === rec.template_id) || null;
+  }
+  if (rec.from_connection_id) _beState.fromConnectionId = rec.from_connection_id;
+  _beState.view = "editor";
+  _beRender();
+}
+
 // ─── Module init ─────────────────────────────────────────────────────────────
 
 let _initialized = false;
@@ -1381,6 +3465,15 @@ export function init() {
   attachEventHandlers();
   initCsvImport();
   _wireImportedBack();
+  // Inject the email history panel and start polling. The panel hides
+  // itself if the table view isn't currently visible (Funnel/Board don't
+  // need it cluttering the screen) — for v1 we keep it visible and let
+  // the user toggle.
+  setTimeout(() => {
+    _leadsEnsureHistoryPanel();
+    _leadsRefreshHistory();
+    _leadsStartHistoryPolling();
+  }, 0);
 }
 
 // ─── Expose globals ───────────────────────────────────────────────────────────
