@@ -14382,19 +14382,17 @@
         .stg-top-pane[hidden] { display: none !important; }
 
         /* ─── Outreach page (merged Engagement + Campaigns) ────────────────── */
+        /* Tool-first layout: no max-width cap, minimal vertical chrome.
+           The side nav says what page you're on; tabs say which view.
+           Removed: centered H1, subtitle, divider, per-pane sub-text. */
         .out-page {
-          display:flex; flex-direction:column; gap:24px;
-          padding:24px 0; max-width:1200px; margin:0 auto; width:100%;
+          display:flex; flex-direction:column; gap:12px;
+          padding:14px 12px 0;
+          max-width:none; margin:0; width:100%;
           box-sizing:border-box;
         }
-        /* Flow builder needs every pixel of horizontal space. Drop the
-           1200px cap and shrink the side padding so the canvas + library
-           panel fill the main-content column edge-to-edge. */
-        .out-page.is-flow-builder {
-          max-width: none;
-          padding: 16px 12px;
-          gap: 12px;
-        }
+        /* Reserved class for any future flow-builder-specific tweaks. */
+        .out-page.is-flow-builder { padding-top:14px; }
         .out-page *, .out-page *::before, .out-page *::after { box-sizing:border-box; }
         .out-page-head { padding-bottom:4px; display:flex; flex-direction:column; gap:4px; }
         .out-page-title {
@@ -15267,11 +15265,6 @@
       <section class="grid" id="outreach" data-route-section="outreach" hidden>
         <div style="grid-column: 1 / -1; width: 100%;">
           <div class="out-page">
-            <header class="out-page-head">
-              <h1 class="out-page-title">Outreach</h1>
-              <p class="out-page-sub">Everything your business sends to customers.</p>
-            </header>
-
             <nav class="out-tabs" role="tablist" aria-label="Outreach type">
               <button type="button" class="out-tab is-active" data-out-tab="myflows" role="tab" aria-selected="true">
                 <span class="out-tab-icon" aria-hidden="true">📂</span> My Flows
@@ -15286,19 +15279,16 @@
 
             <!-- MY FLOWS tab pane -->
             <div class="out-pane" data-out-pane="myflows">
-              <p class="out-section-sub">Pick a flow to work on, or start a new one.</p>
               <div id="outreachMyFlowsMount"></div>
             </div>
 
             <!-- CANVAS tab pane (formerly "Automatic") -->
             <div class="out-pane" data-out-pane="auto" hidden>
-              <p class="out-section-sub">Drag, edit, and build your flow.</p>
               <div id="outreachAutoMount"></div>
             </div>
 
             <!-- ON-DEMAND tab pane -->
             <div class="out-pane" data-out-pane="ondemand" hidden>
-              <p class="out-section-sub">You send these when you want — to a list you pick.</p>
               <div id="outreachOnDemandMount"></div>
             </div>
           </div>
@@ -32067,7 +32057,7 @@ function escHtmlSeq(s) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-03-igfb-iframe"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-05-leads-mini-cal-time"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
