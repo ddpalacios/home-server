@@ -2169,6 +2169,12 @@ let _beState = {
   slotsDiagnostics: null,         // { calendar_id, working_hours_keys, ... } from server when slots fail
   slotAssignments: {},            // { lead_id: { start_iso, end_iso, label, epoch } }
   slotTimeZone: "",               // working-hours tz from /find-slots response
+  // Phase 5 — embedded mini-calendar (drag-drop) inside the slot panel:
+  slotBusy: [],                   // [{start, end}] busy blocks the helper saw
+  slotSearchStart: "",            // ISO string — first day shown by the mini-cal
+  slotSearchEnd: "",              // ISO string — last day shown by the mini-cal
+  slotCalDayOffset: 0,            // how many days forward from slotSearchStart the user has paginated
+  slotCalDayCount: 3,             // 3 days at a time fits the popup well
   hiddenByFilter: 0,              // # of selected leads excluded by current filter (visible+selected scope)
 };
 
@@ -2448,7 +2454,9 @@ function _beEnsureDialog() {
         background:#fff;display:flex;flex-direction:column;
         box-shadow:-12px 0 36px rgba(0,0,0,0.16);
         animation: beSlideIn 180ms ease;
+        transition: width 220ms ease;
       }
+      #leadsBulkEmailDlg .be-panel.is-cal-wide { width:min(900px, 100vw); }
       @keyframes beSlideIn { from { transform: translateX(24px); opacity:0.6; } to { transform: translateX(0); opacity:1; } }
       #leadsBulkEmailDlg .be-head { display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid #e5e7eb;flex-shrink:0; }
       #leadsBulkEmailDlg .be-head h2 { margin:0;font-size:17px;font-weight:700;color:#0a0a0a; }
@@ -2572,6 +2580,15 @@ async function openBulkEmailComposer(opts) {
   _beState.slotsError = "";
   _beState.slotAssignments = {};
   _beState.slotTimeZone = "";
+  // Phase 5: mini-calendar state.
+  _beState.slotBusy = [];
+  _beState.slotSearchStart = "";
+  _beState.slotSearchEnd = "";
+  _beState.slotCalDayOffset = 0;
+  // Make sure the panel resets to the narrow width whenever a fresh
+  // composer opens (no calendar showing yet).
+  const _existingPane = dlg.querySelector(".be-panel");
+  if (_existingPane) _existingPane.classList.remove("is-cal-wide");
 
   _beRender({ loading: true });
 
@@ -2902,10 +2919,155 @@ function _beUpdateWarn() {
 // rotates the assignment with the next lead (circular reassignment for v1
 // — Phase 5 can add a per-lead picker).
 
+// ─── Mini-calendar constants (mirror /dashboard#calendar's sched-* set,
+//     scoped to the composer popup) ────────────────────────────────────────
+const _BE_CAL_DAY_START_MIN = 8 * 60;        // 8 AM
+const _BE_CAL_DAY_END_MIN   = 20 * 60;       // 8 PM
+const _BE_CAL_SLOT_MIN      = 30;            // half-hour rows
+const _BE_CAL_SLOT_PX       = 24;            // 24px per 30-min slot → 576px total
+const _BE_CAL_NUM_SLOTS     = Math.round((_BE_CAL_DAY_END_MIN - _BE_CAL_DAY_START_MIN) / _BE_CAL_SLOT_MIN);
+
+// Card colors — deterministic per lead_id, mirrors the existing palette
+// strategy (hash → index). 8 colors keep the popup uncluttered.
+const _BE_CAL_PALETTE = [
+  "#2563eb", "#16a34a", "#dc2626", "#ea580c",
+  "#7c3aed", "#0891b2", "#be185d", "#65a30d",
+];
+function _beCalLeadColor(leadId) {
+  const s = String(leadId || "");
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h + s.charCodeAt(i)) | 0;
+  return _BE_CAL_PALETTE[Math.abs(h) % _BE_CAL_PALETTE.length];
+}
+
+// Add N days to a Date (returns a new Date). Stays in local-clock time.
+function _beCalAddDays(d, n) {
+  const x = new Date(d);
+  x.setDate(x.getDate() + n);
+  return x;
+}
+// YYYY-MM-DD for the calendar-day a Date sits on (in the browser's local
+// time — same convention as the dashboard calendar's data-date attribute).
+function _beCalIsoDate(d) {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`;
+}
+function _beCalFmtTime(d) {
+  // "9:00a", "10:30a", "1:30p" — matches the popup's compact style.
+  let h = d.getHours();
+  const m = d.getMinutes();
+  const ampm = h >= 12 ? "p" : "a";
+  h = h % 12; if (h === 0) h = 12;
+  return `${h}:${String(m).padStart(2,"0")}${ampm}`;
+}
+function _beCalFmtDayShort(d) {
+  return d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+}
+// Backend label format mirrors `recommend_slots` → "Wed May 12, 9:00 AM".
+function _beCalFmtBackendLabel(d) {
+  const day = d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+  let h = d.getHours();
+  const m = d.getMinutes();
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12; if (h === 0) h = 12;
+  return `${day}, ${h}:${String(m).padStart(2,"0")} ${ampm}`;
+}
+
+// The visible 3-day window (Date[] of length up to slotCalDayCount), starting
+// from slotSearchStart + slotCalDayOffset and capped at slotSearchEnd.
+function _beCalVisibleDays() {
+  const start = _toDate(_beState.slotSearchStart);
+  if (!start) return [];
+  const end = _toDate(_beState.slotSearchEnd);
+  const firstDay = _beCalAddDays(start, _beState.slotCalDayOffset);
+  firstDay.setHours(0, 0, 0, 0);
+  const days = [];
+  for (let i = 0; i < _beState.slotCalDayCount; i++) {
+    const d = _beCalAddDays(firstDay, i);
+    if (end && d.getTime() > end.getTime()) break;
+    days.push(d);
+  }
+  return days;
+}
+// Can the user page forward? True if slotCalDayOffset + slotCalDayCount < total
+// available days in the search window.
+function _beCalCanPageForward() {
+  const start = _toDate(_beState.slotSearchStart);
+  const end   = _toDate(_beState.slotSearchEnd);
+  if (!start || !end) return false;
+  const totalDays = Math.round((end.getTime() - start.getTime()) / 86400000);
+  return (_beState.slotCalDayOffset + _beState.slotCalDayCount) < totalDays;
+}
+function _beCalCanPageBack() {
+  return _beState.slotCalDayOffset > 0;
+}
+// Convert an ISO/epoch to a Date — same resilience as _toDate. The mini-cal
+// uses the browser's local clock for placement; the working tz from the
+// backend (slotTimeZone) influences which wall-clock the iso represents,
+// but since the iso has its own offset suffix the browser correctly resolves
+// it to the right instant. We then position by getHours/getMinutes which
+// reflect the user's local tz — for users whose browser tz != working tz
+// this would mis-position cards, but the backend always returns isos with
+// the working-tz offset and the user is almost always in that same tz.
+// (DST: handled because Date math advances by 24h while getHours/getMinutes
+// resolve in the local tz, which absorbs spring-forward / fall-back.)
+function _beCalDateOf(v) { return _toDate(v); }
+
+// Time-slot layout in pixels relative to the day column's top.
+function _beCalSlotLayout(startDate, endDate) {
+  if (!startDate || !endDate) return null;
+  const startMin = startDate.getHours() * 60 + startDate.getMinutes();
+  const endMin   = endDate.getHours() * 60 + endDate.getMinutes()
+                   + (_beCalIsoDate(endDate) !== _beCalIsoDate(startDate) ? 24 * 60 : 0);
+  const visStart = Math.max(_BE_CAL_DAY_START_MIN, startMin);
+  const visEnd   = Math.min(_BE_CAL_DAY_END_MIN,   endMin);
+  if (visEnd <= visStart) return null;
+  const top    = ((visStart - _BE_CAL_DAY_START_MIN) / _BE_CAL_SLOT_MIN) * _BE_CAL_SLOT_PX;
+  const height = Math.max(_BE_CAL_SLOT_PX,
+                          ((visEnd - visStart) / _BE_CAL_SLOT_MIN) * _BE_CAL_SLOT_PX);
+  return { top, height };
+}
+
+// Build a Date for (dateIso=YYYY-MM-DD, minutesFromMidnight). Uses the local
+// clock — matches the placement logic in _beCalSlotLayout.
+function _beCalLocalDate(dateIso, minOfDay) {
+  const [yy, mm, dd] = dateIso.split("-").map(n => parseInt(n, 10));
+  const d = new Date(yy, (mm || 1) - 1, dd || 1, 0, 0, 0, 0);
+  d.setMinutes(minOfDay);
+  return d;
+}
+
+// Conflict check on drop: would placing (lead_id, start, end) overlap a
+// busy block or another lead's card? Returns true if conflict.
+function _beCalWouldConflict(leadId, startMs, endMs) {
+  const overlaps = (a1, a2, b1, b2) => a1 < b2 && b1 < a2;
+  // Busy events
+  for (const b of _beState.slotBusy || []) {
+    const bs = _beCalDateOf(b.start);
+    const be = _beCalDateOf(b.end);
+    if (!bs || !be) continue;
+    if (overlaps(startMs, endMs, bs.getTime(), be.getTime())) return true;
+  }
+  // Other leads' cards
+  for (const [otherId, a] of Object.entries(_beState.slotAssignments || {})) {
+    if (otherId === leadId) continue;
+    if (!a || !a.start_iso) continue;
+    const os = _beCalDateOf(a.start_iso);
+    const oe = a.end_iso ? _beCalDateOf(a.end_iso)
+               : (os ? new Date(os.getTime() + _beState.slotMinutes * 60000) : null);
+    if (!os || !oe) continue;
+    if (overlaps(startMs, endMs, os.getTime(), oe.getTime())) return true;
+  }
+  return false;
+}
+
 function _beRenderSlotPanel() {
   if (!_beUsesRecommendedSlot()) return "";
   const total = _beState.recipients.length;
   const haveSlots = Object.keys(_beState.slotAssignments).length > 0;
+  const haveBusy  = (_beState.slotBusy || []).length > 0;
+  const showCal   = haveSlots || haveBusy;
   const winOpts = _BE_SLOT_WINDOWS.map(w =>
     `<option value="${escapeHtml(w.value)}" ${w.value === _beState.slotWindow ? "selected" : ""}>${escapeHtml(w.label)}</option>`
   ).join("");
@@ -2913,25 +3075,149 @@ function _beRenderSlotPanel() {
     `<option value="${d.value}" ${Number(d.value) === Number(_beState.slotMinutes) ? "selected" : ""}>${escapeHtml(d.label)}</option>`
   ).join("");
 
-  let assignmentsHtml = "";
-  if (haveSlots) {
-    const rows = _beState.recipients.map(l => {
-      const a = _beState.slotAssignments[l.id];
-      const nm = fullName(l) || l.email || l.id;
-      const slot = a && a.label ? a.label : "(no slot assigned)";
-      const slotColor = a && a.label ? "#0a0a0a" : "#9ca3af";
-      return `
-        <div class="be-slot-row">
-          <span class="be-slot-name">${escapeHtml(nm)}</span>
-          <span class="be-slot-arrow">→</span>
-          <span class="be-slot-time" style="color:${slotColor};">${escapeHtml(slot)}</span>
-          <button type="button" class="be-slot-rotate" data-be-rotate="${escapeHtml(l.id)}" title="Swap with next lead's time" aria-label="Swap with next lead's time">↺</button>
-        </div>`;
+  // ── Mini-calendar HTML (rendered when we have slots OR busy data) ──
+  let calHtml = "";
+  if (showCal) {
+    const days = _beCalVisibleDays();
+    const slotMin = Number(_beState.slotMinutes) || 30;
+    const slotHeightPx = (slotMin / _BE_CAL_SLOT_MIN) * _BE_CAL_SLOT_PX;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+
+    // Day-header row
+    const dayHeaderHtml = `
+      <div class="be-cal-day-header">
+        <div class="be-cal-time-spacer"></div>
+        ${days.map(d => {
+          const isToday = d.getTime() === today.getTime();
+          return `<div class="${isToday ? "is-today" : ""}">
+            <span>${escapeHtml(d.toLocaleDateString([], { weekday: "short" }))}</span>
+            <span class="be-cal-day-num">${d.getDate()}</span>
+          </div>`;
+        }).join("")}
+      </div>
+    `;
+
+    // Time column — labels every hour, blank on the half.
+    let timeCellsHtml = "";
+    for (let i = 0; i < _BE_CAL_NUM_SLOTS; i++) {
+      const m = _BE_CAL_DAY_START_MIN + i * _BE_CAL_SLOT_MIN;
+      const isHour = (m % 60) === 0;
+      let label = "";
+      if (isHour) {
+        const h = Math.floor(m / 60);
+        const ampm = h >= 12 ? "p" : "a";
+        const h12 = ((h + 11) % 12) + 1;
+        label = `${h12}${ampm}`;
+      }
+      timeCellsHtml += `<div class="be-cal-time-cell ${isHour ? "" : "half"}">${label}</div>`;
+    }
+
+    // Per-day cells + busy + cards. Cards are stacked HORIZONTALLY on the
+    // same slot (split width by N), so multiple leads at the same time
+    // stay readable instead of disappearing under a vertical stack.
+    const dayColsHtml = days.map(d => {
+      const dateIso = _beCalIsoDate(d);
+      let cells = "";
+      for (let i = 0; i < _BE_CAL_NUM_SLOTS; i++) {
+        const m = _BE_CAL_DAY_START_MIN + i * _BE_CAL_SLOT_MIN;
+        const isHour = (m % 60) === 0;
+        cells += `<div class="be-cal-cell ${isHour ? "is-hour" : ""}" data-date="${dateIso}" data-min="${m}"></div>`;
+      }
+
+      // Busy overlays for this day.
+      const busyHtml = [];
+      for (const b of _beState.slotBusy || []) {
+        const bs = _beCalDateOf(b.start);
+        const be = _beCalDateOf(b.end);
+        if (!bs || !be) continue;
+        if (_beCalIsoDate(bs) !== dateIso && _beCalIsoDate(be) !== dateIso) {
+          // Multi-day busy events: only render when one end touches this day.
+          // Cross-day spans are rare and clipping is fine.
+          if (!(bs < d && be > _beCalAddDays(d, 1))) continue;
+        }
+        const layout = _beCalSlotLayout(bs, be);
+        if (!layout) continue;
+        busyHtml.push(`<div class="be-cal-busy" style="top:${layout.top}px; height:${layout.height}px;" aria-hidden="true">
+          <div class="be-cal-busy-title">Busy</div>
+          <div class="be-cal-busy-time">${escapeHtml(_beCalFmtTime(bs))}-${escapeHtml(_beCalFmtTime(be))}</div>
+        </div>`);
+      }
+
+      // Cards for this day, grouped by start-minute so co-located cards
+      // can split the column horizontally (1/N width each).
+      const cardsByMin = new Map();
+      for (const lead of _beState.recipients) {
+        const a = _beState.slotAssignments[lead.id];
+        if (!a || !a.start_iso) continue;
+        const sd = _beCalDateOf(a.start_iso);
+        if (!sd) continue;
+        if (_beCalIsoDate(sd) !== dateIso) continue;
+        const startMin = sd.getHours() * 60 + sd.getMinutes();
+        if (startMin < _BE_CAL_DAY_START_MIN || startMin >= _BE_CAL_DAY_END_MIN) continue;
+        const key = String(startMin);
+        if (!cardsByMin.has(key)) cardsByMin.set(key, []);
+        cardsByMin.get(key).push({ lead, assignment: a, startMin });
+      }
+      const cardsHtml = [];
+      for (const [, group] of cardsByMin) {
+        const n = group.length;
+        group.forEach((entry, idx) => {
+          const { lead, assignment, startMin } = entry;
+          const top = ((startMin - _BE_CAL_DAY_START_MIN) / _BE_CAL_SLOT_MIN) * _BE_CAL_SLOT_PX;
+          const widthPct = 100 / n;
+          const leftPct  = idx * widthPct;
+          const color = _beCalLeadColor(lead.id);
+          const nm = fullName(lead) || lead.email || lead.id;
+          const sd = _beCalDateOf(assignment.start_iso);
+          const tLabel = sd ? _beCalFmtTime(sd) : "";
+          cardsHtml.push(`<div class="be-cal-card" draggable="true"
+            data-be-lead-id="${escapeHtml(lead.id)}"
+            style="top:${top}px; height:${slotHeightPx}px; left:calc(${leftPct}% + 2px); width:calc(${widthPct}% - 4px); --be-card-color:${color};">
+            <div class="be-cal-card-name">${escapeHtml(nm)}</div>
+            <div class="be-cal-card-time">${escapeHtml(tLabel)}</div>
+          </div>`);
+        });
+      }
+
+      return `<div class="be-cal-day-col" data-date="${dateIso}">
+        ${cells}
+        ${busyHtml.join("")}
+        ${cardsHtml.join("")}
+      </div>`;
     }).join("");
-    assignmentsHtml = `
-      <div class="be-slot-divider">Your calendar suggested these times</div>
-      <div class="be-slot-list">${rows}</div>
-      <p class="be-slot-help">We'll send each lead their unique time.</p>
+
+    // Day-nav toolbar
+    const first = days[0];
+    const last  = days[days.length - 1];
+    const navLabel = (first && last)
+      ? (days.length === 1
+          ? _beCalFmtDayShort(first)
+          : `${_beCalFmtDayShort(first)} → ${_beCalFmtDayShort(last)}`)
+      : "—";
+    const prevDis = _beCalCanPageBack() ? "" : "disabled";
+    const nextDis = _beCalCanPageForward() ? "" : "disabled";
+
+    // Empty-slots hint when busy data exists but no cards landed.
+    const emptyHint = (!haveSlots && haveBusy)
+      ? `<p class="be-cal-empty-hint">No open slots in this window — try a longer one (busy times shown above).</p>`
+      : "";
+
+    calHtml = `
+      <div class="be-cal-toolbar">
+        <button type="button" class="be-cal-nav-btn" data-be-cal-nav="prev" ${prevDis} aria-label="Previous days">◀</button>
+        <span class="be-cal-nav-label">${escapeHtml(navLabel)}</span>
+        <button type="button" class="be-cal-today-btn" data-be-cal-nav="today">Today</button>
+        <button type="button" class="be-cal-nav-btn" data-be-cal-nav="next" ${nextDis} aria-label="Next days">▶</button>
+      </div>
+      <div class="be-cal-grid-wrap">
+        ${dayHeaderHtml}
+        <div class="be-cal-grid" style="grid-template-columns: 48px repeat(${days.length}, minmax(0, 1fr));">
+          <div class="be-cal-time-col">${timeCellsHtml}</div>
+          ${dayColsHtml}
+        </div>
+      </div>
+      ${emptyHint}
+      <p class="be-cal-help">Drag any card to move that lead's appointment time.</p>
     `;
   }
 
@@ -2940,7 +3226,7 @@ function _beRenderSlotPanel() {
     errHtml = `<div class="be-slot-err">Connect Google Calendar first. <a href="/auth/google/connect-calendar" class="be-slot-err-link">Connect calendar →</a></div>`;
   } else if (_beState.slotsError === "no_working_hours") {
     errHtml = `<div class="be-slot-err">Set your working hours first. <a href="/try/setup" class="be-slot-err-link">Open setup →</a></div>`;
-  } else if (_beState.slotsError === "no_slots_available") {
+  } else if (_beState.slotsError === "no_slots_available" && !showCal) {
     errHtml = `<div class="be-slot-err">No open slots in that window. Try a longer one.</div>`;
   } else if (_beState.slotsError === "network") {
     errHtml = `<div class="be-slot-err">Couldn't reach the server. Try again.</div>`;
@@ -2984,16 +3270,6 @@ function _beRenderSlotPanel() {
       #leadsBulkEmailDlg .be-slot-control select { padding:7px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;background:#fff;color:#0a0a0a; }
       #leadsBulkEmailDlg .be-slot-find-btn { width:100%;padding:9px 14px;background:#0a0a0a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer; }
       #leadsBulkEmailDlg .be-slot-find-btn[disabled] { opacity:0.6;cursor:not-allowed; }
-      #leadsBulkEmailDlg .be-slot-divider { font-size:11.5px;color:#64748b;text-transform:uppercase;letter-spacing:0.04em;margin:14px 0 8px;text-align:center;position:relative; }
-      #leadsBulkEmailDlg .be-slot-list { background:#fff;border:1px solid #e5e7eb;border-radius:8px;max-height:240px;overflow:auto; }
-      #leadsBulkEmailDlg .be-slot-row { display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid #f1f5f9;font-size:13px; }
-      #leadsBulkEmailDlg .be-slot-row:last-child { border-bottom:none; }
-      #leadsBulkEmailDlg .be-slot-name { color:#0a0a0a;font-weight:500;flex:0 0 35%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-      #leadsBulkEmailDlg .be-slot-arrow { color:#9ca3af;font-size:12px; }
-      #leadsBulkEmailDlg .be-slot-time { flex:1;color:#0a0a0a; }
-      #leadsBulkEmailDlg .be-slot-rotate { background:none;border:1px solid #e5e7eb;border-radius:6px;padding:3px 8px;font-size:13px;color:#475569;cursor:pointer; }
-      #leadsBulkEmailDlg .be-slot-rotate:hover { background:#f3f4f6;border-color:#0a0a0a;color:#0a0a0a; }
-      #leadsBulkEmailDlg .be-slot-help { margin:8px 0 0;font-size:11.5px;color:#6b7280;text-align:center; }
       #leadsBulkEmailDlg .be-slot-err { padding:9px 12px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:8px;font-size:12.5px;margin-top:10px; }
       #leadsBulkEmailDlg .be-slot-warn { padding:9px 12px;background:#fffbeb;border:1px solid #fcd34d;color:#78350f;border-radius:8px;font-size:12.5px;margin-top:10px; }
       #leadsBulkEmailDlg .be-slot-err-link { color:#991b1b;text-decoration:underline;font-weight:600;margin-left:6px; }
@@ -3001,6 +3277,45 @@ function _beRenderSlotPanel() {
       #leadsBulkEmailDlg .be-slot-diag summary { cursor:pointer;color:#64748b;text-decoration:underline;font-weight:500;font-size:11.5px;list-style:none;padding:2px 0; }
       #leadsBulkEmailDlg .be-slot-diag summary::-webkit-details-marker { display:none; }
       #leadsBulkEmailDlg .be-slot-diag div div { padding:2px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px; }
+
+      /* ── Mini-calendar inside the slot panel (mirrors /dashboard#calendar) ── */
+      #leadsBulkEmailDlg .be-cal-toolbar { display:flex;align-items:center;gap:8px;margin:14px 0 8px; }
+      #leadsBulkEmailDlg .be-cal-nav-btn { background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:4px 10px;font-size:13px;color:#0a0a0a;cursor:pointer;line-height:1; }
+      #leadsBulkEmailDlg .be-cal-nav-btn:hover { background:#f3f4f6;border-color:#0a0a0a; }
+      #leadsBulkEmailDlg .be-cal-nav-btn[disabled] { opacity:0.4;cursor:not-allowed; }
+      #leadsBulkEmailDlg .be-cal-today-btn { background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:4px 10px;font-size:12px;color:#475569;cursor:pointer;line-height:1.4; }
+      #leadsBulkEmailDlg .be-cal-today-btn:hover { background:#f3f4f6;border-color:#0a0a0a;color:#0a0a0a; }
+      #leadsBulkEmailDlg .be-cal-nav-label { flex:1;text-align:center;font-size:13px;font-weight:600;color:#0a0a0a;font-variant-numeric:tabular-nums; }
+      #leadsBulkEmailDlg .be-cal-grid-wrap { background:#fff;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.04); }
+      #leadsBulkEmailDlg .be-cal-day-header { display:grid;grid-template-columns:48px repeat(auto-fit, minmax(0, 1fr));background:#fafafa;border-bottom:1px solid #e5e7eb; }
+      #leadsBulkEmailDlg .be-cal-day-header > div { padding:8px 6px;font-size:11px;font-weight:600;color:#525252;text-align:center;border-left:1px solid #f4f4f5; }
+      #leadsBulkEmailDlg .be-cal-day-header > div:first-child { border-left:0; }
+      #leadsBulkEmailDlg .be-cal-day-header .be-cal-day-num { display:block;font-size:16px;font-weight:700;color:#0a0a0a;margin-top:2px;font-variant-numeric:tabular-nums; }
+      #leadsBulkEmailDlg .be-cal-day-header .is-today { color:#2563eb; }
+      #leadsBulkEmailDlg .be-cal-day-header .is-today .be-cal-day-num { color:#2563eb; }
+      #leadsBulkEmailDlg .be-cal-day-header > .be-cal-time-spacer { background:transparent; }
+      #leadsBulkEmailDlg .be-cal-grid { display:grid;position:relative;max-height:480px;overflow-y:auto; }
+      #leadsBulkEmailDlg .be-cal-time-col { display:flex;flex-direction:column;background:#fff;border-right:1px solid #e5e7eb; }
+      #leadsBulkEmailDlg .be-cal-time-cell { height:24px;padding:0 5px;font-size:10px;color:#a1a1aa;text-align:right;border-bottom:1px solid #f4f4f5;font-variant-numeric:tabular-nums;line-height:24px; }
+      #leadsBulkEmailDlg .be-cal-time-cell.half { color:transparent; }
+      #leadsBulkEmailDlg .be-cal-day-col { position:relative;border-left:1px solid #f4f4f5; }
+      #leadsBulkEmailDlg .be-cal-day-col:first-of-type { border-left:0; }
+      #leadsBulkEmailDlg .be-cal-cell { height:24px;border-bottom:1px solid #f4f4f5; }
+      #leadsBulkEmailDlg .be-cal-cell.is-hour { border-bottom-color:#e5e7eb; }
+      #leadsBulkEmailDlg .be-cal-cell.is-active-drop { background:rgba(37,99,235,0.10);outline:1px dashed #2563eb;outline-offset:-1px; }
+      #leadsBulkEmailDlg .be-cal-cell.is-conflict-drop { background:rgba(239,68,68,0.10);outline:1px dashed #ef4444;outline-offset:-1px; }
+      @keyframes beCalCellReject { 0% { background:rgba(239,68,68,0.40); } 100% { background:transparent; } }
+      #leadsBulkEmailDlg .be-cal-cell.is-rejected { animation: beCalCellReject 320ms ease-out; }
+      #leadsBulkEmailDlg .be-cal-busy { position:absolute;left:3px;right:3px;background:repeating-linear-gradient(-45deg,#f1f5f9 0,#f1f5f9 4px,#e2e8f0 4px,#e2e8f0 8px);border:1px solid #cbd5e1;border-radius:5px;font-size:10px;color:#64748b;padding:2px 5px;line-height:1.2;overflow:hidden;pointer-events:none;font-style:italic;z-index:1; }
+      #leadsBulkEmailDlg .be-cal-busy-title { font-weight:600;font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+      #leadsBulkEmailDlg .be-cal-busy-time { opacity:0.85; }
+      #leadsBulkEmailDlg .be-cal-card { position:absolute;background:var(--be-card-color, #2563eb);color:#fff;border-radius:5px;padding:3px 5px;font-size:10.5px;line-height:1.2;overflow:hidden;cursor:grab;box-shadow:0 1px 4px rgba(0,0,0,0.18);z-index:2;user-select:none; }
+      #leadsBulkEmailDlg .be-cal-card:hover { box-shadow:0 2px 8px rgba(0,0,0,0.28); }
+      #leadsBulkEmailDlg .be-cal-card.is-dragging { opacity:0.55;cursor:grabbing; }
+      #leadsBulkEmailDlg .be-cal-card-name { font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+      #leadsBulkEmailDlg .be-cal-card-time { opacity:0.92;font-size:10px; }
+      #leadsBulkEmailDlg .be-cal-empty-hint { margin:10px 0 0;padding:10px 12px;background:#fffbeb;border:1px solid #fcd34d;color:#78350f;border-radius:8px;font-size:12.5px;text-align:center; }
+      #leadsBulkEmailDlg .be-cal-help { margin:8px 0 0;font-size:11.5px;color:#6b7280;text-align:center; }
     </style>
     <div class="be-slot-panel" id="beSlotPanel">
       <div class="be-slot-title">Find available times</div>
@@ -3016,7 +3331,7 @@ function _beRenderSlotPanel() {
       </div>
       <button type="button" class="be-slot-find-btn" id="beSlotFindBtn" ${btnDisabled}>${escapeHtml(btnLabel)}</button>
       ${errHtml}
-      ${assignmentsHtml}
+      ${calHtml}
     </div>
   `;
 }
@@ -3032,9 +3347,134 @@ function _beWireSlotPanel() {
   if (durSel) durSel.addEventListener("change", (e) => { _beState.slotMinutes = Number(e.target.value) || 30; });
   const findBtn = panel.querySelector("#beSlotFindBtn");
   if (findBtn) findBtn.addEventListener("click", () => _beFindSlots());
-  panel.querySelectorAll("[data-be-rotate]").forEach(b => {
-    b.addEventListener("click", () => _beRotateSlot(b.dataset.beRotate));
+
+  // Day-nav buttons (only present when the calendar is rendered).
+  panel.querySelectorAll("[data-be-cal-nav]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const dir = btn.dataset.beCalNav;
+      if (dir === "prev") {
+        _beState.slotCalDayOffset = Math.max(0, _beState.slotCalDayOffset - _beState.slotCalDayCount);
+      } else if (dir === "next") {
+        if (_beCalCanPageForward()) _beState.slotCalDayOffset += _beState.slotCalDayCount;
+      } else if (dir === "today") {
+        _beState.slotCalDayOffset = 0;
+      }
+      _beRefreshSlotPanel();
+    });
   });
+
+  _beWireCalDragDrop();
+  // Toggle the wider-popup class whenever the slot panel re-renders.
+  _beUpdatePanelWidthClass();
+}
+
+function _beUpdatePanelWidthClass() {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  if (!dlg) return;
+  const pane = dlg.querySelector(".be-panel");
+  if (!pane) return;
+  const showCal = (Object.keys(_beState.slotAssignments || {}).length > 0)
+                  || ((_beState.slotBusy || []).length > 0);
+  pane.classList.toggle("is-cal-wide", _beUsesRecommendedSlot() && showCal);
+}
+
+// Mini-calendar drag-drop: cards drag to cells. Mirrors the dashboard
+// calendar's pattern (dragstart/dragover/drop + transient classes), but
+// scoped to the composer popup. Conflict guard rejects drops that would
+// overlap busy events or another lead's card.
+function _beWireCalDragDrop() {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  if (!dlg) return;
+  const panel = dlg.querySelector("#beSlotPanel");
+  if (!panel) return;
+
+  panel.querySelectorAll(".be-cal-card").forEach(card => {
+    card.addEventListener("dragstart", (e) => {
+      const lid = card.dataset.beLeadId || "";
+      card.classList.add("is-dragging");
+      try {
+        e.dataTransfer.setData("text/plain", lid);
+        e.dataTransfer.effectAllowed = "move";
+      } catch (_) {}
+    });
+    card.addEventListener("dragend", () => {
+      card.classList.remove("is-dragging");
+      panel.querySelectorAll(".be-cal-cell.is-active-drop, .be-cal-cell.is-conflict-drop")
+        .forEach(c => c.classList.remove("is-active-drop", "is-conflict-drop"));
+    });
+  });
+
+  let activeCell = null;
+  panel.querySelectorAll(".be-cal-cell").forEach(cell => {
+    cell.addEventListener("dragenter", (e) => {
+      e.preventDefault();
+      if (activeCell && activeCell !== cell) {
+        activeCell.classList.remove("is-active-drop", "is-conflict-drop");
+      }
+      const lid = (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.length)
+        ? "" : "";
+      // We can't read the lead-id during dragover (browsers block it for
+      // privacy); just preview the highlight, conflict-check on drop.
+      cell.classList.add("is-active-drop");
+      activeCell = cell;
+    });
+    cell.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      try { e.dataTransfer.dropEffect = "move"; } catch (_) {}
+    });
+    cell.addEventListener("dragleave", () => {
+      if (cell === activeCell) {
+        cell.classList.remove("is-active-drop", "is-conflict-drop");
+        activeCell = null;
+      }
+    });
+    cell.addEventListener("drop", (e) => {
+      e.preventDefault();
+      cell.classList.remove("is-active-drop", "is-conflict-drop");
+      activeCell = null;
+      let leadId = "";
+      try { leadId = e.dataTransfer.getData("text/plain") || ""; } catch (_) {}
+      if (!leadId) return;
+      const dateIso = cell.dataset.date;
+      const minOfDay = parseInt(cell.dataset.min, 10);
+      if (!dateIso || !Number.isFinite(minOfDay)) return;
+
+      const slotMin = Number(_beState.slotMinutes) || 30;
+      const startDate = _beCalLocalDate(dateIso, minOfDay);
+      const endDate   = new Date(startDate.getTime() + slotMin * 60000);
+
+      // Conflict check: vs busy and vs other leads' cards.
+      if (_beCalWouldConflict(leadId, startDate.getTime(), endDate.getTime())) {
+        cell.classList.add("is-rejected");
+        setTimeout(() => cell.classList.remove("is-rejected"), 360);
+        return;
+      }
+
+      // Update the assignment and refresh.
+      _beState.slotAssignments[leadId] = {
+        start_iso: _beCalToOffsetIso(startDate),
+        end_iso:   _beCalToOffsetIso(endDate),
+        label:     _beCalFmtBackendLabel(startDate),
+        epoch:     Math.floor(startDate.getTime() / 1000),
+      };
+      _beRefreshSlotPanel();
+      _beUpdatePreview();
+    });
+  });
+}
+
+// Build an ISO 8601 string with the local timezone offset (so the backend
+// stores the same wall-clock the user dropped on, instead of a UTC instant
+// that would shift across DST). Output looks like 2026-05-12T09:00:00-04:00.
+function _beCalToOffsetIso(d) {
+  const pad = (n, w) => String(n).padStart(w || 2, "0");
+  const offMin = -d.getTimezoneOffset();      // minutes east of UTC
+  const sign = offMin >= 0 ? "+" : "-";
+  const offH = pad(Math.floor(Math.abs(offMin) / 60));
+  const offM = pad(Math.abs(offMin) % 60);
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`
+       + `T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+       + `${sign}${offH}:${offM}`;
 }
 
 function _beRefreshSlotPanel() {
@@ -3083,6 +3523,7 @@ function _beTogglePanelOnTokenChange() {
     existing.remove();
   }
   _beRefreshFooterGate();
+  _beUpdatePanelWidthClass();
 }
 
 function _beRefreshFooterGate() {
@@ -3135,6 +3576,17 @@ async function _beFindSlots() {
   // Stash diagnostics so the user can expand them when the helper can't
   // find slots — debugging in the wild without server logs.
   _beState.slotsDiagnostics = data.diagnostics || null;
+
+  // Capture the search window + busy blocks for the mini-calendar even when
+  // the backend reports no_slots_available — the calendar still renders so
+  // the user can see WHY their window came back empty (covered in busy).
+  const sw = data.search_window || {};
+  _beState.slotSearchStart = sw.start_iso || "";
+  _beState.slotSearchEnd   = sw.end_iso   || "";
+  _beState.slotCalDayOffset = 0;
+  _beState.slotBusy = Array.isArray(data.busy) ? data.busy : [];
+  _beState.slotTimeZone = data.time_zone || "";
+
   if (!res.ok) {
     _beState.slotsError = data.reason || "no_slots_available";
     _beState.slotAssignments = {};
@@ -3148,7 +3600,6 @@ async function _beFindSlots() {
     return;
   }
   const slots = Array.isArray(data.slots) ? data.slots : [];
-  _beState.slotTimeZone = data.time_zone || "";
   // Match each slot 1:1 with a recipient, in order. If the server returned
   // fewer slots than recipients, the trailing recipients have no assignment
   // and the partial-warning surfaces.
