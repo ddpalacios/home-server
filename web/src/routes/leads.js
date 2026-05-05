@@ -74,10 +74,11 @@ function avatarColor(name) {
   return palette[Math.abs(h) % palette.length];
 }
 
-function relativeTime(unixSecs) {
-  if (!unixSecs) return "—";
-  const now = Math.floor(Date.now() / 1000);
-  const diff = now - Number(unixSecs);
+function relativeTime(v) {
+  if (!v) return "—";
+  const dt = _toDate(v);
+  if (!dt) return "—";
+  const diff = Math.floor((Date.now() - dt.getTime()) / 1000);
   if (diff < 60) return "just now";
   if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)} hour${diff >= 7200 ? "s" : ""} ago`;
@@ -86,7 +87,6 @@ function relativeTime(unixSecs) {
     if (d === 1) return "yesterday";
     return `${d} days ago`;
   }
-  const dt = new Date(unixSecs * 1000);
   return dt.toLocaleDateString();
 }
 
@@ -130,10 +130,29 @@ function _fmtMoney(amount) {
   return "$" + n.toLocaleString("en-US", { maximumFractionDigits: 0 });
 }
 
-function _fmtAppt(unixSecs) {
-  if (!unixSecs) return "";
-  const d = new Date(Number(unixSecs) * 1000);
-  if (isNaN(d)) return "";
+// Accepts ISO 8601 strings ("2026-05-12T09:00:00"), epoch seconds (number or
+// numeric string up to ~10 digits), epoch milliseconds (>= 13 digits), or
+// Date objects. Returns "" for anything unparseable so callers can branch.
+function _toDate(v) {
+  if (v == null || v === "") return null;
+  if (v instanceof Date) return isNaN(v) ? null : v;
+  if (typeof v === "number") {
+    const d = new Date(v < 1e12 ? v * 1000 : v);
+    return isNaN(d) ? null : d;
+  }
+  const s = String(v).trim();
+  if (/^\d+$/.test(s)) {
+    const n = Number(s);
+    const d = new Date(n < 1e12 ? n * 1000 : n);
+    return isNaN(d) ? null : d;
+  }
+  const d = new Date(s);
+  return isNaN(d) ? null : d;
+}
+
+function _fmtAppt(v) {
+  const d = _toDate(v);
+  if (!d) return "";
   const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   let h = d.getHours();
   const m = d.getMinutes();
@@ -142,10 +161,9 @@ function _fmtAppt(unixSecs) {
   return `${months[d.getMonth()]} ${d.getDate()}, ${h}:${String(m).padStart(2,"0")} ${ampm}`;
 }
 
-function _fmtShortDate(unixSecs) {
-  if (!unixSecs) return "";
-  const d = new Date(Number(unixSecs) * 1000);
-  if (isNaN(d)) return "";
+function _fmtShortDate(v) {
+  const d = _toDate(v);
+  if (!d) return "";
   const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   return `${months[d.getMonth()]} ${d.getDate()}`;
 }
@@ -195,7 +213,9 @@ function stageDetailsFor(lead) {
   if (stage === "scheduled") {
     const t = lead.appointment_time || lead.appointment_at;
     if (!t) return { text: "—", full: "" };
-    const text = "📅 " + _fmtAppt(t);
+    const formatted = _fmtAppt(t);
+    if (!formatted) return { text: "—", full: "" };
+    const text = "📅 " + formatted;
     return { text, full: text };
   }
 
@@ -2287,13 +2307,55 @@ async function _beFetchSenderProfile() {
   } catch (_) { return null; }
 }
 
+// Inline copy of the 8 ship-with templates. Kept in sync with
+// server/lead_bulk_email.py:TEMPLATES so the composer works even when the
+// API endpoint is unreachable (deploy lag, network blip, server restart in
+// progress). The server response — when it arrives — overrides this.
+const _BE_INLINE_TEMPLATES = [
+  { id: "quote_followup", name: "Quote follow-up", icon: "📧",
+    description: "Nudge leads who haven't responded to a quote.",
+    subject: "Quick follow-up on your quote, {first_name}",
+    body: "Hi {first_name},\n\nWanted to follow up on the quote we sent on {quote_date} for {service_type}.\n\nAny questions I can answer? Happy to walk through anything that's unclear or adjust the scope.\n\n— {your_name}" },
+  { id: "reschedule_reminder", name: "Reschedule reminder", icon: "⏰",
+    description: "Remind a lead to confirm or reschedule their booking.",
+    subject: "Need to move {appointment_date}, {first_name}?",
+    body: "Hi {first_name},\n\nJust checking in on your appointment scheduled for {appointment_date}. If that time still works, no need to reply — we'll see you then.\n\nIf you need to move it, reply with a window that works better and we'll lock something in.\n\n— {your_name}\n{business_name}" },
+  { id: "winback", name: "Win-back", icon: "🔁",
+    description: "Re-engage a lead who's gone quiet.",
+    subject: "Still interested, {first_name}?",
+    body: "Hi {first_name},\n\nIt's been a while — wanted to check in and see if you're still thinking about this.\n\nIf the timing isn't right, just say so and I'll stop pinging. If it is, I'd love to pick up where we left off.\n\n— {your_name}" },
+  { id: "review_request", name: "Review request", icon: "⭐",
+    description: "Ask a happy customer for a review.",
+    subject: "Quick favor, {first_name}?",
+    body: "Hi {first_name},\n\nHope everything's going well after the work we did on {job_date}. If you have a minute, a short review would mean the world to us.\n\nThanks for trusting us with the job.\n\n— {your_name}\n{business_name}" },
+  { id: "first_hello", name: "First hello", icon: "✨",
+    description: "Friendly first-touch when a lead just came in.",
+    subject: "Hi {first_name} — quick intro",
+    body: "Hi {first_name},\n\nThanks for reaching out about {service_type}. I'm {your_name} with {business_name} — happy to help.\n\nWhat's the best time to chat about what you're looking for?\n\n— {your_name}" },
+  { id: "appointment_reminder", name: "Appointment reminder", icon: "📅",
+    description: "Friendly reminder ahead of an upcoming appointment.",
+    subject: "See you {appointment_date}, {first_name}",
+    body: "Hi {first_name},\n\nQuick reminder that we're booked for {appointment_date}. If anything's changed, just reply and we'll move it.\n\n— {your_name}" },
+  { id: "thank_you_after_job", name: "Thank you after job", icon: "💼",
+    description: "Send a brief thank-you after the work is finished.",
+    subject: "Thanks for the work, {first_name}",
+    body: "Hi {first_name},\n\nThank you for letting us handle {service_type} — it was a pleasure working with you.\n\nIf anything comes up after the fact, you know where to find me.\n\n— {your_name}\n{business_name}" },
+  { id: "blank", name: "Blank", icon: "➕",
+    description: "Start from scratch.",
+    subject: "",
+    body: "" },
+];
+
 async function _beFetchTemplates() {
   try {
     const r = await fetch("/me/leads/email-templates", { credentials: "same-origin" });
-    if (!r.ok) return [];
+    if (!r.ok) return _BE_INLINE_TEMPLATES.slice();
     const d = await r.json();
-    return Array.isArray(d.templates) ? d.templates : [];
-  } catch (_) { return []; }
+    const arr = Array.isArray(d.templates) ? d.templates : [];
+    // If the API returns an empty list (server hasn't been restarted yet,
+    // bug, etc.) fall back to inline so the user still sees options.
+    return arr.length ? arr : _BE_INLINE_TEMPLATES.slice();
+  } catch (_) { return _BE_INLINE_TEMPLATES.slice(); }
 }
 
 async function _beFetchConnections() {
