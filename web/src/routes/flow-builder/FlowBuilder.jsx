@@ -602,13 +602,16 @@ function _fmtMinutes(m) {
 function ReplyPhonePreview({
   fallback, customBody, globalAiMode, globalCadence,
 }) {
-  const finalLabel = fallback === "ai"
-    ? (globalAiMode === "i_respond" ? "AI off — stops" : "AI replies")
-    : "My message sends";
+  const isAlways = globalAiMode === "ai_always";
+  const isOff    = globalAiMode === "i_respond";
+  const finalLabel = isOff
+    ? "AI off — flow stops"
+    : fallback === "ai" ? "AI replies" : "My message sends";
   const renderedBody = applyMergeTags(customBody || "");
-  const r1 = globalCadence ? _fmtMinutes(globalCadence.first_reminder_minutes) : "—";
-  const r2 = globalCadence ? _fmtMinutes(globalCadence.second_reminder_minutes) : "—";
-  const rT = globalCadence ? _fmtMinutes(globalCadence.ai_takeover_minutes) : "—";
+  // In Always mode there's no nudge cadence — just a 1-min grace.
+  const r1 = isAlways ? "1 min grace" : (globalCadence ? _fmtMinutes(globalCadence.first_reminder_minutes) : "—");
+  const r2 = isAlways ? "—"           : (globalCadence ? _fmtMinutes(globalCadence.second_reminder_minutes) : "—");
+  const rT = isAlways ? "right away"  : (globalCadence ? _fmtMinutes(globalCadence.ai_takeover_minutes) : "—");
   return (
     <div className="fb-rwprev">
       <div className="fb-rwprev-h">How this plays out</div>
@@ -619,29 +622,42 @@ function ReplyPhonePreview({
             <strong>They write back</strong>
           </div>
         </li>
+        {!isAlways && !isOff && (
+          <>
+            <li>
+              <span className="fb-rwprev-dot" />
+              <div>
+                <strong>Nudge 1</strong>
+                <span>{r1}</span>
+              </div>
+            </li>
+            <li>
+              <span className="fb-rwprev-dot" />
+              <div>
+                <strong>Nudge 2</strong>
+                <span>{r2}</span>
+              </div>
+            </li>
+          </>
+        )}
+        {isAlways && (
+          <li>
+            <span className="fb-rwprev-dot" />
+            <div>
+              <strong>1 min grace</strong>
+              <span>So you can reply first if you want</span>
+            </div>
+          </li>
+        )}
         <li>
-          <span className="fb-rwprev-dot" />
-          <div>
-            <strong>Nudge 1</strong>
-            <span>{r1}</span>
-          </div>
-        </li>
-        <li>
-          <span className="fb-rwprev-dot" />
-          <div>
-            <strong>Nudge 2</strong>
-            <span>{r2}</span>
-          </div>
-        </li>
-        <li>
-          <span className={`fb-rwprev-dot ${fallback === "ai" ? "is-ai" : "is-custom"}`} />
+          <span className={`fb-rwprev-dot ${isOff ? "" : (fallback === "ai" ? "is-ai" : "is-custom")}`} />
           <div>
             <strong>{finalLabel}</strong>
             <span>{rT}</span>
           </div>
         </li>
       </ol>
-      {fallback === "custom" && (
+      {fallback === "custom" && !isOff && (
         <div className="fb-rwprev-custom">
           <div className="fb-rwprev-custom-h">Preview</div>
           <div className="fb-rwprev-custom-body">
@@ -650,7 +666,9 @@ function ReplyPhonePreview({
         </div>
       )}
       <p className="fb-helper" style={{ textAlign: "center", marginTop: 12 }}>
-        Reply yourself anytime → nudges stop.
+        {isAlways ? "AI replies right away — no nudges."
+          : isOff ? "AI is off — you'll get the message in your inbox."
+          : "Reply yourself anytime → nudges stop."}
       </p>
     </div>
   );
@@ -1163,11 +1181,29 @@ function ReplyWidgetEditor({
         </div>
       )}
 
-      {/* Reminders — read-only summary, driven by the global setting */}
-      <div className="fb-replywidget-cadinfo">
-        <div className="fb-replywidget-cadinfo-h">Reminders before takeover</div>
+      {/* Read-only summary that adapts to the global AI mode (the
+          top-right control). When mode is hybrid the card shows the
+          3-stage cadence; when always_reply or off, it explains the
+          mode instead — no fake reminder times. */}
+      <div className={`fb-replywidget-cadinfo is-${globalAiMode || "hybrid"}`}>
+        <div className="fb-replywidget-cadinfo-head">
+          <span className="fb-replywidget-cadinfo-h">
+            {globalAiMode === "ai_always" ? "AI mode"
+              : globalAiMode === "i_respond" ? "AI mode"
+              : "Reminders before takeover"}
+          </span>
+          <span className="fb-replywidget-cadinfo-dot" aria-hidden="true" />
+        </div>
         <div className="fb-replywidget-cadinfo-times">
-          {globalCadence ? (
+          {globalAiMode === "ai_always" ? (
+            <span className="fb-replywidget-cadinfo-mode">
+              Always reply — <strong>AI replies right away</strong>
+            </span>
+          ) : globalAiMode === "i_respond" ? (
+            <span className="fb-replywidget-cadinfo-mode">
+              Off — <strong>you'll handle replies</strong>
+            </span>
+          ) : globalCadence ? (
             <>
               <span>{_fmtMinutes(globalCadence.first_reminder_minutes)}</span>
               <span className="fb-replywidget-cadinfo-sep">·</span>
@@ -2108,26 +2144,67 @@ const STYLES = `
     border-color: #fdba74; color: #9a3412;
   }
 
-  /* Read-only cadence summary (driven by the global setting) */
+  /* Read-only cadence summary (driven by the global AI mode).
+     Hybrid mode: 3 cadence chunks. Always: "AI replies right away".
+     Off: "You'll handle replies". Each state tints the card and the
+     status dot to match the top-right control's color semantics. */
   .fb-replywidget-cadinfo {
     margin-top: 8px;
-    padding: 16px 18px;
+    padding: 18px 20px;
     background: #f8fafc;
-    border: 1.5px dashed #e2e8f0; border-radius: 12px;
+    border: 1.5px solid #e2e8f0; border-radius: 14px;
+    transition: background 0.18s ease, border-color 0.18s ease;
+  }
+  .fb-replywidget-cadinfo.is-hybrid {
+    background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
+    border-color: #fde68a;
+  }
+  .fb-replywidget-cadinfo.is-ai_always {
+    background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
+    border-color: #bbf7d0;
+  }
+  .fb-replywidget-cadinfo.is-i_respond {
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    border-color: #cbd5e1;
+  }
+  .fb-replywidget-cadinfo-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; margin-bottom: 10px;
   }
   .fb-replywidget-cadinfo-h {
     font-size: 11.5px; font-weight: 700;
     letter-spacing: 0.06em; text-transform: uppercase;
-    color: #6b7280; margin-bottom: 8px;
+    color: #6b7280;
+  }
+  .fb-replywidget-cadinfo-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #d97706;            /* default: hybrid (orange) */
+    box-shadow: 0 0 0 3px rgba(217,119,6,0.18);
+  }
+  .fb-replywidget-cadinfo.is-ai_always .fb-replywidget-cadinfo-dot {
+    background: #16a34a;
+    box-shadow: 0 0 0 3px rgba(22,163,74,0.20);
+  }
+  .fb-replywidget-cadinfo.is-i_respond .fb-replywidget-cadinfo-dot {
+    background: #94a3b8;
+    box-shadow: 0 0 0 3px rgba(148,163,184,0.20);
   }
   .fb-replywidget-cadinfo-times {
     display: flex; flex-wrap: wrap; gap: 8px;
     align-items: baseline;
-    font-size: 15px; font-weight: 600; color: #0a0a0a;
+    font-size: 16px; font-weight: 600; color: #0a0a0a;
+    letter-spacing: -0.01em;
   }
   .fb-replywidget-cadinfo-sep { color: #cbd5e1; }
+  .fb-replywidget-cadinfo-mode {
+    font-size: 16px; font-weight: 500; color: #0a0a0a;
+    letter-spacing: -0.01em;
+  }
+  .fb-replywidget-cadinfo-mode strong {
+    font-weight: 700;
+  }
   .fb-replywidget-cadinfo-link {
-    margin-top: 8px;
+    margin-top: 10px;
     font-size: 12.5px; color: #2563eb; font-weight: 500;
   }
 
