@@ -117,8 +117,238 @@
     fetch("/me/forms/" + f.id, { method:"DELETE", credentials:"same-origin" })
       .then(function(){ toast("Deleted"); loadForms(); });
   }
-  function openBuilder(form){ /* implemented in Task 13 */
-    alert("Form builder coming in next task.");
+  var BUILTINS = [
+    {key:"name",        label:"Your name",    type:"text"},
+    {key:"email",       label:"Email",        type:"email"},
+    {key:"phone",       label:"Phone",        type:"phone"},
+    {key:"address",     label:"Address",      type:"address"},
+    {key:"message",     label:"Message",      type:"textarea"},
+    {key:"service",     label:"Service type", type:"select", options:["Service A","Service B"]},
+    {key:"date_needed", label:"Date needed",  type:"date"},
+    {key:"budget",      label:"Budget",       type:"text"},
+    {key:"company",     label:"Company",      type:"text"},
+  ];
+
+  function openBuilder(form){
+    var editing = !!form;
+    var state = {
+      id: editing ? form.id : null,
+      name: editing ? form.name : "Contact form",
+      flow_id: editing ? (form.flow_id || "default") : "default",
+      submit_text: editing ? form.submit_text || "Submit" : "Submit",
+      thank_you:   editing ? form.thank_you   || "Thanks — we'll be in touch." : "Thanks — we'll be in touch.",
+      // Initialize fields: when editing, take from form. When creating, start with name+phone+message ON.
+      fields: editing ? (form.fields || []).slice() : [
+        Object.assign({}, BUILTINS[0], {required:true,  builtin:true}),
+        Object.assign({}, BUILTINS[2], {required:true,  builtin:true}),
+        Object.assign({}, BUILTINS[4], {required:false, builtin:true}),
+      ],
+    };
+
+    var bg = document.createElement("div");
+    bg.style = "position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-start;justify-content:center;z-index:9000;padding:24px;overflow:auto";
+    bg.innerHTML = '<div style="background:#fff;border-radius:12px;max-width:920px;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:0;overflow:hidden">'
+      + '<div id="b-controls" style="padding:18px;border-right:1px solid var(--line);max-height:80vh;overflow:auto"></div>'
+      + '<div id="b-preview" style="padding:18px;background:#f7f7f8;max-height:80vh;overflow:auto"></div>'
+      + '</div>';
+    document.body.appendChild(bg);
+    bg.addEventListener("click", function(e){ if (e.target === bg) document.body.removeChild(bg); });
+
+    function renderControls(){
+      var c = $("b-controls");
+      c.innerHTML =
+        '<h2 style="margin:0 0 12px">' + (editing ? "Edit form" : "New form") + '</h2>'
+        + '<label>Form name</label><input id="b-name" value="' + esc(state.name) + '" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px"/>'
+        + '<label style="display:block;margin-top:12px">When this form is submitted, run:</label>'
+        + '<select id="b-flow" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px">'
+        +   '<option value="default">Default flow</option>'
+        + '</select>'
+        + '<h3 style="margin:18px 0 6px;font-size:14px">Built-in fields</h3>'
+        + '<div id="b-builtins"></div>'
+        + '<h3 style="margin:18px 0 6px;font-size:14px">Custom fields</h3>'
+        + '<div id="b-customs"></div>'
+        + '<button class="btn" id="b-add-custom" style="margin-top:8px">+ Add custom field</button>'
+        + '<label style="display:block;margin-top:18px">Submit button text</label>'
+        + '<input id="b-submit-text" value="' + esc(state.submit_text) + '" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px"/>'
+        + '<label style="display:block;margin-top:12px">Thank-you message</label>'
+        + '<textarea id="b-thanks" rows="3" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:6px">' + esc(state.thank_you) + '</textarea>'
+        + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px">'
+        +   '<button class="btn" id="b-cancel">Cancel</button>'
+        +   '<button class="btn btn-primary" id="b-save">' + (editing ? "Save" : "Create form") + '</button>'
+        + '</div>';
+      $("b-flow").value = state.flow_id;
+
+      // Built-in toggles
+      var bi = $("b-builtins");
+      bi.innerHTML = BUILTINS.map(function(f){
+        var on = state.fields.some(function(x){ return x.key === f.key && x.builtin !== false; });
+        var fld = state.fields.find(function(x){ return x.key === f.key; });
+        var req = on && fld ? fld.required : false;
+        return '<div style="display:flex;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)">'
+          + '<label style="flex:1;display:flex;align-items:center;gap:8px;font-weight:500">'
+          +   '<input type="checkbox" data-bi-toggle="' + f.key + '"' + (on ? " checked" : "") + '/>'
+          +   esc(f.label)
+          + '</label>'
+          + '<label style="font-size:12px;color:var(--sub)">'
+          +   '<input type="checkbox" data-bi-req="' + f.key + '"' + (req ? " checked" : "") + '/> required'
+          + '</label>'
+          + '</div>';
+      }).join("");
+
+      Array.prototype.forEach.call(bi.querySelectorAll("[data-bi-toggle]"), function(cb){
+        cb.addEventListener("change", function(){
+          var key = cb.getAttribute("data-bi-toggle");
+          var spec = BUILTINS.find(function(x){ return x.key === key; });
+          if (cb.checked) {
+            if (!state.fields.some(function(x){ return x.key === key; })) {
+              state.fields.push(Object.assign({}, spec, {required:false, builtin:true}));
+            }
+          } else {
+            state.fields = state.fields.filter(function(x){ return !(x.key === key && x.builtin !== false); });
+          }
+          renderAll();
+        });
+      });
+      Array.prototype.forEach.call(bi.querySelectorAll("[data-bi-req]"), function(cb){
+        cb.addEventListener("change", function(){
+          var key = cb.getAttribute("data-bi-req");
+          var f = state.fields.find(function(x){ return x.key === key; });
+          if (f) f.required = cb.checked;
+          renderAll();
+        });
+      });
+
+      // Custom fields list
+      var cu = $("b-customs");
+      var customs = state.fields.filter(function(f){ return f.builtin === false; });
+      cu.innerHTML = customs.length === 0
+        ? '<div class="meta" style="color:var(--sub);font-size:12.5px">None yet.</div>'
+        : customs.map(function(f, i){
+            return '<div style="display:flex;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);gap:8px">'
+              + '<div style="flex:1">' + esc(f.label) + ' <span class="meta" style="color:var(--sub)">(' + f.type + ')</span></div>'
+              + '<button class="btn" data-cu-rm="' + i + '">Remove</button>'
+              + '</div>';
+          }).join("");
+      Array.prototype.forEach.call(cu.querySelectorAll("[data-cu-rm]"), function(b){
+        b.addEventListener("click", function(){
+          var n = parseInt(b.getAttribute("data-cu-rm"), 10);
+          var customs2 = state.fields.filter(function(f){ return f.builtin === false; });
+          var key = customs2[n] && customs2[n].key;
+          state.fields = state.fields.filter(function(f){ return f.key !== key; });
+          renderAll();
+        });
+      });
+
+      $("b-add-custom").onclick = function(){
+        var label = prompt("Field label?");
+        if (!label) return;
+        var t = prompt("Type? (text or select)", "text");
+        if (t !== "text" && t !== "select") return;
+        var options = [];
+        if (t === "select") {
+          var raw = prompt("Options? (comma-separated)", "Option A, Option B");
+          options = (raw || "").split(",").map(function(s){ return s.trim(); }).filter(Boolean);
+          if (options.length === 0) return;
+        }
+        state.fields.push({
+          key: "custom_" + Math.random().toString(36).slice(2,8),
+          label: label, type: t, required: false, builtin: false,
+          options: options,
+        });
+        renderAll();
+      };
+
+      $("b-cancel").onclick = function(){ document.body.removeChild(bg); };
+      $("b-save").onclick = saveForm;
+
+      // Live updates from name / submit / thanks
+      $("b-name").oninput        = function(){ state.name        = $("b-name").value;        renderPreview(); };
+      $("b-submit-text").oninput = function(){ state.submit_text = $("b-submit-text").value; renderPreview(); };
+      $("b-thanks").oninput      = function(){ state.thank_you   = $("b-thanks").value;      renderPreview(); };
+      $("b-flow").onchange       = function(){ state.flow_id     = $("b-flow").value; };
+    }
+
+    function renderPreview(){
+      var p = $("b-preview");
+      var fieldsHtml = state.fields.map(function(f){
+        var input;
+        if (f.type === "textarea") {
+          input = '<textarea rows="3" style="width:100%;padding:8px;border:1px solid #e6e6ea;border-radius:6px" disabled placeholder="' + esc(f.label) + '"></textarea>';
+        } else if (f.type === "select") {
+          input = '<select style="width:100%;padding:8px;border:1px solid #e6e6ea;border-radius:6px" disabled>'
+            + '<option>' + (f.options && f.options[0] ? esc(f.options[0]) : "Choose…") + '</option></select>';
+        } else {
+          input = '<input style="width:100%;padding:8px;border:1px solid #e6e6ea;border-radius:6px" disabled placeholder="' + esc(f.label) + '"/>';
+        }
+        return '<div style="margin-bottom:10px"><label style="display:block;font-size:12.5px;font-weight:600;margin-bottom:4px">' + esc(f.label)
+          + (f.required ? ' <span style="color:#c0392b">*</span>' : '') + '</label>' + input + '</div>';
+      }).join("");
+      p.innerHTML = '<div style="font-size:12px;color:var(--sub);margin-bottom:8px">Live preview</div>'
+        + '<div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px">'
+        + '<h3 style="margin:0 0 10px">' + esc(state.name) + '</h3>'
+        + fieldsHtml
+        + '<button style="width:100%;padding:10px;background:var(--accent);color:#fff;border:0;border-radius:6px;font-weight:600;margin-top:6px">' + esc(state.submit_text) + '</button>'
+        + '</div>';
+    }
+
+    function renderAll(){ renderControls(); renderPreview(); }
+
+    function saveForm(){
+      var btn = $("b-save"); btn.disabled = true; btn.textContent = "Saving…";
+      var payload = {
+        name: state.name, flow_id: state.flow_id,
+        fields: state.fields, submit_text: state.submit_text,
+        thank_you: state.thank_you,
+      };
+      var url = editing ? "/me/forms/" + state.id : "/me/forms";
+      var method = editing ? "PUT" : "POST";
+      fetch(url, {
+        method: method, credentials:"same-origin",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify(payload),
+      }).then(function(r){ return r.json().then(function(d){ return {status:r.status, body:d}; }); })
+        .then(function(res){
+          if (!res.body || !res.body.form) {
+            toast("Save failed: " + ((res.body && res.body.error) || ("HTTP " + res.status)));
+            btn.disabled = false; btn.textContent = editing ? "Save" : "Create form";
+            return;
+          }
+          document.body.removeChild(bg);
+          showShareScreen(res.body.form);
+          loadForms();
+        }).catch(function(e){
+          toast("Network error: " + e.message);
+          btn.disabled = false; btn.textContent = editing ? "Save" : "Create form";
+        });
+    }
+
+    renderAll();
+  }
+
+  function showShareScreen(form){
+    var url = location.origin + "/f/" + form.slug;
+    var bg = document.createElement("div");
+    bg.style = "position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9000;padding:20px";
+    bg.innerHTML = '<div style="background:#fff;border-radius:12px;max-width:520px;width:100%;padding:22px">'
+      + '<h2 style="margin:0 0 6px">Form ready</h2>'
+      + '<p class="meta" style="color:var(--sub);margin:0 0 14px">Share this link in your Google listing, Facebook page, or text it to customers.</p>'
+      + '<div style="background:#f7f7f8;border:1px solid var(--line);border-radius:8px;padding:10px;font-family:Menlo,monospace;font-size:13px;word-break:break-all">' + esc(url) + '</div>'
+      + '<div style="display:flex;gap:8px;margin-top:14px">'
+      +   '<button class="btn btn-primary" id="ss-copy">Copy link</button>'
+      +   '<button class="btn" id="ss-open">Open preview</button>'
+      +   '<button class="btn" style="margin-left:auto" id="ss-close">Done</button>'
+      + '</div>'
+      + '<details style="margin-top:14px"><summary style="cursor:pointer">Embed on your website</summary>'
+      +   '<p class="meta" style="color:var(--sub);margin:8px 0 4px">Paste this iframe wherever you want the form to appear:</p>'
+      +   '<pre style="background:#f7f7f8;border:1px solid var(--line);border-radius:6px;padding:8px;overflow:auto;font-size:12px">'
+      +     esc('<iframe src="' + url + '" width="100%" height="600" style="border:0"></iframe>')
+      +   '</pre>'
+      + '</details>'
+      + '</div>';
+    document.body.appendChild(bg);
+    bg.querySelector("#ss-copy").onclick  = function(){ copy(url); };
+    bg.querySelector("#ss-open").onclick  = function(){ window.open("/f/" + form.slug, "_blank"); };
+    bg.querySelector("#ss-close").onclick = function(){ document.body.removeChild(bg); };
   }
   loadForms();
 </script>
