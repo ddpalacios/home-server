@@ -1989,8 +1989,12 @@ function FirstTimeGuide() {
   const [show, setShow] = React.useState(false);
   React.useEffect(() => {
     try {
+      // Always show during a form round-trip — the user is being
+      // guided into the canvas and needs the orientation regardless of
+      // whether they dismissed the strip in a past session.
+      const fromForm = !!localStorage.getItem("intake_return_form_id");
       const dismissed = localStorage.getItem("fb_intro_dismissed_v1") === "1";
-      setShow(!dismissed);
+      setShow(fromForm || !dismissed);
     } catch (_) { setShow(true); }
   }, []);
   const dismiss = React.useCallback(() => {
@@ -2119,7 +2123,10 @@ export default function FlowBuilder() {
   // hasn't picked "Start blank" yet. Re-openable via the library
   // panel's "Use a template" button.
   const [pickerDismissed, setPickerDismissed] = React.useState(false);
-  const showPicker = nodes.length === 0 && !pickerDismissed;
+  // Don't show the template picker until the initial load + any seed
+  // has settled — otherwise it flashes for a beat on every mount and
+  // the user thinks they missed a popup. (v2)
+  const showPicker = hydrated && nodes.length === 0 && !pickerDismissed;
 
   // "What comes next?" chooser. Opened by the "+" button on any card
   // (or by the Yes/No buttons on a branch). When the user picks an
