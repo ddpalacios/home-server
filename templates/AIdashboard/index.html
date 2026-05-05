@@ -8901,11 +8901,12 @@
 
       <!-- ─────────── Replies page (Unibox) ─────────── -->
       <style>
-        #replies { padding: 0 !important; }
-        .rep-page { display: flex; flex-direction: column; height: calc(100vh - 96px); min-height: 540px; grid-column: span 12; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; }
-        .rep-header { display: flex; align-items: baseline; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid #f1f5f9; }
-        .rep-header h2 { margin: 0; font-size: 18px; font-weight: 600; color: #0a0a0a; }
-        .rep-header .rep-sub { font-size: 12px; color: #71717a; margin-left: 10px; }
+        /* The route section's 48px/32px padding (set globally on
+           [data-route-section].is-active) handles top spacing under the
+           topbar. .rep-page just fills the space the section gives it. */
+        .rep-page { display: flex; flex-direction: column; height: 100%; min-height: 0; grid-column: span 12; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; }
+        .rep-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 18px; border-bottom: 1px solid #f1f5f9; }
+        .rep-header .rep-sub { font-size: 12px; color: #71717a; }
         .rep-header .rep-shortcut-hint { font-size: 11px; color: #a1a1aa; }
         .rep-cols { display: grid; grid-template-columns: 200px 320px 1fr; flex: 1; min-height: 0; }
         .rep-side { border-right: 1px solid #f1f5f9; padding: 14px 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
@@ -9264,15 +9265,10 @@
             <button type="button" class="page-nudge-close" data-nudge-close aria-label="Dismiss">×</button>
           </div>
 
+          <!-- Page title removed — top bar already says "Replies".
+               Slim subtitle row keeps the live count + shortcut hint. -->
           <header class="rep-header">
-            <div>
-              <h2 style="display:inline-block;">
-                Replies from your customers
-                <span data-help-icon="replies"></span>
-              </h2>
-              <span class="rep-sub" id="repHeaderSub">Loading…</span>
-              <p class="rep-page-sub" style="font-size:13px;color:#6b7280;margin:4px 0 0;">Replies from your customers — emails and Instagram DMs in one place.</p>
-            </div>
+            <span class="rep-sub" id="repHeaderSub">Loading…</span>
             <span class="rep-shortcut-hint">⌨ press <kbd>?</kbd> for shortcuts</span>
           </header>
 
@@ -14681,10 +14677,12 @@
           box-sizing:border-box;
           overflow:hidden;
         }
-        /* Tab row gets its own padding so it doesn't touch the edges.
+        /* Tab row gets generous top spacing so it clears the topbar.
+           Outreach is fullbleed (no route-section padding), so the tab
+           row owns the whole top-margin between itself and the nav bar.
            Stays at the top, doesn't scroll. */
         .out-page > .out-tabs {
-          margin:10px 16px 0;
+          margin:28px 24px 0;
         }
         /* Each pane fills the rest of the height. List panes scroll
            internally; Canvas pane never scrolls (canvas owns its own
