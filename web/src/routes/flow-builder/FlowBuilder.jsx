@@ -2078,7 +2078,10 @@ const TOUR_PATHS = {
           fills out your form. Right now it just says hi to them.
         </>
       ),
-      target: ".fb-card",
+      // pinTo overrides target-anchored positioning. The intro/overview
+      // step doesn't point at any single element — it talks about the
+      // whole canvas. Sit it top-center near the canvas top edge.
+      pinTo: "top-center",
     },
     {
       icon: "➕",
@@ -2216,6 +2219,16 @@ function FirstTimeGuide() {
       }
       setShow(fromForm || !dismissed);
     } catch (_) { setShow(true); }
+  }, []);
+  // Listen for the floating ? button's replay event. Resets state to
+  // step 0 of main path and shows the tour, without reloading the page.
+  React.useEffect(() => {
+    const onReplay = () => {
+      setTour({ path: "main", step: 0, pathHistory: [] });
+      setShow(true);
+    };
+    window.addEventListener("fb-tour-replay", onReplay);
+    return () => window.removeEventListener("fb-tour-replay", onReplay);
   }, []);
   const persistTour = React.useCallback((t) => {
     try {
@@ -2369,16 +2382,25 @@ function FirstTimeGuide() {
   // it's intentionally guiding through the modal. data-sub="1" tells
   // the hide-during-modal CSS to leave us alone.
   const isLast = isLastInPath && (tour.pathHistory || []).length === 0;
-  // Use the computed tooltip position when we have a target; fall back
-  // to top-left/top-center for intro steps with no anchor.
-  const hasAnchor = !!(cur && cur.target) && position.arrow !== null;
-  const panelStyle = hasAnchor
-    ? { position: "fixed", top: position.top, left: position.left,
-        zIndex: 60, width: "min(360px, calc(100% - 28px))" }
-    : { position: "fixed", top: 14,
-        left: isOnSubPath ? "50%" : 14,
-        transform: isOnSubPath ? "translateX(-50%)" : "none",
-        zIndex: 60, width: "min(420px, calc(100% - 32px))" };
+  // Three positioning modes:
+  //   1. Step has pinTo:"top-center" → sit centered at canvas top.
+  //   2. Step has a target the locator resolved to a position → tooltip
+  //      anchored next to that target with an arrow.
+  //   3. Otherwise → fall back to a corner.
+  const hasAnchor = !!(cur && cur.target) && position.arrow !== null
+                    && cur.pinTo !== "top-center";
+  const isPinTopCenter = cur && cur.pinTo === "top-center";
+  const panelStyle = isPinTopCenter
+    ? { position: "fixed", top: 18, left: "50%",
+        transform: "translateX(-50%)",
+        zIndex: 60, width: "min(440px, calc(100% - 32px))" }
+    : hasAnchor
+      ? { position: "fixed", top: position.top, left: position.left,
+          zIndex: 60, width: "min(360px, calc(100% - 28px))" }
+      : { position: "fixed", top: 14,
+          left: isOnSubPath ? "50%" : 14,
+          transform: isOnSubPath ? "translateX(-50%)" : "none",
+          zIndex: 60, width: "min(420px, calc(100% - 32px))" };
   return (
     <div
       className="fb-tour-panel"
@@ -2565,9 +2587,10 @@ function TourReplayButton() {
       localStorage.removeItem("fb_tour_state_v3");
       localStorage.removeItem("fb_tour_ts_v3");
     } catch (_) {}
-    // Hard reload so FirstTimeGuide picks up the cleared state cleanly
-    // and re-runs all its mount effects (highlight, position, etc.).
-    window.location.reload();
+    // Tell FirstTimeGuide to re-mount its tour at step 0 — no reload.
+    try {
+      window.dispatchEvent(new CustomEvent("fb-tour-replay"));
+    } catch (_) {}
   }, []);
   return (
     <button
