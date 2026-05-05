@@ -47,10 +47,29 @@
   var BIZ      = __BUSINESS_NAME__;
   var SLUG     = __SLUG__;
   var TOKEN    = __FORM_TOKEN__;
-  document.title = BIZ + " · " + (FORM.name || "Contact");
+  // Test mode: detect ?test=1 on the URL. The submit will tag the
+  // lead is_test=true and reroute any flow messages to the user.
+  var IS_TEST = (function(){
+    try {
+      var p = new URLSearchParams(location.search);
+      var v = (p.get("test") || "").toLowerCase();
+      return v === "1" || v === "true" || v === "yes";
+    } catch(_) { return false; }
+  })();
+  document.title = (IS_TEST ? "🧪 Test · " : "") + BIZ + " · " + (FORM.name || "Contact");
   document.getElementById("biz").textContent = BIZ;
   document.getElementById("form-name").textContent = FORM.name || "";
   document.getElementById("submit-btn").textContent = FORM.submit_text || "Submit";
+
+  // Inject test banner when in test mode.
+  if (IS_TEST) {
+    var banner = document.createElement("div");
+    banner.style = "background:#fff8db;border:2px solid #f0c419;color:#7a5a00;border-radius:10px;padding:12px 16px;margin:12px 0 18px;font-size:13.5px;line-height:1.45";
+    banner.innerHTML = '<div style="font-weight:700;font-size:15px;margin-bottom:2px">🧪 TEST MODE</div>'
+      + 'This is a test. Messages will go to <strong>YOU</strong>, not to whatever address or phone you fill in.';
+    var card = document.querySelector(".card");
+    if (card) card.insertBefore(banner, card.firstChild);
+  }
 
   var host = document.getElementById("fields");
   (FORM.fields || []).forEach(function(f){
@@ -115,7 +134,10 @@
     });
     var hp = document.querySelector('input[name="hp_email_confirm"]');
     var body = { fields: fields, _t: TOKEN, hp_email_confirm: hp ? hp.value : "" };
-    fetch("/f/" + encodeURIComponent(SLUG) + "/submit", {
+    if (IS_TEST) body.test = true;
+    var submitUrl = "/f/" + encodeURIComponent(SLUG) + "/submit"
+                    + (IS_TEST ? "?test=1" : "");
+    fetch(submitUrl, {
       method: "POST", credentials: "omit",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify(body),
@@ -134,6 +156,35 @@
         return;
       }
       if (res.body && res.body.ok) {
+        if (res.body.is_test) {
+          // Test result page — what fired and where it routed.
+          var tEmail = res.body.test_target_email || "";
+          var tPhone = res.body.test_target_phone || "";
+          var rows = "";
+          if (tPhone) rows += '<div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #eee">'
+            + '<span style="color:#0a8a3a;font-size:18px">✓</span>'
+            + '<div style="flex:1"><div style="font-weight:600;font-size:13.5px">SMS routed to ' + tPhone + '</div>'
+            + '<div style="color:#777;font-size:12px;margin-top:2px">Will arrive prefixed with "(test)"</div></div></div>';
+          if (tEmail) rows += '<div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #eee">'
+            + '<span style="color:#0a8a3a;font-size:18px">✓</span>'
+            + '<div style="flex:1"><div style="font-weight:600;font-size:13.5px">Email routed to ' + tEmail + '</div>'
+            + '<div style="color:#777;font-size:12px;margin-top:2px">Will arrive prefixed with "(test)"</div></div></div>';
+          if (!rows) rows = '<div style="padding:8px 0;color:#a86200">No user contact info found — set OWNER_PHONE and your account email, then try again.</div>';
+          document.querySelector(".card").innerHTML =
+              '<div style="text-align:center;padding:8px 0">'
+            +   '<div style="font-size:42px;margin-bottom:4px">🧪</div>'
+            +   '<h2 style="margin:0 0 4px;font-size:20px">Test complete</h2>'
+            +   '<p style="margin:0 0 18px;color:#777;font-size:13.5px">'
+            +     'Submission tagged <code style="background:#f5f7fa;padding:1px 6px;border-radius:4px">is_test:true</code>. The flow ran with messages routed to YOU.'
+            +   '</p>'
+            +   '<div style="text-align:left;margin-top:12px">' + rows + '</div>'
+            +   '<div style="color:#777;font-size:12.5px;margin-top:14px;line-height:1.5">'
+            +     'Check your inbox and phone — messages should arrive within a minute.<br>'
+            +     'No real customer ever received this submission.'
+            +   '</div>'
+            + '</div>';
+          return;
+        }
         document.querySelector(".card").innerHTML =
           '<div class="thanks"><div class="check">✓</div><p>' + (res.body.thank_you || "Thanks!") + '</p></div>';
         return;
