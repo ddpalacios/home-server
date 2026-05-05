@@ -7020,6 +7020,49 @@
                   else setSub("channels", (3 - ready) + " more to set up");
                 }
               } catch (_) {}
+
+              // "This week" card — at-a-glance numbers from the same events.
+              var week = inWindow(7 * 86400);
+              var prevWeek = events.filter(function(e){
+                var age = now - Number(e.ts || 0);
+                return age > 7 * 86400 && age <= 14 * 86400;
+              });
+              var weekFired = week.filter(function(e){ return e.fired === "first_contact"; }).length;
+              var weekDeduped = week.filter(function(e){ return e.deduped; }).length;
+              var deltaPct = prevWeek.length === 0
+                ? (week.length > 0 ? 100 : 0)
+                : Math.round(((week.length - prevWeek.length) / prevWeek.length) * 100);
+              var deltaArrow = deltaPct > 0 ? "↑" : (deltaPct < 0 ? "↓" : "→");
+              var deltaColor = deltaPct > 0 ? "#0a8a3a" : (deltaPct < 0 ? "#b91c1c" : "#5a6470");
+              var deltaText = (deltaPct === 0)
+                ? "same as last week"
+                : Math.abs(deltaPct) + "% vs last week";
+              var weekRows = [
+                { icon: "📬", label: "New leads",       n: week.length,   tail: '<span style="color:' + deltaColor + ';font-weight:600">' + deltaArrow + " " + deltaText + "</span>" },
+                { icon: "⚡", label: "Flows fired",     n: weekFired,     tail: '<span style="color:#888">first-contact runs</span>' },
+                { icon: "🔁", label: "Already known",   n: weekDeduped,   tail: '<span style="color:#888">duplicates skipped</span>' },
+              ];
+              var weekHost = document.getElementById("homeWeekStats");
+              if (weekHost) {
+                if (week.length === 0 && weekFired === 0 && weekDeduped === 0) {
+                  weekHost.innerHTML = '<div style="padding:24px 0;color:#888;font-size:13px;text-align:center">'
+                    + 'Nothing yet this week. Once leads come in, you\'ll see a quick recap here.'
+                    + '</div>';
+                } else {
+                  weekHost.innerHTML = weekRows.map(function(r){
+                    return '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #f0f2f5">'
+                      + '<span style="font-size:18px;width:24px;text-align:center">' + r.icon + '</span>'
+                      + '<div style="flex:1;min-width:0">'
+                      +   '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">'
+                      +     '<span style="font-size:13px;font-weight:600;color:#0a0a0a">' + r.label + '</span>'
+                      +     '<span style="font-size:18px;font-weight:700;color:#0a0a0a;line-height:1">' + r.n + '</span>'
+                      +   '</div>'
+                      +   '<div style="font-size:11.5px;margin-top:2px">' + r.tail + '</div>'
+                      + '</div>'
+                      + '</div>';
+                  }).join("");
+                }
+              }
             }
             if (document.readyState === "loading") {
               document.addEventListener("DOMContentLoaded", loadKpis);
