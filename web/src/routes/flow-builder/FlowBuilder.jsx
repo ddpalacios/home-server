@@ -704,6 +704,7 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
   React.useEffect(() => {
     if (!isReply) return;
     let cancelled = false;
+    // Initial fetch when the drawer opens.
     (async () => {
       try {
         const r = await fetch("/me/ai/policy", { credentials: "same-origin" });
@@ -714,7 +715,20 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
         setGlobalCadence((p && p.reminder_cadence) || null);
       } catch (_) {}
     })();
-    return () => { cancelled = true; };
+    // Live updates: the top-right control fires `ai-policy:changed`
+    // whenever the user picks a new mode or edits a cadence dropdown.
+    // We update state so the cadence card / preview reflect the change
+    // immediately without a refetch.
+    function onPolicyChanged(ev) {
+      const d = (ev && ev.detail) || {};
+      if (d.mode) setGlobalAiMode(d.mode);
+      if (d.reminder_cadence) setGlobalCadence(d.reminder_cadence);
+    }
+    window.addEventListener("ai-policy:changed", onPolicyChanged);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("ai-policy:changed", onPolicyChanged);
+    };
   }, [isReply]);
 
   const taRef = React.useRef(null);

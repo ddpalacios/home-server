@@ -31807,6 +31807,13 @@
         });
         if (!res.ok) throw new Error("save_failed");
         _writeCadenceCache(cadence);
+        // Broadcast so any open subscriber (e.g. the Flow Builder's
+        // Reply Widget drawer) updates without needing to refetch.
+        try {
+          window.dispatchEvent(new CustomEvent("ai-policy:changed", {
+            detail: { mode, reminder_cadence: cadence },
+          }));
+        } catch (_) {}
       }
 
       panel.querySelectorAll(".ai-mode-opt").forEach(btn => {
@@ -32165,7 +32172,7 @@ function escHtmlSeq(s) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-05-reply-widget-mode-aware"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-05-reply-widget-live-sync"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
