@@ -14662,10 +14662,25 @@
           </div>
 
           <div class="ais-card">
-            <h2>Things to know</h2>
-            <p class="ais-card-sub">Tell the AI about your business so it can answer customer questions correctly.</p>
-            <textarea id="aisThingsToKnow" class="ais-textarea"
-              placeholder="We're open Mon-Fri 9am-5pm, closed weekends.&#10;Our service area is 30 miles from downtown.&#10;Standard estimates take 30 min and are free."></textarea>
+            <h2>What the AI knows</h2>
+            <p class="ais-card-sub">The AI answers from your <strong>Knowledge Base</strong> — the same one your widget uses. To change what the AI knows about your business, edit it there.</p>
+            <div id="aisKbSummary" style="margin-top:8px;">
+              <div id="aisKbCount" style="font-size:13px;color:#475569;line-height:1.55;">Loading your knowledge base…</div>
+              <ul id="aisKbList" style="margin:8px 0 0;padding-left:18px;font-size:12.5px;color:#374151;line-height:1.7;"></ul>
+              <div id="aisKbEmpty" hidden style="margin-top:10px;padding:10px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:12.5px;color:#92400e;">
+                You haven't added anything to your Knowledge Base yet. The AI won't have facts about your business until you do.
+              </div>
+            </div>
+            <div style="margin-top:14px;">
+              <a id="aisKbManageLink" href="#knowledge" class="ais-btn is-secondary" style="text-decoration:none;display:inline-block;">Manage Knowledge Base →</a>
+            </div>
+          </div>
+
+          <div class="ais-card">
+            <h2>Anything else?</h2>
+            <p class="ais-card-sub">Optional. Quick facts the AI should know that aren't worth a full Knowledge Base entry. Most folks leave this empty.</p>
+            <textarea id="aisThingsToKnow" class="ais-textarea" style="min-height:80px;"
+              placeholder="My direct line is 555-0142 if customers ask.&#10;We don't do emergency same-day work."></textarea>
           </div>
 
           <div class="ais-card">
@@ -30226,8 +30241,53 @@
         b.addEventListener("click", () => setTone(b.dataset.tone));
       });
 
+      async function loadKbSummary() {
+        const countEl = sec.querySelector("#aisKbCount");
+        const listEl  = sec.querySelector("#aisKbList");
+        const emptyEl = sec.querySelector("#aisKbEmpty");
+        if (!countEl) return;
+        try {
+          const res = await fetch("/me/ai/kb-summary", { credentials: "same-origin" });
+          if (!res.ok) {
+            countEl.textContent = "Couldn't read your knowledge base.";
+            return;
+          }
+          const data = await res.json();
+          const count = parseInt(data.count || 0, 10);
+          if (count === 0) {
+            countEl.textContent = "Your knowledge base is empty.";
+            if (emptyEl) emptyEl.hidden = false;
+            if (listEl)  listEl.innerHTML = "";
+            return;
+          }
+          if (emptyEl) emptyEl.hidden = true;
+          countEl.textContent = "AI can answer from " + count
+            + " entr" + (count === 1 ? "y" : "ies") + " in your knowledge base:";
+          if (listEl) {
+            listEl.innerHTML = "";
+            (data.entries || []).slice(0, 8).forEach(e => {
+              const li = document.createElement("li");
+              li.textContent = (e.title || "(untitled)")
+                + (e.entry_type === "faq" ? " — FAQ" : "");
+              listEl.appendChild(li);
+            });
+            if (count > 8) {
+              const li = document.createElement("li");
+              li.style.color = "#94a3b8";
+              li.style.listStyle = "none";
+              li.style.marginLeft = "-12px";
+              li.textContent = "…and " + (count - 8) + " more.";
+              listEl.appendChild(li);
+            }
+          }
+        } catch (_) {
+          countEl.textContent = "Couldn't read your knowledge base.";
+        }
+      }
+
       async function loadPolicy() {
         if (_loaded) return;
+        loadKbSummary();
         try {
           const res = await fetch("/me/ai/policy", { credentials: "same-origin" });
           if (!res.ok) return;
