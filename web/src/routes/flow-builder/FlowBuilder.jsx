@@ -1194,6 +1194,21 @@ const STYLES = `
     box-shadow: 0 6px 16px rgba(15,23,42,.22),
                 0 0 0 2px rgba(22,163,74,.35);
   }
+  /* Pulse hint — when the canvas has just one trigger card, draw the
+     user's eye to the green +Next button so they know that's how a
+     step gets added. The parent wrapper sets data-pulse-next="1". */
+  @keyframes fb-pulse-next {
+    0%   { box-shadow: 0 0 0 0   rgba(22,163,74,.55),
+                       0 4px 12px rgba(15,23,42,.18); }
+    70%  { box-shadow: 0 0 0 14px rgba(22,163,74,0),
+                       0 4px 12px rgba(15,23,42,.18); }
+    100% { box-shadow: 0 0 0 0   rgba(22,163,74,0),
+                       0 4px 12px rgba(15,23,42,.18); }
+  }
+  [data-pulse-next="1"] .fb-next-btn {
+    animation: fb-pulse-next 1.6s ease-out infinite;
+  }
+  [data-pulse-next="1"] .fb-next-btn:hover { animation: none; }
   .fb-next-btn .fb-next-btn-l {
     font-size: 12px; font-weight: 700; letter-spacing: .02em;
   }
@@ -1966,6 +1981,86 @@ const STYLES = `
   .fb-drawer-done:hover { background: #15803d; }
 `;
 
+// Friendly first-time intro strip at the top of the canvas. Reads as
+// "what is this and what do I do?" — the bar a 2nd-grader needs to
+// know they can't break anything and that adding a step is just a tap.
+// Dismissed via localStorage so a returning user doesn't see it again.
+function FirstTimeGuide() {
+  const [show, setShow] = React.useState(false);
+  React.useEffect(() => {
+    try {
+      const dismissed = localStorage.getItem("fb_intro_dismissed_v1") === "1";
+      setShow(!dismissed);
+    } catch (_) { setShow(true); }
+  }, []);
+  const dismiss = React.useCallback(() => {
+    try { localStorage.setItem("fb_intro_dismissed_v1", "1"); } catch (_) {}
+    setShow(false);
+  }, []);
+  if (!show) return null;
+  return (
+    <div
+      style={{
+        position: "absolute",
+        top: 14,
+        left: "50%",
+        transform: "translateX(-50%)",
+        zIndex: 40,
+        background: "linear-gradient(135deg,#eaf3fc 0%,#f0e8fb 100%)",
+        border: "1.5px solid #b6c8e0",
+        borderRadius: 14,
+        padding: "12px 16px 12px 14px",
+        boxShadow: "0 6px 18px rgba(20,40,80,.10)",
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        maxWidth: 640,
+        width: "calc(100% - 32px)",
+      }}
+    >
+      <div
+        style={{
+          fontSize: 26,
+          flex: "0 0 auto",
+          background: "#fff",
+          width: 38,
+          height: 38,
+          borderRadius: 10,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: "0 1px 3px rgba(20,40,80,.08)",
+        }}
+      >👋</div>
+      <div style={{ flex: 1, minWidth: 0, lineHeight: 1.35 }}>
+        <div style={{ fontWeight: 700, fontSize: 14, color: "#0a0a0a" }}>
+          This is your flow.
+        </div>
+        <div style={{ fontSize: 12.5, color: "#5a6470", marginTop: 1 }}>
+          Each card is something that happens automatically. Tap the green
+          <strong style={{ color: "#0a8a3a" }}> + Next </strong>
+          button on any card to add the next step.
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={dismiss}
+        style={{
+          background: "#185fa5",
+          color: "#fff",
+          border: 0,
+          borderRadius: 8,
+          padding: "7px 14px",
+          fontWeight: 700,
+          fontSize: 13,
+          cursor: "pointer",
+          flex: "0 0 auto",
+        }}
+      >Got it</button>
+    </div>
+  );
+}
+
 // Pill that appears in the canvas top-right when the user arrived
 // here via a form's "Add more steps" button. Tapping it returns to
 // the lead-intake page; the breadcrumb (still in localStorage) makes
@@ -2377,15 +2472,17 @@ export default function FlowBuilder() {
       <>
       <div
         className={`fb-canvas ${isDropTarget ? "is-drop-target" : ""}`}
+        data-pulse-next={nodes.length === 1 && nodes[0]?.data?.kind === "trigger" ? "1" : "0"}
         onDrop={onDrop}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
       >
+        <FirstTimeGuide />
         <div className={`fb-save fb-save-${saveStatus}`} role="status" aria-live="polite">
           {saveStatus === "saving" && <><span className="fb-save-dot" /> Saving…</>}
           {saveStatus === "saved"  && <>✓ Saved</>}
           {saveStatus === "error"  && <>⚠ Couldn't save — will retry</>}
-          {saveStatus === "idle" && hydrated && <>Auto-saves as you build</>}
+          {saveStatus === "idle" && hydrated && <>Don't worry, we save as you go</>}
         </div>
         <ReturnToFormBanner />
 
