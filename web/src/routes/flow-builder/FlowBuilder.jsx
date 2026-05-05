@@ -24,6 +24,9 @@ import {
   Handle,
   Position,
   MarkerType,
+  BaseEdge,
+  EdgeLabelRenderer,
+  getBezierPath,
   applyNodeChanges,
   applyEdgeChanges,
   addEdge,
@@ -31,9 +34,13 @@ import {
 import "@xyflow/react/dist/style.css";
 
 // Context for passing the "add next step" callback into custom node
-// components. Cleaner than threading callbacks through node.data,
-// which would re-render every node on every state change.
-const FlowContext = React.createContext({ openChooser: () => {} });
+// components AND the "delete this edge" callback into custom edges.
+// Cleaner than threading callbacks through node.data / edge.data,
+// which would re-render every element on every state change.
+const FlowContext = React.createContext({
+  openChooser: () => {},
+  deleteEdge: () => {},
+});
 
 import {
   ACTIVITY_CATALOG, ACTIVITY_BY_ID,
@@ -191,6 +198,61 @@ function BranchCard({ id, data }) {
 }
 
 const NODE_TYPES = { activity: ActivityCard, branch: BranchCard };
+
+// ── Custom edge with hover-to-delete ✕ at the midpoint ─────────────────
+// Renders a smooth bezier path (same as React Flow's default) plus a
+// small ✕ button that fades in when the user hovers either the edge
+// itself or the button. Click ✕ → edge is removed via the delete
+// callback in FlowContext.
+function DeletableEdge({
+  id, source, target,
+  sourceX, sourceY, targetX, targetY,
+  sourcePosition, targetPosition,
+  style, markerEnd,
+  data,
+}) {
+  const ctx = React.useContext(FlowContext);
+  const [hovered, setHovered] = React.useState(false);
+  const [edgePath, labelX, labelY] = getBezierPath({
+    sourceX, sourceY, targetX, targetY,
+    sourcePosition, targetPosition,
+  });
+  return (
+    <>
+      <BaseEdge
+        id={id}
+        path={edgePath}
+        style={style}
+        markerEnd={markerEnd}
+        interactionWidth={20}
+      />
+      <EdgeLabelRenderer>
+        <div
+          className={`fb-edge-x-wrap ${hovered ? "is-hovered" : ""}`}
+          style={{
+            position: "absolute",
+            transform: `translate(-50%,-50%) translate(${labelX}px,${labelY}px)`,
+            pointerEvents: "all",
+          }}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+        >
+          <button
+            type="button"
+            className="fb-edge-x nodrag nopan"
+            aria-label="Remove this connection"
+            title="Remove this connection"
+            onClick={(e) => {
+              e.stopPropagation();
+              ctx.deleteEdge(id);
+            }}
+          >×</button>
+        </div>
+      </EdgeLabelRenderer>
+    </>
+  );
+}
+const EDGE_TYPES = { default: DeletableEdge };
 
 // ── Activity Library (right-docked, collapsible) ────────────────────────
 function LibraryItem({ activity, disabled, comingSoon, alreadyOnCanvas }) {
@@ -864,7 +926,7 @@ function ReplyPhonePreview({
             <strong>They write back</strong>
           </div>
         </li>
-        {!isAlways && !isOff && (() => {
+        {!isAlways && !isOff && fallback === "ai" && (() => {
           const isFirstDefault  = !(firstNudgeBody  && firstNudgeBody.trim());
           const isSecondDefault = !(secondNudgeBody && secondNudgeBody.trim());
           const effectiveFirst  = firstNudgeBody  && firstNudgeBody.trim()  ? firstNudgeBody  : DEFAULT_FIRST_NUDGE_BODY;
@@ -1003,7 +1065,9 @@ function ReplyPhonePreview({
       </ol>
       {/* Custom message preview lives inline next to the textarea on the
           editor side now (fb-rwbody-grid). No duplicate here. */}
-      {editable && (
+      {/* Channel + recipient lists are nudge-related — only show when
+          nudges actually fire (AI replies path, not custom). */}
+      {editable && fallback === "ai" && (
         <div className="fb-rwprev-channel">
           <span className="fb-rwprev-channel-l">Send nudges via</span>
           <div className="fb-rwprev-channel-pills">
@@ -1019,7 +1083,7 @@ function ReplyPhonePreview({
           </div>
         </div>
       )}
-      {editable && (nudgeChannel === "sms" || nudgeChannel === "both") && (
+      {editable && fallback === "ai" && (nudgeChannel === "sms" || nudgeChannel === "both") && (
         <RecipientList
           icon="📱"
           values={nudgePhones || []}
@@ -1028,7 +1092,7 @@ function ReplyPhonePreview({
           onRemove={removePhone}
         />
       )}
-      {editable && (nudgeChannel === "email" || nudgeChannel === "both") && (
+      {editable && fallback === "ai" && (nudgeChannel === "email" || nudgeChannel === "both") && (
         <RecipientList
           icon="📧"
           values={nudgeEmails || []}
@@ -1038,9 +1102,13 @@ function ReplyPhonePreview({
         />
       )}
       <p className="fb-helper" style={{ textAlign: "center", marginTop: 12 }}>
-        {isAlways ? "AI replies right away — no nudges."
-          : isOff ? "AI is off — you'll get the message in your inbox."
-          : "Reply yourself anytime → nudges stop."}
+        {isAlways
+          ? "AI replies right away — no nudges."
+          : isOff
+            ? "AI is off — you'll get the message in your inbox."
+            : fallback === "custom"
+              ? "Reply yourself anytime → your message won't send."
+              : "Reply yourself anytime → nudges stop."}
       </p>
     </div>
   );
