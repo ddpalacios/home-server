@@ -1194,30 +1194,45 @@ const STYLES = `
     box-shadow: 0 6px 16px rgba(15,23,42,.22),
                 0 0 0 2px rgba(22,163,74,.35);
   }
-  /* Tour highlight — pulses an animated ring around whatever element
-     the active tour step is describing. Element gets the class added
-     by FirstTimeGuide's effect; cleared on step change or dismiss.
-     Position relative + z-index 60 so the ring renders above sibling
-     React Flow chrome but below the Back-to-form pill (z-index 70). */
-  @keyframes fb-tour-glow {
+  /* Tour highlight — soft warm yellow/gold halo around whatever
+     element the active tour step is describing. Reads as a "look
+     here!" hint, not an error.
+
+     Critical: NO position override. The +Next button uses
+     position:absolute with a translate, and any reposition on this
+     class would break the card's right-edge anchor. We rely on
+     box-shadow + filter only — pure visual layer, no layout impact. */
+  @keyframes fb-tour-halo {
     0%, 100% {
       box-shadow:
-        0 0 0 4px rgba(24,95,165,.28),
-        0 0 0 10px rgba(24,95,165,.12),
-        0 4px 14px rgba(15,23,42,.18);
+        0 0 0 3px  rgba(252,211,77,.55),    /* warm gold ring */
+        0 0 0 10px rgba(252,211,77,.22),    /* outer soft halo */
+        0 6px 18px rgba(160,110,0,.20);
     }
     50% {
       box-shadow:
-        0 0 0 6px rgba(24,95,165,.42),
-        0 0 0 16px rgba(24,95,165,.18),
-        0 4px 14px rgba(15,23,42,.18);
+        0 0 0 5px  rgba(252,211,77,.70),
+        0 0 0 16px rgba(252,211,77,.28),
+        0 8px 22px rgba(160,110,0,.26);
     }
   }
   .fb-tour-highlight {
-    position: relative;
-    z-index: 60 !important;
+    /* No position / z-index here — purely visual. */
+    animation: fb-tour-halo 1.4s ease-in-out infinite !important;
     border-radius: 12px;
-    animation: fb-tour-glow 1.6s ease-in-out infinite !important;
+  }
+  /* Bobbing arrow companion that points at the highlighted element.
+     The tour panel positions one of these absolutely just below the
+     panel content with content set to direct the user's eye. */
+  @keyframes fb-tour-arrow-bob {
+    0%, 100% { transform: translateY(0)   rotate(-12deg); }
+    50%      { transform: translateY(-4px) rotate(-12deg); }
+  }
+  .fb-tour-arrow {
+    display: inline-block;
+    font-size: 22px;
+    animation: fb-tour-arrow-bob 1.2s ease-in-out infinite;
+    margin: 0 0 0 4px;
   }
 
   /* Pulse hint — when the canvas has just one trigger card, draw the
@@ -2031,23 +2046,29 @@ const TOUR_STEPS = [
     title: "Add a step here.",
     body: (
       <>
-        Tap the green <strong style={{ color: "#0a8a3a" }}>+ Next</strong>{" "}
-        button (glowing now). It opens a list of things you can add:
-        a text, an email, an AI reply, or saving the lead somewhere.
+        See the green <strong style={{ color: "#0a8a3a" }}>+ Next</strong>{" "}
+        button on the card? Tap it to add what comes next — a text, an
+        email, an AI reply, or saving the lead somewhere.
       </>
     ),
     target: ".fb-next-btn",
+    // The "Show me" button programmatically clicks the +Next button
+    // so the user actually SEES the chooser open. v2 of the tour.
+    demoSelector: ".fb-next-btn",
+    demoLabel: "Show me what's inside",
   },
   {
     icon: "✏️",
-    title: "Tap a card to edit it.",
+    title: "Tap a card to change it.",
     body: (
       <>
-        Click any card to change its message, wait time, or what it
-        does. A panel slides in on the right.
+        Click any card and a panel slides in to edit its message,
+        wait time, or what it does.
       </>
     ),
     target: ".fb-card",
+    demoSelector: ".fb-card",
+    demoLabel: "Show me",
   },
   {
     icon: "💾",
@@ -2130,6 +2151,23 @@ function FirstTimeGuide() {
       persistStep(ns); return ns;
     });
   }, [persistStep]);
+  // "Show me" — programmatically click the highlighted element so the
+  // user SEES what tapping it does. Defensive: not all steps have a
+  // demoSelector, and the element may not be in the DOM yet (retry
+  // pattern matches the highlight effect).
+  const showMe = React.useCallback((sel) => {
+    if (!sel) return;
+    let attempts = 0;
+    const tryClick = () => {
+      const el = document.querySelector(sel);
+      if (el) {
+        try { el.click(); } catch (_) {}
+        return;
+      }
+      if (attempts++ < 6) setTimeout(tryClick, 100);
+    };
+    tryClick();
+  }, []);
   if (!show) return null;
   const cur = TOUR_STEPS[step] || TOUR_STEPS[0];
   const isLast = step === TOUR_STEPS.length - 1;
@@ -2211,6 +2249,27 @@ function FirstTimeGuide() {
             />
           ))}
         </div>
+        {cur.demoSelector && (
+          <button
+            type="button"
+            onClick={() => showMe(cur.demoSelector)}
+            style={{
+              background: "#fff8db",
+              color: "#7a5a00",
+              border: "1px solid #f0c419",
+              borderRadius: 8,
+              padding: "6px 12px",
+              fontWeight: 700,
+              fontSize: 13,
+              cursor: "pointer",
+              flex: "0 0 auto",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+            title="Show me what this does"
+          >✨ {cur.demoLabel || "Show me"}</button>
+        )}
         {step > 0 && (
           <button
             type="button"
