@@ -63,6 +63,21 @@ function ActivityCard({ id, data }) {
   // no incoming connection, only an outgoing one. Skip the target
   // handle so nothing in the canvas can ever connect TO it.
   const isInputNode = data.activityId === "input";
+  // Show the picked channel on the canvas so the user reads "Form:
+  // Contact form" without opening the drawer. cardSub falls back to
+  // the catalog default when nothing's been picked yet.
+  let cardSub = data.cardSub || "";
+  if (isInputNode) {
+    if (data.channel === "form" && data.channelRef) {
+      cardSub = "📝 Form: " + (data.channelLabel || "your form");
+    } else if (data.channel === "instagram" && data.channelRef) {
+      cardSub = "💬 Instagram: " + (data.channelLabel || data.channelRef);
+    } else if (data.channel === "phone" && data.channelRef) {
+      cardSub = "📞 Phone: " + (data.channelLabel || data.channelRef);
+    } else {
+      cardSub = "Pick where leads come from →";
+    }
+  }
   const onAddNext = (e) => {
     e.stopPropagation();
     ctx.openChooser({ sourceId: id });
@@ -84,8 +99,8 @@ function ActivityCard({ id, data }) {
         </div>
         <div className="fb-card-text">
           <div className="fb-card-title">{data.title}</div>
-          {data.cardSub ? (
-            <div className="fb-card-sub">{data.cardSub}</div>
+          {cardSub ? (
+            <div className="fb-card-sub">{cardSub}</div>
           ) : null}
           <div className="fb-card-meta">{pill}</div>
         </div>
@@ -1114,6 +1129,232 @@ function ReplyPhonePreview({
   );
 }
 
+// ── Input channel picker (drawer panel for the "Input" trigger) ────────
+// The user picks WHERE leads enter the flow. Three options, all
+// real, all using language a five-year-old reads cleanly:
+//   📝 Form on your website   → /me/forms
+//   💬 Instagram messages     → /me/instagram/accounts
+//   📞 Phone calls or texts   → /me/intake/channels.phone
+// If a channel isn't set up, the card shows ONE big "Set this up →"
+// button that takes the user straight to the page that finishes
+// setup (lead intake, instagram, settings/phone), with a breadcrumb
+// so they come back here when they're done.
+function InputChannelPanel({ nodeId, data, onChange }) {
+  const [loading, setLoading] = React.useState(true);
+  const [channelsStatus, setChannelsStatus] = React.useState(null);
+  const [forms, setForms] = React.useState([]);
+  const [igAccounts, setIgAccounts] = React.useState([]);
+  const channel = data.channel || "";
+  const channelRef = data.channelRef || "";
+
+  React.useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      fetch("/me/intake/channels", { credentials: "same-origin" })
+        .then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch("/me/forms", { credentials: "same-origin" })
+        .then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch("/me/instagram/accounts", { credentials: "same-origin" })
+        .then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([ch, fs, ig]) => {
+      if (cancelled) return;
+      setChannelsStatus(ch?.channels || null);
+      setForms(Array.isArray(fs?.forms) ? fs.forms.filter(f => !f.is_draft) : []);
+      setIgAccounts(Array.isArray(ig?.accounts) ? ig.accounts : []);
+      setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  const setChannel = (kind, ref, label) => {
+    onChange(nodeId, {
+      channel: kind,
+      channelRef: ref || "",
+      channelLabel: label || "",
+    });
+  };
+
+  // Drop a breadcrumb so the user can come back to this flow after
+  // they finish setting up the channel they just clicked into.
+  const dropReturnBreadcrumb = () => {
+    try {
+      localStorage.setItem("fb_return_to_input", "1");
+      localStorage.setItem("fb_return_to_input_ts", String(Date.now()));
+    } catch (_) {}
+  };
+
+  const phoneReady = !!(channelsStatus?.phone?.ready);
+  const phoneNumber = channelsStatus?.phone?.phone_number || "";
+
+  if (loading) {
+    return (
+      <div className="fb-ich-loading">
+        Loading your channels…
+      </div>
+    );
+  }
+
+  return (
+    <div className="fb-ich">
+      <p className="fb-ich-h">Where do your leads come from?</p>
+      <p className="fb-ich-sub">
+        Pick the place. The flow starts as soon as a lead shows up there.
+      </p>
+
+      {/* ── 1. Form on your website ────────────────────────── */}
+      <div className={`fb-ich-card ${channel === "form" ? "is-picked" : ""}`}>
+        <div className="fb-ich-card-h">
+          <span className="fb-ich-ico" aria-hidden="true">📝</span>
+          <div className="fb-ich-card-text">
+            <div className="fb-ich-card-title">Form on your website</div>
+            <div className="fb-ich-card-sub">
+              Someone fills out a form. They land here.
+            </div>
+          </div>
+          {channel === "form" && (
+            <span className="fb-ich-pickdot" aria-hidden="true">✓</span>
+          )}
+        </div>
+        {forms.length === 0 ? (
+          <div className="fb-ich-empty">
+            <p className="fb-ich-empty-msg">You haven't made a form yet.</p>
+            <a
+              className="fb-ich-setup-btn"
+              href="#leadIntake"
+              onClick={dropReturnBreadcrumb}
+            >+ Make a form</a>
+          </div>
+        ) : (
+          <div className="fb-ich-options" role="radiogroup" aria-label="Pick a form">
+            {forms.map(f => {
+              const picked = channel === "form" && channelRef === f.id;
+              return (
+                <button
+                  key={f.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={picked}
+                  className={`fb-ich-option ${picked ? "is-picked" : ""}`}
+                  onClick={() => setChannel("form", f.id, f.name || "Untitled form")}
+                >
+                  <span className="fb-ich-radio" aria-hidden="true" />
+                  <span className="fb-ich-option-name">{f.name || "Untitled form"}</span>
+                </button>
+              );
+            })}
+            <a
+              className="fb-ich-make-another"
+              href="#leadIntake"
+              onClick={dropReturnBreadcrumb}
+            >+ Make a new form</a>
+          </div>
+        )}
+      </div>
+
+      {/* ── 2. Instagram messages ──────────────────────────── */}
+      <div className={`fb-ich-card ${channel === "instagram" ? "is-picked" : ""}`}>
+        <div className="fb-ich-card-h">
+          <span className="fb-ich-ico" aria-hidden="true">💬</span>
+          <div className="fb-ich-card-text">
+            <div className="fb-ich-card-title">Instagram messages</div>
+            <div className="fb-ich-card-sub">
+              Someone DMs your Instagram. They land here.
+            </div>
+          </div>
+          {channel === "instagram" && (
+            <span className="fb-ich-pickdot" aria-hidden="true">✓</span>
+          )}
+        </div>
+        {igAccounts.length === 0 ? (
+          <div className="fb-ich-empty">
+            <p className="fb-ich-empty-msg">You haven't connected Instagram yet.</p>
+            <a
+              className="fb-ich-setup-btn"
+              href="#instagram"
+              onClick={dropReturnBreadcrumb}
+            >Connect Instagram →</a>
+          </div>
+        ) : (
+          <div className="fb-ich-options" role="radiogroup" aria-label="Pick an account">
+            {igAccounts.map(acc => {
+              const id = acc.ig_account_id;
+              const picked = channel === "instagram" && channelRef === id;
+              const handle = acc.ig_username
+                ? "@" + acc.ig_username
+                : (acc.fb_page_name || id);
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  role="radio"
+                  aria-checked={picked}
+                  className={`fb-ich-option ${picked ? "is-picked" : ""}`}
+                  onClick={() => setChannel("instagram", id, handle)}
+                >
+                  <span className="fb-ich-radio" aria-hidden="true" />
+                  <span className="fb-ich-option-name">{handle}</span>
+                  {acc.needs_reconnect && (
+                    <span className="fb-ich-badge-warn">Reconnect</span>
+                  )}
+                </button>
+              );
+            })}
+            <a
+              className="fb-ich-make-another"
+              href="#instagram"
+              onClick={dropReturnBreadcrumb}
+            >+ Add another account</a>
+          </div>
+        )}
+      </div>
+
+      {/* ── 3. Phone calls or texts ────────────────────────── */}
+      <div className={`fb-ich-card ${channel === "phone" ? "is-picked" : ""}`}>
+        <div className="fb-ich-card-h">
+          <span className="fb-ich-ico" aria-hidden="true">📞</span>
+          <div className="fb-ich-card-text">
+            <div className="fb-ich-card-title">Phone calls or texts</div>
+            <div className="fb-ich-card-sub">
+              Someone calls or texts your business number. They land here.
+            </div>
+          </div>
+          {channel === "phone" && (
+            <span className="fb-ich-pickdot" aria-hidden="true">✓</span>
+          )}
+        </div>
+        {!phoneReady ? (
+          <div className="fb-ich-empty">
+            <p className="fb-ich-empty-msg">You don't have a number yet.</p>
+            <a
+              className="fb-ich-setup-btn"
+              href="#phones"
+              onClick={dropReturnBreadcrumb}
+            >Get a phone number →</a>
+          </div>
+        ) : (
+          <div className="fb-ich-options" role="radiogroup" aria-label="Pick a number">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={channel === "phone" && channelRef === phoneNumber}
+              className={`fb-ich-option ${channel === "phone" && channelRef === phoneNumber ? "is-picked" : ""}`}
+              onClick={() => setChannel("phone", phoneNumber, phoneNumber)}
+            >
+              <span className="fb-ich-radio" aria-hidden="true" />
+              <span className="fb-ich-option-name">{phoneNumber}</span>
+            </button>
+          </div>
+        )}
+      </div>
+
+      <p className="fb-helper">
+        You can change this any time. The flow starts when a lead shows up
+        on the channel you picked.
+      </p>
+    </div>
+  );
+}
+
 // ── Message editor drawer ───────────────────────────────────────────────
 function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
   // Local state mirrors node.data so typing is responsive; we propagate
@@ -1260,18 +1501,11 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
         <div className="fb-drawer-body">
           <div className="fb-drawer-edit">
             {isInput ? (
-              <div className="fb-input-panel">
-                <p className="fb-input-panel-h">This is where your flow starts.</p>
-                <p className="fb-input-panel-body">
-                  Every other step you add will run after this card. Connect
-                  the next thing you want to happen by clicking the
-                  <strong> + Next</strong> button on the right edge.
-                </p>
-                <p className="fb-helper">
-                  You can't edit or delete this card — it's the entry point
-                  for the whole flow.
-                </p>
-              </div>
+              <InputChannelPanel
+                nodeId={node.id}
+                data={data}
+                onChange={onChange}
+              />
             ) : isBranch ? (
               <div>
                 <label className="fb-drawer-l" htmlFor="fb-edit-condition">
@@ -2729,22 +2963,147 @@ const STYLES = `
     font-size: 12px; color: #6b7280; margin: 8px 0 0;
     line-height: 1.45;
   }
-  /* Input drawer panel — friendly read-only message instead of a
-     message composer when the user clicks the Input card. */
-  .fb-input-panel {
-    background: #ecfdf5;
-    border: 1px solid #a7f3d0;
-    border-radius: 12px;
-    padding: 16px 18px;
+  /* ── Input channel picker (drawer) ──────────────────────────────────
+     Three big cards — Form / Instagram / Phone — each showing real
+     status and a clear path to set up if not ready. Plain language,
+     short copy, one decision per card. */
+  .fb-ich-loading {
+    padding: 24px 6px;
+    text-align: center;
+    color: #6b7280;
+    font-size: 13.5px;
   }
-  .fb-input-panel-h {
+  .fb-ich-h {
     margin: 0 0 6px;
-    font-size: 14.5px; font-weight: 700; color: #065f46;
+    font-size: 16px; font-weight: 700; color: #0a0a0a;
+    letter-spacing: -0.01em;
   }
-  .fb-input-panel-body {
-    margin: 0; font-size: 13px; color: #064e3b; line-height: 1.55;
+  .fb-ich-sub {
+    margin: 0 0 16px;
+    font-size: 13px; color: #4b5563; line-height: 1.5;
   }
-  .fb-input-panel strong { font-weight: 700; color: #047857; }
+  .fb-ich-card {
+    background: #fff;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    transition: border-color .14s ease, box-shadow .14s ease, background .14s ease;
+  }
+  .fb-ich-card.is-picked {
+    border-color: #10b981;
+    background: #f0fdf4;
+    box-shadow: 0 0 0 3px rgba(16,185,129,.10);
+  }
+  .fb-ich-card-h {
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .fb-ich-ico {
+    font-size: 24px; line-height: 1; flex-shrink: 0;
+  }
+  .fb-ich-card-text {
+    flex: 1; min-width: 0;
+  }
+  .fb-ich-card-title {
+    font-size: 14.5px; font-weight: 700; color: #0a0a0a;
+    line-height: 1.2;
+  }
+  .fb-ich-card-sub {
+    margin-top: 2px;
+    font-size: 12.5px; color: #4b5563; line-height: 1.4;
+  }
+  .fb-ich-pickdot {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px;
+    background: #10b981; color: #fff;
+    border-radius: 50%;
+    font-size: 12px; font-weight: 800;
+    flex-shrink: 0;
+  }
+  .fb-ich-empty {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    display: flex; align-items: center; gap: 12px;
+    flex-wrap: wrap;
+  }
+  .fb-ich-empty-msg {
+    margin: 0; flex: 1; min-width: 0;
+    font-size: 12.5px; color: #92400e; font-weight: 500;
+  }
+  .fb-ich-setup-btn {
+    flex-shrink: 0;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px;
+    background: #185FA5; color: #fff;
+    border-radius: 8px;
+    font-size: 12.5px; font-weight: 600;
+    text-decoration: none;
+    transition: background .12s ease, transform .12s ease;
+  }
+  .fb-ich-setup-btn:hover {
+    background: #144d85;
+    transform: translateY(-1px);
+  }
+  .fb-ich-options {
+    margin-top: 10px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .fb-ich-option {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: #fff;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    color: #0a0a0a;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color .12s ease, background .12s ease;
+  }
+  .fb-ich-option:hover {
+    border-color: #cbd5e1;
+    background: #f9fafb;
+  }
+  .fb-ich-option.is-picked {
+    border-color: #10b981;
+    background: #ecfdf5;
+  }
+  .fb-ich-radio {
+    width: 18px; height: 18px;
+    border: 2px solid #cbd5e1;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: #fff;
+    transition: border-color .12s ease, background .12s ease;
+    position: relative;
+  }
+  .fb-ich-option.is-picked .fb-ich-radio {
+    border-color: #10b981;
+    background: #10b981;
+    box-shadow: inset 0 0 0 3px #fff;
+  }
+  .fb-ich-option-name {
+    flex: 1; min-width: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .fb-ich-make-another {
+    margin-top: 4px;
+    align-self: flex-start;
+    font-size: 12px; color: #185FA5; font-weight: 600;
+    text-decoration: none;
+  }
+  .fb-ich-make-another:hover { text-decoration: underline; }
+  .fb-ich-badge-warn {
+    flex-shrink: 0;
+    padding: 2px 8px;
+    background: #fef3c7; color: #92400e;
+    border-radius: 999px;
+    font-size: 10.5px; font-weight: 700;
+    letter-spacing: .04em; text-transform: uppercase;
+  }
   .fb-wait-row {
     display: flex; align-items: center; gap: 10px;
   }
@@ -4389,10 +4748,29 @@ export default function FlowBuilder() {
         // immediately so subsequent loads see it as "saved." The
         // debounced autosave covers later edits; this initial save
         // makes the auto-create idempotent.
-        // Seed with the generic "Input" trigger so the user sees a
-        // concrete entry-point card on the canvas — every other step
-        // they add will visibly connect back to it.
+        // Seed with the generic "Input" trigger AND pre-fill its
+        // channel with this form so the user lands on a flow that's
+        // already wired to the right source — no extra clicks.
         const seed = buildFromTemplate({ activityIds: ["input"] });
+        // Look up the form's friendly name so the canvas card reads
+        // "📝 Form: Contact form" instead of an opaque id.
+        let formLabel = "your form";
+        try {
+          const fr = await fetch("/me/forms", { credentials: "same-origin" });
+          if (fr.ok) {
+            const fp = await fr.json();
+            const match = (fp?.forms || []).find(f => f.id === formId);
+            if (match?.name) formLabel = match.name;
+          }
+        } catch (_) { /* fall back to default label */ }
+        if (seed.nodes && seed.nodes[0]) {
+          seed.nodes[0].data = {
+            ...seed.nodes[0].data,
+            channel: "form",
+            channelRef: formId,
+            channelLabel: formLabel,
+          };
+        }
         setNodes(seed.nodes);
         setEdges(seed.edges);
         setPickerDismissed(true);
