@@ -40,8 +40,14 @@
       <h3>Website form</h3>
       <div class="meta" id="ch-form-meta">Loading…</div>
     </div>
-    <div class="ch" disabled><h3>Email</h3><div class="meta">Coming soon</div></div>
-    <div class="ch" disabled><h3>Phone (call &amp; text)</h3><div class="meta">Coming soon</div></div>
+    <div class="ch" id="ch-email">
+      <h3>Email</h3>
+      <div class="meta" id="ch-email-meta">Loading…</div>
+    </div>
+    <div class="ch" id="ch-phone">
+      <h3>Phone (call &amp; text)</h3>
+      <div class="meta" id="ch-phone-meta">Loading…</div>
+    </div>
     <div class="ch" disabled><h3>Instagram / Facebook DM</h3><div class="meta">Coming soon</div></div>
   </div>
 
@@ -76,6 +82,80 @@
       if (forms.length === 0) { $("forms-empty").hidden = false; $("forms-list").hidden = true; renderEmpty(); }
       else { $("forms-empty").hidden = true; $("forms-list").hidden = false; renderList(forms); }
     });
+  }
+  var CHANNELS = {};
+  function loadChannels(){
+    fetch("/me/intake/channels", { credentials:"same-origin" })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        CHANNELS = (d && d.channels) || {};
+        var em = CHANNELS.email || {};
+        var ph = CHANNELS.phone || {};
+        $("ch-email-meta").textContent = em.ready
+          ? ("Connected: " + (em.connected_email || "") + " · " + (em.leads_30d || 0) + " leads / 30d")
+          : "Not set up yet — connect Gmail";
+        $("ch-email").style.cursor = "pointer";
+        $("ch-email").onclick = function(){ openEmailModal(em); };
+        $("ch-phone-meta").textContent = ph.ready
+          ? ((ph.phone_number || "") + " · " + (ph.leads_30d || 0) + " leads / 30d")
+          : "No Twilio number assigned to this account yet";
+        $("ch-phone").style.cursor = "pointer";
+        $("ch-phone").onclick = function(){ openPhoneModal(ph); };
+      })
+      .catch(function(){
+        $("ch-email-meta").textContent = "Status unavailable";
+        $("ch-phone-meta").textContent = "Status unavailable";
+      });
+  }
+  function openEmailModal(em){
+    var bg = document.createElement("div");
+    bg.style = "position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9000;padding:20px";
+    var body = em.ready
+      ? '<p>Connected as <strong>' + esc(em.connected_email) + '</strong>.</p>'
+        + '<p class="meta" style="color:var(--sub)">When someone emails this address, we capture them as a lead within 30 seconds and your First Hello flow runs automatically. Polling rides on the same Gmail integration you already use for outreach.</p>'
+        + '<p class="meta" style="color:var(--sub)">No setup needed. To stop receiving leads from this channel, disconnect Gmail in your account settings.</p>'
+      : '<p>Connect your Gmail account to capture inbound emails as leads. We use the same OAuth integration as outbound email — no extra config.</p>'
+        + '<p style="margin-top:14px"><a class="btn btn-primary" href="' + esc(em.connect_url || '/auth/google/start') + '">Connect Gmail</a></p>';
+    bg.innerHTML = '<div style="background:#fff;border-radius:12px;max-width:520px;width:100%;padding:22px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+      +   '<h2 style="margin:0;font-size:18px">Email lead intake</h2>'
+      +   '<button data-x style="border:0;background:transparent;font-size:22px;cursor:pointer">&times;</button>'
+      + '</div>' + body + '</div>';
+    document.body.appendChild(bg);
+    var close = function(){ try { document.body.removeChild(bg); } catch(_){} };
+    bg.querySelector("[data-x]").onclick = close;
+    bg.addEventListener("click", function(e){ if (e.target === bg) close(); });
+  }
+  function openPhoneModal(ph){
+    var bg = document.createElement("div");
+    bg.style = "position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9000;padding:20px";
+    var body;
+    if (!ph.ready) {
+      body = '<p>No Twilio number is assigned to your account yet. Once one is provisioned, return here and we\'ll show the webhook URL to paste into Twilio.</p>';
+    } else {
+      var url = ph.webhook_url || (location.origin + "/twilio/sms");
+      body = '<p>Your number: <strong>' + esc(ph.phone_number) + '</strong></p>'
+        + '<p>Paste this webhook URL into Twilio so inbound SMS becomes leads:</p>'
+        + '<div style="background:#f7f7f8;border:1px solid var(--line);border-radius:8px;padding:10px;font-family:Menlo,monospace;font-size:13px;word-break:break-all">' + esc(url) + '</div>'
+        + '<button class="btn btn-primary" data-cp style="margin-top:10px">Copy URL</button>'
+        + '<ol class="meta" style="color:var(--sub);margin-top:14px;padding-left:18px;line-height:1.6">'
+        +   '<li>Twilio Console → Phone Numbers → Active numbers → click <strong>' + esc(ph.phone_number) + '</strong></li>'
+        +   '<li>Scroll to <strong>Messaging</strong> → <em>A MESSAGE COMES IN</em> → set Webhook to the URL above</li>'
+        +   '<li>Method: <strong>HTTP POST</strong> · Save</li>'
+        +   '<li>Send a test text to your number — it should appear in your dashboard within seconds.</li>'
+        + '</ol>';
+    }
+    bg.innerHTML = '<div style="background:#fff;border-radius:12px;max-width:560px;width:100%;padding:22px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+      +   '<h2 style="margin:0;font-size:18px">Phone (SMS) lead intake</h2>'
+      +   '<button data-x style="border:0;background:transparent;font-size:22px;cursor:pointer">&times;</button>'
+      + '</div>' + body + '</div>';
+    document.body.appendChild(bg);
+    var close = function(){ try { document.body.removeChild(bg); } catch(_){} };
+    bg.querySelector("[data-x]").onclick = close;
+    var cp = bg.querySelector("[data-cp]");
+    if (cp) cp.onclick = function(){ copy(ph.webhook_url || (location.origin + "/twilio/sms")); };
+    bg.addEventListener("click", function(e){ if (e.target === bg) close(); });
   }
   function renderEmpty(){
     $("empty-create").onclick = openBuilder;
@@ -354,6 +434,7 @@
     bg.querySelector("#ss-close").onclick = function(){ document.body.removeChild(bg); };
   }
   loadForms();
+  loadChannels();
 </script>
 </body>
 </html>
