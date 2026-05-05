@@ -796,10 +796,14 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
     data.fallback || activity.defaultFallback || "ai");
   const [globalAiMode, setGlobalAiMode] = React.useState(null);
   const [globalCadence, setGlobalCadence] = React.useState(null);
+  // Nudge config — also lives in ai_policy.json. Edited inline on the
+  // right-side timeline; saves to the global policy.
+  const [nudgeChannel,    setNudgeChannel]    = React.useState("sms");
+  const [firstNudgeBody,  setFirstNudgeBody]  = React.useState("");
+  const [secondNudgeBody, setSecondNudgeBody] = React.useState("");
   React.useEffect(() => {
     if (!isReply) return;
     let cancelled = false;
-    // Initial fetch when the drawer opens.
     (async () => {
       try {
         const r = await fetch("/me/ai/policy", { credentials: "same-origin" });
@@ -808,16 +812,20 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
         if (cancelled) return;
         setGlobalAiMode((p && p.mode) || "hybrid");
         setGlobalCadence((p && p.reminder_cadence) || null);
+        if (p && p.nudge_channel) setNudgeChannel(p.nudge_channel);
+        if (p && typeof p.first_nudge_body  === "string") setFirstNudgeBody(p.first_nudge_body);
+        if (p && typeof p.second_nudge_body === "string") setSecondNudgeBody(p.second_nudge_body);
       } catch (_) {}
     })();
-    // Live updates: the top-right control fires `ai-policy:changed`
-    // whenever the user picks a new mode or edits a cadence dropdown.
-    // We update state so the cadence card / preview reflect the change
-    // immediately without a refetch.
+    // Live updates: any subscriber editing the global policy fires
+    // `ai-policy:changed`. Reflect their changes here without a refetch.
     function onPolicyChanged(ev) {
       const d = (ev && ev.detail) || {};
       if (d.mode) setGlobalAiMode(d.mode);
       if (d.reminder_cadence) setGlobalCadence(d.reminder_cadence);
+      if (d.nudge_channel) setNudgeChannel(d.nudge_channel);
+      if (typeof d.first_nudge_body  === "string") setFirstNudgeBody(d.first_nudge_body);
+      if (typeof d.second_nudge_body === "string") setSecondNudgeBody(d.second_nudge_body);
     }
     window.addEventListener("ai-policy:changed", onPolicyChanged);
     return () => {
@@ -825,6 +833,28 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
       window.removeEventListener("ai-policy:changed", onPolicyChanged);
     };
   }, [isReply]);
+
+  // Save nudge config. Channel = immediate; textarea edits debounce
+  // 600 ms so each keystroke isn't a network round-trip.
+  const _nudgeSaveTimer = React.useRef(null);
+  const persistNudge = React.useCallback((payload, immediate) => {
+    if (_nudgeSaveTimer.current) clearTimeout(_nudgeSaveTimer.current);
+    const fire = async () => {
+      try {
+        const r = await fetch("/me/ai/policy", {
+          method: "POST", credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!r.ok) return;
+        try {
+          window.dispatchEvent(new CustomEvent("ai-policy:changed", { detail: payload }));
+        } catch (_) {}
+      } catch (_) {}
+    };
+    if (immediate) fire();
+    else _nudgeSaveTimer.current = setTimeout(fire, 600);
+  }, []);
 
   const taRef = React.useRef(null);
   const subjRef = React.useRef(null);
