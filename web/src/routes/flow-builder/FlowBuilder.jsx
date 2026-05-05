@@ -2338,12 +2338,26 @@ export default function FlowBuilder() {
     try { localStorage.setItem("fb.viewMode", viewMode); } catch (_) {}
   }, [viewMode]);
 
+  // Per-form flow routing: when the user arrived via a form's
+  // "Add more steps" round-trip (intake_return_form_id breadcrumb),
+  // load AND save against /me/forms/<form_id>/flow instead of the
+  // shared /me/flows/default. Each form keeps its own canvas state,
+  // and DELETE on the parent form cascades to clean it up.
+  const formId = React.useMemo(() => {
+    try {
+      return localStorage.getItem("intake_return_form_id") || "";
+    } catch (_) { return ""; }
+  }, []);
+  const flowEndpoint = formId
+    ? `/me/forms/${encodeURIComponent(formId)}/flow`
+    : "/me/flows/default";
+
   React.useEffect(() => {
     let cancelled = false;
     (async () => {
       let hasSavedFlow = false;
       try {
-        const r = await fetch("/me/flows/default",
+        const r = await fetch(flowEndpoint,
           { credentials: "same-origin" });
         if (cancelled) return;
         if (r.ok) {
@@ -2351,32 +2365,23 @@ export default function FlowBuilder() {
           if (d && d.flow && Array.isArray(d.flow.nodes) && d.flow.nodes.length > 0) {
             setNodes(d.flow.nodes);
             setEdges(Array.isArray(d.flow.edges) ? d.flow.edges : []);
-            // We have a saved flow — skip the first-run template picker.
             setPickerDismissed(true);
             hasSavedFlow = true;
           }
         }
       } catch (_) { /* swallow — work offline */ }
-      // Form round-trip: when the user clicked "Add more steps" on a
-      // form, the lead-intake page set localStorage.intake_return_form_id.
-      // If they land here with no saved flow, auto-seed a First Hello
-      // node so the canvas isn't blank — they came here to add steps to
-      // the form's existing flow, not to start from scratch.
-      if (!cancelled && !hasSavedFlow) {
-        try {
-          const fid = localStorage.getItem("intake_return_form_id");
-          if (fid) {
-            const seed = buildFromTemplate({ activityIds: ["first_contact"] });
-            setNodes(seed.nodes);
-            setEdges(seed.edges);
-            setPickerDismissed(true);
-          }
-        } catch (_) { /* localStorage may be blocked */ }
+      // First-time arrival via form round-trip — seed the first_contact
+      // trigger so the canvas reflects what the form already does.
+      if (!cancelled && !hasSavedFlow && formId) {
+        const seed = buildFromTemplate({ activityIds: ["first_contact"] });
+        setNodes(seed.nodes);
+        setEdges(seed.edges);
+        setPickerDismissed(true);
       }
       if (!cancelled) setHydrated(true);
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [flowEndpoint, formId]);
 
   // Debounced save: any change to nodes/edges schedules a save 800ms
   // after the last edit. Drag-while-dragging coalesces into one save.
@@ -2387,7 +2392,7 @@ export default function FlowBuilder() {
     saveTimerRef.current = setTimeout(async () => {
       setSaveStatus("saving");
       try {
-        const r = await fetch("/me/flows/default", {
+        const r = await fetch(flowEndpoint, {
           method: "POST", credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ nodes, edges }),
@@ -2401,7 +2406,7 @@ export default function FlowBuilder() {
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
-  }, [nodes, edges, hydrated]);
+  }, [nodes, edges, hydrated, flowEndpoint]);
 
   const openChooser = React.useCallback((info) => setChooser(info), []);
   const closeChooser = React.useCallback(() => setChooser(null), []);

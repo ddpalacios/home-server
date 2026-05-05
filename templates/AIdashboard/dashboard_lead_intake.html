@@ -584,6 +584,10 @@
       attached_flow_name: editing ? (form.attached_flow_name || "First Hello")   : "First Hello",
       submit_text: editing ? form.submit_text || "Submit" : "Submit",
       thank_you:   editing ? form.thank_you   || "Thanks — we'll be in touch." : "Thanks — we'll be in touch.",
+      // is_draft flips ON when "Add more steps" persists a brand-new
+      // form before the user has explicitly clicked Save. Closing the
+      // modal in this state deletes the draft + its flow.
+      is_draft: editing ? !!form.is_draft : false,
       // Initialize fields: when editing, take from form. When creating, start with name+phone+message ON.
       fields: editing ? (form.fields || []).slice() : [
         Object.assign({}, BUILTINS[0], {required:true,  builtin:true}),
@@ -615,9 +619,26 @@
       +   '</div>'
       + '</div>';
     document.body.appendChild(bg);
-    bg.addEventListener("click", function(e){ if (e.target === bg) document.body.removeChild(bg); });
-    bg.querySelector("#b-close").onclick = function(){ document.body.removeChild(bg); };
-    bg.querySelector("#b-cancel").onclick = function(){ document.body.removeChild(bg); };
+    // Close-without-save semantics:
+    //   - If state.is_draft is set, the form was created as a draft (the
+    //     user clicked "Add more steps" but never explicitly saved).
+    //     Cancel/X/backdrop-click delete the draft and its flow so the
+    //     user doesn't end up with phantom forms in the list.
+    //   - Otherwise it's a normal close — leave existing forms alone.
+    var closeModal = function(){
+      try { document.body.removeChild(bg); } catch (_) {}
+      if (state.is_draft && state.id) {
+        // Fire-and-forget cleanup. The DELETE endpoint cascades to the
+        // per-form flow record so nothing is orphaned.
+        fetch("/me/forms/" + state.id, {
+          method: "DELETE", credentials: "same-origin",
+        }).catch(function(){});
+        toast("Discarded — nothing was saved.");
+      }
+    };
+    bg.addEventListener("click", function(e){ if (e.target === bg) closeModal(); });
+    bg.querySelector("#b-close").onclick = closeModal;
+    bg.querySelector("#b-cancel").onclick = closeModal;
     var delBtn = bg.querySelector("#b-delete");
     if (delBtn) delBtn.onclick = function(){
       if (!confirm("Delete \"" + state.name + "\"?")) return;
@@ -812,6 +833,10 @@
         asBtn.disabled = true;
         var origText = asBtn.querySelector(".ascta-title");
         if (origText) origText.textContent = "Saving…";
+        // Mark the form as a draft only when it's brand-new (no id
+        // yet). Editing an already-saved form should NOT demote it.
+        var saveAsDraft = !state.id;
+        if (saveAsDraft) state.is_draft = true;
         saveFormAndThen(function(savedForm){
           try {
             localStorage.setItem("intake_return_form_id", savedForm.id || "");
@@ -975,6 +1000,7 @@
         attached_flow_name: state.attached_flow_name,
         fields: state.fields, submit_text: state.submit_text,
         thank_you: state.thank_you,
+        is_draft: !!state.is_draft,
       };
       var url = editing ? "/me/forms/" + state.id : "/me/forms";
       // Always POST. The C proxy at port 9030 has no put_to_local helper,
@@ -1005,6 +1031,9 @@
         });
     }
     function saveForm(){
+      // Explicit Save promotes the form out of draft status. Closing
+      // the modal after this won't trigger the cleanup path.
+      state.is_draft = false;
       saveFormAndThen(function(savedForm){
         document.body.removeChild(bg);
         // For brand-new forms (state was non-editing before save),
