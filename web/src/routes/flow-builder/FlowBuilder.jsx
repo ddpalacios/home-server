@@ -639,7 +639,7 @@ function PhonePreview({ mode, subject, body, fromName }) {
 // long content stays aligned.
 function TokenHighlightTextarea({
   id, taRef, className, rows, value, placeholder,
-  onChange, onFocus, dataAiEditable, dataAiFieldType,
+  onChange, onFocus, dataAiEditable, dataAiFieldType, autoFocus,
 }) {
   const overlayRef = React.useRef(null);
   function handleScroll(e) {
@@ -688,6 +688,7 @@ function TokenHighlightTextarea({
         onChange={onChange}
         onFocus={onFocus}
         onScroll={handleScroll}
+        autoFocus={autoFocus}
         data-ai-editable={dataAiEditable ? "true" : undefined}
         data-ai-field-type={dataAiFieldType}
         spellCheck={true}
@@ -777,6 +778,8 @@ function ReplyPhonePreview({
 
   // Inline edit state — only one nudge open at a time.
   const [openNudge, setOpenNudge] = React.useState(null); // null | 1 | 2
+  const firstNudgeRef  = React.useRef(null);
+  const secondNudgeRef = React.useRef(null);
   function toggleNudge(n) { setOpenNudge(prev => prev === n ? null : n); }
   function changeNudge(which, v) {
     if (which === 1) {
@@ -785,6 +788,17 @@ function ReplyPhonePreview({
     } else {
       setSecondNudgeBody && setSecondNudgeBody(v);
       persistNudge && persistNudge({ second_nudge_body: v }, false);
+    }
+  }
+  function insertNudgeTag(which, token) {
+    if (which === 1) {
+      insertTokenAtCursor(
+        firstNudgeRef, firstNudgeBody || "",
+        (next) => changeNudge(1, next), token);
+    } else {
+      insertTokenAtCursor(
+        secondNudgeRef, secondNudgeBody || "",
+        (next) => changeNudge(2, next), token);
     }
   }
   function pickChannel(ch) {
@@ -856,15 +870,31 @@ function ReplyPhonePreview({
                   </button>
                   {openNudge === 1 ? (
                     <div id="fb-rwprev-nudge-body-1" className="fb-rwprev-nudge-body">
-                      <textarea
+                      <TokenHighlightTextarea
+                        taRef={firstNudgeRef}
                         className="fb-rwprev-nudge-ta"
                         rows={3}
                         value={firstNudgeBody || ""}
                         onChange={(e) => changeNudge(1, e.target.value)}
                         placeholder={DEFAULT_FIRST_NUDGE_BODY}
                         autoFocus
-                        data-ai-editable="true" data-ai-field-type="general"
+                        dataAiEditable
+                        dataAiFieldType="general"
                       />
+                      <div className="fb-rwprev-nudge-chips">
+                        <span className="fb-rwprev-nudge-chips-l">+ Add lead info:</span>
+                        <div className="fb-rwprev-nudge-chips-row">
+                          {MERGE_TAGS.map(t => (
+                            <button
+                              key={t.token}
+                              type="button"
+                              className="fb-chip fb-rwprev-nudge-chip"
+                              onClick={() => insertNudgeTag(1, t.token)}
+                              title={`Adds ${t.token}`}
+                            >{t.label}</button>
+                          ))}
+                        </div>
+                      </div>
                       {isFirstDefault && (
                         <p className="fb-rwprev-nudge-hint">
                           Leave blank to use the default above.
@@ -895,15 +925,31 @@ function ReplyPhonePreview({
                   </button>
                   {openNudge === 2 ? (
                     <div id="fb-rwprev-nudge-body-2" className="fb-rwprev-nudge-body">
-                      <textarea
+                      <TokenHighlightTextarea
+                        taRef={secondNudgeRef}
                         className="fb-rwprev-nudge-ta"
                         rows={3}
                         value={secondNudgeBody || ""}
                         onChange={(e) => changeNudge(2, e.target.value)}
                         placeholder={DEFAULT_SECOND_NUDGE_BODY}
                         autoFocus
-                        data-ai-editable="true" data-ai-field-type="general"
+                        dataAiEditable
+                        dataAiFieldType="general"
                       />
+                      <div className="fb-rwprev-nudge-chips">
+                        <span className="fb-rwprev-nudge-chips-l">+ Add lead info:</span>
+                        <div className="fb-rwprev-nudge-chips-row">
+                          {MERGE_TAGS.map(t => (
+                            <button
+                              key={t.token}
+                              type="button"
+                              className="fb-chip fb-rwprev-nudge-chip"
+                              onClick={() => insertNudgeTag(2, t.token)}
+                              title={`Adds ${t.token}`}
+                            >{t.label}</button>
+                          ))}
+                        </div>
+                      </div>
                       {isSecondDefault && (
                         <p className="fb-rwprev-nudge-hint">
                           Leave blank to use the default above.
@@ -2651,6 +2697,37 @@ const STYLES = `
   .fb-rwprev-nudge-hint {
     margin: 8px 0 0; font-size: 12px; color: #94a3b8;
     font-style: italic;
+  }
+  /* Lead-variable chip row inside a nudge editor — same family as the
+     email/text editor's "Tap to add" row but laid out tighter so it
+     reads "+ Add lead info: [chip] [chip] [chip] …" on one line. */
+  .fb-rwprev-nudge-chips {
+    margin-top: 12px;
+    display: flex; flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .fb-rwprev-nudge-chips-l {
+    font-size: 12.5px; font-weight: 600;
+    color: #1e3a8a;
+    letter-spacing: 0.01em;
+  }
+  .fb-rwprev-nudge-chips-row {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .fb-rwprev-nudge-chip {
+    /* Inherits .fb-chip — slight variant so the chips visually echo
+       the .fb-token highlights inside the textarea (same color family,
+       so the connection between "click chip → insert token → token
+       gets highlighted" is obvious). */
+    background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+    border-color: #bfdbfe;
+    color: #1e3a8a;
+    font-weight: 600;
+  }
+  .fb-rwprev-nudge-chip:hover {
+    background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%);
+    border-color: #93c5fd;
   }
   /* Highlighted merge-tag chips — used everywhere a message is
      previewed so the user can spot the dynamic bits at a glance. */
