@@ -38,7 +38,13 @@
       min-height: 100vh;
     }
 
-    /* ───────────── App shell (sidebar + topbar layout) ───────────── */
+    /* ───────────── App shell (sidebar + topbar layout) ─────────────
+       The topbar contains a 44px-tall AI-replies pill plus 14px of
+       vertical padding, so the topbar's real height is ~72px, not the
+       64px assumed earlier. Track it as a CSS var so .app-body and the
+       route sections all do the right math (no more "first-row buttons
+       hiding under the topbar"). */
+    :root { --topbar-h: 72px; }
     .app-shell {
       display: grid;
       grid-template-columns: 88px 1fr;
@@ -217,7 +223,9 @@
       display: flex; align-items: center; justify-content: space-between;
       gap: 16px;
       z-index: 25;
-      min-height: 64px;
+      min-height: var(--topbar-h);
+      box-sizing: border-box;
+      box-shadow: 0 1px 0 rgba(15, 23, 42, .04);
     }
     .app-topbar-title {
       font-family: "Space Grotesk", "Inter", sans-serif;
@@ -264,18 +272,19 @@
       width: 100%;
       box-sizing: border-box;
       margin: 0;
-      height: calc(100vh - 64px);
+      height: calc(100vh - var(--topbar-h));
       overflow: hidden;
     }
     /* Each active section fills the available space and scrolls
-       internally if its content overflows. Default 20px/24px padding
-       gives page content breathing room from the side-nav + viewport
-       edges, replicating the old article-style framing for content-
-       heavy pages (Leads, Replies, Activity, Settings, etc.). */
+       internally if its content overflows. The 28px top padding gives
+       the page's first row (often a tab/button strip — Leads view
+       switcher, Outreach tabs, Engagement tabs, Settings tabs) clear
+       breathing room from the topbar bottom so it never reads as
+       "covered" by the nav bar above it. */
     .app-body [data-route-section].is-active {
       height: 100%;
       overflow: auto;
-      padding: 20px 24px;
+      padding: 28px 24px 24px;
       box-sizing: border-box;
     }
     /* Outreach is the one tool page that needs zero padding so the
