@@ -657,14 +657,8 @@ function ReplyPhonePreview({
           </div>
         </li>
       </ol>
-      {fallback === "custom" && !isOff && (
-        <div className="fb-rwprev-custom">
-          <div className="fb-rwprev-custom-h">Preview</div>
-          <div className="fb-rwprev-custom-body">
-            {renderedBody || <span className="fb-phone-empty">(write your message)</span>}
-          </div>
-        </div>
-      )}
+      {/* Custom message preview lives inline next to the textarea on the
+          editor side now (fb-rwbody-grid). No duplicate here. */}
       <p className="fb-helper" style={{ textAlign: "center", marginTop: 12 }}>
         {isAlways ? "AI replies right away — no nudges."
           : isOff ? "AI is off — you'll get the message in your inbox."
@@ -1181,18 +1175,19 @@ function ReplyWidgetEditor({
         </div>
       )}
 
-      {/* Custom body — shown when fallback is custom */}
+      {/* Custom body + live preview side-by-side. The two columns
+          collapse to stacked on narrow widths via @media. */}
       {fallback === "custom" && (
-        <>
-          <div className="fb-replywidget-section">
-            <label className="fb-drawer-l">Your message</label>
+        <div className="fb-replywidget-section fb-rwbody-grid">
+          <div className="fb-rwbody-edit">
+            <label className="fb-drawer-l" htmlFor="fb-rw-body">Your message</label>
             <textarea
               id="fb-rw-body"
               ref={taRef}
               className="fb-input fb-textarea fb-rwbody-ta"
               data-ai-editable="true"
               data-ai-field-type="reply_body"
-              rows={7}
+              rows={9}
               value={body}
               onFocus={onActiveField}
               onChange={(e) => setBody(e.target.value)}
@@ -1213,25 +1208,20 @@ function ReplyWidgetEditor({
               </div>
             </div>
           </div>
-
-          {/* Inline rendered preview — same style as the AI test reply
-              card, so the two fallback paths look symmetric. Merge tags
-              get filled in with sample values so the user reads a
-              real-feeling message instead of {first_name} placeholders. */}
-          <div className="fb-replywidget-section">
+          <div className="fb-rwbody-prev">
             <label className="fb-drawer-l">Preview</label>
             <div className="fb-rwbody-preview">
               <div className="fb-rwbody-preview-eye">As your customer would see it</div>
               <div className="fb-rwbody-preview-body">
                 {applyMergeTags(body) || (
                   <span style={{ color: "#94a3b8", fontStyle: "italic" }}>
-                    Write a message above and it'll appear here.
+                    Write a message and it'll appear here.
                   </span>
                 )}
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
 
       {/* Read-only summary that adapts to the global AI mode (the
@@ -1965,7 +1955,7 @@ const STYLES = `
   @keyframes fbFade { from { opacity: 0; } to { opacity: 1; } }
   .fb-drawer {
     position: absolute; right: 0; top: 0; bottom: 0;
-    width: min(720px, 100%);
+    width: min(1000px, 100%);
     background: #fff;
     border-left: 1px solid var(--fb-border);
     box-shadow: -16px 0 40px rgba(15,23,42,.18);
@@ -2151,13 +2141,27 @@ const STYLES = `
     letter-spacing: -0.01em; margin-bottom: 16px; display: block;
   }
 
-  /* Custom body — taller textarea + spaced chip row + inline preview */
-  .fb-rwbody-ta { min-height: 160px; padding: 18px 20px; font-size: 15px; line-height: 1.6; }
+  /* Custom body — taller textarea + spaced chip row + side-by-side preview */
+  .fb-rwbody-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 980px) {
+    .fb-rwbody-grid { grid-template-columns: 1fr; }
+  }
+  .fb-rwbody-edit, .fb-rwbody-prev { min-width: 0; }
+  .fb-rwbody-ta {
+    min-height: 220px; padding: 18px 20px;
+    font-size: 15px; line-height: 1.6;
+  }
   .fb-rwbody-chips { margin-top: 16px; gap: 10px; }
   .fb-rwbody-preview {
     padding: 22px 24px;
     background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
     border: 1.5px solid #e2e8f0; border-radius: 16px;
+    /* Match the textarea side's combined height so the columns line up.
+       textarea (220) + label (~32) + chips (~46) ≈ 298. */
+    min-height: 220px;
   }
   .fb-rwbody-preview-eye {
     font-size: 11.5px; font-weight: 700;
