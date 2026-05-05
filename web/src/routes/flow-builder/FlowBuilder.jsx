@@ -1207,12 +1207,14 @@ const STYLES = `
      persistent UI fades out so it can't visually intrude. */
   .fb-canvas .fb-tour-panel,
   .fb-canvas .fb-return-pill,
-  .fb-canvas .fb-save {
+  .fb-canvas .fb-save,
+  .fb-canvas .fb-tour-replay {
     transition: opacity .15s ease, visibility 0s linear .15s;
   }
   .fb-canvas.is-modal-open .fb-tour-panel:not([data-sub="1"]),
   .fb-canvas.is-modal-open .fb-return-pill,
-  .fb-canvas.is-modal-open .fb-save {
+  .fb-canvas.is-modal-open .fb-save,
+  .fb-canvas.is-modal-open .fb-tour-replay {
     opacity: 0;
     pointer-events: none;
     visibility: hidden;
@@ -2146,23 +2148,54 @@ const TOUR_PATHS = {
     },
     {
       icon: "✨",
-      title: "When you're done picking…",
+      title: "All set?",
       body: (
         <>
-          Close this list with the X (top right) and come back here for
-          more tips on your flow.
+          Tap <strong>Next →</strong> and we'll close this list and
+          take you back to your flow with more tips.
         </>
       ),
       target: ".fb-chooser-x, [aria-label='Close']",
+      // When the user clicks Next on this step, programmatically click
+      // the chooser's close button to dismiss the modal before
+      // returning to the main path.
+      closeOnAdvance: ".fb-chooser-x, .fb-chooser-bg [aria-label='Close']",
     },
   ],
 };
+
+// Compute tour panel position relative to its target. Tries below
+// first, then above, then falls back to a viewport corner. Returns
+// the {top, left} CSS values + which side the arrow points from.
+function computeTourPosition(targetSelector, panelW = 360, panelH = 150) {
+  const margin = 14;
+  const fallback = { top: 14, left: 14, arrow: null };
+  if (!targetSelector || typeof document === "undefined") return fallback;
+  const el = document.querySelector(targetSelector);
+  if (!el) return fallback;
+  const rect = el.getBoundingClientRect();
+  const vw = window.innerWidth, vh = window.innerHeight;
+  // Center horizontally on the target, then clamp into viewport.
+  const desiredLeft = rect.left + rect.width / 2 - panelW / 2;
+  const left = Math.max(14, Math.min(desiredLeft, vw - panelW - 14));
+  const spaceBelow = vh - rect.bottom;
+  if (spaceBelow >= panelH + margin + 12) {
+    return { top: rect.bottom + margin + 12, left, arrow: "up",
+              arrowOffset: rect.left + rect.width / 2 - left };
+  }
+  if (rect.top >= panelH + margin + 12) {
+    return { top: rect.top - panelH - margin - 12, left, arrow: "down",
+              arrowOffset: rect.left + rect.width / 2 - left };
+  }
+  return fallback;
+}
 
 function FirstTimeGuide() {
   const [show, setShow] = React.useState(false);
   // Path-based state. `path` is a key into TOUR_PATHS. `pathHistory`
   // is the breadcrumb for "where to return when this sub-path ends."
   const [tour, setTour] = React.useState({ path: "main", step: 0, pathHistory: [] });
+  const [position, setPosition] = React.useState({ top: 14, left: 14, arrow: null });
   React.useEffect(() => {
     try {
       const fromForm = !!localStorage.getItem("intake_return_form_id");
@@ -2203,22 +2236,37 @@ function FirstTimeGuide() {
   const cur = steps[tour.step] || steps[0];
   const isLastInPath = tour.step >= steps.length - 1;
   const isOnSubPath = tour.path !== "main";
-  // Highlight effect — applies the .fb-tour-highlight class to the
-  // current step's target. Retries because ReactFlow / chooser modal
-  // may not have painted yet.
+  // Highlight effect — applies .fb-tour-highlight to the current
+  // step's target AND positions the tour panel next to that target
+  // with an arrow tip. Retries because ReactFlow / chooser modal
+  // may not have painted yet. Re-positions on window resize.
   React.useEffect(() => {
     if (!show) return;
     const sel = cur && cur.target;
-    if (!sel) return;
+    if (!sel) {
+      setPosition({ top: 14, left: 14, arrow: null });
+      return;
+    }
     const cleanup = [];
     let attempts = 0;
     let stop = false;
+    const recomputePosition = () => {
+      setPosition(computeTourPosition(sel));
+    };
     const apply = () => {
       if (stop) return;
       const el = document.querySelector(sel);
       if (el) {
         el.classList.add("fb-tour-highlight");
         cleanup.push(() => el.classList.remove("fb-tour-highlight"));
+        recomputePosition();
+        // Re-compute on resize/scroll while this step is active.
+        window.addEventListener("resize", recomputePosition);
+        window.addEventListener("scroll", recomputePosition, true);
+        cleanup.push(() => {
+          window.removeEventListener("resize", recomputePosition);
+          window.removeEventListener("scroll", recomputePosition, true);
+        });
         return;
       }
       if (attempts++ < 12) setTimeout(apply, 120);
@@ -2256,6 +2304,14 @@ function FirstTimeGuide() {
   const next = React.useCallback(() => {
     setTour((t) => {
       const list = TOUR_PATHS[t.path] || TOUR_PATHS.main;
+      const cur = list[t.step];
+      // If this step has closeOnAdvance, click the matching element
+      // before transitioning. That's how we close a modal automatically
+      // when the user finishes its sub-path tour.
+      if (cur && cur.closeOnAdvance) {
+        const closeEl = document.querySelector(cur.closeOnAdvance);
+        if (closeEl) { try { closeEl.click(); } catch (_) {} }
+      }
       const ns = t.step + 1;
       if (ns >= list.length) {
         // Path complete. Pop history if any, else dismiss.
@@ -2313,33 +2369,71 @@ function FirstTimeGuide() {
   // it's intentionally guiding through the modal. data-sub="1" tells
   // the hide-during-modal CSS to leave us alone.
   const isLast = isLastInPath && (tour.pathHistory || []).length === 0;
+  // Use the computed tooltip position when we have a target; fall back
+  // to top-left/top-center for intro steps with no anchor.
+  const hasAnchor = !!(cur && cur.target) && position.arrow !== null;
+  const panelStyle = hasAnchor
+    ? { position: "fixed", top: position.top, left: position.left,
+        zIndex: 60, width: "min(360px, calc(100% - 28px))" }
+    : { position: "fixed", top: 14,
+        left: isOnSubPath ? "50%" : 14,
+        transform: isOnSubPath ? "translateX(-50%)" : "none",
+        zIndex: 60, width: "min(420px, calc(100% - 32px))" };
   return (
     <div
       className="fb-tour-panel"
       data-sub={isOnSubPath ? "1" : "0"}
       style={{
-        // Sub-path tours center themselves at top so they sit ABOVE
-        // the active modal. Main path stays top-left so the Back-pill
-        // never overlaps. zIndex 60 elevates the panel above the
-        // chooser's 14 / drawer's 11 so we render in front of modals.
-        position: "fixed",
-        top: 14,
-        left: isOnSubPath ? "50%" : 14,
-        right: "auto",
-        transform: isOnSubPath ? "translateX(-50%)" : "none",
-        zIndex: 60,
-        background: "linear-gradient(135deg,#eaf3fc 0%,#f0e8fb 100%)",
-        border: "1.5px solid #b6c8e0",
+        ...panelStyle,
+        background: "linear-gradient(135deg,#fff8db 0%,#fef0c8 100%)",
+        border: "2px solid #f0c419",
         borderRadius: 14,
         padding: "14px 16px 12px 14px",
-        boxShadow: "0 8px 22px rgba(20,40,80,.14)",
+        boxShadow: "0 14px 36px rgba(160,110,0,.20), 0 4px 10px rgba(160,110,0,.12)",
         display: "flex",
         flexDirection: "column",
         gap: 10,
-        width: "min(480px, calc(100% - 32px))",
-        maxWidth: 480,
       }}
     >
+      {/* Arrow tip pointing at the target. Position: arrowOffset is
+          the px from the panel's LEFT to the target's center, so the
+          arrow lines up regardless of clamping. */}
+      {hasAnchor && position.arrow === "up" && (
+        <span style={{
+          position: "absolute", top: -10,
+          left: Math.max(12, Math.min(position.arrowOffset - 9, 360 - 22)),
+          width: 0, height: 0,
+          borderLeft: "10px solid transparent",
+          borderRight: "10px solid transparent",
+          borderBottom: "10px solid #f0c419",
+        }}>
+          <span style={{
+            position: "absolute", top: 2, left: -8,
+            width: 0, height: 0,
+            borderLeft: "8px solid transparent",
+            borderRight: "8px solid transparent",
+            borderBottom: "8px solid #fff8db",
+          }} />
+        </span>
+      )}
+      {hasAnchor && position.arrow === "down" && (
+        <span style={{
+          position: "absolute", bottom: -10,
+          left: Math.max(12, Math.min(position.arrowOffset - 9, 360 - 22)),
+          width: 0, height: 0,
+          borderLeft: "10px solid transparent",
+          borderRight: "10px solid transparent",
+          borderTop: "10px solid #f0c419",
+        }}>
+          <span style={{
+            position: "absolute", bottom: 2, left: -8,
+            width: 0, height: 0,
+            borderLeft: "8px solid transparent",
+            borderRight: "8px solid transparent",
+            borderTop: "8px solid #fef0c8",
+          }} />
+        </span>
+      )}
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <div
           style={{
@@ -2458,6 +2552,59 @@ function FirstTimeGuide() {
         >{isLast ? "Got it ✓" : "Next →"}</button>
       </div>
     </div>
+  );
+}
+
+// Floating help button bottom-right of the canvas. Tap to restart
+// the tour from step 0. Always visible so users can re-find guidance
+// after they've dismissed it.
+function TourReplayButton() {
+  const replay = React.useCallback(() => {
+    try {
+      localStorage.removeItem("fb_tour_dismissed_v3");
+      localStorage.removeItem("fb_tour_state_v3");
+      localStorage.removeItem("fb_tour_ts_v3");
+    } catch (_) {}
+    // Hard reload so FirstTimeGuide picks up the cleared state cleanly
+    // and re-runs all its mount effects (highlight, position, etc.).
+    window.location.reload();
+  }, []);
+  return (
+    <button
+      type="button"
+      className="fb-tour-replay"
+      onClick={replay}
+      title="Show the tour again"
+      aria-label="Show the tour again"
+      style={{
+        position: "absolute",
+        bottom: 16,
+        right: 16,
+        zIndex: 25,
+        width: 40, height: 40,
+        borderRadius: 99,
+        background: "#fff",
+        border: "1.5px solid #cdd7e3",
+        color: "#185fa5",
+        cursor: "pointer",
+        fontWeight: 700,
+        fontSize: 18,
+        lineHeight: 1,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        boxShadow: "0 3px 10px rgba(20,40,80,.10)",
+        transition: "transform .12s ease, box-shadow .12s ease",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "scale(1.08)";
+        e.currentTarget.style.boxShadow = "0 6px 18px rgba(20,40,80,.16)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "";
+        e.currentTarget.style.boxShadow = "0 3px 10px rgba(20,40,80,.10)";
+      }}
+    >?</button>
   );
 }
 
@@ -2913,6 +3060,7 @@ export default function FlowBuilder() {
         onDragLeave={onDragLeave}
       >
         <FirstTimeGuide />
+        <TourReplayButton />
         <div className={`fb-save fb-save-${saveStatus}`} role="status" aria-live="polite">
           {saveStatus === "saving" && <><span className="fb-save-dot" /> Saving…</>}
           {saveStatus === "saved"  && <>✓ Saved</>}
