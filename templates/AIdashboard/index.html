@@ -259,21 +259,23 @@
       box-sizing: border-box;
       margin: 0 auto;
     }
-    /* Full-bleed Outreach: when the user is on the Outreach page,
-       drop the .app-body 28px padding + 1280px cap so every tab
-       (My Flows / Canvas / On-demand) reaches from the right edge
-       of the side nav all the way to the viewport's right edge. */
-    .app-body:has(#outreach.is-active) {
+    /* Full-bleed Outreach: every element in the height chain from
+       .app-body down to the flow builder root explicitly carries
+       100% height so the canvas can compute non-zero dimensions.
+       Body class is toggled by JS on entering/leaving Outreach
+       (more reliable + faster than :has() recomputing on every DOM
+       change in the rest of the dashboard). */
+    body.is-outreach-fullbleed { overflow: hidden; }
+    body.is-outreach-fullbleed .app-body {
       padding: 0;
       max-width: none;
-      height: calc(100vh - 64px);  /* viewport height minus top bar */
-      overflow: hidden;             /* no page-level scroll */
-    }
-    .app-body:has(#outreach.is-active) #outreach.is-active {
-      height: 100%;
+      height: calc(100vh - 64px);
       overflow: hidden;
     }
-    .app-body:has(#outreach.is-active) #outreach.is-active > div {
+    body.is-outreach-fullbleed #outreach.is-active,
+    body.is-outreach-fullbleed #outreach.is-active > div,
+    body.is-outreach-fullbleed #outreachAutoMount,
+    body.is-outreach-fullbleed #flowBuilderRoot {
       height: 100%;
       overflow: hidden;
     }
@@ -23009,6 +23011,9 @@
       document.querySelectorAll(".app-nav-btn[data-route]").forEach(btn => {
         btn.classList.toggle("is-active", btn.dataset.route === route);
       });
+      // Outreach takes the full viewport (canvas needs every pixel).
+      // Other pages keep the standard padded-article layout.
+      document.body.classList.toggle("is-outreach-fullbleed", route === "outreach");
       try { history.replaceState(null, "", "#" + route); } catch (_) {}
       // Fire the section's deferred data loader on first visit.
       _runSectionLoader(route);
