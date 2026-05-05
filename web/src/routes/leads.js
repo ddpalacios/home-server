@@ -56,9 +56,10 @@ const SOURCE_LABELS = {
 let _allLeads = [];
 let _filteredLeads = [];
 let _selectedIds = new Set();
-let _selectModeOn = false;
+let _selectModeOn = true;  // Phase 1: checkboxes always visible
+let _expandedIds = new Set();  // Lead IDs whose inline detail panel is open
 let _sortBy = { key: "created_at", dir: "desc" };
-let _filters = { source: null, stage: null, when: null, search: "" };
+let _filters = { source: null, stage: null, when: null, search: "", advanced: [] };
 let _moreFilters = { hasPhone: false, hasEmail: false, replied: false, unsubscribed: false };
 let _openMenuEl = null;
 let _view = "table";  // "table" | "funnel" | "board"
@@ -118,6 +119,227 @@ function whenThreshold(filterVal) {
   return 0;
 }
 
+// ─── Stage-aware "Details" column ────────────────────────────────────────────
+
+const CHANNEL_ICONS = { email: "📧", sms: "💬", call: "📞", phone: "📞", instagram: "📷" };
+const CHANNEL_LABELS = { email: "Email", sms: "SMS", call: "Call", phone: "Phone", instagram: "Instagram" };
+
+function _fmtMoney(amount) {
+  const n = Number(amount);
+  if (!isFinite(n)) return "";
+  return "$" + n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+}
+
+function _fmtAppt(unixSecs) {
+  if (!unixSecs) return "";
+  const d = new Date(Number(unixSecs) * 1000);
+  if (isNaN(d)) return "";
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  let h = d.getHours();
+  const m = d.getMinutes();
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12; if (h === 0) h = 12;
+  return `${months[d.getMonth()]} ${d.getDate()}, ${h}:${String(m).padStart(2,"0")} ${ampm}`;
+}
+
+function _fmtShortDate(unixSecs) {
+  if (!unixSecs) return "";
+  const d = new Date(Number(unixSecs) * 1000);
+  if (isNaN(d)) return "";
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return `${months[d.getMonth()]} ${d.getDate()}`;
+}
+
+function _truncate(s, n) {
+  s = String(s || "");
+  if (s.length <= n) return s;
+  return s.slice(0, n - 1).trimEnd() + "…";
+}
+
+function stageDetailsFor(lead) {
+  // Returns { text, full } where text is short for the cell, full is the title attr.
+  // Falls back to "—" gracefully for missing fields.
+  const stage = lead.stage || "new";
+  if (stage === "new") return { text: "", full: "" };
+
+  if (stage === "contacted") {
+    const ch = lead.last_contact_channel || lead.last_channel;
+    const t  = lead.last_contacted_at || lead.last_activity_at;
+    if (!ch && !t) return { text: "—", full: "" };
+    const icon = CHANNEL_ICONS[ch] || "📧";
+    const lbl  = CHANNEL_LABELS[ch] || (ch ? String(ch) : "Email");
+    const when = t ? relativeTime(t) : "—";
+    const text = `${icon} ${lbl} · ${when}`;
+    return { text, full: text };
+  }
+
+  if (stage === "engaged") {
+    const note = lead.last_response || lead.last_note || lead.last_reply || lead.notes;
+    if (!note) return { text: "—", full: "" };
+    const full = String(note);
+    return { text: _truncate(full, 30), full };
+  }
+
+  if (stage === "quoted") {
+    const amt = lead.quote_amount;
+    const sent = lead.quote_sent_at;
+    if (amt == null && !sent) return { text: "—", full: "" };
+    const parts = [];
+    if (amt != null) parts.push(_fmtMoney(amt));
+    if (sent) parts.push("sent " + relativeTime(sent));
+    if (!parts.length) return { text: "—", full: "" };
+    const text = parts.join(" · ");
+    return { text, full: text };
+  }
+
+  if (stage === "scheduled") {
+    const t = lead.appointment_time || lead.appointment_at;
+    if (!t) return { text: "—", full: "" };
+    const text = "📅 " + _fmtAppt(t);
+    return { text, full: text };
+  }
+
+  if (stage === "won") {
+    const date = lead.job_complete_date || lead.won_at;
+    const val  = lead.job_value || lead.quote_amount;
+    if (!date && val == null) return { text: "—", full: "" };
+    const parts = ["✓ Job done"];
+    if (date) parts[0] = "✓ Job done " + _fmtShortDate(date);
+    if (val != null) parts.push(_fmtMoney(val));
+    const text = parts.join(" · ");
+    return { text, full: text };
+  }
+
+  if (stage === "lost") {
+    const reason = lead.lost_reason;
+    const at = lead.lost_at;
+    if (!reason && !at) return { text: "—", full: "" };
+    const parts = [];
+    if (reason) parts.push(String(reason));
+    if (at) parts.push(_fmtShortDate(at));
+    const text = parts.join(" · ");
+    return { text, full: text };
+  }
+
+  return { text: "—", full: "" };
+}
+
+// ─── Advanced filter evaluation ──────────────────────────────────────────────
+
+const ADV_FIELDS = {
+  stage:            { type: "stage",  label: "Stage" },
+  source:           { type: "text",   label: "Source", reader: (l) => l.source || "" },
+  last_contacted:   { type: "date",   label: "Last contacted", reader: (l) => l.last_contacted_at || l.last_activity_at || 0 },
+  last_activity:    { type: "date",   label: "Last activity",  reader: (l) => l.last_activity_at || l.updated_at || l.created_at || 0 },
+  quote_amount:     { type: "number", label: "Quote amount",   reader: (l) => (l.quote_amount != null ? Number(l.quote_amount) : null) },
+  appointment_time: { type: "date",   label: "Appointment time", reader: (l) => l.appointment_time || l.appointment_at || 0 },
+  job_date:         { type: "date",   label: "Job date",       reader: (l) => l.job_complete_date || l.won_at || 0 },
+};
+
+const ADV_OPS_BY_TYPE = {
+  text:   ["is","is not","contains","doesn't contain"],
+  date:   ["is more than X days ago","is less than X days ago","is between X and Y","was today","was yesterday"],
+  number: ["is greater than","is less than","equals"],
+  stage:  ["is","is not","is one of"],
+};
+
+function _daysAgoUnix(days) {
+  return Math.floor(Date.now() / 1000) - Number(days) * 86400;
+}
+function _startOfDayUnix(daysOffset) {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + (daysOffset || 0));
+  return Math.floor(d.getTime() / 1000);
+}
+function _endOfDayUnix(daysOffset) {
+  const d = new Date();
+  d.setHours(23, 59, 59, 999);
+  d.setDate(d.getDate() + (daysOffset || 0));
+  return Math.floor(d.getTime() / 1000);
+}
+
+function _evalAdvCondition(lead, cond) {
+  const f = ADV_FIELDS[cond.field];
+  if (!f) return true;
+  const op = cond.op;
+  const v  = cond.value;
+
+  if (f.type === "text") {
+    const lv = String(f.reader(lead) || "").toLowerCase();
+    const rv = String(v || "").toLowerCase();
+    if (!rv) return true;
+    if (op === "is")             return lv === rv;
+    if (op === "is not")         return lv !== rv;
+    if (op === "contains")       return lv.includes(rv);
+    if (op === "doesn't contain")return !lv.includes(rv);
+    return true;
+  }
+
+  if (f.type === "stage") {
+    const lv = lead.stage || "new";
+    if (op === "is")        return lv === v;
+    if (op === "is not")    return lv !== v;
+    if (op === "is one of") return Array.isArray(v) && v.includes(lv);
+    return true;
+  }
+
+  if (f.type === "number") {
+    const lv = f.reader(lead);
+    const rv = Number(v);
+    if (lv == null || isNaN(rv)) return false;
+    if (op === "is greater than") return lv > rv;
+    if (op === "is less than")    return lv < rv;
+    if (op === "equals")          return lv === rv;
+    return true;
+  }
+
+  if (f.type === "date") {
+    const lv = Number(f.reader(lead) || 0);
+    if (op === "is more than X days ago") {
+      const days = Number(v); if (!isFinite(days)) return true;
+      if (!lv) return false;
+      return lv < _daysAgoUnix(days);
+    }
+    if (op === "is less than X days ago") {
+      const days = Number(v); if (!isFinite(days)) return true;
+      if (!lv) return false;
+      const cutoff = _daysAgoUnix(days);
+      return lv >= cutoff && lv <= Math.floor(Date.now()/1000);
+    }
+    if (op === "is between X and Y") {
+      // value is { from, to } where from/to are day offsets relative to today,
+      // OR ISO date strings. We accept both — saved views use offsets, manual UI uses dates.
+      if (!v) return true;
+      let fromTs, toTs;
+      if (typeof v.fromOffset === "number" && typeof v.toOffset === "number") {
+        fromTs = _startOfDayUnix(v.fromOffset);
+        toTs   = _endOfDayUnix(v.toOffset);
+      } else {
+        const fd = v.from ? new Date(v.from) : null;
+        const td = v.to   ? new Date(v.to)   : null;
+        if (!fd || !td || isNaN(fd) || isNaN(td)) return true;
+        fd.setHours(0,0,0,0); td.setHours(23,59,59,999);
+        fromTs = Math.floor(fd.getTime()/1000);
+        toTs   = Math.floor(td.getTime()/1000);
+      }
+      if (!lv) return false;
+      return lv >= fromTs && lv <= toTs;
+    }
+    if (op === "was today") {
+      if (!lv) return false;
+      return lv >= _startOfDayUnix(0) && lv <= _endOfDayUnix(0);
+    }
+    if (op === "was yesterday") {
+      if (!lv) return false;
+      return lv >= _startOfDayUnix(-1) && lv <= _endOfDayUnix(-1);
+    }
+    return true;
+  }
+
+  return true;
+}
+
 function _showLeadsToast(msg, kind) {
   let host = document.getElementById("leadsToastHost");
   if (!host) {
@@ -174,6 +396,11 @@ function applyFilters() {
   if (_moreFilters.replied)       data = data.filter(l => l.has_reply);
   if (_moreFilters.unsubscribed)  data = data.filter(l => l.unsubscribed);
 
+  // Advanced conditions (combined with AND, AND-with primary filters)
+  if (Array.isArray(_filters.advanced) && _filters.advanced.length) {
+    data = data.filter(l => _filters.advanced.every(c => _evalAdvCondition(l, c)));
+  }
+
   // Sort
   const { key, dir } = _sortBy;
   data.sort((a, b) => {
@@ -199,6 +426,7 @@ const COLUMNS = [
   { key: "name",       label: "Name",          sortable: true },
   { key: "source",     label: "How",            sortable: true, helpText: "How this lead first reached out — phone call, website widget, or imported list." },
   { key: "stage",      label: "Stage",          sortable: true, helpText: "Where this lead is in your sales process." },
+  { key: "details",    label: "Details",        sortable: false, helpText: "What's happening with this lead right now — depends on the stage." },
   { key: "reach",      label: "Reach",          sortable: false, helpText: "Ways you can contact this person — email and/or phone." },
   { key: "created_at", label: "Added",          sortable: true },
   { key: "last_activity", label: "Last activity", sortable: true },
@@ -209,7 +437,7 @@ function renderTableHead() {
   if (!thead) return;
   const { key: sortKey, dir: sortDir } = _sortBy;
   thead.innerHTML = `<tr>
-    ${_selectModeOn ? `<th data-sortable="false" style="width:40px;"><input type="checkbox" id="leadsSelectAll" aria-label="Select all"></th>` : ""}
+    ${_selectModeOn ? `<th data-sortable="false" style="width:40px;"><input type="checkbox" id="leadsSelectAll" aria-label="Select all visible"></th>` : ""}
     ${COLUMNS.map(col => {
       const isSorted = sortKey === col.key;
       const arrow = col.sortable
@@ -223,15 +451,30 @@ function renderTableHead() {
   </tr>`;
 
   if (_selectModeOn) {
-    thead.querySelector("#leadsSelectAll").addEventListener("change", (e) => {
-      if (e.target.checked) {
-        _filteredLeads.forEach(l => _selectedIds.add(l.id));
+    const cbAll = thead.querySelector("#leadsSelectAll");
+    if (cbAll) {
+      // Compute checked / indeterminate state from current filtered set
+      const visibleIds = _filteredLeads.map(l => l.id);
+      const visibleSelected = visibleIds.filter(id => _selectedIds.has(id)).length;
+      if (visibleSelected === 0) {
+        cbAll.checked = false; cbAll.indeterminate = false;
+      } else if (visibleSelected === visibleIds.length) {
+        cbAll.checked = true;  cbAll.indeterminate = false;
       } else {
-        _selectedIds.clear();
+        cbAll.checked = false; cbAll.indeterminate = true;
       }
-      renderTableBody();
-      updateBulkBar();
-    });
+      cbAll.addEventListener("change", () => {
+        if (cbAll.checked) {
+          _filteredLeads.forEach(l => _selectedIds.add(l.id));
+        } else {
+          _filteredLeads.forEach(l => _selectedIds.delete(l.id));
+        }
+        renderTableBody();
+        renderSelectAllAcrossLink();
+        updateBulkBar();
+        renderTableHead();
+      });
+    }
   }
 
   thead.querySelectorAll("th[data-sortable='true']").forEach(th => {
@@ -263,6 +506,7 @@ function renderRow(lead) {
   const sourceLabel = SOURCE_LABELS[lead.source] || (lead.source || "Unknown");
   const lastActTime = lead.last_activity_at || lead.updated_at || lead.created_at;
   const isSelected = _selectedIds.has(lead.id);
+  const isExpanded = _expandedIds.has(lead.id);
 
   const reachHtml = `
     <span class="leads-reach-cell">
@@ -271,10 +515,13 @@ function renderRow(lead) {
     </span>`;
 
   const selectCell = _selectModeOn
-    ? `<td style="width:40px;"><input type="checkbox" class="leads-row-cb" data-id="${escapeHtml(lead.id)}" ${isSelected ? "checked" : ""}></td>`
+    ? `<td style="width:40px;" data-no-expand="1"><input type="checkbox" class="leads-row-cb" data-id="${escapeHtml(lead.id)}" ${isSelected ? "checked" : ""}></td>`
     : "";
 
-  return `<tr data-lead-id="${escapeHtml(lead.id)}" class="${isSelected ? "is-selected" : ""}">
+  const det = stageDetailsFor(lead);
+  const detailsCell = `<td class="leads-details-cell" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#374151;font-size:13px;" title="${escapeHtml(det.full || "")}">${escapeHtml(det.text || "")}</td>`;
+
+  const mainRow = `<tr data-lead-id="${escapeHtml(lead.id)}" class="${isSelected ? "is-selected" : ""} ${isExpanded ? "is-expanded" : ""}">
     ${selectCell}
     <td>
       <div class="leads-name-cell">
@@ -287,9 +534,85 @@ function renderRow(lead) {
     </td>
     <td class="leads-source-cell" title="${escapeHtml(sourceLabel)}">${sourceIcon}</td>
     <td><span class="${stageClass}">${escapeHtml(stageLabel)}</span></td>
-    <td>${reachHtml}</td>
+    ${detailsCell}
+    <td data-no-expand="1">${reachHtml}</td>
     <td style="color:#6b7280;font-size:13px;">${relativeTime(lead.created_at)}</td>
     <td style="color:#6b7280;font-size:13px;">${relativeTime(lastActTime)}</td>
+  </tr>`;
+
+  const expandedRow = isExpanded ? renderExpandedPanelRow(lead) : "";
+  return mainRow + expandedRow;
+}
+
+function renderExpandedPanelRow(lead) {
+  const colSpan = COLUMNS.length + (_selectModeOn ? 1 : 0);
+  const stage = lead.stage || "new";
+
+  // Collect every interesting field, only show non-empty ones.
+  const fields = [];
+  const push = (label, value) => {
+    if (value == null || value === "") return;
+    fields.push({ label, value: String(value) });
+  };
+  push("Email", lead.email);
+  push("Phone", lead.phone);
+  push("Company", lead.company);
+  push("Source", SOURCE_LABELS[lead.source] || lead.source);
+  push("Stage", STAGE_LABELS[stage] || stage);
+  push("Service type", lead.service_type);
+  // Stage-specific
+  if (stage === "contacted" || stage === "engaged") {
+    push("Last contacted", lead.last_contacted_at ? relativeTime(lead.last_contacted_at) : null);
+    push("Last channel", CHANNEL_LABELS[lead.last_contact_channel] || lead.last_contact_channel);
+  }
+  if (stage === "engaged") {
+    push("Last response", lead.last_response || lead.last_reply);
+  }
+  if (stage === "quoted") {
+    push("Quote amount", lead.quote_amount != null ? _fmtMoney(lead.quote_amount) : null);
+    push("Quote sent", lead.quote_sent_at ? relativeTime(lead.quote_sent_at) : null);
+  }
+  if (stage === "scheduled") {
+    push("Appointment", lead.appointment_time ? _fmtAppt(lead.appointment_time) : (lead.appointment_at ? _fmtAppt(lead.appointment_at) : null));
+  }
+  if (stage === "won") {
+    push("Job complete", lead.job_complete_date ? _fmtShortDate(lead.job_complete_date) : null);
+    push("Job value", (lead.job_value != null ? _fmtMoney(lead.job_value) : null));
+  }
+  if (stage === "lost") {
+    push("Lost reason", lead.lost_reason);
+    push("Lost on", lead.lost_at ? _fmtShortDate(lead.lost_at) : null);
+  }
+  push("Added", lead.created_at ? relativeTime(lead.created_at) : null);
+  push("Last activity", lead.last_activity_at ? relativeTime(lead.last_activity_at) : null);
+  push("Notes", lead.notes);
+  push("Has reply", lead.has_reply ? "Yes" : null);
+  push("Unsubscribed", lead.unsubscribed ? "Yes" : null);
+
+  const fieldsHtml = fields.map(f => `
+    <div style="display:flex;gap:8px;padding:4px 0;border-bottom:1px solid #f1f5f9;">
+      <span style="min-width:130px;color:#6b7280;font-size:12px;font-weight:500;">${escapeHtml(f.label)}</span>
+      <span style="color:#111827;font-size:13px;flex:1;word-break:break-word;">${escapeHtml(f.value)}</span>
+    </div>
+  `).join("");
+
+  // "Open full profile" wired to existing single-lead modal if present
+  const hasProfile = (typeof window !== "undefined" && typeof window.openLeadDetailModal === "function");
+  const openBtn = hasProfile
+    ? `<button type="button" class="leads-expanded-btn primary" data-act="open-profile" data-lead-id="${escapeHtml(lead.id)}" style="padding:7px 14px;border-radius:8px;border:1px solid #0a0a0a;background:#0a0a0a;color:#fff;font-size:13px;cursor:pointer;">Open full profile</button>`
+    : "";
+
+  return `<tr class="leads-expanded-row" data-expanded-for="${escapeHtml(lead.id)}">
+    <td colspan="${colSpan}" style="padding:0;background:#fafafa;border-top:1px solid #e5e7eb;">
+      <div style="padding:14px 18px;display:flex;flex-direction:column;gap:12px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;">${fieldsHtml || '<div style="color:#9ca3af;font-size:13px;">No additional details available for this lead.</div>'}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid #e5e7eb;padding-top:12px;">
+          ${openBtn}
+          <button type="button" class="leads-expanded-btn" data-act="send-email" data-lead-id="${escapeHtml(lead.id)}" style="padding:7px 14px;border-radius:8px;border:1px solid #d1d5db;background:#fff;color:#0a0a0a;font-size:13px;cursor:pointer;">Send single email</button>
+          <button type="button" class="leads-expanded-btn" data-act="edit" data-lead-id="${escapeHtml(lead.id)}" style="padding:7px 14px;border-radius:8px;border:1px solid #d1d5db;background:#fff;color:#0a0a0a;font-size:13px;cursor:pointer;">Edit details</button>
+        </div>
+      </div>
+    </td>
   </tr>`;
 }
 
@@ -302,37 +625,58 @@ function renderTableBody() {
   }
   tbody.innerHTML = _filteredLeads.map(renderRow).join("");
 
-  // Row click → open lead detail
+  // Row click → toggle expanded panel
+  // Excludes the checkbox cell (data-no-expand), the reach cell (data-no-expand),
+  // and any explicit links/buttons inside cells.
   tbody.querySelectorAll("tr[data-lead-id]").forEach(row => {
     row.addEventListener("click", (e) => {
-      if (e.target.type === "checkbox") return;
-      if (_selectModeOn) {
-        const id = row.dataset.leadId;
-        if (_selectedIds.has(id)) _selectedIds.delete(id);
-        else _selectedIds.add(id);
-        row.classList.toggle("is-selected", _selectedIds.has(id));
-        updateBulkBar();
-        return;
-      }
+      const t = e.target;
+      if (!t) return;
+      if (t.tagName === "INPUT" || t.tagName === "BUTTON" || t.tagName === "A") return;
+      if (t.closest && t.closest("[data-no-expand]")) return;
       const id = row.dataset.leadId;
-      const lead = _allLeads.find(l => l.id === id) || null;
-      if (typeof window.openLeadDetailModal === "function") {
-        window.openLeadDetailModal(id, lead);
-      }
+      if (_expandedIds.has(id)) _expandedIds.delete(id);
+      else _expandedIds.add(id);
+      renderTableBody();
     });
   });
 
-  // Checkbox clicks in select mode
+  // Per-row checkbox change
   if (_selectModeOn) {
     tbody.querySelectorAll(".leads-row-cb").forEach(cb => {
-      cb.addEventListener("change", () => {
+      cb.addEventListener("change", (e) => {
+        e.stopPropagation();
         if (cb.checked) _selectedIds.add(cb.dataset.id);
         else _selectedIds.delete(cb.dataset.id);
-        cb.closest("tr").classList.toggle("is-selected", cb.checked);
+        const row = cb.closest("tr");
+        if (row) row.classList.toggle("is-selected", cb.checked);
+        renderTableHead();
+        renderSelectAllAcrossLink();
         updateBulkBar();
       });
+      // Also stop click bubbling so cell click on the checkbox cell doesn't toggle expand
+      cb.addEventListener("click", (e) => e.stopPropagation());
     });
   }
+
+  // Expanded-panel action buttons
+  tbody.querySelectorAll(".leads-expanded-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const act = btn.dataset.act;
+      const id = btn.dataset.leadId;
+      const lead = _allLeads.find(l => l.id === id) || null;
+      if (act === "open-profile") {
+        if (typeof window.openLeadDetailModal === "function") {
+          window.openLeadDetailModal(id, lead);
+        }
+      } else if (act === "send-email") {
+        _showLeadsToast("Single-email sending lands in Phase 2.", "info");
+      } else if (act === "edit") {
+        _showLeadsToast("Inline editing lands in Phase 2.", "info");
+      }
+    });
+  });
 }
 
 function renderTable() {
@@ -357,6 +701,8 @@ function renderTable() {
     renderTableHead();
     renderTableBody();
     updateCountRow();
+    renderSelectAllAcrossLink();
+    updateBulkBar();
     if (showMoreEl) showMoreEl.hidden = true;
     return;
   }
@@ -365,6 +711,8 @@ function renderTable() {
   renderTableHead();
   renderTableBody();
   updateCountRow();
+  renderSelectAllAcrossLink();
+  updateBulkBar();
 
   if (showMoreEl) {
     showMoreEl.hidden = false;
@@ -373,6 +721,38 @@ function renderTable() {
     if (shownEl) shownEl.textContent = _filteredLeads.length;
     if (totalEl) totalEl.textContent = _allLeads.length;
   }
+}
+
+function renderSelectAllAcrossLink() {
+  const wrap = document.getElementById("leadsTableWrap");
+  if (!wrap) return;
+  let link = document.getElementById("leadsSelectAllAcross");
+  const visibleIds = _filteredLeads.map(l => l.id);
+  const visibleSelected = visibleIds.filter(id => _selectedIds.has(id)).length;
+  const indeterminate = visibleSelected > 0 && visibleSelected < visibleIds.length;
+
+  if (!indeterminate) {
+    if (link && link.parentNode) link.parentNode.removeChild(link);
+    return;
+  }
+  if (!link) {
+    link = document.createElement("div");
+    link.id = "leadsSelectAllAcross";
+    link.style.cssText = "padding:8px 12px;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;margin-top:8px;font-size:13px;color:#374151;display:flex;align-items:center;gap:8px;";
+    wrap.appendChild(link);
+  }
+  link.innerHTML = `<span>${visibleSelected} selected on this view.</span>
+    <button type="button" id="leadsSelectAllAcrossBtn" style="background:none;border:none;color:#1d4ed8;font-weight:600;cursor:pointer;padding:0;font-size:13px;">
+      Select all ${_filteredLeads.length} leads
+    </button>`;
+  const btn = link.querySelector("#leadsSelectAllAcrossBtn");
+  if (btn) btn.addEventListener("click", () => {
+    _filteredLeads.forEach(l => _selectedIds.add(l.id));
+    renderTableHead();
+    renderTableBody();
+    renderSelectAllAcrossLink();
+    updateBulkBar();
+  });
 }
 
 function renderEmptyState() {
@@ -410,14 +790,36 @@ function updateCountRow() {
 
 function updateBulkBar() {
   const bar = document.getElementById("leadsBulkBar");
-  const countEl = document.getElementById("leadsBulkCount");
   if (!bar) return;
-  if (_selectedIds.size > 0 && _selectModeOn) {
-    bar.hidden = false;
-    if (countEl) countEl.textContent = `${_selectedIds.size} lead${_selectedIds.size !== 1 ? "s" : ""} selected`;
-  } else {
+  if (_selectedIds.size === 0) {
     bar.hidden = true;
+    return;
   }
+  bar.hidden = false;
+  // Re-render bar contents so we control layout & button labels for Phase 1.
+  bar.style.cssText = "position:sticky;top:0;z-index:20;display:flex;flex-direction:column;gap:10px;background:#0a0a0a;color:#fff;padding:12px 16px;border-radius:10px;margin:8px 0;box-shadow:0 6px 20px rgba(0,0,0,0.18);";
+  bar.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <span class="leads-bulk-count" id="leadsBulkCount" style="font-size:14px;font-weight:600;">${_selectedIds.size} lead${_selectedIds.size !== 1 ? "s" : ""} selected</span>
+      <button type="button" id="leadsBulkClearAll" style="background:none;border:none;color:#cbd5e1;font-size:13px;cursor:pointer;text-decoration:underline;padding:0;">Clear</button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button type="button" class="leads-bulk-btn" data-bulk-act="email" style="padding:8px 14px;border-radius:8px;border:1px solid #fff;background:#fff;color:#0a0a0a;font-size:13px;font-weight:600;cursor:pointer;">✉️ Send email</button>
+      <button type="button" class="leads-bulk-btn" data-bulk-act="schedule" style="padding:8px 14px;border-radius:8px;border:1px solid #475569;background:transparent;color:#fff;font-size:13px;font-weight:500;cursor:pointer;">📅 Schedule for later</button>
+      <button type="button" class="leads-bulk-btn" data-bulk-act="stage" disabled title="Coming soon" style="padding:8px 14px;border-radius:8px;border:1px solid #475569;background:transparent;color:#94a3b8;font-size:13px;font-weight:500;cursor:not-allowed;">🏷️ Change stage</button>
+    </div>
+  `;
+  const clearBtn = bar.querySelector("#leadsBulkClearAll");
+  if (clearBtn) clearBtn.addEventListener("click", () => {
+    _selectedIds.clear();
+    renderTableHead();
+    renderTableBody();
+    renderSelectAllAcrossLink();
+    updateBulkBar();
+  });
+  bar.querySelectorAll("[data-bulk-act]").forEach(btn => {
+    btn.addEventListener("click", () => _handleBulkAction(btn.dataset.bulkAct));
+  });
 }
 
 function renderActiveFilterChips() {
@@ -435,7 +837,16 @@ function renderActiveFilterChips() {
   if (_moreFilters.replied)      chips.push({ key: "more_replied",      label: "Replied" });
   if (_moreFilters.unsubscribed) chips.push({ key: "more_unsubscribed", label: "Unsubscribed" });
 
-  if (!chips.length) {
+  // Advanced "More: N filters" chip — click chip to edit, ✕ to clear all
+  const advCount = (_filters.advanced || []).length;
+  const advChipHtml = advCount
+    ? `<span class="leads-active-chip" data-adv-chip="1" style="cursor:pointer;">
+         <span data-adv-edit="1">More: ${advCount} filter${advCount !== 1 ? "s" : ""}</span>
+         <button type="button" data-adv-clear="1" aria-label="Clear advanced filters">×</button>
+       </span>`
+    : "";
+
+  if (!chips.length && !advCount) {
     wrap.hidden = true;
     wrap.innerHTML = "";
     return;
@@ -446,7 +857,7 @@ function renderActiveFilterChips() {
       ${escapeHtml(chip.label)}
       <button type="button" data-remove-filter="${escapeHtml(chip.key)}" aria-label="Remove filter">×</button>
     </span>
-  `).join("") + `<button type="button" class="leads-active-clear-all" id="leadsActiveClearAll">Clear all</button>`;
+  `).join("") + advChipHtml + `<button type="button" class="leads-active-clear-all" id="leadsActiveClearAll">Clear all</button>`;
 
   wrap.querySelectorAll("[data-remove-filter]").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -456,6 +867,19 @@ function renderActiveFilterChips() {
       _refreshFiltersAndRender();
     });
   });
+  const advChip = wrap.querySelector('[data-adv-chip="1"]');
+  if (advChip) {
+    advChip.addEventListener("click", (e) => {
+      if (e.target.closest("[data-adv-clear]")) return;
+      openMoreFiltersModal();
+    });
+    const clearAdv = wrap.querySelector('[data-adv-clear="1"]');
+    if (clearAdv) clearAdv.addEventListener("click", (e) => {
+      e.stopPropagation();
+      _filters.advanced = [];
+      _refreshFiltersAndRender();
+    });
+  }
   const clearAllBtn = wrap.querySelector("#leadsActiveClearAll");
   if (clearAllBtn) clearAllBtn.addEventListener("click", clearAllFilters);
 }
@@ -465,6 +889,7 @@ function clearAllFilters() {
   _filters.stage = null;
   _filters.when = null;
   _filters.search = "";
+  _filters.advanced = [];
   _moreFilters = { hasPhone: false, hasEmail: false, replied: false, unsubscribed: false };
   const search = document.getElementById("leadsSearch");
   if (search) search.value = "";
@@ -492,8 +917,10 @@ function updateFilterPills() {
       pill.classList.toggle("is-active", isActive);
       if (valEl) valEl.textContent = isActive ? (whenLabels[_filters.when] || _filters.when) : "All time";
     } else if (f === "more") {
-      const hasMore = _moreFilters.hasPhone || _moreFilters.hasEmail || _moreFilters.replied || _moreFilters.unsubscribed;
-      pill.classList.toggle("is-active", hasMore);
+      // Phase 1: pill is now "+ More filters" — modal-driven advanced conditions
+      pill.textContent = "+ More filters";
+      const advCount = (_filters.advanced || []).length;
+      pill.classList.toggle("is-active", advCount > 0);
     }
   });
 }
@@ -791,27 +1218,311 @@ function openWhenMenu(anchor) {
 }
 
 function openMoreMenu(anchor) {
-  _closeOpenMenu();
-  const opts = [
-    { key: "hasPhone",    label: "Has phone number" },
-    { key: "hasEmail",    label: "Has email address" },
-    { key: "replied",     label: "Has replied" },
-    { key: "unsubscribed",label: "Unsubscribed" },
-  ];
-  const menu = document.createElement("div");
-  menu.className = "leads-filter-menu";
-  menu.innerHTML = opts.map(o => `
-    <button type="button" class="leads-filter-opt ${_moreFilters[o.key] ? "is-active" : ""}" data-key="${escapeHtml(o.key)}">
-      ${escapeHtml(o.label)}
-    </button>`).join("");
-  menu.querySelectorAll(".leads-filter-opt").forEach(btn => {
+  // Phase 1: anchor unused — modal opens centered. Kept for call-site compat.
+  openMoreFiltersModal();
+}
+
+// ─── "+ More filters" modal ──────────────────────────────────────────────────
+
+const SAVED_VIEWS = [
+  {
+    id: "quoted-followup",
+    label: "Quoted leads needing follow-up",
+    conditions: [
+      { field: "stage",          op: "is",                       value: "quoted" },
+      { field: "last_contacted", op: "is more than X days ago",  value: 3 },
+    ],
+  },
+  {
+    id: "scheduled-week",
+    label: "Scheduled this week",
+    conditions: [
+      { field: "stage",            op: "is",                value: "scheduled" },
+      { field: "appointment_time", op: "is between X and Y",value: { fromOffset: 0, toOffset: 7 } },
+    ],
+  },
+  {
+    id: "won-last-month",
+    label: "Won jobs from last month",
+    conditions: [
+      { field: "stage",    op: "is",                 value: "won" },
+      { field: "job_date", op: "is between X and Y", value: { fromOffset: -30, toOffset: 0 } },
+    ],
+  },
+  {
+    id: "cold-leads",
+    label: "Cold leads (90+ days)",
+    conditions: [
+      { field: "last_activity", op: "is more than X days ago", value: 90 },
+      { field: "stage",         op: "is not",                  value: "won" },
+      { field: "stage",         op: "is not",                  value: "lost" },
+    ],
+  },
+];
+
+let _moreModalDraft = null;  // working copy while modal is open
+
+function _ensureMoreFiltersModal() {
+  let dlg = document.getElementById("leadsMoreFiltersDlg");
+  if (dlg) return dlg;
+  dlg = document.createElement("dialog");
+  dlg.id = "leadsMoreFiltersDlg";
+  dlg.style.cssText = "padding:0;border:none;border-radius:14px;max-width:680px;width:92vw;box-shadow:0 30px 80px rgba(0,0,0,0.25);";
+  dlg.innerHTML = `
+    <style>
+      #leadsMoreFiltersDlg::backdrop { background: rgba(15,23,42,0.45); }
+      #leadsMoreFiltersDlg .lmf-wrap { display:flex;flex-direction:column;max-height:88vh; }
+      #leadsMoreFiltersDlg .lmf-head { display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #e5e7eb; }
+      #leadsMoreFiltersDlg .lmf-head h2 { margin:0;font-size:17px;font-weight:700;color:#0a0a0a; }
+      #leadsMoreFiltersDlg .lmf-close { background:none;border:none;font-size:22px;cursor:pointer;color:#6b7280;line-height:1;padding:0 4px; }
+      #leadsMoreFiltersDlg .lmf-body { padding:18px 22px;overflow:auto;flex:1; }
+      #leadsMoreFiltersDlg .lmf-section-h { font-size:13px;font-weight:600;color:#374151;margin:0 0 10px;text-transform:none;letter-spacing:0; }
+      #leadsMoreFiltersDlg .lmf-cond-row { display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap; }
+      #leadsMoreFiltersDlg .lmf-cond-row select,
+      #leadsMoreFiltersDlg .lmf-cond-row input { padding:7px 10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;background:#fff;color:#0a0a0a; }
+      #leadsMoreFiltersDlg .lmf-cond-row select { min-width:140px; }
+      #leadsMoreFiltersDlg .lmf-cond-row input[type="text"] { min-width:160px; }
+      #leadsMoreFiltersDlg .lmf-cond-row input[type="number"] { width:90px; }
+      #leadsMoreFiltersDlg .lmf-cond-row .lmf-rm { background:none;border:none;color:#9ca3af;font-size:18px;cursor:pointer;padding:2px 6px;border-radius:6px; }
+      #leadsMoreFiltersDlg .lmf-cond-row .lmf-rm:hover { color:#dc2626;background:#fee2e2; }
+      #leadsMoreFiltersDlg .lmf-add { margin-top:6px;padding:7px 12px;border:1px dashed #94a3b8;background:transparent;border-radius:8px;color:#374151;font-size:13px;font-weight:500;cursor:pointer; }
+      #leadsMoreFiltersDlg .lmf-add[disabled] { opacity:0.4;cursor:not-allowed; }
+      #leadsMoreFiltersDlg .lmf-saved { display:flex;flex-direction:column;gap:6px;margin-top:18px;padding-top:18px;border-top:1px solid #e5e7eb; }
+      #leadsMoreFiltersDlg .lmf-saved button { text-align:left;padding:10px 12px;border:1px solid #e5e7eb;background:#fff;border-radius:8px;cursor:pointer;font-size:13px;color:#0a0a0a; }
+      #leadsMoreFiltersDlg .lmf-saved button:hover { background:#f9fafb;border-color:#94a3b8; }
+      #leadsMoreFiltersDlg .lmf-foot { display:flex;justify-content:space-between;gap:8px;padding:14px 22px;border-top:1px solid #e5e7eb;background:#fafafa;border-radius:0 0 14px 14px; }
+      #leadsMoreFiltersDlg .lmf-btn-primary { padding:9px 16px;background:#0a0a0a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer; }
+      #leadsMoreFiltersDlg .lmf-btn-secondary { padding:9px 16px;background:#fff;color:#0a0a0a;border:1px solid #d1d5db;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer; }
+    </style>
+    <form method="dialog" class="lmf-wrap">
+      <div class="lmf-head">
+        <h2>More filters</h2>
+        <button type="button" class="lmf-close" id="leadsMoreFiltersClose" aria-label="Close">×</button>
+      </div>
+      <div class="lmf-body">
+        <h3 class="lmf-section-h">Show me leads that match ALL of these:</h3>
+        <div id="leadsMoreFiltersConds"></div>
+        <button type="button" class="lmf-add" id="leadsMoreFiltersAdd">+ Add a filter</button>
+        <div class="lmf-saved">
+          <h3 class="lmf-section-h">Or pick a saved view:</h3>
+          <div id="leadsMoreFiltersSaved"></div>
+        </div>
+      </div>
+      <div class="lmf-foot">
+        <button type="button" class="lmf-btn-secondary" id="leadsMoreFiltersClear">Clear</button>
+        <button type="button" class="lmf-btn-primary" id="leadsMoreFiltersApply">Apply filters →</button>
+      </div>
+    </form>
+  `;
+  document.body.appendChild(dlg);
+
+  dlg.querySelector("#leadsMoreFiltersClose").addEventListener("click", () => _closeDlg(dlg));
+  dlg.querySelector("#leadsMoreFiltersAdd").addEventListener("click", () => {
+    if (_moreModalDraft.length >= 5) return;
+    _moreModalDraft.push({ field: "stage", op: "is", value: "new" });
+    _renderMoreFiltersConds();
+  });
+  dlg.querySelector("#leadsMoreFiltersClear").addEventListener("click", () => {
+    _moreModalDraft = [];
+    _renderMoreFiltersConds();
+  });
+  dlg.querySelector("#leadsMoreFiltersApply").addEventListener("click", () => {
+    _filters.advanced = _moreModalDraft.filter(c => c && c.field && c.op);
+    _closeDlg(dlg);
+    _refreshFiltersAndRender();
+  });
+  return dlg;
+}
+
+function _defaultValueFor(field, op) {
+  const f = ADV_FIELDS[field];
+  if (!f) return "";
+  if (f.type === "stage") {
+    if (op === "is one of") return ["new"];
+    return "new";
+  }
+  if (f.type === "text")   return "";
+  if (f.type === "number") return 0;
+  if (f.type === "date") {
+    if (op === "is more than X days ago" || op === "is less than X days ago") return 7;
+    if (op === "is between X and Y") {
+      const today = new Date(); today.setHours(0,0,0,0);
+      const iso = today.toISOString().slice(0,10);
+      return { from: iso, to: iso };
+    }
+    return null;
+  }
+  return "";
+}
+
+function _renderCondValueControl(idx, c) {
+  const f = ADV_FIELDS[c.field];
+  if (!f) return "";
+  if (f.type === "stage") {
+    if (c.op === "is one of") {
+      const sel = Array.isArray(c.value) ? c.value : [];
+      return `<select class="lmf-val" data-idx="${idx}" multiple style="min-width:160px;height:auto;">
+        ${STAGE_ORDER.map(s => `<option value="${s}" ${sel.includes(s) ? "selected" : ""}>${escapeHtml(STAGE_LABELS[s])}</option>`).join("")}
+      </select>`;
+    }
+    return `<select class="lmf-val" data-idx="${idx}">
+      ${STAGE_ORDER.map(s => `<option value="${s}" ${c.value === s ? "selected" : ""}>${escapeHtml(STAGE_LABELS[s])}</option>`).join("")}
+    </select>`;
+  }
+  if (f.type === "text") {
+    return `<input class="lmf-val" data-idx="${idx}" type="text" value="${escapeHtml(c.value || "")}" placeholder="value">`;
+  }
+  if (f.type === "number") {
+    return `<input class="lmf-val" data-idx="${idx}" type="number" value="${escapeHtml(String(c.value ?? 0))}">`;
+  }
+  if (f.type === "date") {
+    if (c.op === "is between X and Y") {
+      const v = c.value || {};
+      // If saved view used offsets, render as derived ISO dates for display.
+      let fromStr = v.from || "", toStr = v.to || "";
+      if (typeof v.fromOffset === "number") {
+        const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() + v.fromOffset);
+        fromStr = d.toISOString().slice(0,10);
+      }
+      if (typeof v.toOffset === "number") {
+        const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() + v.toOffset);
+        toStr = d.toISOString().slice(0,10);
+      }
+      return `<input class="lmf-val lmf-val-from" data-idx="${idx}" type="date" value="${escapeHtml(fromStr)}">
+              <span style="font-size:12px;color:#6b7280;">and</span>
+              <input class="lmf-val lmf-val-to" data-idx="${idx}" type="date" value="${escapeHtml(toStr)}">`;
+    }
+    if (c.op === "was today" || c.op === "was yesterday") {
+      return "";  // no value control
+    }
+    // X-days operators
+    return `<input class="lmf-val" data-idx="${idx}" type="number" min="0" value="${escapeHtml(String(c.value ?? 7))}" style="width:80px;">
+            <span style="font-size:12px;color:#6b7280;">days</span>`;
+  }
+  return "";
+}
+
+function _renderMoreFiltersConds() {
+  const dlg = document.getElementById("leadsMoreFiltersDlg");
+  if (!dlg) return;
+  const root = dlg.querySelector("#leadsMoreFiltersConds");
+  if (!_moreModalDraft.length) {
+    root.innerHTML = `<div style="color:#9ca3af;font-size:13px;padding:8px 0;">No filters yet. Add one or pick a saved view below.</div>`;
+  } else {
+    root.innerHTML = _moreModalDraft.map((c, idx) => {
+      const f = ADV_FIELDS[c.field];
+      const ops = f ? ADV_OPS_BY_TYPE[f.type] : [];
+      const fieldOpts = Object.entries(ADV_FIELDS).map(([k, v]) =>
+        `<option value="${k}" ${k === c.field ? "selected" : ""}>${escapeHtml(v.label)}</option>`
+      ).join("");
+      const opOpts = ops.map(o =>
+        `<option value="${escapeHtml(o)}" ${o === c.op ? "selected" : ""}>${escapeHtml(o)}</option>`
+      ).join("");
+      return `<div class="lmf-cond-row" data-idx="${idx}">
+        <select class="lmf-field" data-idx="${idx}">${fieldOpts}</select>
+        <select class="lmf-op" data-idx="${idx}">${opOpts}</select>
+        ${_renderCondValueControl(idx, c)}
+        <button type="button" class="lmf-rm" data-idx="${idx}" aria-label="Remove">×</button>
+      </div>`;
+    }).join("");
+  }
+
+  const addBtn = dlg.querySelector("#leadsMoreFiltersAdd");
+  if (addBtn) addBtn.disabled = _moreModalDraft.length >= 5;
+
+  // Wire control changes
+  root.querySelectorAll(".lmf-field").forEach(sel => {
+    sel.addEventListener("change", () => {
+      const i = Number(sel.dataset.idx);
+      const c = _moreModalDraft[i];
+      const newField = sel.value;
+      const newType = ADV_FIELDS[newField].type;
+      // Reset op + value to first valid op for the new type
+      c.field = newField;
+      c.op    = ADV_OPS_BY_TYPE[newType][0];
+      c.value = _defaultValueFor(newField, c.op);
+      _renderMoreFiltersConds();
+    });
+  });
+  root.querySelectorAll(".lmf-op").forEach(sel => {
+    sel.addEventListener("change", () => {
+      const i = Number(sel.dataset.idx);
+      const c = _moreModalDraft[i];
+      c.op = sel.value;
+      c.value = _defaultValueFor(c.field, c.op);
+      _renderMoreFiltersConds();
+    });
+  });
+  root.querySelectorAll(".lmf-val").forEach(inp => {
+    inp.addEventListener("change", () => {
+      const i = Number(inp.dataset.idx);
+      const c = _moreModalDraft[i];
+      const f = ADV_FIELDS[c.field];
+      if (!f) return;
+      if (f.type === "stage" && c.op === "is one of") {
+        c.value = Array.from(inp.selectedOptions).map(o => o.value);
+      } else if (f.type === "date" && c.op === "is between X and Y") {
+        // Read both date inputs in this row
+        const row = inp.closest(".lmf-cond-row");
+        const from = row.querySelector(".lmf-val-from").value;
+        const to   = row.querySelector(".lmf-val-to").value;
+        c.value = { from, to };
+      } else if (f.type === "number" || (f.type === "date" && (c.op === "is more than X days ago" || c.op === "is less than X days ago"))) {
+        c.value = Number(inp.value);
+      } else {
+        c.value = inp.value;
+      }
+    });
+  });
+  root.querySelectorAll(".lmf-rm").forEach(btn => {
     btn.addEventListener("click", () => {
-      _moreFilters[btn.dataset.key] = !_moreFilters[btn.dataset.key];
-      btn.classList.toggle("is-active", _moreFilters[btn.dataset.key]);
+      const i = Number(btn.dataset.idx);
+      _moreModalDraft.splice(i, 1);
+      _renderMoreFiltersConds();
+    });
+  });
+}
+
+function _renderMoreFiltersSaved() {
+  const dlg = document.getElementById("leadsMoreFiltersDlg");
+  if (!dlg) return;
+  const root = dlg.querySelector("#leadsMoreFiltersSaved");
+  root.innerHTML = SAVED_VIEWS.map(v =>
+    `<button type="button" data-saved-id="${escapeHtml(v.id)}">${escapeHtml(v.label)}</button>`
+  ).join("");
+  root.querySelectorAll("[data-saved-id]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const view = SAVED_VIEWS.find(v => v.id === btn.dataset.savedId);
+      if (!view) return;
+      // Deep clone the conditions so the modal can edit without mutating SAVED_VIEWS
+      _moreModalDraft = view.conditions.map(c => ({
+        field: c.field,
+        op:    c.op,
+        value: (c.value && typeof c.value === "object" && !Array.isArray(c.value))
+                 ? { ...c.value }
+                 : (Array.isArray(c.value) ? [...c.value] : c.value),
+      }));
+      // Apply immediately, close the modal
+      _filters.advanced = _moreModalDraft.slice();
+      _closeDlg(dlg);
       _refreshFiltersAndRender();
     });
   });
-  _positionMenu(menu, anchor);
+}
+
+function openMoreFiltersModal() {
+  const dlg = _ensureMoreFiltersModal();
+  // Seed working draft from currently-applied advanced filters (deep clone)
+  _moreModalDraft = (_filters.advanced || []).map(c => ({
+    field: c.field,
+    op:    c.op,
+    value: (c.value && typeof c.value === "object" && !Array.isArray(c.value))
+             ? { ...c.value }
+             : (Array.isArray(c.value) ? [...c.value] : c.value),
+  }));
+  _renderMoreFiltersConds();
+  _renderMoreFiltersSaved();
+  _openDlg(dlg);
 }
 
 // ─── Event handlers ──────────────────────────────────────────────────────────
@@ -882,35 +1593,18 @@ function attachEventHandlers() {
     freshBtn.addEventListener("click", _openImport);
   }
 
-  // Select-mode toggle
+  // Phase 1: select-mode is always on (per-row checkboxes always visible).
+  // Hide the legacy "Select" toggle so it doesn't confuse the new flow.
   const selectModeChk = document.getElementById("leadsSelectMode");
   if (selectModeChk) {
-    selectModeChk.addEventListener("change", () => {
-      _selectModeOn = selectModeChk.checked;
-      if (!_selectModeOn) {
-        _selectedIds.clear();
-        updateBulkBar();
-      }
-      renderTable();
-    });
+    const lbl = selectModeChk.closest("label");
+    if (lbl) lbl.style.display = "none";
+    selectModeChk.checked = true;
   }
 
-  // Bulk actions
-  const bulkCancel = document.getElementById("leadsBulkCancel");
-  if (bulkCancel) {
-    bulkCancel.addEventListener("click", () => {
-      _selectModeOn = false;
-      _selectedIds.clear();
-      const selectModeEl = document.getElementById("leadsSelectMode");
-      if (selectModeEl) selectModeEl.checked = false;
-      updateBulkBar();
-      renderTable();
-    });
-  }
-
-  document.querySelectorAll("[data-bulk-act]").forEach(btn => {
-    btn.addEventListener("click", () => _handleBulkAction(btn.dataset.bulkAct));
-  });
+  // The legacy "Cancel" button inside the bulk bar — bulk bar is re-rendered
+  // by updateBulkBar() with its own Clear button, so the original is replaced.
+  // We also wire bulk-act buttons via updateBulkBar(); no static wiring needed.
 }
 
 function _openImport() {
@@ -924,17 +1618,25 @@ async function _handleBulkAction(act) {
 
   if (act === "email") {
     sessionStorage.setItem("leadsSelectedIds", JSON.stringify(ids));
-    _showLeadsToast("Campaigns: Select leads from your imported lists. (Full bulk-email wiring coming in v1.5)", "info");
+    console.log("[leads] bulk send email — Phase 2", ids);
+    _showLeadsToast("Coming in Phase 2.", "info");
+    return;
+  }
+
+  if (act === "schedule") {
+    console.log("[leads] bulk schedule — Phase 3", ids);
+    _showLeadsToast("Coming in Phase 3.", "info");
     return;
   }
 
   if (act === "stage") {
+    // Out of Phase 1 scope — kept disabled in the new bulk bar.
     _openBulkStageDropdown(ids);
     return;
   }
 
   if (act === "campaign" || act === "more") {
-    _showLeadsToast("Coming soon — bulk campaign enroll and more actions landing in v1.5.", "info");
+    _showLeadsToast("Coming soon.", "info");
     return;
   }
 }
@@ -965,9 +1667,7 @@ function _openBulkStageDropdown(ids) {
         } catch (_) {}
       }));
       _selectedIds.clear();
-      _selectModeOn = false;
-      const selectModeEl = document.getElementById("leadsSelectMode");
-      if (selectModeEl) selectModeEl.checked = false;
+      // _selectModeOn stays true in Phase 1 (checkboxes always visible).
       updateBulkBar();
       applyFilters();
       renderTable();
