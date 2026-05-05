@@ -3395,6 +3395,70 @@
     }
     .ai-mode-opt.is-active .opt-check { opacity: 1; }
 
+    /* Phase 1 — reminder cadence inputs in the AI mode dropdown */
+    .ai-mode-divider {
+      height: 1px; background: #f1f5f9;
+      margin: 6px 4px;
+    }
+    .ai-mode-cadence { padding: 8px 10px 6px; }
+    .ai-mode-cadence h4 {
+      margin: 0 0 8px;
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      color: #9ca3af;
+    }
+    .ai-mode-cadence-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 10px; padding: 5px 0;
+      font-size: 12.5px; color: #374151;
+    }
+    .ai-mode-cadence-row select {
+      font-size: 12.5px; padding: 4px 6px;
+      border: 1px solid #e5e7eb; border-radius: 6px;
+      background: #fff; color: #0a0a0a;
+      font-family: inherit; min-width: 96px;
+    }
+    .ai-mode-config-link {
+      display: block; width: 100%;
+      padding: 9px 10px; margin-top: 4px;
+      background: transparent; border: 0;
+      border-top: 1px solid #f1f5f9;
+      color: #2563eb; font-size: 12.5px; font-weight: 500;
+      text-align: left; cursor: pointer;
+      border-radius: 0 0 8px 8px; font-family: inherit;
+    }
+    .ai-mode-config-link:hover { background: #f8fafc; }
+
+    /* Phase 1 — confirmation modal for escalating to Always reply */
+    #aiModeConfirmModal {
+      position: fixed; inset: 0; z-index: 11000;
+      display: none; align-items: center; justify-content: center;
+    }
+    #aiModeConfirmModal.is-open { display: flex; }
+    #aiModeConfirmModal .amc-backdrop {
+      position: absolute; inset: 0; background: rgba(10,10,10,0.45);
+    }
+    #aiModeConfirmModal .amc-card {
+      position: relative; background: #fff;
+      width: 440px; max-width: calc(100vw - 32px);
+      border-radius: 14px; padding: 22px 24px 20px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+    }
+    #aiModeConfirmModal h3 { margin: 0 0 10px; font-size: 17px; font-weight: 600; color: #0a0a0a; }
+    #aiModeConfirmModal p  { margin: 0 0 14px; font-size: 13.5px; color: #475569; line-height: 1.5; }
+    #aiModeConfirmModal .amc-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+    #aiModeConfirmModal .amc-btn {
+      padding: 8px 14px; font-size: 13px; font-weight: 500;
+      border-radius: 8px; border: 1px solid #e5e7eb;
+      background: #fff; color: #0a0a0a;
+      cursor: pointer; font-family: inherit;
+    }
+    #aiModeConfirmModal .amc-btn:hover { background: #f8fafc; }
+    #aiModeConfirmModal .amc-btn.is-primary {
+      background: #16a34a; color: #fff; border-color: #16a34a;
+    }
+    #aiModeConfirmModal .amc-btn.is-primary:hover { background: #15803d; }
+
     /* ── Campaigns sub-tabs ── */
     .camp-subtab {
       height: 38px;
@@ -5338,6 +5402,55 @@
                 </span>
                 <span class="opt-check" aria-hidden="true">✓</span>
               </button>
+              <div class="ai-mode-divider" role="separator"></div>
+              <div class="ai-mode-cadence">
+                <h4>Reminder cadence (when "Reply when I'm slow")</h4>
+                <label class="ai-mode-cadence-row">
+                  <span>Send me a reminder after:</span>
+                  <select id="amcFirst" data-cadence="first_reminder_minutes">
+                    <option value="15">15 min</option>
+                    <option value="30" selected>30 min</option>
+                    <option value="60">1 hour</option>
+                    <option value="120">2 hours</option>
+                    <option value="360">6 hours</option>
+                  </select>
+                </label>
+                <label class="ai-mode-cadence-row">
+                  <span>Then again after:</span>
+                  <select id="amcSecond" data-cadence="second_reminder_minutes">
+                    <option value="30">30 min</option>
+                    <option value="60">1 hour</option>
+                    <option value="120" selected>2 hours</option>
+                    <option value="360">6 hours</option>
+                    <option value="720">12 hours</option>
+                  </select>
+                </label>
+                <label class="ai-mode-cadence-row">
+                  <span>Then AI takes over after:</span>
+                  <select id="amcTakeover" data-cadence="ai_takeover_minutes">
+                    <option value="120">2 hours</option>
+                    <option value="360" selected>6 hours</option>
+                    <option value="720">12 hours</option>
+                    <option value="1440">1 day</option>
+                  </select>
+                </label>
+              </div>
+              <button type="button" id="aiModeConfigLink" class="ai-mode-config-link">
+                Configure AI →
+              </button>
+            </div>
+          </div>
+          <!-- Phase 1: confirmation modal when escalating to "Always reply" -->
+          <div id="aiModeConfirmModal" role="dialog" aria-modal="true" aria-labelledby="amcTitle">
+            <div class="amc-backdrop" data-amc-close></div>
+            <div class="amc-card">
+              <h3 id="amcTitle">Turn on Always reply?</h3>
+              <p>The AI will respond to every customer message immediately — about 1 minute after they send. You won't get reminders.</p>
+              <p>You can switch back to "When slow" or "Never" anytime.</p>
+              <div class="amc-actions">
+                <button type="button" class="amc-btn" data-amc-close>Cancel</button>
+                <button type="button" class="amc-btn is-primary" id="aiModeConfirmYes">Turn it on</button>
+              </div>
             </div>
           </div>
           <span class="app-trial-pill" id="appTrialPill" hidden>
@@ -6489,6 +6602,39 @@
       </style>
 
       <section class="grid" id="activity" data-route-section="activity" hidden>
+        <!-- Onboarding nudge: shows when no lead intake channel is set up.
+             Hidden by default; shown by JS only when /me/intake/channels
+             reports nothing ready. -->
+        <a id="intakeOnboardNudge" href="/dashboard/lead-intake"
+           style="display:none;grid-column:span 12;text-decoration:none;color:inherit;
+                  background:linear-gradient(135deg,#eaf3fc 0%,#f5f7fa 100%);
+                  border:1px solid #cdd7e3;border-radius:14px;padding:20px 22px;
+                  align-items:center;gap:18px;flex-wrap:wrap;
+                  transition:transform .15s ease, box-shadow .15s ease;">
+          <span style="font-size:36px;line-height:1;flex:0 0 auto">📥</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;font-size:17px;margin:0 0 2px;color:#0a0a0a;">Get your first lead</div>
+            <div style="color:#5a6470;font-size:13.5px;">Pick how people contact you. Takes 1 minute.</div>
+          </div>
+          <span style="background:#185fa5;color:#fff;font-weight:600;
+                       padding:9px 16px;border-radius:8px;font-size:14px;
+                       white-space:nowrap;flex:0 0 auto">Set it up →</span>
+        </a>
+        <script>
+          (function(){
+            fetch("/me/intake/channels", { credentials:"same-origin" })
+              .then(function(r){ return r.ok ? r.json() : null; })
+              .then(function(d){
+                var ch = (d && d.channels) || {};
+                var anyReady = !!((ch.form  && ch.form.ready)
+                               || (ch.email && ch.email.ready)
+                               || (ch.phone && ch.phone.ready));
+                var nudge = document.getElementById("intakeOnboardNudge");
+                if (nudge && !anyReady) nudge.style.display = "flex";
+              })
+              .catch(function(){});
+          })();
+        </script>
         <!-- First-visit nudge for Insights. -->
         <div class="page-nudge" data-nudge="activity" style="grid-column: span 12;" hidden>
           <span class="page-nudge-icon" aria-hidden="true">
@@ -21810,6 +21956,7 @@
       inbox:     { title: "Inbox",         section: "inbox" },
       sequenceEdit: { title: "Sequence",   section: "sequenceEdit" },
       engagement: { title: "Engagement",   section: "engagement" },
+      aiSettings: { title: "AI Settings",  section: "aiSettings" },
     };
 
     // ─────────── Section-data loaders (lazy, memoized) ───────────
@@ -29735,11 +29882,18 @@
       if (!badge || !panel || !label) return;
 
       const MODE_CACHE_KEY = "dashboard.ai_mode";
+      const CADENCE_CACHE_KEY = "dashboard.ai_cadence";
 
       const LABELS = {
         "ai_always": "Always",
         "hybrid":    "When slow",
         "i_respond": "Off",
+      };
+
+      const cadenceEls = {
+        first_reminder_minutes:  document.getElementById("amcFirst"),
+        second_reminder_minutes: document.getElementById("amcSecond"),
+        ai_takeover_minutes:     document.getElementById("amcTakeover"),
       };
 
       function render(mode) {
@@ -29751,13 +29905,33 @@
         badge.setAttribute("aria-expanded", panel.dataset.open === "true" ? "true" : "false");
       }
 
+      function renderCadence(c) {
+        if (!c) return;
+        Object.keys(cadenceEls).forEach(k => {
+          const el = cadenceEls[k];
+          if (!el) return;
+          const v = String(c[k] || "");
+          // Only set if option exists; else closest match.
+          const exists = Array.from(el.options).some(o => o.value === v);
+          if (exists) el.value = v;
+        });
+      }
+
       function _renderModeFromCache() {
         const cached = localStorage.getItem(MODE_CACHE_KEY);
         if (cached) render(cached);
+        try {
+          const c = JSON.parse(localStorage.getItem(CADENCE_CACHE_KEY) || "null");
+          if (c) renderCadence(c);
+        } catch (_) {}
       }
 
       function _writeModeCache(mode) {
         try { localStorage.setItem(MODE_CACHE_KEY, mode); } catch (_) {}
+      }
+
+      function _writeCadenceCache(c) {
+        try { localStorage.setItem(CADENCE_CACHE_KEY, JSON.stringify(c)); } catch (_) {}
       }
 
       function setPanelOpen(open) {
@@ -29767,7 +29941,6 @@
         badge.setAttribute("aria-expanded", val);
       }
 
-      // Instantly render from cache (no "…" flash on repeat visits)
       _renderModeFromCache();
 
       async function load() {
@@ -29778,6 +29951,10 @@
           const mode = p.mode || "hybrid";
           render(mode);
           _writeModeCache(mode);
+          if (p.reminder_cadence) {
+            renderCadence(p.reminder_cadence);
+            _writeCadenceCache(p.reminder_cadence);
+          }
         } catch (_) {}
       }
 
@@ -29787,16 +29964,63 @@
       });
 
       document.addEventListener("click", (e) => {
-        if (!panel.contains(e.target) && !badge.contains(e.target)) {
+        const modal = document.getElementById("aiModeConfirmModal");
+        const inModal = modal && modal.contains(e.target);
+        if (!panel.contains(e.target) && !badge.contains(e.target) && !inModal) {
           setPanelOpen(false);
         }
       });
 
+      // Confirm modal helpers — Promise that resolves true/false.
+      const modal = document.getElementById("aiModeConfirmModal");
+      function showConfirm() {
+        return new Promise(resolve => {
+          if (!modal) return resolve(true);
+          modal.classList.add("is-open");
+          const cleanup = (val) => {
+            modal.classList.remove("is-open");
+            modal.querySelectorAll("[data-amc-close]").forEach(b =>
+              b.removeEventListener("click", onCancel));
+            const yes = document.getElementById("aiModeConfirmYes");
+            if (yes) yes.removeEventListener("click", onYes);
+            resolve(val);
+          };
+          const onCancel = () => cleanup(false);
+          const onYes    = () => cleanup(true);
+          modal.querySelectorAll("[data-amc-close]").forEach(b =>
+            b.addEventListener("click", onCancel));
+          const yes = document.getElementById("aiModeConfirmYes");
+          if (yes) yes.addEventListener("click", onYes);
+        });
+      }
+
+      async function persist(mode) {
+        const cadence = {
+          first_reminder_minutes:  parseInt(cadenceEls.first_reminder_minutes?.value || "30", 10),
+          second_reminder_minutes: parseInt(cadenceEls.second_reminder_minutes?.value || "120", 10),
+          ai_takeover_minutes:     parseInt(cadenceEls.ai_takeover_minutes?.value || "360", 10),
+        };
+        const res = await fetch("/me/ai/policy", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mode, reminder_cadence: cadence }),
+        });
+        if (!res.ok) throw new Error("save_failed");
+        _writeCadenceCache(cadence);
+      }
+
       panel.querySelectorAll(".ai-mode-opt").forEach(btn => {
         btn.addEventListener("click", async () => {
           const mode = btn.dataset.mode;
-          // Optimistic — render immediately, persist in background.
           const prev = (badge.dataset.mode || "hybrid");
+
+          // Confirmation: only when escalating TO ai_always from a less-aggressive mode.
+          if (mode === "ai_always" && prev !== "ai_always") {
+            const ok = await showConfirm();
+            if (!ok) return;  // user cancelled; leave UI as-is.
+          }
+
           render(mode);
           _writeModeCache(mode);
           panel.dataset.open = "false";
@@ -29805,20 +30029,30 @@
           setTimeout(() => badge.classList.remove("is-confirming"), 350);
 
           try {
-            const res = await fetch("/me/ai/policy", {
-              method: "POST",
-              credentials: "same-origin",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ mode }),
-            });
-            if (!res.ok) throw new Error("save_failed");
+            await persist(mode);
           } catch (_) {
-            // Revert on failure — rare, but the UI shouldn't lie.
             render(prev);
             _writeModeCache(prev);
           }
         });
       });
+
+      // Cadence change → save in background under current mode.
+      Object.values(cadenceEls).forEach(el => {
+        if (!el) return;
+        el.addEventListener("change", async () => {
+          try { await persist(badge.dataset.mode || "hybrid"); } catch (_) {}
+        });
+      });
+
+      // Configure AI → navigate to the AI Settings page.
+      const cfgLink = document.getElementById("aiModeConfigLink");
+      if (cfgLink) {
+        cfgLink.addEventListener("click", () => {
+          setPanelOpen(false);
+          window.location.hash = "#aiSettings";
+        });
+      }
 
       load();
     })();
