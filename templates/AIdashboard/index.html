@@ -7839,6 +7839,126 @@
           gap: 2px;
         }
         .sched-block:hover { filter: brightness(0.96); transform: translateX(1px); }
+        /* Phase 2 hover affordance — pill border thickens slightly to signal
+           clickability. Spine (4px left border) stays; the three thin sides
+           bump 1px → 1.5px and we offset the padding 0.5px so the inner
+           content doesn't shift on hover. */
+        .sched-block:not(.sched-block--external):hover,
+        .sched-block:not(.sched-block--external):focus-visible {
+          border-top-width: 1.5px;
+          border-right-width: 1.5px;
+          border-bottom-width: 1.5px;
+          padding-top: 7.5px;
+          padding-bottom: 7.5px;
+          padding-right: 9.5px;
+          outline: none;
+        }
+        .sched-block { transition: filter 120ms ease, transform 120ms ease, border-width 50ms ease, padding 50ms ease; }
+        /* Phase 2 hover-peek tooltip — appears 300ms after the cursor lands
+           on a pill (or the pill is focused). Single shared element, edge-
+           aware positioning, fades in 150ms, fades out after a 100ms grace
+           period so the user can travel from pill into the tooltip. */
+        .sched-tooltip {
+          position: absolute;
+          top: 0; left: 0;
+          z-index: 60;
+          pointer-events: auto;
+          background: #fff;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          padding: 12px 16px;
+          min-width: 240px;
+          max-width: 320px;
+          font-size: 13px;
+          color: #0a0a0a;
+          line-height: 1.4;
+          opacity: 0;
+          transition: opacity 150ms ease;
+          will-change: opacity, transform;
+        }
+        .sched-tooltip.is-open { opacity: 1; }
+        .sched-tooltip-head {
+          display: flex;
+          align-items: flex-start;
+          gap: 8px;
+          font-size: 14px;
+          font-weight: 700;
+          color: #0a0a0a;
+          line-height: 1.3;
+        }
+        .sched-tooltip-head-icon {
+          flex: 0 0 auto;
+          font-size: 14px;
+          line-height: 1.2;
+          margin-top: 1px;
+        }
+        .sched-tooltip-head-name {
+          flex: 1 1 auto;
+          word-wrap: break-word;
+          overflow-wrap: anywhere;
+        }
+        .sched-tooltip-contact {
+          font-size: 12.5px;
+          color: #475569;
+          margin-top: 4px;
+          word-wrap: break-word;
+          overflow-wrap: anywhere;
+        }
+        .sched-tooltip-divider {
+          height: 1px;
+          background: #f1f5f9;
+          margin: 8px 0;
+          border: 0;
+        }
+        .sched-tooltip-when {
+          font-size: 12.5px;
+          color: #0a0a0a;
+        }
+        .sched-tooltip-when-time {
+          font-size: 12.5px;
+          color: #0a0a0a;
+          margin-top: 2px;
+        }
+        .sched-tooltip-notes-label {
+          font-size: 11.5px;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: #71717a;
+          margin-top: 8px;
+        }
+        .sched-tooltip-notes-body {
+          font-size: 13px;
+          color: #0a0a0a;
+          margin-top: 2px;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+          overflow-wrap: anywhere;
+        }
+        .sched-tooltip-stage {
+          font-size: 13px;
+          color: #475569;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .sched-tooltip-stage-dot {
+          display: inline-block;
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          flex: 0 0 auto;
+        }
+        .sched-tooltip-stage-name {
+          color: #0a0a0a;
+          font-weight: 700;
+        }
+        .sched-tooltip-hint {
+          margin-top: 10px;
+          font-size: 11.5px;
+          font-style: italic;
+          color: #9ca3af;
+        }
         /* Row 1 — type icon + customer name. Wraps so long names don't
            get truncated; the calendar's whole point is "who is at 9am". */
         .sched-block-row1 {
@@ -26006,10 +26126,243 @@
         });
       }
 
+      // ─── Phase 2: hover-peek tooltip ──────────────────────────────────
+      // Single shared tooltip element re-rendered per hover (cheap; one
+      // node lives in <body> for the lifetime of the page). Wired via
+      // event delegation on the calendar host so listeners survive every
+      // re-render — no per-pill listeners that need rebinding.
+      // Show after 300ms hover/focus, hide 100ms after the cursor leaves
+      // both the pill AND the tooltip (grace period lets the cursor travel
+      // from pill into the tooltip without flicker).
+      let _schedTipEl = null;        // the shared tooltip DOM node
+      let _schedTipPill = null;       // the pill the tooltip is currently anchored to
+      let _schedTipShowTimer = null;  // 300ms debounce
+      let _schedTipHideTimer = null;  // 100ms grace
+      function _schedTipEnsureEl() {
+        if (_schedTipEl) return _schedTipEl;
+        const el = document.createElement("div");
+        el.className = "sched-tooltip";
+        el.setAttribute("role", "tooltip");
+        el.style.display = "none";
+        el.addEventListener("mouseenter", () => {
+          // Cursor entered the tooltip — cancel any pending hide so the
+          // user can read it for as long as they want.
+          if (_schedTipHideTimer) { clearTimeout(_schedTipHideTimer); _schedTipHideTimer = null; }
+        });
+        el.addEventListener("mouseleave", () => {
+          _schedTipScheduleHide();
+        });
+        document.body.appendChild(el);
+        _schedTipEl = el;
+        return el;
+      }
+      function _schedTipBuildHtml(lead, b) {
+        const stage = (lead && lead.stage) || "scheduled";
+        const stageC = stageColor(stage);
+        const stageLab = stageLabel(stage);
+        const apptType = (lead && lead.appointment_type) || (b && b.appointment_type) || "other";
+        const icon = apptTypeIcon(apptType);
+        const typeLab = apptTypeLabel(apptType);
+        const name = leadName(lead);
+        // Backend currently sends notes under .appointment_notes (Phase 3
+        // booking flow) but the older lead pipeline uses .notes / .note;
+        // accept any of them so the tooltip works today AND after Phase 3.
+        const notes = (lead && (lead.appointment_notes || lead.notes || lead.note) || "").trim();
+        const email = (lead && lead.email) || "";
+        const phone = (lead && lead.phone) || "";
+        const dateLab = b.start.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+        const timeRange = `${fmtTimeSched(b.start)} — ${fmtTimeSched(b.end)}`;
+        const dur = fmtDurationSched(b.start, b.end);
+        const timeLine = dur ? `${timeRange} (${dur})` : timeRange;
+        let html = "";
+        html += `<div class="sched-tooltip-head">`;
+        html += `<span class="sched-tooltip-head-icon" aria-hidden="true">${icon}</span>`;
+        html += `<span class="sched-tooltip-head-name">${escapeHtml(name)}</span>`;
+        html += `</div>`;
+        if (email) html += `<div class="sched-tooltip-contact">${escapeHtml(email)}</div>`;
+        if (phone) html += `<div class="sched-tooltip-contact">${escapeHtml(phone)}</div>`;
+        html += `<hr class="sched-tooltip-divider" />`;
+        html += `<div class="sched-tooltip-when">${escapeHtml(typeLab)} · ${escapeHtml(dateLab)}</div>`;
+        html += `<div class="sched-tooltip-when-time">${escapeHtml(timeLine)}</div>`;
+        if (notes) {
+          html += `<div class="sched-tooltip-notes-label">Notes:</div>`;
+          html += `<div class="sched-tooltip-notes-body">${escapeHtml(notes)}</div>`;
+        }
+        html += `<hr class="sched-tooltip-divider" />`;
+        html += `<div class="sched-tooltip-stage">Stage: `
+              + `<span class="sched-tooltip-stage-dot" style="background:${stageC};"></span>`
+              + `<span class="sched-tooltip-stage-name">${escapeHtml(stageLab)}</span>`
+              + `</div>`;
+        html += `<div class="sched-tooltip-hint">Click to edit →</div>`;
+        return html;
+      }
+      function _schedTipPosition(pill, el) {
+        // Edge-aware: prefer right of pill, vertically centered. If the
+        // tooltip would clip past any viewport edge, flip to the opposite
+        // side. Falls back to clamped-on-screen if the viewport is so
+        // small that no side fits.
+        const GAP = 8;
+        const pad = 8; // viewport edge padding
+        const pillRect = pill.getBoundingClientRect();
+        // Read tooltip dimensions AFTER it's in the DOM and laid out.
+        // We render it at top:0 left:0 first to measure, then translate.
+        const tipRect = el.getBoundingClientRect();
+        const tipW = tipRect.width;
+        const tipH = tipRect.height;
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+        // Default: right side, vertically centered on the pill.
+        let left = pillRect.right + GAP;
+        let top  = pillRect.top + (pillRect.height - tipH) / 2;
+        // Right would clip → flip to left of pill.
+        if (left + tipW > vw - pad) {
+          const leftAlt = pillRect.left - GAP - tipW;
+          if (leftAlt >= pad) {
+            left = leftAlt;
+          } else {
+            // Neither side fits — drop below or above the pill instead.
+            const belowTop = pillRect.bottom + GAP;
+            const aboveTop = pillRect.top - GAP - tipH;
+            if (belowTop + tipH <= vh - pad) {
+              top = belowTop;
+              left = Math.max(pad, Math.min(pillRect.left, vw - pad - tipW));
+            } else if (aboveTop >= pad) {
+              top = aboveTop;
+              left = Math.max(pad, Math.min(pillRect.left, vw - pad - tipW));
+            } else {
+              // Last resort: clamp to viewport.
+              left = Math.max(pad, Math.min(pillRect.left, vw - pad - tipW));
+              top  = Math.max(pad, Math.min(top, vh - pad - tipH));
+            }
+          }
+        }
+        // Vertical clip → nudge up (or anchor below pill if anchoring above
+        // would clip the top instead).
+        if (top + tipH > vh - pad) {
+          const aboveTop = pillRect.top - GAP - tipH;
+          if (aboveTop >= pad) top = aboveTop;
+          else top = Math.max(pad, vh - pad - tipH);
+        }
+        if (top < pad) {
+          const belowTop = pillRect.bottom + GAP;
+          if (belowTop + tipH <= vh - pad) top = belowTop;
+          else top = pad;
+        }
+        el.style.left = (left + scrollX) + "px";
+        el.style.top  = (top + scrollY) + "px";
+      }
+      function _schedTipShowFor(pill) {
+        const id = pill.dataset.leadId;
+        if (!id) return;
+        const lead = schedLeads.find(x => x.id === id);
+        if (!lead) return;
+        // Find the booking record for this pill so we have start/end.
+        // We iterate schedEvents (the source of truth) and the staged
+        // pending changes, mirroring renderSchedBoard's bookings build.
+        const pending = schedPending.get(id);
+        let start = null, end = null, apptType = null;
+        if (pending && pending.action === "book") {
+          start = new Date(pending.start_iso);
+          end = new Date(start.getTime() + (pending.duration_min || 60) * 60000);
+        } else {
+          const ev = schedEvents.find(e => e.lead_id === id && !e.all_day && e.start);
+          if (ev) {
+            start = new Date(ev.start);
+            end = new Date(ev.end || (start.getTime() + 60*60000));
+          }
+        }
+        if (!start || !end || Number.isNaN(start.getTime())) return;
+        const b = { lead, start, end, appointment_type: apptType };
+        const el = _schedTipEnsureEl();
+        el.innerHTML = _schedTipBuildHtml(lead, b);
+        // Pre-position offscreen so we can measure without the user seeing
+        // a flash, then run the edge-aware positioner.
+        el.style.display = "block";
+        el.style.left = "-9999px";
+        el.style.top = "0px";
+        el.classList.remove("is-open");
+        // Force layout, then position + fade in.
+        // (Reading offsetHeight forces a synchronous reflow.)
+        void el.offsetHeight;
+        _schedTipPosition(pill, el);
+        // Next frame so the opacity transition runs smoothly.
+        requestAnimationFrame(() => { el.classList.add("is-open"); });
+        _schedTipPill = pill;
+      }
+      function _schedTipScheduleShow(pill) {
+        // Reset any stale state — moving cursor pill A → pill B should
+        // restart the 300ms timer for B and cancel any pending hide.
+        if (_schedTipShowTimer) { clearTimeout(_schedTipShowTimer); _schedTipShowTimer = null; }
+        if (_schedTipHideTimer) { clearTimeout(_schedTipHideTimer); _schedTipHideTimer = null; }
+        _schedTipShowTimer = setTimeout(() => {
+          _schedTipShowTimer = null;
+          _schedTipShowFor(pill);
+        }, 300);
+      }
+      function _schedTipScheduleHide() {
+        if (_schedTipShowTimer) { clearTimeout(_schedTipShowTimer); _schedTipShowTimer = null; }
+        if (_schedTipHideTimer) clearTimeout(_schedTipHideTimer);
+        _schedTipHideTimer = setTimeout(() => {
+          _schedTipHideTimer = null;
+          _schedTipForceHide();
+        }, 100);
+      }
+      function _schedTipForceHide() {
+        if (_schedTipShowTimer) { clearTimeout(_schedTipShowTimer); _schedTipShowTimer = null; }
+        if (_schedTipHideTimer) { clearTimeout(_schedTipHideTimer); _schedTipHideTimer = null; }
+        if (!_schedTipEl) return;
+        _schedTipEl.classList.remove("is-open");
+        _schedTipEl.style.display = "none";
+        _schedTipPill = null;
+      }
+      // Event delegation on document — captures hover/focus for any
+      // .sched-block[data-lead-id] regardless of how many times the board
+      // re-renders. Lookups are cheap because we filter inside the handler.
+      function _schedTipPillFromEvent(e) {
+        const t = e.target;
+        if (!t || !t.closest) return null;
+        return t.closest(".sched-block[data-lead-id]:not(.sched-block--external)");
+      }
+      document.addEventListener("mouseenter", (e) => {
+        const pill = _schedTipPillFromEvent(e);
+        if (!pill) return;
+        _schedTipScheduleShow(pill);
+      }, true);
+      document.addEventListener("mouseleave", (e) => {
+        const pill = _schedTipPillFromEvent(e);
+        if (!pill) return;
+        // Cursor leaving the pill — start grace period so the tooltip
+        // survives the hop from pill → tooltip.
+        _schedTipScheduleHide();
+      }, true);
+      document.addEventListener("focusin", (e) => {
+        const pill = _schedTipPillFromEvent(e);
+        if (!pill) return;
+        _schedTipScheduleShow(pill);
+      });
+      document.addEventListener("focusout", (e) => {
+        const pill = _schedTipPillFromEvent(e);
+        if (!pill) return;
+        _schedTipScheduleHide();
+      });
+      // Click on a pill — kill the tooltip immediately so it doesn't
+      // float over the "Remove this appointment?" confirm dialog (or, in
+      // Phase 3, the edit panel that replaces it).
+      document.addEventListener("mousedown", (e) => {
+        const pill = _schedTipPillFromEvent(e);
+        if (pill) _schedTipForceHide();
+      }, true);
+
       function renderSchedBoard() {
         const host = document.getElementById("schedBoard");
         const label = document.getElementById("schedWeekLabel");
         if (!host) return;
+        // Tear down any open hover-peek so a re-render (drop, cancel, week
+        // nav, refresh) can't leave an orphan tooltip pointing at a pill
+        // that no longer exists.
+        if (typeof _schedTipForceHide === "function") _schedTipForceHide();
         if (label) label.textContent = fmtWeekSched(schedWeekStart);
         const days = []; for (let i = 0; i < 7; i++) days.push(addDaysSched(schedWeekStart, i));
         const today = new Date(); today.setHours(0,0,0,0);
@@ -26144,7 +26497,7 @@
             const typeLabel = apptTypeLabel(apptType);
             const stageLab = stageLabel(stage);
             inner += `<div class="sched-block ${sizeClass}" style="top:${top}px; height:${hght}px; --stage-color:${c}; --stage-fill:${fillBg}; --stage-border:${borderRgba};"
-                          data-lead-id="${escapeHtml(b.lead.id)}" data-stage="${escapeHtml(stage)}" draggable="true">
+                          data-lead-id="${escapeHtml(b.lead.id)}" data-stage="${escapeHtml(stage)}" draggable="true" tabindex="0" aria-label="${escapeHtml(leadName(b.lead))} — ${escapeHtml(typeLabel)} — ${escapeHtml(timeLine)}">
                        <div class="sched-block-row1">
                          <span class="sched-block-icon" aria-hidden="true">${icon}</span>
                          <div class="sched-block-name">${escapeHtml(leadName(b.lead))}${pendingBadge}</div>
