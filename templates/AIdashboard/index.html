@@ -6728,70 +6728,97 @@
           <button type="button" class="home-chip" data-range="all">All time</button>
         </div>
 
-        <!-- ─── KPI strip (4 cards across) ────────────────────────────
-             At-a-glance metrics. Each card shows a big number + label
-             + small trend hint. Sourced live from /me/intake/events. -->
-        <div id="homeKpis" style="grid-column: span 12; display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-top:16px">
-          <div class="hkpi" data-kpi="leads"
-               style="background:linear-gradient(135deg,#eaf3fc 0%,#f5f7fa 100%);border:1px solid #cdd7e3;border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:6px;min-height:120px">
-            <div style="display:flex;align-items:center;gap:10px">
-              <span style="font-size:22px">📬</span>
-              <span style="color:#5a6470;font-size:12.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">New leads</span>
+        <!-- ─── Compact KPI strip (4 small tiles) ─────────────────────
+             Single row at the top of the dashboard, fixed height so
+             nothing below gets pushed off-screen. -->
+        <div id="homeKpis" style="grid-column: span 12; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-top:12px">
+          <div class="hkpi" style="background:linear-gradient(135deg,#eaf3fc 0%,#f5f7fa 100%);border:1px solid #cdd7e3;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;height:88px;overflow:hidden">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:18px">📬</span>
+              <span style="color:#5a6470;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em">New leads · 30d</span>
             </div>
-            <div style="font-size:32px;font-weight:700;color:#0a0a0a;line-height:1.1" data-kpi-num="leads">—</div>
-            <div style="color:#5a6470;font-size:12.5px" data-kpi-sub="leads">last 30 days</div>
-            <div data-kpi-spark="leads" style="margin-top:auto"></div>
+            <div style="font-size:26px;font-weight:700;color:#0a0a0a;line-height:1.1" data-kpi-num="leads">—</div>
+            <div data-kpi-spark="leads" style="margin-top:auto;height:18px"></div>
           </div>
-          <div class="hkpi" data-kpi="today"
-               style="background:linear-gradient(135deg,#eaf7ee 0%,#f5fbf6 100%);border:1px solid #b8d9c2;border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:6px;min-height:120px">
-            <div style="display:flex;align-items:center;gap:10px">
-              <span style="font-size:22px">⚡</span>
-              <span style="color:#0a8a3a;font-size:12.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Today</span>
+          <div class="hkpi" style="background:linear-gradient(135deg,#eaf7ee 0%,#f5fbf6 100%);border:1px solid #b8d9c2;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;height:88px;overflow:hidden">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:18px">⚡</span>
+              <span style="color:#0a8a3a;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em">Today</span>
             </div>
-            <div style="font-size:32px;font-weight:700;color:#0a0a0a;line-height:1.1" data-kpi-num="today">—</div>
-            <div style="color:#5a6470;font-size:12.5px" data-kpi-sub="today">leads in the last 24 hours</div>
-            <div data-kpi-spark="today" style="margin-top:auto"></div>
+            <div style="font-size:26px;font-weight:700;color:#0a0a0a;line-height:1.1" data-kpi-num="today">—</div>
+            <div data-kpi-spark="today" style="margin-top:auto;height:18px"></div>
           </div>
-          <div class="hkpi" data-kpi="flows"
-               style="background:linear-gradient(135deg,#fef5e7 0%,#fcf9f3 100%);border:1px solid #f0c419;border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:6px;min-height:120px">
-            <div style="display:flex;align-items:center;gap:10px">
-              <span style="font-size:22px">⚙️</span>
-              <span style="color:#a86200;font-size:12.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Flows fired</span>
+          <div class="hkpi" style="background:linear-gradient(135deg,#fef5e7 0%,#fcf9f3 100%);border:1px solid #f0c419;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;height:88px;overflow:hidden">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:18px">⚙️</span>
+              <span style="color:#a86200;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em">Flows · 30d</span>
             </div>
-            <div style="font-size:32px;font-weight:700;color:#0a0a0a;line-height:1.1" data-kpi-num="flows">—</div>
-            <div style="color:#5a6470;font-size:12.5px" data-kpi-sub="flows">welcomes sent / 30 days</div>
-            <div data-kpi-spark="flows" style="margin-top:auto"></div>
+            <div style="font-size:26px;font-weight:700;color:#0a0a0a;line-height:1.1" data-kpi-num="flows">—</div>
+            <div data-kpi-spark="flows" style="margin-top:auto;height:18px"></div>
           </div>
-          <div class="hkpi" data-kpi="channels"
-               style="background:linear-gradient(135deg,#f3e7fb 0%,#faf5ff 100%);border:1px solid #c8a2e0;border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:6px;min-height:120px">
-            <div style="display:flex;align-items:center;gap:10px">
-              <span style="font-size:22px">📡</span>
-              <span style="color:#6b3a99;font-size:12.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Channels</span>
+          <div class="hkpi" style="background:linear-gradient(135deg,#f3e7fb 0%,#faf5ff 100%);border:1px solid #c8a2e0;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;height:88px;overflow:hidden">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:18px">📡</span>
+              <span style="color:#6b3a99;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em">Channels</span>
             </div>
-            <div style="font-size:32px;font-weight:700;color:#0a0a0a;line-height:1.1" data-kpi-num="channels">—</div>
-            <div style="color:#5a6470;font-size:12.5px" data-kpi-sub="channels">connected to receive leads</div>
-            <div data-kpi-spark="channels" style="margin-top:auto"></div>
+            <div style="font-size:26px;font-weight:700;color:#0a0a0a;line-height:1.1" data-kpi-num="channels">—</div>
+            <div style="color:#6b3a99;font-size:11px;margin-top:auto" data-kpi-sub="channels">connected</div>
           </div>
         </div>
 
-        <!-- ─── Two-column split: leads channels chart + recent feed ── -->
-        <div class="card" style="grid-column: span 5; margin-top: 16px;">
-          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
-            <h2 class="section-title" style="margin:0;">Where leads come from</h2>
-            <a href="#leadIntake" style="font-size:12.5px;color:#185FA5;text-decoration:none;">Manage →</a>
+        <!-- ─── Dashboard grid (3 cards side-by-side, then a wide one) ─
+             Multiple cards visible at once. Each card has a fixed
+             height so nothing scrolls off-screen unless its OWN
+             content overflows (handled internally per card). -->
+        <div class="card" style="grid-column: span 4; margin-top: 14px; max-height:280px; overflow:hidden; display:flex; flex-direction:column">
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;flex-shrink:0">
+            <h2 class="section-title" style="margin:0;font-size:14px;">Where leads come from</h2>
+            <a href="#leadIntake" style="font-size:12px;color:#185FA5;text-decoration:none;">Manage →</a>
           </div>
-          <div id="homeChannelsBars" style="display:flex;flex-direction:column;gap:12px;padding:6px 0">
+          <div id="homeChannelsBars" style="display:flex;flex-direction:column;gap:10px;flex:1;overflow:auto">
             <div style="color:#888;font-size:13px;padding:14px 0;text-align:center">Loading…</div>
           </div>
         </div>
 
-        <div class="card" style="grid-column: span 7; margin-top: 16px;">
-          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
-            <h2 class="section-title" style="margin:0;">Recent leads</h2>
-            <a href="#leadIntake" style="font-size:12.5px;color:#185FA5;text-decoration:none;">Manage intake →</a>
+        <div class="card" style="grid-column: span 4; margin-top: 14px; max-height:280px; overflow:hidden; display:flex; flex-direction:column">
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:6px;flex-shrink:0">
+            <h2 class="section-title" style="margin:0;font-size:14px;">Quick actions</h2>
           </div>
-          <p class="section-note" style="margin:0 0 8px">Live feed of every lead from your form, email, or phone.</p>
-          <div id="intakeRecent" style="margin-top:8px;">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <a href="#leadIntake" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #e6e9ef;border-radius:10px;text-decoration:none;color:inherit">
+              <span style="font-size:20px">📥</span>
+              <div style="flex:1"><div style="font-weight:600;font-size:13.5px">Set up a form</div><div style="color:#888;font-size:11.5px">Capture leads from your site</div></div>
+              <span style="color:#185FA5;font-weight:600;font-size:14px">→</span>
+            </a>
+            <a href="#outreach" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #e6e9ef;border-radius:10px;text-decoration:none;color:inherit">
+              <span style="font-size:20px">⚙️</span>
+              <div style="flex:1"><div style="font-weight:600;font-size:13.5px">Build a flow</div><div style="color:#888;font-size:11.5px">Automate what happens next</div></div>
+              <span style="color:#185FA5;font-weight:600;font-size:14px">→</span>
+            </a>
+            <a href="#leads" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #e6e9ef;border-radius:10px;text-decoration:none;color:inherit">
+              <span style="font-size:20px">👥</span>
+              <div style="flex:1"><div style="font-weight:600;font-size:13.5px">View leads</div><div style="color:#888;font-size:11.5px">Browse, filter, follow up</div></div>
+              <span style="color:#185FA5;font-weight:600;font-size:14px">→</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="card" style="grid-column: span 4; margin-top: 14px; max-height:280px; overflow:hidden; display:flex; flex-direction:column">
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:6px;flex-shrink:0">
+            <h2 class="section-title" style="margin:0;font-size:14px;">This week</h2>
+          </div>
+          <div id="homeWeekStats" style="display:flex;flex-direction:column;gap:10px;flex:1">
+            <div style="color:#888;font-size:13px;padding:14px 0;text-align:center">Loading…</div>
+          </div>
+        </div>
+
+        <!-- Recent leads — wide card spanning the full row ────────── -->
+        <div class="card" style="grid-column: span 12; margin-top: 14px; max-height:340px; overflow:hidden; display:flex; flex-direction:column">
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;flex-shrink:0">
+            <h2 class="section-title" style="margin:0;font-size:14px;">Recent leads</h2>
+            <a href="#leadIntake" style="font-size:12px;color:#185FA5;text-decoration:none;">Manage intake →</a>
+          </div>
+          <div id="intakeRecent" style="flex:1;overflow:auto;margin:0 -4px;padding:0 4px">
             <div style="padding:18px 0;color:#888;font-size:13px;text-align:center;">Loading…</div>
           </div>
         </div>
@@ -6799,7 +6826,7 @@
         <!-- Pipeline section preserved below for reference; sourced
              from /me/pipeline like before. Hidden until we redesign it
              to fit alongside the new top KPI strip. -->
-        <div class="card" data-tone="cool" style="grid-column: span 12; margin-top: 16px;" hidden>
+        <div class="card" data-tone="cool" style="grid-column: span 12; margin-top: 14px;" hidden>
           <div class="card-header" style="margin-bottom: 8px;">
             <h2 class="section-title" style="margin:0;">Where things are</h2>
           </div>
@@ -7159,10 +7186,7 @@
         <div style="grid-column: 1 / -1; width: 100%;">
           <div class="leads-page">
             <header class="leads-page-head">
-              <div class="leads-page-titlewrap">
-                <h1 class="leads-page-title">Leads</h1>
-                <p class="leads-page-sub">Everyone who's reached out — captured by your AI or added by you.</p>
-              </div>
+              <!-- Page title removed — top bar already says "Leads". -->
               <div class="pl-views" role="tablist" id="leadsViewSwitcher" aria-label="Switch view">
                 <button type="button" class="pl-view-btn is-active" data-leads-view="table">Table</button>
                 <button type="button" class="pl-view-btn" data-leads-view="funnel">Funnel</button>
@@ -15442,8 +15466,8 @@
             #aisKbList  { font-size: 14.5px !important; line-height: 1.9 !important; }
           </style>
 
-          <h1>AI Settings</h1>
-          <p class="ais-sub">How the AI talks for you.</p>
+          <!-- Page title removed — top bar already says "AI Settings". -->
+          <p class="ais-sub" style="margin-top:0">How the AI talks for you.</p>
 
           <div class="ais-card">
             <h2>Voice</h2>
@@ -15506,8 +15530,8 @@
 
           <!-- Page header -->
           <div class="ibx-page-header">
-            <h2 class="ibx-page-title">Inbox</h2>
-            <p class="ibx-page-sub">Customer DMs from your connected Instagram accounts.</p>
+            <!-- Page title removed — top bar already says "Inbox". -->
+            <p class="ibx-page-sub" style="margin-top:0">Customer DMs from your connected Instagram accounts.</p>
           </div>
 
           <!-- Empty state: no DM-enabled account connected -->
@@ -15597,13 +15621,7 @@
         <div style="grid-column: 1 / -1; width: 100%;">
           <div class="eng-page">
             <header class="eng-page-head">
-              <div class="eng-page-titlewrap">
-                <h1 class="eng-page-title">
-                  Engagement
-                  <button type="button" class="eng-help-btn" id="engHelpBtn" aria-label="What is this?">?</button>
-                </h1>
-                <p class="eng-page-sub">How your AI talks to customers — automatically.</p>
-              </div>
+              <!-- Page title removed — top bar already says the page name. -->
             </header>
 
             <div id="engShell">
@@ -32364,7 +32382,7 @@ function escHtmlSeq(s) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-05-reply-widget-side-by-side"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-05-reply-widget-hide-cadence-on-custom"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->

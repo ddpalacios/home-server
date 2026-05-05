@@ -1224,42 +1224,43 @@ function ReplyWidgetEditor({
         </div>
       )}
 
-      {/* Read-only summary that adapts to the global AI mode (the
-          top-right control). When mode is hybrid the card shows the
-          3-stage cadence; when always_reply or off, it explains the
-          mode instead — no fake reminder times. */}
-      <div className={`fb-replywidget-cadinfo is-${globalAiMode || "hybrid"}`}>
-        <div className="fb-replywidget-cadinfo-head">
-          <span className="fb-replywidget-cadinfo-h">
-            {globalAiMode === "ai_always" ? "AI mode"
-              : globalAiMode === "i_respond" ? "AI mode"
-              : "Reminders before takeover"}
-          </span>
-          <span className="fb-replywidget-cadinfo-dot" aria-hidden="true" />
-        </div>
-        <div className="fb-replywidget-cadinfo-times">
-          {globalAiMode === "ai_always" ? (
-            <span className="fb-replywidget-cadinfo-mode">
-              Always reply — <strong>AI replies right away</strong>
+      {/* Read-only summary of the global AI mode. Only relevant when
+          the fallback is AI — for "Send this" the user has chosen
+          their own message and the AI cadence is irrelevant. */}
+      {fallback === "ai" && (
+        <div className={`fb-replywidget-cadinfo is-${globalAiMode || "hybrid"}`}>
+          <div className="fb-replywidget-cadinfo-head">
+            <span className="fb-replywidget-cadinfo-h">
+              {globalAiMode === "ai_always" ? "AI mode"
+                : globalAiMode === "i_respond" ? "AI mode"
+                : "Reminders before takeover"}
             </span>
-          ) : globalAiMode === "i_respond" ? (
-            <span className="fb-replywidget-cadinfo-mode">
-              Off — <strong>you'll handle replies</strong>
-            </span>
-          ) : globalCadence ? (
-            <>
-              <span>{_fmtMinutes(globalCadence.first_reminder_minutes)}</span>
-              <span className="fb-replywidget-cadinfo-sep">·</span>
-              <span>{_fmtMinutes(globalCadence.second_reminder_minutes)}</span>
-              <span className="fb-replywidget-cadinfo-sep">·</span>
-              <span>{_fmtMinutes(globalCadence.ai_takeover_minutes)} (takeover)</span>
-            </>
-          ) : <span style={{ color: "#94a3b8" }}>Loading…</span>}
+            <span className="fb-replywidget-cadinfo-dot" aria-hidden="true" />
+          </div>
+          <div className="fb-replywidget-cadinfo-times">
+            {globalAiMode === "ai_always" ? (
+              <span className="fb-replywidget-cadinfo-mode">
+                Always reply — <strong>AI replies right away</strong>
+              </span>
+            ) : globalAiMode === "i_respond" ? (
+              <span className="fb-replywidget-cadinfo-mode">
+                Off — <strong>you'll handle replies</strong>
+              </span>
+            ) : globalCadence ? (
+              <>
+                <span>{_fmtMinutes(globalCadence.first_reminder_minutes)}</span>
+                <span className="fb-replywidget-cadinfo-sep">·</span>
+                <span>{_fmtMinutes(globalCadence.second_reminder_minutes)}</span>
+                <span className="fb-replywidget-cadinfo-sep">·</span>
+                <span>{_fmtMinutes(globalCadence.ai_takeover_minutes)} (takeover)</span>
+              </>
+            ) : <span style={{ color: "#94a3b8" }}>Loading…</span>}
+          </div>
+          <div className="fb-replywidget-cadinfo-link">
+            Change in top-right ↗
+          </div>
         </div>
-        <div className="fb-replywidget-cadinfo-link">
-          Change in top-right ↗
-        </div>
-      </div>
+      )}
     </div>
   );
 }
