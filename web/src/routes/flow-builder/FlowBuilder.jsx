@@ -1053,6 +1053,14 @@ function ReplyWidgetEditor({
 }) {
   const aiOff = globalAiMode === "i_respond";
 
+  // If global AI is Off, the "AI replies" choice is unrunnable. Auto-
+  // flip to "Send this" so the user lands on a valid default. Runs both
+  // on initial policy load AND on any live change (top-right → Off).
+  React.useEffect(() => {
+    if (aiOff && fallback === "ai") setFallback("custom");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiOff]);
+
   // Inline AI tester — same /me/ai/test-reply endpoint the AI Settings
   // page uses, just rendered in the drawer so users can sanity-check
   // without leaving the flow.
@@ -1102,17 +1110,28 @@ function ReplyWidgetEditor({
       <div className="fb-replywidget-section">
         <label className="fb-drawer-l">If I don't reply</label>
         <div className="fb-replywidget-fallback">
-          <label className={`fb-replywidget-fbcard ${fallback === "ai" ? "is-active" : ""}`}>
+          <label
+            className={`fb-replywidget-fbcard${
+              fallback === "ai" ? " is-active" : ""}${
+              aiOff ? " is-disabled" : ""}`}
+            aria-disabled={aiOff || undefined}
+          >
             <input
               type="radio"
               name="rwFallback"
               checked={fallback === "ai"}
-              onChange={() => setFallback("ai")}
+              disabled={aiOff}
+              onChange={() => { if (!aiOff) setFallback("ai"); }}
             />
             <div>
-              <div className="fb-replywidget-fbtitle">🤖 AI replies</div>
+              <div className="fb-replywidget-fbtitle">
+                🤖 AI replies
+                {aiOff && <span className="fb-replywidget-fbtag">Off</span>}
+              </div>
               <div className="fb-replywidget-fbsub">
-                {aiOff ? "AI is off — turn on in top-right" : "Uses my Knowledge Base"}
+                {aiOff
+                  ? "Turn AI on in the top-right to use this."
+                  : "Uses my Knowledge Base"}
               </div>
             </div>
           </label>
@@ -2272,6 +2291,34 @@ const STYLES = `
   }
   .fb-replywidget-fbsub {
     font-size: 13.5px; color: #4b5563; line-height: 1.5;
+  }
+
+  /* Disabled fallback card (e.g. AI replies when global mode is Off) */
+  .fb-replywidget-fbcard.is-disabled {
+    cursor: not-allowed;
+    background: #f8fafc;
+    border-color: #e5e7eb;
+    box-shadow: none;
+    transform: none;
+  }
+  .fb-replywidget-fbcard.is-disabled:hover {
+    border-color: #e5e7eb; transform: none;
+    box-shadow: none; background: #f8fafc;
+  }
+  .fb-replywidget-fbcard.is-disabled .fb-replywidget-fbtitle {
+    color: #94a3b8;
+  }
+  .fb-replywidget-fbcard.is-disabled .fb-replywidget-fbsub {
+    color: #94a3b8;
+  }
+  .fb-replywidget-fbtag {
+    display: inline-block; margin-left: 8px;
+    padding: 2px 8px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #6b7280;
+    background: #e5e7eb; border-radius: 999px;
+    vertical-align: 2px;
   }
 
   /* Right-side preview */
