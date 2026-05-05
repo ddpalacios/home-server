@@ -400,7 +400,9 @@ function NextStepChooser({ source, canvasActivityIds, onPick, onClose }) {
 
   // Triggers + actions can both be a "next step." The library shows
   // them grouped — same idea here.
-  const triggers = ACTIVITY_CATALOG.filter(a => a.kind === "trigger");
+  // The Input card is the flow's entry point; it's never a "next
+  // step" off another card, so hide it from the chooser entirely.
+  const triggers = ACTIVITY_CATALOG.filter(a => a.kind === "trigger" && a.id !== "input");
   const actions  = ACTIVITY_CATALOG.filter(a => a.kind === "action");
   const logic    = ACTIVITY_CATALOG.filter(a => a.kind === "logic");
 
@@ -1676,6 +1678,12 @@ const STYLES = `
   .fb-card-pill.is-on {
     background: var(--kind-color); color: #fff;
     box-shadow: 0 0 0 3px var(--kind-ring);
+  }
+  /* Input card always shows a green "START" badge so the user reads
+     it instantly as the entry point, regardless of on/off state. */
+  .fb-card-pill-input {
+    background: #10b981; color: #fff;
+    box-shadow: 0 0 0 3px rgba(16,185,129,.20);
   }
   /* "+ Next" connector button — sticks out the right edge of every
      activity card so adding the next step never requires hunting for
@@ -3784,6 +3792,12 @@ export default function FlowBuilder() {
     (changes) => setEdges((es) => applyEdgeChanges(changes, es)), []);
   const onConnect = React.useCallback(
     (params) => setEdges((es) => {
+      // The Input card is the flow's entry point and must never have
+      // an incoming edge. Block any connection whose target is the
+      // Input — even though the card no longer renders a target
+      // handle, this is the belt to that suspenders.
+      const targetNode = nodes.find(n => n.id === params.target);
+      if (targetNode && targetNode.data?.activityId === "input") return es;
       const handle = params.sourceHandle || "";
       const stroke = handle === "no" ? "#9ca3af" : "#16a34a";
       return addEdge({
@@ -3798,7 +3812,7 @@ export default function FlowBuilder() {
         },
       }, es);
     }),
-    []);
+    [nodes]);
 
   const onDragOver = React.useCallback((event) => {
     event.preventDefault();
