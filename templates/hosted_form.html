@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Contact</title>
+<style>
+  :root { --fg:#111; --sub:#555; --bg:#f7f7f8; --card:#fff; --line:#e6e6ea; --accent:#0a66c2; --err:#c0392b; --ok:#0a8a3a; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:16px/1.45 -apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--fg); }
+  .wrap { max-width:520px; margin:0 auto; padding:24px 16px 40px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px 18px; }
+  h1 { font-size:22px; margin:0 0 4px; }
+  .sub { color:var(--sub); font-size:14px; margin:0 0 16px; }
+  label { display:block; font-size:13px; font-weight:600; margin:14px 0 6px; }
+  input, select, textarea { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font:inherit; background:#fff; }
+  textarea { min-height:96px; resize:vertical; }
+  .req { color:var(--err); margin-left:2px; }
+  .err-msg { color:var(--err); font-size:12px; margin-top:4px; min-height:16px; }
+  button { width:100%; padding:12px; border:0; border-radius:8px; background:var(--accent); color:#fff; font:inherit; font-weight:600; cursor:pointer; margin-top:18px; }
+  button:disabled { opacity:.6; cursor:not-allowed; }
+  .hp { position:absolute; left:-9999px; }
+  .footer { text-align:center; color:var(--sub); font-size:12px; margin-top:18px; }
+  .thanks { text-align:center; padding:24px 12px; }
+  .thanks .check { font-size:48px; color:var(--ok); }
+  .err-banner { background:#fff4f4; color:var(--err); padding:10px; border-radius:6px; margin-bottom:12px; font-size:13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1 id="biz">…</h1>
+    <p class="sub" id="form-name"></p>
+    <div id="err" class="err-banner" hidden></div>
+    <form id="hf" autocomplete="on" novalidate>
+      <div id="fields"></div>
+      <input type="text" name="hp_email_confirm" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button type="submit" id="submit-btn">Submit</button>
+    </form>
+  </div>
+  <div class="footer">Powered by JustGotALead</div>
+</div>
+<script>
+(function(){
+  var FORM     = __FORM_JSON__;
+  var BIZ      = __BUSINESS_NAME__;
+  var SLUG     = __SLUG__;
+  var TOKEN    = __FORM_TOKEN__;
+  document.title = BIZ + " · " + (FORM.name || "Contact");
+  document.getElementById("biz").textContent = BIZ;
+  document.getElementById("form-name").textContent = FORM.name || "";
+  document.getElementById("submit-btn").textContent = FORM.submit_text || "Submit";
+
+  var host = document.getElementById("fields");
+  (FORM.fields || []).forEach(function(f){
+    var wrap = document.createElement("div");
+    var label = document.createElement("label");
+    label.textContent = f.label || f.key;
+    if (f.required) {
+      var sp = document.createElement("span"); sp.className = "req"; sp.textContent = "*"; label.appendChild(sp);
+    }
+    label.htmlFor = "f-" + f.key;
+    wrap.appendChild(label);
+    var el;
+    if (f.type === "textarea") { el = document.createElement("textarea"); }
+    else if (f.type === "select") {
+      el = document.createElement("select");
+      var blank = document.createElement("option"); blank.value = ""; blank.textContent = "Choose…"; el.appendChild(blank);
+      (f.options || []).forEach(function(o){
+        var op = document.createElement("option"); op.value = o; op.textContent = o; el.appendChild(op);
+      });
+    } else {
+      el = document.createElement("input");
+      el.type = (f.type === "phone") ? "tel" : (f.type === "email" ? "email" : (f.type === "date" ? "date" : "text"));
+      el.autocomplete = ({"name":"name","email":"email","phone":"tel","address":"street-address"})[f.type] || "off";
+    }
+    el.id = "f-" + f.key; el.name = f.key;
+    if (f.required) el.required = true;
+    wrap.appendChild(el);
+    var emsg = document.createElement("div"); emsg.className = "err-msg"; emsg.id = "e-" + f.key;
+    wrap.appendChild(emsg);
+    host.appendChild(wrap);
+  });
+
+  function clearErrors(){
+    document.getElementById("err").hidden = true;
+    document.getElementById("err").textContent = "";
+    Array.prototype.forEach.call(document.querySelectorAll(".err-msg"), function(n){ n.textContent = ""; });
+  }
+  function showFieldErrors(map){
+    Object.keys(map || {}).forEach(function(k){
+      var n = document.getElementById("e-" + k);
+      if (n) n.textContent = humanizeErr(map[k]);
+    });
+  }
+  function humanizeErr(code){
+    return ({required:"Please fill this in",
+              bad_email:"Please enter a valid email",
+              bad_phone:"Please enter a valid phone",
+              bad_option:"Pick one of the options",
+              too_long:"Too long",
+              unknown_field:"Unexpected field"})[code] || ("Invalid (" + code + ")");
+  }
+
+  document.getElementById("hf").addEventListener("submit", function(ev){
+    ev.preventDefault();
+    clearErrors();
+    var btn = document.getElementById("submit-btn");
+    btn.disabled = true; btn.textContent = "Sending…";
+    var fields = {};
+    (FORM.fields || []).forEach(function(f){
+      var n = document.getElementById("f-" + f.key);
+      if (n != null) fields[f.key] = n.value;
+    });
+    var hp = document.querySelector('input[name="hp_email_confirm"]');
+    var body = { fields: fields, _t: TOKEN, hp_email_confirm: hp ? hp.value : "" };
+    fetch("/f/" + encodeURIComponent(SLUG) + "/submit", {
+      method: "POST", credentials: "omit",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(body),
+    }).then(function(r){
+      return r.json().then(function(d){ return {status:r.status, body:d}; });
+    }).then(function(res){
+      if (res.status === 429) {
+        document.getElementById("err").textContent = "Too many submissions — please try again in a moment.";
+        document.getElementById("err").hidden = false;
+        btn.disabled = false; btn.textContent = FORM.submit_text || "Submit";
+        return;
+      }
+      if (res.status === 400 && res.body && res.body.fields) {
+        showFieldErrors(res.body.fields);
+        btn.disabled = false; btn.textContent = FORM.submit_text || "Submit";
+        return;
+      }
+      if (res.body && res.body.ok) {
+        document.querySelector(".card").innerHTML =
+          '<div class="thanks"><div class="check">✓</div><p>' + (res.body.thank_you || "Thanks!") + '</p></div>';
+        return;
+      }
+      document.getElementById("err").textContent = "Something went wrong. Please try again.";
+      document.getElementById("err").hidden = false;
+      btn.disabled = false; btn.textContent = FORM.submit_text || "Submit";
+    }).catch(function(e){
+      document.getElementById("err").textContent = "Network error. Please try again.";
+      document.getElementById("err").hidden = false;
+      btn.disabled = false; btn.textContent = FORM.submit_text || "Submit";
+    });
+  });
+})();
+</script>
+</body>
+</html>
