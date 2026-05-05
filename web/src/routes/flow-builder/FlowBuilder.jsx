@@ -442,8 +442,12 @@ function NextStepChooser({ source, canvasActivityIds, onPick, onClose }) {
   };
 
   // Headline tells the user what they're hooking up — esp. clear for
-  // branches where the source handle decides the path.
+  // branches where the source handle decides the path. Canvas-drop
+  // (the user pulled a line out and let go on empty space) gets its
+  // own headline so it reads as "fill this slot" rather than
+  // "what's the next step generally."
   let headline = "What comes next?";
+  if (source && source.dropAt) headline = "What goes here?";
   if (source && source.sourceHandle === "yes") headline = "Then what? (the yes path)";
   if (source && source.sourceHandle === "no")  headline = "Else what? (the no path)";
 
@@ -2480,6 +2484,28 @@ const STYLES = `
     50%      { opacity: 1;  transform: scale(1.05); }
   }
 
+  /* "That would create a loop." toast — slides up from the bottom
+     when the user drops a connection that would cycle back to its
+     own source. Subtle, not alarming. */
+  .fb-loop-toast {
+    position: absolute;
+    left: 50%; bottom: 24px;
+    transform: translateX(-50%);
+    padding: 10px 18px;
+    background: #0f172a; color: #fff;
+    font-size: 13px; font-weight: 600;
+    border-radius: 999px;
+    box-shadow: 0 10px 30px rgba(15,23,42,.30),
+                0 0 0 1px rgba(15,23,42,.06);
+    z-index: 50;
+    pointer-events: none;
+    animation: fb-loop-toast-in .22s ease-out;
+  }
+  @keyframes fb-loop-toast-in {
+    from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
   /* Subtle hint when the user is dragging over the canvas. */
   .fb-canvas.is-drop-target::before {
     content: ""; position: absolute; inset: 0;
@@ -4375,16 +4401,58 @@ export default function FlowBuilder() {
     (changes) => setNodes((ns) => applyNodeChanges(changes, ns)), []);
   const onEdgesChange = React.useCallback(
     (changes) => setEdges((es) => applyEdgeChanges(changes, es)), []);
+  // Cycle check used by both isValidConnection (live, during drag)
+  // and onConnectEnd (final, on drop) so the drag preview reflects
+  // reality and we can show a "loop" toast when the user lets go.
+  const wouldCreateCycle = React.useCallback((source, target) => {
+    if (!source || !target) return false;
+    if (source === target) return true;
+    const adj = {};
+    edges.forEach(e => {
+      (adj[e.source] = adj[e.source] || []).push(e.target);
+    });
+    const seen = new Set();
+    const queue = [target];
+    while (queue.length) {
+      const n = queue.shift();
+      if (n === source) return true;
+      if (seen.has(n)) continue;
+      seen.add(n);
+      (adj[n] || []).forEach(next => queue.push(next));
+    }
+    return false;
+  }, [edges]);
+
+  // Live drag-preview gate. Returns false → React Flow refuses to
+  // snap, so the user gets visual feedback that the drop won't take.
+  const isValidConnection = React.useCallback((conn) => {
+    if (!conn || conn.source === conn.target) return false;
+    const targetNode = nodes.find(n => n.id === conn.target);
+    if (targetNode?.data?.activityId === "input") return false;
+    if (wouldCreateCycle(conn.source, conn.target)) return false;
+    // Refuse a duplicate edge with the same source+target+sourceHandle.
+    const sh = conn.sourceHandle || null;
+    const dupe = edges.some(e =>
+      e.source === conn.source &&
+      e.target === conn.target &&
+      ((e.sourceHandle || null) === sh));
+    if (dupe) return false;
+    return true;
+  }, [nodes, edges, wouldCreateCycle]);
+
   const onConnect = React.useCallback(
     (params) => setEdges((es) => {
-      // The Input card is the flow's entry point and must never have
-      // an incoming edge. Block any connection whose target is the
-      // Input — even though the card no longer renders a target
-      // handle, this is the belt to that suspenders.
+      // Belt-and-suspenders — isValidConnection should already gate
+      // this, but a stray onConnect is cheaper to ignore than to chase.
       const targetNode = nodes.find(n => n.id === params.target);
       if (targetNode && targetNode.data?.activityId === "input") return es;
-      const handle = params.sourceHandle || "";
-      const stroke = handle === "no" ? "#9ca3af" : "#16a34a";
+      if (params.source === params.target) return es;
+      const sh = params.sourceHandle || null;
+      if (es.some(e =>
+        e.source === params.source &&
+        e.target === params.target &&
+        ((e.sourceHandle || null) === sh))) return es;
+      const stroke = sh === "no" ? "#9ca3af" : "#16a34a";
       return addEdge({
         ...params,
         animated: true,
@@ -4398,6 +4466,43 @@ export default function FlowBuilder() {
       }, es);
     }),
     [nodes]);
+
+  // ── Phase 2: drop-on-canvas opens the chooser at the drop point ──
+  // React Flow fires onConnectEnd with a connectionState describing
+  // whether the drop landed on a target (isValid: true → onConnect
+  // already ran) or on empty canvas (isValid: false, no toNode).
+  // We reuse the existing chooser modal but stash the drop-point
+  // flow coords on it so pickFromChooser can spawn the new node
+  // exactly where the user let go.
+  const [loopToast, setLoopToast] = React.useState(false);
+  const onConnectEnd = React.useCallback((event, connectionState) => {
+    const fromNode = connectionState?.fromNode;
+    if (!fromNode) return;
+    // If the drop was a successful connection, onConnect already
+    // handled it — nothing to do here.
+    if (connectionState?.isValid) return;
+    // If isValid is false BUT the drop landed on a target node
+    // (toNode exists), it was rejected — most commonly a cycle.
+    if (connectionState?.toNode) {
+      if (wouldCreateCycle(fromNode.id, connectionState.toNode.id)) {
+        setLoopToast(true);
+        setTimeout(() => setLoopToast(false), 2400);
+      }
+      return;
+    }
+    // True empty-canvas drop. Translate cursor to flow coords and
+    // open the chooser at the drop point.
+    if (!rfInstance) return;
+    const cx = event.clientX ?? event.changedTouches?.[0]?.clientX;
+    const cy = event.clientY ?? event.changedTouches?.[0]?.clientY;
+    if (cx == null || cy == null) return;
+    const dropAt = rfInstance.screenToFlowPosition({ x: cx, y: cy });
+    setChooser({
+      sourceId: fromNode.id,
+      sourceHandle: connectionState?.fromHandle?.id || null,
+      dropAt,
+    });
+  }, [rfInstance, wouldCreateCycle]);
 
   const onDragOver = React.useCallback((event) => {
     event.preventDefault();
@@ -4455,7 +4560,10 @@ export default function FlowBuilder() {
     // Auto-connect to the rightmost orphan tail (the typical linear
     // case). Branch nodes come later — for now any node with no
     // outgoing edge counts as a tail.
-    const tail = findRightmostOrphan(nodes, edges);
+    // Exception: the Input card is the flow's entry point and must
+    // never have an incoming edge. Drop it cleanly with no auto-edge
+    // so the user manually drags from Input to whatever's next.
+    const tail = activityId === "input" ? null : findRightmostOrphan(nodes, edges);
     setNodes((ns) => ns.concat(newNode));
     if (tail) {
       const newEdge = {
@@ -4491,12 +4599,21 @@ export default function FlowBuilder() {
       setChooser(null);
       return;
     }
-    // Position 380px to the right of the source. For Yes/No paths,
-    // also offset vertically so the two paths don't overlap.
-    const x = (sourceNode.position?.x || 0) + 380;
-    let y = sourceNode.position?.y || 0;
-    if (chooser.sourceHandle === "yes") y -= 120;
-    if (chooser.sourceHandle === "no")  y += 120;
+    // Default position is 380px to the right of the source. If the
+    // chooser was opened by a canvas-drop (drag knob → drop on empty
+    // canvas), use the recorded drop coords instead so the new card
+    // lands exactly where the user let go. Yes/No vertical offset
+    // only applies to "+ Then/Else" buttons, not canvas drops.
+    let x, y;
+    if (chooser.dropAt) {
+      x = chooser.dropAt.x - 180;
+      y = chooser.dropAt.y - 50;
+    } else {
+      x = (sourceNode.position?.x || 0) + 380;
+      y = sourceNode.position?.y || 0;
+      if (chooser.sourceHandle === "yes") y -= 120;
+      if (chooser.sourceHandle === "no")  y += 120;
+    }
 
     const newId = `${activityId}_${shortId()}`;
     const nodeType = activity.kind === "logic" ? "branch" : "activity";
@@ -4588,6 +4705,11 @@ export default function FlowBuilder() {
           {saveStatus === "idle" && hydrated && <>Don't worry, we save as you go</>}
         </div>
         <ReturnToFormBanner />
+        {loopToast && (
+          <div className="fb-loop-toast" role="status" aria-live="polite">
+            That would create a loop.
+          </div>
+        )}
 
         <ReactFlow
           nodes={nodes}
@@ -4596,6 +4718,8 @@ export default function FlowBuilder() {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
+          onConnectEnd={onConnectEnd}
+          isValidConnection={isValidConnection}
           onNodeClick={onNodeClick}
           onInit={setRfInstance}
           fitView
