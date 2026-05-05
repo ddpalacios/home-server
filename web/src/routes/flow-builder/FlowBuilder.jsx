@@ -514,6 +514,38 @@ const MERGE_TAGS = [
   { token: "{phone}",          label: "Their phone",  sample: "(555) 123-4567" },
 ];
 
+// Render text with merge-tag tokens highlighted as styled chips that
+// show the SAMPLE value (so the sentence still reads naturally) but
+// look visually distinct. Hover tooltip shows the original token.
+// Unknown tokens (not in MERGE_TAGS) render as a chip with the bare
+// variable name so the user still sees them as dynamic.
+const _MERGE_TAG_REGEX = /\{(\w+)\}/g;
+function renderWithMergeTags(text) {
+  const src = String(text || "");
+  if (!src) return null;
+  const out = [];
+  let lastIndex = 0;
+  let key = 0;
+  let match;
+  _MERGE_TAG_REGEX.lastIndex = 0;
+  while ((match = _MERGE_TAG_REGEX.exec(src)) !== null) {
+    if (match.index > lastIndex) {
+      out.push(src.substring(lastIndex, match.index));
+    }
+    const token = match[0];
+    const tagDef = MERGE_TAGS.find(t => t.token === token);
+    const display = tagDef ? tagDef.sample : match[1];
+    out.push(
+      <span key={`tok-${key++}`} className="fb-token" title={token}>
+        {display}
+      </span>
+    );
+    lastIndex = _MERGE_TAG_REGEX.lastIndex;
+  }
+  if (lastIndex < src.length) out.push(src.substring(lastIndex));
+  return out;
+}
+
 function applyMergeTags(text) {
   let out = String(text || "");
   for (const t of MERGE_TAGS) {
@@ -731,70 +763,94 @@ function ReplyPhonePreview({
             <strong>They write back</strong>
           </div>
         </li>
-        {!isAlways && !isOff && (
-          <>
-            <li className={`fb-rwprev-nudge ${openNudge === 1 ? "is-open" : ""}`}>
-              <span className="fb-rwprev-dot" />
-              <div>
-                <button
-                  type="button"
-                  className="fb-rwprev-nudge-head"
-                  onClick={() => toggleNudge(1)}
-                  aria-expanded={openNudge === 1}
-                  aria-controls="fb-rwprev-nudge-body-1"
-                  title="Click to edit"
-                >
-                  <strong>Nudge 1</strong>
-                  <span>{r1}</span>
-                  <span className="fb-rwprev-edit-ico" aria-hidden="true">✏️</span>
-                </button>
-                {openNudge === 1 && (
-                  <div id="fb-rwprev-nudge-body-1" className="fb-rwprev-nudge-body">
-                    <textarea
-                      className="fb-rwprev-nudge-ta"
-                      rows={3}
-                      value={firstNudgeBody || ""}
-                      onChange={(e) => changeNudge(1, e.target.value)}
-                      placeholder="{first_name} is waiting for a reply."
-                      autoFocus
-                      data-ai-editable="true" data-ai-field-type="general"
-                    />
-                  </div>
-                )}
-              </div>
-            </li>
-            <li className={`fb-rwprev-nudge ${openNudge === 2 ? "is-open" : ""}`}>
-              <span className="fb-rwprev-dot" />
-              <div>
-                <button
-                  type="button"
-                  className="fb-rwprev-nudge-head"
-                  onClick={() => toggleNudge(2)}
-                  aria-expanded={openNudge === 2}
-                  aria-controls="fb-rwprev-nudge-body-2"
-                  title="Click to edit"
-                >
-                  <strong>Nudge 2</strong>
-                  <span>{r2}</span>
-                  <span className="fb-rwprev-edit-ico" aria-hidden="true">✏️</span>
-                </button>
-                {openNudge === 2 && (
-                  <div id="fb-rwprev-nudge-body-2" className="fb-rwprev-nudge-body">
-                    <textarea
-                      className="fb-rwprev-nudge-ta"
-                      rows={3}
-                      value={secondNudgeBody || ""}
-                      onChange={(e) => changeNudge(2, e.target.value)}
-                      placeholder="Still waiting on {first_name}. AI will take over soon if you don't reply."
-                      autoFocus
-                      data-ai-editable="true" data-ai-field-type="general"
-                    />
-                  </div>
-                )}
-              </div>
-            </li>
-          </>
-        )}
+        {!isAlways && !isOff && (() => {
+          const isFirstDefault  = !(firstNudgeBody  && firstNudgeBody.trim());
+          const isSecondDefault = !(secondNudgeBody && secondNudgeBody.trim());
+          const effectiveFirst  = firstNudgeBody  && firstNudgeBody.trim()  ? firstNudgeBody  : DEFAULT_FIRST_NUDGE_BODY;
+          const effectiveSecond = secondNudgeBody && secondNudgeBody.trim() ? secondNudgeBody : DEFAULT_SECOND_NUDGE_BODY;
+          return (
+            <>
+              <li className={`fb-rwprev-nudge ${openNudge === 1 ? "is-open" : ""}`}>
+                <span className="fb-rwprev-dot" />
+                <div>
+                  <button
+                    type="button"
+                    className="fb-rwprev-nudge-head"
+                    onClick={() => toggleNudge(1)}
+                    aria-expanded={openNudge === 1}
+                    aria-controls="fb-rwprev-nudge-body-1"
+                    title="Click to edit"
+                  >
+                    <strong>Nudge 1</strong>
+                    <span>{r1}</span>
+                    <span className="fb-rwprev-edit-ico" aria-hidden="true">✏️</span>
+                  </button>
+                  {openNudge === 1 ? (
+                    <div id="fb-rwprev-nudge-body-1" className="fb-rwprev-nudge-body">
+                      <textarea
+                        className="fb-rwprev-nudge-ta"
+                        rows={3}
+                        value={firstNudgeBody || ""}
+                        onChange={(e) => changeNudge(1, e.target.value)}
+                        placeholder={DEFAULT_FIRST_NUDGE_BODY}
+                        autoFocus
+                        data-ai-editable="true" data-ai-field-type="general"
+                      />
+                      {isFirstDefault && (
+                        <p className="fb-rwprev-nudge-hint">
+                          Leave blank to use the default above.
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className={`fb-rwprev-nudge-text ${isFirstDefault ? "is-default" : ""}`}>
+                      {renderWithMergeTags(effectiveFirst)}
+                    </div>
+                  )}
+                </div>
+              </li>
+              <li className={`fb-rwprev-nudge ${openNudge === 2 ? "is-open" : ""}`}>
+                <span className="fb-rwprev-dot" />
+                <div>
+                  <button
+                    type="button"
+                    className="fb-rwprev-nudge-head"
+                    onClick={() => toggleNudge(2)}
+                    aria-expanded={openNudge === 2}
+                    aria-controls="fb-rwprev-nudge-body-2"
+                    title="Click to edit"
+                  >
+                    <strong>Nudge 2</strong>
+                    <span>{r2}</span>
+                    <span className="fb-rwprev-edit-ico" aria-hidden="true">✏️</span>
+                  </button>
+                  {openNudge === 2 ? (
+                    <div id="fb-rwprev-nudge-body-2" className="fb-rwprev-nudge-body">
+                      <textarea
+                        className="fb-rwprev-nudge-ta"
+                        rows={3}
+                        value={secondNudgeBody || ""}
+                        onChange={(e) => changeNudge(2, e.target.value)}
+                        placeholder={DEFAULT_SECOND_NUDGE_BODY}
+                        autoFocus
+                        data-ai-editable="true" data-ai-field-type="general"
+                      />
+                      {isSecondDefault && (
+                        <p className="fb-rwprev-nudge-hint">
+                          Leave blank to use the default above.
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className={`fb-rwprev-nudge-text ${isSecondDefault ? "is-default" : ""}`}>
+                      {renderWithMergeTags(effectiveSecond)}
+                    </div>
+                  )}
+                </div>
+              </li>
+            </>
+          );
+        })()}
         {isAlways && (
           <li>
             <span className="fb-rwprev-dot" />
@@ -1284,6 +1340,13 @@ const REMINDER_OPTIONS = [
   { value: 1440, label: "1 day"  },
 ];
 
+// Default nudge templates — shown under each Nudge row when the user
+// hasn't customized them, AND used at runtime by the engine
+// (server-side mirror lives in sequences/policy.py — keep these in sync
+// if you change the wording).
+const DEFAULT_FIRST_NUDGE_BODY  = "{first_name} is waiting for a reply.";
+const DEFAULT_SECOND_NUDGE_BODY = "Still waiting on {first_name}. AI will take over soon if you don't reply.";
+
 const GLOBAL_MODE_LABEL = {
   ai_always: "Always reply",
   hybrid:    "Reply when I'm slow",
@@ -1463,11 +1526,13 @@ function ReplyWidgetEditor({
             <div className="fb-rwbody-preview">
               <div className="fb-rwbody-preview-eye">As your customer would see it</div>
               <div className="fb-rwbody-preview-body">
-                {applyMergeTags(body) || (
-                  <span style={{ color: "#94a3b8", fontStyle: "italic" }}>
-                    Write a message and it'll appear here.
-                  </span>
-                )}
+                {body
+                  ? renderWithMergeTags(body)
+                  : (
+                    <span style={{ color: "#94a3b8", fontStyle: "italic" }}>
+                      Write a message and it'll appear here.
+                    </span>
+                  )}
               </div>
             </div>
           </div>
@@ -2503,6 +2568,40 @@ const STYLES = `
   .fb-rwprev-nudge-ta:focus {
     outline: 0; border-color: #2563eb;
     box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+  }
+  /* Inline message text under each Nudge row when collapsed */
+  .fb-rwprev-nudge-text {
+    margin-top: 6px;
+    font-size: 13.5px; line-height: 1.5;
+    color: #0a0a0a;
+    white-space: pre-wrap; word-wrap: break-word;
+  }
+  .fb-rwprev-nudge-text.is-default {
+    color: #64748b; font-style: italic;
+  }
+  .fb-rwprev-nudge-hint {
+    margin: 8px 0 0; font-size: 12px; color: #94a3b8;
+    font-style: italic;
+  }
+  /* Highlighted merge-tag chips — used everywhere a message is
+     previewed so the user can spot the dynamic bits at a glance. */
+  .fb-token {
+    display: inline-block;
+    padding: 1px 9px;
+    margin: 0 1px;
+    background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e3a8a;
+    border-radius: 999px;
+    font-size: 0.92em; font-weight: 600;
+    letter-spacing: 0.01em;
+    cursor: help;
+    box-shadow: inset 0 0 0 1px rgba(30,58,138,0.10);
+    white-space: nowrap;
+  }
+  .fb-rwprev-nudge-text.is-default .fb-token {
+    /* When the surrounding text is in the "default" italic gray, keep
+       the chip visible but a touch softer. */
+    background: linear-gradient(180deg, #e0e7ff 0%, #c7d2fe 100%);
   }
 
   /* Channel pill row below the timeline */
