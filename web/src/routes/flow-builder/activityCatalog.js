@@ -119,6 +119,30 @@ export const ACTIVITY_CATALOG = [
     canBeSms: true,
   },
 
+  // ── Reply Widget ─────────────────────────────────────────────────────
+  // The owner-controlled escalation step: ping me a few times, then
+  // either let AI take over (using the global "AI replies" mode in
+  // the top-right) OR send a custom message I wrote with merge tags.
+  // Cadence defaults come from the account's policy and can be
+  // overridden per step in the drawer.
+  {
+    id: "reply", kind: "action",
+    icon: "🔁", title: "Reply",
+    cardSub: "Remind me, then reply",
+    description: "Pings you to reply. If you don't, AI takes over OR sends a custom message you wrote.",
+    trigger: "REPLY ON YOUR BEHALF",
+    defaultMode: "reply",
+    // Cadence: use the account's global reminder_cadence by default.
+    defaultUseGlobalCadence: true,
+    defaultFirstReminderMinutes:  30,
+    defaultSecondReminderMinutes: 120,
+    defaultTakeoverMinutes:       360,
+    // Fallback: 'ai' (uses the global AI mode) or 'custom' (sends the
+    // body below with token substitution).
+    defaultFallback: "ai",
+    defaultBody: "Hey {first_name}, sorry I missed you — just following up about {service_type}. I'll be in touch shortly.\n— {owner_name}",
+  },
+
   // ── Logic ────────────────────────────────────────────────────────────
   {
     id: "branch", kind: "logic",

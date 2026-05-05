@@ -583,6 +583,84 @@ function PhonePreview({ mode, subject, body, fromName }) {
   );
 }
 
+// ── Reply Widget preview (right side of drawer) ────────────────────────
+// Shows the timeline visually so the user can sanity-check what they
+// configured: 3 reminders followed by AI or custom takeover.
+function _fmtMinutes(m) {
+  m = parseInt(m, 10) || 0;
+  if (m % 1440 === 0) {
+    const d = m / 1440;
+    return d + " day" + (d === 1 ? "" : "s");
+  }
+  if (m % 60 === 0) {
+    const h = m / 60;
+    return h + " hour" + (h === 1 ? "" : "s");
+  }
+  return m + " min";
+}
+
+function ReplyPhonePreview({
+  fallback, useGlobalCadence,
+  firstReminderMinutes, secondReminderMinutes, takeoverMinutes,
+  customBody, globalAiMode,
+}) {
+  const cadenceLabel = useGlobalCadence
+    ? "Using your global cadence"
+    : "Custom cadence";
+  const finalLabel = fallback === "ai"
+    ? (globalAiMode === "i_respond"
+        ? "AI is OFF — flow stops here"
+        : "AI replies to the customer")
+    : "Your custom message goes out";
+  const renderedBody = applyMergeTags(customBody || "");
+  return (
+    <div className="fb-rwprev">
+      <div className="fb-rwprev-h">{cadenceLabel}</div>
+      <ol className="fb-rwprev-timeline">
+        <li>
+          <span className="fb-rwprev-dot is-cust" />
+          <div>
+            <strong>Customer replies</strong>
+            <span>Step starts here</span>
+          </div>
+        </li>
+        <li>
+          <span className="fb-rwprev-dot" />
+          <div>
+            <strong>Reminder 1</strong>
+            <span>{useGlobalCadence ? "After your global first reminder" : "After " + _fmtMinutes(firstReminderMinutes)}</span>
+          </div>
+        </li>
+        <li>
+          <span className="fb-rwprev-dot" />
+          <div>
+            <strong>Reminder 2</strong>
+            <span>{useGlobalCadence ? "Per your global second reminder" : "After " + _fmtMinutes(secondReminderMinutes)}</span>
+          </div>
+        </li>
+        <li>
+          <span className={`fb-rwprev-dot ${fallback === "ai" ? "is-ai" : "is-custom"}`} />
+          <div>
+            <strong>{finalLabel}</strong>
+            <span>{useGlobalCadence ? "At your global takeover time" : "After " + _fmtMinutes(takeoverMinutes)}</span>
+          </div>
+        </li>
+      </ol>
+      {fallback === "custom" && (
+        <div className="fb-rwprev-custom">
+          <div className="fb-rwprev-custom-h">Custom message preview</div>
+          <div className="fb-rwprev-custom-body">
+            {renderedBody || <span className="fb-phone-empty">(type your message)</span>}
+          </div>
+        </div>
+      )}
+      <p className="fb-helper" style={{ textAlign: "center", marginTop: 12 }}>
+        If you reply yourself before takeover, reminders cancel automatically.
+      </p>
+    </div>
+  );
+}
+
 // ── Message editor drawer ───────────────────────────────────────────────
 function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
   // Local state mirrors node.data so typing is responsive; we propagate
@@ -856,6 +934,16 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                   </div>
                 </div>
               </div>
+            ) : isReply ? (
+              <ReplyPhonePreview
+                fallback={fallback}
+                useGlobalCadence={useGlobalCadence}
+                firstReminderMinutes={firstReminderMinutes}
+                secondReminderMinutes={secondReminderMinutes}
+                takeoverMinutes={takeoverMinutes}
+                customBody={body}
+                globalAiMode={globalAiMode}
+              />
             ) : (
               <>
                 <PhonePreview
@@ -931,6 +1019,163 @@ function buildStepTrees(nodes, edges) {
   return roots.map(r => walk(r.id)).filter(Boolean);
 }
 
+// ── Reply Widget editor ────────────────────────────────────────────────
+// Drawer body for the "Reply" activity. Surfaces:
+//   - the global AI mode (read-only — change it from the top-right control)
+//   - reminder cadence (use global default OR override here)
+//   - what happens when reminders run out: AI replies, OR a custom message
+//   - if custom: a textarea for the body (same merge-tag conventions as Text/Email)
+const REMINDER_OPTIONS = [
+  { value: 15,   label: "15 min" },
+  { value: 30,   label: "30 min" },
+  { value: 60,   label: "1 hour" },
+  { value: 120,  label: "2 hours" },
+  { value: 360,  label: "6 hours" },
+  { value: 720,  label: "12 hours" },
+  { value: 1440, label: "1 day"  },
+];
+
+const GLOBAL_MODE_LABEL = {
+  ai_always: "Always reply",
+  hybrid:    "Reply when I'm slow",
+  i_respond: "Never reply (off)",
+};
+
+function ReplyWidgetEditor({
+  fallback, setFallback,
+  useGlobalCadence, setUseGlobalCadence,
+  firstReminderMinutes, setFirstReminderMinutes,
+  secondReminderMinutes, setSecondReminderMinutes,
+  takeoverMinutes, setTakeoverMinutes,
+  body, setBody, taRef, onActiveField,
+  globalAiMode,
+}) {
+  const aiOff = globalAiMode === "i_respond";
+
+  return (
+    <div>
+      <div className="fb-replywidget-section">
+        <label className="fb-drawer-l">When the customer replies</label>
+        <p className="fb-helper" style={{ marginTop: 4 }}>
+          This step waits for the customer's response, then sends you reminders so you can reply yourself. If you don't, it falls back to the choice below.
+        </p>
+      </div>
+
+      <div className="fb-replywidget-section">
+        <label className="fb-drawer-l">Reminder schedule</label>
+        <div className="fb-replywidget-cadence-toggle">
+          <label className="fb-replywidget-radio">
+            <input
+              type="radio"
+              name="rwCadenceMode"
+              checked={useGlobalCadence}
+              onChange={() => setUseGlobalCadence(true)}
+            />
+            <span>Use my global setting</span>
+          </label>
+          <label className="fb-replywidget-radio">
+            <input
+              type="radio"
+              name="rwCadenceMode"
+              checked={!useGlobalCadence}
+              onChange={() => setUseGlobalCadence(false)}
+            />
+            <span>Override for this step</span>
+          </label>
+        </div>
+        {useGlobalCadence ? (
+          <p className="fb-helper">
+            Uses the cadence from the top-right "AI replies" control. Change it once, applies everywhere.
+          </p>
+        ) : (
+          <div className="fb-replywidget-cadence-grid">
+            <label>
+              <span>First reminder after</span>
+              <select className="fb-input"
+                value={firstReminderMinutes}
+                onChange={(e) => setFirstReminderMinutes(parseInt(e.target.value, 10))}>
+                {REMINDER_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+            </label>
+            <label>
+              <span>Then again after</span>
+              <select className="fb-input"
+                value={secondReminderMinutes}
+                onChange={(e) => setSecondReminderMinutes(parseInt(e.target.value, 10))}>
+                {REMINDER_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+            </label>
+            <label>
+              <span>Then take over after</span>
+              <select className="fb-input"
+                value={takeoverMinutes}
+                onChange={(e) => setTakeoverMinutes(parseInt(e.target.value, 10))}>
+                {REMINDER_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+            </label>
+          </div>
+        )}
+      </div>
+
+      <div className="fb-replywidget-section">
+        <label className="fb-drawer-l">If you don't reply, then…</label>
+        <div className="fb-replywidget-fallback">
+          <label className={`fb-replywidget-fbcard ${fallback === "ai" ? "is-active" : ""}`}>
+            <input
+              type="radio"
+              name="rwFallback"
+              checked={fallback === "ai"}
+              onChange={() => setFallback("ai")}
+            />
+            <div>
+              <div className="fb-replywidget-fbtitle">🤖 Let AI reply</div>
+              <div className="fb-replywidget-fbsub">
+                Uses the global setting <strong>AI replies: {GLOBAL_MODE_LABEL[globalAiMode] || "loading…"}</strong>.
+                {aiOff
+                  ? " Right now it's off — turn it on in the top-right to use this option."
+                  : " Reads your Knowledge Base, tone, and rules from AI Settings."}
+              </div>
+            </div>
+          </label>
+          <label className={`fb-replywidget-fbcard ${fallback === "custom" ? "is-active" : ""}`}>
+            <input
+              type="radio"
+              name="rwFallback"
+              checked={fallback === "custom"}
+              onChange={() => setFallback("custom")}
+            />
+            <div>
+              <div className="fb-replywidget-fbtitle">✏️ Send my custom message</div>
+              <div className="fb-replywidget-fbsub">
+                Sends the exact text below. Same channel the customer used (text or email).
+              </div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      {fallback === "custom" && (
+        <div className="fb-replywidget-section">
+          <label className="fb-drawer-l" htmlFor="fb-rw-body">Your message</label>
+          <textarea
+            id="fb-rw-body"
+            ref={taRef}
+            className="fb-input fb-textarea"
+            rows={6}
+            value={body}
+            onFocus={onActiveField}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="Hey {first_name}, thanks for reaching out about {service_type}. I'll get back to you shortly."
+          />
+          <p className="fb-helper">
+            Use <code>{"{first_name}"}</code>, <code>{"{last_name}"}</code>, <code>{"{phone}"}</code>, <code>{"{email}"}</code>, <code>{"{service_type}"}</code>, <code>{"{stage}"}</code>, <code>{"{owner_name}"}</code>. They get filled in per lead.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ListStepCard({ index, node, onEdit }) {
   const data = node.data || {};
   const activity = ACTIVITY_BY_ID[data.activityId] || {};
@@ -941,6 +1186,11 @@ function ListStepCard({ index, node, onEdit }) {
   if (activity.defaultMode === "wait") {
     const d = data.waitDays || 1;
     sub = `Wait ${d} day${d === 1 ? "" : "s"}`;
+  } else if (activity.defaultMode === "reply") {
+    const fb = data.fallback || "ai";
+    sub = fb === "ai"
+      ? "Reminders → AI replies"
+      : "Reminders → custom message";
   } else if (data.body) {
     const firstLine = applyMergeTags(data.body || "").split("\n")[0];
     sub = firstLine.length > 96 ? firstLine.slice(0, 96) + "…" : firstLine;
@@ -1796,6 +2046,96 @@ const STYLES = `
   .fb-phone-wait-ico { font-size: 40px; margin-bottom: 8px; }
   .fb-phone-wait-h { font-size: 14px; font-weight: 700; color: #0a0a0a; }
   .fb-phone-wait-p { font-size: 12px; margin-top: 4px; }
+
+  /* ── Reply Widget editor + preview ────────────────────────────────── */
+  .fb-replywidget-section { margin-bottom: 22px; }
+  .fb-replywidget-cadence-toggle {
+    display: flex; gap: 14px; flex-wrap: wrap; margin-top: 6px;
+  }
+  .fb-replywidget-radio {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; color: #0a0a0a; cursor: pointer;
+  }
+  .fb-replywidget-radio input { margin: 0; }
+  .fb-replywidget-cadence-grid {
+    display: grid; grid-template-columns: 1fr; gap: 10px;
+    margin-top: 8px;
+  }
+  .fb-replywidget-cadence-grid label {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; font-size: 13px; color: #374151;
+  }
+  .fb-replywidget-cadence-grid select { min-width: 130px; }
+  .fb-replywidget-fallback {
+    display: flex; flex-direction: column; gap: 10px; margin-top: 8px;
+  }
+  .fb-replywidget-fbcard {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 12px 14px; cursor: pointer;
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
+    transition: border-color 0.10s, background 0.10s;
+  }
+  .fb-replywidget-fbcard:hover { background: #f9fafb; }
+  .fb-replywidget-fbcard.is-active {
+    border-color: #0f172a; background: #f1f5f9;
+  }
+  .fb-replywidget-fbcard input { margin-top: 4px; flex-shrink: 0; }
+  .fb-replywidget-fbtitle {
+    font-size: 13.5px; font-weight: 600; color: #0a0a0a;
+  }
+  .fb-replywidget-fbsub {
+    font-size: 12.5px; color: #4b5563; line-height: 1.5; margin-top: 4px;
+  }
+
+  .fb-rwprev {
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
+    padding: 18px 18px 14px;
+  }
+  .fb-rwprev-h {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+    text-transform: uppercase; color: #6b7280; margin-bottom: 14px;
+  }
+  .fb-rwprev-timeline {
+    list-style: none; padding: 0; margin: 0;
+    position: relative;
+  }
+  .fb-rwprev-timeline::before {
+    content: ""; position: absolute; left: 6px; top: 8px; bottom: 8px;
+    width: 2px; background: #eef0f3;
+  }
+  .fb-rwprev-timeline li {
+    position: relative; padding-left: 24px; margin-bottom: 14px;
+  }
+  .fb-rwprev-timeline li:last-child { margin-bottom: 0; }
+  .fb-rwprev-dot {
+    position: absolute; left: 0; top: 4px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #fff; border: 2px solid #cbd5e1;
+  }
+  .fb-rwprev-dot.is-cust { border-color: #2563eb; background: #2563eb; }
+  .fb-rwprev-dot.is-ai { border-color: #16a34a; background: #16a34a; }
+  .fb-rwprev-dot.is-custom { border-color: #d97706; background: #d97706; }
+  .fb-rwprev-timeline li > div {
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .fb-rwprev-timeline strong {
+    font-size: 13px; font-weight: 600; color: #0a0a0a;
+  }
+  .fb-rwprev-timeline span {
+    font-size: 12px; color: #6b7280;
+  }
+  .fb-rwprev-custom {
+    margin-top: 16px; padding: 12px 14px;
+    background: #f8fafc; border: 1px solid #eef0f3; border-radius: 10px;
+  }
+  .fb-rwprev-custom-h {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+    text-transform: uppercase; color: #9ca3af; margin-bottom: 6px;
+  }
+  .fb-rwprev-custom-body {
+    font-size: 13px; color: #0a0a0a; line-height: 1.55;
+    white-space: pre-wrap; word-wrap: break-word;
+  }
 
   /* ── Template picker (centered overlay on empty canvas) ──────────── */
   .fb-tpl-bg {
