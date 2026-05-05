@@ -15279,12 +15279,14 @@
           <div class="ais-card">
             <h2>Extra notes</h2>
             <textarea id="aisThingsToKnow" class="ais-textarea" style="min-height:80px;"
+              data-ai-editable="true" data-ai-field-type="knowledge_base"
               placeholder="Quick stuff the AI should know."></textarea>
           </div>
 
           <div class="ais-card">
             <h2>Never do</h2>
             <textarea id="aisThingsToAvoid" class="ais-textarea" style="min-height:96px;"
+              data-ai-editable="true" data-ai-field-type="general"
               placeholder="Never quote a price.&#10;Never promise a time."></textarea>
           </div>
 
@@ -15292,6 +15294,7 @@
             <h2>Try it</h2>
             <div class="ais-test-row">
               <input id="aisTestInput" type="text" class="ais-test-input"
+                data-ai-editable="true" data-ai-field-type="general"
                 placeholder="Ask anything a customer might ask." />
               <button type="button" id="aisTestBtn" class="ais-btn">Try →</button>
             </div>

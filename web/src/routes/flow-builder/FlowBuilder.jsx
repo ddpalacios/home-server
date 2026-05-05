@@ -1107,6 +1107,8 @@ function ReplyWidgetEditor({
             <input
               type="text"
               className="fb-rwtest-input"
+              data-ai-editable="true"
+              data-ai-field-type="general"
               placeholder="Ask anything a customer might ask."
               value={testInput}
               onChange={(e) => setTestInput(e.target.value)}
@@ -1136,6 +1138,8 @@ function ReplyWidgetEditor({
             id="fb-rw-body"
             ref={taRef}
             className="fb-input fb-textarea"
+            data-ai-editable="true"
+            data-ai-field-type="reply_body"
             rows={6}
             value={body}
             onFocus={onActiveField}
