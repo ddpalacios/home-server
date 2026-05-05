@@ -627,6 +627,75 @@ function PhonePreview({ mode, subject, body, fromName }) {
   );
 }
 
+// ── Textarea with inline merge-token highlights ────────────────────────
+// Native textareas can't render colored runs, so we layer two elements:
+//   1. A transparent-text div BEHIND the textarea that mirrors the
+//      content character-for-character. Tokens are wrapped in a
+//      .fb-htxt-tok span so their background paints behind the text.
+//   2. The textarea itself, sitting on top with a transparent
+//      background so the token highlights show through.
+// Both share identical font / padding / line-height / wrapping so
+// every character lines up. Scroll position is synced both ways so
+// long content stays aligned.
+function TokenHighlightTextarea({
+  id, taRef, className, rows, value, placeholder,
+  onChange, onFocus, dataAiEditable, dataAiFieldType,
+}) {
+  const overlayRef = React.useRef(null);
+  function handleScroll(e) {
+    const o = overlayRef.current;
+    if (!o) return;
+    o.scrollTop  = e.target.scrollTop;
+    o.scrollLeft = e.target.scrollLeft;
+  }
+  // Render the overlay content. Each token becomes a styled span; the
+  // span's TEXT is the original {first_name} string so character widths
+  // line up with the textarea exactly.
+  const overlayParts = [];
+  {
+    const src = String(value || "");
+    let lastIndex = 0;
+    let key = 0;
+    let match;
+    _MERGE_TAG_REGEX.lastIndex = 0;
+    while ((match = _MERGE_TAG_REGEX.exec(src)) !== null) {
+      if (match.index > lastIndex) {
+        overlayParts.push(src.substring(lastIndex, match.index));
+      }
+      overlayParts.push(
+        <span key={`htxt-${key++}`} className="fb-htxt-tok">{match[0]}</span>
+      );
+      lastIndex = _MERGE_TAG_REGEX.lastIndex;
+    }
+    if (lastIndex < src.length) overlayParts.push(src.substring(lastIndex));
+    // Trailing space lets a final newline render its own line in pre-wrap.
+    overlayParts.push("​");
+  }
+  return (
+    <div className="fb-htxt-wrap">
+      <div
+        ref={overlayRef}
+        className="fb-htxt-overlay"
+        aria-hidden="true"
+      >{overlayParts}</div>
+      <textarea
+        id={id}
+        ref={taRef}
+        className={`${className || ""} fb-htxt-input`}
+        rows={rows}
+        value={value}
+        placeholder={placeholder}
+        onChange={onChange}
+        onFocus={onFocus}
+        onScroll={handleScroll}
+        data-ai-editable={dataAiEditable ? "true" : undefined}
+        data-ai-field-type={dataAiFieldType}
+        spellCheck={true}
+      />
+    </div>
+  );
+}
+
 // ── Reply Widget recipient list (chip-style add/remove) ────────────────
 // Used under the channel pills to manage phones and emails. Compact:
 // chips for current values, an inline input for adding via Enter.
@@ -1494,12 +1563,12 @@ function ReplyWidgetEditor({
         <div className="fb-replywidget-section fb-rwbody-grid">
           <div className="fb-rwbody-edit">
             <label className="fb-drawer-l" htmlFor="fb-rw-body">Your message</label>
-            <textarea
+            <TokenHighlightTextarea
               id="fb-rw-body"
-              ref={taRef}
+              taRef={taRef}
               className="fb-input fb-textarea fb-rwbody-ta"
-              data-ai-editable="true"
-              data-ai-field-type="reply_body"
+              dataAiEditable
+              dataAiFieldType="reply_body"
               rows={9}
               value={body}
               onFocus={onActiveField}
@@ -2599,9 +2668,68 @@ const STYLES = `
     white-space: nowrap;
   }
   .fb-rwprev-nudge-text.is-default .fb-token {
-    /* When the surrounding text is in the "default" italic gray, keep
-       the chip visible but a touch softer. */
     background: linear-gradient(180deg, #e0e7ff 0%, #c7d2fe 100%);
+  }
+
+  /* Textarea with inline token highlighting (overlay + textarea stack).
+     The overlay mirrors the textarea content character-for-character;
+     token spans paint a colored background behind the user's text. */
+  .fb-htxt-wrap {
+    position: relative;
+    display: block;
+  }
+  .fb-htxt-overlay,
+  .fb-htxt-input {
+    /* These two MUST share identical layout so character columns line up.
+       Defining shared values up front; component-specific .fb-htxt-input
+       still inherits the .fb-rwbody-ta styling for padding/font/etc. */
+    font-family: inherit;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    box-sizing: border-box;
+    margin: 0;
+    border-radius: 12px;
+  }
+  .fb-htxt-overlay {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: auto;
+    /* Hide the overlay text but keep widths intact. The token spans
+       override this color so the chip text is visible. */
+    color: transparent;
+    /* Mirror the textarea's padding + border-width so glyphs align.
+       border-color is transparent so the only visible border is the
+       textarea's. */
+    border: 1.5px solid transparent;
+    /* Padding/font come from the same selector as fb-rwbody-ta so they
+       always match — set explicitly below. */
+    padding: 18px 20px;
+    font-size: 15px;
+    line-height: 1.6;
+    /* Chrome scrollbar gutter handling matches textarea's. */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .fb-htxt-overlay::-webkit-scrollbar { display: none; }
+  .fb-htxt-input {
+    position: relative;
+    z-index: 1;
+    background: transparent;
+    /* Caret stays visible since text color is preserved on the input. */
+  }
+  .fb-htxt-tok {
+    /* Inline token highlight inside the textarea. The text inside is
+       transparent (parent rule) but we set color so the chip "label"
+       is faintly visible above its own background — gives the user a
+       gentle reassurance the highlight is on the right characters. */
+    background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%);
+    color: rgba(30,58,138,0.0);  /* invisible — textarea text shows */
+    border-radius: 4px;
+    box-shadow: inset 0 0 0 1px rgba(30,58,138,0.10);
+    padding: 1px 0;
+    margin: 0;
   }
 
   /* Channel pill row below the timeline */
