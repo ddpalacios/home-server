@@ -276,15 +276,15 @@
       overflow: hidden;
     }
     /* Each active section fills the available space and scrolls
-       internally if its content overflows. The 28px top padding gives
-       the page's first row (often a tab/button strip — Leads view
-       switcher, Outreach tabs, Engagement tabs, Settings tabs) clear
-       breathing room from the topbar bottom so it never reads as
-       "covered" by the nav bar above it. */
+       internally if its content overflows. Generous 48px top padding
+       so the page's first row (often a tab/button strip — Leads view
+       switcher, Outreach tabs, Engagement tabs, Settings tabs) sits
+       well clear of the topbar bottom and never reads as crowded
+       under the nav bar. */
     .app-body [data-route-section].is-active {
       height: 100%;
       overflow: auto;
-      padding: 28px 24px 24px;
+      padding: 48px 32px 32px;
       box-sizing: border-box;
     }
     /* Outreach is the one tool page that needs zero padding so the
