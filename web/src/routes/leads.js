@@ -2169,6 +2169,7 @@ let _beState = {
   slotsDiagnostics: null,         // { calendar_id, working_hours_keys, ... } from server when slots fail
   slotAssignments: {},            // { lead_id: { start_iso, end_iso, label, epoch } }
   slotTimeZone: "",               // working-hours tz from /find-slots response
+  hiddenByFilter: 0,              // # of selected leads excluded by current filter (visible+selected scope)
 };
 
 function _beFmtCurrency(value) {
@@ -2522,13 +2523,29 @@ async function openBulkEmailComposer(opts) {
   opts = opts || {};
   if (!_selectedIds.size) return;
   const ids = Array.from(_selectedIds);
-  // Snapshot recipients from the current list (selection persists across
-  // filter changes — selected ids may not all be in _filteredLeads).
-  const recipients = [];
+  // Bulk actions act on (selected ∩ currently-visible). The global
+  // selection state stays intact across filter changes (so the user can
+  // re-broaden the filter and the same leads come back), but the action
+  // itself is scoped to what they can see — so a Select-All-then-Filter
+  // doesn't silently broadcast to the entire dataset.
+  const visibleIdSet = new Set((_filteredLeads || []).map(l => l && l.id));
   const byId = new Map(_allLeads.map(l => [l.id, l]));
+  const recipients = [];
+  let hiddenByFilter = 0;
   for (const id of ids) {
+    if (visibleIdSet.size && !visibleIdSet.has(id)) {
+      hiddenByFilter += 1;
+      continue;
+    }
     const l = byId.get(id);
     if (l) recipients.push(l);
+  }
+
+  if (!recipients.length) {
+    // Edge case: every selected lead is hidden by the current filter.
+    // Bail with a clear toast instead of opening an empty composer.
+    _showLeadsToast(`All ${ids.length} selected lead${ids.length === 1 ? "" : "s"} are hidden by your current filter — clear it to include them.`, "warn");
+    return;
   }
 
   _beEnsureDialog();
@@ -2536,6 +2553,7 @@ async function openBulkEmailComposer(opts) {
   dlg.style.display = "block";
   _beState.open = true;
   _beState.recipients = recipients;
+  _beState.hiddenByFilter = hiddenByFilter;
   _beState.previewLeadId = recipients[0] ? recipients[0].id : "";
   _beState.subject = "";
   _beState.body = "";
@@ -2651,6 +2669,12 @@ function _beRecipientHeader() {
   const optHint = optedOut > 0
     ? `<div style="margin-top:6px;font-size:12px;color:#9a3412;">${optedOut} lead${optedOut !== 1 ? "s" : ""} opted out of email — they'll be skipped.</div>`
     : "";
+  // When the user has selected leads that aren't in the current filter, we
+  // act on visible+selected only and tell them why the count is what it is.
+  const hidden = Number(_beState.hiddenByFilter || 0);
+  const filterHint = hidden > 0
+    ? `<div style="margin-top:6px;font-size:12px;color:#475569;">${hidden} other selected lead${hidden !== 1 ? "s are" : " is"} hidden by your current filter — clear filters to include ${hidden !== 1 ? "them" : "it"}.</div>`
+    : "";
   return `
     <div class="be-recip">
       <strong>To:</strong> ${n} lead${n !== 1 ? "s" : ""}
@@ -2659,6 +2683,7 @@ function _beRecipientHeader() {
         ${first10.map(n => escapeHtml(n)).join("<br>")}
         ${more ? `<div style="margin-top:6px;color:#6b7280;">…and ${more} more</div>` : ""}
       </div>
+      ${filterHint}
       ${optHint}
     </div>`;
 }
