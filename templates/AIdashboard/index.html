@@ -259,6 +259,14 @@
       box-sizing: border-box;
       margin: 0 auto;
     }
+    /* Full-bleed canvas: when the user is on Outreach AND the Canvas
+       pane is active, drop the .app-body 28px padding + 1280px cap
+       so the flow editor reaches from the right edge of the side nav
+       all the way to the viewport's right edge. */
+    .app-body:has(#outreach.is-active .out-pane[data-out-pane="auto"]:not([hidden])) {
+      padding: 0;
+      max-width: none;
+    }
     /* Route sections — only the .is-active one renders. The active
        section needs `display: grid` so the inner `grid-column: span 12`
        children fill the full row (otherwise content squishes to the
@@ -14382,17 +14390,33 @@
         .stg-top-pane[hidden] { display: none !important; }
 
         /* ─── Outreach page (merged Engagement + Campaigns) ────────────────── */
-        /* Tool-first layout: no max-width cap, minimal vertical chrome.
-           The side nav says what page you're on; tabs say which view.
-           Removed: centered H1, subtitle, divider, per-pane sub-text. */
+        /* Tool-first layout: side nav + dashboard top bar are the
+           only chrome. The Canvas pane goes edge-to-edge — its left
+           edge meets the side nav, its right edge meets the viewport,
+           and its bottom edge meets the viewport bottom. */
         .out-page {
-          display:flex; flex-direction:column; gap:12px;
-          padding:14px 12px 0;
+          display:flex; flex-direction:column; gap:8px;
+          padding:10px 12px 0;
           max-width:none; margin:0; width:100%;
           box-sizing:border-box;
         }
-        /* Reserved class for any future flow-builder-specific tweaks. */
-        .out-page.is-flow-builder { padding-top:14px; }
+        /* When the Canvas pane is the active one, cancel the parent's
+           horizontal padding so the flow builder fills full width. */
+        .out-page > .out-pane[data-out-pane="auto"]:not([hidden]) {
+          margin: 0 -12px;
+        }
+        /* Force the flow builder to fill the remaining viewport height.
+           Was hardcoded to calc(100vh - 200px) reserving space for the
+           old title block; that block is gone, so reclaim ~70px. */
+        .out-page .fb-root {
+          height: calc(100vh - 130px) !important;
+          min-height: 0 !important;
+          border-radius: 0 !important;
+          border-left: 0 !important;
+          border-right: 0 !important;
+          border-bottom: 0 !important;
+        }
+        .out-page.is-flow-builder { padding-top:10px; }
         .out-page *, .out-page *::before, .out-page *::after { box-sizing:border-box; }
         .out-page-head { padding-bottom:4px; display:flex; flex-direction:column; gap:4px; }
         .out-page-title {

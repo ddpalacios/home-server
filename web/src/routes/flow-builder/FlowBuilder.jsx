@@ -1329,8 +1329,8 @@ const STYLES = `
   .fb-root {
     position: relative;
     width: 100%;
-    height: calc(100vh - 200px);
-    min-height: 560px;
+    height: calc(100vh - 130px);
+    min-height: 480px;
     background: #fafaf9;
     border: 1px solid rgba(15,23,42,.08);
     border-radius: 14px;
