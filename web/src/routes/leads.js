@@ -2174,7 +2174,7 @@ let _beState = {
   slotSearchStart: "",            // ISO string — first day shown by the mini-cal
   slotSearchEnd: "",              // ISO string — last day shown by the mini-cal
   slotCalDayOffset: 0,            // how many days forward from slotSearchStart the user has paginated
-  slotCalDayCount: 3,             // 3 days at a time fits the popup well
+  slotCalDayCount: 7,             // full week visible at once
   hiddenByFilter: 0,              // # of selected leads excluded by current filter (visible+selected scope)
 };
 
@@ -2736,6 +2736,15 @@ function _bePickTemplate(id) {
   _beState.body = tpl.body || "";
   _beState.view = "editor";
   _beRender();
+  // If this template needs proposed slots, fire Find Times automatically
+  // so the calendar appears with cards instead of an empty button. The user
+  // didn't ask to compose blind — they picked the reschedule template, so
+  // the helpful default is to show them suggested times immediately.
+  if (_beUsesRecommendedSlot()
+      && !_beState.slotsLoading
+      && Object.keys(_beState.slotAssignments).length === 0) {
+    _beFindSlots();
+  }
 }
 
 function _beRenderEditor() {
@@ -3146,7 +3155,7 @@ function _beRenderSlotPanel() {
     // weekday/day-num come out right regardless of browser tz.
     const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
     const dayHeaderHtml = `
-      <div class="be-cal-day-header">
+      <div class="be-cal-day-header" style="grid-template-columns: 48px repeat(${days.length}, minmax(0, 1fr));">
         <div class="be-cal-time-spacer"></div>
         ${days.map(dStr => {
           const [yy, mm, dd] = dStr.split("-").map(Number);
