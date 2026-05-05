@@ -456,6 +456,15 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
     } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/dashboard/linkedin", 19) == 0) {
         /* LinkedIn-as-its-own-tab — page + JSON status/posts/rate APIs. */
         get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/dashboard/lead-intake") == 0) {
+        /* Lead-intake settings page (Phase 1: web form). */
+        get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/f/", 3) == 0) {
+        /* Public hosted lead-intake form. */
+        get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/f/", 3) == 0) {
+        /* Public lead-intake form submission. */
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/api/ai/", 8) == 0) {
         /* Inline AI editor — rewrite-selection endpoint + hooks +
          * preview + voice rules. Auth-gated server-side. */

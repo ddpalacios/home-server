@@ -301,7 +301,10 @@
         thank_you: state.thank_you,
       };
       var url = editing ? "/me/forms/" + state.id : "/me/forms";
-      var method = editing ? "PUT" : "POST";
+      // Always POST. The C proxy at port 9030 has no put_to_local helper,
+      // so PUT requests are dropped before reaching Flask. The Flask
+      // me_forms_one route accepts POST as an alias for PUT.
+      var method = "POST";
       fetch(url, {
         method: method, credentials:"same-origin",
         headers: {"Content-Type":"application/json"},
