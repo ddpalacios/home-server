@@ -1551,6 +1551,47 @@
       letter-spacing: 0.05em;
     }
 
+    /* Per-post score pills + reasoning row on the review card.
+       Colors map at-a-glance: green = strong, amber = ok, red = weak. */
+    .rev-scores {
+      display: flex; gap: 6px; flex-wrap: wrap;
+      margin-top: 4px;
+    }
+    .rev-score {
+      font-size: 10.5px; font-weight: 700; letter-spacing: 0.3px;
+      padding: 2px 8px; border-radius: 999px;
+      border: 1px solid var(--border); background: var(--bg-alt);
+      color: var(--text-sub);
+    }
+    .rev-score.is-hi  {
+      background: rgba(16,185,129,.12); border-color: #10B981;
+      color: #047857;
+    }
+    .rev-score.is-mid {
+      background: rgba(245,158,11,.12); border-color: #F59E0B;
+      color: #92400E;
+    }
+    .rev-score.is-lo  {
+      background: rgba(220,38,38,.10); border-color: #DC2626;
+      color: #B91C1C;
+    }
+    .rev-reasoning {
+      font-size: 12px; line-height: 1.5;
+      color: var(--text-sub);
+      padding: 8px 10px; border-radius: 8px;
+      background: rgba(10,102,194,.05);
+      border-left: 3px solid var(--link);
+    }
+    .rev-reasoning strong { color: var(--text); }
+    .rev-mediarec {
+      font-size: 12px; line-height: 1.5;
+      color: var(--text);
+      padding: 8px 10px; border-radius: 8px;
+      background: rgba(252,211,63,.10);
+      border-left: 3px solid #FCD34D;
+      margin-top: 6px;
+    }
+
     /* Export dropdown on the review grid top bar. */
     .rev-export-wrap { position: relative; }
     .rev-export-menu {
@@ -11293,6 +11334,44 @@
           + revMediaSlotHTML(p, mgCtx);
       }
 
+      // Score row + reasoning + media recommendation. The LLM stamps
+      // these self-ratings 1-10. We color-code each pill by score
+      // so the user can scan a 47-card grid and immediately spot
+      // weak ones (low scores stand out red).
+      function _scoreCls(v){
+        v = Number(v) || 0;
+        if (v >= 8) return "is-hi";
+        if (v >= 6) return "is-mid";
+        if (v >= 1) return "is-lo";
+        return "is-na";
+      }
+      var rs = Number(p.relevance_score || 0);
+      var ps = Number(p.pain_score      || 0);
+      var cs = Number(p.clarity_score   || 0);
+      var hasAnyScore = (rs + ps + cs) > 0;
+      var scoresHtml = hasAnyScore
+        ? ('<div class="rev-scores">'
+            + '<span class="rev-score ' + _scoreCls(rs) + '" '
+            +   'title="How well this post fits the audience">'
+            + 'Relevance ' + rs + '/10</span>'
+            + '<span class="rev-score ' + _scoreCls(ps) + '" '
+            +   'title="How directly the hook hits a real pain">'
+            + 'Pain ' + ps + '/10</span>'
+            + '<span class="rev-score ' + _scoreCls(cs) + '" '
+            +   'title="How scannable in the first 3 seconds">'
+            + 'Clarity ' + cs + '/10</span>'
+            + '</div>')
+        : '';
+      var reasoningHtml = (p.reasoning || "").trim()
+        ? ('<div class="rev-reasoning"><strong>Why this post: </strong>'
+            + esc(p.reasoning) + '</div>')
+        : '';
+      var mediaRecHtml = (p.media_recommendation || "").trim()
+        ? ('<div class="rev-mediarec">'
+            + '<strong>📷 Media: </strong>'
+            + esc(p.media_recommendation) + '</div>')
+        : '';
+
       return ''
         + '<div class="rev-card ' + cardCls + '" data-rev-card="' + esc(p.id) + '"'
         +   ' data-mg-card data-mg-post="' + esc(p.id) + '">'
@@ -11304,11 +11383,14 @@
         +       '<div class="rev-card-pill ' + pillCls + '">' + pillTxt + '</div>'
         +     '</div>'
         +   '</div>'
+        +   scoresHtml
+        +   reasoningHtml
         +   (angle
               ? '<div class="rev-card-meta"><span>'
                 + esc(angle) + '</span></div>'
               : '')
         +   bodyHtml
+        +   mediaRecHtml
         +   '<div class="rev-card-actions">'
         +     '<button class="' + keepCls + '" type="button" data-rev-keep>'
         +       esc(keepLbl) + '</button>'
