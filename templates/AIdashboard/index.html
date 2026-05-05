@@ -7959,6 +7959,307 @@
           font-style: italic;
           color: #9ca3af;
         }
+        /* ─── Phase 3 click-to-edit appointment panel ───────────────────
+           Slides in from the right of the viewport with a dimmed backdrop.
+           Replaces the legacy single-click "Remove this appointment?"
+           confirm dialog with a richer multi-field editor (type, date,
+           time, duration, notes) plus a Cancel-this-appointment surface
+           that keeps the previous flow as one option inside it. */
+        .sched-edit-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 990;
+          background: rgba(15, 23, 42, 0.30);
+          opacity: 0;
+          transition: opacity 180ms ease;
+        }
+        .sched-edit-backdrop.is-open { opacity: 1; }
+        .sched-edit-panel {
+          position: fixed;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          width: 520px;
+          max-width: 92vw;
+          z-index: 1000;
+          background: #fff;
+          box-shadow: -16px 0 40px rgba(15, 23, 42, 0.14);
+          display: flex;
+          flex-direction: column;
+          font-family: "Inter", "Space Grotesk", system-ui, -apple-system, sans-serif;
+          color: #0a0a0a;
+          transform: translateX(100%);
+          transition: transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+        }
+        .sched-edit-panel.is-open { transform: translateX(0); }
+        .sched-edit-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 18px 22px 14px;
+          border-bottom: 1px solid #e5e7eb;
+          flex: 0 0 auto;
+        }
+        .sched-edit-title {
+          font-size: 17px;
+          font-weight: 700;
+          margin: 0;
+        }
+        .sched-edit-close {
+          appearance: none;
+          background: transparent;
+          border: 0;
+          font-size: 22px;
+          line-height: 1;
+          color: #64748b;
+          cursor: pointer;
+          padding: 4px 8px;
+          border-radius: 6px;
+        }
+        .sched-edit-close:hover { background: #f1f5f9; color: #0a0a0a; }
+        .sched-edit-body {
+          flex: 1 1 auto;
+          overflow-y: auto;
+          padding: 18px 22px 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        .sched-edit-summary {
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 10px;
+          padding: 14px 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .sched-edit-summary-name {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 16px;
+          font-weight: 700;
+          color: #0a0a0a;
+        }
+        .sched-edit-summary-icon {
+          font-size: 16px;
+          line-height: 1;
+        }
+        .sched-edit-summary-email {
+          font-size: 13px;
+          color: #475569;
+          word-wrap: break-word;
+          overflow-wrap: anywhere;
+        }
+        .sched-edit-summary-stage {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 13px;
+          color: #475569;
+          margin-top: 2px;
+        }
+        .sched-edit-summary-stage-dot {
+          display: inline-block;
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+        }
+        .sched-edit-summary-stage-name {
+          font-weight: 700;
+          color: #0a0a0a;
+        }
+        .sched-edit-profile-link {
+          appearance: none;
+          background: transparent;
+          border: 0;
+          padding: 4px 0 0;
+          font-size: 12.5px;
+          color: #2563eb;
+          font-weight: 600;
+          cursor: pointer;
+          align-self: flex-start;
+        }
+        .sched-edit-profile-link:hover { text-decoration: underline; }
+        .sched-edit-field {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        .sched-edit-field > label {
+          font-size: 12px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: #64748b;
+        }
+        .sched-edit-field > input[type="date"],
+        .sched-edit-field > input[type="time"],
+        .sched-edit-field > input[type="number"],
+        .sched-edit-field > select,
+        .sched-edit-field > textarea {
+          font-family: inherit;
+          font-size: 14px;
+          color: #0a0a0a;
+          background: #fff;
+          border: 1px solid #cbd5e1;
+          border-radius: 8px;
+          padding: 9px 11px;
+          outline: 0;
+          transition: border-color 120ms ease, box-shadow 120ms ease;
+        }
+        .sched-edit-field > input:focus,
+        .sched-edit-field > select:focus,
+        .sched-edit-field > textarea:focus {
+          border-color: #2563eb;
+          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+        }
+        .sched-edit-time-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .sched-edit-time-row > input[type="time"] {
+          flex: 1 1 0;
+          min-width: 0;
+        }
+        .sched-edit-time-sep {
+          color: #94a3b8;
+          font-weight: 600;
+        }
+        .sched-edit-custom-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-top: 6px;
+        }
+        .sched-edit-custom-row > input[type="number"] {
+          width: 110px;
+        }
+        .sched-edit-custom-row > span {
+          font-size: 13px;
+          color: #475569;
+        }
+        .sched-edit-divider {
+          height: 1px;
+          background: #e5e7eb;
+          margin: 4px 0 0;
+          border: 0;
+        }
+        .sched-edit-cancel-block {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        .sched-edit-cancel-btn {
+          appearance: none;
+          background: #fff;
+          border: 1px solid #fecaca;
+          color: #b91c1c;
+          font-weight: 600;
+          padding: 10px 14px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 14px;
+          align-self: flex-start;
+          transition: background 120ms ease, border-color 120ms ease;
+        }
+        .sched-edit-cancel-btn:hover {
+          background: #fef2f2;
+          border-color: #fca5a5;
+        }
+        .sched-edit-warn {
+          background: #fffbeb;
+          border: 1px solid #fde68a;
+          color: #92400e;
+          padding: 12px 14px;
+          border-radius: 8px;
+          font-size: 13px;
+          line-height: 1.45;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .sched-edit-warn-title {
+          font-weight: 700;
+          color: #78350f;
+        }
+        .sched-edit-warn-list {
+          margin: 0;
+          padding-left: 18px;
+        }
+        .sched-edit-warn-actions {
+          display: flex;
+          gap: 8px;
+          margin-top: 4px;
+        }
+        .sched-edit-warn-actions > button {
+          appearance: none;
+          font-family: inherit;
+          font-size: 13px;
+          font-weight: 600;
+          padding: 7px 12px;
+          border-radius: 6px;
+          cursor: pointer;
+        }
+        .sched-edit-warn-actions > button.is-primary {
+          background: #b45309;
+          border: 1px solid #b45309;
+          color: #fff;
+        }
+        .sched-edit-warn-actions > button.is-primary:hover { background: #92400e; }
+        .sched-edit-warn-actions > button.is-secondary {
+          background: #fff;
+          border: 1px solid #fde68a;
+          color: #78350f;
+        }
+        .sched-edit-warn-actions > button.is-secondary:hover { background: #fef3c7; }
+        .sched-edit-foot {
+          display: flex;
+          justify-content: flex-end;
+          gap: 10px;
+          padding: 14px 22px 18px;
+          border-top: 1px solid #e5e7eb;
+          flex: 0 0 auto;
+        }
+        .sched-edit-foot > button {
+          appearance: none;
+          font-family: inherit;
+          font-size: 14px;
+          font-weight: 600;
+          padding: 9px 16px;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: background 120ms ease, border-color 120ms ease;
+        }
+        .sched-edit-foot-cancel {
+          background: #fff;
+          border: 1px solid #cbd5e1;
+          color: #0a0a0a;
+        }
+        .sched-edit-foot-cancel:hover { background: #f1f5f9; }
+        .sched-edit-foot-save {
+          background: #2563eb;
+          border: 1px solid #2563eb;
+          color: #fff;
+        }
+        .sched-edit-foot-save:hover { background: #1d4ed8; }
+        .sched-edit-foot-save:disabled {
+          background: #93c5fd;
+          border-color: #93c5fd;
+          cursor: not-allowed;
+        }
+        .sched-edit-empty {
+          padding: 28px 16px;
+          text-align: center;
+          color: #64748b;
+          font-size: 14px;
+          line-height: 1.5;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .sched-edit-panel, .sched-edit-backdrop { transition: none; }
+        }
         /* Row 1 — type icon + customer name. Wraps so long names don't
            get truncated; the calendar's whole point is "who is at 9am". */
         .sched-block-row1 {
@@ -26578,25 +26879,18 @@
             schedDrag = null;
           });
           blk.addEventListener("click", () => {
-            // Don't open the remove dialog if the click is the tail end
+            // Don't open the edit panel if the click is the tail end
             // of a drag — the drop handler already moved the block.
             if (dragOccurred) return;
             const id = blk.dataset.leadId;
             const lead = schedLeads.find(x => x.id === id);
             if (!lead) return;
-            window.confirmDialog({
-              title:       "Remove this appointment?",
-              message:     `${leadName(lead)} will be moved back to the unscheduled list. The Google Calendar event won't be deleted until you click Submit changes.`,
-              confirmText: "Remove from calendar",
-              cancelText:  "Keep it",
-              tone:        "warn",
-            }).then(ok => {
-              if (!ok) return;
-              schedPending.set(id, { action: "cancel" });
-              renderSchedRail();
-              renderSchedBoard();
-              updatePendingBar();
-            });
+            // Phase 3: kill the hover-peek synchronously, then open the
+            // click-to-edit panel. Cancel-this-appointment now lives as
+            // one option INSIDE the panel rather than as a single-purpose
+            // confirm dialog at this entry point.
+            if (typeof _schedTipForceHide === "function") _schedTipForceHide();
+            openSchedEditPanel(id);
           });
         });
       }
@@ -26818,6 +27112,546 @@
           _runSectionLoader("calendar");
         }
       });
+
+      // ─── Phase 3: click-to-edit appointment panel ─────────────────────
+      // Replaces the legacy single-click "Remove this appointment?" confirm
+      // with a slide-in side panel that can edit type / date / time /
+      // duration / notes and exposes Cancel-this-appointment as ONE option
+      // inside it (instead of the previous flow's only option).
+      //
+      // DOM: lazily appended to <body> on first open (one set of nodes
+      // reused across opens). Backdrop dims the calendar; panel slides in
+      // from the right; ESC + outside-click + the ✕ button all dismiss.
+      // Dirty-tracking compares a snapshot taken at open-time against the
+      // current field values, so closing without changes skips the
+      // discard-prompt.
+      //
+      // Linked time/duration interplay (the trickiest piece):
+      //   Start time changes → keep duration constant, shift end time.
+      //   End   time changes → keep start fixed, recompute duration.
+      //   Duration changes   → keep start fixed, shift end time.
+      //   Date  changes      → keep H:M of start/end intact (just the
+      //                        calendar-day moves).
+      const _SCHED_TYPE_OPTIONS = [
+        { v: "call",     label: "Call" },
+        { v: "estimate", label: "Estimate" },
+        { v: "visit",    label: "Visit" },
+        { v: "meeting",  label: "Meeting" },
+        { v: "job",      label: "Job" },
+        { v: "other",    label: "Other" },
+      ];
+      const _SCHED_DURATION_PRESETS = [15, 30, 45, 60, 90, 120];
+
+      let _schedEditEls = null;          // {backdrop, panel, ...field refs}
+      let _schedEditState = null;        // {leadId, snapshot, current, conflicts?}
+
+      function _schedEditEnsureEls() {
+        if (_schedEditEls) return _schedEditEls;
+        const backdrop = document.createElement("div");
+        backdrop.className = "sched-edit-backdrop";
+        backdrop.hidden = true;
+        backdrop.addEventListener("click", () => _schedEditAttemptClose());
+
+        const panel = document.createElement("aside");
+        panel.className = "sched-edit-panel";
+        panel.setAttribute("role", "dialog");
+        panel.setAttribute("aria-modal", "true");
+        panel.setAttribute("aria-labelledby", "schedEditTitle");
+        panel.hidden = true;
+        panel.innerHTML = `
+          <header class="sched-edit-head">
+            <p class="sched-edit-title" id="schedEditTitle">Edit appointment</p>
+            <button type="button" class="sched-edit-close" data-act="close" aria-label="Close">×</button>
+          </header>
+          <div class="sched-edit-body" data-role="body"></div>
+          <footer class="sched-edit-foot" data-role="foot">
+            <button type="button" class="sched-edit-foot-cancel" data-act="cancel">Cancel</button>
+            <button type="button" class="sched-edit-foot-save" data-act="save">Save changes</button>
+          </footer>
+        `;
+        // Stop the panel itself from bubbling click into the backdrop.
+        panel.addEventListener("click", (e) => e.stopPropagation());
+        document.body.appendChild(backdrop);
+        document.body.appendChild(panel);
+
+        panel.querySelector('[data-act="close"]').addEventListener("click", () => _schedEditAttemptClose());
+        panel.querySelector('[data-act="cancel"]').addEventListener("click", () => _schedEditAttemptClose());
+        panel.querySelector('[data-act="save"]').addEventListener("click", () => _schedEditSave());
+
+        _schedEditEls = {
+          backdrop,
+          panel,
+          body: panel.querySelector('[data-role="body"]'),
+          foot: panel.querySelector('[data-role="foot"]'),
+          saveBtn: panel.querySelector('[data-act="save"]'),
+          cancelBtn: panel.querySelector('[data-act="cancel"]'),
+        };
+        return _schedEditEls;
+      }
+
+      // ESC closes the panel (with dirty-prompt). Wired once at the doc
+      // level so the listener survives the panel's lazy DOM creation.
+      document.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape") return;
+        if (!_schedEditEls || _schedEditEls.panel.hidden) return;
+        e.stopPropagation();
+        _schedEditAttemptClose();
+      });
+
+      function _schedEditFmtDate(d) {
+        // Local-tz YYYY-MM-DD for <input type="date">.
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const da = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${da}`;
+      }
+      function _schedEditFmtTime(d) {
+        // Local-tz HH:MM for <input type="time">.
+        return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+      }
+      function _schedEditDateTimeToDate(dateStr, timeStr) {
+        // Parse YYYY-MM-DD + HH:MM in local tz → Date.
+        if (!dateStr || !timeStr) return null;
+        const [y, mo, d] = dateStr.split("-").map(n => parseInt(n, 10));
+        const [h, m] = timeStr.split(":").map(n => parseInt(n, 10));
+        if ([y, mo, d, h, m].some(n => Number.isNaN(n))) return null;
+        return new Date(y, mo - 1, d, h, m, 0);
+      }
+
+      function openSchedEditPanel(leadId) {
+        const els = _schedEditEnsureEls();
+        const lead = schedLeads.find(l => l.id === leadId);
+        // Edge case: lead vanished (deleted in another tab). Show a stub
+        // with only a Close button so the user isn't trapped.
+        if (!lead) {
+          els.body.innerHTML = `<div class="sched-edit-empty">This appointment's lead is no longer available.</div>`;
+          els.foot.innerHTML = `<button type="button" class="sched-edit-foot-cancel" data-act="close-only">Close</button>`;
+          els.foot.querySelector('[data-act="close-only"]').addEventListener("click", () => _schedEditClose(true));
+          _schedEditState = { leadId: null, snapshot: null, current: null };
+          _schedEditShow();
+          return;
+        }
+        // Determine current start/end. Prefer the live GCal event for
+        // this lead (source of truth on the rendered grid); fall back to
+        // appt_start_iso/appt_end_iso on the lead record.
+        const ev = _eventForLead(leadId);
+        let startDate = null, endDate = null;
+        if (ev && ev.start) {
+          startDate = new Date(ev.start);
+          endDate = ev.end ? new Date(ev.end) : new Date(startDate.getTime() + 60 * 60000);
+        } else if (lead.scheduled_start) {
+          startDate = new Date(lead.scheduled_start);
+          endDate = lead.scheduled_end ? new Date(lead.scheduled_end) : new Date(startDate.getTime() + 60 * 60000);
+        } else {
+          startDate = new Date();
+          startDate.setMinutes(0, 0, 0);
+          endDate = new Date(startDate.getTime() + 60 * 60000);
+        }
+        const apptType = (lead.appointment_type || "other").toLowerCase();
+        const apptNotes = lead.appointment_notes || lead.notes || lead.note || "";
+        const durationMin = Math.max(15, Math.round((endDate - startDate) / 60000) || 60);
+        const stage = (lead.stage || "scheduled").toLowerCase();
+        const snapshot = {
+          type:        apptType,
+          dateStr:     _schedEditFmtDate(startDate),
+          startStr:    _schedEditFmtTime(startDate),
+          endStr:      _schedEditFmtTime(endDate),
+          durationMin: durationMin,
+          notes:       apptNotes,
+        };
+        _schedEditState = {
+          leadId: leadId,
+          snapshot: snapshot,
+          current: { ...snapshot },
+        };
+        const stageC = stageColor(stage);
+        const stageLab = stageLabel(stage);
+        const icon = apptTypeIcon(apptType);
+        const name = leadName(lead);
+        const email = lead.email || "";
+        const hasProfileOpener = (typeof window.openLeadDetailModal === "function");
+
+        // Build duration <option> list. If durationMin doesn't match a
+        // preset, the picker starts on "Custom..." with the number visible.
+        const isCustomDur = !_SCHED_DURATION_PRESETS.includes(durationMin);
+        const durOpts = _SCHED_DURATION_PRESETS.map(m => {
+          const lab = _schedDurationLabel(m);
+          const sel = (!isCustomDur && m === durationMin) ? " selected" : "";
+          return `<option value="${m}"${sel}>${escapeHtml(lab)}</option>`;
+        }).join("") + `<option value="custom"${isCustomDur ? " selected" : ""}>Custom…</option>`;
+        const typeOpts = _SCHED_TYPE_OPTIONS.map(o => {
+          const sel = (o.v === apptType) ? " selected" : "";
+          return `<option value="${o.v}"${sel}>${escapeHtml(o.label)}</option>`;
+        }).join("");
+
+        els.body.innerHTML = `
+          <div class="sched-edit-summary">
+            <div class="sched-edit-summary-name">
+              <span class="sched-edit-summary-icon" data-role="sumIcon" aria-hidden="true">${icon}</span>
+              <span data-role="sumName">${escapeHtml(name)}</span>
+            </div>
+            ${email ? `<div class="sched-edit-summary-email">${escapeHtml(email)}</div>` : ""}
+            <div class="sched-edit-summary-stage">
+              <span>Stage:</span>
+              <span class="sched-edit-summary-stage-dot" style="background:${stageC};"></span>
+              <span class="sched-edit-summary-stage-name">${escapeHtml(stageLab)}</span>
+            </div>
+            ${hasProfileOpener ? `<button type="button" class="sched-edit-profile-link" data-act="open-profile">Open lead profile →</button>` : ""}
+          </div>
+          <div class="sched-edit-field">
+            <label for="schedEditType">Type</label>
+            <select id="schedEditType" data-field="type">${typeOpts}</select>
+          </div>
+          <div class="sched-edit-field">
+            <label for="schedEditDate">Date</label>
+            <input type="date" id="schedEditDate" data-field="date" value="${snapshot.dateStr}" />
+          </div>
+          <div class="sched-edit-field">
+            <label>Time</label>
+            <div class="sched-edit-time-row">
+              <input type="time" data-field="start" value="${snapshot.startStr}" step="900" aria-label="Start time" />
+              <span class="sched-edit-time-sep" aria-hidden="true">—</span>
+              <input type="time" data-field="end" value="${snapshot.endStr}" step="900" aria-label="End time" />
+            </div>
+          </div>
+          <div class="sched-edit-field">
+            <label for="schedEditDur">Duration</label>
+            <select id="schedEditDur" data-field="duration">${durOpts}</select>
+            <div class="sched-edit-custom-row" data-role="customDurRow" ${isCustomDur ? "" : "hidden"}>
+              <input type="number" min="5" max="480" step="5" data-field="customDur" value="${durationMin}" />
+              <span>minutes</span>
+            </div>
+          </div>
+          <div class="sched-edit-field">
+            <label for="schedEditNotes">Notes</label>
+            <textarea id="schedEditNotes" data-field="notes" rows="6" maxlength="4000" placeholder="Anything the customer mentioned…">${escapeHtml(snapshot.notes)}</textarea>
+          </div>
+          <hr class="sched-edit-divider" />
+          <div class="sched-edit-cancel-block">
+            <button type="button" class="sched-edit-cancel-btn" data-act="cancel-appt">Cancel this appointment</button>
+          </div>
+          <div data-role="warnSlot"></div>
+        `;
+
+        // Reset the footer (in case a previous open replaced it for the
+        // missing-lead stub).
+        els.foot.innerHTML = `
+          <button type="button" class="sched-edit-foot-cancel" data-act="cancel">Cancel</button>
+          <button type="button" class="sched-edit-foot-save" data-act="save">Save changes</button>
+        `;
+        els.saveBtn = els.foot.querySelector('[data-act="save"]');
+        els.cancelBtn = els.foot.querySelector('[data-act="cancel"]');
+        els.foot.querySelector('[data-act="cancel"]').addEventListener("click", () => _schedEditAttemptClose());
+        els.foot.querySelector('[data-act="save"]').addEventListener("click", () => _schedEditSave());
+
+        // Wire body interactions.
+        const profileBtn = els.body.querySelector('[data-act="open-profile"]');
+        if (profileBtn) {
+          profileBtn.addEventListener("click", () => {
+            try { window.openLeadDetailModal(lead.id, lead); } catch (_) {}
+          });
+        }
+        const typeSel = els.body.querySelector('[data-field="type"]');
+        const dateInp = els.body.querySelector('[data-field="date"]');
+        const startInp = els.body.querySelector('[data-field="start"]');
+        const endInp = els.body.querySelector('[data-field="end"]');
+        const durSel = els.body.querySelector('[data-field="duration"]');
+        const customDurInp = els.body.querySelector('[data-field="customDur"]');
+        const customDurRow = els.body.querySelector('[data-role="customDurRow"]');
+        const notesInp = els.body.querySelector('[data-field="notes"]');
+        const cancelApptBtn = els.body.querySelector('[data-act="cancel-appt"]');
+
+        typeSel.addEventListener("change", () => {
+          _schedEditState.current.type = typeSel.value;
+          // Live-update the summary icon so the user sees the change.
+          const newIcon = apptTypeIcon(typeSel.value);
+          const sumIcon = els.body.querySelector('[data-role="sumIcon"]');
+          if (sumIcon) sumIcon.textContent = newIcon;
+        });
+        dateInp.addEventListener("change", () => {
+          _schedEditState.current.dateStr = dateInp.value;
+        });
+        startInp.addEventListener("change", () => {
+          // Start moves → preserve duration, shift end forward by the
+          // delta. Falls back to recomputing if parsing fails.
+          const oldStart = _schedEditDateTimeToDate(_schedEditState.current.dateStr, _schedEditState.current.startStr);
+          const newStart = _schedEditDateTimeToDate(_schedEditState.current.dateStr, startInp.value);
+          if (oldStart && newStart) {
+            const delta = newStart - oldStart;
+            const oldEnd = _schedEditDateTimeToDate(_schedEditState.current.dateStr, _schedEditState.current.endStr);
+            if (oldEnd) {
+              const newEnd = new Date(oldEnd.getTime() + delta);
+              endInp.value = _schedEditFmtTime(newEnd);
+              _schedEditState.current.endStr = endInp.value;
+            }
+          }
+          _schedEditState.current.startStr = startInp.value;
+        });
+        endInp.addEventListener("change", () => {
+          // End moves → recompute duration. If end <= start, snap end to
+          // start + 15min so duration stays positive.
+          const start = _schedEditDateTimeToDate(_schedEditState.current.dateStr, _schedEditState.current.startStr);
+          let end = _schedEditDateTimeToDate(_schedEditState.current.dateStr, endInp.value);
+          if (start && end) {
+            if (end <= start) {
+              end = new Date(start.getTime() + 15 * 60000);
+              endInp.value = _schedEditFmtTime(end);
+            }
+            const newDur = Math.max(15, Math.round((end - start) / 60000));
+            _schedEditState.current.endStr = endInp.value;
+            _schedEditState.current.durationMin = newDur;
+            // Reflect in the duration picker.
+            if (_SCHED_DURATION_PRESETS.includes(newDur)) {
+              durSel.value = String(newDur);
+              customDurRow.hidden = true;
+            } else {
+              durSel.value = "custom";
+              customDurInp.value = newDur;
+              customDurRow.hidden = false;
+            }
+          }
+        });
+        durSel.addEventListener("change", () => {
+          if (durSel.value === "custom") {
+            customDurRow.hidden = false;
+            const v = parseInt(customDurInp.value, 10) || 60;
+            _schedEditApplyDuration(v, startInp, endInp);
+          } else {
+            customDurRow.hidden = true;
+            const v = parseInt(durSel.value, 10) || 60;
+            _schedEditApplyDuration(v, startInp, endInp);
+          }
+        });
+        customDurInp.addEventListener("input", () => {
+          const v = parseInt(customDurInp.value, 10);
+          if (!Number.isFinite(v) || v <= 0) return;
+          _schedEditApplyDuration(Math.max(5, Math.min(480, v)), startInp, endInp);
+        });
+        notesInp.addEventListener("input", () => {
+          _schedEditState.current.notes = notesInp.value;
+        });
+        cancelApptBtn.addEventListener("click", () => _schedEditCancelAppt(lead));
+
+        _schedEditShow();
+        // Defer focus so the slide-in animation isn't fighting the
+        // browser's auto-scroll-into-view on focus.
+        setTimeout(() => { try { typeSel.focus(); } catch (_) {} }, 50);
+      }
+
+      function _schedDurationLabel(m) {
+        if (m < 60) return `${m} min`;
+        const h = Math.floor(m / 60), rem = m % 60;
+        if (rem === 0) return h === 1 ? "1 hour" : `${h} hours`;
+        return `${h} hr ${rem} min`;
+      }
+
+      function _schedEditApplyDuration(durationMin, startInp, endInp) {
+        // Duration changes → keep start fixed, shift end. Mirror the
+        // change into both the field-level state and the visible end input.
+        _schedEditState.current.durationMin = durationMin;
+        const start = _schedEditDateTimeToDate(_schedEditState.current.dateStr, startInp.value);
+        if (!start) return;
+        const newEnd = new Date(start.getTime() + durationMin * 60000);
+        endInp.value = _schedEditFmtTime(newEnd);
+        _schedEditState.current.endStr = endInp.value;
+      }
+
+      function _schedEditShow() {
+        const els = _schedEditEnsureEls();
+        els.backdrop.hidden = false;
+        els.panel.hidden = false;
+        // Force reflow so the transition fires.
+        // eslint-disable-next-line no-unused-expressions
+        els.panel.offsetHeight;
+        els.backdrop.classList.add("is-open");
+        els.panel.classList.add("is-open");
+      }
+
+      function _schedEditClose(force) {
+        const els = _schedEditEls;
+        if (!els) return;
+        els.backdrop.classList.remove("is-open");
+        els.panel.classList.remove("is-open");
+        // Hide after the transition so a fast re-open doesn't see a
+        // stale aria-hidden node.
+        setTimeout(() => {
+          if (!els.panel.classList.contains("is-open")) {
+            els.panel.hidden = true;
+            els.backdrop.hidden = true;
+          }
+        }, 240);
+        _schedEditState = null;
+      }
+
+      function _schedEditIsDirty() {
+        if (!_schedEditState || !_schedEditState.snapshot) return false;
+        const a = _schedEditState.snapshot;
+        const b = _schedEditState.current;
+        return (a.type !== b.type) || (a.dateStr !== b.dateStr)
+            || (a.startStr !== b.startStr) || (a.endStr !== b.endStr)
+            || (a.durationMin !== b.durationMin) || (a.notes !== b.notes);
+      }
+
+      function _schedEditAttemptClose() {
+        if (!_schedEditIsDirty()) { _schedEditClose(); return; }
+        Promise.resolve(window.confirmDialog({
+          title:       "Discard changes?",
+          message:     "You have unsaved changes. Close without saving?",
+          confirmText: "Discard",
+          cancelText:  "Keep editing",
+          tone:        "warn",
+        })).then(ok => { if (ok) _schedEditClose(); });
+      }
+
+      async function _schedEditSave(opts) {
+        const els = _schedEditEnsureEls();
+        if (!_schedEditState || !_schedEditState.leadId) { _schedEditClose(); return; }
+        const cur = _schedEditState.current;
+        const start = _schedEditDateTimeToDate(cur.dateStr, cur.startStr);
+        if (!start) {
+          showSchedToast("Please pick a valid date and start time.", "error");
+          return;
+        }
+        const durationMin = Math.max(5, Math.min(480, parseInt(cur.durationMin, 10) || 60));
+        const body = {
+          lead_id:           _schedEditState.leadId,
+          start_iso:         start.toISOString(),
+          duration_min:      durationMin,
+          appointment_type:  cur.type || "other",
+          appointment_notes: cur.notes || "",
+          check_overlap:     true,
+        };
+        if (opts && opts.override) body.override_overlap = true;
+        els.saveBtn.disabled = true;
+        const prevSaveLabel = els.saveBtn.textContent;
+        els.saveBtn.textContent = "Saving…";
+        try {
+          const res = await fetch("/me/appointments/book", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          if (res.status === 409) {
+            const data = await res.json().catch(() => ({}));
+            if (data && data.error === "overlap_conflict" && Array.isArray(data.conflicts)) {
+              _schedEditRenderOverlapWarning(data.conflicts);
+              els.saveBtn.disabled = false;
+              els.saveBtn.textContent = prevSaveLabel;
+              return;
+            }
+            // Legacy "conflict" shape from the same endpoint — surface
+            // generically so the user isn't stuck.
+            showSchedToast("This slot conflicts with another appointment.", "error");
+            els.saveBtn.disabled = false;
+            els.saveBtn.textContent = prevSaveLabel;
+            return;
+          }
+          if (!res.ok) {
+            showSchedToast("Couldn't save. Try again.", "error");
+            els.saveBtn.disabled = false;
+            els.saveBtn.textContent = prevSaveLabel;
+            return;
+          }
+          const out = await res.json().catch(() => ({}));
+          // Mirror the persisted record into local state so the next
+          // re-render shows the saved values without a refetch race.
+          if (out && out.lead) {
+            const idx = schedLeads.findIndex(l => l.id === out.lead.id);
+            if (idx >= 0) {
+              schedLeads[idx] = Object.assign({}, schedLeads[idx], {
+                appointment_type:  out.lead.appointment_type || "",
+                appointment_notes: out.lead.appointment_notes || "",
+                appointment_date:  out.lead.appointment_date || "",
+                appointment_time:  out.lead.appointment_time || "",
+                scheduled_start:   out.lead.appt_start_iso || "",
+                scheduled_end:     out.lead.appt_end_iso || "",
+                duration_min:      out.lead.appt_duration_min || 0,
+              });
+            }
+            // Optional cross-surface notification — leads list / lead
+            // detail modal can listen and re-render. No-op if no listener.
+            try {
+              window.dispatchEvent(new CustomEvent("lead:updated", {
+                detail: { lead_id: out.lead.id, lead: out.lead },
+              }));
+            } catch (_) {}
+          }
+          showSchedToast("Saved.", "success");
+          _schedEditClose(true);
+          // Reload from the server so the calendar grid + GCal events
+          // reflect the new time/duration without a stale-frame flash.
+          loadSchedulerData();
+        } catch (_) {
+          showSchedToast("Network error — try again.", "error");
+          els.saveBtn.disabled = false;
+          els.saveBtn.textContent = prevSaveLabel;
+        }
+      }
+
+      function _schedEditRenderOverlapWarning(conflicts) {
+        const els = _schedEditEnsureEls();
+        const slot = els.body.querySelector('[data-role="warnSlot"]');
+        if (!slot) return;
+        const items = conflicts.slice(0, 5).map(c => {
+          let when = "";
+          try {
+            const s = new Date(c.start_iso);
+            if (!Number.isNaN(s.getTime())) {
+              when = ` — ${s.toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}`;
+            }
+          } catch (_) {}
+          return `<li>${escapeHtml(c.lead_name || "Customer")}${escapeHtml(when)}</li>`;
+        }).join("");
+        slot.innerHTML = `
+          <div class="sched-edit-warn">
+            <div class="sched-edit-warn-title">This overlaps with another appointment</div>
+            <ul class="sched-edit-warn-list">${items}</ul>
+            <div class="sched-edit-warn-actions">
+              <button type="button" class="is-secondary" data-act="warn-back">Move it back</button>
+              <button type="button" class="is-primary" data-act="warn-force">Save anyway</button>
+            </div>
+          </div>
+        `;
+        slot.querySelector('[data-act="warn-back"]').addEventListener("click", () => {
+          slot.innerHTML = "";
+        });
+        slot.querySelector('[data-act="warn-force"]').addEventListener("click", () => {
+          slot.innerHTML = "";
+          _schedEditSave({ override: true });
+        });
+      }
+
+      function _schedEditCancelAppt(lead) {
+        Promise.resolve(window.confirmDialog({
+          title:       "Cancel this appointment?",
+          message:     `Cancel this appointment with ${leadName(lead)}? This won't delete the lead — just clears the appointment.`,
+          confirmText: "Cancel appointment",
+          cancelText:  "Keep it",
+          tone:        "warn",
+        })).then(async (ok) => {
+          if (!ok) return;
+          try {
+            const r = await fetch("/me/appointments/cancel", {
+              method: "POST",
+              credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ lead_id: lead.id }),
+            });
+            if (!r.ok) { showSchedToast("Couldn't cancel — try again.", "error"); return; }
+            showSchedToast(`Appointment with ${leadName(lead)} canceled.`, "success");
+            try {
+              window.dispatchEvent(new CustomEvent("lead:updated", {
+                detail: { lead_id: lead.id, lead: lead },
+              }));
+            } catch (_) {}
+            _schedEditClose(true);
+            loadSchedulerData();
+          } catch (_) {
+            showSchedToast("Network error — try again.", "error");
+          }
+        });
+      }
     })();
 
     // The schedule-board IIFE that used to drive #calendar's drag-and-drop
