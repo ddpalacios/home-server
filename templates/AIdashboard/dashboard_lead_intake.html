@@ -251,6 +251,35 @@
     border-radius:99px; flex:0 0 auto;
   }
   .tag-on { background:#e6f6ec; color:#0a8a3a; }
+
+  /* Big "Add more steps" CTA button — sits below the two-step flow
+     summary. Visually distinct so it's the obvious next action. */
+  .add-steps-cta {
+    width:100%; margin-top:12px; padding:14px 16px;
+    background:linear-gradient(135deg,#eaf3fc 0%,#f0e8fb 100%);
+    border:1.5px dashed #b6c8e0; border-radius:12px;
+    cursor:pointer; font:inherit; color:var(--fg);
+    display:flex; align-items:center; gap:14px;
+    text-align:left;
+    transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+  }
+  .add-steps-cta:hover {
+    transform:translateY(-1px);
+    box-shadow:0 6px 18px rgba(20,40,80,.10);
+    border-color:var(--accent);
+    background:linear-gradient(135deg,#dceefb 0%,#ebe0f6 100%);
+  }
+  .add-steps-cta .ascta-icon {
+    width:38px; height:38px; flex:0 0 auto;
+    border-radius:10px; background:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px; line-height:1;
+    box-shadow:0 1px 3px rgba(20,40,80,.08);
+  }
+  .add-steps-cta .ascta-body { flex:1; min-width:0; }
+  .add-steps-cta .ascta-title { display:block; font-weight:700; font-size:15px; color:var(--fg); margin-bottom:1px; }
+  .add-steps-cta .ascta-sub   { display:block; font-size:12.5px; color:var(--sub); }
+  .add-steps-cta .ascta-arrow { font-size:18px; color:var(--accent); flex:0 0 auto; font-weight:700; }
 </style>
 </head>
 <body>
@@ -635,42 +664,31 @@
         +     '<div class="flow-step-icon" style="background:#e7f7ec">📥</div>'
         +     '<div class="flow-step-body">'
         +       '<div class="flow-step-title">We catch the lead</div>'
-        +       '<div class="flow-step-sub">Saved to your dashboard. Always on.</div>'
+        +       '<div class="flow-step-sub">Saved to your dashboard.</div>'
         +     '</div>'
-        +     '<span class="flow-step-tag tag-on">Always on</span>'
         +   '</div>'
-        // Step 2 — welcome flow (the attached one)
+        // Step 2 — welcome flow
         +   '<div class="flow-step">'
         +     '<div class="flow-step-num">2</div>'
         +     '<div class="flow-step-icon" style="background:#eaf3fc">' + attachedIcon + '</div>'
         +     '<div class="flow-step-body">'
-        +       '<div class="flow-step-title">' + esc(attachedName) + ' runs</div>'
-        +       '<div class="flow-step-sub">A welcome text or email goes out right away.</div>'
+        +       '<div class="flow-step-title">' + esc(attachedName) + '</div>'
+        +       '<div class="flow-step-sub">A welcome text or email goes out.</div>'
         +     '</div>'
         +     '<button class="btn flow-step-btn" id="b-change-flow" type="button">Change</button>'
-        +     '<a class="btn flow-step-btn" target="_top" href="/dashboard#outreach" title="Open Flow Builder">Edit messages</a>'
-        +   '</div>'
-        // Step 3 — AI replies
-        +   '<div class="flow-step">'
-        +     '<div class="flow-step-num">3</div>'
-        +     '<div class="flow-step-icon" style="background:#f3e7fb">🤖</div>'
-        +     '<div class="flow-step-body">'
-        +       '<div class="flow-step-title">AI handles their replies</div>'
-        +       '<div class="flow-step-sub">When they text or email back, your AI answers using your knowledge base.</div>'
-        +     '</div>'
-        +     '<a class="btn flow-step-btn" target="_top" href="/dashboard#aiSettings" title="AI rules">AI rules</a>'
-        +   '</div>'
-        // Step 4 — send a copy elsewhere (destinations)
-        +   '<div class="flow-step">'
-        +     '<div class="flow-step-num">4</div>'
-        +     '<div class="flow-step-icon" style="background:#fef5e7">📊</div>'
-        +     '<div class="flow-step-body">'
-        +       '<div class="flow-step-title">Send a copy to other places</div>'
-        +       '<div class="flow-step-sub">Google Sheets, your CRM, a webhook, or email a teammate.</div>'
-        +     '</div>'
-        +     '<button class="btn flow-step-btn" id="b-destinations" type="button">+ Add</button>'
         +   '</div>'
         + '</div>'
+        // Big inviting "Add more steps" button — opens flow canvas with
+        // the current form context so the user can build out additional
+        // steps and return to the form builder with changes applied.
+        + '<button class="add-steps-cta" id="b-add-steps" type="button">'
+        +   '<span class="ascta-icon">✨</span>'
+        +   '<span class="ascta-body">'
+        +     '<span class="ascta-title">Add more steps</span>'
+        +     '<span class="ascta-sub">Send to Sheets, AI replies, alerts, and more</span>'
+        +   '</span>'
+        +   '<span class="ascta-arrow">→</span>'
+        + '</button>'
         + '<div class="b-section-h">Button text</div>'
         + '<input id="b-submit-text" class="b-input" value="' + esc(state.submit_text) + '"/>'
         + '<div class="b-section-h">Thank-you note</div>'
@@ -781,9 +799,30 @@
         renderAll();
       }); };
 
-      // Destinations modal.
+      // Destinations modal (kept for fallback access; main entry point
+      // now is "Add more steps" → flow canvas).
       var dest = $("b-destinations");
       if (dest) dest.onclick = openDestinationsModal;
+
+      // Add-more-steps round-trip: save the form, drop a breadcrumb in
+      // localStorage so the lead-intake page knows to reopen this form's
+      // builder when the user returns from the canvas.
+      var asBtn = $("b-add-steps");
+      if (asBtn) asBtn.onclick = function(){
+        asBtn.disabled = true;
+        var origText = asBtn.querySelector(".ascta-title");
+        if (origText) origText.textContent = "Saving…";
+        saveFormAndThen(function(savedForm){
+          try {
+            localStorage.setItem("intake_return_form_id", savedForm.id || "");
+            localStorage.setItem("intake_return_form_ts", String(Date.now()));
+          } catch(_){}
+          // target=_top equivalent — reach up to the parent dashboard
+          // window since this page lives inside an iframe.
+          try { window.top.location.href = "/dashboard#outreach"; }
+          catch(_) { window.location.href = "/dashboard#outreach"; }
+        });
+      };
 
       // Save handler.
       $("b-save").onclick = saveForm;
@@ -925,8 +964,11 @@
 
     function renderAll(){ renderControls(); renderPreview(); }
 
-    function saveForm(){
-      var btn = $("b-save"); btn.disabled = true; btn.textContent = "Saving…";
+    // Persist the current state. onSaved(form) fires on success; the
+    // caller decides what UI follows (share screen, navigate to canvas,
+    // etc.). When onSaved is omitted we run the legacy share-screen path.
+    function saveFormAndThen(onSaved){
+      var btn = $("b-save"); if (btn) { btn.disabled = true; btn.textContent = "Saving…"; }
       var payload = {
         name: state.name, flow_id: state.flow_id,
         attached_flow_id:   state.attached_flow_id,
@@ -938,35 +980,45 @@
       // Always POST. The C proxy at port 9030 has no put_to_local helper,
       // so PUT requests are dropped before reaching Flask. The Flask
       // me_forms_one route accepts POST as an alias for PUT.
-      var method = "POST";
-      fetch(url, {
-        method: method, credentials:"same-origin",
+      return fetch(url, {
+        method: "POST", credentials:"same-origin",
         headers: {"Content-Type":"application/json"},
         body: JSON.stringify(payload),
       }).then(function(r){ return r.json().then(function(d){ return {status:r.status, body:d}; }); })
         .then(function(res){
           if (!res.body || !res.body.form) {
             toast("Save failed: " + ((res.body && res.body.error) || ("HTTP " + res.status)));
-            btn.disabled = false; btn.textContent = editing ? "Save" : "Create form";
-            return;
+            if (btn) { btn.disabled = false; btn.textContent = editing ? "Save" : "Save form"; }
+            return null;
           }
-          document.body.removeChild(bg);
-          // For brand-new forms, prompt the user about what happens
-          // when someone fills it. Editing an existing form skips this
-          // step and goes straight to the share screen.
-          if (!editing) {
-            showFlowPrompt(res.body.form, function(){
-              showShareScreen(res.body.form);
-            });
-          } else {
-            showShareScreen(res.body.form);
-          }
+          // Update the in-modal state so subsequent edits (e.g. after
+          // returning from the canvas) preserve the saved id.
+          state.id = res.body.form.id;
+          editing = true;
+          if (onSaved) onSaved(res.body.form);
           loadForms();
+          return res.body.form;
         }).catch(function(e){
           toast("Network error: " + e.message);
-          btn.disabled = false; btn.textContent = editing ? "Save" : "Create form";
+          if (btn) { btn.disabled = false; btn.textContent = editing ? "Save" : "Save form"; }
+          return null;
         });
     }
+    function saveForm(){
+      saveFormAndThen(function(savedForm){
+        document.body.removeChild(bg);
+        // For brand-new forms (state was non-editing before save),
+        // prompt the user. Otherwise straight to share screen.
+        // editing flips true inside saveFormAndThen, so we use a
+        // local flag captured BEFORE the call below.
+        if (!_wasEditingBeforeSave) {
+          showFlowPrompt(savedForm, function(){ showShareScreen(savedForm); });
+        } else {
+          showShareScreen(savedForm);
+        }
+      });
+    }
+    var _wasEditingBeforeSave = editing;
 
     renderAll();
   }
@@ -1148,6 +1200,39 @@
   }
   loadForms();
   loadChannels();
+
+  // Return-from-canvas: when the user clicks "Add more steps" we drop
+  // a breadcrumb in localStorage, navigate to /dashboard#outreach, and
+  // expect the user to come back to /dashboard#leadIntake. On return,
+  // re-open the form builder for the form they were editing so they
+  // never have to re-find their place.
+  (function checkReturnFromCanvas(){
+    try {
+      var fid = localStorage.getItem("intake_return_form_id");
+      var ts  = parseInt(localStorage.getItem("intake_return_form_ts") || "0", 10);
+      if (!fid) return;
+      // Don't re-open if breadcrumb is older than 30 minutes — stale.
+      if (!ts || (Date.now() - ts) > 30*60*1000) {
+        localStorage.removeItem("intake_return_form_id");
+        localStorage.removeItem("intake_return_form_ts");
+        return;
+      }
+      // Clear the breadcrumb immediately so a refresh doesn't re-trigger.
+      localStorage.removeItem("intake_return_form_id");
+      localStorage.removeItem("intake_return_form_ts");
+      fetch("/me/forms/" + encodeURIComponent(fid), { credentials:"same-origin" })
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(d){
+          if (d && d.form) {
+            // Small toast first, then re-open the builder so the user
+            // sees they're picking up where they left off.
+            toast("Welcome back — picking up where you left off.");
+            setTimeout(function(){ openBuilder(d.form); }, 250);
+          }
+        })
+        .catch(function(){});
+    } catch(_){}
+  })();
 </script>
 </body>
 </html>
