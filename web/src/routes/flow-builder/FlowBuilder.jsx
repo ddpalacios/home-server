@@ -2119,25 +2119,26 @@ export default function FlowBuilder() {
   // the canvas → drawer opens. Click outside / press Esc / hit Done →
   // drawer closes.
   const [selectedNodeId, setSelectedNodeId] = React.useState(null);
+  // ── Persistence ───────────────────────────────────────────────────
+  // Load the saved flow from /me/flows/default on mount. After load
+  // the canvas is "hydrated" — until then we suppress saves so we
+  // don't overwrite the server with our pre-load empty state.
+  // Declared early because showPicker (below) reads it.
+  const [hydrated, setHydrated] = React.useState(false);
+
   // Template picker: shown when the canvas is empty AND the user
   // hasn't picked "Start blank" yet. Re-openable via the library
   // panel's "Use a template" button.
   const [pickerDismissed, setPickerDismissed] = React.useState(false);
   // Don't show the template picker until the initial load + any seed
   // has settled — otherwise it flashes for a beat on every mount and
-  // the user thinks they missed a popup. (v2)
+  // the user thinks they missed a popup.
   const showPicker = hydrated && nodes.length === 0 && !pickerDismissed;
 
   // "What comes next?" chooser. Opened by the "+" button on any card
   // (or by the Yes/No buttons on a branch). When the user picks an
   // activity, we create the new node + edge in one shot.
   const [chooser, setChooser] = React.useState(null); // { sourceId, sourceHandle? }
-
-  // ── Persistence ───────────────────────────────────────────────────
-  // Load the saved flow from /me/flows/default on mount. After load
-  // the canvas is "hydrated" — until then we suppress saves so we
-  // don't overwrite the server with our pre-load empty state.
-  const [hydrated, setHydrated] = React.useState(false);
   // saveStatus drives the indicator: "idle" | "saving" | "saved" | "error".
   const [saveStatus, setSaveStatus] = React.useState("idle");
   // View mode: "canvas" (drag-and-drop) or "list" (numbered arrowed list).
