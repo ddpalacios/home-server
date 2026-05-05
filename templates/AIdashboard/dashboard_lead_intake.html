@@ -5,56 +5,157 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Lead intake</title>
 <style>
-  :root { --fg:#111; --sub:#555; --bg:#f7f7f8; --card:#fff; --line:#e6e6ea; --accent:#0a66c2; --err:#c0392b; --ok:#0a8a3a; --soft:#f0f2f5; }
+  :root {
+    --fg:#0a0a0a; --sub:#5a6470; --bg:#f5f7fa; --card:#fff;
+    --line:#e6e9ef; --accent:#185fa5; --err:#c0392b; --ok:#0a8a3a;
+    --soft:#f0f4f9;
+  }
   * { box-sizing:border-box; }
-  body { margin:0; font:14.5px/1.45 -apple-system,Segoe UI,Roboto,sans-serif; color:var(--fg); background:var(--bg); }
-  .wrap { max-width:920px; margin:0 auto; padding:20px 16px 60px; }
-  h1 { font-size:22px; margin:0 0 4px; }
-  .sub { color:var(--sub); margin:0 0 18px; }
-  .channels { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:24px; }
-  .ch { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px; cursor:pointer; }
-  .ch[disabled] { opacity:.55; cursor:not-allowed; }
-  .ch h3 { margin:0 0 4px; font-size:15px; }
-  .ch .meta { color:var(--sub); font-size:12.5px; }
-  .panel { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:18px; }
-  .row { display:flex; align-items:center; padding:10px 0; border-bottom:1px solid var(--line); }
+  body { margin:0; font:14.5px/1.5 -apple-system,Segoe UI,Roboto,sans-serif; color:var(--fg); background:var(--bg); }
+  .wrap { max-width:980px; margin:0 auto; padding:24px 16px 60px; }
+
+  /* Hero */
+  .hero { background:linear-gradient(135deg,#eaf3fc 0%,#f5f7fa 100%);
+          border:1px solid var(--line); border-radius:14px;
+          padding:28px 24px; margin-bottom:24px; }
+  .hero h1 { font-size:26px; margin:0 0 6px; line-height:1.25; }
+  .hero p  { color:var(--sub); margin:0; font-size:15px; max-width:620px; }
+
+  /* Channel cards */
+  .channels {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:14px; margin-bottom:28px;
+  }
+  .ch {
+    background:var(--card); border:1px solid var(--line);
+    border-radius:14px; padding:18px 16px 16px; cursor:pointer;
+    position:relative; transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    display:flex; flex-direction:column; min-height:160px;
+  }
+  .ch:hover { transform:translateY(-2px);
+              box-shadow:0 6px 18px rgba(20,40,80,.07);
+              border-color:#cdd7e3; }
+  .ch[aria-disabled="true"] { opacity:.55; cursor:not-allowed;
+              transform:none; box-shadow:none; }
+  .ch .icon {
+    width:42px; height:42px; border-radius:11px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:24px; line-height:1; margin-bottom:10px;
+  }
+  .ch[data-tone="form"]  .icon { background:#e7f0fb; }
+  .ch[data-tone="email"] .icon { background:#fef5e7; }
+  .ch[data-tone="phone"] .icon { background:#e7f7ec; }
+  .ch[data-tone="dm"]    .icon { background:#f3e7fb; }
+  .ch h3 { margin:0 0 4px; font-size:16px; font-weight:600; }
+  .ch p  { margin:0 0 12px; color:var(--sub); font-size:13px; line-height:1.45; }
+  .ch .pill {
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:11.5px; font-weight:600; padding:3px 9px;
+    border-radius:99px; align-self:flex-start;
+  }
+  .ch .pill .dot { width:6px; height:6px; border-radius:99px; background:currentColor; }
+  .pill-on   { background:#e6f6ec; color:#0a8a3a; }
+  .pill-off  { background:#fdecec; color:#c0392b; }
+  .pill-soon { background:#eef0f3; color:#5a6470; }
+  .ch .stat { font-size:11.5px; color:var(--sub); margin-top:auto; padding-top:10px; }
+  .ch .cta {
+    display:inline-block; margin-top:10px; align-self:flex-start;
+    background:var(--accent); color:#fff; border:0;
+    padding:8px 14px; border-radius:8px; font:inherit; font-size:13px;
+    font-weight:600; cursor:pointer;
+  }
+  .ch .cta-secondary {
+    background:transparent; color:var(--accent);
+    border:1px solid var(--accent);
+  }
+
+  /* Forms section */
+  .section-h {
+    display:flex; justify-content:space-between; align-items:flex-end;
+    gap:12px; margin:8px 0 12px;
+  }
+  .section-h h2 { font-size:18px; margin:0; }
+  .section-h .sub { color:var(--sub); font-size:13px; margin:0; }
+  .panel { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px; }
+  .row { display:flex; align-items:center; padding:12px 0; border-bottom:1px solid var(--line); gap:12px; }
   .row:last-child { border-bottom:0; }
   .row .name { font-weight:600; }
   .row .url { color:var(--sub); font-size:12.5px; word-break:break-all; }
-  .actions { margin-left:auto; display:flex; gap:6px; }
-  .btn { background:var(--card); border:1px solid var(--line); border-radius:6px; padding:6px 10px; cursor:pointer; font:inherit; }
-  .btn-primary { background:var(--accent); color:#fff; border-color:var(--accent); }
-  .empty { text-align:center; padding:40px 12px; color:var(--sub); }
-  .empty .btn-primary { margin-top:12px; }
-  .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#222; color:#fff; padding:10px 14px; border-radius:6px; opacity:0; transition:opacity .2s; }
+  .actions { margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; }
+  .btn { background:var(--card); border:1px solid var(--line); border-radius:7px; padding:7px 12px; cursor:pointer; font:inherit; font-size:13px; }
+  .btn:hover { border-color:#bcc7d4; }
+  .btn-primary { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600; }
+  .btn-primary:hover { background:#0e4d8a; border-color:#0e4d8a; }
+  .btn-ghost { background:transparent; border:0; color:var(--accent); font-weight:600; }
+  .empty { text-align:center; padding:48px 16px; color:var(--sub); }
+  .empty .big { font-size:38px; margin-bottom:8px; }
+  .empty h3 { margin:0 0 6px; font-size:18px; color:var(--fg); }
+  .empty p { margin:0 0 14px; }
+  .empty .btn-primary { margin-top:6px; }
+  .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#222; color:#fff; padding:10px 14px; border-radius:6px; opacity:0; transition:opacity .2s; z-index:10000; }
   .toast.show { opacity:1; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Lead intake</h1>
-  <p class="sub">How leads reach you. They all fire your saved flows automatically.</p>
-
-  <div class="channels">
-    <div class="ch" id="ch-form">
-      <h3>Website form</h3>
-      <div class="meta" id="ch-form-meta">Loading…</div>
-    </div>
-    <div class="ch" id="ch-email">
-      <h3>Email</h3>
-      <div class="meta" id="ch-email-meta">Loading…</div>
-    </div>
-    <div class="ch" id="ch-phone">
-      <h3>Phone (call &amp; text)</h3>
-      <div class="meta" id="ch-phone-meta">Loading…</div>
-    </div>
-    <div class="ch" disabled><h3>Instagram / Facebook DM</h3><div class="meta">Coming soon</div></div>
+  <div class="hero">
+    <h1>How do customers reach you?</h1>
+    <p>Pick how leads come in &mdash; a form on your site, your email, your phone, or all three. Every new lead gets a welcome message right away, automatically.</p>
   </div>
 
+  <div class="channels">
+    <div class="ch" data-tone="form" id="ch-form">
+      <div class="icon" aria-hidden="true">📝</div>
+      <h3>Website form</h3>
+      <p>People fill out a form on your site or a link you share.</p>
+      <span class="pill pill-on" id="ch-form-pill" hidden><span class="dot"></span><span id="ch-form-pill-text">Ready</span></span>
+      <span class="pill pill-off" id="ch-form-pill-off"><span class="dot"></span>Not set up yet</span>
+      <button class="cta" id="ch-form-cta">Set up form</button>
+      <div class="stat" id="ch-form-meta"></div>
+    </div>
+
+    <div class="ch" data-tone="email" id="ch-email">
+      <div class="icon" aria-hidden="true">✉️</div>
+      <h3>Email</h3>
+      <p>People email you. We&rsquo;ll watch your inbox and turn each one into a lead.</p>
+      <span class="pill pill-on" id="ch-email-pill" hidden><span class="dot"></span>Connected</span>
+      <span class="pill pill-off" id="ch-email-pill-off"><span class="dot"></span>Not connected</span>
+      <button class="cta" id="ch-email-cta">Connect Gmail</button>
+      <div class="stat" id="ch-email-meta"></div>
+    </div>
+
+    <div class="ch" data-tone="phone" id="ch-phone">
+      <div class="icon" aria-hidden="true">📱</div>
+      <h3>Phone (text)</h3>
+      <p>People text your business number. We grab the message and start your flow.</p>
+      <span class="pill pill-on" id="ch-phone-pill" hidden><span class="dot"></span>Ready</span>
+      <span class="pill pill-off" id="ch-phone-pill-off"><span class="dot"></span>Not connected</span>
+      <button class="cta" id="ch-phone-cta">Set up phone</button>
+      <div class="stat" id="ch-phone-meta"></div>
+    </div>
+
+    <div class="ch" data-tone="dm" aria-disabled="true">
+      <div class="icon" aria-hidden="true">💬</div>
+      <h3>Instagram / Facebook DM</h3>
+      <p>Coming soon. People who DM your social account will become leads.</p>
+      <span class="pill pill-soon"><span class="dot"></span>Coming soon</span>
+    </div>
+  </div>
+
+  <div class="section-h">
+    <div>
+      <h2>Your forms</h2>
+      <p class="sub">Each form gets its own link you can paste anywhere.</p>
+    </div>
+    <button class="btn btn-primary" id="top-create" hidden>+ New form</button>
+  </div>
   <div class="panel" id="forms-panel">
     <div id="forms-empty" class="empty" hidden>
-      <div>No forms yet.</div>
-      <button class="btn btn-primary" id="empty-create">Create form</button>
+      <div class="big">📝</div>
+      <h3>No forms yet</h3>
+      <p>Create your first form. It takes about a minute.</p>
+      <button class="btn btn-primary" id="empty-create">Create your first form</button>
     </div>
     <div id="forms-list" hidden></div>
   </div>
@@ -73,12 +174,34 @@
       try { document.execCommand("copy"); toast("Copied"); } catch(_){}
       document.body.removeChild(i); }
   }
+  function setPill(id, idOff, on, onText){
+    var p = $(id), pOff = $(idOff);
+    if (p)    p.hidden    = !on;
+    if (pOff) pOff.hidden = on;
+    if (on && onText) {
+      var t = p ? p.querySelector("span:last-child") : null;
+      if (t) t.textContent = onText;
+    }
+  }
   function loadForms(){
     fetch("/me/forms", { credentials:"same-origin" }).then(function(r){ return r.json(); }).then(function(d){
       var forms = (d && d.forms) || [];
-      $("ch-form-meta").textContent = forms.length === 0
-        ? "Not set up yet"
-        : forms.length + " form" + (forms.length === 1 ? "" : "s");
+      var ready = forms.length > 0;
+      setPill("ch-form-pill", "ch-form-pill-off", ready,
+              ready ? (forms.length + " form" + (forms.length === 1 ? "" : "s")) : "");
+      var formCta = $("ch-form-cta");
+      if (formCta) {
+        formCta.textContent = ready ? "+ New form" : "Create your first form";
+        formCta.onclick = function(ev){ ev.stopPropagation(); openBuilder(); };
+      }
+      var topCreate = $("top-create");
+      if (topCreate) {
+        topCreate.hidden = !ready;
+        topCreate.onclick = function(){ openBuilder(); };
+      }
+      $("ch-form-meta").textContent = ready
+        ? ((forms.reduce(function(a,f){ return a + (f.lead_count || 0); }, 0)) + " leads captured")
+        : "Each form gets its own link to share.";
       if (forms.length === 0) { $("forms-empty").hidden = false; $("forms-list").hidden = true; renderEmpty(); }
       else { $("forms-empty").hidden = true; $("forms-list").hidden = false; renderList(forms); }
     });
@@ -91,15 +214,30 @@
         CHANNELS = (d && d.channels) || {};
         var em = CHANNELS.email || {};
         var ph = CHANNELS.phone || {};
+        // Email card
+        setPill("ch-email-pill", "ch-email-pill-off", !!em.ready, "Connected");
+        var emCta = $("ch-email-cta");
+        if (emCta) {
+          emCta.textContent = em.ready ? "Manage" : "Connect Gmail";
+          emCta.classList.toggle("cta-secondary", !!em.ready);
+          emCta.onclick = function(ev){ ev.stopPropagation(); openEmailModal(em); };
+        }
         $("ch-email-meta").textContent = em.ready
-          ? ("Connected: " + (em.connected_email || "") + " · " + (em.leads_30d || 0) + " leads / 30d")
-          : "Not set up yet — connect Gmail";
-        $("ch-email").style.cursor = "pointer";
+          ? (em.connected_email + " · " + (em.leads_30d || 0) + " leads / 30d")
+          : "Takes 10 seconds.";
         $("ch-email").onclick = function(){ openEmailModal(em); };
+
+        // Phone card
+        setPill("ch-phone-pill", "ch-phone-pill-off", !!ph.ready, "Ready");
+        var phCta = $("ch-phone-cta");
+        if (phCta) {
+          phCta.textContent = ph.ready ? "Show webhook" : "Set up phone";
+          phCta.classList.toggle("cta-secondary", !!ph.ready);
+          phCta.onclick = function(ev){ ev.stopPropagation(); openPhoneModal(ph); };
+        }
         $("ch-phone-meta").textContent = ph.ready
           ? ((ph.phone_number || "") + " · " + (ph.leads_30d || 0) + " leads / 30d")
-          : "No Twilio number assigned to this account yet";
-        $("ch-phone").style.cursor = "pointer";
+          : "Needs a Twilio number on your account.";
         $("ch-phone").onclick = function(){ openPhoneModal(ph); };
       })
       .catch(function(){
@@ -397,7 +535,16 @@
             return;
           }
           document.body.removeChild(bg);
-          showShareScreen(res.body.form);
+          // For brand-new forms, prompt the user about what happens
+          // when someone fills it. Editing an existing form skips this
+          // step and goes straight to the share screen.
+          if (!editing) {
+            showFlowPrompt(res.body.form, function(){
+              showShareScreen(res.body.form);
+            });
+          } else {
+            showShareScreen(res.body.form);
+          }
           loadForms();
         }).catch(function(e){
           toast("Network error: " + e.message);
@@ -406,6 +553,52 @@
     }
 
     renderAll();
+  }
+
+  function showFlowPrompt(form, onContinue){
+    // Friendly post-save modal: explains what the form does on submit
+    // and lets the user pick the default flow or jump to the flow
+    // builder to customize. v1 has just one option ("Default flow")
+    // since multiple flows aren't yet exposed; the second card is a
+    // link to /dashboard#outreach where the Flow Builder lives.
+    var bg = document.createElement("div");
+    bg.style = "position:fixed;inset:0;background:rgba(10,15,25,.55);display:flex;align-items:center;justify-content:center;z-index:9000;padding:20px";
+    bg.innerHTML = ''
+      + '<div style="background:#fff;border-radius:14px;max-width:560px;width:100%;padding:26px">'
+      +   '<div style="font-size:36px;text-align:center;margin-bottom:8px">🎉</div>'
+      +   '<h2 style="margin:0 0 4px;text-align:center;font-size:20px">Your form is ready!</h2>'
+      +   '<p style="margin:0 0 18px;text-align:center;color:var(--sub);font-size:14px">'
+      +     'When someone fills out <strong>' + esc(form.name) + '</strong>, what should happen?'
+      +   '</p>'
+      +   '<div data-fp-card style="border:2px solid var(--accent);background:#f1f7fd;border-radius:12px;padding:14px 16px;cursor:pointer;margin-bottom:10px;">'
+      +     '<div style="display:flex;align-items:center;gap:12px">'
+      +       '<div style="font-size:24px">⚡</div>'
+      +       '<div style="flex:1">'
+      +         '<div style="font-weight:600;font-size:15px;margin-bottom:2px">Send my welcome flow <span style="color:var(--accent);font-size:11px;background:#dbe8f7;padding:2px 8px;border-radius:99px;margin-left:4px">Recommended</span></div>'
+      +         '<div style="color:var(--sub);font-size:12.5px">A welcome text or email goes out right away. We&rsquo;ll handle quiet hours and pick the best channel automatically.</div>'
+      +       '</div>'
+      +     '</div>'
+      +   '</div>'
+      +   '<a data-fp-customize href="/dashboard#outreach" style="display:block;border:1px solid var(--line);background:#fff;border-radius:12px;padding:14px 16px;text-decoration:none;color:inherit;cursor:pointer;">'
+      +     '<div style="display:flex;align-items:center;gap:12px">'
+      +       '<div style="font-size:24px">🛠️</div>'
+      +       '<div style="flex:1">'
+      +         '<div style="font-weight:600;font-size:15px;margin-bottom:2px">I want something different</div>'
+      +         '<div style="color:var(--sub);font-size:12.5px">Open the Flow Builder and customize what happens (wait, ask, branch, send specific messages).</div>'
+      +       '</div>'
+      +     '</div>'
+      +   '</a>'
+      +   '<div style="display:flex;justify-content:flex-end;margin-top:16px">'
+      +     '<button class="btn" data-fp-skip>Skip for now</button>'
+      +   '</div>'
+      + '</div>';
+    document.body.appendChild(bg);
+    var done = function(){ try { document.body.removeChild(bg); } catch(_){} if (onContinue) onContinue(); };
+    bg.querySelector("[data-fp-card]").onclick = done;
+    bg.querySelector("[data-fp-skip]").onclick = done;
+    // The "customize" anchor navigates to /dashboard#outreach naturally.
+    // Don't intercept its click.
+    bg.addEventListener("click", function(e){ if (e.target === bg) done(); });
   }
 
   function showShareScreen(form){
