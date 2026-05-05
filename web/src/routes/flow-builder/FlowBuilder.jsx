@@ -1194,6 +1194,32 @@ const STYLES = `
     box-shadow: 0 6px 16px rgba(15,23,42,.22),
                 0 0 0 2px rgba(22,163,74,.35);
   }
+  /* Tour highlight — pulses an animated ring around whatever element
+     the active tour step is describing. Element gets the class added
+     by FirstTimeGuide's effect; cleared on step change or dismiss.
+     Position relative + z-index 60 so the ring renders above sibling
+     React Flow chrome but below the Back-to-form pill (z-index 70). */
+  @keyframes fb-tour-glow {
+    0%, 100% {
+      box-shadow:
+        0 0 0 4px rgba(24,95,165,.28),
+        0 0 0 10px rgba(24,95,165,.12),
+        0 4px 14px rgba(15,23,42,.18);
+    }
+    50% {
+      box-shadow:
+        0 0 0 6px rgba(24,95,165,.42),
+        0 0 0 16px rgba(24,95,165,.18),
+        0 4px 14px rgba(15,23,42,.18);
+    }
+  }
+  .fb-tour-highlight {
+    position: relative;
+    z-index: 60 !important;
+    border-radius: 12px;
+    animation: fb-tour-glow 1.6s ease-in-out infinite !important;
+  }
+
   /* Pulse hint — when the canvas has just one trigger card, draw the
      user's eye to the green +Next button so they know that's how a
      step gets added. The parent wrapper sets data-pulse-next="1". */
@@ -1981,9 +2007,13 @@ const STYLES = `
   .fb-drawer-done:hover { background: #15803d; }
 `;
 
-// Step-by-step tour strip at the top of the canvas. Each step explains
-// one feature in plain language; user clicks Next → to advance. Tour
-// state persists in localStorage so a refresh keeps your place.
+// Step-by-step tour strip on the canvas. Each step explains one
+// feature AND glows the actual UI element it describes — so a user
+// always sees both the words and the thing the words refer to.
+//
+// `target` is a CSS selector. The tour effect adds a temporary
+// .fb-tour-highlight class to the matching element, which gives it a
+// glowing ring (CSS keyframe). null target = no highlight (intro).
 const TOUR_STEPS = [
   {
     icon: "👋",
@@ -1994,27 +2024,30 @@ const TOUR_STEPS = [
         fills out your form. Right now it just says hi to them.
       </>
     ),
+    target: ".fb-card",
   },
   {
     icon: "➕",
-    title: "Add a step with the green +Next button.",
+    title: "Add a step here.",
     body: (
       <>
-        See the <strong style={{ color: "#0a8a3a" }}>+ Next</strong>{" "}
-        button next to your card? Tap it to add what happens next —
-        a follow-up text, an AI reply, or saving the lead somewhere.
+        Tap the green <strong style={{ color: "#0a8a3a" }}>+ Next</strong>{" "}
+        button (glowing now). It opens a list of things you can add:
+        a text, an email, an AI reply, or saving the lead somewhere.
       </>
     ),
+    target: ".fb-next-btn",
   },
   {
     icon: "✏️",
     title: "Tap a card to edit it.",
     body: (
       <>
-        Click any card to change the message, the wait time, or what it
+        Click any card to change its message, wait time, or what it
         does. A panel slides in on the right.
       </>
     ),
+    target: ".fb-card",
   },
   {
     icon: "💾",
@@ -2022,9 +2055,11 @@ const TOUR_STEPS = [
     body: (
       <>
         Don't worry about losing work. When you're done, tap{" "}
-        <strong>← Back to your form</strong> in the top right.
+        <strong>← Back to your form</strong> (top right) to keep
+        building your form.
       </>
     ),
+    target: ".fb-return-pill",
   },
 ];
 
@@ -2043,6 +2078,35 @@ function FirstTimeGuide() {
       setShow(fromForm || !dismissed);
     } catch (_) { setShow(true); }
   }, []);
+  // Apply / remove the .fb-tour-highlight class to the current step's
+  // target. We retry briefly because ReactFlow may not have rendered
+  // the cards yet at first paint.
+  React.useEffect(() => {
+    if (!show) return;
+    const sel = TOUR_STEPS[step] && TOUR_STEPS[step].target;
+    if (!sel) return;
+    const cleanup = [];
+    let attempts = 0;
+    let stop = false;
+    const apply = () => {
+      if (stop) return;
+      const el = document.querySelector(sel);
+      if (el) {
+        el.classList.add("fb-tour-highlight");
+        cleanup.push(() => el.classList.remove("fb-tour-highlight"));
+        return;
+      }
+      if (attempts++ < 8) setTimeout(apply, 120);
+    };
+    apply();
+    return () => {
+      stop = true;
+      cleanup.forEach((fn) => { try { fn(); } catch (_) {} });
+      // Defensive sweep in case the element id changed mid-step.
+      document.querySelectorAll(".fb-tour-highlight").forEach(
+        (n) => n.classList.remove("fb-tour-highlight"));
+    };
+  }, [show, step]);
   const persistStep = React.useCallback((s) => {
     try { localStorage.setItem("fb_tour_step", String(s)); } catch (_) {}
   }, []);
@@ -2071,22 +2135,25 @@ function FirstTimeGuide() {
   const isLast = step === TOUR_STEPS.length - 1;
   return (
     <div
+      className="fb-tour-panel"
       style={{
+        // Top-LEFT (not centered) so the Back-to-form pill in the
+        // top-right has a guaranteed exclusion zone — no overlap on
+        // any viewport width.
         position: "absolute",
         top: 14,
-        left: "50%",
-        transform: "translateX(-50%)",
-        zIndex: 40,
+        left: 14,
+        right: "auto",
+        zIndex: 45,
         background: "linear-gradient(135deg,#eaf3fc 0%,#f0e8fb 100%)",
         border: "1.5px solid #b6c8e0",
         borderRadius: 14,
         padding: "14px 16px 12px 14px",
-        boxShadow: "0 6px 18px rgba(20,40,80,.10)",
+        boxShadow: "0 8px 22px rgba(20,40,80,.14)",
         display: "flex",
         flexDirection: "column",
         gap: 10,
-        maxWidth: 660,
-        width: "calc(100% - 32px)",
+        width: "min(440px, calc(100% - 240px))",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -2199,12 +2266,16 @@ function ReturnToFormBanner() {
   if (!show) return null;
   return (
     <a
+      className="fb-return-pill"
       href="/dashboard#leadIntake"
       style={{
         position: "absolute",
         top: 12,
         right: 14,
-        zIndex: 50,
+        // Highest UI z-index in the canvas — must stay above tour
+        // panel, save indicator, and any Vite-injected helpers so it's
+        // never hidden by another popup.
+        zIndex: 70,
         background: "linear-gradient(135deg,#fff7e0 0%,#fef0c8 100%)",
         border: "1.5px solid #f0c419",
         color: "#7a5a00",
