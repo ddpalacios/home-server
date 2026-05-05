@@ -252,27 +252,39 @@
     }
     .app-topbar-btn:hover { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
 
+    /* Tool-first dashboard layout, applied to EVERY page. The old
+       1280px max-width + 28px padding trapped tools (canvas, leads,
+       schedule) in a centered column. Now .app-body fills the
+       viewport-minus-top-bar and lets each section own its own
+       internal padding + scroll. No page-level scroll on any page. */
+    body { overflow: hidden; }
     .app-body {
-      padding: 28px;
-      max-width: 1280px;
-      width: 100%;
-      box-sizing: border-box;
-      margin: 0 auto;
-    }
-    /* Full-bleed Outreach: every element in the height chain from
-       .app-body down to the flow builder root explicitly carries
-       100% height so the canvas can compute non-zero dimensions.
-       Body class is toggled by JS on entering/leaving Outreach
-       (more reliable + faster than :has() recomputing on every DOM
-       change in the rest of the dashboard). */
-    body.is-outreach-fullbleed { overflow: hidden; }
-    body.is-outreach-fullbleed .app-body {
       padding: 0;
       max-width: none;
+      width: 100%;
+      box-sizing: border-box;
+      margin: 0;
       height: calc(100vh - 64px);
       overflow: hidden;
     }
-    body.is-outreach-fullbleed #outreach.is-active,
+    /* Each active section fills the available space and scrolls
+       internally if its content overflows. Default 20px/24px padding
+       gives page content breathing room from the side-nav + viewport
+       edges, replicating the old article-style framing for content-
+       heavy pages (Leads, Replies, Activity, Settings, etc.). */
+    .app-body [data-route-section].is-active {
+      height: 100%;
+      overflow: auto;
+      padding: 20px 24px;
+      box-sizing: border-box;
+    }
+    /* Outreach is the one tool page that needs zero padding so the
+       flow canvas reaches all four edges. The body class toggled by
+       appShowRoute switches between the two modes. */
+    body.is-outreach-fullbleed .app-body [data-route-section].is-active {
+      padding: 0;
+      overflow: hidden;
+    }
     body.is-outreach-fullbleed #outreach.is-active > div,
     body.is-outreach-fullbleed #outreachAutoMount,
     body.is-outreach-fullbleed #flowBuilderRoot {
@@ -321,7 +333,8 @@
       .app-sidebar-logo { width: 34px; height: 34px; font-size: 16px; }
       .app-nav-btn { width: 46px; height: 46px; }
       .app-nav-btn svg { width: 22px; height: 22px; }
-      .app-body { padding: 18px; }
+      /* No app-body padding override — full-bleed on every viewport.
+         Sections handle their own internal padding. */
       .app-topbar { padding: 12px 18px; }
     }
 
