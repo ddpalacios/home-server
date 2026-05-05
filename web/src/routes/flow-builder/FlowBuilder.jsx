@@ -591,6 +591,7 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
   const canBeSms = !!activity.canBeSms;
   const isWait = activity.defaultMode === "wait";
   const isBranch = activity.kind === "logic";
+  const isReply = activity.defaultMode === "reply";
 
   const [mode, setMode] = React.useState(
     data.mode || activity.defaultMode || "email");
@@ -602,6 +603,37 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
     data.waitDays != null ? data.waitDays : (activity.defaultDurationDays || 1));
   const [conditionId, setConditionId] = React.useState(
     data.conditionId || activity.defaultConditionId || BRANCH_CONDITIONS[0].id);
+  // Reply Widget state — only meaningful when isReply.
+  const [fallback, setFallback] = React.useState(
+    data.fallback || activity.defaultFallback || "ai");
+  const [useGlobalCadence, setUseGlobalCadence] = React.useState(
+    data.useGlobalCadence != null ? !!data.useGlobalCadence
+      : (activity.defaultUseGlobalCadence !== false));
+  const [firstReminderMinutes, setFirstReminderMinutes] = React.useState(
+    data.firstReminderMinutes != null ? data.firstReminderMinutes
+      : (activity.defaultFirstReminderMinutes || 30));
+  const [secondReminderMinutes, setSecondReminderMinutes] = React.useState(
+    data.secondReminderMinutes != null ? data.secondReminderMinutes
+      : (activity.defaultSecondReminderMinutes || 120));
+  const [takeoverMinutes, setTakeoverMinutes] = React.useState(
+    data.takeoverMinutes != null ? data.takeoverMinutes
+      : (activity.defaultTakeoverMinutes || 360));
+  // Live mirror of the account's global AI mode for the helper line in
+  // the drawer ("AI replies: When slow"). Single fetch on open.
+  const [globalAiMode, setGlobalAiMode] = React.useState(null);
+  React.useEffect(() => {
+    if (!isReply) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetch("/me/ai/policy", { credentials: "same-origin" });
+        if (!r.ok) return;
+        const p = await r.json();
+        if (!cancelled) setGlobalAiMode((p && p.mode) || "hybrid");
+      } catch (_) {}
+    })();
+    return () => { cancelled = true; };
+  }, [isReply]);
 
   const taRef = React.useRef(null);
   const subjRef = React.useRef(null);
@@ -610,9 +642,15 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
   // Push edits up to the canvas. We don't debounce — typing into a 100kB
   // node graph is fine in React.
   React.useEffect(() => {
-    onChange(node.id, { mode, subject, body, waitDays, conditionId });
+    onChange(node.id, {
+      mode, subject, body, waitDays, conditionId,
+      fallback, useGlobalCadence,
+      firstReminderMinutes, secondReminderMinutes, takeoverMinutes,
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, subject, body, waitDays, conditionId]);
+  }, [mode, subject, body, waitDays, conditionId,
+      fallback, useGlobalCadence,
+      firstReminderMinutes, secondReminderMinutes, takeoverMinutes]);
 
   // Esc closes the drawer.
   React.useEffect(() => {
@@ -706,6 +744,22 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                   This step doesn't send anything — it just pauses your flow.
                 </p>
               </div>
+            ) : isReply ? (
+              <ReplyWidgetEditor
+                fallback={fallback} setFallback={setFallback}
+                useGlobalCadence={useGlobalCadence}
+                setUseGlobalCadence={setUseGlobalCadence}
+                firstReminderMinutes={firstReminderMinutes}
+                setFirstReminderMinutes={setFirstReminderMinutes}
+                secondReminderMinutes={secondReminderMinutes}
+                setSecondReminderMinutes={setSecondReminderMinutes}
+                takeoverMinutes={takeoverMinutes}
+                setTakeoverMinutes={setTakeoverMinutes}
+                body={body} setBody={setBody}
+                taRef={taRef}
+                onActiveField={() => setActiveField("body")}
+                globalAiMode={globalAiMode}
+              />
             ) : (
               <>
                 {canBeSms && (
@@ -2382,25 +2436,20 @@ function FirstTimeGuide() {
   // it's intentionally guiding through the modal. data-sub="1" tells
   // the hide-during-modal CSS to leave us alone.
   const isLast = isLastInPath && (tour.pathHistory || []).length === 0;
-  // Three positioning modes:
-  //   1. Step has pinTo:"top-center" → sit centered at canvas top.
-  //   2. Step has a target the locator resolved to a position → tooltip
-  //      anchored next to that target with an arrow.
-  //   3. Otherwise → fall back to a corner.
-  const hasAnchor = !!(cur && cur.target) && position.arrow !== null
-                    && cur.pinTo !== "top-center";
-  const isPinTopCenter = cur && cur.pinTo === "top-center";
-  const panelStyle = isPinTopCenter
-    ? { position: "fixed", top: 18, left: "50%",
-        transform: "translateX(-50%)",
-        zIndex: 60, width: "min(440px, calc(100% - 32px))" }
-    : hasAnchor
-      ? { position: "fixed", top: position.top, left: position.left,
-          zIndex: 60, width: "min(360px, calc(100% - 28px))" }
-      : { position: "fixed", top: 14,
-          left: isOnSubPath ? "50%" : 14,
-          transform: isOnSubPath ? "translateX(-50%)" : "none",
-          zIndex: 60, width: "min(420px, calc(100% - 32px))" };
+  // ONE fixed position for every step. The user doesn't have to
+  // chase the Next button across the screen — Skip / Show me / Back /
+  // Next sit in the SAME pixel coordinates regardless of which step
+  // is active. The yellow halo on the active target tells you which
+  // element is being described; the panel doesn't move.
+  const panelStyle = {
+    position: "fixed",
+    top: 18,
+    left: "50%",
+    transform: "translateX(-50%)",
+    zIndex: 60,
+    width: "min(440px, calc(100% - 80px))",
+  };
+  const hasAnchor = false;  // arrow tips no longer needed
   return (
     <div
       className="fb-tour-panel"
@@ -2601,10 +2650,10 @@ function TourReplayButton() {
       aria-label="Show the tour again"
       style={{
         position: "absolute",
-        bottom: 16,
-        right: 16,
+        top: 16,
+        left: 16,
         zIndex: 25,
-        width: 40, height: 40,
+        width: 36, height: 36,
         borderRadius: 99,
         background: "#fff",
         border: "1.5px solid #cdd7e3",
