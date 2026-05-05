@@ -215,13 +215,63 @@
   .b-section-h {
     font-size:11px; font-weight:700; color:#9aa4b2;
     text-transform:uppercase; letter-spacing:.05em;
-    margin:18px 0 8px;
+    margin:24px 0 10px;
   }
-  .b-input { width:100%; padding:9px 11px; border:1px solid var(--line);
-              border-radius:7px; font:inherit; font-size:14px;
+  .b-section-h:first-child { margin-top:0; }
+  .b-input { width:100%; padding:10px 12px; border:1px solid var(--line);
+              border-radius:8px; font:inherit; font-size:14px;
               background:#fff; }
   .b-input:focus { outline:none; border-color:var(--accent);
                     box-shadow:0 0 0 3px rgba(24,95,165,.12); }
+
+  /* Grouped card — visually separates "what they see" copy fields
+     (button text, thank-you note) from the fields/flow above. */
+  .b-card {
+    background:#fff; border:1px solid var(--line);
+    border-radius:12px; padding:16px;
+    margin-top:18px;
+  }
+  .b-card-h {
+    font-size:13px; font-weight:700; color:#0a0a0a;
+    margin:0 0 10px;
+  }
+  .b-field { margin-bottom:14px; }
+  .b-field:last-child { margin-bottom:0; }
+  .b-field-label {
+    display:block; font-size:12.5px; font-weight:600;
+    color:#3b4a5a; margin-bottom:6px;
+  }
+  .b-field-help {
+    font-size:11.5px; color:#9aa4b2;
+    margin-top:5px; line-height:1.4;
+  }
+
+  /* Danger zone — the Delete form button gets its own clearly-marked
+     section at the very bottom of the editor so it's never confused
+     with neutral actions like Cancel/Save. */
+  .b-danger {
+    margin-top:24px; padding:14px 16px;
+    background:#fff5f5; border:1px solid #f5d3d3;
+    border-radius:12px;
+    display:flex; align-items:center; gap:12px;
+  }
+  .b-danger-text { flex:1; min-width:0; }
+  .b-danger-title {
+    font-size:13px; font-weight:700; color:#9a3a3a;
+    margin:0 0 2px;
+  }
+  .b-danger-sub {
+    font-size:12px; color:#a86060;
+    line-height:1.4;
+  }
+  .b-danger-btn {
+    flex:0 0 auto;
+    background:#fff; border:1px solid #d77;
+    color:#9a3a3a; padding:7px 14px; border-radius:8px;
+    font:inherit; font-weight:600; font-size:13px;
+    cursor:pointer;
+  }
+  .b-danger-btn:hover { background:#fdecec; border-color:#c55; }
 
   /* Flow step rows — the "What happens" sequence in the builder. */
   .flow-step {
@@ -609,9 +659,7 @@
       +     '<div class="builder-preview"  id="b-preview"></div>'
       +   '</div>'
       +   '<div class="builder-foot">'
-      +     '<div id="b-foot-left">'
-      +       (editing ? '<button class="btn-ghost" id="b-delete" style="background:transparent;border:0;color:var(--err);cursor:pointer;font:inherit;font-weight:600">Delete form</button>' : '')
-      +     '</div>'
+      +     '<div></div>'
       +     '<div style="display:flex;gap:8px">'
       +       '<button class="btn" id="b-cancel">Cancel</button>'
       +       '<button class="btn btn-primary" id="b-save">' + (editing ? "Save" : "Save form") + '</button>'
@@ -710,10 +758,31 @@
         +   '</span>'
         +   '<span class="ascta-arrow">→</span>'
         + '</button>'
-        + '<div class="b-section-h">Button text</div>'
-        + '<input id="b-submit-text" class="b-input" value="' + esc(state.submit_text) + '"/>'
-        + '<div class="b-section-h">Thank-you note</div>'
-        + '<textarea id="b-thanks" class="b-input" rows="2" style="resize:vertical">' + esc(state.thank_you) + '</textarea>';
+        // Grouped card — what the form's submit screen looks like to
+        // the lead. Two fields, plenty of breathing room, plain copy.
+        + '<div class="b-card">'
+        +   '<div class="b-card-h">What they see</div>'
+        +   '<div class="b-field">'
+        +     '<label for="b-submit-text" class="b-field-label">Button label</label>'
+        +     '<input id="b-submit-text" class="b-input" placeholder="Submit" value="' + esc(state.submit_text) + '"/>'
+        +     '<div class="b-field-help">The big button people tap to send the form.</div>'
+        +   '</div>'
+        +   '<div class="b-field">'
+        +     '<label for="b-thanks" class="b-field-label">Thank-you note</label>'
+        +     '<textarea id="b-thanks" class="b-input" rows="2" style="resize:vertical" placeholder="Thanks — we\'ll be in touch.">' + esc(state.thank_you) + '</textarea>'
+        +     '<div class="b-field-help">Shows after they hit the button.</div>'
+        +   '</div>'
+        + '</div>'
+        // Danger zone — only when editing an existing form.
+        + (editing ? (
+            '<div class="b-danger">'
+          +   '<div class="b-danger-text">'
+          +     '<div class="b-danger-title">Delete this form</div>'
+          +     '<div class="b-danger-sub">The link stops working. Past leads stay safe.</div>'
+          +   '</div>'
+          +   '<button class="b-danger-btn" id="b-delete" type="button">Delete form</button>'
+          + '</div>'
+          ) : "");
 
       // Inline label editing.
       Array.prototype.forEach.call(c.querySelectorAll("[data-fld-edit]"), function(span){
