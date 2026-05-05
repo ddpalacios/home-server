@@ -1618,8 +1618,7 @@ async function _handleBulkAction(act) {
 
   if (act === "email") {
     sessionStorage.setItem("leadsSelectedIds", JSON.stringify(ids));
-    console.log("[leads] bulk send email — Phase 2", ids);
-    _showLeadsToast("Coming in Phase 2.", "info");
+    openBulkEmailComposer();
     return;
   }
 
@@ -2070,6 +2069,835 @@ function initCsvImport() {
     }
   });
 }
+
+// ─── Bulk-email composer (Phase 2) ───────────────────────────────────────────
+//
+// Two-state slide-in panel. State A is the template grid; State B is the
+// editor (subject + body + chips + preview). On Send Now we POST
+// /me/leads/bulk-email and poll /me/leads/bulk-email/<batch_id> every 2s for
+// progress. Schedule for later stays disabled here — Phase 3.
+
+const _BE_DEFAULT_FALLBACKS = {
+  first_name: "there",
+  name: "there",
+  service_type: "your service",
+  quote_amount: "the quote",
+  quote_date: "recently",
+  appointment_date: "your scheduled time",
+  job_date: "the work date",
+};
+
+const _BE_TOKEN_RE = /\{([a-zA-Z_][a-zA-Z0-9_]*)\}/g;
+
+const _BE_VAR_CHIPS = [
+  { token: "first_name",       label: "First name" },
+  { token: "service_type",     label: "Service" },
+  { token: "quote_amount",     label: "Quote amount" },
+  { token: "quote_date",       label: "Quote date" },
+  { token: "appointment_date", label: "Appointment" },
+  { token: "your_name",        label: "Your name" },
+  { token: "business_name",    label: "Business name" },
+  { token: "phone",            label: "Phone" },
+];
+
+let _beState = {
+  open: false,
+  view: "grid",          // "grid" | "editor" | "sending" | "done" | "no-connection"
+  templates: [],
+  templateLoaded: null,
+  subject: "",
+  body: "",
+  recipients: [],        // array of lead objects (snapshot at open time)
+  senderProfile: null,
+  connections: [],
+  fromConnectionId: "",
+  previewLeadId: "",
+  fallbacks: { ...{}, ..._BE_DEFAULT_FALLBACKS },
+  fallbackOverrides: {}, // user-supplied per-token replacements
+  skipMissing: false,    // if true, skip leads with any missing token
+  lastFocused: "body",
+  batchId: "",
+  pollTimer: null,
+  lastBatch: null,
+};
+
+function _beFmtCurrency(value) {
+  if (value == null || value === "") return null;
+  const n = Number(value);
+  if (!isFinite(n)) return null;
+  return "$" + n.toLocaleString(undefined, { maximumFractionDigits: 0 });
+}
+
+function _beCoerceDate(value) {
+  if (value == null || value === "") return null;
+  if (value instanceof Date) return value;
+  if (typeof value === "number") {
+    let v = value;
+    if (v > 1e12) v = v / 1000;
+    const dt = new Date(v * 1000);
+    return isNaN(dt.getTime()) ? null : dt;
+  }
+  if (typeof value === "string") {
+    const s = value.trim();
+    if (!s) return null;
+    if (/^\d+$/.test(s)) return _beCoerceDate(Number(s));
+    const dt = new Date(s);
+    return isNaN(dt.getTime()) ? null : dt;
+  }
+  return null;
+}
+
+const _BE_MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+function _beFmtDate(value) {
+  const dt = _beCoerceDate(value);
+  if (!dt) return null;
+  return `${_BE_MONTHS[dt.getMonth()]} ${dt.getDate()}`;
+}
+function _beFmtDateTime(value) {
+  const dt = _beCoerceDate(value);
+  if (!dt) return null;
+  let h = dt.getHours();
+  const m = String(dt.getMinutes()).padStart(2, "0");
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12; if (h === 0) h = 12;
+  return `${_BE_MONTHS[dt.getMonth()]} ${dt.getDate()}, ${h}:${m} ${ampm}`;
+}
+
+function _beResolveLeadValue(token, lead) {
+  if (!lead) return null;
+  if (token === "first_name") {
+    const fn = (lead.first_name || "").trim();
+    if (fn) return fn;
+    const nm = (lead.name || "").trim();
+    if (nm) return nm.split(/\s+/)[0];
+    return null;
+  }
+  if (token === "name") {
+    const nm = (lead.name || "").trim();
+    if (nm) return nm;
+    const both = [(lead.first_name || "").trim(), (lead.last_name || "").trim()]
+      .filter(Boolean).join(" ");
+    return both || null;
+  }
+  if (token === "service_type") return (lead.service_type || "").trim() || null;
+  if (token === "quote_amount") return _beFmtCurrency(lead.quote_amount);
+  if (token === "quote_date") return _beFmtDate(lead.quote_sent_at || lead.quote_date);
+  if (token === "appointment_date")
+    return _beFmtDateTime(lead.appointment_time || lead.appointment_date);
+  if (token === "job_date") return _beFmtDate(lead.job_complete_date || lead.job_date);
+  if (token === "email") return (lead.email || "").trim() || null;
+  if (token === "phone") return (lead.phone || "").trim() || null;
+  return null;
+}
+
+function _beResolveProfileValue(token, profile) {
+  if (!profile) return null;
+  if (token === "your_name")        return (profile.your_name || "").trim() || null;
+  if (token === "business_name")    return (profile.business_name || "").trim() || null;
+  if (token === "phone")            return (profile.business_phone || "").trim() || null;
+  if (token === "business_address") return (profile.business_address || "").trim() || null;
+  return null;
+}
+
+const _BE_LEAD_TOKEN_FIELDS = new Set([
+  "first_name","name","service_type","quote_amount","quote_date",
+  "appointment_date","job_date","email","phone",
+]);
+const _BE_PROFILE_TOKEN_FIELDS = new Set([
+  "your_name","business_name","phone","business_address",
+]);
+
+function substituteClientSide(template, lead, profile, fallbacks) {
+  if (!template) return template || "";
+  const fb = { ..._BE_DEFAULT_FALLBACKS, ...(fallbacks || {}) };
+  return template.replace(_BE_TOKEN_RE, (full, token) => {
+    if (_BE_LEAD_TOKEN_FIELDS.has(token)) {
+      const v = _beResolveLeadValue(token, lead);
+      if (v) return v;
+    }
+    if (_BE_PROFILE_TOKEN_FIELDS.has(token)) {
+      const v = _beResolveProfileValue(token, profile);
+      if (v) return v;
+    }
+    if (fb[token]) return fb[token];
+    return full; // leave intact
+  });
+}
+
+function _beTokensIn(text) {
+  if (!text) return [];
+  const seen = new Set();
+  const out = [];
+  let m;
+  _BE_TOKEN_RE.lastIndex = 0;
+  while ((m = _BE_TOKEN_RE.exec(text)) !== null) {
+    if (!seen.has(m[1])) { seen.add(m[1]); out.push(m[1]); }
+  }
+  return out;
+}
+
+function _beValidate() {
+  const tokens = Array.from(new Set([..._beTokensIn(_beState.subject),
+                                     ..._beTokensIn(_beState.body)]));
+  const missingByLead = {};
+  for (const lead of _beState.recipients) {
+    const missing = [];
+    for (const tok of tokens) {
+      // Lead-sourced tokens
+      if (_BE_LEAD_TOKEN_FIELDS.has(tok)) {
+        if (_beResolveLeadValue(tok, lead)) continue;
+      }
+      if (_BE_PROFILE_TOKEN_FIELDS.has(tok)) {
+        if (_beResolveProfileValue(tok, _beState.senderProfile)) continue;
+      }
+      // If the token has a default fallback we treat it as covered.
+      if (_BE_DEFAULT_FALLBACKS.hasOwnProperty(tok)) continue;
+      missing.push(tok);
+    }
+    if (missing.length) missingByLead[lead.id] = missing;
+  }
+  return {
+    tokens,
+    missingByLead,
+    missingCount: Object.keys(missingByLead).length,
+  };
+}
+
+async function _beFetchSenderProfile() {
+  // /me returns first_name + last_name + business_name. business_phone /
+  // business_address are not in the user record today — fall through to
+  // empty strings (the unsubscribe footer skips empty pieces).
+  try {
+    const r = await fetch("/me", { credentials: "same-origin" });
+    if (!r.ok) return null;
+    const d = await r.json();
+    const yn = [(d.first_name || "").trim(), (d.last_name || "").trim()]
+                 .filter(Boolean).join(" ");
+    return {
+      your_name:         yn,
+      business_name:     d.business_name || "",
+      business_phone:    d.business_phone || "",
+      business_address:  d.business_address || "",
+    };
+  } catch (_) { return null; }
+}
+
+async function _beFetchTemplates() {
+  try {
+    const r = await fetch("/me/leads/email-templates", { credentials: "same-origin" });
+    if (!r.ok) return [];
+    const d = await r.json();
+    return Array.isArray(d.templates) ? d.templates : [];
+  } catch (_) { return []; }
+}
+
+async function _beFetchConnections() {
+  try {
+    const r = await fetch("/me/email-connections", { credentials: "same-origin" });
+    if (!r.ok) return [];
+    const d = await r.json();
+    const arr = d.connections || d || [];
+    return Array.isArray(arr) ? arr.filter(c => (c.status || "active") === "active") : [];
+  } catch (_) { return []; }
+}
+
+function _beEnsureDialog() {
+  let dlg = document.getElementById("leadsBulkEmailDlg");
+  if (dlg) return dlg;
+  dlg = document.createElement("div");
+  dlg.id = "leadsBulkEmailDlg";
+  dlg.style.cssText = "display:none;position:fixed;inset:0;z-index:90;";
+  dlg.innerHTML = `
+    <style>
+      #leadsBulkEmailDlg .be-backdrop { position:absolute;inset:0;background:rgba(15,23,42,0.45);transition:opacity 160ms ease; }
+      #leadsBulkEmailDlg .be-panel {
+        position:absolute;top:0;right:0;bottom:0;width:min(640px, 100vw);
+        background:#fff;display:flex;flex-direction:column;
+        box-shadow:-12px 0 36px rgba(0,0,0,0.16);
+        animation: beSlideIn 180ms ease;
+      }
+      @keyframes beSlideIn { from { transform: translateX(24px); opacity:0.6; } to { transform: translateX(0); opacity:1; } }
+      #leadsBulkEmailDlg .be-head { display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid #e5e7eb;flex-shrink:0; }
+      #leadsBulkEmailDlg .be-head h2 { margin:0;font-size:17px;font-weight:700;color:#0a0a0a; }
+      #leadsBulkEmailDlg .be-close { background:none;border:none;font-size:22px;cursor:pointer;color:#6b7280;line-height:1;padding:0 4px; }
+      #leadsBulkEmailDlg .be-body { flex:1;overflow:auto;padding:18px 22px; }
+      #leadsBulkEmailDlg .be-foot { padding:14px 22px;border-top:1px solid #e5e7eb;background:#fafafa;flex-shrink:0;display:flex;gap:8px;justify-content:flex-end;align-items:center; }
+      #leadsBulkEmailDlg .be-recip { font-size:13.5px;color:#374151;margin-bottom:14px; }
+      #leadsBulkEmailDlg .be-recip-toggle { background:none;border:none;color:#0a0a0a;font-size:13px;cursor:pointer;text-decoration:underline;padding:0 0 0 6px; }
+      #leadsBulkEmailDlg .be-recip-list { margin-top:6px;padding:8px 12px;background:#f9fafb;border-radius:8px;font-size:12.5px;color:#475569;max-height:160px;overflow:auto; }
+      #leadsBulkEmailDlg .be-grid { display:grid;grid-template-columns:repeat(3, 1fr);gap:10px; }
+      #leadsBulkEmailDlg .be-card { padding:14px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:6px;transition:border-color 120ms; }
+      #leadsBulkEmailDlg .be-card:hover { border-color:#0a0a0a; }
+      #leadsBulkEmailDlg .be-card .be-icon { font-size:22px;line-height:1; }
+      #leadsBulkEmailDlg .be-card .be-name { font-size:13.5px;font-weight:600;color:#0a0a0a; }
+      #leadsBulkEmailDlg .be-card .be-desc { font-size:12px;color:#6b7280;line-height:1.4; }
+      #leadsBulkEmailDlg .be-back { background:none;border:none;color:#0a0a0a;font-size:13px;cursor:pointer;padding:0;margin-bottom:12px;text-decoration:underline; }
+      #leadsBulkEmailDlg .be-field { margin-bottom:12px; }
+      #leadsBulkEmailDlg .be-label { display:block;font-size:12.5px;font-weight:600;color:#374151;margin-bottom:6px; }
+      #leadsBulkEmailDlg .be-input { width:100%;padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:13.5px;background:#fff;color:#0a0a0a;font-family:inherit;box-sizing:border-box; }
+      #leadsBulkEmailDlg .be-textarea { width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:13.5px;background:#fff;color:#0a0a0a;font-family:inherit;min-height:200px;resize:vertical;line-height:1.5;box-sizing:border-box; }
+      #leadsBulkEmailDlg .be-chips { display:flex;flex-wrap:wrap;gap:6px;margin-top:8px; }
+      #leadsBulkEmailDlg .be-chip { padding:5px 10px;border:1px solid #e5e7eb;background:#fff;border-radius:999px;font-size:12px;color:#0a0a0a;cursor:pointer; }
+      #leadsBulkEmailDlg .be-chip:hover { border-color:#0a0a0a;background:#f3f4f6; }
+      #leadsBulkEmailDlg .be-chip-help { font-size:11.5px;color:#6b7280;margin:6px 0 0; }
+      #leadsBulkEmailDlg .be-warn { padding:10px 12px;border:1px solid #fcd34d;background:#fffbeb;border-radius:8px;font-size:12.5px;color:#78350f;margin:10px 0; }
+      #leadsBulkEmailDlg .be-warn .be-warn-link { background:none;border:none;color:#78350f;text-decoration:underline;cursor:pointer;padding:0;font-weight:600;font-size:12.5px; }
+      #leadsBulkEmailDlg .be-preview-pane { padding:12px 14px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;font-size:13px;color:#0a0a0a;white-space:pre-wrap;font-family:inherit;line-height:1.5;max-height:240px;overflow:auto; }
+      #leadsBulkEmailDlg .be-preview-subj { font-weight:700;margin-bottom:8px;font-size:13.5px; }
+      #leadsBulkEmailDlg .be-from { font-size:12.5px;color:#475569;margin:10px 0; }
+      #leadsBulkEmailDlg .be-btn-primary { padding:9px 16px;background:#0a0a0a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer; }
+      #leadsBulkEmailDlg .be-btn-primary[disabled] { opacity:0.5;cursor:not-allowed; }
+      #leadsBulkEmailDlg .be-btn-secondary { padding:9px 16px;background:#fff;color:#0a0a0a;border:1px solid #d1d5db;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer; }
+      #leadsBulkEmailDlg .be-btn-secondary[disabled] { opacity:0.5;cursor:not-allowed; }
+      #leadsBulkEmailDlg .be-progress { padding:14px 0; }
+      #leadsBulkEmailDlg .be-progress-track { height:8px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin:10px 0; }
+      #leadsBulkEmailDlg .be-progress-bar { height:100%;background:#0a0a0a;width:0%;transition:width 160ms ease; }
+      #leadsBulkEmailDlg .be-cta-empty { padding:24px;text-align:center;border:1px dashed #d1d5db;border-radius:10px;color:#374151; }
+      #leadsBulkEmailDlg .be-mini-modal { position:absolute;inset:0;background:rgba(15,23,42,0.55);display:flex;align-items:center;justify-content:center;z-index:5; }
+      #leadsBulkEmailDlg .be-mini-modal .be-mini-card { background:#fff;border-radius:12px;padding:18px 20px;width:min(420px,92%);box-shadow:0 30px 60px rgba(0,0,0,0.3); }
+      #leadsBulkEmailDlg .be-mini-card h3 { margin:0 0 8px;font-size:15px;font-weight:700;color:#0a0a0a; }
+      #leadsBulkEmailDlg .be-mini-card p { margin:0 0 12px;font-size:13px;color:#374151;line-height:1.5; }
+      #leadsBulkEmailDlg .be-mini-list { font-size:12.5px;color:#475569;max-height:160px;overflow:auto;background:#f9fafb;border-radius:8px;padding:8px 12px;margin-bottom:12px; }
+      #leadsBulkEmailDlg .be-mini-actions { display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap; }
+    </style>
+    <div class="be-backdrop" data-be-backdrop></div>
+    <div class="be-panel" role="dialog" aria-label="Send email">
+      <div class="be-head">
+        <h2 id="beTitle">Send email</h2>
+        <button type="button" class="be-close" id="beClose" aria-label="Close">×</button>
+      </div>
+      <div class="be-body" id="beBody"></div>
+      <div class="be-foot" id="beFoot"></div>
+    </div>
+  `;
+  document.body.appendChild(dlg);
+  dlg.querySelector("#beClose").addEventListener("click", _beClose);
+  dlg.querySelector("[data-be-backdrop]").addEventListener("click", _beClose);
+  return dlg;
+}
+
+function _beClose() {
+  if (_beState.pollTimer) {
+    clearInterval(_beState.pollTimer);
+    _beState.pollTimer = null;
+  }
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  if (dlg) dlg.style.display = "none";
+  _beState.open = false;
+}
+
+async function openBulkEmailComposer() {
+  if (!_selectedIds.size) return;
+  const ids = Array.from(_selectedIds);
+  // Snapshot recipients from the current list (selection persists across
+  // filter changes — selected ids may not all be in _filteredLeads).
+  const recipients = [];
+  const byId = new Map(_allLeads.map(l => [l.id, l]));
+  for (const id of ids) {
+    const l = byId.get(id);
+    if (l) recipients.push(l);
+  }
+
+  _beEnsureDialog();
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  dlg.style.display = "block";
+  _beState.open = true;
+  _beState.recipients = recipients;
+  _beState.previewLeadId = recipients[0] ? recipients[0].id : "";
+  _beState.subject = "";
+  _beState.body = "";
+  _beState.templateLoaded = null;
+  _beState.fallbackOverrides = {};
+  _beState.skipMissing = false;
+  _beState.batchId = "";
+  _beState.lastBatch = null;
+
+  _beRender({ loading: true });
+
+  const [profile, templates, connections] = await Promise.all([
+    _beFetchSenderProfile(),
+    _beFetchTemplates(),
+    _beFetchConnections(),
+  ]);
+  _beState.senderProfile = profile;
+  _beState.templates = templates || [];
+  _beState.connections = connections || [];
+
+  if (!profile || !profile.your_name) {
+    _beState.view = "no-profile";
+    _beRender();
+    return;
+  }
+  if (!_beState.connections.length) {
+    _beState.view = "no-connection";
+    _beRender();
+    return;
+  }
+  // Default to most-recently-used.
+  _beState.connections.sort((a, b) => (b.last_used_at || 0) - (a.last_used_at || 0));
+  _beState.fromConnectionId = _beState.connections[0].id;
+
+  _beState.view = "grid";
+  _beRender();
+}
+
+function _beRender(opts) {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  if (!dlg) return;
+  const body = dlg.querySelector("#beBody");
+  const foot = dlg.querySelector("#beFoot");
+  const title = dlg.querySelector("#beTitle");
+  if (opts && opts.loading) {
+    title.textContent = "Send email";
+    body.innerHTML = `<div style="padding:40px;text-align:center;color:#6b7280;font-size:13px;">Loading…</div>`;
+    foot.innerHTML = "";
+    return;
+  }
+  if (_beState.view === "no-profile") {
+    title.textContent = "Set your profile first";
+    body.innerHTML = `
+      <div class="be-cta-empty">
+        <p style="margin:0 0 12px;font-size:14px;font-weight:600;">We need your name before sending.</p>
+        <p style="margin:0 0 16px;font-size:13px;color:#6b7280;">Add your first and last name in Profile, then come back and pick a template.</p>
+        <a href="/dashboard/settings" style="display:inline-block;padding:9px 16px;background:#0a0a0a;color:#fff;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;">Open Profile</a>
+      </div>`;
+    foot.innerHTML = `<button type="button" class="be-btn-secondary" data-be-act="close">Close</button>`;
+    _beWireFooter();
+    return;
+  }
+  if (_beState.view === "no-connection") {
+    title.textContent = "Connect Gmail to send";
+    body.innerHTML = `
+      <div class="be-cta-empty">
+        <p style="margin:0 0 12px;font-size:14px;font-weight:600;">Connect Gmail to send these emails.</p>
+        <p style="margin:0 0 16px;font-size:13px;color:#6b7280;">We send through your own Gmail so replies land in your inbox and the From address is yours.</p>
+        <a href="/auth/google/connect-email" style="display:inline-block;padding:9px 16px;background:#0a0a0a;color:#fff;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;">Connect Gmail</a>
+      </div>`;
+    foot.innerHTML = `<button type="button" class="be-btn-secondary" data-be-act="close">Close</button>`;
+    _beWireFooter();
+    return;
+  }
+  if (_beState.view === "grid")    return _beRenderGrid();
+  if (_beState.view === "editor")  return _beRenderEditor();
+  if (_beState.view === "sending") return _beRenderSending();
+  if (_beState.view === "done")    return _beRenderDone();
+}
+
+function _beRecipientHeader() {
+  const n = _beState.recipients.length;
+  const first10 = _beState.recipients.slice(0, 10).map(l => fullName(l) || l.email || "(no name)");
+  const more = Math.max(0, n - 10);
+  return `
+    <div class="be-recip">
+      <strong>To:</strong> ${n} lead${n !== 1 ? "s" : ""}
+      <button type="button" class="be-recip-toggle" data-be-act="toggle-recip">Show recipients ▾</button>
+      <div class="be-recip-list" id="beRecipList" style="display:none;">
+        ${first10.map(n => escapeHtml(n)).join("<br>")}
+        ${more ? `<div style="margin-top:6px;color:#6b7280;">…and ${more} more</div>` : ""}
+      </div>
+    </div>`;
+}
+
+function _beRenderGrid() {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  dlg.querySelector("#beTitle").textContent = "Pick a template";
+  const body = dlg.querySelector("#beBody");
+  const foot = dlg.querySelector("#beFoot");
+  body.innerHTML = `
+    ${_beRecipientHeader()}
+    <div class="be-grid">
+      ${_beState.templates.map(t => `
+        <button type="button" class="be-card" data-be-tpl="${escapeHtml(t.id)}">
+          <span class="be-icon">${escapeHtml(t.icon || "✉️")}</span>
+          <span class="be-name">${escapeHtml(t.name)}</span>
+          <span class="be-desc">${escapeHtml(t.description || "")}</span>
+        </button>`).join("")}
+    </div>`;
+  foot.innerHTML = `<button type="button" class="be-btn-secondary" data-be-act="close">Cancel</button>`;
+  body.querySelectorAll(".be-card").forEach(c => {
+    c.addEventListener("click", () => _bePickTemplate(c.dataset.beTpl));
+  });
+  _beWireRecipToggle();
+  _beWireFooter();
+}
+
+function _bePickTemplate(id) {
+  const tpl = _beState.templates.find(t => t.id === id);
+  if (!tpl) return;
+  _beState.templateLoaded = tpl;
+  _beState.subject = tpl.subject || "";
+  _beState.body = tpl.body || "";
+  _beState.view = "editor";
+  _beRender();
+}
+
+function _beRenderEditor() {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  dlg.querySelector("#beTitle").textContent = "Send email";
+  const body = dlg.querySelector("#beBody");
+  const foot = dlg.querySelector("#beFoot");
+
+  const valid = _beValidate();
+  const previewLead = _beState.recipients.find(l => l.id === _beState.previewLeadId)
+                     || _beState.recipients[0] || {};
+  const fb = { ..._BE_DEFAULT_FALLBACKS, ..._beState.fallbackOverrides };
+  const previewSubj = substituteClientSide(_beState.subject, previewLead, _beState.senderProfile, fb);
+  const previewBody = substituteClientSide(_beState.body, previewLead, _beState.senderProfile, fb);
+
+  const conn = _beState.connections.find(c => c.id === _beState.fromConnectionId)
+             || _beState.connections[0];
+  const fromBlock = _beState.connections.length > 1
+    ? `<div class="be-from"><strong>Sending from:</strong>
+         <select id="beFromSel" style="margin-left:6px;padding:4px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:12.5px;">
+           ${_beState.connections.map(c => `<option value="${escapeHtml(c.id)}" ${c.id === _beState.fromConnectionId ? "selected" : ""}>${escapeHtml(c.email_address || c.id)}</option>`).join("")}
+         </select> (Connected Gmail)
+       </div>`
+    : `<div class="be-from"><strong>Sending from:</strong> ${escapeHtml(conn ? (conn.email_address || "") : "")} (Connected Gmail)</div>`;
+
+  const warnHtml = (valid.missingCount > 0)
+    ? `<div class="be-warn">
+         ⚠️ ${valid.missingCount} lead${valid.missingCount !== 1 ? "s are" : " is"} missing data.
+         We'll skip ${valid.missingCount === 1 ? "it" : "them"} unless you fix this.
+         <button type="button" class="be-warn-link" data-be-act="see-missing">See which leads</button>
+       </div>`
+    : "";
+
+  body.innerHTML = `
+    <button type="button" class="be-back" data-be-act="back-to-grid">← Back to templates</button>
+    ${_beRecipientHeader()}
+    <div class="be-field">
+      <label class="be-label" for="beSubject">Subject</label>
+      <input type="text" class="be-input" id="beSubject" value="${escapeHtml(_beState.subject)}" placeholder="Subject…" />
+    </div>
+    <div class="be-field">
+      <label class="be-label" for="beBody">Body</label>
+      <textarea class="be-textarea" id="beBodyEdit" placeholder="Write your message…">${escapeHtml(_beState.body)}</textarea>
+      <div class="be-chips" id="beChips">
+        ${_BE_VAR_CHIPS.map(c => `<button type="button" class="be-chip" data-be-token="${escapeHtml(c.token)}">${escapeHtml(c.label)}</button>`).join("")}
+      </div>
+      <p class="be-chip-help">Click any chip to add it. Each one fills with that lead's info when we send.</p>
+    </div>
+    ${warnHtml}
+    <div class="be-field">
+      <label class="be-label" for="bePreviewLead">Preview as</label>
+      <select id="bePreviewLead" class="be-input">
+        ${_beState.recipients.map(l => `<option value="${escapeHtml(l.id)}" ${l.id === _beState.previewLeadId ? "selected" : ""}>${escapeHtml(fullName(l) || l.email || l.id)}</option>`).join("")}
+      </select>
+    </div>
+    <div class="be-field">
+      <label class="be-label">Preview</label>
+      <div class="be-preview-pane">
+        <div class="be-preview-subj">${escapeHtml(previewSubj || "(no subject)")}</div>
+        <div>${escapeHtml(previewBody || "(no body)")}</div>
+      </div>
+    </div>
+    ${fromBlock}
+  `;
+
+  const total = _beState.recipients.length;
+  const eta = Math.max(1, total);
+  foot.innerHTML = `
+    <span style="margin-right:auto;font-size:12px;color:#6b7280;">About ${eta} second${eta !== 1 ? "s" : ""} to send ${total} email${total !== 1 ? "s" : ""}</span>
+    <button type="button" class="be-btn-secondary" disabled title="Coming in Phase 3">Schedule for later →</button>
+    <button type="button" class="be-btn-primary" data-be-act="send-now">Send now</button>
+  `;
+
+  // Wiring
+  const subj = body.querySelector("#beSubject");
+  const bod  = body.querySelector("#beBodyEdit");
+  subj.addEventListener("focus", () => { _beState.lastFocused = "subject"; });
+  bod.addEventListener("focus",  () => { _beState.lastFocused = "body"; });
+  subj.addEventListener("input", () => {
+    _beState.subject = subj.value;
+    _beUpdatePreview();
+    _beUpdateWarn();
+  });
+  bod.addEventListener("input", () => {
+    _beState.body = bod.value;
+    _beUpdatePreview();
+    _beUpdateWarn();
+  });
+  body.querySelectorAll(".be-chip").forEach(c => {
+    c.addEventListener("click", () => _beInsertToken(c.dataset.beToken));
+  });
+  body.querySelector("#bePreviewLead").addEventListener("change", (e) => {
+    _beState.previewLeadId = e.target.value;
+    _beUpdatePreview();
+  });
+  const fromSel = body.querySelector("#beFromSel");
+  if (fromSel) fromSel.addEventListener("change", (e) => {
+    _beState.fromConnectionId = e.target.value;
+  });
+  body.querySelectorAll("[data-be-act]").forEach(b => {
+    b.addEventListener("click", () => _beHandleAct(b.dataset.beAct));
+  });
+  _beWireRecipToggle();
+  _beWireFooter();
+}
+
+function _beUpdatePreview() {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  if (!dlg) return;
+  const pane = dlg.querySelector(".be-preview-pane");
+  if (!pane) return;
+  const previewLead = _beState.recipients.find(l => l.id === _beState.previewLeadId)
+                     || _beState.recipients[0] || {};
+  const fb = { ..._BE_DEFAULT_FALLBACKS, ..._beState.fallbackOverrides };
+  const previewSubj = substituteClientSide(_beState.subject, previewLead, _beState.senderProfile, fb);
+  const previewBody = substituteClientSide(_beState.body, previewLead, _beState.senderProfile, fb);
+  pane.innerHTML = `
+    <div class="be-preview-subj">${escapeHtml(previewSubj || "(no subject)")}</div>
+    <div>${escapeHtml(previewBody || "(no body)")}</div>
+  `;
+}
+
+function _beUpdateWarn() {
+  // Re-render the editor body to refresh the warn strip — cheap, and keeps
+  // the editor logic in one place.
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  if (!dlg) return;
+  const valid = _beValidate();
+  const existing = dlg.querySelector(".be-warn");
+  if (valid.missingCount > 0) {
+    const html = `⚠️ ${valid.missingCount} lead${valid.missingCount !== 1 ? "s are" : " is"} missing data. We'll skip ${valid.missingCount === 1 ? "it" : "them"} unless you fix this. <button type="button" class="be-warn-link" data-be-act="see-missing">See which leads</button>`;
+    if (existing) {
+      existing.innerHTML = html;
+      existing.querySelector("[data-be-act]").addEventListener("click", () => _beHandleAct("see-missing"));
+    } else {
+      // Insert before the preview-as field — find chip help and insert after.
+      const pane = dlg.querySelector(".be-chip-help");
+      if (pane) {
+        const div = document.createElement("div");
+        div.className = "be-warn";
+        div.innerHTML = html;
+        pane.parentElement.insertAdjacentElement("afterend", div);
+        div.querySelector("[data-be-act]").addEventListener("click", () => _beHandleAct("see-missing"));
+      }
+    }
+  } else if (existing) {
+    existing.remove();
+  }
+}
+
+function _beInsertToken(token) {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  const target = (_beState.lastFocused === "subject")
+    ? dlg.querySelector("#beSubject")
+    : dlg.querySelector("#beBodyEdit");
+  if (!target) return;
+  const tok = `{${token}}`;
+  const start = target.selectionStart != null ? target.selectionStart : target.value.length;
+  const end   = target.selectionEnd   != null ? target.selectionEnd   : target.value.length;
+  const v = target.value;
+  target.value = v.slice(0, start) + tok + v.slice(end);
+  const pos = start + tok.length;
+  target.focus();
+  if (target.setSelectionRange) target.setSelectionRange(pos, pos);
+  if (target.id === "beSubject") _beState.subject = target.value;
+  else _beState.body = target.value;
+  _beUpdatePreview();
+  _beUpdateWarn();
+}
+
+function _beWireRecipToggle() {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  if (!dlg) return;
+  const btn = dlg.querySelector("[data-be-act='toggle-recip']");
+  const list = dlg.querySelector("#beRecipList");
+  if (!btn || !list) return;
+  btn.addEventListener("click", () => {
+    const open = list.style.display !== "none";
+    list.style.display = open ? "none" : "block";
+    btn.textContent = open ? "Show recipients ▾" : "Hide recipients ▴";
+  });
+}
+
+function _beWireFooter() {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  if (!dlg) return;
+  dlg.querySelector("#beFoot").querySelectorAll("[data-be-act]").forEach(b => {
+    b.addEventListener("click", () => _beHandleAct(b.dataset.beAct));
+  });
+}
+
+function _beHandleAct(act) {
+  if (act === "close")           return _beClose();
+  if (act === "back-to-grid")    { _beState.view = "grid"; _beRender(); return; }
+  if (act === "send-now")        return _beSendNow();
+  if (act === "see-missing")     return _beShowMissingModal();
+}
+
+function _beShowMissingModal() {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  if (!dlg) return;
+  const valid = _beValidate();
+  const ids = Object.keys(valid.missingByLead);
+  const byId = new Map(_allLeads.map(l => [l.id, l]));
+  const lines = ids.slice(0, 50).map(id => {
+    const l = byId.get(id) || {};
+    const nm = fullName(l) || l.email || id;
+    const tokens = (valid.missingByLead[id] || []).join(", ");
+    return `${escapeHtml(nm)} <span style="color:#9ca3af;">— missing ${escapeHtml(tokens)}</span>`;
+  }).join("<br>");
+  const more = ids.length > 50 ? `<br><span style="color:#6b7280;">…and ${ids.length - 50} more</span>` : "";
+
+  const overlay = document.createElement("div");
+  overlay.className = "be-mini-modal";
+  overlay.innerHTML = `
+    <div class="be-mini-card">
+      <h3>${ids.length} lead${ids.length !== 1 ? "s" : ""} missing data</h3>
+      <p>Pick how to handle these:</p>
+      <div class="be-mini-list">${lines}${more}</div>
+      <div class="be-mini-actions">
+        <button type="button" class="be-btn-secondary" data-mini="cancel">Cancel</button>
+        <button type="button" class="be-btn-secondary" data-mini="fallback">Use fallback</button>
+        <button type="button" class="be-btn-primary"   data-mini="skip">Skip them</button>
+      </div>
+    </div>`;
+  dlg.appendChild(overlay);
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) overlay.remove();
+  });
+  overlay.querySelector("[data-mini='cancel']").addEventListener("click", () => overlay.remove());
+  overlay.querySelector("[data-mini='fallback']").addEventListener("click", () => {
+    _beState.skipMissing = false;
+    overlay.remove();
+    _beUpdatePreview();
+    _beUpdateWarn();
+  });
+  overlay.querySelector("[data-mini='skip']").addEventListener("click", () => {
+    _beState.skipMissing = true;
+    overlay.remove();
+    _beUpdatePreview();
+    _beUpdateWarn();
+  });
+}
+
+async function _beSendNow() {
+  if (!_beState.subject.trim() || !_beState.body.trim()) {
+    _showLeadsToast("Add a subject and body first.", "error");
+    return;
+  }
+  let lead_ids = _beState.recipients.map(l => l.id);
+  if (_beState.skipMissing) {
+    const valid = _beValidate();
+    lead_ids = lead_ids.filter(id => !valid.missingByLead[id]);
+  }
+  if (!lead_ids.length) {
+    _showLeadsToast("No leads to send to after skipping.", "error");
+    return;
+  }
+  _beState.view = "sending";
+  _beState.lastBatch = { sent_count: 0, failed_count: 0, skipped_count: 0,
+                         total_count: lead_ids.length, status: "queued" };
+  _beRender();
+  let res;
+  try {
+    res = await fetch("/me/leads/bulk-email", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lead_ids,
+        subject:            _beState.subject,
+        body:               _beState.body,
+        from_connection_id: _beState.fromConnectionId,
+        fallbacks:          _beState.fallbackOverrides,
+        template_id:        _beState.templateLoaded ? _beState.templateLoaded.id : null,
+        send_now:           true,
+      }),
+    });
+  } catch (_) {
+    _showLeadsToast("Network error.", "error");
+    _beState.view = "editor";
+    _beRender();
+    return;
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    _showLeadsToast(err.hint || err.error || "Couldn't start sending.", "error");
+    _beState.view = "editor";
+    _beRender();
+    return;
+  }
+  const data = await res.json();
+  _beState.batchId = data.batch_id;
+  _beState.lastBatch.total_count = data.total_count;
+  _bePollProgress();
+}
+
+function _bePollProgress() {
+  if (_beState.pollTimer) clearInterval(_beState.pollTimer);
+  _beState.pollTimer = setInterval(async () => {
+    if (!_beState.batchId || !_beState.open) {
+      clearInterval(_beState.pollTimer);
+      _beState.pollTimer = null;
+      return;
+    }
+    try {
+      const r = await fetch(`/me/leads/bulk-email/${encodeURIComponent(_beState.batchId)}`,
+                            { credentials: "same-origin" });
+      if (!r.ok) return;
+      const d = await r.json();
+      _beState.lastBatch = d;
+      if (d.status === "completed" || d.status === "failed") {
+        clearInterval(_beState.pollTimer);
+        _beState.pollTimer = null;
+        _beState.view = "done";
+        _beRender();
+      } else {
+        _beRenderSending();
+      }
+    } catch (_) { /* keep polling */ }
+  }, 2000);
+}
+
+function _beRenderSending() {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  dlg.querySelector("#beTitle").textContent = "Sending…";
+  const body = dlg.querySelector("#beBody");
+  const foot = dlg.querySelector("#beFoot");
+  const b = _beState.lastBatch || {};
+  const total = b.total_count || 0;
+  const done = (b.sent_count || 0) + (b.failed_count || 0) + (b.skipped_count || 0);
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  body.innerHTML = `
+    <div class="be-progress">
+      <div style="font-size:14px;font-weight:600;color:#0a0a0a;">Sending email ${done} of ${total}…</div>
+      <div class="be-progress-track"><div class="be-progress-bar" style="width:${pct}%;"></div></div>
+      <div style="font-size:12.5px;color:#6b7280;">
+        ${b.sent_count || 0} sent · ${b.failed_count || 0} failed · ${b.skipped_count || 0} skipped
+      </div>
+    </div>
+  `;
+  foot.innerHTML = `<button type="button" class="be-btn-secondary" data-be-act="close">Close</button>`;
+  _beWireFooter();
+}
+
+function _beRenderDone() {
+  const dlg = document.getElementById("leadsBulkEmailDlg");
+  dlg.querySelector("#beTitle").textContent = "All done";
+  const body = dlg.querySelector("#beBody");
+  const foot = dlg.querySelector("#beFoot");
+  const b = _beState.lastBatch || {};
+  const sent = b.sent_count || 0;
+  const failed = b.failed_count || 0;
+  const skipped = b.skipped_count || 0;
+  body.innerHTML = `
+    <div style="padding:18px 0;">
+      <div style="font-size:18px;font-weight:700;color:#0a0a0a;margin-bottom:6px;">${sent} sent${failed ? `, ${failed} failed` : ""}${skipped ? `, ${skipped} skipped` : ""}.</div>
+      ${b.status === "failed" ? `<div style="color:#b91c1c;font-size:13px;">Send stopped early.</div>` : ""}
+      ${(failed || skipped)
+         ? `<div style="margin-top:10px;font-size:12.5px;color:#475569;">${failed ? `${failed} couldn't be sent — check those addresses.` : ""}${failed && skipped ? " " : ""}${skipped ? `${skipped} were skipped (missing email or unsubscribed).` : ""}</div>`
+         : ""}
+    </div>`;
+  foot.innerHTML = `<button type="button" class="be-btn-primary" data-be-act="close">Close</button>`;
+  _beWireFooter();
+}
+
+// Expose for debugging / tests.
+window.openBulkEmailComposer = openBulkEmailComposer;
 
 // ─── Module init ─────────────────────────────────────────────────────────────
 
