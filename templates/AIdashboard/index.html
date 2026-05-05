@@ -259,13 +259,23 @@
       box-sizing: border-box;
       margin: 0 auto;
     }
-    /* Full-bleed canvas: when the user is on Outreach AND the Canvas
-       pane is active, drop the .app-body 28px padding + 1280px cap
-       so the flow editor reaches from the right edge of the side nav
-       all the way to the viewport's right edge. */
-    .app-body:has(#outreach.is-active .out-pane[data-out-pane="auto"]:not([hidden])) {
+    /* Full-bleed Outreach: when the user is on the Outreach page,
+       drop the .app-body 28px padding + 1280px cap so every tab
+       (My Flows / Canvas / On-demand) reaches from the right edge
+       of the side nav all the way to the viewport's right edge. */
+    .app-body:has(#outreach.is-active) {
       padding: 0;
       max-width: none;
+      height: calc(100vh - 64px);  /* viewport height minus top bar */
+      overflow: hidden;             /* no page-level scroll */
+    }
+    .app-body:has(#outreach.is-active) #outreach.is-active {
+      height: 100%;
+      overflow: hidden;
+    }
+    .app-body:has(#outreach.is-active) #outreach.is-active > div {
+      height: 100%;
+      overflow: hidden;
     }
     /* Route sections — only the .is-active one renders. The active
        section needs `display: grid` so the inner `grid-column: span 12`
@@ -14391,32 +14401,46 @@
 
         /* ─── Outreach page (merged Engagement + Campaigns) ────────────────── */
         /* Tool-first layout: side nav + dashboard top bar are the
-           only chrome. The Canvas pane goes edge-to-edge — its left
-           edge meets the side nav, its right edge meets the viewport,
-           and its bottom edge meets the viewport bottom. */
+           only chrome. .out-page itself fills the .app-body container
+           (which is constrained to viewport-minus-top-bar). */
         .out-page {
-          display:flex; flex-direction:column; gap:8px;
-          padding:10px 12px 0;
+          display:flex; flex-direction:column; gap:0;
+          padding:0;
           max-width:none; margin:0; width:100%;
+          height:100%;
           box-sizing:border-box;
+          overflow:hidden;
         }
-        /* When the Canvas pane is the active one, cancel the parent's
-           horizontal padding so the flow builder fills full width. */
-        .out-page > .out-pane[data-out-pane="auto"]:not([hidden]) {
-          margin: 0 -12px;
+        /* Tab row gets its own padding so it doesn't touch the edges.
+           Stays at the top, doesn't scroll. */
+        .out-page > .out-tabs {
+          margin:10px 16px 0;
         }
-        /* Force the flow builder to fill the remaining viewport height.
-           Was hardcoded to calc(100vh - 200px) reserving space for the
-           old title block; that block is gone, so reclaim ~70px. */
+        /* Each pane fills the rest of the height. List panes scroll
+           internally; Canvas pane never scrolls (canvas owns its own
+           viewport via React Flow). */
+        .out-page > .out-pane {
+          flex:1; min-height:0;
+          padding:14px 16px 0;
+          overflow:auto;
+        }
+        .out-page > .out-pane[data-out-pane="auto"] {
+          padding:0;            /* canvas reaches the edge */
+          overflow:hidden;
+        }
+        /* Force the flow builder to fill its pane (no fixed pixel
+           height — the parent already constrains us). */
         .out-page .fb-root {
-          height: calc(100vh - 130px) !important;
+          height: 100% !important;
           min-height: 0 !important;
           border-radius: 0 !important;
-          border-left: 0 !important;
-          border-right: 0 !important;
-          border-bottom: 0 !important;
+          border: 0 !important;
         }
-        .out-page.is-flow-builder { padding-top:10px; }
+        /* Hide the inner Canvas/Steps tabs from the React island.
+           The outer tabs (My Flows / Canvas / On-demand) cover the
+           same intent without stacking a second tab row that pushes
+           the canvas further down. */
+        .out-page .fb-view-tabs { display: none !important; }
         .out-page *, .out-page *::before, .out-page *::after { box-sizing:border-box; }
         .out-page-head { padding-bottom:4px; display:flex; flex-direction:column; gap:4px; }
         .out-page-title {
