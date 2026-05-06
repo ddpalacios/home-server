@@ -20620,6 +20620,12 @@
           if (requestedTab) {
             const btn = document.querySelector('[data-out-tab="' + requestedTab + '"]');
             if (btn) btn.click();
+          } else if (sessionStorage.getItem("outreach_came_from_form") === "1") {
+            // Coming from a form's "Add more steps" button — drop the
+            // user straight onto the Canvas tab so they land on their
+            // form's flow instead of the My Flows list.
+            const btn = document.querySelector('[data-out-tab="auto"]');
+            if (btn) btn.click();
           }
         } catch (_) {}
         _outreachMounted = true;
@@ -20661,18 +20667,18 @@
           + ' aria-label="Delete this flow" title="Delete this flow"'
           + ' style="position:absolute;top:10px;right:10px;width:28px;height:28px;'
           +        'border-radius:50%;border:1px solid #e6e9ef;background:#fff;color:#9aa4b2;'
-          +        'cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;'
-          +        'justify-content:center;font-family:inherit;'
-          +        'transition:background .12s ease, color .12s ease, border-color .12s ease;'
-          +        'opacity:0;pointer-events:auto;"'
-          + ' onmouseenter="this.style.background=\'#fef2f2\';this.style.color=\'#b91c1c\';this.style.borderColor=\'#fecaca\'"'
-          + ' onmouseleave="this.style.background=\'#fff\';this.style.color=\'#9aa4b2\';this.style.borderColor=\'#e6e9ef\'">×</button>';
+          +        'cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;'
+          +        'justify-content:center;font-family:inherit;font-weight:700;'
+          +        'transition:background .12s ease, color .12s ease, border-color .12s ease, transform .12s ease;'
+          +        'box-shadow:0 1px 2px rgba(15,23,42,.06);"'
+          + ' onmouseenter="this.style.background=\'#fef2f2\';this.style.color=\'#b91c1c\';this.style.borderColor=\'#fecaca\';this.style.transform=\'scale(1.08)\'"'
+          + ' onmouseleave="this.style.background=\'#fff\';this.style.color=\'#9aa4b2\';this.style.borderColor=\'#e6e9ef\';this.style.transform=\'\'">×</button>';
         return ''
           + '<div class="my-flow-card" data-flow-id="' + (f.id || "") + '"'
           +   ' style="position:relative;background:#fff;border:1px solid #e6e9ef;border-radius:14px;'
           +          'padding:20px 18px 16px;cursor:pointer;transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease;display:flex;flex-direction:column;min-height:170px"'
-          +   ' onmouseenter="this.style.transform=\'translateY(-2px) rotate(.3deg)\';this.style.boxShadow=\'0 8px 22px rgba(20,40,80,.10)\';this.style.borderColor=\'#cdd7e3\';var d=this.querySelector(\'.my-flow-del\');if(d)d.style.opacity=\'1\'"'
-          +   ' onmouseleave="this.style.transform=\'\';this.style.boxShadow=\'\';this.style.borderColor=\'#e6e9ef\';var d=this.querySelector(\'.my-flow-del\');if(d)d.style.opacity=\'0\'">'
+          +   ' onmouseenter="this.style.transform=\'translateY(-2px) rotate(.3deg)\';this.style.boxShadow=\'0 8px 22px rgba(20,40,80,.10)\';this.style.borderColor=\'#cdd7e3\'"'
+          +   ' onmouseleave="this.style.transform=\'\';this.style.boxShadow=\'\';this.style.borderColor=\'#e6e9ef\'">'
           +   deleteBtn
           +   '<div style="font-size:30px;line-height:1;margin-bottom:10px">' + icon + '</div>'
           +   '<div style="font-weight:700;font-size:15.5px;color:#0a0a0a;margin-bottom:3px;'
@@ -23344,6 +23350,20 @@
       // Outreach takes the full viewport (canvas needs every pixel).
       // Other pages keep the standard padded-article layout.
       document.body.classList.toggle("is-outreach-fullbleed", route === "outreach");
+      // Form-context entry: the user clicked "Add more steps" on a
+      // form. Drop them straight onto the Canvas tab so they land on
+      // their form's flow, not the My Flows list. Runs every time we
+      // route to outreach, not just on first mount.
+      if (route === "outreach") {
+        try {
+          if (sessionStorage.getItem("outreach_came_from_form") === "1") {
+            requestAnimationFrame(() => {
+              const btn = document.querySelector('[data-out-tab="auto"]');
+              if (btn && !btn.classList.contains("is-active")) btn.click();
+            });
+          }
+        } catch (_) {}
+      }
       try { history.replaceState(null, "", "#" + route); } catch (_) {}
       // Fire the section's deferred data loader on first visit.
       _runSectionLoader(route);
