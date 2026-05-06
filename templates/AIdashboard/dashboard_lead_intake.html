@@ -26,54 +26,84 @@
     margin:0; color:var(--sub); font-size:16px;
   }
 
-  /* Channel cards */
+  /* Channel cards.
+     One card = one channel = one decision. Big emoji, short name,
+     1-3 word subtitle, ONE status pill, ONE CTA. The whole card is
+     the click target — the button is just a visible affordance. */
   .channels {
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-    gap:14px; margin-bottom:28px;
+    gap:14px; margin-bottom:36px;
   }
   .ch {
     background:var(--card); border:1px solid var(--line);
-    border-radius:14px; padding:18px 16px 16px; cursor:pointer;
-    position:relative; transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
-    display:flex; flex-direction:column; min-height:160px;
+    border-radius:14px; padding:22px 18px 18px;
+    cursor:pointer; position:relative;
+    transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    display:flex; flex-direction:column;
+    min-height:200px;
+    text-align:left;
   }
-  .ch:hover { transform:translateY(-2px);
-              box-shadow:0 6px 18px rgba(20,40,80,.07);
-              border-color:#cdd7e3; }
-  .ch[aria-disabled="true"] { opacity:.55; cursor:not-allowed;
-              transform:none; box-shadow:none; }
+  .ch:hover {
+    transform:translateY(-2px) scale(1.01);
+    box-shadow:0 8px 22px rgba(20,40,80,.10);
+    border-color:#cdd7e3;
+  }
+  .ch[aria-disabled="true"] {
+    opacity:.5; cursor:not-allowed;
+  }
+  .ch[aria-disabled="true"]:hover {
+    transform:none; box-shadow:none; border-color:var(--line);
+  }
+  /* Big emoji icon — no background tile, the emoji carries the
+     channel's identity. */
   .ch .icon {
-    width:42px; height:42px; border-radius:11px;
-    display:flex; align-items:center; justify-content:center;
-    font-size:24px; line-height:1; margin-bottom:10px;
+    font-size:40px; line-height:1; margin-bottom:14px;
   }
-  .ch[data-tone="form"]  .icon { background:#e7f0fb; }
-  .ch[data-tone="email"] .icon { background:#fef5e7; }
-  .ch[data-tone="phone"] .icon { background:#e7f7ec; }
-  .ch[data-tone="dm"]    .icon { background:#f3e7fb; }
-  .ch h3 { margin:0 0 4px; font-size:16px; font-weight:600; }
-  .ch p  { margin:0 0 12px; color:var(--sub); font-size:13px; line-height:1.45; }
+  .ch h3 {
+    margin:0 0 2px; font-size:18px; font-weight:700;
+    color:var(--fg); letter-spacing:-0.01em;
+  }
+  .ch .ch-sub {
+    margin:0 0 14px; color:var(--sub);
+    font-size:12.5px; line-height:1.35;
+  }
   .ch .pill {
     display:inline-flex; align-items:center; gap:6px;
-    font-size:11.5px; font-weight:600; padding:3px 9px;
+    font-size:11px; font-weight:700; letter-spacing:.04em;
+    text-transform:uppercase;
+    padding:4px 10px;
     border-radius:99px; align-self:flex-start;
   }
-  .ch .pill .dot { width:6px; height:6px; border-radius:99px; background:currentColor; }
-  .pill-on   { background:#e6f6ec; color:#0a8a3a; }
-  .pill-off  { background:#fdecec; color:#c0392b; }
-  .pill-soon { background:#eef0f3; color:#5a6470; }
-  .ch .stat { font-size:11.5px; color:var(--sub); margin-top:auto; padding-top:10px; }
+  .ch .pill .dot {
+    width:7px; height:7px; border-radius:99px; background:currentColor;
+  }
+  /* Single source of truth for state — set on .pill data-state. */
+  .ch .pill[data-state="ready"]    { background:#e6f6ec; color:#0a8a3a; }
+  .ch .pill[data-state="off"]      { background:#eef0f3; color:#5a6470; }
+  .ch .pill[data-state="off"] .dot { background:#9aa4b2; }
+  .ch .pill[data-state="soon"]     { background:#eef0f3; color:#5a6470; }
+  .ch .pill[data-state="soon"] .dot{ background:#9aa4b2; }
+  /* CTA — single, prominent, large enough to tap. */
+  .ch .stat {
+    font-size:11.5px; color:var(--sub);
+    margin-top:auto; padding-top:10px;
+  }
   .ch .cta {
-    display:inline-block; margin-top:10px; align-self:flex-start;
+    display:inline-flex; align-items:center; justify-content:center;
+    margin-top:14px; align-self:stretch;
     background:var(--accent); color:#fff; border:0;
-    padding:8px 14px; border-radius:8px; font:inherit; font-size:13px;
-    font-weight:600; cursor:pointer;
+    padding:11px 14px; border-radius:10px;
+    font:inherit; font-size:13.5px; font-weight:600;
+    cursor:pointer; min-height:44px;
+    transition:background .12s ease, transform .12s ease;
   }
+  .ch .cta:hover { background:#0e4d8a; transform:translateY(-1px); }
   .ch .cta-secondary {
-    background:transparent; color:var(--accent);
-    border:1px solid var(--accent);
+    background:#fff; color:var(--accent);
+    border:1.5px solid var(--accent);
   }
+  .ch .cta-secondary:hover { background:#f0f6fb; }
 
   /* Forms section */
   .section-h {
@@ -358,38 +388,35 @@
     <div class="ch" data-tone="form" id="ch-form">
       <div class="icon" aria-hidden="true">📝</div>
       <h3>Form</h3>
-      <p>People fill it out. You get the lead.</p>
-      <span class="pill pill-on" id="ch-form-pill" hidden><span class="dot"></span><span id="ch-form-pill-text">Ready</span></span>
-      <span class="pill pill-off" id="ch-form-pill-off"><span class="dot"></span><span>Not set up</span></span>
-      <button class="cta" id="ch-form-cta">Make a form</button>
+      <p class="ch-sub">On your site</p>
+      <span class="pill" id="ch-form-pill" data-state="off"><span class="dot"></span><span class="ch-pill-text">Set up</span></span>
+      <button class="cta" id="ch-form-cta">+ Make form</button>
       <div class="stat" id="ch-form-meta"></div>
     </div>
 
     <div class="ch" data-tone="email" id="ch-email">
-      <div class="icon" aria-hidden="true">✉️</div>
+      <div class="icon" aria-hidden="true">📧</div>
       <h3>Email</h3>
-      <p>People email you. We catch it.</p>
-      <span class="pill pill-on" id="ch-email-pill" hidden><span class="dot"></span>Connected</span>
-      <span class="pill pill-off" id="ch-email-pill-off"><span class="dot"></span>Not connected</span>
+      <p class="ch-sub">Catch every email</p>
+      <span class="pill" id="ch-email-pill" data-state="off"><span class="dot"></span><span class="ch-pill-text">Not connected</span></span>
       <button class="cta" id="ch-email-cta">Connect</button>
       <div class="stat" id="ch-email-meta"></div>
     </div>
 
     <div class="ch" data-tone="phone" id="ch-phone">
-      <div class="icon" aria-hidden="true">📱</div>
+      <div class="icon" aria-hidden="true">💬</div>
       <h3>Texts</h3>
-      <p>People text you. You get the lead.</p>
-      <span class="pill pill-on" id="ch-phone-pill" hidden><span class="dot"></span>Ready</span>
-      <span class="pill pill-off" id="ch-phone-pill-off"><span class="dot"></span>Not set up</span>
+      <p class="ch-sub">Reply by SMS</p>
+      <span class="pill" id="ch-phone-pill" data-state="off"><span class="dot"></span><span class="ch-pill-text">Set up</span></span>
       <button class="cta" id="ch-phone-cta">Set up</button>
       <div class="stat" id="ch-phone-meta"></div>
     </div>
 
-    <div class="ch" data-tone="dm" aria-disabled="true">
-      <div class="icon" aria-hidden="true">💬</div>
+    <div class="ch" data-tone="dm" aria-disabled="true" id="ch-dm">
+      <div class="icon" aria-hidden="true">📲</div>
       <h3>DMs</h3>
-      <p>Soon!</p>
-      <span class="pill pill-soon"><span class="dot"></span>Coming soon</span>
+      <p class="ch-sub">Instagram &amp; Facebook</p>
+      <span class="pill" data-state="soon"><span class="dot"></span><span class="ch-pill-text">Soon</span></span>
     </div>
   </div>
 
@@ -418,48 +445,48 @@
       try { document.execCommand("copy"); toast("Copied"); } catch(_){}
       document.body.removeChild(i); }
   }
-  function setPill(id, idOff, on, onText){
-    var p = $(id), pOff = $(idOff);
-    if (p)    p.hidden    = !on;
-    if (pOff) pOff.hidden = on;
-    if (on && onText) {
-      var t = p ? p.querySelector("span:last-child") : null;
-      if (t) t.textContent = onText;
-    }
+  // ONE pill per card. setPill writes both the data-state (drives
+  // colour) and the visible label so the user only ever sees a
+  // single, accurate status.
+  //   state:
+  //     "ready" — set up + working (green)
+  //     "off"   — needs setup (gray)
+  //     "soon"  — coming soon (gray, hourglass dot)
+  function setPill(pillId, state, label){
+    var p = $(pillId);
+    if (!p) return;
+    p.setAttribute("data-state", state);
+    var t = p.querySelector(".ch-pill-text");
+    if (t) t.textContent = label;
   }
   function loadForms(){
     fetch("/me/forms", { credentials:"same-origin" }).then(function(r){ return r.json(); }).then(function(d){
       var forms = (d && d.forms) || [];
       var hasForms = forms.length > 0;
-      var hasFlowAttached = forms.some(function(f){ return !!f.attached_flow_id; });
-      var ready = hasForms && hasFlowAttached;
-      // Three states for the form-channel pill:
-      //   none      → "Not set up"        (red pill)
-      //   no-flow   → "Needs flow"        (red pill, custom text)
-      //   ready     → "Ready · N form(s)" (green pill)
-      var label = ready
-        ? (forms.length + " form" + (forms.length === 1 ? "" : "s"))
-        : (hasForms ? "Needs flow" : "");
-      setPill("ch-form-pill", "ch-form-pill-off", ready, label);
-      // Override the "Not set up" pill text when forms exist but no flow.
-      var offEl = $("ch-form-pill-off");
-      if (offEl) {
-        var offText = offEl.querySelector("span:last-child");
-        if (offText) offText.textContent = hasForms ? "Needs flow" : "Not set up";
-      }
+      // Form channel — single pill. "Ready" once at least one form
+      // exists; "Set up" when there are zero forms.
+      setPill("ch-form-pill", hasForms ? "ready" : "off",
+              hasForms ? "Ready" : "Set up");
       var formCta = $("ch-form-cta");
       if (formCta) {
-        formCta.textContent = ready ? "+ New form" : "Create your first form";
+        formCta.textContent = hasForms ? "+ Make form" : "+ Make form";
+        formCta.classList.remove("cta-secondary");
         formCta.onclick = function(ev){ ev.stopPropagation(); openBuilder(); };
       }
+      // Whole-card click target — anywhere on the form card opens
+      // the builder. Status pill / button are visible affordances on
+      // top of the same action.
+      var formCard = $("ch-form");
+      if (formCard) formCard.onclick = function(){ openBuilder(); };
       var topCreate = $("top-create");
       if (topCreate) {
-        topCreate.hidden = !ready;
+        topCreate.hidden = true;
         topCreate.onclick = function(){ openBuilder(); };
       }
       var totalLeads = forms.reduce(function(a,f){ return a + (f.lead_count || 0); }, 0);
-      $("ch-form-meta").textContent = ready
-        ? (totalLeads + " lead" + (totalLeads === 1 ? "" : "s"))
+      $("ch-form-meta").textContent = hasForms
+        ? (forms.length + " form" + (forms.length === 1 ? "" : "s")
+           + " · " + totalLeads + " lead" + (totalLeads === 1 ? "" : "s"))
         : "";
       if (forms.length === 0) { $("forms-empty").hidden = false; $("forms-list").hidden = true; renderEmpty(); }
       else { $("forms-empty").hidden = true; $("forms-list").hidden = false; renderList(forms); }
@@ -473,11 +500,12 @@
         CHANNELS = (d && d.channels) || {};
         var em = CHANNELS.email || {};
         var ph = CHANNELS.phone || {};
-        // Email card
-        setPill("ch-email-pill", "ch-email-pill-off", !!em.ready, "Connected");
+        // Email — single pill, single CTA per state.
+        setPill("ch-email-pill", em.ready ? "ready" : "off",
+                em.ready ? "Connected" : "Not connected");
         var emCta = $("ch-email-cta");
         if (emCta) {
-          emCta.textContent = em.ready ? "Manage" : "Connect Gmail";
+          emCta.textContent = em.ready ? "Manage" : "Connect";
           emCta.classList.toggle("cta-secondary", !!em.ready);
           emCta.onclick = function(ev){ ev.stopPropagation(); openEmailModal(em); };
         }
@@ -486,11 +514,12 @@
           : "";
         $("ch-email").onclick = function(){ openEmailModal(em); };
 
-        // Phone card
-        setPill("ch-phone-pill", "ch-phone-pill-off", !!ph.ready, "Ready");
+        // Phone — single pill, single CTA per state.
+        setPill("ch-phone-pill", ph.ready ? "ready" : "off",
+                ph.ready ? "Ready" : "Set up");
         var phCta = $("ch-phone-cta");
         if (phCta) {
-          phCta.textContent = ph.ready ? "Show link" : "Set up";
+          phCta.textContent = ph.ready ? "Manage" : "Set up";
           phCta.classList.toggle("cta-secondary", !!ph.ready);
           phCta.onclick = function(ev){ ev.stopPropagation(); openPhoneModal(ph); };
         }
@@ -498,6 +527,11 @@
           ? ((ph.phone_number || "") + " · " + (ph.leads_30d || 0) + " lead" + (ph.leads_30d === 1 ? "" : "s"))
           : "";
         $("ch-phone").onclick = function(){ openPhoneModal(ph); };
+
+        // DMs — coming soon. Click does nothing visible; show a brief
+        // toast so the user knows it isn't broken.
+        var dmCard = $("ch-dm");
+        if (dmCard) dmCard.onclick = function(){ toast("We're working on it."); };
       })
       .catch(function(){
         $("ch-email-meta").textContent = "Status unavailable";
