@@ -331,7 +331,7 @@
           <div class="title">Gmail</div>
           <div class="sub" id="emailStatusSub">Not connected yet.</div>
         </div>
-        <a class="btn-connect" id="connectEmailBtn" href="/auth/google/connect-email?onboarding=1&amp;return_step=3">Connect Gmail</a>
+        <a class="btn-connect" id="connectEmailBtn" target="_top" href="/auth/google/connect-email?onboarding=1&amp;return_step=3">Connect Gmail</a>
       </div>
       <div class="err" id="err3"></div>
     </section>
@@ -345,7 +345,7 @@
           <div class="title">Google Calendar</div>
           <div class="sub" id="calStatusSub">Not connected yet.</div>
         </div>
-        <a class="btn-connect" id="connectCalBtn" href="/auth/google/connect-calendar?onboarding=1&amp;return_step=4">Connect Calendar</a>
+        <a class="btn-connect" id="connectCalBtn" target="_top" href="/auth/google/connect-calendar?onboarding=1&amp;return_step=4">Connect Calendar</a>
       </div>
       <div class="err" id="err4"></div>
     </section>
@@ -859,6 +859,17 @@
             ok = await saveDigest();
           } else if (step === 8) {
             await postJson("/me/onboarding/complete", {});
+            // When this wizard runs inside the dashboard SPA shell as
+            // an iframe (#onboarding section), navigate the PARENT
+            // window to #home — otherwise the dashboard would load
+            // INSIDE the iframe, which looks like a wizard-within-a-
+            // wizard. window.top guards against any deeper nesting.
+            try {
+              if (window.top && window.top !== window) {
+                window.top.location.href = "/dashboard#home";
+                return;
+              }
+            } catch (_) { /* cross-origin shouldn't happen here */ }
             window.location.href = "/dashboard#home";
             return;
           }
