@@ -3802,8 +3802,11 @@
         try {
           var r = await fetch("/dashboard/linkedin/api/accounts/"
               + encodeURIComponent(a.platform) + "/"
-              + encodeURIComponent(a.account_id) + "?cancel_pending=1", {
-            method:"DELETE", credentials:"same-origin",
+              + encodeURIComponent(a.account_id), {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ op: "delete", cancel_pending: true }),
           });
           if (!r.ok) { toast("Couldn't disconnect."); return; }
           toast("Disconnected.");

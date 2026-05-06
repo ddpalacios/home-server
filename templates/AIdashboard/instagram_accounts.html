@@ -491,12 +491,19 @@
                 + encodeURIComponent(a.account_id)
             : "/dashboard/instagram/api/accounts/"
                 + encodeURIComponent(a.ig_account_id);
-          var qs = "";
-          if (pick === "cancel") qs = "?cancel_pending=1";
-          else if (pick === "pause") qs = "?pause_only=1";
-          var method = (pick === "pause") ? "DELETE" : "DELETE";
-          var r = await fetch(url + qs, {
-            method: method, credentials:"same-origin",
+          // The C proxy at port 9030 only forwards GET/POST, so
+          // disconnect goes via POST {op:"delete"} with the
+          // cancel_pending / pause_only flags in the body. The
+          // backend accepts both DELETE and this POST shape.
+          var r = await fetch(url, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              op: "delete",
+              cancel_pending: pick === "cancel",
+              pause_only:     pick === "pause",
+            }),
           });
           if (!r.ok) {
             toast("Couldn't disconnect.");
