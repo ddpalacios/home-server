@@ -300,6 +300,18 @@
       height: 100%;
       overflow: hidden;
     }
+    /* Lead intake also fullbleeds so the iframe fills the whole main
+       area — no padding gutter, no implicit height cap. The iframe
+       owns its own scroll inside; the form-builder modal lives inside
+       it as position:fixed and covers the iframe's full visible
+       viewport instead of being smushed into a centered card. */
+    .app-body [data-route-section="leadIntake"].is-active {
+      padding: 0;
+      overflow: hidden;
+    }
+    [data-route-section="leadIntake"].is-active > div {
+      height: 100%;
+    }
     /* Route sections — only the .is-active one renders. The active
        section needs `display: grid` so the inner `grid-column: span 12`
        children fill the full row (otherwise content squishes to the
@@ -15378,17 +15390,18 @@
       </section>
 
       <!-- ─── Lead intake — iframed for source isolation but visually
-           seamless: transparent background, no rounded chrome, height
-           tracks the iframe's content via postMessage so the dashboard's
-           scroll handles the page (no nested scrollbar). ───────────── -->
+           seamless. Iframe fills the entire route section; its body
+           owns the internal scroll. The form builder modal is
+           position:fixed inside the iframe, so it covers the iframe's
+           full visible viewport (no smushing into a sliver). ──────── -->
       <section class="grid" id="leadIntake" data-route-section="leadIntake" hidden>
-        <div style="grid-column: span 12;">
+        <div style="grid-column: span 12; height:100%;">
           <iframe
             id="leadIntakeFrame"
             src="about:blank"
             title="Lead intake"
             loading="lazy"
-            style="width:100%;height:auto;min-height:600px;border:0;background:transparent;display:block"
+            style="width:100%;height:100%;min-height:0;border:0;background:transparent;display:block"
             data-src="/dashboard/lead-intake"
           ></iframe>
         </div>
@@ -20557,17 +20570,9 @@
         var src = fr.getAttribute("data-src");
         if (src && fr.getAttribute("src") !== src) fr.setAttribute("src", src);
       };
-      // Listen for the lead-intake iframe's height pings and resize
-      // it to match — that way the iframe never shows its own
-      // scrollbar; the dashboard's .app-body owns the scroll.
-      window.addEventListener("message", function(e){
-        var msg = e && e.data;
-        if (!msg || msg.type !== "lead-intake-height") return;
-        var fr = document.getElementById("leadIntakeFrame");
-        if (!fr) return;
-        var h = Math.max(600, parseInt(msg.height, 10) || 0);
-        fr.style.height = h + "px";
-      });
+      // (autosize message handler removed — the iframe now fills the
+      //  route section at 100% height and scrolls internally; modal
+      //  uses position:fixed against the iframe viewport directly.)
 
       // Engagement page: lazy-loads web/src/routes/engagement.js then calls
       // window.loadEngagementSection to fetch sequences + render funnel stages.

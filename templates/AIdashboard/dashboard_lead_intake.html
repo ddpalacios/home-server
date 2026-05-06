@@ -12,10 +12,17 @@
   }
   * { box-sizing:border-box; }
   /* Body background matches the parent dashboard so the iframe
-     reads as part of the page, not a card embedded on it. */
+     reads as part of the page, not a card embedded on it. The iframe
+     itself is sized to the route section's viewport (see the parent
+     dashboard); body owns its own scroll so the form-builder modal,
+     which is position:fixed, behaves against the iframe's actual
+     viewport instead of an auto-resized full-content height. */
   body { margin:0; font:14.5px/1.5 -apple-system,Segoe UI,Roboto,sans-serif; color:var(--fg); background:transparent; }
-  html { background:transparent; }
-  .wrap { max-width:980px; margin:0 auto; padding:32px 16px 60px; }
+  html, body { height:100%; }
+  body { overflow-y:auto; overflow-x:hidden; }
+  /* Wrap goes full width — caps were the source of "smushed" content
+     when the iframe is wider than 980px. */
+  .wrap { max-width:none; margin:0; padding:32px 32px 60px; }
 
   /* Page header — flat, no nested card. The page IS the surface. */
   .page-h {
@@ -1465,33 +1472,8 @@
     } catch(_){}
   })();
 
-  // Auto-resize: tell the dashboard frame how tall this content is so
-  // the iframe height matches and no internal scrollbar appears. The
-  // dashboard's .app-body owns the page-level scroll instead.
-  (function autosize(){
-    if (window.top === window.self) return;  // not iframed; bail
-    var post = function(){
-      try {
-        var h = Math.max(
-          document.body ? document.body.scrollHeight : 0,
-          document.documentElement ? document.documentElement.scrollHeight : 0
-        );
-        window.parent.postMessage({ type: "lead-intake-height", height: h }, "*");
-      } catch(_){}
-    };
-    if (window.ResizeObserver) {
-      try { new ResizeObserver(post).observe(document.body); } catch(_){}
-    }
-    var mo;
-    try {
-      mo = new MutationObserver(function(){ post(); });
-      mo.observe(document.body, { subtree: true, childList: true, attributes: true });
-    } catch(_){}
-    window.addEventListener("load", post);
-    window.addEventListener("resize", post);
-    setTimeout(post, 50);
-    setTimeout(post, 400);
-  })();
+  // (autosize removed — iframe is now full-viewport-height in the
+  //  dashboard route section and scrolls internally.)
 </script>
 </body>
 </html>
