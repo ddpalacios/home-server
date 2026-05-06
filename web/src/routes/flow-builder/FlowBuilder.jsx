@@ -2788,6 +2788,47 @@ const STYLES = `
     50%      { opacity: 1;  transform: scale(1.05); }
   }
 
+  /* Loading bar — pinned to the top edge of the canvas during the
+     hydrate window (between mount and the first /me/flows fetch
+     resolving). The bar is an indeterminate slider, so the user
+     gets visible feedback that "the canvas is doing something" even
+     when total wait is sub-second. Disappears the moment the flow
+     is rendered. */
+  .fb-loading {
+    position: absolute; top: 0; left: 0; right: 0;
+    z-index: 8;
+    pointer-events: none;
+    display: flex; flex-direction: column; align-items: stretch;
+  }
+  .fb-loading-bar {
+    height: 3px;
+    background: rgba(22,163,74,.10);
+    overflow: hidden;
+    position: relative;
+  }
+  .fb-loading-bar-fill {
+    position: absolute;
+    top: 0; bottom: 0;
+    left: -40%;
+    width: 40%;
+    background: linear-gradient(90deg, transparent 0%, var(--fb-green) 50%, transparent 100%);
+    animation: fbLoadingSlide 1.1s ease-in-out infinite;
+  }
+  @keyframes fbLoadingSlide {
+    from { left: -40%; }
+    to   { left: 100%; }
+  }
+  .fb-loading-label {
+    align-self: flex-start;
+    margin: 8px 0 0 12px;
+    padding: 5px 12px;
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(6px);
+    border: 1px solid var(--fb-border);
+    border-radius: 999px;
+    font-size: 12px; font-weight: 600; color: #4b5563;
+  }
+
   /* ✕ button at the midpoint of every edge. Hidden by default;
      fades in when the user hovers the 32×32 wrap area sitting on
      top of the edge midpoint. Click → the edge is removed and the
@@ -5228,6 +5269,12 @@ export default function FlowBuilder() {
       >
         <FirstTimeGuide />
         <TourReplayButton />
+        {!hydrated && (
+          <div className="fb-loading" role="status" aria-live="polite" aria-label="Loading your flow">
+            <div className="fb-loading-bar"><div className="fb-loading-bar-fill" /></div>
+            <div className="fb-loading-label">Loading your flow…</div>
+          </div>
+        )}
         <div className={`fb-save fb-save-${saveStatus}`} role="status" aria-live="polite">
           {saveStatus === "saving" && <><span className="fb-save-dot" /> Saving…</>}
           {saveStatus === "saved"  && <>✓ Saved</>}
