@@ -20682,6 +20682,59 @@
         return Math.floor(s/(86400*30)) + "mo ago";
       }
 
+      // ── Flow card badge palette ──────────────────────────────────
+      // Status badge: state of the flow itself.
+      //   active   → green
+      //   paused   → gray
+      //   draft    → yellow
+      // Source badge: where the flow was created from.
+      //   standalone → amber
+      //   form       → blue
+      //   email      → purple
+      //   sms        → green
+      //   builtin    → neutral gray
+      // Both palettes are intentionally distinct so a glance tells
+      // the user "what state is this in?" vs "where did this come
+      // from?" without having to read.
+      function _flowCardBadges(f){
+        // ── Source ─────────
+        var src = { txt: "✨ Flow", color: "#5a6470", bg: "#eef0f3" };
+        if (f.builtin) {
+          src = { txt: "✨ Built-in", color: "#5a6470", bg: "#eef0f3" };
+        } else if (f.form_id || (f.id && f.id.indexOf("form:") === 0)) {
+          src = {
+            txt: "📝 " + (f.name ? f.name.replace(/\s+flow\s*$/i, "") : "Form"),
+            color: "#185fa5", bg: "#eaf3fc",
+          };
+        } else if (f.id === "default") {
+          src = { txt: "⚡ Standalone", color: "#7a5a00", bg: "#fef5e7" };
+        } else if ((f.source || "") === "email") {
+          src = { txt: "📧 Email", color: "#6b21a8", bg: "#f3e8ff" };
+        } else if ((f.source || "") === "sms") {
+          src = { txt: "💬 Texts", color: "#0a8a3a", bg: "#e6f6ec" };
+        }
+        // ── Status ─────────
+        var status = (f.status || "active").toLowerCase();
+        var st;
+        if (status === "paused") {
+          st = { txt: "Paused", color: "#5a6470", bg: "#eef0f3", dot: "#9aa4b2" };
+        } else if (status === "draft") {
+          st = { txt: "Draft", color: "#a86200", bg: "#fef5e7", dot: "#f0b41c" };
+        } else {
+          st = { txt: "Active", color: "#0a8a3a", bg: "#e6f6ec", dot: "#16a34a" };
+        }
+        var pill = function(p){
+          return '<span style="display:inline-flex;align-items:center;gap:5px;'
+            + 'font-size:11.5px;font-weight:700;letter-spacing:.02em;'
+            + 'background:' + p.bg + ';color:' + p.color + ';'
+            + 'padding:3px 9px;border-radius:99px;max-width:100%;'
+            + 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
+            + (p.dot ? '<span style="width:6px;height:6px;border-radius:99px;background:' + p.dot + '"></span>' : '')
+            + p.txt + '</span>';
+        };
+        return pill(st) + pill(src);
+      }
+
       function _myFlowsCardHtml(f) {
         var icon = f.icon || "✨";
         var stepCount = (f.step_count || 0);
@@ -20689,64 +20742,35 @@
         var editedTxt = (f.last_edited
           ? "Edited " + _myFlowsTimeAgo(f.last_edited)
           : (f.builtin ? "Built-in" : "New"));
-        // Channel attribution badge: every flow's source at a glance.
-        // Form-attached flows show the form name; standalone flow is
-        // labelled as such; built-ins get a plain label.
-        var attrText = "", attrColor = "#5a6470", attrBg = "#eef0f3";
-        if (f.builtin) {
-          attrText = "✨ Built-in";
-        } else if (f.form_id || (f.id && f.id.indexOf("form:") === 0)) {
-          attrText = "📝 " + (f.name ? f.name.replace(/\s+flow\s*$/i, "") : "Form");
-          attrColor = "#185fa5"; attrBg = "#eaf3fc";
-        } else if (f.id === "default") {
-          attrText = "⚡ Standalone";
-          attrColor = "#7a5a00"; attrBg = "#fef5e7";
-        } else {
-          attrText = "✨ Flow";
-        }
-        var attrPill =
-            '<span style="display:inline-flex;align-items:center;gap:5px;'
-          +        'font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;'
-          +        'background:' + attrBg + ';color:' + attrColor + ';'
-          +        'padding:3px 9px;border-radius:99px;max-width:100%;'
-          +        'overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
-          +   attrText
-          + '</span>';
-        // Delete affordance for non-builtins. Built-ins (e.g. First Hello)
-        // are read-only — no delete button.
         var deleteBtn = f.builtin ? '' :
             '<button type="button" class="my-flow-del" data-flow-del="' + (f.id || "") + '"'
           + ' aria-label="Delete this flow" title="Delete this flow"'
-          + ' style="position:absolute;top:10px;right:10px;width:28px;height:28px;'
+          + ' style="position:absolute;top:10px;right:10px;width:26px;height:26px;'
           +        'border-radius:50%;border:1px solid #e6e9ef;background:#fff;color:#9aa4b2;'
-          +        'cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;'
+          +        'cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;'
           +        'justify-content:center;font-family:inherit;font-weight:700;'
           +        'transition:background .12s ease, color .12s ease, border-color .12s ease, transform .12s ease;'
-          +        'box-shadow:0 1px 2px rgba(15,23,42,.06);"'
+          +        'opacity:0;'
+          + '"'
           + ' onmouseenter="this.style.background=\'#fef2f2\';this.style.color=\'#b91c1c\';this.style.borderColor=\'#fecaca\';this.style.transform=\'scale(1.08)\'"'
           + ' onmouseleave="this.style.background=\'#fff\';this.style.color=\'#9aa4b2\';this.style.borderColor=\'#e6e9ef\';this.style.transform=\'\'">×</button>';
         return ''
           + '<div class="my-flow-card" data-flow-id="' + (f.id || "") + '"'
           +   ' style="position:relative;background:#fff;border:1px solid #e6e9ef;border-radius:14px;'
-          +          'padding:20px 18px 16px;cursor:pointer;transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease;display:flex;flex-direction:column;min-height:170px"'
-          +   ' onmouseenter="this.style.transform=\'translateY(-2px) rotate(.3deg)\';this.style.boxShadow=\'0 8px 22px rgba(20,40,80,.10)\';this.style.borderColor=\'#cdd7e3\'"'
-          +   ' onmouseleave="this.style.transform=\'\';this.style.boxShadow=\'\';this.style.borderColor=\'#e6e9ef\'">'
+          +          'padding:20px;cursor:pointer;'
+          +          'transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease;'
+          +          'display:flex;flex-direction:column;gap:8px;min-height:170px"'
+          +   ' onmouseenter="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 22px rgba(20,40,80,.10)\';this.style.borderColor=\'#cdd7e3\';var d=this.querySelector(\'.my-flow-del\');if(d)d.style.opacity=\'1\'"'
+          +   ' onmouseleave="this.style.transform=\'\';this.style.boxShadow=\'\';this.style.borderColor=\'#e6e9ef\';var d=this.querySelector(\'.my-flow-del\');if(d)d.style.opacity=\'0\'">'
           +   deleteBtn
-          +   '<div style="font-size:30px;line-height:1;margin-bottom:10px">' + icon + '</div>'
-          +   '<div style="font-weight:700;font-size:15.5px;color:#0a0a0a;margin-bottom:3px;'
+          +   '<div style="font-size:24px;line-height:1">' + icon + '</div>'
+          +   '<div style="font-weight:700;font-size:16px;color:#0a0a0a;'
           +          'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:32px">' + (f.name || "Untitled") + '</div>'
-          +   '<div style="color:#5a6470;font-size:12.5px;line-height:1.4;flex:1;'
+          +   '<div style="color:#5a6470;font-size:13px;line-height:1.4;flex:1;'
           +          'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">'
           +     (f.description || "") + '</div>'
-          +   '<div style="margin-top:10px">' + attrPill + '</div>'
-          +   '<div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">'
-          +     '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;background:#e6f6ec;color:#0a8a3a;padding:3px 9px;border-radius:99px">'
-          +       '<span style="width:6px;height:6px;border-radius:99px;background:currentColor"></span>Active'
-          +     '</span>'
-          +     '<span style="font-size:11.5px;color:#5a6470;font-weight:500">' + stepText + '</span>'
-          +     '<span style="font-size:11.5px;color:#9aa4b2">·</span>'
-          +     '<span style="font-size:11.5px;color:#9aa4b2">' + editedTxt + '</span>'
-          +   '</div>'
+          +   '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:2px">' + _flowCardBadges(f) + '</div>'
+          +   '<div style="font-size:12px;color:#9aa4b2;margin-top:2px">' + stepText + ' · ' + editedTxt + '</div>'
           + '</div>';
       }
 
@@ -20884,39 +20908,30 @@
         }
       }
 
-      // SaaS-style "start a new flow" card row. Two equal-width cards
-      // — "Start blank" (filled) and "Use a template" (outlined) — so
-      // both options are visible up-front and the choice is one tap.
+      // Two equal-weight starting cards. Same dimensions, same
+      // styling, only icon + copy differ — visual equality signals
+      // "two valid paths" rather than "recommended + alternative."
       function _myFlowsStartCardsHtml(){
+        var card = function(opts){
+          return ''
+            + '<button type="button" id="' + opts.id + '"'
+            +   ' class="mf-start-card"'
+            +   ' style="text-align:left;padding:24px;background:#fff;'
+            +          'border:1px solid #e6e9ef;border-radius:14px;cursor:pointer;color:#0a0a0a;'
+            +          'transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease;'
+            +          'font-family:inherit;display:flex;flex-direction:column;gap:8px;min-height:160px"'
+            +   ' onmouseenter="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 8px 22px rgba(20,40,80,.08)\';this.style.borderColor=\'#cdd7e3\'"'
+            +   ' onmouseleave="this.style.transform=\'\';this.style.boxShadow=\'\';this.style.borderColor=\'#e6e9ef\'">'
+            +   '<span style="font-size:32px;line-height:1">' + opts.icon + '</span>'
+            +   '<span style="font-size:20px;font-weight:700;letter-spacing:-0.01em;color:#0a0a0a;margin-top:2px">' + opts.title + '</span>'
+            +   '<span style="font-size:14px;line-height:1.4;color:#5a6470">' + opts.body + '</span>'
+            +   '<span style="margin-top:auto;font-size:13px;font-weight:600;color:#185fa5">' + opts.cta + ' →</span>'
+            + '</button>';
+        };
         return ''
-          + '<div class="mf-start-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:24px">'
-          // Start blank
-          +   '<button type="button" id="mf-start-blank"'
-          +     ' style="text-align:left;padding:22px 22px 20px;background:linear-gradient(135deg,#185fa5 0%,#2563eb 100%);'
-          +            'border:0;border-radius:16px;cursor:pointer;color:#fff;'
-          +            'box-shadow:0 8px 22px rgba(24,95,165,.20);'
-          +            'transition:transform .14s ease, box-shadow .14s ease;'
-          +            'font-family:inherit;display:flex;flex-direction:column;gap:6px"'
-          +     ' onmouseenter="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 12px 28px rgba(24,95,165,.30)\'"'
-          +     ' onmouseleave="this.style.transform=\'\';this.style.boxShadow=\'0 8px 22px rgba(24,95,165,.20)\'">'
-          +     '<span style="font-size:26px;line-height:1">✨</span>'
-          +     '<span style="font-size:17px;font-weight:700;letter-spacing:-0.01em">Start blank</span>'
-          +     '<span style="font-size:13px;line-height:1.4;color:rgba(255,255,255,.85)">Open the canvas with nothing on it. Drop activities however you want.</span>'
-          +     '<span style="margin-top:6px;font-size:13px;font-weight:600;color:#fff">Open canvas →</span>'
-          +   '</button>'
-          // Use a template
-          +   '<button type="button" id="mf-start-template"'
-          +     ' style="text-align:left;padding:22px 22px 20px;background:#fff;'
-          +            'border:1.5px solid #cdd7e3;border-radius:16px;cursor:pointer;color:#0a0a0a;'
-          +            'transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease;'
-          +            'font-family:inherit;display:flex;flex-direction:column;gap:6px"'
-          +     ' onmouseenter="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 12px 28px rgba(20,40,80,.10)\';this.style.borderColor=\'#94a3b8\'"'
-          +     ' onmouseleave="this.style.transform=\'\';this.style.boxShadow=\'\';this.style.borderColor=\'#cdd7e3\'">'
-          +     '<span style="font-size:26px;line-height:1">📋</span>'
-          +     '<span style="font-size:17px;font-weight:700;letter-spacing:-0.01em;color:#0a0a0a">Use a template</span>'
-          +     '<span style="font-size:13px;line-height:1.4;color:#5a6470">Pre-built first-contact + follow-up flows. Tweak then save.</span>'
-          +     '<span style="margin-top:6px;font-size:13px;font-weight:600;color:#185fa5">Browse templates →</span>'
-          +   '</button>'
+          + '<div class="mf-start-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px">'
+          + card({ id: "mf-start-blank",    icon: "✨", title: "Start blank",      body: "Build from scratch.",   cta: "Open canvas" })
+          + card({ id: "mf-start-template", icon: "📋", title: "Use a template",   body: "Pick a ready-made flow.", cta: "Browse templates" })
           + '</div>';
       }
       function _wireStartCards(){
@@ -20948,37 +20963,31 @@
         // saved-flow grid.
         var userFlows = _myFlowsAll.filter(function(f){ return !f.builtin; });
         _myFlowsAllDisplayed = userFlows;
+        // No "Flows" page title or paragraph subtitle — the active
+        // "My Flows" tab + the visual layout below carry the page's
+        // intent. A single short line orients the user.
         host.innerHTML = ''
-          + '<div style="margin-bottom:6px">'
-          +   '<h2 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.01em">Flows</h2>'
-          +   '<p style="color:#5a6470;margin:4px 0 0;font-size:14px">How your business handles customers automatically — say hi, follow up, ask for reviews.</p>'
-          + '</div>'
-          + '<div style="margin-top:24px">'
-          +   '<div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#9aa4b2;margin-bottom:10px">Start a new flow</div>'
-          +   _myFlowsStartCardsHtml()
-          + '</div>'
+          + '<p class="mf-subline" style="color:#5a6470;font-size:14px;margin:0 0 16px">Pick a flow or start a new one.</p>'
+          + _myFlowsStartCardsHtml()
           + (userFlows.length === 0
-              ? ('<div style="margin-top:16px;padding:24px;background:#fff;border:1px solid #e6e9ef;border-radius:14px;text-align:center;color:#5a6470;font-size:13.5px">'
-                + 'No saved flows yet. Pick a starting point above to make your first one.'
-                + '</div>')
+              ? ''  // No empty-state header at all — the start cards above are obvious.
               : (
-                  '<div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin:24px 0 12px">'
-                +   '<div>'
-                +     '<div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#9aa4b2;margin-bottom:4px">Your saved flows</div>'
-                +     '<div id="mf-count" style="color:#5a6470;font-size:12.5px">' + userFlows.length + ' flow' + (userFlows.length === 1 ? "" : "s") + '</div>'
+                  // 32px gap implicitly separates "starting cards"
+                  // from "saved flows" without a shouted divider.
+                  '<div style="display:flex;gap:10px;align-items:center;margin:32px 0 16px;flex-wrap:wrap">'
+                +   '<div style="position:relative;flex:1;min-width:220px">'
+                +     '<span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;color:#9aa4b2;pointer-events:none">🔍</span>'
+                +     '<input id="mf-search" type="text" placeholder="Search flows…" '
+                +          'style="width:100%;padding:11px 14px 11px 38px;border:1px solid #e6e9ef;border-radius:10px;font:inherit;font-size:13.5px;background:#fff;box-sizing:border-box"/>'
                 +   '</div>'
-                + '</div>'
-                + '<div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">'
-                +   '<input id="mf-search" type="text" placeholder="🔍  Search flows…" '
-                +          'style="flex:1;min-width:200px;padding:10px 14px;border:1px solid #e6e9ef;border-radius:10px;font:inherit;font-size:13.5px;background:#fff"/>'
-                +   '<select id="mf-sort" style="padding:10px 14px;border:1px solid #e6e9ef;border-radius:10px;font:inherit;font-size:13.5px;background:#fff;cursor:pointer">'
+                +   '<select id="mf-sort" style="padding:11px 14px;border:1px solid #e6e9ef;border-radius:10px;font:inherit;font-size:13.5px;background:#fff;cursor:pointer;min-width:180px">'
                 +     '<option value="edited">Recently edited</option>'
                 +     '<option value="name_az">Name (A–Z)</option>'
                 +     '<option value="name_za">Name (Z–A)</option>'
                 +     '<option value="steps">Most steps</option>'
                 +   '</select>'
                 + '</div>'
-                + '<div id="my-flows-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px"></div>'
+                + '<div id="my-flows-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px"></div>'
               ));
         _wireStartCards();
         var sortEl = host.querySelector("#mf-sort");
