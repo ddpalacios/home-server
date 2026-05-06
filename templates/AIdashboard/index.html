@@ -25262,6 +25262,7 @@
             </div>
           </div>
           ${renderRecurringPlanPanel(lead)}
+          ${renderQuoteOptionsPanel(lead)}
           ${renderChangeOrdersPanel(lead)}
         `;
         bodyEl.querySelectorAll("[data-toggle-event]").forEach(el =>
@@ -25271,6 +25272,7 @@
             if (body) body.hidden = !body.hidden;
           }));
         wireRecurringPlanPanel(lead);
+        wireQuoteOptionsPanel(lead);
         wireChangeOrdersPanel(lead);
         bodyEl.querySelectorAll("[data-lm-suggest]").forEach(b =>
           b.addEventListener("click", () => handleAction(b.dataset.lmSuggest)));
@@ -25692,6 +25694,445 @@
             if (status) status.textContent = "Couldn't save. Try again.";
           } finally {
             save.disabled = false;
+          }
+        });
+      }
+
+      // ── Tier D: Quote options panel ─────────────────────────────────
+      // Multi-option quotes for roofing / HVAC / broker workflows. Owner
+      // builds a bundle of 2-5 options (good/better/best, or option_1/2/3
+      // for brokers). Customer replies with the keyword, the digit, or
+      // the dollar amount; ai_conversation.py auto-flips status and
+      // sets selected_key. Slots ABOVE Change orders since it's typically
+      // used BEFORE change orders enter the picture.
+      function _qoFmtMoney(n) {
+        const v = parseInt(n || 0, 10);
+        const sign = v < 0 ? "-" : "";
+        const abs = Math.abs(v).toLocaleString();
+        return sign + "$" + abs;
+      }
+      function _qoFmtSent(epoch) {
+        if (!epoch) return "";
+        try {
+          const d = new Date(epoch * 1000);
+          return d.toLocaleString(undefined, {
+            month: "short", day: "numeric",
+          });
+        } catch (_) { return ""; }
+      }
+      function _qoFmtSentLong(epoch) {
+        if (!epoch) return "";
+        try {
+          const d = new Date(epoch * 1000);
+          return d.toLocaleString(undefined, {
+            month: "short", day: "numeric",
+            hour: "numeric", minute: "2-digit",
+          });
+        } catch (_) { return ""; }
+      }
+      function _qoStatusPill(status) {
+        const map = {
+          draft:    { label: "Draft",    bg: "#e2e8f0", fg: "#475569" },
+          sent:     { label: "Sent",     bg: "#dbeafe", fg: "#1e40af" },
+          selected: { label: "Selected", bg: "#dcfce7", fg: "#166534" },
+          declined: { label: "Declined", bg: "#fee2e2", fg: "#991b1b" },
+          canceled: { label: "Canceled", bg: "#e2e8f0", fg: "#475569" },
+        };
+        const m = map[(status || "draft").toLowerCase()] || map.draft;
+        return `<span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:${m.bg};color:${m.fg};">${m.label}</span>`;
+      }
+      function _qoUsesWordKeys(options) {
+        const keys = (options || []).map(o => (o && o.key) || "");
+        const k3 = keys.length === 3 && keys[0] === "good" && keys[1] === "better" && keys[2] === "best";
+        const k2 = keys.length === 2 && keys[0] === "good" && keys[1] === "better";
+        return k3 || k2;
+      }
+      function _qoDisplayKey(option, idx, wordScheme) {
+        if (wordScheme) return ((option && option.key) || "").toUpperCase();
+        return `OPTION ${idx + 1}`;
+      }
+
+      function renderQuoteOptionsPanel(lead) {
+        const qos = ((lead && lead.quote_options) || []).slice();
+        // Newest first.
+        qos.sort((a, b) => (b.created_at || 0) - (a.created_at || 0));
+        const cards = qos.map(qo => {
+          const status = (qo.status || "draft").toLowerCase();
+          const options = qo.options || [];
+          const wordScheme = _qoUsesWordKeys(options);
+          const sentLine = qo.sent_at ? `Sent ${_qoFmtSent(qo.sent_at)}` : "Not sent yet";
+          const respLine = (status === "selected" && qo.customer_response_at)
+            ? `Customer picked ${(qo.selected_key || "").toUpperCase()} on ${_qoFmtSentLong(qo.customer_response_at)}.`
+            : (status === "declined" && qo.customer_response_at
+                ? `Customer declined on ${_qoFmtSentLong(qo.customer_response_at)}.`
+                : (status === "sent" ? "Awaiting customer reply." : ""));
+          const optionRows = options.map((opt, i) => {
+            const key = _qoDisplayKey(opt, i, wordScheme);
+            const picked = (status === "selected" &&
+              ((qo.selected_key || "").toLowerCase() === ((opt.key || "").toLowerCase())));
+            const star = picked
+              ? `<span style="color:#ca8a04;font-weight:600;margin-left:6px;">★ customer picked</span>`
+              : "";
+            const highlights = (opt.highlights || []).slice(0, 4);
+            const hBlock = highlights.length
+              ? `<ul style="margin:4px 0 0 0;padding-left:16px;font-size:11px;color:#64748b;">${
+                  highlights.map(h => `<li>${esc(h)}</li>`).join("")
+                }</ul>`
+              : "";
+            return `
+              <div data-qo-opt-row="${esc(opt.key || ('option_' + (i+1)))}" style="padding:6px 0;${picked ? 'background:#fefce8;border-radius:6px;padding:6px 8px;' : ''}">
+                <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+                  <strong style="min-width:70px;">${esc(key)}</strong>
+                  <span style="font-weight:600;">${_qoFmtMoney(opt.amount)}</span>
+                  <span style="font-size:13px;color:#475569;">${esc(opt.label || "")}</span>
+                  ${star}
+                </div>
+                ${hBlock}
+              </div>
+            `;
+          }).join("");
+
+          let actions = "";
+          if (status === "draft") {
+            actions = `
+              <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">
+                <button type="button" class="lm-btn is-primary" data-qo-action="send-email" data-qo-id="${esc(qo.id)}">Send via email</button>
+                <button type="button" class="lm-btn" data-qo-action="send-sms" data-qo-id="${esc(qo.id)}">Send via SMS</button>
+                <button type="button" class="lm-btn" data-qo-action="send-both" data-qo-id="${esc(qo.id)}">Send both</button>
+                <button type="button" class="lm-btn" data-qo-action="cancel" data-qo-id="${esc(qo.id)}">Cancel</button>
+              </div>`;
+          } else if (status === "sent") {
+            // Manual override row: owner can mark a specific pick or
+            // decline if the customer responded off-channel.
+            const manualPickButtons = options.map((opt, i) => {
+              const key = _qoDisplayKey(opt, i, wordScheme);
+              return `<button type="button" class="lm-btn" data-qo-action="pick" data-qo-id="${esc(qo.id)}" data-qo-key="${esc(opt.key || ('option_' + (i+1)))}">Mark ${esc(key)}</button>`;
+            }).join("");
+            actions = `
+              <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">
+                ${manualPickButtons}
+                <button type="button" class="lm-btn" data-qo-action="decline" data-qo-id="${esc(qo.id)}">Mark declined</button>
+                <button type="button" class="lm-btn" data-qo-action="cancel" data-qo-id="${esc(qo.id)}">Cancel</button>
+              </div>`;
+          }
+
+          const titleLine = qo.created_at
+            ? `${esc(qo.title || "Quote")} (${_qoFmtSent(qo.created_at)})`
+            : esc(qo.title || "Quote");
+
+          return `
+            <div class="lm-qo-card" data-qo-card="${esc(qo.id)}" style="border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff;margin-top:10px;">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                ${_qoStatusPill(status)}
+                <strong>${titleLine}</strong>
+              </div>
+              <div style="margin-top:8px;">${optionRows}</div>
+              ${respLine ? `<div style="margin-top:8px;font-size:12px;color:#475569;">${esc(respLine)}</div>` : ""}
+              <div style="margin-top:4px;font-size:11px;color:#94a3b8;">${esc(sentLine)}.</div>
+              ${actions}
+            </div>
+          `;
+        }).join("");
+
+        return `
+          <div class="lm-section" id="lmQuoteOptionsSection">
+            <h3>Quote options</h3>
+            <div style="border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;background:#fcfdff;">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                <div style="font-size:13px;color:#475569;">
+                  Multi-option quotes — customer picks one by reply.
+                </div>
+                <button type="button" id="lmQoNewBtn" class="lm-btn is-primary">+ New quote with options</button>
+              </div>
+              <div id="lmQoForm" style="display:none;margin-top:12px;border:1px dashed #cbd5e1;border-radius:8px;padding:12px;background:#fff;">
+                <div style="font-size:13px;color:#1e293b;margin-bottom:8px;font-weight:600;">New quote with options</div>
+                <label style="display:flex;flex-direction:column;font-size:12px;color:#475569;gap:4px;">
+                  What's it for?
+                  <input type="text" id="lmQoTitle" placeholder='e.g. "Roof replacement"' style="padding:8px;font-size:14px;border:1px solid #cbd5e1;border-radius:6px;" />
+                </label>
+                <div id="lmQoOptions" style="margin-top:10px;"></div>
+                <div style="margin-top:8px;display:flex;gap:8px;">
+                  <button type="button" id="lmQoAddOption" class="lm-btn">+ Add an option</button>
+                  <span id="lmQoOptCount" style="font-size:12px;color:#94a3b8;align-self:center;">0 / 5</span>
+                </div>
+                <label style="display:flex;flex-direction:column;font-size:12px;color:#475569;margin-top:12px;gap:4px;">
+                  Notes (internal, not sent to customer)
+                  <textarea id="lmQoNotes" rows="2" style="padding:8px;font-size:13px;border:1px solid #cbd5e1;border-radius:6px;resize:vertical;" placeholder="Quoted Tuesday after the on-site visit. Customer leaning Better."></textarea>
+                </label>
+                <div style="margin-top:12px;font-size:12px;color:#475569;">
+                  Send via:
+                  <label style="margin-left:8px;cursor:pointer;"><input type="checkbox" id="lmQoChEmail" checked /> Email</label>
+                  <label style="margin-left:8px;cursor:pointer;"><input type="checkbox" id="lmQoChSms" /> SMS</label>
+                </div>
+                <div style="margin-top:12px;display:flex;justify-content:flex-end;gap:8px;">
+                  <button type="button" id="lmQoCancel" class="lm-btn">Cancel</button>
+                  <button type="button" id="lmQoSaveDraft" class="lm-btn">Save as draft</button>
+                  <button type="button" id="lmQoSend" class="lm-btn is-primary">Send →</button>
+                </div>
+                <div id="lmQoStatus" style="margin-top:8px;font-size:12px;color:#475569;"></div>
+              </div>
+              <div id="lmQoList">${cards || `<div style="margin-top:10px;font-size:13px;color:#94a3b8;">No quote options yet.</div>`}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      function _qoToast(msg) {
+        try {
+          if (typeof window.showToast === "function") {
+            window.showToast(msg);
+            return;
+          }
+        } catch (_) {}
+        try { console.log("[quote-options]", msg); } catch (_) {}
+      }
+
+      // Default keyword for option N when starting fresh; the form
+      // mutates this on add/remove to either word scheme (3) or digit
+      // scheme (4-5). The backend re-applies the canonical scheme on
+      // save based on applied_pack_id, so this label is purely cosmetic
+      // until the bundle is persisted.
+      function _qoDefaultKeyLabels(n) {
+        if (n === 2) return ["GOOD", "BETTER"];
+        if (n === 3) return ["GOOD", "BETTER", "BEST"];
+        // 4 or 5
+        const out = [];
+        for (let i = 0; i < n; i++) out.push(`OPTION ${i + 1}`);
+        return out;
+      }
+
+      function _qoAppendOptionRow(container, idx, totalCountSpan) {
+        const row = document.createElement("div");
+        row.setAttribute("data-qo-opt", "1");
+        row.style.cssText = "border:1px solid #e2e8f0;border-radius:8px;padding:10px;margin-top:8px;background:#fafafa;";
+        row.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+            <strong style="font-size:13px;color:#1e293b;" data-qo-opt-tag>Option ${idx + 1}</strong>
+            <button type="button" data-qo-opt-remove style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:18px;line-height:1;">×</button>
+          </div>
+          <label style="display:flex;flex-direction:column;font-size:11px;color:#64748b;margin-top:6px;gap:3px;">
+            Label
+            <input type="text" data-qo-opt-label placeholder="e.g. Standard 25-year shingle" style="padding:6px 8px;font-size:13px;border:1px solid #cbd5e1;border-radius:6px;" />
+          </label>
+          <label style="display:flex;flex-direction:column;font-size:11px;color:#64748b;margin-top:6px;gap:3px;">
+            Amount
+            <div style="display:flex;align-items:center;gap:4px;">
+              <span style="font-size:13px;color:#475569;">$</span>
+              <input type="number" data-qo-opt-amount min="1" step="1" placeholder="0" style="padding:6px 8px;font-size:13px;border:1px solid #cbd5e1;border-radius:6px;width:120px;" />
+            </div>
+          </label>
+          <label style="display:flex;flex-direction:column;font-size:11px;color:#64748b;margin-top:6px;gap:3px;">
+            Highlights (one per line, optional)
+            <textarea data-qo-opt-hl rows="3" style="padding:6px 8px;font-size:12px;border:1px solid #cbd5e1;border-radius:6px;resize:vertical;font-family:inherit;" placeholder="Standard 25-year architectural shingle&#10;All flashing replaced&#10;5-year workmanship warranty"></textarea>
+          </label>
+        `;
+        row.querySelector("[data-qo-opt-remove]").addEventListener("click", () => {
+          row.remove();
+          _qoRelabelRows(container, totalCountSpan);
+        });
+        container.appendChild(row);
+        _qoRelabelRows(container, totalCountSpan);
+      }
+
+      function _qoRelabelRows(container, totalCountSpan) {
+        const rows = container.querySelectorAll("[data-qo-opt]");
+        const labels = _qoDefaultKeyLabels(rows.length);
+        rows.forEach((r, i) => {
+          const tag = r.querySelector("[data-qo-opt-tag]");
+          if (tag) tag.textContent = `Option ${i + 1} — ${labels[i] || ("OPTION " + (i+1))}`;
+        });
+        if (totalCountSpan) totalCountSpan.textContent = `${rows.length} / 5`;
+      }
+
+      function wireQuoteOptionsPanel(lead) {
+        const sec = document.getElementById("lmQuoteOptionsSection");
+        if (!sec || !lead || !lead.id) return;
+        const newBtn = document.getElementById("lmQoNewBtn");
+        const form   = document.getElementById("lmQoForm");
+        const cancel = document.getElementById("lmQoCancel");
+        const saveDraftBtn = document.getElementById("lmQoSaveDraft");
+        const sendBtn = document.getElementById("lmQoSend");
+        const status = document.getElementById("lmQoStatus");
+        const title  = document.getElementById("lmQoTitle");
+        const notes  = document.getElementById("lmQoNotes");
+        const optsBox = document.getElementById("lmQoOptions");
+        const addOpt  = document.getElementById("lmQoAddOption");
+        const optCnt  = document.getElementById("lmQoOptCount");
+        const chEmail = document.getElementById("lmQoChEmail");
+        const chSms   = document.getElementById("lmQoChSms");
+
+        if (newBtn) newBtn.addEventListener("click", () => {
+          if (!form) return;
+          const willOpen = (form.style.display === "none" || !form.style.display);
+          form.style.display = willOpen ? "" : "none";
+          if (willOpen) {
+            // Initialize with 3 default option rows.
+            if (optsBox && !optsBox.children.length) {
+              _qoAppendOptionRow(optsBox, 0, optCnt);
+              _qoAppendOptionRow(optsBox, 1, optCnt);
+              _qoAppendOptionRow(optsBox, 2, optCnt);
+            }
+            if (title) title.focus();
+          }
+        });
+        if (cancel) cancel.addEventListener("click", () => {
+          if (form) form.style.display = "none";
+          if (status) status.textContent = "";
+        });
+        if (addOpt) addOpt.addEventListener("click", () => {
+          if (!optsBox) return;
+          const cur = optsBox.querySelectorAll("[data-qo-opt]").length;
+          if (cur >= 5) {
+            if (status) status.textContent = "Caps at 5 options.";
+            return;
+          }
+          _qoAppendOptionRow(optsBox, cur, optCnt);
+        });
+
+        async function _qoSubmit({ andSend }) {
+          if (!title || !optsBox) return;
+          const titleVal = (title.value || "").trim();
+          if (!titleVal) {
+            if (status) status.textContent = "Add a short title (e.g. \"Roof replacement\").";
+            return;
+          }
+          const rows = optsBox.querySelectorAll("[data-qo-opt]");
+          const options = [];
+          for (const r of rows) {
+            const lab = (r.querySelector("[data-qo-opt-label]").value || "").trim();
+            const am  = parseInt(r.querySelector("[data-qo-opt-amount]").value || "0", 10);
+            const hlText = (r.querySelector("[data-qo-opt-hl]").value || "").trim();
+            const highlights = hlText
+              ? hlText.split("\n").map(s => s.trim()).filter(Boolean)
+              : [];
+            if (!lab || !am) continue;
+            options.push({ label: lab, amount: am, highlights: highlights });
+          }
+          if (options.length < 2) {
+            if (status) status.textContent = "Need at least 2 options (each with label + amount).";
+            return;
+          }
+          if (options.length > 5) {
+            if (status) status.textContent = "Caps at 5 options.";
+            return;
+          }
+          const notesVal = (notes && notes.value || "").trim();
+          if (sendBtn) sendBtn.disabled = true;
+          if (saveDraftBtn) saveDraftBtn.disabled = true;
+          if (status) status.textContent = "Saving…";
+          try {
+            const res1 = await fetch(
+              `/me/leads/${encodeURIComponent(lead.id)}/quote-options`,
+              { method: "POST", credentials: "same-origin",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                  title: titleVal, options: options, notes: notesVal,
+                }) });
+            const d1 = await res1.json().catch(() => ({}));
+            if (!res1.ok) {
+              if (status) status.textContent = "Couldn't save: " + (d1.error || res1.status);
+              return;
+            }
+            const qo = d1.quote_options_entry || {};
+            if (!andSend) {
+              _qoToast(`Quote draft saved.`);
+              if (form) form.style.display = "none";
+              try { loadJourney(lead.id); } catch (_) {}
+              return;
+            }
+            // Determine channel from the toggles.
+            const wantEmail = !!(chEmail && chEmail.checked);
+            const wantSms   = !!(chSms && chSms.checked);
+            let channel = "email";
+            if (wantEmail && wantSms) channel = "both";
+            else if (wantSms && !wantEmail) channel = "sms";
+            else channel = "email";
+            if (status) status.textContent = "Sending…";
+            const res2 = await fetch(
+              `/me/leads/${encodeURIComponent(lead.id)}/quote-options/${encodeURIComponent(qo.id)}/send`,
+              { method: "POST", credentials: "same-origin",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ channel: channel }) });
+            const d2 = await res2.json().catch(() => ({}));
+            if (!res2.ok) {
+              if (status) status.textContent = "Saved as draft, but send failed: " + ((d2.errors||[]).join(",") || d2.error || res2.status);
+              try { loadJourney(lead.id); } catch (_) {}
+              return;
+            }
+            const firstName = (lead.first_name || (lead.name||"").split(" ")[0] || "your customer");
+            _qoToast(`Quote with ${options.length} options sent to ${firstName}.`);
+            if (form) form.style.display = "none";
+            try { loadJourney(lead.id); } catch (_) {}
+          } catch (_) {
+            if (status) status.textContent = "Couldn't save. Try again.";
+          } finally {
+            if (sendBtn) sendBtn.disabled = false;
+            if (saveDraftBtn) saveDraftBtn.disabled = false;
+          }
+        }
+
+        if (saveDraftBtn) saveDraftBtn.addEventListener("click", () => _qoSubmit({ andSend: false }));
+        if (sendBtn)      sendBtn.addEventListener("click", () => _qoSubmit({ andSend: true }));
+
+        // Per-card actions: send drafts, manual pick, decline, cancel.
+        sec.addEventListener("click", async (ev) => {
+          const btn = ev.target.closest("[data-qo-action]");
+          if (!btn) return;
+          const action = btn.dataset.qoAction;
+          const qoId = btn.dataset.qoId;
+          if (!qoId) return;
+          if (action === "send-email" || action === "send-sms" || action === "send-both") {
+            const channel = action === "send-email" ? "email"
+                          : action === "send-sms"   ? "sms"
+                          :                           "both";
+            btn.disabled = true;
+            try {
+              const res = await fetch(
+                `/me/leads/${encodeURIComponent(lead.id)}/quote-options/${encodeURIComponent(qoId)}/send`,
+                { method: "POST", credentials: "same-origin",
+                  headers: {"Content-Type": "application/json"},
+                  body: JSON.stringify({ channel: channel }) });
+              if (res.ok) {
+                _qoToast(`Quote sent via ${channel}.`);
+                try { loadJourney(lead.id); } catch (_) {}
+              } else {
+                _qoToast(`Send failed.`);
+              }
+            } finally { btn.disabled = false; }
+            return;
+          }
+          if (action === "pick") {
+            const key = btn.dataset.qoKey;
+            if (!key) return;
+            btn.disabled = true;
+            try {
+              const res = await fetch(
+                `/me/leads/${encodeURIComponent(lead.id)}/quote-options/${encodeURIComponent(qoId)}/respond`,
+                { method: "POST", credentials: "same-origin",
+                  headers: {"Content-Type": "application/json"},
+                  body: JSON.stringify({ selected_key: key }) });
+              if (res.ok) {
+                _qoToast(`Marked ${key.toUpperCase()}.`);
+                try { loadJourney(lead.id); } catch (_) {}
+              }
+            } finally { btn.disabled = false; }
+            return;
+          }
+          if (action === "decline" || action === "cancel") {
+            const status = action === "decline" ? "declined" : "canceled";
+            btn.disabled = true;
+            try {
+              const res = await fetch(
+                `/me/leads/${encodeURIComponent(lead.id)}/quote-options/${encodeURIComponent(qoId)}/respond`,
+                { method: "POST", credentials: "same-origin",
+                  headers: {"Content-Type": "application/json"},
+                  body: JSON.stringify({ status: status }) });
+              if (res.ok) {
+                _qoToast(`Marked ${status}.`);
+                try { loadJourney(lead.id); } catch (_) {}
+              }
+            } finally { btn.disabled = false; }
+            return;
           }
         });
       }
@@ -32860,7 +33301,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-06-change-orders"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-06-quote-options"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
