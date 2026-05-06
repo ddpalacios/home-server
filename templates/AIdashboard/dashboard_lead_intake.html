@@ -107,14 +107,68 @@
 
   /* Forms section */
   .section-h {
-    display:flex; justify-content:space-between; align-items:flex-end;
-    gap:12px; margin:8px 0 12px;
+    margin:8px 0 14px;
   }
-  .section-h h2 { font-size:18px; margin:0; }
-  .section-h .sub { color:var(--sub); font-size:13px; margin:0; }
+  .section-h h2 {
+    font-size:18px; font-weight:700; margin:0; color:var(--fg);
+    letter-spacing:-0.01em;
+  }
   /* Forms section sits directly on the page background — no nested
-     card. Form rows are individual cards instead of a stacked list. */
+     card. Each form is its own card matching the channel-card pattern. */
   .forms-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; }
+  .form-card {
+    position:relative;
+    background:var(--card); border:1px solid var(--line);
+    border-radius:14px; padding:16px 16px 14px;
+    cursor:pointer; display:flex; flex-direction:column; gap:6px;
+    min-height:140px;
+    transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  }
+  .form-card:hover {
+    transform:translateY(-2px) scale(1.01);
+    box-shadow:0 8px 22px rgba(20,40,80,.10);
+    border-color:#cdd7e3;
+  }
+  .form-card:hover .form-card-del { opacity:1; }
+  .form-card:focus-visible {
+    outline:2px solid var(--accent); outline-offset:2px;
+  }
+  .form-card-head {
+    display:flex; align-items:center; gap:10px;
+  }
+  .form-card-ico { font-size:22px; line-height:1; flex-shrink:0; }
+  .form-card-title {
+    font-size:15px; font-weight:700; color:var(--fg);
+    flex:1; min-width:0;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .form-card-meta {
+    display:flex; flex-wrap:wrap; align-items:center; gap:6px;
+    font-size:11.5px; color:var(--sub);
+  }
+  .form-card-meta .row-status { margin-left:0; }
+  .form-card-flow {
+    font-size:12px; color:var(--sub);
+  }
+  .form-card-flow strong { color:var(--fg); font-weight:600; }
+  .form-card-flow-warn { color:#a86200; }
+  .form-card-foot {
+    margin-top:auto; padding-top:6px;
+    font-size:11.5px; color:#9aa4b2;
+  }
+  .form-card-del {
+    position:absolute; top:8px; right:8px;
+    width:26px; height:26px; border-radius:50%;
+    border:1px solid var(--line); background:#fff;
+    color:#9aa4b2; cursor:pointer; font-family:inherit;
+    font-size:14px; line-height:1; padding:0;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0;
+    transition:opacity .12s ease, background .12s ease, color .12s ease, border-color .12s ease;
+  }
+  .form-card-del:hover {
+    background:#fef2f2; color:#b91c1c; border-color:#fecaca;
+  }
   .row { display:flex; align-items:center; padding:12px 0; border-bottom:1px solid var(--line); gap:12px; }
   .row:last-child { border-bottom:0; }
   .row .name { font-weight:600; }
@@ -421,10 +475,7 @@
   </div>
 
   <div class="section-h">
-    <div>
-      <h2>Your forms</h2>
-    </div>
-    <button class="btn btn-primary" id="top-create" hidden>+ New</button>
+    <h2>Your forms</h2>
   </div>
   <div id="forms-empty" class="forms-empty" hidden>
     <p>No forms yet. Tap <strong>Form</strong> above to make one.</p>
@@ -478,11 +529,8 @@
       // top of the same action.
       var formCard = $("ch-form");
       if (formCard) formCard.onclick = function(){ openBuilder(); };
-      var topCreate = $("top-create");
-      if (topCreate) {
-        topCreate.hidden = true;
-        topCreate.onclick = function(){ openBuilder(); };
-      }
+      // (top-create button removed — Form channel card is the only
+      //  primary path to "make a new form"; no duplicate CTA.)
       var totalLeads = forms.reduce(function(a,f){ return a + (f.lead_count || 0); }, 0);
       $("ch-form-meta").textContent = hasForms
         ? (forms.length + " form" + (forms.length === 1 ? "" : "s")
@@ -595,49 +643,64 @@
   }
   // The empty state is plain prose now — no button to wire up.
   function renderEmpty(){ /* no-op */ }
+  // Card grid for the forms list. Matches the channel-card / My Flows
+  // visual pattern (emoji + name + meta + hover lift). Click anywhere
+  // on the card opens the editor; the small × is a destructive escape
+  // hatch with stopPropagation. No "+ New form" button at the bottom —
+  // the Form channel card above is the single primary path.
   function renderList(forms){
     var el = $("forms-list");
     el.innerHTML = forms.map(function(f){
-      var url = hostBase() + "/f/" + f.slug;
-      // Status: 🟢 Active iff form has an attached_flow_id; 🟡 No flow otherwise.
+      var fields = (f.fields || []).length;
       var hasFlow = !!(f.attached_flow_id || (f.flow_id && f.flow_id !== ""));
       var badge = hasFlow
         ? '<span class="row-status rs-active"><span class="dot"></span>Active</span>'
         : '<span class="row-status rs-no-flow"><span class="dot"></span>No flow</span>';
-      var flowLine = f.attached_flow_name
-        ? '<div class="meta" style="color:var(--sub);font-size:12.5px;margin-top:2px">Sends: <strong style="color:var(--fg)">' + esc(f.attached_flow_name) + '</strong></div>'
-        : (hasFlow
-            ? '<div class="meta" style="color:var(--sub);font-size:12.5px;margin-top:2px">Sends: <strong style="color:var(--fg)">First Hello</strong></div>'
-            : '<div class="meta" style="color:#a86200;font-size:12.5px;margin-top:2px">⚠️ No flow attached. Submissions create a lead but no messages send.</div>');
-      return '<div class="row" data-id="' + f.id + '">'
-        +   '<div style="flex:1;min-width:0">'
-        +     '<div class="name">' + esc(f.name) + badge + '</div>'
-        +     '<div class="url">' + esc(url) + '</div>'
-        +     '<div class="meta" style="color:var(--sub);font-size:12.5px;margin-top:2px">'
-        +       (f.lead_count || 0) + ' leads · last used ' + (f.last_used_at ? new Date(f.last_used_at*1000).toLocaleDateString() : "never")
-        +     '</div>'
-        +     flowLine
+      var flowName = f.attached_flow_name
+        || (hasFlow ? "First Hello" : "");
+      var flowLine = flowName
+        ? '<div class="form-card-flow">Sends: <strong>' + esc(flowName) + '</strong></div>'
+        : '<div class="form-card-flow form-card-flow-warn">⚠️ No flow attached</div>';
+      var edited = f.last_used_at
+        ? "Last used " + _shortAgo(f.last_used_at)
+        : (f.created_at ? "New" : "");
+      return '<div class="form-card" data-id="' + f.id + '" tabindex="0">'
+        +   '<button class="form-card-del" data-act="del" aria-label="Delete this form" title="Delete form">×</button>'
+        +   '<div class="form-card-head">'
+        +     '<span class="form-card-ico" aria-hidden="true">📝</span>'
+        +     '<div class="form-card-title">' + esc(f.name) + '</div>'
         +   '</div>'
-        +   '<div class="actions">'
-        +     '<button class="btn" data-act="copy">Copy link</button>'
-        +     '<button class="btn" data-act="test" title="Open form in test mode">Test it</button>'
-        +     '<button class="btn" data-act="edit">Edit</button>'
-        +     '<button class="btn" data-act="del" style="color:#c0392b">&times;</button>'
+        +   '<div class="form-card-meta">'
+        +     badge
+        +     '<span>' + fields + ' field' + (fields === 1 ? "" : "s") + '</span>'
+        +     '<span>·</span>'
+        +     '<span>' + (f.lead_count || 0) + ' lead' + (f.lead_count === 1 ? "" : "s") + '</span>'
         +   '</div>'
+        +   flowLine
+        +   '<div class="form-card-foot">' + esc(edited) + '</div>'
         + '</div>';
-    }).join("") + '<div style="padding:14px 0 0"><button class="btn btn-primary" id="row-create">+ New form</button></div>';
-    Array.prototype.forEach.call(el.querySelectorAll("[data-act]"), function(b){
-      b.addEventListener("click", function(){
-        var row = b.closest(".row"); var id = row.getAttribute("data-id");
-        var f = forms.find(function(x){ return x.id === id; });
-        if (b.dataset.act === "copy") copy(hostBase() + "/f/" + f.slug);
-        if (b.dataset.act === "open") window.open("/f/" + f.slug, "_blank");
-        if (b.dataset.act === "edit") openBuilder(f);
-        if (b.dataset.act === "del")  deleteForm(f);
-        if (b.dataset.act === "test") window.open("/f/" + f.slug + "?test=1", "_blank");
+    }).join("");
+    Array.prototype.forEach.call(el.querySelectorAll(".form-card"), function(card){
+      var id = card.getAttribute("data-id");
+      var f = forms.find(function(x){ return x.id === id; });
+      card.addEventListener("click", function(){ openBuilder(f); });
+      card.addEventListener("keydown", function(ev){
+        if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); openBuilder(f); }
+      });
+      var delBtn = card.querySelector(".form-card-del");
+      if (delBtn) delBtn.addEventListener("click", function(ev){
+        ev.stopPropagation();
+        deleteForm(f);
       });
     });
-    $("row-create").onclick = function(){ openBuilder(); };
+  }
+  function _shortAgo(ts){
+    var s = Math.max(0, Math.floor(Date.now()/1000) - (Number(ts) || 0));
+    if (s < 60) return "just now";
+    if (s < 3600) return Math.floor(s/60) + "m ago";
+    if (s < 86400) return Math.floor(s/3600) + "h ago";
+    if (s < 30 * 86400) return Math.floor(s/86400) + "d ago";
+    return new Date(Number(ts) * 1000).toLocaleDateString();
   }
   function deleteForm(f){
     if (!confirm("Delete \"" + f.name + "\"?")) return;
@@ -919,35 +982,49 @@
       var dest = $("b-destinations");
       if (dest) dest.onclick = openDestinationsModal;
 
-      // Add-more-steps round-trip: jump straight to the canvas without
-      // saving the form. Saving on every click was slow and unwanted —
-      // the canvas autosaves its own changes, and the form's explicit
-      // Save button still saves the form. We only carry a breadcrumb
-      // forward when the form already has an id (otherwise the canvas
-      // falls back to /me/flows/default).
+      // Add-more-steps: navigate to the canvas with THIS form's flow
+      // loaded. Each form has its own per-form flow at
+      // /me/forms/<form_id>/flow (1:1 with the form's id), so opening
+      // the canvas with form_id in localStorage makes FlowBuilder
+      // fetch that exact flow blob from GCS.
+      //
+      // If the form is brand-new (no state.id yet), we save it as a
+      // draft FIRST so it has an id — without that the per-form flow
+      // can't be addressed. The save is async but quick (one POST to
+      // /me/forms); the user sees a momentary "Opening…" while it
+      // resolves. Subsequent clicks for the same form are instant.
       var asBtn = $("b-add-steps");
-      if (asBtn) asBtn.onclick = function(){
+      function _gotoCanvas(formId){
         try {
-          if (state.id) {
-            localStorage.setItem("intake_return_form_id", state.id);
+          if (formId) {
+            localStorage.setItem("intake_return_form_id", formId);
             localStorage.setItem("intake_return_form_ts", String(Date.now()));
-          } else {
-            // Brand-new unsaved form — no id yet. Don't drop a stale
-            // breadcrumb; let the canvas open with the default flow.
-            localStorage.removeItem("intake_return_form_id");
-            localStorage.removeItem("intake_return_form_ts");
-          }
-          // Session flag tells the canvas this navigation came FROM
-          // the form (vs. a sidebar click), so the "← Back to your
-          // form" pill shows. Sidebar clicks clear this flag.
-          if (state.id) {
             sessionStorage.setItem("outreach_came_from_form", "1");
           } else {
+            localStorage.removeItem("intake_return_form_id");
+            localStorage.removeItem("intake_return_form_ts");
             sessionStorage.removeItem("outreach_came_from_form");
           }
         } catch(_){}
         try { window.top.location.href = "/dashboard#outreach"; }
         catch(_) { window.location.href = "/dashboard#outreach"; }
+      }
+      if (asBtn) asBtn.onclick = function(){
+        if (state.id) {
+          // Already saved — just go.
+          _gotoCanvas(state.id);
+          return;
+        }
+        // Brand-new form: save as draft first so it has an id, THEN
+        // navigate. Disable the button briefly so we don't fire twice.
+        asBtn.disabled = true;
+        var origText = asBtn.querySelector(".ascta-title");
+        if (origText) origText.textContent = "Opening…";
+        state.is_draft = true;
+        saveFormAndThen(function(savedForm){
+          // saveFormAndThen mutates state.id on success.
+          _gotoCanvas((savedForm && savedForm.id) || state.id || "");
+        });
       };
 
       // Save handler.
