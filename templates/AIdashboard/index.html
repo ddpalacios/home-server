@@ -27766,7 +27766,13 @@
         const frame = document.getElementById("liEmbedFrame");
         if (!frame) return;
         const src = frame.getAttribute("data-src");
-        if (src) frame.setAttribute("src", src);
+        if (src) {
+          // Bust the browser cache on every cold mount — the iframe
+          // template (dashboard_linkedin.html) gets edits we want
+          // picked up without making the user clear cache by hand.
+          const bust = src + (src.indexOf("?") < 0 ? "?" : "&") + "v=" + Date.now();
+          frame.setAttribute("src", bust);
+        }
         _schedLiMounted = true;
       }
       function ensureSchedIgMounted() {
