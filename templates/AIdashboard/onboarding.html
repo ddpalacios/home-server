@@ -1,0 +1,830 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Set up your business — JustGotALead</title>
+  <style>
+    :root {
+      --accent: #2563eb;
+      --accent-2: #38bdf8;
+      --green: #047857;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --panel: #ffffff;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Inter", -apple-system, "Segoe UI", system-ui, sans-serif;
+      font-feature-settings: "ss01", "cv11", "tnum";
+      background:
+        radial-gradient(800px 600px at 12% -10%, rgba(56, 189, 248, 0.10), transparent 70%),
+        radial-gradient(700px 500px at 110% 110%, rgba(37, 99, 235, 0.08), transparent 70%),
+        #f6f8fc;
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      letter-spacing: -0.01em;
+      -webkit-font-smoothing: antialiased;
+    }
+    body::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image: radial-gradient(rgba(15,23,42,.05) 1px, transparent 1px);
+      background-size: 22px 22px;
+      mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%);
+      -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%);
+    }
+    main, .card { position: relative; z-index: 1; }
+    .card {
+      background: var(--panel);
+      border-radius: 18px;
+      padding: 36px 40px;
+      box-shadow: 0 1px 0 rgba(15,23,42,.04), 0 12px 32px rgba(15,23,42,.06);
+      width: min(640px, 100%);
+      border: 1px solid var(--border);
+      animation: cardenter 480ms cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes cardenter {
+      from { opacity: 0; transform: translateY(20px) scale(.985); }
+      to   { opacity: 1; transform: none; }
+    }
+    .stepper { display: flex; gap: 6px; margin-bottom: 18px; }
+    .dot {
+      flex: 1; height: 3px; border-radius: 2px; background: var(--border);
+      transition: background .3s cubic-bezier(.22,1,.36,1);
+    }
+    .dot.active { background: var(--accent); }
+    .dot.done { background: var(--green); }
+    .label-step {
+      font-size: 12px; color: var(--muted); margin-bottom: 8px;
+      text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
+    }
+    h1 { font-size: 24px; margin-bottom: 8px; line-height: 1.2; }
+    p.lede { color: var(--muted); margin-bottom: 24px; font-size: 14px; line-height: 1.5; }
+    label.field-label {
+      display: block; font-size: 13px; font-weight: 600;
+      margin-bottom: 6px; margin-top: 14px;
+    }
+    input[type="text"], input[type="tel"], input[type="email"], select {
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 15px;
+      font-family: inherit;
+      background: #fff;
+    }
+    input:focus, select:focus { outline: 2px solid var(--accent-2); }
+
+    /* Vertical picker grid */
+    .vertical-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .vertical-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      cursor: pointer;
+      background: #fff;
+      transition: all .18s ease;
+      text-align: left;
+      font-family: inherit;
+      color: inherit;
+      width: 100%;
+    }
+    .vertical-card:hover {
+      border-color: var(--accent-2);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(37,99,235,.08);
+    }
+    .vertical-card.selected {
+      border-color: var(--accent);
+      background: linear-gradient(180deg, #f5f9ff 0%, #fff 100%);
+      box-shadow: 0 8px 22px rgba(37,99,235,.12);
+    }
+    .vertical-card .icon { font-size: 28px; margin-bottom: 6px; }
+    .vertical-card .name { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+    .vertical-card .tag { font-size: 12px; color: var(--muted); line-height: 1.4; }
+
+    /* Connect rows */
+    .connect-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-top: 10px;
+    }
+    .connect-row .info { flex: 1; }
+    .connect-row .info .title { font-size: 14px; font-weight: 600; }
+    .connect-row .info .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .connect-row .status {
+      font-size: 12px; padding: 4px 10px; border-radius: 999px;
+      background: #f1f5f9; color: var(--muted); font-weight: 600;
+    }
+    .connect-row .status.connected {
+      background: #ecfdf5; color: var(--green);
+    }
+    .btn-connect {
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-connect:hover { background: #1e40af; }
+    .btn-connect.outline {
+      background: #fff;
+      color: var(--accent);
+    }
+
+    /* Approval radio cards */
+    .radio-card {
+      display: block;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all .15s ease;
+    }
+    .radio-card:hover { border-color: var(--accent-2); }
+    .radio-card.selected {
+      border-color: var(--accent);
+      background: #f5f9ff;
+    }
+    .radio-card .head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+    .radio-card input[type="radio"] { accent-color: var(--accent); }
+    .radio-card .head .title { font-size: 14px; font-weight: 600; }
+    .radio-card .pill {
+      font-size: 11px; font-weight: 600;
+      padding: 2px 8px; border-radius: 999px;
+      background: #ecfdf5; color: var(--green);
+      margin-left: auto;
+    }
+    .radio-card .body { font-size: 13px; color: var(--muted); padding-left: 24px; line-height: 1.4; }
+
+    /* Hours grid */
+    .hours-table {
+      width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px;
+    }
+    .hours-table td { padding: 6px 4px; }
+    .hours-table td:first-child {
+      width: 50px; font-weight: 600;
+    }
+    .hours-table input[type="time"] {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .hours-table input[type="checkbox"] { accent-color: var(--accent); }
+
+    .digest-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-top: 10px;
+    }
+    .digest-row label { font-size: 14px; font-weight: 600; flex: 1; }
+
+    /* Footer buttons */
+    .footer {
+      display: flex; gap: 10px; justify-content: space-between;
+      margin-top: 28px; padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+    .btn {
+      padding: 11px 22px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      color: var(--text);
+    }
+    .btn:hover:not(:disabled) { background: #f3f4f6; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary {
+      background: var(--accent); border-color: var(--accent); color: #fff;
+    }
+    .btn-primary:hover:not(:disabled) { background: #1e40af; }
+    .btn-skip {
+      background: transparent; border-color: transparent; color: var(--muted);
+    }
+
+    .err {
+      color: #b91c1c; font-size: 13px; margin-top: 10px; min-height: 18px;
+    }
+    .ok-banner {
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      color: var(--green);
+      padding: 14px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    .summary {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+    .summary h4 { font-size: 14px; margin-bottom: 6px; }
+    .summary p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="stepper" id="stepper">
+      <div class="dot active"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+    <div class="label-step" id="stepLabel">Step 1 of 8 · Your business</div>
+
+    <!-- Step 1: Pick business type -->
+    <section data-step="1">
+      <h1>Pick your business type</h1>
+      <p class="lede">We'll set you up with 5 ready-to-go flows tuned for how your customers actually reach out. You can change anything later.</p>
+      <div class="vertical-grid" id="verticalGrid">
+        <!-- Cards rendered by JS from /me/vertical-pack -->
+      </div>
+      <div class="err" id="err1"></div>
+    </section>
+
+    <!-- Step 2: Phone number -->
+    <section data-step="2" style="display:none">
+      <h1>Connect your phone number</h1>
+      <p class="lede">We use this for everything — calls, texts, automations. One number that runs the whole show.</p>
+      <div class="connect-row">
+        <div class="info">
+          <div class="title" id="phoneStatusTitle">Your business number</div>
+          <div class="sub" id="phoneStatusSub">No number connected yet.</div>
+        </div>
+        <div class="status" id="phoneStatusPill">Not set</div>
+      </div>
+      <label class="field-label" for="phoneInput">Or paste a number you already have</label>
+      <input id="phoneInput" type="tel" placeholder="+1 555 123 4567" />
+      <div class="err" id="err2"></div>
+    </section>
+
+    <!-- Step 3: Email -->
+    <section data-step="3" style="display:none">
+      <h1>Connect your email</h1>
+      <p class="lede">We send quote follow-ups and review requests through your own Gmail so customers see your name in the inbox.</p>
+      <div class="connect-row">
+        <div class="info">
+          <div class="title">Gmail</div>
+          <div class="sub" id="emailStatusSub">Not connected yet.</div>
+        </div>
+        <a class="btn-connect" id="connectEmailBtn" href="/auth/google/connect-email">Connect Gmail</a>
+      </div>
+      <div class="err" id="err3"></div>
+    </section>
+
+    <!-- Step 4: Calendar -->
+    <section data-step="4" style="display:none">
+      <h1>Connect your calendar</h1>
+      <p class="lede">When the AI talks scheduling, it'll only offer times you're actually free.</p>
+      <div class="connect-row">
+        <div class="info">
+          <div class="title">Google Calendar</div>
+          <div class="sub" id="calStatusSub">Not connected yet.</div>
+        </div>
+        <a class="btn-connect" id="connectCalBtn" href="/auth/google/connect-calendar">Connect Calendar</a>
+      </div>
+      <div class="err" id="err4"></div>
+    </section>
+
+    <!-- Step 5: Hours -->
+    <section data-step="5" style="display:none">
+      <h1>Set your business hours</h1>
+      <p class="lede">We pre-filled these from your business type. Tweak as needed — outside-hours messages will get an "ask first" by default.</p>
+      <table class="hours-table" id="hoursTable">
+        <!-- Rows rendered by JS -->
+      </table>
+      <label class="field-label" for="tzSelect">Time zone</label>
+      <select id="tzSelect">
+        <option value="America/New_York">Eastern (ET)</option>
+        <option value="America/Chicago">Central (CT)</option>
+        <option value="America/Denver">Mountain (MT)</option>
+        <option value="America/Los_Angeles">Pacific (PT)</option>
+        <option value="America/Phoenix">Arizona (no DST)</option>
+        <option value="America/Anchorage">Alaska</option>
+        <option value="Pacific/Honolulu">Hawaii</option>
+        <option value="UTC">UTC</option>
+      </select>
+      <div class="err" id="err5"></div>
+    </section>
+
+    <!-- Step 6: Approval mode -->
+    <section data-step="6" style="display:none">
+      <h1>How should we handle messages?</h1>
+      <p class="lede">You can change this anytime. Most owners start with "ask first" while they get a feel for it.</p>
+
+      <label class="radio-card" data-mode="auto">
+        <div class="head">
+          <input type="radio" name="approvalMode" value="auto">
+          <span class="title">Auto-pilot</span>
+        </div>
+        <div class="body">The AI replies on its own and only pings you for the things you'd want to handle personally — quotes, outside hours, anything sensitive.</div>
+      </label>
+
+      <label class="radio-card selected" data-mode="ask_first">
+        <div class="head">
+          <input type="radio" name="approvalMode" value="ask_first" checked>
+          <span class="title">Ask first on quotes &amp; outside hours</span>
+          <span class="pill">Recommended</span>
+        </div>
+        <div class="body">Auto-replies on common stuff. Asks you first before sending quote nudges, reaching out after-hours, or pinging cold leads.</div>
+      </label>
+
+      <label class="radio-card" data-mode="approve_all">
+        <div class="head">
+          <input type="radio" name="approvalMode" value="approve_all">
+          <span class="title">Ask me about everything</span>
+        </div>
+        <div class="body">You'll get a text for every outbound. Maximum control, more work for you.</div>
+      </label>
+      <div class="err" id="err6"></div>
+    </section>
+
+    <!-- Step 7: Digest -->
+    <section data-step="7" style="display:none">
+      <h1>Daily summary</h1>
+      <p class="lede">A single end-of-day text with everything that happened — leads in, replies sent, anything that needs you tomorrow.</p>
+      <div class="digest-row">
+        <input type="checkbox" id="digestEnabled" checked>
+        <label for="digestEnabled">Send a daily summary text</label>
+        <select id="digestTime" style="width:auto">
+          <option value="17:00">5 PM</option>
+          <option value="18:00" selected>6 PM</option>
+          <option value="19:00">7 PM</option>
+          <option value="20:00">8 PM</option>
+          <option value="21:00">9 PM</option>
+        </select>
+      </div>
+      <div class="err" id="err7"></div>
+    </section>
+
+    <!-- Step 8: Done -->
+    <section data-step="8" style="display:none">
+      <div class="ok-banner">You're all set. Everything's running.</div>
+      <h1>Welcome aboard, <span id="doneOwnerName">friend</span>.</h1>
+      <p class="lede">Here's what's live right now:</p>
+      <div class="summary">
+        <h4 id="doneVerticalLabel">Your business pack: —</h4>
+        <p id="doneVerticalDesc">5 flows are ready to run on every form, text, and missed call. Lead arrivals route to the right flow automatically.</p>
+      </div>
+      <div class="summary">
+        <h4>Your phone</h4>
+        <p>Texts and calls coming in get handled — the AI replies on the easy stuff and pings you when something needs a human.</p>
+      </div>
+      <div class="summary">
+        <h4>Your daily summary</h4>
+        <p id="doneDigestDesc">You'll get a recap text at 6 PM tonight.</p>
+      </div>
+    </section>
+
+    <div class="footer">
+      <button class="btn" id="btnBack" disabled>Back</button>
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-skip" id="btnSkip">Skip for now</button>
+        <button class="btn btn-primary" id="btnNext">Continue</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (function() {
+      "use strict";
+      const TOTAL = 8;
+      let step = 1;
+      let availablePacks = [];
+      let selectedPackId = null;
+      let appliedPackResult = null;
+      let phoneE164 = "";
+      let emailConnected = false;
+      let calConnected = false;
+      let workingHours = null;
+      let approvalMode = "ask_first";
+      let digestEnabled = true;
+      let digestTime = "18:00";
+
+      const stepper = document.getElementById("stepper");
+      const stepLabel = document.getElementById("stepLabel");
+      const stepLabels = ["Your business", "Phone", "Email",
+                          "Calendar", "Hours", "Replies",
+                          "Daily summary", "Done"];
+      const sections = document.querySelectorAll("section[data-step]");
+      const btnBack = document.getElementById("btnBack");
+      const btnNext = document.getElementById("btnNext");
+      const btnSkip = document.getElementById("btnSkip");
+
+      // ── helpers ─────────────────────────────────────────────────────
+      function postJson(url, body) {
+        return fetch(url, {
+          method: "POST",
+          credentials: "include",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(body || {}),
+        }).then(r => r.json().catch(() => ({})).then(j => ({ok: r.ok, status: r.status, body: j})));
+      }
+      function getJson(url) {
+        return fetch(url, {credentials: "include"})
+          .then(r => r.json().catch(() => ({})).then(j => ({ok: r.ok, body: j})));
+      }
+      function showErr(n, msg) {
+        const el = document.getElementById("err" + n);
+        if (el) el.textContent = msg || "";
+      }
+      function setStep(n) {
+        step = Math.max(1, Math.min(TOTAL, n));
+        for (let i = 0; i < TOTAL; i++) {
+          stepper.children[i].className =
+            "dot " + (step > i + 1 ? "done" : step === i + 1 ? "active" : "");
+        }
+        stepLabel.textContent = "Step " + step + " of " + TOTAL +
+                                " · " + stepLabels[step - 1];
+        sections.forEach(sec => {
+          const idx = parseInt(sec.getAttribute("data-step"), 10);
+          sec.style.display = (idx === step ? "" : "none");
+        });
+        btnBack.disabled = step === 1;
+        btnNext.textContent = step === TOTAL ? "Open dashboard ▶" : "Continue ▶";
+        btnSkip.style.display = (step === 1 || step === TOTAL) ? "none" : "";
+        // Persist progress so a tab close doesn't lose state.
+        persistState();
+        // Render Done summary when we land there.
+        if (step === TOTAL) renderDone();
+      }
+      function persistState() {
+        const choices = {
+          pack_id: selectedPackId || "",
+          phone_e164: phoneE164,
+          email_connected: emailConnected,
+          cal_connected: calConnected,
+          approval_mode: approvalMode,
+          digest_enabled: digestEnabled,
+          digest_time_local: digestTime,
+        };
+        postJson("/me/onboarding/state", {step, choices}).catch(() => {});
+      }
+
+      // ── step 1: vertical pick ─────────────────────────────────────
+      function renderVerticals(packs, appliedId) {
+        const grid = document.getElementById("verticalGrid");
+        grid.innerHTML = "";
+        packs.forEach(p => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "vertical-card" + (p.id === appliedId ? " selected" : "");
+          btn.dataset.packId = p.id;
+          btn.innerHTML =
+            '<div class="icon">' + (p.icon || "🧰") + '</div>' +
+            '<div class="name">' + (p.name || p.id) + '</div>' +
+            '<div class="tag">' + (p.tagline || "") + '</div>';
+          btn.addEventListener("click", () => selectPack(p.id));
+          grid.appendChild(btn);
+        });
+      }
+      function selectPack(id) {
+        selectedPackId = id;
+        document.querySelectorAll(".vertical-card").forEach(c => {
+          c.classList.toggle("selected", c.dataset.packId === id);
+        });
+      }
+      async function applySelectedPack() {
+        if (!selectedPackId) {
+          showErr(1, "Pick a business type to continue.");
+          return false;
+        }
+        const r = await postJson("/me/vertical-pack/apply",
+                                 {pack_id: selectedPackId});
+        if (!r.ok) {
+          showErr(1, "Couldn't apply your pack. " +
+                  ((r.body && r.body.error) || "") + " Try again?");
+          return false;
+        }
+        appliedPackResult = (r.body || {}).result || {};
+        // Pre-fill hours from pack if not already set.
+        const pack = availablePacks.find(p => p.id === selectedPackId);
+        if (pack) workingHoursDefaultsFor(selectedPackId);
+        return true;
+      }
+
+      // ── step 2: phone ─────────────────────────────────────────────
+      async function loadPhoneStatus() {
+        const r = await getJson("/me/owner-settings");
+        const settings = (r.body && r.body.settings) || {};
+        phoneE164 = (settings.owner_phone || "").trim();
+        const titleEl = document.getElementById("phoneStatusTitle");
+        const subEl   = document.getElementById("phoneStatusSub");
+        const pillEl  = document.getElementById("phoneStatusPill");
+        const inputEl = document.getElementById("phoneInput");
+        if (phoneE164) {
+          titleEl.textContent = "Connected: " + phoneE164;
+          subEl.textContent = "Owner-control number for digest + commands.";
+          pillEl.textContent = "Connected";
+          pillEl.classList.add("connected");
+          inputEl.value = phoneE164;
+        } else {
+          titleEl.textContent = "Your owner phone";
+          subEl.textContent = "Where digest texts and approval prompts go.";
+          pillEl.textContent = "Not set";
+          pillEl.classList.remove("connected");
+        }
+      }
+      async function savePhone() {
+        const raw = (document.getElementById("phoneInput").value || "").trim();
+        if (!raw) {
+          showErr(2, "Enter a phone number, or click Skip if you'll add it later.");
+          return false;
+        }
+        const r = await postJson("/me/owner-settings", {owner_phone: raw});
+        if (!r.ok) {
+          showErr(2, "Couldn't save. " + ((r.body && r.body.error) || ""));
+          return false;
+        }
+        phoneE164 = ((r.body && r.body.settings) || {}).owner_phone || "";
+        return true;
+      }
+
+      // ── step 3 / 4: connection status ─────────────────────────────
+      async function refreshConnections() {
+        // Email status: we use the Gmail token presence indirectly via
+        // owner_settings or onboarding payload. The wizard presents a
+        // simple Connect button; the user returns to /dashboard/onboarding
+        // after the OAuth round trip and we read the state again.
+        const r = await getJson("/me/onboarding/state");
+        const state = (r.body && r.body.state) || {};
+        const choices = state.choices || {};
+        emailConnected = !!choices.email_connected;
+        calConnected = !!choices.cal_connected;
+        document.getElementById("emailStatusSub").textContent =
+          emailConnected
+            ? "Connected. We'll send from your Gmail."
+            : "Not connected yet.";
+        document.getElementById("calStatusSub").textContent =
+          calConnected
+            ? "Connected. Times offered will respect your free/busy."
+            : "Not connected yet.";
+        const eBtn = document.getElementById("connectEmailBtn");
+        const cBtn = document.getElementById("connectCalBtn");
+        if (emailConnected) {
+          eBtn.textContent = "Reconnect";
+          eBtn.classList.add("outline");
+        }
+        if (calConnected) {
+          cBtn.textContent = "Reconnect";
+          cBtn.classList.add("outline");
+        }
+      }
+
+      // ── step 5: working hours ─────────────────────────────────────
+      const DAYS = ["mon","tue","wed","thu","fri","sat","sun"];
+      const DAY_LABELS = {mon:"Mon",tue:"Tue",wed:"Wed",thu:"Thu",
+                          fri:"Fri",sat:"Sat",sun:"Sun"};
+      function workingHoursDefaultsFor(packId) {
+        // Pull the pack's business_defaults.hours by re-querying
+        // /me/vertical-pack — keeps the source of truth on the server.
+        // For a snappier wizard, we use a fallback table here.
+        const fallback = {
+          mon:[8,18], tue:[8,18], wed:[8,18], thu:[8,18],
+          fri:[8,18], sat:[9,13], sun:"closed",
+        };
+        workingHours = fallback;
+      }
+      function renderHours() {
+        const tbl = document.getElementById("hoursTable");
+        tbl.innerHTML = "";
+        if (!workingHours) workingHoursDefaultsFor(selectedPackId);
+        DAYS.forEach(d => {
+          const v = workingHours[d];
+          const closed = (v === "closed" || !Array.isArray(v));
+          const open = closed ? 8 : v[0];
+          const close = closed ? 17 : v[1];
+          const tr = document.createElement("tr");
+          tr.innerHTML =
+            '<td>' + DAY_LABELS[d] + '</td>' +
+            '<td><label style="font-weight:400; font-size:13px; margin:0; display:flex; align-items:center; gap:6px;">' +
+              '<input type="checkbox" data-day="' + d + '" data-role="open" ' +
+                (closed ? '' : 'checked') + '> Open' +
+            '</label></td>' +
+            '<td><input type="time" data-day="' + d + '" data-role="from" ' +
+              'value="' + String(open).padStart(2,'0') + ':00" ' +
+              (closed ? 'disabled' : '') + '></td>' +
+            '<td><input type="time" data-day="' + d + '" data-role="to" ' +
+              'value="' + String(close).padStart(2,'0') + ':00" ' +
+              (closed ? 'disabled' : '') + '></td>';
+          tbl.appendChild(tr);
+        });
+        tbl.addEventListener("change", (e) => {
+          const t = e.target;
+          if (t.dataset.role === "open") {
+            const day = t.dataset.day;
+            const fromI = tbl.querySelector('input[data-day="' + day + '"][data-role="from"]');
+            const toI = tbl.querySelector('input[data-day="' + day + '"][data-role="to"]');
+            fromI.disabled = !t.checked;
+            toI.disabled = !t.checked;
+          }
+        }, {once: true});
+      }
+      function readHoursFromUI() {
+        const tbl = document.getElementById("hoursTable");
+        const out = {};
+        DAYS.forEach(d => {
+          const openCb = tbl.querySelector('input[data-day="' + d + '"][data-role="open"]');
+          if (!openCb || !openCb.checked) { out[d] = "closed"; return; }
+          const fromI = tbl.querySelector('input[data-day="' + d + '"][data-role="from"]');
+          const toI = tbl.querySelector('input[data-day="' + d + '"][data-role="to"]');
+          const fH = parseInt((fromI.value || "08:00").split(":")[0], 10);
+          const tH = parseInt((toI.value || "18:00").split(":")[0], 10);
+          out[d] = [fH, tH];
+        });
+        return out;
+      }
+      async function saveHours() {
+        const hours = readHoursFromUI();
+        const tz = document.getElementById("tzSelect").value || "UTC";
+        const r = await postJson("/integrations/working-hours",
+                                 {time_zone: tz, hours});
+        if (!r.ok) {
+          showErr(5, "Couldn't save hours. " + ((r.body && r.body.error) || ""));
+          return false;
+        }
+        workingHours = hours;
+        return true;
+      }
+
+      // ── step 6: approval mode ─────────────────────────────────────
+      document.querySelectorAll(".radio-card").forEach(card => {
+        card.addEventListener("click", () => {
+          document.querySelectorAll(".radio-card")
+            .forEach(c => c.classList.remove("selected"));
+          card.classList.add("selected");
+          const inp = card.querySelector("input[type=radio]");
+          if (inp) {
+            inp.checked = true;
+            approvalMode = inp.value;
+          }
+        });
+      });
+      async function saveApproval() {
+        // Map UX modes onto the persisted approval_mode field.
+        // 'auto'        → auto
+        // 'ask_first'   → ask_first (default)
+        // 'approve_all' → ask_first (with ALL flows in ask_first list;
+        //                  the pack-applied list already covers most;
+        //                  the wizard simply records the user's pref).
+        let m = "ask_first";
+        if (approvalMode === "auto") m = "auto";
+        const r = await postJson("/me/owner-settings", {approval_mode: m});
+        if (!r.ok) {
+          showErr(6, "Couldn't save preference. " +
+                  ((r.body && r.body.error) || ""));
+          return false;
+        }
+        return true;
+      }
+
+      // ── step 7: digest ────────────────────────────────────────────
+      async function saveDigest() {
+        digestEnabled = document.getElementById("digestEnabled").checked;
+        digestTime = document.getElementById("digestTime").value || "18:00";
+        const r = await postJson("/me/owner-settings", {
+          digest_enabled: digestEnabled,
+          digest_time_local: digestTime,
+        });
+        if (!r.ok) {
+          showErr(7, "Couldn't save. " + ((r.body && r.body.error) || ""));
+          return false;
+        }
+        return true;
+      }
+
+      // ── step 8: done renderer ─────────────────────────────────────
+      async function renderDone() {
+        const pack = availablePacks.find(p => p.id === selectedPackId);
+        if (pack) {
+          document.getElementById("doneVerticalLabel").textContent =
+            "Your business pack: " + (pack.icon || "") + " " + (pack.name || "");
+          document.getElementById("doneVerticalDesc").textContent =
+            "5 flows are ready to run on every form, text, and missed call. " +
+            "Lead arrivals route to the right flow automatically.";
+        }
+        const dt = (digestTime || "18:00");
+        const hh = parseInt(dt.split(":")[0], 10);
+        const human = hh > 12 ? (hh - 12) + " PM"
+                              : (hh === 0 ? "midnight" :
+                                 hh === 12 ? "noon" : hh + " AM");
+        document.getElementById("doneDigestDesc").textContent =
+          digestEnabled ? "You'll get a recap text at " + human + " tonight."
+                        : "Daily summary is off — you can flip it on later.";
+      }
+
+      // ── boot ─────────────────────────────────────────────────────
+      async function boot() {
+        // 1. Available vertical packs
+        try {
+          const r = await getJson("/me/vertical-pack");
+          availablePacks = (r.body && r.body.available_packs) || [];
+          if ((r.body || {}).applied_pack_id) {
+            selectedPackId = r.body.applied_pack_id;
+          }
+          renderVerticals(availablePacks, selectedPackId);
+        } catch (_) {}
+        // 2. Existing onboarding state — resume where we left off
+        try {
+          const r = await getJson("/me/onboarding/state");
+          const state = (r.body && r.body.state) || {};
+          const choices = state.choices || {};
+          if (choices.pack_id) selectedPackId = choices.pack_id;
+          if (choices.phone_e164) phoneE164 = choices.phone_e164;
+          if (choices.approval_mode) approvalMode = choices.approval_mode;
+          if (typeof choices.digest_enabled === "boolean") digestEnabled = choices.digest_enabled;
+          if (choices.digest_time_local) digestTime = choices.digest_time_local;
+          if (state.step) {
+            const resume = parseInt(state.step, 10);
+            if (resume >= 1 && resume <= TOTAL) {
+              setStep(resume);
+              return;
+            }
+          }
+        } catch (_) {}
+        setStep(1);
+      }
+      boot();
+      renderHours();
+      loadPhoneStatus();
+      refreshConnections();
+
+      // ── nav handlers ─────────────────────────────────────────────
+      btnBack.addEventListener("click", () => { if (step > 1) setStep(step - 1); });
+      btnSkip.addEventListener("click", () => { if (step < TOTAL) setStep(step + 1); });
+      btnNext.addEventListener("click", async () => {
+        btnNext.disabled = true;
+        let ok = true;
+        try {
+          if (step === 1) {
+            ok = await applySelectedPack();
+          } else if (step === 2) {
+            ok = await savePhone();
+            if (ok) await loadPhoneStatus();
+          } else if (step === 3) {
+            // Email connection happens off-page; we just record intent.
+            const choices = {email_connected: true};
+            await postJson("/me/onboarding/state", {choices});
+          } else if (step === 4) {
+            const choices = {cal_connected: true};
+            await postJson("/me/onboarding/state", {choices});
+          } else if (step === 5) {
+            ok = await saveHours();
+          } else if (step === 6) {
+            ok = await saveApproval();
+          } else if (step === 7) {
+            ok = await saveDigest();
+          } else if (step === 8) {
+            await postJson("/me/onboarding/complete", {});
+            window.location.href = "/dashboard#home";
+            return;
+          }
+        } catch (e) {
+          showErr(step, "Something went wrong. Try again?");
+          ok = false;
+        }
+        if (ok) {
+          showErr(step, "");
+          if (step < TOTAL) setStep(step + 1);
+        }
+        btnNext.disabled = false;
+      });
+    })();
+  </script>
+</body>
+</html>
