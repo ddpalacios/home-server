@@ -301,15 +301,22 @@
   .builder-card {
     background:#fff; border-radius:16px;
     width:100%;
-    max-width:none;
+    /* Pull the modal back from full-bleed: 75% of the viewport
+       (with a 1100px ceiling on giant monitors) so the card has
+       comfortable gutters on each side without compressing the
+       columns. */
+    max-width:min(75vw, 1100px);
     display:flex; flex-direction:column;
-    /* Stretch to the full backdrop height (viewport minus the 24px
-       gutter on each side) so the modal extends all the way down,
-       not just the height of its content. */
     height:100%;
     max-height:none;
     overflow:hidden;
     box-shadow:0 24px 64px rgba(15,23,42,.22);
+  }
+  /* Below 1100px the 75vw cap kicks in fine, but on tablet-ish
+     widths give the modal more of the screen so columns aren't
+     forced too narrow. */
+  @media (max-width: 1100px) {
+    .builder-card { max-width: 92vw; }
   }
   .builder-head {
     display:flex; align-items:center; gap:12px;
@@ -828,12 +835,6 @@
     bg.addEventListener("click", function(e){ if (e.target === bg) closeModal(); });
     bg.querySelector("#b-close").onclick = closeModal;
     bg.querySelector("#b-cancel").onclick = closeModal;
-    var delBtn = bg.querySelector("#b-delete");
-    if (delBtn) delBtn.onclick = function(){
-      if (!confirm("Delete \"" + state.name + "\"?")) return;
-      fetch("/me/forms/" + state.id, { method:"DELETE", credentials:"same-origin" })
-        .then(function(){ toast("Deleted"); document.body.removeChild(bg); loadForms(); });
-    };
 
     // Drag-and-drop support — track which field index is being dragged.
     var dragIdx = null;
@@ -896,16 +897,10 @@
         // so the public form still has a button label and confirmation
         // copy; we just don't surface them as editable in this builder
         // anymore.
-        // Danger zone — only when editing an existing form.
-        + (editing ? (
-            '<div class="b-danger">'
-          +   '<div class="b-danger-text">'
-          +     '<div class="b-danger-title">Delete this form</div>'
-          +     '<div class="b-danger-sub">The link stops working. Past leads stay safe.</div>'
-          +   '</div>'
-          +   '<button class="b-danger-btn" id="b-delete" type="button">Delete form</button>'
-          + '</div>'
-          ) : "");
+        // Danger zone removed per user request — deleting a form is
+        // now done via the × button on the form card in the list,
+        // not from inside the builder modal.
+        ;
 
       // Inline label editing.
       Array.prototype.forEach.call(c.querySelectorAll("[data-fld-edit]"), function(span){
