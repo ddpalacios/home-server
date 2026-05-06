@@ -5335,6 +5335,12 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
           <span class="nav-tooltip">Lead intake</span>
         </button>
+        <button class="app-nav-btn" type="button" data-route="onboarding" id="appOnboardingNavBtn" aria-label="Set up">
+          <!-- Wand / sparkle icon — signals "let's set things up". -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l9-9"/><path d="M15 5l4 4"/><path d="M16 2l1.5 1.5L19 2l-.5 1.5L20 5l-1.5.5L18 7l-.5-1.5L16 5l1.5-.5z"/><path d="M5 14l1 .5L6.5 16l.5-1.5L8 14l-1.5-.5L6 12l-.5 1.5z"/></svg>
+          <span class="nav-tooltip">Set up your business</span>
+          <span class="app-nav-badge" id="appOnboardingBadge" hidden>!</span>
+        </button>
         <button class="app-nav-btn" type="button" data-route="settings" aria-label="Settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           <span class="nav-tooltip">Settings</span>
@@ -20299,6 +20305,25 @@
 
       initAppRouter();   // calls appShowRoute(initial) → _runSectionLoader(initial)
       initAppChrome();
+
+      // Onboarding nav indicator: show the "!" badge when the owner
+      // hasn't completed setup so the wand icon reads as a CTA, not a
+      // permanent nav item. Once /me/onboarding/state.completed_at is
+      // set the badge hides — the button stays accessible (you can
+      // re-run setup) but loses the nudge styling.
+      (async () => {
+        try {
+          const r = await fetch("/me/onboarding/state",
+                                { credentials: "same-origin", cache: "no-store" });
+          if (!r.ok) return;
+          const j = await r.json().catch(() => ({}));
+          const state = (j && j.state) || j || {};
+          const badge = document.getElementById("appOnboardingBadge");
+          if (!badge) return;
+          if (!state.completed_at) badge.hidden = false;
+          else badge.hidden = true;
+        } catch (_) { /* non-fatal */ }
+      })();
       initMockUpgradeShortcut();
       initAdminTrialsPanel();
       // initLeadsTabs() and initCsvImport() are now in web/src/routes/leads.js
@@ -32264,7 +32289,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-06-onboarding-hashroute"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-06-onboarding-navbutton"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
