@@ -727,18 +727,11 @@
         + '</div>'
         + '<div class="b-section-h">What happens when someone fills it out</div>'
         + '<div style="border:1px solid var(--line);border-radius:12px;background:#fff;overflow:hidden">'
-        // Step 1 — always: capture
+        // Single step — the attached flow. "We catch the lead" was
+        // step 1 historically, but it's a given (every form saves the
+        // lead) and reads as filler, so it's gone. Only the flow
+        // step shows now.
         +   '<div class="flow-step">'
-        +     '<div class="flow-step-num">1</div>'
-        +     '<div class="flow-step-icon" style="background:#e7f7ec">📥</div>'
-        +     '<div class="flow-step-body">'
-        +       '<div class="flow-step-title">We catch the lead</div>'
-        +       '<div class="flow-step-sub">Saved to your dashboard.</div>'
-        +     '</div>'
-        +   '</div>'
-        // Step 2 — welcome flow
-        +   '<div class="flow-step">'
-        +     '<div class="flow-step-num">2</div>'
         +     '<div class="flow-step-icon" style="background:#eaf3fc">' + attachedIcon + '</div>'
         +     '<div class="flow-step-body">'
         +       '<div class="flow-step-title">' + esc(attachedName) + '</div>'
@@ -747,14 +740,13 @@
         +     '<button class="btn flow-step-btn" id="b-change-flow" type="button">Change</button>'
         +   '</div>'
         + '</div>'
-        // Big inviting "Add more steps" button — opens flow canvas with
-        // the current form context so the user can build out additional
-        // steps and return to the form builder with changes applied.
+        // Big inviting "Add more steps" button — opens the flow canvas
+        // with the current form context. Subtitle removed per user
+        // request; the button is just "Add more steps" now.
         + '<button class="add-steps-cta" id="b-add-steps" type="button">'
         +   '<span class="ascta-icon">✨</span>'
         +   '<span class="ascta-body">'
         +     '<span class="ascta-title">Add more steps</span>'
-        +     '<span class="ascta-sub">Send to Sheets, AI replies, alerts, and more</span>'
         +   '</span>'
         +   '<span class="ascta-arrow">→</span>'
         + '</button>'
@@ -884,28 +876,35 @@
       var dest = $("b-destinations");
       if (dest) dest.onclick = openDestinationsModal;
 
-      // Add-more-steps round-trip: save the form, drop a breadcrumb in
-      // localStorage so the lead-intake page knows to reopen this form's
-      // builder when the user returns from the canvas.
+      // Add-more-steps round-trip: jump straight to the canvas without
+      // saving the form. Saving on every click was slow and unwanted —
+      // the canvas autosaves its own changes, and the form's explicit
+      // Save button still saves the form. We only carry a breadcrumb
+      // forward when the form already has an id (otherwise the canvas
+      // falls back to /me/flows/default).
       var asBtn = $("b-add-steps");
       if (asBtn) asBtn.onclick = function(){
-        asBtn.disabled = true;
-        var origText = asBtn.querySelector(".ascta-title");
-        if (origText) origText.textContent = "Saving…";
-        // Mark the form as a draft only when it's brand-new (no id
-        // yet). Editing an already-saved form should NOT demote it.
-        var saveAsDraft = !state.id;
-        if (saveAsDraft) state.is_draft = true;
-        saveFormAndThen(function(savedForm){
-          try {
-            localStorage.setItem("intake_return_form_id", savedForm.id || "");
+        try {
+          if (state.id) {
+            localStorage.setItem("intake_return_form_id", state.id);
             localStorage.setItem("intake_return_form_ts", String(Date.now()));
-          } catch(_){}
-          // target=_top equivalent — reach up to the parent dashboard
-          // window since this page lives inside an iframe.
-          try { window.top.location.href = "/dashboard#outreach"; }
-          catch(_) { window.location.href = "/dashboard#outreach"; }
-        });
+          } else {
+            // Brand-new unsaved form — no id yet. Don't drop a stale
+            // breadcrumb; let the canvas open with the default flow.
+            localStorage.removeItem("intake_return_form_id");
+            localStorage.removeItem("intake_return_form_ts");
+          }
+          // Session flag tells the canvas this navigation came FROM
+          // the form (vs. a sidebar click), so the "← Back to your
+          // form" pill shows. Sidebar clicks clear this flag.
+          if (state.id) {
+            sessionStorage.setItem("outreach_came_from_form", "1");
+          } else {
+            sessionStorage.removeItem("outreach_came_from_form");
+          }
+        } catch(_){}
+        try { window.top.location.href = "/dashboard#outreach"; }
+        catch(_) { window.location.href = "/dashboard#outreach"; }
       };
 
       // Save handler.

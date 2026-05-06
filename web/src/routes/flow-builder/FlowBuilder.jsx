@@ -4627,13 +4627,24 @@ function TourReplayButton() {
 function ReturnToFormBanner() {
   const [show, setShow] = React.useState(false);
   React.useEffect(() => {
-    try {
-      const fid = localStorage.getItem("intake_return_form_id");
-      const ts  = parseInt(localStorage.getItem("intake_return_form_ts") || "0", 10);
-      if (fid && ts && (Date.now() - ts) < 30 * 60 * 1000) {
-        setShow(true);
-      }
-    } catch (_) {}
+    const refresh = () => {
+      try {
+        const fid = localStorage.getItem("intake_return_form_id");
+        const ts  = parseInt(localStorage.getItem("intake_return_form_ts") || "0", 10);
+        // The pill is a hand-off from a form. It only shows when this
+        // session was actually started from the form's "Add more steps"
+        // button — not when the user navigated to Outreach via the
+        // sidebar. The sessionStorage flag is set by the form handler
+        // and cleared by the sidebar nav.
+        const fromForm = sessionStorage.getItem("outreach_came_from_form") === "1";
+        const fresh = ts && (Date.now() - ts) < 30 * 60 * 1000;
+        setShow(!!(fid && fromForm && fresh));
+      } catch (_) { setShow(false); }
+    };
+    refresh();
+    // Re-evaluate when the breadcrumb is cleared by the sidebar handler.
+    window.addEventListener("fb-outreach-nav-reset", refresh);
+    return () => window.removeEventListener("fb-outreach-nav-reset", refresh);
   }, []);
   if (!show) return null;
   return (
@@ -4715,10 +4726,29 @@ export default function FlowBuilder() {
   // load AND save against /me/forms/<form_id>/flow instead of the
   // shared /me/flows/default. Each form keeps its own canvas state,
   // and DELETE on the parent form cascades to clean it up.
-  const formId = React.useMemo(() => {
+  // formId reads from localStorage on mount and on the
+  // fb-outreach-nav-reset event (dispatched when the user clicks
+  // Outreach in the sidebar). This way clicking the sidebar nav
+  // pulls the canvas back to /me/flows/default — "only what we
+  // most recently saved" — instead of showing whatever form-flow
+  // the user happened to last open.
+  const [formId, setFormId] = React.useState(() => {
     try {
-      return localStorage.getItem("intake_return_form_id") || "";
+      const fromForm = sessionStorage.getItem("outreach_came_from_form") === "1";
+      return fromForm ? (localStorage.getItem("intake_return_form_id") || "") : "";
     } catch (_) { return ""; }
+  });
+  React.useEffect(() => {
+    const onReset = () => {
+      try {
+        sessionStorage.removeItem("outreach_came_from_form");
+        localStorage.removeItem("intake_return_form_id");
+        localStorage.removeItem("intake_return_form_ts");
+      } catch (_) {}
+      setFormId("");
+    };
+    window.addEventListener("fb-outreach-nav-reset", onReset);
+    return () => window.removeEventListener("fb-outreach-nav-reset", onReset);
   }, []);
   const flowEndpoint = formId
     ? `/me/forms/${encodeURIComponent(formId)}/flow`
