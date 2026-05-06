@@ -555,6 +555,7 @@
   function loadForms(){
     fetch("/me/forms", { credentials:"same-origin" }).then(function(r){ return r.json(); }).then(function(d){
       var forms = (d && d.forms) || [];
+      _formsCache = forms;
       var hasForms = forms.length > 0;
       // Form channel — single pill. "Ready" once at least one form
       // exists; "Set up" when there are zero forms.
@@ -744,10 +745,60 @@
     if (s < 30 * 86400) return Math.floor(s/86400) + "d ago";
     return new Date(Number(ts) * 1000).toLocaleDateString();
   }
+  // Optimistic delete: yank the card from the DOM and the in-memory
+  // forms list immediately so the UI feels instant. The actual GCS
+  // delete fires in the background via POST {op:"delete"} (the C
+  // proxy strips DELETE). On failure we re-render from the server
+  // and surface a toast — the card reappears so the user knows it
+  // wasn't actually removed.
+  var _formsCache = null;
   function deleteForm(f){
     if (!confirm("Delete \"" + f.name + "\"?")) return;
-    fetch("/me/forms/" + f.id, { method:"DELETE", credentials:"same-origin" })
-      .then(function(){ toast("Deleted"); loadForms(); });
+    // 1. Remove the card from the DOM right now.
+    var listEl = document.getElementById("forms-list");
+    if (listEl) {
+      var card = listEl.querySelector('.form-card[data-id="' + f.id + '"]');
+      if (card) {
+        card.style.transition = "opacity .15s ease, transform .15s ease";
+        card.style.opacity = "0";
+        card.style.transform = "scale(.94)";
+        setTimeout(function(){ if (card.parentNode) card.parentNode.removeChild(card); }, 150);
+      }
+      // If that was the last form, swap to the empty state immediately.
+      setTimeout(function(){
+        if (!listEl.querySelector(".form-card")) {
+          listEl.hidden = true;
+          var empty = document.getElementById("forms-empty");
+          if (empty) empty.hidden = false;
+        }
+      }, 160);
+    }
+    // 2. Drop it from the in-memory cache too so a re-render mid-flight
+    //    doesn't bring the card back. _formsCache is set by loadForms
+    //    on every successful list fetch.
+    if (Array.isArray(_formsCache)) {
+      _formsCache = _formsCache.filter(function(x){ return x.id !== f.id; });
+    }
+    toast("Deleted");
+    // 3. Fire the actual delete in the background.
+    fetch("/me/forms/" + encodeURIComponent(f.id), {
+      method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ op: "delete" }),
+    })
+      .then(function(r){
+        if (!r.ok) throw new Error("delete_failed");
+        // Refresh the list silently to reconcile with server truth
+        // (e.g., if the form had related records that also got
+        // cleaned up). User won't see flicker because the card is
+        // already gone from the DOM.
+        loadForms();
+      })
+      .catch(function(){
+        // Reverse the optimistic removal: re-fetch and tell the user.
+        toast("Couldn't delete that form. Try again.");
+        loadForms();
+      });
   }
   var BUILTINS = [
     {key:"name",        label:"Name",         type:"text"},
