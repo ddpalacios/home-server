@@ -826,6 +826,7 @@ function updateBulkBar() {
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <button type="button" class="leads-bulk-btn" data-bulk-act="email" style="padding:8px 14px;border-radius:8px;border:1px solid #fff;background:#fff;color:#0a0a0a;font-size:13px;font-weight:600;cursor:pointer;">✉️ Send email</button>
       <button type="button" class="leads-bulk-btn" data-bulk-act="schedule" style="padding:8px 14px;border-radius:8px;border:1px solid #475569;background:transparent;color:#fff;font-size:13px;font-weight:500;cursor:pointer;">📅 Schedule for later</button>
+      <button type="button" class="leads-bulk-btn" data-bulk-act="run-flow" style="padding:8px 14px;border-radius:8px;border:1px solid #475569;background:transparent;color:#fff;font-size:13px;font-weight:500;cursor:pointer;">▶ Run a flow</button>
       <button type="button" class="leads-bulk-btn" data-bulk-act="stage" disabled title="Coming soon" style="padding:8px 14px;border-radius:8px;border:1px solid #475569;background:transparent;color:#94a3b8;font-size:13px;font-weight:500;cursor:not-allowed;">🏷️ Change stage</button>
     </div>
   `;
@@ -1645,6 +1646,43 @@ async function _handleBulkAction(act) {
   if (act === "schedule") {
     sessionStorage.setItem("leadsSelectedIds", JSON.stringify(ids));
     openBulkEmailComposer({ openSchedulePicker: true });
+    return;
+  }
+
+  if (act === "run-flow") {
+    // Same (selected ∩ visible) recipient set the composer uses. Global
+    // selection survives filter changes, but the action is scoped to
+    // what the user can currently see — so a Select-All-then-Filter
+    // doesn't silently broadcast to the whole dataset.
+    const visibleIdSet = new Set((_filteredLeads || []).map(l => l && l.id));
+    const recipientIds = ids.filter(id => !visibleIdSet.size || visibleIdSet.has(id));
+    if (!recipientIds.length) {
+      _showLeadsToast(
+        `All ${ids.length} selected lead${ids.length === 1 ? "" : "s"} are hidden by your current filter — clear it to include them.`,
+        "warn");
+      return;
+    }
+    if (typeof window.openRunFlowPicker !== "function") {
+      _showLeadsToast("The flow picker isn't available yet — refresh the page.", "error");
+      return;
+    }
+    if (recipientIds.length === 1) {
+      // Carry the lead's first name + currently-running context the
+      // single-lead picker shows, so the bar→picker flow looks the same
+      // as the modal→picker flow when there's only one lead selected.
+      const lead = (_allLeads || []).find(l => l && l.id === recipientIds[0]);
+      const firstName = (lead && (lead.first_name || "").trim()) ||
+                        ((lead && (lead.full_name || "")).split(" ")[0]) ||
+                        "this lead";
+      window.openRunFlowPicker(recipientIds, {
+        singleLeadName: firstName,
+        singleLeadId:   recipientIds[0],
+      });
+    } else {
+      window.openRunFlowPicker(recipientIds, {
+        bulkLabel: `${recipientIds.length} leads`,
+      });
+    }
     return;
   }
 
@@ -4712,3 +4750,8 @@ window.__leadsRoute = {
   loadUnifiedLeads,
   init,
 };
+
+// Expose the leads-page toast so cross-route helpers (e.g. the global
+// Run-a-flow picker mounted in index.html) can surface results in the
+// same dark pill the rest of the page uses.
+window.__leadsShowToast = _showLeadsToast;
