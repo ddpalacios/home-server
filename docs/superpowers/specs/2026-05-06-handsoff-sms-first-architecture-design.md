@@ -273,20 +273,91 @@ against an owner accidentally relaying a private message.
 
 ---
 
-## 6. AI default behavior (using the voice we have)
+## 6. AI Reply: a first-class canvas activity with three modes
 
-The existing `sequences/ai_responder.py` (and `execute_ai_conversation`
-in `sequences/steps.py`) handles inbound conversational messages today.
-We use it as-is for v1.
+The existing `execute_ai_reply` and `execute_ai_conversation` steps
+(`server/sequences/steps.py`) are first-class **canvas activities** the
+owner can drop into any flow. Like Wait, Send Text, and Send Email, AI
+Reply has its own configuration. We use the existing voice as-is for v1
+— no new training, no new samples.
 
-### When the AI replies automatically
+### The three AI modes (per-flow setting, drop-in node)
 
-- Inbound text from a lead that is the FIRST message in the thread (the
-  "first hello" auto-response).
-- Inbound text from a lead that is small-talk / clarifying / confirming
-  ("got it, thanks", "that works", "what time again?").
+Every flow that handles a conversation (inbound text, AI auto-response
+to a form, recurring check-in) has an `ai_mode` setting on the AI Reply
+node:
 
-### When the AI escalates to the owner
+```
+                    ┌──────────────────────┐
+                    │ 🤖 AI Reply (node)   │
+                    │  Mode: [ ai_first ▾ ] │
+                    │  Max turns: [ 5 ]    │
+                    │  Wait for owner: [ — ]│
+                    │  Escalate on: ...    │
+                    └──────────────────────┘
+
+  Three modes the owner can pick from the dropdown:
+
+  1. ai_first         AI replies immediately to the lead. Owner gets a
+                      notification but is not blocking the response.
+                      Best for: first-touch responses, off-hours
+                      coverage, high-volume verticals where the lead
+                      cannot wait. Default for: landscaping, HVAC.
+
+  2. owner_first      Owner is nudged via SMS first. AI runs ONLY if
+                      the owner doesn't reply within
+                      `ai_fallback_after_min` (default 10 min,
+                      configurable per node).
+                      Best for: high-touch verticals where the owner is
+                      the relationship. Default for: real-estate broker,
+                      roofing.
+
+  3. owner_only       Owner is nudged. AI never runs on this conversation.
+                      The lead's message just sits until the owner replies.
+                      Best for: time-sensitive routine confirms, sensitive
+                      states (complaint leads, opted-out leads). Default
+                      for: estimate-day reminders, payment confirmations.
+```
+
+### Where the AI Reply node fits in a flow
+
+Because it's a canvas activity, the owner can place it anywhere — and
+combine it with other nodes (Wait, Send Text, branch). Two common
+patterns:
+
+```
+Pattern: ai_first (AI is the first responder)
+─────────────────────────────────────────────
+
+  📥 Inbound text → 🤖 AI Reply (ai_first, max 5 turns)
+                          │
+                          ▼
+                    AI hits an escalation rule
+                    (price / schedule / 5th turn)
+                          │
+                          ▼
+                    📲 Notify owner (with transcript)
+
+
+Pattern: owner_first with AI fallback
+─────────────────────────────────────
+
+  📥 Inbound text → 📲 Notify owner ("Reply within 10 min or AI handles")
+                          │
+                          ▼
+                    ⏱️ Wait for owner reply (10 min)
+                          │
+                  ┌───────┴───────┐
+                  ▼               ▼
+              Pat replied      Timer fired
+                  │               │
+                  ▼               ▼
+              Relay Pat's     🤖 AI Reply
+              text to lead    (max 1 turn,
+                              then notify)
+```
+
+### Default escalation rules (apply to all modes)
 
 The AI hands back to the owner via SMS prompt when ANY of the following:
 
@@ -296,11 +367,16 @@ The AI hands back to the owner via SMS prompt when ANY of the following:
 - Tone shifts to negative (frustrated, angry, urgent).
 - The lead's message contains an address (we treat addresses as a sign
   of "the customer wants me to come there" → owner decides).
-- After the **5th message** in a thread (default; configurable), regardless
-  of content. This is a "the AI has done enough; let the human read."
+- After the **5th message** in a thread (default; configurable per node),
+  regardless of content. This is a "the AI has done enough; let the
+  human read."
 - The customer explicitly asks for the owner ("can I talk to Pat directly?").
 
-When the AI escalates, the owner receives:
+The escalation list is editable per AI Reply node — vertical packs ship
+sensible defaults (e.g. landscaping adds "chemical / pesticide / HOA"
+to the list).
+
+### Escalation prompt the owner receives
 
 ```
 🚨 Aaron asked about price ($1,500ish?). Stepping out of the conversation.
@@ -317,15 +393,34 @@ The owner can respond from the same SMS thread; the system relays the
 response to the lead from the Twilio number. Aaron sees one continuous
 conversation.
 
-### When the AI is silent
+### When the AI is silent (regardless of mode)
 
 - Inbound from leads that are NOT in active flow state (cold leads, opted-out
   leads, manual-only leads). The owner gets the message forwarded but the
   AI does not engage.
-- After STOP or TAKE OVER on this conversation.
+- After `STOP` or `TAKE OVER` on this conversation (owner SMS commands).
 - Outside business hours, if owner setting is "AI silent outside hours."
   The lead's message queues; AI replies at start of next business hour OR
   the owner responds first.
+
+### Mixing modes within one flow
+
+Different stages of a flow can use different modes. Example for
+landscaping:
+
+```
+First-touch flow              Active-conversation flow      Recurring confirm
+─────────────────             ────────────────────────       ─────────────────
+🤖 ai_first                    🤖 owner_first                 🤖 owner_only
+Cold lead arriving;           Pat already knows this lead;   No AI needed —
+fast response wins;           Pat is the voice, AI fills    just confirm with
+AI handles small talk;        in if Pat is on a roof.       the customer.
+escalates on hard cases.
+```
+
+This is the entire point of having AI Reply as a configurable node:
+the owner picks the right mode per situation rather than the system
+imposing one global pattern.
 
 ---
 
@@ -545,10 +640,63 @@ Components that need to be built for this design:
 - Each pack contains:
   - Default flows for first-hello, quote-nudge, win-back, after-job
   - AI voice tuning (system prompt with vertical-specific rules)
+  - **Per-flow `ai_mode`** picked from `ai_first` / `owner_first` /
+    `owner_only` (see section 6). Each AI Reply node in the pack ships
+    with the right mode for its situation.
   - Default approval settings (e.g. HVAC: ask-first on diagnostic-fee
     quotes; landscaping: auto-send on weekly-check-in)
 - Stored as JSON under `server/sequences/vertical_packs/`. Selected during
   the setup wizard.
+
+#### Landscaping pack — example shape
+
+```json
+{
+  "id": "landscaping",
+  "name": "Landscaping",
+  "default_flows": [
+    {
+      "id": "first_hello_landscaping",
+      "trigger_type": "channel",
+      "channels": ["form", "phone_text", "phone_call_missed"],
+      "ai_node": {
+        "ai_mode": "ai_first",
+        "max_turns": 5,
+        "escalate_on": [
+          "price_question", "schedule_request",
+          "chemical_or_hoa_mention", "address_provided",
+          "explicit_owner_request", "message_count >= 5"
+        ]
+      },
+      "auto_send": true
+    },
+    {
+      "id": "active_conversation_landscaping",
+      "trigger_type": "inbound_to_active_lead",
+      "ai_node": {
+        "ai_mode": "owner_first",
+        "ai_fallback_after_min": 15,
+        "max_turns": 1
+      },
+      "auto_send": true
+    },
+    {
+      "id": "recurring_service_confirm",
+      "trigger_type": "recurring_schedule",
+      "ai_node": {
+        "ai_mode": "owner_only"
+      },
+      "auto_send_in_hours": true
+    }
+  ],
+  "ai_voice": {
+    "system_prompt": "You're an assistant for a small landscaping company. Friendly, casual, practical. Knows mowing, trimming, mulch, sod, tree work, fall cleanup, spring cleanup, snow removal. Always asks for photos when describing the work."
+  }
+}
+```
+
+The owner can flip any `ai_mode` from the flow editor canvas without
+touching the JSON.
 
 ### 11.8 Dashboard slimming
 - Add a first-time-wizard route and a "you're done with setup; SMS will
