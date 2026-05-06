@@ -3454,6 +3454,22 @@
 
       <!-- Scheduled -->
       <div class="pane" data-pane="scheduled" hidden>
+        <!-- Slim "still loading" banner. Shown while pollNextUp is
+             talking to /api/scheduled and hidden as soon as the
+             response (or stale cache) populates the calendar. The
+             green pulse dot signals "we're working on it" so the
+             user knows new data is en route — UI is never blank. -->
+        <div id="sch-loading-banner"
+             style="display:none;align-items:center;gap:8px;
+                    margin-bottom:10px;padding:6px 12px;
+                    background:#ecfdf5;border:1px solid #bbf7d0;
+                    border-radius:99px;font-size:12px;font-weight:600;
+                    color:#0a8a3a;align-self:flex-start;width:auto;
+                    max-width:max-content">
+          <span style="width:7px;height:7px;border-radius:99px;background:#16a34a;
+                       animation:nxtpulse 1.2s ease-in-out infinite"></span>
+          <span>Loading the latest scheduled posts…</span>
+        </div>
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
           <div style="font-weight:700;font-size:18px">Scheduled posts</div>
           <div class="sch-segs" id="sch-view-toggle" style="margin-left:8px">
@@ -5068,19 +5084,74 @@
       });
     }
 
+    // Stale-while-revalidate cache for /api/scheduled. The response
+    // can be 200-700 records and the GCS round-trip dominates server
+    // time. Show whatever we cached on the previous load INSTANTLY,
+    // then fetch fresh data in the background and reconcile.
+    var _SCHED_CACHE_KEY = "li_sched_cache_v1";
+    function _readSchedCache(){
+      try {
+        var raw = sessionStorage.getItem(_SCHED_CACHE_KEY);
+        if (!raw) return null;
+        var d = JSON.parse(raw);
+        // 5-minute soft expiry — older cache is shown but the loading
+        // banner stays up to encourage the user to wait for fresh.
+        if (!d || !d.scheduled || !d.savedAt) return null;
+        return d;
+      } catch(_) { return null; }
+    }
+    function _writeSchedCache(scheduled){
+      try {
+        sessionStorage.setItem(_SCHED_CACHE_KEY, JSON.stringify({
+          scheduled: scheduled,
+          savedAt:   Date.now(),
+        }));
+      } catch(_) {}
+    }
+    function _showLoadingBanner(on){
+      var b = document.getElementById("sch-loading-banner");
+      if (!b) return;
+      b.style.display = on ? "flex" : "none";
+    }
+
     async function pollNextUp(){
       if (!STATE.active) {
         console.log("[li-cal] pollNextUp: no STATE.active, bailing", STATE);
         return;
       }
+      // Stale cache — render instantly so the calendar is never blank
+      // while the server processes a slow response. The server hit
+      // continues in the background and the result reconciles when
+      // it arrives.
+      var stale = _readSchedCache();
+      if (stale && stale.scheduled && !STATE._cacheUsed) {
+        STATE._cacheUsed = true;  // only on first poll
+        console.log("[li-cal] using stale cache:", stale.scheduled.length, "records");
+        _processSchedResponse({ scheduled: stale.scheduled }, /*fromCache*/true);
+      }
+      _showLoadingBanner(true);
       try {
         var r = await fetch("/dashboard/linkedin/api/scheduled",
           { credentials:"same-origin" });
         if (!r.ok) {
           console.warn("[li-cal] /api/scheduled fetch failed:", r.status);
+          _showLoadingBanner(false);
           return;
         }
         var d = await r.json().catch(()=>({}));
+        _writeSchedCache((d && d.scheduled) || []);
+        _showLoadingBanner(false);
+        return _processSchedResponse(d, /*fromCache*/false);
+      } catch(e) {
+        _showLoadingBanner(false);
+        return;
+      }
+    }
+
+    async function _processSchedResponse(d, fromCache){
+      // The body of the original pollNextUp; extracted so the cache
+      // path and the network path go through the same logic.
+      try {
         console.log("[li-cal] /api/scheduled raw response:",
           "total=" + ((d.scheduled || []).length),
           "active.platform=" + (STATE.active.platform),

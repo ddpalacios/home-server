@@ -2343,6 +2343,20 @@
 
       <!-- Scheduled -->
       <div class="pane" data-pane="scheduled" hidden>
+        <!-- Slim "still loading" pill — visible only while
+             /api/scheduled is in flight. The cache renders the
+             calendar instantly so the user never sees a blank tab;
+             this banner just says "fresh data is on the way." -->
+        <div id="ig-sched-loading-banner"
+             style="display:none;align-items:center;gap:8px;
+                    margin-bottom:10px;padding:6px 12px;
+                    background:#ecfdf5;border:1px solid #bbf7d0;
+                    border-radius:99px;font-size:12px;font-weight:600;
+                    color:#0a8a3a;width:max-content">
+          <span style="width:7px;height:7px;border-radius:99px;background:#16a34a;
+                       animation:mg-pulse 1.2s ease-in-out infinite"></span>
+          <span>Loading the latest scheduled posts…</span>
+        </div>
         <div id="sched-status" class="loading"><span class="spinner" aria-hidden="true"></span> Loading scheduled posts…</div>
         <!-- View toggle: List / Week / Month (ported from dashboard_linkedin.html — keep in sync) -->
         <div id="sched-view-bar" style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap" hidden>
@@ -7346,27 +7360,67 @@
       else if (document.querySelector('.tab[data-tab="scheduled"].is-active')) _schStartTicker();
     });
 
+    // Stale-while-revalidate cache for /api/scheduled. The endpoint
+    // can return hundreds of records and the GCS round-trip dominates
+    // server time. Render the cache instantly so the calendar is
+    // never blank, then fetch fresh data in the background and
+    // reconcile when it arrives.
+    var _IG_SCHED_CACHE_KEY = "ig_sched_cache_v1";
+    function _igReadSchedCache(){
+      try {
+        var raw = sessionStorage.getItem(_IG_SCHED_CACHE_KEY);
+        if (!raw) return null;
+        var d = JSON.parse(raw);
+        if (!d || !d.scheduled) return null;
+        return d;
+      } catch(_) { return null; }
+    }
+    function _igWriteSchedCache(scheduled){
+      try {
+        sessionStorage.setItem(_IG_SCHED_CACHE_KEY, JSON.stringify({
+          scheduled: scheduled,
+          savedAt:   Date.now(),
+        }));
+      } catch(_) {}
+    }
+    function _igShowSchedLoading(on){
+      var b = document.getElementById("ig-sched-loading-banner");
+      if (!b) return;
+      b.style.display = on ? "inline-flex" : "none";
+    }
+
     async function loadScheduled(){
       var statusEl = $("sched-status");
+      // Render stale cache instantly so the page feels alive while the
+      // server processes the request.
+      var stale = _igReadSchedCache();
+      if (stale && Array.isArray(stale.scheduled) && !window._igSchedCacheUsed) {
+        window._igSchedCacheUsed = true;
+        _scheduled = _schApplyInflight(_schFilterToInstagram(stale.scheduled));
+        _schRender();
+      }
+      _igShowSchedLoading(true);
       try {
         var r = await fetch("/dashboard/instagram/api/scheduled", {credentials:"same-origin"});
         var data = await r.json().catch(()=>({}));
         if (!r.ok) {
+          _igShowSchedLoading(false);
           if (statusEl) {
             statusEl.hidden = false;
             statusEl.innerHTML = '<div class="error-text">Couldn\'t load scheduled posts.</div>';
           }
           return;
         }
+        _igWriteSchedCache(data.scheduled || []);
+        _igShowSchedLoading(false);
         _scheduled = _schApplyInflight(_schFilterToInstagram(data.scheduled || []));
-        // Library cache may not be populated yet (Scheduled tab opened
-        // before Library tab). Lazy-load it so the row thumbnails work.
         if (!_libCache.hooks.length && !_libCache.meats.length && !_libCache.ctas.length) {
           _libLoadAll().then(_schRender);
         }
         _schRender();
         _schStartTicker();
       } catch (e) {
+        _igShowSchedLoading(false);
         if (statusEl) {
           statusEl.hidden = false;
           statusEl.innerHTML = '<div class="error-text">Network error: ' + esc(e.message) + '</div>';
