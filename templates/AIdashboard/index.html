@@ -25183,6 +25183,7 @@
             <button type="button" class="lm-btn" data-lm-action="note">📝 Add a note</button>
             <button type="button" class="lm-btn" data-lm-action="run_flow">▶ Run a flow</button>
             <button type="button" class="lm-btn" data-lm-action="replies">💬 Open in Replies</button>
+            ${(lead.phone && !lead.voice_opted_out) ? `<button type="button" class="lm-btn" data-lm-action="click-to-call">📞 Call now</button>` : ""}
           </div>
         `;
         headerEl.querySelectorAll("[data-lm-action]").forEach(b =>
@@ -26526,6 +26527,47 @@
               onStarted:      () => { try { loadJourney(currentLeadId); } catch (_) {} },
             });
           }
+          return;
+        }
+        if (action === "click-to-call") {
+          // Tier C: warm-transfer click-to-call. Backend dials the OWNER
+          // first; when they pick up, Twilio bridges in the lead. The
+          // owner gets an SMS heads-up too ("📞 Calling Aaron now…")
+          // so they know to expect the inbound ring.
+          const btn = headerEl && headerEl.querySelector("[data-lm-action='click-to-call']");
+          const origLabel = btn ? btn.textContent : "";
+          if (btn) { btn.disabled = true; btn.textContent = "Calling…"; }
+          fetch(`/me/leads/${encodeURIComponent(currentLeadId)}/click-to-call`, {
+            method: "POST", credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({}),
+          }).then(async r => {
+            const ok = r.ok;
+            let data = {};
+            try { data = await r.json(); } catch (_) {}
+            if (btn) { btn.disabled = false; btn.textContent = origLabel || "📞 Call now"; }
+            if (ok && data.ok) {
+              const msg = "Calling you first — pick up to connect.";
+              if (typeof window.showToast === "function") window.showToast(msg);
+              else alert(msg);
+            } else {
+              const why = (data && data.error) || "could not place call";
+              const friendly = (
+                why === "voice_opted_out"        ? "This contact has asked us not to call them." :
+                why === "no_lead_phone"           ? "We don't have a phone number for this contact." :
+                why === "no_owner_phone"          ? "Add your phone number in Settings first." :
+                why === "twilio_not_configured"   ? "Calling isn't set up for this account yet." :
+                                                    "Couldn't place the call. " + why
+              );
+              if (typeof window.showToast === "function") window.showToast(friendly);
+              else alert(friendly);
+            }
+          }).catch(_ => {
+            if (btn) { btn.disabled = false; btn.textContent = origLabel || "📞 Call now"; }
+            const msg = "Couldn't reach the calling service. Try again in a moment.";
+            if (typeof window.showToast === "function") window.showToast(msg);
+            else alert(msg);
+          });
           return;
         }
       }
@@ -33301,7 +33343,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-06-wizard-top-nav"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-06-tier-c-voice"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
