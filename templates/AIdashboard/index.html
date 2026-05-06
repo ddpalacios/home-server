@@ -15377,8 +15377,10 @@
         </div>
       </section>
 
-      <!-- ─── Lead intake — iframed standalone page so it can be reached
-           directly OR routed to via #leadIntake. ───────────────────── -->
+      <!-- ─── Lead intake — iframed for source isolation but visually
+           seamless: transparent background, no rounded chrome, height
+           tracks the iframe's content via postMessage so the dashboard's
+           scroll handles the page (no nested scrollbar). ───────────── -->
       <section class="grid" id="leadIntake" data-route-section="leadIntake" hidden>
         <div style="grid-column: span 12;">
           <iframe
@@ -15386,7 +15388,7 @@
             src="about:blank"
             title="Lead intake"
             loading="lazy"
-            style="width:100%;height:calc(100vh - 96px);min-height:760px;border:0;border-radius:10px;background:#fff;display:block"
+            style="width:100%;height:auto;min-height:600px;border:0;background:transparent;display:block"
             data-src="/dashboard/lead-intake"
           ></iframe>
         </div>
@@ -20555,6 +20557,17 @@
         var src = fr.getAttribute("data-src");
         if (src && fr.getAttribute("src") !== src) fr.setAttribute("src", src);
       };
+      // Listen for the lead-intake iframe's height pings and resize
+      // it to match — that way the iframe never shows its own
+      // scrollbar; the dashboard's .app-body owns the scroll.
+      window.addEventListener("message", function(e){
+        var msg = e && e.data;
+        if (!msg || msg.type !== "lead-intake-height") return;
+        var fr = document.getElementById("leadIntakeFrame");
+        if (!fr) return;
+        var h = Math.max(600, parseInt(msg.height, 10) || 0);
+        fr.style.height = h + "px";
+      });
 
       // Engagement page: lazy-loads web/src/routes/engagement.js then calls
       // window.loadEngagementSection to fetch sequences + render funnel stages.
