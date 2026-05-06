@@ -26196,6 +26196,7 @@
             </div>
           </div>
           ${renderRecurringPlanPanel(lead)}
+          ${renderChangeOrdersPanel(lead)}
         `;
         bodyEl.querySelectorAll("[data-toggle-event]").forEach(el =>
           el.addEventListener("click", () => {
@@ -26204,6 +26205,7 @@
             if (body) body.hidden = !body.hidden;
           }));
         wireRecurringPlanPanel(lead);
+        wireChangeOrdersPanel(lead);
         bodyEl.querySelectorAll("[data-lm-suggest]").forEach(b =>
           b.addEventListener("click", () => handleAction(b.dataset.lmSuggest)));
         bodyEl.querySelectorAll("[data-note-cancel]").forEach(b =>
@@ -26626,6 +26628,324 @@
             save.disabled = false;
           }
         });
+      }
+
+      // ── Tier E: Change orders panel ──────────────────────────────────
+      // Slots between the recurring service panel and the actions row.
+      // Captures mid-job add-ons cleanly: owner records reason +
+      // amount_delta + optional line items, then sends to customer via
+      // email or SMS. Customer's YES/NO reply auto-flips status (handled
+      // server-side in ai_conversation.py); owner can manually flip too.
+      // Total = base quote + sum(approved change_orders) — computed at
+      // read time, never stored.
+      function _coFmtMoney(n) {
+        const v = parseInt(n || 0, 10);
+        const sign = v < 0 ? "-" : "";
+        const abs = Math.abs(v).toLocaleString();
+        return sign + "$" + abs;
+      }
+      function _coFmtSent(epoch) {
+        if (!epoch) return "";
+        try {
+          const d = new Date(epoch * 1000);
+          return d.toLocaleString(undefined, {
+            weekday: "short", hour: "numeric", minute: "2-digit",
+          });
+        } catch (_) { return ""; }
+      }
+      function _coStatusPill(status) {
+        const map = {
+          pending:  { label: "Open",     bg: "#fef3c7", fg: "#92400e" },
+          approved: { label: "Approved", bg: "#dcfce7", fg: "#166534" },
+          declined: { label: "Declined", bg: "#fee2e2", fg: "#991b1b" },
+          canceled: { label: "Canceled", bg: "#e2e8f0", fg: "#475569" },
+        };
+        const m = map[(status || "pending").toLowerCase()] || map.pending;
+        return `<span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:${m.bg};color:${m.fg};">${m.label}</span>`;
+      }
+      function _coRunningTotal(lead) {
+        const base = parseInt(lead && lead.quote_amount || 0, 10) || 0;
+        const cos = (lead && lead.change_orders) || [];
+        let add = 0;
+        for (const c of cos) {
+          if ((c.status || "").toLowerCase() === "approved") {
+            add += (parseInt(c.amount_delta || 0, 10) || 0);
+          }
+        }
+        return base + add;
+      }
+
+      function renderChangeOrdersPanel(lead) {
+        const cos = ((lead && lead.change_orders) || []).slice();
+        const base = parseInt(lead && lead.quote_amount || 0, 10) || 0;
+        const total = _coRunningTotal(lead);
+        // Newest first for display.
+        cos.sort((a, b) => (b.created_at || 0) - (a.created_at || 0));
+        const cards = cos.map(co => {
+          const idx = ((lead && lead.change_orders) || [])
+            .findIndex(x => x.id === co.id) + 1;
+          const status = (co.status || "pending").toLowerCase();
+          const delta = parseInt(co.amount_delta || 0, 10) || 0;
+          const sign = delta >= 0 ? "+" : "−";
+          const amt = `${sign}${_coFmtMoney(Math.abs(delta))}`;
+          const reason = (co.reason || "").trim();
+          const sentLine = co.sent_at
+            ? `Sent ${_coFmtSent(co.sent_at)}.`
+            : "Not sent yet.";
+          const respLine = co.customer_response_at
+            ? `Customer ${status} ${_coFmtSent(co.customer_response_at)}.`
+            : (status === "pending" && co.sent_at
+                ? "Awaiting customer reply."
+                : "");
+          const items = (co.line_items || []);
+          const itemsBlock = items.length
+            ? `<ul style="margin:6px 0 0 0;padding-left:18px;font-size:12px;color:#475569;">${
+                items.map(li => `<li>${esc(li.label || "")} — ${_coFmtMoney(li.amount)}</li>`).join("")
+              }</ul>`
+            : "";
+          let actions = "";
+          if (status === "pending") {
+            const sendBtn = co.sent_at ? "" :
+              `<button type="button" class="lm-btn is-primary" data-co-action="send" data-co-id="${esc(co.id)}">Send to customer</button>`;
+            actions = `
+              <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">
+                ${sendBtn}
+                <button type="button" class="lm-btn" data-co-action="approve" data-co-id="${esc(co.id)}">Mark approved</button>
+                <button type="button" class="lm-btn" data-co-action="decline" data-co-id="${esc(co.id)}">Mark declined</button>
+                <button type="button" class="lm-btn" data-co-action="cancel" data-co-id="${esc(co.id)}">Cancel</button>
+              </div>`;
+          }
+          return `
+            <div class="lm-co-card" data-co-card="${esc(co.id)}" style="border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;background:#fff;margin-top:10px;">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                ${_coStatusPill(status)}
+                <strong>#${idx}</strong>
+                <span style="font-weight:600;">${amt}</span>
+              </div>
+              <div style="margin-top:6px;font-size:13px;color:#1e293b;">${esc(reason || "(no reason)")}</div>
+              ${itemsBlock}
+              <div style="margin-top:6px;font-size:12px;color:#64748b;">
+                ${esc(sentLine)} ${esc(respLine)}
+              </div>
+              ${actions}
+            </div>
+          `;
+        }).join("");
+
+        return `
+          <div class="lm-section" id="lmChangeOrdersSection">
+            <h3>Change orders</h3>
+            <div style="border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;background:#fcfdff;">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                <div style="font-size:13px;color:#475569;">
+                  <div>Original quote: <strong>${_coFmtMoney(base)}</strong></div>
+                  <div>Running total: <strong id="lmCoTotal">${_coFmtMoney(total)}</strong></div>
+                </div>
+                <button type="button" id="lmCoNewBtn" class="lm-btn is-primary">+ New change order</button>
+              </div>
+              <div id="lmCoForm" style="display:none;margin-top:12px;border:1px dashed #cbd5e1;border-radius:8px;padding:12px;background:#fff;">
+                <div style="font-size:13px;color:#1e293b;margin-bottom:8px;font-weight:600;">New change order</div>
+                <label style="display:flex;flex-direction:column;font-size:12px;color:#475569;gap:4px;">
+                  What did you find? (1–2 sentences)
+                  <textarea id="lmCoReason" rows="2" style="padding:8px;font-size:14px;border:1px solid #cbd5e1;border-radius:6px;resize:vertical;" placeholder="e.g. Found rotten subfloor under the sink — needs full replacement"></textarea>
+                </label>
+                <label style="display:flex;flex-direction:column;font-size:12px;color:#475569;margin-top:10px;gap:4px;">
+                  How much does it add?
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span style="font-size:14px;color:#475569;">$</span>
+                    <input type="number" id="lmCoAmount" min="1" step="1" style="padding:8px;font-size:14px;border:1px solid #cbd5e1;border-radius:6px;width:140px;" placeholder="2000" />
+                  </div>
+                </label>
+                <div style="margin-top:10px;">
+                  <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#475569;cursor:pointer;">
+                    <input type="checkbox" id="lmCoUseLines" />
+                    Add line items (optional)
+                  </label>
+                  <div id="lmCoLines" style="display:none;margin-top:8px;"></div>
+                  <button type="button" id="lmCoAddLine" style="display:none;margin-top:6px;font-size:12px;color:#2563eb;background:none;border:none;cursor:pointer;padding:0;">+ Add line</button>
+                </div>
+                <div style="margin-top:12px;font-size:12px;color:#475569;">
+                  Send via:
+                  <label style="margin-left:8px;cursor:pointer;"><input type="radio" name="lmCoChannel" value="email" checked /> Email</label>
+                  <label style="margin-left:8px;cursor:pointer;"><input type="radio" name="lmCoChannel" value="sms" /> SMS</label>
+                  <label style="margin-left:8px;cursor:pointer;"><input type="radio" name="lmCoChannel" value="both" /> Both</label>
+                </div>
+                <div style="margin-top:12px;display:flex;justify-content:flex-end;gap:8px;">
+                  <button type="button" id="lmCoCancel" class="lm-btn">Cancel</button>
+                  <button type="button" id="lmCoSend" class="lm-btn is-primary">Send change order →</button>
+                </div>
+                <div id="lmCoStatus" style="margin-top:8px;font-size:12px;color:#475569;"></div>
+              </div>
+              <div id="lmCoList">${cards || `<div style="margin-top:10px;font-size:13px;color:#94a3b8;">No change orders yet.</div>`}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      function _coToast(msg) {
+        // Reuse existing toast if available; fall back to a plain alert.
+        try {
+          if (typeof window.showToast === "function") {
+            window.showToast(msg);
+            return;
+          }
+        } catch (_) {}
+        try { console.log("[change-order]", msg); } catch (_) {}
+      }
+
+      function wireChangeOrdersPanel(lead) {
+        const sec = document.getElementById("lmChangeOrdersSection");
+        if (!sec || !lead || !lead.id) return;
+        const newBtn  = document.getElementById("lmCoNewBtn");
+        const form    = document.getElementById("lmCoForm");
+        const cancel  = document.getElementById("lmCoCancel");
+        const sendBtn = document.getElementById("lmCoSend");
+        const status  = document.getElementById("lmCoStatus");
+        const reason  = document.getElementById("lmCoReason");
+        const amount  = document.getElementById("lmCoAmount");
+        const useLines = document.getElementById("lmCoUseLines");
+        const linesC  = document.getElementById("lmCoLines");
+        const addLine = document.getElementById("lmCoAddLine");
+
+        if (newBtn) newBtn.addEventListener("click", () => {
+          if (!form) return;
+          form.style.display = (form.style.display === "none" || !form.style.display) ? "" : "none";
+          if (form.style.display === "" && reason) reason.focus();
+        });
+        if (cancel) cancel.addEventListener("click", () => {
+          if (form) form.style.display = "none";
+          if (status) status.textContent = "";
+        });
+        if (useLines) useLines.addEventListener("change", () => {
+          const on = useLines.checked;
+          if (linesC) linesC.style.display = on ? "" : "none";
+          if (addLine) addLine.style.display = on ? "" : "none";
+          if (on && linesC && !linesC.children.length) {
+            _coAppendLineRow(linesC);
+          }
+        });
+        if (addLine) addLine.addEventListener("click", () => {
+          if (linesC) _coAppendLineRow(linesC);
+        });
+
+        if (sendBtn) sendBtn.addEventListener("click", async () => {
+          if (!reason || !amount) return;
+          const reasonVal = (reason.value || "").trim();
+          const amtVal = parseInt(amount.value || "0", 10);
+          if (!reasonVal) { if (status) status.textContent = "Please describe what you found."; return; }
+          if (!amtVal) { if (status) status.textContent = "Enter a dollar amount."; return; }
+          let lineItems = [];
+          if (useLines && useLines.checked && linesC) {
+            for (const row of linesC.querySelectorAll("[data-co-line]")) {
+              const lab = (row.querySelector("[data-co-line-label]").value || "").trim();
+              const am = parseInt(row.querySelector("[data-co-line-amount]").value || "0", 10);
+              if (lab || am) lineItems.push({ label: lab, amount: am });
+            }
+          }
+          const channelEl = sec.querySelector('input[name="lmCoChannel"]:checked');
+          const channel = channelEl ? channelEl.value : "email";
+          sendBtn.disabled = true;
+          if (status) status.textContent = "Saving…";
+          try {
+            // 1. Create
+            const res1 = await fetch(
+              `/me/leads/${encodeURIComponent(lead.id)}/change-orders`,
+              { method: "POST", credentials: "same-origin",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                  amount_delta: amtVal, reason: reasonVal,
+                  line_items: lineItems,
+                }) });
+            const d1 = await res1.json().catch(() => ({}));
+            if (!res1.ok) {
+              if (status) status.textContent = "Couldn't create: " + (d1.error || res1.status);
+              return;
+            }
+            const co = d1.change_order || {};
+            const idx = d1.index || 0;
+            // 2. Send
+            if (status) status.textContent = "Sending…";
+            const res2 = await fetch(
+              `/me/leads/${encodeURIComponent(lead.id)}/change-orders/${encodeURIComponent(co.id)}/send`,
+              { method: "POST", credentials: "same-origin",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ channel: channel }) });
+            const d2 = await res2.json().catch(() => ({}));
+            if (!res2.ok) {
+              if (status) status.textContent = "Created, but send failed: " + ((d2.errors||[]).join(",") || d2.error || res2.status);
+              return;
+            }
+            const firstName = (lead.first_name || (lead.name||"").split(" ")[0] || "your customer");
+            _coToast(`Change order #${idx} sent to ${firstName}.`);
+            if (form) form.style.display = "none";
+            if (reason) reason.value = "";
+            if (amount) amount.value = "";
+            if (useLines) { useLines.checked = false; }
+            if (linesC) { linesC.innerHTML = ""; linesC.style.display = "none"; }
+            if (addLine) addLine.style.display = "none";
+            if (status) status.textContent = "";
+            // Refresh modal to pick up the new change order in the list.
+            try { loadJourney(lead.id); } catch (_) {}
+          } catch (_) {
+            if (status) status.textContent = "Couldn't send. Try again.";
+          } finally {
+            sendBtn.disabled = false;
+          }
+        });
+
+        // Per-card actions (manual approve / decline / cancel / re-send).
+        sec.addEventListener("click", async (ev) => {
+          const btn = ev.target.closest("[data-co-action]");
+          if (!btn) return;
+          const action = btn.dataset.coAction;
+          const coId = btn.dataset.coId;
+          if (!coId) return;
+          if (action === "send") {
+            btn.disabled = true;
+            try {
+              const res = await fetch(
+                `/me/leads/${encodeURIComponent(lead.id)}/change-orders/${encodeURIComponent(coId)}/send`,
+                { method: "POST", credentials: "same-origin",
+                  headers: {"Content-Type": "application/json"},
+                  body: JSON.stringify({ channel: "email" }) });
+              if (res.ok) {
+                _coToast("Change order sent.");
+                try { loadJourney(lead.id); } catch (_) {}
+              }
+            } finally { btn.disabled = false; }
+            return;
+          }
+          // approve / decline / cancel → respond endpoint
+          const statusMap = { approve: "approved", decline: "declined", cancel: "canceled" };
+          const status = statusMap[action];
+          if (!status) return;
+          btn.disabled = true;
+          try {
+            const res = await fetch(
+              `/me/leads/${encodeURIComponent(lead.id)}/change-orders/${encodeURIComponent(coId)}/respond`,
+              { method: "POST", credentials: "same-origin",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ status: status }) });
+            if (res.ok) {
+              _coToast(`Marked ${status}.`);
+              try { loadJourney(lead.id); } catch (_) {}
+            }
+          } finally { btn.disabled = false; }
+        });
+      }
+
+      function _coAppendLineRow(container) {
+        const row = document.createElement("div");
+        row.setAttribute("data-co-line", "1");
+        row.style.cssText = "display:flex;gap:6px;margin-top:6px;align-items:center;";
+        row.innerHTML = `
+          <input type="text" data-co-line-label placeholder="Label (e.g. Subfloor replacement)" style="flex:1;padding:6px 8px;font-size:13px;border:1px solid #cbd5e1;border-radius:6px;" />
+          <span style="font-size:13px;color:#475569;">$</span>
+          <input type="number" data-co-line-amount min="0" step="1" placeholder="0" style="width:90px;padding:6px 8px;font-size:13px;border:1px solid #cbd5e1;border-radius:6px;" />
+          <button type="button" data-co-line-remove style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:16px;">×</button>
+        `;
+        row.querySelector("[data-co-line-remove]").addEventListener("click", () => row.remove());
+        container.appendChild(row);
       }
 
       function handleAction(action) {
@@ -33487,7 +33807,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-06-tierb-polish"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-06-change-orders"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
