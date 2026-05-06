@@ -5081,12 +5081,29 @@
         // linkedin_text / linkedin_image / linkedin_combo / etc.) so
         // anything without a linkedin_ kind doesn't belong on this
         // calendar.
+        //
+        // Account match is loosened: we ALWAYS surface LinkedIn-kind
+        // records on this calendar, even if their (platform,
+        // account_id) doesn't line up with the currently active
+        // LinkedIn credential. This prevents the "all my scheduled
+        // posts vanished after I re-logged in" bug — re-auth can mint
+        // a new account_id, leaving prior records orphaned. Records
+        // whose account_id doesn't match the active one get an
+        // `_orphaned: true` flag so the UI can render them with a
+        // "Reconnect to publish" hint, and the rebind script /
+        // endpoint can reattach them to the current account.
+        var activePlatform = (STATE.active && STATE.active.platform) || "";
+        var activeAccountId = (STATE.active && STATE.active.account_id) || "";
         var all = (d.scheduled || []).filter(rec => {
           var kind = (rec.kind || "").toLowerCase();
           if (!kind.startsWith("linkedin_")) return false;
           if (!(rec.platform || "").startsWith("linkedin_")) return false;
-          return rec.account_id === STATE.active.account_id
-              && rec.platform   === STATE.active.platform;
+          return true;
+        }).map(rec => {
+          var matches = rec.account_id === activeAccountId
+                     && rec.platform   === activePlatform;
+          if (!matches) rec._orphaned = true;
+          return rec;
         });
         // Drop expired in-flight entries first.
         _schPruneInflight();
