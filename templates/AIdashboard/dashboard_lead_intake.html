@@ -185,7 +185,11 @@
   .add-fld-item:hover { background:#f5f7fa; }
   .add-fld-divider { height:1px; background:var(--line); margin:6px 0; }
 
-  /* Builder modal frame */
+  /* Builder modal frame.
+     The card is capped at viewport-height so the footer (Save / Cancel
+     etc.) is always visible no matter how many fields the user adds.
+     The body flex-fills the remaining space and scrolls its two
+     columns internally. */
   .builder-bg {
     position:fixed; inset:0; background:rgba(10,15,25,.55);
     display:flex; align-items:flex-start; justify-content:center;
@@ -194,23 +198,26 @@
   .builder-card {
     background:#fff; border-radius:14px; max-width:980px;
     width:100%; display:flex; flex-direction:column;
+    max-height:calc(100vh - 48px);
     overflow:hidden; box-shadow:0 20px 60px rgba(20,40,80,.18);
   }
   .builder-head {
     display:flex; align-items:center; gap:10px;
     padding:14px 18px; border-bottom:1px solid var(--line);
+    flex-shrink:0;
   }
   .builder-head h2 { margin:0; font-size:17px; font-weight:600; }
   .builder-body {
     display:grid; grid-template-columns:1fr 1fr; gap:0;
-    min-height:480px; max-height:78vh;
+    flex:1; min-height:0;
   }
-  .builder-controls { padding:18px 22px; overflow:auto; }
+  .builder-controls { padding:18px 22px; overflow:auto; min-height:0; }
   .builder-preview  { padding:18px 22px; background:#f5f7fa; overflow:auto;
-                       border-left:1px solid var(--line); }
+                       border-left:1px solid var(--line); min-height:0; }
   .builder-foot {
     display:flex; gap:10px; justify-content:space-between; align-items:center;
     padding:14px 18px; border-top:1px solid var(--line);
+    flex-shrink:0;
   }
   .b-section-h {
     font-size:11px; font-weight:700; color:#9aa4b2;
