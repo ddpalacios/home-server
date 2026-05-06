@@ -20705,44 +20705,102 @@
         return Math.floor(s/(86400*30)) + "mo ago";
       }
 
-      // Compact list-row rendering for saved flows. Two-line layout:
-      //   line 1: emoji + flow name
-      //   line 2: source pill · status dot+label · steps · timestamp
-      // Hover-only ✕ delete button on the right. No per-row border —
-      // rows live inside a single bordered container with 1px
-      // hairline separators, so the eye reads a unified list, not a
-      // grid of cards.
+      // ── Operational metadata formatters ─────────────────────────
+      function _fmtRunCount(n) {
+        n = Number(n) || 0;
+        if (n === 0)      return "Not run yet";
+        if (n === 1)      return "Ran 1 time";
+        if (n < 1000)     return "Ran " + n + " times";
+        if (n < 10000)    return "Ran " + n.toLocaleString() + " times";
+        return "Ran " + (n / 1000).toFixed(1).replace(/\.0$/, "") + "k times";
+      }
+      function _fmtLastRan(ts) {
+        ts = Number(ts) || 0;
+        if (!ts) return "";  // never run — caller omits the metric
+        var s = Math.max(0, Math.floor(Date.now()/1000) - ts);
+        if (s < 60)             return "Last ran just now";
+        if (s < 3600)           return "Last ran " + Math.floor(s/60) + "m ago";
+        if (s < 86400)          return "Last ran " + Math.floor(s/3600) + "h ago";
+        if (s < 7 * 86400)      return "Last ran " + Math.floor(s/86400) + "d ago";
+        if (s < 30 * 86400)     return "Last ran " + Math.floor(s/(7*86400)) + "w ago";
+        if (s < 365 * 86400)    return "Last ran " + Math.floor(s/(30*86400)) + "mo ago";
+        return "Last ran 1y+ ago";
+      }
+      function _fmtInFlight(n, stepCount) {
+        n = Number(n) || 0;
+        if (n <= 0) return "";  // omit when 0
+        // 1-step flows complete instantly — no real "in flight" state.
+        if ((Number(stepCount) || 0) <= 1) return "";
+        return n === 1 ? "1 in flight" : (n + " in flight");
+      }
+
+      // Compact list-row rendering for saved flows. Three-line layout:
+      //   line 1: emoji + flow name (+ hover-only ✕ delete)
+      //   line 2: source pill · status dot+label · step count
+      //   line 3: ran-count · last-ran · in-flight (operational data)
+      // Rows live inside a single bordered container with hairline
+      // separators — eye reads ONE list, not a grid of cards.
       function _myFlowsCardHtml(f) {
         var icon = f.icon || "✨";
         var stepCount = (f.step_count || 0);
         var stepText = stepCount + " step" + (stepCount === 1 ? "" : "s");
-        var editedTxt = (f.last_edited
-          ? "Edited " + _myFlowsTimeAgo(f.last_edited)
-          : (f.builtin ? "Built-in" : "New"));
 
-        // ── Source pill (color-coded by channel). Same palette
-        //    documented in the badge system: blue=form, purple=email,
-        //    green=sms, amber=standalone, neutral=builtin.
-        var src = { txt: "✨ Flow", color: "#5a6470", bg: "#eef0f3" };
+        var stats = f.stats || {};
+        var totalRuns = Number(stats.total_runs || 0);
+        var lastRan   = Number(stats.last_triggered_at || 0);
+        var inFlight  = Number(stats.in_flight_count || 0);
+
+        // ── Source pill (color-coded by channel). Same palette as
+        //    documented earlier: blue=form, purple=email, green=sms,
+        //    amber=standalone, neutral=builtin. Form-attached pills
+        //    are clickable and navigate to that form's editor; email
+        //    and sms pills navigate to those settings; standalone +
+        //    built-in are non-clickable.
+        var src = { txt: "✨ Flow", color: "#5a6470", bg: "#eef0f3", href: "", title: "" };
+        var formId = "";
         if (f.builtin) {
-          src = { txt: "✨ Built-in", color: "#5a6470", bg: "#eef0f3" };
+          src = { txt: "✨ Built-in", color: "#5a6470", bg: "#eef0f3", href: "", title: "Built-in flow" };
         } else if (f.form_id || (f.id && f.id.indexOf("form:") === 0)) {
+          formId = f.form_id || (f.id || "").replace(/^form:/, "");
           src = { txt: "📝 " + (f.name ? f.name.replace(/\s+flow\s*$/i, "") : "Form"),
-                  color: "#185fa5", bg: "#eaf3fc" };
+                  color: "#185fa5", bg: "#eaf3fc",
+                  href: "#leadIntake", title: "Open the attached form",
+                  formId: formId };
         } else if (f.id === "default") {
-          src = { txt: "⚡ Standalone", color: "#7a5a00", bg: "#fef5e7" };
+          src = { txt: "⚡ Standalone", color: "#7a5a00", bg: "#fef5e7",
+                  href: "", title: "Runs on its own — no channel attached" };
         } else if ((f.source || "") === "email") {
-          src = { txt: "📧 Email", color: "#6b21a8", bg: "#f3e8ff" };
+          src = { txt: "📧 Email", color: "#6b21a8", bg: "#f3e8ff",
+                  href: "#settings", title: "Open Email settings" };
         } else if ((f.source || "") === "sms") {
-          src = { txt: "💬 Texts", color: "#0a8a3a", bg: "#e6f6ec" };
+          src = { txt: "💬 Texts", color: "#0a8a3a", bg: "#e6f6ec",
+                  href: "#phones", title: "Open Texts settings" };
         }
-        var sourcePill =
-            '<span style="display:inline-flex;align-items:center;gap:5px;'
-          +        'font-size:11.5px;font-weight:700;'
-          +        'background:' + src.bg + ';color:' + src.color + ';'
-          +        'padding:3px 9px;border-radius:99px;max-width:240px;'
-          +        'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 0 auto">'
-          + src.txt + '</span>';
+        // Pill is rendered as a button when href is set so click can
+        // be cancelled-stopPropagation'd cleanly without bubbling to
+        // the row click that opens the canvas.
+        var pillCommonStyle =
+            'display:inline-flex;align-items:center;gap:5px;'
+          + 'font-size:11.5px;font-weight:700;font-family:inherit;'
+          + 'background:' + src.bg + ';color:' + src.color + ';'
+          + 'padding:3px 9px;border-radius:99px;max-width:240px;'
+          + 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'
+          + 'flex:0 0 auto;border:0;line-height:1.4';
+        var sourcePill;
+        if (src.href) {
+          sourcePill = ''
+            + '<button type="button" class="mf-source-pill"'
+            +   ' data-source-href="' + src.href + '"'
+            +   (src.formId ? ' data-source-form-id="' + src.formId + '"' : '')
+            +   ' title="' + src.title + '"'
+            +   ' style="' + pillCommonStyle + ';cursor:pointer"'
+            +   ' onmouseover="this.style.textDecoration=\'underline\'"'
+            +   ' onmouseout="this.style.textDecoration=\'none\'">'
+            +   src.txt
+            + '</button>';
+        } else {
+          sourcePill = '<span title="' + src.title + '" style="' + pillCommonStyle + '">' + src.txt + '</span>';
+        }
 
         // ── Status indicator (dot + label, NOT a pill)
         var status = (f.status || "active").toLowerCase();
@@ -20756,8 +20814,18 @@
           +   '<span style="width:7px;height:7px;border-radius:99px;background:' + sd.dot + '"></span>'
           +   sd.label + '</span>';
 
-        // ── Hover-only ✕ delete (no edit pencil — the row click
-        //    opens the canvas which IS the edit surface)
+        // ── Operational line (line 3): ran X times · last ran · in flight
+        var runCountTxt = _fmtRunCount(totalRuns);
+        var lastRanTxt  = _fmtLastRan(lastRan);
+        var inFlightTxt = _fmtInFlight(inFlight, stepCount);
+        var opsParts = [runCountTxt];
+        if (lastRanTxt)  opsParts.push(lastRanTxt);
+        if (inFlightTxt) opsParts.push(inFlightTxt);
+        var opsLine = opsParts
+          .map(function(t){ return '<span>' + t + '</span>'; })
+          .join('<span aria-hidden="true">·</span>');
+
+        // ── Hover-only ✕ delete (no edit pencil — row click is edit)
         var deleteBtn = f.builtin ? '' :
             '<button type="button" class="my-flow-del" data-flow-del="' + (f.id || "") + '"'
           + ' aria-label="Delete this flow" title="Delete this flow"'
@@ -20780,9 +20848,11 @@
           +   ' onmouseleave="this.style.background=\'#fff\';var d=this.querySelector(\'.my-flow-del\');if(d)d.style.opacity=\'0\'">'
           +   '<span style="font-size:22px;line-height:1;flex:0 0 auto">' + icon + '</span>'
           +   '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">'
+          // line 1: name
           +     '<div style="font-weight:700;font-size:15px;color:#0a0a0a;'
           +            'overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
           +       (f.name || "Untitled") + '</div>'
+          // line 2: source · status · steps
           +     '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;'
           +            'font-size:12.5px;color:#9aa4b2">'
           +       sourcePill
@@ -20790,8 +20860,11 @@
           +       statusDot
           +       '<span aria-hidden="true">·</span>'
           +       '<span>' + stepText + '</span>'
-          +       '<span aria-hidden="true">·</span>'
-          +       '<span>' + editedTxt + '</span>'
+          +     '</div>'
+          // line 3: operational stats
+          +     '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;'
+          +            'font-size:12.5px;color:#9aa4b2">'
+          +       opsLine
           +     '</div>'
           +   '</div>'
           +   deleteBtn
@@ -20833,6 +20906,27 @@
           return;
         }
         grid.innerHTML = list.map(_myFlowsCardHtml).join("");
+        // Source pill click — navigate to the channel that owns this
+        // flow (form editor / email settings / sms settings). Stop
+        // propagation so the row click doesn't ALSO open the canvas.
+        grid.querySelectorAll(".mf-source-pill").forEach(function(pill){
+          pill.addEventListener("click", function(ev){
+            ev.stopPropagation();
+            ev.preventDefault();
+            var href = pill.getAttribute("data-source-href") || "";
+            if (!href) return;
+            // Form pills carry the form_id so the lead-intake page
+            // can re-open that form's builder modal on arrival.
+            var formId = pill.getAttribute("data-source-form-id") || "";
+            if (formId) {
+              try {
+                localStorage.setItem("intake_return_form_id", formId);
+                localStorage.setItem("intake_return_form_ts", String(Date.now()));
+              } catch(_) {}
+            }
+            try { window.location.hash = href; } catch(_) {}
+          });
+        });
         grid.querySelectorAll(".my-flow-card").forEach(function(card){
           card.addEventListener("click", function(){
             var fid = card.getAttribute("data-flow-id") || "";
