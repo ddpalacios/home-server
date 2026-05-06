@@ -908,16 +908,15 @@
         +   '<div class="add-fld-menu" id="b-add-menu" hidden></div>'
         + '</div>'
         + '<div class="b-section-h">What happens when someone fills it out</div>'
-        + '<div style="border:1px solid var(--line);border-radius:12px;background:#fff;overflow:hidden">'
-        // Single step — the attached flow. "We catch the lead" was
-        // step 1 historically, but it's a given (every form saves the
-        // lead) and reads as filler, so it's gone. Only the flow
-        // step shows now.
+        // Mount target for the flow-step list. Renders a placeholder
+        // immediately, then renderFlowSteps() replaces it with the
+        // real per-form flow once /me/forms/<form_id>/flow comes back.
+        + '<div id="b-flow-steps" style="border:1px solid var(--line);border-radius:12px;background:#fff;overflow:hidden">'
         +   '<div class="flow-step">'
         +     '<div class="flow-step-icon" style="background:#eaf3fc">' + attachedIcon + '</div>'
         +     '<div class="flow-step-body">'
         +       '<div class="flow-step-title">' + esc(attachedName) + '</div>'
-        +       '<div class="flow-step-sub">A welcome text or email goes out.</div>'
+        +       '<div class="flow-step-sub" id="b-flow-steps-sub">Loading your flow…</div>'
         +     '</div>'
         +     '<button class="btn flow-step-btn" id="b-change-flow" type="button">Change</button>'
         +   '</div>'
@@ -1065,15 +1064,28 @@
       // resolves. Subsequent clicks for the same form are instant.
       var asBtn = $("b-add-steps");
       function _gotoCanvas(formId){
+        // sessionStorage is scoped per-window — same-origin iframes do
+        // NOT share sessionStorage with the parent dashboard, so
+        // setting the came-from-form flag on this iframe's storage
+        // would be invisible to FlowBuilder. Write to BOTH the parent
+        // window's sessionStorage AND the iframe's so the flag lands
+        // where it's actually read.
         try {
+          var topSess = (window.top && window.top !== window.self)
+            ? window.top.sessionStorage
+            : sessionStorage;
           if (formId) {
+            // localStorage is shared across same-origin frames, so
+            // the breadcrumb is fine on either window.
             localStorage.setItem("intake_return_form_id", formId);
             localStorage.setItem("intake_return_form_ts", String(Date.now()));
-            sessionStorage.setItem("outreach_came_from_form", "1");
+            topSess.setItem("outreach_came_from_form", "1");
+            try { sessionStorage.setItem("outreach_came_from_form", "1"); } catch(_){}
           } else {
             localStorage.removeItem("intake_return_form_id");
             localStorage.removeItem("intake_return_form_ts");
-            sessionStorage.removeItem("outreach_came_from_form");
+            topSess.removeItem("outreach_came_from_form");
+            try { sessionStorage.removeItem("outreach_came_from_form"); } catch(_){}
           }
         } catch(_){}
         try { window.top.location.href = "/dashboard#outreach"; }
@@ -1258,7 +1270,119 @@
             + '</div>' : "");
     }
 
-    function renderAll(){ renderControls(); renderPreview(); }
+    function renderAll(){ renderControls(); renderPreview(); renderFlowSteps(); }
+
+    // Render the actual per-form flow's steps in the
+    // "What happens when someone fills it out" panel. Fetches the
+    // flow from /me/forms/<state.id>/flow on each call and lists
+    // every node (skipping the Input trigger — that's the form
+    // submission itself, already implied). Without this, the
+    // panel hardcoded a single "First Hello" row regardless of
+    // how many steps the canvas actually has.
+    function renderFlowSteps(){
+      var host = document.getElementById("b-flow-steps");
+      if (!host) return;
+      // Only meaningful when the form has been saved (has an id) —
+      // brand-new unsaved drafts can't have a per-form flow yet.
+      if (!state.id) return;
+      fetch("/me/forms/" + encodeURIComponent(state.id) + "/flow",
+        { credentials: "same-origin" })
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(d){
+          var flow = d && d.flow;
+          var nodes = (flow && Array.isArray(flow.nodes)) ? flow.nodes : [];
+          // Linearize using edges so the order matches the canvas.
+          var byId = {};
+          nodes.forEach(function(n){ byId[n.id] = n; });
+          var incoming = {}, outgoing = {};
+          (flow && flow.edges || []).forEach(function(e){
+            incoming[e.target] = (incoming[e.target] || []).concat(e);
+            outgoing[e.source] = (outgoing[e.source] || []).concat(e);
+          });
+          // Find the input/root: a node with no incoming edges.
+          var roots = nodes.filter(function(n){ return !(incoming[n.id] || []).length; });
+          var ordered = [];
+          var visited = {};
+          function walk(id){
+            if (!id || visited[id]) return;
+            visited[id] = true;
+            var n = byId[id];
+            if (n) ordered.push(n);
+            var outs = outgoing[id] || [];
+            outs.forEach(function(e){ walk(e.target); });
+          }
+          if (roots.length) {
+            roots.forEach(function(r){ walk(r.id); });
+          } else {
+            // Fall back to insertion order if no clean root.
+            ordered = nodes.slice();
+          }
+          // Skip the Input trigger row — submitting the form is the
+          // implicit step 1 and rendering it adds no information.
+          var steps = ordered.filter(function(n){
+            var aid = n && n.data && n.data.activityId;
+            return aid !== "input";
+          });
+          if (steps.length === 0) {
+            host.innerHTML = ''
+              + '<div class="flow-step">'
+              +   '<div class="flow-step-icon" style="background:#fef5e7">⚠️</div>'
+              +   '<div class="flow-step-body">'
+              +     '<div class="flow-step-title">No steps yet</div>'
+              +     '<div class="flow-step-sub">Tap <strong>Add more steps</strong> below to build your flow.</div>'
+              +   '</div>'
+              +   '<button class="btn flow-step-btn" id="b-change-flow" type="button">Change</button>'
+              + '</div>';
+            wireChangeFlow();
+            return;
+          }
+          host.innerHTML = steps.map(function(n, i){
+            var d = (n && n.data) || {};
+            var icon = d.icon || "✨";
+            var title = d.title || d.kind || "Step " + (i + 1);
+            var sub = d.cardSub || d.description || "";
+            var bg = d.kind === "trigger" ? "#e7f7ec"
+                   : d.kind === "logic"   ? "#fef5e7"
+                   :                         "#eaf3fc";
+            return ''
+              + '<div class="flow-step">'
+              +   '<div class="flow-step-num">' + (i + 1) + '</div>'
+              +   '<div class="flow-step-icon" style="background:' + bg + '">' + esc(icon) + '</div>'
+              +   '<div class="flow-step-body">'
+              +     '<div class="flow-step-title">' + esc(title) + '</div>'
+              +     (sub ? '<div class="flow-step-sub">' + esc(sub) + '</div>' : '')
+              +   '</div>'
+              + '</div>';
+          }).join("")
+          // Append a footer row with the Change button so the user
+          // still has access to the change-flow modal.
+          + '<div class="flow-step" style="background:#fafbfc">'
+          +   '<div class="flow-step-icon" style="background:transparent;font-size:14px">✨</div>'
+          +   '<div class="flow-step-body">'
+          +     '<div class="flow-step-title" style="font-size:13px">' + steps.length + ' step' + (steps.length === 1 ? "" : "s") + ' total</div>'
+          +     '<div class="flow-step-sub">Tap <strong>Add more steps</strong> below to edit on the canvas.</div>'
+          +   '</div>'
+          +   '<button class="btn flow-step-btn" id="b-change-flow" type="button">Change</button>'
+          + '</div>';
+          wireChangeFlow();
+        })
+        .catch(function(){
+          // Silent fail — leave the placeholder so we don't lie.
+        });
+    }
+    // Re-attach the change-flow handler after renderFlowSteps replaces
+    // the panel HTML (the old #b-change-flow button is destroyed).
+    function wireChangeFlow(){
+      var chFl = document.getElementById("b-change-flow");
+      if (!chFl) return;
+      chFl.onclick = function(){
+        openChangeFlowModal(state, function(picked){
+          state.attached_flow_id   = picked.id;
+          state.attached_flow_name = picked.name;
+          renderAll();
+        });
+      };
+    }
 
     // Persist the current state. onSaved(form) fires on success; the
     // caller decides what UI follows (share screen, navigate to canvas,
