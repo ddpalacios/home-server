@@ -10052,6 +10052,25 @@
         </div>
       </section>
 
+      <!-- Onboarding wizard — lives at /dashboard#onboarding inside the
+           SPA shell. Embeds the standalone /dashboard/onboarding page in
+           an iframe (mirrors the LinkedIn iframe pattern). Lazy-loaded:
+           the iframe's data-src is promoted to src on first activation
+           so the wizard's setup-wizard JS doesn't run until the user
+           routes to it. -->
+      <section class="grid" id="onboarding" data-route-section="onboarding" hidden>
+        <div style="grid-column: span 12;">
+          <iframe
+            id="onboardingFrame"
+            src="about:blank"
+            data-src="/dashboard/onboarding?embed=1"
+            title="Set up your business"
+            loading="lazy"
+            style="width:100%;height:calc(100vh - 80px);min-height:720px;border:0;border-radius:12px;background:#fff;display:block;box-shadow:0 1px 2px rgba(15,23,42,0.04);"
+          ></iframe>
+        </div>
+      </section>
+
       <!-- Booking confirmation modal — fired when the user drops a lead
            card onto an open slot. -->
       <div class="kbs-modal" id="schedBookModal" role="dialog" aria-modal="true" aria-labelledby="schedBookTitle">
@@ -20606,6 +20625,18 @@
       //  route section at 100% height and scrolls internally; modal
       //  uses position:fixed against the iframe viewport directly.)
 
+      // Onboarding wizard — same lazy-mount pattern. Hash-routed at
+      // /dashboard#onboarding; the iframe loads the existing standalone
+      // wizard at /dashboard/onboarding?embed=1. The `embed=1` flag
+      // tells the wizard to suppress its outer chrome (header, body
+      // background) so it slots into the SPA shell cleanly.
+      SECTION_ON_ENTER.onboarding = function loadOnboardingSection() {
+        var fr = document.getElementById("onboardingFrame");
+        if (!fr) return;
+        var src = fr.getAttribute("data-src");
+        if (src && fr.getAttribute("src") !== src) fr.setAttribute("src", src);
+      };
+
       // Engagement page: lazy-loads web/src/routes/engagement.js then calls
       // window.loadEngagementSection to fetch sequences + render funnel stages.
       SECTION_ON_ENTER.engagement = async function loadEngagementSectionEntry() {
@@ -23521,6 +23552,7 @@
       engagement: { title: "Engagement",   section: "engagement" },
       aiSettings: { title: "AI Settings",  section: "aiSettings" },
       leadIntake: { title: "Lead intake",  section: "leadIntake" },
+      onboarding: { title: "Set up your business", section: "onboarding" },
     };
 
     // ─────────── Section-data loaders (lazy, memoized) ───────────
@@ -33179,7 +33211,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-06-run-flow-fast-picker"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-06-onboarding-hashroute"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->

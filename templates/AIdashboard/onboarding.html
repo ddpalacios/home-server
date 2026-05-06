@@ -251,9 +251,38 @@
     }
     .summary h4 { font-size: 14px; margin-bottom: 6px; }
     .summary p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+    /* When embedded inside the dashboard SPA shell via iframe
+       (/dashboard#onboarding routes here with ?embed=1), suppress the
+       full-page chrome — no radial-gradient background, no centered
+       padded body — so the wizard slots cleanly into the parent layout. */
+    body.is-embedded {
+      background: transparent;
+      padding: 24px 0;
+      align-items: flex-start;
+    }
+    body.is-embedded::before { content: none; }
+    body.is-embedded .card {
+      box-shadow: none;
+      border: 1px solid var(--border);
+      width: min(720px, 100%);
+      margin: 0 auto;
+    }
   </style>
 </head>
 <body>
+  <script>
+    // If we're loaded inside the SPA iframe (?embed=1) — drop chrome
+    // immediately so the user doesn't see a flash of stand-alone styling.
+    (function () {
+      try {
+        var p = new URLSearchParams(window.location.search);
+        if (p.get("embed") === "1") {
+          document.body.classList.add("is-embedded");
+        }
+      } catch (_) {}
+    })();
+  </script>
   <main class="card">
     <div class="stepper" id="stepper">
       <div class="dot active"></div>
