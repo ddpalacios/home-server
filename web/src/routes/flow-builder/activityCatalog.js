@@ -151,6 +151,30 @@ export const ACTIVITY_CATALOG = [
     defaultBody: "Hey {first_name}, sorry I missed you — just following up about {service_type}. I'll be in touch shortly.\n— {owner_name}",
   },
 
+  // ── Call (Tier C) ────────────────────────────────────────────────────
+  // Two modes:
+  //   warm_transfer   — backend dials the OWNER first, bridges the lead
+  //                     in when the owner answers (same flow as the
+  //                     "📞 Call now" button on the lead detail modal).
+  //   voicemail_drop  — backend places a call with answering-machine
+  //                     detection; if the lead's voicemail picks up we
+  //                     play the chosen recording. If a human picks up
+  //                     we hang up immediately so we never surprise
+  //                     anyone with a recorded blast.
+  // The drawer UI is intentionally minimal in v1 — full editor wiring
+  // (mode toggle, recording picker, business-hours toggle) ships in a
+  // follow-up. The engine already handles every option here.
+  {
+    id: "call", kind: "action",
+    icon: "📞", title: "Call",
+    cardSub: "Auto-call this lead",
+    description: "Calls the lead. Warm-transfer connects you when they pick up; voicemail mode drops a recorded message.",
+    trigger: "PLACE A CALL",
+    defaultMode: "warm_transfer",        // or "voicemail_drop"
+    defaultRecordingId: "",              // when defaultMode=voicemail_drop
+    defaultRespectBusinessHours: true,
+  },
+
   // ── Logic ────────────────────────────────────────────────────────────
   {
     id: "branch", kind: "logic",
