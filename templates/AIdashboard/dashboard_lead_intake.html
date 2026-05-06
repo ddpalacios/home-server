@@ -758,21 +758,11 @@
         +   '</span>'
         +   '<span class="ascta-arrow">→</span>'
         + '</button>'
-        // Grouped card — what the form's submit screen looks like to
-        // the lead. Two fields, plenty of breathing room, plain copy.
-        + '<div class="b-card">'
-        +   '<div class="b-card-h">What they see</div>'
-        +   '<div class="b-field">'
-        +     '<label for="b-submit-text" class="b-field-label">Button label</label>'
-        +     '<input id="b-submit-text" class="b-input" placeholder="Submit" value="' + esc(state.submit_text) + '"/>'
-        +     '<div class="b-field-help">The big button people tap to send the form.</div>'
-        +   '</div>'
-        +   '<div class="b-field">'
-        +     '<label for="b-thanks" class="b-field-label">Thank-you note</label>'
-        +     '<textarea id="b-thanks" class="b-input" rows="2" style="resize:vertical" placeholder="Thanks — we\'ll be in touch.">' + esc(state.thank_you) + '</textarea>'
-        +     '<div class="b-field-help">Shows after they hit the button.</div>'
-        +   '</div>'
-        + '</div>'
+        // "What they see" card removed per user request — submit_text
+        // and thank_you stay on state with their saved/default values
+        // so the public form still has a button label and confirmation
+        // copy; we just don't surface them as editable in this builder
+        // anymore.
         // Danger zone — only when editing an existing form.
         + (editing ? (
             '<div class="b-danger">'
@@ -876,10 +866,10 @@
         }
       });
 
-      // Live updates from name / submit / thanks.
-      $("b-name").oninput        = function(){ state.name        = $("b-name").value;        renderPreview(); };
-      $("b-submit-text").oninput = function(){ state.submit_text = $("b-submit-text").value; renderPreview(); };
-      $("b-thanks").oninput      = function(){ state.thank_you   = $("b-thanks").value;      renderPreview(); };
+      // Live updates from name. submit-text + thank-you fields were
+      // removed from the builder UI; their state values stay at saved
+      // defaults so the public form still renders correctly.
+      $("b-name").oninput = function(){ state.name = $("b-name").value; renderPreview(); };
 
       // Change-flow.
       var chFl = $("b-change-flow");
