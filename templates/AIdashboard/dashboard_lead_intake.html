@@ -776,7 +776,7 @@
     var editing = !!form;
     var state = {
       id: editing ? form.id : null,
-      name: editing ? form.name : "Contact form",
+      name: editing ? form.name : "Untitled form",
       flow_id: editing ? (form.flow_id || "default") : "default",
       attached_flow_id:   editing ? (form.attached_flow_id   || "first_contact") : "first_contact",
       attached_flow_name: editing ? (form.attached_flow_name || "First Hello")   : "First Hello",
@@ -786,13 +786,53 @@
       // form before the user has explicitly clicked Save. Closing the
       // modal in this state deletes the draft + its flow.
       is_draft: editing ? !!form.is_draft : false,
-      // Initialize fields: when editing, take from form. When creating, start with name+phone+message ON.
+      // Initialize fields: when editing, take from form. When
+      // creating, start with name+email — the most common starter
+      // pair and matches the Phase 2 spec.
       fields: editing ? (form.fields || []).slice() : [
         Object.assign({}, BUILTINS[0], {required:true,  builtin:true}),
-        Object.assign({}, BUILTINS[2], {required:true,  builtin:true}),
-        Object.assign({}, BUILTINS[4], {required:false, builtin:true}),
+        Object.assign({}, BUILTINS[1], {required:true,  builtin:true}),
       ],
     };
+
+    // Background auto-create: as soon as a new-form builder opens,
+    // fire the POST so the form lands in GCS and shows up in the
+    // Lead Intake "Your forms" list. The user doesn't have to click
+    // Save — the form is real from the moment they see it. Their
+    // edits in the modal will PUT the existing record (state.id is
+    // populated when the POST resolves).
+    if (!editing) {
+      state._autoCreating = true;
+      fetch("/me/forms", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: state.name,
+          flow_id: state.flow_id,
+          attached_flow_id: state.attached_flow_id,
+          attached_flow_name: state.attached_flow_name,
+          fields: state.fields,
+          submit_text: state.submit_text,
+          thank_you: state.thank_you,
+          is_draft: false,
+        }),
+      })
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(d){
+          if (!d || !d.form) return;
+          state.id = d.form.id;
+          state.is_draft = false;
+          state._autoCreating = false;
+          // Refresh the Lead Intake "Your forms" list so the new
+          // form appears in the body of the page.
+          try { loadForms(); } catch(_) {}
+        })
+        .catch(function(){
+          state._autoCreating = false;
+          toast("Couldn't create your form. Try again.");
+        });
+    }
 
     var bg = document.createElement("div");
     bg.className = "builder-bg";
@@ -1041,18 +1081,41 @@
       }
       if (asBtn) asBtn.onclick = function(){
         if (state.id) {
-          // Already saved — just go.
+          // Already saved (auto-create finished, or editing existing
+          // form) — instant navigation, no save round-trip.
           _gotoCanvas(state.id);
           return;
         }
-        // Brand-new form: save as draft first so it has an id, THEN
-        // navigate. Disable the button briefly so we don't fire twice.
+        if (state._autoCreating) {
+          // Auto-create still in flight — poll briefly for state.id
+          // (typically resolves within 200-500ms), then navigate.
+          // No spinner; the modal stays put while we wait.
+          var origText = asBtn.querySelector(".ascta-title");
+          if (origText) origText.textContent = "Opening…";
+          var t0 = Date.now();
+          var iv = setInterval(function(){
+            if (state.id) {
+              clearInterval(iv);
+              _gotoCanvas(state.id);
+            } else if (Date.now() - t0 > 4000) {
+              // Auto-create stalled — fall back to a synchronous save.
+              clearInterval(iv);
+              state.is_draft = false;
+              saveFormAndThen(function(savedForm){
+                _gotoCanvas((savedForm && savedForm.id) || state.id || "");
+              });
+            }
+          }, 80);
+          return;
+        }
+        // No auto-create ever fired (e.g. user opened builder via a
+        // path that skips it) — save first so the canvas has a real
+        // form_id to load against.
         asBtn.disabled = true;
         var origText = asBtn.querySelector(".ascta-title");
         if (origText) origText.textContent = "Opening…";
-        state.is_draft = true;
+        state.is_draft = false;
         saveFormAndThen(function(savedForm){
-          // saveFormAndThen mutates state.id on success.
           _gotoCanvas((savedForm && savedForm.id) || state.id || "");
         });
       };
@@ -1200,6 +1263,12 @@
     // Persist the current state. onSaved(form) fires on success; the
     // caller decides what UI follows (share screen, navigate to canvas,
     // etc.). When onSaved is omitted we run the legacy share-screen path.
+    //
+    // The choice of POST (create) vs. PUT (update) is driven by
+    // state.id, NOT the closed-over `editing` flag. The auto-create
+    // path populates state.id asynchronously after the modal opens,
+    // so a manual Save firing AFTER auto-create completes must do a
+    // PUT to update — otherwise we'd create duplicate forms.
     function saveFormAndThen(onSaved){
       var btn = $("b-save"); if (btn) { btn.disabled = true; btn.textContent = "Saving…"; }
       var payload = {
@@ -1210,7 +1279,7 @@
         thank_you: state.thank_you,
         is_draft: !!state.is_draft,
       };
-      var url = editing ? "/me/forms/" + state.id : "/me/forms";
+      var url = state.id ? ("/me/forms/" + state.id) : "/me/forms";
       // Always POST. The C proxy at port 9030 has no put_to_local helper,
       // so PUT requests are dropped before reaching Flask. The Flask
       // me_forms_one route accepts POST as an alias for PUT.

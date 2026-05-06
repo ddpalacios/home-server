@@ -20678,6 +20678,29 @@
         var editedTxt = (f.last_edited
           ? "Edited " + _myFlowsTimeAgo(f.last_edited)
           : (f.builtin ? "Built-in" : "New"));
+        // Channel attribution badge: every flow's source at a glance.
+        // Form-attached flows show the form name; standalone flow is
+        // labelled as such; built-ins get a plain label.
+        var attrText = "", attrColor = "#5a6470", attrBg = "#eef0f3";
+        if (f.builtin) {
+          attrText = "✨ Built-in";
+        } else if (f.form_id || (f.id && f.id.indexOf("form:") === 0)) {
+          attrText = "📝 " + (f.name ? f.name.replace(/\s+flow\s*$/i, "") : "Form");
+          attrColor = "#185fa5"; attrBg = "#eaf3fc";
+        } else if (f.id === "default") {
+          attrText = "⚡ Standalone";
+          attrColor = "#7a5a00"; attrBg = "#fef5e7";
+        } else {
+          attrText = "✨ Flow";
+        }
+        var attrPill =
+            '<span style="display:inline-flex;align-items:center;gap:5px;'
+          +        'font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;'
+          +        'background:' + attrBg + ';color:' + attrColor + ';'
+          +        'padding:3px 9px;border-radius:99px;max-width:100%;'
+          +        'overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
+          +   attrText
+          + '</span>';
         // Delete affordance for non-builtins. Built-ins (e.g. First Hello)
         // are read-only — no delete button.
         var deleteBtn = f.builtin ? '' :
@@ -20704,7 +20727,8 @@
           +   '<div style="color:#5a6470;font-size:12.5px;line-height:1.4;flex:1;'
           +          'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">'
           +     (f.description || "") + '</div>'
-          +   '<div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">'
+          +   '<div style="margin-top:10px">' + attrPill + '</div>'
+          +   '<div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">'
           +     '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;background:#e6f6ec;color:#0a8a3a;padding:3px 9px;border-radius:99px">'
           +       '<span style="width:6px;height:6px;border-radius:99px;background:currentColor"></span>Active'
           +     '</span>'
