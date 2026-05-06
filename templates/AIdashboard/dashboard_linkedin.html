@@ -5069,12 +5069,34 @@
     }
 
     async function pollNextUp(){
-      if (!STATE.active) return;
+      if (!STATE.active) {
+        console.log("[li-cal] pollNextUp: no STATE.active, bailing", STATE);
+        return;
+      }
       try {
         var r = await fetch("/dashboard/linkedin/api/scheduled",
           { credentials:"same-origin" });
-        if (!r.ok) return;
+        if (!r.ok) {
+          console.warn("[li-cal] /api/scheduled fetch failed:", r.status);
+          return;
+        }
         var d = await r.json().catch(()=>({}));
+        console.log("[li-cal] /api/scheduled raw response:",
+          "total=" + ((d.scheduled || []).length),
+          "active.platform=" + (STATE.active.platform),
+          "active.account_id=" + (STATE.active.account_id));
+        // Log a kind/platform/status breakdown so we can see at a
+        // glance which records will pass the filter and which will
+        // be dropped.
+        var bk = {}, bp = {}, bs = {};
+        (d.scheduled || []).forEach(function(r){
+          var k = (r.kind || "—"); bk[k] = (bk[k]||0)+1;
+          var p = (r.platform || "—"); bp[p] = (bp[p]||0)+1;
+          var s = (r.status || "—"); bs[s] = (bs[s]||0)+1;
+        });
+        console.log("[li-cal] by-kind:", bk);
+        console.log("[li-cal] by-platform:", bp);
+        console.log("[li-cal] by-status:", bs);
         // Treat the PLATFORM as the source of truth for "this record
         // belongs on the LinkedIn calendar." The library/combo flow
         // tags records with kind=library_combo regardless of channel,
@@ -5100,6 +5122,22 @@
           if (!matches) rec._orphaned = true;
           return rec;
         });
+        console.log("[li-cal] after filter:", all.length, "records");
+        console.log("[li-cal] orphan count (account mismatch):",
+          all.filter(r => r._orphaned).length);
+        console.log("[li-cal] sample of first 5:",
+          all.slice(0, 5).map(r => ({
+            queue_id: r.queue_id,
+            kind: r.kind,
+            platform: r.platform,
+            account_id: r.account_id,
+            status: r.status,
+            scheduled_at: r.scheduled_at,
+            scheduled_at_iso: r.scheduled_at
+              ? new Date(r.scheduled_at * 1000).toISOString()
+              : "—",
+            orphaned: !!r._orphaned,
+          })));
         // Drop expired in-flight entries first.
         _schPruneInflight();
         // Reconcile poll vs in-flight: for any qid we've optimistically
