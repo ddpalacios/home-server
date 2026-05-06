@@ -846,44 +846,12 @@
       ],
     };
 
-    // Background auto-create: as soon as a new-form builder opens,
-    // fire the POST so the form lands in GCS and shows up in the
-    // Lead Intake "Your forms" list. The user doesn't have to click
-    // Save — the form is real from the moment they see it. Their
-    // edits in the modal will PUT the existing record (state.id is
-    // populated when the POST resolves).
-    if (!editing) {
-      state._autoCreating = true;
-      fetch("/me/forms", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: state.name,
-          flow_id: state.flow_id,
-          attached_flow_id: state.attached_flow_id,
-          attached_flow_name: state.attached_flow_name,
-          fields: state.fields,
-          submit_text: state.submit_text,
-          thank_you: state.thank_you,
-          is_draft: false,
-        }),
-      })
-        .then(function(r){ return r.ok ? r.json() : null; })
-        .then(function(d){
-          if (!d || !d.form) return;
-          state.id = d.form.id;
-          state.is_draft = false;
-          state._autoCreating = false;
-          // Refresh the Lead Intake "Your forms" list so the new
-          // form appears in the body of the page.
-          try { loadForms(); } catch(_) {}
-        })
-        .catch(function(){
-          state._autoCreating = false;
-          toast("Couldn't create your form. Try again.");
-        });
-    }
+    // Auto-create on open is OFF per user request. New forms are
+    // only persisted when the user explicitly clicks Save (or hits
+    // "Add more steps", which still does a one-shot save first
+    // because the canvas needs a real form_id to address the per-
+    // form flow). Closing the modal without saving leaves no
+    // record on the server.
 
     var bg = document.createElement("div");
     bg.className = "builder-bg";
@@ -923,7 +891,20 @@
         toast("Discarded — nothing was saved.");
       }
     };
-    bg.addEventListener("click", function(e){ if (e.target === bg) closeModal(); });
+    // Backdrop dismiss — only close if BOTH mousedown AND mouseup
+    // landed on the backdrop. Plain click() fires whenever the
+    // ancestor is the common element of down+up, so highlighting
+    // text inside the card and releasing on the backdrop used to
+    // close the modal mid-selection. Track the down target and
+    // require it to be the backdrop too.
+    var _bgDownOnSelf = false;
+    bg.addEventListener("mousedown", function(e){
+      _bgDownOnSelf = (e.target === bg);
+    });
+    bg.addEventListener("mouseup", function(e){
+      if (e.target === bg && _bgDownOnSelf) closeModal();
+      _bgDownOnSelf = false;
+    });
     bg.querySelector("#b-close").onclick = closeModal;
     bg.querySelector("#b-cancel").onclick = closeModal;
 
@@ -1144,36 +1125,16 @@
       }
       if (asBtn) asBtn.onclick = function(){
         if (state.id) {
-          // Already saved (auto-create finished, or editing existing
-          // form) — instant navigation, no save round-trip.
+          // Already saved (editing an existing form) — instant
+          // navigation, no save round-trip.
           _gotoCanvas(state.id);
           return;
         }
-        if (state._autoCreating) {
-          // Auto-create still in flight — poll briefly for state.id
-          // (typically resolves within 200-500ms), then navigate.
-          // No spinner; the modal stays put while we wait.
-          var origText = asBtn.querySelector(".ascta-title");
-          if (origText) origText.textContent = "Opening…";
-          var t0 = Date.now();
-          var iv = setInterval(function(){
-            if (state.id) {
-              clearInterval(iv);
-              _gotoCanvas(state.id);
-            } else if (Date.now() - t0 > 4000) {
-              // Auto-create stalled — fall back to a synchronous save.
-              clearInterval(iv);
-              state.is_draft = false;
-              saveFormAndThen(function(savedForm){
-                _gotoCanvas((savedForm && savedForm.id) || state.id || "");
-              });
-            }
-          }, 80);
-          return;
-        }
-        // No auto-create ever fired (e.g. user opened builder via a
-        // path that skips it) — save first so the canvas has a real
-        // form_id to load against.
+        // Brand-new form, never saved. The canvas needs a real
+        // form_id to address /me/forms/<id>/flow, so this is the
+        // one path that still triggers a save before navigating —
+        // user pressed "Add more steps" instead of "Save," which
+        // implies they want to continue building.
         asBtn.disabled = true;
         var origText = asBtn.querySelector(".ascta-title");
         if (origText) origText.textContent = "Opening…";
