@@ -5072,31 +5072,23 @@
           { credentials:"same-origin" });
         if (!r.ok) return;
         var d = await r.json().catch(()=>({}));
-        // Filter by KIND, not just platform. The platform field is set
-        // from the active session at schedule time, and IG batches that
-        // were scheduled while a LinkedIn account was active got tagged
-        // platform=linkedin_* even though their `kind` is single /
-        // carousel / reel / library_combo. Kind is the source-of-truth
-        // (set at record creation by the LinkedIn-specific endpoints to
-        // linkedin_text / linkedin_image / linkedin_combo / etc.) so
-        // anything without a linkedin_ kind doesn't belong on this
-        // calendar.
+        // Treat the PLATFORM as the source of truth for "this record
+        // belongs on the LinkedIn calendar." The library/combo flow
+        // tags records with kind=library_combo regardless of channel,
+        // so a kind-only filter would hide every library-driven
+        // LinkedIn post. The platform field is set from the active
+        // session at schedule time and reliably starts with
+        // linkedin_* for any LinkedIn-bound post.
         //
-        // Account match is loosened: we ALWAYS surface LinkedIn-kind
-        // records on this calendar, even if their (platform,
+        // Account match is loosened too: every linkedin_*-platform
+        // record surfaces on the calendar, even if its (platform,
         // account_id) doesn't line up with the currently active
-        // LinkedIn credential. This prevents the "all my scheduled
-        // posts vanished after I re-logged in" bug — re-auth can mint
-        // a new account_id, leaving prior records orphaned. Records
-        // whose account_id doesn't match the active one get an
-        // `_orphaned: true` flag so the UI can render them with a
-        // "Reconnect to publish" hint, and the rebind script /
-        // endpoint can reattach them to the current account.
+        // credential. Records whose account_id doesn't match get an
+        // `_orphaned: true` flag so the UI can render a "reconnect to
+        // publish" hint; the rebind endpoint reattaches them.
         var activePlatform = (STATE.active && STATE.active.platform) || "";
         var activeAccountId = (STATE.active && STATE.active.account_id) || "";
         var all = (d.scheduled || []).filter(rec => {
-          var kind = (rec.kind || "").toLowerCase();
-          if (!kind.startsWith("linkedin_")) return false;
           if (!(rec.platform || "").startsWith("linkedin_")) return false;
           return true;
         }).map(rec => {
