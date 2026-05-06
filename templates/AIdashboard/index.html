@@ -12106,6 +12106,26 @@
         .leads-table tbody tr.is-selected { background:#eef2ff; }
         .leads-table tbody td { padding:14px 16px; vertical-align:middle; }
 
+        /* Expanded row + its inline detail panel render as one visually
+           framed group: tinted background, accent stripe down the left,
+           and no separator BETWEEN the parent row and the panel so they
+           read as a single block. A heavier border below the panel
+           separates the group from the next lead. */
+        .leads-table tbody tr.is-expanded > td {
+          background:#f0f7ff;
+          border-bottom:none;
+          box-shadow:inset 4px 0 0 #2563eb;
+        }
+        .leads-table tbody tr.is-expanded:hover > td { background:#e6f1ff; }
+        .leads-table tbody tr.leads-expanded-row > td {
+          background:#f0f7ff;
+          padding:0 16px 18px 16px;
+          border-bottom:2px solid #cbd5e1;
+          box-shadow:inset 4px 0 0 #2563eb;
+          cursor:default;
+        }
+        .leads-table tbody tr.leads-expanded-row:hover > td { background:#f0f7ff; }
+
         .leads-name-cell { display:flex; align-items:center; gap:10px; }
         .leads-avatar {
           width:28px; height:28px;
