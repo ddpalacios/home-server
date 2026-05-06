@@ -31991,7 +31991,26 @@ window.openRunFlowPicker = async function (leadIds, opts) {
       "</div>" +
       '<div id="runFlowPickerBody" style="padding:16px 20px;overflow-y:auto;' +
       'flex:1;font-size:13.5px;color:#0f172a;">' +
-        '<div style="color:#64748b;">Loading your flows…</div>' +
+        // Skeleton placeholders so the picker has visible structure
+        // BEFORE the network resolves. Three rows match the typical
+        // count and feel less stalled than a "Loading…" sentence.
+        '<div data-flow-skeleton style="opacity:0.55;">' +
+          '<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;margin-bottom:8px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;">' +
+            '<span style="width:14px;height:14px;border-radius:999px;background:#e2e8f0;flex-shrink:0;"></span>' +
+            '<span style="width:24px;height:24px;border-radius:6px;background:#e2e8f0;flex-shrink:0;"></span>' +
+            '<span style="flex:1;"><span style="display:block;height:13px;background:#e2e8f0;border-radius:4px;width:60%;"></span><span style="display:block;height:10px;background:#eef2f7;border-radius:4px;margin-top:6px;width:80%;"></span></span>' +
+          "</div>" +
+          '<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;margin-bottom:8px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;">' +
+            '<span style="width:14px;height:14px;border-radius:999px;background:#e2e8f0;flex-shrink:0;"></span>' +
+            '<span style="width:24px;height:24px;border-radius:6px;background:#e2e8f0;flex-shrink:0;"></span>' +
+            '<span style="flex:1;"><span style="display:block;height:13px;background:#e2e8f0;border-radius:4px;width:50%;"></span></span>' +
+          "</div>" +
+          '<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;">' +
+            '<span style="width:14px;height:14px;border-radius:999px;background:#e2e8f0;flex-shrink:0;"></span>' +
+            '<span style="width:24px;height:24px;border-radius:6px;background:#e2e8f0;flex-shrink:0;"></span>' +
+            '<span style="flex:1;"><span style="display:block;height:13px;background:#e2e8f0;border-radius:4px;width:70%;"></span></span>' +
+          "</div>" +
+        "</div>" +
       "</div>" +
       '<div style="display:flex;align-items:center;justify-content:flex-end;' +
       'gap:8px;padding:14px 20px;border-top:1px solid #e5e7eb;">' +
@@ -32019,39 +32038,55 @@ window.openRunFlowPicker = async function (leadIds, opts) {
   const bodyEl = backdrop.querySelector("#runFlowPickerBody");
   const submitBtn = backdrop.querySelector("#runFlowPickerSubmit");
 
-  // Fetch flows + (single mode) the lead's current flows in parallel.
+  // Flows are cached in-memory for 60s — they rarely change between
+  // picker opens, so the second-and-onward open should be instant. The
+  // sequences-running fetch can't be cached (it's per-lead, per-state)
+  // but we render the flow list FIRST and patch the "already running"
+  // panel in when it arrives — so the slower fetch never blocks the UI.
   let flows = [];
-  let runningFlowIds = new Set();
   let runningEnrs = [];
-  try {
-    const reqs = [fetch("/me/flows", { credentials: "same-origin" })];
-    if (!isBulk && opts.singleLeadId) {
-      reqs.push(fetch(
-        "/me/leads/" + encodeURIComponent(opts.singleLeadId) + "/sequences",
-        { credentials: "same-origin" }));
-    }
-    const results = await Promise.all(reqs);
-    if (results[0] && results[0].ok) {
-      const j = await results[0].json();
-      flows = (j && j.flows) || [];
-    }
-    if (results[1] && results[1].ok) {
-      const j = await results[1].json();
-      runningEnrs = ((j && j.enrollments) || [])
-        .filter(e => e && e.state === "in_progress");
-      runningEnrs.forEach(e => runningFlowIds.add(e.sequence_id));
-    }
-  } catch (_) {
+  let flowsErr = false;
+  const cache = window.__runFlowPickerCache;
+  const fresh = cache && cache.flows && cache.flows.length
+              && (Date.now() - (cache.ts || 0) < 60000);
+  if (fresh) {
+    flows = cache.flows;
+  } else {
+    try {
+      const r = await fetch("/me/flows", { credentials: "same-origin" });
+      if (r && r.ok) {
+        const j = await r.json();
+        flows = (j && j.flows) || [];
+        window.__runFlowPickerCache = { ts: Date.now(), flows: flows };
+      } else {
+        flowsErr = true;
+      }
+    } catch (_) { flowsErr = true; }
+  }
+  if (flowsErr) {
     bodyEl.innerHTML =
       '<div style="color:#b91c1c;">Couldn\'t load flows. Try again.</div>';
     return;
   }
-
   if (!flows.length) {
     bodyEl.innerHTML =
       '<div style="color:#64748b;">You haven\'t saved any flows yet. ' +
       "Build one in Flow Builder first.</div>";
     return;
+  }
+  // Kick off the per-lead sequences fetch in the background — we'll
+  // patch the "Already running on this lead" panel in once it lands.
+  let runningPromise = null;
+  if (!isBulk && opts.singleLeadId) {
+    runningPromise = fetch(
+      "/me/leads/" + encodeURIComponent(opts.singleLeadId) + "/sequences",
+      { credentials: "same-origin" }
+    ).then(r => r && r.ok ? r.json() : null)
+     .then(j => {
+       runningEnrs = ((j && j.enrollments) || [])
+         .filter(e => e && e.state === "in_progress");
+     })
+     .catch(() => { /* non-fatal */ });
   }
 
   // Render flow choices.
@@ -32096,28 +32131,38 @@ window.openRunFlowPicker = async function (leadIds, opts) {
     );
   }).join("");
 
-  let runningHtml = "";
-  if (!isBulk && runningEnrs.length) {
-    const items = runningEnrs.map(e => {
-      const name = e.sequence_name || e.sequence_id || "Flow";
-      return '<li style="margin:4px 0;">📋 ' + escHtmlSeq(name) + "</li>";
-    }).join("");
-    runningHtml =
-      '<div style="margin-top:14px;padding-top:12px;border-top:1px dashed #e5e7eb;">' +
-        '<div style="font-size:12px;font-weight:600;color:#475569;' +
-        'text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">' +
-          "Already running on this lead" +
-        "</div>" +
-        '<ul style="margin:0;padding-left:18px;font-size:13px;color:#0f172a;">' +
-          items +
-        "</ul>" +
-      "</div>";
-  }
-
-  bodyEl.innerHTML = flowRowsHtml + runningHtml;
+  // Paint the flow list IMMEDIATELY (no await on running-list).
+  // Reserve a slot for the "Already running on this lead" panel so the
+  // patch-in doesn't shift layout when the running-list fetch lands.
+  bodyEl.innerHTML = flowRowsHtml +
+    '<div id="runFlowPickerRunningSlot"></div>';
   bodyEl.querySelectorAll("[data-flow-row]").forEach(row => {
     row.addEventListener("click", () => setChosen(row.dataset.flowRow));
   });
+
+  // Patch in the "already running" panel once /sequences resolves. Modal
+  // may have been closed by the user before that happens — guard with a
+  // dom-still-mounted check.
+  if (runningPromise) {
+    runningPromise.then(() => {
+      const slot = document.getElementById("runFlowPickerRunningSlot");
+      if (!slot || !runningEnrs.length || isBulk) return;
+      const items = runningEnrs.map(e => {
+        const name = e.sequence_name || e.sequence_id || "Flow";
+        return '<li style="margin:4px 0;">📋 ' + escHtmlSeq(name) + "</li>";
+      }).join("");
+      slot.innerHTML =
+        '<div style="margin-top:14px;padding-top:12px;border-top:1px dashed #e5e7eb;">' +
+          '<div style="font-size:12px;font-weight:600;color:#475569;' +
+          'text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">' +
+            "Already running on this lead" +
+          "</div>" +
+          '<ul style="margin:0;padding-left:18px;font-size:13px;color:#0f172a;">' +
+            items +
+          "</ul>" +
+        "</div>";
+    });
+  }
 
   // Submit handler.
   submitBtn.addEventListener("click", async () => {
@@ -32187,7 +32232,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-06-run-a-flow"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-06-run-flow-fast-picker"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
