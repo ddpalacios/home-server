@@ -23551,6 +23551,14 @@
             try {
               window.dispatchEvent(new CustomEvent("fb-outreach-nav-reset"));
             } catch (_) {}
+            // Sidebar click ALWAYS lands on My Flows. Whatever
+            // canvas was open during a form-edit round-trip stays
+            // out of sight — the user came in via the nav, not the
+            // form, so they expect the flow library, not the
+            // last-edited canvas.
+            requestAnimationFrame(function(){
+              if (typeof _outShowMyFlows === "function") _outShowMyFlows();
+            });
           }
           appShowRoute(btn.dataset.route);
         });
