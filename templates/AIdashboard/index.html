@@ -25033,6 +25033,7 @@
           <div class="lm-actions">
             <button type="button" class="lm-btn" data-lm-action="email">📧 Send an email</button>
             <button type="button" class="lm-btn" data-lm-action="note">📝 Add a note</button>
+            <button type="button" class="lm-btn" data-lm-action="run_flow">▶ Run a flow</button>
             <button type="button" class="lm-btn" data-lm-action="replies">💬 Open in Replies</button>
           </div>
         `;
@@ -25419,6 +25420,23 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ stage: "engaged" }),
           }).then(() => loadJourney(currentLeadId));
+          return;
+        }
+        if (action === "run_flow") {
+          // Manual Run-a-flow on this single lead. The picker fetches
+          // /me/flows, shows currently-running flows for context (so the
+          // owner doesn't enroll twice), and POSTs /me/flows/<id>/run.
+          if (typeof window.openRunFlowPicker === "function") {
+            const lead = (currentJourney && currentJourney.lead) || {};
+            const firstName = (lead.first_name || "").trim() ||
+                              (fullName(lead) || "").split(" ")[0] ||
+                              "this lead";
+            window.openRunFlowPicker([currentLeadId], {
+              singleLeadName: firstName,
+              singleLeadId:   currentLeadId,
+              onStarted:      () => { try { loadJourney(currentLeadId); } catch (_) {} },
+            });
+          }
           return;
         }
       }
@@ -31875,12 +31893,281 @@ function escHtmlSeq(s) {
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
   }[c]));
 }
+
+// ── Manual Run-a-flow picker ─────────────────────────────────────────
+// Single source of truth for both entry points (lead detail modal and
+// the leads-table bulk-action bar). Loads /me/flows, shows a list, and
+// on pick POSTs /me/flows/<flow_id>/run. Single-lead mode also pulls
+// /me/leads/<id>/sequences so the owner sees what's already running on
+// that lead.
+//
+// opts:
+//   singleLeadName  – first name; shown in header & toast (single mode)
+//   singleLeadId    – lead id whose currently-running flows to show
+//   onStarted       – callback fired after a successful run (single mode)
+//   bulkLabel       – e.g. "5 leads"; if set, header reads
+//                     "Pick a flow to run on <bulkLabel>" and the
+//                     "already running" panel is hidden
+//   onSuccessToast  – optional override (msg, kind)
+window.openRunFlowPicker = async function (leadIds, opts) {
+  opts = opts || {};
+  if (!Array.isArray(leadIds) || !leadIds.length) return;
+
+  const isBulk     = leadIds.length > 1 || !!opts.bulkLabel;
+  const headerName = isBulk
+    ? (opts.bulkLabel || (leadIds.length + " leads"))
+    : (opts.singleLeadName || "this lead");
+
+  const toast = (msg, kind) => {
+    if (typeof opts.onSuccessToast === "function") {
+      try { opts.onSuccessToast(msg, kind); return; } catch (_) {}
+    }
+    // Reuse the dashboard's toast helper if present, else console.
+    if (typeof window.__leadsShowToast === "function") {
+      try { window.__leadsShowToast(msg, kind); return; } catch (_) {}
+    }
+    try { console.log("[run-flow]", kind || "info", msg); } catch (_) {}
+    // Fallback inline toast so the user gets feedback even when the
+    // leads-route helper isn't mounted.
+    let host = document.getElementById("runFlowToastHost");
+    if (!host) {
+      host = document.createElement("div");
+      host.id = "runFlowToastHost";
+      host.style.cssText =
+        "position:fixed;bottom:24px;left:50%;transform:translateX(-50%);" +
+        "z-index:99999;pointer-events:none;";
+      document.body.appendChild(host);
+    }
+    host.innerHTML =
+      '<div style="padding:10px 18px;border-radius:10px;font-size:13px;' +
+      'font-weight:500;background:' +
+        (kind === "error" ? "#b91c1c" : "#0a0a0a") +
+      ';color:#fff;box-shadow:0 8px 24px rgba(0,0,0,0.18);">' +
+      escHtmlSeq(msg) + "</div>";
+    clearTimeout(host._timer);
+    host._timer = setTimeout(() => { host.innerHTML = ""; }, 3200);
+  };
+
+  // Modal scaffold ----------------------------------------------------
+  let backdrop = document.getElementById("runFlowPickerBackdrop");
+  if (backdrop) backdrop.remove();
+  backdrop = document.createElement("div");
+  backdrop.id = "runFlowPickerBackdrop";
+  backdrop.style.cssText =
+    "position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:99000;" +
+    "display:flex;align-items:center;justify-content:center;padding:20px;";
+  backdrop.innerHTML =
+    '<div id="runFlowPickerPanel" style="background:#fff;border-radius:14px;' +
+    'width:min(520px,100%);max-height:80vh;display:flex;flex-direction:column;' +
+    'overflow:hidden;box-shadow:0 24px 60px rgba(15,23,42,0.35);">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;' +
+      'padding:16px 20px;border-bottom:1px solid #e5e7eb;">' +
+        '<div style="font-size:15px;font-weight:600;color:#0f172a;">' +
+          "Pick a flow to run on " + escHtmlSeq(headerName) +
+        "</div>" +
+        '<button type="button" id="runFlowPickerClose" aria-label="Close" ' +
+        'style="background:none;border:none;font-size:18px;color:#64748b;' +
+        'cursor:pointer;padding:4px 8px;">✕</button>' +
+      "</div>" +
+      '<div id="runFlowPickerBody" style="padding:16px 20px;overflow-y:auto;' +
+      'flex:1;font-size:13.5px;color:#0f172a;">' +
+        '<div style="color:#64748b;">Loading your flows…</div>' +
+      "</div>" +
+      '<div style="display:flex;align-items:center;justify-content:flex-end;' +
+      'gap:8px;padding:14px 20px;border-top:1px solid #e5e7eb;">' +
+        '<button type="button" id="runFlowPickerCancel" ' +
+        'style="padding:8px 14px;border-radius:8px;border:1px solid #cbd5e1;' +
+        'background:#fff;color:#0f172a;font-size:13px;font-weight:500;' +
+        'cursor:pointer;">Cancel</button>' +
+        '<button type="button" id="runFlowPickerSubmit" disabled ' +
+        'style="padding:8px 14px;border-radius:8px;border:1px solid #0a0a0a;' +
+        'background:#0a0a0a;color:#fff;font-size:13px;font-weight:600;' +
+        'cursor:pointer;opacity:0.5;">Run it →</button>' +
+      "</div>" +
+    "</div>";
+  document.body.appendChild(backdrop);
+
+  const closeModal = () => { try { backdrop.remove(); } catch (_) {} };
+  backdrop.addEventListener("click", (e) => {
+    if (e.target === backdrop) closeModal();
+  });
+  backdrop.querySelector("#runFlowPickerClose")
+          .addEventListener("click", closeModal);
+  backdrop.querySelector("#runFlowPickerCancel")
+          .addEventListener("click", closeModal);
+
+  const bodyEl = backdrop.querySelector("#runFlowPickerBody");
+  const submitBtn = backdrop.querySelector("#runFlowPickerSubmit");
+
+  // Fetch flows + (single mode) the lead's current flows in parallel.
+  let flows = [];
+  let runningFlowIds = new Set();
+  let runningEnrs = [];
+  try {
+    const reqs = [fetch("/me/flows", { credentials: "same-origin" })];
+    if (!isBulk && opts.singleLeadId) {
+      reqs.push(fetch(
+        "/me/leads/" + encodeURIComponent(opts.singleLeadId) + "/sequences",
+        { credentials: "same-origin" }));
+    }
+    const results = await Promise.all(reqs);
+    if (results[0] && results[0].ok) {
+      const j = await results[0].json();
+      flows = (j && j.flows) || [];
+    }
+    if (results[1] && results[1].ok) {
+      const j = await results[1].json();
+      runningEnrs = ((j && j.enrollments) || [])
+        .filter(e => e && e.state === "in_progress");
+      runningEnrs.forEach(e => runningFlowIds.add(e.sequence_id));
+    }
+  } catch (_) {
+    bodyEl.innerHTML =
+      '<div style="color:#b91c1c;">Couldn\'t load flows. Try again.</div>';
+    return;
+  }
+
+  if (!flows.length) {
+    bodyEl.innerHTML =
+      '<div style="color:#64748b;">You haven\'t saved any flows yet. ' +
+      "Build one in Flow Builder first.</div>";
+    return;
+  }
+
+  // Render flow choices.
+  let chosenId = "";
+  const setChosen = (id) => {
+    chosenId = id;
+    bodyEl.querySelectorAll("[data-flow-row]").forEach(row => {
+      const isMe = row.dataset.flowRow === id;
+      row.style.borderColor = isMe ? "#0a0a0a" : "#e5e7eb";
+      row.style.background  = isMe ? "#f8fafc" : "#fff";
+      const dot = row.querySelector("[data-flow-radio]");
+      if (dot) dot.style.background = isMe ? "#0a0a0a" : "#fff";
+    });
+    submitBtn.disabled = !id;
+    submitBtn.style.opacity = id ? "1" : "0.5";
+    submitBtn.style.cursor  = id ? "pointer" : "not-allowed";
+  };
+
+  const flowRowsHtml = flows.map(f => {
+    const id   = f.id || "";
+    const name = f.name || id || "Untitled flow";
+    const icon = f.icon || "📋";
+    const desc = f.description || "";
+    return (
+      '<button type="button" data-flow-row="' + escHtmlSeq(id) + '" ' +
+      'style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;' +
+      'padding:10px 12px;margin-bottom:8px;border:1px solid #e5e7eb;' +
+      'border-radius:10px;background:#fff;cursor:pointer;">' +
+        '<span data-flow-radio style="display:inline-block;width:14px;height:14px;' +
+        'border-radius:999px;border:2px solid #0a0a0a;background:#fff;flex-shrink:0;"></span>' +
+        '<span style="font-size:18px;flex-shrink:0;">' + escHtmlSeq(icon) + "</span>" +
+        '<span style="flex:1;min-width:0;">' +
+          '<span style="display:block;font-weight:600;color:#0f172a;">' +
+            escHtmlSeq(name) +
+          "</span>" +
+          (desc
+            ? '<span style="display:block;font-size:12px;color:#64748b;margin-top:2px;">' +
+              escHtmlSeq(desc) + "</span>"
+            : "") +
+        "</span>" +
+      "</button>"
+    );
+  }).join("");
+
+  let runningHtml = "";
+  if (!isBulk && runningEnrs.length) {
+    const items = runningEnrs.map(e => {
+      const name = e.sequence_name || e.sequence_id || "Flow";
+      return '<li style="margin:4px 0;">📋 ' + escHtmlSeq(name) + "</li>";
+    }).join("");
+    runningHtml =
+      '<div style="margin-top:14px;padding-top:12px;border-top:1px dashed #e5e7eb;">' +
+        '<div style="font-size:12px;font-weight:600;color:#475569;' +
+        'text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">' +
+          "Already running on this lead" +
+        "</div>" +
+        '<ul style="margin:0;padding-left:18px;font-size:13px;color:#0f172a;">' +
+          items +
+        "</ul>" +
+      "</div>";
+  }
+
+  bodyEl.innerHTML = flowRowsHtml + runningHtml;
+  bodyEl.querySelectorAll("[data-flow-row]").forEach(row => {
+    row.addEventListener("click", () => setChosen(row.dataset.flowRow));
+  });
+
+  // Submit handler.
+  submitBtn.addEventListener("click", async () => {
+    if (!chosenId) return;
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Running…";
+    submitBtn.style.opacity = "0.7";
+    let res, data;
+    try {
+      res = await fetch(
+        "/me/flows/" + encodeURIComponent(chosenId) + "/run",
+        {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lead_ids: leadIds }),
+        });
+      data = await res.json().catch(() => ({}));
+    } catch (_) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Run it →";
+      submitBtn.style.opacity = "1";
+      toast("Couldn't start the flow. Try again.", "error");
+      return;
+    }
+    if (!res.ok) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Run it →";
+      submitBtn.style.opacity = "1";
+      const reason = (data && data.error) || "request_failed";
+      toast("Couldn't start the flow (" + reason + ").", "error");
+      return;
+    }
+    const flowName = (data && data.flow_name) || "the flow";
+    const started  = (data && data.started) || 0;
+    const skipRun  = ((data && data.skipped_already_running) || []).length;
+    const skipUnk  = ((data && data.skipped_unknown) || []).length;
+    let msg;
+    if (isBulk) {
+      msg = "Started '" + flowName + "' on " + started +
+            " lead" + (started === 1 ? "" : "s") + ".";
+      if (skipRun || skipUnk) {
+        msg += " (";
+        const parts = [];
+        if (skipRun) parts.push(skipRun + " already running");
+        if (skipUnk) parts.push(skipUnk + " unknown");
+        msg += parts.join(", ") + ".)";
+      }
+    } else if (started === 1) {
+      msg = "Started '" + flowName + "' on " +
+            (opts.singleLeadName || "this lead") + ".";
+    } else if (skipRun) {
+      msg = "'" + flowName + "' is already running on " +
+            (opts.singleLeadName || "this lead") + ".";
+    } else {
+      msg = "Couldn't start '" + flowName + "'.";
+    }
+    toast(msg, started ? "success" : "info");
+    closeModal();
+    if (typeof opts.onStarted === "function") {
+      try { opts.onStarted(data); } catch (_) {}
+    }
+  });
+};
   </script>
 <!-- Dashboard JS bundle (Vite). In dev, points at the Vite dev server on
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-03-igfb-iframe"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-06-run-a-flow"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
