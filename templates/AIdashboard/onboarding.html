@@ -331,7 +331,7 @@
           <div class="title">Gmail</div>
           <div class="sub" id="emailStatusSub">Not connected yet.</div>
         </div>
-        <a class="btn-connect" id="connectEmailBtn" href="/auth/google/connect-email">Connect Gmail</a>
+        <a class="btn-connect" id="connectEmailBtn" href="/auth/google/connect-email?onboarding=1&amp;return_step=3">Connect Gmail</a>
       </div>
       <div class="err" id="err3"></div>
     </section>
@@ -345,7 +345,7 @@
           <div class="title">Google Calendar</div>
           <div class="sub" id="calStatusSub">Not connected yet.</div>
         </div>
-        <a class="btn-connect" id="connectCalBtn" href="/auth/google/connect-calendar">Connect Calendar</a>
+        <a class="btn-connect" id="connectCalBtn" href="/auth/google/connect-calendar?onboarding=1&amp;return_step=4">Connect Calendar</a>
       </div>
       <div class="err" id="err4"></div>
     </section>
@@ -798,6 +798,25 @@
           if (choices.approval_mode) approvalMode = choices.approval_mode;
           if (typeof choices.digest_enabled === "boolean") digestEnabled = choices.digest_enabled;
           if (choices.digest_time_local) digestTime = choices.digest_time_local;
+          // Tier B: return_step beats persisted state. When the OAuth
+          // callback bounces the SPA shell to
+          // /dashboard?return_step=N#onboarding, the SPA forwards N
+          // into this iframe's URL. Honoring it ensures the user lands
+          // on the same step they kicked the OAuth flow off from
+          // (rather than wherever the persisted state.step says, which
+          // can be stale if the user hopped between steps).
+          try {
+            const params = new URLSearchParams(window.location.search);
+            const rs = parseInt(params.get("return_step") || "0", 10);
+            if (rs >= 1 && rs <= TOTAL) {
+              // Refresh connection-status displays first so step 3 / 4
+              // reflect the just-completed OAuth flow instead of the
+              // pre-OAuth "Not connected" state.
+              try { await refreshConnections(); } catch (_) {}
+              setStep(rs);
+              return;
+            }
+          } catch (_) {}
           if (state.step) {
             const resume = parseInt(state.step, 10);
             if (resume >= 1 && resume <= TOTAL) {

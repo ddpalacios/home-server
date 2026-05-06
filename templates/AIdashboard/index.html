@@ -6611,6 +6611,65 @@
       </style>
 
       <section class="grid" id="activity" data-route-section="activity" hidden>
+        <!-- Tier B: Resume-setup banner. Hidden by default; shown by
+             onboardingResumeBanner.js when /me/onboarding/state reports
+             completed_at is unset. ✕ hides for 7 days via localStorage
+             key "onboardingResumeDismissedUntil". Permanently hides
+             after the wizard's final POST to /me/onboarding/complete. -->
+        <div class="page-nudge" id="onboardingResumeBanner"
+             style="grid-column:span 12;display:none;background:linear-gradient(135deg,#eef5ff,#f0fdf4);border-color:#bae6fd;"
+             role="status" aria-live="polite">
+          <span class="page-nudge-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/></svg>
+          </span>
+          <div style="flex:1;min-width:0;">
+            <p class="page-nudge-text">
+              <strong>Finish setting up your business</strong> — takes about 8 minutes.
+              Connect Twilio, Gmail, and pick your industry to turn on AI replies,
+              daily digests, and channel-aware flows.
+            </p>
+            <div class="page-nudge-actions">
+              <a class="page-nudge-dismiss" href="#onboarding"
+                 id="onboardingResumeContinue" style="text-decoration:none;">Continue →</a>
+            </div>
+          </div>
+          <button type="button" class="page-nudge-close"
+                  id="onboardingResumeDismiss"
+                  aria-label="Dismiss for a week">×</button>
+        </div>
+        <script>
+          (function(){
+            // Resume-setup banner controller. Three short-circuits:
+            //   1. Banner already dismissed within 7 days → don't fetch.
+            //   2. /me/onboarding/state.completed_at is set → permanently
+            //      hide (no localStorage write needed).
+            //   3. Otherwise show.
+            // Dismiss writes localStorage key with epoch-ms expiry.
+            var banner = document.getElementById("onboardingResumeBanner");
+            if (!banner) return;
+            var DISMISS_KEY = "onboardingResumeDismissedUntil";
+            var WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+            try {
+              var until = parseInt(localStorage.getItem(DISMISS_KEY) || "0", 10);
+              if (until && until > Date.now()) return;
+            } catch (_) {}
+            fetch("/me/onboarding/state", { credentials:"same-origin" })
+              .then(function(r){ return r.ok ? r.json() : null; })
+              .then(function(d){
+                var state = (d && d.state) || {};
+                if (state.completed_at) return;  // already done — stay hidden
+                banner.style.display = "flex";
+              })
+              .catch(function(){});
+            var dismiss = document.getElementById("onboardingResumeDismiss");
+            if (dismiss) dismiss.addEventListener("click", function(){
+              try {
+                localStorage.setItem(DISMISS_KEY, String(Date.now() + WEEK_MS));
+              } catch (_) {}
+              banner.style.display = "none";
+            });
+          })();
+        </script>
         <!-- Onboarding nudge: shows when no lead intake channel is set up.
              Hidden by default; shown by JS only when /me/intake/channels
              reports nothing ready. -->
@@ -20228,6 +20287,18 @@
         var fr = document.getElementById("onboardingFrame");
         if (!fr) return;
         var src = fr.getAttribute("data-src");
+        // Tier B: when the user hops back from an OAuth callback
+        // (e.g. /auth/google/connect-email/callback redirected to
+        // /dashboard?return_step=4#onboarding), forward the
+        // return_step into the iframe URL so the wizard JS jumps to
+        // the saved step. Without this hop the iframe loads its own
+        // boot path and drops the user back at step 1.
+        try {
+          var rs = new URLSearchParams(window.location.search).get("return_step");
+          if (rs && /^\d+$/.test(rs) && src) {
+            src = src + (src.indexOf("?") >= 0 ? "&" : "?") + "return_step=" + rs;
+          }
+        } catch (_) { /* fall through to plain src */ }
         if (src && fr.getAttribute("src") !== src) fr.setAttribute("src", src);
       };
 
@@ -25190,6 +25261,7 @@
               <div id="leadSequencesPanelBody"></div>
             </div>
           </div>
+          ${renderRecurringPlanPanel(lead)}
         `;
         bodyEl.querySelectorAll("[data-toggle-event]").forEach(el =>
           el.addEventListener("click", () => {
@@ -25197,6 +25269,7 @@
             const body = bodyEl.querySelector(`[data-event-body="${idx}"]`);
             if (body) body.hidden = !body.hidden;
           }));
+        wireRecurringPlanPanel(lead);
         bodyEl.querySelectorAll("[data-lm-suggest]").forEach(b =>
           b.addEventListener("click", () => handleAction(b.dataset.lmSuggest)));
         bodyEl.querySelectorAll("[data-note-cancel]").forEach(b =>
@@ -25441,6 +25514,184 @@
             ${showBtn ? `<button type="button" class="lm-btn is-primary" data-lm-suggest="${esc(s.action)}">${esc(s.btn)}</button>` : ""}
           </div>`;
         }).join("")}</div>`;
+      }
+
+      // ── Tier B: Recurring service panel ─────────────────────────────
+      // Tier A's recurring daemon reads `lead.recurring_plan` from
+      // CRMAssistBot/{cid}/leads.json and fires the matching pack flow
+      // when cadence + day + time of day align. This panel is the
+      // owner-facing write surface — without it, the daemon has nothing
+      // to fire on. Critical for landscapers / cleaning / pool crews
+      // whose business model is recurring service routes.
+      function renderRecurringPlanPanel(lead) {
+        const plan = (lead && lead.recurring_plan) || {};
+        const active = !!plan.active;
+        const cadence = (plan.cadence || "weekly").toLowerCase();
+        const dow = (plan.day_of_week || "mon").toLowerCase();
+        const dom = parseInt(plan.day_of_month || 1, 10);
+        const tod = (plan.time_of_day || "09:00");
+        const dowOpts = [
+          ["mon","Monday"],["tue","Tuesday"],["wed","Wednesday"],["thu","Thursday"],
+          ["fri","Friday"],["sat","Saturday"],["sun","Sunday"]
+        ].map(([v,l]) =>
+          `<option value="${v}"${dow===v?" selected":""}>${l}</option>`).join("");
+        // 1..28 only — matches daemon's clamp (avoids "31st" surprises
+        // in months that don't have one).
+        let domOpts = "";
+        for (let i = 1; i <= 28; i++) {
+          domOpts += `<option value="${i}"${dom===i?" selected":""}>${i}</option>`;
+        }
+        const todOpts = [
+          "06:00","07:00","08:00","09:00","10:00","11:00","12:00",
+          "13:00","14:00","15:00","16:00","17:00","18:00","19:00"
+        ].map(t => {
+          const h = parseInt(t.slice(0,2), 10);
+          const mer = h >= 12 ? "PM" : "AM";
+          const h12 = ((h + 11) % 12) + 1;
+          return `<option value="${t}"${tod===t?" selected":""}>${h12}:00 ${mer}</option>`;
+        }).join("");
+        const cadOpts = [
+          ["weekly","Weekly"],["biweekly","Every other week"],["monthly","Monthly"]
+        ].map(([v,l]) =>
+          `<option value="${v}"${cadence===v?" selected":""}>${l}</option>`).join("");
+        return `
+          <div class="lm-section" id="lmRecurringPlanSection">
+            <h3>Recurring service</h3>
+            <div class="lm-recurring-card" style="border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;background:#fcfdff;">
+              <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+                <input type="checkbox" id="lmRecurActive"${active?" checked":""} />
+                <span><strong>This lead is on recurring service.</strong> When checked, our system fires the matching flow each cycle automatically.</span>
+              </label>
+              <div id="lmRecurFields" style="margin-top:12px;${active?"":"display:none;"}">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;">
+                  <label style="display:flex;flex-direction:column;font-size:12px;color:#64748b;">Cadence
+                    <select id="lmRecurCadence" style="margin-top:4px;padding:6px 8px;font-size:14px;border:1px solid #cbd5e1;border-radius:6px;">${cadOpts}</select>
+                  </label>
+                  <label id="lmRecurDowLabel" style="display:flex;flex-direction:column;font-size:12px;color:#64748b;${cadence==="monthly"?"display:none;":""}">Day of week
+                    <select id="lmRecurDow" style="margin-top:4px;padding:6px 8px;font-size:14px;border:1px solid #cbd5e1;border-radius:6px;">${dowOpts}</select>
+                  </label>
+                  <label id="lmRecurDomLabel" style="display:flex;flex-direction:column;font-size:12px;color:#64748b;${cadence==="monthly"?"":"display:none;"}">Day of month
+                    <select id="lmRecurDom" style="margin-top:4px;padding:6px 8px;font-size:14px;border:1px solid #cbd5e1;border-radius:6px;">${domOpts}</select>
+                  </label>
+                  <label style="display:flex;flex-direction:column;font-size:12px;color:#64748b;">Time
+                    <select id="lmRecurTod" style="margin-top:4px;padding:6px 8px;font-size:14px;border:1px solid #cbd5e1;border-radius:6px;">${todOpts}</select>
+                  </label>
+                </div>
+              </div>
+              <div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                <button type="button" id="lmRecurSave" class="lm-btn is-primary">Save recurring plan</button>
+                <span id="lmRecurStatus" style="font-size:13px;color:#475569;"></span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function _formatRecurringStatus(plan, diag) {
+        // Pure-display helper: turns plan + diag into the one-line
+        // status shown under the Save button. Returns "" when there's
+        // nothing to show (no active plan).
+        if (!plan || !plan.active) return "Not on a recurring schedule.";
+        const cad = plan.cadence || "weekly";
+        const tod = plan.time_of_day || "09:00";
+        const h = parseInt(tod.slice(0,2),10);
+        const mer = h >= 12 ? "PM" : "AM";
+        const h12 = ((h + 11) % 12) + 1;
+        const todHuman = `${h12}:00 ${mer}`;
+        let when = "";
+        if (cad === "monthly") {
+          const dom = plan.day_of_month || 1;
+          when = `monthly on day ${dom} at ${todHuman}`;
+        } else {
+          const dowMap = { mon:"Mondays", tue:"Tuesdays", wed:"Wednesdays",
+                           thu:"Thursdays", fri:"Fridays", sat:"Saturdays",
+                           sun:"Sundays" };
+          const dow = dowMap[plan.day_of_week || "mon"] || "Mondays";
+          const cadHuman = cad === "biweekly" ? "every other week" : "weekly";
+          when = `${cadHuman} on ${dow} at ${todHuman}`;
+        }
+        let extra = "";
+        if (diag) {
+          if (diag.last_fired_iso) extra += ` Last fired: ${diag.last_fired_iso}.`;
+          if (diag.next_due_human) extra += ` Next fire: ${diag.next_due_human}.`;
+        }
+        return `Active — fires ${when}.${extra}`;
+      }
+
+      function wireRecurringPlanPanel(lead) {
+        const sec = document.getElementById("lmRecurringPlanSection");
+        if (!sec) return;
+        const cb     = document.getElementById("lmRecurActive");
+        const fields = document.getElementById("lmRecurFields");
+        const cad    = document.getElementById("lmRecurCadence");
+        const dowL   = document.getElementById("lmRecurDowLabel");
+        const domL   = document.getElementById("lmRecurDomLabel");
+        const dow    = document.getElementById("lmRecurDow");
+        const dom    = document.getElementById("lmRecurDom");
+        const tod    = document.getElementById("lmRecurTod");
+        const save   = document.getElementById("lmRecurSave");
+        const status = document.getElementById("lmRecurStatus");
+        // Initial status line — render from the lead's existing plan
+        // before the first save so owners see "Active — …" right away.
+        const seedPlan = (lead && lead.recurring_plan) || {};
+        if (status) status.textContent = _formatRecurringStatus(seedPlan, null);
+        // Hydrate diag asynchronously so "Last fired" / "Next fire"
+        // show up if available.
+        if (seedPlan && seedPlan.active && lead && lead.id) {
+          fetch(`/me/leads/${encodeURIComponent(lead.id)}/recurring-plan`,
+                { credentials:"same-origin" })
+            .then(r => r.ok ? r.json() : null)
+            .then(d => {
+              if (!d || !d.plan) return;
+              if (status) status.textContent =
+                _formatRecurringStatus(d.plan, d.diagnostics || {});
+            })
+            .catch(() => {});
+        }
+        // Toggle field visibility on the active checkbox.
+        if (cb) cb.addEventListener("change", () => {
+          if (fields) fields.style.display = cb.checked ? "" : "none";
+        });
+        // Cadence drives whether DOW or DOM is visible.
+        if (cad) cad.addEventListener("change", () => {
+          const isMonthly = cad.value === "monthly";
+          if (dowL) dowL.style.display = isMonthly ? "none" : "flex";
+          if (domL) domL.style.display = isMonthly ? "flex" : "none";
+        });
+        if (save) save.addEventListener("click", async () => {
+          if (!lead || !lead.id) return;
+          save.disabled = true;
+          if (status) status.textContent = "Saving…";
+          const body = {
+            active:      !!(cb && cb.checked),
+            cadence:     cad ? cad.value : "weekly",
+            time_of_day: tod ? tod.value : "09:00",
+          };
+          if (body.cadence === "monthly") {
+            body.day_of_month = dom ? parseInt(dom.value, 10) : 1;
+          } else {
+            body.day_of_week = dow ? dow.value : "mon";
+          }
+          try {
+            const res = await fetch(
+              `/me/leads/${encodeURIComponent(lead.id)}/recurring-plan`,
+              { method:"POST", credentials:"same-origin",
+                headers:{"Content-Type":"application/json"},
+                body: JSON.stringify(body) });
+            const d = await res.json().catch(() => ({}));
+            if (!res.ok) {
+              if (status) status.textContent =
+                "Couldn't save: " + (d.error || res.status);
+              return;
+            }
+            if (status) status.textContent =
+              _formatRecurringStatus(d.plan || body, d.diagnostics || {});
+          } catch (_) {
+            if (status) status.textContent = "Couldn't save. Try again.";
+          } finally {
+            save.disabled = false;
+          }
+        });
       }
 
       function handleAction(action) {
@@ -32289,7 +32540,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-06-onboarding-navbutton"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-06-tierb-polish"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
