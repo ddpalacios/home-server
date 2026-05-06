@@ -20788,7 +20788,10 @@
             if (!confirm('Delete "' + name + '"? This can\'t be undone.')) return;
             btn.disabled = true;
             // The list returns ids as either "default" or "form:<form_id>".
-            var url, method = "DELETE";
+            // The C proxy at port 9030 doesn't forward HTTP DELETE,
+            // so we POST { op: "delete" } and the Flask side treats
+            // it as a delete operation. Same effect, no 405.
+            var url;
             if (flowId === "default") {
               url = "/me/flows/default";
             } else if (flowId.indexOf("form:") === 0) {
@@ -20798,7 +20801,12 @@
               btn.disabled = false;
               return;
             }
-            fetch(url, { method: method, credentials: "same-origin" })
+            fetch(url, {
+              method: "POST",
+              credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ op: "delete" }),
+            })
               .then(function(r){
                 if (!r.ok) throw new Error("delete_failed");
                 // Refresh the list. host is the surrounding panel.
