@@ -1,42 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://crystal-lake-landscapers.local/landscaping</loc>
+    <loc>https://crystal-lake-landscapers.local/landscape</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://crystal-lake-landscapers.local/landscaping#ask-ai</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://crystal-lake-landscapers.local/landscaping#wizard</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://crystal-lake-landscapers.local/landscaping#services</loc>
+    <loc>https://crystal-lake-landscapers.local/landscape/guide</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://crystal-lake-landscapers.local/landscaping#pros</loc>
+    <loc>https://crystal-lake-landscapers.local/landscape/glossary</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://crystal-lake-landscapers.local/landscape/hiring-tips</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://crystal-lake-landscapers.local/landscape/chat</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://crystal-lake-landscapers.local/landscape#wizard</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://crystal-lake-landscapers.local/landscaping#cost</loc>
+    <loc>https://crystal-lake-landscapers.local/landscape#services</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://crystal-lake-landscapers.local/landscaping#guide</loc>
+    <loc>https://crystal-lake-landscapers.local/landscape#cost</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://crystal-lake-landscapers.local/landscaping#faq</loc>
+    <loc>https://crystal-lake-landscapers.local/landscape#faq</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>

@@ -111,8 +111,29 @@ export const ACTIVITY_CATALOG = [
     defaultMode: "wait",
     defaultDurationDays: 2,
   },
+  // ── Unified Notify activity ──────────────────────────────────────────
+  // Replaces the legacy send_text + send_email blocks. One step that
+  // can fan out via SMS, email, or both. The drawer shows a 3-way mode
+  // picker; when mode="both" the saved step runs both branches at fire
+  // time (see server/sequences/steps.py:execute_notify).
   {
-    id: "send_text", kind: "action",
+    id: "notify", kind: "action",
+    icon: "🔔", title: "Notify",
+    cardSub: "Send a text, email, or both",
+    description: "Send your customer a text, an email, or both at once.",
+    trigger: "SEND A NOTIFICATION",
+    defaultMode: "both",
+    defaultSubject: "Quick update for you",
+    defaultBody: "Hi {first_name}, quick note from {owner_name}.",
+    canBeSms: true,
+    canBeBoth: true,
+  },
+  // ── Legacy send_text / send_email (kept for existing saved flows) ───
+  // Hidden from the picker — `hidden: true` filters them out of the
+  // library + chooser. Saved flows that still reference these IDs keep
+  // rendering and firing as before.
+  {
+    id: "send_text", kind: "action", hidden: true,
     icon: "💬", title: "Text",
     cardSub: "Send a quick note",
     description: "Message your customer with a quick note.",
@@ -121,7 +142,7 @@ export const ACTIVITY_CATALOG = [
     defaultBody: "Hey {first_name}, quick note from {owner_name}.",
   },
   {
-    id: "send_email", kind: "action",
+    id: "send_email", kind: "action", hidden: true,
     icon: "📧", title: "Email",
     cardSub: "Send a longer note",
     description: "Email your customer a longer message.",

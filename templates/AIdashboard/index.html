@@ -21038,18 +21038,37 @@
         grid.querySelectorAll(".my-flow-card").forEach(function(card){
           card.addEventListener("click", function(){
             var fid = card.getAttribute("data-flow-id") || "";
-            // For form-attached flows, set the breadcrumb so the
-            // canvas knows which flow to load. For "default" (the
-            // standalone canvas), just clear and switch panes.
+            // Three flow-id shapes:
+            //   form:<form_id>  → per-form flow (legacy intake breadcrumbs)
+            //   user:<flow_id>  → user-named flow (new multi-flow support)
+            //   anything else   → singleton standalone canvas
             try {
               if (fid.indexOf("form:") === 0) {
                 var formId = fid.slice(5);
                 localStorage.setItem("intake_return_form_id", formId);
                 localStorage.setItem("intake_return_form_ts", String(Date.now()));
                 sessionStorage.setItem("outreach_came_from_form", "1");
+                localStorage.removeItem("outreach_active_user_flow_id");
+              } else if (fid.indexOf("user:") === 0) {
+                localStorage.setItem("outreach_active_user_flow_id", fid.slice(5));
+                localStorage.removeItem("intake_return_form_id");
+                localStorage.removeItem("intake_return_form_ts");
+                sessionStorage.removeItem("outreach_came_from_form");
+              } else if (fid.indexOf("pack:") === 0) {
+                // Vertical-pack flow — keep the "pack:" prefix on the
+                // saved id so the canvas's load handler hits the
+                // backend's pack-synthesis branch (which converts
+                // vertical_flows/<id>.json → canvas nodes/edges).
+                // Without this branch pack flows fell through to
+                // "else" and the canvas opened on /me/flows/default.
+                localStorage.setItem("outreach_active_user_flow_id", fid);
+                localStorage.removeItem("intake_return_form_id");
+                localStorage.removeItem("intake_return_form_ts");
+                sessionStorage.removeItem("outreach_came_from_form");
               } else {
                 localStorage.removeItem("intake_return_form_id");
                 localStorage.removeItem("intake_return_form_ts");
+                localStorage.removeItem("outreach_active_user_flow_id");
                 sessionStorage.removeItem("outreach_came_from_form");
               }
               window.dispatchEvent(new CustomEvent("fb-outreach-nav-reset"));
@@ -21069,7 +21088,8 @@
               && card.querySelector("div[style*='font-weight:700']").textContent) || "this flow";
             if (!confirm('Delete "' + name + '"? This can\'t be undone.')) return;
             btn.disabled = true;
-            // The list returns ids as either "default" or "form:<form_id>".
+            // The list returns ids as one of:
+            //   "default", "form:<id>", "user:<id>".
             // The C proxy at port 9030 doesn't forward HTTP DELETE,
             // so we POST { op: "delete" } and the Flask side treats
             // it as a delete operation. Same effect, no 405.
@@ -21078,11 +21098,38 @@
               url = "/me/flows/default";
             } else if (flowId.indexOf("form:") === 0) {
               url = "/me/forms/" + encodeURIComponent(flowId.slice(5)) + "/flow";
+            } else if (flowId.indexOf("user:") === 0) {
+              url = "/me/flows/user/" + encodeURIComponent(flowId.slice(5));
+            } else if (flowId.indexOf("pack:") === 0) {
+              // Pack-installed flow — backend deletes the saved copy
+              // AND removes from vertical_pack.flow_ids so it stops
+              // showing up in the My Flows list. Pack original on disk
+              // (server/sequences/vertical_packs/*.json) stays untouched.
+              url = "/me/flows/user/" + encodeURIComponent(flowId);
             } else {
               alert("This flow can't be deleted.");
               btn.disabled = false;
               return;
             }
+            // Optimistic remove — hide the card immediately so the UI
+            // feels instant, then fire the delete in the background.
+            // Roll back the hide if the network call fails.
+            var prevDisplay = card ? card.style.display : "";
+            if (card) {
+              card.style.transition = "opacity 120ms ease, max-height 180ms ease";
+              card.style.opacity = "0";
+              card.style.maxHeight = "0px";
+              card.style.overflow = "hidden";
+              card.style.pointerEvents = "none";
+              // Drop from layout shortly after the fade so neighbouring
+              // cards close the gap. 200ms matches the transition above.
+              setTimeout(function(){
+                if (card && card.parentNode) card.style.display = "none";
+              }, 200);
+            }
+            // Drop cache pre-emptively so any other UI re-fetching
+            // /me/flows in this tick gets a fresh list.
+            try { sessionStorage.removeItem(_MY_FLOWS_CACHE_KEY); } catch(_) {}
             fetch(url, {
               method: "POST",
               credentials: "same-origin",
@@ -21091,11 +21138,22 @@
             })
               .then(function(r){
                 if (!r.ok) throw new Error("delete_failed");
-                // Refresh the list. host is the surrounding panel.
+                // Re-render to confirm the persistent state matches
+                // what the user sees. No-op visually if everything's
+                // already in sync.
                 var host = document.getElementById("outreachMyFlowsMount");
                 if (host) renderMyFlowsList(host);
               })
               .catch(function(){
+                // Server rejected the delete — restore the card and
+                // surface a non-blocking error.
+                if (card) {
+                  card.style.display = prevDisplay;
+                  card.style.opacity = "1";
+                  card.style.maxHeight = "";
+                  card.style.overflow = "";
+                  card.style.pointerEvents = "";
+                }
                 btn.disabled = false;
                 alert("Couldn't delete that flow. Try again.");
               });
@@ -21166,7 +21224,40 @@
       }
       function _wireStartCards(){
         var blank = document.getElementById("mf-start-blank");
-        if (blank) blank.onclick = function(){ _outShowCanvas(); };
+        if (blank) blank.onclick = function(){
+          // "Start blank" mints a brand-new user-named flow on the
+          // server so each click produces a separate flow with its
+          // own canvas (instead of all sharing the singleton default).
+          // FlowBuilder's STATE C path seeds an Input node and saves
+          // it as soon as the canvas mounts.
+          blank.disabled = true;
+          fetch("/me/flows/user", {
+            method: "POST", credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: "Untitled flow" }),
+          }).then(function(r){ return r.ok ? r.json() : null; })
+            .then(function(d){
+              blank.disabled = false;
+              if (d && d.flow_id) {
+                try {
+                  localStorage.setItem("outreach_active_user_flow_id", d.flow_id);
+                  localStorage.removeItem("intake_return_form_id");
+                  localStorage.removeItem("intake_return_form_ts");
+                  sessionStorage.removeItem("outreach_came_from_form");
+                  // Invalidate cached My Flows list so the new entry
+                  // shows on next back-nav without waiting for the
+                  // revalidate round-trip.
+                  sessionStorage.removeItem(_MY_FLOWS_CACHE_KEY);
+                  window.dispatchEvent(new CustomEvent("fb-outreach-nav-reset"));
+                } catch(_) {}
+              }
+              _outShowCanvas();
+            })
+            .catch(function(){
+              blank.disabled = false;
+              _outShowCanvas();
+            });
+        };
         var tpl = document.getElementById("mf-start-template");
         if (tpl) tpl.onclick = function(){
           // Same destination — the canvas's TemplatePicker overlay
@@ -21178,32 +21269,37 @@
         };
       }
 
-      async function renderMyFlowsList(host) {
-        host.innerHTML = '<div style="padding:48px 16px;text-align:center;color:#9aa4b2">Loading your flows…</div>';
+      // SWR cache for the My Flows list. /me/flows can be 1-3s on
+      // first hit (it walks GCS prefixes for forms + flows + intake
+      // events). Render last-known list instantly from sessionStorage
+      // so the Outreach tab is responsive on every revisit; revalidate
+      // and re-render only after the network catches up.
+      var _MY_FLOWS_CACHE_KEY = "my_flows_cache_v1";
+      function _myFlowsReadSwr(){
         try {
-          var r = await fetch("/me/flows", { credentials: "same-origin" });
-          if (r.ok) {
-            var d = await r.json().catch(function(){ return {}; });
-            _myFlowsAll = (d && d.flows) || [];
-          }
-        } catch (_) { _myFlowsAll = []; }
-        // Built-ins (First Hello etc.) are reference templates, not
-        // user-owned flows. They live in the new "Templates / start
-        // points" row above instead of being mixed into the user's
-        // saved-flow grid.
-        var userFlows = _myFlowsAll.filter(function(f){ return !f.builtin; });
+          var raw = sessionStorage.getItem(_MY_FLOWS_CACHE_KEY);
+          if (!raw) return null;
+          var c = JSON.parse(raw);
+          return Array.isArray(c && c.flows) ? c.flows : null;
+        } catch(e){ return null; }
+      }
+      function _myFlowsWriteSwr(flows){
+        try {
+          sessionStorage.setItem(_MY_FLOWS_CACHE_KEY,
+            JSON.stringify({ flows: flows || [], ts: Date.now() }));
+        } catch(e){}
+      }
+
+      function _renderMyFlowsBody(host, allFlows) {
+        var userFlows = (allFlows || []).filter(function(f){ return !f.builtin; });
+        _myFlowsAll = allFlows || [];
         _myFlowsAllDisplayed = userFlows;
-        // No "Flows" page title or paragraph subtitle — the active
-        // "My Flows" tab + the visual layout below carry the page's
-        // intent. A single short line orients the user.
         host.innerHTML = ''
           + '<p class="mf-subline" style="color:#5a6470;font-size:14px;margin:0 0 16px">Pick a flow or start a new one.</p>'
           + _myFlowsStartCardsHtml()
           + (userFlows.length === 0
-              ? ''  // No empty-state header at all — the start cards above are obvious.
+              ? ''
               : (
-                  // 32px gap implicitly separates "starting cards"
-                  // from "saved flows" without a shouted divider.
                   '<div style="display:flex;gap:10px;align-items:center;margin:32px 0 16px;flex-wrap:wrap">'
                 +   '<div style="position:relative;flex:1;min-width:220px">'
                 +     '<span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;color:#9aa4b2;pointer-events:none">🔍</span>'
@@ -21217,9 +21313,6 @@
                 +     '<option value="steps">Most steps</option>'
                 +   '</select>'
                 + '</div>'
-                // Single bordered container; rows are separated by 1px
-                // hairlines via .my-flow-card + .my-flow-card sibling
-                // border-top (CSS rule lives in the page-level <style>).
                 + '<div id="my-flows-grid" class="mf-list" style="background:#fff;border:1px solid #e6e9ef;border-radius:10px;overflow:hidden"></div>'
               ));
         _wireStartCards();
@@ -21245,6 +21338,34 @@
         }
         if (userFlows.length > 0) _myFlowsRenderInto(host);
       }
+
+      async function renderMyFlowsList(host) {
+        // Stage 1: paint cached list synchronously. The user sees real
+        // rows in <50ms on every revisit.
+        var cached = _myFlowsReadSwr();
+        if (cached) {
+          _renderMyFlowsBody(host, cached);
+        } else {
+          host.innerHTML = '<div style="padding:48px 16px;text-align:center;color:#9aa4b2">Loading your flows…</div>';
+        }
+        // Stage 2: revalidate.
+        var fresh = null;
+        try {
+          var r = await fetch("/me/flows", { credentials: "same-origin" });
+          if (r.ok) {
+            var d = await r.json().catch(function(){ return {}; });
+            fresh = (d && d.flows) || [];
+          }
+        } catch (_) { /* keep cached if fetch fails */ }
+        if (fresh) {
+          _myFlowsWriteSwr(fresh);
+          _renderMyFlowsBody(host, fresh);
+        } else if (!cached) {
+          _renderMyFlowsBody(host, []);
+        }
+        return;
+      }
+
       SECTION_ON_ENTER.outreach = async function loadOutreachSection() {
         // Automatic = flow builder (React island), On-demand = campaigns
         // wizard. Engagement bundle is no longer loaded here — the old
@@ -26053,6 +26174,7 @@
       const headerEl = document.getElementById("lmHeader");
       const bodyEl = document.getElementById("lmBody");
       let currentLeadId = null;
+      let currentLead   = null;   // last lead object passed to renderHeader
       let currentJourney = null;
       let openerEl = null;  // returns focus on close
 
@@ -26092,6 +26214,7 @@
       };
 
       function renderHeader(lead) {
+        currentLead = lead || currentLead;
         const name = fullName(lead);
         const dot = colorFor(lead.id || lead.email);
         const stage = lead.stage || "new";
@@ -26108,7 +26231,10 @@
           </div>
           <div class="lm-contact">
             ${lead.email ? `<span>📧 ${esc(lead.email)}</span>` : ""}
-            ${lead.phone ? `<span>📞 ${esc(lead.phone)}</span>` : ""}
+            ${lead.phone
+              ? `<span>📞 ${esc(lead.phone)} <button type="button" class="lm-phone-edit" data-lm-action="edit-phone" title="Change phone number" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:12px;padding:0 4px;">✎</button></span>`
+              : `<button type="button" class="lm-add-phone" data-lm-action="edit-phone" style="background:none;border:1px dashed #d1d5db;color:#2563eb;cursor:pointer;font-size:13px;padding:4px 10px;border-radius:8px;font-family:inherit;">📞 + Add phone</button>`
+            }
             ${lead.auto_unsubscribed ? `<span class="lm-pill-warn">unsubscribed</span>` : ""}
           </div>
           <div class="lm-source">${esc(sourceLabel(lead.source || "phone_call", captureDays))}</div>
@@ -26117,7 +26243,19 @@
             <button type="button" class="lm-btn" data-lm-action="note">📝 Add a note</button>
             <button type="button" class="lm-btn" data-lm-action="run_flow">▶ Run a flow</button>
             <button type="button" class="lm-btn" data-lm-action="replies">💬 Open in Replies</button>
-            ${(lead.phone && !lead.voice_opted_out) ? `<button type="button" class="lm-btn" data-lm-action="click-to-call">📞 Call now</button>` : ""}
+            ${(() => {
+              // Call now is strictly disabled when we can't actually
+              // dial. Adding a phone happens via the "+ Add phone"
+              // affordance in the contact row above — keeps the
+              // action button honest about what it does.
+              if (!lead.phone) {
+                return `<button type="button" class="lm-btn" disabled title="Add a phone number first (click '+ Add phone' above)." style="opacity:0.55;cursor:not-allowed;">📞 Call now</button>`;
+              }
+              if (lead.voice_opted_out) {
+                return `<button type="button" class="lm-btn" disabled title="${esc(fullName(lead) || 'This lead')} opted out of calls." style="opacity:0.55;cursor:not-allowed;">📞 Call now</button>`;
+              }
+              return `<button type="button" class="lm-btn" data-lm-action="click-to-call">📞 Call now</button>`;
+            })()}
           </div>
         `;
         headerEl.querySelectorAll("[data-lm-action]").forEach(b =>
@@ -27461,6 +27599,44 @@
               onStarted:      () => { try { loadJourney(currentLeadId); } catch (_) {} },
             });
           }
+          return;
+        }
+        if (action === "edit-phone") {
+          // Add or change the lead's phone. Native prompt accepts
+          // E.164, paren'd, dashed, or dotted formats — backend
+          // normalizes. After save, the modal header re-renders so
+          // the disabled "Call now" button flips to active.
+          const leadName = (currentLead &&
+            (currentLead.first_name || currentLead.email || "this lead"));
+          const current = (currentLead && currentLead.phone) || "";
+          const promptMsg =
+            (current
+              ? "Change the phone number for " + leadName + ":"
+              : "What's the phone number for " + leadName + "?") +
+            "\n\nExamples:  +15551234567   (555) 123-4567   555-123-4567";
+          const raw = window.prompt(promptMsg, current);
+          if (raw === null) return;        // user hit Cancel
+          if (!raw.trim() && !current) return;   // empty, nothing to save
+          fetch(`/me/leads/${encodeURIComponent(currentLeadId)}/phone`, {
+            method: "POST", credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone: raw.trim() }),
+          }).then(async r => {
+            const data = await r.json().catch(() => ({}));
+            if (!r.ok) {
+              alert("Couldn't save phone: " + (data.error || "try again"));
+              return;
+            }
+            // Update in-memory lead + re-render the modal header so the
+            // contact row + Call now button reflect the new phone.
+            if (currentLead) {
+              if (data.lead) Object.assign(currentLead, data.lead);
+              else if (data.phone) currentLead.phone = data.phone;
+            }
+            renderHeader(currentLead || { id: currentLeadId });
+          }).catch(() => {
+            alert("Couldn't save the phone number. Try again.");
+          });
           return;
         }
         if (action === "click-to-call") {
@@ -29149,11 +29325,13 @@
         if (!frame) return;
         const src = frame.getAttribute("data-src");
         if (src) {
-          // Bust the browser cache on every cold mount — the iframe
-          // template (dashboard_linkedin.html) gets edits we want
-          // picked up without making the user clear cache by hand.
-          const bust = src + (src.indexOf("?") < 0 ? "?" : "&") + "v=" + Date.now();
-          frame.setAttribute("src", bust);
+          // Was: src + "?v=" + Date.now() — that defeated browser
+          // caching entirely (a unique URL per click forces a 674KB
+          // template redownload). The server now returns ETag +
+          // Cache-Control: no-cache, so the browser revalidates
+          // (sends If-None-Match) and gets a 304 when unchanged —
+          // same freshness without the redownload.
+          frame.setAttribute("src", src);
         }
         _schedLiMounted = true;
       }
@@ -34290,7 +34468,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-06-tier-c-voice"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-06-test-flow-edges"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->

@@ -94,7 +94,9 @@
     matches: [],
     compare: new Set(),
     sessionId: ensureSessionId(),
-    chatBusy: false
+    chatBusy: false,
+    completed: false,
+    editing: false   // user clicked "Update notes" on /done → edit step-6
   };
 
   function ensureSessionId() {
@@ -228,30 +230,259 @@
   }
 
   // ==========================================================================
-  // Wizard
+  // Match flow — routing, state persistence, transitions
   // ==========================================================================
   const QUESTION_STEPS = 6;
+  const FADE_MS = 200;
+  const MATCH_STORAGE_KEY = "landscaping_match_state";
+  const PATHNAME_STEP_RE = /^\/(landscaping|landscape)\/match\/step-(\d)\/?$/;
+  const PATHNAME_DONE_RE = /^\/(landscaping|landscape)\/match\/done\/?$/;
 
-  function showStep(n) {
-    state.step = n;
-    $$(".wizard-step").forEach((el) => {
-      el.classList.toggle("active", Number(el.dataset.step) === n);
+  function pathPrefix() {
+    return window.location.pathname.indexOf("/landscape/") === 0 ||
+           window.location.pathname === "/landscape"
+      ? "/landscape" : "/landscaping";
+  }
+  function stepUrl(n)   { return pathPrefix() + "/match/step-" + n; }
+  function doneUrl()    { return pathPrefix() + "/match/done"; }
+  function landingUrl() { return pathPrefix(); }
+
+  // ---- sessionStorage persistence ----
+  function loadMatchState() {
+    try {
+      const raw = sessionStorage.getItem(MATCH_STORAGE_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      if (saved && typeof saved === "object") {
+        if (saved.answers) Object.assign(state.answers, saved.answers);
+        state.completed = !!saved.completed;
+        state.editing = !!saved.editing;
+      }
+    } catch (_) { /* corrupt state — ignore */ }
+  }
+  function saveMatchState() {
+    try {
+      sessionStorage.setItem(MATCH_STORAGE_KEY, JSON.stringify({
+        answers: state.answers,
+        completed: !!state.completed,
+        editing: !!state.editing
+      }));
+    } catch (_) {}
+  }
+  function clearMatchState() {
+    try { sessionStorage.removeItem(MATCH_STORAGE_KEY); } catch (_) {}
+    state.answers = {
+      projectType: null, propertySize: null, budget: null,
+      timeline: null, zip: "", name: "", email: "", phone: "", notes: ""
+    };
+    state.matches = [];
+    state.completed = false;
+    state.editing = false;
+    $$(".option").forEach((o) => o.classList.remove("selected"));
+    ["zip", "name", "email", "phone", "notes"].forEach((id) => {
+      const el = $("#" + id);
+      if (el) el.value = "";
     });
+  }
+
+  // ---- Routing ----
+  function parseRoute(pathname) {
+    const stepM = pathname.match(PATHNAME_STEP_RE);
+    if (stepM) {
+      const n = Number(stepM[2]);
+      if (n >= 1 && n <= QUESTION_STEPS) return { kind: "step", step: n - 1 };
+      return { kind: "landing" };
+    }
+    if (PATHNAME_DONE_RE.test(pathname)) return { kind: "done" };
+    return { kind: "landing" };
+  }
+
+  function navigateMatch(url, opts) {
+    if (window.location.pathname === url) {
+      if (!opts || !opts.force) { routeMatch(); return; }
+    }
+    history.pushState({ matchRoute: true }, "", url);
+    routeMatch();
+  }
+
+  function routeMatch() {
+    const route = parseRoute(window.location.pathname);
+    const flow = $("#match-flow");
+    const card = $(".match-flow-card");
+    const body = document.body;
+    const wasMatchMode = body.classList.contains("match-mode");
+    const willBeMatchMode = route.kind !== "landing";
+
+    // Render the target view; share with the mode-crossing branch below.
+    const renderTarget = () => {
+      if (route.kind === "landing") return;
+      if (route.kind === "done") {
+        if (!state.completed || !hasAnswers()) {
+          transitionTo(card, () => showEmptyView(card));
+        } else {
+          transitionTo(card, () => showDoneView(card));
+        }
+        return;
+      }
+      if (route.kind === "step") {
+        if (state.completed && !state.editing) {
+          transitionTo(card, () => showWarningView(card));
+        } else {
+          transitionTo(card, () => showStepView(card, route.step));
+        }
+      }
+    };
+
+    if (wasMatchMode === willBeMatchMode) {
+      // Within the same mode (match → match, or landing → landing).
+      // The inner transitionTo handles the fade between panels.
+      if (route.kind === "landing") {
+        // No-op for landing → landing.
+        return;
+      }
+      // Ensure flow is shown in case it was hidden.
+      if (flow) { flow.hidden = false; flow.setAttribute("aria-hidden", "false"); }
+      renderTarget();
+      return;
+    }
+
+    // Crossing modes — fade out the departing surface, then switch + fade in.
+    body.classList.add("match-fading-out");
+    setTimeout(() => {
+      if (willBeMatchMode) {
+        body.classList.add("match-mode");
+        if (flow) { flow.hidden = false; flow.setAttribute("aria-hidden", "false"); }
+      } else {
+        body.classList.remove("match-mode");
+        if (flow) { flow.hidden = true; flow.setAttribute("aria-hidden", "true"); }
+      }
+      // Force reflow before lifting the fade-out class so the fade-in runs.
+      void document.body.offsetWidth;
+      body.classList.remove("match-fading-out");
+      renderTarget();
+    }, FADE_MS);
+  }
+
+  function hasAnswers() {
+    const a = state.answers;
+    return !!a.projectType && !!a.email;
+  }
+
+  // ---- View transitions: 200ms fade-out → swap → 200ms fade-in ----
+  function transitionTo(card, showFn) {
+    if (!card) { showFn(); return; }
+    const visible = card.querySelector(".fade-in");
+    if (visible) {
+      visible.classList.remove("fade-in");
+      setTimeout(() => {
+        visible.hidden = true;
+        showFn();
+      }, FADE_MS);
+    } else {
+      showFn();
+    }
+  }
+
+  function hideAllPanels(card) {
+    $$(".match-step, .match-done, .match-empty, .match-warning", card)
+      .forEach((el) => { el.hidden = true; el.classList.remove("fade-in"); });
+  }
+
+  function fadeInPanel(el) {
+    if (!el) return;
+    el.hidden = false;
+    void el.offsetWidth;   // force reflow so the opacity transition runs
+    el.classList.add("fade-in");
+  }
+
+  function showStepView(card, stepIdx) {
+    card.classList.remove("done-mode", "empty-mode", "warning-mode");
+    hideAllPanels(card);
+    state.step = stepIdx;
+    restoreAnswerForStep(stepIdx);
+    fadeInPanel(card.querySelector('.match-step[data-step="' + stepIdx + '"]'));
     renderProgress();
     updateNav();
     updateLiveCount();
-    if (n === 6) renderResults();
+    resetScroll();
+    setTimeout(() => {
+      const el = card.querySelector('.match-step[data-step="' + stepIdx + '"]');
+      const focusable = el && el.querySelector("input, textarea, .option");
+      if (focusable && typeof focusable.focus === "function") {
+        try { focusable.focus({ preventScroll: true }); }
+        catch (_) { focusable.focus(); }
+      }
+    }, FADE_MS + 30);
   }
 
+  function showDoneView(card) {
+    card.classList.add("done-mode");
+    card.classList.remove("empty-mode", "warning-mode");
+    hideAllPanels(card);
+    computeMatches();
+    saveMatchState();
+    renderResults();
+    fadeInPanel($("#matchDone"));
+    resetScroll();
+  }
+
+  function showEmptyView(card) {
+    card.classList.add("empty-mode");
+    card.classList.remove("done-mode", "warning-mode");
+    hideAllPanels(card);
+    fadeInPanel($("#matchEmpty"));
+    resetScroll();
+  }
+
+  function showWarningView(card) {
+    card.classList.add("warning-mode");
+    card.classList.remove("done-mode", "empty-mode");
+    hideAllPanels(card);
+    fadeInPanel($("#matchWarning"));
+    resetScroll();
+  }
+
+  function resetScroll() {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }
+
+  function restoreAnswerForStep(stepIdx) {
+    const a = state.answers;
+    const optionMap = {
+      0: { q: "projectType",  val: a.projectType  },
+      1: { q: "propertySize", val: a.propertySize },
+      2: { q: "budget",       val: a.budget       },
+      3: { q: "timeline",     val: a.timeline     }
+    };
+    if (optionMap[stepIdx]) {
+      const { q, val } = optionMap[stepIdx];
+      const group = document.querySelector('.options[data-question="' + q + '"]');
+      if (group) {
+        $$(".option", group).forEach((o) => {
+          o.classList.toggle("selected", val !== null && o.dataset.value === val);
+        });
+      }
+    } else if (stepIdx === 4) {
+      const zip = $("#zip");
+      if (zip) zip.value = a.zip || "";
+    } else if (stepIdx === 5) {
+      ["name", "email", "phone", "notes"].forEach((id) => {
+        const el = $("#" + id);
+        if (el) el.value = a[id] || "";
+      });
+    }
+  }
+
+  // ---- Progress dots / Next-Back nav ----
   function renderProgress() {
     const bar = $("#progressBar");
+    if (!bar) return;
     bar.innerHTML = "";
-    if (state.step >= 6) { bar.style.display = "none"; return; }
-    bar.style.display = "flex";
     for (let i = 0; i < QUESTION_STEPS; i++) {
-      const span = document.createElement("span");
-      if (i <= state.step) span.classList.add("active");
-      bar.appendChild(span);
+      const dot = document.createElement("span");
+      if (i < state.step) dot.classList.add("filled");
+      if (i === state.step) { dot.classList.add("filled"); dot.classList.add("current"); }
+      bar.appendChild(dot);
     }
   }
 
@@ -272,12 +503,12 @@
   function updateNav() {
     const back = $("#backBtn");
     const next = $("#nextBtn");
-    const nav = $("#wizardNav");
-    if (state.step >= 6) { nav.style.display = "none"; return; }
-    nav.style.display = "flex";
-    back.style.visibility = state.step === 0 ? "hidden" : "visible";
+    if (!back || !next) return;
+    back.hidden = state.step === 0;
     next.disabled = !currentStepValid();
-    next.textContent = state.step === 5 ? "See my matches →" : "Next →";
+    next.textContent = state.step === QUESTION_STEPS - 1
+      ? (state.editing ? "Save and continue →" : "See my matches →")
+      : "Next →";
   }
 
   function liveMatchCount() {
@@ -295,15 +526,16 @@
   function updateLiveCount() {
     const el = $("#liveCount");
     if (!el) return;
-    if (state.step === 0 || state.step >= 6) { el.textContent = ""; return; }
+    if (state.step === 0) { el.textContent = ""; return; }
     const n = liveMatchCount();
     if (n === null) { el.textContent = ""; return; }
     el.textContent = n === 0
       ? "No pros match yet — adjust your answers or reach out and we'll expand our directory."
-      : `${n} pro${n === 1 ? "" : "s"} match so far.`;
+      : n + " pro" + (n === 1 ? "" : "s") + " match so far.";
   }
 
-  function bindWizard() {
+  // ---- Bindings ----
+  function bindMatchFlow() {
     $$(".options").forEach((group) => {
       const question = group.dataset.question;
       group.addEventListener("click", (e) => {
@@ -312,6 +544,7 @@
         $$(".option", group).forEach((o) => o.classList.remove("selected"));
         btn.classList.add("selected");
         state.answers[question] = btn.dataset.value;
+        saveMatchState();
         updateNav();
         updateLiveCount();
       });
@@ -323,9 +556,10 @@
         const cleaned = e.target.value.replace(/\D/g, "").slice(0, 5);
         e.target.value = cleaned;
         state.answers.zip = cleaned;
-        zip.parentElement.classList.toggle(
-          "invalid",
-          cleaned.length > 0 && !/^\d{5}$/.test(cleaned)
+        saveMatchState();
+        const wrap = zip.closest(".field");
+        if (wrap) wrap.classList.toggle(
+          "invalid", cleaned.length > 0 && !/^\d{5}$/.test(cleaned)
         );
         updateNav();
       });
@@ -336,43 +570,87 @@
       if (!el) return;
       el.addEventListener("input", (e) => {
         state.answers[field] = e.target.value;
-        const wrap = el.parentElement;
-        if (field === "email") {
-          const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.target.value);
-          wrap.classList.toggle("invalid", e.target.value.length > 0 && !valid);
-        } else if (field === "name") {
-          wrap.classList.toggle("invalid", false);
+        saveMatchState();
+        const wrap = el.closest(".field");
+        if (wrap) {
+          if (field === "email") {
+            const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.target.value);
+            wrap.classList.toggle("invalid", e.target.value.length > 0 && !valid);
+          } else if (field === "name") {
+            wrap.classList.toggle("invalid", false);
+          }
         }
         updateNav();
       });
     });
 
-    $("#backBtn").addEventListener("click", () => {
-      if (state.step > 0) showStep(state.step - 1);
+    const backBtn = $("#backBtn");
+    if (backBtn) backBtn.addEventListener("click", () => {
+      // Mirror browser back — keeps the history stack sane and lets the
+      // user's back button do the same thing as our in-flow ← Back.
+      // If the user landed here directly (no prior entry), fall back to
+      // pushing the previous URL so the button still works.
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        navigateMatch(state.step === 0 ? landingUrl() : stepUrl(state.step));
+      }
     });
-    $("#nextBtn").addEventListener("click", () => {
-      if (!currentStepValid()) return;
-      if (state.step === 5) { computeMatches(); showStep(6); return; }
-      showStep(state.step + 1);
-    });
-    $("#modalClose").addEventListener("click", () => {
-      $("#thanksModal").classList.remove("show");
-      resetWizard();
-    });
-  }
 
-  function resetWizard() {
-    state.answers = {
-      projectType: null, propertySize: null, budget: null,
-      timeline: null, zip: "", name: "", email: "", phone: "", notes: ""
-    };
-    state.matches = [];
-    $$(".option").forEach((o) => o.classList.remove("selected"));
-    ["zip", "name", "email", "phone", "notes"].forEach((id) => {
-      const el = $("#" + id);
-      if (el) el.value = "";
+    const nextBtn = $("#nextBtn");
+    if (nextBtn) nextBtn.addEventListener("click", () => {
+      if (!currentStepValid()) return;
+      if (state.step === QUESTION_STEPS - 1) {
+        // Final step — record completion and go to /done.
+        state.completed = true;
+        state.editing = false;
+        saveMatchState();
+        navigateMatch(doneUrl());
+        return;
+      }
+      navigateMatch(stepUrl(state.step + 2));   // 0-indexed step → next URL number
     });
-    showStep(0);
+
+    const modalClose = $("#modalClose");
+    if (modalClose) modalClose.addEventListener("click", () => {
+      $("#thanksModal").classList.remove("show");
+    });
+
+    const doneUpdate = $("#doneUpdate");
+    if (doneUpdate) doneUpdate.addEventListener("click", () => {
+      // Open step-6 in edit mode without losing completion state.
+      state.editing = true;
+      saveMatchState();
+      navigateMatch(stepUrl(QUESTION_STEPS));
+      // After navigate, focus the notes textarea.
+      setTimeout(() => {
+        const notes = $("#notes");
+        if (notes) {
+          try { notes.focus({ preventScroll: true }); } catch (_) { notes.focus(); }
+        }
+      }, FADE_MS + 60);
+    });
+
+    const restartBtn = $("#restartBtn");
+    if (restartBtn) restartBtn.addEventListener("click", () => {
+      clearMatchState();
+      navigateMatch(stepUrl(1));
+    });
+
+    // Delegate clicks on all match-flow-related anchors so SPA navigation
+    // happens without a full page load.
+    document.body.addEventListener("click", (e) => {
+      const a = e.target.closest(
+        "a[data-match-start], a[data-match-exit], a[data-match-internal]"
+      );
+      if (!a) return;
+      // Honor open-in-new-tab / modifier-click defaults
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      navigateMatch(a.getAttribute("href"));
+    });
+
+    window.addEventListener("popstate", routeMatch);
   }
 
   // ==========================================================================
@@ -401,18 +679,27 @@
   function renderResults() {
     const list = $("#matchesList");
     const none = $("#noMatches");
-    const subtitle = $("#resultsSubtitle");
+    const lede = $("#matchDoneLede");
+    if (!list) return;
     list.innerHTML = "";
 
     if (state.matches.length === 0) {
-      list.style.display = "none";
-      none.style.display = "block";
-      subtitle.textContent = "We couldn't find an exact match — here's what's next.";
+      list.hidden = true;
+      if (none) none.hidden = false;
+      if (lede) {
+        lede.innerHTML = "We don't have a perfect local match yet — we'll reach out " +
+          "when one is available. Hold tight.";
+      }
       return;
     }
-    list.style.display = "flex";
-    none.style.display = "none";
-    subtitle.textContent = "Based on your answers, these pros are the best fit.";
+    list.hidden = false;
+    if (none) none.hidden = true;
+    if (lede) {
+      const projectLabel = serviceLabel(state.answers.projectType || "").toLowerCase();
+      const subjectLabel = projectLabel || "project";
+      lede.innerHTML = "Three local pros will reach out within <strong>24–48 hours</strong> " +
+        "about your " + esc(subjectLabel) + ".";
+    }
 
     state.matches.forEach(({ pro, score }) => {
       list.appendChild(buildMatchCard(pro, score, true));
@@ -563,31 +850,41 @@
     });
   }
 
-  // Infer project type from conversation and pre-fill wizard.
+  // Infer project type from conversation and persist for the matching flow.
   function inferAndPrefill(text) {
     const lower = text.toLowerCase();
+    let changed = false;
     if (!state.answers.projectType) {
       for (const row of KEYWORD_TO_SERVICE) {
         if (row.words.some((w) => lower.includes(w))) {
           state.answers.projectType = row.svc;
-          const btn = document.querySelector(`.options[data-question="projectType"] .option[data-value="${row.svc}"]`);
-          if (btn) { $$(".option", btn.parentElement).forEach((o) => o.classList.remove("selected")); btn.classList.add("selected"); }
+          changed = true;
+          const btn = document.querySelector(
+            '.options[data-question="projectType"] .option[data-value="' + row.svc + '"]'
+          );
+          if (btn) {
+            $$(".option", btn.parentElement).forEach((o) => o.classList.remove("selected"));
+            btn.classList.add("selected");
+          }
           break;
         }
       }
     }
-    // ZIP extraction
     const zipMatch = text.match(/\b(600\d{2})\b/);
     if (zipMatch && CRYSTAL_LAKE_ZIPS.has(zipMatch[1])) {
       state.answers.zip = zipMatch[1];
+      changed = true;
       const zipEl = $("#zip"); if (zipEl) zipEl.value = zipMatch[1];
       const zipCheck = $("#zipCheckInput"); if (zipCheck) zipCheck.value = zipMatch[1];
     }
-    // Urgency
     if (!state.answers.timeline) {
-      if (/(asap|urgent|this week|emergency)/.test(lower)) state.answers.timeline = "asap";
-      else if (/(this month|next couple weeks)/.test(lower)) state.answers.timeline = "month";
+      if (/(asap|urgent|this week|emergency)/.test(lower)) {
+        state.answers.timeline = "asap"; changed = true;
+      } else if (/(this month|next couple weeks)/.test(lower)) {
+        state.answers.timeline = "month"; changed = true;
+      }
     }
+    if (changed) saveMatchState();
     updateLiveCount();
   }
 
@@ -630,7 +927,7 @@
         if (/match|get matched|form|wizard|pro/i.test(answer)) {
           const cta = document.createElement("div");
           cta.style.marginTop = "8px";
-          cta.innerHTML = `<a href="#wizard" class="btn btn-outline btn-sm">Start quick match →</a>`;
+          cta.innerHTML = '<a href="' + stepUrl(1) + '" class="btn btn-outline btn-sm" data-match-start>Start quick match →</a>';
           botMsg.appendChild(cta);
         }
 
@@ -705,17 +1002,86 @@
   }
 
   // ==========================================================================
+  // Hero search + category tiles → start the matching flow
+  // ==========================================================================
+  function preselectAnswer(question, value) {
+    state.answers[question] = value;
+    saveMatchState();
+    const group = document.querySelector(
+      '.options[data-question="' + question + '"]'
+    );
+    if (!group) return;
+    const btn = group.querySelector('.option[data-value="' + value + '"]');
+    if (!btn) return;
+    $$(".option", group).forEach((o) => o.classList.remove("selected"));
+    btn.classList.add("selected");
+  }
+
+  function initHeroSearch() {
+    const form = $("#heroSearch");
+    const svc = $("#heroService");
+    const zip = $("#heroZip");
+    const btn = $("#heroSubmit");
+    if (!form || !svc || !zip || !btn) return;
+    zip.addEventListener("input", (e) => {
+      e.target.value = e.target.value.replace(/\D/g, "").slice(0, 5);
+    });
+    function go() {
+      const service = svc.value;
+      const zipVal = (zip.value || "").trim();
+      if (service) preselectAnswer("projectType", service);
+      if (zipVal && /^\d{5}$/.test(zipVal)) {
+        state.answers.zip = zipVal;
+        saveMatchState();
+        const wizZip = $("#zip");
+        if (wizZip) wizZip.value = zipVal;
+      }
+      // Per spec: hero CTA always lands the user on /step-1. Pre-filled
+      // answers persist via state — the user sees them already selected.
+      navigateMatch(stepUrl(1));
+    }
+    btn.addEventListener("click", go);
+    form.addEventListener("submit", (e) => { e.preventDefault(); go(); });
+  }
+
+  function initCategoryTiles() {
+    const tiles = $$(".cat-tile");
+    if (!tiles.length) return;
+    tiles.forEach((tile) => {
+      tile.addEventListener("click", () => {
+        const cat = tile.dataset.cat;
+        if (cat) preselectAnswer("projectType", cat);
+        navigateMatch(stepUrl(1));
+      });
+    });
+  }
+
+  // ==========================================================================
   // Start
   // ==========================================================================
   document.addEventListener("DOMContentLoaded", () => {
+    // If the user deep-linked to a /match URL, switch into match-mode
+    // BEFORE we wire anything else up so the landing page doesn't flash.
+    if (parseRoute(window.location.pathname).kind !== "landing") {
+      document.body.classList.add("match-mode");
+      const flow = $("#match-flow");
+      if (flow) { flow.hidden = false; flow.setAttribute("aria-hidden", "false"); }
+    }
+    // The inline pre-paint guard (html.is-match-route) is a one-shot hint
+    // for first paint only. JS now owns visibility via body.match-mode.
+    document.documentElement.classList.remove("is-match-route");
     initNav();
     initReveal();
     initZipCheck();
     initEstimator();
-    bindWizard();
+    loadMatchState();
+    bindMatchFlow();
     renderDirectory();
     bindCompareBar();
     initChat();
-    showStep(0);
+    initHeroSearch();
+    initCategoryTiles();
+    // Render the right view for the current URL (landing, step-N, or done).
+    routeMatch();
   });
 })();

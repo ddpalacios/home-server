@@ -4,22 +4,32 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Crystal Lake Landscapers | Match With Local Landscaping Pros in McHenry County, IL</title>
-<meta name="description" content="Find vetted landscapers in Crystal Lake, Cary, Algonquin and nearby McHenry County, IL. Get matched in 30 seconds, chat with our AI landscape advisor, and compare local pros for lawn care, hardscaping, design, irrigation, and tree work." />
-<meta name="keywords" content="crystal lake landscapers, landscaping crystal lake il, lawn care mchenry county, hardscaping algonquin, landscape designer cary il, zone 5a landscaping" />
+<meta name="description" content="Find a local landscaper in Crystal Lake, Cary, Algonquin, and nearby McHenry County, IL. Answer six quick questions to get matched with local pros for lawn care, hardscaping, design, irrigation, and tree work — free, no spam." />
+<meta name="keywords" content="crystal lake landscapers, landscaping crystal lake il, lawn care mchenry county, hardscaping algonquin, landscape designer cary il, northern illinois landscaping" />
 <meta name="robots" content="index, follow, max-image-preview:large" />
 <meta name="theme-color" content="#1f5f35" />
 <link rel="canonical" href="https://crystal-lake-landscapers.local/landscaping" />
 
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Crystal Lake Landscapers" />
-<meta property="og:title" content="Crystal Lake Landscapers | Match with vetted local landscaping pros" />
-<meta property="og:description" content="Answer a few quick questions or chat with our AI advisor — we'll match you with local landscaping pros serving Crystal Lake and McHenry County." />
+<meta property="og:title" content="Crystal Lake Landscapers | Match with local landscaping pros" />
+<meta property="og:description" content="Answer six quick questions or chat with our AI advisor — we'll match you with local landscaping pros serving Crystal Lake and McHenry County. Free, no spam." />
 <meta property="og:url" content="https://crystal-lake-landscapers.local/landscaping" />
 <meta property="og:locale" content="en_US" />
 
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Crystal Lake Landscapers" />
-<meta name="twitter:description" content="Match with vetted landscapers in Crystal Lake, IL. Free AI advisor included." />
+<meta name="twitter:description" content="Match with local landscapers in Crystal Lake, IL. Free, no spam. AI advisor included." />
+
+<script>
+  // Run BEFORE first paint so deep-links to /landscaping/match/* don't flash
+  // the landing page. Sets html.is-match-route → CSS hides landing chrome.
+  (function () {
+    if (/^\/(landscape|landscaping)\/match\//.test(location.pathname)) {
+      document.documentElement.classList.add("is-match-route");
+    }
+  })();
+</script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -36,6 +46,27 @@
     "target": "https://crystal-lake-landscapers.local/landscaping?q={search_term_string}",
     "query-input": "required name=search_term_string"
   }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Crystal Lake Landscapers",
+  "url": "https://crystal-lake-landscapers.local/landscaping",
+  "logo": "https://crystal-lake-landscapers.local/landscaping/og-image.jpg",
+  "areaServed": [
+    {"@type":"City","name":"Crystal Lake","address":{"@type":"PostalAddress","addressRegion":"IL","postalCode":"60014"}},
+    {"@type":"City","name":"Cary","address":{"@type":"PostalAddress","addressRegion":"IL","postalCode":"60013"}},
+    {"@type":"City","name":"Algonquin","address":{"@type":"PostalAddress","addressRegion":"IL","postalCode":"60102"}},
+    {"@type":"City","name":"Lake in the Hills","address":{"@type":"PostalAddress","addressRegion":"IL","postalCode":"60156"}},
+    {"@type":"City","name":"McHenry","address":{"@type":"PostalAddress","addressRegion":"IL","postalCode":"60050"}},
+    {"@type":"City","name":"Woodstock","address":{"@type":"PostalAddress","addressRegion":"IL","postalCode":"60098"}},
+    {"@type":"City","name":"Huntley","address":{"@type":"PostalAddress","addressRegion":"IL","postalCode":"60142"}}
+  ],
+  "description": "Free matching service connecting homeowners in McHenry County, Illinois with local landscaping pros. Six-question intake, no spam, no resale of contact info.",
+  "knowsAbout": ["Landscaping","Lawn care","Hardscaping","Irrigation","Tree care","Snow removal"]
 }
 </script>
 
@@ -89,28 +120,22 @@
   "@type": "FAQPage",
   "mainEntity": [
     {"@type":"Question","name":"How much does landscaping cost in Crystal Lake, IL?","acceptedAnswer":{"@type":"Answer","text":"Weekly mowing in Crystal Lake typically runs $40–$75 per visit depending on lot size. A full landscape design and install averages $4,000–$15,000, while paver patios range from $18–$35 per square foot installed. Irrigation systems start around $3,500 for small yards."}},
-    {"@type":"Question","name":"When is the best time to plant in Northern Illinois?","acceptedAnswer":{"@type":"Answer","text":"Crystal Lake sits in USDA hardiness Zone 5a. The safe spring planting window opens after the last frost, usually mid-May. Fall planting (September through mid-October) is ideal for trees, shrubs, and perennials because cooler soil reduces transplant shock."}},
-    {"@type":"Question","name":"Do Crystal Lake landscapers need to be licensed?","acceptedAnswer":{"@type":"Answer","text":"Illinois does not require a statewide landscaping license, but the City of Crystal Lake requires contractors to register and carry liability insurance. Always verify registration, insurance, and request references before hiring."}},
+    {"@type":"Question","name":"When is the best time to plant in Northern Illinois?","acceptedAnswer":{"@type":"Answer","text":"Crystal Lake sits in USDA hardiness Zone 6a (per the 2023 USDA Plant Hardiness Zone Map update — previously Zone 5a). The safe spring planting window opens after the last frost, usually mid-May. Fall planting (September through mid-October) is ideal for trees, shrubs, and perennials because cooler soil reduces transplant shock."}},
+    {"@type":"Question","name":"Do Crystal Lake landscapers need to be licensed?","acceptedAnswer":{"@type":"Answer","text":"Illinois does not require a statewide general landscaping license. Specific trades — irrigation contractors and applicators of restricted-use pesticides — do need state credentials. Many municipalities also require contractors to register locally and show proof of liability insurance, so check Crystal Lake's current contractor-registration rules at crystallake.org. Always verify registration, insurance, and request references before hiring."}},
     {"@type":"Question","name":"How far in advance should I book a landscaper?","acceptedAnswer":{"@type":"Answer","text":"Book spring cleanups by mid-February, summer installs by early April, and fall cleanups by mid-August. Irrigation and hardscape projects typically need 3–6 weeks lead time during peak season."}},
-    {"@type":"Question","name":"Can I water my lawn anytime in Crystal Lake?","acceptedAnswer":{"@type":"Answer","text":"Crystal Lake observes odd/even watering restrictions from May 15 through September 15. Addresses ending in odd numbers water on odd calendar dates; even on even. Watering is limited to early-morning and evening hours."}},
+    {"@type":"Question","name":"Can I water my lawn anytime in Crystal Lake?","acceptedAnswer":{"@type":"Answer","text":"Crystal Lake has water-conservation rules during the warm-weather months that include odd/even sprinkling restrictions tied to your address. The exact start and end dates and any morning/evening hour limits are set by the city's water-conservation ordinance — check crystallake.org or call the Public Works department for the current rules before installing or scheduling irrigation."}},
     {"@type":"Question","name":"Do you charge to get matched with a landscaper?","acceptedAnswer":{"@type":"Answer","text":"No. Matching and talking to our AI advisor are free. You only pay the landscaper directly for the work you choose to hire them for."}}
   ]
 }
 </script>
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {"@type":"LocalBusiness","@id":"#greenbrook","name":"Greenbrook Lawn & Landscape","areaServed":"Crystal Lake, IL","address":{"@type":"PostalAddress","addressLocality":"Crystal Lake","addressRegion":"IL","postalCode":"60014","addressCountry":"US"},"telephone":"+18155550142","aggregateRating":{"@type":"AggregateRating","ratingValue":"4.8","reviewCount":128}},
-    {"@type":"LocalBusiness","@id":"#stoneoak","name":"StoneOak Hardscapes","areaServed":"Cary, IL","address":{"@type":"PostalAddress","addressLocality":"Cary","addressRegion":"IL","postalCode":"60013","addressCountry":"US"},"telephone":"+18155550178","aggregateRating":{"@type":"AggregateRating","ratingValue":"4.9","reviewCount":94}},
-    {"@type":"LocalBusiness","@id":"#rootsandshoots","name":"Roots & Shoots Design","areaServed":"Crystal Lake, IL","address":{"@type":"PostalAddress","addressLocality":"Crystal Lake","addressRegion":"IL","postalCode":"60012","addressCountry":"US"},"telephone":"+18155550164","aggregateRating":{"@type":"AggregateRating","ratingValue":"4.7","reviewCount":71}},
-    {"@type":"LocalBusiness","@id":"#lakesidetree","name":"Lakeside Tree & Shrub","areaServed":"Lake in the Hills, IL","address":{"@type":"PostalAddress","addressLocality":"Lake in the Hills","addressRegion":"IL","postalCode":"60156","addressCountry":"US"},"telephone":"+18155550191","aggregateRating":{"@type":"AggregateRating","ratingValue":"4.6","reviewCount":62}},
-    {"@type":"LocalBusiness","@id":"#flowspro","name":"FlowsPro Irrigation","areaServed":"Algonquin, IL","address":{"@type":"PostalAddress","addressLocality":"Algonquin","addressRegion":"IL","postalCode":"60102","addressCountry":"US"},"telephone":"+18155550133","aggregateRating":{"@type":"AggregateRating","ratingValue":"4.8","reviewCount":54}},
-    {"@type":"LocalBusiness","@id":"#fourseasons","name":"Four Seasons Crystal Lake","areaServed":"Crystal Lake, IL","address":{"@type":"PostalAddress","addressLocality":"Crystal Lake","addressRegion":"IL","postalCode":"60014","addressCountry":"US"},"telephone":"+18155550125","aggregateRating":{"@type":"AggregateRating","ratingValue":"4.5","reviewCount":207}}
-  ]
-}
-</script>
+<!-- LocalBusiness schema for individual pros is intentionally omitted
+     until real partner pros are signed up. Emitting AggregateRating /
+     reviewCount data for businesses we don't actually represent would
+     violate Google's structured-data policy and the honest-claims rule
+     for the product. Re-add this block (one entry per real partner)
+     once vetting + signed agreements are in place. -->
+
 
 <style>
   :root {
@@ -212,30 +237,119 @@
     .mobile-toggle { display: block; }
   }
 
-  /* ===== HERO ===== */
-  .hero {
+  /* ===== HERO (Angi-style search-first) ===== */
+  .hero-angi {
     position: relative;
     background:
       radial-gradient(1200px 400px at 80% -10%, rgba(139,201,142,.35), transparent 60%),
       radial-gradient(800px 400px at 10% 100%, rgba(47,128,72,.18), transparent 60%),
       linear-gradient(180deg, var(--cream) 0%, var(--green-50) 100%);
-    padding: 72px 0 96px;
+    padding: clamp(48px, 7vw, 96px) 0 clamp(56px, 8vw, 104px);
     overflow: hidden;
   }
-  .hero-grid {
-    display: grid; gap: 48px; align-items: center;
-    grid-template-columns: 1.2fr 1fr;
+  .hero-angi-inner {
+    text-align: center;
+    max-width: 760px; margin: 0 auto;
   }
-  @media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; } }
-  .hero .eyebrow {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: var(--green-100); color: var(--green-800);
-    padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 600;
-    margin-bottom: 18px;
+  .hero-angi-h1 {
+    font-size: clamp(34px, 5.4vw, 60px);
+    font-weight: 700;
+    margin: 0 auto 32px;
+    max-width: 16ch;
+    line-height: 1.1;
   }
-  .hero .eyebrow::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--green-600); }
-  .hero p.lead { font-size: 18px; max-width: 520px; color: var(--ink-2); }
-  .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+  .hero-search {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 12px;
+    max-width: 640px; margin: 0 auto;
+    text-align: left;
+  }
+  .hero-search-row {
+    display: grid; grid-template-columns: 1.4fr 1fr;
+    gap: 8px;
+  }
+  @media (max-width: 600px) { .hero-search-row { grid-template-columns: 1fr; } }
+  .hero-search-field {
+    display: flex; flex-direction: column;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: var(--cream);
+    transition: background .15s;
+    cursor: text;
+  }
+  .hero-search-field:focus-within { background: var(--green-50); }
+  .hero-search-label {
+    font-size: 11.5px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: 4px;
+  }
+  .hero-search-field select,
+  .hero-search-field input {
+    border: none; outline: none; background: transparent;
+    font-family: inherit; font-size: 16px; color: var(--ink);
+    padding: 4px 0; width: 100%; min-width: 0;
+    appearance: none; -webkit-appearance: none;
+  }
+  .hero-search-field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235f6f66' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0 center;
+    padding-right: 22px;
+  }
+  .hero-search-btn {
+    display: block; width: 100%;
+    margin-top: 10px;
+    padding: 16px 28px; font-size: 16px; font-weight: 700;
+    border-radius: 12px;
+    box-shadow: 0 8px 22px rgba(31,95,53,.20), 0 2px 6px rgba(31,95,53,.10);
+  }
+  .hero-search-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 28px rgba(31,95,53,.26), 0 4px 10px rgba(31,95,53,.14);
+  }
+  .hero-trust {
+    margin-top: 22px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .hero-trust-stars {
+    color: var(--sun); letter-spacing: 3px; font-size: 16px;
+  }
+  .hero-trust-line {
+    font-size: 13.5px; color: var(--muted); font-weight: 500;
+  }
+
+  /* Category tile grid below hero */
+  .categories-section { padding: 56px 0 64px; }
+  .categories-section .section-head { margin-bottom: 28px; }
+  .cat-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px;
+    max-width: 880px; margin: 0 auto;
+  }
+  @media (max-width: 720px) { .cat-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 420px) { .cat-grid { grid-template-columns: 1fr; } }
+  .cat-tile {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 12px;
+    background: #fff; border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 18px;
+    cursor: pointer; font-family: inherit;
+    transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
+    box-shadow: var(--shadow-sm);
+  }
+  .cat-tile:hover {
+    transform: translateY(-2px);
+    border-color: var(--green-500);
+    box-shadow: var(--shadow-md);
+  }
+  .cat-tile-ico { font-size: 32px; line-height: 1; }
+  .cat-tile-label {
+    font-size: 16px; font-weight: 600; color: var(--ink);
+    letter-spacing: -0.005em;
+  }
 
   .zip-check {
     background: #fff;
@@ -273,6 +387,11 @@
   .hero-stat strong { display: block; font-size: 24px; color: var(--green-800); font-family: "Fraunces", serif; }
   .hero-stat span { font-size: 12px; color: var(--muted); font-weight: 600; }
 
+  /* (Old page-curtain transition removed — the matching flow now lives on
+     its own URLs at /landscaping/match/step-N and uses simple opacity
+     fades. See .match-step / .match-done / .match-empty / .match-warning
+     below.) */
+
   /* ===== BUTTONS ===== */
   .btn {
     padding: 12px 22px; border-radius: 999px;
@@ -301,6 +420,41 @@
     font-size: 12px; color: var(--green-800); font-weight: 700; margin-bottom: 10px;
   }
   .section-head p { color: var(--muted); font-size: 17px; }
+
+  /* ===== HOW IT WORKS ===== */
+  .how-section { padding: 64px 0; }
+  .how-steps {
+    list-style: none; padding: 0; margin: 0;
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 22px;
+    counter-reset: how;
+  }
+  @media (max-width: 820px) { .how-steps { grid-template-columns: 1fr; } }
+  .how-steps li {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 26px 24px; box-shadow: var(--shadow-sm);
+    position: relative;
+  }
+  .how-steps li h3 {
+    font-family: "Fraunces", serif; font-size: 19px;
+    color: var(--ink); margin: 14px 0 8px; font-weight: 600;
+  }
+  .how-steps li p { font-size: 14.5px; line-height: 1.55; margin: 0; }
+  .how-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--green-800); color: #fff;
+    font-family: "Fraunces", serif; font-size: 17px; font-weight: 700;
+  }
+  .how-promise {
+    margin: 32px auto 0; max-width: 720px; text-align: center;
+    font-size: 15.5px; color: var(--ink-2); line-height: 1.6;
+    padding: 18px 22px;
+    background: var(--green-50);
+    border: 1px solid var(--green-100);
+    border-radius: var(--radius);
+  }
+  .how-promise strong { color: var(--green-900); }
 
   /* ===== AI CHAT ===== */
   .chat-shell {
@@ -386,22 +540,244 @@
   .chat-input button:disabled { background: #b4c7b9; cursor: not-allowed; }
   .chat-footer-meta { padding: 10px 18px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; background: var(--cream); }
 
-  /* ===== WIZARD ===== */
-  .wizard-card {
-    background: #fff; border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md); border: 1px solid var(--border);
-    padding: 32px; max-width: 880px; margin: 0 auto;
+  /* ===== MATCH FLOW ===== */
+  /* Each question lives at its own URL (/landscaping/match/step-N) and
+     /done shows the success view. body.match-mode hides the rest of the
+     page chrome so the user only sees one question at a time.
+     The .match-fading-out class runs a 200ms opacity fade on the
+     departing surface (landing → match, or match → landing) so neither
+     side cuts in/out abruptly. */
+  body > .topnav,
+  body > main,
+  body > footer { transition: opacity 200ms ease-out; }
+  body.match-fading-out > .topnav,
+  body.match-fading-out > main,
+  body.match-fading-out > footer { opacity: 0; pointer-events: none; }
+  body.match-mode > .topnav,
+  body.match-mode > main,
+  body.match-mode > footer,
+  body.match-mode > .compare-bar { display: none !important; }
+  body.match-mode #match-flow { display: flex; }
+  body.match-mode.match-fading-out #match-flow { opacity: 0; }
+  #match-flow { transition: opacity 200ms ease-out; }
+  /* Pre-paint guard: when the page loads on a /match/* URL, the inline
+     head script sets html.is-match-route. Hide the landing surface
+     immediately so the user never sees a hero flash before our SPA JS
+     swaps to match mode. */
+  html.is-match-route body > .topnav,
+  html.is-match-route body > main,
+  html.is-match-route body > footer { display: none !important; }
+  html.is-match-route #match-flow { display: flex !important; }
+
+  .match-flow {
+    min-height: 100vh;
+    flex-direction: column;
+    background:
+      radial-gradient(900px 500px at 50% -10%, rgba(220,239,217,.55), transparent 60%),
+      var(--cream);
   }
-  .progress { display: flex; gap: 6px; margin-bottom: 28px; }
-  .progress span {
-    flex: 1; height: 6px; border-radius: 3px;
-    background: var(--border); transition: background .25s ease;
+  .match-flow[hidden] { display: none; }
+
+  .match-flow-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 24px;
+    max-width: 1120px;
+    margin: 0 auto;
+    width: 100%;
   }
-  .progress span.active { background: var(--green-600); }
-  .wizard-step { display: none; }
-  .wizard-step.active { display: block; }
-  .wizard-step h3 { font-family: "Fraunces", serif; font-size: 24px; margin-bottom: 6px; }
-  .wizard-step .subtitle { color: var(--muted); margin-bottom: 24px; }
+  .match-flow-bar .brand { text-decoration: none; }
+  .match-flow-bar .brand:hover { text-decoration: none; }
+  .match-flow-close {
+    width: 40px; height: 40px;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    color: var(--ink-2);
+    font-size: 26px; line-height: 1;
+    text-decoration: none;
+    transition: background .15s, color .15s;
+  }
+  .match-flow-close:hover {
+    background: var(--green-50);
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .match-flow-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 20px 64px;
+    width: 100%;
+  }
+
+  .match-flow-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 36px 36px 28px;
+    width: 100%;
+    max-width: 640px;
+    position: relative;
+  }
+  @media (max-width: 600px) {
+    .match-flow-card { padding: 24px 22px 20px; }
+  }
+
+  /* Progress dots — 6 dots, filled / current / hollow */
+  .match-flow-card .progress {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 0 0 32px;
+  }
+  .match-flow-card .progress span {
+    width: 10px; height: 10px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: transparent;
+    border: 2px solid var(--border);
+    transition: background .18s ease, border-color .18s ease,
+                transform .18s ease, box-shadow .18s ease;
+  }
+  .match-flow-card .progress span.filled {
+    background: var(--green-600);
+    border-color: var(--green-600);
+  }
+  .match-flow-card .progress span.current {
+    background: var(--green-600);
+    border-color: var(--green-600);
+    transform: scale(1.35);
+    box-shadow: 0 0 0 5px var(--green-100);
+  }
+
+  /* Step container — 200ms opacity fade per spec */
+  .match-step {
+    opacity: 0;
+    transition: opacity 200ms ease-out;
+    will-change: opacity;
+  }
+  .match-step[hidden] { display: none; }
+  .match-step.fade-in { opacity: 1; }
+  .match-step h2 {
+    font-family: "Fraunces", serif;
+    font-size: clamp(24px, 3.4vw, 30px);
+    font-weight: 700;
+    margin: 0 0 10px;
+    line-height: 1.2;
+  }
+  .match-step .subtitle {
+    color: var(--muted);
+    margin-bottom: 24px;
+    font-size: 15.5px;
+  }
+
+  .match-flow-card .live-count {
+    margin: 18px 0 0;
+    text-align: center;
+    font-size: 13px;
+    color: var(--green-800);
+    font-weight: 600;
+    min-height: 18px;
+  }
+  .match-flow-nav {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 12px;
+    margin-top: 22px;
+    padding-top: 22px;
+    border-top: 1px solid var(--border);
+  }
+  .match-flow-nav .btn-ghost[hidden] { display: none; }
+
+  /* /done view */
+  .match-done {
+    text-align: center;
+    opacity: 0;
+    transition: opacity 200ms ease-out;
+  }
+  .match-done[hidden] { display: none; }
+  .match-done.fade-in { opacity: 1; }
+  .match-done-icon {
+    width: 72px; height: 72px;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    background: var(--green-100);
+    color: var(--green-800);
+    font-size: 38px; line-height: 1;
+    display: grid; place-items: center;
+    font-weight: 700;
+  }
+  .match-done-icon-muted {
+    background: var(--cream-2);
+    color: var(--ink-2);
+    font-size: 30px;
+  }
+  .match-done h1,
+  .match-empty h1,
+  .match-warning h1 {
+    font-family: "Fraunces", serif;
+    font-size: clamp(28px, 4vw, 36px);
+    margin: 0 0 12px;
+  }
+  .match-done .match-done-lede {
+    font-size: 17px;
+    color: var(--ink-2);
+    margin: 0 auto 28px;
+    max-width: 36ch;
+  }
+  .match-done .matches { text-align: left; margin-bottom: 24px; }
+  .match-empty-inline {
+    background: var(--cream-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 24px;
+    text-align: left;
+  }
+  .match-empty-inline p { margin: 0; font-size: 14.5px; }
+  .match-done-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* /done without state */
+  .match-empty,
+  .match-warning {
+    text-align: center;
+    padding: 16px 0 8px;
+    opacity: 0;
+    transition: opacity 200ms ease-out;
+  }
+  .match-empty[hidden],
+  .match-warning[hidden] { display: none; }
+  .match-empty.fade-in,
+  .match-warning.fade-in { opacity: 1; }
+  .match-empty p,
+  .match-warning p { margin-bottom: 24px; color: var(--ink-2); }
+
+  /* Hide step nav / progress / live-count when on done/empty/warning */
+  .match-flow-card.done-mode .progress,
+  .match-flow-card.done-mode .match-flow-nav,
+  .match-flow-card.done-mode .live-count,
+  .match-flow-card.empty-mode .progress,
+  .match-flow-card.empty-mode .match-flow-nav,
+  .match-flow-card.empty-mode .live-count,
+  .match-flow-card.warning-mode .progress,
+  .match-flow-card.warning-mode .match-flow-nav,
+  .match-flow-card.warning-mode .live-count { display: none; }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .match-step,
+    .match-done,
+    .match-empty,
+    .match-warning {
+      transition: none;
+    }
+  }
 
   .options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   @media (max-width: 600px) { .options { grid-template-columns: 1fr; } }
@@ -427,15 +803,26 @@
   .field .error { color: var(--warn); font-size: 13px; margin-top: 4px; display: none; }
   .field.invalid .error { display: block; }
   .field.invalid input, .field.invalid textarea { border-color: var(--warn); }
+  .field input { font-size: 16px; }   /* iOS won't zoom on focus at 16px+ */
+  .field textarea { font-size: 16px; }
+  .field-helper {
+    font-size: 12.5px; color: var(--muted);
+    margin: 6px 0 0;
+  }
+  .field-trust {
+    display: flex; align-items: flex-start; gap: 10px;
+    margin-top: 18px; padding: 12px 14px;
+    background: var(--green-50);
+    border: 1px solid var(--green-100);
+    border-radius: 12px;
+    font-size: 13.5px; color: var(--green-900); line-height: 1.5;
+  }
+  .field-trust span:first-child {
+    font-size: 16px; flex-shrink: 0; line-height: 1;
+  }
 
-  .wizard-nav {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-top: 28px;
-  }
-  .live-count {
-    font-size: 13px; color: var(--green-800); font-weight: 600;
-    margin: 20px 0 -8px; text-align: center; min-height: 18px;
-  }
+  /* (Old .wizard-nav and standalone .live-count selectors removed —
+     see .match-flow-nav and .match-flow-card .live-count above.) */
 
   /* ===== MATCHES ===== */
   .matches { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
@@ -517,6 +904,11 @@
   }
   .estimator-result .amount { font-family: "Fraunces", serif; font-size: 28px; font-weight: 700; }
   .estimator-result .note { font-size: 12px; color: var(--green-100); margin-top: 4px; }
+  .cost-sources {
+    margin: 36px auto 0; max-width: 760px;
+    text-align: center; font-size: 13.5px; color: var(--muted);
+    line-height: 1.55; font-style: italic;
+  }
 
   /* ===== GUIDE / CONTENT ===== */
   .guide-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 48px; }
@@ -568,16 +960,6 @@
   }
   .step-item h4 { margin: 0 0 4px; font-size: 16px; font-family: "Inter", sans-serif; font-weight: 600; }
   .step-item p { margin: 0; font-size: 14px; color: var(--ink-2); }
-
-  /* ===== REVIEWS ===== */
-  .reviews-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
-  .review {
-    background: var(--cream); border: 1px solid var(--border);
-    border-radius: 14px; padding: 22px;
-  }
-  .stars { color: var(--sun); margin-bottom: 10px; letter-spacing: 2px; }
-  .review p { font-size: 15px; color: var(--ink); margin-bottom: 14px; font-style: italic; }
-  .reviewer { font-size: 13px; color: var(--muted); font-weight: 600; }
 
   /* ===== FAQ ===== */
   .faq-list { max-width: 780px; margin: 0 auto; }
@@ -631,6 +1013,41 @@
     border-radius: 50%; background: var(--green-100); color: var(--green-800);
     display: grid; place-items: center; font-size: 32px;
   }
+  .modal-card-lg { max-width: 540px; padding: 36px 38px 30px; text-align: left; }
+  .modal-card-lg .icon-big { margin: 0 0 16px; }
+  .modal-card-lg h3 { text-align: left; }
+  .modal-lede {
+    font-size: 16px; color: var(--ink-2); line-height: 1.55;
+    margin: 0 0 18px;
+  }
+  .modal-lede strong { color: var(--ink); }
+  .modal-next {
+    list-style: none; padding: 0; margin: 0 0 18px;
+    border-top: 1px solid var(--border);
+  }
+  .modal-next li {
+    display: grid; grid-template-columns: 18px 1fr; gap: 10px;
+    align-items: start;
+    padding: 11px 0; font-size: 14.5px; color: var(--ink-2); line-height: 1.5;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-next li::before {
+    content: ""; display: block;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green-600); margin-top: 8px;
+  }
+  .modal-foot {
+    margin: 0 0 22px;
+    font-size: 13.5px; color: var(--muted); line-height: 1.55;
+  }
+  .modal-actions {
+    display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;
+  }
+  @media (max-width: 540px) {
+    .modal-card-lg { padding: 26px 22px 22px; }
+    .modal-actions { flex-direction: column-reverse; align-items: stretch; }
+    .modal-actions .btn { width: 100%; justify-content: center; }
+  }
 
   /* ===== FOOTER ===== */
   footer {
@@ -662,67 +1079,131 @@
     </a>
     <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu">☰</button>
     <nav id="mainNav" aria-label="Primary">
-      <a href="#ask-ai">Ask AI</a>
       <a href="#services">Services</a>
-      <a href="#pros">Pros</a>
       <a href="#cost">Pricing</a>
-      <a href="#guide">Guide</a>
+      <a href="/landscape/guide">Guide</a>
       <a href="#faq">FAQ</a>
-      <a class="cta-nav" href="#wizard">Get matched</a>
+      <a href="#ask-ai" class="nav-ai" title="Ask our AI advisor">Ask AI</a>
+      <a class="cta-nav" href="/landscaping/match/step-1" data-match-start>Get matched</a>
     </nav>
   </div>
 </header>
 
 <main id="main">
 
-  <!-- ===== HERO ===== -->
-  <section class="hero" id="top">
-    <div class="container hero-grid">
-      <div>
-        <div class="eyebrow">Serving Crystal Lake &amp; McHenry County</div>
-        <h1>Find the right landscaper for your yard — fast, local, free.</h1>
-        <p class="lead">
-          Answer a few questions or chat with our AI landscape advisor.
-          We'll match you with vetted pros in Crystal Lake, Cary, Algonquin, Lake in the Hills, and nearby — ranked by how well they fit your project.
-        </p>
-        <div class="hero-ctas">
-          <a href="#ask-ai" class="btn btn-primary btn-lg">💬 Talk to our AI advisor</a>
-          <a href="#wizard" class="btn btn-outline btn-lg">Get matched in 30 s</a>
-        </div>
+  <!-- ===== HERO — search-first (Angi format) ===== -->
+  <section class="hero hero-angi" id="top">
+    <div class="container hero-angi-inner">
+      <h1 class="hero-angi-h1">Find a landscaper near you.</h1>
 
-        <form class="zip-check" id="zipCheck" onsubmit="return false;" aria-label="Check service area by ZIP code">
-          <div style="flex:1;">
-            <label for="zipCheckInput">Check your ZIP</label>
-            <input id="zipCheckInput" inputmode="numeric" maxlength="5" placeholder="e.g. 60014" aria-describedby="zipResult" />
-          </div>
-          <button class="btn btn-primary" id="zipCheckBtn" type="button">Check</button>
-        </form>
-        <div id="zipResult" class="zip-result" role="status" aria-live="polite"></div>
+      <form class="hero-search" id="heroSearch" onsubmit="return false;" aria-label="Find a landscaper">
+        <div class="hero-search-row">
+          <label class="hero-search-field">
+            <span class="hero-search-label">What do you need?</span>
+            <select id="heroService" aria-label="Service category">
+              <option value="">Pick a service…</option>
+              <option value="lawn_care">Lawn care</option>
+              <option value="design_install">Landscape design</option>
+              <option value="hardscape">Hardscaping</option>
+              <option value="tree_shrub">Tree &amp; shrub work</option>
+              <option value="irrigation">Irrigation &amp; drainage</option>
+              <option value="seasonal">Seasonal cleanup</option>
+            </select>
+          </label>
+          <label class="hero-search-field hero-search-zip">
+            <span class="hero-search-label">Your ZIP</span>
+            <input id="heroZip" type="text" inputmode="numeric" maxlength="5"
+                   autocomplete="postal-code" placeholder="60014" aria-label="ZIP code" />
+          </label>
+        </div>
+        <button type="submit" id="heroSubmit" class="btn btn-primary btn-lg hero-search-btn">
+          Get matched →
+        </button>
+      </form>
+
+      <div class="hero-trust" aria-label="Trust">
+        <span class="hero-trust-stars" aria-hidden="true">★ ★ ★ ★ ★</span>
+        <span class="hero-trust-line">Local pros · McHenry County · Free, no commitment</span>
       </div>
-
-      <aside class="hero-card" aria-label="Why use us">
-        <span class="badge">Free &amp; unbiased</span>
-        <h3>Why homeowners pick us</h3>
-        <p style="font-size:14px; color:var(--muted); margin-bottom:8px;">
-          We only list pros with valid Illinois registration and insurance. No call-centers, no spam.
-        </p>
-        <div class="hero-stats">
-          <div class="hero-stat"><strong>6</strong><span>Vetted local pros</span></div>
-          <div class="hero-stat"><strong>4.7★</strong><span>Avg. rating</span></div>
-          <div class="hero-stat"><strong>30 s</strong><span>To first match</span></div>
-          <div class="hero-stat"><strong>0 $</strong><span>To get matched</span></div>
-        </div>
-      </aside>
     </div>
   </section>
 
-  <!-- ===== AI CHAT — STAR FEATURE ===== -->
+  <!-- ===== CATEGORY TILES — primary path into the matching flow ===== -->
+  <section id="categories" class="categories-section">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="eyebrow">What kind of project?</div>
+      </div>
+      <div class="cat-grid reveal">
+        <button type="button" class="cat-tile" data-cat="lawn_care">
+          <span class="cat-tile-ico" aria-hidden="true">🌱</span>
+          <span class="cat-tile-label">Lawn care</span>
+        </button>
+        <button type="button" class="cat-tile" data-cat="tree_shrub">
+          <span class="cat-tile-ico" aria-hidden="true">🌳</span>
+          <span class="cat-tile-label">Tree work</span>
+        </button>
+        <button type="button" class="cat-tile" data-cat="hardscape">
+          <span class="cat-tile-ico" aria-hidden="true">🪨</span>
+          <span class="cat-tile-label">Hardscaping</span>
+        </button>
+        <button type="button" class="cat-tile" data-cat="design_install">
+          <span class="cat-tile-ico" aria-hidden="true">🌷</span>
+          <span class="cat-tile-label">Design</span>
+        </button>
+        <button type="button" class="cat-tile" data-cat="irrigation">
+          <span class="cat-tile-ico" aria-hidden="true">💧</span>
+          <span class="cat-tile-label">Irrigation</span>
+        </button>
+        <button type="button" class="cat-tile" data-cat="seasonal">
+          <span class="cat-tile-ico" aria-hidden="true">❄️</span>
+          <span class="cat-tile-label">Seasonal</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== HOW IT WORKS — anxiety reduction at the top of the funnel ===== -->
+  <section id="how" class="alt how-section">
+    <div class="container">
+      <div class="section-head reveal">
+        <div class="eyebrow">How it works</div>
+        <h2>What happens after you click "Get matched"</h2>
+      </div>
+      <ol class="how-steps reveal">
+        <li>
+          <span class="how-num" aria-hidden="true">1</span>
+          <h3>You answer six quick questions</h3>
+          <p>Project type, budget, timeline, ZIP, and how to reach you. Takes about 30 seconds.</p>
+        </li>
+        <li>
+          <span class="how-num" aria-hidden="true">2</span>
+          <h3>We match you with up to three local pros</h3>
+          <p>Pros who actually do that type of work in your ZIP. You'll see who they are before any contact happens.</p>
+        </li>
+        <li>
+          <span class="how-num" aria-hidden="true">3</span>
+          <h3>The pros reach out — usually within a day</h3>
+          <p>You pick the one you like, or none of them. No commitment, no spam.</p>
+        </li>
+      </ol>
+      <p class="how-promise">
+        We never sell your contact info. Pros only see your project details and contact info if <strong>you</strong> decide to move forward.
+      </p>
+    </div>
+  </section>
+
+  <!-- The 6-question matching flow lives at /landscaping/match/step-N
+       (and /done). It's not inlined here — see the #match-flow block
+       outside <main> below, which the SPA router toggles on. -->
+
+  <!-- ===== AI CHAT — accessible via #ask-ai from top nav ===== -->
   <section id="ask-ai">
     <div class="container">
       <div class="section-head reveal">
         <div class="eyebrow">AI landscape advisor</div>
-        <h2>Ask anything about your yard</h2>
-        <p>Not sure what you need? Chat with our AI. It knows Zone 5a planting, Crystal Lake ordinances, cost ranges, and which local pro specializes in what. When you're ready, it'll guide you into a match.</p>
+        <h2>Have questions before you start? Ask our AI advisor</h2>
+        <p>Chat with our AI before you get matched. It knows Zone 6a planting, Crystal Lake ordinances, and typical cost ranges, so you can sanity-check your project before talking to a pro. When you're ready, it'll guide you into a match.</p>
       </div>
 
       <div class="chat-shell reveal" id="chatShell">
@@ -743,7 +1224,7 @@
           <button class="chip" data-prompt="What does a paver patio cost in Crystal Lake?">Paver patio cost?</button>
           <button class="chip" data-prompt="I have a boggy backyard — what do I do?">Fix boggy yard</button>
           <button class="chip" data-prompt="When should I aerate and overseed in Northern Illinois?">Aerate timing</button>
-          <button class="chip" data-prompt="Best native plants for Zone 5a Crystal Lake?">Native plants</button>
+          <button class="chip" data-prompt="Best native plants for Zone 6a Crystal Lake?">Native plants</button>
           <button class="chip" data-prompt="Help me pick the right landscaper for a full backyard redesign.">Help me get matched</button>
         </div>
 
@@ -762,117 +1243,6 @@
     </div>
   </section>
 
-  <!-- ===== WIZARD ===== -->
-  <section id="wizard" class="alt">
-    <div class="container">
-      <div class="section-head reveal">
-        <div class="eyebrow">30-second match</div>
-        <h2>Prefer the quick path? Answer six questions.</h2>
-        <p>We'll narrow your match list to the pros who actually do your type of project at your budget and on your timeline.</p>
-      </div>
-
-      <div class="wizard-card reveal">
-        <div class="progress" id="progressBar" aria-hidden="true"></div>
-
-        <div class="wizard-step active" data-step="0">
-          <h3>What kind of project is this?</h3>
-          <p class="subtitle">Pick the one that best describes what you need.</p>
-          <div class="options" data-question="projectType">
-            <button class="option" data-value="lawn_care"><strong>Lawn care &amp; maintenance</strong><span class="hint">Mowing, fertilizing, aeration</span></button>
-            <button class="option" data-value="design_install"><strong>Landscape design &amp; install</strong><span class="hint">New beds, plantings, makeover</span></button>
-            <button class="option" data-value="hardscape"><strong>Hardscaping</strong><span class="hint">Patios, walkways, retaining walls</span></button>
-            <button class="option" data-value="tree_shrub"><strong>Tree &amp; shrub work</strong><span class="hint">Pruning, removal, planting</span></button>
-            <button class="option" data-value="irrigation"><strong>Irrigation &amp; drainage</strong><span class="hint">Sprinklers, French drains</span></button>
-            <button class="option" data-value="seasonal"><strong>Seasonal cleanup</strong><span class="hint">Spring / fall cleanup, snow</span></button>
-          </div>
-        </div>
-
-        <div class="wizard-step" data-step="1">
-          <h3>How big is the property?</h3>
-          <p class="subtitle">A rough estimate is fine.</p>
-          <div class="options" data-question="propertySize">
-            <button class="option" data-value="small"><strong>Small</strong><span class="hint">Under 1/4 acre</span></button>
-            <button class="option" data-value="medium"><strong>Medium</strong><span class="hint">1/4 to 1/2 acre</span></button>
-            <button class="option" data-value="large"><strong>Large</strong><span class="hint">1/2 to 1 acre</span></button>
-            <button class="option" data-value="xlarge"><strong>Extra large</strong><span class="hint">Over 1 acre</span></button>
-          </div>
-        </div>
-
-        <div class="wizard-step" data-step="2">
-          <h3>What's your budget range?</h3>
-          <p class="subtitle">We use this to match you with the right pros.</p>
-          <div class="options" data-question="budget">
-            <button class="option" data-value="under_500"><strong>Under $500</strong><span class="hint">Small jobs</span></button>
-            <button class="option" data-value="500_2k"><strong>$500 – $2,000</strong><span class="hint">Standard projects</span></button>
-            <button class="option" data-value="2k_10k"><strong>$2,000 – $10,000</strong><span class="hint">Larger installs</span></button>
-            <button class="option" data-value="10k_plus"><strong>$10,000+</strong><span class="hint">Full redesign / major hardscape</span></button>
-            <button class="option" data-value="unsure"><strong>Not sure yet</strong><span class="hint">Looking for quotes</span></button>
-          </div>
-        </div>
-
-        <div class="wizard-step" data-step="3">
-          <h3>When do you want it done?</h3>
-          <p class="subtitle">This helps us filter for availability.</p>
-          <div class="options" data-question="timeline">
-            <button class="option" data-value="asap"><strong>ASAP</strong><span class="hint">Within 2 weeks</span></button>
-            <button class="option" data-value="month"><strong>This month</strong><span class="hint">2 – 4 weeks out</span></button>
-            <button class="option" data-value="season"><strong>This season</strong><span class="hint">Next 1 – 3 months</span></button>
-            <button class="option" data-value="flexible"><strong>Flexible</strong><span class="hint">No rush</span></button>
-          </div>
-        </div>
-
-        <div class="wizard-step" data-step="4">
-          <h3>Where is the property?</h3>
-          <p class="subtitle">We serve Crystal Lake and surrounding McHenry County.</p>
-          <div class="field">
-            <label for="zip">ZIP code</label>
-            <input type="text" id="zip" inputmode="numeric" maxlength="5" placeholder="60014" />
-            <span class="error">Please enter a valid 5-digit ZIP code.</span>
-          </div>
-        </div>
-
-        <div class="wizard-step" data-step="5">
-          <h3>How should the pro reach you?</h3>
-          <p class="subtitle">We share your info only with pros you choose to contact.</p>
-          <div class="field">
-            <label for="name">Your name</label>
-            <input type="text" id="name" placeholder="Jane Doe" />
-            <span class="error">Please enter your name.</span>
-          </div>
-          <div class="field">
-            <label for="email">Email</label>
-            <input type="email" id="email" placeholder="jane@example.com" />
-            <span class="error">Please enter a valid email address.</span>
-          </div>
-          <div class="field">
-            <label for="phone">Phone (optional)</label>
-            <input type="tel" id="phone" placeholder="(815) 555-0199" />
-          </div>
-          <div class="field">
-            <label for="notes">Anything else the pro should know? (optional)</label>
-            <textarea id="notes" placeholder="Sloped backyard, two dogs, prefer native plants…"></textarea>
-          </div>
-        </div>
-
-        <div class="wizard-step" data-step="6" id="resultsStep">
-          <h3>Your top matches near Crystal Lake</h3>
-          <p class="subtitle" id="resultsSubtitle">Based on your answers, these pros are the best fit.</p>
-          <div class="matches" id="matchesList"></div>
-          <div class="section-head" id="noMatches" style="display:none;">
-            <p>We don't have a perfect match in our directory yet — we'll reach out when one is available.</p>
-          </div>
-        </div>
-
-        <div class="live-count" id="liveCount" aria-live="polite"></div>
-
-        <div class="wizard-nav" id="wizardNav">
-          <button class="btn btn-ghost" id="backBtn" style="visibility:hidden;">← Back</button>
-          <button class="btn btn-primary" id="nextBtn" disabled>Next →</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- ===== SERVICES GRID ===== -->
   <section id="services">
     <div class="container">
@@ -886,7 +1256,7 @@
         <article class="service-card reveal" itemscope itemtype="https://schema.org/Service" data-service="lawn_care" data-question="What does weekly lawn care in Crystal Lake usually include?">
           <div class="icon" aria-hidden="true">🌿</div>
           <h3 itemprop="name">Lawn care &amp; maintenance</h3>
-          <p itemprop="description">Weekly mowing, edging, fertilizing, aeration, overseeding, weed control. The backbone of a healthy Zone 5a lawn.</p>
+          <p itemprop="description">Weekly mowing, edging, fertilizing, aeration, overseeding, weed control. The backbone of a healthy Northern Illinois cool-season lawn.</p>
           <span class="learn">Ask the AI →</span>
         </article>
         <article class="service-card reveal" itemscope itemtype="https://schema.org/Service" data-service="design_install" data-question="What goes into a landscape design and install?">
@@ -901,7 +1271,7 @@
           <p itemprop="description">Paver patios, walkways, retaining walls, fire pits, and outdoor kitchens. Built to handle Illinois freeze-thaw cycles.</p>
           <span class="learn">Ask the AI →</span>
         </article>
-        <article class="service-card reveal" itemscope itemtype="https://schema.org/Service" data-service="tree_shrub" data-question="When is the best time to prune trees in Zone 5a?">
+        <article class="service-card reveal" itemscope itemtype="https://schema.org/Service" data-service="tree_shrub" data-question="When is the best time to prune trees in Northern Illinois?">
           <div class="icon" aria-hidden="true">🌳</div>
           <h3 itemprop="name">Tree &amp; shrub care</h3>
           <p itemprop="description">Pruning, removal, disease diagnosis, planting, and emerald-ash-borer treatment by certified arborists.</p>
@@ -928,8 +1298,8 @@
     <div class="container">
       <div class="section-head reveal">
         <div class="eyebrow">The directory</div>
-        <h2>Top-rated landscapers near Crystal Lake</h2>
-        <p>These are the pros we've vetted. Check the compare boxes to see two side by side.</p>
+        <h2>Local landscapers near Crystal Lake</h2>
+        <p>Examples of the kinds of pros we match homeowners with. Check the compare boxes to see two side by side.</p>
       </div>
       <div class="matches" id="prosDirectory"><!-- populated by JS --></div>
     </div>
@@ -941,7 +1311,7 @@
       <div class="section-head reveal">
         <div class="eyebrow">Pricing transparency</div>
         <h2>What does landscaping cost in Crystal Lake?</h2>
-        <p>Every yard is different, but here are the typical ranges homeowners in McHenry County pay in 2026.</p>
+        <p>Typical 2026 prices in McHenry County. Your quote may vary based on scope and access.</p>
       </div>
 
       <div class="cost-layout">
@@ -976,165 +1346,17 @@
           </div>
         </div>
       </div>
+      <p class="cost-sources reveal">
+        Sources: average of 2024–2025 pro quotes from McHenry County, U of I Extension cost data, and homeowner surveys.
+      </p>
     </div>
   </section>
 
-  <!-- ===== ZONE 5A GUIDE ===== -->
-  <section id="guide" class="alt">
-    <div class="container">
-      <div class="section-head reveal">
-        <div class="eyebrow">The local guide</div>
-        <h2>Northern Illinois landscape &amp; planting guide</h2>
-        <p>Crystal Lake sits in USDA Hardiness Zone 5a. Here's how to make the most of it.</p>
-      </div>
+  <!-- Long-form content moved to dedicated pages:
+       /landscape/guide        — Northern Illinois landscape & planting guide
+       /landscape/glossary     — Terminology
+       /landscape/hiring-tips  — 7 questions to ask before hiring -->
 
-      <div class="guide-grid">
-        <article class="prose reveal">
-          <h3>Zone 5a in plain English</h3>
-          <p>Zone 5a means average annual extreme minimum temperatures of <strong>–20°F to –15°F</strong>. Anything you plant should tolerate that low. Plan for a frost-free window of roughly <strong>May 15 to October 5</strong>, though early and late frosts happen.</p>
-
-          <h3>Native plants that thrive here</h3>
-          <ul>
-            <li><strong>Prairie natives:</strong> purple coneflower, black-eyed Susan, little bluestem, butterfly milkweed.</li>
-            <li><strong>Trees:</strong> swamp white oak, serviceberry, eastern redbud, river birch.</li>
-            <li><strong>Shrubs:</strong> ninebark, arrowwood viburnum, American beautyberry, gray dogwood.</li>
-            <li><strong>Shade beds:</strong> wild geranium, wood aster, Virginia bluebells, sensitive fern.</li>
-          </ul>
-
-          <div class="callout" style="margin: 24px 0;">
-            <strong>Ordinance note:</strong> Crystal Lake enforces odd/even watering from May 15 – September 15. Addresses ending in odd numbers water on odd calendar days; even on even. Morning and evening only.
-          </div>
-
-          <h3>Lawn care calendar for 60014</h3>
-          <p>A healthy cool-season lawn needs different work each month. Use this as a baseline — your pro will dial it in for your lot.</p>
-        </article>
-
-        <aside class="prose reveal">
-          <h3>Soil in Crystal Lake</h3>
-          <p>Most of Crystal Lake sits on glacial till — clay-heavy, slow-draining, pH slightly acidic. A soil test every 2 – 3 years ($15 at the U of I extension) pays for itself in fertilizer saved.</p>
-
-          <h3>Invasive species to avoid</h3>
-          <ul>
-            <li>Buckthorn &mdash; remove on sight.</li>
-            <li>Japanese barberry</li>
-            <li>Burning bush</li>
-            <li>Callery / Bradford pear</li>
-          </ul>
-        </aside>
-      </div>
-
-      <div class="season-grid">
-        <div class="season-card reveal">
-          <h4>Spring · Mar – May</h4>
-          <ul>
-            <li>Spring cleanup &amp; dethatch</li>
-            <li>Pre-emergent (crabgrass)</li>
-            <li>Soil test</li>
-            <li>Mulch refresh</li>
-            <li>Prune late bloomers</li>
-          </ul>
-        </div>
-        <div class="season-card reveal">
-          <h4>Summer · Jun – Aug</h4>
-          <ul>
-            <li>Weekly mowing at 3.5"</li>
-            <li>Deep-water 1" / week</li>
-            <li>Spot-treat weeds</li>
-            <li>Deadhead perennials</li>
-            <li>Watch for grubs</li>
-          </ul>
-        </div>
-        <div class="season-card reveal">
-          <h4>Fall · Sep – Nov</h4>
-          <ul>
-            <li>Aerate &amp; overseed</li>
-            <li>Fall fertilizer (key!)</li>
-            <li>Plant trees / shrubs</li>
-            <li>Leaf removal</li>
-            <li>Winterize irrigation</li>
-          </ul>
-        </div>
-        <div class="season-card reveal">
-          <h4>Winter · Dec – Feb</h4>
-          <ul>
-            <li>Snow &amp; ice mgmt</li>
-            <li>Prune dormant trees</li>
-            <li>Plan next year's beds</li>
-            <li>Order bulk materials</li>
-            <li>Book spring cleanup</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== GLOSSARY ===== -->
-  <section id="glossary">
-    <div class="container container-narrow">
-      <div class="section-head reveal">
-        <div class="eyebrow">Know the lingo</div>
-        <h2>Lawn care vs. landscaping vs. hardscaping</h2>
-        <p>Homeowners mix these up all the time. Here's the quick difference.</p>
-      </div>
-      <div class="glossary-grid">
-        <dl class="term reveal"><dt>Lawn care</dt><dd>Ongoing maintenance of an existing lawn — mowing, fertilizing, aeration, weed control, seeding.</dd></dl>
-        <dl class="term reveal"><dt>Landscaping</dt><dd>Adding or changing living things in the yard — planting beds, trees, shrubs, borders, yard-wide design.</dd></dl>
-        <dl class="term reveal"><dt>Hardscaping</dt><dd>Anything non-living and permanent — patios, walkways, walls, fire pits, stone, brick, concrete.</dd></dl>
-        <dl class="term reveal"><dt>Grading</dt><dd>Shaping the dirt so water flows away from your house. Fixes wet basements and boggy yards.</dd></dl>
-        <dl class="term reveal"><dt>Aeration</dt><dd>Pulling small plugs of soil out of the lawn to relieve compaction and let air, water, and nutrients reach roots.</dd></dl>
-        <dl class="term reveal"><dt>Mulch</dt><dd>Organic layer (usually shredded hardwood) around plants. Retains moisture, moderates soil temp, suppresses weeds.</dd></dl>
-        <dl class="term reveal"><dt>Zone 5a</dt><dd>USDA cold-hardiness rating — tells you if a plant will survive a typical Crystal Lake winter.</dd></dl>
-        <dl class="term reveal"><dt>French drain</dt><dd>Perforated pipe in a gravel trench that collects and redirects groundwater. Fixes chronic wet spots.</dd></dl>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== HIRING GUIDE ===== -->
-  <section id="hire" class="alt">
-    <div class="container container-narrow">
-      <div class="section-head reveal">
-        <div class="eyebrow">Before you sign</div>
-        <h2>7 questions to ask before hiring any landscaper</h2>
-      </div>
-
-      <div class="steps-list">
-        <div class="step-item reveal"><h4>Are you registered with the City of Crystal Lake?</h4><p>Illinois has no statewide license, but the city requires registration and proof of liability insurance.</p></div>
-        <div class="step-item reveal"><h4>Can I see three references within 10 miles?</h4><p>Local references let you drive by the work. Out-of-area references aren't as useful.</p></div>
-        <div class="step-item reveal"><h4>Is the estimate fixed or time-and-materials?</h4><p>Fixed estimates protect your budget. Time-and-materials can balloon if scope isn't tight.</p></div>
-        <div class="step-item reveal"><h4>What's your warranty on plants and workmanship?</h4><p>Reputable pros offer a one-year plant warranty and 2+ years on hardscape workmanship.</p></div>
-        <div class="step-item reveal"><h4>Who pulls permits for hardscape / drainage work?</h4><p>Patios over 144 sqft and any drainage into the street usually need a permit. That's the pro's job — not yours.</p></div>
-        <div class="step-item reveal"><h4>Will you handle the call-811 before digging?</h4><p>Illinois law requires a locate-request 48 hours before digging. The contractor should call — you shouldn't have to.</p></div>
-        <div class="step-item reveal"><h4>How do you handle leftover debris and soil?</h4><p>Haul-away should be in writing. Otherwise you end up with a pile of spoil in the side yard for months.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== REVIEWS ===== -->
-  <section id="reviews">
-    <div class="container">
-      <div class="section-head reveal">
-        <div class="eyebrow">Real homeowners, real results</div>
-        <h2>What your neighbors say</h2>
-      </div>
-      <div class="reviews-grid">
-        <article class="review reveal" itemscope itemtype="https://schema.org/Review">
-          <div class="stars" aria-label="5 out of 5">★★★★★</div>
-          <p itemprop="reviewBody">"The AI advisor flagged drainage issues I didn't know I had. Greenbrook came out the next week and fixed it for half what I expected."</p>
-          <div class="reviewer">— Megan R., Crystal Lake</div>
-        </article>
-        <article class="review reveal" itemscope itemtype="https://schema.org/Review">
-          <div class="stars" aria-label="5 out of 5">★★★★★</div>
-          <p itemprop="reviewBody">"Matched with StoneOak for a paver patio. Quoted three pros in 24 hours and saved $1,800 vs. the first quote I got on my own."</p>
-          <div class="reviewer">— Dave K., Cary</div>
-        </article>
-        <article class="review reveal" itemscope itemtype="https://schema.org/Review">
-          <div class="stars" aria-label="5 out of 5">★★★★★</div>
-          <p itemprop="reviewBody">"I asked the chat for native plant ideas and ended up hiring Roots &amp; Shoots. My pollinator garden is the best thing I did all year."</p>
-          <div class="reviewer">— Priya S., Algonquin</div>
-        </article>
-      </div>
-    </div>
-  </section>
 
   <!-- ===== FAQ ===== -->
   <section id="faq" class="alt">
@@ -1145,10 +1367,10 @@
       </div>
       <div class="faq-list">
         <details class="faq-item reveal"><summary>How much does landscaping cost in Crystal Lake?</summary><div class="answer">Weekly mowing in Crystal Lake typically runs $40–$75 per visit depending on lot size. A full landscape design and install averages $4,000–$15,000, while paver patios range from $18–$35 per square foot installed. Irrigation systems start around $3,500 for small yards.</div></details>
-        <details class="faq-item reveal"><summary>When is the best time to plant in Northern Illinois?</summary><div class="answer">Crystal Lake sits in USDA Zone 5a. The safe spring planting window opens after the last frost, usually mid-May. Fall planting (September through mid-October) is ideal for trees, shrubs, and perennials because cooler soil reduces transplant shock.</div></details>
-        <details class="faq-item reveal"><summary>Do Crystal Lake landscapers need to be licensed?</summary><div class="answer">Illinois does not require a statewide landscaping license, but the City of Crystal Lake requires contractors to register and carry liability insurance. Always verify registration, insurance, and request references before hiring.</div></details>
+        <details class="faq-item reveal"><summary>When is the best time to plant in Northern Illinois?</summary><div class="answer">Crystal Lake sits in USDA Zone 6a (per the 2023 USDA map update — previously Zone 5a). The safe spring planting window opens after the last frost, usually mid-May. Fall planting (September through mid-October) is ideal for trees, shrubs, and perennials because cooler soil reduces transplant shock.</div></details>
+        <details class="faq-item reveal"><summary>Do Crystal Lake landscapers need to be licensed?</summary><div class="answer">Illinois does not require a statewide general landscaping license. Specific trades — irrigation contractors and applicators of restricted-use pesticides — do need state credentials. Many municipalities also require contractors to register locally and show proof of liability insurance, so check Crystal Lake's current contractor-registration rules at crystallake.org. Always verify registration, insurance, and request references before hiring.</div></details>
         <details class="faq-item reveal"><summary>How far in advance should I book?</summary><div class="answer">Spring cleanups — mid-February. Summer installs — early April. Fall cleanups — mid-August. Irrigation and hardscape typically need 3 – 6 weeks lead time during peak season.</div></details>
-        <details class="faq-item reveal"><summary>Can I water my lawn anytime?</summary><div class="answer">Crystal Lake observes odd/even watering from May 15 through September 15. Addresses ending in odd numbers water on odd calendar dates; even on even. Early-morning and evening hours only.</div></details>
+        <details class="faq-item reveal"><summary>Can I water my lawn anytime?</summary><div class="answer">Crystal Lake has water-conservation rules during the warm-weather months that include odd/even sprinkling restrictions tied to your address. The exact start/end dates and any morning/evening hour limits are set by the city ordinance — check crystallake.org or call Public Works for the current rules before installing or scheduling irrigation.</div></details>
         <details class="faq-item reveal"><summary>Do you charge to get matched?</summary><div class="answer">No. Matching and talking to our AI advisor are free. You only pay the landscaper directly for the work you choose to hire them for.</div></details>
       </div>
     </div>
@@ -1180,6 +1402,159 @@
   </section>
 </main>
 
+<!-- ===== MATCH FLOW — own URL per step, hidden until body.match-mode ===== -->
+<div id="match-flow" class="match-flow" hidden aria-hidden="true">
+  <header class="match-flow-bar">
+    <a class="brand" href="/landscaping" data-match-exit>
+      <span class="brand-mark" aria-hidden="true">❦</span>
+      Crystal Lake Landscapers
+    </a>
+    <a class="match-flow-close" href="/landscaping" data-match-exit aria-label="Close and return to homepage">×</a>
+  </header>
+
+  <main class="match-flow-main">
+    <div class="match-flow-card">
+      <!-- Progress dots: 6 questions. Hidden on /done, /empty, /warning. -->
+      <div class="progress" id="progressBar" aria-label="Progress" data-progress></div>
+
+      <!-- 6 question steps. data-step is 0-indexed internally;
+           URL is 1-indexed (/step-1 → data-step="0"). -->
+      <div class="match-step" data-step="0" hidden>
+        <h2>What kind of project is this?</h2>
+        <p class="subtitle">Pick the one that best describes what you need.</p>
+        <div class="options" data-question="projectType">
+          <button class="option" data-value="lawn_care"><strong>Lawn care &amp; maintenance</strong><span class="hint">Mowing, fertilizing, aeration</span></button>
+          <button class="option" data-value="design_install"><strong>Landscape design &amp; install</strong><span class="hint">New beds, plantings, makeover</span></button>
+          <button class="option" data-value="hardscape"><strong>Hardscaping</strong><span class="hint">Patios, walkways, retaining walls</span></button>
+          <button class="option" data-value="tree_shrub"><strong>Tree &amp; shrub work</strong><span class="hint">Pruning, removal, planting</span></button>
+          <button class="option" data-value="irrigation"><strong>Irrigation &amp; drainage</strong><span class="hint">Sprinklers, French drains</span></button>
+          <button class="option" data-value="seasonal"><strong>Seasonal cleanup</strong><span class="hint">Spring / fall cleanup, snow</span></button>
+        </div>
+      </div>
+
+      <div class="match-step" data-step="1" hidden>
+        <h2>How big is the property?</h2>
+        <p class="subtitle">A rough estimate is fine.</p>
+        <div class="options" data-question="propertySize">
+          <button class="option" data-value="small"><strong>Small</strong><span class="hint">Under 1/4 acre</span></button>
+          <button class="option" data-value="medium"><strong>Medium</strong><span class="hint">1/4 to 1/2 acre</span></button>
+          <button class="option" data-value="large"><strong>Large</strong><span class="hint">1/2 to 1 acre</span></button>
+          <button class="option" data-value="xlarge"><strong>Extra large</strong><span class="hint">Over 1 acre</span></button>
+        </div>
+      </div>
+
+      <div class="match-step" data-step="2" hidden>
+        <h2>What's your budget range?</h2>
+        <p class="subtitle">We use this to match you with the right pros.</p>
+        <div class="options" data-question="budget">
+          <button class="option" data-value="under_500"><strong>Under $500</strong><span class="hint">Small jobs</span></button>
+          <button class="option" data-value="500_2k"><strong>$500 – $2,000</strong><span class="hint">Standard projects</span></button>
+          <button class="option" data-value="2k_10k"><strong>$2,000 – $10,000</strong><span class="hint">Larger installs</span></button>
+          <button class="option" data-value="10k_plus"><strong>$10,000+</strong><span class="hint">Full redesign / major hardscape</span></button>
+          <button class="option" data-value="unsure"><strong>Not sure yet</strong><span class="hint">Looking for quotes</span></button>
+        </div>
+      </div>
+
+      <div class="match-step" data-step="3" hidden>
+        <h2>When do you want it done?</h2>
+        <p class="subtitle">This helps us filter for availability.</p>
+        <div class="options" data-question="timeline">
+          <button class="option" data-value="asap"><strong>ASAP</strong><span class="hint">Within 2 weeks</span></button>
+          <button class="option" data-value="month"><strong>This month</strong><span class="hint">2 – 4 weeks out</span></button>
+          <button class="option" data-value="season"><strong>This season</strong><span class="hint">Next 1 – 3 months</span></button>
+          <button class="option" data-value="flexible"><strong>Flexible</strong><span class="hint">No rush</span></button>
+        </div>
+      </div>
+
+      <div class="match-step" data-step="4" hidden>
+        <h2>Where is the property?</h2>
+        <p class="subtitle">We serve Crystal Lake and surrounding McHenry County.</p>
+        <div class="field">
+          <label for="zip">ZIP code</label>
+          <input type="text" id="zip" inputmode="numeric" maxlength="5"
+                 autocomplete="postal-code" placeholder="60014" />
+          <span class="error">Please enter a valid 5-digit ZIP code.</span>
+        </div>
+      </div>
+
+      <div class="match-step" data-step="5" hidden>
+        <h2>How should the pro reach you?</h2>
+        <p class="subtitle">We share your info only with pros you choose to contact.</p>
+        <div class="field">
+          <label for="name">Your name</label>
+          <input type="text" id="name" autocomplete="name" placeholder="Jane Doe" />
+          <span class="error">Please enter your name.</span>
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" autocomplete="email" inputmode="email"
+                 placeholder="jane@example.com" />
+          <span class="error">Please enter a valid email address.</span>
+        </div>
+        <div class="field">
+          <label for="phone">Phone (optional)</label>
+          <input type="tel" id="phone" autocomplete="tel" inputmode="tel"
+                 placeholder="(815) 555-0199" />
+        </div>
+        <div class="field">
+          <label for="notes">Anything else the pro should know? (optional)</label>
+          <textarea id="notes" placeholder="Sloped backyard, two dogs, prefer native plants…"></textarea>
+          <p class="field-helper">
+            You can update this in the next 24 hours after submitting.
+          </p>
+        </div>
+        <div class="field-trust">
+          <span aria-hidden="true">🔒</span>
+          <span>Your contact info goes to up to three matched pros — and nowhere else. Never resold.</span>
+        </div>
+      </div>
+
+      <!-- Live count + step nav: hidden on /done, /empty, /warning -->
+      <div class="live-count" id="liveCount" aria-live="polite"></div>
+      <div class="match-flow-nav" id="wizardNav">
+        <button class="btn btn-ghost" id="backBtn" type="button">← Back</button>
+        <button class="btn btn-primary" id="nextBtn" type="button" disabled>Next →</button>
+      </div>
+
+      <!-- /done view: success message + matched pros + actions -->
+      <div class="match-done" id="matchDone" hidden>
+        <div class="match-done-icon" aria-hidden="true">✓</div>
+        <h1>You're matched!</h1>
+        <p class="match-done-lede" id="matchDoneLede">
+          Three local pros will reach out within <strong>24–48 hours</strong> about your project.
+        </p>
+        <div class="matches" id="matchesList"></div>
+        <div class="match-empty-inline" id="noMatches" hidden>
+          <p>We don't have a perfect match in our directory yet — we'll reach out when one is available.</p>
+        </div>
+        <div class="match-done-actions">
+          <button class="btn btn-outline" id="doneUpdate" type="button">Update notes</button>
+          <a class="btn btn-primary" href="/landscaping" data-match-exit>Got it, thanks</a>
+        </div>
+      </div>
+
+      <!-- /done without state: deep-link landed without going through flow -->
+      <div class="match-empty" id="matchEmpty" hidden>
+        <div class="match-done-icon match-done-icon-muted" aria-hidden="true">📋</div>
+        <h1>You haven't requested matches yet.</h1>
+        <p>Answer six quick questions and we'll match you with up to three local pros.</p>
+        <a class="btn btn-primary btn-lg" href="/landscaping/match/step-1" data-match-start>Start now</a>
+      </div>
+
+      <!-- Back-from-/done warning: user is on a step URL but already completed -->
+      <div class="match-warning" id="matchWarning" hidden>
+        <div class="match-done-icon match-done-icon-muted" aria-hidden="true">!</div>
+        <h1>You're already matched.</h1>
+        <p>Want to start over with a new project?</p>
+        <div class="match-done-actions">
+          <a class="btn btn-outline" href="/landscaping/match/done" data-match-internal>Back to my matches</a>
+          <button class="btn btn-primary" id="restartBtn" type="button">Start over</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
 <!-- ===== COMPARE BAR ===== -->
 <div class="compare-bar" id="compareBar" role="region" aria-label="Compare selections">
   <span id="compareText">0 pros selected</span>
@@ -1187,13 +1562,19 @@
   <button class="close" id="compareClear" aria-label="Clear compare selection">×</button>
 </div>
 
-<!-- ===== THANKS MODAL ===== -->
+<!-- ===== PER-PRO QUOTE-REQUEST CONFIRMATION MODAL =====
+     Shown when the user clicks "Request a quote" on a specific pro card
+     on /landscaping/match/done or in the directory. Body text is filled
+     in dynamically per-pro by submitLead(). The hard-coded text is
+     placeholder — never user-visible. -->
 <div class="modal" id="thanksModal" role="dialog" aria-modal="true" aria-labelledby="thanksTitle">
-  <div class="modal-card">
+  <div class="modal-card modal-card-lg">
     <div class="icon-big" aria-hidden="true">✓</div>
-    <h3 id="thanksTitle">Request sent!</h3>
-    <p>We've forwarded your project to the pro. Expect a reply within 1–2 business days.</p>
-    <button class="btn btn-primary" id="modalClose">Start a new search</button>
+    <h3 id="thanksTitle">Request sent.</h3>
+    <p class="modal-lede" id="thanksLede"></p>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="modalClose" type="button">Got it, thanks</button>
+    </div>
   </div>
 </div>
 
@@ -1206,14 +1587,14 @@
           Crystal Lake Landscapers
         </div>
         <p style="color:var(--green-100); font-size:14px; max-width:320px;">
-          Free, unbiased matching between homeowners and vetted landscaping pros in McHenry County, Illinois.
+          Free, unbiased matching between homeowners and local landscaping pros in McHenry County, Illinois.
         </p>
       </div>
       <div>
         <h4>Explore</h4>
         <ul>
-          <li><a href="#ask-ai">Ask the AI</a></li>
-          <li><a href="#wizard">Get matched</a></li>
+          <li><a href="#ask-ai">Ask our AI advisor</a></li>
+          <li><a href="/landscaping/match/step-1" data-match-start>Get matched</a></li>
           <li><a href="#services">Services</a></li>
           <li><a href="#cost">Pricing</a></li>
         </ul>
@@ -1221,9 +1602,9 @@
       <div>
         <h4>Learn</h4>
         <ul>
-          <li><a href="#guide">Zone 5a guide</a></li>
-          <li><a href="#glossary">Glossary</a></li>
-          <li><a href="#hire">Hiring tips</a></li>
+          <li><a href="/landscape/guide">Planting guide</a></li>
+          <li><a href="/landscape/glossary">Glossary</a></li>
+          <li><a href="/landscape/hiring-tips">Hiring tips</a></li>
           <li><a href="#faq">FAQ</a></li>
         </ul>
       </div>

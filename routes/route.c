@@ -415,9 +415,31 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/test") == 0) {
         get_live_html(cSSL, http_header, "portfolio/tst.html");
     } else if (strcmp(request_type, "GET") == 0 &&
-               (strcmp(route, "/landscaping") == 0 || strcmp(route, "/landscaping/") == 0)) {
+               (strcmp(route, "/landscaping") == 0 || strcmp(route, "/landscaping/") == 0 ||
+                strcmp(route, "/landscape")  == 0 || strcmp(route, "/landscape/")  == 0)) {
         get_live_html(cSSL, http_header, "landscaping/index.html");
+    } else if (strcmp(request_type, "GET") == 0 &&
+               (strncmp(route, "/landscaping/match/", 19) == 0 ||
+                strncmp(route, "/landscape/match/",  17) == 0)) {
+        /* Client-side router for the match wizard (step-1..step-6, done).
+           All paths under /match/ serve the SPA shell; landscaping.js reads
+           window.location.pathname and renders the appropriate step. */
+        get_live_html(cSSL, http_header, "landscaping/index.html");
+    } else if (strcmp(request_type, "GET") == 0 &&
+               (strcmp(route, "/landscape/guide") == 0 || strcmp(route, "/landscape/guide/") == 0)) {
+        get_live_html(cSSL, http_header, "landscaping/guide.html");
+    } else if (strcmp(request_type, "GET") == 0 &&
+               (strcmp(route, "/landscape/glossary") == 0 || strcmp(route, "/landscape/glossary/") == 0)) {
+        get_live_html(cSSL, http_header, "landscaping/glossary.html");
+    } else if (strcmp(request_type, "GET") == 0 &&
+               (strcmp(route, "/landscape/hiring-tips") == 0 || strcmp(route, "/landscape/hiring-tips/") == 0)) {
+        get_live_html(cSSL, http_header, "landscaping/hiring-tips.html");
+    } else if (strcmp(request_type, "GET") == 0 &&
+               (strcmp(route, "/landscape/chat") == 0 || strcmp(route, "/landscape/chat/") == 0)) {
+        get_live_html(cSSL, http_header, "landscaping/chat.html");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/landscaping/landscaping.js") == 0) {
+        get_live_js(cSSL, http_header, "landscaping/landscaping.js");
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/landscape/landscaping.js") == 0) {
         get_live_js(cSSL, http_header, "landscaping/landscaping.js");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/sitemap.xml") == 0) {
         get_live_file_typed(cSSL, "landscaping/sitemap.xml", "application/xml; charset=utf-8");
@@ -461,6 +483,11 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/dashboard/lead-intake") == 0) {
         /* Lead-intake settings page (Phase 1: web form). */
+        get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/dashboard/onboarding", 21) == 0) {
+        /* SMS-first onboarding wizard. Direct hits redirect to
+         * /dashboard#onboarding; ?embed=1 hits serve the wizard for
+         * the iframe inside the SPA shell. */
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/f/", 3) == 0) {
         /* Public hosted lead-intake form. */
