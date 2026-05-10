@@ -836,6 +836,15 @@
       failTakeover();
       return;
     }
+    // pro_search: redirect to the real directory search instead of the
+    // static "We don't list pros publicly" card.
+    if (entry.intent === "pro_search") {
+      const q = searchQueryForCategory(entry.value || "all");
+      window.location.replace(
+        "https://mchenrycountylandscapers.com/landscapers?q=" + encodeURIComponent(q)
+      );
+      return;
+    }
     container.innerHTML = renderResultMarkup(entry);
     showTakeoverPanel("result");
     // Re-bind any "Ask another" / quick-prompt buttons rendered within.
@@ -5861,6 +5870,127 @@
   // ==========================================================================
   const BOT_GREETING = "Hi! I'm your Crystal Lake landscape advisor. Tell me about your yard or your project — I can help with plants, costs, timing, and picking the right local pro. What's on your mind?";
 
+  // Map pro_search category values to service keys stored on each pro
+  const CHAT_CAT_TO_SERVICE = {
+    design_install: "design_install",
+    lawn_care:      "lawn_care",
+    hardscape:      "hardscape",
+    tree_shrub:     "tree_shrub",
+    irrigation:     "irrigation",
+    seasonal:       "seasonal",
+  };
+
+  function filterProsForChat(cat) {
+    const svc = CHAT_CAT_TO_SERVICE[cat];
+    const pool = svc
+      ? LANDSCAPERS.filter(p => Array.isArray(p.services) && p.services.includes(svc))
+      : [];
+    // Fall back to full list sorted by rating if category yields < 3
+    const src = pool.length >= 3 ? pool : LANDSCAPERS;
+    return src
+      .slice()
+      .sort((a, b) => (b.rating || 0) - (a.rating || 0) || (b.reviews || 0) - (a.reviews || 0))
+      .slice(0, 6);
+  }
+
+  function buildChatProCard(pro) {
+    const el = document.createElement("div");
+    el.className = "chat-pro-card";
+    const initials = pro.name.split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase();
+    const tags = (pro.services || []).slice(0, 2)
+      .map(s => `<span class="tag">${esc(serviceLabel(s))}</span>`).join("");
+    el.innerHTML = `
+      <div class="chat-pro-avatar">${initials}</div>
+      <div class="chat-pro-name">${esc(pro.name)}</div>
+      <div class="chat-pro-meta">${esc(pro.city || "")} · ★ ${(pro.rating || 0).toFixed(1)} (${pro.reviews || 0})</div>
+      <div class="chat-pro-tags">${tags}</div>
+      <div class="chat-pro-actions">
+        <button class="btn btn-primary btn-sm chat-pro-quote" data-pro="${esc(pro.id)}">Get quote</button>
+        ${pro.profile ? `<button class="btn btn-ghost btn-sm chat-pro-profile" data-pro="${esc(pro.id)}">Profile →</button>` : ""}
+      </div>
+    `;
+    el.querySelector(".chat-pro-quote").addEventListener("click", () => openContactModal(pro.id));
+    const profileBtn = el.querySelector(".chat-pro-profile");
+    if (profileBtn) profileBtn.addEventListener("click", () => openProProfile(pro.id));
+    return el;
+  }
+
+  function addInlinePros(pros, introText, cat) {
+    const body = $("#chatBody");
+    const wrap = document.createElement("div");
+    wrap.className = "chat-msg bot chat-pros";
+    if (introText) {
+      const p = document.createElement("p");
+      p.className = "chat-msg-para";
+      p.textContent = introText;
+      wrap.appendChild(p);
+    }
+
+    const carousel = document.createElement("div");
+    carousel.className = "chat-pro-carousel";
+
+    const scroll = document.createElement("div");
+    scroll.className = "chat-pro-scroll";
+    pros.forEach(p => scroll.appendChild(buildChatProCard(p)));
+    carousel.appendChild(scroll);
+
+    // Prev / next nav with wrap-around
+    const cardWidth = 210; // card width (200) + gap (10)
+    const nav = document.createElement("div");
+    nav.className = "chat-pro-nav";
+
+    const prevBtn = document.createElement("button");
+    prevBtn.type = "button";
+    prevBtn.setAttribute("aria-label", "Previous");
+    prevBtn.textContent = "‹";
+
+    const nextBtn = document.createElement("button");
+    nextBtn.type = "button";
+    nextBtn.setAttribute("aria-label", "Next");
+    nextBtn.textContent = "›";
+
+    prevBtn.addEventListener("click", () => {
+      const maxScroll = scroll.scrollWidth - scroll.clientWidth;
+      if (scroll.scrollLeft <= 2) {
+        // At start — wrap to end
+        scroll.scrollLeft = maxScroll;
+      } else {
+        scroll.scrollLeft = Math.max(0, scroll.scrollLeft - cardWidth);
+      }
+    });
+
+    nextBtn.addEventListener("click", () => {
+      const maxScroll = scroll.scrollWidth - scroll.clientWidth;
+      if (scroll.scrollLeft >= maxScroll - 2) {
+        // At end — wrap to start
+        scroll.scrollLeft = 0;
+      } else {
+        scroll.scrollLeft = Math.min(maxScroll, scroll.scrollLeft + cardWidth);
+      }
+    });
+
+    nav.appendChild(prevBtn);
+    nav.appendChild(nextBtn);
+    carousel.appendChild(nav);
+    wrap.appendChild(carousel);
+
+    const footer = document.createElement("div");
+    footer.className = "chat-pros-footer";
+    footer.innerHTML = `<a href="#" class="btn btn-outline btn-sm" data-match-start>See all pros & get matched →</a>`;
+    footer.querySelector("[data-match-start]").addEventListener("click", (e) => {
+      e.preventDefault();
+      const query = searchQueryForCategory(cat || "all");
+      window.location.href = "https://mchenrycountylandscapers.com/landscapers?q=" + encodeURIComponent(query);
+    });
+    wrap.appendChild(footer);
+
+    const savedScrollY = window.scrollY;
+    body.appendChild(wrap);
+    body.scrollTop = body.scrollHeight;
+    window.scrollTo(0, savedScrollY);
+    return wrap;
+  }
+
   function addMessage(role, text, opts) {
     const body = $("#chatBody");
     const msg = document.createElement("div");
@@ -5991,34 +6121,36 @@
       typingEl.remove();
 
       if (!res.ok || !data) {
-        addMessage("bot", "Hmm, I couldn't reach the advisor service just now. You can still get matched using the form below — or call (815) 555-0100.");
+        addMessage("bot", "Hmm, I couldn't reach the advisor service just now. You can still get matched using the form below.");
       } else {
         const rawAnswer = data.answer || data.response || "Got it.";
-        // Parse [scroll:...] / [filter-services:...] / etc directives so
-        // the page can react to the bot's intent. Cleaned text is what the
-        // visitor sees in the message; directives drive page updates.
         const { cleaned, directives } = LandscapingNav.parseDirectives(rawAnswer);
-        const botMsg = addMessage("bot", cleaned || rawAnswer);
 
-        // Some bots return structured directives at the API level too
-        // (data.directives = [{action, value}, ...]). Honor them.
+        // Some bots return structured directives at the API level too.
         if (Array.isArray(data.directives)) {
           data.directives.forEach((d) => directives.push(d));
         }
 
-        // Apply directives. Cap at one to keep the page calm.
-        if (directives.length) {
-          LandscapingNav.applyDirective(directives[0]);
-        } else if (/match|get matched|form|wizard|pro/i.test(rawAnswer)) {
-          // Fallback for older bots that don't yet emit directives.
-          const cta = document.createElement("div");
-          cta.style.marginTop = "8px";
-          cta.innerHTML = '<a href="' + stepUrl(1) + '" class="btn btn-outline btn-sm" data-match-start>Start quick match →</a>';
-          botMsg.appendChild(cta);
-        }
+        // Detect pro_search before rendering any chat message — for that
+        // intent the advisor behaves exactly like the header AI bar
+        // (runs runHomeSearch) rather than responding in the chat.
+        const d0 = directives[0];
+        const isTakeover = d0 && d0.action === "takeover";
+        const tVal = isTakeover ? String(d0.value || "").trim() : "";
+        const tColon = tVal.indexOf(":");
+        const tIntent = tColon === -1 ? tVal : tVal.slice(0, tColon);
+        const tCat   = tColon === -1 ? "" : tVal.slice(tColon + 1);
 
-        if (Array.isArray(data.next_questions) && data.next_questions.length) {
-          renderChipsFromSuggestions(data.next_questions);
+        if (isTakeover && tIntent === "pro_search") {
+          runHomeSearch(searchQueryForCategory(tCat || "all"));
+        } else {
+          const botMsg = addMessage("bot", cleaned || rawAnswer);
+          if (d0) {
+            LandscapingNav.applyDirective(d0);
+          }
+          if (Array.isArray(data.next_questions) && data.next_questions.length) {
+            renderChipsFromSuggestions(data.next_questions);
+          }
         }
       }
     } catch (err) {
