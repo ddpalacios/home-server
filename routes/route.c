@@ -398,8 +398,6 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
 
         free(accountid);
         if (parsed) cJSON_Delete(parsed);
-    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/twiliobot") == 0) {
-        get_live_html(cSSL, http_header, "portfolio/twiliobot.html");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/privacy") == 0) {
         get_live_html(cSSL, http_header, "portfolio/privacy.html");
     } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/privacy/", 9) == 0) {

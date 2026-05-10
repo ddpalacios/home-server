@@ -3214,6 +3214,49 @@
       transition: height 0.18s ease;
     }
     .admin-nav-link[hidden] { display: none !important; }
+
+    /* ── Admin "View as user" toggle ─────────────────────────────
+       Lets an admin preview the dashboard from a non-admin's
+       perspective without logging out. The toggle itself is admin-
+       only (only rendered when body.app-is-admin). When ON, body
+       gets .viewing-as-user, which hides every [data-admin-only]
+       element via CSS so the admin sees the same nav as a non-
+       admin. The toggle button itself stays visible (it's not
+       data-admin-only — it's data-admin-required, a distinct
+       attribute that we don't gate via .viewing-as-user). State
+       persists in localStorage so a refresh keeps the chosen mode. */
+    .app-view-toggle { display: none; }   /* hidden until admin-confirmed */
+    body.app-is-admin .app-view-toggle {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 14px; border-radius: 999px;
+      background: #f0f4f8; border: 1px solid #cdd7e3;
+      color: #2a3340; font: inherit; font-size: 13px; font-weight: 600;
+      cursor: pointer; user-select: none;
+      transition: background .15s, border-color .15s, color .15s;
+    }
+    body.app-is-admin .app-view-toggle:hover {
+      background: #e6edf5; border-color: #94a8c2; color: #1f2a36;
+    }
+    .app-view-toggle .vw-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #1f5f35; flex: 0 0 auto;
+      box-shadow: 0 0 0 3px rgba(31,95,53,.15);
+    }
+    body.viewing-as-user .app-view-toggle {
+      background: #fef3c7; border-color: #f0c419; color: #78350f;
+    }
+    body.viewing-as-user .app-view-toggle:hover {
+      background: #fde68a; border-color: #d99e1a; color: #78350f;
+    }
+    body.viewing-as-user .app-view-toggle .vw-dot {
+      background: #d97706; box-shadow: 0 0 0 3px rgba(217,119,6,.18);
+    }
+    /* Hide every admin-only element when the admin has flipped to
+       user view. Single rule — covers nav buttons, tabs, sections,
+       links — anything with data-admin-only. */
+    body.app-is-admin.viewing-as-user [data-admin-only] {
+      display: none !important;
+    }
     .admin-tabbar {
       display: flex;
       gap: 6px;
@@ -5462,6 +5505,16 @@
       <header class="app-topbar">
         <h1 class="app-topbar-title" id="appPageTitle">Phone numbers</h1>
         <div class="app-topbar-actions">
+          <!-- "View as user" toggle. Admin-only — hidden by CSS unless
+               body has .app-is-admin (set after applyAdminGate confirms
+               the /me response). When ON the body gains .viewing-as-user
+               which hides every [data-admin-only] element. -->
+          <button type="button" id="appViewAsUserToggle" class="app-view-toggle"
+                  aria-pressed="false"
+                  title="Toggle between admin and non-admin perspective">
+            <span class="vw-dot" aria-hidden="true"></span>
+            <span class="vw-label">Viewing as: <strong id="appViewAsUserMode">Admin</strong></span>
+          </button>
           <div class="ai-mode-panel-wrap">
             <button type="button" id="aiModeBadge" aria-haspopup="true" aria-expanded="false">
               <span class="ai-mode-dot" aria-hidden="true"></span>
@@ -6885,382 +6938,6 @@
           </div>
         </div>
 
-        <!-- ─── Dashboard grid (3 cards side-by-side, then a wide one) ─
-             Multiple cards visible at once. Each card has a fixed
-             height so nothing scrolls off-screen unless its OWN
-             content overflows (handled internally per card). -->
-        <div class="card" style="grid-column: span 4; margin-top: 14px; max-height:280px; overflow:hidden; display:flex; flex-direction:column">
-          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;flex-shrink:0">
-            <h2 class="section-title" style="margin:0;font-size:14px;">Where leads come from</h2>
-            <a href="#leadIntake" style="font-size:12px;color:#185FA5;text-decoration:none;">Manage →</a>
-          </div>
-          <div id="homeChannelsBars" style="display:flex;flex-direction:column;gap:10px;flex:1;overflow:auto">
-            <div style="color:#888;font-size:13px;padding:14px 0;text-align:center">Loading…</div>
-          </div>
-        </div>
-
-        <div class="card" style="grid-column: span 4; margin-top: 14px; max-height:280px; overflow:hidden; display:flex; flex-direction:column">
-          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:6px;flex-shrink:0">
-            <h2 class="section-title" style="margin:0;font-size:14px;">Quick actions</h2>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <a href="#leadIntake" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #e6e9ef;border-radius:10px;text-decoration:none;color:inherit">
-              <span style="font-size:20px">📥</span>
-              <div style="flex:1"><div style="font-weight:600;font-size:13.5px">Set up a form</div><div style="color:#888;font-size:11.5px">Capture leads from your site</div></div>
-              <span style="color:#185FA5;font-weight:600;font-size:14px">→</span>
-            </a>
-            <a href="#outreach" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #e6e9ef;border-radius:10px;text-decoration:none;color:inherit">
-              <span style="font-size:20px">⚙️</span>
-              <div style="flex:1"><div style="font-weight:600;font-size:13.5px">Build a flow</div><div style="color:#888;font-size:11.5px">Automate what happens next</div></div>
-              <span style="color:#185FA5;font-weight:600;font-size:14px">→</span>
-            </a>
-            <a href="#leads" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #e6e9ef;border-radius:10px;text-decoration:none;color:inherit">
-              <span style="font-size:20px">👥</span>
-              <div style="flex:1"><div style="font-weight:600;font-size:13.5px">View leads</div><div style="color:#888;font-size:11.5px">Browse, filter, follow up</div></div>
-              <span style="color:#185FA5;font-weight:600;font-size:14px">→</span>
-            </a>
-          </div>
-        </div>
-
-        <div class="card" style="grid-column: span 4; margin-top: 14px; max-height:280px; overflow:hidden; display:flex; flex-direction:column">
-          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:6px;flex-shrink:0">
-            <h2 class="section-title" style="margin:0;font-size:14px;">This week</h2>
-          </div>
-          <div id="homeWeekStats" style="display:flex;flex-direction:column;gap:10px;flex:1">
-            <div style="color:#888;font-size:13px;padding:14px 0;text-align:center">Loading…</div>
-          </div>
-        </div>
-
-        <!-- Recent leads — wide card spanning the full row ────────── -->
-        <div class="card" style="grid-column: span 12; margin-top: 14px; max-height:340px; overflow:hidden; display:flex; flex-direction:column">
-          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;flex-shrink:0">
-            <h2 class="section-title" style="margin:0;font-size:14px;">Recent leads</h2>
-            <a href="#leadIntake" style="font-size:12px;color:#185FA5;text-decoration:none;">Manage intake →</a>
-          </div>
-          <div id="intakeRecent" style="flex:1;overflow:auto;margin:0 -4px;padding:0 4px">
-            <div style="padding:18px 0;color:#888;font-size:13px;text-align:center;">Loading…</div>
-          </div>
-        </div>
-
-        <!-- Pipeline section preserved below for reference; sourced
-             from /me/pipeline like before. Hidden until we redesign it
-             to fit alongside the new top KPI strip. -->
-        <div class="card" data-tone="cool" style="grid-column: span 12; margin-top: 14px;" hidden>
-          <div class="card-header" style="margin-bottom: 8px;">
-            <h2 class="section-title" style="margin:0;">Where things are</h2>
-          </div>
-          <p class="section-note">A quick look at how your leads are moving.</p>
-          <div class="pl-stat-row" id="actPipelineStats"></div>
-        </div>
-        <script>
-          (function(){
-            function escIR(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
-              return ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[c]; }); }
-            function timeAgo(ts){
-              var s = Math.max(0, Math.floor(Date.now()/1000) - (Number(ts) || 0));
-              if (s < 60)    return s + "s ago";
-              if (s < 3600)  return Math.floor(s/60) + "m ago";
-              if (s < 86400) return Math.floor(s/3600) + "h ago";
-              return Math.floor(s/86400) + "d ago";
-            }
-            function chBadge(channel){
-              var label = ({form:"Form", email:"Email", phone:"SMS"}[channel]) || channel;
-              return '<span style="display:inline-block;font-size:11px;padding:1px 8px;border-radius:99px;background:#eef2f7;color:#3b4a5a;margin-right:6px">' + escIR(label) + '</span>';
-            }
-            function renderEvent(e){
-              var status, dot;
-              if (e.fired === "first_contact") {
-                dot = "#10b981"; status = "First Hello flow started";
-              } else if (e.deduped) {
-                dot = "#9ca3af"; status = "Deduped — already contacted recently";
-              } else if (e.over_cap) {
-                dot = "#f59e0b"; status = "Over daily cap — flow not fired";
-              } else {
-                dot = "#9ca3af"; status = "Lead captured (no flow)";
-              }
-              // Identity: phone first, then dedupe_key (email or phone), else lead_id.
-              var identity = e.phone || e.dedupe_key || e.lead_id || "";
-              return '<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #eef0f3;align-items:flex-start;">'
-                + '<span style="display:inline-block;width:8px;height:8px;border-radius:99px;margin-top:7px;background:' + dot + '"></span>'
-                + '<div style="flex:1;min-width:0;">'
-                +   '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline;">'
-                +     '<div style="font-size:13.5px;font-weight:600;color:#0a0a0a;">'
-                +       chBadge(e.channel) + escIR(identity)
-                +     '</div>'
-                +     '<div style="font-size:11.5px;color:#888;">' + escIR(timeAgo(e.ts)) + '</div>'
-                +   '</div>'
-                +   '<div style="font-size:12.5px;color:#3b4a5a;margin-top:2px;">' + escIR(status) + '</div>'
-                + '</div>'
-                + '</div>';
-            }
-            function load(){
-              fetch("/me/intake/events?limit=10", { credentials:"same-origin" })
-                .then(function(r){ return r.ok ? r.json() : { events: [] }; })
-                .then(function(d){
-                  var evs = (d && d.events) || [];
-                  var host = document.getElementById("intakeRecent");
-                  if (!host) return;
-                  if (evs.length === 0) {
-                    host.innerHTML = '<div style="padding:24px 0;color:#888;font-size:13px;text-align:center;">'
-                      + 'No leads yet. Once someone fills your form, texts your number, or emails you, they\'ll show up here.'
-                      + '</div>';
-                    return;
-                  }
-                  host.innerHTML = evs.map(renderEvent).join("");
-                })
-                .catch(function(){
-                  var host = document.getElementById("intakeRecent");
-                  if (host) host.innerHTML = '<div style="padding:18px 0;color:#b91c1c;font-size:13px;text-align:center;">Couldn\'t load recent leads.</div>';
-                });
-            }
-            // Run on first DOM ready, then again whenever the activity
-            // route is shown (to refresh after the user has been away).
-            if (document.readyState === "loading") {
-              document.addEventListener("DOMContentLoaded", load);
-            } else {
-              load();
-            }
-            window.addEventListener("hashchange", function(){
-              if (location.hash === "#activity" || location.hash === "") load();
-            });
-          })();
-        </script>
-
-        <!-- KPI strip + channel bars renderer ─────────────────────────
-             Computes 30-day counts from /me/intake/events and channel
-             readiness from /me/intake/channels. Pure client-side
-             aggregation; no new endpoints. -->
-        <script>
-          (function(){
-            function setNum(key, val) {
-              var el = document.querySelector('[data-kpi-num="' + key + '"]');
-              if (el) el.textContent = String(val);
-            }
-            function setSub(key, val) {
-              var el = document.querySelector('[data-kpi-sub="' + key + '"]');
-              if (el) el.textContent = val;
-            }
-            // Lightweight inline sparkline (SVG, 7 daily buckets).
-            function spark(key, buckets, color) {
-              var host = document.querySelector('[data-kpi-spark="' + key + '"]');
-              if (!host) return;
-              var max = Math.max(1, Math.max.apply(null, buckets));
-              var w = 100, h = 22, n = buckets.length;
-              var dx = w / (n - 1 || 1);
-              var pts = buckets.map(function(v, i){
-                var y = h - (v / max) * h;
-                return (i * dx).toFixed(1) + "," + y.toFixed(1);
-              }).join(" ");
-              host.innerHTML = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" style="width:100%;height:22px;display:block">'
-                + '<polyline fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="' + pts + '"/>'
-                + '</svg>';
-            }
-            function dayBuckets(events, days) {
-              var now = Math.floor(Date.now() / 1000);
-              var out = new Array(days).fill(0);
-              events.forEach(function(e){
-                var ts = Number(e.ts || 0);
-                if (!ts) return;
-                var dayAgo = Math.floor((now - ts) / 86400);
-                if (dayAgo >= 0 && dayAgo < days) out[days - 1 - dayAgo] += 1;
-              });
-              return out;
-            }
-            async function loadKpis() {
-              var events = [];
-              try {
-                var r = await fetch("/me/intake/events?limit=500", { credentials: "same-origin" });
-                if (r.ok) {
-                  var d = await r.json();
-                  events = (d && d.events) || [];
-                }
-              } catch (_) {}
-              var now = Math.floor(Date.now() / 1000);
-              var inWindow = function(secs) {
-                return events.filter(function(e){ return (now - Number(e.ts || 0)) <= secs; });
-              };
-              var leads30 = inWindow(30 * 86400);
-              var leads24 = inWindow(86400);
-              var fired30 = leads30.filter(function(e){ return e.fired === "first_contact"; });
-              setNum("leads", leads30.length);
-              setNum("today", leads24.length);
-              setNum("flows", fired30.length);
-              spark("leads", dayBuckets(leads30, 14), "#185fa5");
-              spark("today", dayBuckets(leads24, 24), "#0a8a3a");
-              spark("flows", dayBuckets(fired30, 14), "#a86200");
-
-              // Channel breakdown for the bars card.
-              var byCh = { form: 0, email: 0, phone: 0 };
-              leads30.forEach(function(e){
-                var c = e.channel;
-                if (byCh[c] != null) byCh[c] += 1;
-              });
-              var totalCh = byCh.form + byCh.email + byCh.phone;
-              var bars = document.getElementById("homeChannelsBars");
-              if (bars) {
-                if (totalCh === 0) {
-                  bars.innerHTML = '<div style="padding:24px 0;color:#888;font-size:13px;text-align:center">'
-                    + 'No leads yet — once they start coming in we\'ll show where each one came from.'
-                    + '</div>';
-                } else {
-                  var rows = [
-                    { k: "form",  label: "📝 Web form", color: "#185fa5", n: byCh.form },
-                    { k: "email", label: "✉️ Email",    color: "#a86200", n: byCh.email },
-                    { k: "phone", label: "📱 Texts",    color: "#0a8a3a", n: byCh.phone },
-                  ];
-                  bars.innerHTML = rows.map(function(r){
-                    var pct = Math.round((r.n / totalCh) * 100);
-                    return '<div>'
-                      + '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:5px">'
-                      +   '<span>' + r.label + '</span>'
-                      +   '<span style="color:#5a6470;font-weight:500">' + r.n + ' lead' + (r.n === 1 ? "" : "s") + ' · ' + pct + '%</span>'
-                      + '</div>'
-                      + '<div style="height:10px;background:#f0f4f9;border-radius:99px;overflow:hidden">'
-                      +   '<div style="width:' + pct + '%;height:100%;background:' + r.color + ';border-radius:99px;transition:width .3s ease"></div>'
-                      + '</div>'
-                      + '</div>';
-                  }).join("");
-                }
-              }
-
-              // Channels-connected count (from intake/channels).
-              try {
-                var rc = await fetch("/me/intake/channels", { credentials: "same-origin" });
-                if (rc.ok) {
-                  var dc = await rc.json();
-                  var ch = (dc && dc.channels) || {};
-                  var ready = 0;
-                  if (ch.form  && ch.form.ready)  ready++;
-                  if (ch.email && ch.email.ready) ready++;
-                  if (ch.phone && ch.phone.ready) ready++;
-                  setNum("channels", ready + " / 3");
-                  if (ready === 0) setSub("channels", "click set up to receive leads");
-                  else if (ready === 3) setSub("channels", "all channels active");
-                  else setSub("channels", (3 - ready) + " more to set up");
-                }
-              } catch (_) {}
-
-              // "This week" card — at-a-glance numbers from the same events.
-              var week = inWindow(7 * 86400);
-              var prevWeek = events.filter(function(e){
-                var age = now - Number(e.ts || 0);
-                return age > 7 * 86400 && age <= 14 * 86400;
-              });
-              var weekFired = week.filter(function(e){ return e.fired === "first_contact"; }).length;
-              var weekDeduped = week.filter(function(e){ return e.deduped; }).length;
-              var deltaPct = prevWeek.length === 0
-                ? (week.length > 0 ? 100 : 0)
-                : Math.round(((week.length - prevWeek.length) / prevWeek.length) * 100);
-              var deltaArrow = deltaPct > 0 ? "↑" : (deltaPct < 0 ? "↓" : "→");
-              var deltaColor = deltaPct > 0 ? "#0a8a3a" : (deltaPct < 0 ? "#b91c1c" : "#5a6470");
-              var deltaText = (deltaPct === 0)
-                ? "same as last week"
-                : Math.abs(deltaPct) + "% vs last week";
-              var weekRows = [
-                { icon: "📬", label: "New leads",       n: week.length,   tail: '<span style="color:' + deltaColor + ';font-weight:600">' + deltaArrow + " " + deltaText + "</span>" },
-                { icon: "⚡", label: "Flows fired",     n: weekFired,     tail: '<span style="color:#888">first-contact runs</span>' },
-                { icon: "🔁", label: "Already known",   n: weekDeduped,   tail: '<span style="color:#888">duplicates skipped</span>' },
-              ];
-              var weekHost = document.getElementById("homeWeekStats");
-              if (weekHost) {
-                if (week.length === 0 && weekFired === 0 && weekDeduped === 0) {
-                  weekHost.innerHTML = '<div style="padding:24px 0;color:#888;font-size:13px;text-align:center">'
-                    + 'Nothing yet this week. Once leads come in, you\'ll see a quick recap here.'
-                    + '</div>';
-                } else {
-                  weekHost.innerHTML = weekRows.map(function(r){
-                    return '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #f0f2f5">'
-                      + '<span style="font-size:18px;width:24px;text-align:center">' + r.icon + '</span>'
-                      + '<div style="flex:1;min-width:0">'
-                      +   '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">'
-                      +     '<span style="font-size:13px;font-weight:600;color:#0a0a0a">' + r.label + '</span>'
-                      +     '<span style="font-size:18px;font-weight:700;color:#0a0a0a;line-height:1">' + r.n + '</span>'
-                      +   '</div>'
-                      +   '<div style="font-size:11.5px;margin-top:2px">' + r.tail + '</div>'
-                      + '</div>'
-                      + '</div>';
-                  }).join("");
-                }
-              }
-            }
-            if (document.readyState === "loading") {
-              document.addEventListener("DOMContentLoaded", loadKpis);
-            } else {
-              loadKpis();
-            }
-            window.addEventListener("hashchange", function(){
-              if (location.hash === "#activity" || location.hash === "") loadKpis();
-            });
-          })();
-        </script>
-
-        <!-- Phone activity — at-a-glance read of the AI receptionist's
-             call volume, what callers ask about, and recent calls. Data
-             comes from /me/insights/phone-activity. -->
-        <div class="card" style="grid-column: span 12; margin-top: 16px;">
-          <div class="card-header" style="margin-bottom: 8px;">
-            <h2 class="section-title" style="margin:0;">
-              How your AI is doing on the phone
-              <span data-help-icon="phone_activity"></span>
-            </h2>
-          </div>
-          <p class="section-note">Every call your AI receptionist has answered. See how many calls turned into leads and how many became real appointments.</p>
-          <div class="phone-stats" id="phoneActivityStats">
-            <div class="phone-stat" data-pa-stat="week" data-help-hover="phone_calls_total">
-              <div class="phone-stat-label">Calls this week</div>
-              <div class="phone-stat-num">—</div>
-            </div>
-            <div class="phone-stat" data-pa-stat="avg" data-help-hover="phone_avg_length">
-              <div class="phone-stat-label">How long the average call ran</div>
-              <div class="phone-stat-num">—</div>
-            </div>
-            <div class="phone-stat" data-pa-stat="captured" data-help-hover="phone_leads_captured">
-              <div class="phone-stat-label">Calls that became leads</div>
-              <div class="phone-stat-num">—</div>
-            </div>
-            <div class="phone-stat" data-pa-stat="booked" data-help-hover="phone_appointments_booked">
-              <div class="phone-stat-label">Appointments your AI booked</div>
-              <div class="phone-stat-num">—</div>
-            </div>
-          </div>
-          <div class="phone-recent-wrap" style="margin-top: 16px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
-              <h3 style="margin:0;font-size:14px;font-weight:600;color:#0a0a0a;">Recent calls</h3>
-              <a href="#leads" style="font-size:11.5px;color:#185FA5;text-decoration:none;" data-go-leads>See all leads →</a>
-            </div>
-            <div class="phone-recent" id="phoneActivityRecent">
-              <div class="phone-recent-empty">No calls yet.</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card chart-card">
-        <div class="card-header">
-          <div>
-            <h2>Bookings over time</h2>
-            <p class="chart-subtitle">How many appointments your phone has captured each week. Big spikes mean a busy week — flat weeks might be a good time for outreach.</p>
-          </div>
-          <select class="filter-select" aria-label="Date range">
-            <option>Last 7 days</option>
-            <option>Last 30 days</option>
-            <option>This quarter</option>
-            <option>Year to date</option>
-          </select>
-        </div>
-        <div class="chart-shell">
-          <div class="chart-grid">
-            <div class="chart-panel">
-              <canvas id="leadsChart" class="leads-chart-canvas" aria-label="Booked leads chart"></canvas>
-              <div class="chart-empty" id="leadsChartEmpty">No booked leads yet.</div>
-            </div>
-            <div class="chart-panel chart-panel-compact">
-              <div class="chart-panel-title">Leads by service</div>
-              <canvas id="serviceChart" class="leads-chart-canvas" aria-label="Leads by service chart"></canvas>
-              <div class="chart-empty" id="serviceChartEmpty">No service data yet.</div>
-            </div>
-          </div>
-        </div>
-        </div>
 
         <!-- Funnel + flat lead table. The KPI tiles that used to live
              here have been hoisted up under the insights box. -->
@@ -24156,6 +23833,16 @@
           if (d && d.is_admin) {
             window.__appIsAdmin = true;
             document.body.classList.add("app-is-admin");
+            // Restore the "view as user" preference if the admin had
+            // it on last session (lets you keep the perspective across
+            // refreshes). The toggle button itself is still visible
+            // (admin-required, not admin-only).
+            try {
+              if (localStorage.getItem("app_view_as_user") === "1") {
+                document.body.classList.add("viewing-as-user");
+              }
+            } catch (_) {}
+            _wireViewAsUserToggle();
             return;
           }
         }
@@ -24163,6 +23850,42 @@
       // Fall-through: not admin. Strip admin DOM so even devtools edits
       // can't reactivate it without a server-side admin role.
       document.querySelectorAll("[data-admin-only]").forEach(el => el.remove());
+    }
+
+    // Wires the topbar "Viewing as: Admin/User" toggle. Called only
+    // after applyAdminGate confirms the user is admin (so the toggle
+    // never appears or fires for non-admins). Click flips the
+    // viewing-as-user body class, which CSS uses to hide every
+    // [data-admin-only] element. Persists choice in localStorage.
+    function _wireViewAsUserToggle() {
+      const btn   = document.getElementById("appViewAsUserToggle");
+      const label = document.getElementById("appViewAsUserMode");
+      if (!btn || !label) return;
+      function syncLabel() {
+        const asUser = document.body.classList.contains("viewing-as-user");
+        label.textContent = asUser ? "User" : "Admin";
+        btn.setAttribute("aria-pressed", asUser ? "true" : "false");
+        btn.title = asUser
+          ? "You're seeing the dashboard as a regular user. Click to switch back to admin view."
+          : "You're seeing the full admin dashboard. Click to preview the user view.";
+      }
+      syncLabel();
+      btn.addEventListener("click", () => {
+        const wasAsUser = document.body.classList.contains("viewing-as-user");
+        document.body.classList.toggle("viewing-as-user", !wasAsUser);
+        try { localStorage.setItem("app_view_as_user", !wasAsUser ? "1" : "0"); } catch (_) {}
+        syncLabel();
+        // If the admin was sitting on a now-hidden admin-only route,
+        // bounce back to home so they're not staring at a blank pane.
+        if (!wasAsUser) {
+          const hash = (window.location.hash || "").replace(/^#/, "");
+          const adminRoutes = new Set(
+            ["replies","socialPipeline","campaigns","adminTrials","admin"]);
+          if (adminRoutes.has(hash) && typeof appShowRoute === "function") {
+            appShowRoute("activity");
+          }
+        }
+      });
     }
 
     // ─────────── Admin: trial overview ───────────
