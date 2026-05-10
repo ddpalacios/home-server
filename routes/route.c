@@ -122,8 +122,10 @@ static int eq_or_prefix_with_slash(const char *r, const char *base) {
 static int is_landscaping_path(const char *r) {
     if (!r || r[0] != '/') return 0;
     /* Catches /landscape, /landscaper, /landscapers, /landscaping
-     * and every subpath beneath them (e.g. /landscape-design/, /landscapers/<slug>/). */
-    if (strncmp(r, "/landscape", 10) == 0) return 1;
+     * and every subpath beneath them (e.g. /landscape-design/, /landscapers/<slug>/).
+     * Must use 9-char prefix "/landscap" — "/landscape" (10 chars) misses "/landscaping"
+     * because position 9 is 'i' not 'e'. */
+    if (strncmp(r, "/landscap", 9) == 0) return 1;
     /* Service hubs */
     if (eq_or_prefix_with_slash(r, "/lawn-care"))           return 1;
     if (eq_or_prefix_with_slash(r, "/hardscaping"))         return 1;
@@ -323,7 +325,8 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
              * /auth, /admin, etc. */
             else if (!is_landscaping_path(route) &&
                      strcmp(route, "/sitemap.xml") != 0 &&
-                     strcmp(route, "/robots.txt")  != 0) {
+                     strcmp(route, "/robots.txt")  != 0 &&
+                     strcmp(route, "/favicon.ico") != 0) {
                 send_response_code(cSSL, 404);
                 free(route);
                 free(route_with_query);
@@ -597,10 +600,9 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
         post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 &&
                strncmp(route, "/landscaping/img/", 17) == 0) {
-        /* Static images for article + company cards (saved by
-         * fetch_article_images.py). Proxied to Flask which uses
-         * send_from_directory under templates/landscaping/img/. */
-        get_to_local(socket, http_header, body, route_with_query, "5000");
+        /* Serve landscaping images directly from templates/landscaping/img/
+         * — no Flask hop needed for static assets. */
+        get_landscaping_img(cSSL, route);
     } else if (strcmp(request_type, "GET") == 0 &&
                (strcmp(route, "/landscaping/ask") == 0 ||
                 strcmp(route, "/landscaping/ask/") == 0 ||

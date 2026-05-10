@@ -468,6 +468,50 @@ void get_video_file(SSL* cSSL, char* request, char* route){
     SSL_write(cSSL, video_data, video_size);
     free(video_data);
 }
+void get_landscaping_img(SSL* cSSL, const char* route) {
+    const char *prefix = "/landscaping/img/";
+    size_t prefix_len = strlen(prefix);
+    if (!route || strncmp(route, prefix, prefix_len) != 0) {
+        send_response_code(cSSL, 404);
+        return;
+    }
+    const char *rel = route + prefix_len;
+    if (rel[0] == '\0' || strstr(rel, "..") != NULL) {
+        send_response_code(cSSL, 400);
+        return;
+    }
+    char path[512];
+    snprintf(path, sizeof(path), "../templates/landscaping/img/%s", rel);
+    size_t sz = 0;
+    unsigned char *data = read_binary_file(path, &sz);
+    if (!data) {
+        send_response_code(cSSL, 404);
+        return;
+    }
+    const char *ext = strrchr(rel, '.');
+    const char *mime = "application/octet-stream";
+    if (ext) {
+        if (strcmp(ext, ".png") == 0)                          mime = "image/png";
+        else if (strcmp(ext, ".jpg") == 0 || strcmp(ext, ".jpeg") == 0) mime = "image/jpeg";
+        else if (strcmp(ext, ".webp") == 0)                    mime = "image/webp";
+        else if (strcmp(ext, ".svg") == 0)                     mime = "image/svg+xml";
+        else if (strcmp(ext, ".gif") == 0)                     mime = "image/gif";
+        else if (strcmp(ext, ".ico") == 0)                     mime = "image/x-icon";
+    }
+    char hdr[256];
+    int hlen = snprintf(hdr, sizeof(hdr),
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: %s\r\n"
+        "Content-Length: %zu\r\n"
+        "Cache-Control: max-age=3600\r\n"
+        "Connection: close\r\n"
+        "\r\n",
+        mime, sz);
+    SSL_write(cSSL, hdr, hlen);
+    SSL_write(cSSL, data, sz);
+    free(data);
+}
+
 char* generate_websocket_accptKey(char* websocket_sec_key ){
 	char websocket_key[32];
 	char* magic_key =  "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
