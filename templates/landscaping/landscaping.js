@@ -3153,7 +3153,7 @@
     document.removeEventListener("keydown", _contactEscHandler);
   }
 
-  const CONTACT_WEBHOOK_URL = "https://infallibly-nonbrutal-soila.ngrok-free.dev/v1/triggers/wh_GPR2wyl3dbKiqYCDZviqB7cK";
+  const CONTACT_WEBHOOK_URL = "https://justgotalead.com/v1/triggers/wh_GPR2wyl3dbKiqYCDZviqB7cK";
 
   function renderContactModalHTML(pro, saved) {
     return `
@@ -3165,7 +3165,7 @@
           <h3 id="contactTitle">Contact ${esc(pro.name)}</h3>
         </header>
 
-        <form id="contactForm" action="https://infallibly-nonbrutal-soila.ngrok-free.dev/v1/triggers/wh_GPR2wyl3dbKiqYCDZviqB7cK" method="POST">
+        <form id="contactForm" action="https://justgotalead.com/v1/triggers/wh_GPR2wyl3dbKiqYCDZviqB7cK" method="POST">
           <label class="contact-field">
             <span class="contact-field-label">Your name <span class="contact-req">*</span></span>
             <input name="name" type="text" required placeholder="Full name" autocomplete="name" value="${esc((saved && saved.name) || "")}" />
