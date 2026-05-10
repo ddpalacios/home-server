@@ -244,6 +244,65 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
         return;
     }
 
+    /* ── Host-based site routing ─────────────────────────────────────────────
+     * Two domains terminate at this server:
+     *   justgotalead.com           → portfolio + dashboard
+     *   mchenrycountylandscapers.com → landscaping site
+     * Branch on the Host header so each gets its own front page and so any
+     * cross-site URL 301s home to its true domain. */
+    {
+        char host_buf[128];
+        host_buf[0] = '\0';
+        char *raw_host = get_header_value(http_header, "Host");
+        if (raw_host) {
+            size_t i = 0;
+            while (raw_host[i] && raw_host[i] != ':' && i < sizeof(host_buf) - 1) {
+                host_buf[i] = (raw_host[i] >= 'A' && raw_host[i] <= 'Z')
+                            ? (char)(raw_host[i] + 32)
+                            : raw_host[i];
+                i++;
+            }
+            host_buf[i] = '\0';
+        }
+        int is_landscaping_host =
+            (strcmp(host_buf, "mchenrycountylandscapers.com") == 0 ||
+             strcmp(host_buf, "www.mchenrycountylandscapers.com") == 0);
+
+        if (is_landscaping_host && strcmp(request_type, "GET") == 0) {
+            /* Apex of the landscaping domain → serve the landscaping landing
+             * page directly so the URL stays at "/" (no visible redirect). */
+            if (strcmp(route, "/") == 0 || strcmp(route, "/home") == 0) {
+                free(route);
+                route = strdup("/landscapers");
+                free(route_with_query);
+                route_with_query = strdup("/landscapers");
+            }
+            /* Cross-site routes that don't belong on the landscaping domain
+             * → 301 over to justgotalead.com so SEO and OAuth stay clean. */
+            else if (strncmp(route, "/dashboard", 10) == 0 ||
+                     strncmp(route, "/admin",     6) == 0 ||
+                     strncmp(route, "/me",        3) == 0 ||
+                     strncmp(route, "/try",       4) == 0 ||
+                     strncmp(route, "/auth/",     6) == 0 ||
+                     strncmp(route, "/oauth/",    7) == 0 ||
+                     strncmp(route, "/login",     6) == 0) {
+                char redirect[1024];
+                int n = snprintf(redirect, sizeof(redirect),
+                    "HTTP/1.1 301 Moved Permanently\r\n"
+                    "Location: https://justgotalead.com%s\r\n"
+                    "Content-Length: 0\r\n"
+                    "Connection: close\r\n"
+                    "\r\n",
+                    route_with_query ? route_with_query : "/");
+                if (n > 0) SSL_write(cSSL, redirect, n);
+                free(route);
+                free(route_with_query);
+                free(request_type);
+                return;
+            }
+        }
+    }
+
     if (strcmp(request_type, "POST") == 0 &&
         (strcmp(route, "/twilio/voice") == 0 || strcmp(route, "/voice") == 0)) {
         printf("Twilio live voice webhook received — proxying to Flask for phone-to-account lookup.\n");

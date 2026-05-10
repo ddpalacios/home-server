@@ -10,3 +10,4 @@ web/node_modules/
 web/dist/
 templates/AIdashboard/dist/
 .vite/
+prod.env.sh
