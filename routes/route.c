@@ -637,8 +637,6 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
         /* Dynamic robots — Flask emits the Sitemap: line with the
          * correct public origin (no hardcoded domain). */
         get_to_local(socket, http_header, body, route_with_query, "5000");
-    } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/favicon.ico") != NULL) {
-        get_image_file(cSSL, http_header, "/portfolio/images/favicon.ico");
     } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/dashboard/dist/", 16) == 0) {
         // Serve compiled bundle output from templates/AIdashboard/dist/.
         // The bundle assets are produced by `npm run build` in /web.
