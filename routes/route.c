@@ -325,8 +325,7 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
              * /auth, /admin, etc. */
             else if (!is_landscaping_path(route) &&
                      strcmp(route, "/sitemap.xml") != 0 &&
-                     strcmp(route, "/robots.txt")  != 0 &&
-                     strcmp(route, "/favicon.ico") != 0) {
+                     strcmp(route, "/robots.txt")  != 0) {
                 send_response_code(cSSL, 404);
                 free(route);
                 free(route_with_query);
