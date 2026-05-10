@@ -277,8 +277,10 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
                 free(route_with_query);
                 route_with_query = strdup("/landscapers");
             }
-            /* Cross-site routes that don't belong on the landscaping domain
-             * → 301 over to justgotalead.com so SEO and OAuth stay clean. */
+            /* Dashboard / auth / admin paths simply do not exist on the
+             * landscaping domain. Return 404 instead of redirecting to
+             * justgotalead.com so the landscaping site looks like a fully
+             * self-contained brand with no leak of the dashboard's URL. */
             else if (strncmp(route, "/dashboard", 10) == 0 ||
                      strncmp(route, "/admin",     6) == 0 ||
                      strncmp(route, "/me",        3) == 0 ||
@@ -286,15 +288,7 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
                      strncmp(route, "/auth/",     6) == 0 ||
                      strncmp(route, "/oauth/",    7) == 0 ||
                      strncmp(route, "/login",     6) == 0) {
-                char redirect[1024];
-                int n = snprintf(redirect, sizeof(redirect),
-                    "HTTP/1.1 301 Moved Permanently\r\n"
-                    "Location: https://justgotalead.com%s\r\n"
-                    "Content-Length: 0\r\n"
-                    "Connection: close\r\n"
-                    "\r\n",
-                    route_with_query ? route_with_query : "/");
-                if (n > 0) SSL_write(cSSL, redirect, n);
+                send_response_code(cSSL, 404);
                 free(route);
                 free(route_with_query);
                 free(request_type);
