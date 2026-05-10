@@ -20,6 +20,7 @@ const ROUTE_MODULE_LOADERS = {
   "home":      () => import("./routes/activity.js"),
   "leads":     () => import("./routes/leads.js"),
   "campaigns": () => import("./routes/campaigns.js"),
+  "outreach":  () => import("./routes/campaigns.js"),
   "replies":   () => import("./routes/replies.js"),
   "pipeline":  () => import("./routes/pipeline.js"),
   "voice":     () => import("./routes/voice.js"),
