@@ -1165,6 +1165,21 @@
     .sch-week-pill:hover { filter: brightness(1.1); }
     .sch-week-pill.is-failed     { background: var(--err-fg); }
     .sch-week-pill.is-publishing { background: #f59e0b; }
+    .sch-week-pill.is-published  {
+      background: #6b7280;
+      opacity: .72;
+    }
+    .sch-week-pill.is-published::before {
+      content: "✓ ";
+      opacity: 0.85;
+      margin-right: 1px;
+    }
+    .sch-week-pill.is-cancelled  {
+      background: #cbd5e1;
+      color: #475569;
+      text-decoration: line-through;
+      opacity: .60;
+    }
     /* Drag-and-drop reschedule states. The whole pill is the grab
        target — no separate handle. Click vs drag is decided by whether
        the cursor moves more than 4px before pointerup (click = open
@@ -1317,6 +1332,23 @@
     .sch-month-pill:hover { filter: brightness(1.1); }
     .sch-month-pill.is-failed     { background: var(--err-fg); }
     .sch-month-pill.is-publishing { background: #f59e0b; }
+    /* Published posts get a soft slate-green so users can SEE what
+       went out without confusing them for upcoming pending pills. */
+    .sch-month-pill.is-published  {
+      background: #6b7280;
+      opacity: .72;
+    }
+    .sch-month-pill.is-published::before {
+      content: "✓ ";
+      opacity: 0.85;
+      margin-right: 1px;
+    }
+    .sch-month-pill.is-cancelled  {
+      background: #cbd5e1;
+      color: #475569;
+      text-decoration: line-through;
+      opacity: .60;
+    }
     /* Drag-to-reschedule on Month view. Same conventions as Week view:
        grab cursor, placeholder fade for the source pill, floating clone
        at body level, blue/red drop-target highlight on cells. */
@@ -3998,19 +4030,74 @@
     STATE.lib_cache = { hook_lines: null, meat_blocks: null, cta_lines: null, media: null };
     STATE.media_filter = "all";
 
+    // Stale-while-revalidate cache for the LinkedIn library. We persist
+    // each kind under one sessionStorage key so a tab switch back into
+    // a library section is instant; the network revalidate runs in
+    // parallel and updates the grid only if the response actually
+    // differs.
+    var _LI_LIB_CACHE_KEY = "li_lib_cache_v1";
+    function _liLibReadSwr(){
+      try {
+        var raw = sessionStorage.getItem(_LI_LIB_CACHE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw) || null;
+      } catch(e){ return null; }
+    }
+    function _liLibWriteSwr(){
+      try {
+        var snap = {};
+        Object.keys(STATE.lib_cache || {}).forEach(k => {
+          snap[k] = STATE.lib_cache[k] || [];
+        });
+        sessionStorage.setItem(_LI_LIB_CACHE_KEY,
+          JSON.stringify({ kinds: snap, ts: Date.now() }));
+      } catch(e){}
+    }
+
+    function _liLibSkeleton(kind){
+      var listEl = document.getElementById("lib-list-" + kind);
+      if (!listEl) return;
+      // Show 4 ghost rows so the pane has visible structure in <50ms.
+      // Pulse animation reuses the keyframes the scheduled tab uses.
+      var ghost = '<div class="lib-card" style="pointer-events:none;background:#f9fafb;border-color:#e5e7eb">'
+        + '<div style="height:14px;width:80%;background:#e5e7eb;border-radius:4px;margin-bottom:8px;animation:liSchedPulse 1.4s ease-in-out infinite"></div>'
+        + '<div style="height:10px;width:60%;background:#e5e7eb;border-radius:4px;animation:liSchedPulse 1.4s ease-in-out infinite"></div>'
+        + '</div>';
+      listEl.innerHTML = new Array(4).fill(ghost).join("");
+    }
+
     async function loadLibrary(kind){
       var listEl = document.getElementById("lib-list-" + kind);
       if (!listEl) return;
+      STATE._libSwrUsed_ = STATE._libSwrUsed_ || {};
+      // Stage 1: paint synchronously. Cache hit → real list. Cache
+      // miss → skeleton rows. The user *never* sees a blank pane.
+      var cached = _liLibReadSwr();
+      var cachedItems = (cached && cached.kinds) ? cached.kinds[kind] : null;
+      if (cachedItems && !STATE._libSwrUsed_[kind]) {
+        STATE._libSwrUsed_[kind] = true;
+        STATE.lib_cache[kind] = cachedItems;
+        if (kind === "media") renderMediaList();
+        else                  renderTextList(kind);
+      } else if (!STATE.lib_cache[kind] || !STATE.lib_cache[kind].length) {
+        _liLibSkeleton(kind);
+      }
+      // Stage 2: revalidate in background. The backend already
+      // parallelizes blob downloads inside _li_lib_list, so this
+      // returns in one round-trip window even for 100+ items.
       try {
         var r = await fetch("/dashboard/linkedin/api/library/" + kind,
           { credentials: "same-origin" });
         var d = r.ok ? await r.json() : { items: [] };
         STATE.lib_cache[kind] = d.items || [];
+        _liLibWriteSwr();
         if (kind === "media") renderMediaList();
         else                  renderTextList(kind);
       } catch (e) {
-        listEl.innerHTML = '<div class="helper is-err">Couldn\'t load: '
-          + esc(e.message) + '</div>';
+        if (!STATE.lib_cache[kind] || !STATE.lib_cache[kind].length) {
+          listEl.innerHTML = '<div class="helper is-err">Couldn\'t load: '
+            + esc(e.message) + '</div>';
+        }
       }
     }
 
@@ -6095,10 +6182,18 @@
     function renderScheduledList(){
       var listEl = $("sch-list");
       if (!listEl) return;
-      var allActive = (STATE.scheduled_cache || [])
+      // Calendar views (week / month) need the FULL cache — including
+      // already-published and cancelled posts — so users see a complete
+      // record of what went out plus what's coming up. The list view
+      // is a planning surface for upcoming work, so it stays focused
+      // on active (non-published, non-cancelled) entries.
+      var calendarView = (STATE.sch_view === "week" || STATE.sch_view === "month");
+      var fullCache = (STATE.scheduled_cache || []);
+      var allActive = fullCache
         .filter(r => r.status !== "published" && r.status !== "cancelled")
         .sort((a, b) => (a.scheduled_at || 0) - (b.scheduled_at || 0));
-      // Update filter chip counts (live).
+      // Update filter chip counts (live). These reflect the LIST surface
+      // — the chips are about "what still needs my attention."
       var nAll      = allActive.length;
       var nPending  = allActive.filter(r =>
                        r.status === "pending" || r.status === "publishing").length;
@@ -6111,7 +6206,11 @@
       if (cp) cp.textContent = nPending;
       if (cf) cf.textContent = nFailed;
 
-      var rows = allActive;
+      // Choose the base row set: full cache for calendar views, active-
+      // only for the list. Both still respect the status chip + search.
+      var rows = calendarView
+        ? fullCache.slice().sort((a, b) => (a.scheduled_at || 0) - (b.scheduled_at || 0))
+        : allActive;
       // Apply status filter (chips: all / pending / failed).
       if (STATE.sch_filter === "pending") {
         rows = rows.filter(r => (r.status === "pending" || r.status === "publishing"));
@@ -6331,7 +6430,9 @@
             var status = (p.status || "pending").toLowerCase();
             var pillCls = "sch-week-pill"
               + (status === "errored" || status === "failed" ? " is-failed" : "")
-              + (status === "publishing" ? " is-publishing" : "");
+              + (status === "publishing" ? " is-publishing" : "")
+              + (status === "published"  ? " is-published"  : "")
+              + (status === "cancelled"  ? " is-cancelled"  : "");
             var t = new Date((p.scheduled_at || 0) * 1000);
             var clock = t.toLocaleTimeString(undefined, { hour:"numeric", minute:"2-digit" });
             var snippet = (p.caption || "").trim().slice(0, 50);
@@ -7037,6 +7138,8 @@
           var cls = "sch-month-pill"
             + (status === "errored" || status === "failed" ? " is-failed" : "")
             + (status === "publishing" ? " is-publishing" : "")
+            + (status === "published"  ? " is-published"  : "")
+            + (status === "cancelled"  ? " is-cancelled"  : "")
             + (fresh ? " is-fresh-plan" : "");
           var t = new Date((p.scheduled_at || 0) * 1000);
           var clock = t.toLocaleTimeString(undefined,
@@ -8917,13 +9020,42 @@
       } catch (e) { return []; }
     }
 
-    async function makeRenderOverview(){
+    // SWR cache for AI drafts so the Make Posts overview paints
+    // synchronously on revisit. The list is small (one entry per
+    // draft batch) so storing the full payload is fine.
+    var _LI_AI_DRAFTS_CACHE_KEY = "li_ai_drafts_cache_v1";
+    function _liAiDraftsReadSwr(){
+      try {
+        var raw = sessionStorage.getItem(_LI_AI_DRAFTS_CACHE_KEY);
+        if (!raw) return null;
+        var c = JSON.parse(raw);
+        return Array.isArray(c && c.drafts) ? c.drafts : null;
+      } catch(e){ return null; }
+    }
+    function _liAiDraftsWriteSwr(drafts){
+      try {
+        sessionStorage.setItem(_LI_AI_DRAFTS_CACHE_KEY,
+          JSON.stringify({ drafts: drafts || [], ts: Date.now() }));
+      } catch(e){}
+    }
+    function _makeOverviewSkeleton(){
       var el = $("make-overview");
-      var hooksRes = STATE.lib_cache.hook_lines  || (await fetchLib("hook_lines"));
-      var meatsRes = STATE.lib_cache.meat_blocks || (await fetchLib("meat_blocks"));
-      var ctasRes  = STATE.lib_cache.cta_lines   || (await fetchLib("cta_lines"));
-      var mediaRes = STATE.lib_cache.media       || (await fetchLib("media"));
-      var aiDrafts = await fetchAiDrafts();
+      if (!el) return;
+      // Two ghost cards matching the actual overview layout so the
+      // pane has shape in <50ms instead of staying blank while four
+      // library fetches + a drafts fetch round-trip.
+      var card = '<div style="border:1px solid #e5e7eb;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:8px;background:#f9fafb">'
+        + '<div style="height:14px;width:60%;background:#e5e7eb;border-radius:4px;animation:liSchedPulse 1.4s ease-in-out infinite"></div>'
+        + '<div style="height:10px;width:90%;background:#e5e7eb;border-radius:4px;animation:liSchedPulse 1.4s ease-in-out infinite"></div>'
+        + '<div style="height:10px;width:70%;background:#e5e7eb;border-radius:4px;animation:liSchedPulse 1.4s ease-in-out infinite"></div>'
+        + '</div>';
+      el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'
+        + card + card + '</div>';
+    }
+
+    function _makeRenderOverviewWith(hooksRes, meatsRes, ctasRes, mediaRes, aiDrafts){
+      var el = $("make-overview");
+      if (!el) return;
       var nh = (hooksRes || []).length, nm = (meatsRes || []).length;
       var nc = (ctasRes  || []).length, nme = (mediaRes || []).length;
       var captions = nh * nm * nc;
@@ -8990,6 +9122,54 @@
           var [kind, draftId] = b.dataset.mineOpen.split(":");
           aiMineOpenPanel(draftId, kind);
         }));
+    }
+
+    async function makeRenderOverview(){
+      var el = $("make-overview");
+      if (!el) return;
+
+      // Stage 1: paint synchronously. Three fallback sources, in order
+      // of freshness:
+      //   (a) in-memory STATE.lib_cache + sessionStorage drafts cache
+      //   (b) sessionStorage library cache (if user hasn't visited
+      //       the Library tab this session)
+      //   (c) skeleton placeholders
+      var libSwrSeed = (typeof _liLibReadSwr === "function") ? _liLibReadSwr() : null;
+      var libSwrKinds = (libSwrSeed && libSwrSeed.kinds) || {};
+      function _seedKind(k){
+        if (STATE.lib_cache[k]) return STATE.lib_cache[k];
+        if (Array.isArray(libSwrKinds[k])) return libSwrKinds[k];
+        return null;
+      }
+      var seedHooks = _seedKind("hook_lines");
+      var seedMeats = _seedKind("meat_blocks");
+      var seedCtas  = _seedKind("cta_lines");
+      var seedMedia = _seedKind("media");
+      var seedDrafts = _liAiDraftsReadSwr();
+      var painted = false;
+      if (seedHooks && seedMeats && seedCtas && seedMedia && seedDrafts) {
+        _makeRenderOverviewWith(seedHooks, seedMeats, seedCtas, seedMedia, seedDrafts);
+        painted = true;
+      } else {
+        _makeOverviewSkeleton();
+      }
+
+      // Stage 2: revalidate. Fire library + drafts in parallel —
+      // was 5 sequential awaits, which stacked 5 round-trips.
+      var libKinds = ["hook_lines", "meat_blocks", "cta_lines", "media"];
+      var libPromises = libKinds.map(k =>
+        STATE.lib_cache[k] ? Promise.resolve(STATE.lib_cache[k]) : fetchLib(k));
+      var draftsPromise = fetchAiDrafts();
+      try {
+        var results = await Promise.all([...libPromises, draftsPromise]);
+        var hooksRes = results[0], meatsRes = results[1];
+        var ctasRes  = results[2], mediaRes = results[3];
+        var aiDrafts = results[4];
+        _liAiDraftsWriteSwr(aiDrafts);
+        _makeRenderOverviewWith(hooksRes, meatsRes, ctasRes, mediaRes, aiDrafts);
+      } catch (e) {
+        if (!painted) _makeOverviewSkeleton();
+      }
     }
 
     function aiDraftCard(d){

@@ -56,9 +56,21 @@
       return v === "1" || v === "true" || v === "yes";
     } catch(_) { return false; }
   })();
-  document.title = (IS_TEST ? "🧪 Test · " : "") + BIZ + " · " + (FORM.name || "Contact");
+  // Browser tab title: "<biz> · <form name>" if both, else just "<biz>".
+  // Avoids leaking placeholders like "Untitled" or "Contact" into the
+  // tab when the owner intentionally cleared the form name.
+  document.title = (IS_TEST ? "🧪 Test · " : "") + BIZ +
+    (FORM.name && FORM.name.trim() ? " · " + FORM.name.trim() : "");
   document.getElementById("biz").textContent = BIZ;
-  document.getElementById("form-name").textContent = FORM.name || "";
+  // Empty form name = no public header at all (just hide the element).
+  // The internal name stays for owner-side identification; we just
+  // don't show it on the customer-facing page when it's blank.
+  var formNameEl = document.getElementById("form-name");
+  if (FORM.name && FORM.name.trim()) {
+    formNameEl.textContent = FORM.name.trim();
+  } else {
+    formNameEl.style.display = "none";
+  }
   document.getElementById("submit-btn").textContent = FORM.submit_text || "Submit";
 
   // Inject test banner when in test mode.

@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Landscaping services in Crystal Lake | McHenry County Landscapers</title>
+<meta name="description" content="Plain-English guides for the six core landscaping services in Crystal Lake — what each one involves, what to look for in a pro, common mistakes, and DIY tips." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<style>
+  :root {
+    --ink: #1d2a25;
+    --ink-2: #4a574f;
+    --muted: #76817b;
+    --cream: #f5efe1;
+    --border: #e2dac5;
+    --green-50: #eff5ec;
+    --green-100: #e6f6ec;
+    --green-500: #8bc98e;
+    --green-800: #1f7a3c;
+    --shadow-md: 0 6px 16px rgba(31, 122, 60, 0.08);
+    --shadow-lg: 0 14px 30px rgba(31, 122, 60, 0.12);
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--ink);
+    background: var(--cream);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--green-800); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ===== TOP BAR ===== */
+  .topbar {
+    background: #fff; border-bottom: 1px solid var(--border);
+    padding: 14px 0; position: sticky; top: 0; z-index: 10;
+  }
+  .topbar-inner {
+    max-width: 1100px; margin: 0 auto; padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .brand {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: "Marcellus", serif; font-size: 18px; color: var(--ink);
+    text-decoration: none;
+  }
+  .brand-mark { display: inline-block; width: 28px; height: 28px; border-radius: 50%; background: #fff url("/landscaping/img/brand/logo.png") center/20px 20px no-repeat; border: 1px solid var(--border, #d8e2d4); font-size: 0; color: transparent; line-height: 0; flex: 0 0 auto; vertical-align: middle; }
+  .topbar-cta {
+    background: var(--green-800); color: #fff; border: 1px solid var(--green-800);
+    border-radius: 999px; padding: 8px 18px; font-size: 14px; font-weight: 700;
+    text-decoration: none;
+  }
+  .topbar-cta:hover { background: var(--green-500); border-color: var(--green-500); text-decoration: none; }
+
+  /* ===== CONTAINERS ===== */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+  .container-narrow { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+
+  /* ===== INDEX PAGE ===== */
+  .idx-hero {
+    text-align: center; padding: 56px 24px 32px;
+  }
+  .idx-hero h1 {
+    font-family: "Marcellus", serif; font-weight: 400;
+    font-size: clamp(28px, 4vw, 40px);
+    color: var(--ink); margin: 0 0 12px; line-height: 1.15;
+  }
+  .idx-hero p {
+    color: var(--ink-2); font-size: 16px; margin: 0 auto; max-width: 620px;
+  }
+  .idx-grid {
+    display: grid; gap: 18px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    margin: 24px 0 56px;
+  }
+  .idx-card {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px 22px;
+    transition: transform .15s, box-shadow .15s, border-color .15s;
+    display: flex; flex-direction: column; gap: 8px;
+    text-decoration: none; color: inherit;
+  }
+  .idx-card:hover {
+    transform: translateY(-3px); border-color: var(--green-500);
+    box-shadow: var(--shadow-md); text-decoration: none;
+  }
+  .idx-card-icon { font-size: 30px; line-height: 1; }
+  .idx-card h3 {
+    font-family: "Inter", sans-serif; font-weight: 700; font-size: 18px;
+    color: var(--ink); margin: 4px 0 0;
+  }
+  .idx-card p {
+    color: var(--ink-2); font-size: 14px; margin: 0; line-height: 1.5; flex: 1;
+  }
+  .idx-card-cta {
+    color: var(--green-800); font-weight: 700; font-size: 14px; margin-top: 8px;
+  }
+
+  /* ===== ARTICLE PAGE ===== */
+  .art-back {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: transparent; border: 1px solid var(--border); border-radius: 999px;
+    padding: 6px 14px; font-size: 13px; font-weight: 600; color: var(--ink);
+    cursor: pointer; transition: all .15s;
+    margin: 24px 0 12px;
+    text-decoration: none;
+  }
+  .art-back:hover { background: #fff; border-color: var(--green-500); color: var(--green-800); text-decoration: none; }
+
+  .art-breadcrumb {
+    color: var(--muted); font-size: 13px; margin: 4px 0 14px;
+  }
+  .art-breadcrumb a { color: var(--muted); }
+  .art-breadcrumb a:hover { color: var(--green-800); }
+
+  .art-header {
+    margin: 0 0 24px; padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .art-header h1 {
+    font-family: "Marcellus", serif; font-weight: 400;
+    font-size: clamp(28px, 4.6vw, 44px);
+    color: var(--ink); margin: 0 0 8px; line-height: 1.15;
+  }
+  .art-header .art-icon { font-size: 36px; line-height: 1; margin-bottom: 8px; }
+  .art-subtitle {
+    font-size: 17px; color: var(--ink-2); margin: 0 0 12px; line-height: 1.5;
+  }
+  .art-meta {
+    font-size: 13px; color: var(--muted);
+  }
+
+  .art-toc {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 22px;
+    margin: 0 0 32px;
+  }
+  .art-toc-label {
+    font-size: 11px; font-weight: 700; color: var(--ink-2);
+    letter-spacing: 0.06em; text-transform: uppercase;
+    margin: 0 0 8px;
+  }
+  .art-toc ul { list-style: none; padding: 0; margin: 0; }
+  .art-toc li {
+    font-size: 14.5px; padding: 4px 0;
+  }
+  .art-toc a { color: var(--ink); text-decoration: none; }
+  .art-toc a:hover { color: var(--green-800); text-decoration: underline; }
+  .art-toc a::before { content: "›  "; color: var(--green-500); font-weight: 700; }
+
+  .art-body section {
+    margin: 0 0 36px;
+    scroll-margin-top: 80px;
+  }
+  .art-body h2 {
+    font-family: "Inter", sans-serif; font-weight: 700;
+    font-size: clamp(20px, 2.6vw, 24px);
+    color: var(--ink); margin: 0 0 12px; line-height: 1.3;
+  }
+  .art-body p {
+    font-size: 16px; line-height: 1.65; color: var(--ink); margin: 0 0 12px;
+  }
+  .art-body ul {
+    margin: 8px 0 16px; padding-left: 22px;
+  }
+  .art-body li {
+    font-size: 16px; line-height: 1.6; color: var(--ink); margin-bottom: 6px;
+  }
+  .art-body li::marker { color: var(--green-500); }
+  .art-body strong { color: var(--ink); font-weight: 700; }
+
+  .art-cta {
+    margin: 40px 0 24px; padding: 28px 26px;
+    background: linear-gradient(180deg, #fff 0%, var(--green-50) 100%);
+    border: 1px solid var(--green-500); border-radius: var(--radius);
+    text-align: center;
+    box-shadow: var(--shadow-md);
+  }
+  .art-cta h3 {
+    font-family: "Inter", sans-serif; font-size: 19px; font-weight: 700;
+    color: var(--ink); margin: 0 0 6px;
+  }
+  .art-cta p {
+    color: var(--ink-2); font-size: 14.5px; margin: 0 0 14px;
+  }
+  .art-cta-btn {
+    display: inline-block;
+    background: linear-gradient(180deg, var(--green-500) 0%, var(--green-800) 100%);
+    color: #fff; padding: 13px 26px; border-radius: 10px;
+    font-weight: 700; font-size: 15px; letter-spacing: 0.01em;
+    box-shadow: 0 4px 14px rgba(31, 122, 60, 0.22);
+    transition: transform .15s, box-shadow .15s;
+    text-decoration: none;
+  }
+  .art-cta-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(31, 122, 60, 0.32);
+    color: #fff; text-decoration: none;
+  }
+
+  .art-related {
+    margin: 32px 0; padding: 22px 24px;
+    background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+  }
+  .art-related-label {
+    font-size: 11px; font-weight: 700; color: var(--ink-2);
+    letter-spacing: 0.06em; text-transform: uppercase;
+    margin: 0 0 10px;
+  }
+  .art-related-pills {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .art-related-pill {
+    background: var(--cream); border: 1px solid var(--border); border-radius: 999px;
+    padding: 6px 14px; font-size: 13px; color: var(--ink); font-weight: 600;
+    text-decoration: none;
+  }
+  .art-related-pill:hover {
+    background: var(--green-100); border-color: var(--green-500);
+    color: var(--green-800); text-decoration: none;
+  }
+
+  .art-sources {
+    margin: 24px 0; padding-top: 14px;
+    border-top: 1px dashed var(--border);
+    font-size: 12.5px; color: var(--muted); line-height: 1.5;
+  }
+  .art-sources strong { color: var(--ink-2); }
+
+  .art-footer-spacer { height: 64px; }
+
+  @media (max-width: 600px) {
+    .topbar-inner { padding: 0 16px; }
+    .container, .container-narrow { padding: 0 16px; }
+    .idx-hero { padding: 36px 16px 24px; }
+    .art-toc { padding: 14px 18px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="/landscaping">
+      <span class="brand-mark">❦</span>
+      <span>McHenry County Landscapers</span>
+    </a>
+    <a class="topbar-cta" href="/landscaping#top">Get matched</a>
+  </div>
+</header>
+
+<main id="svcMain"></main>
+
+<script>
+(function () {
+  "use strict";
+
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  // ---------- Article data (hand-anchored to the spec) ----------
+  const ARTICLES = {
+    "lawn-care": {
+      slug: "lawn-care",
+      title: "Lawn care & maintenance",
+      icon: "🌿",
+      subtitle: "Everything you need to know about keeping a healthy lawn in Crystal Lake.",
+      read_minutes: 8,
+      last_updated: "May 2026",
+      match_category: "lawn_care",
+      sections: [
+        { id: "what-it-includes", h: "What lawn care includes",
+          html: "<ul><li>Mowing on a regular schedule (typically weekly during peak growing season)</li><li>Fertilization (3-5 applications per year for cool-season grasses common in Northern Illinois)</li><li>Aeration (mechanical core aeration, usually fall)</li><li>Overseeding (often paired with aeration)</li><li>Weed control (pre-emergent in spring, spot treatment as needed)</li><li>Edging along sidewalks, driveways, and beds</li></ul>" },
+        { id: "when-you-need-it", h: "When you need it",
+          html: "<p>For most homeowners with 1/4 acre or larger lots, ongoing service makes sense. For smaller lots, you can often handle most tasks yourself with the right equipment. Spring and fall require the most work; mid-summer is often \"just keep mowing.\"</p>" },
+        { id: "what-to-look-for", h: "What to look for in a pro",
+          html: "<ul><li>They explain <strong>why</strong> they're applying each fertilizer, not just \"it's what we do.\"</li><li>They use organic or low-chemical options if you ask.</li><li>They aerate in fall (not spring — fall aeration is correct for cool-season grass).</li><li>They don't bag clippings unless asked — mulching is healthier for the soil.</li></ul>" },
+        { id: "common-mistakes", h: "Common mistakes homeowners make",
+          html: "<ul><li>Mowing too short (under 3 inches stresses cool-season grass; aim for 3.5-4 inches)</li><li>Watering daily for short periods instead of deeply 2-3 times per week</li><li>Applying fertilizer too early in spring before grass has greened up</li><li>Using lawn-and-feed products that contain pre-emergents in established lawns (the pre-emergent doesn't matter at that point and you're just wasting product)</li></ul>" },
+        { id: "diy-vs-pro", h: "DIY vs. hire a pro",
+          html: "<p>DIY makes sense if you have the time, equipment, and interest. Hiring a pro makes sense if your lawn is over 1/2 acre, if you travel a lot, or if you want consistent results without the learning curve. Many homeowners do basic mowing themselves and hire out fertilization and aeration.</p>" },
+        { id: "zone-5a", h: "Crystal Lake / Zone 5a specifics",
+          html: "<ul><li>Northern Illinois soil is clay-heavy glacial till. This means slow drainage and the need for aeration to prevent compaction.</li><li>Cool-season grasses (Kentucky bluegrass, fescue mixtures) are standard.</li><li>Watering ordinances apply May 15-September 15 (odd/even by address).</li><li>First mow typically late April; last mow typically late October / early November.</li></ul>" },
+        { id: "questions-to-ask", h: "Questions to ask before hiring",
+          html: "<ul><li>What products do you use? Can I see the labels?</li><li>How do you handle clippings — mulch or bag?</li><li>Do you aerate in spring or fall? <em>(Correct answer: fall for cool-season grass)</em></li><li>What's your schedule reliability — what happens after rain?</li><li>Are you registered with the City of Crystal Lake?</li></ul>" },
+      ],
+      sources: "University of Illinois Extension Lawn Talk; Crystal Lake watering ordinance",
+    },
+
+    "landscape-design": {
+      slug: "landscape-design",
+      title: "Landscape design & install",
+      icon: "🎨",
+      subtitle: "Designing a yard you actually use, with plants suited to Northern Illinois clay.",
+      read_minutes: 7,
+      last_updated: "May 2026",
+      match_category: "design_install",
+      sections: [
+        { id: "what-it-includes", h: "What landscape design includes",
+          html: "<ul><li>Site assessment (sun, soil, drainage, existing plants, sightlines from house)</li><li>Design plan (overhead view drawing, plant lists, hardscape elements)</li><li>Installation (bed preparation, planting, mulching, irrigation if included)</li><li>Often includes a 1-year plant warranty</li></ul>" },
+        { id: "when-you-need-it", h: "When you need it",
+          html: "<ul><li>Before a major yard renovation</li><li>When existing beds are tired and you want a fresh start</li><li>When you're moving into a new construction home with a bare lot</li></ul>" },
+        { id: "what-to-look-for", h: "What to look for in a pro",
+          html: "<ul><li>They ask about your lifestyle and how you use the yard, not just what plants you like.</li><li>They include a site assessment, not just \"what do you want planted?\"</li><li>They use Zone 5a appropriate plants (or explain why if specifying borderline ones).</li><li>They provide a written plan you can keep.</li></ul>" },
+        { id: "common-mistakes", h: "Common mistakes homeowners make",
+          html: "<ul><li>Buying plants without measuring (mature size matters more than you think)</li><li>Planting in fall too late (after late October, plants don't establish well in NIL)</li><li>Skipping the soil prep step (\"we'll just plant in this clay\")</li><li>Choosing all annuals (they need replacing every year — perennials and shrubs are less work over time)</li><li>Forgetting about how it looks in winter (deciduous-only plantings look bare 5 months)</li></ul>" },
+        { id: "diy-vs-pro", h: "DIY vs. hire a pro",
+          html: "<p>Small bed projects (10×10 ft, 5-8 plants) are often DIY-able. Whole-yard makeovers usually warrant a pro for the design at minimum. You can hire a designer to plan and DIY the install yourself.</p>" },
+        { id: "zone-5a", h: "Crystal Lake / Zone 5a specifics",
+          html: "<ul><li>Best planting windows: late April-May (after last frost) or September-early October.</li><li>Native plants often outperform non-natives in clay soil and freeze-thaw cycles.</li><li>Frost-free window is roughly May 15 - October 5.</li><li>Avoid invasives: buckthorn, Japanese barberry, burning bush, callery pear.</li></ul>" },
+        { id: "questions-to-ask", h: "Questions to ask before hiring",
+          html: "<ul><li>Can I see your portfolio of installs in McHenry County?</li><li>What's your plant warranty?</li><li>Do you provide a written design plan?</li><li>How do you handle plants that fail in year 1?</li><li>Are you a member of ILCA (Illinois Landscape Contractors Association)?</li></ul>" },
+      ],
+      sources: "USDA Plant Hardiness Zone Map; Illinois Native Plant Society",
+    },
+
+    "hardscaping": {
+      slug: "hardscaping",
+      title: "Hardscaping",
+      icon: "🪨",
+      subtitle: "Patios, walls, and walkways built to survive Northern Illinois freeze-thaw.",
+      read_minutes: 8,
+      last_updated: "May 2026",
+      match_category: "hardscape",
+      sections: [
+        { id: "what-it-includes", h: "What hardscaping includes",
+          html: "<ul><li>Patios (paver, concrete, natural stone)</li><li>Walkways and driveways</li><li>Retaining walls</li><li>Outdoor kitchens and fire pits</li><li>Steps, edging, decorative stone</li></ul>" },
+        { id: "when-you-need-it", h: "When you need it",
+          html: "<ul><li>Adding usable outdoor space (most common driver)</li><li>Solving drainage problems (retaining walls, French drains)</li><li>Replacing a deteriorating concrete patio or walkway</li><li>Property value improvements</li></ul>" },
+        { id: "what-to-look-for", h: "What to look for in a pro",
+          html: "<ul><li>They mention <strong>base preparation</strong>. (For pavers, 4-6 inches of compacted gravel base + sand bed is standard. Anything less in Northern Illinois will heave.)</li><li>They reference Illinois freeze-thaw cycles.</li><li>They pull permits when needed (patios over 144 sq ft typically require a Crystal Lake permit; the contractor should handle this, not you).</li><li>They call 811 before digging (this is law in Illinois — no exceptions).</li></ul>" },
+        { id: "common-mistakes", h: "Common mistakes homeowners make",
+          html: "<ul><li>Skimping on base prep (patios fail in 2-3 winters without proper base)</li><li>Not addressing drainage (water pooling causes shifting and weed growth)</li><li>Choosing pavers without considering snow removal (smooth pavers are easier to shovel)</li><li>Forgetting about edging restraints (loose edge = creeping pavers over time)</li></ul>" },
+        { id: "diy-vs-pro", h: "DIY vs. hire a pro",
+          html: "<p>A small (under 100 sq ft) patio with simple geometry is DIY-able if you're handy. Anything larger, anything with curves, or anything with a slope generally warrants a pro. Retaining walls over 4 feet require engineering and a permit — always hire.</p>" },
+        { id: "zone-5a", h: "Crystal Lake / Zone 5a specifics",
+          html: "<ul><li>Freeze-thaw cycles are aggressive (~30 cycles per winter). Base prep matters more here than in milder climates.</li><li>Soil is clay-heavy and holds water; drainage is a constant consideration.</li><li>Permit requirements: patios over 144 sq ft, any structure over 6 feet, any structure within setback distance of property lines.</li><li>Always call 811 (JULIE in Illinois) before any digging.</li></ul>" },
+        { id: "questions-to-ask", h: "Questions to ask before hiring",
+          html: "<ul><li>What base depth do you build to? <em>(4 inches minimum; 6 inches better)</em></li><li>What's your warranty on workmanship? <em>(2+ years is standard)</em></li><li>Will you pull the permit? <em>(yes is the right answer; \"you should pull it\" is not)</em></li><li>Will you call 811? <em>(yes; required)</em></li><li>Have you done patios in McHenry County specifically?</li></ul>" },
+      ],
+      sources: "ICPI (Interlocking Concrete Pavement Institute) installation guidelines; Crystal Lake building permit requirements; JULIE 811 Illinois",
+    },
+
+    "tree-shrub-care": {
+      slug: "tree-shrub-care",
+      title: "Tree & shrub care",
+      icon: "🌳",
+      subtitle: "Pruning, removal, and disease management — when an arborist matters.",
+      read_minutes: 8,
+      last_updated: "May 2026",
+      match_category: "tree_shrub",
+      sections: [
+        { id: "what-it-includes", h: "What tree & shrub care includes",
+          html: "<ul><li>Pruning (timing varies by species)</li><li>Disease and pest treatment (emerald ash borer, oak wilt, fungal diseases)</li><li>Removal of dead, dying, or hazardous trees</li><li>New tree and shrub planting</li><li>Cabling and bracing for structural issues</li></ul>" },
+        { id: "when-you-need-it", h: "When you need it",
+          html: "<ul><li>Annual or biannual pruning maintains plant health and form</li><li>After storm damage</li><li>When you notice signs of disease (dieback, unusual leaf color, bark damage)</li><li>Before construction work that could damage roots</li></ul>" },
+        { id: "what-to-look-for", h: "What to look for in a pro",
+          html: "<ul><li>They are an <strong>ISA Certified Arborist</strong> (or have one on staff).</li><li>They carry a $1M+ liability insurance policy. Tree work is high-risk.</li><li>They explain <strong>why</strong> they're recommending pruning or removal, with evidence.</li><li>They never recommend \"topping\" a tree (this is malpractice; reputable arborists won't do it).</li></ul>" },
+        { id: "common-mistakes", h: "Common mistakes homeowners make",
+          html: "<ul><li>Ignoring signs of emerald ash borer until the tree is past saving</li><li>Pruning oaks during the growing season (oak wilt risk; prune in winter only)</li><li>Removing healthy lower branches \"to clean up the look\" (this stresses trees)</li><li>Hiring uninsured tree services (one mistake = your homeowner's problem)</li><li>Letting storm damage sit untreated (creates future hazard)</li></ul>" },
+        { id: "diy-vs-pro", h: "DIY vs. hire a pro",
+          html: "<p>Small shrub pruning is DIY. Anything requiring a ladder, anything near power lines, anything over ~15 feet: hire a pro. Diagnosis of tree health issues: hire an arborist.</p>" },
+        { id: "zone-5a", h: "Crystal Lake / Zone 5a specifics",
+          html: "<ul><li>Emerald ash borer has killed most untreated ash trees in the area. If you have ash trees, get them assessed.</li><li>Oak wilt is established in NIL. Never prune red oaks April-July.</li><li>Buckthorn is invasive and aggressive — many local pros offer buckthorn removal as a specific service.</li><li>Local native trees that thrive: swamp white oak, serviceberry, eastern redbud, river birch.</li></ul>" },
+        { id: "questions-to-ask", h: "Questions to ask before hiring",
+          html: "<ul><li>Are you ISA Certified? Can I see your certification number?</li><li>What's your insurance coverage?</li><li>Do you climb or use a bucket truck? <em>(Both are valid; experience matters.)</em></li><li>Will you \"top\" my tree? <em>(Correct answer: no — they should refuse and explain why)</em></li><li>Do you handle clean-up and haul-away?</li></ul>" },
+      ],
+      sources: "International Society of Arboriculture; Illinois Department of Agriculture EAB program; Morton Arboretum tree species recommendations",
+    },
+
+    "irrigation-drainage": {
+      slug: "irrigation-drainage",
+      title: "Irrigation & drainage",
+      icon: "💧",
+      subtitle: "Sprinklers, drip lines, French drains, and yard grading for Northern Illinois clay.",
+      read_minutes: 7,
+      last_updated: "May 2026",
+      match_category: "irrigation",
+      sections: [
+        { id: "what-it-includes", h: "What irrigation & drainage includes",
+          html: "<ul><li>Sprinkler system installation</li><li>Drip irrigation for beds</li><li>Smart controller installation (Wi-Fi-enabled, weather-aware)</li><li>French drains for water management</li><li>Yard grading to redirect water away from foundations</li><li>Backflow preventer installation (required by Crystal Lake)</li></ul>" },
+        { id: "when-you-need-it", h: "When you need it",
+          html: "<ul><li>Lawn or beds suffering from inconsistent watering</li><li>Water pooling in yard or near foundation</li><li>Ongoing wet basement (often a yard-grading issue)</li><li>Wanting to reduce manual watering effort</li></ul>" },
+        { id: "what-to-look-for", h: "What to look for in a pro",
+          html: "<ul><li>They do a site assessment, not just \"we'll install zones.\"</li><li>They install a backflow preventer (required by IL plumbing code).</li><li>They include a winterization service or explain how to do it yourself.</li><li>They size the system to your water pressure and meter (oversized = poor coverage).</li></ul>" },
+        { id: "common-mistakes", h: "Common mistakes homeowners make",
+          html: "<ul><li>Setting the controller and forgetting it (smart controllers solve this)</li><li>Watering daily for 10 minutes (lawns need deep, infrequent watering)</li><li>Skipping winterization (Northern Illinois freezes will crack pipes)</li><li>Installing too many heads per zone (pressure drops, coverage suffers)</li><li>Ignoring the watering ordinance schedule</li></ul>" },
+        { id: "diy-vs-pro", h: "DIY vs. hire a pro",
+          html: "<p>Drip irrigation in beds: DIY-able with kits from any hardware store. Full lawn sprinkler systems: hire (it involves digging, plumbing, electrical). French drains and yard grading: hire — the math on slope and drainage is real.</p>" },
+        { id: "zone-5a", h: "Crystal Lake / Zone 5a specifics",
+          html: "<ul><li>Watering ordinance: odd/even days from May 15-September 15. Morning and evening only.</li><li>Winterization (blowing out the system) is required — usually mid-October to early November.</li><li>Crystal Lake requires a permit and licensed plumber for backflow preventer installation.</li><li>Spring start-up usually mid-April to early May.</li></ul>" },
+        { id: "questions-to-ask", h: "Questions to ask before hiring",
+          html: "<ul><li>Do you install backflow preventers? Do you pull the permit?</li><li>What's your warranty on heads, valves, and labor?</li><li>Do you offer winterization service? What's the schedule?</li><li>Can I see the design plan before installation?</li><li>Are you a licensed plumber (required for backflow preventer)?</li></ul>" },
+      ],
+      sources: "City of Crystal Lake watering ordinance; Illinois plumbing code Section 890.1140 (backflow prevention)",
+    },
+
+    "seasonal-cleanup": {
+      slug: "seasonal-cleanup",
+      title: "Seasonal cleanup",
+      icon: "🍂",
+      subtitle: "Spring & fall cleanups and snow management — when to book and what's included.",
+      read_minutes: 7,
+      last_updated: "May 2026",
+      match_category: "seasonal",
+      sections: [
+        { id: "what-it-includes", h: "What seasonal cleanup includes",
+          html: "<ul><li>Spring cleanup (debris removal, bed clearing, edging refresh, first-cut prep)</li><li>Fall cleanup (leaf removal, perennial cutback, gutter clearing, beds prepared for winter)</li><li>Snow and ice management (plowing, shoveling, salting)</li><li>Winter storm preparation</li><li>Annual mulch refresh (typically spring)</li></ul>" },
+        { id: "when-you-need-it", h: "When you need it",
+          html: "<ul><li>Most homeowners hire seasonal cleanup at minimum, even if they handle weekly maintenance themselves</li><li>Especially valuable for older homeowners or homeowners who travel</li><li>Snow management contracts typically run November-March</li></ul>" },
+        { id: "what-to-look-for", h: "What to look for in a pro",
+          html: "<ul><li>They specify what's included in spring vs. fall cleanup (these are different).</li><li>They offer contract pricing OR per-visit pricing — both valid.</li><li>For snow removal, they have backup equipment (one truck breaks = service stops).</li><li>They use ice melt safe for pets and plants (calcium chloride, not rock salt for beds).</li></ul>" },
+        { id: "common-mistakes", h: "Common mistakes homeowners make",
+          html: "<ul><li>Removing fallen leaves entirely (some leaf litter helps soil; over-removal harms)</li><li>Cutting back perennials too early in fall (leave seed heads for birds and winter interest)</li><li>Using rock salt on driveways adjacent to lawn (kills grass at edges)</li><li>Not signing a snow contract until November (good services book up by October)</li><li>Forgetting to cover/protect tender plants before first frost</li></ul>" },
+        { id: "diy-vs-pro", h: "DIY vs. hire a pro",
+          html: "<p>Spring cleanup: DIY-able if you have the equipment and a free weekend. Fall cleanup: harder because of leaf volume; consider hiring. Snow management: depends on your driveway size and physical ability.</p>" },
+        { id: "zone-5a", h: "Crystal Lake / Zone 5a specifics",
+          html: "<ul><li>First frost typically early-to-mid October.</li><li>Last frost typically early-to-mid May.</li><li>Winter storms: Crystal Lake gets ~36 inches of snow per year on average, with 2-3 major storms (6+ inches) typical.</li><li>Crystal Lake has snow ordinances about pushing snow into roadways (don't do it).</li></ul>" },
+        { id: "questions-to-ask", h: "Questions to ask before hiring",
+          html: "<ul><li>What's included in your spring vs. fall cleanup packages?</li><li>For snow: what's your trigger (snow depth that activates service)?</li><li>Do you have backup equipment / drivers for storms?</li><li>What ice melt do you use, and is it safe for pets?</li><li>When do contracts need to be signed for the season?</li></ul>" },
+      ],
+      sources: "National Weather Service Chicago snow climatology; City of Crystal Lake snow removal ordinance",
+    },
+  };
+
+  const ARTICLE_ORDER = [
+    "lawn-care", "landscape-design", "hardscaping",
+    "tree-shrub-care", "irrigation-drainage", "seasonal-cleanup",
+  ];
+
+  function shortDescription(slug) {
+    return ({
+      "lawn-care":           "Mowing, fertilization, aeration, weed control, seeding.",
+      "landscape-design":    "Yard makeovers, planting beds, design plans, ornamentals.",
+      "hardscaping":         "Patios, walkways, retaining walls, fire pits, outdoor kitchens.",
+      "tree-shrub-care":     "Pruning, removal, disease and pest management, planting.",
+      "irrigation-drainage": "Sprinkler systems, smart controllers, French drains, grading.",
+      "seasonal-cleanup":    "Spring and fall cleanups, leaf removal, snow management.",
+    })[slug] || "";
+  }
+
+  function setMeta(name, content) {
+    let el = document.querySelector(`meta[name="${name}"]`);
+    if (!el) { el = document.createElement("meta"); el.setAttribute("name", name); document.head.appendChild(el); }
+    el.setAttribute("content", content);
+  }
+  function setOg(prop, content) {
+    let el = document.querySelector(`meta[property="${prop}"]`);
+    if (!el) { el = document.createElement("meta"); el.setAttribute("property", prop); document.head.appendChild(el); }
+    el.setAttribute("content", content);
+  }
+
+  // ---------- Render: index page ----------
+  function renderIndex() {
+    document.title = "Landscaping services in Crystal Lake | McHenry County Landscapers";
+    setMeta("description", "Plain-English guides for the six core landscaping services in Crystal Lake — what each one involves, what to look for in a pro, common mistakes, and DIY tips.");
+
+    const cards = ARTICLE_ORDER.map((slug) => {
+      const a = ARTICLES[slug];
+      return `
+        <a class="idx-card" href="/landscaping/services/${esc(slug)}">
+          <div class="idx-card-icon" aria-hidden="true">${esc(a.icon)}</div>
+          <h3>${esc(a.title)}</h3>
+          <p>${esc(shortDescription(slug))}</p>
+          <span class="idx-card-cta">Read the guide →</span>
+        </a>`;
+    }).join("");
+
+    return `
+      <div class="container">
+        <div class="idx-hero">
+          <h1>Landscaping services in Crystal Lake</h1>
+          <p>Read about what each service involves, what to look for in a pro, and when to hire vs. handle it yourself. Plain English, regional specifics, no marketing fluff.</p>
+        </div>
+        <div class="idx-grid">${cards}</div>
+      </div>`;
+  }
+
+  // ---------- Render: single article ----------
+  function renderArticle(slug) {
+    const a = ARTICLES[slug];
+    if (!a) return renderNotFound();
+
+    document.title = `${a.title} in Crystal Lake | McHenry County Landscapers`;
+    setMeta("description", `${a.subtitle} What to look for, common mistakes, DIY vs. hire a pro, and questions to ask before booking.`);
+    setOg("og:title",       `${a.title} in Crystal Lake`);
+    setOg("og:description", a.subtitle);
+    setOg("og:type",        "article");
+
+    // Article schema for SEO
+    const schemaScript = document.createElement("script");
+    schemaScript.type = "application/ld+json";
+    schemaScript.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": a.title + " in Crystal Lake",
+      "description": a.subtitle,
+      "datePublished": "2026-05-01",
+      "dateModified":  "2026-05-08",
+      "publisher": {
+        "@type": "Organization",
+        "name": "McHenry County Landscapers",
+      },
+    });
+    document.head.appendChild(schemaScript);
+
+    const toc = `
+      <nav class="art-toc" aria-label="In this guide">
+        <p class="art-toc-label">In this guide</p>
+        <ul>
+          ${a.sections.map((s) => `<li><a href="#${esc(s.id)}">${esc(s.h)}</a></li>`).join("")}
+        </ul>
+      </nav>`;
+
+    const body = a.sections.map((s) =>
+      `<section id="${esc(s.id)}"><h2>${esc(s.h)}</h2>${s.html}</section>`
+    ).join("");
+
+    const otherSlugs = ARTICLE_ORDER.filter((x) => x !== slug);
+    const related = `
+      <div class="art-related">
+        <p class="art-related-label">Other landscaping services</p>
+        <div class="art-related-pills">
+          ${otherSlugs.map((s) => `<a class="art-related-pill" href="/landscaping/services/${esc(s)}">${esc(ARTICLES[s].icon)} ${esc(ARTICLES[s].title)}</a>`).join("")}
+        </div>
+      </div>`;
+
+    const ctaQueries = {
+      lawn_care:      "lawn care",
+      design_install: "landscape design",
+      hardscape:      "hardscaping",
+      tree_shrub:     "tree work",
+      irrigation:     "irrigation and drainage",
+      seasonal:       "seasonal cleanup",
+    };
+    const ctaQuery = ctaQueries[a.match_category] || "landscaping";
+    const cta = `
+      <div class="art-cta">
+        <h3>Ready to find a ${esc(a.title.toLowerCase())} pro?</h3>
+        <p>We'll match you with up to three local pros in McHenry County. Free, no commitment.</p>
+        <a class="art-cta-btn" href="/landscaping?q=${encodeURIComponent(ctaQuery)}">Get matched in 30 seconds →</a>
+      </div>`;
+
+    const sources = a.sources
+      ? `<p class="art-sources"><strong>Sources:</strong> ${esc(a.sources)}</p>` : "";
+
+    return `
+      <div class="container container-narrow">
+        <a class="art-back" href="/landscaping/services">← Back to services</a>
+        <p class="art-breadcrumb"><a href="/landscaping">Home</a> / <a href="/landscaping/services">Services</a> / ${esc(a.title)}</p>
+
+        <header class="art-header">
+          <div class="art-icon" aria-hidden="true">${esc(a.icon)}</div>
+          <h1>${esc(a.title)}</h1>
+          <p class="art-subtitle">${esc(a.subtitle)}</p>
+          <p class="art-meta">${esc(a.read_minutes)}-min read · Updated ${esc(a.last_updated)}</p>
+        </header>
+
+        ${toc}
+
+        <article class="art-body">${body}</article>
+
+        ${cta}
+        ${related}
+        ${sources}
+
+        <div class="art-footer-spacer"></div>
+      </div>`;
+  }
+
+  function renderNotFound() {
+    return `
+      <div class="container container-narrow" style="padding: 64px 24px; text-align: center;">
+        <h1 style="font-family: 'Marcellus', serif; font-weight: 400; font-size: 32px;">Article not found</h1>
+        <p>That guide doesn't exist. Try the <a href="/landscaping/services">services index</a>.</p>
+      </div>`;
+  }
+
+  // ---------- Router ----------
+  function route() {
+    const main = document.getElementById("svcMain");
+    const path = window.location.pathname.replace(/\/+$/, "");
+    // Match /landscaping/services or /landscape/services (root)
+    if (/^\/(landscaping|landscape)\/services$/.test(path)) {
+      main.innerHTML = renderIndex();
+      return;
+    }
+    // Match /landscaping/services/<slug>
+    const m = path.match(/^\/(?:landscaping|landscape)\/services\/([a-z0-9-]+)$/);
+    if (m) {
+      main.innerHTML = renderArticle(m[1]);
+      window.scrollTo(0, 0);
+      return;
+    }
+    main.innerHTML = renderNotFound();
+  }
+
+  document.addEventListener("DOMContentLoaded", route);
+})();
+</script>
+
+</body>
+</html>

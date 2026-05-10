@@ -118,20 +118,106 @@ export const ACTIVITY_CATALOG = [
   // time (see server/sequences/steps.py:execute_notify).
   {
     id: "notify", kind: "action",
-    icon: "🔔", title: "Notify",
-    cardSub: "Send a text, email, or both",
-    description: "Send your customer a text, an email, or both at once.",
-    trigger: "SEND A NOTIFICATION",
-    defaultMode: "both",
-    defaultSubject: "Quick update for you",
-    defaultBody: "Hi {first_name}, quick note from {owner_name}.",
+    icon: "🔔", title: "Notify Me",
+    cardSub: "Ping you about the lead",
+    description: "Sends a text, an email, a phone call — or any combination — to you (and any extra phones / emails you add) so you know a new lead came in.",
+    trigger: "NOTIFY ME",
+    // Multi-select: pick one or more of "sms", "email", "call". The
+    // drawer renders the matching message editors as you toggle each.
+    // Default ALL channels checked on first add so the user discovers
+    // every option; they can uncheck to narrow down.
+    defaultModes: ["sms", "email", "call"],
+    defaultMode: "both",                 // legacy single-string mode for back-compat
+    // Default OFF for include_customer. Notify-Me is internal lead-
+    // routing — the homeowner doesn't need a copy of "here's the
+    // landscaper's specialties / certifications / AI summary." Operator
+    // can flip it back on via the new drawer toggle if they want.
+    defaultIncludeCustomer: false,
+    defaultSubject: "🌿 New lead: {name} → picked {landscape_name}",
+    defaultBody:
+      "A new homeowner just submitted on McHenry County Landscapers.\n\n" +
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+      "CUSTOMER (the homeowner)\n" +
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+      "Name:     {name}\n" +
+      "Email:    {email}\n" +
+      "Phone:    {phone}\n" +
+      "Wants by: {date_needed}\n" +
+      "Project:  {project_description}\n\n" +
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+      "LANDSCAPER THEY PICKED\n" +
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+      "Business:         {landscape_name}\n" +
+      "Phone:            {landscape_phonenumber}\n" +
+      "Email:            {landscape_email}\n" +
+      "Website:          {landscape_website}\n" +
+      "Address:          {landscape_address}\n" +
+      "City:             {landscape_city}\n" +
+      "Rating:           {landscape_rating} ({landscape_reviews} reviews)\n" +
+      "Years in biz:     {landscape_years_in_business}\n" +
+      "Specialties:      {landscape_specialties}\n" +
+      "Services offered: {landscape_services_offered}\n" +
+      "Service area:     {landscape_service_area}\n" +
+      "Licensed:         {landscape_licensed}\n" +
+      "Insured:          {landscape_insured}\n" +
+      "Certifications:   {landscape_certifications}\n" +
+      "Warranty:         {landscape_warranty}\n" +
+      "Google Maps:      {landscape_google_maps_uri}\n\n" +
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+      "AI summary of this landscaper\n" +
+      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+      "{landscape_summary}\n\n" +
+      "—\n" +
+      "Forward the lead to the landscaper, or reach the customer directly at the phone/email above.",
     canBeSms: true,
     canBeBoth: true,
+    canBeCall: true,
+    defaultSpokenMessage: "New homeowner lead from {name}. They picked {landscape_name}. Project: {project_description}. Phone: {phone}.",
   },
-  // ── Legacy send_text / send_email (kept for existing saved flows) ───
-  // Hidden from the picker — `hidden: true` filters them out of the
-  // library + chooser. Saved flows that still reference these IDs keep
-  // rendering and firing as before.
+  // ── Reach out to the customer ────────────────────────────────────────
+  // Mirror image of Notify Me, but customer-facing. Multi-select
+  // sms/email/call channels; ALL go to the lead's contact info from
+  // their form submission. No "extras" because the audience is always
+  // the lead — there's no reason to CC the owner. The engine picks the
+  // values automatically from the lead record (lead.email for email,
+  // lead.phone for sms+call) so the user doesn't type anything beyond
+  // the message body.
+  {
+    id: "reach_out", kind: "action",
+    icon: "📤", title: "Reach out to customer",
+    cardSub: "Email, text, or call the lead",
+    description: "Reaches the customer who filled out the form. Pick any combination of email, text, and call — each one auto-uses the contact info they typed in.",
+    trigger: "REACH OUT TO CUSTOMER",
+    // Default email-only on first add. SMS / call are off so the user
+    // opts in deliberately (text needs Twilio, calls cost minutes).
+    defaultModes: ["email"],
+    defaultMode: "email",
+    defaultSubject: "Thanks for reaching out, {first_name}",
+    defaultBody: "Hi {first_name},\n\nThanks for getting in touch about {service_type}. I'll get back to you shortly with next steps.\n\n— {owner_name}",
+    defaultSpokenMessage: "Hi {first_name}, this is {owner_name} from {business_name} returning your form submission.",
+    canBeSms: true,
+    canBeBoth: true,
+    canBeCall: true,
+  },
+  // Standalone Email — sends to ANY address you pick. Distinct from
+  // `reach_out` (which always emails the lead): this one lets the
+  // user route the email to a custom address OR to a site_field
+  // value from the form payload. Useful for fan-out (forward the
+  // lead to a partner, route to the chosen vendor, etc.).
+  {
+    id: "send_email", kind: "action",
+    icon: "📧", title: "Email",
+    cardSub: "Email any address",
+    description: "Send an email to any address — you pick the recipient: the lead, an address you type in, or a value from a 'From your site' field.",
+    trigger: "SEND AN EMAIL",
+    defaultMode: "email",
+    defaultRecipientSource: "lead",  // "lead" | "custom" | "site_field"
+    defaultRecipientValue:  "",       // email address (custom) or site_field key
+    defaultSubject: "Thanks for reaching out, {first_name}",
+    defaultBody: "Hi {first_name},\n\nThanks for getting in touch about {service_type}. I'll get back to you shortly with next steps.\n\n— {owner_name}",
+    canBeSms: false,
+  },
+  // Legacy send_text — kept hidden so saved flows still render and run.
   {
     id: "send_text", kind: "action", hidden: true,
     icon: "💬", title: "Text",
@@ -140,17 +226,6 @@ export const ACTIVITY_CATALOG = [
     trigger: "SEND A TEXT",
     defaultMode: "sms",
     defaultBody: "Hey {first_name}, quick note from {owner_name}.",
-  },
-  {
-    id: "send_email", kind: "action", hidden: true,
-    icon: "📧", title: "Email",
-    cardSub: "Send a longer note",
-    description: "Email your customer a longer message.",
-    trigger: "SEND AN EMAIL",
-    defaultMode: "email",
-    defaultSubject: "Quick update for you",
-    defaultBody: "Hi {first_name},\n\n— {owner_name}",
-    canBeSms: true,
   },
 
   // ── Reply Widget ─────────────────────────────────────────────────────
@@ -185,15 +260,65 @@ export const ACTIVITY_CATALOG = [
   // The drawer UI is intentionally minimal in v1 — full editor wiring
   // (mode toggle, recording picker, business-hours toggle) ships in a
   // follow-up. The engine already handles every option here.
+  // Standalone Call — like Email above, but for outbound calls.
+  // Recipient picker: the lead, a custom phone number, or a value
+  // from a 'From your site' field. Engine bridges the call to your
+  // AI voice agent once the recipient picks up.
   {
     id: "call", kind: "action",
     icon: "📞", title: "Call",
-    cardSub: "Auto-call this lead",
-    description: "Calls the lead. Warm-transfer connects you when they pick up; voicemail mode drops a recorded message.",
+    cardSub: "Call any number",
+    description: "Place an outbound call via your connected Twilio number — pick the recipient: the lead, a number you type in, or a value from a 'From your site' field.",
     trigger: "PLACE A CALL",
-    defaultMode: "warm_transfer",        // or "voicemail_drop"
-    defaultRecordingId: "",              // when defaultMode=voicemail_drop
+    defaultMode: "warm_transfer",
+    defaultCallTarget: "lead",           // "lead" | "custom" | "site_field"
+    defaultPhoneNumber: "",              // custom phone number OR site_field key
+    defaultSpokenMessage: "Hi, this is your CRM. I have a quick update for you.",
+    defaultRecordingId: "",
     defaultRespectBusinessHours: true,
+  },
+
+  // ── Google Sheets logger ─────────────────────────────────────────────
+  // Appends a row to a Google Sheet for every lead that hits this
+  // step. Useful as a durable, sortable record that lives outside the
+  // CRM. The drawer collects:
+  //   - Sheet URL or ID
+  //   - Worksheet (tab) name (default "Sheet1")
+  //   - Columns: ordered list of {header, source} where source is a
+  //     {merge_tag} (e.g. {name}, {landscape_name}, {landscape_summary})
+  // Auto-writes the header row if the sheet's A1 is empty so the user
+  // doesn't have to set up the sheet manually. The service account
+  // backing the app needs Editor access on the target sheet.
+  {
+    id: "append_sheet", kind: "action",
+    icon: "📊", title: "Google Sheet",
+    cardSub: "Log lead to a sheet",
+    description: "Appends one row per lead to a Google Sheet. Map any form field or picked-pro variable to a column.",
+    trigger: "LOG TO SHEET",
+    defaultMode: "sheet",
+    defaultSpreadsheetId: "",
+    defaultWorksheetName: "Sheet1",
+    defaultEnsureHeaderRow: true,
+    // Default schema. Captures the lead + the picked-landscaper
+    // variables the contact form attaches. The drawer lets the
+    // operator add/remove/reorder columns.
+    defaultColumns: [
+      { header: "Timestamp",            source: "{timestamp}" },
+      { header: "Lead ID",              source: "{lead_id}" },
+      { header: "Customer name",        source: "{name}" },
+      { header: "Customer email",       source: "{email}" },
+      { header: "Customer phone",       source: "{phone}" },
+      { header: "When",                 source: "{date_needed}" },
+      { header: "Project description",  source: "{project_description}" },
+      { header: "Picked landscaper",    source: "{landscape_name}" },
+      { header: "Landscaper email",     source: "{landscape_email}" },
+      { header: "Landscaper phone",     source: "{landscape_phonenumber}" },
+      { header: "Landscaper website",   source: "{landscape_website}" },
+      { header: "Services",             source: "{landscape_services}" },
+      { header: "Specialties",          source: "{landscape_specialties}" },
+      { header: "Years in business",    source: "{landscape_years_in_business}" },
+      { header: "Summary",              source: "{landscape_summary}" },
+    ],
   },
 
   // ── Logic ────────────────────────────────────────────────────────────

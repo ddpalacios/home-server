@@ -1,0 +1,3233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Social Pipeline</title>
+<style>
+  /* ── Tokens (mirror the rest of the dashboard) ─────────────── */
+  :root {
+    --text:        #0f172a;
+    --text-2:      #475569;
+    --text-3:      #94a3b8;
+    --brand:       #2563eb;
+    --brand-2:     #06b6d4;
+    --success:     #16a34a;
+    --error:       #dc2626;
+    --border:      #e5e7eb;
+    --soft:        #f8fafc;
+    --radius:      12px;
+    --radius-sm:   8px;
+    --radius-pill: 999px;
+    --shadow-sm:   0 1px 2px rgba(15, 23, 42, .04);
+    --shadow-md:   0 8px 24px rgba(15, 23, 42, .08);
+
+    --bronze-bg:     #fffbf5;
+    --bronze-border: #f3e3cb;
+    --bronze-accent: #b8763a;
+    --bronze-chip:   #fde9c8;
+    --bronze-text:   #92400e;
+
+    --silver-bg:     #f8fafc;
+    --silver-border: #e2e8f0;
+    --silver-accent: #64748b;
+    --silver-chip:   #e2e8f0;
+    --silver-text:   #334155;
+
+    --gold-bg:     #fffaeb;
+    --gold-border: #fde68a;
+    --gold-accent: #d97706;
+    --gold-chip:   #fef3c7;
+    --gold-text:   #92400e;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI",
+                   Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    background: #ffffff;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; cursor: pointer; }
+
+  /* ── Page chrome ───────────────────────────────────────────── */
+  .sp-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    background: #ffffff;
+    position: sticky; top: 0; z-index: 5;
+  }
+  .sp-title-block h1 {
+    font-size: 22px; font-weight: 700; margin: 0; letter-spacing: -.01em;
+  }
+  .sp-title-block p {
+    font-size: 13px; color: var(--text-2); margin: 4px 0 0;
+  }
+  .sp-generate-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
+    color: #ffffff; border: 0; padding: 10px 18px;
+    border-radius: var(--radius-pill); font-weight: 600; font-size: 14px;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, .25);
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .sp-generate-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, .30);
+  }
+  .sp-generate-btn:active { transform: translateY(0); }
+  .sp-generate-btn:disabled {
+    opacity: .55; cursor: not-allowed; transform: none; box-shadow: none;
+  }
+
+  /* ── Body grid ─────────────────────────────────────────────── */
+  .sp-body { padding: 22px 24px 80px; max-width: 1500px; margin: 0 auto; }
+  .sp-lanes {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px;
+    min-height: calc(100vh - 220px);
+  }
+  @media (max-width: 1100px) {
+    .sp-lanes { grid-template-columns: 1fr; }
+  }
+
+  .sp-lane {
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: #ffffff;
+    display: flex; flex-direction: column;
+    min-height: 480px;
+  }
+  .sp-lane[data-lane="bronze"] { background: var(--bronze-bg); border-color: var(--bronze-border); }
+  .sp-lane[data-lane="silver"] { background: var(--silver-bg); border-color: var(--silver-border); }
+  .sp-lane[data-lane="gold"]   { background: var(--gold-bg);   border-color: var(--gold-border); }
+
+  .sp-lane-head {
+    padding: 14px 16px; border-bottom: 1px solid rgba(15, 23, 42, .05);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 8px;
+  }
+  .sp-lane-title {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-weight: 700; font-size: 15px;
+  }
+  .sp-lane-title .sp-emoji { font-size: 18px; }
+  .sp-lane-meta {
+    font-size: 12px; color: var(--text-2);
+  }
+  .sp-lane-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: var(--radius-pill);
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .sp-lane[data-lane="bronze"] .sp-lane-chip { background: var(--bronze-chip); color: var(--bronze-text); }
+  .sp-lane[data-lane="silver"] .sp-lane-chip { background: var(--silver-chip); color: var(--silver-text); }
+  .sp-lane[data-lane="gold"]   .sp-lane-chip { background: var(--gold-chip);   color: var(--gold-text); }
+
+  .sp-lane-body {
+    flex: 1; padding: 14px 14px 18px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+
+  /* ── Card ──────────────────────────────────────────────────── */
+  .sp-card {
+    background: #ffffff; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px 14px;
+    box-shadow: var(--shadow-sm);
+    transition: transform .14s ease, box-shadow .14s ease;
+    animation: sp-card-land .32s cubic-bezier(.2, .8, .2, 1);
+    will-change: transform;
+  }
+  .sp-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  @keyframes sp-card-land {
+    from { opacity: 0; transform: translateY(-8px) scale(.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .sp-card-row {
+    display: flex; gap: 8px; padding: 6px 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .sp-card-row:last-of-type { border-bottom: 0; }
+  .sp-card-row .sp-row-emoji {
+    flex: 0 0 24px; font-size: 16px; line-height: 1.4;
+    text-align: center;
+  }
+  .sp-card-row .sp-row-text {
+    flex: 1; font-size: 13px; color: var(--text);
+    overflow-wrap: anywhere;
+  }
+  .sp-card-row.sp-row-hook .sp-row-text { font-weight: 600; }
+  .sp-card-row.sp-row-cta .sp-row-text {
+    font-style: italic; color: var(--text-2);
+  }
+  .sp-card .sp-platform-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: var(--radius-pill);
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .05em; margin-bottom: 6px;
+  }
+  .sp-platform-pill[data-platform="linkedin"] {
+    background: #dbeafe; color: #1e40af;
+  }
+  .sp-platform-pill[data-platform="instagram"] {
+    background: #fce7f3; color: #9f1239;
+  }
+
+  .sp-card-actions {
+    display: flex; gap: 8px; margin-top: 10px;
+    justify-content: flex-end;
+  }
+  .sp-btn {
+    border: 1px solid var(--border); background: #ffffff;
+    border-radius: var(--radius-sm); padding: 6px 12px;
+    font-size: 12px; font-weight: 600; color: var(--text);
+    transition: background .12s ease, border-color .12s ease;
+  }
+  .sp-btn:hover { background: var(--soft); border-color: var(--silver-accent); }
+  .sp-btn.sp-btn-primary {
+    background: var(--success); color: #ffffff; border-color: var(--success);
+  }
+  .sp-btn.sp-btn-primary:hover {
+    background: #15803d; border-color: #15803d;
+  }
+  .sp-btn.sp-btn-quiet {
+    color: var(--text-3); border-color: transparent;
+    background: transparent;
+  }
+  .sp-btn.sp-btn-quiet:hover {
+    color: var(--error); background: #fef2f2;
+  }
+
+  /* ── Score bar ─────────────────────────────────────────────── */
+  .sp-score-row {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 8px;
+  }
+  .sp-score-bar {
+    flex: 1; height: 8px; background: var(--silver-chip);
+    border-radius: var(--radius-pill); overflow: hidden;
+    position: relative;
+  }
+  .sp-score-bar-fill {
+    height: 100%; background: linear-gradient(90deg, #94a3b8, #64748b);
+    border-radius: var(--radius-pill); width: 0;
+    transition: width .6s cubic-bezier(.2, .8, .2, 1);
+  }
+  .sp-score-num {
+    font-weight: 700; font-size: 13px; color: var(--silver-text);
+    min-width: 28px; text-align: right;
+  }
+  .sp-score-bar[data-tier="high"] .sp-score-bar-fill {
+    background: linear-gradient(90deg, #34d399, #10b981);
+  }
+  .sp-score-bar[data-tier="mid"] .sp-score-bar-fill {
+    background: linear-gradient(90deg, #fbbf24, #f59e0b);
+  }
+
+  /* ── Skeleton (during generation) ──────────────────────────── */
+  .sp-skel {
+    border-radius: var(--radius); border: 1px dashed var(--bronze-border);
+    background: linear-gradient(90deg, #fff8ec 0%, #fff 50%, #fff8ec 100%);
+    background-size: 200% 100%;
+    animation: sp-shimmer 1.4s ease-in-out infinite;
+    height: 132px;
+  }
+  @keyframes sp-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ── Ticker above Bronze ───────────────────────────────────── */
+  .sp-ticker {
+    font-size: 12px; color: var(--text-2);
+    padding: 6px 10px; background: rgba(255, 255, 255, .65);
+    border-radius: var(--radius-sm); margin-bottom: 4px;
+    border: 1px solid var(--bronze-border);
+    display: none;
+  }
+  .sp-ticker.is-visible { display: block; }
+
+  /* ── Empty-state hero ──────────────────────────────────────── */
+  .sp-hero {
+    grid-column: 1 / -1;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 14px; text-align: center;
+    padding: 80px 24px;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(37, 99, 235, .06), transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(6, 182, 212, .06), transparent 50%);
+    border-radius: var(--radius); border: 1px dashed var(--border);
+  }
+  .sp-hero-icon {
+    font-size: 56px; animation: sp-float 3s ease-in-out infinite;
+  }
+  @keyframes sp-float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-8px); }
+  }
+  .sp-hero h2 {
+    margin: 0; font-size: 28px; font-weight: 700;
+    letter-spacing: -.02em;
+  }
+  .sp-hero p {
+    margin: 0; color: var(--text-2); font-size: 16px;
+    max-width: 480px;
+  }
+
+  /* ── Generate popover ──────────────────────────────────────── */
+  .sp-pop-overlay {
+    position: fixed; inset: 0; background: rgba(15, 23, 42, .35);
+    display: none; z-index: 50;
+    align-items: center; justify-content: center;
+    animation: sp-fade-in .14s ease;
+  }
+  .sp-pop-overlay.is-visible { display: flex; }
+  @keyframes sp-fade-in { from { opacity: 0; } to { opacity: 1; } }
+  .sp-pop {
+    background: #ffffff; border-radius: var(--radius);
+    box-shadow: 0 20px 60px rgba(15, 23, 42, .25);
+    width: 100%; max-width: 480px; padding: 22px 24px;
+    animation: sp-pop-in .2s cubic-bezier(.2, .8, .2, 1);
+  }
+  @keyframes sp-pop-in {
+    from { opacity: 0; transform: translateY(8px) scale(.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .sp-pop h3 {
+    margin: 0 0 14px; font-size: 18px; font-weight: 700;
+  }
+  .sp-pop label {
+    display: block; font-size: 12px; font-weight: 600;
+    color: var(--text-2); margin: 12px 0 4px;
+  }
+  .sp-pop input[type="text"], .sp-pop textarea {
+    width: 100%; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 8px 10px;
+    font: inherit; color: var(--text); background: #ffffff;
+    transition: border-color .12s ease, box-shadow .12s ease;
+  }
+  .sp-pop input[type="text"]:focus, .sp-pop textarea:focus {
+    outline: 0; border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
+  }
+  .sp-pop textarea { resize: vertical; min-height: 60px; }
+  .sp-chips {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .sp-chip {
+    border: 1px solid var(--border); background: #ffffff;
+    border-radius: var(--radius-pill); padding: 5px 12px;
+    font-size: 12px; font-weight: 600; color: var(--text-2);
+    cursor: pointer; transition: all .12s ease;
+  }
+  .sp-chip:hover { border-color: var(--brand); color: var(--brand); }
+  .sp-chip.is-selected {
+    background: var(--brand); color: #ffffff; border-color: var(--brand);
+  }
+  .sp-pop-foot {
+    display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px;
+  }
+  .sp-pop-cancel {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text-2); padding: 8px 14px; border-radius: var(--radius-sm);
+    font-weight: 600;
+  }
+  .sp-pop-cancel:hover { background: var(--soft); }
+  .sp-pop-go {
+    background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
+    color: #ffffff; border: 0; padding: 8px 16px;
+    border-radius: var(--radius-sm); font-weight: 600;
+  }
+  .sp-pop-go:hover { transform: translateY(-1px); }
+  .sp-pop-go:disabled { opacity: .55; cursor: not-allowed; }
+
+  /* ── Approve drawer (time chips) ───────────────────────────── */
+  .sp-drawer-overlay {
+    position: fixed; inset: 0; background: rgba(15, 23, 42, .35);
+    display: none; z-index: 60;
+    align-items: center; justify-content: center;
+  }
+  .sp-drawer-overlay.is-visible { display: flex; }
+  .sp-drawer {
+    background: #ffffff; border-radius: var(--radius);
+    box-shadow: 0 20px 60px rgba(15, 23, 42, .25);
+    width: 100%; max-width: 420px; padding: 22px 24px;
+  }
+  .sp-drawer h3 { margin: 0 0 6px; font-size: 18px; font-weight: 700; }
+  .sp-drawer p { margin: 0 0 16px; color: var(--text-2); font-size: 13px; }
+  .sp-time-chips {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  }
+  .sp-time-chip {
+    border: 1px solid var(--border); background: var(--gold-bg);
+    border-radius: var(--radius-sm); padding: 12px 14px;
+    text-align: left; transition: all .12s ease;
+  }
+  .sp-time-chip:hover {
+    border-color: var(--gold-accent);
+    background: var(--gold-chip);
+    transform: translateY(-1px);
+  }
+  .sp-time-chip strong {
+    display: block; font-size: 14px; color: var(--text);
+  }
+  .sp-time-chip span {
+    display: block; font-size: 11px; color: var(--text-2);
+    margin-top: 2px;
+  }
+  .sp-drawer-foot {
+    display: flex; justify-content: flex-end; margin-top: 16px;
+  }
+  .sp-drawer-cancel {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text-2); padding: 8px 14px; border-radius: var(--radius-sm);
+    font-weight: 600;
+  }
+
+  /* ── Toast ─────────────────────────────────────────────────── */
+  .sp-toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--text); color: #ffffff;
+    padding: 10px 18px; border-radius: var(--radius-pill);
+    font-size: 13px; font-weight: 500; z-index: 100;
+    opacity: 0; pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+  }
+  .sp-toast.is-visible {
+    opacity: 1; transform: translateX(-50%) translateY(0);
+  }
+  .sp-toast.sp-toast-error { background: var(--error); }
+  .sp-toast.sp-toast-success { background: var(--success); }
+
+  /* ── Score row (Silver card) ───────────────────────────────── */
+  .sp-card-rationale {
+    font-size: 11px; color: var(--text-3); font-style: italic;
+    margin-top: 6px; line-height: 1.4;
+  }
+
+  /* ── Per-component tips (collapsible) ───────────────────────── */
+  .sp-tips-toggle {
+    margin-top: 6px;
+    background: transparent; border: 1px dashed var(--border);
+    color: var(--text-2); font-size: 11px; font-weight: 600;
+    padding: 4px 10px; border-radius: var(--radius-sm); width: 100%;
+    text-align: left; display: flex; align-items: center;
+    justify-content: space-between; gap: 8px;
+    transition: background .12s ease, border-color .12s ease;
+  }
+  .sp-tips-toggle:hover {
+    background: var(--soft); border-color: var(--silver-accent);
+    color: var(--text);
+  }
+  .sp-tips-toggle .sp-tips-arrow {
+    transition: transform .2s ease;
+    font-size: 10px; opacity: .6;
+  }
+  .sp-tips-toggle.is-open .sp-tips-arrow {
+    transform: rotate(180deg);
+  }
+  .sp-tips-block {
+    display: none;
+    margin-top: 8px;
+    padding: 10px 12px;
+    background: rgba(37, 99, 235, .04);
+    border-left: 3px solid var(--brand);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: 11.5px; line-height: 1.5;
+  }
+  .sp-tips-block.is-open { display: block; }
+  .sp-tip-row {
+    margin-bottom: 8px;
+  }
+  .sp-tip-row:last-child { margin-bottom: 0; }
+  .sp-tip-row .sp-tip-head {
+    font-weight: 700; font-size: 11px; color: var(--text);
+    text-transform: uppercase; letter-spacing: .04em;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .sp-tip-row .sp-tip-line {
+    display: block; margin: 2px 0; color: var(--text-2);
+  }
+  .sp-tip-line strong { color: var(--text); font-weight: 600; }
+  .sp-tip-suggest {
+    display: block; margin-top: 4px; padding: 6px 8px;
+    background: #fffbf5; border: 1px solid var(--bronze-border);
+    border-radius: var(--radius-sm);
+    font-style: italic; color: var(--bronze-text);
+    font-size: 11px;
+  }
+  .sp-tip-suggest::before {
+    content: "✏ Try: "; font-style: normal; font-weight: 700;
+    margin-right: 4px;
+  }
+  .sp-tip-actions {
+    display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap;
+  }
+  .sp-tip-btn {
+    border: 1px solid var(--border); background: #ffffff;
+    border-radius: var(--radius-sm);
+    padding: 4px 10px; font-size: 11px; font-weight: 600;
+    color: var(--text-2); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px;
+    transition: background .12s ease, border-color .12s ease, color .12s ease;
+  }
+  .sp-tip-btn:hover {
+    background: var(--soft); border-color: var(--brand); color: var(--brand);
+  }
+  .sp-tip-btn.sp-tip-btn-ai {
+    background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
+    color: #ffffff; border-color: transparent;
+  }
+  .sp-tip-btn.sp-tip-btn-ai:hover {
+    filter: brightness(1.05);
+    color: #ffffff;
+  }
+  .sp-tip-btn:disabled {
+    opacity: .55; cursor: wait;
+  }
+  .sp-tip-btn .sp-tip-spin {
+    width: 10px; height: 10px; border: 2px solid currentColor;
+    border-top-color: transparent; border-radius: 50%;
+    animation: sp-spin .8s linear infinite;
+    display: none;
+  }
+  .sp-tip-btn.is-loading .sp-tip-spin { display: inline-block; }
+  .sp-tip-btn.is-loading .sp-tip-label { opacity: .7; }
+
+  /* Inline editor (replaces the tip rows when Edit is clicked). */
+  .sp-tip-edit {
+    display: none; margin-top: 6px;
+  }
+  .sp-tip-edit.is-active { display: block; }
+  .sp-tip-edit textarea {
+    width: 100%; min-height: 70px;
+    border: 1px solid var(--brand);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px; font: inherit;
+    background: #ffffff; color: var(--text);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+    resize: vertical;
+  }
+  .sp-tip-edit-foot {
+    display: flex; justify-content: flex-end; gap: 6px; margin-top: 6px;
+  }
+
+  /* ── Attached media panel (inside tips drawer) ─────────────── */
+  .sp-media-panel {
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px dashed var(--border);
+  }
+  .sp-media-head {
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .04em;
+    color: var(--text-2); margin-bottom: 8px;
+  }
+  .sp-media-list {
+    display: grid; gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+  .sp-media-item {
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: #ffffff; overflow: hidden;
+    display: flex; flex-direction: column;
+    transition: border-color .12s ease, transform .12s ease;
+  }
+  .sp-media-item:hover { transform: translateY(-1px); border-color: var(--brand); }
+  .sp-media-thumb {
+    background: #0f172a; aspect-ratio: 1 / 1;
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,.6); font-size: 10px;
+    overflow: hidden;
+  }
+  .sp-media-thumb img,
+  .sp-media-thumb video {
+    width: 100%; height: 100%; object-fit: cover;
+    display: block;
+  }
+  .sp-media-thumb video {
+    background: #000000;
+  }
+  .sp-media-thumb.sp-media-pdf {
+    background: linear-gradient(135deg, #1e3a8a, #1e40af);
+    font-size: 22px;
+  }
+  .sp-media-thumb.sp-media-reel {
+    aspect-ratio: 9 / 16;
+    background: #000000;
+  }
+  .sp-media-meta {
+    padding: 6px 8px; font-size: 10.5px; line-height: 1.4;
+    color: var(--text-2);
+  }
+  .sp-media-meta strong { color: var(--text); display: block; font-size: 11px; }
+  .sp-media-actions {
+    display: flex; gap: 4px; padding: 0 8px 8px;
+  }
+  .sp-media-link {
+    flex: 1; text-align: center;
+    text-decoration: none; color: var(--brand);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 3px 0; font-size: 10px; font-weight: 600;
+    transition: background .12s ease, border-color .12s ease;
+  }
+  .sp-media-link:hover { background: var(--soft); border-color: var(--brand); }
+
+  /* Card badge that appears when a record has any attached media. */
+  .sp-media-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 2px 8px; border-radius: var(--radius-pill);
+    background: rgba(22, 163, 74, .1); color: var(--success);
+    font-size: 10px; font-weight: 700;
+    margin-left: 6px;
+  }
+
+  /* Drawer footer with the Re-score button. */
+  .sp-tips-foot {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 10px; padding-top: 8px;
+    border-top: 1px dashed var(--border);
+    font-size: 11px; color: var(--text-3);
+  }
+  .sp-tips-foot button {
+    border: 1px solid var(--border); background: #ffffff;
+    border-radius: var(--radius-sm); padding: 5px 12px;
+    font-size: 11px; font-weight: 600; color: var(--text);
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .sp-tips-foot button:hover {
+    background: var(--soft); border-color: var(--brand); color: var(--brand);
+  }
+  .sp-tips-foot button.is-loading {
+    opacity: .55; cursor: wait;
+  }
+  .sp-score-reasons {
+    margin: 4px 0 10px;
+    padding: 8px 10px;
+    background: rgba(100, 116, 139, .06);
+    border-left: 2px solid var(--silver-accent);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--silver-text);
+  }
+  .sp-score-reason {
+    display: block; margin: 2px 0;
+  }
+  .sp-score-reason .sp-axis {
+    font-weight: 700; text-transform: uppercase;
+    letter-spacing: .04em; font-size: 10px;
+    color: var(--silver-text); margin-right: 4px;
+  }
+  .sp-score-reason[data-axis="quality"] .sp-axis   { color: #1d4ed8; }
+  .sp-score-reason[data-axis="relevance"] .sp-axis { color: #7c3aed; }
+
+  /* ── Active filters bar (above the table) ─────────────────── */
+  .sp-filters {
+    display: none;
+    flex-wrap: wrap; align-items: center; gap: 6px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    background: rgba(37, 99, 235, .04);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+  }
+  .sp-filters.is-visible { display: flex; }
+  .sp-filters-label {
+    color: var(--text-2); font-weight: 600;
+    margin-right: 4px;
+  }
+  .sp-filter-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 4px 3px 10px;
+    background: #ffffff; border: 1px solid var(--brand);
+    color: var(--brand); border-radius: var(--radius-pill);
+    font-size: 11px; font-weight: 600;
+  }
+  .sp-filter-chip-key {
+    color: var(--text-2); font-weight: 500;
+    margin-right: 3px;
+  }
+  .sp-filter-chip-x {
+    border: 0; background: transparent; color: var(--brand);
+    cursor: pointer; padding: 0 6px; font-size: 14px;
+    line-height: 1; border-radius: 50%;
+    transition: background .12s ease;
+  }
+  .sp-filter-chip-x:hover { background: rgba(37, 99, 235, .12); }
+  .sp-filters-clear {
+    margin-left: auto;
+    background: transparent; border: 0;
+    color: var(--text-2); font-size: 11px;
+    font-weight: 600; cursor: pointer; padding: 4px 8px;
+  }
+  .sp-filters-clear:hover { color: var(--error); text-decoration: underline; }
+
+  /* Make filterable pills feel clickable. */
+  .sp-platform-pill[data-filter-col] { cursor: pointer; transition: filter .12s ease; }
+  .sp-platform-pill[data-filter-col]:hover { filter: brightness(.95); }
+  .sp-cell-stage[data-filter-col]   { cursor: pointer; transition: filter .12s ease; }
+  .sp-cell-stage[data-filter-col]:hover { filter: brightness(.95); }
+
+  /* ── Carousel modal ────────────────────────────────────────── */
+  .sp-carousel-overlay {
+    position: fixed; inset: 0; background: rgba(15, 23, 42, .55);
+    display: none; z-index: 80;
+    align-items: stretch; justify-content: center;
+  }
+  .sp-carousel-overlay.is-visible { display: flex; }
+  .sp-carousel {
+    background: #ffffff; width: 100%; max-width: 1100px;
+    margin: 24px;
+    border-radius: var(--radius);
+    box-shadow: 0 30px 80px rgba(15, 23, 42, .35);
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    overflow: hidden;
+    max-height: calc(100vh - 48px);
+  }
+  @media (max-width: 900px) {
+    .sp-carousel { grid-template-columns: 1fr; }
+  }
+  .sp-cs-side {
+    background: var(--soft);
+    border-right: 1px solid var(--border);
+    padding: 20px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .sp-cs-main {
+    padding: 18px 20px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .sp-cs-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px;
+  }
+  .sp-cs-head h3 {
+    margin: 0; font-size: 18px; font-weight: 700;
+  }
+  .sp-cs-close {
+    background: transparent; border: 0;
+    width: 32px; height: 32px; border-radius: 50%;
+    color: var(--text-2); font-size: 20px; cursor: pointer;
+    transition: background .12s ease;
+  }
+  .sp-cs-close:hover { background: var(--soft); color: var(--text); }
+  .sp-cs-section {
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .sp-cs-section h4 {
+    margin: 0; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .05em;
+    color: var(--text-3);
+  }
+  .sp-cs-row {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .sp-cs-row label {
+    font-size: 12px; font-weight: 600; color: var(--text-2);
+  }
+  .sp-cs-row textarea, .sp-cs-row input[type="text"] {
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 8px 10px; font: inherit; color: var(--text); background: #ffffff;
+  }
+  .sp-cs-row textarea:focus, .sp-cs-row input[type="text"]:focus {
+    outline: 0; border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
+  }
+  .sp-cs-chips {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .sp-cs-chip {
+    border: 1px solid var(--border); background: #ffffff;
+    border-radius: var(--radius-pill); padding: 4px 12px;
+    font-size: 12px; font-weight: 600; color: var(--text-2); cursor: pointer;
+    transition: all .12s ease;
+  }
+  .sp-cs-chip.is-selected {
+    background: var(--brand); color: #ffffff; border-color: var(--brand);
+  }
+  .sp-cs-chip:hover { border-color: var(--brand); color: var(--brand); }
+  .sp-cs-chip.is-selected:hover { color: #ffffff; }
+  .sp-cs-style-chip {
+    display: flex; flex-direction: column; gap: 4px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 8px; cursor: pointer; min-width: 90px;
+    transition: border-color .12s ease;
+  }
+  .sp-cs-style-chip.is-selected { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(37, 99, 235, .15); }
+  .sp-cs-style-swatch {
+    width: 100%; height: 30px; border-radius: var(--radius-sm);
+  }
+  .sp-cs-style-label {
+    font-size: 11px; font-weight: 600; color: var(--text);
+  }
+  .sp-cs-go {
+    background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
+    color: #ffffff; border: 0; padding: 10px 16px;
+    border-radius: var(--radius-sm); font-weight: 700;
+    cursor: pointer; font-size: 13px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .sp-cs-go:hover { filter: brightness(1.05); }
+  .sp-cs-go:disabled { opacity: .55; cursor: wait; }
+  .sp-cs-secondary {
+    background: #ffffff; border: 1px solid var(--border);
+    color: var(--text); padding: 10px 16px;
+    border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; font-size: 13px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .sp-cs-secondary:hover { background: var(--soft); border-color: var(--brand); color: var(--brand); }
+  .sp-cs-actions {
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+
+  /* Slide preview grid */
+  .sp-cs-grid {
+    display: grid; gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+  .sp-cs-slide {
+    border: 2px solid transparent; border-radius: var(--radius-sm);
+    background: #ffffff; cursor: pointer;
+    overflow: hidden; transition: border-color .12s ease, transform .12s ease;
+    position: relative;
+  }
+  .sp-cs-slide:hover { transform: translateY(-2px); border-color: var(--silver-accent); }
+  .sp-cs-slide.is-selected { border-color: var(--brand); }
+  .sp-cs-slide img { display: block; width: 100%; height: auto; }
+  .sp-cs-slide-num {
+    position: absolute; top: 6px; left: 6px;
+    background: rgba(15, 23, 42, .7); color: #ffffff;
+    border-radius: var(--radius-pill); padding: 2px 8px;
+    font-size: 10px; font-weight: 700;
+  }
+  .sp-cs-slide-empty {
+    border: 1px dashed var(--border); border-radius: var(--radius-sm);
+    padding: 60px 24px; text-align: center;
+    color: var(--text-3); font-size: 13px;
+    grid-column: 1 / -1;
+  }
+
+  /* Inline slide editor (when a slide is clicked) */
+  .sp-cs-editor {
+    background: var(--soft); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 14px;
+    display: none;
+  }
+  .sp-cs-editor.is-visible { display: block; }
+  .sp-cs-editor h4 {
+    margin: 0 0 8px; font-size: 12px; font-weight: 700;
+    color: var(--text-2);
+  }
+  .sp-cs-edit-row {
+    display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;
+  }
+  .sp-cs-edit-row label {
+    font-size: 11px; font-weight: 600; color: var(--text-2);
+  }
+  .sp-cs-edit-row input, .sp-cs-edit-row textarea {
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 6px 8px; font: inherit; color: var(--text); background: #ffffff;
+  }
+  .sp-cs-edit-row textarea { min-height: 60px; resize: vertical; }
+  .sp-cs-edit-foot {
+    display: flex; gap: 6px; justify-content: flex-end;
+  }
+
+  .sp-cs-status {
+    font-size: 11px; color: var(--text-3); font-style: italic;
+  }
+  .sp-cs-status.is-error { color: var(--error); font-style: normal; }
+  /* ── Reel video preview ──────────────────────────────────── */
+  .sp-cs-reel-preview {
+    display: none;
+    background: #000000; border-radius: var(--radius-sm);
+    padding: 12px;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+  .sp-cs-reel-preview.is-visible { display: block; }
+  .sp-cs-reel-preview video {
+    max-width: 280px; width: 100%; height: auto;
+    border-radius: var(--radius-sm);
+    background: #000000;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .35);
+  }
+  .sp-cs-reel-preview-meta {
+    margin-top: 8px;
+    color: rgba(255, 255, 255, .7);
+    font-size: 11px;
+  }
+  .sp-cs-reel-btn {
+    background: #ffffff; border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px; font-weight: 600; font-size: 12px;
+    color: var(--text); cursor: pointer; width: 100%;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    transition: background .12s ease, border-color .12s ease;
+  }
+  .sp-cs-reel-btn:hover { background: var(--soft); border-color: var(--brand); color: var(--brand); }
+  .sp-cs-reel-btn:disabled { opacity: .55; cursor: wait; }
+
+  .sp-cs-status.is-busy::before {
+    content: ""; display: inline-block;
+    width: 10px; height: 10px; margin-right: 6px;
+    border: 2px solid currentColor; border-top-color: transparent;
+    border-radius: 50%; animation: sp-spin .8s linear infinite;
+    vertical-align: -1px;
+  }
+
+  /* ── First-load placeholder (avoids hero flash) ────────────── */
+  .sp-loading {
+    grid-column: 1 / -1;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 12px; padding: 80px 24px;
+    color: var(--text-3); font-size: 13px;
+  }
+  .sp-loading-spinner {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 3px solid var(--border); border-top-color: var(--brand);
+    animation: sp-spin 1s linear infinite;
+  }
+  @keyframes sp-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ── Saved-count chip in the topbar ────────────────────────── */
+  .sp-saved-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: var(--radius-pill);
+    background: rgba(22, 163, 74, .08); color: var(--success);
+    font-size: 11px; font-weight: 600;
+    margin-right: 12px;
+    transition: opacity .2s ease;
+  }
+  .sp-saved-chip[hidden] { display: none; }
+  .sp-saved-chip::before {
+    content: "✓"; font-weight: 700;
+  }
+  .sp-topbar-right {
+    display: flex; align-items: center; gap: 0;
+  }
+
+  /* ── View toggle (Cards | Table) ───────────────────────────── */
+  .sp-view-toggle {
+    display: inline-flex; align-items: center;
+    background: var(--soft); border: 1px solid var(--border);
+    border-radius: var(--radius-pill); padding: 3px;
+    margin-right: 12px;
+  }
+  .sp-view-btn {
+    border: 0; background: transparent; padding: 5px 12px;
+    border-radius: var(--radius-pill); font-size: 12px;
+    font-weight: 600; color: var(--text-2);
+    transition: background .12s ease, color .12s ease;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .sp-view-btn:hover { color: var(--text); }
+  .sp-view-btn.is-active {
+    background: #ffffff; color: var(--text);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, .12);
+  }
+
+  .sp-cols-btn {
+    border: 1px solid var(--border); background: #ffffff;
+    border-radius: var(--radius-pill); padding: 6px 12px;
+    font-size: 12px; font-weight: 600; color: var(--text-2);
+    margin-right: 12px;
+    display: inline-flex; align-items: center; gap: 5px;
+    transition: background .12s ease, border-color .12s ease;
+  }
+  .sp-cols-btn:hover { background: var(--soft); border-color: var(--silver-accent); }
+
+  /* ── Table view ────────────────────────────────────────────── */
+  .sp-table-wrap {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: #ffffff;
+    overflow: auto;
+    max-height: calc(100vh - 220px);
+  }
+  .sp-table {
+    width: 100%; border-collapse: separate; border-spacing: 0;
+    font-size: 12.5px; color: var(--text);
+    table-layout: auto;
+  }
+  .sp-table thead th {
+    position: sticky; top: 0; z-index: 2;
+    background: #f8fafc; color: var(--text-2);
+    font-weight: 700; text-transform: uppercase;
+    letter-spacing: .04em; font-size: 10.5px;
+    text-align: left; padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    user-select: none; cursor: pointer;
+    white-space: nowrap;
+  }
+  .sp-table thead th:hover { color: var(--text); background: #eef2f6; }
+  .sp-table thead th[data-sort-active] { color: var(--brand); }
+  .sp-table thead th .sp-sort-arrow {
+    margin-left: 4px; opacity: .5; font-size: 10px;
+  }
+  .sp-table thead th[data-sort-active] .sp-sort-arrow { opacity: 1; }
+  .sp-table tbody td {
+    padding: 9px 12px; border-bottom: 1px solid #f1f5f9;
+    vertical-align: top;
+  }
+  .sp-table tbody tr {
+    transition: background .12s ease;
+  }
+  .sp-table tbody tr:hover {
+    background: rgba(37, 99, 235, .03);
+    cursor: pointer;
+  }
+  .sp-table tbody tr.is-expanded {
+    background: rgba(37, 99, 235, .04);
+  }
+  .sp-table tbody tr.is-expanded + tr.sp-row-expand {
+    display: table-row;
+  }
+  .sp-table tbody tr.sp-row-expand { display: none; }
+  .sp-table tbody tr.sp-row-expand td {
+    padding: 0; background: var(--soft); border-bottom: 1px solid var(--border);
+  }
+  .sp-row-expand-inner {
+    padding: 14px 18px; display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px 24px;
+  }
+  .sp-row-expand-block { min-width: 0; }
+  .sp-row-expand-block h5 {
+    margin: 0 0 4px; font-size: 10.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .05em;
+    color: var(--text-3);
+  }
+  .sp-row-expand-block p {
+    margin: 0; font-size: 13px; color: var(--text);
+    line-height: 1.5; word-wrap: break-word;
+  }
+  .sp-row-expand-block.sp-expand-reasons {
+    grid-column: 1 / -1;
+    padding-top: 10px; margin-top: 6px;
+    border-top: 1px dashed var(--border);
+  }
+  .sp-row-expand-block.sp-expand-reasons p { font-size: 12px; color: var(--text-2); }
+
+  /* Cell adornments inside the table. */
+  .sp-cell-stage {
+    display: inline-block; padding: 2px 8px;
+    border-radius: var(--radius-pill); font-size: 10px;
+    font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  }
+  .sp-cell-stage[data-stage="bronze"] { background: var(--bronze-chip); color: var(--bronze-text); }
+  .sp-cell-stage[data-stage="silver"] { background: var(--silver-chip); color: var(--silver-text); }
+  .sp-cell-stage[data-stage="gold"]   { background: var(--gold-chip);   color: var(--gold-text); }
+  .sp-cell-stage[data-stage="rejected"] { background: #fee2e2; color: #991b1b; }
+
+  .sp-cell-truncate {
+    max-width: 320px;
+    overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sp-cell-truncate.sp-cell-meat { max-width: 420px; }
+
+  .sp-cell-score-mini {
+    display: inline-flex; align-items: center; gap: 8px;
+    min-width: 88px;
+  }
+  .sp-cell-score-mini .sp-score-bar {
+    height: 6px; flex: 1;
+  }
+  .sp-cell-score-mini .sp-score-num {
+    font-variant-numeric: tabular-nums; min-width: 24px;
+    font-size: 12px;
+  }
+  /* Heatmap-style score cells — Power BI-like continuous gradient.
+     Cell background is set inline via JS; this just handles layout. */
+  .sp-heat-cell {
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    color: var(--text);
+    transition: background-color .25s ease;
+  }
+  .sp-heat-cell.sp-heat-empty {
+    background: transparent !important;
+    color: var(--text-3); font-weight: 500;
+  }
+
+  .sp-cell-num {
+    font-variant-numeric: tabular-nums; text-align: right;
+    color: var(--text-2);
+  }
+
+  .sp-cell-actions {
+    white-space: nowrap; text-align: right;
+  }
+  .sp-cell-actions .sp-btn {
+    padding: 4px 10px; font-size: 11px;
+  }
+
+  .sp-table-empty {
+    padding: 60px 24px; text-align: center;
+    color: var(--text-3); font-size: 13px;
+  }
+
+  /* ── Column manager popover ────────────────────────────────── */
+  .sp-cols-pop {
+    position: absolute; top: 56px; right: 24px;
+    background: #ffffff; border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow-md);
+    padding: 12px 14px; z-index: 40;
+    min-width: 240px; display: none;
+    animation: sp-pop-in .14s ease;
+  }
+  .sp-cols-pop.is-visible { display: block; }
+  .sp-cols-pop h4 {
+    margin: 0 0 8px; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .05em;
+    color: var(--text-3);
+  }
+  .sp-cols-list {
+    display: flex; flex-direction: column; gap: 2px;
+    max-height: 360px; overflow-y: auto;
+  }
+  .sp-col-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px; border-radius: var(--radius-sm);
+    font-size: 13px; color: var(--text);
+    cursor: pointer;
+  }
+  .sp-col-item:hover { background: var(--soft); }
+  .sp-col-item input { accent-color: var(--brand); }
+  .sp-cols-pop .sp-cols-foot {
+    display: flex; justify-content: space-between; gap: 8px;
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .sp-cols-pop button {
+    border: 0; background: transparent;
+    color: var(--brand); font-weight: 600; font-size: 12px;
+    cursor: pointer; padding: 4px 8px;
+  }
+  .sp-cols-pop button:hover { text-decoration: underline; }
+
+  /* ── Reduced motion ────────────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .001ms !important;
+      transition-duration: .001ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header class="sp-topbar">
+  <div class="sp-title-block">
+    <h1>🥉 Social Pipeline 🥇</h1>
+    <p>Generate ideas. Score them. Schedule the winners.</p>
+  </div>
+  <div class="sp-topbar-right">
+    <span id="spSavedChip" class="sp-saved-chip" hidden>0 ideas saved</span>
+    <div class="sp-view-toggle" role="tablist" aria-label="View">
+      <button id="spViewCardsBtn" class="sp-view-btn is-active" type="button" data-view="cards" role="tab" aria-selected="true">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        Cards
+      </button>
+      <button id="spViewTableBtn" class="sp-view-btn" type="button" data-view="table" role="tab" aria-selected="false">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="4" x2="9" y2="20"/></svg>
+        Table
+      </button>
+    </div>
+    <button id="spColsBtn" class="sp-cols-btn" type="button" hidden>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      Columns
+    </button>
+    <button id="spGenerateBtn" class="sp-generate-btn" type="button">
+      ✨ Generate ideas
+    </button>
+  </div>
+
+  <!-- ─── Column manager popover ─── -->
+  <div id="spColsPop" class="sp-cols-pop" role="dialog" aria-label="Choose columns">
+    <h4>Show columns</h4>
+    <div id="spColsList" class="sp-cols-list"></div>
+    <div class="sp-cols-foot">
+      <button type="button" id="spColsAll">Show all</button>
+      <button type="button" id="spColsReset">Reset</button>
+    </div>
+  </div>
+</header>
+
+<main class="sp-body">
+  <!-- ─── Active filters bar — only visible when filters set ─── -->
+  <div id="spFilters" class="sp-filters" role="region" aria-label="Active filters" hidden>
+    <span class="sp-filters-label">Filters:</span>
+    <span id="spFilterChips"></span>
+    <button id="spFiltersClear" class="sp-filters-clear" type="button">Clear all</button>
+  </div>
+
+  <!-- ─── Table view (hidden by default; toggled from topbar) ─── -->
+  <div id="spTableWrap" class="sp-table-wrap" hidden>
+    <table class="sp-table" id="spTable">
+      <thead><tr id="spTableHead"></tr></thead>
+      <tbody id="spTableBody"></tbody>
+    </table>
+    <div id="spTableEmpty" class="sp-table-empty" hidden>
+      Nothing here yet. Hit ✨ Generate ideas above.
+    </div>
+  </div>
+
+  <div id="spLanes" class="sp-lanes">
+
+    <!-- Initial loading placeholder — shown until the first fetch
+         resolves so the empty-state hero never flashes for users who
+         already have saved records. -->
+    <div id="spLoading" class="sp-loading">
+      <div class="sp-loading-spinner"></div>
+      <div>Loading your ideas…</div>
+    </div>
+
+    <!-- Empty-state hero takes over only after we've confirmed there
+         are no saved records in GCS for this customer. -->
+    <div id="spHero" class="sp-hero" style="display:none;">
+      <div class="sp-hero-icon">✨</div>
+      <h2>Let's make some posts</h2>
+      <p>I'll cook up 10 ideas for LinkedIn and Instagram. You pick the ones you like. I schedule them. Your work auto-saves.</p>
+      <button id="spHeroBtn" class="sp-generate-btn" type="button">
+        ✨ Generate my first batch
+      </button>
+    </div>
+
+    <!-- 🥉 Bronze ── -->
+    <section class="sp-lane" data-lane="bronze">
+      <header class="sp-lane-head">
+        <span class="sp-lane-title"><span class="sp-emoji">🥉</span> Bronze</span>
+        <span class="sp-lane-chip" id="spLaneCountBronze">0</span>
+      </header>
+      <div class="sp-lane-body">
+        <div id="spTicker" class="sp-ticker">🥣 Cooking up ideas…</div>
+        <div id="spLaneBronze"></div>
+      </div>
+    </section>
+
+    <!-- 🥈 Silver ── -->
+    <section class="sp-lane" data-lane="silver">
+      <header class="sp-lane-head">
+        <span class="sp-lane-title"><span class="sp-emoji">🥈</span> Silver</span>
+        <span class="sp-lane-chip" id="spLaneCountSilver">0</span>
+      </header>
+      <div class="sp-lane-body">
+        <div id="spLaneSilver"></div>
+      </div>
+    </section>
+
+    <!-- 🥇 Gold ── -->
+    <section class="sp-lane" data-lane="gold">
+      <header class="sp-lane-head">
+        <span class="sp-lane-title"><span class="sp-emoji">🥇</span> Gold</span>
+        <span class="sp-lane-chip" id="spLaneCountGold">0</span>
+      </header>
+      <div class="sp-lane-body">
+        <div id="spLaneGold"></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- ─── Generate popover ─── -->
+<div id="spPopOverlay" class="sp-pop-overlay" role="dialog" aria-modal="true">
+  <div class="sp-pop">
+    <h3>What are we cooking?</h3>
+
+    <label>Where?</label>
+    <div class="sp-chips" data-chip-group="platforms">
+      <button class="sp-chip is-selected" type="button" data-value="linkedin">LinkedIn</button>
+      <button class="sp-chip is-selected" type="button" data-value="instagram">Instagram</button>
+    </div>
+
+    <label>Topic</label>
+    <input type="text" id="spInpTopic" placeholder="e.g. lead generation for landscapers">
+
+    <label>Audience</label>
+    <input type="text" id="spInpAudience" placeholder="e.g. SMB owners, US, $1M–$10M revenue">
+
+    <label>Your role</label>
+    <input type="text" id="spInpRole" placeholder="e.g. Founder of an AI-powered CRM">
+
+    <label>How many ideas per platform?</label>
+    <div class="sp-chips" data-chip-group="count">
+      <button class="sp-chip" type="button" data-value="6">6</button>
+      <button class="sp-chip is-selected" type="button" data-value="10">10</button>
+      <button class="sp-chip" type="button" data-value="15">15</button>
+    </div>
+
+    <div class="sp-pop-foot">
+      <button class="sp-pop-cancel" id="spPopCancel" type="button">Cancel</button>
+      <button class="sp-pop-go" id="spPopGo" type="button">Let's go →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Approve / time-chip drawer ─── -->
+<div id="spDrawerOverlay" class="sp-drawer-overlay" role="dialog" aria-modal="true">
+  <div class="sp-drawer">
+    <h3>When should I post this?</h3>
+    <p>Pick a time. I'll add it to the LinkedIn calendar.</p>
+    <div class="sp-time-chips" id="spTimeChips"></div>
+    <div class="sp-drawer-foot">
+      <button class="sp-drawer-cancel" id="spDrawerCancel" type="button">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="spToast" class="sp-toast" role="status" aria-live="polite"></div>
+
+<!-- ─── Carousel modal ─── -->
+<div id="spCarouselOverlay" class="sp-carousel-overlay" role="dialog" aria-modal="true" aria-labelledby="spCsTitle">
+  <div class="sp-carousel">
+
+    <aside class="sp-cs-side">
+      <div class="sp-cs-head">
+        <h3 id="spCsTitle">🎨 Generate carousel</h3>
+        <button class="sp-cs-close" id="spCsClose" type="button" aria-label="Close">×</button>
+      </div>
+
+      <div class="sp-cs-section">
+        <h4>Platform</h4>
+        <div class="sp-cs-chips" data-cs-group="platform">
+          <button class="sp-cs-chip is-selected" type="button" data-value="linkedin">LinkedIn (PDF)</button>
+          <button class="sp-cs-chip" type="button" data-value="instagram">IG carousel</button>
+          <button class="sp-cs-chip" type="button" data-value="instagram_reel">🎬 IG Reel</button>
+        </div>
+      </div>
+
+      <div class="sp-cs-section">
+        <h4 id="spCsPagesLabel">Pages</h4>
+        <div class="sp-cs-chips" data-cs-group="page_count">
+          <button class="sp-cs-chip" type="button" data-value="3">3</button>
+          <button class="sp-cs-chip" type="button" data-value="4">4</button>
+          <button class="sp-cs-chip is-selected" type="button" data-value="5">5</button>
+          <button class="sp-cs-chip" type="button" data-value="6">6</button>
+          <button class="sp-cs-chip" type="button" data-value="7">7</button>
+        </div>
+      </div>
+
+      <div class="sp-cs-section" id="spCsAspectSection">
+        <h4>Aspect</h4>
+        <div class="sp-cs-chips" data-cs-group="aspect">
+          <button class="sp-cs-chip is-selected" type="button" data-value="1:1">1:1 square</button>
+          <button class="sp-cs-chip" type="button" data-value="4:5">4:5 portrait</button>
+          <button class="sp-cs-chip" type="button" data-value="9:16">9:16 reel</button>
+        </div>
+      </div>
+
+      <!-- Reel-only controls — hidden until platform=instagram_reel. -->
+      <div class="sp-cs-section" id="spCsReelSection" style="display:none;">
+        <h4>Animation</h4>
+        <div class="sp-cs-chips" data-cs-group="animation">
+          <button class="sp-cs-chip is-selected" type="button" data-value="kinetic" title="Word-by-word reveal with accent flash. Most modern.">Kinetic</button>
+          <button class="sp-cs-chip" type="button" data-value="zoom" title="Headline scales from 60% with overshoot. Body slides up.">Zoom</button>
+          <button class="sp-cs-chip" type="button" data-value="swipe" title="Text slides in from left, exits right.">Swipe</button>
+          <button class="sp-cs-chip" type="button" data-value="typewriter" title="Letter-by-letter reveal with blinking cursor. Viral on IG.">Typewriter</button>
+          <button class="sp-cs-chip" type="button" data-value="glitch" title="RGB-split text with intermittent flash frames. Edgy.">Glitch</button>
+          <button class="sp-cs-chip" type="button" data-value="cinematic" title="Letterbox bars + slow Ken Burns zoom + center-aligned text.">Cinematic</button>
+        </div>
+        <h4 style="margin-top:8px;">Seconds per slide</h4>
+        <div class="sp-cs-chips" data-cs-group="slide_duration">
+          <button class="sp-cs-chip" type="button" data-value="3">3s</button>
+          <button class="sp-cs-chip is-selected" type="button" data-value="4">4s</button>
+          <button class="sp-cs-chip" type="button" data-value="5">5s</button>
+          <button class="sp-cs-chip" type="button" data-value="6">6s</button>
+        </div>
+        <button class="sp-cs-reel-btn" type="button" id="spCsReelPreviewBtn" disabled style="margin-top:8px;">
+          🎥 Preview animation
+        </button>
+        <div style="font-size:11px;color:var(--text-3);">
+          Reels are locked to 9:16 vertical. Preview is half-res (~5–15s);
+          final render is full 1080×1920 H.264 ready for IG.
+        </div>
+      </div>
+
+      <div class="sp-cs-section">
+        <h4>Style</h4>
+        <div class="sp-cs-chips" data-cs-group="style" id="spCsStyles"></div>
+      </div>
+
+      <div class="sp-cs-section">
+        <h4>Background</h4>
+        <div class="sp-cs-chips" data-cs-group="background">
+          <button class="sp-cs-chip is-selected" type="button" data-value="solid" title="Solid color from the chosen style.">Solid color</button>
+          <button class="sp-cs-chip" type="button" data-value="ai_scene" title="AI-generated scene per slide via Pollinations.ai (free, no API key).">🎨 AI scene</button>
+        </div>
+        <div id="spCsBgHintRow" style="display:none;">
+          <div class="sp-cs-row" style="margin-top:6px;">
+            <label>Visual style hint (consistent across slides)</label>
+            <input type="text" id="spCsBgStyleHint" maxlength="120"
+              placeholder="e.g. minimalist flat illustration, muted earth tones">
+          </div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:4px;line-height:1.4;">
+            Free via Pollinations.ai · ~30-60s per slide on first fetch
+            (parallel) · cached after.
+          </div>
+        </div>
+      </div>
+
+      <div class="sp-cs-section">
+        <h4>Extra steering (optional)</h4>
+        <div class="sp-cs-row">
+          <textarea id="spCsCustom" rows="2" placeholder="e.g. open with a punchy stat, end with urgency"></textarea>
+        </div>
+      </div>
+
+      <div class="sp-cs-actions" style="margin-top:auto;">
+        <button class="sp-cs-go" id="spCsPlanBtn" type="button" title="Calls the LLM to generate slide structure (headlines, bodies, kinds) from this record's hook+meat+CTA. ~$0.001 per plan.">
+          ✨ Plan with AI
+        </button>
+        <button class="sp-cs-secondary" id="spCsRenderBtn" type="button" disabled title="Manually refresh the preview using the current plan + settings. No LLM, no upload. Auto-fires when you edit slides or change settings — you usually don't need this.">
+          ↻ Refresh preview
+        </button>
+      </div>
+      <div id="spCsStatus" class="sp-cs-status"></div>
+      <div style="font-size:11px;color:var(--text-3);line-height:1.5;">
+        <strong>Plan with AI</strong> = LLM call, generates slide content.<br>
+        <strong>Edit slides / change style</strong> = auto-refresh, free.<br>
+        <strong>Render &amp; attach</strong> = full-res render + upload.
+      </div>
+    </aside>
+
+    <main class="sp-cs-main">
+      <!-- Reel animation preview (only shown after Preview animation is clicked). -->
+      <div class="sp-cs-reel-preview" id="spCsReelPreview">
+        <video id="spCsReelVideo" controls autoplay loop muted playsinline></video>
+        <div class="sp-cs-reel-preview-meta" id="spCsReelMeta">
+          Preview · half-res · accurate timing &amp; layout
+        </div>
+      </div>
+
+      <div class="sp-cs-section">
+        <h4>Preview</h4>
+        <div id="spCsGrid" class="sp-cs-grid">
+          <div class="sp-cs-slide-empty">
+            Click <strong>✨ Plan with AI</strong> to generate slide structure, then preview before rendering.
+          </div>
+        </div>
+      </div>
+
+      <div id="spCsEditor" class="sp-cs-editor">
+        <h4>Edit slide <span id="spCsEditNum">1</span></h4>
+        <div class="sp-cs-edit-row">
+          <label>Headline</label>
+          <input type="text" id="spCsEditHeadline" maxlength="80">
+        </div>
+        <div class="sp-cs-edit-row">
+          <label>Body</label>
+          <textarea id="spCsEditBody" rows="2" maxlength="200"></textarea>
+        </div>
+        <div class="sp-cs-edit-row">
+          <label>Kind</label>
+          <div class="sp-cs-chips" data-cs-group="kind" id="spCsEditKind">
+            <button class="sp-cs-chip" type="button" data-value="intro">intro</button>
+            <button class="sp-cs-chip" type="button" data-value="fact">fact</button>
+            <button class="sp-cs-chip" type="button" data-value="tip">tip</button>
+            <button class="sp-cs-chip" type="button" data-value="step">step</button>
+            <button class="sp-cs-chip" type="button" data-value="quote">quote</button>
+            <button class="sp-cs-chip" type="button" data-value="cta">cta</button>
+            <button class="sp-cs-chip" type="button" data-value="outro">outro</button>
+          </div>
+        </div>
+        <div class="sp-cs-edit-row" id="spCsEditBgRow" style="display:none;">
+          <label>🎨 Background scene prompt (Pollinations.ai)</label>
+          <textarea id="spCsEditBg" rows="2" maxlength="240"
+            placeholder="e.g. minimalist illustration of a withered garden, muted earth tones"></textarea>
+          <div style="font-size:10px;color:var(--text-3);margin-top:2px;">
+            Edit and re-preview to fetch a fresh scene · Don't include text/letters · Style suffix recommended
+          </div>
+        </div>
+        <div class="sp-cs-edit-foot">
+          <button class="sp-cs-secondary" id="spCsEditClose" type="button">Done</button>
+        </div>
+      </div>
+
+      <div class="sp-cs-actions" style="margin-top:auto;">
+        <button class="sp-cs-secondary" id="spCsCancelBtn" type="button">Cancel</button>
+        <button class="sp-cs-go" id="spCsAttachBtn" type="button" disabled>
+          💾 Render &amp; attach to record
+        </button>
+      </div>
+    </main>
+
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ── State ─────────────────────────────────────────────────
+  const STATE = {
+    bronze: new Map(),  // record_id → meta
+    silver: new Map(),
+    gold:   new Map(),
+    poll:   null,
+    job:    null,
+    pendingApproveId: null,
+    briefDefaults: {},
+    firstLoadDone: false,  // gates the hero — no flash before first fetch
+    view: "cards",          // "cards" | "table"
+    visibleCols: null,       // array of column ids; null = use defaults
+    sort: { col: null, dir: "desc" },  // null col = use stage's natural order
+    expandedRows: new Set(),
+    // record_ids whose Tips drawer is open. Tracked across re-renders
+    // so that when the AI fix lands and the card re-paints with new
+    // Works/Change copy, the user keeps reading in place.
+    tipsOpen: new Set(),
+    // filters: keyed by column id, value is the literal record-field value
+    // we want to match. Pretty label kept separately for the chip text.
+    filters: {},   // { hook_type: { value: "specific_number", label: "Specific number anchor" }, ... }
+  };
+
+  // What columns are filterable by clicking a chip. Each entry maps
+  // the column id used in the table → which record field carries the
+  // raw value to match. Most are 1:1 but a couple are aliased.
+  const FILTERABLE_COLS = {
+    stage:           { recordKey: "stage" },
+    platform:        { recordKey: "platform" },
+    hook_type:       { recordKey: "hook_type",       labelKey: "hook_type_label" },
+    hook_emotional:  { recordKey: "hook_emotional" },
+    hook_specificity:{ recordKey: "hook_specificity" },
+    meat_type:       { recordKey: "meat_type" },
+    meat_proof_basis:{ recordKey: "meat_proof_basis" },
+    meat_structure:  { recordKey: "meat_structure" },
+    cta_type:        { recordKey: "cta_type" },
+    cta_friction:    { recordKey: "cta_friction" },
+    cta_urgency:     { recordKey: "cta_urgency" },
+  };
+
+  // ── Column definitions ────────────────────────────────────
+  // Each entry: {id, label, default (shown by default), sortKey?,
+  // render(record) → HTML string, width? (CSS), align? }
+  // To add a new column, append here and rebuild — the rest is generic.
+  const COLUMN_DEFS = [
+    { id: "stage", label: "Stage", default: true, sortKey: r => r.stage || "",
+      render: r => r.stage
+        ? `<span class="sp-cell-stage" data-stage="${escHtml(r.stage)}" data-filter-col="stage" data-filter-val="${escHtml(r.stage)}" title="Click to filter by ${escHtml(r.stage)}">${escHtml(r.stage)}</span>`
+        : `<span class="sp-cell-num">—</span>` },
+    { id: "platform", label: "Platform", default: true, sortKey: r => r.platform || "",
+      render: r => r.platform
+        ? `<span class="sp-platform-pill" data-platform="${escHtml(r.platform)}" data-filter-col="platform" data-filter-val="${escHtml(r.platform)}" title="Click to filter by ${escHtml(r.platform)}">${escHtml((r.platform.charAt(0).toUpperCase()) + r.platform.slice(1))}</span>`
+        : `<span class="sp-cell-num">—</span>` },
+    { id: "score", label: "Score", default: true,
+      sortKey: r => parseInt(r.score_overall || 0, 10),
+      cellClass: r => "sp-heat-cell" + ((r.score_overall == null || r.score_overall === 0) ? " sp-heat-empty" : ""),
+      cellStyle: r => {
+        const c = scoreHeatColor(r.score_overall);
+        return c ? `background-color: ${c};` : "";
+      },
+      render: r => (r.score_overall == null || r.score_overall === 0) ? "—" : String(r.score_overall) },
+    { id: "quality", label: "Quality", default: false,
+      sortKey: r => parseInt(r.score_quality || 0, 10),
+      cellClass: r => "sp-heat-cell" + (r.score_quality == null ? " sp-heat-empty" : ""),
+      cellStyle: r => {
+        const c = scoreHeatColor(r.score_quality);
+        return c ? `background-color: ${c};` : "";
+      },
+      render: r => r.score_quality == null ? "—" : String(r.score_quality) },
+    { id: "relevance", label: "Relevance", default: false,
+      sortKey: r => parseInt(r.score_relevance || 0, 10),
+      cellClass: r => "sp-heat-cell" + (r.score_relevance == null ? " sp-heat-empty" : ""),
+      cellStyle: r => {
+        const c = scoreHeatColor(r.score_relevance);
+        return c ? `background-color: ${c};` : "";
+      },
+      render: r => r.score_relevance == null ? "—" : String(r.score_relevance) },
+    { id: "hook_type", label: "Hook type", default: true, sortKey: r => r.hook_type_label || r.hook_type || "",
+      render: r => r.hook_type
+        ? `<span class="sp-platform-pill" data-platform="hooktype" data-filter-col="hook_type" data-filter-val="${escHtml(r.hook_type)}" data-filter-label="${escHtml(r.hook_type_label || r.hook_type)}" title="Click to show only ${escHtml(r.hook_type_label || r.hook_type)}" style="background:#eef2ff;color:#4338ca;">${escHtml(r.hook_type_label || r.hook_type)}</span>`
+        : `<span class="sp-cell-num">—</span>` },
+    { id: "hook_emotional", label: "Emotion", default: false, sortKey: r => r.hook_emotional || "",
+      render: r => r.hook_emotional
+        ? `<span class="sp-platform-pill" data-filter-col="hook_emotional" data-filter-val="${escHtml(r.hook_emotional)}" title="Click to filter by ${escHtml(r.hook_emotional)}" style="background:#fce7f3;color:#9f1239;">${escHtml(r.hook_emotional)}</span>`
+        : `<span class="sp-cell-num">—</span>` },
+    { id: "hook_specificity", label: "Specificity", default: false, sortKey: r => r.hook_specificity || "",
+      render: r => r.hook_specificity
+        ? `<span class="sp-platform-pill" data-filter-col="hook_specificity" data-filter-val="${escHtml(r.hook_specificity)}" title="Click to filter by ${escHtml(r.hook_specificity)}" style="background:#ecfeff;color:#0e7490;">${escHtml(r.hook_specificity)}</span>`
+        : `<span class="sp-cell-num">—</span>` },
+    { id: "hook_word_count", label: "Hook words", default: false, sortKey: r => parseInt(r.hook_word_count || 0, 10),
+      render: r => `<span class="sp-cell-num">${r.hook_word_count != null ? r.hook_word_count : "—"}</span>` },
+    { id: "hook", label: "Hook", default: true, sortKey: r => (r.hook_preview || "").toLowerCase(),
+      render: r => `<div class="sp-cell-truncate" title="${escHtml(r.hook_preview || "")}">${escHtml(r.hook_preview || "—")}</div>` },
+    { id: "meat", label: "Meat", default: false, sortKey: r => (r.meat_preview || "").toLowerCase(),
+      render: r => `<div class="sp-cell-truncate sp-cell-meat" title="${escHtml(r.meat_preview || "")}">${escHtml(r.meat_preview || "—")}</div>` },
+    { id: "meat_type", label: "Meat type", default: false, sortKey: r => r.meat_type || "",
+      render: r => r.meat_type
+        ? `<span class="sp-platform-pill" data-filter-col="meat_type" data-filter-val="${escHtml(r.meat_type)}" title="Click to filter by ${escHtml(r.meat_type)}" style="background:#f0fdf4;color:#15803d;">${escHtml(r.meat_type)}</span>`
+        : `<span class="sp-cell-num">—</span>` },
+    { id: "meat_proof_basis", label: "Proof basis", default: false, sortKey: r => r.meat_proof_basis || "",
+      render: r => r.meat_proof_basis
+        ? `<span class="sp-platform-pill" data-filter-col="meat_proof_basis" data-filter-val="${escHtml(r.meat_proof_basis)}" title="Click to filter by ${escHtml(r.meat_proof_basis)}" style="background:#fefce8;color:#854d0e;">${escHtml(r.meat_proof_basis)}</span>`
+        : `<span class="sp-cell-num">—</span>` },
+    { id: "meat_structure", label: "Structure", default: false, sortKey: r => r.meat_structure || "",
+      render: r => r.meat_structure
+        ? `<span class="sp-platform-pill" data-filter-col="meat_structure" data-filter-val="${escHtml(r.meat_structure)}" title="Click to filter by ${escHtml(r.meat_structure)}" style="background:#f5f3ff;color:#6d28d9;">${escHtml(r.meat_structure)}</span>`
+        : `<span class="sp-cell-num">—</span>` },
+    { id: "cta", label: "CTA", default: false, sortKey: r => (r.cta_preview || "").toLowerCase(),
+      render: r => `<div class="sp-cell-truncate" title="${escHtml(r.cta_preview || "")}">${escHtml(r.cta_preview || "—")}</div>` },
+    { id: "cta_type", label: "CTA type", default: false, sortKey: r => r.cta_type || "",
+      render: r => r.cta_type
+        ? `<span class="sp-platform-pill" data-filter-col="cta_type" data-filter-val="${escHtml(r.cta_type)}" title="Click to filter by ${escHtml(r.cta_type)}" style="background:#fff7ed;color:#c2410c;">${escHtml(r.cta_type)}</span>`
+        : `<span class="sp-cell-num">—</span>` },
+    { id: "cta_keyword", label: "Keyword", default: false, sortKey: r => r.cta_keyword || "",
+      render: r => r.cta_keyword
+        ? `<span style="font-family:monospace;font-size:11px;color:var(--text);font-weight:700;">${escHtml(r.cta_keyword)}</span>`
+        : `<span class="sp-cell-num">—</span>` },
+    { id: "cta_friction", label: "Friction", default: false, sortKey: r => r.cta_friction || "",
+      render: r => r.cta_friction
+        ? `<span class="sp-platform-pill" data-friction="${escHtml(r.cta_friction)}" data-filter-col="cta_friction" data-filter-val="${escHtml(r.cta_friction)}" title="Click to filter by ${escHtml(r.cta_friction)} friction" style="background:${r.cta_friction === 'low' ? '#dcfce7' : r.cta_friction === 'medium' ? '#fef3c7' : '#fee2e2'};color:${r.cta_friction === 'low' ? '#15803d' : r.cta_friction === 'medium' ? '#b45309' : '#b91c1c'};">${escHtml(r.cta_friction)}</span>`
+        : `<span class="sp-cell-num">—</span>` },
+    { id: "cta_urgency", label: "Urgency", default: false, sortKey: r => r.cta_urgency || "",
+      render: r => r.cta_urgency
+        ? `<span class="sp-platform-pill" data-filter-col="cta_urgency" data-filter-val="${escHtml(r.cta_urgency)}" title="Click to filter by ${escHtml(r.cta_urgency)} urgency" style="background:${r.cta_urgency === 'high' ? '#fee2e2' : r.cta_urgency === 'medium' ? '#fef3c7' : '#f1f5f9'};color:${r.cta_urgency === 'high' ? '#b91c1c' : r.cta_urgency === 'medium' ? '#b45309' : '#475569'};">${escHtml(r.cta_urgency)}</span>`
+        : `<span class="sp-cell-num">—</span>` },
+    { id: "topic_tags", label: "Topics", default: false, sortKey: r => (r.topic_tags || []).join(","),
+      render: r => {
+        const t = r.topic_tags || [];
+        if (!t.length) return `<span class="sp-cell-num">—</span>`;
+        return t.slice(0, 4).map(x => `<span class="sp-platform-pill" style="background:#f1f5f9;color:#475569;margin-right:3px;">${escHtml(x)}</span>`).join("");
+      } },
+    { id: "audience_tags", label: "Audience", default: false, sortKey: r => (r.audience_tags || []).join(","),
+      render: r => {
+        const t = r.audience_tags || [];
+        if (!t.length) return `<span class="sp-cell-num">—</span>`;
+        return t.slice(0, 3).map(x => `<span class="sp-platform-pill" style="background:#fef3c7;color:#854d0e;margin-right:3px;">${escHtml(x)}</span>`).join("");
+      } },
+    { id: "quality_reason", label: "Quality reason", default: false,
+      render: r => `<div class="sp-cell-truncate sp-cell-meat" title="${escHtml(r.score_quality_reason || "")}">${escHtml(r.score_quality_reason || "—")}</div>` },
+    { id: "relevance_reason", label: "Relevance reason", default: false,
+      render: r => `<div class="sp-cell-truncate sp-cell-meat" title="${escHtml(r.score_relevance_reason || "")}">${escHtml(r.score_relevance_reason || "—")}</div>` },
+    { id: "status", label: "Status", default: false, sortKey: r => r.status || "",
+      render: r => `<span style="color:var(--text-2);font-size:11px;">${escHtml(r.status || "—")}</span>` },
+    { id: "created", label: "Created", default: true, sortKey: r => parseInt(r.created_at || 0, 10),
+      render: r => `<span class="sp-cell-num">${escHtml(formatRelative(r.created_at))}</span>` },
+    { id: "scheduled", label: "Scheduled", default: false, sortKey: r => parseInt(r.scheduled_at || 0, 10),
+      render: r => r.scheduled_at
+        ? `<span class="sp-cell-num">${escHtml(formatDate(r.scheduled_at))}</span>`
+        : `<span class="sp-cell-num">—</span>` },
+    { id: "batch", label: "Batch", default: false, sortKey: r => r.batch_id || "",
+      render: r => `<span style="font-family:monospace;font-size:11px;color:var(--text-3);">${escHtml((r.batch_id || "—").slice(0, 12))}</span>` },
+    { id: "actions", label: "Actions", default: true,
+      render: r => {
+        if (r.stage === "silver") {
+          return `<span class="sp-cell-actions">
+            <button class="sp-btn sp-btn-quiet" data-row-action="reject" data-id="${escHtml(r.record_id)}">✗</button>
+            <button class="sp-btn sp-btn-primary" data-row-action="approve" data-id="${escHtml(r.record_id)}">👍</button>
+          </span>`;
+        } else if (r.stage === "bronze") {
+          return `<span class="sp-cell-actions">
+            <button class="sp-btn sp-btn-quiet" data-row-action="reject" data-id="${escHtml(r.record_id)}">🗑</button>
+          </span>`;
+        }
+        return `<span class="sp-cell-num">—</span>`;
+      } },
+  ];
+
+  const DEFAULT_COL_IDS = COLUMN_DEFS.filter(c => c.default).map(c => c.id);
+
+  // Diverging color scale, Power BI-style conditional formatting.
+  // 0 → soft red, 50 → white, 100 → soft green. Linearly interpolated
+  // in RGB so every value in between gets a smoothly tinted cell.
+  function scoreHeatColor(value) {
+    if (value == null || isNaN(value)) return null;
+    const v = Math.max(0, Math.min(100, Number(value)));
+    const RED   = [254, 202, 202];  // red-200
+    const WHITE = [255, 255, 255];
+    const GREEN = [187, 247, 208];  // green-200
+    let from, to, t;
+    if (v <= 50) { from = RED;   to = WHITE; t = v / 50; }
+    else         { from = WHITE; to = GREEN; t = (v - 50) / 50; }
+    const r = Math.round(from[0] + (to[0] - from[0]) * t);
+    const g = Math.round(from[1] + (to[1] - from[1]) * t);
+    const b = Math.round(from[2] + (to[2] - from[2]) * t);
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+
+  // Build the per-component tips HTML used in BOTH cards and the
+  // table row expand. Pass a record; returns "" when no feedback yet
+  // so we render nothing (avoids an empty drawer). The HTML includes
+  // `Apply AI fix` + `Edit` action buttons per component, plus an
+  // inline textarea editor that appears when Edit is clicked.
+  function tipsHTML(r) {
+    const recId = r.record_id || "";
+    const stage = r.stage || "";
+    const isGold = stage === "gold";
+    const slots = [
+      ["hook", "🪝 Hook", r.hook_feedback, r.hook_preview],
+      ["meat", "🥩 Meat", r.meat_feedback, r.meat_preview],
+      ["cta",  "👉 CTA",  r.cta_feedback,  r.cta_preview],
+    ];
+    const rows = slots
+      .map(([key, label, fb, currentText]) => {
+        const f = fb || {};
+        const works = (f.what_works || "").trim();
+        const fix   = (f.to_change  || "").trim();
+        const sug   = (f.suggested  || "").trim();
+        if (!works && !fix && !sug) return "";
+        // Action buttons. Gold records are read-only (already scheduled).
+        const aiDisabled = isGold || !fix;
+        const aiTitle = isGold ? "Cancel the scheduled post first to revise."
+                       : !fix  ? "No change recommendation yet on this component."
+                       : `AI rewrite using: "${fix}"`;
+        const editDisabled = isGold;
+        const editTitle = isGold ? "Cancel the scheduled post first to edit." : "Edit this component manually";
+        return `<div class="sp-tip-row" data-component="${escHtml(key)}" data-record="${escHtml(recId)}">
+          <span class="sp-tip-head">${label}</span>
+          ${works ? `<span class="sp-tip-line"><strong>Works:</strong> ${escHtml(works)}</span>` : ""}
+          ${fix   ? `<span class="sp-tip-line"><strong>Change:</strong> ${escHtml(fix)}</span>`   : ""}
+          ${sug   ? `<span class="sp-tip-suggest">${escHtml(sug)}</span>` : ""}
+          <div class="sp-tip-actions">
+            <button class="sp-tip-btn sp-tip-btn-ai" data-tip-action="ai-fix" data-record="${escHtml(recId)}" data-component="${escHtml(key)}" ${aiDisabled ? "disabled" : ""} title="${escHtml(aiTitle)}">
+              <span class="sp-tip-spin"></span>
+              <span class="sp-tip-label">✨ Apply AI fix</span>
+            </button>
+            <button class="sp-tip-btn" data-tip-action="edit" data-record="${escHtml(recId)}" data-component="${escHtml(key)}" ${editDisabled ? "disabled" : ""} title="${escHtml(editTitle)}">
+              ✏ Edit
+            </button>
+          </div>
+          <div class="sp-tip-edit" data-component="${escHtml(key)}" data-record="${escHtml(recId)}">
+            <textarea data-tip-edit-text rows="3">${escHtml(currentText || "")}</textarea>
+            <div class="sp-tip-edit-foot">
+              <button class="sp-tip-btn" data-tip-action="edit-cancel" data-record="${escHtml(recId)}" data-component="${escHtml(key)}">Cancel</button>
+              <button class="sp-tip-btn sp-tip-btn-ai" data-tip-action="edit-save" data-record="${escHtml(recId)}" data-component="${escHtml(key)}">
+                <span class="sp-tip-spin"></span>
+                <span class="sp-tip-label">💾 Save &amp; rescore</span>
+              </button>
+            </div>
+          </div>
+        </div>`;
+      })
+      .filter(Boolean)
+      .join("");
+    if (!rows) return "";
+
+    // Attached media panel — appears between tips and footer when the
+    // record has any rendered carousel / reel / PDF refs persisted.
+    const mediaPanel = mediaPanelHTML(r);
+
+    // Drawer footer: Re-score + Generate-carousel buttons + revision count.
+    const revs = (r.hook_revisions || []).length
+                + (r.meat_revisions || []).length
+                + (r.cta_revisions || []).length;
+    const mediaCount = (r.media_refs || []).length;
+    const footer = `
+      <div class="sp-tips-foot">
+        <span>${revs ? revs + " revision" + (revs === 1 ? "" : "s") + " on this record" : "No revisions yet"}${mediaCount ? " · " + mediaCount + " media file" + (mediaCount === 1 ? "" : "s") : ""}</span>
+        <span style="display:inline-flex;gap:6px;">
+          <button data-tip-action="carousel" data-record="${escHtml(recId)}" ${isGold ? "disabled" : ""} title="${isGold ? "Cancel the scheduled post first to regenerate media." : "Plan and render a carousel from this record's content"}">
+            🎨 Generate carousel
+          </button>
+          <button data-tip-action="rescore" data-record="${escHtml(recId)}" ${isGold ? "disabled" : ""} title="${isGold ? "Cancel the scheduled post first to re-score." : "Re-run the LLM judge on the current text"}">
+            <span class="sp-tip-spin"></span>
+            <span class="sp-tip-label">🔁 Re-score</span>
+          </button>
+        </span>
+      </div>`;
+    return rows + mediaPanel + footer;
+  }
+
+  // Build the inline 📎 attached-media panel for the tips drawer.
+  // Each ref renders as a small card: thumbnail/video/pdf-tile,
+  // metadata (kind, size, slide count or duration), inline preview
+  // for images/videos, and a Download link that hits the streaming
+  // endpoint (which forces the browser to fetch the GCS blob).
+  function mediaPanelHTML(r) {
+    const refs = r.media_refs || [];
+    if (!refs.length) return "";
+    const recId = r.record_id;
+    const items = refs.map((ref, idx) => {
+      const kind = ref.kind || "";
+      const url  = `/dashboard/social-pipeline/api/records/${encodeURIComponent(recId)}/media/${idx}`;
+      const sizeKb = ref.size_bytes ? Math.max(1, Math.round(ref.size_bytes / 1024)) : null;
+      let thumb, label, sub;
+      if (kind === "instagram_slide_png") {
+        thumb = `<div class="sp-media-thumb"><img src="${url}" alt="Slide ${(ref.slide_index ?? idx) + 1}" loading="lazy"></div>`;
+        label = `IG slide ${(ref.slide_index ?? idx) + 1}`;
+        sub   = sizeKb ? `${sizeKb} KB · PNG` : "PNG";
+      } else if (kind === "instagram_reel_mp4") {
+        thumb = `<div class="sp-media-thumb sp-media-reel"><video src="${url}" controls muted loop playsinline preload="metadata"></video></div>`;
+        const dur = ref.duration_secs ? `${ref.duration_secs}s` : "";
+        label = `IG Reel`;
+        sub = [dur, ref.animation, sizeKb ? `${sizeKb} KB` : ""].filter(Boolean).join(" · ");
+      } else if (kind === "linkedin_carousel_pdf") {
+        thumb = `<div class="sp-media-thumb sp-media-pdf">📄</div>`;
+        label = `LinkedIn carousel`;
+        sub = [ref.slide_count ? `${ref.slide_count} slides` : "", sizeKb ? `${sizeKb} KB · PDF` : "PDF"].filter(Boolean).join(" · ");
+      } else {
+        thumb = `<div class="sp-media-thumb">📎</div>`;
+        label = kind || "media";
+        sub = sizeKb ? `${sizeKb} KB` : "";
+      }
+      return `<div class="sp-media-item">
+        ${thumb}
+        <div class="sp-media-meta"><strong>${escHtml(label)}</strong>${escHtml(sub)}</div>
+        <div class="sp-media-actions">
+          <a class="sp-media-link" href="${url}" target="_blank" rel="noopener">Open</a>
+          <a class="sp-media-link" href="${url}" download>Download</a>
+        </div>
+      </div>`;
+    }).join("");
+    return `<div class="sp-media-panel">
+      <div class="sp-media-head">📎 Attached media (${refs.length})</div>
+      <div class="sp-media-list">${items}</div>
+    </div>`;
+  }
+
+  function formatRelative(epoch) {
+    if (!epoch) return "—";
+    const now = Date.now() / 1000;
+    const diff = now - epoch;
+    if (diff < 60) return "just now";
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+    return new Date(epoch * 1000).toLocaleDateString();
+  }
+  function formatDate(epoch) {
+    if (!epoch) return "—";
+    return new Date(epoch * 1000).toLocaleString(undefined, {
+      month: "short", day: "numeric", hour: "numeric", minute: "2-digit"
+    });
+  }
+
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => document.querySelectorAll(sel);
+
+  // ── localStorage for brief defaults ───────────────────────
+  const LS_KEY = "sp_brief_defaults_v1";
+  try {
+    STATE.briefDefaults = JSON.parse(localStorage.getItem(LS_KEY) || "{}") || {};
+  } catch (_) { STATE.briefDefaults = {}; }
+
+  function saveBriefDefaults(b) {
+    STATE.briefDefaults = b;
+    try { localStorage.setItem(LS_KEY, JSON.stringify(b)); } catch (_) {}
+  }
+
+  // ── localStorage for view + columns + sort + filters ──────
+  const LS_VIEW_KEY = "sp_view_prefs_v1";
+  try {
+    const saved = JSON.parse(localStorage.getItem(LS_VIEW_KEY) || "{}") || {};
+    if (saved.view === "table" || saved.view === "cards") STATE.view = saved.view;
+    if (Array.isArray(saved.visibleCols)) STATE.visibleCols = saved.visibleCols;
+    if (saved.sort && typeof saved.sort.col === "string") STATE.sort = saved.sort;
+    if (saved.filters && typeof saved.filters === "object") STATE.filters = saved.filters;
+  } catch (_) {}
+  if (!STATE.visibleCols) STATE.visibleCols = DEFAULT_COL_IDS.slice();
+
+  function saveViewPrefs() {
+    try {
+      localStorage.setItem(LS_VIEW_KEY, JSON.stringify({
+        view: STATE.view,
+        visibleCols: STATE.visibleCols,
+        sort: STATE.sort,
+        filters: STATE.filters,
+      }));
+    } catch (_) {}
+  }
+
+  // ── Toast ────────────────────────────────────────────────
+  function toast(msg, kind) {
+    const el = $("#spToast");
+    el.className = "sp-toast" + (kind ? " sp-toast-" + kind : "") + " is-visible";
+    el.textContent = msg;
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => {
+      el.classList.remove("is-visible");
+    }, 3200);
+  }
+
+  // ── Popover wiring ───────────────────────────────────────
+  function openPopover() {
+    $("#spInpTopic").value    = STATE.briefDefaults.main_topic || "";
+    $("#spInpAudience").value = STATE.briefDefaults.audience   || "";
+    $("#spInpRole").value     = STATE.briefDefaults.role       || "";
+    $("#spPopOverlay").classList.add("is-visible");
+    setTimeout(() => $("#spInpTopic").focus(), 50);
+  }
+  function closePopover() {
+    $("#spPopOverlay").classList.remove("is-visible");
+  }
+
+  document.addEventListener("click", (ev) => {
+    const chip = ev.target.closest(".sp-chip");
+    if (!chip) return;
+    const group = chip.parentElement.dataset.chipGroup;
+    if (group === "count") {
+      $$(`[data-chip-group="count"] .sp-chip`).forEach(c => c.classList.remove("is-selected"));
+      chip.classList.add("is-selected");
+    } else if (group === "platforms") {
+      chip.classList.toggle("is-selected");
+      // Always at least one selected.
+      const any = $$(`[data-chip-group="platforms"] .sp-chip.is-selected`).length;
+      if (!any) chip.classList.add("is-selected");
+    }
+  });
+
+  $("#spGenerateBtn").addEventListener("click", openPopover);
+  $("#spHeroBtn").addEventListener("click", openPopover);
+  $("#spPopCancel").addEventListener("click", closePopover);
+  $("#spPopOverlay").addEventListener("click", (ev) => {
+    if (ev.target === $("#spPopOverlay")) closePopover();
+  });
+  $("#spPopGo").addEventListener("click", submitGenerate);
+  document.addEventListener("keydown", (ev) => {
+    if (ev.key === "Escape") {
+      closePopover();
+      $("#spDrawerOverlay").classList.remove("is-visible");
+    }
+  });
+
+  // ── Generate submit ──────────────────────────────────────
+  async function submitGenerate() {
+    const platforms = Array.from(
+      $$(`[data-chip-group="platforms"] .sp-chip.is-selected`)
+    ).map(c => c.dataset.value);
+    const count = parseInt(
+      ($(`[data-chip-group="count"] .sp-chip.is-selected`) || {}).dataset?.value || "10",
+      10
+    );
+    const brief = {
+      main_topic: $("#spInpTopic").value.trim(),
+      audience:   $("#spInpAudience").value.trim(),
+      role:       $("#spInpRole").value.trim(),
+      tone:       "direct, founder-led",
+    };
+    if (!brief.main_topic) {
+      toast("Need a topic to start", "error");
+      $("#spInpTopic").focus();
+      return;
+    }
+
+    saveBriefDefaults(brief);
+    const goBtn = $("#spPopGo");
+    goBtn.disabled = true;
+    goBtn.textContent = "Starting…";
+
+    try {
+      const r = await fetch("/dashboard/social-pipeline/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ platforms, brief, count }),
+      });
+      const data = await r.json();
+      if (!r.ok) {
+        toast(data.detail || data.error || "Couldn't start generation", "error");
+        return;
+      }
+      closePopover();
+      STATE.job = { id: data.job_id, total: count * platforms.length };
+      showSkeletons(STATE.job.total);
+      showTicker("🥣 Cooking up ideas…");
+      startPolling();
+    } catch (err) {
+      toast("Network error: " + err.message, "error");
+    } finally {
+      goBtn.disabled = false;
+      goBtn.textContent = "Let's go →";
+    }
+  }
+
+  // ── Skeletons + ticker ───────────────────────────────────
+  function showSkeletons(n) {
+    const lane = $("#spLaneBronze");
+    let skel = "";
+    for (let i = 0; i < n; i++) skel += '<div class="sp-skel" data-skel></div>';
+    lane.innerHTML = skel + lane.innerHTML;
+    refreshHero();
+  }
+  function clearSkeletons() {
+    $$("[data-skel]").forEach(el => el.remove());
+  }
+  function showTicker(text) {
+    const t = $("#spTicker");
+    t.textContent = text;
+    t.classList.add("is-visible");
+  }
+  function hideTicker() {
+    $("#spTicker").classList.remove("is-visible");
+  }
+
+  // ── Polling ──────────────────────────────────────────────
+  function startPolling() {
+    if (STATE.poll) clearInterval(STATE.poll);
+    STATE.poll = setInterval(refreshAll, 2200);
+    refreshAll();
+  }
+  function stopPolling() {
+    if (STATE.poll) { clearInterval(STATE.poll); STATE.poll = null; }
+  }
+
+  async function refreshAll() {
+    try {
+      const tasks = [
+        fetchRecords("bronze"),
+        fetchRecords("silver"),
+        fetchRecords("gold"),
+      ];
+      if (STATE.job && STATE.job.id) tasks.push(fetchJob(STATE.job.id));
+      await Promise.all(tasks);
+      // First-load gate: only after the first fetch completes do we
+      // know whether to show the empty-state hero. Hide the loading
+      // placeholder, flip the flag, then render.
+      if (!STATE.firstLoadDone) {
+        STATE.firstLoadDone = true;
+        const loading = document.getElementById("spLoading");
+        if (loading) loading.style.display = "none";
+      }
+      renderAllLanes();
+      maybeFinishJob();
+    } catch (err) {
+      // Silent — don't kill the polling loop on transient errors.
+      // (But still drop the loading placeholder so the user isn't stuck.)
+      if (!STATE.firstLoadDone) {
+        STATE.firstLoadDone = true;
+        const loading = document.getElementById("spLoading");
+        if (loading) loading.style.display = "none";
+      }
+    }
+  }
+
+  async function fetchRecords(stage) {
+    // Pull up to 500 — covers heavy users without paginating in v0.
+    // Records persist in GCS forever; the index is per-customer so
+    // this list is just a flat read of one JSON file.
+    const r = await fetch(`/dashboard/social-pipeline/api/records?stage=${stage}&limit=500`);
+    if (!r.ok) return;
+    const data = await r.json();
+    const map = new Map();
+    for (const rec of (data.records || [])) {
+      map.set(rec.record_id, rec);
+    }
+    STATE[stage] = map;
+  }
+
+  async function fetchJob(jobId) {
+    const r = await fetch(`/dashboard/social-pipeline/api/jobs/${jobId}`);
+    if (!r.ok) return;
+    const j = await r.json();
+    STATE.job = { ...STATE.job, ...j };
+    const max = STATE.job.total || (j.total || j.generated || 1);
+    if (j.generated > 0 && j.scored < j.generated) {
+      showTicker(`🥣 Cooking up idea ${Math.min(j.generated, max)} of ${max}…`);
+    }
+    if (j.scored > 0 && !j.done) {
+      showTicker(`🧐 Scoring ${j.scored}/${j.generated || max}…`);
+    }
+  }
+
+  function maybeFinishJob() {
+    if (!STATE.job || !STATE.job.id) return;
+    if (STATE.job.done) {
+      hideTicker();
+      clearSkeletons();
+      const errs = STATE.job.errors || 0;
+      if (errs) toast(`Done — but ${errs} item${errs > 1 ? "s" : ""} hit an error`, "error");
+      else      toast("Ideas are ready 🎉", "success");
+      STATE.job = null;
+      // Slow polling once done.
+      stopPolling();
+      STATE.poll = setInterval(refreshAll, 8000);
+    }
+  }
+
+  // ── Render ───────────────────────────────────────────────
+  function renderAllLanes() {
+    renderLane("bronze");
+    renderLane("silver");
+    renderLane("gold");
+    refreshHero();
+    refreshSavedChip();
+    $("#spLaneCountBronze").textContent = STATE.bronze.size;
+    $("#spLaneCountSilver").textContent = STATE.silver.size;
+    $("#spLaneCountGold").textContent   = STATE.gold.size;
+    if (STATE.view === "table") renderTable();
+  }
+
+  // ── View switcher ────────────────────────────────────────
+  function applyView() {
+    const isTable = STATE.view === "table";
+    $("#spLanes").style.display     = isTable ? "none" : "";
+    $("#spTableWrap").hidden        = !isTable;
+    $("#spColsBtn").hidden          = !isTable;
+    $("#spViewCardsBtn").classList.toggle("is-active", !isTable);
+    $("#spViewTableBtn").classList.toggle("is-active",  isTable);
+    $("#spViewCardsBtn").setAttribute("aria-selected", String(!isTable));
+    $("#spViewTableBtn").setAttribute("aria-selected", String( isTable));
+    if (isTable) renderTable();
+    else {
+      // Hide the filter bar in cards view (filters are table-specific).
+      const bar = document.getElementById("spFilters");
+      if (bar) { bar.classList.remove("is-visible"); bar.hidden = true; }
+    }
+  }
+  document.addEventListener("click", (ev) => {
+    const btn = ev.target.closest(".sp-view-btn");
+    if (!btn) return;
+    const next = btn.dataset.view;
+    if (!next || next === STATE.view) return;
+    STATE.view = next;
+    saveViewPrefs();
+    applyView();
+  });
+
+  // ── Table renderer ───────────────────────────────────────
+  function allRecords() {
+    // Combine bronze/silver/gold/rejected into a single flat array,
+    // then apply any active filters.
+    const merged = new Map();
+    for (const m of [STATE.bronze, STATE.silver, STATE.gold]) {
+      for (const [id, r] of m) merged.set(id, r);
+    }
+    let arr = Array.from(merged.values());
+    const activeFilters = Object.entries(STATE.filters || {});
+    if (activeFilters.length) {
+      arr = arr.filter(rec => activeFilters.every(([colId, f]) => {
+        const cfg = FILTERABLE_COLS[colId];
+        if (!cfg) return true;
+        const v = (rec[cfg.recordKey] || "").toString();
+        return v === (f.value || "");
+      }));
+    }
+    return arr;
+  }
+
+  // ── Active filters: bar render, click-to-add, click-X-to-remove ──
+  function renderFiltersBar() {
+    const bar      = document.getElementById("spFilters");
+    const chipsEl  = document.getElementById("spFilterChips");
+    if (!bar || !chipsEl) return;
+    const entries  = Object.entries(STATE.filters || {});
+    if (!entries.length || STATE.view !== "table") {
+      bar.classList.remove("is-visible");
+      bar.hidden = true;
+      return;
+    }
+    chipsEl.innerHTML = entries.map(([colId, f]) => {
+      const colDef = COLUMN_DEFS.find(c => c.id === colId);
+      const colLabel = colDef ? colDef.label : colId;
+      return `<span class="sp-filter-chip">
+        <span class="sp-filter-chip-key">${escHtml(colLabel)}:</span>
+        ${escHtml(f.label || f.value || "")}
+        <button class="sp-filter-chip-x" type="button" data-filter-remove="${escHtml(colId)}" aria-label="Remove filter">×</button>
+      </span>`;
+    }).join("");
+    bar.classList.add("is-visible");
+    bar.hidden = false;
+  }
+
+  function setFilter(colId, value, label) {
+    if (!FILTERABLE_COLS[colId]) return;
+    if (!value) return;
+    // Click the same value again to remove the filter (toggle).
+    const existing = STATE.filters[colId];
+    if (existing && existing.value === value) {
+      delete STATE.filters[colId];
+    } else {
+      STATE.filters[colId] = { value: String(value), label: String(label || value) };
+    }
+    saveViewPrefs();
+    renderFiltersBar();
+    renderTable();
+  }
+
+  function clearAllFilters() {
+    STATE.filters = {};
+    saveViewPrefs();
+    renderFiltersBar();
+    renderTable();
+  }
+
+  // Delegated click: any pill carrying data-filter-col adds itself.
+  document.addEventListener("click", (ev) => {
+    const pill = ev.target.closest("[data-filter-col][data-filter-val]");
+    if (!pill) return;
+    if (ev.target.closest("[data-filter-remove]")) return;  // removal is its own handler
+    if (!ev.target.closest("#spTableBody, #spFilterChips")) return;  // only inside the table
+    ev.stopPropagation();   // don't toggle row expand
+    setFilter(pill.dataset.filterCol, pill.dataset.filterVal, pill.dataset.filterLabel || pill.textContent.trim());
+  });
+
+  // Filter-chip remove (×).
+  document.addEventListener("click", (ev) => {
+    const x = ev.target.closest("[data-filter-remove]");
+    if (!x) return;
+    delete STATE.filters[x.dataset.filterRemove];
+    saveViewPrefs();
+    renderFiltersBar();
+    renderTable();
+  });
+
+  document.getElementById("spFiltersClear")?.addEventListener("click", clearAllFilters);
+
+  function activeColumns() {
+    return STATE.visibleCols
+      .map(id => COLUMN_DEFS.find(c => c.id === id))
+      .filter(Boolean);
+  }
+
+  function renderTable() {
+    renderFiltersBar();
+    const cols = activeColumns();
+    const head = $("#spTableHead");
+    const body = $("#spTableBody");
+
+    // Header — sortable.
+    head.innerHTML = cols.map(c => {
+      const isActive = STATE.sort.col === c.id;
+      const arrow = isActive ? (STATE.sort.dir === "asc" ? "▲" : "▼") : "↕";
+      return `<th data-col-id="${escHtml(c.id)}"${isActive ? " data-sort-active" : ""}>
+        ${escHtml(c.label)}<span class="sp-sort-arrow">${arrow}</span>
+      </th>`;
+    }).join("");
+
+    // Sort + filter records.
+    let rows = allRecords();
+    const sortCol = COLUMN_DEFS.find(c => c.id === STATE.sort.col);
+    if (sortCol && sortCol.sortKey) {
+      rows.sort((a, b) => {
+        const av = sortCol.sortKey(a), bv = sortCol.sortKey(b);
+        if (av < bv) return STATE.sort.dir === "asc" ? -1 : 1;
+        if (av > bv) return STATE.sort.dir === "asc" ?  1 : -1;
+        return 0;
+      });
+    } else {
+      // Default: stage rank (gold > silver > bronze) then created desc.
+      const stageRank = { gold: 3, silver: 2, bronze: 1, rejected: 0 };
+      rows.sort((a, b) => {
+        const ar = stageRank[a.stage] || 0, br = stageRank[b.stage] || 0;
+        if (ar !== br) return br - ar;
+        return (b.created_at || 0) - (a.created_at || 0);
+      });
+    }
+
+    // Body.
+    if (!rows.length) {
+      body.innerHTML = "";
+      $("#spTableEmpty").hidden = false;
+    } else {
+      $("#spTableEmpty").hidden = true;
+      body.innerHTML = rows.map(r => {
+        const cells = cols.map(c => {
+          const cls   = c.cellClass ? c.cellClass(r) : "";
+          const style = c.cellStyle ? c.cellStyle(r) : "";
+          const clsAttr   = cls   ? ` class="${escHtml(cls)}"`   : "";
+          const styleAttr = style ? ` style="${escHtml(style)}"` : "";
+          return `<td${clsAttr}${styleAttr}>${c.render(r)}</td>`;
+        }).join("");
+        const expanded = STATE.expandedRows.has(r.record_id);
+        return `<tr data-id="${escHtml(r.record_id)}"${expanded ? ' class="is-expanded"' : ""}>${cells}</tr>
+                <tr class="sp-row-expand"><td colspan="${cols.length}">
+                  <div class="sp-row-expand-inner">
+                    <div class="sp-row-expand-block">
+                      <h5>🪝 Hook</h5><p>${escHtml(r.hook_preview || "—")}</p>
+                    </div>
+                    <div class="sp-row-expand-block">
+                      <h5>🥩 Meat</h5><p>${escHtml(r.meat_preview || "—")}</p>
+                    </div>
+                    <div class="sp-row-expand-block">
+                      <h5>👉 CTA</h5><p>${escHtml(r.cta_preview || "—")}</p>
+                    </div>
+                    <div class="sp-row-expand-block">
+                      <h5>📊 Score</h5><p>Overall ${r.score_overall || "—"} · Quality ${r.score_quality || "—"} · Relevance ${r.score_relevance || "—"}</p>
+                    </div>
+                    ${(r.score_quality_reason || r.score_relevance_reason) ? `
+                      <div class="sp-row-expand-block sp-expand-reasons">
+                        <h5>Why this score</h5>
+                        <p><strong>Quality:</strong> ${escHtml(r.score_quality_reason || "—")}</p>
+                        <p><strong>Relevance:</strong> ${escHtml(r.score_relevance_reason || "—")}</p>
+                      </div>` : ""}
+                    ${tipsHTML(r) ? `
+                      <div class="sp-row-expand-block sp-expand-reasons">
+                        <h5>💡 Tips per component &amp; attached media</h5>
+                        <div class="sp-tips-block is-open" style="border-left:none;padding:0;background:transparent;">
+                          ${tipsHTML(r)}
+                        </div>
+                      </div>` : ""}
+                    ${(r.media_refs || []).length && !tipsHTML(r) ? `
+                      <div class="sp-row-expand-block sp-expand-reasons">
+                        <h5>📎 Attached media</h5>
+                        <div style="margin-top:6px;">${mediaPanelHTML(r)}</div>
+                      </div>` : ""}
+                  </div>
+                </td></tr>`;
+      }).join("");
+    }
+
+    // Animate score bars from 0 → N (matches the cards behavior).
+    requestAnimationFrame(() => {
+      body.querySelectorAll(".sp-score-bar-fill[data-target]").forEach(el => {
+        el.style.width = el.dataset.target + "%";
+      });
+    });
+  }
+
+  // Sortable headers.
+  document.addEventListener("click", (ev) => {
+    const th = ev.target.closest("#spTableHead th[data-col-id]");
+    if (!th) return;
+    const col = th.dataset.colId;
+    if (STATE.sort.col === col) {
+      STATE.sort.dir = STATE.sort.dir === "asc" ? "desc" : "asc";
+    } else {
+      STATE.sort.col = col;
+      STATE.sort.dir = "desc";
+    }
+    saveViewPrefs();
+    renderTable();
+  });
+
+  // Row click toggles expand. Skip if the click was on an action button.
+  document.addEventListener("click", (ev) => {
+    const row = ev.target.closest("#spTableBody tr[data-id]");
+    if (!row) return;
+    if (ev.target.closest("[data-row-action]")) return;
+    const id = row.dataset.id;
+    if (STATE.expandedRows.has(id)) STATE.expandedRows.delete(id);
+    else                            STATE.expandedRows.add(id);
+    renderTable();
+  });
+
+  // Inline action buttons in the table.
+  document.addEventListener("click", (ev) => {
+    const btn = ev.target.closest("[data-row-action]");
+    if (!btn) return;
+    ev.stopPropagation();
+    const action = btn.dataset.rowAction;
+    const id     = btn.dataset.id;
+    if (action === "reject")  return rejectCard(id);
+    if (action === "approve") return openApproveDrawer(id);
+  });
+
+  // ── Column manager ───────────────────────────────────────
+  function renderColumnManager() {
+    const list = $("#spColsList");
+    list.innerHTML = COLUMN_DEFS.map(c => {
+      const checked = STATE.visibleCols.includes(c.id);
+      return `<label class="sp-col-item">
+        <input type="checkbox" data-col="${escHtml(c.id)}" ${checked ? "checked" : ""}>
+        <span>${escHtml(c.label)}</span>
+      </label>`;
+    }).join("");
+  }
+  function openColsPop() {
+    renderColumnManager();
+    $("#spColsPop").classList.add("is-visible");
+  }
+  function closeColsPop() {
+    $("#spColsPop").classList.remove("is-visible");
+  }
+  $("#spColsBtn").addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    if ($("#spColsPop").classList.contains("is-visible")) closeColsPop();
+    else                                                  openColsPop();
+  });
+  document.addEventListener("click", (ev) => {
+    const pop = $("#spColsPop");
+    if (!pop.classList.contains("is-visible")) return;
+    if (pop.contains(ev.target) || ev.target.closest("#spColsBtn")) return;
+    closeColsPop();
+  });
+  $("#spColsList").addEventListener("change", (ev) => {
+    const cb = ev.target.closest("input[type='checkbox'][data-col]");
+    if (!cb) return;
+    const id = cb.dataset.col;
+    if (cb.checked) {
+      if (!STATE.visibleCols.includes(id)) STATE.visibleCols.push(id);
+    } else {
+      STATE.visibleCols = STATE.visibleCols.filter(x => x !== id);
+      // Always keep at least one column visible.
+      if (!STATE.visibleCols.length) STATE.visibleCols = [id];
+      if (STATE.visibleCols.length === 1 && STATE.visibleCols[0] === id) cb.checked = true;
+    }
+    saveViewPrefs();
+    if (STATE.view === "table") renderTable();
+  });
+  $("#spColsAll").addEventListener("click", () => {
+    STATE.visibleCols = COLUMN_DEFS.map(c => c.id);
+    saveViewPrefs();
+    renderColumnManager();
+    if (STATE.view === "table") renderTable();
+  });
+  $("#spColsReset").addEventListener("click", () => {
+    STATE.visibleCols = DEFAULT_COL_IDS.slice();
+    saveViewPrefs();
+    renderColumnManager();
+    if (STATE.view === "table") renderTable();
+  });
+
+  function refreshHero() {
+    // Don't show anything (hero or lanes) until we've heard back from
+    // GCS at least once. Otherwise users with saved records would see
+    // a flash of "Let's make some posts" before their work loads.
+    const lanes = $("#spLanes").querySelectorAll(".sp-lane");
+    if (!STATE.firstLoadDone) {
+      $("#spHero").style.display = "none";
+      lanes.forEach(l => { l.style.display = "none"; });
+      return;
+    }
+    const empty = !STATE.bronze.size && !STATE.silver.size && !STATE.gold.size
+                  && !$$("[data-skel]").length;
+    $("#spHero").style.display = empty ? "" : "none";
+    // Hide the lanes' inner content when hero is up — looks cleaner.
+    lanes.forEach(l => { l.style.display = empty ? "none" : ""; });
+  }
+
+  function refreshSavedChip() {
+    if (!STATE.firstLoadDone) return;
+    const total = STATE.bronze.size + STATE.silver.size + STATE.gold.size;
+    const chip = document.getElementById("spSavedChip");
+    if (!chip) return;
+    if (!total) { chip.hidden = true; return; }
+    chip.hidden = false;
+    chip.textContent = `${total} idea${total === 1 ? "" : "s"} saved`;
+  }
+
+  function renderLane(stage) {
+    const root = $(`#spLane${stage[0].toUpperCase() + stage.slice(1)}`);
+    const recs = Array.from(STATE[stage].values());
+    if (!recs.length) {
+      root.innerHTML = stage === "bronze"
+        ? "" /* skeletons may live here during generation */
+        : `<div style="color:var(--text-3);font-size:12px;padding:8px 4px;">${
+              stage === "silver" ? "Scored cards land here." :
+              "Approved cards land here."
+          }</div>`;
+      return;
+    }
+    root.innerHTML = recs.map(r => cardHTML(r, stage)).join("");
+    // Wire up actions.
+    root.querySelectorAll("[data-action]").forEach(btn => {
+      btn.addEventListener("click", onCardAction);
+    });
+    // Animate score bars from 0 → N on first paint.
+    requestAnimationFrame(() => {
+      root.querySelectorAll(".sp-score-bar-fill[data-target]").forEach(el => {
+        el.style.width = el.dataset.target + "%";
+      });
+    });
+  }
+
+  function escHtml(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function cardHTML(r, stage) {
+    const platformLabel = (r.platform || "").charAt(0).toUpperCase() + (r.platform || "").slice(1);
+    const hookText = r.hook_preview || "";
+    const meatText = r.meat_preview || "";
+    const ctaText  = r.cta_preview  || "";
+    let scoreBlock = "";
+    let actionBlock = "";
+
+    if (stage === "silver" || stage === "gold") {
+      const score = parseInt(r.score_overall || 0, 10);
+      const tier = score >= 75 ? "high" : (score >= 50 ? "mid" : "low");
+      const qNum = parseInt(r.score_quality   || 0, 10);
+      const rNum = parseInt(r.score_relevance || 0, 10);
+      const qReason = r.score_quality_reason   || "";
+      const rReason = r.score_relevance_reason || "";
+      const reasonsBlock = (qReason || rReason) ? `
+        <div class="sp-score-reasons">
+          ${qReason ? `<span class="sp-score-reason" data-axis="quality"><span class="sp-axis">Quality ${qNum}</span>${escHtml(qReason)}</span>` : ""}
+          ${rReason ? `<span class="sp-score-reason" data-axis="relevance"><span class="sp-axis">Relevance ${rNum}</span>${escHtml(rReason)}</span>` : ""}
+        </div>` : "";
+      scoreBlock = `
+        <div class="sp-score-row">
+          <div class="sp-score-bar" data-tier="${tier}">
+            <div class="sp-score-bar-fill" data-target="${score}"></div>
+          </div>
+          <div class="sp-score-num">${score}</div>
+        </div>
+        ${reasonsBlock}`;
+    }
+
+    if (stage === "bronze") {
+      actionBlock = `
+        <div class="sp-card-actions">
+          <button class="sp-btn sp-btn-quiet" data-action="reject" data-id="${escHtml(r.record_id)}">🗑 Toss</button>
+        </div>`;
+    } else if (stage === "silver") {
+      actionBlock = `
+        <div class="sp-card-actions">
+          <button class="sp-btn sp-btn-quiet" data-action="reject" data-id="${escHtml(r.record_id)}">✗ Reject</button>
+          <button class="sp-btn sp-btn-primary" data-action="approve" data-id="${escHtml(r.record_id)}">👍 Approve</button>
+        </div>`;
+    } else if (stage === "gold") {
+      const when = r.scheduled_at
+        ? new Date(r.scheduled_at * 1000).toLocaleString(undefined, {
+            weekday: "short", month: "short", day: "numeric",
+            hour: "numeric", minute: "2-digit"
+          })
+        : "—";
+      actionBlock = `
+        <div class="sp-card-rationale" style="margin-top:8px;">
+          ✅ Scheduled · ${escHtml(when)}
+        </div>`;
+    }
+
+    // Render the meat row only if we have meat text. Same for CTA.
+    // Old records may be missing previews until the backfill runs.
+    const meatRow = meatText ? `
+        <div class="sp-card-row sp-row-meat">
+          <div class="sp-row-emoji">🥩</div>
+          <div class="sp-row-text">${escHtml(meatText)}</div>
+        </div>` : "";
+    const ctaRow = ctaText ? `
+        <div class="sp-card-row sp-row-cta">
+          <div class="sp-row-emoji">👉</div>
+          <div class="sp-row-text">${escHtml(ctaText)}</div>
+        </div>` : "";
+
+    // Tips drawer — only on Silver/Gold and only if we have any
+    // per-component feedback. Collapsed by default so the card stays
+    // compact; click to expand.
+    let tipsBlock = "";
+    if (stage === "silver" || stage === "gold") {
+      const tips = tipsHTML(r);
+      if (tips) {
+        // Preserve open/closed state across re-renders so the user
+        // sees the updated Works/Change tips right where they were
+        // reading after Apply-AI-fix / Save / Re-score.
+        const isOpen = STATE.tipsOpen.has(r.record_id);
+        tipsBlock = `
+          <button class="sp-tips-toggle ${isOpen ? "is-open" : ""}" data-tips-toggle data-record="${escHtml(r.record_id)}" type="button">
+            <span>💡 Tips · why this score &amp; what to change</span>
+            <span class="sp-tips-arrow">▼</span>
+          </button>
+          <div class="sp-tips-block ${isOpen ? "is-open" : ""}">${tips}</div>`;
+      }
+    }
+
+    const mediaCountForBadge = (r.media_refs || []).length;
+    const mediaBadge = mediaCountForBadge
+      ? `<span class="sp-media-badge" title="${mediaCountForBadge} attached media file${mediaCountForBadge === 1 ? "" : "s"}">📎 ${mediaCountForBadge}</span>`
+      : "";
+
+    return `
+      <article class="sp-card" data-id="${escHtml(r.record_id)}">
+        <span class="sp-platform-pill" data-platform="${escHtml(r.platform || '')}">${escHtml(platformLabel)}</span>${mediaBadge}
+        ${scoreBlock}
+        <div class="sp-card-row sp-row-hook">
+          <div class="sp-row-emoji">🪝</div>
+          <div class="sp-row-text">${escHtml(hookText)}</div>
+        </div>
+        ${meatRow}
+        ${ctaRow}
+        ${tipsBlock}
+        ${actionBlock}
+      </article>`;
+  }
+
+  // Tips drawer toggle (delegated — works for any card, Silver or Gold).
+  // We track open/closed state in STATE.tipsOpen so the next re-render
+  // (e.g. after Apply AI fix) keeps the drawer open and the user can
+  // see the freshly-updated Works/Change/Try lines without re-clicking.
+  document.addEventListener("click", (ev) => {
+    const toggle = ev.target.closest("[data-tips-toggle]");
+    if (!toggle) return;
+    ev.stopPropagation();
+    const recId = toggle.dataset.record || "";
+    const willOpen = !toggle.classList.contains("is-open");
+    if (recId) {
+      if (willOpen) STATE.tipsOpen.add(recId);
+      else          STATE.tipsOpen.delete(recId);
+    }
+    toggle.classList.toggle("is-open", willOpen);
+    const drawer = toggle.nextElementSibling;
+    if (drawer && drawer.classList.contains("sp-tips-block")) {
+      drawer.classList.toggle("is-open", willOpen);
+    }
+  });
+
+  // ── The continuous refinement loop ───────────────────────
+  // Apply AI fix → Edit → Save → Re-score. Each handler POSTs to
+  // its endpoint, shows a spinner on the clicked button, then
+  // refreshes the records list so the new text + score appear.
+  document.addEventListener("click", async (ev) => {
+    const btn = ev.target.closest("[data-tip-action]");
+    if (!btn) return;
+    ev.stopPropagation();
+    if (btn.disabled) return;
+    const action = btn.dataset.tipAction;
+    const recId  = btn.dataset.record;
+    const comp   = btn.dataset.component;
+    if (!recId) return;
+
+    if (action === "edit") {
+      // Toggle the inline editor for this component row.
+      const row = btn.closest(".sp-tip-row");
+      if (!row) return;
+      const editor = row.querySelector(".sp-tip-edit");
+      if (!editor) return;
+      const willOpen = !editor.classList.contains("is-active");
+      editor.classList.toggle("is-active", willOpen);
+      if (willOpen) {
+        const ta = editor.querySelector("textarea");
+        if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+      }
+      return;
+    }
+
+    if (action === "edit-cancel") {
+      const editor = btn.closest(".sp-tip-edit");
+      if (editor) editor.classList.remove("is-active");
+      return;
+    }
+
+    if (action === "ai-fix") {
+      await runRecordAction(btn, async () => {
+        const r = await fetch(`/dashboard/social-pipeline/api/records/${encodeURIComponent(recId)}/revise`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ component: comp }),
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.detail || data.error || "AI fix failed");
+        toast(`✨ AI rewrote the ${comp} — re-scored.`, "success");
+        await refreshAll();
+      });
+      return;
+    }
+
+    if (action === "edit-save") {
+      const editor = btn.closest(".sp-tip-edit");
+      const ta = editor && editor.querySelector("textarea[data-tip-edit-text]");
+      const text = ta ? ta.value.trim() : "";
+      if (!text) { toast("Empty — nothing to save", "error"); return; }
+      await runRecordAction(btn, async () => {
+        const r = await fetch(`/dashboard/social-pipeline/api/records/${encodeURIComponent(recId)}/edit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ component: comp, text, rescore: true }),
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.detail || data.error || "Save failed");
+        toast(`💾 Saved & re-scored.`, "success");
+        if (editor) editor.classList.remove("is-active");
+        await refreshAll();
+      });
+      return;
+    }
+
+    if (action === "rescore") {
+      await runRecordAction(btn, async () => {
+        const r = await fetch(`/dashboard/social-pipeline/api/records/${encodeURIComponent(recId)}/rescore`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.detail || data.error || "Re-score failed");
+        toast(`🔁 Re-scored.`, "success");
+        await refreshAll();
+      });
+      return;
+    }
+
+    if (action === "carousel") {
+      // Find the record and open the modal pre-populated for it.
+      const rec = STATE.silver.get(recId) || STATE.gold.get(recId) || STATE.bronze.get(recId);
+      openCarouselModal(rec || { record_id: recId });
+      return;
+    }
+  });
+
+  // Helper that handles the spinner / disabled state around any
+  // record-mutating action. Errors get toasted; success is the
+  // caller's job to message.
+  async function runRecordAction(btn, fn) {
+    btn.classList.add("is-loading");
+    btn.disabled = true;
+    try {
+      await fn();
+    } catch (err) {
+      toast(err.message || String(err), "error");
+    } finally {
+      btn.classList.remove("is-loading");
+      btn.disabled = false;
+    }
+  }
+
+  // ── Card actions ─────────────────────────────────────────
+  async function onCardAction(ev) {
+    const btn = ev.currentTarget;
+    const action = btn.dataset.action;
+    const id = btn.dataset.id;
+    if (action === "reject") return rejectCard(id);
+    if (action === "approve") return openApproveDrawer(id);
+  }
+
+  async function rejectCard(id) {
+    const r = await fetch(`/dashboard/social-pipeline/api/records/${id}/reject`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    if (r.ok) {
+      STATE.bronze.delete(id);
+      STATE.silver.delete(id);
+      renderAllLanes();
+      toast("Tossed 🗑");
+    } else {
+      toast("Couldn't reject — try again", "error");
+    }
+  }
+
+  // ── Approve drawer ───────────────────────────────────────
+  function buildTimeChips() {
+    const now = new Date();
+    const opts = [];
+    // Today 5pm — only if it's still in the future and >= 30 min away.
+    const today5 = new Date(now); today5.setHours(17, 0, 0, 0);
+    if (today5.getTime() - now.getTime() > 30 * 60 * 1000) {
+      opts.push({ label: "Today 5:00 pm", date: today5 });
+    }
+    const tomorrow9 = new Date(now); tomorrow9.setDate(tomorrow9.getDate() + 1); tomorrow9.setHours(9, 0, 0, 0);
+    opts.push({ label: "Tomorrow 9:00 am", date: tomorrow9 });
+
+    const nextTuesday = nextWeekday(now, 2); nextTuesday.setHours(10, 0, 0, 0);
+    opts.push({ label: "Next Tuesday 10 am", date: nextTuesday });
+
+    const nextFriday = nextWeekday(now, 5); nextFriday.setHours(13, 0, 0, 0);
+    opts.push({ label: "Next Friday 1 pm", date: nextFriday });
+
+    return opts;
+  }
+
+  function nextWeekday(from, targetDay) {
+    const d = new Date(from);
+    let add = (targetDay - d.getDay() + 7) % 7;
+    if (add === 0) add = 7;
+    d.setDate(d.getDate() + add);
+    return d;
+  }
+
+  function openApproveDrawer(id) {
+    STATE.pendingApproveId = id;
+    const chips = buildTimeChips();
+    const root = $("#spTimeChips");
+    root.innerHTML = chips.map((c, i) => `
+      <button class="sp-time-chip" data-iso="${c.date.toISOString()}">
+        <strong>${escHtml(c.label)}</strong>
+        <span>${escHtml(c.date.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }))}</span>
+      </button>
+    `).join("");
+    root.querySelectorAll(".sp-time-chip").forEach(el => {
+      el.addEventListener("click", () => approveAt(el.dataset.iso));
+    });
+    $("#spDrawerOverlay").classList.add("is-visible");
+  }
+
+  $("#spDrawerCancel").addEventListener("click", () => {
+    $("#spDrawerOverlay").classList.remove("is-visible");
+  });
+  $("#spDrawerOverlay").addEventListener("click", (ev) => {
+    if (ev.target === $("#spDrawerOverlay")) {
+      $("#spDrawerOverlay").classList.remove("is-visible");
+    }
+  });
+
+  async function approveAt(iso) {
+    const id = STATE.pendingApproveId;
+    if (!id) return;
+    $("#spDrawerOverlay").classList.remove("is-visible");
+    const r = await fetch(`/dashboard/social-pipeline/api/records/${id}/approve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ scheduled_at: iso }),
+    });
+    const data = await r.json();
+    if (!r.ok) {
+      toast(data.detail || data.error || "Couldn't schedule", "error");
+      return;
+    }
+    // Move card from silver → gold locally so the FLIP feels instant.
+    const meta = STATE.silver.get(id);
+    if (meta) {
+      STATE.silver.delete(id);
+      STATE.gold.set(id, {
+        ...meta,
+        stage: "gold",
+        status: "scheduled",
+        scheduled_at: data.gold_record?.scheduled_at,
+      });
+      renderAllLanes();
+    }
+    const when = new Date(iso).toLocaleString(undefined, {
+      weekday: "short", month: "short", day: "numeric",
+      hour: "numeric", minute: "2-digit"
+    });
+    toast(`On the calendar for ${when} 🎉`, "success");
+    // Refresh from server too.
+    refreshAll();
+  }
+
+  // ── Carousel modal ───────────────────────────────────────
+  // Three-step UX:
+  //   1. User picks platform/pages/aspect/style + clicks "Plan with AI"
+  //      → POST /carousel/plan (LLM call)
+  //   2. Slides come back; user can click any slide to edit headline/body/kind
+  //      → "Re-render" or any chip change calls /carousel/preview (no LLM)
+  //   3. "Render & attach" → /carousel/render (uploads to GCS) then
+  //      /carousel/attach (links refs to the record)
+  const CAROUSEL = {
+    open: false,
+    record: null,
+    settings: {
+      platform:       "linkedin",
+      page_count:     5,
+      aspect:         "1:1",
+      style:          "brand-dark",
+      custom_brief:   "",
+      animation:      "kinetic",   // reels only
+      slide_duration: 4,           // reels only — seconds per slide
+      background:     "solid",     // "solid" | "ai_scene"
+      bg_style_hint:  "",          // visual style suffix (when ai_scene)
+    },
+    plan: null,           // {slides:[...], settings}
+    previews: [],         // base64 PNGs from /carousel/preview
+    selectedSlide: -1,    // index of slide being edited, or -1
+    rendered_refs: null,  // populated after /carousel/render
+  };
+
+  // Style swatches (mirror social_pipeline_media.STYLE_PRESETS).
+  const CAROUSEL_STYLES = [
+    { id: "brand-dark",  label: "Brand · dark navy",   bg: "#0F1729", accent: "#E63946", fg: "#FFFFFF" },
+    { id: "brand-light", label: "Brand · light",       bg: "#F8FAFC", accent: "#2563EB", fg: "#0F1729" },
+    { id: "minimal-mono",label: "Minimal · mono",      bg: "#FFFFFF", accent: "#18181B", fg: "#18181B" },
+    { id: "bold-sun",    label: "Bold · sun",          bg: "#FFD23F", accent: "#E63946", fg: "#0F1729" },
+  ];
+
+  function renderStyleChips() {
+    const root = $("#spCsStyles");
+    if (!root) return;
+    root.innerHTML = CAROUSEL_STYLES.map(s => `
+      <div class="sp-cs-style-chip ${s.id === CAROUSEL.settings.style ? "is-selected" : ""}" data-cs-style="${s.id}" title="${escHtml(s.label)}">
+        <div class="sp-cs-style-swatch" style="background:linear-gradient(135deg, ${s.bg} 0%, ${s.bg} 60%, ${s.accent} 100%);"></div>
+        <div class="sp-cs-style-label">${escHtml(s.label)}</div>
+      </div>
+    `).join("");
+  }
+
+  function openCarouselModal(rec) {
+    CAROUSEL.open = true;
+    CAROUSEL.record = rec;
+    // Default platform from the record's platform if known.
+    CAROUSEL.settings.platform = (rec && rec.platform) ? rec.platform : "linkedin";
+    CAROUSEL.plan = null;
+    CAROUSEL.previews = [];
+    CAROUSEL.selectedSlide = -1;
+    CAROUSEL.rendered_refs = null;
+
+    // Sync chip selection state with current settings.
+    syncChipGroups();
+    syncPlatformUI();
+    syncBackgroundUI();
+    renderStyleChips();
+    renderCarouselGrid();
+    setCarouselStatus("Pick your settings, then click Plan with AI.");
+    $("#spCsRenderBtn").disabled = true;
+    $("#spCsAttachBtn").disabled = true;
+    $("#spCsReelPreviewBtn").disabled = true;
+    const reelPrev = document.getElementById("spCsReelPreview");
+    const reelVid  = document.getElementById("spCsReelVideo");
+    if (reelPrev) reelPrev.classList.remove("is-visible");
+    if (reelVid)  reelVid.removeAttribute("src");
+    $("#spCsCustom").value = CAROUSEL.settings.custom_brief || "";
+    $("#spCsEditor").classList.remove("is-visible");
+    $("#spCarouselOverlay").classList.add("is-visible");
+  }
+
+  function closeCarouselModal() {
+    CAROUSEL.open = false;
+    $("#spCarouselOverlay").classList.remove("is-visible");
+  }
+
+  function setCarouselStatus(msg, kind) {
+    const el = $("#spCsStatus");
+    if (!el) return;
+    el.textContent = msg || "";
+    el.className = "sp-cs-status" + (kind ? " is-" + kind : "");
+  }
+
+  function syncChipGroups() {
+    document.querySelectorAll('.sp-cs-chip[data-value]').forEach(chip => {
+      const group = chip.parentElement.dataset.csGroup;
+      const setting = CAROUSEL.settings[group];
+      const matches = String(setting) === String(chip.dataset.value);
+      chip.classList.toggle("is-selected", matches);
+    });
+  }
+
+  function syncPlatformUI() {
+    // Show reel-only controls + lock aspect when platform = instagram_reel.
+    const isReel = CAROUSEL.settings.platform === "instagram_reel";
+    const reelSection = document.getElementById("spCsReelSection");
+    const aspectSection = document.getElementById("spCsAspectSection");
+    if (reelSection)   reelSection.style.display   = isReel ? "" : "none";
+    if (aspectSection) aspectSection.style.display = isReel ? "none" : "";
+    // Force 9:16 when in reel mode (the renderer ignores other aspects
+    // anyway, but we keep state consistent).
+    if (isReel && CAROUSEL.settings.aspect !== "9:16") {
+      CAROUSEL.settings.aspect = "9:16";
+      syncChipGroups();
+    }
+    // Reels are locked to 3 scenes (hook/meat/cta). Force the
+    // page-count chip group to 3 in reel mode and hide 4-7.
+    const pageChips = document.querySelectorAll('[data-cs-group="page_count"] .sp-cs-chip');
+    pageChips.forEach(chip => {
+      const v = parseInt(chip.dataset.value, 10);
+      if (isReel) {
+        chip.style.display = (v === 3) ? "" : "none";
+      } else {
+        chip.style.display = "";
+      }
+    });
+    if (isReel) {
+      CAROUSEL.settings.page_count = 3;
+      syncChipGroups();
+    }
+    // Update the "Pages" label to read "Scenes" in reel mode for clarity.
+    const pagesLabel = document.getElementById("spCsPagesLabel");
+    if (pagesLabel) pagesLabel.textContent = isReel ? "Scenes (locked: hook · meat · CTA)" : "Pages";
+    // Hide the reel video preview when leaving reel mode (it'd be
+    // confusing to show an MP4 preview while in carousel-PNG mode).
+    if (!isReel) {
+      const reelPrev = document.getElementById("spCsReelPreview");
+      const reelVid  = document.getElementById("spCsReelVideo");
+      if (reelPrev) reelPrev.classList.remove("is-visible");
+      if (reelVid)  { reelVid.pause?.(); reelVid.removeAttribute("src"); }
+    }
+  }
+
+  function syncBackgroundUI() {
+    // Show the visual-style hint row + the per-slide bg_prompt editor
+    // only when AI scene mode is selected.
+    const isAi = CAROUSEL.settings.background === "ai_scene";
+    const hintRow = document.getElementById("spCsBgHintRow");
+    const editBg  = document.getElementById("spCsEditBgRow");
+    if (hintRow) hintRow.style.display = isAi ? "" : "none";
+    if (editBg)  editBg.style.display  = isAi ? "" : "none";
+    const hintInput = document.getElementById("spCsBgStyleHint");
+    if (hintInput) hintInput.value = CAROUSEL.settings.bg_style_hint || "";
+  }
+
+  // Click on chips inside the modal sidebar.
+  document.addEventListener("click", (ev) => {
+    if (!CAROUSEL.open) return;
+    const chip = ev.target.closest(".sp-cs-chip[data-value]");
+    if (!chip) return;
+    const group = chip.parentElement.dataset.csGroup;
+    if (!group) return;
+    if (group === "kind") return;  // editor handles its own group
+    let v = chip.dataset.value;
+    if (group === "page_count" || group === "slide_duration") v = parseInt(v, 10);
+    CAROUSEL.settings[group] = v;
+    syncChipGroups();
+    if (group === "platform") {
+      syncPlatformUI();
+      setCarouselStatus(
+        v === "instagram_reel"
+          ? "Reel mode — vertical 9:16, animated MP4 output. Click Plan with AI to start."
+          : "");
+      return;  // platform change doesn't trigger re-preview
+    }
+    if (group === "background") {
+      syncBackgroundUI();
+      // Background changes mean the existing plan is missing bg_prompts
+      // (or has stale ones). Tell the user to re-plan if they have a plan.
+      if (CAROUSEL.plan && v === "ai_scene") {
+        setCarouselStatus("Click Plan with AI to generate scene prompts for each slide.");
+      } else if (CAROUSEL.plan && v === "solid") {
+        // Drop bg_prompts in current plan so the next preview/render is solid.
+        (CAROUSEL.plan.slides || []).forEach(s => { s.bg_prompt = ""; });
+        schedulePreview();
+      }
+      return;
+    }
+    if (CAROUSEL.plan && (group === "aspect" || group === "style"
+                          || group === "animation"
+                          || group === "slide_duration")) {
+      // For reels, slide_duration / animation only matter at final render
+      // time, so we don't need to re-preview here. But aspect/style do.
+      if (group === "aspect" || group === "style") {
+        schedulePreview();
+      } else {
+        setCarouselStatus(`${group === "animation" ? "Animation" : "Duration"} updated — applies on Render & attach.`);
+      }
+    } else if (CAROUSEL.plan && group === "page_count") {
+      setCarouselStatus("Scene count changed. Click Plan with AI to regenerate.", "");
+    }
+  });
+
+  // Style swatches.
+  document.addEventListener("click", (ev) => {
+    if (!CAROUSEL.open) return;
+    const sc = ev.target.closest("[data-cs-style]");
+    if (!sc) return;
+    CAROUSEL.settings.style = sc.dataset.csStyle;
+    renderStyleChips();
+    if (CAROUSEL.plan) schedulePreview();
+  });
+
+  $("#spCsCustom").addEventListener("input", (ev) => {
+    CAROUSEL.settings.custom_brief = ev.target.value;
+  });
+  document.getElementById("spCsBgStyleHint")?.addEventListener("input", (ev) => {
+    CAROUSEL.settings.bg_style_hint = ev.target.value;
+  });
+
+  $("#spCsClose").addEventListener("click", closeCarouselModal);
+  $("#spCsCancelBtn").addEventListener("click", closeCarouselModal);
+  $("#spCarouselOverlay").addEventListener("click", (ev) => {
+    if (ev.target === $("#spCarouselOverlay")) closeCarouselModal();
+  });
+
+  // ── Plan (LLM call, ~3-6s) ───────────────────────────────
+  $("#spCsPlanBtn").addEventListener("click", async () => {
+    if (!CAROUSEL.record) return;
+    const btn = $("#spCsPlanBtn");
+    btn.disabled = true;
+    setCarouselStatus("Planning slides…", "busy");
+    try {
+      const r = await fetch(`/dashboard/social-pipeline/api/records/${encodeURIComponent(CAROUSEL.record.record_id)}/carousel/plan`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ settings: CAROUSEL.settings }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.detail || data.error || "Plan failed");
+      CAROUSEL.plan = data.plan;
+      setCarouselStatus(`${(CAROUSEL.plan.slides || []).length} slides planned. Rendering preview…`, "busy");
+      $("#spCsRenderBtn").disabled = false;
+      $("#spCsReelPreviewBtn").disabled = false;
+      await runPreview();
+      $("#spCsAttachBtn").disabled = false;
+    } catch (err) {
+      setCarouselStatus(err.message || String(err), "error");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // ── Preview (no LLM) ─────────────────────────────────────
+  // Debounced — chip changes can fire rapidly.
+  let _previewTimer = null;
+  function schedulePreview() {
+    if (_previewTimer) clearTimeout(_previewTimer);
+    _previewTimer = setTimeout(runPreview, 250);
+  }
+
+  async function runPreview() {
+    if (!CAROUSEL.plan) return;
+    setCarouselStatus("Rendering preview…", "busy");
+    try {
+      const r = await fetch(`/dashboard/social-pipeline/api/records/${encodeURIComponent(CAROUSEL.record.record_id)}/carousel/preview`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan:     CAROUSEL.plan,
+          settings: CAROUSEL.settings,
+        }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.detail || data.error || "Preview failed");
+      CAROUSEL.previews = data.previews || [];
+      renderCarouselGrid();
+      setCarouselStatus(`${CAROUSEL.previews.length} slides ready · click any slide to edit`);
+    } catch (err) {
+      setCarouselStatus(err.message || String(err), "error");
+    }
+  }
+
+  $("#spCsRenderBtn").addEventListener("click", runPreview);
+
+  // ── Reel animation preview (low-res MP4 inline) ──────────
+  $("#spCsReelPreviewBtn").addEventListener("click", async () => {
+    if (!CAROUSEL.plan || !CAROUSEL.record) return;
+    const btn = $("#spCsReelPreviewBtn");
+    btn.disabled = true;
+    btn.innerHTML = "🎥 Encoding preview…";
+    setCarouselStatus("Encoding low-res preview MP4 (5–15s)…", "busy");
+    try {
+      const r = await fetch(`/dashboard/social-pipeline/api/records/${encodeURIComponent(CAROUSEL.record.record_id)}/carousel/reel-preview`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan:     CAROUSEL.plan,
+          settings: CAROUSEL.settings,
+        }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.detail || data.error || "Preview encode failed");
+      const video = document.getElementById("spCsReelVideo");
+      const wrap  = document.getElementById("spCsReelPreview");
+      const meta  = document.getElementById("spCsReelMeta");
+      video.src = data.data_url;
+      wrap.classList.add("is-visible");
+      const slidesCount = (CAROUSEL.plan.slides || []).length;
+      const totalSecs = slidesCount * (CAROUSEL.settings.slide_duration || 4);
+      meta.textContent = `Preview · ${slidesCount} scenes · ~${totalSecs}s · ${data.size_kb} KB · ${CAROUSEL.settings.animation} animation`;
+      // Try to autoplay (most browsers allow muted autoplay).
+      video.play?.().catch(() => {});
+      setCarouselStatus("Preview ready — adjust settings and re-preview, or render full-res to attach.");
+    } catch (err) {
+      setCarouselStatus(err.message || String(err), "error");
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = "🎥 Preview animation";
+    }
+  });
+
+  // ── Slide grid ───────────────────────────────────────────
+  function renderCarouselGrid() {
+    const grid = $("#spCsGrid");
+    if (!grid) return;
+    if (!CAROUSEL.previews.length) {
+      grid.innerHTML = `<div class="sp-cs-slide-empty">${
+        CAROUSEL.plan ? "No previews yet — click Re-render." : "Click <strong>✨ Plan with AI</strong> to generate slide structure."
+      }</div>`;
+      return;
+    }
+    grid.innerHTML = CAROUSEL.previews.map((dataUrl, i) => `
+      <div class="sp-cs-slide ${i === CAROUSEL.selectedSlide ? "is-selected" : ""}" data-cs-slide-idx="${i}">
+        <span class="sp-cs-slide-num">${i + 1}</span>
+        <img src="${dataUrl}" alt="Slide ${i + 1}">
+      </div>
+    `).join("");
+  }
+
+  // Click a slide → open editor.
+  document.addEventListener("click", (ev) => {
+    if (!CAROUSEL.open) return;
+    const card = ev.target.closest("[data-cs-slide-idx]");
+    if (!card) return;
+    const idx = parseInt(card.dataset.csSlideIdx, 10);
+    openSlideEditor(idx);
+  });
+
+  function openSlideEditor(idx) {
+    if (!CAROUSEL.plan || !CAROUSEL.plan.slides[idx]) return;
+    CAROUSEL.selectedSlide = idx;
+    const s = CAROUSEL.plan.slides[idx];
+    $("#spCsEditNum").textContent = idx + 1;
+    $("#spCsEditHeadline").value = s.headline || "";
+    $("#spCsEditBody").value     = s.body || "";
+    const bgEl = document.getElementById("spCsEditBg");
+    if (bgEl) bgEl.value = s.bg_prompt || "";
+    document.querySelectorAll('#spCsEditKind .sp-cs-chip').forEach(c => {
+      c.classList.toggle("is-selected", c.dataset.value === (s.kind || "fact"));
+    });
+    syncBackgroundUI();   // make sure the bg row is visible only when ai_scene
+    $("#spCsEditor").classList.add("is-visible");
+    renderCarouselGrid();
+  }
+
+  // Editor handlers — write to plan in place, debounced re-preview.
+  $("#spCsEditHeadline").addEventListener("input", (ev) => {
+    if (CAROUSEL.selectedSlide < 0) return;
+    CAROUSEL.plan.slides[CAROUSEL.selectedSlide].headline = ev.target.value;
+    schedulePreview();
+  });
+  $("#spCsEditBody").addEventListener("input", (ev) => {
+    if (CAROUSEL.selectedSlide < 0) return;
+    CAROUSEL.plan.slides[CAROUSEL.selectedSlide].body = ev.target.value;
+    schedulePreview();
+  });
+  document.getElementById("spCsEditBg")?.addEventListener("input", (ev) => {
+    if (CAROUSEL.selectedSlide < 0) return;
+    CAROUSEL.plan.slides[CAROUSEL.selectedSlide].bg_prompt = ev.target.value;
+    // Don't auto-preview on every keystroke — Pollinations fetches are
+    // slow. Let the user click Refresh preview when they're done typing.
+    setCarouselStatus("Background prompt updated — click Refresh preview to re-fetch the scene.");
+  });
+  document.querySelectorAll('#spCsEditKind .sp-cs-chip').forEach(chip => {
+    chip.addEventListener("click", () => {
+      if (CAROUSEL.selectedSlide < 0) return;
+      document.querySelectorAll('#spCsEditKind .sp-cs-chip').forEach(c => c.classList.remove("is-selected"));
+      chip.classList.add("is-selected");
+      CAROUSEL.plan.slides[CAROUSEL.selectedSlide].kind = chip.dataset.value;
+      schedulePreview();
+    });
+  });
+  $("#spCsEditClose").addEventListener("click", () => {
+    CAROUSEL.selectedSlide = -1;
+    $("#spCsEditor").classList.remove("is-visible");
+    renderCarouselGrid();
+  });
+
+  // ── Render & attach (final step, hits GCS) ───────────────
+  $("#spCsAttachBtn").addEventListener("click", async () => {
+    if (!CAROUSEL.plan || !CAROUSEL.record) return;
+    const btn = $("#spCsAttachBtn");
+    btn.disabled = true;
+    setCarouselStatus("Rendering full-resolution slides & uploading…", "busy");
+    try {
+      const renderResp = await fetch(`/dashboard/social-pipeline/api/records/${encodeURIComponent(CAROUSEL.record.record_id)}/carousel/render`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan:     CAROUSEL.plan,
+          settings: CAROUSEL.settings,
+          platform: CAROUSEL.settings.platform,
+        }),
+      });
+      const renderData = await renderResp.json();
+      if (!renderResp.ok) throw new Error(renderData.detail || renderData.error || "Render failed");
+
+      const attachResp = await fetch(`/dashboard/social-pipeline/api/records/${encodeURIComponent(CAROUSEL.record.record_id)}/carousel/attach`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          media_refs: renderData.media_refs,
+          platform:   CAROUSEL.settings.platform,
+        }),
+      });
+      const attachData = await attachResp.json();
+      if (!attachResp.ok) throw new Error(attachData.detail || attachData.error || "Attach failed");
+
+      const n = (renderData.media_refs || []).length;
+      toast(`🎨 Rendered ${n} slide${n === 1 ? "" : "s"} for ${CAROUSEL.settings.platform} — attached to record.`, "success");
+      closeCarouselModal();
+      await refreshAll();
+    } catch (err) {
+      setCarouselStatus(err.message || String(err), "error");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // ── Initial load ─────────────────────────────────────────
+  renderStyleChips();
+  applyView();
+  refreshAll();
+  // Soft polling at 8s when idle, in case of cross-tab activity.
+  STATE.poll = setInterval(refreshAll, 8000);
+})();
+</script>
+
+</body>
+</html>

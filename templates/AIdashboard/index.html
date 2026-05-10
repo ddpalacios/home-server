@@ -5,6 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Dashboard — JustGotALead</title>
   <style>
+    @keyframes rl-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
+    }
+    /* ── Print stylesheet for the run-audit detail view (Phase 3).
+       When body.rl-printing is set, hide chrome and let only the
+       audit detail flow onto paper. Browser-native Save-as-PDF in
+       the print dialog gives the user a clean export — no extra
+       libraries, no server-side PDF generator. */
+    @media print {
+      body.rl-printing .app-shell > nav,
+      body.rl-printing .app-shell > aside,
+      body.rl-printing .app-topbar,
+      body.rl-printing .app-nav,
+      body.rl-printing [data-route-section]:not(#outreach),
+      body.rl-printing #outreach .out-pane:not([data-out-pane="runs"]),
+      body.rl-printing .rl-detail-toolbar,
+      body.rl-printing .rl-back-btn,
+      body.rl-printing .rl-back-runs,
+      body.rl-printing .rl-print-btn { display: none !important; }
+      body.rl-printing { background: #fff; }
+      body.rl-printing .rl-detail-print { padding: 0; }
+      body.rl-printing #outreachRunsMount { padding: 0; }
+    }
+  </style>
+  <style>
     :root {
       --accent: #2563eb;
       --accent-2: #38bdf8;
@@ -5372,7 +5398,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           <span class="nav-tooltip">Leads</span>
         </button>
-        <button class="app-nav-btn" type="button" data-route="replies" aria-label="Replies" id="appRepliesNavBtn">
+        <button class="app-nav-btn" type="button" data-route="replies" aria-label="Replies" id="appRepliesNavBtn" data-admin-only>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           <span class="nav-tooltip"><span data-replies-tooltip>Replies</span></span>
           <span class="app-nav-badge" id="appRepliesBadge" hidden>0</span>
@@ -5387,16 +5413,20 @@
           <span class="nav-tooltip">Outreach</span>
           <span class="app-nav-badge" id="appCampaignsBadge" hidden>0</span>
         </button>
+        <button class="app-nav-btn" type="button" data-route="socialPipeline" aria-label="Social Pipeline" data-admin-only>
+          <!-- Stacked-cards icon — three rectangles, signals "bronze/silver/gold lanes". -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="5" rx="1"/><rect x="4" y="10" width="16" height="5" rx="1"/><rect x="4" y="17" width="16" height="4" rx="1"/></svg>
+          <span class="nav-tooltip">Social Pipeline</span>
+        </button>
+        <button class="app-nav-btn" type="button" data-route="campaigns" aria-label="Email campaigns" data-admin-only>
+          <!-- Megaphone / blast icon — distinct from outreach paper-plane. -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a4 4 0 0 0 4 4h1l4 4V7L8 11H7a4 4 0 0 0-4 0z"/><path d="M21 5a8 8 0 0 1 0 14"/><path d="M17 8a4 4 0 0 1 0 8"/></svg>
+          <span class="nav-tooltip">Email campaigns</span>
+        </button>
         <button class="app-nav-btn" type="button" data-route="leadIntake" aria-label="Lead intake">
           <!-- Inbox / arrow-down icon -->
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
           <span class="nav-tooltip">Lead intake</span>
-        </button>
-        <button class="app-nav-btn" type="button" data-route="onboarding" id="appOnboardingNavBtn" aria-label="Set up">
-          <!-- Wand / sparkle icon — signals "let's set things up". -->
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l9-9"/><path d="M15 5l4 4"/><path d="M16 2l1.5 1.5L19 2l-.5 1.5L20 5l-1.5.5L18 7l-.5-1.5L16 5l1.5-.5z"/><path d="M5 14l1 .5L6.5 16l.5-1.5L8 14l-1.5-.5L6 12l-.5 1.5z"/></svg>
-          <span class="nav-tooltip">Set up your business</span>
-          <span class="app-nav-badge" id="appOnboardingBadge" hidden>!</span>
         </button>
         <button class="app-nav-btn" type="button" data-route="settings" aria-label="Settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -10051,8 +10081,8 @@
 
           <nav class="sched-top-tabs" role="tablist" aria-label="Schedule sections">
             <button type="button" class="sched-top-tab is-active" data-sched-top-tab="calendar" role="tab" aria-selected="true">Calendar</button>
-            <button type="button" class="sched-top-tab" data-sched-top-tab="instagram" role="tab" aria-selected="false">Instagram</button>
-            <button type="button" class="sched-top-tab" data-sched-top-tab="linkedin"  role="tab" aria-selected="false">LinkedIn</button>
+            <button type="button" class="sched-top-tab" data-sched-top-tab="instagram" role="tab" aria-selected="false" data-admin-only>Instagram</button>
+            <button type="button" class="sched-top-tab" data-sched-top-tab="linkedin"  role="tab" aria-selected="false" data-admin-only>LinkedIn</button>
           </nav>
 
           <!-- Calendar tab pane (Google Calendar appointments) -->
@@ -10083,7 +10113,7 @@
           </div>
 
           <!-- Instagram scheduling tab pane -->
-          <div class="sched-top-pane" data-sched-top-pane="instagram" hidden>
+          <div class="sched-top-pane" data-sched-top-pane="instagram" hidden data-admin-only>
             <header class="cal-head" style="margin-bottom:12px;">
               <div>
                 <h2 style="margin:0;">Instagram posts</h2>
@@ -10096,7 +10126,7 @@
           </div>
 
           <!-- LinkedIn tab pane -->
-          <div class="sched-top-pane" data-sched-top-pane="linkedin" hidden>
+          <div class="sched-top-pane" data-sched-top-pane="linkedin" hidden data-admin-only>
             <header class="cal-head" style="margin-bottom:12px;">
               <div>
                 <h2 style="margin:0;">LinkedIn posts</h2>
@@ -14796,19 +14826,12 @@
           box-sizing:border-box;
           overflow:hidden;
         }
-        /* Tab row gets generous top spacing so it clears the topbar.
-           Outreach is fullbleed (no route-section padding), so the tab
-           row owns the whole top-margin between itself and the nav bar.
-           Stays at the top, doesn't scroll. */
-        .out-page > .out-tabs {
-          margin:28px 24px 0;
-        }
         /* Each pane fills the rest of the height. List panes scroll
            internally; Canvas pane never scrolls (canvas owns its own
            viewport via React Flow). */
         .out-page > .out-pane {
           flex:1; min-height:0;
-          padding:14px 16px 0;
+          padding:28px 24px 0;
           overflow:auto;
         }
         .out-page > .out-pane[data-out-pane="auto"] {
@@ -14823,10 +14846,8 @@
           border-radius: 0 !important;
           border: 0 !important;
         }
-        /* Hide the inner Canvas/Steps tabs from the React island.
-           The outer tabs (My Flows / Canvas / On-demand) cover the
-           same intent without stacking a second tab row that pushes
-           the canvas further down. */
+        /* Hide the inner Canvas/Steps tabs from the React island —
+           the outer route already names the page, no nested tabs. */
         .out-page .fb-view-tabs { display: none !important; }
         .out-page *, .out-page *::before, .out-page *::after { box-sizing:border-box; }
         .out-page-head { padding-bottom:4px; display:flex; flex-direction:column; gap:4px; }
@@ -14836,31 +14857,6 @@
           letter-spacing:-0.01em;
         }
         .out-page-sub { font-size:13px; color:#6b7280; margin:0; }
-
-        /* Tab strip — modernized, larger tap targets, sticky on scroll */
-        .out-tabs {
-          display:inline-flex; gap:4px;
-          border:1px solid #e5e7eb; border-radius:12px;
-          padding:4px; background:#f4f4f5;
-          align-self:flex-start;
-          position:sticky; top:0; z-index:5;
-        }
-        .out-tab {
-          display:inline-flex; align-items:center; gap:8px;
-          padding:10px 20px;
-          font-size:14px; font-weight:600; font-family:inherit;
-          color:#525252; background:transparent;
-          border:0; border-radius:9px; cursor:pointer;
-          transition:background 0.18s ease, color 0.18s ease,
-                     transform 0.12s ease, box-shadow 0.18s ease;
-          min-height:40px;
-        }
-        .out-tab:hover { color:#0a0a0a; transform:translateY(-1px); }
-        .out-tab.is-active {
-          background:#fff; color:#0a0a0a;
-          box-shadow:0 2px 6px rgba(20,40,80,.08);
-        }
-        .out-tab-icon { font-size:16px; line-height:1; }
 
         .out-pane {
           display:flex; flex-direction:column; gap:12px;
@@ -14876,8 +14872,6 @@
         /* When the engagement list-card is mounted under outreach, drop its
            top corners so it visually attaches to the section header. */
         #outreachAutoMount > .eng-list-card { /* styles inherited */ }
-        #outreachOnDemandMount > .cmp-page { padding:0; }
-        #outreachOnDemandMount > .cmp-page .cmp-head { padding:0 0 14px; }
 
         /* ─── Engagement page (modern redesign) ───────────────────────────── */
         .eng-page {
@@ -15770,45 +15764,52 @@
       </section>
       <!-- ─── /Instagram DMs Inbox ────────────────────────────────────────── -->
 
+      <!-- ─────────── Social Pipeline (Bronze / Silver / Gold) ─────────────
+           Generate hook+meat+CTA candidates for LinkedIn + Instagram, score
+           them with an LLM judge, approve winners onto the LinkedIn schedule.
+           The page is a self-contained Flask template at /dashboard/social-pipeline,
+           embedded as an iframe so its CSS is sandboxed from the rest of
+           the dashboard. -->
+      <section class="grid" id="socialPipeline" data-route-section="socialPipeline" hidden>
+        <div style="grid-column: span 12;">
+          <iframe
+            id="socialPipelineFrame"
+            src="/dashboard/social-pipeline"
+            title="Social Pipeline"
+            loading="lazy"
+            style="width:100%;height:calc(100vh - 96px);min-height:760px;border:0;border-radius:10px;background:#fff;display:block"
+          ></iframe>
+        </div>
+      </section>
+
       <!-- ─── Engagement ──────────────────────────────────────────────────── -->
       <!-- ─────────── Outreach (merged Engagement + Campaigns) ───────────── -->
       <section class="grid" id="outreach" data-route-section="outreach" hidden>
         <div style="grid-column: 1 / -1; width: 100%;">
           <div class="out-page">
-            <nav class="out-tabs" role="tablist" aria-label="Outreach type">
-              <button type="button" class="out-tab is-active" data-out-tab="myflows" role="tab" aria-selected="true">
-                <span class="out-tab-icon" aria-hidden="true">📂</span> My Flows
-              </button>
-              <button type="button" class="out-tab" data-out-tab="ondemand" role="tab" aria-selected="false">
-                <span class="out-tab-icon" aria-hidden="true">⚡</span> On-demand
-              </button>
-            </nav>
-
-            <!-- MY FLOWS tab pane -->
+            <!-- My Flows pane — the only outreach surface now. The
+                 on-demand campaigns moved to their own #campaigns route
+                 in the sidebar; tabs were removed because a single
+                 pane doesn't need a tab strip. -->
             <div class="out-pane" data-out-pane="myflows">
               <div id="outreachMyFlowsMount"></div>
             </div>
 
-            <!-- Canvas pane — no longer reachable from the nav.
-                 Surfaced when the user clicks a flow card under
-                 My Flows. A pinned "← My Flows" button lets them
-                 return without a sidebar trip. -->
+            <!-- Canvas pane — surfaced when the user clicks a flow card
+                 under My Flows. The flow-builder React island owns its
+                 own back-to-flows pill (top-left of the canvas) and
+                 dispatches `fb-back-to-flows` to return to the list. -->
             <div class="out-pane" data-out-pane="auto" hidden>
-              <button type="button" id="out-canvas-back"
-                style="position:absolute;top:14px;left:14px;z-index:30;
-                       display:inline-flex;align-items:center;gap:6px;
-                       padding:7px 14px;border:1px solid #cdd7e3;
-                       background:#fff;border-radius:99px;font:600 12.5px inherit;
-                       color:#185fa5;cursor:pointer;
-                       box-shadow:0 2px 8px rgba(15,23,42,.08)">
-                ← My Flows
-              </button>
               <div id="outreachAutoMount"></div>
             </div>
-
-            <!-- ON-DEMAND tab pane -->
-            <div class="out-pane" data-out-pane="ondemand" hidden>
-              <div id="outreachOnDemandMount"></div>
+            <!-- Phase 2/3: per-flow run history + per-run audit detail.
+                 Both live in this single mount so the "back" navigation
+                 stays simple. JS swaps innerHTML based on which view
+                 is active. No new React island, no new tools — pure
+                 inline JS hitting /me/flows/<id>/runs and
+                 /me/flows/<id>/runs/<rid>. -->
+            <div class="out-pane" data-out-pane="runs" hidden>
+              <div id="outreachRunsMount"></div>
             </div>
           </div>
         </div>
@@ -20731,9 +20732,8 @@
       function ensureOutreachMounted() {
         if (_outreachMounted) return;
         const autoMount = document.getElementById("outreachAutoMount");
-        const onDemandMount = document.getElementById("outreachOnDemandMount");
         const myFlowsMount = document.getElementById("outreachMyFlowsMount");
-        if (!autoMount || !onDemandMount) return;
+        if (!autoMount) return;
         if (!document.getElementById("flowBuilderRoot")) {
           const fbRoot = document.createElement("div");
           fbRoot.id = "flowBuilderRoot";
@@ -20742,50 +20742,8 @@
         }
         const outPage = document.querySelector("#outreach .out-page");
         if (outPage) outPage.classList.add("is-flow-builder");
-        const cmpPane = document.querySelector('#campaigns [data-camp-pane="oneshot"] .cmp-page');
-        if (cmpPane) onDemandMount.appendChild(cmpPane);
         // My Flows: render the flow grid into its mount.
         if (myFlowsMount) renderMyFlowsList(myFlowsMount);
-        // Tab switching.
-        document.querySelectorAll("[data-out-tab]").forEach(btn => {
-          btn.addEventListener("click", () => {
-            const target = btn.dataset.outTab;
-            document.querySelectorAll("[data-out-tab]").forEach(t => {
-              const active = t.dataset.outTab === target;
-              t.classList.toggle("is-active", active);
-              t.setAttribute("aria-selected", active ? "true" : "false");
-            });
-            document.querySelectorAll("[data-out-pane]").forEach(p => {
-              p.hidden = p.dataset.outPane !== target;
-            });
-            // Reflect tab in URL so deep-linking works.
-            try {
-              const u = new URL(window.location.href);
-              u.searchParams.set("outab", target);
-              window.history.replaceState(null, "", u.toString());
-            } catch (_) {}
-            // Re-fetch the My Flows list when switching to it (data
-            // may have changed since the user last looked).
-            if (target === "myflows" && myFlowsMount) {
-              renderMyFlowsList(myFlowsMount);
-            }
-          });
-        });
-        // Honor ?outab= param on initial mount.
-        try {
-          const u = new URL(window.location.href);
-          const requestedTab = u.searchParams.get("outab");
-          if (requestedTab) {
-            const btn = document.querySelector('[data-out-tab="' + requestedTab + '"]');
-            if (btn) btn.click();
-          } else if (sessionStorage.getItem("outreach_came_from_form") === "1") {
-            // Coming from a form's "Add more steps" button — drop the
-            // user straight onto the canvas so they land on their
-            // form's flow instead of the My Flows list. (The Canvas
-            // tab itself is removed; we manipulate panes directly.)
-            _outShowCanvas();
-          }
-        } catch (_) {}
         _wireCanvasBack();
         _outreachMounted = true;
       }
@@ -20802,6 +20760,31 @@
         try { return localStorage.getItem("myFlowsSort") || "edited"; }
         catch (_) { return "edited"; }
       })();
+      // Phase 1 table filters: status + source. Both persist so the
+      // operator's view sticks across reloads. Default status filter
+      // is "all" (we don't auto-hide paused/draft). Default sort dir
+      // is desc on the active column.
+      var _myFlowsStatusFilter = (function(){
+        try { return localStorage.getItem("myFlowsStatusFilter") || "all"; }
+        catch (_) { return "all"; }
+      })();
+      var _myFlowsSourceFilter = (function(){
+        try { return localStorage.getItem("myFlowsSourceFilter") || "all"; }
+        catch (_) { return "all"; }
+      })();
+      var _myFlowsSortDir = (function(){
+        try { return localStorage.getItem("myFlowsSortDir") || "desc"; }
+        catch (_) { return "desc"; }
+      })();
+      // Map ascending shorthand to sort dropdown values for the
+      // legacy mf-sort select. Column-header clicks also write here.
+      function _setMyFlowsSort(key, dir){
+        _myFlowsSort = key; _myFlowsSortDir = dir;
+        try {
+          localStorage.setItem("myFlowsSort", key);
+          localStorage.setItem("myFlowsSortDir", dir);
+        } catch (_) {}
+      }
 
       function _myFlowsTimeAgo(ts) {
         if (!ts) return "—";
@@ -20979,10 +20962,184 @@
           + '</div>';
       }
 
+      // ── Phase 1: Table-style row renderer ──────────────────────────
+      // Replaces the stacked-card layout when the table view is
+      // active. One <tr> per flow with sortable/filterable columns.
+      // All values come from the same backing data (`f`) — no extra
+      // backend calls required.
+      function _myFlowsRowHtml(f) {
+        var icon = f.icon || "✨";
+        var stepCount = (f.step_count || 0);
+        var stats = f.stats || {};
+        var totalRuns = Number(stats.total_runs || 0);
+        var lastRan   = Number(stats.last_triggered_at || 0);
+        var inFlight  = Number(stats.in_flight_count || 0);
+        var successCount = Number(stats.completed_count || 0);
+        // Source pill (form / email / sms / standalone / built-in)
+        var src = { txt: "✨ Flow", color: "#5a6470", bg: "#eef0f3", title: "" };
+        var formId = "";
+        if (f.builtin) {
+          src = { txt: "✨ Built-in", color: "#5a6470", bg: "#eef0f3", title: "Built-in flow" };
+        } else if (f.form_id || (f.id && f.id.indexOf("form:") === 0)) {
+          formId = f.form_id || (f.id || "").replace(/^form:/, "");
+          src = { txt: "📝 " + (f.name ? f.name.replace(/\s+flow\s*$/i, "") : "Form"),
+                  color: "#185fa5", bg: "#eaf3fc",
+                  title: "Open the attached form",
+                  formId: formId };
+        } else if (f.id === "default") {
+          src = { txt: "⚡ Standalone", color: "#7a5a00", bg: "#fef5e7",
+                  title: "Runs on its own — no channel attached" };
+        } else if ((f.source || "") === "email") {
+          src = { txt: "📧 Email", color: "#6b21a8", bg: "#f3e8ff",
+                  title: "Email-triggered flow" };
+        } else if ((f.source || "") === "sms") {
+          src = { txt: "💬 Texts", color: "#0a8a3a", bg: "#e6f6ec",
+                  title: "SMS-triggered flow" };
+        }
+        var sourcePill =
+            '<span class="mf-source-cell" title="' + src.title + '" style="'
+          +   'display:inline-flex;align-items:center;font-size:11.5px;'
+          +   'font-weight:600;background:' + src.bg + ';color:' + src.color + ';'
+          +   'padding:3px 9px;border-radius:99px;max-width:200px;'
+          +   'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'
+          + (src.formId ? 'cursor:pointer' : '')
+          + '"' + (src.formId ? ' data-source-form-id="' + src.formId + '"' : '')
+          + '>' + src.txt + '</span>';
+        // Status indicator
+        var status = (f.status || "active").toLowerCase();
+        var sd;
+        if (status === "paused")     sd = { dot: "#9aa4b2", label: "Paused" };
+        else if (status === "draft") sd = { dot: "#f0b41c", label: "Draft"  };
+        else                          sd = { dot: "#16a34a", label: "Active" };
+        var statusCell =
+            '<span style="display:inline-flex;align-items:center;gap:6px;'
+          +        'font-size:13px;color:#374151">'
+          +   '<span style="width:8px;height:8px;border-radius:99px;background:' + sd.dot + '"></span>'
+          +   sd.label
+          + '</span>';
+        // Last ran column — relative time in cell, exact tooltip on hover
+        var lastRanCell;
+        if (!lastRan) {
+          lastRanCell = '<span style="color:#9aa4b2">—</span>';
+        } else {
+          var date = new Date(lastRan * 1000);
+          lastRanCell = '<span title="' + date.toString() + '">'
+                      + _myFlowsTimeAgo(lastRan) + '</span>';
+        }
+        // Success column — "X / Y completed without errors"
+        var successCell;
+        if (totalRuns === 0) {
+          successCell = '<span style="color:#9aa4b2">—</span>';
+        } else {
+          var successTitle = successCount + ' completed without errors. '
+                           + (totalRuns - successCount) + ' had at least one issue.';
+          successCell = '<span title="' + successTitle + '">'
+                      +   successCount + ' / ' + totalRuns
+                      + '</span>';
+        }
+        // In-flight chip — only when nonzero
+        var inFlightChip = (inFlight > 0)
+          ? ' <span style="margin-left:6px;font-size:11px;background:#fef3c7;'
+          +        'color:#92400e;padding:1px 6px;border-radius:99px">'
+          +    inFlight + ' running</span>'
+          : '';
+        // Action buttons
+        var canDelete = !f.builtin;
+        var actionsCell =
+            '<div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">'
+          +   '<button type="button" class="mf-edit-btn" data-flow-id="' + (f.id || "") + '"'
+          +     ' style="padding:5px 10px;border:1px solid #cdd7e3;background:#fff;'
+          +            'border-radius:6px;font:600 12px inherit;color:#185fa5;cursor:pointer">Edit</button>'
+          +   '<button type="button" class="mf-runs-btn" data-flow-id="' + (f.id || "") + '"'
+          +          ' data-flow-name="' + ((f.name || "Untitled") + "").replace(/"/g,'&quot;') + '"'
+          +     ' title="View run history"'
+          +     ' style="padding:5px 10px;border:1px solid #cdd7e3;background:#fff;'
+          +            'border-radius:6px;font:600 12px inherit;color:#0a0a0a;cursor:pointer">↳ Runs</button>'
+          + (canDelete
+              ? '   <button type="button" class="mf-del-btn" data-flow-id="' + (f.id || "") + '"'
+              +     ' aria-label="Delete this flow" title="Delete this flow"'
+              +     ' style="width:28px;height:28px;border-radius:50%;'
+              +            'border:1px solid #e6e9ef;background:#fff;color:#9aa4b2;'
+              +            'cursor:pointer;font:700 14px inherit">×</button>'
+              : '')
+          + '</div>';
+        return ''
+          + '<tr class="mf-row" data-flow-id="' + (f.id || "") + '"'
+          +   ' style="cursor:pointer;border-bottom:1px solid #f1f5f9"'
+          +   ' onmouseover="this.style.background=\'#f8fafc\'"'
+          +   ' onmouseout="this.style.background=\'#fff\'">'
+          +   '<td style="padding:12px 14px;font-size:14px;font-weight:600;color:#0a0a0a">'
+          +     '<span style="margin-right:8px">' + icon + '</span>'
+          +     ((f.name || "Untitled") + "").replace(/</g,'&lt;').replace(/>/g,'&gt;')
+          +     inFlightChip
+          +   '</td>'
+          +   '<td style="padding:12px 14px;font-size:13px">' + sourcePill + '</td>'
+          +   '<td style="padding:12px 14px;font-size:13px">' + statusCell + '</td>'
+          +   '<td style="padding:12px 14px;font-size:13px;color:#374151;text-align:center">'
+          +     stepCount + '</td>'
+          +   '<td style="padding:12px 14px;font-size:13px;color:#374151;text-align:center">'
+          +     (totalRuns || '<span style="color:#9aa4b2">0</span>') + '</td>'
+          +   '<td style="padding:12px 14px;font-size:13px;color:#374151">' + lastRanCell + '</td>'
+          +   '<td style="padding:12px 14px;font-size:13px;color:#374151;text-align:center">'
+          +     successCell + '</td>'
+          +   '<td style="padding:12px 14px;font-size:13px;text-align:right">' + actionsCell + '</td>'
+          + '</tr>';
+      }
+      // Sort comparator picker. Reads _myFlowsSort + _myFlowsSortDir.
+      function _myFlowsTableSort(list){
+        var key = _myFlowsSort || "edited";
+        var dir = (_myFlowsSortDir === "asc") ? 1 : -1;
+        function num(f, attr){
+          if (attr === "name")        return (f.name || "").toLowerCase();
+          if (attr === "source")      return (f.form_id || f.source || "").toLowerCase();
+          if (attr === "status")      return (f.status || "active");
+          if (attr === "steps")       return Number(f.step_count || 0);
+          if (attr === "total_runs")  return Number((f.stats||{}).total_runs || 0);
+          if (attr === "last_run")    return Number((f.stats||{}).last_triggered_at || 0);
+          if (attr === "success") {
+            var s = (f.stats||{});
+            var t = Number(s.total_runs || 0);
+            if (!t) return -1; // no runs sorts last
+            return Number(s.completed_count || 0) / t;
+          }
+          if (attr === "edited")      return Number(f.last_edited || 0);
+          return 0;
+        }
+        // Map column-key to attr
+        var attr = ({
+          name:"name", source:"source", status:"status",
+          steps:"steps", total_runs:"total_runs", last_run:"last_run",
+          success:"success", edited:"edited",
+          // Legacy values kept for the old sort dropdown.
+          name_az:"name", name_za:"name",
+        })[key] || "edited";
+        var legacyAsc = (key === "name_az");
+        var legacyDesc = (key === "name_za");
+        list.sort(function(a, b){
+          var av = num(a, attr), bv = num(b, attr);
+          if (av < bv) return -1 * (legacyAsc ? 1 : (legacyDesc ? -1 : dir));
+          if (av > bv) return  1 * (legacyAsc ? 1 : (legacyDesc ? -1 : dir));
+          return 0;
+        });
+        return list;
+      }
+      // Distinct sources present in the flows list, for the source filter.
+      function _myFlowsSources(){
+        var seen = {};
+        (_myFlowsAllDisplayed || []).forEach(function(f){
+          var k;
+          if (f.form_id || (f.id && f.id.indexOf("form:") === 0)) k = "form";
+          else if (f.id === "default") k = "standalone";
+          else if ((f.source || "") === "email") k = "email";
+          else if ((f.source || "") === "sms") k = "sms";
+          else k = "other";
+          seen[k] = true;
+        });
+        return Object.keys(seen);
+      }
+
       function _myFlowsApply() {
         var q = (_myFlowsQuery || "").trim().toLowerCase();
-        // Apply works on the user-visible subset (no built-ins —
-        // those live in the start-cards row above the grid now).
         var src = Array.isArray(_myFlowsAllDisplayed)
           ? _myFlowsAllDisplayed
           : (_myFlowsAll || []).filter(function(f){ return !f.builtin; });
@@ -20993,49 +21150,202 @@
             return hay.toLowerCase().indexOf(q) >= 0;
           });
         }
-        if (_myFlowsSort === "name_az") {
-          list.sort(function(a,b){ return (a.name||"").localeCompare(b.name||""); });
-        } else if (_myFlowsSort === "name_za") {
-          list.sort(function(a,b){ return (b.name||"").localeCompare(a.name||""); });
-        } else if (_myFlowsSort === "steps") {
-          list.sort(function(a,b){ return (b.step_count||0) - (a.step_count||0); });
-        } else {
-          list.sort(function(a,b){ return (b.last_edited||0) - (a.last_edited||0); });
+        // Status filter
+        if (_myFlowsStatusFilter && _myFlowsStatusFilter !== "all") {
+          list = list.filter(function(f){
+            return (f.status || "active").toLowerCase() === _myFlowsStatusFilter;
+          });
         }
-        return list;
+        // Source filter
+        if (_myFlowsSourceFilter && _myFlowsSourceFilter !== "all") {
+          list = list.filter(function(f){
+            var k;
+            if (f.form_id || (f.id && f.id.indexOf("form:") === 0)) k = "form";
+            else if (f.id === "default") k = "standalone";
+            else if ((f.source || "") === "email") k = "email";
+            else if ((f.source || "") === "sms") k = "sms";
+            else k = "other";
+            return k === _myFlowsSourceFilter;
+          });
+        }
+        return _myFlowsTableSort(list);
+      }
+
+      // Shared delete helper used by the table-row × button. Same
+      // logic as the legacy .my-flow-del handler (URL routing per
+      // flow id shape, optimistic row hide, cache invalidation,
+      // rollback on server reject) — extracted so the row markup can
+      // call it without dragging a card-shaped DOM closure along.
+      function _myFlowsDeleteFromBtn(btn, host){
+        var flowId = btn.getAttribute("data-flow-id") || "";
+        var row = btn.closest("tr");
+        var name = (row && row.querySelector("td"))
+          ? row.querySelector("td").innerText.trim()
+          : "this flow";
+        if (!confirm('Delete "' + name + '"? This can\'t be undone.')) return;
+        btn.disabled = true;
+        var url;
+        if (flowId === "default") {
+          url = "/me/flows/default";
+        } else if (flowId.indexOf("form:") === 0) {
+          url = "/me/forms/" + encodeURIComponent(flowId.slice(5)) + "/flow";
+        } else if (flowId.indexOf("user:") === 0) {
+          url = "/me/flows/user/" + encodeURIComponent(flowId.slice(5));
+        } else if (flowId.indexOf("pack:") === 0) {
+          url = "/me/flows/user/" + encodeURIComponent(flowId);
+        } else {
+          alert("This flow can't be deleted.");
+          btn.disabled = false; return;
+        }
+        var prevOpacity = row ? row.style.opacity : "";
+        if (row) {
+          row.style.transition = "opacity 120ms ease";
+          row.style.opacity = "0";
+          row.style.pointerEvents = "none";
+        }
+        try { sessionStorage.removeItem(_MY_FLOWS_CACHE_KEY); } catch(_){}
+        fetch(url, {
+          method: "POST", credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ op: "delete" }),
+        }).then(function(r){
+          if (!r.ok) throw new Error("delete_failed");
+          if (host) renderMyFlowsList(host);
+        }).catch(function(){
+          if (row) {
+            row.style.opacity = prevOpacity || "1";
+            row.style.pointerEvents = "";
+          }
+          btn.disabled = false;
+          alert("Couldn't delete that flow. Try again.");
+        });
       }
 
       function _myFlowsRenderInto(host) {
         var list = _myFlowsApply();
         var grid = host.querySelector("#my-flows-grid");
         if (!grid) return;
-        if (list.length === 0 && _myFlowsQuery) {
-          grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px 16px;color:#9aa4b2;font-size:13.5px">No flows match. Try different words.</div>';
+        if (list.length === 0 && (_myFlowsQuery || _myFlowsStatusFilter !== "all" || _myFlowsSourceFilter !== "all")) {
+          grid.innerHTML =
+              '<div style="text-align:center;padding:40px 16px;color:#9aa4b2;font-size:13.5px">'
+            +   'No flows match these filters. '
+            +   '<button type="button" id="mf-clear-filters" '
+            +          'style="background:none;border:0;color:#185fa5;'
+            +                 'cursor:pointer;text-decoration:underline;font:inherit">Clear filters</button>'
+            + '</div>';
+          var clr = grid.querySelector("#mf-clear-filters");
+          if (clr) clr.addEventListener("click", function(){
+            _myFlowsQuery = ""; _myFlowsStatusFilter = "all"; _myFlowsSourceFilter = "all";
+            try {
+              localStorage.setItem("myFlowsStatusFilter", "all");
+              localStorage.setItem("myFlowsSourceFilter", "all");
+            } catch(_){}
+            var s = host.querySelector("#mf-search"); if (s) s.value = "";
+            var st = host.querySelector("#mf-status-filter"); if (st) st.value = "all";
+            var sf = host.querySelector("#mf-source-filter"); if (sf) sf.value = "all";
+            _myFlowsRenderInto(host);
+          });
           return;
         }
-        grid.innerHTML = list.map(_myFlowsCardHtml).join("");
-        // Source pill click — navigate to the channel that owns this
-        // flow (form editor / email settings / sms settings). Stop
-        // propagation so the row click doesn't ALSO open the canvas.
-        grid.querySelectorAll(".mf-source-pill").forEach(function(pill){
-          pill.addEventListener("click", function(ev){
-            ev.stopPropagation();
-            ev.preventDefault();
-            var href = pill.getAttribute("data-source-href") || "";
-            if (!href) return;
-            // Form pills carry the form_id so the lead-intake page
-            // can re-open that form's builder modal on arrival.
-            var formId = pill.getAttribute("data-source-form-id") || "";
-            if (formId) {
-              try {
-                localStorage.setItem("intake_return_form_id", formId);
-                localStorage.setItem("intake_return_form_ts", String(Date.now()));
-              } catch(_) {}
+        // Header arrow indicator for sorted column.
+        function headArrow(key){
+          if (_myFlowsSort !== key) return '';
+          return _myFlowsSortDir === "asc"
+            ? ' <span style="color:#185fa5">▲</span>'
+            : ' <span style="color:#185fa5">▼</span>';
+        }
+        function colHead(key, label, opts){
+          opts = opts || {};
+          var w = opts.width ? ('width:' + opts.width + ';') : '';
+          var ta = opts.center ? 'text-align:center;' : '';
+          var sortable = opts.sortable !== false;
+          return '<th data-sort-key="' + (sortable ? key : '') + '"'
+               + ' style="' + w + ta
+               +        'padding:11px 14px;font:600 12px inherit;'
+               +        'color:#5a6470;text-transform:uppercase;'
+               +        'letter-spacing:.04em;text-align:' + (opts.center?'center':'left') + ';'
+               +        'border-bottom:2px solid #e6e9ef;background:#fafbfc;'
+               + (sortable ? 'cursor:pointer;user-select:none;' : '')
+               + '">' + label + (sortable ? headArrow(key) : '') + '</th>';
+        }
+        grid.innerHTML =
+            '<table style="width:100%;border-collapse:collapse;font-family:inherit">'
+          +   '<thead><tr>'
+          +     colHead("name",       "Name",       {width:"28%"})
+          +     colHead("source",     "Source",     {width:"14%"})
+          +     colHead("status",     "Status",     {width:"10%"})
+          +     colHead("steps",      "Steps",      {width:"7%",  center:true})
+          +     colHead("total_runs", "Total runs", {width:"9%",  center:true})
+          +     colHead("last_run",   "Last run",   {width:"10%"})
+          +     colHead("success",    "Success",    {width:"9%",  center:true})
+          +     colHead("",           "",           {width:"13%", sortable:false})
+          +   '</tr></thead>'
+          +   '<tbody>' + list.map(_myFlowsRowHtml).join("") + '</tbody>'
+          + '</table>';
+        // Sort header clicks toggle direction or switch column.
+        grid.querySelectorAll("th[data-sort-key]").forEach(function(th){
+          var key = th.getAttribute("data-sort-key");
+          if (!key) return;
+          th.addEventListener("click", function(){
+            var dir;
+            if (_myFlowsSort === key) {
+              dir = (_myFlowsSortDir === "asc") ? "desc" : "asc";
+            } else {
+              dir = (key === "name") ? "asc" : "desc";
             }
-            try { window.location.hash = href; } catch(_) {}
+            _setMyFlowsSort(key, dir);
+            _myFlowsRenderInto(host);
           });
         });
-        grid.querySelectorAll(".my-flow-card").forEach(function(card){
+        // ── Row click → opens canvas. Source pill → opens the form
+        // (only when the cell carries a data-source-form-id).
+        grid.querySelectorAll(".mf-source-cell[data-source-form-id]").forEach(function(cell){
+          cell.addEventListener("click", function(ev){
+            ev.stopPropagation();
+            var formId = cell.getAttribute("data-source-form-id") || "";
+            if (!formId) return;
+            try {
+              localStorage.setItem("intake_return_form_id", formId);
+              localStorage.setItem("intake_return_form_ts", String(Date.now()));
+            } catch(_){}
+            try { window.location.hash = "#leadIntake"; } catch(_){}
+          });
+        });
+        // Edit button → same as row click (open canvas).
+        grid.querySelectorAll(".mf-edit-btn").forEach(function(btn){
+          btn.addEventListener("click", function(ev){
+            ev.stopPropagation();
+            var row = btn.closest("tr");
+            if (row) row.click();
+          });
+        });
+        // Runs button → opens the runs pane (Phase 2). Hands off to
+        // _outShowRunsList which fetches /me/flows/<id>/runs and
+        // renders the table.
+        grid.querySelectorAll(".mf-runs-btn").forEach(function(btn){
+          btn.addEventListener("click", function(ev){
+            ev.stopPropagation();
+            var fid = btn.getAttribute("data-flow-id") || "";
+            var fname = btn.getAttribute("data-flow-name") || "this flow";
+            if (typeof _outShowRunsList === "function") {
+              _outShowRunsList(fid, fname);
+            } else {
+              alert("Runs view not loaded yet — try again in a moment.");
+            }
+          });
+        });
+        // Delete button. Same logic as the legacy .my-flow-del handler
+        // below — kept as the new .mf-del-btn class so the row markup
+        // is self-contained.
+        grid.querySelectorAll(".mf-del-btn").forEach(function(btn){
+          btn.addEventListener("click", function(ev){
+            ev.stopPropagation();
+            ev.preventDefault();
+            _myFlowsDeleteFromBtn(btn, host);
+          });
+        });
+        // Row click → open the canvas for this flow.
+        grid.querySelectorAll(".mf-row").forEach(function(card){
           card.addEventListener("click", function(){
             var fid = card.getAttribute("data-flow-id") || "";
             // Three flow-id shapes:
@@ -21076,8 +21386,9 @@
             _outShowCanvas();
           });
         });
-        // Delete buttons — stop propagation so click doesn't navigate
-        // to the canvas; confirm before destroying.
+        // (Legacy delete handler kept for the old card grid — harmless
+        // when the table rows are rendered, since `.my-flow-del` no
+        // longer matches anything. Removed in a follow-up commit.)
         grid.querySelectorAll(".my-flow-del").forEach(function(btn){
           btn.addEventListener("click", function(ev){
             ev.stopPropagation();
@@ -21168,28 +21479,419 @@
         document.querySelectorAll("[data-out-pane]").forEach(function(p){
           p.hidden = (p.dataset.outPane !== "auto");
         });
-        document.querySelectorAll("[data-out-tab]").forEach(function(t){
-          t.classList.remove("is-active");
-          t.setAttribute("aria-selected", "false");
-        });
       }
       function _outShowMyFlows(){
         document.querySelectorAll("[data-out-pane]").forEach(function(p){
           p.hidden = (p.dataset.outPane !== "myflows");
         });
-        document.querySelectorAll("[data-out-tab]").forEach(function(t){
-          var isMy = t.dataset.outTab === "myflows";
-          t.classList.toggle("is-active", isMy);
-          t.setAttribute("aria-selected", isMy ? "true" : "false");
+      }
+      function _outShowRuns(){
+        document.querySelectorAll("[data-out-pane]").forEach(function(p){
+          p.hidden = (p.dataset.outPane !== "runs");
         });
       }
-      // Wire the back button on the canvas pane (idempotent).
-      function _wireCanvasBack(){
-        var bk = document.getElementById("out-canvas-back");
-        if (bk && !bk._wired) {
-          bk._wired = true;
-          bk.addEventListener("click", _outShowMyFlows);
+      // ── Phase 2 / 3: runs list + per-run audit ──────────────────
+      // Local state — kept simple so the back/forward navigation
+      // doesn't depend on URL hash routing (which the SPA already
+      // claims for top-level sections).
+      var _runsState = { flowId: "", flowName: "", filters: { status: "all", q: "" } };
+      function _runsEsc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+        return ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[c]; }); }
+      function _runsFmtDuration(secs){
+        secs = Math.max(0, Math.floor(Number(secs) || 0));
+        if (secs < 60) return secs + "s";
+        if (secs < 3600) return Math.floor(secs/60) + "m " + (secs%60) + "s";
+        return Math.floor(secs/3600) + "h " + Math.floor((secs%3600)/60) + "m";
+      }
+      function _runsFmtRel(ts){
+        if (!ts) return "—";
+        var s = Math.max(0, Math.floor(Date.now()/1000) - ts);
+        if (s < 60) return "just now";
+        if (s < 3600) return Math.floor(s/60) + "m ago";
+        if (s < 86400) return Math.floor(s/3600) + "h ago";
+        if (s < 86400*30) return Math.floor(s/86400) + "d ago";
+        return new Date(ts*1000).toLocaleDateString();
+      }
+      function _runsStatusPill(row){
+        var state = row.state || "in_progress";
+        var label, dot;
+        if (state === "completed" && !row.is_failed) {
+          label = "Done"; dot = "#16a34a";
+        } else if (state === "in_progress") {
+          label = "Running"; dot = "#0ea5e9";
+        } else if (state === "paused") {
+          label = "Paused"; dot = "#9aa4b2";
+        } else {
+          label = state.charAt(0).toUpperCase() + state.slice(1); dot = "#9aa4b2";
         }
+        if (row.is_failed) { label = "Failed"; dot = "#dc2626"; }
+        return '<span style="display:inline-flex;align-items:center;gap:6px;font-size:13px">'
+             +   '<span style="width:8px;height:8px;border-radius:99px;background:' + dot + '"></span>'
+             +   _runsEsc(label)
+             + '</span>';
+      }
+
+      // Stale-while-revalidate cache. Stored per (flowId, filters)
+      // so repeated visits paint instantly. The cache is in
+      // sessionStorage so it dies on tab close (we want fresh data
+      // on a new session).
+      function _runsCacheKey(flowId, filters){
+        return "runs_swr_v1:" + flowId + ":" +
+               (filters.status || "all") + ":" + (filters.q || "");
+      }
+      function _runsReadCache(flowId, filters){
+        try {
+          var raw = sessionStorage.getItem(_runsCacheKey(flowId, filters));
+          if (!raw) return null;
+          var c = JSON.parse(raw);
+          if (!c || !c.data || !c.ts) return null;
+          // 5-minute window — beyond that fetch fresh and don't
+          // even bother painting the cache.
+          if (Date.now() - c.ts > 5 * 60 * 1000) return null;
+          return c.data;
+        } catch(e) { return null; }
+      }
+      function _runsWriteCache(flowId, filters, data){
+        try {
+          sessionStorage.setItem(_runsCacheKey(flowId, filters),
+            JSON.stringify({ data: data, ts: Date.now() }));
+        } catch(e){}
+      }
+      async function _outShowRunsList(flowId, flowName){
+        _runsState.flowId   = flowId;
+        _runsState.flowName = flowName || "Flow";
+        var host = document.getElementById("outreachRunsMount");
+        if (!host) return;
+        _outShowRuns();
+        // Stage 1: paint cache instantly if we have one. The user
+        // sees real rows in <50ms on every revisit.
+        var cached = _runsReadCache(flowId, _runsState.filters);
+        if (cached) {
+          _renderRunsList(host, cached, /*fromCache=*/true);
+        } else {
+          // No cache — show a friendly skeleton instead of a bare
+          // "Loading…" spinner. Skeleton mimics the table layout
+          // so the shift to real data isn't jarring.
+          host.innerHTML = ''
+            + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">'
+            +   '<button type="button" class="rl-back-btn" '
+            +          'style="background:none;border:0;color:#185fa5;font:600 14px inherit;cursor:pointer">← Back to flows</button>'
+            +   '<h2 style="margin:0;font-size:22px;font-weight:700">'
+            +     _runsEsc(_runsState.flowName) + ' <span style="color:#9aa4b2;font-weight:400">→ Runs</span>'
+            +   '</h2>'
+            + '</div>'
+            + '<div style="padding:14px 18px;background:#f8fafc;border:1px solid #e6e9ef;border-radius:10px;margin-bottom:18px;color:#9aa4b2;font-size:13.5px">'
+            +   '<span style="display:inline-block;width:10px;height:10px;background:#cbd5e1;border-radius:99px;margin-right:8px;animation:rl-pulse 1.2s infinite"></span>'
+            +   'Loading run history… you can stay on this page.'
+            + '</div>'
+            + '<div id="rl-skeleton" style="background:#fff;border:1px solid #e6e9ef;border-radius:10px;overflow:hidden">'
+            +   Array(5).fill(0).map(function(){
+                  return '<div style="display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid #f1f5f9">'
+                       +   '<div style="height:14px;width:80px;background:#f3f4f6;border-radius:4px"></div>'
+                       +   '<div style="height:14px;width:160px;background:#f3f4f6;border-radius:4px"></div>'
+                       +   '<div style="height:14px;width:60px;background:#f3f4f6;border-radius:4px;margin-left:auto"></div>'
+                       + '</div>';
+                }).join("")
+            + '</div>';
+          var bk = host.querySelector(".rl-back-btn");
+          if (bk) bk.addEventListener("click", _outShowMyFlows);
+        }
+        // Stage 2: fetch fresh in the background. If we showed
+        // cached data first, the table seamlessly rewrites with
+        // the new data when this resolves.
+        var qs = new URLSearchParams();
+        if (_runsState.filters.status !== "all") qs.set("status", _runsState.filters.status);
+        if (_runsState.filters.q) qs.set("q", _runsState.filters.q);
+        try {
+          var r = await fetch("/me/flows/" + encodeURIComponent(flowId) + "/runs?" + qs.toString(),
+            { credentials: "same-origin" });
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          var d = await r.json();
+          _runsWriteCache(flowId, _runsState.filters, d);
+          // Only re-render if the user is still on this page (they
+          // might have navigated away during the fetch).
+          if (host.isConnected && document.querySelector('[data-out-pane="runs"]:not([hidden])')) {
+            _renderRunsList(host, d, /*fromCache=*/false);
+          }
+        } catch (e) {
+          // Only show error if no cache was painted — otherwise the
+          // user has stale-but-still-useful data, and an error toast
+          // is just noise.
+          if (!cached) {
+            host.innerHTML = '<div style="padding:32px 16px;color:#b91c1c">'
+                           +   'Couldn\'t load runs: ' + _runsEsc(e.message)
+                           + '</div>';
+          }
+        }
+      }
+      function _renderRunsList(host, d){
+        var summary = d.summary || {};
+        var runs    = d.runs || [];
+        var name    = d.flow_name || _runsState.flowName;
+        var rowsHtml = runs.map(function(r){
+          var lead = r.lead || {};
+          return '<tr class="rl-row" data-run-id="' + _runsEsc(r.enr_id) + '"'
+               + ' style="cursor:pointer;border-bottom:1px solid #f1f5f9"'
+               + ' onmouseover="this.style.background=\'#f8fafc\'"'
+               + ' onmouseout="this.style.background=\'#fff\'">'
+               + '<td style="padding:12px 14px;font-size:13px"'
+               + ' title="' + _runsEsc(new Date((r.started_at||0)*1000).toString()) + '">'
+               +   _runsFmtRel(r.started_at) + '</td>'
+               + '<td style="padding:12px 14px;font-size:13px;font-weight:600">'
+               +   _runsEsc(lead.name || "—")
+               +   (lead.email ? ' <span style="font-weight:400;color:#9aa4b2">· ' + _runsEsc(lead.email) + '</span>' : "")
+               + '</td>'
+               + '<td style="padding:12px 14px">' + _runsStatusPill(r) + '</td>'
+               + '<td style="padding:12px 14px;font-size:13px;color:#374151">' + _runsFmtDuration(r.duration_seconds) + '</td>'
+               + '<td style="padding:12px 14px;font-size:13px;color:#374151;text-align:center">'
+               +   r.steps_completed + ' / ' + r.steps_total + '</td>'
+               + '<td style="padding:12px 14px;font-size:13px;text-align:right">'
+               +   '<button type="button" class="rl-view-btn" data-run-id="' + _runsEsc(r.enr_id) + '"'
+               +     ' style="padding:5px 10px;border:1px solid #cdd7e3;background:#fff;'
+               +            'border-radius:6px;font:600 12px inherit;color:#185fa5;cursor:pointer">'
+               +     'View →</button>'
+               + '</td>'
+               + '</tr>';
+        }).join("");
+        var emptyState = '<div style="padding:48px 16px;text-align:center;color:#9aa4b2;font-size:13.5px">'
+                       +   (d.summary && d.summary.total === 0
+                             ? 'This flow hasn\'t run yet. When a lead submits the form connected to this flow, you\'ll see their run here.'
+                             : 'No runs match these filters.')
+                       + '</div>';
+        host.innerHTML = ''
+          + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">'
+          +   '<button type="button" class="rl-back-btn" '
+          +          'style="background:none;border:0;color:#185fa5;font:600 14px inherit;'
+          +                 'cursor:pointer;padding:6px 8px">← Back to flows</button>'
+          +   '<h2 style="margin:0;font-size:22px;font-weight:700">'
+          +     _runsEsc(name) + ' <span style="color:#9aa4b2;font-weight:400">→ Runs</span>'
+          +   '</h2>'
+          + '</div>'
+          + '<div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:18px;'
+          +        'padding:14px 18px;background:#f8fafc;border:1px solid #e6e9ef;border-radius:10px;font-size:13.5px">'
+          +   '<div><strong style="font-size:18px">' + (summary.total || 0) + '</strong> total runs</div>'
+          +   '<div><strong style="color:#16a34a;font-size:18px">' + (summary.completed || 0) + '</strong> successful</div>'
+          +   '<div><strong style="color:#dc2626;font-size:18px">' + (summary.failed || 0) + '</strong> with failures</div>'
+          +   '<div>Avg duration: <strong>' + _runsFmtDuration(summary.avg_duration_seconds) + '</strong></div>'
+          + '</div>'
+          + '<div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">'
+          +   '<input id="rl-search" type="text" placeholder="Search by lead name or email…" value="' + _runsEsc(_runsState.filters.q) + '"'
+          +     ' style="flex:1;min-width:220px;padding:11px 14px;border:1px solid #e6e9ef;border-radius:10px;font:inherit;font-size:13.5px"/>'
+          +   '<select id="rl-status" style="padding:11px 14px;border:1px solid #e6e9ef;border-radius:10px;font:inherit;font-size:13.5px;cursor:pointer">'
+          +     '<option value="all">Any status</option>'
+          +     '<option value="completed">Completed</option>'
+          +     '<option value="failed">Failed</option>'
+          +     '<option value="running">Running</option>'
+          +     '<option value="paused">Paused</option>'
+          +   '</select>'
+          + '</div>'
+          + (runs.length === 0 ? emptyState
+              : '<div style="background:#fff;border:1px solid #e6e9ef;border-radius:10px;overflow:hidden">'
+              +   '<table style="width:100%;border-collapse:collapse;font-family:inherit">'
+              +     '<thead><tr>'
+              +       '<th style="padding:11px 14px;text-align:left;font:600 12px inherit;color:#5a6470;text-transform:uppercase;letter-spacing:.04em;background:#fafbfc;border-bottom:2px solid #e6e9ef">Started</th>'
+              +       '<th style="padding:11px 14px;text-align:left;font:600 12px inherit;color:#5a6470;text-transform:uppercase;letter-spacing:.04em;background:#fafbfc;border-bottom:2px solid #e6e9ef">Lead</th>'
+              +       '<th style="padding:11px 14px;text-align:left;font:600 12px inherit;color:#5a6470;text-transform:uppercase;letter-spacing:.04em;background:#fafbfc;border-bottom:2px solid #e6e9ef">Status</th>'
+              +       '<th style="padding:11px 14px;text-align:left;font:600 12px inherit;color:#5a6470;text-transform:uppercase;letter-spacing:.04em;background:#fafbfc;border-bottom:2px solid #e6e9ef">Duration</th>'
+              +       '<th style="padding:11px 14px;text-align:center;font:600 12px inherit;color:#5a6470;text-transform:uppercase;letter-spacing:.04em;background:#fafbfc;border-bottom:2px solid #e6e9ef">Steps</th>'
+              +       '<th style="padding:11px 14px;text-align:right;font:600 12px inherit;color:#5a6470;text-transform:uppercase;letter-spacing:.04em;background:#fafbfc;border-bottom:2px solid #e6e9ef"></th>'
+              +     '</tr></thead>'
+              +     '<tbody>' + rowsHtml + '</tbody>'
+              +   '</table>'
+              + '</div>');
+        // Wire interactions.
+        host.querySelector(".rl-back-btn").addEventListener("click", _outShowMyFlows);
+        var statusEl = host.querySelector("#rl-status");
+        if (statusEl) {
+          statusEl.value = _runsState.filters.status;
+          statusEl.addEventListener("change", function(){
+            _runsState.filters.status = statusEl.value;
+            _outShowRunsList(_runsState.flowId, _runsState.flowName);
+          });
+        }
+        var searchEl = host.querySelector("#rl-search");
+        if (searchEl) {
+          var _t;
+          searchEl.addEventListener("input", function(){
+            clearTimeout(_t);
+            _t = setTimeout(function(){
+              _runsState.filters.q = searchEl.value || "";
+              _outShowRunsList(_runsState.flowId, _runsState.flowName);
+            }, 200);
+          });
+        }
+        host.querySelectorAll(".rl-row").forEach(function(row){
+          row.addEventListener("click", function(){
+            _outShowRunDetail(_runsState.flowId, row.dataset.runId);
+          });
+        });
+        host.querySelectorAll(".rl-view-btn").forEach(function(btn){
+          btn.addEventListener("click", function(ev){
+            ev.stopPropagation();
+            _outShowRunDetail(_runsState.flowId, btn.dataset.runId);
+          });
+        });
+      }
+      // ── Phase 3: per-run audit detail ──────────────────────────
+      async function _outShowRunDetail(flowId, runId){
+        var host = document.getElementById("outreachRunsMount");
+        if (!host) return;
+        host.innerHTML = '<div style="padding:48px 16px;text-align:center;color:#9aa4b2">Loading run audit…</div>';
+        try {
+          var r = await fetch("/me/flows/" + encodeURIComponent(flowId) + "/runs/" + encodeURIComponent(runId),
+            { credentials: "same-origin" });
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          var d = await r.json();
+          _renderRunDetail(host, d);
+        } catch (e) {
+          host.innerHTML = '<div style="padding:32px 16px;color:#b91c1c">'
+                         +   'Couldn\'t load run: ' + _runsEsc(e.message)
+                         + '</div>';
+        }
+      }
+      function _renderRunDetail(host, d){
+        var run = d.run || {};
+        var lead = d.lead || {};
+        var timeline = d.timeline || [];
+        var doneOk = (run.state === "completed");
+        var pillColor = doneOk ? "#16a34a" : (run.state === "in_progress" ? "#0ea5e9" : "#dc2626");
+        var pillLabel = doneOk ? "All successful" : (run.state === "in_progress" ? "Running" : "Completed with failures");
+        function tsLabel(ts){
+          if (!ts) return "";
+          var dt = new Date(ts*1000);
+          return dt.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit", second:"2-digit"});
+        }
+        function escMulti(s){
+          return _runsEsc(s).replace(/\n/g, "<br>");
+        }
+        function stepHtml(e){
+          var statusBg = e.sent ? "#ecfdf5" : (e.error ? "#fef2f2" : "#f8fafc");
+          var statusBorder = e.sent ? "#a7f3d0" : (e.error ? "#fecaca" : "#e6e9ef");
+          var statusBadge = e.sent
+            ? '<span style="background:#16a34a;color:#fff;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700">✓ Sent</span>'
+            : (e.error
+                ? '<span style="background:#dc2626;color:#fff;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700">⚠ Error</span>'
+                : '<span style="background:#9aa4b2;color:#fff;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700">' + _runsEsc(e.reason || "—") + '</span>');
+          var head = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
+                   +   '<span style="font-size:11px;color:#5a6470">' + tsLabel(e.ts) + '</span>'
+                   +   '<strong style="font-size:14px">' + _runsEsc(e.label || e.step_type) + '</strong>'
+                   +   statusBadge
+                   + '</div>';
+          var body = '';
+          if (e.step_type === "send_email" || e.step_type === "notify") {
+            body += '<div style="font-size:12.5px;color:#374151;line-height:1.5">';
+            if (e.recipient || e.recipient_lead) {
+              body += '<div><strong>To:</strong> ' + _runsEsc(e.recipient || e.recipient_lead) + '</div>';
+            }
+            if (e.extra_emails && e.extra_emails.length) {
+              var ee = e.extra_emails.map(function(x){ return x.raw || x.display || x; }).join(", ");
+              body += '<div><strong>Cc:</strong> ' + _runsEsc(ee) + '</div>';
+            }
+            if (e.subject) body += '<div><strong>Subject:</strong> ' + _runsEsc(e.subject) + '</div>';
+            if (e.body) {
+              body += '<div style="margin-top:8px;padding:12px;background:#fff;border:1px solid ' + statusBorder + ';border-radius:6px;white-space:pre-wrap">' + escMulti(e.body) + '</div>';
+            }
+            if (e.message_id) {
+              body += '<div style="margin-top:6px;color:#9aa4b2;font-size:11.5px">Gmail thread: ' + _runsEsc(e.message_id) + '</div>';
+            }
+            body += '</div>';
+          } else if (e.step_type === "send_sms") {
+            body += '<div style="font-size:12.5px;color:#374151;line-height:1.5">';
+            if (e.recipient) body += '<div><strong>To:</strong> ' + _runsEsc(e.recipient) + '</div>';
+            if (e.body) {
+              body += '<div style="margin-top:8px;padding:12px;background:#fff;border:1px solid ' + statusBorder + ';border-radius:6px;white-space:pre-wrap">' + escMulti(e.body) + '</div>';
+            }
+            if (e.message_id) body += '<div style="margin-top:6px;color:#9aa4b2;font-size:11.5px">Twilio SMS SID: ' + _runsEsc(e.message_id) + '</div>';
+            body += '</div>';
+          } else if (e.step_type === "call") {
+            body += '<div style="font-size:12.5px;color:#374151;line-height:1.5">';
+            if (e.recipient) body += '<div><strong>Dialed:</strong> ' + _runsEsc(e.recipient) + '</div>';
+            if (e.spoken_message) {
+              body += '<div style="margin-top:6px"><strong>AI script:</strong></div>'
+                    +'<div style="margin-top:4px;padding:10px;background:#fff;border:1px solid ' + statusBorder + ';border-radius:6px;white-space:pre-wrap">' + escMulti(e.spoken_message) + '</div>';
+            }
+            if (e.message_id) body += '<div style="margin-top:6px;color:#9aa4b2;font-size:11.5px">Twilio Call SID: ' + _runsEsc(e.message_id) + '</div>';
+            if (e.call_record && e.call_record.transcript && e.call_record.transcript.length) {
+              body += '<div style="margin-top:10px;padding:12px;background:#fafbfc;border:1px solid #e6e9ef;border-radius:6px">'
+                    +   '<div style="font-weight:700;font-size:12px;color:#5a6470;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Call transcript</div>';
+              e.call_record.transcript.forEach(function(t){
+                var who = t.role === "assistant" ? "🤖 AI" : (t.role === "user" ? "👤 Recipient" : t.role);
+                body += '<div style="margin-bottom:6px;font-size:12.5px">'
+                      +   '<span style="color:#9aa4b2;font-size:11px">' + _runsEsc(who) + '</span>'
+                      +   '<div style="color:#0a0a0a;line-height:1.5">' + escMulti(t.text || "") + '</div>'
+                      + '</div>';
+              });
+              body += '</div>';
+            }
+            body += '</div>';
+          } else if (e.step_type === "wait") {
+            var sec = e.seconds || 0;
+            body += '<div style="font-size:12.5px;color:#5a6470">Waited ' + _runsFmtDuration(sec) + '.</div>';
+          } else if (e.kind === "tick_error") {
+            body += '<div style="font-size:12.5px;color:#b91c1c;background:#fef2f2;padding:8px;border-radius:6px">'
+                  +    _runsEsc(e.error || "Unknown engine error")
+                  + '</div>';
+          } else if (e.kind === "deferred") {
+            body += '<div style="font-size:12.5px;color:#5a6470">Deferred · reason: ' + _runsEsc(e.reason || "—") + '</div>';
+          }
+          if (e.error) {
+            body += '<div style="margin-top:8px;font-size:12px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;padding:8px;border-radius:6px">'
+                  +   '<strong>Error:</strong> ' + _runsEsc(e.error)
+                  + '</div>';
+          }
+          return '<div style="padding:14px 16px;background:' + statusBg + ';border:1px solid ' + statusBorder + ';border-radius:10px;margin-bottom:10px">'
+               +    head + body
+               + '</div>';
+        }
+        host.innerHTML = ''
+          + '<div class="rl-detail-toolbar" style="display:flex;align-items:center;gap:12px;margin-bottom:16px">'
+          +   '<button type="button" class="rl-back-runs" '
+          +          'style="background:none;border:0;color:#185fa5;font:600 14px inherit;cursor:pointer;padding:6px 8px">← Back to runs</button>'
+          +   '<h2 style="margin:0;font-size:22px;font-weight:700">'
+          +     'Run for ' + _runsEsc(lead.name || "—")
+          +   '</h2>'
+          +   '<div style="margin-left:auto;display:flex;gap:8px">'
+          +     '<button type="button" class="rl-print-btn" '
+          +            'style="padding:8px 14px;border:1px solid #cdd7e3;background:#fff;'
+          +                   'border-radius:8px;font:600 13px inherit;color:#0a0a0a;cursor:pointer">'
+          +       '🖨 Print / Save as PDF</button>'
+          +   '</div>'
+          + '</div>'
+          + '<div class="rl-detail-print" id="rl-detail-print">'
+          +   '<div style="padding:14px 18px;background:#f8fafc;border:1px solid #e6e9ef;border-radius:10px;margin-bottom:18px;font-size:13.5px;line-height:1.5">'
+          +     '<div><strong>' + _runsEsc(d.flow_name) + '</strong> · Started ' + _runsFmtRel(run.started_at) + ' · Done in ' + _runsFmtDuration(run.duration_seconds) + ' · '
+          +       '<span style="color:' + pillColor + ';font-weight:700">' + _runsEsc(pillLabel) + '</span></div>'
+          +     '<div style="margin-top:6px"><strong>Lead:</strong> ' + _runsEsc(lead.name || "—")
+          +       (lead.email ? ' · ' + _runsEsc(lead.email) : "")
+          +       (lead.phone ? ' · ' + _runsEsc(lead.phone) : "") + '</div>'
+          +     '<div style="margin-top:6px;color:#5a6470">Run ID: <code>' + _runsEsc(run.id) + '</code></div>'
+          +   '</div>'
+          +   '<div style="font-weight:700;font-size:12px;color:#5a6470;text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px">Timeline</div>'
+          +   (timeline.length === 0
+              ? '<div style="padding:40px 16px;text-align:center;color:#9aa4b2">No events recorded for this run yet.</div>'
+              : timeline.map(stepHtml).join(""))
+          + '</div>';
+        host.querySelector(".rl-back-runs").addEventListener("click", function(){
+          _outShowRunsList(_runsState.flowId, _runsState.flowName);
+        });
+        host.querySelector(".rl-print-btn").addEventListener("click", function(){
+          // Browser-native print → user picks "Save as PDF" in the
+          // print dialog. No new tools needed. We add a print
+          // stylesheet at the document level (see <style> below)
+          // so non-print elements hide and the timeline renders
+          // cleanly on paper.
+          document.body.classList.add("rl-printing");
+          window.print();
+          setTimeout(function(){ document.body.classList.remove("rl-printing"); }, 1500);
+        });
+      }
+      // Listen for the flow-builder's "go back to my flows" event.
+      // The React island owns the back-pill UI and dispatches this
+      // event when clicked. Idempotent — safe to call repeatedly.
+      function _wireCanvasBack(){
+        if (window.__fb_back_wired) return;
+        window.__fb_back_wired = true;
+        window.addEventListener("fb-back-to-flows", _outShowMyFlows);
       }
 
       // Action bars — slim, button-like rows that read as "tap to do
@@ -21306,8 +22008,25 @@
                 +     '<input id="mf-search" type="text" placeholder="Search flows…" '
                 +          'style="width:100%;padding:11px 14px 11px 38px;border:1px solid #e6e9ef;border-radius:10px;font:inherit;font-size:13.5px;background:#fff;box-sizing:border-box"/>'
                 +   '</div>'
+                +   '<select id="mf-status-filter" style="padding:11px 14px;border:1px solid #e6e9ef;border-radius:10px;font:inherit;font-size:13.5px;background:#fff;cursor:pointer;min-width:140px">'
+                +     '<option value="all">All status</option>'
+                +     '<option value="active">Active</option>'
+                +     '<option value="paused">Paused</option>'
+                +     '<option value="draft">Draft</option>'
+                +   '</select>'
+                +   '<select id="mf-source-filter" style="padding:11px 14px;border:1px solid #e6e9ef;border-radius:10px;font:inherit;font-size:13.5px;background:#fff;cursor:pointer;min-width:140px">'
+                +     '<option value="all">All sources</option>'
+                +     '<option value="form">📝 Form</option>'
+                +     '<option value="email">📧 Email</option>'
+                +     '<option value="sms">💬 Text</option>'
+                +     '<option value="standalone">⚡ Standalone</option>'
+                +     '<option value="other">Other</option>'
+                +   '</select>'
                 +   '<select id="mf-sort" style="padding:11px 14px;border:1px solid #e6e9ef;border-radius:10px;font:inherit;font-size:13.5px;background:#fff;cursor:pointer;min-width:180px">'
                 +     '<option value="edited">Recently edited</option>'
+                +     '<option value="last_run">Most recent run</option>'
+                +     '<option value="total_runs">Most runs</option>'
+                +     '<option value="success">Highest success</option>'
                 +     '<option value="name_az">Name (A–Z)</option>'
                 +     '<option value="name_za">Name (Z–A)</option>'
                 +     '<option value="steps">Most steps</option>'
@@ -21321,7 +22040,34 @@
           sortEl.value = _myFlowsSort;
           sortEl.addEventListener("change", function(){
             _myFlowsSort = sortEl.value;
-            try { localStorage.setItem("myFlowsSort", _myFlowsSort); } catch (_) {}
+            // Sort dropdown picks always force descending so the
+            // selected option matches the visible order. Column-
+            // header clicks override this with explicit asc/desc.
+            _myFlowsSortDir = (sortEl.value === "name_az") ? "asc"
+                             : (sortEl.value === "name_za") ? "desc"
+                             : "desc";
+            try {
+              localStorage.setItem("myFlowsSort", _myFlowsSort);
+              localStorage.setItem("myFlowsSortDir", _myFlowsSortDir);
+            } catch (_) {}
+            _myFlowsRenderInto(host);
+          });
+        }
+        var statusEl = host.querySelector("#mf-status-filter");
+        if (statusEl) {
+          statusEl.value = _myFlowsStatusFilter;
+          statusEl.addEventListener("change", function(){
+            _myFlowsStatusFilter = statusEl.value;
+            try { localStorage.setItem("myFlowsStatusFilter", _myFlowsStatusFilter); } catch(_){}
+            _myFlowsRenderInto(host);
+          });
+        }
+        var srcEl = host.querySelector("#mf-source-filter");
+        if (srcEl) {
+          srcEl.value = _myFlowsSourceFilter;
+          srcEl.addEventListener("change", function(){
+            _myFlowsSourceFilter = srcEl.value;
+            try { localStorage.setItem("myFlowsSourceFilter", _myFlowsSourceFilter); } catch(_){}
             _myFlowsRenderInto(host);
           });
         }
@@ -21367,22 +22113,12 @@
       }
 
       SECTION_ON_ENTER.outreach = async function loadOutreachSection() {
-        // Automatic = flow builder (React island), On-demand = campaigns
-        // wizard. Engagement bundle is no longer loaded here — the old
-        // Automations / History tabs UI is retired in favor of the
-        // drag-and-drop canvas.
-        await Promise.all([
-          window.__dashboardLoadRouteModule("flow-builder"),
-          window.__dashboardLoadRouteModule("campaigns"),
-        ]);
+        // Outreach is now a single surface: the flow builder. Email
+        // campaigns moved to their own #campaigns route in the sidebar.
+        await window.__dashboardLoadRouteModule("flow-builder");
         ensureOutreachMounted();
         if (typeof window.loadFlowBuilderSection === "function") {
           window.loadFlowBuilderSection();
-        }
-        if (typeof window.loadCampaignsSection === "function") {
-          window.loadCampaignsSection();
-        } else if (window.__campaignsRoute && typeof window.__campaignsRoute.load === "function") {
-          window.__campaignsRoute.load();
         }
       };
 
@@ -23770,6 +24506,7 @@
       aiSettings: { title: "AI Settings",  section: "aiSettings" },
       leadIntake: { title: "Lead intake",  section: "leadIntake" },
       onboarding: { title: "Set up your business", section: "onboarding" },
+      socialPipeline: { title: "Social Pipeline", section: "socialPipeline" },
     };
 
     // ─────────── Section-data loaders (lazy, memoized) ───────────
@@ -23823,8 +24560,10 @@
           if (phoneTab) phoneTab.click();
         });
       }
-      // engagement + campaigns merged into outreach. Old hashes still resolve.
-      if (route === "engagement" || route === "campaigns") {
+      // Engagement was retired — its old hash still resolves to outreach.
+      // Campaigns is its own sidebar route again, so we no longer
+      // redirect "campaigns" anywhere.
+      if (route === "engagement") {
         route = "outreach";
       }
       // embed (widget install) is now inline in the General Settings pane.
@@ -23895,17 +24634,18 @@
       // Outreach takes the full viewport (canvas needs every pixel).
       // Other pages keep the standard padded-article layout.
       document.body.classList.toggle("is-outreach-fullbleed", route === "outreach");
-      // Form-context entry: the user clicked "Add more steps" on a
-      // form. Drop them straight onto the Canvas tab so they land on
-      // their form's flow, not the My Flows list. Runs every time we
-      // route to outreach, not just on first mount.
+      // Outreach entry: ALWAYS land on My Flows. Canvas is only
+      // reached by clicking a flow card from there. This prevents the
+      // previously-active canvas from "leaking" across visits when
+      // the user navigates away (e.g. to Home) and returns. The
+      // come-from-form breadcrumb is cleared on entry so a stale flag
+      // can never re-route into the canvas.
       if (route === "outreach") {
         try {
-          if (sessionStorage.getItem("outreach_came_from_form") === "1") {
-            requestAnimationFrame(() => {
-              if (typeof _outShowCanvas === "function") _outShowCanvas();
-            });
-          }
+          sessionStorage.removeItem("outreach_came_from_form");
+          requestAnimationFrame(() => {
+            if (typeof _outShowMyFlows === "function") _outShowMyFlows();
+          });
         } catch (_) {}
       }
       try { history.replaceState(null, "", "#" + route); } catch (_) {}
@@ -34468,10 +35208,10 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-06-test-flow-edges"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-08-runs-fast"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
-<script src="/dashboard/static/ai-rewrite.js" async></script>
+<script src="/dashboard/static/ai-rewrite.js?v=2026-05-07-site-fields" async></script>
 </body>
 </html>

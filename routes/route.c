@@ -415,8 +415,13 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/test") == 0) {
         get_live_html(cSSL, http_header, "portfolio/tst.html");
     } else if (strcmp(request_type, "GET") == 0 &&
-               (strcmp(route, "/landscaping") == 0 || strcmp(route, "/landscaping/") == 0 ||
+               (strcmp(route, "/landscapers") == 0 || strcmp(route, "/landscapers/") == 0 ||
+                strcmp(route, "/landscaping") == 0 || strcmp(route, "/landscaping/") == 0 ||
                 strcmp(route, "/landscape")  == 0 || strcmp(route, "/landscape/")  == 0)) {
+        /* Home page. /landscapers is the canonical (matches the
+         * mchenrycountylandscapers.com brand + the per-pro pages at
+         * /landscapers/<slug>/). The /landscaping and /landscape paths
+         * are kept alive for back-compat with old inbound links. */
         get_live_html(cSSL, http_header, "landscaping/index.html");
     } else if (strcmp(request_type, "GET") == 0 &&
                (strncmp(route, "/landscaping/match/", 19) == 0 ||
@@ -424,6 +429,89 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
         /* Client-side router for the match wizard (step-1..step-6, done).
            All paths under /match/ serve the SPA shell; landscaping.js reads
            window.location.pathname and renders the appropriate step. */
+        get_live_html(cSSL, http_header, "landscaping/index.html");
+    } else if (strcmp(request_type, "GET") == 0 &&
+               (strncmp(route, "/landscaping/services", 21) == 0 ||
+                strncmp(route, "/landscape/services",  19) == 0)) {
+        /* Service article hub uses the SPA shell — landscaping.js reads
+           window.location.pathname and renders the index or a specific
+           article inline, so the topnav and AI ask-bar never move. */
+        get_live_html(cSSL, http_header, "landscaping/index.html");
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/landscaping/pros") == 0) {
+        /* Cleaned landscaping pro dataset from gold bucket — used by the
+         * /landscaping match flow to score real pros instead of the
+         * hardcoded sample. */
+        get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 &&
+               strncmp(route, "/landscapers/", 13) == 0) {
+        /* SEO per-pro pages — server-rendered HTML with LocalBusiness
+         * JSON-LD + AggregateRating. Flask handler at app.py
+         * landscaper_profile_page parses the slug and writes the page. */
+        get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && (
+               /* Service hubs (single-segment URLs) */
+               strcmp(route, "/lawn-care") == 0 || strcmp(route, "/lawn-care/") == 0 ||
+               strcmp(route, "/hardscaping") == 0 || strcmp(route, "/hardscaping/") == 0 ||
+               strcmp(route, "/landscape-design") == 0 || strcmp(route, "/landscape-design/") == 0 ||
+               strcmp(route, "/tree-shrub-care") == 0 || strcmp(route, "/tree-shrub-care/") == 0 ||
+               strcmp(route, "/irrigation-drainage") == 0 || strcmp(route, "/irrigation-drainage/") == 0 ||
+               strcmp(route, "/seasonal-cleanup") == 0 || strcmp(route, "/seasonal-cleanup/") == 0 ||
+               /* City hubs (single-segment URLs) */
+               strcmp(route, "/crystal-lake") == 0 || strcmp(route, "/crystal-lake/") == 0 ||
+               strcmp(route, "/algonquin") == 0 || strcmp(route, "/algonquin/") == 0 ||
+               strcmp(route, "/cary") == 0 || strcmp(route, "/cary/") == 0 ||
+               strcmp(route, "/lake-in-the-hills") == 0 || strcmp(route, "/lake-in-the-hills/") == 0 ||
+               strcmp(route, "/mchenry") == 0 || strcmp(route, "/mchenry/") == 0 ||
+               strcmp(route, "/woodstock") == 0 || strcmp(route, "/woodstock/") == 0 ||
+               strcmp(route, "/huntley") == 0 || strcmp(route, "/huntley/") == 0 ||
+               strcmp(route, "/marengo") == 0 || strcmp(route, "/marengo/") == 0 ||
+               strcmp(route, "/harvard") == 0 || strcmp(route, "/harvard/") == 0 ||
+               strcmp(route, "/spring-grove") == 0 || strcmp(route, "/spring-grove/") == 0 ||
+               /* Service × city matrix — prefix match for "<known city>/<service>"
+                * is too broad in plain C; forward anything starting with one of
+                * the city prefixes to Flask, which slug-validates and 404s if
+                * the second segment isn't a known service. */
+               strncmp(route, "/crystal-lake/",      14) == 0 ||
+               strncmp(route, "/algonquin/",          11) == 0 ||
+               strncmp(route, "/cary/",                6) == 0 ||
+               strncmp(route, "/lake-in-the-hills/", 19) == 0 ||
+               strncmp(route, "/mchenry/",             9) == 0 ||
+               strncmp(route, "/woodstock/",          11) == 0 ||
+               strncmp(route, "/huntley/",             9) == 0 ||
+               strncmp(route, "/marengo/",             9) == 0 ||
+               strncmp(route, "/harvard/",             9) == 0 ||
+               strncmp(route, "/spring-grove/",       14) == 0)) {
+        /* SEO service / city / service-x-city hub pages. Flask renders
+         * these from the gold dataset (filtered by slug). Slug
+         * allowlist enforced server-side; unknown slugs 404. */
+        get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "POST") == 0 &&
+               strncmp(route, "/landscaping/pros/", 18) == 0) {
+        /* Per-pro override save from /prospects admin — body is JSON
+         * with editable field updates; Flask writes them to a separate
+         * overrides blob layered on top of gold reads. */
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
+    } else if (strcmp(request_type, "POST") == 0 &&
+               strcmp(route, "/landscaping/contact-business") == 0) {
+        /* One-Click Contact form submission — homeowner contacts a
+         * directory pro. Flask writes the lead to bronze. */
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 &&
+               strncmp(route, "/landscaping/img/", 17) == 0) {
+        /* Static images for article + company cards (saved by
+         * fetch_article_images.py). Proxied to Flask which uses
+         * send_from_directory under templates/landscaping/img/. */
+        get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 &&
+               (strcmp(route, "/landscaping/ask") == 0 ||
+                strcmp(route, "/landscaping/ask/") == 0 ||
+                strcmp(route, "/landscape/ask") == 0 ||
+                strcmp(route, "/landscape/ask/") == 0 ||
+                strncmp(route, "/landscaping/ask/", 17) == 0 ||
+                strncmp(route, "/landscape/ask/", 15) == 0)) {
+        /* Full-screen takeover for chat-driven results. The SPA reads
+           window.location.pathname and renders the empty/loading/result
+           view; refresh-safe because result state lives in sessionStorage. */
         get_live_html(cSSL, http_header, "landscaping/index.html");
     } else if (strcmp(request_type, "GET") == 0 &&
                (strcmp(route, "/landscape/guide") == 0 || strcmp(route, "/landscape/guide/") == 0)) {
@@ -442,9 +530,13 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/landscape/landscaping.js") == 0) {
         get_live_js(cSSL, http_header, "landscaping/landscaping.js");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/sitemap.xml") == 0) {
-        get_live_file_typed(cSSL, "landscaping/sitemap.xml", "application/xml; charset=utf-8");
+        /* Dynamic sitemap — Flask generates from live dataset so new
+         * pros / hubs auto-appear without a redeploy. */
+        get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/robots.txt") == 0) {
-        get_live_file_typed(cSSL, "landscaping/robots.txt", "text/plain; charset=utf-8");
+        /* Dynamic robots — Flask emits the Sitemap: line with the
+         * correct public origin (no hardcoded domain). */
+        get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/favicon.ico") != NULL) {
         get_image_file(cSSL, http_header, "/portfolio/images/favicon.ico");
     } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/dashboard/dist/", 16) == 0) {
@@ -481,6 +573,14 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
     } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/dashboard/linkedin", 19) == 0) {
         /* LinkedIn-as-its-own-tab — page + JSON status/posts/rate APIs. */
         get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/dashboard/social-pipeline", 26) == 0) {
+        /* Social Pipeline — Bronze/Silver/Gold content workflow.
+         * Page (/dashboard/social-pipeline) + JSON list/job/record APIs
+         * under /dashboard/social-pipeline/api/. */
+        get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/dashboard/social-pipeline/", 27) == 0) {
+        /* Social Pipeline — generate, approve, reject endpoints. */
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/dashboard/lead-intake") == 0) {
         /* Lead-intake settings page (Phase 1: web form). */
         get_to_local(socket, http_header, body, route_with_query, "5000");
@@ -494,6 +594,16 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/f/", 3) == 0) {
         /* Public lead-intake form submission. */
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/v1/triggers/", 13) == 0) {
+        /* Public webhook entry — third-party sites POST form/JSON
+         * payloads here, Flask validates against the form definition
+         * and fires the flow. Token-in-URL is the credential, no
+         * session required. */
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
+    } else if (strcmp(request_type, "OPTIONS") == 0 && strncmp(route, "/v1/triggers/", 13) == 0) {
+        /* CORS preflight from browser-side fetches — Flask returns
+         * the Access-Control-* headers itself. */
         post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/api/ai/", 8) == 0) {
         /* Inline AI editor — rewrite-selection endpoint + hooks +

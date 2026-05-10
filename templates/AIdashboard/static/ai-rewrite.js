@@ -406,6 +406,21 @@
           after  = fullText.slice(i + s.text.length, i + s.text.length + 200);
         }
       }
+      // If the flow-builder canvas is mounted, it publishes the
+      // current Input node's bound form fields AND any site_fields
+      // (extras the customer's website attaches alongside the form
+      // submission) on window so the AI only suggests variables the
+      // pipeline actually collects.
+      var formFields = [];
+      var siteFields = [];
+      try {
+        if (Array.isArray(window.__fb_input_form_fields)) {
+          formFields = window.__fb_input_form_fields;
+        }
+        if (Array.isArray(window.__fb_input_site_fields)) {
+          siteFields = window.__fb_input_site_fields;
+        }
+      } catch (_) {}
       var resp = await fetch("/api/ai/rewrite-selection", {
         method: "POST", credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
@@ -415,6 +430,8 @@
             field_type: s.fieldType,
             surrounding_text_before: before,
             surrounding_text_after:  after,
+            form_fields: formFields,
+            site_fields: siteFields,
           },
         }),
       });

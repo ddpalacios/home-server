@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Landscaping Glossary | Crystal Lake Landscapers</title>
+<title>Landscaping Glossary | McHenry County Landscapers</title>
 <meta name="description" content="Plain-English definitions: lawn care vs. landscaping vs. hardscaping, plus aeration, grading, mulch, French drains, and USDA hardiness zones." />
 <meta name="robots" content="index, follow" />
 <meta name="theme-color" content="#1f5f35" />
 <link rel="canonical" href="https://crystal-lake-landscapers.local/landscape/glossary" />
 <meta property="og:type" content="article" />
-<meta property="og:title" content="Landscaping glossary — Crystal Lake Landscapers" />
+<meta property="og:title" content="Landscaping glossary — McHenry County Landscapers" />
 <meta property="og:description" content="Plain-English landscaping terms for Crystal Lake homeowners." />
 <meta property="og:url" content="https://crystal-lake-landscapers.local/landscape/glossary" />
 
@@ -48,9 +48,27 @@
     height: 64px; max-width: 1120px; margin: 0 auto; padding: 0 24px;
   }
   .brand { display: inline-flex; align-items: center; gap: 10px; font-family: "Fraunces", serif; font-weight: 700; font-size: 19px; color: var(--ink); }
-  .brand-mark { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, var(--green-800), var(--green-500)); display: grid; place-items: center; color: #fff; font-size: 17px; }
+  .brand-mark { width: 30px; height: 30px; border-radius: 50%; background: #fff url("/landscaping/img/brand/logo.png") center/22px 22px no-repeat; border: 1px solid var(--border); font-size: 0; color: transparent; line-height: 0; display: inline-block; flex: 0 0 auto; }
   .topnav .cta { padding: 9px 18px; border-radius: 999px; background: var(--green-800); color: #fff; font-size: 14px; font-weight: 600; }
   .topnav .cta:hover { background: var(--green-900); text-decoration: none; }
+  .topnav .topnav-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 18px; border-radius: 999px;
+    background: #fff; color: var(--ink);
+    border: 2px solid var(--green-800);
+    font-size: 14px; font-weight: 700;
+    text-decoration: none; transition: all .15s;
+    margin-right: 10px;
+  }
+  .topnav-back::before { content: "←"; font-size: 16px; line-height: 1; }
+  .topnav .topnav-back:hover, .topnav .topnav-back:focus-visible {
+    background: var(--green-100, #e7f3ea); color: var(--green-800);
+    text-decoration: none; outline: none; transform: translateY(-1px);
+  }
+  .topnav-actions { display: inline-flex; align-items: center; }
+  @media (max-width: 540px) {
+    .topnav .topnav-back, .topnav .cta { padding: 8px 14px; font-size: 13px; }
+  }
 
   .breadcrumbs { font-size: 13.5px; color: var(--muted); padding: 18px 0 0; }
   article.page { padding: 18px 0 80px; }
@@ -96,9 +114,12 @@
   <div class="topnav-inner">
     <a class="brand" href="/landscape">
       <span class="brand-mark" aria-hidden="true">❦</span>
-      Crystal Lake Landscapers
+      McHenry County Landscapers
     </a>
-    <a class="cta" href="/landscape#wizard">Get matched</a>
+    <div class="topnav-actions">
+      <a class="topnav-back" href="/landscaping" aria-label="Back to site">Back to site</a>
+      <a class="cta" href="/landscaping">Get matched</a>
+    </div>
   </div>
 </header>
 
@@ -128,7 +149,7 @@
 
 <footer>
   <div class="container">
-    <span>© Crystal Lake Landscapers</span>
+    <span>© McHenry County Landscapers</span>
     <span><a href="/landscape">Home</a> · <a href="/landscape/guide">Planting guide</a> · <a href="/landscape/hiring-tips">Hiring tips</a></span>
   </div>
 </footer>

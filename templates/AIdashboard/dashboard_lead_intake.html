@@ -166,6 +166,152 @@
     margin-top:auto; padding-top:6px;
     font-size:11.5px; color:#9aa4b2;
   }
+  .form-card-webhook-btn {
+    align-self:flex-start;
+    display:inline-flex; align-items:center; gap:6px;
+    margin-top:6px;
+    padding:5px 10px;
+    border:1px solid #cbd5e1; border-radius:99px;
+    background:#f8fafc; color:#185fa5;
+    font:inherit; font-size:11.5px; font-weight:600;
+    cursor:pointer;
+    transition:background .12s ease, border-color .12s ease;
+  }
+  .form-card-webhook-btn:hover {
+    background:#eff6ff; border-color:#94a3b8;
+  }
+  /* Webhook modal — opens from the card link. Same backdrop pattern
+     the rest of this page uses. */
+  .wh-modal-bg {
+    position:fixed; inset:0; background:rgba(15,23,42,.45);
+    display:flex; align-items:center; justify-content:center;
+    padding:24px; z-index:9999;
+    animation:wh-fade .12s ease;
+  }
+  @keyframes wh-fade { from { opacity:0 } to { opacity:1 } }
+  .wh-modal {
+    background:#fff; border-radius:14px;
+    width:100%; max-width:640px; max-height:calc(100vh - 48px);
+    overflow:auto; box-shadow:0 20px 50px rgba(15,23,42,.25);
+    padding:22px;
+    box-sizing:border-box;
+  }
+  .wh-modal h3 { margin:0 0 4px; font-size:18px; }
+  .wh-modal-sub { margin:0 0 16px; color:var(--sub); font-size:13px; }
+  .wh-url-row {
+    display:flex; gap:8px; align-items:stretch;
+    background:#f1f5f9; border:1px solid #cbd5e1; border-radius:10px;
+    padding:6px; margin-bottom:14px;
+  }
+  .wh-url-input {
+    flex:1; min-width:0;
+    border:0; background:transparent;
+    padding:8px 10px;
+    font:inherit; font-size:13px; font-family:ui-monospace,Menlo,Consolas,monospace;
+    color:#0f172a;
+  }
+  .wh-url-input:focus { outline:none; }
+  .wh-copy-btn {
+    border:0; background:#185fa5; color:#fff;
+    padding:8px 14px; border-radius:8px;
+    font:inherit; font-size:13px; font-weight:600;
+    cursor:pointer; flex-shrink:0;
+  }
+  .wh-copy-btn:hover { background:#1d4ed8; }
+  .wh-copy-btn.is-ok { background:#16a34a; }
+  .wh-section-h {
+    font-size:13px; font-weight:600;
+    margin:14px 0 8px; color:#0f172a;
+    text-transform:uppercase; letter-spacing:.04em;
+  }
+  /* Plain-English step headers + paragraphs. Bigger and friendlier
+     than the all-caps section labels above — meant to read like a
+     short note, not a spec. */
+  .wh-step-h {
+    font-size:14px; font-weight:700; color:#0f172a;
+    margin:14px 0 8px;
+  }
+  .wh-step-h:first-of-type { margin-top:0; }
+  .wh-step-p {
+    margin:0 0 10px; line-height:1.55;
+    font-size:13.5px; color:#1f2937;
+  }
+  .wh-step-p code {
+    background:#f1f5f9; border:1px solid #e2e8f0; border-radius:4px;
+    padding:1px 6px; font-size:12px;
+  }
+  .wh-list {
+    list-style:none; padding:0; margin:0;
+    border:1px solid var(--line); border-radius:8px;
+    background:#fafbfd;
+  }
+  .wh-list li {
+    padding:8px 12px;
+    border-bottom:1px solid var(--line);
+    font-size:13.5px; color:#1f2937;
+    display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+  }
+  .wh-list li:last-child { border-bottom:0; }
+  .wh-list-key {
+    color:var(--sub); font-size:12px;
+  }
+  .wh-list-key code {
+    background:transparent; padding:0; font-size:12px;
+  }
+  .wh-pill-req {
+    display:inline-flex; align-items:center;
+    background:#fef3c7; color:#92400e;
+    border-radius:99px; padding:1px 8px;
+    font-size:11px; font-weight:600;
+  }
+  .wh-details {
+    margin:14px 0 0;
+    border:1px solid var(--line); border-radius:8px;
+    padding:10px 14px; background:#fff;
+  }
+  .wh-details summary {
+    cursor:pointer; font-size:13px; font-weight:600; color:#185fa5;
+    list-style:none;
+  }
+  .wh-details summary::-webkit-details-marker { display:none; }
+  .wh-details summary::before {
+    content:"▸ "; color:#94a3b8; margin-right:4px;
+  }
+  .wh-details[open] summary::before { content:"▾ "; }
+  .wh-fields {
+    border:1px solid var(--line); border-radius:8px;
+    padding:8px 12px; font-size:13px; background:#fafbfd;
+  }
+  .wh-fields div { padding:3px 0; }
+  .wh-fields code {
+    background:#fff; border:1px solid #e5e7eb; border-radius:4px;
+    padding:1px 6px; font-size:12px;
+  }
+  .wh-snippet {
+    background:#0f172a; color:#e2e8f0;
+    border-radius:8px; padding:14px;
+    font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12.5px;
+    line-height:1.55;
+    overflow:auto; max-height:240px;
+    white-space:pre; tab-size:2;
+    margin:10px 0 0;
+  }
+  .wh-foot {
+    display:flex; justify-content:space-between; align-items:center;
+    margin-top:16px; padding-top:14px; border-top:1px solid var(--line);
+    font-size:12.5px;
+  }
+  .wh-regen {
+    background:transparent; border:0; color:#b91c1c; cursor:pointer;
+    font:inherit; font-size:12.5px; padding:4px 8px;
+    border-radius:6px;
+  }
+  .wh-regen:hover { background:#fef2f2; }
+  .wh-close-btn {
+    background:#0f172a; color:#fff; border:0; border-radius:8px;
+    padding:8px 16px; font:inherit; font-size:13px; font-weight:600;
+    cursor:pointer;
+  }
   .form-card-del {
     position:absolute; top:8px; right:8px;
     width:26px; height:26px; border-radius:50%;
@@ -720,6 +866,9 @@
         +     '<span>' + (f.lead_count || 0) + ' lead' + (f.lead_count === 1 ? "" : "s") + '</span>'
         +   '</div>'
         +   flowLine
+        +   '<button class="form-card-webhook-btn" data-act="webhook" type="button">'
+        +     '🔗 <span>Get link</span>'
+        +   '</button>'
         +   '<div class="form-card-foot">' + esc(edited) + '</div>'
         + '</div>';
     }).join("");
@@ -735,7 +884,151 @@
         ev.stopPropagation();
         deleteForm(f);
       });
+      var whBtn = card.querySelector('[data-act="webhook"]');
+      if (whBtn) whBtn.addEventListener("click", function(ev){
+        ev.stopPropagation();
+        openWebhookModal(f);
+      });
     });
+  }
+
+  // "Get the link" modal — plain-English explanation of how to wire
+  // the form on the user's own website. Designed for a non-technical
+  // owner: ONE big link, ONE example to copy. The HTML/JS/curl tabs
+  // are gone; an optional "Show me the code" disclosure surfaces the
+  // ready-to-paste form snippet for whoever is actually doing the
+  // wiring (often the user's web designer, not the user).
+  function openWebhookModal(f){
+    var bg = document.createElement("div");
+    bg.className = "wh-modal-bg";
+    bg.innerHTML = ''
+      + '<div class="wh-modal" role="dialog" aria-modal="true" aria-labelledby="wh-h">'
+      +   '<h3 id="wh-h">Your link</h3>'
+      +   '<p class="wh-modal-sub">Paste this into your form. Done.</p>'
+      +   '<div class="wh-url-row">'
+      +     '<input class="wh-url-input" data-wh="url" readonly value="Loading…" />'
+      +     '<button class="wh-copy-btn" data-wh="copy" type="button">Copy</button>'
+      +   '</div>'
+      +   '<div data-wh="fields-wrap"></div>'
+      +   '<details class="wh-details">'
+      +     '<summary>For your web person</summary>'
+      +     '<pre class="wh-snippet" data-wh="snippet">Loading…</pre>'
+      +   '</details>'
+      +   '<div class="wh-foot">'
+      +     '<button class="wh-regen" data-wh="regen" type="button">🔄 New link</button>'
+      +     '<button class="wh-close-btn" data-wh="close" type="button">Done</button>'
+      +   '</div>'
+      + '</div>';
+    document.body.appendChild(bg);
+
+    var state = { url: "", token: "", fields: f.fields || [] };
+    var $$ = function(s){ return bg.querySelector(s); };
+    var close = function(){ try { document.body.removeChild(bg); } catch(_){} };
+    bg.addEventListener("click", function(e){ if (e.target === bg) close(); });
+    $$("[data-wh='close']").onclick = close;
+
+    var renderFields = function(){
+      var w = $$("[data-wh='fields-wrap']");
+      if (!w) return;
+      if (!state.fields.length) {
+        w.innerHTML = '';
+        return;
+      }
+      // Field list — bare labels, optional "needed" pill on required
+      // ones. The technical key still shows small for whoever wires
+      // it up but it's quiet enough to ignore.
+      w.innerHTML = '<div class="wh-step-h" style="margin-top:14px">Asks for:</div>'
+        + '<ul class="wh-list">'
+        + state.fields.map(function(fd){
+            return '<li>'
+              + '<strong>' + esc(fd.label || fd.key || "") + '</strong>'
+              + (fd.required ? ' <span class="wh-pill-req">needed</span>' : '')
+              + ' <span class="wh-list-key">(<code>' + esc(fd.key || "") + '</code>)</span>'
+              + '</li>';
+          }).join("")
+        + '</ul>';
+    };
+
+    var renderSnippet = function(){
+      var url = state.url || "your-link-here";
+      var fields = state.fields;
+      var pre = $$("[data-wh='snippet']");
+      if (!pre) return;
+      var inputs = fields.map(function(fd){
+        var t = (fd.type === "email" ? "email"
+              : fd.type === "phone"  ? "tel"
+              : fd.type === "number" ? "number"
+              : fd.type === "textarea" ? "textarea"
+              : "text");
+        if (t === "textarea") {
+          return '  <textarea name="' + esc(fd.key) + '"'
+            + (fd.required ? ' required' : '') + '></textarea>';
+        }
+        return '  <input name="' + esc(fd.key) + '" type="' + t + '"'
+          + (fd.required ? ' required' : '') + ' />';
+      }).join("\n") || '  <input name="email" type="email" required />';
+      pre.textContent = '<form action="' + url + '" method="POST">\n'
+        + inputs + '\n'
+        + '  <button type="submit">Send</button>\n</form>';
+    };
+
+    $$("[data-wh='copy']").onclick = function(){
+      if (!state.url) return;
+      try {
+        navigator.clipboard.writeText(state.url);
+        var btn = $$("[data-wh='copy']");
+        btn.textContent = "Copied ✓";
+        btn.classList.add("is-ok");
+        setTimeout(function(){
+          btn.textContent = "Copy";
+          btn.classList.remove("is-ok");
+        }, 1400);
+      } catch(_) {}
+    };
+
+    $$("[data-wh='regen']").onclick = function(){
+      if (!confirm("Make a new link? The old one will stop working right away.")) return;
+      var btn = $$("[data-wh='regen']");
+      btn.disabled = true; btn.textContent = "Making one…";
+      fetch("/me/forms/" + encodeURIComponent(f.id) + "/webhook/regenerate", {
+        method:"POST", credentials:"same-origin",
+      }).then(function(r){ return r.json(); })
+        .then(function(d){
+          btn.disabled = false; btn.textContent = "🔄 Get a new link";
+          if (d && d.url) {
+            state.url = d.url; state.token = d.token;
+            $$("[data-wh='url']").value = d.url;
+            renderSnippet();
+          }
+        })
+        .catch(function(){
+          btn.disabled = false; btn.textContent = "🔄 Get a new link";
+          alert("Couldn't make a new link. Please try again.");
+        });
+    };
+
+    // Pull the URL.
+    fetch("/me/forms/" + encodeURIComponent(f.id) + "/webhook", {
+      credentials: "same-origin",
+    }).then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){
+        if (!d || !d.url) {
+          $$("[data-wh='url']").value = "Couldn't load — please try again.";
+          return;
+        }
+        state.url    = d.url;
+        state.token  = d.token;
+        if (Array.isArray(d.fields) && d.fields.length) state.fields = d.fields;
+        $$("[data-wh='url']").value = d.url;
+        renderFields();
+        renderSnippet();
+      })
+      .catch(function(){
+        $$("[data-wh='url']").value = "Couldn't load — please try again.";
+      });
+
+    renderFields();
+    renderSnippet();
   }
   function _shortAgo(ts){
     var s = Math.max(0, Math.floor(Date.now()/1000) - (Number(ts) || 0));
@@ -827,7 +1120,7 @@
     var editing = !!form;
     var state = {
       id: editing ? form.id : null,
-      name: editing ? form.name : "Untitled form",
+      name: editing ? form.name : "",
       flow_id: editing ? (form.flow_id || "default") : "default",
       attached_flow_id:   editing ? (form.attached_flow_id   || "first_contact") : "first_contact",
       attached_flow_name: editing ? (form.attached_flow_name || "First Hello")   : "First Hello",
@@ -1271,7 +1564,7 @@
       p.innerHTML = ''
         + '<div style="font-size:11px;font-weight:700;color:#9aa4b2;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Live preview</div>'
         + '<div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:0 1px 3px rgba(20,40,80,.04)">'
-        +   '<h3 style="margin:0 0 4px;font-size:18px">' + esc(state.name || "Untitled form") + '</h3>'
+        +   (state.name ? '<h3 style="margin:0 0 4px;font-size:18px">' + esc(state.name) + '</h3>' : '')
         +   fieldsHtml
         +   '<button style="width:100%;padding:11px;background:var(--accent);color:#fff;border:0;border-radius:8px;font-weight:600;font-size:14px;margin-top:6px;cursor:not-allowed" title="This is a preview" disabled>' + esc(state.submit_text || "Submit") + '</button>'
         + '</div>'
@@ -1448,16 +1741,12 @@
       // the modal after this won't trigger the cleanup path.
       state.is_draft = false;
       saveFormAndThen(function(savedForm){
+        // Just close the builder. No share-screen / flow-prompt popup
+        // chain — owner asked for a quiet save. They can re-open the
+        // form to edit it again or grab the share link from the form
+        // list later.
         document.body.removeChild(bg);
-        // For brand-new forms (state was non-editing before save),
-        // prompt the user. Otherwise straight to share screen.
-        // editing flips true inside saveFormAndThen, so we use a
-        // local flag captured BEFORE the call below.
-        if (!_wasEditingBeforeSave) {
-          showFlowPrompt(savedForm, function(){ showShareScreen(savedForm); });
-        } else {
-          showShareScreen(savedForm);
-        }
+        toast("Saved.");
       });
     }
     var _wasEditingBeforeSave = editing;

@@ -118,10 +118,13 @@ function ActivityCard({ id, data }) {
     ctx.openChooser({ sourceId: id });
   };
   // Pill content lives next to the text block (not at the right edge)
-  // so it can never collide with the drag knob or + button.
+  // so it can never collide with the drag knob or + button. Only the
+  // Input/START card carries a pill — action cards used to show
+  // ON/OFF, but every saved step IS effectively "on" the moment it's
+  // wired into the canvas. The label was just visual noise.
   const pill = isInputNode
     ? <span className="fb-card-pill fb-card-pill-input">START</span>
-    : <span className={`fb-card-pill ${isOn ? "is-on" : ""}`}>{isOn ? "ON" : "OFF"}</span>;
+    : null;
   // Test runner state — set during a "Test this flow" simulation.
   // undefined for normal use; one of: "running" | "completed" | "failed"
   // | "skipped" | "stopped".
@@ -735,9 +738,22 @@ function insertTokenAtCursor(textareaRef, value, setValue, token) {
 }
 
 // ── Phone preview (iMessage / Mail-style) ───────────────────────────────
-function PhonePreview({ mode, subject, body, fromName, previewValues, tags }) {
+function PhonePreview({ mode, subject, body, fromName, previewValues, tags, spokenMessage }) {
   const renderedBody = applyMergeTags(body || "", previewValues, tags);
   const renderedSubject = applyMergeTags(subject || "", previewValues, tags);
+  const renderedSpoken = applyMergeTags(spokenMessage || "", previewValues, tags);
+  // Detect channels from any mode shape: legacy single string ("sms" /
+  // "email" / "both" / "call") OR notify's comma-joined multi-select
+  // ("sms,email,call"). Building flags up front lets one render path
+  // handle every combination.
+  const m = String(mode || "").toLowerCase();
+  const parts = m.split(",").map(s => s.trim()).filter(Boolean);
+  const showSms   = parts.includes("sms")   || m === "both";
+  const showEmail = parts.includes("email") || m === "both";
+  const showCall  = parts.includes("call");
+  const isWait    = m === "wait";
+  const anyChannel = showSms || showEmail || showCall;
+
   return (
     <div className="fb-phone">
       <div className="fb-phone-notch" />
@@ -746,52 +762,7 @@ function PhonePreview({ mode, subject, body, fromName, previewValues, tags }) {
           <span>9:41</span>
           <span>● ● ●</span>
         </div>
-        {mode === "email" ? (
-          <div className="fb-phone-mail">
-            <div className="fb-phone-mail-from">
-              <strong>{fromName || "Your business"}</strong>
-            </div>
-            <div className="fb-phone-mail-subject">
-              {renderedSubject || <span className="fb-phone-empty">Your subject will appear here</span>}
-            </div>
-            <div className="fb-phone-mail-body">
-              {renderedBody || <span className="fb-phone-empty">Your message will appear here as you type</span>}
-            </div>
-          </div>
-        ) : mode === "sms" ? (
-          <div className="fb-phone-sms">
-            <div className="fb-phone-sms-from">
-              {fromName || "Your business"}
-            </div>
-            <div className="fb-phone-sms-bubble">
-              {renderedBody || <span className="fb-phone-empty">Your message will appear here as you type</span>}
-            </div>
-          </div>
-        ) : mode === "both" ? (
-          // Stacked: SMS first (immediate channel), email below (longer-form).
-          // Same body in both, plus the subject on the email card.
-          <div className="fb-phone-both">
-            <div className="fb-phone-sms">
-              <div className="fb-phone-sms-from">
-                {fromName || "Your business"}
-              </div>
-              <div className="fb-phone-sms-bubble">
-                {renderedBody || <span className="fb-phone-empty">Your message will appear here as you type</span>}
-              </div>
-            </div>
-            <div className="fb-phone-mail" style={{ marginTop: 12 }}>
-              <div className="fb-phone-mail-from">
-                <strong>{fromName || "Your business"}</strong>
-              </div>
-              <div className="fb-phone-mail-subject">
-                {renderedSubject || <span className="fb-phone-empty">Your subject will appear here</span>}
-              </div>
-              <div className="fb-phone-mail-body">
-                {renderedBody || <span className="fb-phone-empty">Your message will appear here as you type</span>}
-              </div>
-            </div>
-          </div>
-        ) : mode === "wait" ? (
+        {isWait ? (
           <div className="fb-phone-wait">
             <div className="fb-phone-wait-ico">⏱️</div>
             <div className="fb-phone-wait-h">Nothing happens here</div>
@@ -799,9 +770,41 @@ function PhonePreview({ mode, subject, body, fromName, previewValues, tags }) {
               We just pause before the next step.
             </div>
           </div>
-        ) : (
+        ) : !anyChannel ? (
           <div className="fb-phone-wait">
-            <div className="fb-phone-wait-h">No preview</div>
+            <div className="fb-phone-wait-h">Pick a channel to preview</div>
+          </div>
+        ) : (
+          <div className="fb-phone-both">
+            {showSms && (
+              <div className="fb-phone-sms">
+                <div className="fb-phone-sms-from">{fromName || "Your business"}</div>
+                <div className="fb-phone-sms-bubble">
+                  {renderedBody || <span className="fb-phone-empty">Your message will appear here as you type</span>}
+                </div>
+              </div>
+            )}
+            {showEmail && (
+              <div className="fb-phone-mail" style={{ marginTop: showSms ? 12 : 0 }}>
+                <div className="fb-phone-mail-from">
+                  <strong>{fromName || "Your business"}</strong>
+                </div>
+                <div className="fb-phone-mail-subject">
+                  {renderedSubject || <span className="fb-phone-empty">Your subject will appear here</span>}
+                </div>
+                <div className="fb-phone-mail-body">
+                  {renderedBody || <span className="fb-phone-empty">Your message will appear here as you type</span>}
+                </div>
+              </div>
+            )}
+            {showCall && (
+              <div className="fb-phone-call" style={{ marginTop: (showSms || showEmail) ? 12 : 0 }}>
+                <div className="fb-phone-call-h">📞 Incoming call</div>
+                <div className="fb-phone-call-body">
+                  {renderedSpoken || <span className="fb-phone-empty">What the AI says will appear here</span>}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -821,7 +824,8 @@ function PhonePreview({ mode, subject, body, fromName, previewValues, tags }) {
 // long content stays aligned.
 function TokenHighlightTextarea({
   id, taRef, className, rows, value, placeholder,
-  onChange, onFocus, dataAiEditable, dataAiFieldType, autoFocus,
+  onChange, onFocus, onKeyDown,
+  dataAiEditable, dataAiFieldType, autoFocus, style,
 }) {
   const overlayRef = React.useRef(null);
   function handleScroll(e) {
@@ -869,8 +873,10 @@ function TokenHighlightTextarea({
         placeholder={placeholder}
         onChange={onChange}
         onFocus={onFocus}
+        onKeyDown={onKeyDown}
         onScroll={handleScroll}
         autoFocus={autoFocus}
+        style={style}
         data-ai-editable={dataAiEditable ? "true" : undefined}
         data-ai-field-type={dataAiFieldType}
         spellCheck={true}
@@ -1216,53 +1222,79 @@ function ReplyPhonePreview({
   );
 }
 
-// ── Input channel picker (drawer panel for the "Input" trigger) ────────
-// The user picks WHERE leads enter the flow. Three options, all
-// real, all using language a five-year-old reads cleanly:
-//   📝 Form on your website   → /me/forms
-//   💬 Instagram messages     → /me/instagram/accounts
-//   📞 Phone calls or texts   → /me/intake/channels.phone
-// If a channel isn't set up, the card shows ONE big "Set this up →"
-// button that takes the user straight to the page that finishes
-// setup (lead intake, instagram, settings/phone), with a breadcrumb
-// so they come back here when they're done.
+// ── Input panel (drawer for the "Input" trigger) ───────────────────────
+// One-to-one with the Lead Intake form-builder modal. Same field cards,
+// same Required/Optional pill toggle, same "+ Add field ▾" dropdown,
+// same live-preview render. Editing a form here is the same edit you'd
+// make on the Lead Intake page; both surfaces hit /me/forms/<id> with
+// identical payloads.
+//
+// Field shape (matches dashboard_lead_intake.html):
+//   { key, label, type, required, options?, builtin? }
+// where type ∈ {text, email, phone, address, textarea, select, date, number}
+const FB_FIELD_ICON = {
+  text: "📝", email: "📧", phone: "📞", address: "🏠",
+  textarea: "💬", select: "📋", date: "⏰", number: "🔢",
+};
+const FB_FIELD_TYPE_LABEL = {
+  text: "Short text", email: "Email", phone: "Phone",
+  address: "Address", textarea: "Long text", select: "Pick from a list",
+  date: "Date", number: "Number",
+};
+const FB_BUILTINS = [
+  { key: "name",        label: "Name",          type: "text" },
+  { key: "email",       label: "Email",         type: "email" },
+  { key: "phone",       label: "Phone",         type: "phone" },
+  { key: "address",     label: "Address",       type: "address" },
+  { key: "message",     label: "What they need", type: "textarea" },
+  { key: "service",     label: "What service",  type: "select", options: ["Service A", "Service B"] },
+  { key: "date_needed", label: "When",          type: "date" },
+  { key: "budget",      label: "Budget",        type: "text" },
+  { key: "company",     label: "Company",       type: "text" },
+];
+
 function InputChannelPanel({ nodeId, data, onChange }) {
   const [loading, setLoading] = React.useState(true);
-  const [channelsStatus, setChannelsStatus] = React.useState(null);
   const [forms, setForms] = React.useState([]);
-  const [igAccounts, setIgAccounts] = React.useState([]);
-  const channel = data.channel || "";
+  const [activeForm, setActiveForm] = React.useState(null);
+  const [name, setName] = React.useState("");
+  const [fields, setFields] = React.useState([]);
+  // Extra fields the customer's WEBSITE attaches to each webhook
+  // payload — distinct from form-fields the customer fills out.
+  // Each entry: { key, label }.
+  const [siteFields, setSiteFields] = React.useState([]);
+  const [activeTab, setActiveTab] = React.useState("form");  // "form" | "site"
+  const [savingTag, setSavingTag] = React.useState("idle"); // "idle" | "saving" | "saved"
+  const [addMenuOpen, setAddMenuOpen] = React.useState(false);
+  const [editingIdx, setEditingIdx] = React.useState(-1);
+  // HTML5 drag-reorder state for the field cards. `dragIdx` is the
+  // card currently being dragged; `overIdx` is the slot it'll drop
+  // into (used to render the insertion line).
+  const [dragIdx, setDragIdx] = React.useState(-1);
+  const [overIdx, setOverIdx] = React.useState(-1);
   const channelRef = data.channelRef || "";
+  const saveTimer = React.useRef(null);
 
   React.useEffect(() => {
     let cancelled = false;
-    Promise.all([
-      fetch("/me/intake/channels", { credentials: "same-origin" })
-        .then(r => r.ok ? r.json() : null).catch(() => null),
-      fetch("/me/forms", { credentials: "same-origin" })
-        .then(r => r.ok ? r.json() : null).catch(() => null),
-      fetch("/me/instagram/accounts", { credentials: "same-origin" })
-        .then(r => r.ok ? r.json() : null).catch(() => null),
-    ]).then(([ch, fs, ig]) => {
-      if (cancelled) return;
-      setChannelsStatus(ch?.channels || null);
-      setForms(Array.isArray(fs?.forms) ? fs.forms.filter(f => !f.is_draft) : []);
-      setIgAccounts(Array.isArray(ig?.accounts) ? ig.accounts : []);
-      setLoading(false);
-    });
+    fetch("/me/forms", { credentials: "same-origin" })
+      .then(r => r.ok ? r.json() : null).catch(() => null)
+      .then(fs => {
+        if (cancelled) return;
+        const list = Array.isArray(fs?.forms) ? fs.forms.filter(f => !f.is_draft) : [];
+        setForms(list);
+        let pickId = channelRef;
+        if (!pickId && list.length === 1) pickId = list[0].id;
+        if (pickId && list.find(f => f.id === pickId)) {
+          loadForm(pickId, list);
+        } else {
+          setLoading(false);
+        }
+      });
     return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const setChannel = (kind, ref, label) => {
-    onChange(nodeId, {
-      channel: kind,
-      channelRef: ref || "",
-      channelLabel: label || "",
-    });
-  };
-
-  // Drop a breadcrumb so the user can come back to this flow after
-  // they finish setting up the channel they just clicked into.
   const dropReturnBreadcrumb = () => {
     try {
       localStorage.setItem("fb_return_to_input", "1");
@@ -1270,174 +1302,940 @@ function InputChannelPanel({ nodeId, data, onChange }) {
     } catch (_) {}
   };
 
-  const phoneReady = !!(channelsStatus?.phone?.ready);
-  const phoneNumber = channelsStatus?.phone?.phone_number || "";
+  function loadForm(id, listOverride) {
+    setLoading(true);
+    fetch(`/me/forms/${encodeURIComponent(id)}`, { credentials: "same-origin" })
+      .then(r => r.ok ? r.json() : null).catch(() => null)
+      .then(d => {
+        const f = d?.form;
+        if (f) {
+          setActiveForm(f);
+          setName(f.name || "");
+          setFields(Array.isArray(f.fields) ? f.fields.map(x => ({ ...x })) : []);
+          setSiteFields(Array.isArray(f.site_fields) ? f.site_fields.map(x => ({ ...x })) : []);
+          const list = listOverride || forms;
+          const meta = list.find(x => x.id === id);
+          onChange(nodeId, {
+            channel: "form",
+            channelRef: id,
+            channelLabel: (meta && meta.name) || f.name || "Untitled form",
+          });
+        }
+        setLoading(false);
+      });
+  }
+
+  // Pending-name ref ensures the latest typed value gets flushed on
+  // unmount even if the debounce timer is still pending. Without this,
+  // clicking "Save and continue" mid-debounce would lose the edit.
+  const pendingNameRef = React.useRef(null);
+
+  function doSave(patch) {
+    if (!activeForm?.id) return;
+    setSavingTag("saving");
+    fetch(`/me/forms/${encodeURIComponent(activeForm.id)}`, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    })
+      .then(r => r.ok ? r.json() : null).catch(() => null)
+      .finally(() => {
+        setSavingTag("saved");
+        setTimeout(() => setSavingTag("idle"), 1200);
+      });
+  }
+
+  function flushPendingName() {
+    if (saveTimer.current) {
+      clearTimeout(saveTimer.current);
+      saveTimer.current = null;
+    }
+    if (pendingNameRef.current !== null) {
+      doSave({ name: pendingNameRef.current });
+      pendingNameRef.current = null;
+    }
+  }
+
+  // Force-flush any pending name save when the panel unmounts (drawer
+  // closes via "Save and continue", Esc, backdrop click, or any other
+  // path). Fixes the lost-edit bug where the 400 ms debounce timer
+  // hadn't fired yet at close time.
+  React.useEffect(() => {
+    return () => { flushPendingName(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function commitFields(next) {
+    setFields(next);
+    doSave({ fields: next });
+  }
+  function commitSiteFields(next) {
+    setSiteFields(next);
+    doSave({ site_fields: next });
+  }
+  function updateSiteField(idx, patch) {
+    commitSiteFields(siteFields.map((f, i) => (i === idx ? { ...f, ...patch } : f)));
+  }
+  function removeSiteField(idx) {
+    commitSiteFields(siteFields.filter((_, i) => i !== idx));
+  }
+  function addSiteField() {
+    const usedKeys = new Set([
+      ...fields.map(f => f.key),
+      ...siteFields.map(f => f.key),
+    ]);
+    let i = 1;
+    let key = "extra_field";
+    while (usedKeys.has(key)) {
+      i += 1;
+      key = `extra_field_${i}`;
+    }
+    commitSiteFields([...siteFields, { key, label: "What this is" }]);
+  }
+  // Bulk add for domain presets (e.g., "+ Add all landscape pro fields").
+  // Skips entries whose key is already taken by a form-field or site-field.
+  function addSiteFieldsBulk(presets) {
+    const usedKeys = new Set([
+      ...fields.map(f => f.key),
+      ...siteFields.map(f => f.key),
+    ]);
+    const fresh = (presets || []).filter(p => p && p.key && !usedKeys.has(p.key))
+      .map(p => ({ key: String(p.key), label: String(p.label || p.key) }));
+    if (!fresh.length) return;
+    commitSiteFields([...siteFields, ...fresh]);
+  }
+  function commitName(next) {
+    setName(next);
+    pendingNameRef.current = next;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      saveTimer.current = null;
+      const v = pendingNameRef.current;
+      pendingNameRef.current = null;
+      if (v !== null) doSave({ name: v });
+    }, 400);
+    onChange(nodeId, {
+      channel: "form",
+      channelRef: activeForm?.id || "",
+      channelLabel: next || "Untitled form",
+    });
+  }
+  function updateField(idx, patch) {
+    commitFields(fields.map((f, i) => (i === idx ? { ...f, ...patch } : f)));
+  }
+  function removeField(idx) {
+    commitFields(fields.filter((_, i) => i !== idx));
+  }
+  function moveField(from, to) {
+    if (from === to || from < 0 || to < 0) return;
+    const next = fields.slice();
+    const [item] = next.splice(from, 1);
+    // After removing `from`, indices >= from shift left by 1; clamp
+    // `to` so dropping below the last card lands at the end.
+    const clamped = Math.max(0, Math.min(to, next.length));
+    next.splice(clamped, 0, item);
+    commitFields(next);
+  }
+  function addBuiltin(key) {
+    const spec = FB_BUILTINS.find(x => x.key === key);
+    if (!spec) return;
+    commitFields([...fields, Object.assign({}, spec, { required: false, builtin: true })]);
+  }
+  // Slugify a label into a snake_case key (lowercase, alphanumeric +
+  // underscores). Collision-safe: appends `_2`, `_3` ... when the
+  // base key is already in use elsewhere on the form.
+  function _slugifyKey(label, ignoreIdx = -1) {
+    const base = String(label || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .replace(/_{2,}/g, "_")
+      .slice(0, 48) || "field";
+    const taken = new Set(
+      fields.map((f, i) => i === ignoreIdx ? null : (f.key || ""))
+            .filter(Boolean));
+    if (!taken.has(base)) return base;
+    for (let i = 2; i < 100; i++) {
+      const candidate = `${base}_${i}`;
+      if (!taken.has(candidate)) return candidate;
+    }
+    return `${base}_${Math.random().toString(36).slice(2, 5)}`;
+  }
+  function addCustom(type) {
+    const label = FB_FIELD_TYPE_LABEL[type] || "New question";
+    const f = {
+      key:   _slugifyKey(label),
+      label,
+      type,
+      required: false,
+      // Marker that the key was auto-derived from the label. The
+      // commit-label handler uses this to know whether to keep the
+      // key in sync. Once a user manually edits the key (planned
+      // surface) this flips to false and we stop touching it.
+      auto_key: true,
+    };
+    if (type === "select") f.options = ["Option A", "Option B"];
+    commitFields([...fields, f]);
+  }
 
   if (loading) {
-    return (
-      <div className="fb-ich-loading">
-        Loading your channels…
+    return <div className="fb-ich-loading">Loading your forms…</div>;
+  }
+
+  const usedKeys = new Set(fields.map(f => f.key));
+  const availableBuiltins = FB_BUILTINS.filter(b => !usedKeys.has(b.key));
+  const customTypes = ["text", "textarea", "select", "number", "date"];
+
+  return (
+    <div className="fb-ich is-form-editor">
+      <div className="fb-ich-grid">
+        <div className="fb-ich-edit-pane">
+          {forms.length === 0 ? (
+            <div className="fb-ich-empty">
+              <p className="fb-ich-empty-msg">You haven't made a form yet.</p>
+              <a
+                className="fb-ich-setup-btn"
+                href="#leadIntake"
+                onClick={dropReturnBreadcrumb}
+              >+ Make a form</a>
+            </div>
+          ) : (
+            <>
+              <div className="fb-bsection-h" style={{ marginTop: 0 }}>Your form</div>
+              <select
+                className="fb-binput"
+                value={activeForm?.id || ""}
+                onChange={(e) => loadForm(e.target.value)}
+              >
+                {!activeForm && <option value="">Pick a form…</option>}
+                {forms.map(f => (
+                  <option key={f.id} value={f.id}>{f.name || "Untitled form"}</option>
+                ))}
+              </select>
+
+              {activeForm && (
+                <>
+                  <div className="fb-bsection-h">Form name</div>
+                  <input
+                    className="fb-binput"
+                    value={name}
+                    placeholder="Contact form"
+                    onChange={(e) => commitName(e.target.value)}
+                    onBlur={flushPendingName}
+                  />
+
+                  <div className="fb-bsection-h fb-bsection-h-row" style={{ marginBottom: 4 }}>
+                    <span>Fields</span>
+                    <span className="fb-bsave-tag" aria-live="polite">
+                      {savingTag === "saving" ? "Saving…" : savingTag === "saved" ? "✓ Saved" : ""}
+                    </span>
+                  </div>
+                  <div className="fb-field-tabs" role="tablist">
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={activeTab === "form"}
+                      className={`fb-field-tab ${activeTab === "form" ? "is-active" : ""}`}
+                      onClick={() => setActiveTab("form")}
+                    >📝 From the form{fields.length > 0 ? ` (${fields.length})` : ""}</button>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={activeTab === "site"}
+                      className={`fb-field-tab ${activeTab === "site" ? "is-active" : ""}`}
+                      onClick={() => setActiveTab("site")}
+                    >🌐 From your site{siteFields.length > 0 ? ` (${siteFields.length})` : ""}</button>
+                  </div>
+
+                  {activeTab === "form" && (
+                  <>
+                  <p className="fb-helper-tight" style={{ marginTop: 4, marginBottom: 10 }}>
+                    Questions you ask the customer on the form itself.
+                  </p>
+                  <div className="fb-fields">
+                    {fields.length === 0 ? (
+                      <div className="fb-fields-empty">No fields yet — add one below.</div>
+                    ) : fields.map((f, i) => (
+                      <FldCard
+                        key={`${f.key}-${i}`}
+                        field={f}
+                        index={i}
+                        isEditing={editingIdx === i}
+                        isDragging={dragIdx === i}
+                        showDropAbove={overIdx === i && dragIdx !== i && dragIdx > i}
+                        showDropBelow={overIdx === i && dragIdx !== i && dragIdx < i}
+                        onStartEdit={() => setEditingIdx(i)}
+                        onCommitLabel={(label) => {
+                          setEditingIdx(-1);
+                          const trimmed = (label || "").trim();
+                          if (!trimmed) return;
+                          // Re-derive the key from the new label IF
+                          // the field's key is still auto-generated
+                          // (auto_key=true). This is what makes the
+                          // public form's `<input name="...">` use a
+                          // human-meaningful name instead of an ID
+                          // like q_ip2km. Builtin fields keep their
+                          // canonical keys (name/email/phone/…) so we
+                          // don't accidentally drift them.
+                          const fld = fields[i] || {};
+                          const patch = { label: trimmed };
+                          const isAuto = fld.auto_key !== false && !fld.builtin;
+                          if (isAuto) {
+                            const newKey = _slugifyKey(trimmed, i);
+                            if (newKey && newKey !== fld.key) {
+                              patch.key = newKey;
+                            }
+                          }
+                          updateField(i, patch);
+                        }}
+                        onCancelEdit={() => setEditingIdx(-1)}
+                        onToggleRequired={() => updateField(i, { required: !f.required })}
+                        onRemove={() => removeField(i)}
+                        onDragStart={(e) => {
+                          setDragIdx(i);
+                          try {
+                            e.dataTransfer.effectAllowed = "move";
+                            e.dataTransfer.setData("text/plain", String(i));
+                          } catch (_) {}
+                        }}
+                        onDragOver={(e) => {
+                          if (dragIdx === -1 || dragIdx === i) return;
+                          e.preventDefault();
+                          try { e.dataTransfer.dropEffect = "move"; } catch (_) {}
+                          if (overIdx !== i) setOverIdx(i);
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          if (dragIdx !== -1 && dragIdx !== i) {
+                            // Drop ON card `i`. moveField splices, so:
+                            // drag-down (dragIdx<i) lands AFTER current
+                            // i; drag-up (dragIdx>i) lands BEFORE.
+                            // Both resolve to the same insertion index.
+                            moveField(dragIdx, i);
+                          }
+                          setDragIdx(-1);
+                          setOverIdx(-1);
+                        }}
+                        onDragEnd={() => { setDragIdx(-1); setOverIdx(-1); }}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="fb-add-fld-wrap">
+                    <button
+                      type="button"
+                      className="fb-add-fld-btn"
+                      onClick={() => setAddMenuOpen(v => !v)}
+                      aria-expanded={addMenuOpen}
+                    >+ Add field <span className="fb-add-fld-caret">▾</span></button>
+                    {addMenuOpen && (
+                      <div className="fb-add-fld-menu" role="menu">
+                        <div className="fb-add-fld-section">Quick adds</div>
+                        {availableBuiltins.length === 0 ? (
+                          <div className="fb-add-fld-none">All quick adds are in your form.</div>
+                        ) : availableBuiltins.map(b => (
+                          <div
+                            key={b.key}
+                            role="menuitem"
+                            tabIndex={0}
+                            className="fb-add-fld-item"
+                            onClick={() => { setAddMenuOpen(false); addBuiltin(b.key); }}
+                          >
+                            <span className="fb-add-fld-ico">{FB_FIELD_ICON[b.type] || "📝"}</span>
+                            <span>{b.label}</span>
+                          </div>
+                        ))}
+                        <div className="fb-add-fld-divider" />
+                        <div className="fb-add-fld-section">Custom</div>
+                        {customTypes.map(t => (
+                          <div
+                            key={t}
+                            role="menuitem"
+                            tabIndex={0}
+                            className="fb-add-fld-item"
+                            onClick={() => { setAddMenuOpen(false); addCustom(t); }}
+                          >
+                            <span className="fb-add-fld-ico">{FB_FIELD_ICON[t] || "📝"}</span>
+                            <span>+ {FB_FIELD_TYPE_LABEL[t]}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  </>
+                  )}
+
+                  {activeTab === "site" && (
+                    <SiteFieldsPane
+                      siteFields={siteFields}
+                      formFieldKeys={fields.map(f => f.key)}
+                      webhookUrl={activeForm?.webhook_url || activeForm?.webhook_trigger_url || ""}
+                      onUpdate={updateSiteField}
+                      onRemove={removeSiteField}
+                      onAdd={addSiteField}
+                      onAddBulk={addSiteFieldsBulk}
+                    />
+                  )}
+
+                  <a
+                    className="fb-ich-make-another"
+                    href="#leadIntake"
+                    onClick={dropReturnBreadcrumb}
+                    style={{ display: "inline-block", marginTop: 14 }}
+                  >+ Make a new form</a>
+                </>
+              )}
+            </>
+          )}
+        </div>
+
+        <div className="fb-ich-preview-pane">
+          <FormPreview activeForm={activeForm} name={name} fields={fields} />
+        </div>
       </div>
-    );
+    </div>
+  );
+}
+
+// Single field card. Mirrors `.fld-card` from the Lead Intake form-builder
+// pixel-for-pixel: drag handle, type icon, click-to-edit label,
+// Required/Optional pill toggle, hover-only delete. Builtin fields
+// (name/email/phone/etc.) are deletable by design — same as Lead Intake.
+//
+// Drag-reorder is HTML5 native: only the handle starts the drag (so
+// hovering the label/pill doesn't accidentally pick the card up). The
+// parent owns dragIdx/overIdx and renders the insertion line via
+// showDropAbove / showDropBelow.
+function FldCard({
+  field, index, isEditing, isDragging, showDropAbove, showDropBelow,
+  onStartEdit, onCommitLabel, onCancelEdit, onToggleRequired, onRemove,
+  onDragStart, onDragOver, onDrop, onDragEnd,
+}) {
+  const inputRef = React.useRef(null);
+  const [draft, setDraft] = React.useState(field.label || "");
+  // Only enable native draggable when the user grabs the handle —
+  // otherwise click-to-edit on the label would compete with the drag.
+  const [armed, setArmed] = React.useState(false);
+  React.useEffect(() => {
+    if (isEditing) {
+      setDraft(field.label || "");
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+          inputRef.current.select();
+        }
+      }, 0);
+    }
+  }, [isEditing, field.label]);
+  const icon = FB_FIELD_ICON[field.type] || "📝";
+  const reqOn = !!field.required;
+  return (
+    <div
+      className={`fb-fld-card ${isDragging ? "is-dragging" : ""} ${showDropAbove ? "drop-above" : ""} ${showDropBelow ? "drop-below" : ""}`}
+      draggable={armed}
+      onDragStart={(e) => { onDragStart && onDragStart(e); }}
+      onDragOver={(e) => { onDragOver && onDragOver(e); }}
+      onDrop={(e) => { onDrop && onDrop(e); setArmed(false); }}
+      onDragEnd={() => { onDragEnd && onDragEnd(); setArmed(false); }}
+    >
+      <span
+        className="fb-fld-handle"
+        aria-label="Drag to reorder"
+        title="Drag to reorder"
+        onMouseDown={() => setArmed(true)}
+        onMouseUp={() => setArmed(false)}
+        onMouseLeave={() => { /* keep armed during drag */ }}
+        style={{ cursor: "grab", userSelect: "none" }}
+      >⋮⋮</span>
+      <span className="fb-fld-ico" aria-hidden="true">{icon}</span>
+      {isEditing ? (
+        <input
+          ref={inputRef}
+          className="fb-fld-label-input"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={() => onCommitLabel(draft)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") { e.preventDefault(); e.target.blur(); }
+            else if (e.key === "Escape") { onCancelEdit(); }
+          }}
+        />
+      ) : (
+        <span
+          className="fb-fld-label"
+          tabIndex={0}
+          title="Click to rename"
+          onClick={onStartEdit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onStartEdit(); }
+          }}
+        >{field.label || "(no label)"}</span>
+      )}
+      <button
+        type="button"
+        className={`fb-fld-req-pill ${reqOn ? "is-req" : "is-opt"}`}
+        onClick={onToggleRequired}
+      >
+        <span className="fb-fld-req-dot" />
+        {reqOn ? "Required" : "Optional"}
+      </button>
+      <button
+        type="button"
+        className="fb-fld-del"
+        onClick={onRemove}
+        title="Remove field"
+        aria-label="Remove"
+      >×</button>
+    </div>
+  );
+}
+
+// Domain-specific site-field presets. Each preset is a {key, label}
+// pair the user can drop into "From your site" with one click — those
+// keys then become merge tags ({landscape_summary} etc.) AND show up
+// in the email recipient picker, the call recipient picker, and the
+// Google Sheet column editor's tag suggestions.
+//
+// Currently only the landscaping bundle is wired. To add another
+// vertical (plumber, contractor, etc.) just append another array
+// here and surface it in the Quick-add section below.
+const LANDSCAPING_PRO_PRESETS = [
+  { key: "landscape_name",                label: "Business name" },
+  { key: "landscape_email",               label: "Pro's email" },
+  { key: "landscape_phonenumber",         label: "Pro's phone" },
+  { key: "landscape_pro_id",              label: "Place ID" },
+  { key: "landscape_website",             label: "Pro's website" },
+  { key: "landscape_address",             label: "Address" },
+  { key: "landscape_city",                label: "City" },
+  { key: "landscape_rating",              label: "Google rating" },
+  { key: "landscape_reviews",             label: "Review count" },
+  { key: "landscape_services",            label: "Services (comma list)" },
+  { key: "landscape_blurb",               label: "Short blurb" },
+  { key: "landscape_summary",             label: "AI summary for homeowner" },
+  { key: "landscape_specialties",         label: "Specialties (comma list)" },
+  { key: "landscape_services_offered",    label: "Services offered (LLM)" },
+  { key: "landscape_service_area",        label: "Service area" },
+  { key: "landscape_years_in_business",   label: "Years in business" },
+  { key: "landscape_warranty",            label: "Warranty" },
+  { key: "landscape_when_to_use",         label: "When to use them" },
+  { key: "landscape_certifications",      label: "Certifications" },
+  { key: "landscape_licensed",            label: "Licensed claim" },
+  { key: "landscape_insured",             label: "Insured claim" },
+  { key: "landscape_free_estimates",      label: "Free estimates? (yes/no)" },
+  { key: "landscape_pricing_quotes",      label: "Pricing quotes from site" },
+  { key: "landscape_google_maps_uri",     label: "Google Maps URL" },
+];
+
+// "From your site" tab content — extra fields the customer's WEBSITE
+// attaches to the webhook payload (alongside form-fields the customer
+// fills out). Each row: snake_case key + friendly label + remove.
+// Below the editor, an auto-generated copy-paste recipe shows how to
+// send these from a generic HTML site. Platform-specific recipes
+// (Wix, Squarespace, etc.) are a follow-up.
+function SiteFieldsPane({ siteFields, formFieldKeys, webhookUrl, onUpdate, onRemove, onAdd, onAddBulk }) {
+  const [copied, setCopied] = React.useState("");
+  // Platform recipe tabs: "fetch" (vanilla JS), "wix" (Velo), "html"
+  // (plain form action). Defaults to "fetch" because that's the most
+  // copy-pasteable for the technically inclined; Wix users will spot
+  // the dedicated tab.
+  const [recipe, setRecipe] = React.useState("fetch");
+  const usedKeys = new Set(formFieldKeys || []);
+  // Used while typing — keeps trailing underscores so the user can
+  // actually type "chosen_landscaper" one char at a time. The strict
+  // strip (no leading/trailing _, no double _) runs on blur via
+  // snakeifyCommit below, and again server-side on save.
+  function snakeify(s) {
+    return String(s || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9_]+/g, "_");
+  }
+  function snakeifyCommit(s) {
+    return snakeify(s)
+      .replace(/^_+|_+$/g, "")
+      .replace(/_{2,}/g, "_");
+  }
+  function isCollision(idx, candidate) {
+    const otherSiteKeys = siteFields
+      .filter((_, i) => i !== idx)
+      .map(f => f.key);
+    return usedKeys.has(candidate) || otherSiteKeys.includes(candidate);
+  }
+  // Snippet generator — keys regenerate on every edit.
+  const url = webhookUrl || "https://your-crm.example/v1/triggers/<your-token>";
+  const allKeys = [
+    ...(formFieldKeys || []).map(k => ({ k, isSite: false })),
+    ...siteFields.map(f => ({ k: f.key, isSite: true })),
+  ];
+  const jsonExample = (() => {
+    if (!allKeys.length) return "";
+    const lines = ["{"];
+    allKeys.forEach((entry, i) => {
+      const comma = i < allKeys.length - 1 ? "," : "";
+      const tag = entry.isSite ? "  // ◀ from your site" : "";
+      lines.push(`  "${entry.k}": "..."${comma}${tag}`);
+    });
+    lines.push("}");
+    return lines.join("\n");
+  })();
+  const fetchExample = (() => {
+    if (!allKeys.length) return "";
+    const bodyLines = allKeys.map((e, i) => {
+      const comma = i < allKeys.length - 1 ? "," : "";
+      const tag = e.isSite ? "  // ◀ your site fills this in" : "";
+      return `      ${e.k}: "..."${comma}${tag}`;
+    }).join("\n");
+    return [
+      "await fetch(",
+      `  "${url}",`,
+      `  {`,
+      `    method:  "POST",`,
+      `    headers: { "Content-Type": "application/json" },`,
+      `    body:    JSON.stringify({`,
+      bodyLines,
+      `    }),`,
+      `  }`,
+      `);`,
+    ].join("\n");
+  })();
+  // Wix Velo (front-end .jsw or page code). Uses fetch from
+  // wix-fetch which mirrors the browser fetch API.
+  const wixExample = (() => {
+    if (!allKeys.length) return "";
+    const bodyLines = allKeys.map((e, i) => {
+      const comma = i < allKeys.length - 1 ? "," : "";
+      const src = e.isSite
+        ? `someSiteValue   // ◀ your site fills this in`
+        : `$w("#${e.k}Input").value`;
+      return `      ${e.k}: ${src}${comma}`;
+    }).join("\n");
+    return [
+      `// In your Wix page code (Velo). Wire this to your form's onSubmit:`,
+      `import { fetch } from 'wix-fetch';`,
+      ``,
+      `export async function sendLead() {`,
+      `  await fetch(`,
+      `    "${url}",`,
+      `    {`,
+      `      method:  "POST",`,
+      `      headers: { "Content-Type": "application/json" },`,
+      `      body:    JSON.stringify({`,
+      bodyLines,
+      `      }),`,
+      `    }`,
+      `  );`,
+      `}`,
+    ].join("\n");
+  })();
+  // Plain HTML form (no JS). The customer types form fields; the
+  // site fields ride along as hidden inputs your site renders with
+  // the right value (server-rendered or via a templating engine).
+  const htmlExample = (() => {
+    if (!allKeys.length) return "";
+    const inputs = allKeys.map(e => {
+      if (e.isSite) {
+        return `  <!-- ◀ your site fills the value attribute -->\n  <input type="hidden" name="${e.k}" value="" />`;
+      }
+      return `  <input type="text" name="${e.k}" placeholder="${e.k.replace(/_/g, " ")}" />`;
+    }).join("\n");
+    return [
+      `<form method="POST" action="${url}" enctype="application/json">`,
+      inputs,
+      `  <button type="submit">Send</button>`,
+      `</form>`,
+    ].join("\n");
+  })();
+  // Active example based on the selected recipe tab.
+  const exampleByRecipe = { fetch: fetchExample, wix: wixExample, html: htmlExample };
+  const activeExample = exampleByRecipe[recipe] || fetchExample;
+  const recipeLabel = { fetch: "Plain JS (fetch)", wix: "Wix Velo", html: "Plain HTML form" }[recipe];
+  function copyText(text, key) {
+    try {
+      navigator.clipboard.writeText(text);
+      setCopied(key);
+      setTimeout(() => setCopied(""), 1200);
+    } catch (_) {}
+  }
+
+  // Presets — keys the user can one-click add. Skip presets whose key
+  // is already on the form (so the chips don't suggest duplicates).
+  const existingKeys = new Set([
+    ...(formFieldKeys || []),
+    ...siteFields.map(f => f.key),
+  ]);
+  const availablePresets = LANDSCAPING_PRO_PRESETS
+    .filter(p => !existingKeys.has(p.key));
+  const allPresetsAdded = availablePresets.length === 0
+    && LANDSCAPING_PRO_PRESETS.every(p => existingKeys.has(p.key));
+  function addOnePreset(preset) {
+    if (typeof onAddBulk === "function") onAddBulk([preset]);
+  }
+  function addAllLandscapingPresets() {
+    if (typeof onAddBulk === "function") onAddBulk(LANDSCAPING_PRO_PRESETS);
   }
 
   return (
-    <div className="fb-ich">
-      <p className="fb-ich-h">Where do your leads come from?</p>
-      <p className="fb-ich-sub">
-        Pick the place. The flow starts as soon as a lead shows up there.
+    <div className="fb-sitefields">
+      <p className="fb-helper-tight" style={{ marginTop: 4, marginBottom: 12 }}>
+        Things YOUR site sends along — the customer doesn't see or fill these in.
+        Useful for data your site already knows: a chosen package, a referral source, etc.
       </p>
 
-      {/* ── 1. Form on your website ────────────────────────── */}
-      <div className={`fb-ich-card ${channel === "form" ? "is-picked" : ""}`}>
-        <div className="fb-ich-card-h">
-          <span className="fb-ich-ico" aria-hidden="true">📝</span>
-          <div className="fb-ich-card-text">
-            <div className="fb-ich-card-title">Form on your website</div>
-            <div className="fb-ich-card-sub">
-              Someone fills out a form. They land here.
-            </div>
-          </div>
-          {channel === "form" && (
-            <span className="fb-ich-pickdot" aria-hidden="true">✓</span>
-          )}
+      {/* Quick-add for landscaping pro variables. The /landscaping
+          contact form attaches all of these automatically; this
+          surface lets the operator drop them onto the form so they
+          appear as merge tags / picker options across the canvas. */}
+      <div className="fb-sf-presets" style={{
+        background:"#ecfdf5",
+        border:"1px solid #a7f3d0",
+        borderRadius:10,
+        padding:"10px 12px",
+        marginBottom:12,
+      }}>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+          <span style={{fontSize:18}} aria-hidden="true">🌿</span>
+          <strong style={{fontSize:13.5,color:"#13401f"}}>Landscaping pro variables</strong>
+          <span style={{fontSize:11.5,color:"#2f8048",fontWeight:500,marginLeft:"auto"}}>
+            {allPresetsAdded
+              ? "All added ✓"
+              : `${LANDSCAPING_PRO_PRESETS.length - availablePresets.length} of ${LANDSCAPING_PRO_PRESETS.length} added`}
+          </span>
         </div>
-        {forms.length === 0 ? (
-          <div className="fb-ich-empty">
-            <p className="fb-ich-empty-msg">You haven't made a form yet.</p>
-            <a
-              className="fb-ich-setup-btn"
-              href="#leadIntake"
-              onClick={dropReturnBreadcrumb}
-            >+ Make a form</a>
-          </div>
-        ) : (
-          <div className="fb-ich-options" role="radiogroup" aria-label="Pick a form">
-            {forms.map(f => {
-              const picked = channel === "form" && channelRef === f.id;
-              return (
+        <p className="fb-helper-tight" style={{margin:"0 0 8px",fontSize:12,color:"#1f5f35"}}>
+          The /landscaping contact form attaches these about the picked landscaper.
+          Add them here so they show up as <code>{"{merge_tags}"}</code> and in the
+          recipient / sheet-column pickers across the canvas.
+        </p>
+        {availablePresets.length > 0 ? (
+          <>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}>
+              {availablePresets.map(p => (
                 <button
-                  key={f.id}
+                  key={p.key}
                   type="button"
-                  role="radio"
-                  aria-checked={picked}
-                  className={`fb-ich-option ${picked ? "is-picked" : ""}`}
-                  onClick={() => setChannel("form", f.id, f.name || "Untitled form")}
+                  className="fb-sf-preset-chip"
+                  onClick={() => addOnePreset(p)}
+                  title={`Add ${p.key}`}
+                  style={{
+                    background:"#fff",
+                    color:"#13401f",
+                    border:"1px solid #a7f3d0",
+                    borderRadius:999,
+                    padding:"4px 10px",
+                    fontSize:11.5,
+                    fontWeight:600,
+                    cursor:"pointer",
+                    fontFamily:"inherit",
+                  }}
                 >
-                  <span className="fb-ich-radio" aria-hidden="true" />
-                  <span className="fb-ich-option-name">{f.name || "Untitled form"}</span>
+                  + {p.key}
                 </button>
-              );
-            })}
-            <a
-              className="fb-ich-make-another"
-              href="#leadIntake"
-              onClick={dropReturnBreadcrumb}
-            >+ Make a new form</a>
-          </div>
-        )}
-      </div>
-
-      {/* ── 2. Instagram messages ──────────────────────────── */}
-      <div className={`fb-ich-card ${channel === "instagram" ? "is-picked" : ""}`}>
-        <div className="fb-ich-card-h">
-          <span className="fb-ich-ico" aria-hidden="true">💬</span>
-          <div className="fb-ich-card-text">
-            <div className="fb-ich-card-title">Instagram messages</div>
-            <div className="fb-ich-card-sub">
-              Someone DMs your Instagram. They land here.
+              ))}
             </div>
-          </div>
-          {channel === "instagram" && (
-            <span className="fb-ich-pickdot" aria-hidden="true">✓</span>
-          )}
-        </div>
-        {igAccounts.length === 0 ? (
-          <div className="fb-ich-empty">
-            <p className="fb-ich-empty-msg">You haven't connected Instagram yet.</p>
-            <a
-              className="fb-ich-setup-btn"
-              href="#instagram"
-              onClick={dropReturnBreadcrumb}
-            >Connect Instagram →</a>
-          </div>
-        ) : (
-          <div className="fb-ich-options" role="radiogroup" aria-label="Pick an account">
-            {igAccounts.map(acc => {
-              const id = acc.ig_account_id;
-              const picked = channel === "instagram" && channelRef === id;
-              const handle = acc.ig_username
-                ? "@" + acc.ig_username
-                : (acc.fb_page_name || id);
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  role="radio"
-                  aria-checked={picked}
-                  className={`fb-ich-option ${picked ? "is-picked" : ""}`}
-                  onClick={() => setChannel("instagram", id, handle)}
-                >
-                  <span className="fb-ich-radio" aria-hidden="true" />
-                  <span className="fb-ich-option-name">{handle}</span>
-                  {acc.needs_reconnect && (
-                    <span className="fb-ich-badge-warn">Reconnect</span>
-                  )}
-                </button>
-              );
-            })}
-            <a
-              className="fb-ich-make-another"
-              href="#instagram"
-              onClick={dropReturnBreadcrumb}
-            >+ Add another account</a>
-          </div>
-        )}
-      </div>
-
-      {/* ── 3. Phone calls or texts ────────────────────────── */}
-      <div className={`fb-ich-card ${channel === "phone" ? "is-picked" : ""}`}>
-        <div className="fb-ich-card-h">
-          <span className="fb-ich-ico" aria-hidden="true">📞</span>
-          <div className="fb-ich-card-text">
-            <div className="fb-ich-card-title">Phone calls or texts</div>
-            <div className="fb-ich-card-sub">
-              Someone calls or texts your business number. They land here.
-            </div>
-          </div>
-          {channel === "phone" && (
-            <span className="fb-ich-pickdot" aria-hidden="true">✓</span>
-          )}
-        </div>
-        {!phoneReady ? (
-          <div className="fb-ich-empty">
-            <p className="fb-ich-empty-msg">You don't have a number yet.</p>
-            <a
-              className="fb-ich-setup-btn"
-              href="#phones"
-              onClick={dropReturnBreadcrumb}
-            >Get a phone number →</a>
-          </div>
-        ) : (
-          <div className="fb-ich-options" role="radiogroup" aria-label="Pick a number">
             <button
               type="button"
-              role="radio"
-              aria-checked={channel === "phone" && channelRef === phoneNumber}
-              className={`fb-ich-option ${channel === "phone" && channelRef === phoneNumber ? "is-picked" : ""}`}
-              onClick={() => setChannel("phone", phoneNumber, phoneNumber)}
+              onClick={addAllLandscapingPresets}
+              style={{
+                background:"#1f5f35",
+                color:"#fff",
+                border:"none",
+                borderRadius:8,
+                padding:"7px 14px",
+                fontSize:12.5,
+                fontWeight:600,
+                cursor:"pointer",
+                fontFamily:"inherit",
+              }}
             >
-              <span className="fb-ich-radio" aria-hidden="true" />
-              <span className="fb-ich-option-name">{phoneNumber}</span>
+              + Add all {availablePresets.length} landscaping pro fields
             </button>
-          </div>
+          </>
+        ) : (
+          <p className="fb-helper-tight" style={{margin:0,fontSize:12,color:"#2f8048"}}>
+            All landscaping pro variables are on the form already.
+          </p>
         )}
       </div>
 
-      <p className="fb-helper">
-        You can change this any time. The flow starts when a lead shows up
-        on the channel you picked.
-      </p>
+      <div className="fb-sitefields-list">
+        {siteFields.length === 0 ? (
+          <div className="fb-fields-empty">
+            No site fields yet. Add one below if your website sends extra data with the form
+            (like which package the customer picked).
+          </div>
+        ) : siteFields.map((f, i) => {
+          const dupe = isCollision(i, f.key);
+          return (
+            <div key={i} className="fb-sf-row">
+              <div className="fb-sf-row-grid">
+                <label className="fb-sf-row-l">Field name</label>
+                <label className="fb-sf-row-l">What this is</label>
+                <input
+                  className={`fb-input fb-sf-key ${dupe ? "is-error" : ""}`}
+                  value={f.key || ""}
+                  onChange={(e) => onUpdate(i, { key: snakeify(e.target.value) })}
+                  onBlur={(e) => onUpdate(i, { key: snakeifyCommit(e.target.value) })}
+                  placeholder="chosen_landscaper"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                />
+                <input
+                  className="fb-input fb-sf-label"
+                  value={f.label || ""}
+                  onChange={(e) => onUpdate(i, { label: e.target.value })}
+                  placeholder="Landscaper they picked"
+                />
+              </div>
+              {dupe && (
+                <p className="fb-sf-error">
+                  That name's already taken by another field. Pick something different.
+                </p>
+              )}
+              <button
+                type="button"
+                className="fb-sf-remove"
+                onClick={() => onRemove(i)}
+                aria-label="Remove site field"
+                title="Remove"
+              >×</button>
+            </div>
+          );
+        })}
+      </div>
+
+      <button type="button" className="fb-add-fld-btn" onClick={onAdd}>
+        + Add a site field
+      </button>
+
+      {siteFields.length > 0 && (
+        <div className="fb-sf-snippet">
+          <div className="fb-sf-snippet-h">📋 How to send these from your site</div>
+          <p className="fb-helper-tight" style={{ marginTop: 0, marginBottom: 10 }}>
+            Add the highlighted keys to whatever your site posts to the webhook.
+            The customer-typed fields ride along automatically.
+          </p>
+
+          <div className="fb-sf-snippet-block">
+            <div className="fb-sf-snippet-row">
+              <span>JSON body</span>
+              <button
+                type="button"
+                className="fb-sf-copy"
+                onClick={() => copyText(jsonExample, "json")}
+              >{copied === "json" ? "✓ Copied" : "⎘ Copy"}</button>
+            </div>
+            <pre className="fb-sf-code">{jsonExample}</pre>
+          </div>
+
+          <div className="fb-sf-snippet-block">
+            <div className="fb-sf-recipe-tabs" role="tablist">
+              {[
+                { id: "fetch", label: "Plain JS" },
+                { id: "wix",   label: "Wix" },
+                { id: "html",  label: "HTML form" },
+              ].map(t => (
+                <button
+                  key={t.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={recipe === t.id}
+                  className={`fb-sf-recipe-tab ${recipe === t.id ? "is-active" : ""}`}
+                  onClick={() => setRecipe(t.id)}
+                >{t.label}</button>
+              ))}
+            </div>
+            <div className="fb-sf-snippet-row">
+              <span>{recipeLabel}</span>
+              <button
+                type="button"
+                className="fb-sf-copy"
+                onClick={() => copyText(activeExample, `recipe-${recipe}`)}
+              >{copied === `recipe-${recipe}` ? "✓ Copied" : "⎘ Copy"}</button>
+            </div>
+            <pre className="fb-sf-code">{activeExample}</pre>
+          </div>
+
+          <div className="fb-sf-snippet-block">
+            <div className="fb-sf-snippet-row">
+              <span>Webhook URL</span>
+              <button
+                type="button"
+                className="fb-sf-copy"
+                onClick={() => copyText(url, "url")}
+              >{copied === "url" ? "✓ Copied" : "⎘ Copy"}</button>
+            </div>
+            <pre className="fb-sf-code">{url}</pre>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Live preview — mirrors renderPreview() in dashboard_lead_intake.html
+// pixel-for-pixel. Same input style, same submit button color, same
+// "After they submit" thank-you note when present.
+function FormPreview({ activeForm, name, fields }) {
+  if (!activeForm) {
+    return (
+      <div className="fb-bpreview is-empty">
+        <div className="fb-bpreview-empty">
+          <span className="fb-bpreview-empty-ico" aria-hidden="true">📝</span>
+          <p>Pick a form to see what your leads will see.</p>
+        </div>
+      </div>
+    );
+  }
+  const inStyle = {
+    width: "100%", padding: "10px 12px",
+    border: "1px solid #e6e6ea", borderRadius: 8,
+    fontSize: 14, background: "#fff", color: "#777",
+    boxSizing: "border-box", fontFamily: "inherit",
+  };
+  return (
+    <div className="fb-bpreview">
+      <div className="fb-bpreview-h">Live preview</div>
+      <div className="fb-bpreview-card">
+        {name ? <h3 className="fb-bpreview-title">{name}</h3> : null}
+        {(fields || []).length === 0 ? (
+          <div className="fb-bpreview-blank">Fields you add show here.</div>
+        ) : (
+          (fields || []).map((f, i) => (
+            <div key={i} className="fb-bpreview-field">
+              <label className="fb-bpreview-label">
+                {f.label || "(no label)"}
+                {f.required && <span className="fb-bpreview-req"> *</span>}
+              </label>
+              {f.type === "textarea" ? (
+                <textarea rows={3} disabled style={{ ...inStyle, resize: "vertical" }} />
+              ) : f.type === "select" ? (
+                <select disabled style={inStyle}>
+                  <option>{(f.options && f.options[0]) || "Choose…"}</option>
+                </select>
+              ) : f.type === "date" ? (
+                <input type="date" disabled style={inStyle} />
+              ) : f.type === "number" ? (
+                <input type="number" disabled style={inStyle} />
+              ) : (
+                <input
+                  type={f.type === "email" ? "email" : f.type === "phone" ? "tel" : "text"}
+                  disabled
+                  style={inStyle}
+                />
+              )}
+            </div>
+          ))
+        )}
+        <button type="button" disabled className="fb-bpreview-submit">
+          {activeForm.submit_text || "Submit"}
+        </button>
+      </div>
+      {activeForm.thank_you ? (
+        <div className="fb-bpreview-thanks">
+          <div className="fb-bpreview-thanks-h">After they submit</div>
+          <div className="fb-bpreview-thanks-t">{activeForm.thank_you}</div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -1564,9 +2362,16 @@ function RecipientChips({ kind, iconLabel, values, onChange, placeholder, onMisr
         {(values || []).map(c => (
           <span
             key={c.id}
-            className={`fb-recip-chip ${c.valid ? "" : "is-invalid"}`}
-            title={c.valid ? "" : "Doesn't look quite right — we'll skip it at send time."}
+            className={`fb-recip-chip ${c.valid ? "" : "is-invalid"} ${c.is_default ? "is-default" : ""}`}
+            title={
+              c.is_default
+                ? "Default — your connected Gmail. Removing this stops emails to you."
+                : (c.valid ? "" : "Doesn't look quite right — we'll skip it at send time.")
+            }
           >
+            {c.is_default && (
+              <span className="fb-recip-chip-badge" aria-label="Default sender">Default</span>
+            )}
             {c.display}
             <button
               type="button"
@@ -1767,14 +2572,279 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
   // preview source. Stored on node.data with snake_case keys so the
   // server-side execute_notify reads them verbatim — no canvas-to-engine
   // shape translation in between.
-  const isNotify = activity.id === "notify";
+  const isNotify     = activity.id === "notify";
+  const isReachOut   = activity.id === "reach_out";
+  const isCall       = activity.id === "call";
+  const isSendEmail  = activity.id === "send_email";
+  const isAppendSheet = activity.id === "append_sheet";
+
+  // ── Google Sheet drawer state ──────────────────────────────────
+  // Editable: spreadsheet URL/ID, worksheet/tab name, ordered column
+  // mapping (header + token source). Header row auto-creation flag.
+  const [sheetSpreadsheetId, setSheetSpreadsheetId] = React.useState(
+    data.spreadsheet_id != null ? data.spreadsheet_id : (activity.defaultSpreadsheetId || ""));
+  const [sheetWorksheetName, setSheetWorksheetName] = React.useState(
+    data.worksheet_name != null ? data.worksheet_name : (activity.defaultWorksheetName || "Sheet1"));
+  const [sheetEnsureHeader, setSheetEnsureHeader] = React.useState(
+    data.ensure_header_row != null ? !!data.ensure_header_row
+                                    : (activity.defaultEnsureHeaderRow !== false));
+  const [sheetColumns, setSheetColumns] = React.useState(() => {
+    if (Array.isArray(data.columns) && data.columns.length) {
+      return data.columns.map(c => ({
+        header: String(c.header || ""),
+        source: String(c.source || ""),
+      }));
+    }
+    return (activity.defaultColumns || []).map(c => ({
+      header: String(c.header || ""),
+      source: String(c.source || ""),
+    }));
+  });
+  // ── Sheets OAuth connection status ─────────────────────────────
+  // Polls /me/sheets-connection on drawer mount + window focus so the
+  // moment the user finishes the OAuth dance and the popup/tab closes,
+  // the badge flips from "Not connected" to "Connected as ...".
+  const [sheetsConn, setSheetsConn] = React.useState({
+    connected: false, ready: true, google_email: "", loading: true,
+  });
+  const refetchSheetsConn = React.useCallback(() => {
+    if (!isAppendSheet) return;
+    fetch("/me/sheets-connection", { credentials: "same-origin" })
+      .then(r => r.ok ? r.json() : null).catch(() => null)
+      .then(d => {
+        if (!d) { setSheetsConn(s => ({ ...s, loading: false })); return; }
+        setSheetsConn({
+          connected:    !!d.connected,
+          ready:        d.ready !== false,
+          google_email: d.google_email || "",
+          loading:      false,
+        });
+      });
+  }, [isAppendSheet]);
+  React.useEffect(() => {
+    if (!isAppendSheet) return;
+    refetchSheetsConn();
+    const onFocus = () => refetchSheetsConn();
+    window.addEventListener("focus", onFocus);
+    // Detect the ?sheets_connect=<status> query the callback bounces
+    // back to. Refetch on success, surface error states inline. Then
+    // clean the param out of the URL so refreshing doesn't re-trigger.
+    function consumeStatusFlag() {
+      const m = /[?&]sheets_connect=([a-z_]+)\b/.exec(window.location.search);
+      if (!m) return;
+      const status = m[1];
+      try {
+        const u = new URL(window.location.href);
+        u.searchParams.delete("sheets_connect");
+        const next = u.pathname + (u.searchParams.toString() ? "?" + u.searchParams.toString() : "") + u.hash;
+        window.history.replaceState({}, "", next);
+      } catch (_) {}
+      if (status === "ok") {
+        // Server sometimes needs a beat to commit the GCS write before
+        // the GET returns the new state. Couple of retries handles it.
+        [200, 700, 1500].forEach(ms => setTimeout(refetchSheetsConn, ms));
+      } else {
+        setSheetsConn(s => ({ ...s, loading: false, _lastError: status }));
+        // Surface the failure to the user.
+        // eslint-disable-next-line no-console
+        console.warn("[sheets-oauth] callback status:", status);
+      }
+    }
+    consumeStatusFlag();
+    return () => window.removeEventListener("focus", onFocus);
+  }, [isAppendSheet, refetchSheetsConn]);
+  function startSheetsOAuth() {
+    const rt = window.location.pathname + window.location.search + window.location.hash;
+    const url = "/auth/google/connect-sheets?return_to=" + encodeURIComponent(rt);
+    // Open in same tab — Google's consent screen redirects back via
+    // the callback, which lands the user on /dashboard?sheets_connect=ok
+    // (or wherever return_to pointed). The drawer state listener picks
+    // up the success on focus / on hash-flag.
+    window.location.assign(url);
+  }
+  async function disconnectSheetsOAuth() {
+    if (!confirm("Disconnect Google Sheets? Existing flow rows will stop logging until you reconnect.")) return;
+    try {
+      const r = await fetch("/me/sheets-connection", {
+        method: "DELETE", credentials: "same-origin",
+      });
+      if (r.ok) refetchSheetsConn();
+    } catch (_) {}
+  }
+  // `isMultiChannel` covers the two activities that pick any combo
+  // of sms / email / call:
+  //   - Notify Me      → owner-side (extras + include_customer)
+  //   - Reach out      → customer-side (always lead, no extras)
+  // `isOwnerSide` differentiates: only Notify Me shows the extra
+  // phones/emails inputs and the include_customer toggle.
+  const isMultiChannel = isNotify || isReachOut;
+  const isOwnerSide    = isNotify;
+  const [modes, setModes] = React.useState(() => {
+    if (Array.isArray(data.modes) && data.modes.length) return data.modes.slice();
+    if (data.mode === "both") return ["sms", "email"];
+    if (data.mode) return [data.mode];
+    return Array.isArray(activity.defaultModes)
+      ? activity.defaultModes.slice()
+      : ["sms", "email"];
+  });
+  const hasSms   = isMultiChannel ? modes.includes("sms")   : (mode === "sms"   || mode === "both");
+  const hasEmail = isMultiChannel ? modes.includes("email") : (mode === "email" || mode === "both");
+  const hasCall  = isMultiChannel ? modes.includes("call")  : (mode === "call");
+  function toggleMode(m) {
+    setModes(cur => {
+      if (cur.includes(m)) {
+        return cur.filter(x => x !== m);
+      }
+      return [...cur, m];
+    });
+  }
+  const noModesPicked = isMultiChannel && modes.length === 0;
+  const [callPhone, setCallPhone] = React.useState(
+    data.phone_number != null ? data.phone_number : (activity.defaultPhoneNumber || ""));
+  const [callMessage, setCallMessage] = React.useState(
+    data.spoken_message != null ? data.spoken_message : (activity.defaultSpokenMessage || ""));
+  const [callVoiceTone, setCallVoiceTone] = React.useState(
+    data.voice_tone != null ? data.voice_tone : "friendly");
+  const [callTarget, setCallTarget] = React.useState(
+    data.call_target != null ? data.call_target : (activity.defaultCallTarget || "lead"));
+  // Recipient picker for the standalone Email activity. Three modes:
+  //   "lead"       — engine uses lead.email (legacy default)
+  //   "custom"     — user typed a literal email address
+  //   "site_field" — user picked a key from the form's site_fields;
+  //                  compile pass wraps it in {curlies} so the
+  //                  engine resolves against lead.fields at send time
+  const [emailRecipientSource, setEmailRecipientSource] = React.useState(
+    data.recipient_source || activity.defaultRecipientSource || "lead");
+  const [emailRecipientValue, setEmailRecipientValue] = React.useState(
+    data.recipient_value != null ? data.recipient_value
+                                  : (activity.defaultRecipientValue || ""));
+  // Site fields published by the Input drawer so the picker can list
+  // available keys without a fetch.
+  const [siteFieldsForPicker, setSiteFieldsForPicker] = React.useState([]);
+  React.useEffect(() => {
+    function read() {
+      try {
+        const sf = Array.isArray(window.__fb_input_site_fields)
+          ? window.__fb_input_site_fields : [];
+        setSiteFieldsForPicker(sf);
+      } catch (_) {}
+    }
+    read();
+    window.addEventListener("fb-input-fields-changed", read);
+    const ts = [120, 320, 720].map(ms => setTimeout(read, ms));
+    return () => {
+      window.removeEventListener("fb-input-fields-changed", read);
+      ts.forEach(clearTimeout);
+    };
+  }, []);
+  // Customer-facing calls default to honoring business hours so we
+  // don't dial leads at 11pm. Owner-side notify-with-call ignores
+  // this on the compile side (the owner wants paged any time).
+  const [respectBusinessHours, setRespectBusinessHours] = React.useState(
+    data.respect_business_hours != null ? !!data.respect_business_hours : true);
+  const callMsgRef = React.useRef(null);
+  // ── Live voice preview ──────────────────────────────────────────
+  // Lets the owner hear EXACTLY how the AI's voice will sound on a
+  // real call before saving the flow. Hits /me/call/voice-preview
+  // which substitutes sample lead values + the user's account vars,
+  // then streams an MP3 back. Same OpenAI voice the realtime call
+  // uses, so the preview matches production.
+  const [voicePreviewState, setVoicePreviewState] = React.useState("idle"); // idle|loading|playing|error
+  const [voicePreviewError, setVoicePreviewError] = React.useState("");
+  const voicePreviewAudioRef = React.useRef(null);
+  const voicePreviewUrlRef   = React.useRef("");
+  React.useEffect(() => () => {
+    // Cleanup on drawer unmount: stop audio + free the blob URL.
+    try { voicePreviewAudioRef.current?.pause(); } catch (_) {}
+    if (voicePreviewUrlRef.current) {
+      try { URL.revokeObjectURL(voicePreviewUrlRef.current); } catch (_) {}
+    }
+  }, []);
+  async function _previewVoice() {
+    if (voicePreviewState === "playing") {
+      // Stop a playing preview.
+      try { voicePreviewAudioRef.current?.pause(); } catch (_) {}
+      setVoicePreviewState("idle");
+      return;
+    }
+    setVoicePreviewError("");
+    setVoicePreviewState("loading");
+    try {
+      const r = await fetch("/me/call/voice-preview", {
+        method: "POST", credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          spoken_message: callMessage,
+          voice_tone:     callVoiceTone,
+        }),
+      });
+      if (!r.ok) {
+        let msg = `Couldn't generate preview (HTTP ${r.status})`;
+        try {
+          const e = await r.json();
+          if (e && e.error) msg = String(e.error);
+        } catch (_) {}
+        setVoicePreviewError(msg);
+        setVoicePreviewState("error");
+        return;
+      }
+      const blob = await r.blob();
+      // Free any previous preview blob to avoid memory leaks across
+      // repeated previews.
+      if (voicePreviewUrlRef.current) {
+        try { URL.revokeObjectURL(voicePreviewUrlRef.current); } catch (_) {}
+      }
+      const url = URL.createObjectURL(blob);
+      voicePreviewUrlRef.current = url;
+      const audio = new Audio(url);
+      voicePreviewAudioRef.current = audio;
+      audio.onended = () => setVoicePreviewState("idle");
+      audio.onerror = () => {
+        setVoicePreviewError("Couldn't play the audio.");
+        setVoicePreviewState("error");
+      };
+      await audio.play();
+      setVoicePreviewState("playing");
+    } catch (exc) {
+      setVoicePreviewError("Network error. Try again.");
+      setVoicePreviewState("error");
+    }
+  }
+  const [callPickerOpen, setCallPickerOpen] = React.useState(false);
+  const [callPickerAnchor, setCallPickerAnchor] = React.useState({ x: 0, y: 0 });
   const [includeCustomer, setIncludeCustomer] = React.useState(
-    data.include_customer != null ? !!data.include_customer : true);
+    data.include_customer != null
+      ? !!data.include_customer
+      : (activity.defaultIncludeCustomer != null
+         ? !!activity.defaultIncludeCustomer
+         : true));
   const [extraPhones, setExtraPhones] = React.useState(
     Array.isArray(data.extra_phones) ? data.extra_phones : []);
   const [extraEmails, setExtraEmails] = React.useState(
     Array.isArray(data.extra_emails) ? data.extra_emails : []);
+  // Default-sender state. We fetch the owner's connected Gmail once
+  // when the drawer opens and (a) seed it as a "Default" chip in the
+  // email field if the field is empty AND the user hasn't dismissed
+  // it before, (b) surface a "Connect your Gmail" CTA when no
+  // connection exists. The dismiss flag persists on node.data so a
+  // user who removed the default doesn't get it re-added next time.
+  const [defaultSender, setDefaultSender] = React.useState("");
+  const [emailReady, setEmailReady] = React.useState(true); // assume ready until told otherwise
+  const [defaultDismissed, setDefaultDismissed] = React.useState(
+    !!data.default_email_dismissed);
+  const [connectUrl, setConnectUrl] = React.useState("/auth/google/connect-email");
   const [previewSource, setPreviewSource] = React.useState("sample");
+  // Preview collapse — gives the form full drawer width when the user
+  // doesn't need to see the iPhone mockup. Persists per-session in
+  // localStorage so a user who hides it once stays hidden.
+  const [previewCollapsed, setPreviewCollapsed] = React.useState(() => {
+    try { return localStorage.getItem("fb_preview_collapsed") === "1"; }
+    catch (_) { return false; }
+  });
+  React.useEffect(() => {
+    try { localStorage.setItem("fb_preview_collapsed", previewCollapsed ? "1" : "0"); }
+    catch (_) {}
+  }, [previewCollapsed]);
   const [previewOverrides, setPreviewOverrides] = React.useState(() => {
     // Seed test-data with the same sample values, so toggling to
     // "Test data" doesn't blank out the preview.
@@ -1803,11 +2873,63 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
     })();
     return () => { cancelled = true; };
   }, []);
-  // Combined tag list used by the picker AND the quick chips. Account
-  // vars come FIRST so they're always visible at the top of the picker.
-  const allTags = React.useMemo(
-    () => [...accountVars, ...MERGE_TAGS],
-    [accountVars]);
+  // Form-bound variables — read from the FlowBuilder publisher
+  // (window.__fb_input_form_fields / __fb_input_site_fields) so the
+  // picker shows EXACTLY the keys this flow's input form will collect.
+  // Form fields go in a "From the form" group; site fields go in
+  // "From your site" so the user can see at a glance which channel
+  // they're authoring against. Re-reads on mount + on a custom event
+  // (`fb-input-fields-changed`) the publisher emits when the bound form
+  // id flips.
+  const [formVars, setFormVars] = React.useState([]);
+  const [siteVars, setSiteVars] = React.useState([]);
+  React.useEffect(() => {
+    function read() {
+      try {
+        const ff = Array.isArray(window.__fb_input_form_fields)
+          ? window.__fb_input_form_fields : [];
+        const sf = Array.isArray(window.__fb_input_site_fields)
+          ? window.__fb_input_site_fields : [];
+        setFormVars(ff.map(f => ({
+          token: `{${f.key}}`,
+          label: f.label || f.key,
+          sample: "",
+          group: "From the form",
+        })));
+        setSiteVars(sf.map(f => ({
+          token: `{${f.key}}`,
+          label: f.label || f.key,
+          sample: "",
+          group: "From your site",
+        })));
+      } catch (_) {}
+    }
+    read();
+    window.addEventListener("fb-input-fields-changed", read);
+    // Late-arriving publisher: poll a few times in the first second so
+    // the picker fills in even if the drawer mounts before the form
+    // fetch resolves.
+    const ts = [120, 320, 720, 1500].map(ms => setTimeout(read, ms));
+    return () => {
+      window.removeEventListener("fb-input-fields-changed", read);
+      ts.forEach(clearTimeout);
+    };
+  }, []);
+  // Combined tag list used by the picker AND the quick chips. Form
+  // fields come FIRST (they're the most relevant), then site fields,
+  // then account vars, then the hardcoded MERGE_TAGS. The picker
+  // dedupes by token so a key declared on the form AND in MERGE_TAGS
+  // shows only once (with the form's label).
+  const allTags = React.useMemo(() => {
+    const seen = new Set();
+    const out = [];
+    for (const t of [...formVars, ...siteVars, ...accountVars, ...MERGE_TAGS]) {
+      if (!t || !t.token || seen.has(t.token)) continue;
+      seen.add(t.token);
+      out.push(t);
+    }
+    return out;
+  }, [formVars, siteVars, accountVars]);
   // (`usedTokens` derivation is declared LATER, below `activeField` —
   // it reads body/subject/activeField, all of which need to exist
   // first or React throws a TDZ "Cannot access X before initialization"
@@ -1834,6 +2956,88 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
   }
   const [globalAiMode, setGlobalAiMode] = React.useState(null);
   const [globalCadence, setGlobalCadence] = React.useState(null);
+  // Customer-call business-hours window. Surfaced inline next to the
+  // "Only call during business hours" toggle so the user doesn't have
+  // to wonder what counts as "business hours" — they see the exact
+  // start/end and can edit it without leaving the canvas.
+  // Nothing hardcoded — these stay null until the policy fetch
+  // resolves OR the user explicitly picks values in the editor.
+  // Engine treats null/missing as "gate is off" so calls fire
+  // immediately, which is the right default for someone who hasn't
+  // told us what time zone they operate in.
+  const [bizHourStart, setBizHourStart] = React.useState(null);
+  const [bizHourEnd,   setBizHourEnd]   = React.useState(null);
+  const [bizHourTz,    setBizHourTz]    = React.useState("");
+  // Browser-detected zone, surfaced as a one-click suggestion in
+  // the editor (not auto-applied — the owner has to pick it).
+  const _detectedTz = (() => {
+    try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ""; }
+    catch (_) { return ""; }
+  })();
+  const bizHoursConfigured = !!(bizHourTz &&
+                                 typeof bizHourStart === "number" &&
+                                 typeof bizHourEnd   === "number");
+  const [bizHoursEditing, setBizHoursEditing] = React.useState(false);
+  const [bizHoursSaving,  setBizHoursSaving]  = React.useState(false);
+  // Fetch the policy whenever a call channel is active so the helper
+  // text reflects the user's actual configured window (not just the
+  // hardcoded default).
+  React.useEffect(() => {
+    if (!hasCall) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetch("/me/ai/policy", { credentials: "same-origin" });
+        if (!r.ok) return;
+        const p = await r.json();
+        if (cancelled) return;
+        if (typeof p.call_hour_start === "number") setBizHourStart(p.call_hour_start);
+        if (typeof p.call_hour_end   === "number") setBizHourEnd(p.call_hour_end);
+        if (typeof p.timezone        === "string" && p.timezone) setBizHourTz(p.timezone);
+      } catch (_) {}
+    })();
+    return () => { cancelled = true; };
+  }, [hasCall]);
+  function _fmt12(h) {
+    const hour = ((h % 12) || 12);
+    const mer  = h < 12 ? "am" : "pm";
+    return `${hour}${mer}`;
+  }
+  // Compute "is now inside the configured window?" using the user's
+  // configured timezone — the same Intl shortcut works in every
+  // modern browser and avoids pulling moment-tz. Returns false when
+  // the policy isn't fully configured (no zone or no hours), since
+  // the engine doesn't gate in that case either.
+  function _isOutsideBizHoursNow() {
+    if (!bizHoursConfigured) return false;
+    try {
+      const fmt = new Intl.DateTimeFormat("en-US", {
+        timeZone: bizHourTz, hour12: false, hour: "numeric",
+      });
+      const parts = fmt.formatToParts(new Date());
+      const hpart = parts.find(p => p.type === "hour");
+      if (!hpart) return false;
+      const h = parseInt(hpart.value, 10);
+      return !(bizHourStart <= h && h < bizHourEnd);
+    } catch (_) { return false; }
+  }
+  async function _saveBizHours(start, end) {
+    setBizHoursSaving(true);
+    try {
+      const r = await fetch("/me/ai/policy", {
+        method: "POST", credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          call_hour_start: start, call_hour_end: end, timezone: bizHourTz,
+        }),
+      });
+      if (r.ok) {
+        setBizHourStart(start); setBizHourEnd(end);
+        setBizHoursEditing(false);
+      }
+    } catch (_) {}
+    setBizHoursSaving(false);
+  }
   // Nudge config — also lives in ai_policy.json. Edited inline on the
   // right-side timeline; saves to the global policy.
   const [nudgeChannel,    setNudgeChannel]    = React.useState("sms");
@@ -1921,19 +3125,126 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
   // Push edits up to the canvas. We don't debounce — typing into a 100kB
   // node graph is fine in React.
   React.useEffect(() => {
+    // For notify, derive a legacy single-string `mode` from `modes` so
+    // older code paths (and the saved-flow shape) still parse. The
+    // canonical source is `modes` for notify, `mode` for everyone else.
+    let legacyMode = mode;
+    if (isMultiChannel) {
+      const ms = modes.slice().sort();
+      if (ms.length === 1) legacyMode = ms[0];
+      else if (ms.length === 2 && ms.includes("sms") && ms.includes("email")) legacyMode = "both";
+      else legacyMode = ms.join(",");
+    }
     onChange(node.id, {
-      mode, subject, body, waitDays, conditionId,
+      mode: legacyMode,
+      modes: isMultiChannel ? modes : undefined,
+      subject, body, waitDays, conditionId,
       fallback,
       // Notify-only fields. Always emitted (no-op for non-notify steps,
       // ignored by the engine for those types). snake_case so the
       // server reads node.data verbatim — no shape translation needed.
-      include_customer: includeCustomer,
+      // include_customer is hard-forced to false (no UI toggle): Notify-Me
+      // is internal-only — sends solely to the addresses/numbers in
+      // extra_emails / extra_phones. The homeowner never receives a copy.
+      include_customer: false,
       extra_phones:     extraPhones,
       extra_emails:     extraEmails,
+      default_email_dismissed: defaultDismissed,
+      // Call-only fields. snake_case so the engine reads node.data
+      // verbatim. Ignored for non-call steps.
+      phone_number:    callPhone,
+      spoken_message:  callMessage,
+      voice_tone:      callVoiceTone,
+      call_target:     callTarget,
+      respect_business_hours: respectBusinessHours,
+      // Standalone Email activity recipient picker.
+      recipient_source: emailRecipientSource,
+      recipient_value:  emailRecipientValue,
+      // Google Sheet activity. Always emitted; engine ignores for
+      // non-append_sheet steps. snake_case for verbatim engine read.
+      spreadsheet_id:     sheetSpreadsheetId,
+      worksheet_name:     sheetWorksheetName,
+      ensure_header_row:  sheetEnsureHeader,
+      columns:            sheetColumns,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, subject, body, waitDays, conditionId, fallback,
-      includeCustomer, extraPhones, extraEmails]);
+  }, [mode, modes, subject, body, waitDays, conditionId, fallback,
+      includeCustomer, extraPhones, extraEmails, defaultDismissed,
+      callPhone, callMessage, callVoiceTone, callTarget, respectBusinessHours,
+      emailRecipientSource, emailRecipientValue,
+      sheetSpreadsheetId, sheetWorksheetName, sheetEnsureHeader, sheetColumns]);
+
+  // Owner's connected Gmail — used as the default sender for Notify
+  // steps. Seeds a "Default" email chip on first open. Re-fetched on
+  // window focus so the chip appears the moment the user returns from
+  // the OAuth tab without having to reopen the drawer.
+  const refetchConnections = React.useCallback(() => {
+    if (!isNotify) return;
+    fetch("/me/email-connections", { credentials: "same-origin" })
+      .then(r => r.ok ? r.json() : null).catch(() => null)
+      .then(d => {
+        if (!d) return;
+        setEmailReady(d.ready !== false);
+        // Build a return-to URL that bounces back to whichever
+        // dashboard hash we're on right now, so the user lands on the
+        // same canvas (and can reopen the drawer to see the new chip).
+        const rt = encodeURIComponent("/dashboard" + (window.location.hash || "#outreach"));
+        const base = d.connect_url || "/auth/google/connect-email";
+        setConnectUrl(base + (base.includes("?") ? "&" : "?") + "return_to=" + rt);
+        // Prefer the server-supplied default, fall back to the first
+        // active connection in the list. The fallback covers stale
+        // server builds that don't yet emit the `default` field.
+        let addr = (d.default || "").trim().toLowerCase();
+        if (!addr && Array.isArray(d.connections)) {
+          for (const c of d.connections) {
+            if ((c.status || "active") === "active") {
+              addr = (c.email_address || "").trim().toLowerCase();
+              if (addr) break;
+            }
+          }
+        }
+        setDefaultSender(addr);
+        if (!addr) return;
+        // Seed only on first open: empty list + not dismissed. We
+        // don't auto-add when the user already has typed/saved chips
+        // — they made an explicit choice we shouldn't overwrite.
+        const already = (extraEmails || []).some(c =>
+          (c.raw || c.display || "").trim().toLowerCase() === addr);
+        if (!already && !defaultDismissed && (extraEmails || []).length === 0) {
+          setExtraEmails([{
+            id:         "default-" + Math.random().toString(36).slice(2, 9),
+            raw:        addr,
+            display:    addr,
+            valid:      true,
+            is_default: true,
+          }]);
+        }
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isNotify, defaultDismissed]);
+
+  React.useEffect(() => {
+    if (!isNotify) return;
+    refetchConnections();
+    // Re-fetch when the canvas tab regains focus — covers the path
+    // where the user OAuth'd in another tab and came back.
+    const onFocus = () => refetchConnections();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isNotify]);
+
+  // When the user removes the default chip, remember the dismissal so
+  // we don't re-seed it next time. Watches the chip list — if the
+  // default address is no longer present and we previously had it, set
+  // the flag.
+  React.useEffect(() => {
+    if (!isNotify || !defaultSender || defaultDismissed) return;
+    const stillThere = (extraEmails || []).some(c =>
+      (c.raw || c.display || "").trim().toLowerCase() === defaultSender);
+    if (!stillThere) setDefaultDismissed(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [extraEmails, defaultSender, isNotify]);
 
   // Esc closes the drawer.
   React.useEffect(() => {
@@ -1991,7 +3302,7 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
           >×</button>
         </header>
 
-        <div className={`fb-drawer-body ${isInput ? "is-no-preview" : ""}`}>
+        <div className={`fb-drawer-body ${isInput || isCall ? "is-no-preview" : ""} ${previewCollapsed && !isInput && !isCall ? "is-preview-collapsed" : ""}`}>
           <div className="fb-drawer-edit">
             {isInput ? (
               <InputChannelPanel
@@ -2063,9 +3374,292 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                 globalAiMode={globalAiMode}
                 globalCadence={globalCadence}
               />
+            ) : isCall ? (
+              <div className="fb-call-panel">
+                {/* Step 1 — who to call. Mirror of the Email recipient
+                    picker but channel-coded mint green so a glance at
+                    the drawer tells you it's the call branch. */}
+                <div className="fb-erecip is-call">
+                  <div className="fb-erecip-h">
+                    <span className="fb-erecip-h-ico" aria-hidden="true">📞</span>
+                    <span>Who should the AI call?</span>
+                  </div>
+                  <div className="fb-erecip-cards" role="radiogroup" aria-label="Call recipient">
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={callTarget === "lead"}
+                      className={`fb-erecip-card ${callTarget === "lead" ? "is-picked" : ""}`}
+                      onClick={() => setCallTarget("lead")}
+                    >
+                      <span className="fb-erecip-card-ico" aria-hidden="true">👤</span>
+                      <span className="fb-erecip-card-body">
+                        <span className="fb-erecip-card-title">The person who filled out the form</span>
+                        <span className="fb-erecip-card-sub">Uses the phone number they typed in. Skips if blank.</span>
+                      </span>
+                      <span className="fb-erecip-card-mark" aria-hidden="true">{callTarget === "lead" ? "✓" : ""}</span>
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={callTarget === "custom"}
+                      className={`fb-erecip-card ${callTarget === "custom" ? "is-picked" : ""}`}
+                      onClick={() => setCallTarget("custom")}
+                    >
+                      <span className="fb-erecip-card-ico" aria-hidden="true">🎯</span>
+                      <span className="fb-erecip-card-body">
+                        <span className="fb-erecip-card-title">A specific number I pick</span>
+                        <span className="fb-erecip-card-sub">Always dials the same number — staff hotline, partner, etc.</span>
+                      </span>
+                      <span className="fb-erecip-card-mark" aria-hidden="true">{callTarget === "custom" ? "✓" : ""}</span>
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={callTarget === "site_field"}
+                      className={`fb-erecip-card ${callTarget === "site_field" ? "is-picked" : ""} ${siteFieldsForPicker.length === 0 ? "is-disabled" : ""}`}
+                      onClick={() => { if (siteFieldsForPicker.length > 0) setCallTarget("site_field"); }}
+                      disabled={siteFieldsForPicker.length === 0}
+                      title={siteFieldsForPicker.length === 0
+                        ? "Add a 'From your site' field on the Input step first"
+                        : ""}
+                    >
+                      <span className="fb-erecip-card-ico" aria-hidden="true">🌐</span>
+                      <span className="fb-erecip-card-body">
+                        <span className="fb-erecip-card-title">A number from your site</span>
+                        <span className="fb-erecip-card-sub">
+                          {siteFieldsForPicker.length === 0
+                            ? "(none yet — add a 'From your site' field on the Input step)"
+                            : "Pulls the phone from a value your site sends with the form."}
+                        </span>
+                      </span>
+                      <span className="fb-erecip-card-mark" aria-hidden="true">{callTarget === "site_field" ? "✓" : ""}</span>
+                    </button>
+                  </div>
+                  {callTarget === "custom" && (
+                    <input
+                      id="fb-call-phone"
+                      type="tel"
+                      className="fb-input fb-erecip-detail"
+                      value={callPhone}
+                      onChange={(e) => setCallPhone(e.target.value)}
+                      placeholder="(555) 123-4567"
+                      inputMode="tel"
+                      autoComplete="tel"
+                    />
+                  )}
+                  {callTarget === "site_field" && siteFieldsForPicker.length > 0 && (
+                    <select
+                      className="fb-input fb-erecip-detail"
+                      value={callPhone}
+                      onChange={(e) => setCallPhone(e.target.value)}
+                    >
+                      <option value="">Pick a field from your site…</option>
+                      {siteFieldsForPicker.map(f => (
+                        <option key={f.key} value={f.key}>
+                          {f.label || f.key}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+
+                {/* Composer — matches the call sub-section used inside
+                    Notify Me / Reach Out (fb-composer.fb-call-mini),
+                    so the AI-script editor looks identical wherever
+                    it appears. Mint section header, chip rail, the
+                    same TokenHighlightTextarea pattern as the email
+                    body composer. */}
+                <div className="fb-composer fb-call-mini" style={{ marginTop: 12 }}>
+                  <div className="fb-section-h-v2 is-call fb-call-composer-h" style={{ padding: "10px 14px 0" }}>
+                    <span style={{ flex: 1 }}>📞 What the AI should say on the call</span>
+                    <button
+                      type="button"
+                      className={`fb-voice-preview-btn ${voicePreviewState}`}
+                      onClick={_previewVoice}
+                      disabled={voicePreviewState === "loading" || !(callMessage || "").trim()}
+                      title={(callMessage || "").trim()
+                        ? "Hear the AI read this message"
+                        : "Type a message first"}
+                    >
+                      {voicePreviewState === "loading" ? (
+                        <><span className="fb-voice-preview-spinner" aria-hidden="true" /> Generating…</>
+                      ) : voicePreviewState === "playing" ? (
+                        <>⏸ Stop</>
+                      ) : (
+                        <>▶ Preview voice</>
+                      )}
+                    </button>
+                  </div>
+                  {voicePreviewError && (
+                    <div className="fb-voice-preview-err" role="alert">
+                      ⚠ {voicePreviewError}
+                    </div>
+                  )}
+                  <TokenHighlightTextarea
+                    id="fb-call-message"
+                    taRef={callMsgRef}
+                    className="fb-composer-ta"
+                    rows={5}
+                    value={callMessage}
+                    onChange={(e) => setCallMessage(e.target.value)}
+                    onFocus={() => setActiveField("call")}
+                    dataAiEditable={true}
+                    dataAiFieldType="reply_body"
+                    onKeyDown={(e) => {
+                      if (e.key === "{") {
+                        e.preventDefault();
+                        const r = e.currentTarget.getBoundingClientRect();
+                        setCallPickerAnchor({ x: r.left + 16, y: r.top + 36 });
+                        setCallPickerOpen(true);
+                      }
+                    }}
+                    placeholder="Hi, this is your CRM with an update. Press { to insert a variable like {first_name}."
+                  />
+                  <div className="fb-composer-rail">
+                    <span className="fb-composer-rail-l" aria-hidden="true">Insert:</span>
+                    {(() => {
+                      const quick = [...QUICK_TAGS];
+                      for (const extra of ["{owner_name}", "{business_name}"]) {
+                        if (!quick.includes(extra)) quick.push(extra);
+                      }
+                      const used = new Set();
+                      const re = /\{[a-zA-Z_][a-zA-Z0-9_]*\}/g;
+                      let m;
+                      while ((m = re.exec(callMessage || "")) !== null) used.add(m[0]);
+                      return quick
+                        .map(tok => allTags.find(t => t.token === tok))
+                        .filter(Boolean)
+                        .map(t => (
+                          <button
+                            key={t.token}
+                            type="button"
+                            className={`fb-chip ${used.has(t.token) ? "is-used" : ""}`}
+                            onClick={() => insertTokenAtCursor(callMsgRef, callMessage, setCallMessage, t.token)}
+                            title={used.has(t.token) ? "Already in your message" : `Click to add ${t.token}`}
+                          >
+                            {used.has(t.token) && <span className="fb-chip-used" aria-hidden="true">✓ </span>}
+                            {t.label}
+                          </button>
+                        ));
+                    })()}
+                    <button
+                      type="button"
+                      className="fb-chip-outline"
+                      onClick={(e) => {
+                        const r = e.currentTarget.getBoundingClientRect();
+                        setCallPickerAnchor({ x: r.left, y: r.bottom + 6 });
+                        setCallPickerOpen(true);
+                      }}
+                      title="Browse all variables"
+                    >
+                      <svg className="fb-chip-outline-ico" width="14" height="14"
+                           viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+                           aria-hidden="true">
+                        <path d="M12 5v14M5 12h14"/>
+                      </svg>
+                      Insert variable
+                    </button>
+                  </div>
+                </div>
+                <VariablePicker
+                  open={callPickerOpen}
+                  anchor={callPickerAnchor}
+                  tags={allTags}
+                  usedTokens={(() => {
+                    const used = new Set();
+                    const re = /\{[a-zA-Z_][a-zA-Z0-9_]*\}/g;
+                    let m;
+                    while ((m = re.exec(callMessage || "")) !== null) used.add(m[0]);
+                    return used;
+                  })()}
+                  onClose={() => setCallPickerOpen(false)}
+                  onPick={(token) => {
+                    insertTokenAtCursor(callMsgRef, callMessage, setCallMessage, token);
+                    setCallPickerOpen(false);
+                  }}
+                />
+
+                {/* Voice tone — compact, three pills inline. Same
+                    visual weight as the channel toggles elsewhere. */}
+                <div className="fb-call-tone-row" style={{ marginTop: 14 }}>
+                  <div className="fb-section-h-v2 is-call" style={{ padding: "0 0 8px" }}>
+                    🎤 How the AI should sound
+                  </div>
+                  <div className="fb-tone-grid" role="radiogroup" aria-label="Voice tone">
+                    {[
+                      { id: "friendly",     icon: "😊", label: "Friendly" },
+                      { id: "professional", icon: "👔", label: "Professional" },
+                      { id: "brief",        icon: "⚡", label: "Brief" },
+                    ].map(t => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={callVoiceTone === t.id}
+                        className={`fb-tone-card ${callVoiceTone === t.id ? "is-picked" : ""}`}
+                        onClick={() => setCallVoiceTone(t.id)}
+                      >
+                        <span className="fb-tone-card-ico" aria-hidden="true">{t.icon}</span>
+                        <span className="fb-tone-card-label">{t.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
             ) : (
               <>
-                {canBeSms && (
+                {canBeSms && isMultiChannel && (
+                  <div className="fb-modes-multi" role="group" aria-label="Channels">
+                    <p className="fb-helper-tight" style={{ marginTop: 0, marginBottom: 8 }}>
+                      {isOwnerSide
+                        ? "Pick one or more — we'll use whichever you want."
+                        : "Pick one or more — each one uses the contact info the customer typed in the form."}
+                    </p>
+                    <div className="fb-modes-multi-row">
+                      <button
+                        type="button"
+                        role="checkbox"
+                        aria-checked={hasCall}
+                        className={`fb-mode-toggle is-call ${hasCall ? "is-on" : ""}`}
+                        onClick={() => toggleMode("call")}
+                      >
+                        <span className="fb-mode-toggle-check" aria-hidden="true">{hasCall ? "✓" : ""}</span>
+                        <span className="fb-mode-toggle-ico" aria-hidden="true">📞</span>
+                        <span className="fb-mode-toggle-label">{isOwnerSide ? "Call me" : "Call them"}</span>
+                      </button>
+                      <button
+                        type="button"
+                        role="checkbox"
+                        aria-checked={hasSms}
+                        className={`fb-mode-toggle is-sms ${hasSms ? "is-on" : ""}`}
+                        onClick={() => toggleMode("sms")}
+                      >
+                        <span className="fb-mode-toggle-check" aria-hidden="true">{hasSms ? "✓" : ""}</span>
+                        <span className="fb-mode-toggle-ico" aria-hidden="true">💬</span>
+                        <span className="fb-mode-toggle-label">{isOwnerSide ? "Text me" : "Text them"}</span>
+                      </button>
+                      <button
+                        type="button"
+                        role="checkbox"
+                        aria-checked={hasEmail}
+                        className={`fb-mode-toggle is-email ${hasEmail ? "is-on" : ""}`}
+                        onClick={() => toggleMode("email")}
+                      >
+                        <span className="fb-mode-toggle-check" aria-hidden="true">{hasEmail ? "✓" : ""}</span>
+                        <span className="fb-mode-toggle-ico" aria-hidden="true">📧</span>
+                        <span className="fb-mode-toggle-label">{isOwnerSide ? "Email me" : "Email them"}</span>
+                      </button>
+                    </div>
+                    {noModesPicked && (
+                      <div className="fb-modes-warn" role="alert">
+                        Pick at least one channel.
+                      </div>
+                    )}
+                  </div>
+                )}
+                {canBeSms && !isMultiChannel && (
                   <div className="fb-modes-3" role="tablist" aria-label="Send by">
                     <button
                       type="button"
@@ -2087,76 +3681,35 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                       <span className="fb-mode3-ico" aria-hidden="true">💬</span>
                       <span className="fb-mode3-label">Text</span>
                     </button>
-                    {activity.canBeBoth && (
-                      <button
-                        type="button"
-                        role="tab"
-                        aria-selected={mode === "both"}
-                        className={`fb-mode3 is-both ${mode === "both" ? "is-active" : ""}`}
-                        onClick={() => setMode("both")}
-                      >
-                        <span className="fb-mode3-ico" aria-hidden="true">🔔</span>
-                        <span className="fb-mode3-label">Both</span>
-                      </button>
-                    )}
                   </div>
                 )}
 
                 {/* ── Notify-only Recipients block ────────────────────
-                    Flat structure: a section heading, the lead row
-                    (clickable to toggle off), then "Also send to" chip
-                    inputs with the channel icon as a prefix INSIDE each
-                    field — no stacked all-caps labels. */}
+                    Header text removed per user request; the phone +
+                    email fields stay so the user can add extra
+                    recipients beyond the lead. */}
                 {isNotify && (
                   <div className="fb-recip-flat">
-                    <div className="fb-recip-flat-h">Who gets this?</div>
-
-                    {/* Lead row — flat, no card background. Click toggles. */}
-                    <button
-                      type="button"
-                      className={`fb-recip-lead ${includeCustomer ? "is-on" : "is-off"}`}
-                      onClick={() => setIncludeCustomer(v => !v)}
-                      aria-pressed={includeCustomer}
-                      title={includeCustomer
-                        ? "Click to stop sending to the lead. Extra recipients still receive."
-                        : "Click to include the lead on this notification."}
-                    >
-                      <span className="fb-recip-lead-ico" aria-hidden="true">
-                        {includeCustomer
-                          ? (
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                 stroke="currentColor" strokeWidth="3"
-                                 strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M5 12.5l5 5 9-11"/>
-                            </svg>
-                          )
-                          : (
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                                 stroke="currentColor" strokeWidth="2.2"
-                                 strokeLinecap="round" strokeLinejoin="round">
-                              <circle cx="12" cy="12" r="9"/>
-                            </svg>
-                          )}
-                      </span>
-                      <span className="fb-recip-lead-text">
-                        <span className="fb-recip-lead-l">
-                          {includeCustomer
-                            ? "Send to the lead — their phone & email on file"
-                            : "Not sending to the lead — click to include them"}
-                        </span>
-                      </span>
-                    </button>
-
-                    {/* Combined "Also send to" subsection. */}
                     {(mode !== "wait") && (
                       <div className="fb-recip-also">
-                        {(mode === "sms" || mode === "both") && (
+                        {(hasSms || hasCall) && (
+                        <div className={`fb-recip-card ${hasCall && !hasSms ? "is-call" : "is-sms"}`}>
                           <RecipientChips
                             kind="phone"
-                            iconLabel="📱 Phone numbers"
+                            iconLabel={
+                              hasCall && hasSms
+                                ? "📱 Phones (we'll text & call)"
+                                : hasCall
+                                ? "📞 Numbers to call"
+                                : "📱 Phone numbers"
+                            }
                             values={extraPhones}
                             onChange={setExtraPhones}
-                            placeholder="Add a phone number"
+                            placeholder={
+                              hasCall && !hasSms
+                                ? "Add a phone number to call"
+                                : "Add a phone number"
+                            }
                             onMisroute={(parts) => {
                               setExtraEmails(prev => [
                                 ...prev,
@@ -2169,27 +3722,73 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                               setMisrouteToast(`Moved ${parts.length} entr${parts.length > 1 ? "ies" : "y"} to Emails`);
                             }}
                           />
+                        </div>
                         )}
-                        {(mode === "email" || mode === "both") && (
-                          <RecipientChips
-                            kind="email"
-                            iconLabel="✉️ Emails"
-                            values={extraEmails}
-                            onChange={setExtraEmails}
-                            placeholder="Add an email"
-                            onMisroute={(parts) => {
-                              setExtraPhones(prev => [
-                                ...prev,
-                                ...parts.map(p => ({
-                                  id: Math.random().toString(36).slice(2, 9),
-                                  raw: p,
-                                  display: p,
-                                  valid: p.replace(/\D/g, "").length >= 10,
-                                })),
-                              ]);
-                              setMisrouteToast(`Moved ${parts.length} entr${parts.length > 1 ? "ies" : "y"} to Phone numbers`);
-                            }}
-                          />
+                        {hasEmail && (
+                          <div className="fb-recip-card is-email">
+                            <RecipientChips
+                              kind="email"
+                              iconLabel="✉️ Emails"
+                              values={extraEmails}
+                              onChange={setExtraEmails}
+                              placeholder="Add an email"
+                              onMisroute={(parts) => {
+                                setExtraPhones(prev => [
+                                  ...prev,
+                                  ...parts.map(p => ({
+                                    id: Math.random().toString(36).slice(2, 9),
+                                    raw: p,
+                                    display: p,
+                                    valid: p.replace(/\D/g, "").length >= 10,
+                                  })),
+                                ]);
+                                setMisrouteToast(`Moved ${parts.length} entr${parts.length > 1 ? "ies" : "y"} to Phone numbers`);
+                              }}
+                            />
+                            {emailReady && defaultSender && defaultDismissed && (
+                              <div className="fb-recip-default-hint is-dismissed">
+                                <span aria-hidden="true">✉️</span>
+                                <span>
+                                  Sending from your Gmail (<strong>{defaultSender}</strong>).
+                                  You won't get a copy — only the addresses above will.
+                                </span>
+                                <button
+                                  type="button"
+                                  className="fb-recip-default-restore"
+                                  onClick={() => {
+                                    setDefaultDismissed(false);
+                                    const already = (extraEmails || []).some(c =>
+                                      (c.raw || c.display || "").trim().toLowerCase() === defaultSender);
+                                    if (!already) {
+                                      setExtraEmails(prev => [
+                                        {
+                                          id: "default-" + Math.random().toString(36).slice(2, 9),
+                                          raw: defaultSender,
+                                          display: defaultSender,
+                                          valid: true,
+                                          is_default: true,
+                                        },
+                                        ...(prev || []),
+                                      ]);
+                                    }
+                                  }}
+                                >Add me back</button>
+                              </div>
+                            )}
+                            {emailReady && !defaultSender && (
+                              <div className="fb-recip-connect">
+                                <span aria-hidden="true">📨</span>
+                                <span>
+                                  No Gmail connected yet — connect one and we'll
+                                  use it as your default sender.
+                                </span>
+                                <a
+                                  className="fb-recip-connect-btn"
+                                  href={connectUrl}
+                                >Connect Gmail →</a>
+                              </div>
+                            )}
+                          </div>
                         )}
                       </div>
                     )}
@@ -2198,8 +3797,8 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                     )}
                     {(() => {
                       const invalid =
-                        ((mode === "sms" || mode === "both") ? extraPhones.filter(p => !p.valid).length : 0) +
-                        ((mode === "email" || mode === "both") ? extraEmails.filter(e => !e.valid).length : 0);
+                        ((hasSms || hasCall) ? extraPhones.filter(p => !p.valid).length : 0) +
+                        (hasEmail ? extraEmails.filter(e => !e.valid).length : 0);
                       if (invalid === 0) return null;
                       return (
                         <div className="fb-recip-warn">
@@ -2211,13 +3810,296 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                   </div>
                 )}
 
-                {/* Subject is meaningful for email + both. SMS-only hides it.
-                    Compressed: no label, the inline ✉️ icon (with native
-                    title for "email only") signals the meaning. */}
-                {(mode === "email" || mode === "both") && (
+                {/* Email subject — labeled clearly so a new user
+                    can't confuse it with the body. Visually grouped
+                    with the message body below via the .fb-mail-frame
+                    wrapper that the composer block opens. */}
+                {/* Standalone Email — recipient picker comes FIRST,
+                    before the subject. Big visual cards instead of
+                    radio buttons so the choice reads at a glance.
+                    Three options: the lead, a specific address, or
+                    a value from a "From your site" field. */}
+                {isSendEmail && (
+                  <div className="fb-erecip">
+                    <div className="fb-erecip-h">
+                      <span className="fb-erecip-h-ico" aria-hidden="true">📬</span>
+                      <span>Where should this email go?</span>
+                    </div>
+                    <div className="fb-erecip-cards" role="radiogroup" aria-label="Email recipient">
+                      <button
+                        type="button"
+                        role="radio"
+                        aria-checked={emailRecipientSource === "lead"}
+                        className={`fb-erecip-card ${emailRecipientSource === "lead" ? "is-picked" : ""}`}
+                        onClick={() => { setEmailRecipientSource("lead"); setEmailRecipientValue(""); }}
+                      >
+                        <span className="fb-erecip-card-ico" aria-hidden="true">👤</span>
+                        <span className="fb-erecip-card-body">
+                          <span className="fb-erecip-card-title">The person who filled out the form</span>
+                          <span className="fb-erecip-card-sub">Use the email they typed in.</span>
+                        </span>
+                        <span className="fb-erecip-card-mark" aria-hidden="true">{emailRecipientSource === "lead" ? "✓" : ""}</span>
+                      </button>
+                      <button
+                        type="button"
+                        role="radio"
+                        aria-checked={emailRecipientSource === "custom"}
+                        className={`fb-erecip-card ${emailRecipientSource === "custom" ? "is-picked" : ""}`}
+                        onClick={() => setEmailRecipientSource("custom")}
+                      >
+                        <span className="fb-erecip-card-ico" aria-hidden="true">✉️</span>
+                        <span className="fb-erecip-card-body">
+                          <span className="fb-erecip-card-title">A specific email I pick</span>
+                          <span className="fb-erecip-card-sub">Always sends to the same address — staff inbox, partner, etc.</span>
+                        </span>
+                        <span className="fb-erecip-card-mark" aria-hidden="true">{emailRecipientSource === "custom" ? "✓" : ""}</span>
+                      </button>
+                      <button
+                        type="button"
+                        role="radio"
+                        aria-checked={emailRecipientSource === "site_field"}
+                        className={`fb-erecip-card ${emailRecipientSource === "site_field" ? "is-picked" : ""} ${siteFieldsForPicker.length === 0 ? "is-disabled" : ""}`}
+                        onClick={() => { if (siteFieldsForPicker.length > 0) setEmailRecipientSource("site_field"); }}
+                        disabled={siteFieldsForPicker.length === 0}
+                        title={siteFieldsForPicker.length === 0
+                          ? "Add a 'From your site' field on the Input step first"
+                          : ""}
+                      >
+                        <span className="fb-erecip-card-ico" aria-hidden="true">🌐</span>
+                        <span className="fb-erecip-card-body">
+                          <span className="fb-erecip-card-title">An email from your site</span>
+                          <span className="fb-erecip-card-sub">
+                            {siteFieldsForPicker.length === 0
+                              ? "(none yet — add a 'From your site' field on the Input step)"
+                              : "Pulls the address from a value your site sends with the form."}
+                          </span>
+                        </span>
+                        <span className="fb-erecip-card-mark" aria-hidden="true">{emailRecipientSource === "site_field" ? "✓" : ""}</span>
+                      </button>
+                    </div>
+                    {emailRecipientSource === "custom" && (
+                      <input
+                        type="email"
+                        className="fb-input fb-erecip-detail"
+                        value={emailRecipientValue}
+                        onChange={(e) => setEmailRecipientValue(e.target.value)}
+                        placeholder="them@example.com"
+                        autoCapitalize="off"
+                        autoCorrect="off"
+                        spellCheck={false}
+                      />
+                    )}
+                    {emailRecipientSource === "site_field" && siteFieldsForPicker.length > 0 && (
+                      <select
+                        className="fb-input fb-erecip-detail"
+                        value={emailRecipientValue}
+                        onChange={(e) => setEmailRecipientValue(e.target.value)}
+                      >
+                        <option value="">Pick a field from your site…</option>
+                        {siteFieldsForPicker.map(f => (
+                          <option key={f.key} value={f.key}>
+                            {f.label || f.key}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                )}
+
+                {/* ── Google Sheets activity drawer ────────────────
+                    Sheet URL + worksheet + an editable column-mapping
+                    table. Each column is a {header, source} pair where
+                    source is a {merge_tag} like {name} or
+                    {landscape_summary}. The default columns cover the
+                    standard form fields + the picked landscaper's
+                    profile so the user has a working sheet on first
+                    drop without configuring anything. */}
+                {isAppendSheet && (
+                  <div className="fb-erecip" style={{display:"flex",flexDirection:"column",gap:10}}>
+                    <div className="fb-erecip-h">
+                      <span className="fb-erecip-h-ico" aria-hidden="true">📊</span>
+                      <span>Where should this row land?</span>
+                    </div>
+
+                    {/* Connection status. If not connected, primary CTA
+                        is "Connect Google Sheets" (OAuth). When connected,
+                        the badge shows the connected Google account and
+                        offers a Disconnect link. */}
+                    <div style={{
+                      display:"flex",alignItems:"center",gap:10,
+                      padding:"10px 12px",borderRadius:10,
+                      background: sheetsConn.connected ? "#ecfdf5" : "#fffbeb",
+                      border:"1px solid " + (sheetsConn.connected ? "#a7f3d0" : "#fde68a"),
+                    }}>
+                      <span style={{fontSize:18}} aria-hidden="true">
+                        {sheetsConn.connected ? "✓" : "🔗"}
+                      </span>
+                      <div style={{flex:1,minWidth:0}}>
+                        {sheetsConn.connected ? (
+                          <>
+                            <div style={{fontSize:13,fontWeight:700,color:"#13401f"}}>
+                              Connected to Google
+                            </div>
+                            <div style={{fontSize:11.5,color:"#1f5f35",fontFamily:"ui-monospace, SFMono-Regular, Menlo, monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                              {sheetsConn.google_email || "(unknown account)"}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div style={{fontSize:13,fontWeight:700,color:"#78350f"}}>
+                              Connect a Google account to write rows
+                            </div>
+                            <div style={{fontSize:11.5,color:"#92400e"}}>
+                              {sheetsConn.ready
+                                ? "Sign in once. We use it to append rows to your sheets."
+                                : "(Server not configured for OAuth — set EMAIL_TOKEN_ENCRYPTION_KEY.)"}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      {sheetsConn.connected ? (
+                        <button
+                          type="button"
+                          onClick={disconnectSheetsOAuth}
+                          style={{background:"transparent",color:"#92400e",border:"1px solid #d8e2d4",borderRadius:8,padding:"6px 10px",fontSize:12,fontWeight:600,cursor:"pointer"}}
+                        >Disconnect</button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={startSheetsOAuth}
+                          disabled={!sheetsConn.ready || sheetsConn.loading}
+                          style={{background:"#1f5f35",color:"#fff",border:"none",borderRadius:8,padding:"7px 14px",fontSize:12.5,fontWeight:700,cursor:sheetsConn.ready?"pointer":"not-allowed",opacity:sheetsConn.ready?1:0.55}}
+                        >
+                          {sheetsConn.loading ? "Checking…" : "Connect Google Sheets"}
+                        </button>
+                      )}
+                    </div>
+                    <label style={{display:"flex",flexDirection:"column",gap:4,fontSize:13,fontWeight:600,color:"#2e4238"}}>
+                      <span>Google Sheet URL or ID</span>
+                      <input
+                        type="text"
+                        className="fb-input"
+                        value={sheetSpreadsheetId}
+                        onChange={(e) => setSheetSpreadsheetId(e.target.value)}
+                        placeholder="https://docs.google.com/spreadsheets/d/1abc.../edit"
+                        autoCapitalize="off"
+                        autoCorrect="off"
+                        spellCheck={false}
+                      />
+                      <span style={{fontWeight:500,fontSize:12,color:"#5f6f66"}}>
+                        Share the sheet with the service account that runs your CRM, with Editor access.
+                      </span>
+                    </label>
+                    <label style={{display:"flex",flexDirection:"column",gap:4,fontSize:13,fontWeight:600,color:"#2e4238"}}>
+                      <span>Worksheet (tab) name</span>
+                      <input
+                        type="text"
+                        className="fb-input"
+                        value={sheetWorksheetName}
+                        onChange={(e) => setSheetWorksheetName(e.target.value)}
+                        placeholder="Sheet1"
+                        autoCapitalize="off"
+                        autoCorrect="off"
+                        spellCheck={false}
+                      />
+                    </label>
+                    <label style={{display:"inline-flex",alignItems:"center",gap:8,fontSize:13,fontWeight:500,color:"#2e4238",cursor:"pointer"}}>
+                      <input
+                        type="checkbox"
+                        checked={!!sheetEnsureHeader}
+                        onChange={(e) => setSheetEnsureHeader(e.target.checked)}
+                      />
+                      <span>Auto-write the header row if the sheet is empty</span>
+                    </label>
+                    <div style={{marginTop:6}}>
+                      <div style={{fontSize:13,fontWeight:700,color:"#2e4238",marginBottom:6}}>
+                        Columns (each row = one column in the sheet)
+                      </div>
+                      <div style={{fontSize:11.5,color:"#5f6f66",marginBottom:8,lineHeight:1.45}}>
+                        Use <code>{"{merge_tags}"}</code> like <code>{"{name}"}</code>,{" "}
+                        <code>{"{email}"}</code>, <code>{"{landscape_name}"}</code>,{" "}
+                        <code>{"{landscape_summary}"}</code>,{" "}
+                        <code>{"{landscape_phonenumber}"}</code>, plus computed{" "}
+                        <code>{"{timestamp}"}</code> and <code>{"{lead_id}"}</code>.
+                      </div>
+                      <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                        {sheetColumns.map((col, idx) => (
+                          <div key={idx} style={{display:"grid",gridTemplateColumns:"1fr 1fr 28px",gap:6,alignItems:"center"}}>
+                            <input
+                              type="text"
+                              className="fb-input"
+                              value={col.header}
+                              placeholder="Column header"
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                setSheetColumns(cur => cur.map((c, i) => i === idx ? {...c, header: v} : c));
+                              }}
+                            />
+                            <input
+                              type="text"
+                              className="fb-input"
+                              value={col.source}
+                              placeholder="{merge_tag}"
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                setSheetColumns(cur => cur.map((c, i) => i === idx ? {...c, source: v} : c));
+                              }}
+                              style={{fontFamily:"ui-monospace, SFMono-Regular, Menlo, monospace", fontSize:13}}
+                            />
+                            <button
+                              type="button"
+                              aria-label="Remove column"
+                              onClick={() => setSheetColumns(cur => cur.filter((_, i) => i !== idx))}
+                              style={{background:"#fff",border:"1px solid #d8e2d4",borderRadius:6,height:32,cursor:"pointer",fontWeight:700,color:"#92400e"}}
+                            >×</button>
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setSheetColumns(cur => [...cur, {header:"", source:""}])}
+                        style={{marginTop:8,padding:"6px 12px",background:"#fff",color:"#1f5f35",border:"1px dashed #a7f3d0",borderRadius:6,fontWeight:600,fontSize:12.5,cursor:"pointer"}}
+                      >+ Add column</button>
+                    </div>
+                  </div>
+                )}
+
+                {hasEmail && isMultiChannel && (
+                  <div className="fb-mail-frame">
+                    <div className="fb-mail-frame-row">
+                      <div className="fb-section-h-v2 is-email">✉️ Email subject</div>
+                      <input
+                        id="fb-edit-subject"
+                        ref={subjRef}
+                        type="text"
+                        className="fb-input fb-subject-input-v2"
+                        data-ai-editable="true"
+                        data-ai-field-type="post_caption"
+                        value={subject}
+                        onChange={(e) => setSubject(e.target.value)}
+                        onFocus={() => setActiveField("subject")}
+                        onKeyDown={(e) => {
+                          // Press `{` in the subject → open the variable
+                          // picker. activeField is already "subject" via
+                          // onFocus, so toggleToken inserts there.
+                          if (e.key === "{") {
+                            e.preventDefault();
+                            const r = e.currentTarget.getBoundingClientRect();
+                            setVarPickerAnchor({ x: r.left + 16, y: r.bottom + 6 });
+                            setVarPickerOpen(true);
+                          }
+                        }}
+                        placeholder="Quick update for you (press { to insert a variable)"
+                        maxLength={140}
+                        aria-label="Email subject"
+                      />
+                    </div>
+                  </div>
+                )}
+                {hasEmail && !isMultiChannel && (
                   <div
                     className="fb-subject-wrap"
-                    title={mode === "both"
+                    title={hasSms
                       ? "Subject — only shown in the email; texts don't have one."
                       : "Subject"}
                   >
@@ -2239,19 +4121,44 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                   </div>
                 )}
 
+
                 {/* Section header dropped — the textarea placeholder +
                     char counter already communicate "this is the message"
                     and "it's sent as text and/or email". Saves 24px. */}
                 {/* Composer shell: textarea + attached chip rail share a
                     single rounded border so the chips read as part of
-                    the editor instead of a floating accessory. */}
+                    the editor instead of a floating accessory.
+                    For Notify Me, this section only renders if at least
+                    one text/email channel is selected. The Call channel
+                    has its own message section below — separate inputs
+                    so the user can phrase each one differently. */}
+                {(!isMultiChannel || hasSms || hasEmail) && (
                 <div className="fb-composer">
-                  <textarea
+                  {isMultiChannel && (
+                    <div
+                      className={`fb-section-h-v2 ${
+                        // When paired with the email subject above
+                        // (any email mode), header is blue so the
+                        // whole panel reads as one email block.
+                        hasEmail ? "is-email"
+                        : hasSms ? "is-sms"
+                        : "is-email"
+                      }`}
+                      style={{ padding: "10px 14px 0" }}
+                    >
+                      {hasSms && hasEmail
+                        ? "💬 Message (text + email)"
+                        : hasSms
+                        ? "💬 Text message"
+                        : "💬 Email message"}
+                    </div>
+                  )}
+                  <TokenHighlightTextarea
                     id="fb-edit-body"
-                    ref={taRef}
+                    taRef={taRef}
                     className="fb-composer-ta"
-                    data-ai-editable="true"
-                    data-ai-field-type={mode === "sms" ? "reply_body" : "post_caption"}
+                    dataAiEditable={true}
+                    dataAiFieldType={hasSms && !hasEmail ? "reply_body" : "post_caption"}
                     value={body}
                     onChange={(e) => setBody(e.target.value)}
                     onFocus={() => setActiveField("body")}
@@ -2269,14 +4176,29 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                         setVarPickerOpen(true);
                       }
                     }}
-                    placeholder={mode === "sms"
+                    placeholder={hasSms && !hasEmail
                       ? "Type a quick note… (press { to insert a variable)"
-                      : mode === "both"
+                      : hasSms && hasEmail
                       ? "Type one message — we'll send it as a text AND an email. Press { to insert a variable."
+                      : !isMultiChannel && mode === "call"
+                      ? "What the AI should say first when the call connects. Press { to insert a variable like {first_name}."
                       : "Type your message here. Press { to insert a variable, or use the chips below."}
-                    rows={mode === "sms" ? 5 : (mode === "both" ? 7 : 10)}
+                    rows={
+                      // Multi-channel (Notify Me / Reach out): keep the
+                      // body textarea compact so the whole drawer fits
+                      // at 1440x900. Resizable for longer messages.
+                      isMultiChannel
+                        ? (hasSms && !hasEmail ? 4 : 5)
+                        : (mode === "sms" ? 5
+                            : mode === "both" ? 7
+                            : mode === "call" ? 6
+                            : 10)
+                    }
                   />
                   <div className="fb-composer-rail">
+                    {isMultiChannel && (
+                      <span className="fb-composer-rail-l" aria-hidden="true">Insert:</span>
+                    )}
                     {/* Quick chips: now driven by allTags so account
                         vars surface here too if they're in QUICK_TAGS.
                         Used tokens get the .is-used highlight; clicking
@@ -2337,11 +4259,248 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                     </button>
                   </div>
                 </div>
+                )}
+
+                {/* Multi-channel — Call channel gets its OWN message
+                    section so the user can phrase what the AI says on
+                    the call differently from the text/email. Hidden
+                    until they pick the Call toggle. */}
+                {isMultiChannel && hasCall && (
+                  <div className="fb-composer fb-call-mini" style={{ marginTop: 12 }}>
+                    <div className="fb-section-h-v2 is-call" style={{ padding: "10px 14px 0" }}>
+                      📞 What the AI should say on the call
+                    </div>
+                    <TokenHighlightTextarea
+                      id="fb-notify-call-msg"
+                      taRef={callMsgRef}
+                      className="fb-composer-ta"
+                      rows={4}
+                      value={callMessage}
+                      onChange={(e) => setCallMessage(e.target.value)}
+                      onFocus={() => setActiveField("call")}
+                      dataAiEditable={true}
+                      dataAiFieldType="reply_body"
+                      onKeyDown={(e) => {
+                        if (e.key === "{") {
+                          e.preventDefault();
+                          const r = e.currentTarget.getBoundingClientRect();
+                          setCallPickerAnchor({ x: r.left + 16, y: r.top + 36 });
+                          setCallPickerOpen(true);
+                        }
+                      }}
+                      placeholder="Hi, this is your CRM with a quick update on a new lead. Press { to insert a variable like {first_name}."
+                    />
+                    <p className="fb-helper-tight" style={{ padding: "4px 14px 10px" }}>
+                      Keep it short — under 30 seconds when read aloud.
+                    </p>
+                    {/* Customer-facing call only: business-hours toggle.
+                        Notify Me's call channel rings the OWNER and
+                        bypasses business hours by design (compile-side),
+                        so we don't show this for it. */}
+                    {isReachOut && (() => {
+                      const outsideNow = respectBusinessHours && _isOutsideBizHoursNow();
+                      const tzShort = bizHourTz
+                        ? bizHourTz.split("/").pop().replace(/_/g, " ")
+                        : "";
+                      return (
+                        <div className="fb-bh-section" style={{
+                            padding: "10px 14px 12px",
+                            borderTop: "1px solid #e6e9ef",
+                          }}>
+                          <label style={{
+                              display: "flex", alignItems: "flex-start",
+                              gap: 10, cursor: "pointer",
+                            }}>
+                            <input
+                              type="checkbox"
+                              checked={respectBusinessHours}
+                              onChange={(e) => setRespectBusinessHours(e.target.checked)}
+                              style={{ marginTop: 3 }}
+                            />
+                            <span style={{ fontSize: 13, lineHeight: 1.45, flex: 1 }}>
+                              <strong>Only call during business hours</strong>
+                              <span style={{ display: "block", color: "#5a6470", marginTop: 2 }}>
+                                {respectBusinessHours
+                                  ? (bizHoursConfigured
+                                      ? <>Calls between <strong>{_fmt12(bizHourStart)} – {_fmt12(bizHourEnd)} {tzShort}</strong> fire immediately. Outside that window they wait until next morning so customers aren't dialed at night.</>
+                                      : <>⚠ <strong>Time zone not set yet.</strong> The gate is off until you pick a time zone and window below — calls will fire whenever the engine reaches them.</>)
+                                  : <>Calls fire immediately, day or night. Use only for testing or genuinely time-critical alerts. {bizHoursConfigured && <span style={{ color: "#94a3b8" }}>(Saved zone: <strong>{tzShort}</strong>.)</span>}</>}
+                              </span>
+                            </span>
+                          </label>
+                          {/* Live "you're outside the window right now" warning
+                              so the user understands WHY a call deferred. */}
+                          {outsideNow && (
+                            <div role="alert" style={{
+                                marginTop: 8, padding: "8px 12px",
+                                background: "#fef3c7", border: "1px solid #fde68a",
+                                borderRadius: 8, fontSize: 12.5, color: "#78350f",
+                                lineHeight: 1.4,
+                              }}>
+                              ⚠ It's currently outside <strong>{_fmt12(bizHourStart)} – {_fmt12(bizHourEnd)} {tzShort}</strong>. Calls submitted now would defer to the next morning. Either turn this off, widen the window, or test during business hours.
+                            </div>
+                          )}
+                          {/* Always show the change-window control when
+                              Call is on — even if the user has unchecked
+                              "Only call during business hours" they may
+                              still want to change the time-zone (other
+                              steps in the flow can opt back into the
+                              window). Hiding this behind the toggle
+                              made the timezone unreachable. */}
+                          <div style={{ marginTop: 8 }}>
+                              {bizHoursEditing ? (
+                                <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12.5 }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                                    <span style={{ color: "#5a6470" }}>Window:</span>
+                                    <select
+                                      value={bizHourStart == null ? "" : bizHourStart}
+                                      onChange={(e) => setBizHourStart(e.target.value === "" ? null : parseInt(e.target.value, 10))}
+                                      style={{ padding: "4px 6px", border: "1px solid #cdd7e3", borderRadius: 6 }}
+                                    >
+                                      <option value="">Pick a start time…</option>
+                                      {Array.from({length: 24}, (_, h) => (
+                                        <option key={h} value={h}>{_fmt12(h)}</option>
+                                      ))}
+                                    </select>
+                                    <span>to</span>
+                                    <select
+                                      value={bizHourEnd == null ? "" : bizHourEnd}
+                                      onChange={(e) => setBizHourEnd(e.target.value === "" ? null : parseInt(e.target.value, 10))}
+                                      style={{ padding: "4px 6px", border: "1px solid #cdd7e3", borderRadius: 6 }}
+                                    >
+                                      <option value="">Pick an end time…</option>
+                                      {Array.from({length: 24}, (_, h) => (
+                                        <option key={h+1} value={h+1}>{_fmt12((h+1) % 24)}</option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                                    <span style={{ color: "#5a6470" }}>Time zone:</span>
+                                    <select
+                                      value={bizHourTz}
+                                      onChange={(e) => setBizHourTz(e.target.value)}
+                                      style={{ padding: "4px 6px", border: "1px solid #cdd7e3", borderRadius: 6, minWidth: 220 }}
+                                    >
+                                      <option value="">Pick a time zone…</option>
+                                      {(() => {
+                                        const COMMON = [
+                                          ["America/New_York",     "Eastern (New York)"],
+                                          ["America/Chicago",      "Central (Chicago)"],
+                                          ["America/Denver",       "Mountain (Denver)"],
+                                          ["America/Phoenix",      "Arizona (no DST)"],
+                                          ["America/Los_Angeles",  "Pacific (Los Angeles)"],
+                                          ["America/Anchorage",    "Alaska"],
+                                          ["Pacific/Honolulu",     "Hawaii"],
+                                          ["UTC",                  "UTC"],
+                                        ];
+                                        const seen = new Set(COMMON.map(c => c[0]));
+                                        const opts = [];
+                                        if (_detectedTz && !seen.has(_detectedTz)) {
+                                          opts.push(<option key={_detectedTz} value={_detectedTz}>📍 Use my zone: {_detectedTz}</option>);
+                                        }
+                                        opts.push(...COMMON.map(([v, label]) => (
+                                          <option key={v} value={v}>{label}</option>
+                                        )));
+                                        if (bizHourTz && !seen.has(bizHourTz) && bizHourTz !== _detectedTz) {
+                                          opts.unshift(<option key={bizHourTz} value={bizHourTz}>{bizHourTz}</option>);
+                                        }
+                                        return opts;
+                                      })()}
+                                    </select>
+                                    {_detectedTz && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setBizHourTz(_detectedTz)}
+                                        title={`Use your browser's detected zone: ${_detectedTz}`}
+                                        style={{
+                                          background: "none", border: 0, padding: 0,
+                                          color: "#185fa5", cursor: "pointer",
+                                          fontSize: 12, textDecoration: "underline",
+                                        }}
+                                      >Use my zone</button>
+                                    )}
+                                  </div>
+                                  {!bizHoursConfigured && (
+                                    <p style={{ margin: 0, color: "#94a3b8", fontSize: 11.5, lineHeight: 1.4 }}>
+                                      Until all three are filled in, the gate stays off — calls fire whenever the engine reaches them.
+                                    </p>
+                                  )}
+                                  <div style={{ display: "flex", gap: 8 }}>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (bizHoursConfigured) _saveBizHours(bizHourStart, bizHourEnd);
+                                      }}
+                                      disabled={bizHoursSaving || !bizHoursConfigured}
+                                      title={bizHoursConfigured ? "" : "Pick a start, end, and time zone first."}
+                                      style={{
+                                        padding: "4px 10px", borderRadius: 6,
+                                        border: "1px solid #185fa5",
+                                        background: bizHoursConfigured ? "#185fa5" : "#cbd5e1",
+                                        color: "#fff",
+                                        cursor: bizHoursConfigured ? "pointer" : "not-allowed",
+                                        fontSize: 12,
+                                      }}
+                                    >{bizHoursSaving ? "Saving…" : "Save"}</button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setBizHoursEditing(false)}
+                                      style={{
+                                        padding: "4px 10px", borderRadius: 6,
+                                        border: "1px solid #cdd7e3", background: "#fff",
+                                        color: "#374151", cursor: "pointer", fontSize: 12,
+                                      }}
+                                    >Cancel</button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => setBizHoursEditing(true)}
+                                  style={{
+                                    background: "none", border: 0, padding: 0,
+                                    color: "#185fa5", cursor: "pointer",
+                                    textDecoration: "underline", fontSize: 12.5,
+                                  }}
+                                >{bizHoursConfigured ? "Change time zone & window" : "Set time zone & window"}</button>
+                              )}
+                            </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                {/* Variable picker for the multi-channel Call message
+                    textarea. Without this, pressing `{` in the call
+                    field would open nothing — the picker rendered only
+                    inside the standalone Call activity drawer. */}
+                {isMultiChannel && hasCall && (
+                  <VariablePicker
+                    open={callPickerOpen}
+                    anchor={callPickerAnchor}
+                    tags={allTags}
+                    usedTokens={(() => {
+                      const used = new Set();
+                      const re = /\{[a-zA-Z_][a-zA-Z0-9_]*\}/g;
+                      let m;
+                      while ((m = re.exec(callMessage || "")) !== null) {
+                        used.add(m[0]);
+                      }
+                      return used;
+                    })()}
+                    onClose={() => setCallPickerOpen(false)}
+                    onPick={(token) => {
+                      insertTokenAtCursor(callMsgRef, callMessage, setCallMessage, token);
+                      setCallPickerOpen(false);
+                    }}
+                  />
+                )}
 
                 {/* Polish 3 — informational char counter; shown only when
                     SMS is in play. No warning styling once we cross 160;
                     long texts are normal, just multi-segment. */}
-                {(mode === "sms" || mode === "both") && (() => {
+                {hasSms && (() => {
                   const chars = body.length;
                   const segments = chars === 0 ? 0 : (chars <= 160 ? 1 : Math.ceil(chars / 153));
                   return (
@@ -2369,36 +4528,17 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
             )}
           </div>
 
-          {!isInput && (
-          <div className="fb-drawer-preview">
-            {/* Combined header: title left, recipient pills right.
-                Sentence case matches the rest of the panel. */}
+          {!isInput && !isCall && !isAppendSheet && (
+          <div className={`fb-drawer-preview ${previewCollapsed ? "is-collapsed" : ""}`}>
+            <button
+              type="button"
+              className="fb-preview-toggle"
+              onClick={() => setPreviewCollapsed(v => !v)}
+              title={previewCollapsed ? "Show live preview" : "Hide live preview"}
+              aria-label={previewCollapsed ? "Show live preview" : "Hide live preview"}
+            >{previewCollapsed ? "◂ Show preview" : "Hide preview ▸"}</button>
             <div className="fb-prev-header">
               <div className="fb-prev-header-l">Live preview</div>
-              {!isBranch && !isReply && isNotify && (() => {
-                const phoneCount =
-                  (mode !== "email")
-                    ? (includeCustomer ? 1 : 0) + extraPhones.filter(p => p.valid).length
-                    : 0;
-                const emailCount =
-                  (mode !== "sms")
-                    ? (includeCustomer ? 1 : 0) + extraEmails.filter(e => e.valid).length
-                    : 0;
-                if (phoneCount === 0 && emailCount === 0) return null;
-                // Counts ARE the signal — owner unchecking the lead just
-                // shrinks them. No "lead excluded" tag (confusing copy
-                // for non-technical users).
-                return (
-                  <div className="fb-prev-header-pills">
-                    {phoneCount > 0 && (
-                      <span className="fb-prev-pill">📱 {phoneCount}</span>
-                    )}
-                    {emailCount > 0 && (
-                      <span className="fb-prev-pill">✉️ {emailCount}</span>
-                    )}
-                  </div>
-                );
-              })()}
             </div>
             {isBranch ? (
               <div className="fb-branch-preview">
@@ -2438,103 +4578,64 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
               />
             ) : (
               <>
-                {/* Source toggle is now self-explanatory — no "Preview
-                    with:" prefix. Sits as Row 2 under the header. */}
-                <div className="fb-prev-source">
-                  <div className="fb-prev-source-pills">
-                    <button
-                      type="button"
-                      className={`fb-prev-source-pill ${previewSource === "sample" ? "is-active" : ""}`}
-                      onClick={() => setPreviewSource("sample")}
-                    >Sample customer</button>
-                    <button
-                      type="button"
-                      className={`fb-prev-source-pill ${previewSource === "custom" ? "is-active" : ""}`}
-                      onClick={() => setPreviewSource("custom")}
-                    >Test data</button>
-                  </div>
-                </div>
-
-                {/* SWAP, don't STACK. The two views share the same
-                    content slot — switching the toggle replaces what's
-                    visible. This eliminates layout shift / scrollbars
-                    that the previous stacked layout introduced. */}
                 <div className="fb-prev-slot">
-                  {previewSource === "custom" ? (
-                    <div className="fb-prev-testdata-pane">
-                      <p className="fb-prev-testdata-intro">
-                        Edit values to see how your message will look.
-                        Switch back to <strong>Sample customer</strong> to preview it.
-                      </p>
-                      <div className="fb-prev-testdata">
-                        {(() => {
-                          // De-dup by token so {owner_name} doesn't show
-                          // twice (Account list + Business list both define it).
-                          const seen = new Set();
-                          const all = allTags.filter(t => {
-                            if (seen.has(t.token)) return false;
-                            seen.add(t.token); return true;
-                          });
-                          const visible = testDataExpanded ? all : all.slice(0, 5);
-                          return (
-                            <>
-                              {visible.map(t => (
-                                <label key={t.token} className="fb-prev-testdata-row">
-                                  <span className="fb-prev-testdata-k">{t.label}</span>
-                                  <input
-                                    type="text"
-                                    className="fb-prev-testdata-v"
-                                    value={previewOverrides[t.token] != null ? previewOverrides[t.token] : ""}
-                                    onChange={(e) => setPreviewOverrides(prev => ({
-                                      ...prev, [t.token]: e.target.value,
-                                    }))}
-                                    placeholder={t.sample}
-                                  />
-                                </label>
-                              ))}
-                              {all.length > 5 && (
-                                <button
-                                  type="button"
-                                  className="fb-prev-testdata-more"
-                                  onClick={() => setTestDataExpanded(v => !v)}
-                                >
-                                  {testDataExpanded
-                                    ? "Show fewer"
-                                    : `Show ${all.length - 5} more`}
-                                </button>
-                              )}
-                            </>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  ) : (() => {
+                  {(() => {
                     // Empty-recipients message replaces the phone when
                     // the count truly is zero. Avoids showing a fake
                     // preview that promises something the engine won't
                     // deliver.
-                    if (isNotify) {
-                      const phoneCount =
-                        (mode !== "email")
-                          ? (includeCustomer ? 1 : 0) + extraPhones.filter(p => p.valid).length
-                          : 0;
-                      const emailCount =
-                        (mode !== "sms")
-                          ? (includeCustomer ? 1 : 0) + extraEmails.filter(e => e.valid).length
-                          : 0;
-                      if (phoneCount === 0 && emailCount === 0) {
+                    if (isMultiChannel) {
+                      const noChannels = !hasSms && !hasEmail && !hasCall;
+                      if (noChannels) {
                         return (
                           <div className="fb-prev-empty">
-                            No recipients yet. Add at least one to send.
+                            Pick a channel to see the preview.
                           </div>
                         );
                       }
+                      // Notify Me's recipients = lead (if include_customer)
+                      // + owner extras. Reach Out's recipients = always
+                      // the lead (1), no extras concept. Skip the empty-
+                      // recipient check entirely for the customer-side
+                      // step; the lead always has SOMETHING.
+                      if (isOwnerSide) {
+                        const phoneCount =
+                          (hasSms || hasCall)
+                            ? (includeCustomer ? 1 : 0) + extraPhones.filter(p => p.valid).length
+                            : 0;
+                        const emailCount =
+                          hasEmail
+                            ? (includeCustomer ? 1 : 0) + extraEmails.filter(e => e.valid).length
+                            : 0;
+                        if (phoneCount === 0 && emailCount === 0 && !hasCall) {
+                          return (
+                            <div className="fb-prev-empty">
+                              No recipients yet. Add at least one to send.
+                            </div>
+                          );
+                        }
+                      }
                     }
+                    // For multi-channel activities, derive the preview's
+                    // mode string from the live `modes` array — the
+                    // local `mode` state isn't touched by toggleMode,
+                    // so reading it would freeze the preview at whatever
+                    // was loaded.
+                    const previewMode = isMultiChannel
+                      ? (() => {
+                          const ms = (modes || []).slice().sort();
+                          if (ms.length === 0) return "";
+                          if (ms.length === 1) return ms[0];
+                          if (ms.length === 2 && ms.includes("sms") && ms.includes("email")) return "both";
+                          return ms.join(",");
+                        })()
+                      : mode;
                     return (
                       <PhonePreview
-                        mode={mode}
+                        mode={previewMode}
                         subject={subject}
                         body={body}
+                        spokenMessage={callMessage}
                         fromName="Your business"
                         previewValues={previewSource === "custom" ? previewOverrides : null}
                         tags={allTags}
@@ -2599,6 +4700,8 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
             <button
               type="button"
               className="fb-drawer-done"
+              disabled={noModesPicked}
+              title={noModesPicked ? "Pick at least one way to be notified first." : ""}
               onClick={onClose}
             >Save and continue</button>
           </div>
@@ -2873,7 +4976,7 @@ async function runFlowSimulation({
             });
           }
         } else if (a === "send_text" ||
-                   ((data.mode || data.defaultMode) === "sms")) {
+                   ((data.mode || data.defaultMode) === "sms" && a !== "notify")) {
           summary.sent.push({
             nodeId, channel: "sms",
             to: inputs.phone || "(no phone in test data)",
@@ -2882,7 +4985,7 @@ async function runFlowSimulation({
             testRouted: true,
           });
         } else if (a === "send_email" ||
-                   ((data.mode || data.defaultMode) === "email")) {
+                   ((data.mode || data.defaultMode) === "email" && a !== "notify")) {
           summary.sent.push({
             nodeId, channel: "email",
             to: inputs.email || "(no email in test data)",
@@ -2890,6 +4993,251 @@ async function runFlowSimulation({
             body: renderTemplate(data.body, inputs),
             testRouted: true,
           });
+        } else if (a === "notify") {
+          // Real-send path. The simulator simulates everything else, but
+          // a Notify step's whole point is to email the owner — so the
+          // test fires actual emails through the user's connected Gmail
+          // to whatever extra_emails they configured. SMS and the
+          // customer-facing path stay simulated (no real customer
+          // contact info in scope during a test).
+          // Prefer the new `modes` array (multi-select); fall back to
+          // legacy `mode` string for older saved nodes.
+          const modeSet = new Set(
+            Array.isArray(data.modes) && data.modes.length
+              ? data.modes.map(s => String(s).toLowerCase())
+              : (() => {
+                  const m = (data.mode || data.defaultMode || "both").toLowerCase();
+                  if (m === "both") return ["sms", "email"];
+                  return [m];
+                })()
+          );
+          const doEmail = modeSet.has("email");
+          const doSms   = modeSet.has("sms");
+          const doCall  = modeSet.has("call");
+          const extraEmails = Array.isArray(data.extra_emails) ? data.extra_emails : [];
+          const extraPhones = Array.isArray(data.extra_phones) ? data.extra_phones : [];
+          // Call mode: each phone in extra_phones gets a real outbound
+          // call via Twilio, same path as the standalone Call activity.
+          // With the recipients block removed from Notify Me, extras
+          // are usually empty — fall back to the lead's phone (from the
+          // test inputs / form submission) so the channel still fires.
+          if (doCall) {
+            const fromExtras = extraPhones
+              .filter(c => !c || c.valid !== false)
+              .map(c => ((c && (c.raw || c.display)) || (typeof c === "string" ? c : "")).trim())
+              .filter(Boolean);
+            const leadPhone = ((inputs && (inputs.phone || inputs.phone_number)) || "").trim();
+            const numbers = fromExtras.length ? fromExtras
+              : (leadPhone ? [leadPhone] : []);
+            if (numbers.length === 0) {
+              summary.skipped.push({ nodeId, reason: "no_call_numbers" });
+            } else {
+              for (const to of numbers) {
+                try {
+                  const resp = await fetch("/me/call/test-place", {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      to_phone:       to,
+                      // The Call channel uses its own dedicated field
+                      // (spoken_message). data.body is the email/text
+                      // message — it must NOT fall through here, or
+                      // the AI ends up reading the email body on the
+                      // phone call.
+                      spoken_message: data.spoken_message || data.body || "",
+                      voice_tone:     data.voice_tone || "friendly",
+                      lead:           inputs || {},
+                    }),
+                  });
+                  const out = resp.ok ? await resp.json() : null;
+                  if (out && out.ok) {
+                    summary.sent.push({
+                      nodeId, channel: "phone", to: out.to || to,
+                      from: out.from || "", subject: "", body: "",
+                      realSend: true,
+                    });
+                  } else {
+                    summary.sent.push({
+                      nodeId, channel: "phone", to,
+                      from: (out && out.from) || "", subject: "", body: "",
+                      realSend: false,
+                      sendError: (out && out.error) || "call_failed",
+                    });
+                  }
+                } catch (err) {
+                  summary.sent.push({
+                    nodeId, channel: "phone", to, subject: "", body: "",
+                    realSend: false,
+                    sendError: "call_failed: " + (err.message || err),
+                  });
+                }
+              }
+            }
+          }
+          if (doSms) {
+            summary.sent.push({
+              nodeId, channel: "sms",
+              to: inputs.phone || "(no phone in test data)",
+              subject: "",
+              body: "[TEST] " + renderTemplate(data.body, inputs),
+              testRouted: true,
+            });
+            for (const c of extraPhones) {
+              if (c && c.valid === false) continue;
+              const to = (c && (c.raw || c.display)) || (typeof c === "string" ? c : "");
+              if (!to) continue;
+              summary.sent.push({
+                nodeId, channel: "sms", to,
+                subject: "", body: "[TEST] " + renderTemplate(data.body, inputs),
+                testRouted: false, simulated: true,
+              });
+            }
+          }
+          if (doEmail && extraEmails.length > 0) {
+            // Hit the backend test-send endpoint so the user's Gmail
+            // actually fires real emails to the configured recipients.
+            try {
+              const resp = await fetch("/me/notify/test-send", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  subject:      data.subject || "",
+                  body:         data.body || "",
+                  extra_emails: extraEmails,
+                  lead:         inputs || {},
+                }),
+              });
+              const out = resp.ok ? await resp.json() : null;
+              if (out && Array.isArray(out.results)) {
+                for (const r of out.results) {
+                  summary.sent.push({
+                    nodeId, channel: "email",
+                    to:        r.to,
+                    subject:   "[TEST] " + renderTemplate(data.subject, inputs),
+                    body:      renderTemplate(data.body, inputs),
+                    from:      out.from || "",
+                    testRouted: false,
+                    realSend:  !!r.sent,
+                    sendError: r.sent ? "" : (r.error || "send_failed"),
+                  });
+                }
+                if (out.error === "no_email_connection") {
+                  summary.failed.push({
+                    nodeId,
+                    message: "No Gmail connected — open a Notify step and click Connect Gmail.",
+                  });
+                  failedSet.add(nodeId);
+                  emitEdge(nodeId, "failed");
+                  onNodeState(nodeId, "failed", {
+                    message: "No Gmail connected.",
+                  });
+                  markDownstreamSkipped(nodeId);
+                  return;
+                }
+              } else {
+                summary.failed.push({
+                  nodeId, message: "Test send failed (server error).",
+                });
+              }
+            } catch (err) {
+              summary.failed.push({
+                nodeId, message: "Test send failed: " + (err.message || err),
+              });
+            }
+          } else if (doEmail) {
+            // No extras configured — fall back to a simulated owner-facing
+            // "would have emailed the lead" line so the canvas still
+            // shows what would happen in production.
+            summary.sent.push({
+              nodeId, channel: "email",
+              to: inputs.email || "(no email in test data)",
+              subject: "[TEST] " + renderTemplate(data.subject, inputs),
+              body: renderTemplate(data.body, inputs),
+              testRouted: true,
+            });
+          }
+        } else if (a === "call") {
+          // Real-send path. The Call activity dials a phone number
+          // from the user's Twilio number and bridges to the AI voice
+          // agent. The number comes from the form's phone field by
+          // default (call_target="lead"); a "custom" target uses the
+          // step's saved phone_number instead. SMS/email simulators
+          // stay client-side — only this branch makes a real call.
+          const target = (data.call_target || "lead").toLowerCase();
+          const toPhone = (target === "custom"
+            ? (data.phone_number || "")
+            : ((inputs && (inputs.phone || inputs.phone_number)) || "")
+          ).trim();
+          if (!toPhone) {
+            const reason = target === "custom"
+              ? "no_phone_number"
+              : "lead_has_no_phone";
+            summary.skipped.push({ nodeId, reason });
+            onLog({ kind: "noop", nodeId, activityId: a, reason });
+          } else {
+            try {
+              // Strip empty values so the AI's lead block only contains
+              // fields the user actually filled in. Without this, the
+              // canvas was forwarding {first_name: "", service_type: "", ...}
+              // for every undiscovered token, which the model treated as
+              // "you have no real info" and hallucinated a lead.
+              const trimmedLead = {};
+              for (const [k, v] of Object.entries(inputs || {})) {
+                const s = (v == null ? "" : String(v)).trim();
+                if (s) trimmedLead[k] = s;
+              }
+              // eslint-disable-next-line no-console
+              console.log("[fb-test] call lead payload:", trimmedLead);
+              const resp = await fetch("/me/call/test-place", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  to_phone:       toPhone,
+                  spoken_message: data.spoken_message || "",
+                  voice_tone:     data.voice_tone     || "friendly",
+                  // Forward the test inputs so the AI on the other end
+                  // can answer questions about the lead the call is about.
+                  lead:           trimmedLead,
+                }),
+              });
+              const out = resp.ok ? await resp.json() : null;
+              if (out && out.ok) {
+                summary.sent.push({
+                  nodeId, channel: "phone",
+                  to:       out.to || toPhone,
+                  from:     out.from || "",
+                  subject:  "",
+                  body:     "",
+                  realSend: true,
+                });
+              } else {
+                const err = (out && out.error) || "call_failed";
+                summary.sent.push({
+                  nodeId, channel: "phone",
+                  to:        toPhone,
+                  from:      (out && out.from) || "",
+                  subject:   "",
+                  body:      "",
+                  realSend:  false,
+                  sendError: err,
+                });
+                summary.failed.push({
+                  nodeId,
+                  message: "Couldn't place call: " + err,
+                });
+                failedSet.add(nodeId);
+              }
+            } catch (err) {
+              summary.failed.push({
+                nodeId,
+                message: "Couldn't place call: " + (err.message || err),
+              });
+              failedSet.add(nodeId);
+            }
+          }
         } else if (a === "branch") {
           // Branch passes through both edges; no message.
           onLog({ kind: "branch", nodeId });
@@ -2931,8 +5279,22 @@ function TestConfigModal({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onCancel, onRun]);
+  // Track whether the mousedown started on the backdrop. We only close
+  // the modal when BOTH mousedown AND mouseup land on the backdrop —
+  // a plain onClick fires whenever the common ancestor of down+up is
+  // the backdrop, so highlighting text inside the modal and releasing
+  // outside used to close it mid-selection. This pattern matches the
+  // form-builder modal's fix.
+  const downOnBgRef = React.useRef(false);
   return (
-    <div className="fb-test-modal-bg" onClick={onCancel}>
+    <div
+      className="fb-test-modal-bg"
+      onMouseDown={(e) => { downOnBgRef.current = (e.target === e.currentTarget); }}
+      onMouseUp={(e) => {
+        if (e.target === e.currentTarget && downOnBgRef.current) onCancel();
+        downOnBgRef.current = false;
+      }}
+    >
       <div className="fb-test-modal" onClick={(e) => e.stopPropagation()}>
         <h2>Test your flow</h2>
         <p className="fb-test-modal-sub">
@@ -3013,11 +5375,18 @@ function TestConfigModal({
 function TestSummaryCard({ summary, error, onClose, onRunAgain, onSeeFailedStep }) {
   // Group sent rows by channel + recipient for compact display.
   const sentByChannel = {};
+  let realSendFrom = "";
   if (summary && summary.sent) {
     for (const s of summary.sent) {
       const k = `${s.channel}:${s.to}`;
-      sentByChannel[k] = sentByChannel[k] || { channel: s.channel, to: s.to, count: 0 };
+      sentByChannel[k] = sentByChannel[k] || {
+        channel: s.channel, to: s.to, count: 0,
+        anyReal: false, anyError: "",
+      };
       sentByChannel[k].count++;
+      if (s.realSend) sentByChannel[k].anyReal = true;
+      if (s.sendError && !sentByChannel[k].anyError) sentByChannel[k].anyError = s.sendError;
+      if (s.from && !realSendFrom) realSendFrom = s.from;
     }
   }
   const sentRows = Object.values(sentByChannel);
@@ -3069,12 +5438,28 @@ function TestSummaryCard({ summary, error, onClose, onRunAgain, onSeeFailedStep 
           {sentRows.length > 0 && (
             <div className="fb-test-sent-list">
               <div className="fb-test-summary-stat" style={{ marginBottom: 6 }}>
-                <strong>Test messages would have gone to:</strong>
+                <strong>Test messages:</strong>
+                {realSendFrom && (
+                  <span style={{ marginLeft: 6, color: "#0a8a3a", fontWeight: 600 }}>
+                    real emails sent from {realSendFrom}
+                  </span>
+                )}
               </div>
               {sentRows.map((r, i) => (
                 <div key={i} className="fb-test-sent-row">
                   {r.channel === "email" ? "📧" : r.channel === "sms" ? "💬" : "📞"}{" "}
-                  {r.to} <span style={{ color: "#94a3b8" }}>· {r.count} message{r.count === 1 ? "" : "s"}</span>
+                  {r.to}{" "}
+                  <span style={{ color: "#94a3b8" }}>· {r.count} message{r.count === 1 ? "" : "s"}</span>
+                  {r.anyReal && !r.anyError && (
+                    <span style={{ marginLeft: 8, color: "#0a8a3a", fontWeight: 700, fontSize: 11 }}>
+                      ✓ SENT
+                    </span>
+                  )}
+                  {r.anyError && (
+                    <span style={{ marginLeft: 8, color: "#991b1b", fontWeight: 700, fontSize: 11 }}>
+                      ✕ {r.anyError.slice(0, 60)}
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
@@ -3796,29 +6181,31 @@ const STYLES = `
     transition-delay: .35s;
   }
   /* ── Layered UI z-index scale ──────────────────────────────────────
-     Codified so future components don't pick arbitrary values.
-        20  persistent UI (save status, return-pill, intro strip)
-        30  popovers, dropdowns
-        40  modals (chooser, template picker, message drawer)
+     Codified so future chrome doesn't pick arbitrary values.
+        20  persistent UI (save indicator, intro strip)
+        25  ? help icon (bottom-left)
+        30  back pill, popovers, dropdowns
+        40  modals (chooser, template picker, editor panel backdrop)
         45  tour panel (above modals so it can guide through them)
         50  toasts
-        70  return-pill RAISED state — but only when no modal is open
-     The pill defaults to 20; we elevate it to 70 only when there's no
-     competing modal. When a modal opens (.fb-canvas.is-modal-open),
-     persistent UI fades out so it can't visually intrude. */
-  .fb-canvas .fb-tour-panel,
-  .fb-canvas .fb-return-pill,
-  .fb-canvas .fb-save,
-  .fb-canvas .fb-tour-replay {
+        51  Test this flow CTA (above tour overlay)
+     When the chooser modal opens (.fb-canvas.is-modal-open), persistent
+     chrome fades out so it can't visually intrude. The editor panel
+     uses a different class (.is-drawer-open) and instead of fading
+     chrome out, the right-side corners reflow leftward by --fb-panel-w
+     so the chrome stays visible inside the narrowed canvas. */
+  .fb-canvas .fb-tour-panel {
     transition: opacity .15s ease, visibility 0s linear .15s;
   }
   .fb-canvas.is-modal-open .fb-tour-panel:not([data-sub="1"]),
-  .fb-canvas.is-modal-open .fb-return-pill,
   .fb-canvas.is-modal-open .fb-save,
-  .fb-canvas.is-modal-open .fb-tour-replay {
+  .fb-canvas.is-modal-open .fb-tour-replay,
+  .fb-canvas.is-modal-open .fb-test-btn,
+  .fb-canvas.is-modal-open .fb-backpill {
     opacity: 0;
     pointer-events: none;
     visibility: hidden;
+    transition: opacity .15s ease, visibility 0s linear .15s;
   }
   /* Sub-path tour panels stay visible during modals — they're the
      guidance INSIDE the modal. Float them on top of everything. */
@@ -4118,13 +6505,25 @@ const STYLES = `
     background: #dcfce7; color: #166534;
   }
 
-  /* Save indicator (top-right, inside the canvas). Subtle by default;
-     animates while a save is in flight; turns soft red on error. */
+  /* ── Canvas chrome corners ──────────────────────────────────────────
+     Four corners of the canvas. Each chrome element owns exactly one:
+
+       Top-left     → BackPill (one of two: My Flows / form)
+       Top-right    → Test this flow + Saved indicator (stacked)
+       Bottom-left  → ? help icon (TourReplayButton)
+       Bottom-right → React Flow zoom controls
+
+     All chrome z-indexes sit BELOW the editor panel's z-index (11),
+     so when a panel or modal slides in, the chrome stays anchored to
+     its corner and the panel covers it. No reflow, no overlap on top
+     of the panel. */
+
+  /* Top-right secondary — Saved indicator stacked under the Test btn. */
   .fb-save {
-    position: absolute; top: 12px; right: 12px;
+    position: absolute; top: 64px; right: 16px;
     display: inline-flex; align-items: center; gap: 6px;
     padding: 6px 12px;
-    background: rgba(255,255,255,.85);
+    background: rgba(255,255,255,.92);
     backdrop-filter: blur(6px);
     border: 1px solid var(--fb-border);
     border-radius: 999px;
@@ -4232,8 +6631,12 @@ const STYLES = `
 
   /* ── Test-this-flow runner UI ─────────────────────────────────────── */
   .fb-test-btn {
-    position: absolute; top: 16px; right: 200px;
-    z-index: 51;
+    position: absolute; top: 16px; right: 16px;
+    /* Below the editor panel's z-index (11) so the panel covers the
+       button when open. We deliberately don't reflow the button — it
+       just gets tucked behind the panel. */
+    z-index: 8;
+    transition: transform .14s ease, box-shadow .14s ease, background .14s ease;
     padding: 9px 18px;
     font-size: 14px; font-weight: 700;
     border-radius: 999px;
@@ -4243,7 +6646,6 @@ const STYLES = `
     display: inline-flex; align-items: center; gap: 8px;
     box-shadow: 0 4px 14px rgba(15,23,42,0.20),
                 0 1px 2px rgba(15,23,42,0.08);
-    transition: transform .14s ease, box-shadow .14s ease, background .14s ease;
   }
   .fb-test-btn:hover {
     transform: translateY(-1px);
@@ -4255,7 +6657,58 @@ const STYLES = `
     border-color: #991b1b;
   }
   .fb-test-btn-ico { font-size: 12px; line-height: 1; }
-  @media (max-width: 900px) { .fb-test-btn { right: 16px; top: 60px; } }
+  /* Top-left — back pill (one of two: My Flows or Done? Back to your
+     form). Mutually exclusive — only one pill ever renders at a time. */
+  .fb-backpill {
+    position: absolute; top: 16px; left: 16px;
+    /* Below the editor panel's z-index (11) so the panel covers it. */
+    z-index: 8;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px;
+    font: 600 13px inherit;
+    border-radius: 999px;
+    cursor: pointer;
+    text-decoration: none;
+    box-shadow: 0 3px 10px rgba(20,40,80,.10);
+    transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+  }
+  .fb-backpill:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(20,40,80,.16);
+  }
+  .fb-backpill.is-from-flows {
+    background: #fff; border: 1px solid #cdd7e3; color: #185fa5;
+  }
+  .fb-backpill.is-from-flows:hover { background: #f5f9fd; }
+
+  /* Bottom-left — help / tour replay icon. Round 36 px button. */
+  .fb-tour-replay {
+    position: absolute; bottom: 16px; left: 16px;
+    /* Below the panel z-index (11) — covered when panel slides in. */
+    z-index: 8;
+    width: 36px; height: 36px;
+    border-radius: 999px;
+    background: #fff;
+    border: 1.5px solid #cdd7e3;
+    color: #185fa5;
+    cursor: pointer;
+    font-weight: 700; font-size: 18px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 3px 10px rgba(20,40,80,.10);
+    transition: transform .12s ease, box-shadow .12s ease;
+    padding: 0;
+  }
+  .fb-tour-replay:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 18px rgba(20,40,80,.16);
+  }
+
+  /* Bottom-right — React Flow's built-in zoom controls. Anchor in the
+     corner. The control's own z-index is below the panel's so the
+     panel naturally covers it without any reflow logic. */
+  .fb-canvas .react-flow__controls {
+    z-index: 4;
+  }
 
   /* Node highlighting during a test. Set by mutating node.data.runState
      so the React Flow re-render picks it up and the ActivityCard tags
@@ -4590,7 +7043,7 @@ const STYLES = `
     box-shadow: -16px 0 40px rgba(15,23,42,.18);
     z-index: 11;
     display: flex; flex-direction: column;
-    animation: fbSlideIn .22s cubic-bezier(.2,.8,.2,1);
+    animation: fbSlideIn .3s cubic-bezier(.2,.8,.2,1);
   }
   @keyframes fbSlideIn {
     from { transform: translateX(100%); opacity: 0; }
@@ -4742,6 +7195,61 @@ const STYLES = `
     background: #fef2f2; color: #b91c1c;
     text-decoration: underline wavy #fca5a5; text-underline-offset: 2px;
   }
+  /* Default-sender chip — the user's connected Gmail. Subtle blue tint
+     + tiny "Default" badge so the owner sees instantly that this row
+     is them, not someone they typed in. */
+  .fb-recip-chip.is-default {
+    background: #eff6ff;
+    border: 1px solid #c7dbf3;
+    color: #0a3d7a;
+    padding-left: 6px;
+  }
+  .fb-recip-chip-badge {
+    display: inline-flex; align-items: center;
+    padding: 1px 7px;
+    background: #185fa5; color: #fff;
+    border-radius: 999px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: .04em; text-transform: uppercase;
+    line-height: 1.4;
+  }
+  /* Compact one-line Gmail sender notice — replaces the colored
+     callout box that was eating ~52px of vertical space in the
+     Notify Me drawer. Now it reads as a single helper line. */
+  .fb-recip-default-hint {
+    margin-top: 4px;
+    display: flex; align-items: center; gap: 6px;
+    padding: 0;
+    background: transparent; border: 0;
+    color: #475569; font-size: 12px; line-height: 1.3;
+  }
+  .fb-recip-default-hint.is-dismissed {
+    color: #92400e;
+  }
+  .fb-recip-default-restore {
+    margin-left: auto;
+    background: #fff; border: 1px solid #d97706; color: #78350f;
+    padding: 4px 10px; border-radius: 999px;
+    font: inherit; font-size: 12px; font-weight: 600;
+    cursor: pointer; flex-shrink: 0;
+  }
+  .fb-recip-default-restore:hover { background: #fef3c7; }
+  .fb-recip-connect {
+    margin-top: 8px;
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 10px;
+    background: #fefce8; border: 1px dashed #fde047;
+    color: #713f12; font-size: 13px;
+  }
+  .fb-recip-connect-btn {
+    margin-left: auto;
+    background: #185fa5; color: #fff;
+    padding: 6px 14px; border-radius: 999px;
+    font-size: 12.5px; font-weight: 700;
+    text-decoration: none; flex-shrink: 0;
+    transition: background .12s;
+  }
+  .fb-recip-connect-btn:hover { background: #144b85; }
   .fb-recip-x {
     border: 0; background: transparent; color: #6b7280; cursor: pointer;
     width: 20px; height: 20px; line-height: 16px; border-radius: 4px;
@@ -4890,11 +7398,215 @@ const STYLES = `
   .fb-mode3.is-email.is-active { background: #eff6ff; border-color: #3b82f6; color: #1d4ed8; }
   .fb-mode3.is-sms.is-active   { background: #f5f3ff; border-color: #8b5cf6; color: #6d28d9; }
   .fb-mode3.is-both.is-active  { background: #fffbeb; border-color: #f59e0b; color: #92400e; }
+  .fb-mode3.is-call.is-active  { background: #ecfdf5; border-color: #10b981; color: #047857; }
+
+  /* ── Notify Me multi-select channel toggles ────────────────────────
+     Three independently-togglable buttons (Call / Text / Email). Each
+     shows a check when on. At least one must stay selected (handled
+     in toggleMode). Designed plain enough that a 5-year-old reads it
+     as "what should we do, ping you which way?". */
+  .fb-modes-multi { margin-bottom: 10px; }
+
+  /* Validation warning when the user unchecks every channel. The
+     Save button also disables; this banner explains why. */
+  .fb-modes-warn {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: #fef3c7; border: 1px solid #fde68a;
+    color: #92400e; border-radius: 8px;
+    font: 600 13px inherit;
+  }
+
+  /* Channel-coded section panels — each conditionally-rendered section
+     gets a full color-tinted card so the user can ALWAYS tell which
+     channel a field belongs to. Bold left-edge stripe (5px), tinted
+     fill, matching saturated border. */
+
+  /* 📧 Email subject card — top half of a merged blue panel.
+     Rounded top, flat bottom, no bottom border so it visually
+     continues into the body composer below. */
+  .fb-mail-frame {
+    border: 2px solid #60a5fa;
+    border-bottom: 0;
+    border-left: 6px solid #1d4ed8;
+    background: #bfdbfe;
+    border-radius: 12px 12px 0 0;
+    padding: 12px 14px;
+    margin-top: 14px;
+  }
+  .fb-mail-frame .fb-mail-frame-row {
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    border-radius: 0;
+  }
+  /* 📧 Email message body — bottom half of the same blue panel when
+     paired with the email subject above. Higher specificity than the
+     standalone violet rule below so this wins for the email path. */
+  .fb-mail-frame + .fb-composer {
+    border: 2px solid #60a5fa;
+    border-top: 0;
+    border-left: 6px solid #1d4ed8;
+    background: #bfdbfe;            /* SAME blue as the subject card */
+    border-radius: 0 0 12px 12px;
+    margin-top: 0;                  /* zero gap so they merge */
+    padding: 0;
+    box-shadow: none;
+  }
+  /* 💬 Text-only message body card — only when there's NO email
+     subject above (so :not(.fb-mail-frame + .fb-composer) wins). */
+  .fb-composer:not(.fb-call-mini):not(.fb-mail-frame + .fb-composer) {
+    border: 2px solid #c4b5fd;
+    border-left: 6px solid #7c3aed;
+    background: #ddd6fe;            /* saturated violet */
+    border-radius: 12px;
+    padding: 0;
+    margin-top: 12px;
+  }
+  /* 📞 Call message section card */
+  .fb-composer.fb-call-mini {
+    border: 2px solid #6ee7b7;
+    border-left: 6px solid #059669;
+    background: #a7f3d0;            /* saturated mint card fill */
+    border-radius: 12px;
+    padding: 0;
+    margin-top: 12px;
+  }
+  /* Inner content — chip rail + textarea use translucent white over
+     the channel tint so the user can see the card color but the text
+     stays legible. */
+  .fb-mail-frame .fb-htxt-input,
+  .fb-composer.fb-call-mini .fb-htxt-input,
+  .fb-composer:not(.fb-call-mini) .fb-htxt-input {
+    background: rgba(255,255,255,.85) !important;
+  }
+  /* Subject input — translucent white so the card's blue fill is
+     visible around it instead of a solid-white box that hides the
+     channel color. */
+  .fb-subject-input-v2 {
+    background: rgba(255,255,255,.85);
+    border-color: rgba(29,78,216,.25);
+  }
+  .fb-subject-input-v2:focus {
+    background: #fff;
+    border-color: #1d4ed8;
+    box-shadow: 0 0 0 3px rgba(29,78,216,.18);
+  }
+  /* Composer rail (variable chips) keeps a translucent white so chips
+     stay readable while the card tint shows. */
+  .fb-composer .fb-composer-rail {
+    background: rgba(255,255,255,.6);
+  }
+
+  /* Recipient input cards — same channel-coded card treatment as the
+     message editors so phone vs email rows are visually distinct. */
+  .fb-recip-card {
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 2px solid; border-left-width: 6px;
+  }
+  .fb-recip-card.is-sms {
+    background: #faf5ff;
+    border-color: #c4b5fd;
+    border-left-color: #7c3aed;
+  }
+  .fb-recip-card.is-call {
+    background: #ecfdf5;
+    border-color: #6ee7b7;
+    border-left-color: #059669;
+  }
+  .fb-recip-card.is-email {
+    background: #eff6ff;
+    border-color: #93c5fd;
+    border-left-color: #2563eb;
+  }
+  /* Inside each card, the chip input keeps a white inner fill so chips
+     and the typing area stay legible against the card tint. */
+  .fb-recip-card .fb-recip-box {
+    background: #fff;
+  }
+
+  /* Smooth show animation for any field section that fades into view
+     when a channel is toggled on. The hide path is an instant unmount
+     (React removes the node) — fine for v1. */
+  @keyframes fb-field-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: none; }
+  }
+  .fb-recip-flat,
+  .fb-mail-frame,
+  .fb-call-mini,
+  .fb-call-target,
+  .fb-composer.fb-call-mini { animation: fb-field-in .2s ease-out; }
+  .fb-composer:not(.fb-call-mini) { animation: fb-field-in .2s ease-out; }
+
+  /* Disabled save button — semantic feedback that an action is blocked
+     without screaming about it. */
+  .fb-drawer-done[disabled] {
+    background: #cbd5e1 !important;
+    color: #64748b !important;
+    cursor: not-allowed !important;
+    box-shadow: none !important;
+  }
+  .fb-modes-multi-h {
+    font: 600 13px inherit; color: #0a0a0a;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .fb-modes-multi-hint {
+    font: 500 11.5px inherit; color: #6b7280;
+    background: #f3f4f6; padding: 2px 8px; border-radius: 999px;
+  }
+  .fb-modes-multi-row {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  @media (max-width: 480px) {
+    .fb-modes-multi-row { grid-template-columns: 1fr; }
+  }
+  .fb-mode-toggle {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 14px;
+    background: #fff; border: 1.5px solid #e5e7eb;
+    border-radius: 12px; cursor: pointer;
+    font: 600 14px inherit; color: #0a0a0a;
+    text-align: left;
+    transition: border-color .12s, background .12s, transform .12s;
+  }
+  .fb-mode-toggle:hover {
+    border-color: #cbd5e1; transform: translateY(-1px);
+  }
+  .fb-mode-toggle.is-on {
+    border-color: #185fa5; background: #eff6ff;
+    box-shadow: 0 0 0 3px rgba(24,95,165,.12);
+  }
+  .fb-mode-toggle-check {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    background: #f3f4f6; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    flex-shrink: 0;
+    transition: background .12s;
+  }
+  .fb-mode-toggle.is-on .fb-mode-toggle-check {
+    background: #185fa5;
+  }
+  .fb-mode-toggle-ico { font-size: 18px; line-height: 1; }
+  .fb-mode-toggle-label { font-weight: 600; }
+
+  /* Section header above each notify message editor — tells the user
+     exactly which channel the textarea below maps to. */
+  .fb-composer-section-h {
+    padding: 8px 14px 0;
+    font: 700 11.5px inherit; color: #475569;
+    text-transform: uppercase; letter-spacing: .04em;
+  }
 
   /* ── Issue 3: flat Recipients section ─────────────────────────── */
   .fb-recip-flat {
-    margin-top: 14px; margin-bottom: 18px;
-    display: flex; flex-direction: column; gap: 12px;
+    margin-top: 10px; margin-bottom: 12px;
+    display: flex; flex-direction: column; gap: 6px;
   }
   .fb-recip-flat-h {
     font: 600 14px inherit; color: #111827;
@@ -4921,8 +7633,8 @@ const STYLES = `
   .fb-recip-lead-s { font: 400 12px inherit; color: #9ca3af; margin-top: 2px; }
 
   .fb-recip-also {
-    display: flex; flex-direction: column; gap: 8px;
-    padding-left: 36px;     /* aligns under the lead row's text column */
+    display: flex; flex-direction: column; gap: 6px;
+    padding-left: 0;
   }
   .fb-recip-also-l {
     font: 500 12px inherit; color: #6b7280;
@@ -4973,6 +7685,26 @@ const STYLES = `
     font: 16px/1.5 inherit;
     border-top-left-radius: 10px; border-top-right-radius: 10px;
     background: transparent;
+  }
+  /* The token-highlight overlay must match the composer textarea's
+     padding + font EXACTLY so highlight spans sit BEHIND the actual
+     glyphs. There's a later .fb-composer-ta override that drops
+     padding to 10/12 and font-size to 15 — match that, not the
+     earlier 12/14 16/1.5 rule. Mismatched padding caused chips to
+     drift left/down by ~2px per line. */
+  .fb-composer .fb-htxt-overlay {
+    padding: 10px 12px;
+    font-size: 15px;
+    line-height: 1.5;
+    font-family: inherit;
+    border-radius: 10px 10px 0 0;
+    border: 0;
+  }
+  /* And lock the textarea side too — explicit line-height so it can't
+     be browser-default. Both layers sit at 15px / 1.5 / 10px-12px
+     padding now, character columns line up. */
+  .fb-composer .fb-htxt-input.fb-composer-ta {
+    line-height: 1.5;
   }
   .fb-composer-rail {
     display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
@@ -5040,7 +7772,87 @@ const STYLES = `
   }
 
   /* ── Polish 5: footer Save + Send-a-test layout ───────────────── */
-  .fb-drawer-foot { position: relative; }
+  .fb-drawer-foot {
+    /* Sticky footer — Save and continue is always visible regardless
+       of how far the user scrolls in the form. The body above scrolls;
+       this footer sits at the bottom of the drawer at all times. */
+    position: sticky; bottom: 0;
+    background: #fff;
+    border-top: 1px solid var(--fb-border);
+    padding: 12px 22px;
+    display: flex; align-items: center; justify-content: space-between;
+    z-index: 5;
+    box-shadow: 0 -2px 8px rgba(15,23,42,.04);
+  }
+
+  /* ── Standardized section header (Notify Me redesign) ────────────────
+     Used by the redesigned drawer panels. Sentence case, semibold, no
+     uppercase letter-spacing. One consistent treatment for every
+     section so the user can predict where to look for what. */
+  .fb-section-h-v2 {
+    font: 700 16px inherit;
+    color: #0a0a0a;
+    margin: 0 0 10px;
+    display: flex; align-items: center; gap: 8px;
+    letter-spacing: 0;
+    text-transform: none;
+    line-height: 1.2;
+  }
+  /* Channel-tinted variants — saturated colors matching each mode
+     toggle. Bigger, bolder so the section purpose reads at a glance. */
+  .fb-section-h-v2.is-email { color: #1e40af; }
+  .fb-section-h-v2.is-sms   { color: #5b21b6; }
+  .fb-section-h-v2.is-call  { color: #065f46; }
+  .fb-section-h-v2.is-both  { color: #0f172a; }
+  .fb-helper-tight {
+    color: #475569;
+  }
+  .fb-helper-tight {
+    margin: 4px 0 0;
+    font: 400 12.5px inherit;
+    color: #6b7280;
+    line-height: 1.4;
+  }
+  /* (Stale gray-bg .fb-mail-frame rule removed — the saturated-blue
+     channel-card definition higher up is the source of truth now.) */
+  .fb-mail-frame-row { margin-bottom: 6px; }
+  /* Insert: label above the variable chip rail */
+  .fb-composer-rail-l {
+    font: 600 12px inherit; color: #475569;
+    margin-right: 4px;
+    align-self: center;
+  }
+
+  /* Collapsible preview — when the user clicks Hide preview, the
+     right-side pane shrinks to a thin tab and the form takes the
+     full drawer width. Frees up real estate for the form fields and
+     reduces vertical scroll. */
+  .fb-drawer-body.is-preview-collapsed {
+    grid-template-columns: minmax(0, 1fr) 36px !important;
+  }
+  .fb-drawer-preview.is-collapsed > *:not(.fb-preview-toggle) {
+    display: none !important;
+  }
+  .fb-preview-toggle {
+    background: #f8fafc; border: 1px solid var(--fb-border);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font: 600 12px inherit;
+    color: #475569; cursor: pointer;
+    align-self: flex-end;
+    margin-bottom: 10px;
+    transition: background .12s, color .12s;
+  }
+  .fb-preview-toggle:hover {
+    background: #eff6ff; color: #185fa5;
+  }
+  .fb-drawer-preview.is-collapsed .fb-preview-toggle {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    margin: 0 auto;
+    padding: 12px 6px;
+    height: auto;
+  }
   .fb-drawer-foot-r {
     display: flex; align-items: center; gap: 8px;
   }
@@ -5207,6 +8019,330 @@ const STYLES = `
     font-size: 10.5px; font-weight: 700;
     letter-spacing: .04em; text-transform: uppercase;
   }
+
+  /* ── Form editor + live preview (Input drawer) ─────────────────────────
+     Visual rules copied 1-to-1 from the Lead Intake form-builder modal
+     (.fld-card / .fld-handle / .fld-icon / .fld-label / .fld-req-pill /
+     .fld-del / .b-input / .b-section-h / .add-fld-menu / .builder-preview).
+     Class names are prefixed fb- to avoid colliding with the iframe's
+     copies but the rules themselves are byte-equivalent. */
+  .fb-ich.is-form-editor { width: 100%; }
+  .fb-ich-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: 0;
+    align-items: stretch;
+  }
+  @media (max-width: 880px) {
+    .fb-ich-grid { grid-template-columns: 1fr; }
+  }
+  .fb-ich-edit-pane {
+    min-width: 0; padding: 4px 28px 24px 4px;
+  }
+  .fb-ich-preview-pane {
+    min-width: 0; padding: 4px 4px 24px 28px;
+    background: #fafbfc;
+    border-left: 1px solid #e6e9ef;
+    margin-left: 8px;
+  }
+  @media (max-width: 880px) {
+    .fb-ich-preview-pane {
+      border-left: 0; border-top: 1px solid #e6e9ef;
+      margin-left: 0; padding-top: 24px;
+    }
+  }
+
+  /* Section header (.b-section-h) */
+  .fb-bsection-h {
+    font-size: 11px; font-weight: 700; color: #9aa4b2;
+    text-transform: uppercase; letter-spacing: .05em;
+    margin: 24px 0 10px;
+  }
+  .fb-bsection-h-row {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .fb-bsave-tag {
+    font-size: 11px; font-weight: 600; color: #0a8a3a;
+    text-transform: none; letter-spacing: 0;
+  }
+
+  /* Text input (.b-input) */
+  .fb-binput {
+    width: 100%; padding: 10px 12px;
+    border: 1px solid #e6e9ef; border-radius: 8px;
+    font: inherit; font-size: 14px;
+    background: #fff; color: #0a0a0a;
+    box-sizing: border-box;
+  }
+  .fb-binput:focus {
+    outline: none; border-color: #185fa5;
+    box-shadow: 0 0 0 3px rgba(24,95,165,.12);
+  }
+
+  /* ── Form-fields / Site-fields tab nav ──────────────────────────── */
+  .fb-field-tabs {
+    display: flex; gap: 6px;
+    margin: 0 0 12px;
+    border-bottom: 1px solid #e6e9ef;
+  }
+  .fb-field-tab {
+    padding: 8px 14px;
+    background: transparent; border: 0;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    font: 600 13.5px inherit; color: #6b7280;
+    cursor: pointer;
+    transition: color .12s, border-color .12s, background .12s;
+  }
+  .fb-field-tab:hover { color: #185fa5; }
+  .fb-field-tab.is-active {
+    color: #0f172a;
+    border-bottom-color: #185fa5;
+  }
+
+  /* Site-fields editor rows + snippet panel */
+  .fb-sitefields { display: flex; flex-direction: column; gap: 10px; }
+  .fb-sitefields-list { display: flex; flex-direction: column; gap: 8px; }
+  .fb-sf-row {
+    position: relative;
+    background: #fff; border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 10px 12px 12px;
+  }
+  .fb-sf-row-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    gap: 8px 10px;
+    align-items: end;
+  }
+  .fb-sf-row-l {
+    font: 600 11.5px inherit; color: #6b7280;
+    text-transform: uppercase; letter-spacing: .04em;
+  }
+  .fb-sf-key {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+  }
+  .fb-sf-key.is-error { border-color: #f87171; box-shadow: 0 0 0 3px rgba(248,113,113,.15); }
+  .fb-sf-error { color: #b91c1c; font: 500 12px inherit; margin: 4px 0 0; }
+  .fb-sf-remove {
+    position: absolute; top: 6px; right: 6px;
+    background: transparent; border: 0; cursor: pointer;
+    width: 24px; height: 24px; border-radius: 6px;
+    color: #9ca3af; font-size: 18px; line-height: 1;
+  }
+  .fb-sf-remove:hover { background: #fee2e2; color: #b91c1c; }
+
+  .fb-sf-snippet {
+    margin-top: 14px;
+    padding: 14px 14px 4px;
+    background: #f8fafc; border: 1px solid #e6e9ef;
+    border-radius: 12px;
+  }
+  .fb-sf-snippet-h {
+    font: 700 13px inherit; color: #0a0a0a;
+    margin-bottom: 4px;
+  }
+  .fb-sf-snippet-block { margin-bottom: 12px; }
+  .fb-sf-snippet-row {
+    display: flex; align-items: center; justify-content: space-between;
+    font: 600 11.5px inherit; color: #475569;
+    text-transform: uppercase; letter-spacing: .04em;
+    margin-bottom: 4px;
+  }
+  .fb-sf-copy {
+    background: #fff; border: 1px solid #cdd7e3;
+    color: #185fa5; cursor: pointer;
+    padding: 3px 10px; border-radius: 999px;
+    font: 600 11.5px inherit;
+    text-transform: none; letter-spacing: 0;
+  }
+  .fb-sf-copy:hover { background: #eff6ff; }
+  .fb-sf-code {
+    margin: 0; padding: 10px 12px;
+    background: #0f172a; color: #e2e8f0;
+    border-radius: 8px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px; line-height: 1.55;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .fb-sf-recipe-tabs {
+    display: flex; gap: 4px;
+    margin-bottom: 6px;
+    background: #eef2f7;
+    padding: 3px;
+    border-radius: 8px;
+    width: fit-content;
+  }
+  .fb-sf-recipe-tab {
+    background: transparent; border: 0;
+    color: #475569; cursor: pointer;
+    padding: 5px 12px; border-radius: 6px;
+    font: 600 12px inherit;
+  }
+  .fb-sf-recipe-tab:hover { color: #0f172a; }
+  .fb-sf-recipe-tab.is-active {
+    background: #fff; color: #0f172a;
+    box-shadow: 0 1px 2px rgba(15,23,42,.08);
+  }
+
+  .fb-fields { /* container for field cards */ }
+  .fb-fields-empty {
+    text-align: center; padding: 20px 12px;
+    color: #5a6470; font-size: 13px;
+    border: 1px dashed #e6e9ef; border-radius: 10px;
+  }
+
+  /* Field card (.fld-card) */
+  .fb-fld-card {
+    background: #fff; border: 1px solid #e6e9ef;
+    border-radius: 10px; padding: 10px 12px; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 10px;
+    transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+    position: relative;
+  }
+  .fb-fld-card:hover { border-color: #bcc7d4; }
+  .fb-fld-card.is-dragging {
+    opacity: .45; box-shadow: 0 6px 18px rgba(15,23,42,.12);
+  }
+  .fb-fld-card.drop-above::before,
+  .fb-fld-card.drop-below::after {
+    content: ""; position: absolute; left: 0; right: 0; height: 3px;
+    background: #2563eb; border-radius: 2px;
+    box-shadow: 0 0 0 2px rgba(37,99,235,.18);
+    pointer-events: none;
+  }
+  .fb-fld-card.drop-above::before { top: -6px; }
+  .fb-fld-card.drop-below::after  { bottom: -6px; }
+  .fb-fld-handle {
+    color: #9aa4b2; cursor: grab; user-select: none;
+    font-size: 14px; line-height: 1;
+    padding: 4px 2px;
+  }
+  .fb-fld-handle:hover { color: #475569; }
+  .fb-fld-handle:active { cursor: grabbing; }
+  .fb-fld-ico {
+    width: 28px; height: 28px; border-radius: 8px; flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; line-height: 1; background: #f0f4f9;
+  }
+  .fb-fld-label {
+    flex: 1; font-size: 14px; font-weight: 500; color: #0a0a0a;
+    cursor: text; padding: 4px 6px; border-radius: 5px;
+    border: 1px solid transparent; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .fb-fld-label:hover { background: #f5f7fa; }
+  .fb-fld-label-input {
+    flex: 1; font: inherit; font-size: 14px; font-weight: 500;
+    padding: 4px 6px; border: 1px solid #185fa5; border-radius: 5px;
+    outline: none; min-width: 0; background: #fff; color: #0a0a0a;
+  }
+  .fb-fld-req-pill {
+    background: transparent; border: 0; cursor: pointer; font: inherit;
+    font-size: 11.5px; font-weight: 600; padding: 3px 9px;
+    border-radius: 99px; flex: 0 0 auto;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .fb-fld-req-dot { width: 5px; height: 5px; border-radius: 99px; background: currentColor; }
+  .fb-fld-req-pill.is-req { background: #e6f6ec; color: #0a8a3a; }
+  .fb-fld-req-pill.is-opt { background: #eef0f3; color: #5a6470; }
+  .fb-fld-del {
+    border: 0; background: transparent; cursor: pointer; padding: 4px 8px;
+    color: #9aa4b2; font-size: 18px; line-height: 1;
+    opacity: 0; transition: opacity .12s;
+  }
+  .fb-fld-card:hover .fb-fld-del { opacity: 1; }
+  .fb-fld-del:hover { color: #c0392b; }
+
+  /* + Add field dropdown (.add-fld-wrap / .add-fld-menu) */
+  .fb-add-fld-wrap { position: relative; margin-top: 6px; }
+  .fb-add-fld-btn {
+    padding: 9px 14px;
+    background: #fff; border: 1px solid #e6e9ef;
+    border-radius: 10px; cursor: pointer;
+    font: inherit; font-size: 13.5px; font-weight: 600;
+    color: #0a0a0a;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .fb-add-fld-btn:hover { background: #f5f7fa; border-color: #cdd7e3; }
+  .fb-add-fld-caret { color: #9aa4b2; }
+  .fb-add-fld-menu {
+    position: absolute; top: calc(100% + 4px); left: 0;
+    background: #fff; border: 1px solid #e6e9ef; border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(20,40,80,.10);
+    min-width: 240px; padding: 8px 0; z-index: 50;
+    max-height: 60vh; overflow: auto;
+  }
+  .fb-add-fld-section {
+    font-size: 11px; font-weight: 700; color: #9aa4b2;
+    text-transform: uppercase; letter-spacing: .04em;
+    padding: 6px 14px;
+  }
+  .fb-add-fld-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 14px; cursor: pointer; font-size: 13.5px;
+    color: #0a0a0a;
+  }
+  .fb-add-fld-item:hover { background: #f5f7fa; }
+  .fb-add-fld-ico { font-size: 18px; line-height: 1; }
+  .fb-add-fld-divider { height: 1px; background: #e6e9ef; margin: 6px 0; }
+  .fb-add-fld-none { padding: 8px 14px; color: #5a6470; font-size: 12.5px; }
+
+  /* Live preview pane (.builder-preview + the in-pane card render) */
+  .fb-bpreview { display: flex; flex-direction: column; gap: 14px; }
+  .fb-bpreview.is-empty { min-height: 240px; }
+  .fb-bpreview-empty {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 10px;
+    padding: 40px 20px; min-height: 220px;
+    border: 1.5px dashed #d4d8df; border-radius: 14px;
+    background: #fff; color: #5a6470;
+    font-size: 13.5px; text-align: center;
+  }
+  .fb-bpreview-empty-ico { font-size: 30px; }
+  .fb-bpreview-empty p { margin: 0; }
+  .fb-bpreview-h {
+    font-size: 11px; font-weight: 700; color: #9aa4b2;
+    text-transform: uppercase; letter-spacing: .05em;
+  }
+  .fb-bpreview-card {
+    background: #fff; border: 1px solid #e6e9ef; border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0 1px 3px rgba(20,40,80,.04);
+  }
+  .fb-bpreview-title { margin: 0 0 4px; font-size: 18px; font-weight: 600; color: #0a0a0a; }
+  .fb-bpreview-blank {
+    color: #aaa; font-size: 13px; text-align: center;
+    padding: 24px 12px;
+    border: 1px dashed #e6e9ef; border-radius: 8px;
+  }
+  .fb-bpreview-field { margin-bottom: 14px; }
+  .fb-bpreview-label {
+    display: block; font-size: 13px; font-weight: 600;
+    color: #0a0a0a; margin-bottom: 6px;
+  }
+  .fb-bpreview-req { color: #c0392b; }
+  .fb-bpreview-submit {
+    width: 100%; padding: 11px;
+    background: #185fa5; color: #fff;
+    border: 0; border-radius: 8px;
+    font-weight: 600; font-size: 14px;
+    margin-top: 6px; cursor: not-allowed;
+  }
+  .fb-bpreview-thanks {
+    padding: 12px 14px;
+    background: #fff; border: 1px dashed #e6e9ef; border-radius: 10px;
+  }
+  .fb-bpreview-thanks-h {
+    font-size: 11px; font-weight: 700; color: #9aa4b2;
+    text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px;
+  }
+  .fb-bpreview-thanks-t {
+    font-size: 13.5px; color: #0a0a0a; font-style: italic;
+  }
+
   .fb-wait-row {
     display: flex; align-items: center; gap: 10px;
   }
@@ -5214,6 +8350,267 @@ const STYLES = `
     width: 80px; text-align: center; font-size: 16px; font-weight: 700;
   }
   .fb-wait-unit { font-size: 14px; color: #4b5563; }
+
+  /* ── Call activity panel (5-year-old simple) ─────────────────────────
+     Numbered rows + a friendly tone picker + a "what'll happen" list.
+     No live preview, no editable prompt — just three checkbox-easy
+     decisions and a plain-language summary. */
+  .fb-call-panel {
+    display: flex; flex-direction: column; gap: 18px;
+    max-width: 560px; margin: 0 auto;
+  }
+  .fb-call-row {
+    display: grid; grid-template-columns: 36px 1fr; gap: 12px;
+    align-items: start;
+  }
+  .fb-call-row-num {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: #185fa5; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font: 700 14px inherit; line-height: 1;
+    flex-shrink: 0;
+  }
+  .fb-call-row-body { min-width: 0; }
+  .fb-call-label {
+    display: block; font: 600 14.5px inherit; color: #0a0a0a;
+    margin-bottom: 8px;
+  }
+  .fb-call-target { display: flex; flex-direction: column; gap: 8px; }
+  .fb-call-target-card {
+    display: grid; grid-template-columns: 36px 1fr; gap: 12px;
+    align-items: start;
+    padding: 12px 14px;
+    background: #fff; border: 1.5px solid #e5e7eb;
+    border-radius: 12px; cursor: pointer;
+    font: inherit; color: #0a0a0a; text-align: left;
+    transition: border-color .12s, background .12s, transform .12s;
+  }
+  .fb-call-target-card:hover {
+    border-color: #cbd5e1; transform: translateY(-1px);
+  }
+  .fb-call-target-card.is-picked {
+    border-color: #185fa5; background: #eff6ff;
+    box-shadow: 0 0 0 3px rgba(24,95,165,.12);
+  }
+  .fb-call-target-ico {
+    font-size: 22px; line-height: 1;
+    align-self: center; text-align: center;
+  }
+  .fb-call-target-body {
+    display: flex; flex-direction: column; gap: 3px; min-width: 0;
+  }
+  .fb-call-target-title { font-size: 14px; font-weight: 600; }
+  .fb-call-target-sub   { font-size: 12.5px; color: #5a6470; }
+
+  /* Email recipient picker — first thing in the standalone Email
+     drawer, designed to read at a glance: big icon, plain title,
+     short helper line, and an obvious checkmark on the picked card.
+     Bigger padding + softer borders + a friendly blue tint so it
+     doesn't look like the rest of the form fields. */
+  .fb-erecip {
+    margin: 0 0 16px;
+    padding: 16px 18px;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #f0f7ff 0%, #ffffff 80%);
+    border: 1px solid #dbeafe;
+  }
+  .fb-erecip-h {
+    display: flex; align-items: center; gap: 8px;
+    font: 700 15px inherit; color: #0a0a0a;
+    margin-bottom: 12px;
+  }
+  .fb-erecip-h-ico { font-size: 20px; line-height: 1; }
+  .fb-erecip-cards {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .fb-erecip-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: 44px 1fr 24px;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: #fff;
+    border: 2px solid #e5e7eb;
+    border-radius: 14px;
+    cursor: pointer;
+    font: inherit; color: #0a0a0a; text-align: left;
+    transition: border-color .14s, transform .14s, box-shadow .14s, background .14s;
+  }
+  .fb-erecip-card:hover:not(.is-disabled) {
+    border-color: #93c5fd;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(15,23,42,.06);
+  }
+  .fb-erecip-card.is-picked {
+    border-color: #2563eb;
+    background: #eff6ff;
+    box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+  }
+  .fb-erecip-card.is-disabled {
+    opacity: .55; cursor: not-allowed;
+  }
+  .fb-erecip-card-ico {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: #dbeafe;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; line-height: 1;
+    flex-shrink: 0;
+  }
+  .fb-erecip-card.is-picked .fb-erecip-card-ico {
+    background: #2563eb; color: #fff;
+  }
+  .fb-erecip-card-body {
+    display: flex; flex-direction: column; gap: 3px; min-width: 0;
+  }
+  .fb-erecip-card-title {
+    font-size: 14.5px; font-weight: 600; line-height: 1.25;
+  }
+  .fb-erecip-card-sub {
+    font-size: 12.5px; color: #5a6470; line-height: 1.4;
+  }
+  .fb-erecip-card-mark {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    font: 700 14px inherit;
+    color: transparent;
+  }
+  .fb-erecip-card.is-picked .fb-erecip-card-mark {
+    background: #2563eb; color: #fff;
+  }
+  .fb-erecip-detail {
+    margin-top: 12px;
+    width: 100%;
+    padding: 12px 14px !important;
+    font-size: 14px !important;
+    border: 2px solid #dbeafe !important;
+    border-radius: 12px;
+    background: #fff;
+  }
+  .fb-erecip-detail:focus {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.15) !important;
+  }
+  /* Call-channel variant — mint-green color scheme matching the
+     channel-coded cards used elsewhere on the canvas (e.g. the
+     Notify Me call sub-section). */
+  .fb-erecip.is-call {
+    background: linear-gradient(180deg, #ecfdf5 0%, #ffffff 80%);
+    border-color: #a7f3d0;
+  }
+  .fb-erecip.is-call .fb-erecip-card-ico {
+    background: #d1fae5;
+  }
+  .fb-erecip.is-call .fb-erecip-card:hover:not(.is-disabled) {
+    border-color: #6ee7b7;
+  }
+  .fb-erecip.is-call .fb-erecip-card.is-picked {
+    border-color: #059669;
+    background: #ecfdf5;
+    box-shadow: 0 0 0 4px rgba(5,150,105,.15);
+  }
+  .fb-erecip.is-call .fb-erecip-card.is-picked .fb-erecip-card-ico {
+    background: #059669; color: #fff;
+  }
+  .fb-erecip.is-call .fb-erecip-card.is-picked .fb-erecip-card-mark {
+    background: #059669; color: #fff;
+  }
+  .fb-erecip.is-call .fb-erecip-detail {
+    border-color: #a7f3d0 !important;
+  }
+  .fb-erecip.is-call .fb-erecip-detail:focus {
+    border-color: #059669 !important;
+    box-shadow: 0 0 0 3px rgba(5,150,105,.15) !important;
+  }
+  /* Voice preview play button — sits in the call composer header so
+     the owner can hear the AI read the script with their picked
+     voice + tone before saving the flow. Mint accent matches the
+     rest of the call section. */
+  .fb-call-composer-h {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .fb-voice-preview-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px;
+    background: #059669; color: #fff;
+    border: 0; border-radius: 999px;
+    font: 600 12.5px inherit;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(5,150,105,.18);
+    transition: background .14s, transform .14s, box-shadow .14s;
+  }
+  .fb-voice-preview-btn:hover:not(:disabled) {
+    background: #047857;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(5,150,105,.22);
+  }
+  .fb-voice-preview-btn:disabled {
+    background: #cbd5e1; color: #fff;
+    cursor: not-allowed; box-shadow: none;
+  }
+  .fb-voice-preview-btn.playing {
+    background: #b91c1c;
+  }
+  .fb-voice-preview-btn.playing:hover {
+    background: #991b1b;
+  }
+  .fb-voice-preview-spinner {
+    width: 12px; height: 12px;
+    border: 2px solid rgba(255,255,255,.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: fb-vp-spin .8s linear infinite;
+  }
+  @keyframes fb-vp-spin {
+    to { transform: rotate(360deg); }
+  }
+  .fb-voice-preview-err {
+    margin: 6px 14px 0;
+    padding: 6px 10px;
+    background: #fef2f2; border: 1px solid #fecaca;
+    color: #991b1b;
+    font-size: 12.5px;
+    border-radius: 8px;
+  }
+
+  .fb-tone-grid {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  @media (max-width: 480px) {
+    .fb-tone-grid { grid-template-columns: 1fr; }
+  }
+  .fb-tone-card {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 12px 8px;
+    background: #fff; border: 1.5px solid #e5e7eb;
+    border-radius: 12px; cursor: pointer;
+    font: inherit; color: #0a0a0a;
+    transition: border-color .12s, background .12s, transform .12s;
+  }
+  .fb-tone-card:hover {
+    border-color: #cbd5e1; transform: translateY(-1px);
+  }
+  .fb-tone-card.is-picked {
+    border-color: #185fa5; background: #eff6ff;
+    box-shadow: 0 0 0 3px rgba(24,95,165,.12);
+  }
+  .fb-tone-card-ico { font-size: 24px; line-height: 1; }
+  .fb-tone-card-label { font-size: 13px; font-weight: 600; }
+  .fb-call-summary {
+    margin-top: 4px; padding: 14px 16px;
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
+  }
+  .fb-call-summary-h {
+    font-size: 12.5px; font-weight: 700; color: #475569;
+    text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px;
+  }
+  .fb-call-summary-list {
+    margin: 0; padding-left: 18px;
+    font-size: 14px; line-height: 1.6; color: #0a0a0a;
+  }
+  .fb-call-summary-list li { margin-bottom: 2px; }
 
   /* Live phone preview */
   .fb-drawer-preview {
@@ -5282,6 +8679,20 @@ const STYLES = `
     white-space: pre-wrap; word-wrap: break-word;
   }
   .fb-phone-empty { color: #9ca3af; font-style: italic; }
+  .fb-phone-call {
+    padding: 12px 14px;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0; border-radius: 12px;
+  }
+  .fb-phone-call-h {
+    font: 700 12px inherit; color: #047857;
+    text-transform: uppercase; letter-spacing: .04em;
+    margin-bottom: 6px;
+  }
+  .fb-phone-call-body {
+    font-size: 12.5px; color: #064e3b; line-height: 1.5;
+    white-space: pre-wrap; word-wrap: break-word;
+  }
   .fb-phone-wait {
     text-align: center; padding: 40px 16px; color: #6b7280;
   }
@@ -5472,19 +8883,16 @@ const STYLES = `
     pointer-events: none;
     z-index: 0;
     overflow: auto;
-    /* Hide the overlay text but keep widths intact. The token spans
-       override this color so the chip text is visible. */
+    /* Pattern A — overlay sits BEHIND the textarea. The textarea on
+       top owns the visible text AND the caret, so the cursor is
+       NEVER hidden by chip backgrounds. The overlay paints chip
+       backgrounds in a saturated color that shows clearly through
+       the textarea's transparent background. */
     color: transparent;
-    /* Mirror the textarea's padding + border-width so glyphs align.
-       border-color is transparent so the only visible border is the
-       textarea's. */
     border: 1.5px solid transparent;
-    /* Padding/font come from the same selector as fb-rwbody-ta so they
-       always match — set explicitly below. */
     padding: 18px 20px;
     font-size: 15px;
     line-height: 1.6;
-    /* Chrome scrollbar gutter handling matches textarea's. */
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
@@ -5493,19 +8901,36 @@ const STYLES = `
     position: relative;
     z-index: 1;
     background: transparent;
-    /* Caret stays visible since text color is preserved on the input. */
+    /* Caret is always visible because the textarea is the top layer. */
   }
-  .fb-htxt-tok {
-    /* Inline token highlight inside the textarea. The text inside is
-       transparent (parent rule) but we set color so the chip "label"
-       is faintly visible above its own background — gives the user a
-       gentle reassurance the highlight is on the right characters. */
-    background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%);
-    color: rgba(30,58,138,0.0);  /* invisible — textarea text shows */
-    border-radius: 4px;
-    box-shadow: inset 0 0 0 1px rgba(30,58,138,0.10);
-    padding: 1px 0;
-    margin: 0;
+  .fb-htxt-tok,
+  .fb-composer .fb-htxt-overlay .fb-htxt-tok,
+  .fb-htxt-overlay .fb-htxt-tok {
+    /* Variable pill — Pattern A (overlay BEHIND, textarea on top).
+       Chip BG paints in the overlay layer; the textarea on top has
+       background: transparent so the chip shows through. Caret is
+       drawn by the textarea on top — always visible.
+
+       Width-neutral so cursor positions line up to the visible glyph:
+         - NO padding/margin/border
+         - NO font-weight / letter-spacing change
+         - chip text stays transparent (textarea handles glyphs)
+
+       High-saturation yellow so the chip is unmistakable behind any
+       text color. The duplicated selectors boost specificity past any
+       cascade override. */
+    background-color: #fde68a !important;     /* warm amber — unmissable */
+    color: transparent !important;            /* textarea on top paints the text */
+    border-radius: 3px !important;
+    box-shadow: 0 0 0 1px #f59e0b !important; /* amber outline, no width */
+    font-weight: inherit !important;
+    font-style: inherit !important;
+    letter-spacing: inherit !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: inline !important;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
   }
 
   /* Channel pill row below the timeline */
@@ -6655,12 +10080,12 @@ const TOUR_PATHS = {
       title: "We save as you build.",
       body: (
         <>
-          Don't worry about losing work. When you're done, tap{" "}
-          <strong>← Back to your form</strong> (top right) to keep
-          building your form.
+          Don't worry about losing work. Use{" "}
+          <strong>← My Flows</strong> (top left) to head back to your
+          flow library.
         </>
       ),
-      target: ".fb-return-pill",
+      target: ".fb-backpill",
     },
   ],
   // Sub-path: "What comes next?" chooser modal. Tour stays visible
@@ -7122,7 +10547,6 @@ function TourReplayButton() {
       localStorage.removeItem("fb_tour_state_v3");
       localStorage.removeItem("fb_tour_ts_v3");
     } catch (_) {}
-    // Tell FirstTimeGuide to re-mount its tour at step 0 — no reload.
     try {
       window.dispatchEvent(new CustomEvent("fb-tour-replay"));
     } catch (_) {}
@@ -7134,100 +10558,75 @@ function TourReplayButton() {
       onClick={replay}
       title="Show the tour again"
       aria-label="Show the tour again"
-      style={{
-        position: "absolute",
-        top: 16,
-        left: 16,
-        zIndex: 25,
-        width: 36, height: 36,
-        borderRadius: 99,
-        background: "#fff",
-        border: "1.5px solid #cdd7e3",
-        color: "#185fa5",
-        cursor: "pointer",
-        fontWeight: 700,
-        fontSize: 18,
-        lineHeight: 1,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        boxShadow: "0 3px 10px rgba(20,40,80,.10)",
-        transition: "transform .12s ease, box-shadow .12s ease",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = "scale(1.08)";
-        e.currentTarget.style.boxShadow = "0 6px 18px rgba(20,40,80,.16)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "";
-        e.currentTarget.style.boxShadow = "0 3px 10px rgba(20,40,80,.10)";
-      }}
     >?</button>
   );
 }
 
-// Pill that appears in the canvas top-right when the user arrived
-// here via a form's "Add more steps" button. Tapping it returns to
-// the lead-intake page; the breadcrumb (still in localStorage) makes
-// the form-builder modal re-open at the form they were editing.
-function ReturnToFormBanner() {
-  const [show, setShow] = React.useState(false);
-  React.useEffect(() => {
-    const refresh = () => {
-      try {
-        const fid = localStorage.getItem("intake_return_form_id");
-        const ts  = parseInt(localStorage.getItem("intake_return_form_ts") || "0", 10);
-        // The pill is a hand-off from a form. It only shows when this
-        // session was actually started from the form's "Add more steps"
-        // button — not when the user navigated to Outreach via the
-        // sidebar. The sessionStorage flag is set by the form handler
-        // and cleared by the sidebar nav.
-        const fromForm = sessionStorage.getItem("outreach_came_from_form") === "1";
-        const fresh = ts && (Date.now() - ts) < 30 * 60 * 1000;
-        setShow(!!(fid && fromForm && fresh));
-      } catch (_) { setShow(false); }
-    };
-    refresh();
-    // Re-evaluate when the breadcrumb is cleared by the sidebar handler.
-    window.addEventListener("fb-outreach-nav-reset", refresh);
-    return () => window.removeEventListener("fb-outreach-nav-reset", refresh);
-  }, []);
-  if (!show) return null;
+// Top-left pill on the canvas. Always "← My Flows" — clicking it
+// dispatches `fb-back-to-flows` which the dashboard listens for to
+// switch panes back to the flow list.
+function BackPill() {
+  const onClick = () => {
+    try {
+      window.dispatchEvent(new CustomEvent("fb-back-to-flows"));
+    } catch (_) {}
+  };
   return (
-    <a
-      className="fb-return-pill"
-      href="/dashboard#leadIntake"
-      style={{
-        position: "absolute",
-        top: 12,
-        right: 14,
-        // Highest UI z-index in the canvas — must stay above tour
-        // panel, save indicator, and any Vite-injected helpers so it's
-        // never hidden by another popup.
-        zIndex: 70,
-        background: "linear-gradient(135deg,#fff7e0 0%,#fef0c8 100%)",
-        border: "1.5px solid #f0c419",
-        color: "#7a5a00",
-        textDecoration: "none",
-        padding: "8px 14px",
-        borderRadius: 99,
-        fontSize: 13,
-        fontWeight: 600,
-        boxShadow: "0 4px 14px rgba(40,30,0,.14)",
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-      }}
-      title="Return to the form you were editing"
-    >
-      <span>← Done? Back to your form</span>
-    </a>
+    <button
+      type="button"
+      className="fb-backpill is-from-flows"
+      onClick={onClick}
+      title="Back to your flow library"
+    >← My Flows</button>
   );
 }
 
 export default function FlowBuilder() {
   const [nodes, setNodes] = React.useState(INITIAL_NODES);
   const [edges, setEdges] = React.useState(INITIAL_EDGES);
+
+  // Whenever the bound input form changes, publish its field list on
+  // window so the Ask-AI rewrite can constrain its variable suggestions
+  // to the ACTUAL fields collected by this flow's form. Without this,
+  // the AI would happily emit {address} or {budget} tokens that the
+  // form never collects, leaving placeholders un-substituted at send
+  // time.
+  React.useEffect(() => {
+    const inputNode = (nodes || []).find(
+      n => n.data && (n.data.activityId === "input" || n.data.kind === "trigger"));
+    const formId = (inputNode && inputNode.data && inputNode.data.channelRef) || "";
+    if (!formId) {
+      try {
+        delete window.__fb_input_form_fields;
+        delete window.__fb_input_site_fields;
+        window.dispatchEvent(new CustomEvent("fb-input-fields-changed"));
+      } catch (_) {}
+      return;
+    }
+    let cancelled = false;
+    fetch(`/me/forms/${encodeURIComponent(formId)}`, { credentials: "same-origin" })
+      .then(r => r.ok ? r.json() : null).catch(() => null)
+      .then(d => {
+        if (cancelled) return;
+        const fields = (d && d.form && Array.isArray(d.form.fields)) ? d.form.fields : [];
+        const siteFields = (d && d.form && Array.isArray(d.form.site_fields)) ? d.form.site_fields : [];
+        try {
+          window.__fb_input_form_fields = fields.map(f => ({
+            key:   String(f.key || "").trim(),
+            label: String(f.label || f.key || "").trim(),
+            type:  String(f.type || "text").trim(),
+          })).filter(f => f.key);
+          window.__fb_input_site_fields = siteFields.map(f => ({
+            key:   String(f.key || "").trim(),
+            label: String(f.label || f.key || "").trim(),
+          })).filter(f => f.key);
+          try { window.dispatchEvent(new CustomEvent("fb-input-fields-changed")); }
+          catch (_) {}
+        } catch (_) {}
+      });
+    return () => { cancelled = true; };
+    // Re-run when the bound form id changes.
+  }, [(nodes || []).find(n => n.data && (n.data.activityId === "input"))?.data?.channelRef]);
   const [collapsed, setCollapsed] = React.useState(false);
   const [rfInstance, setRfInstance] = React.useState(null);
   const [isDropTarget, setIsDropTarget] = React.useState(false);
@@ -7286,8 +10685,12 @@ export default function FlowBuilder() {
   }
 
   function openTestModal() {
-    // Seed: localStorage saved values > sample defaults, only for fields
-    // the flow actually references — keeps the modal small.
+    // Seed from localStorage (last values the user actually typed), or
+    // empty otherwise. We deliberately do NOT pre-fill SAMPLE_INPUT_DATA
+    // — that confused the user when the AI read out "Sam Tester" / sample
+    // values they hadn't entered. The modal's input placeholders still
+    // surface the samples so users know the shape, and a "Use sample
+    // data" button below fills them in on-demand.
     let saved = {};
     try {
       saved = JSON.parse(localStorage.getItem(TEST_INPUTS_LOCAL_KEY) || "{}");
@@ -7295,11 +10698,7 @@ export default function FlowBuilder() {
     const fields = discoverInputFields(nodes);
     const seed = {};
     for (const f of fields) {
-      if (saved[f] != null && saved[f] !== "") {
-        seed[f] = saved[f];
-      } else {
-        seed[f] = SAMPLE_INPUT_DATA[f] != null ? SAMPLE_INPUT_DATA[f] : "";
-      }
+      seed[f] = (saved[f] != null && saved[f] !== "") ? saved[f] : "";
     }
     setTestInputs(seed);
     // Default reply behavior: "yes" for every Reply node.
@@ -7837,30 +11236,13 @@ export default function FlowBuilder() {
       },
     };
 
-    // Auto-connect to the rightmost orphan tail (the typical linear
-    // case). Branch nodes come later — for now any node with no
-    // outgoing edge counts as a tail.
-    // Exception: the Input card is the flow's entry point and must
-    // never have an incoming edge. Drop it cleanly with no auto-edge
-    // so the user manually drags from Input to whatever's next.
-    const tail = activityId === "input" ? null : findRightmostOrphan(nodes, edges);
+    // No auto-connect on drag-drop. The previous behavior wired the
+    // new card to whichever orphan-tail was rightmost on the canvas,
+    // which surprised users — they'd drop a fan-out branch and the
+    // app would silently link it to an unrelated step. The "+" button
+    // on a card (pickFromChooser, below) still anchors a deliberate
+    // edge when the user explicitly chooses to extend a branch.
     setNodes((ns) => ns.concat(newNode));
-    if (tail) {
-      const newEdge = {
-        id: `e-${tail.id}-${newId}`,
-        source: tail.id,
-        target: newId,
-        animated: true,
-        style: { stroke: "#16a34a", strokeWidth: 2.5 },
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          color: "#16a34a",
-          width: 18,
-          height: 18,
-        },
-      };
-      setEdges((es) => es.concat(newEdge));
-    }
   }, [nodes, edges, rfInstance]);
 
   // Pick from the chooser → add a node + edge anchored to the source.
@@ -7960,7 +11342,7 @@ export default function FlowBuilder() {
       <>
       <div
         className={`fb-canvas ${isDropTarget ? "is-drop-target" : ""} ${
-          (!!chooser || !!selectedNodeId) ? "is-modal-open" : ""
+          !!chooser ? "is-modal-open" : ""
         }`}
         data-pulse-next={nodes.length === 1 && nodes[0]?.data?.kind === "trigger" ? "1" : "0"}
         onDrop={onDrop}
@@ -7968,6 +11350,7 @@ export default function FlowBuilder() {
         onDragLeave={onDragLeave}
       >
         <FirstTimeGuide />
+        <BackPill />
         <TourReplayButton />
         {!hydrated && (
           <div className="fb-loading" role="status" aria-live="polite" aria-label="Loading your flow">
@@ -8038,7 +11421,6 @@ export default function FlowBuilder() {
           {testAnnouncement}
         </div>
 
-        <ReturnToFormBanner />
         {loopToast && (
           <div className="fb-loop-toast" role="status" aria-live="polite">
             That would create a loop.

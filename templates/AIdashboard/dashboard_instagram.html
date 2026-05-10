@@ -267,6 +267,20 @@
       border-radius:999px;
     }
     .tab-badge.muted{background:#e5e7eb; color:var(--text-secondary)}
+    /* Failed-tab badge — red so the user notices something needs
+       attention. Hidden when count is zero. */
+    .tab-badge.is-warn{background:#fee2e2; color:#991b1b}
+    /* Failed-row error message + retry hint. */
+    .failed-err-msg{
+      margin: 6px 0 0; padding: 6px 10px;
+      background: #fef2f2; border: 1px solid #fecaca;
+      border-radius: 8px; color: #991b1b;
+      font-size: 12.5px; line-height: 1.4;
+    }
+    .failed-retry-hint{
+      margin-left: 6px; font-size: 11.5px;
+      color: var(--text-secondary); font-weight: 500;
+    }
 
     /* ── Posts grid ───────────────────────────────────────────────────── */
     .posts-grid{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:16px}
@@ -327,6 +341,7 @@
       border-radius:50%; animation:spin .8s linear infinite;
     }
     @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes liSchedPulse{0%,100%{opacity:.4;transform:scale(.85)}50%{opacity:1;transform:scale(1)}}
     .error-text{color:var(--red); font-size:14px; text-align:center; padding:24px}
 
     /* ── DM two-pane (iMessage style) ─────────────────────────────────── */
@@ -756,6 +771,21 @@
     .sch-week-pill:hover { filter: brightness(1.1); }
     .sch-week-pill.is-failed     { background: var(--err-fg); }
     .sch-week-pill.is-publishing { background: #f59e0b; }
+    .sch-week-pill.is-published  {
+      background: #6b7280;
+      opacity: .72;
+    }
+    .sch-week-pill.is-published::before {
+      content: "✓ ";
+      opacity: 0.85;
+      margin-right: 1px;
+    }
+    .sch-week-pill.is-cancelled  {
+      background: #cbd5e1;
+      color: #475569;
+      text-decoration: line-through;
+      opacity: .60;
+    }
     .sch-week-pill { cursor: grab; user-select: none; touch-action: none; }
     .sch-week-pill.is-grabbing { cursor: grabbing; }
     .sch-week-pill.is-placeholder {
@@ -875,6 +905,21 @@
     .sch-month-pill:hover { filter: brightness(1.1); }
     .sch-month-pill.is-failed     { background: var(--err-fg); }
     .sch-month-pill.is-publishing { background: #f59e0b; }
+    .sch-month-pill.is-published  {
+      background: #6b7280;
+      opacity: .72;
+    }
+    .sch-month-pill.is-published::before {
+      content: "✓ ";
+      opacity: 0.85;
+      margin-right: 1px;
+    }
+    .sch-month-pill.is-cancelled  {
+      background: #cbd5e1;
+      color: #475569;
+      text-decoration: line-through;
+      opacity: .60;
+    }
     .sch-month-pill { cursor: grab; user-select: none; touch-action: none; }
     .sch-month-pill.is-grabbing { cursor: grabbing; }
     .sch-month-pill.is-placeholder {
@@ -2313,6 +2358,9 @@
         <button class="tab" data-tab="scheduled" type="button" role="tab" aria-selected="false">
           Scheduled <span id="sched-count" class="tab-badge muted" hidden>0</span>
         </button>
+        <button class="tab" data-tab="failed" type="button" role="tab" aria-selected="false">
+          Failed <span id="failed-count" class="tab-badge is-warn" hidden>0</span>
+        </button>
         <button class="tab" data-tab="library" type="button" role="tab" aria-selected="false">Library</button>
         <button class="tab" data-tab="publish" type="button" role="tab" aria-selected="false">New post</button>
       </nav>
@@ -2384,6 +2432,20 @@
         <div id="sched-list" class="scheduled-list" hidden></div>
       </div>
 
+      <!-- Failed posts — surfaces every scheduled post in errored /
+           failed state with a one-click "Republish" button that hits
+           /api/scheduled/<id>/retry (resets status → pending and bumps
+           scheduled_at to now so the worker picks it up next tick). -->
+      <div class="pane" data-pane="failed" hidden>
+        <div id="failed-status" class="loading"><span class="spinner" aria-hidden="true"></span> Loading failed posts…</div>
+        <div id="failed-empty" class="sched-empty-state" hidden>
+          <div class="sched-empty-icon" aria-hidden="true">✓</div>
+          <p class="sched-empty-h">Nothing failed.</p>
+          <p class="sched-empty-p">When a scheduled post can't publish (Instagram rate-limited, token expired, media rejected, etc.) it shows up here so you can republish it in one click.</p>
+        </div>
+        <div id="failed-list" class="scheduled-list" hidden></div>
+      </div>
+
       <!-- Content Library (Hooks · Meats · CTAs · Make Posts) -->
       <div class="pane" data-pane="library" hidden>
         <!-- Quick Sort entry — drop a mixed folder, sort one-card-at-a-time -->
@@ -2410,6 +2472,11 @@
           <button class="lib-subtab" data-lib-tab="ctas" type="button">CTAs</button>
           <button class="lib-subtab" data-lib-tab="make" type="button">Make Posts</button>
         </nav>
+
+        <div id="lib-loading-banner" class="li-sched-loading" hidden style="display:flex;align-items:center;gap:8px;padding:8px 12px;margin:8px 0;font-size:12px;color:#6b7280;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;animation:liSchedPulse 1.4s ease-in-out infinite"></span>
+          <span>Loading library…</span>
+        </div>
 
         <!-- Hooks panel -->
         <div class="lib-panel" data-lib-panel="hooks">
@@ -3244,6 +3311,7 @@
       }
       if (name === "scheduled") loadScheduled();
       else if (typeof _schStopTicker === "function") _schStopTicker();
+      if (name === "failed") loadFailed();
     }
 
     async function _loadRecentPublishes(){
@@ -3268,43 +3336,99 @@
     }
 
     // ── Posts ──────────────────────────────────────────────────────────
+    // SWR cache: Graph API is slow (1-3s for accounts with many posts +
+    // insights). Paint the last-known media list synchronously on every
+    // visit so the grid is *visible* in <50ms; revalidate in the
+    // background and re-render only if the response actually differs.
+    var _IG_POSTS_CACHE_KEY = "ig_posts_cache_v1";
+    function _igPostsReadSwr(){
+      try {
+        var raw = sessionStorage.getItem(_IG_POSTS_CACHE_KEY);
+        if (!raw) return null;
+        var c = JSON.parse(raw);
+        return (c && Array.isArray(c.media)) ? c : null;
+      } catch(e){ return null; }
+    }
+    function _igPostsWriteSwr(media){
+      try {
+        sessionStorage.setItem(_IG_POSTS_CACHE_KEY,
+          JSON.stringify({ media: media || [], ts: Date.now() }));
+      } catch(e){}
+    }
+    function _igPostsRenderGrid(media){
+      var statusEl = $("posts-status"); var gridEl = $("posts-grid");
+      if (!statusEl || !gridEl) return;
+      _media = media || [];
+      if (_media.length === 0) {
+        statusEl.hidden = true;
+        gridEl.hidden = false;
+        gridEl.innerHTML = '<div class="panel-empty" style="grid-column:1/-1">'
+          + '<div class="panel-empty-icon">📸</div>'
+          + '<h3 class="panel-empty-h">Your Instagram is connected — but no posts yet.</h3>'
+          + '<p class="panel-empty-p">Once you post on Instagram, your posts will show up here.</p>'
+          + '</div>';
+        return;
+      }
+      statusEl.hidden = true; gridEl.hidden = false;
+      gridEl.innerHTML = _media.map((m,i) => renderPostCard(m, i)).join("");
+      gridEl.querySelectorAll(".post").forEach(card => {
+        card.addEventListener("click", () => openPostPanel(parseInt(card.dataset.idx, 10)));
+      });
+    }
+    function _igPostsShowSkeleton(){
+      var statusEl = $("posts-status"); var gridEl = $("posts-grid");
+      if (!statusEl || !gridEl) return;
+      statusEl.hidden = true; gridEl.hidden = false;
+      // Six ghost cards so the grid layout is immediately visible
+      // even before the first byte comes back.
+      var ghost = '<div class="post" style="pointer-events:none">'
+        + '<div class="post-thumb-wrap" style="background:#f3f4f6;animation:liSchedPulse 1.4s ease-in-out infinite"></div>'
+        + '<div class="post-body">'
+        + '<p class="post-meta-line" style="background:#f3f4f6;color:transparent;border-radius:4px">loading</p>'
+        + '<p class="post-cap" style="background:#f3f4f6;color:transparent;border-radius:4px">loading caption…</p>'
+        + '</div></div>';
+      gridEl.innerHTML = new Array(6).fill(ghost).join("");
+    }
+
     async function loadPosts(){
       var statusEl = $("posts-status"); var gridEl = $("posts-grid");
       if (!statusEl || !gridEl) return;
+      // Stage 1: paint synchronously. Cache hit → real data; cache
+      // miss → 6 skeleton tiles. The user *never* sees a blank grid.
+      var cached = _igPostsReadSwr();
+      if (cached) {
+        _igPostsRenderGrid(cached.media);
+      } else {
+        _igPostsShowSkeleton();
+      }
+      // Stage 2: revalidate in background. Recent-publishes is fired
+      // alongside so the "Just published" pills are in place when we
+      // re-render.
+      _loadRecentPublishes();
       try {
-        // Load recent-publishes alongside posts so the pill is in place
-        // by the time we render. Don't block render if it fails.
-        _loadRecentPublishes();
-        var r = await fetch("/dashboard/instagram/api/media",{credentials:"same-origin"});
+        var r = await fetch("/dashboard/instagram/api/media",
+          {credentials:"same-origin"});
         var data = await r.json().catch(()=>({}));
         if (!r.ok) {
-          statusEl.hidden = false;
-          statusEl.innerHTML = '<div class="error-text">Couldn\'t load posts: ' + esc(data.body || data.error || r.status) + '</div>';
-          gridEl.hidden = true;
+          // Only surface the error if we have nothing else to show.
+          if (!cached) {
+            statusEl.hidden = false;
+            statusEl.innerHTML = '<div class="error-text">Couldn\'t load posts: '
+              + esc(data.body || data.error || r.status) + '</div>';
+            gridEl.hidden = true;
+          }
           return;
         }
-        _media = data.data || [];
-        if (_media.length === 0) {
-          // Render the empty state INTO the grid so #posts-status stays
-          // mounted and reusable on future reloads.
-          statusEl.hidden = true;
-          gridEl.hidden = false;
-          gridEl.innerHTML = '<div class="panel-empty" style="grid-column:1/-1">'
-            + '<div class="panel-empty-icon">📸</div>'
-            + '<h3 class="panel-empty-h">Your Instagram is connected — but no posts yet.</h3>'
-            + '<p class="panel-empty-p">Once you post on Instagram, your posts will show up here.</p>'
-            + '</div>';
-          return;
-        }
-        statusEl.hidden = true; gridEl.hidden = false;
-        gridEl.innerHTML = _media.map((m,i) => renderPostCard(m, i)).join("");
-        gridEl.querySelectorAll(".post").forEach(card => {
-          card.addEventListener("click", () => openPostPanel(parseInt(card.dataset.idx, 10)));
-        });
+        var media = data.data || [];
+        _igPostsWriteSwr(media);
+        _igPostsRenderGrid(media);
       } catch (e) {
-        statusEl.hidden = false;
-        statusEl.innerHTML = '<div class="error-text">Network error: ' + esc(e.message) + '</div>';
-        gridEl.hidden = true;
+        if (!cached) {
+          statusEl.hidden = false;
+          statusEl.innerHTML = '<div class="error-text">Network error: '
+            + esc(e.message) + '</div>';
+          gridEl.hidden = true;
+        }
       }
     }
     function renderPostCard(m, i){
@@ -5373,7 +5497,9 @@
             var status = (p.status || "pending").toLowerCase();
             var pillCls = "sch-week-pill"
               + (status === "errored" || status === "failed" ? " is-failed" : "")
-              + (status === "publishing" ? " is-publishing" : "");
+              + (status === "publishing" ? " is-publishing" : "")
+              + (status === "published"  ? " is-published"  : "")
+              + (status === "cancelled"  ? " is-cancelled"  : "");
             var t = new Date((p.scheduled_at || 0) * 1000);
             var clock = t.toLocaleTimeString(undefined, { hour:"numeric", minute:"2-digit" });
             var snippet = (p.caption || "").trim().slice(0, 50);
@@ -6075,7 +6201,9 @@
           var status = (p.status || "pending").toLowerCase();
           var cls = "sch-month-pill"
             + (status === "errored" || status === "failed" ? " is-failed" : "")
-            + (status === "publishing" ? " is-publishing" : "");
+            + (status === "publishing" ? " is-publishing" : "")
+            + (status === "published"  ? " is-published"  : "")
+            + (status === "cancelled"  ? " is-cancelled"  : "");
           var t = new Date((p.scheduled_at || 0) * 1000);
           var clock = t.toLocaleTimeString(undefined,
             { hour: "numeric", minute: "2-digit" });
@@ -7389,6 +7517,197 @@
       b.style.display = on ? "inline-flex" : "none";
     }
 
+    // ── Failed posts tab ────────────────────────────────────────────
+    // Reuses the same `_scheduled` array loadScheduled() populates;
+    // filters to status === errored / failed and renders simple rows
+    // with a "Republish" button. Keeps badge in sync with the actual
+    // count.
+    function _failedPosts(){
+      return (_scheduled || []).filter(s => {
+        var st = (s.status || "").toLowerCase();
+        return st === "errored" || st === "failed";
+      });
+    }
+    function _failedRefreshBadge(){
+      var n = _failedPosts().length;
+      var b = document.getElementById("failed-count");
+      if (!b) return;
+      b.textContent = String(n);
+      b.hidden = n === 0;
+    }
+    async function loadFailed(){
+      var statusEl = document.getElementById("failed-status");
+      var emptyEl  = document.getElementById("failed-empty");
+      var listEl   = document.getElementById("failed-list");
+      // Reuse the existing /api/scheduled fetch — failed posts live in
+      // the same record list, just with a different status field. If
+      // _scheduled is already populated (e.g. user already opened the
+      // Scheduled tab), render instantly without re-fetching.
+      if (!_scheduled || _scheduled.length === 0) {
+        try {
+          var r = await fetch("/dashboard/instagram/api/scheduled",
+                               {credentials:"same-origin"});
+          if (r.ok) {
+            var data = await r.json().catch(()=>({}));
+            _scheduled = _schApplyInflight(_schFilterToInstagram(data.scheduled || []));
+          }
+        } catch (e) { /* fall through to whatever we had */ }
+      }
+      _failedRender();
+    }
+    function _failedRender(){
+      var statusEl = document.getElementById("failed-status");
+      var emptyEl  = document.getElementById("failed-empty");
+      var listEl   = document.getElementById("failed-list");
+      if (!listEl) return;
+      var failed = _failedPosts();
+      _failedRefreshBadge();
+      if (statusEl) statusEl.hidden = true;
+      if (failed.length === 0) {
+        if (emptyEl) emptyEl.hidden = false;
+        listEl.hidden = true;
+        listEl.innerHTML = "";
+        return;
+      }
+      if (emptyEl) emptyEl.hidden = true;
+      listEl.hidden = false;
+      // Sort newest-failed-first so the user sees the latest issue at
+      // the top. Falls back to scheduled_at when errored_at is missing.
+      var sorted = failed.slice().sort((a, b) => {
+        var ta = Number(a.errored_at || a.scheduled_at || 0);
+        var tb = Number(b.errored_at || b.scheduled_at || 0);
+        return tb - ta;
+      });
+      listEl.innerHTML = sorted.map(_failedRowHtml).join("");
+      // Wire row actions.
+      listEl.querySelectorAll("[data-failed-republish]").forEach(btn => {
+        btn.addEventListener("click", () => _failedRepublish(btn.dataset.failedRepublish, btn));
+      });
+      listEl.querySelectorAll("[data-failed-edit]").forEach(btn => {
+        btn.addEventListener("click", () => _schOpenEditModal(btn.dataset.failedEdit));
+      });
+    }
+    // Pull a human-readable string out of whatever shape `error` came
+    // back as. Instagram / Facebook Graph errors are usually nested
+    // objects ({message, code, error_user_msg, error_user_title}); we
+    // lift the most user-meaningful field. Falls back to JSON for
+    // anything we don't recognize so the user at least sees something
+    // structured instead of "[object Object]".
+    function _failedHumanizeError(s){
+      var raw = s.error;
+      if (raw == null) raw = s.error_message;
+      if (raw == null) raw = s.last_error;
+      if (raw == null) return "";
+      // Plain string → trim & return.
+      if (typeof raw === "string") return raw.trim();
+      // Numbers / booleans → stringify.
+      if (typeof raw !== "object") return String(raw);
+      // Object — try the most user-friendly fields in order. Graph API
+      // returns `error_user_title` + `error_user_msg` for issues meant
+      // to be shown to humans; `message` is generally safe; deeper
+      // shapes wrap a nested `error` object.
+      var src = raw;
+      if (src.error && typeof src.error === "object") src = src.error;
+      var title = (src.error_user_title || "").toString().trim();
+      var human = (src.error_user_msg   || "").toString().trim();
+      if (title && human) return title + " — " + human;
+      if (human) return human;
+      if (title) return title;
+      var msg = (src.message || src.error_description || src.detail || "").toString().trim();
+      if (msg) {
+        var code = (src.code || src.subcode || src.status || "").toString().trim();
+        var type = (src.type || "").toString().trim();
+        var tags = [];
+        if (code) tags.push("code " + code);
+        if (type) tags.push(type);
+        return tags.length ? msg + " (" + tags.join(", ") + ")" : msg;
+      }
+      // Last resort — compact JSON dump so the field at least carries
+      // information instead of "[object Object]".
+      try {
+        return JSON.stringify(raw);
+      } catch (e) {
+        return String(raw);
+      }
+    }
+
+    function _failedRowHtml(s){
+      var thumb = _schPickThumb(s);
+      var caption = (s.caption || "").trim();
+      var capHtml = caption
+        ? '<p class="sched-cap-v2">' + esc(caption.length > 200 ? caption.slice(0,200) + "…" : caption) + '</p>'
+        : '<p class="sched-cap-v2 is-empty">(no caption)</p>';
+      var typeLabel = _schKindLabel(s);
+      var isVideo = (typeLabel === "Video" || typeLabel === "Reel");
+      var when = _schFmtDate(s.scheduled_at) + ' · ' + _schFmtClock(s.scheduled_at);
+      var errMsg = _failedHumanizeError(s);
+      var errPreview = errMsg
+        ? '<p class="failed-err-msg" title="' + esc(errMsg) + '">⚠ ' + esc(errMsg.length > 200 ? errMsg.slice(0,200) + "…" : errMsg) + '</p>'
+        : '<p class="failed-err-msg">⚠ Publish failed (no detail recorded)</p>';
+      var retryCount = Number(s.retry_count || 0);
+      var retryHint = retryCount > 0
+        ? '<span class="failed-retry-hint">· retried ' + retryCount + 'x</span>'
+        : '';
+      return '<div class="sched-row-v2 is-failed" data-row-q="'+esc(s.queue_id||"")+'">'
+        + '<div class="sched-thumb-v2">'
+        +   (thumb
+              ? '<img src="' + esc(thumb) + '" alt="" loading="lazy" '
+                + 'onerror="this.outerHTML=\'<div class=&quot;sched-thumb-fb&quot;>📷</div>\'">'
+              : '<div class="sched-thumb-fb">📷</div>')
+        +   (isVideo ? '<span class="sched-thumb-play">▶</span>' : '')
+        + '</div>'
+        + '<div class="sched-meta-v2">'
+        +   '<p class="sched-when-v2">'
+        +     esc(when)
+        +     ' <span class="sched-type-pill">' + esc(typeLabel) + '</span>'
+        +     '<span class="sched-state-pill is-failed">Failed</span>'
+        +     retryHint
+        +   '</p>'
+        +   capHtml
+        +   errPreview
+        + '</div>'
+        + '<div class="sched-actions-v2">'
+        +   '<button class="sched-edit-btn" type="button" data-failed-edit="'+esc(s.queue_id||"")+'">Edit</button>'
+        +   '<button class="btn btn-primary" type="button" data-failed-republish="'+esc(s.queue_id||"")+'">↻ Republish</button>'
+        + '</div>'
+        + '</div>';
+    }
+    async function _failedRepublish(queueId, btn){
+      if (!queueId) return;
+      var orig = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Republishing…";
+      try {
+        var r = await fetch("/dashboard/instagram/api/scheduled/" + encodeURIComponent(queueId) + "/retry",
+                            { method: "POST", credentials: "same-origin" });
+        var data = await r.json().catch(()=>({}));
+        if (!r.ok) {
+          btn.textContent = orig;
+          btn.disabled = false;
+          alert((data && data.error) ? "Couldn't republish: " + data.error : "Couldn't republish — try again.");
+          return;
+        }
+        // Optimistically flip the local record so the row leaves the
+        // failed tab immediately. Worker will fire on its next tick.
+        var rec = (_scheduled || []).find(x => x.queue_id === queueId);
+        if (rec) {
+          rec.status = "pending";
+          rec.scheduled_at = new Date().toISOString();
+          rec.retry_count = (rec.retry_count || 0) + 1;
+          delete rec.error;
+          delete rec.errored_at;
+        }
+        _failedRender();
+        // If the Scheduled tab's render is also visible, refresh it.
+        if (typeof _schRender === "function") _schRender();
+        _libToast("Republishing — should publish within a minute.");
+      } catch (e) {
+        btn.textContent = orig;
+        btn.disabled = false;
+        alert("Network error — try again.");
+      }
+    }
+
     async function loadScheduled(){
       var statusEl = $("sched-status");
       // Render stale cache instantly so the page feels alive while the
@@ -7419,6 +7738,10 @@
         }
         _schRender();
         _schStartTicker();
+        // Keep the Failed-tab badge in sync. Even when the user is on
+        // Scheduled, the badge has to reflect reality so they notice
+        // when something needs attention.
+        try { _failedRefreshBadge(); } catch (e) {}
       } catch (e) {
         _igShowSchedLoading(false);
         if (statusEl) {
@@ -7477,20 +7800,78 @@
       });
     })();
 
+    // Stale-while-revalidate cache for the library. Render last-known
+    // items synchronously from sessionStorage so the user sees the grid
+    // instantly; revalidate against the network in parallel and only
+    // re-render when the response is genuinely different.
+    var _LIB_CACHE_KEY = "ig_lib_cache_v1";
+    function _libReadSwr(){
+      try {
+        var raw = sessionStorage.getItem(_LIB_CACHE_KEY);
+        if (!raw) return null;
+        var c = JSON.parse(raw);
+        if (!c || !c.kinds) return null;
+        return c;
+      } catch(e){ return null; }
+    }
+    function _libWriteSwr(){
+      try {
+        sessionStorage.setItem(_LIB_CACHE_KEY, JSON.stringify({
+          kinds: { hooks: _libCache.hooks||[], meats: _libCache.meats||[], ctas: _libCache.ctas||[] },
+          ts: Date.now()
+        }));
+      } catch(e){}
+    }
+    function _libShowLoading(on){
+      var b = document.getElementById("lib-loading-banner");
+      if (!b) return;
+      b.hidden = !on;
+    }
+
+    function _libRenderSkeleton(){
+      ["hooks","meats","ctas"].forEach(kind => {
+        var grid = document.querySelector('[data-lib-grid="'+kind+'"]');
+        if (!grid) return;
+        var ghost = '<div class="lib-card" style="pointer-events:none">'
+          + '<div class="lib-thumb" style="background:#f3f4f6;animation:liSchedPulse 1.4s ease-in-out infinite;aspect-ratio:1/1"></div>'
+          + '</div>';
+        grid.innerHTML = new Array(6).fill(ghost).join("");
+      });
+    }
+
     async function _libLoadAll(){
       var kinds = ["hooks", "meats", "ctas"];
-      for (var i=0; i<kinds.length; i++) {
-        var k = kinds[i];
-        try {
-          var r = await fetch("/dashboard/instagram/api/library/" + k,
-            {credentials:"same-origin"});
-          if (!r.ok) continue;
-          var d = await r.json().catch(()=>({}));
-          _libCache[k] = d.items || [];
-        } catch(e) { _libCache[k] = []; }
+      // Stage 1: paint stale cache instantly (don't block on network).
+      // If no cache exists yet, drop a skeleton grid so the user sees
+      // *structure* in <50ms rather than an empty pane.
+      var stale = _libReadSwr();
+      if (stale && !_libCache._swrUsed) {
+        _libCache._swrUsed = true;
+        _libCache.hooks = stale.kinds.hooks || [];
+        _libCache.meats = stale.kinds.meats || [];
+        _libCache.ctas  = stale.kinds.ctas  || [];
+        _libRenderAll();
+        _libUpdateMakeSummary();
+      } else if (!stale) {
+        _libRenderSkeleton();
       }
-      _libRenderAll();
-      _libUpdateMakeSummary();
+      // Stage 2: revalidate. Fire all three kinds in parallel — the
+      // backend now parallelizes blob downloads, so each call is
+      // already fast; this also keeps the three independent.
+      _libShowLoading(true);
+      try {
+        var results = await Promise.all(kinds.map(k =>
+          fetch("/dashboard/instagram/api/library/" + k, {credentials:"same-origin"})
+            .then(r => r.ok ? r.json() : {items:[]})
+            .catch(() => ({items:[]}))
+        ));
+        kinds.forEach((k, i) => { _libCache[k] = results[i].items || []; });
+        _libWriteSwr();
+        _libRenderAll();
+        _libUpdateMakeSummary();
+      } finally {
+        _libShowLoading(false);
+      }
     }
 
     function _libRenderAll(){

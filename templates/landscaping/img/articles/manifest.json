@@ -1,0 +1,266 @@
+{
+  "hardscaping": {
+    "common-mistakes": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:17:36Z",
+      "file": "img/articles/hardscaping/common-mistakes.png",
+      "src": "https://www.greenwavs.com/wp-content/uploads/2025/09/Common-Hardscape-Design-Mistakes-and-How-to-Avoid-Them.png"
+    },
+    "diy-vs-pro": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:17:36Z",
+      "file": "img/articles/hardscaping/diy-vs-pro.jpg",
+      "src": "https://images.bannerbear.com/direct/4mGpW3zwpg0ZK0AxQw/requests/000/090/944/997/P0ev7XDZrzqlo9edYMjR9og8N/11d5cec08daed0780a5df60b1bfba32bb100c46a.jpg"
+    },
+    "hero": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:17:36Z",
+      "file": "img/articles/hardscaping/hero.jpg",
+      "src": "http://www.lyngsogarden.com/wp-content/uploads/2018/10/hardscape.jpg"
+    },
+    "questions-to-ask": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:17:36Z",
+      "file": "img/articles/hardscaping/questions-to-ask.jpg",
+      "src": "https://worklifesupport.com/wp-content/uploads/2024/01/780740.jpg"
+    },
+    "what-it-includes": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:17:36Z",
+      "file": "img/articles/hardscaping/what-it-includes.jpg",
+      "src": "https://images.bannerbear.com/direct/4mGpW3zwpg0ZK0AxQw/requests/000/096/523/860/bknAjN4e763bZ7ElzXPRKxlD8/678ddb9438d9871e10b153aa8fa60f44033ef33d.jpg"
+    },
+    "what-to-look-for": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:17:36Z",
+      "file": "img/articles/hardscaping/what-to-look-for.jpg",
+      "src": "https://daveandtom.com/wp-content/uploads/2024/09/605783.jpg"
+    },
+    "when-you-need-it": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:17:36Z",
+      "file": "img/articles/hardscaping/when-you-need-it.jpg",
+      "src": "https://georgiaoutdoorliving.com/wp-content/uploads/2024/08/boosting-your-homes-value-with-hardscaping.jpg"
+    }
+  },
+  "irrigation-drainage": {
+    "common-mistakes": {
+      "engine": "shared",
+      "fetched_at": "2026-05-08T19:43:07Z",
+      "file": "img/articles/lawn-care/common-mistakes.webp",
+      "src": "https://landzie.com/wp-content/uploads/2024/07/common-lawn-care-mistakes.webp"
+    },
+    "diy-vs-pro": {
+      "engine": "shared",
+      "fetched_at": "2026-05-08T19:43:07Z",
+      "file": "img/articles/lawn-care/diy-vs-pro.png",
+      "src": "https://static.wixstatic.com/media/0b24c2_6502d5871ec24443bf7c9b78e2ed4a4c~mv2.png"
+    },
+    "hero": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:30:53Z",
+      "file": "img/articles/irrigation-drainage/hero.jpg",
+      "src": "https://bladesofglorylandscaping.com/wp-content/uploads/2024/07/Drip-Irrigation-systems-vs-Sprinkler-Systems.jpg"
+    },
+    "questions-to-ask": {
+      "engine": "shared",
+      "fetched_at": "2026-05-08T19:43:07Z",
+      "file": "img/articles/lawn-care/questions-to-ask.jpg",
+      "src": "https://www.peellandscapedepot.com/wp-content/uploads/a9e5fad28219bb965c0431c0a238641c.jpg"
+    },
+    "what-it-includes": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:30:53Z",
+      "file": "img/articles/irrigation-drainage/what-it-includes.jpg",
+      "src": "https://images.bannerbear.com/direct/4mGpW3zwpg0ZK0AxQw/requests/000/089/203/392/w0gWbdEPaYadKv2jQrVklOA5j/cafff4359a336e5937c7b8955e82584ab87c3889.jpg"
+    },
+    "what-to-look-for": {
+      "engine": "shared",
+      "fetched_at": "2026-05-08T19:43:07Z",
+      "file": "img/articles/lawn-care/what-to-look-for.jpg",
+      "src": "https://www.grassperson.com/hs-fs/hubfs/Photos%20Low%20Rez/Crew/grassperson-crew-lawn-maintenance-mowing.jpg"
+    },
+    "when-you-need-it": {
+      "engine": "shared",
+      "fetched_at": "2026-05-08T19:43:07Z",
+      "file": "img/articles/lawn-care/when-you-need-it.jpg",
+      "src": "https://constructionhow.com/wp-content/uploads/2021/09/4-BENEFITS-OF-HIRING-LAWN-MAINTENANCE-SERVICES-min.jpg"
+    }
+  },
+  "landscape-design": {
+    "common-mistakes": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:23:32Z",
+      "file": "img/articles/landscape-design/common-mistakes.jpg",
+      "src": "https://i.pinimg.com/736x/5a/47/a3/5a47a31d627ca3c56e8965918c618b43.jpg"
+    },
+    "diy-vs-pro": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:23:32Z",
+      "file": "img/articles/landscape-design/diy-vs-pro.jpg",
+      "src": "https://landformai.com/hero-landscape-design.jpg"
+    },
+    "hero": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:23:32Z",
+      "file": "img/articles/landscape-design/hero.jpg",
+      "src": "https://www.garden.eco/wp-content/uploads/2025/03/image0_sloped-backyard-landscaping-ideas_sloped-backyard-landscaping-ideas.jpg"
+    },
+    "questions-to-ask": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:23:32Z",
+      "file": "img/articles/landscape-design/questions-to-ask.jpg",
+      "src": "https://hips.hearstapps.com/hmg-prod/images/magee2025-0187-68dea35c1b9e2.jpg"
+    },
+    "what-it-includes": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:23:32Z",
+      "file": "img/articles/landscape-design/what-it-includes.jpg",
+      "src": "https://prolandscape.com/wp-content/uploads/2018/01/easy-to-use-cad-black-white.jpg"
+    },
+    "what-to-look-for": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:23:32Z",
+      "file": "img/articles/landscape-design/what-to-look-for.png",
+      "src": "https://millburnlandscape.com/wp-content/uploads/2025/05/ChatGPT-Image-May-8-2025-08_52_14-AM.png"
+    },
+    "when-you-need-it": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:23:32Z",
+      "file": "img/articles/landscape-design/when-you-need-it.jpg",
+      "src": "https://www.thespruce.com/thmb/LYwVAw--XXq2lg1wHP-3ynbnqTg=/1500x998/filters:no_upscale():max_bytes(150000):strip_icc()/Fulhamtomhoward-5b5cafb346e0fb002c69c824.jpg"
+    }
+  },
+  "lawn-care": {
+    "common-mistakes": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T19:39:14Z",
+      "file": "img/articles/lawn-care/common-mistakes.webp",
+      "src": "https://landzie.com/wp-content/uploads/2024/07/common-lawn-care-mistakes.webp"
+    },
+    "diy-vs-pro": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T19:39:14Z",
+      "file": "img/articles/lawn-care/diy-vs-pro.png",
+      "src": "https://static.wixstatic.com/media/0b24c2_6502d5871ec24443bf7c9b78e2ed4a4c~mv2.png"
+    },
+    "hero": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:41:43Z",
+      "file": "img/articles/lawn-care/hero.png",
+      "src": "https://finaltouchlandscaping.com/images/lawn-care.png"
+    },
+    "questions-to-ask": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T19:39:14Z",
+      "file": "img/articles/lawn-care/questions-to-ask.jpg",
+      "src": "https://www.peellandscapedepot.com/wp-content/uploads/a9e5fad28219bb965c0431c0a238641c.jpg"
+    },
+    "what-it-includes": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T19:39:14Z",
+      "file": "img/articles/lawn-care/what-it-includes.png",
+      "src": "https://www.yourlandscapersnepa.com/wp-content/uploads/2022/10/Seasonal-Lawn-Care-Maintenance.png"
+    },
+    "what-to-look-for": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T19:39:14Z",
+      "file": "img/articles/lawn-care/what-to-look-for.jpg",
+      "src": "https://www.grassperson.com/hs-fs/hubfs/Photos%20Low%20Rez/Crew/grassperson-crew-lawn-maintenance-mowing.jpg"
+    },
+    "when-you-need-it": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T19:39:14Z",
+      "file": "img/articles/lawn-care/when-you-need-it.jpg",
+      "src": "https://constructionhow.com/wp-content/uploads/2021/09/4-BENEFITS-OF-HIRING-LAWN-MAINTENANCE-SERVICES-min.jpg"
+    }
+  },
+  "seasonal-cleanup": {
+    "common-mistakes": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:32:44Z",
+      "file": "img/articles/seasonal-cleanup/common-mistakes.png",
+      "src": "https://royallandscapes.net/wp-content/uploads/2020/02/Seasonal-Clean-up.png"
+    },
+    "diy-vs-pro": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:32:59Z",
+      "file": "img/articles/seasonal-cleanup/diy-vs-pro.webp",
+      "src": "https://rayofhopeproperties.com/wp-content/uploads/emplibot/seasonal-yard-clean-up-1746932914.webp"
+    },
+    "hero": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:31:47Z",
+      "file": "img/articles/seasonal-cleanup/hero.jpeg",
+      "src": "https://omgcpanel3.com/skyfall/wp-content/uploads/2022/02/Depositphotos_462894410_L-Seasonal-Cleanup-Promo-box.jpeg"
+    },
+    "questions-to-ask": {
+      "engine": "shared",
+      "fetched_at": "2026-05-08T19:43:07Z",
+      "file": "img/articles/lawn-care/questions-to-ask.jpg",
+      "src": "https://www.peellandscapedepot.com/wp-content/uploads/a9e5fad28219bb965c0431c0a238641c.jpg"
+    },
+    "what-it-includes": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:31:47Z",
+      "file": "img/articles/seasonal-cleanup/what-it-includes.webp",
+      "src": "https://images.squarespace-cdn.com/content/v1/5ff53347a0367f287d83f8e4/1611207766900-AX7KV36OV9CD0CE74PWA/SO_Session+1_Web-119.jpg"
+    },
+    "what-to-look-for": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:32:30Z",
+      "file": "img/articles/seasonal-cleanup/what-to-look-for.webp",
+      "src": "https://www.trianglegardener.com/wp-content/uploads/2023/03/Leaf-cleaning-AdobeStock_517212650-810x466.jpg"
+    },
+    "when-you-need-it": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:31:47Z",
+      "file": "img/articles/seasonal-cleanup/when-you-need-it.jpg",
+      "src": "https://www.theleafcleanuppros.com/contents/1.jpg"
+    }
+  },
+  "tree-shrub-care": {
+    "common-mistakes": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:26:59Z",
+      "file": "img/articles/tree-shrub-care/common-mistakes.jpg",
+      "src": "https://selnertreeshrubcare.com/images/fontbanners/frontbannerwinter2018.jpg"
+    },
+    "diy-vs-pro": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:26:59Z",
+      "file": "img/articles/tree-shrub-care/diy-vs-pro.jpg",
+      "src": "https://www.treehugger.com/thmb/eZfXi0DyYfBIi0fdviKGOBiUxTI=/2120x1415/filters:fill(auto,1)/GettyImages-493238552-9772c8d6c81f48be8f9360881f811a29.jpg"
+    },
+    "hero": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:26:59Z",
+      "file": "img/articles/tree-shrub-care/hero.jpg",
+      "src": "https://www.coastalspray.com/wp-content/uploads/2022/11/tree-shrub-care.jpg"
+    },
+    "questions-to-ask": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:26:59Z",
+      "file": "img/articles/tree-shrub-care/questions-to-ask.webp",
+      "src": "https://cititurf.com/wp-content/uploads/2025/09/banner-diagnosing-tree-for-disease-768x433.webp"
+    },
+    "what-it-includes": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:26:59Z",
+      "file": "img/articles/tree-shrub-care/what-it-includes.webp",
+      "src": "https://shurlawn.com/wp-content/uploads/elementor/thumbs/tree-shrub-care-3-qo08p9bnzupcnnhkgjjgdnwcrinkyrhb516ozou5ck.webp"
+    },
+    "what-to-look-for": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:26:59Z",
+      "file": "img/articles/tree-shrub-care/what-to-look-for.jpg",
+      "src": "https://wimberglandscaping.com/wp-content/uploads/2023/04/tree-planting-Wimberg-Landscaping-2.jpg"
+    },
+    "when-you-need-it": {
+      "engine": "manual",
+      "fetched_at": "2026-05-08T20:26:59Z",
+      "file": "img/articles/tree-shrub-care/when-you-need-it.jpg",
+      "src": "https://www.coastalspray.com/wp-content/uploads/2022/11/tree-and-shrub-care.jpg"
+    }
+  }
+}
