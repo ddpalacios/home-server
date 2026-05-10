@@ -108,6 +108,42 @@ static char *get_query_param(const char *route, const char *key) {
     return NULL;
 }
 
+/* Returns 1 if `r` matches a base path exactly, OR is followed by '/' or '?'.
+ * Avoids false positives like "/cary" matching "/caryfoo". */
+static int eq_or_prefix_with_slash(const char *r, const char *base) {
+    size_t n = strlen(base);
+    if (strncmp(r, base, n) != 0) return 0;
+    char c = r[n];
+    return c == '\0' || c == '/' || c == '?';
+}
+
+/* Returns 1 if the request path belongs to the landscaping site.
+ * Mirrors the route ladder below — keep in sync when adding hubs/cities. */
+static int is_landscaping_path(const char *r) {
+    if (!r || r[0] != '/') return 0;
+    /* Catches /landscape, /landscaper, /landscapers, /landscaping
+     * and every subpath beneath them (e.g. /landscape-design/, /landscapers/<slug>/). */
+    if (strncmp(r, "/landscape", 10) == 0) return 1;
+    /* Service hubs */
+    if (eq_or_prefix_with_slash(r, "/lawn-care"))           return 1;
+    if (eq_or_prefix_with_slash(r, "/hardscaping"))         return 1;
+    if (eq_or_prefix_with_slash(r, "/tree-shrub-care"))     return 1;
+    if (eq_or_prefix_with_slash(r, "/irrigation-drainage")) return 1;
+    if (eq_or_prefix_with_slash(r, "/seasonal-cleanup"))    return 1;
+    /* City hubs (and city × service matrix beneath each one) */
+    if (eq_or_prefix_with_slash(r, "/crystal-lake"))        return 1;
+    if (eq_or_prefix_with_slash(r, "/algonquin"))           return 1;
+    if (eq_or_prefix_with_slash(r, "/cary"))                return 1;
+    if (eq_or_prefix_with_slash(r, "/lake-in-the-hills"))   return 1;
+    if (eq_or_prefix_with_slash(r, "/mchenry"))             return 1;
+    if (eq_or_prefix_with_slash(r, "/woodstock"))           return 1;
+    if (eq_or_prefix_with_slash(r, "/huntley"))             return 1;
+    if (eq_or_prefix_with_slash(r, "/marengo"))             return 1;
+    if (eq_or_prefix_with_slash(r, "/harvard"))             return 1;
+    if (eq_or_prefix_with_slash(r, "/spring-grove"))        return 1;
+    return 0;
+}
+
 static void send_twilio_voice_stream_response(SSL *ssl, const char *http_header) {
     char host[128];
     char *header_host = get_header_value(http_header, "Host");
@@ -245,11 +281,12 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
     }
 
     /* ── Host-based site routing ─────────────────────────────────────────────
-     * Two domains terminate at this server:
-     *   justgotalead.com           → portfolio + dashboard
-     *   mchenrycountylandscapers.com → landscaping site
-     * Branch on the Host header so each gets its own front page and so any
-     * cross-site URL 301s home to its true domain. */
+     * Two production domains terminate at this server:
+     *   justgotalead.com             → portfolio + dashboard ONLY
+     *   mchenrycountylandscapers.com → landscaping site ONLY
+     * Each domain serves its own pages and 404s the other side's URLs so the
+     * brands stay strictly separated. Bare-IP / localhost / any other Host
+     * falls through unchanged so local dev keeps working as today. */
     {
         char host_buf[128];
         host_buf[0] = '\0';
@@ -267,6 +304,9 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
         int is_landscaping_host =
             (strcmp(host_buf, "mchenrycountylandscapers.com") == 0 ||
              strcmp(host_buf, "www.mchenrycountylandscapers.com") == 0);
+        int is_dashboard_host =
+            (strcmp(host_buf, "justgotalead.com") == 0 ||
+             strcmp(host_buf, "www.justgotalead.com") == 0);
 
         if (is_landscaping_host && strcmp(request_type, "GET") == 0) {
             /* Apex of the landscaping domain → serve the landscaping landing
@@ -277,17 +317,25 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
                 free(route_with_query);
                 route_with_query = strdup("/landscapers");
             }
-            /* Dashboard / auth / admin paths simply do not exist on the
-             * landscaping domain. Return 404 instead of redirecting to
-             * justgotalead.com so the landscaping site looks like a fully
-             * self-contained brand with no leak of the dashboard's URL. */
-            else if (strncmp(route, "/dashboard", 10) == 0 ||
-                     strncmp(route, "/admin",     6) == 0 ||
-                     strncmp(route, "/me",        3) == 0 ||
-                     strncmp(route, "/try",       4) == 0 ||
-                     strncmp(route, "/auth/",     6) == 0 ||
-                     strncmp(route, "/oauth/",    7) == 0 ||
-                     strncmp(route, "/login",     6) == 0) {
+            /* Anything that isn't landscaping (and isn't a shared essential
+             * like /sitemap.xml or /robots.txt) does not exist on this
+             * domain → 404. Visitors never see dashboard, portfolio, /try,
+             * /auth, /admin, etc. */
+            else if (!is_landscaping_path(route) &&
+                     strcmp(route, "/sitemap.xml") != 0 &&
+                     strcmp(route, "/robots.txt")  != 0) {
+                send_response_code(cSSL, 404);
+                free(route);
+                free(route_with_query);
+                free(request_type);
+                return;
+            }
+        }
+        else if (is_dashboard_host && strcmp(request_type, "GET") == 0) {
+            /* Landscaping URLs do not exist on the dashboard domain → 404.
+             * Forces the landscaping brand to live entirely on its own
+             * hostname for SEO + UX consistency. */
+            if (is_landscaping_path(route)) {
                 send_response_code(cSSL, 404);
                 free(route);
                 free(route_with_query);
