@@ -22172,12 +22172,22 @@
         });
       }
 
-      // Generate password.
+      // Generate password — also saves immediately. Two-click flow
+      // (Generate → Save) trips users up: they walk away thinking the
+      // new password is live but it's still the OLD one server-side.
+      // Now Generate produces a strong password AND persists it in a
+      // single step.
       if (genBtn && passEl) {
         genBtn.addEventListener("click", () => {
-          passEl.value = gen();
+          const fresh = gen();
+          passEl.value = fresh;
           passEl.focus();
           passEl.select();
+          if (saveBtn) {
+            // Trigger the save flow so the new password is live on
+            // the server immediately, not just shown in the input.
+            saveBtn.click();
+          }
         });
       }
 
