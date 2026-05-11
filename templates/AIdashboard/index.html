@@ -2972,6 +2972,71 @@
     .kb-table-empty strong { color: #0a0a0a; display: block; margin-bottom: 8px; font-size: 14px; }
     .kb-table-empty .kb-add-btn { margin: 12px 4px 0; }
 
+    /* Inputs used inside the KB detail / add-website modals. */
+    .kb-detail-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #fff;
+      color: #0a0a0a;
+      outline: none;
+      transition: border-color 140ms ease, box-shadow 140ms ease;
+      box-sizing: border-box;
+    }
+    .kb-detail-input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    }
+    .kb-faq-pair {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: grid;
+      gap: 8px;
+      position: relative;
+    }
+    .kb-faq-pair .kb-faq-remove {
+      position: absolute;
+      top: 8px; right: 8px;
+      background: transparent; border: 0;
+      width: 24px; height: 24px;
+      border-radius: 6px;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .kb-faq-pair .kb-faq-remove:hover { color: #b91c1c; background: #fef2f2; }
+
+    /* Popover menu shown when ⋯ is clicked on a row. */
+    .kb-row-menu-pop {
+      position: fixed;
+      z-index: 2100;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+      padding: 4px;
+      min-width: 140px;
+      display: flex;
+      flex-direction: column;
+    }
+    .kb-row-menu-pop[hidden] { display: none; }
+    .kb-row-menu-pop button {
+      background: transparent; border: 0;
+      text-align: left;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: #0a0a0a;
+      cursor: pointer;
+      border-radius: 6px;
+      font-family: inherit;
+    }
+    .kb-row-menu-pop button:hover { background: #f1f5f9; }
+
     /* Responsive — hide secondary columns on narrow viewports. */
     @media (max-width: 1100px) {
       .kb-table th.col-desc, .kb-table td.col-desc { display: none; }
@@ -23012,8 +23077,11 @@
         }
       });
 
-      // Wire add buttons — Phase 2 will replace these with proper
-      // modals; for Phase 1 they fire the existing legacy handlers.
+      // Wire add buttons — Phase 2:
+      //   * website → kbAddWebsiteModal
+      //   * article → legacy openArticleModalClient/Internal (already
+      //               renders a centered .modal)
+      //   * faq     → legacy openFaqModalClient/Internal
       host.querySelectorAll("[data-kb-add]").forEach(function (btn) {
         btn.addEventListener("click", function (e) {
           e.stopPropagation();
@@ -23025,22 +23093,12 @@
             var legacyFaq = document.getElementById(mode === "internal" ? "openFaqModalInternal" : "openFaqModalClient");
             if (legacyFaq) legacyFaq.click();
           } else if (kind === "website") {
-            // Quick prompt for now — Phase 2 swaps in a proper modal.
-            var url = window.prompt("Paste a website link to train your bot on:");
-            if (!url) return;
-            fetch("/kb/sources", {
-              method: "POST",
-              credentials: "same-origin",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ accountid: getAid(), url: url.trim(), kb_type: mode }),
-            }).then(function (r) { return r.ok ? r.json() : r.json().then(function (b) { throw b; }); })
-              .then(function () { loadRows(); })
-              .catch(function (err) { alert((err && err.error) || "Couldn't add that URL."); });
+            window.__kbOpenAddWebsiteModal(mode, loadRows);
           }
         });
       });
 
-      // Export button — Phase 3 will wire CSV/JSON; Phase 1 stub.
+      // Export button — Phase 3 will wire CSV/JSON.
       var exportBtn = host.querySelector("[data-kb-export]");
       if (exportBtn) {
         exportBtn.addEventListener("click", function () {
@@ -23048,26 +23106,22 @@
         });
       }
 
-      // Row click → Phase 2 will open detail modal. For Phase 1 we
-      // route to the legacy KB row preview as a placeholder.
+      // Row click → open the detail modal. ⋯ menu opens the popover.
       body.addEventListener("click", function (e) {
         if (e.target.closest("[data-kb-clear-filters]")) return;
-        if (e.target.closest(".kb-row-menu")) {
-          // Phase 2: open per-row actions menu.
-          e.stopPropagation();
-          return;
-        }
         var tr = e.target.closest("tr[data-id]");
         if (!tr) return;
         var id = tr.dataset.id;
         var row = rows.find(function (r) { return r.id === id; });
         if (!row) return;
-        // Placeholder: surface the entry summary so the user gets
-        // feedback that the row is interactive. Phase 2 replaces
-        // this with the full detail/edit modal.
-        var preview = row.title + "\n\n" + (row.description || "");
-        if (row.raw && row.raw.url) preview += "\n\n" + row.raw.url;
-        alert(preview.slice(0, 600));
+
+        var menuBtn = e.target.closest(".kb-row-menu");
+        if (menuBtn) {
+          e.stopPropagation();
+          window.__kbOpenRowMenu(menuBtn, row, mode, loadRows);
+          return;
+        }
+        window.__kbOpenDetailModal(row, mode, loadRows);
       });
 
       host.__kbRefresh = loadRows;
@@ -23076,6 +23130,355 @@
       if (getAid()) loadRows();
       else window.addEventListener("accountIdReady", loadRows, { once: true });
     }
+
+    // ─────── KB detail / add-website / row-action handlers ───────
+    // All three popups use the existing .modal/.modal-card pattern
+    // which is already centered (position:fixed inset:0 flex). One
+    // detail modal handles Website/Article/Q&A by toggling which
+    // field group is visible.
+    (function () {
+      function getAid() { return window.__accountId || ""; }
+      function escapeHtml(s) {
+        return String(s == null ? "" : s)
+          .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+      }
+      function openModal(el) {
+        if (!el) return;
+        el.classList.add("is-open");
+        el.setAttribute("aria-hidden", "false");
+      }
+      function closeModal(el) {
+        if (!el) return;
+        el.classList.remove("is-open");
+        el.setAttribute("aria-hidden", "true");
+      }
+      // Close any modal when backdrop is clicked or Escape pressed.
+      document.querySelectorAll("#kbDetailModal, #kbAddWebsiteModal").forEach(function (m) {
+        m.addEventListener("click", function (e) { if (e.target === m) closeModal(m); });
+      });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
+          ["kbDetailModal", "kbAddWebsiteModal"].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el && el.classList.contains("is-open")) closeModal(el);
+          });
+          var menu = document.getElementById("kbRowMenu");
+          if (menu) menu.hidden = true;
+        }
+      });
+      // Close × buttons.
+      document.querySelectorAll("[data-kb-detail-close]").forEach(function (b) {
+        b.addEventListener("click", function () { closeModal(document.getElementById("kbDetailModal")); });
+      });
+      document.querySelectorAll("[data-kb-add-website-close]").forEach(function (b) {
+        b.addEventListener("click", function () { closeModal(document.getElementById("kbAddWebsiteModal")); });
+      });
+
+      // ── Add website modal ─────────────────────────────────────
+      var addState = { mode: "client", refresh: null };
+      window.__kbOpenAddWebsiteModal = function (mode, refresh) {
+        addState.mode = mode === "internal" ? "internal" : "client";
+        addState.refresh = typeof refresh === "function" ? refresh : null;
+        var input = document.getElementById("kbAddWebsiteUrl");
+        var err = document.getElementById("kbAddWebsiteError");
+        if (input) input.value = "";
+        if (err) { err.hidden = true; err.textContent = ""; }
+        openModal(document.getElementById("kbAddWebsiteModal"));
+        setTimeout(function () { input && input.focus(); }, 60);
+      };
+      var addSubmit = document.getElementById("kbAddWebsiteSubmit");
+      if (addSubmit) {
+        addSubmit.addEventListener("click", async function () {
+          var input = document.getElementById("kbAddWebsiteUrl");
+          var err = document.getElementById("kbAddWebsiteError");
+          var url = ((input && input.value) || "").trim();
+          if (!url) { err.hidden = false; err.textContent = "Paste a website link first."; return; }
+          addSubmit.disabled = true;
+          try {
+            var r = await fetch("/kb/sources", {
+              method: "POST", credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ accountid: getAid(), url: url, kb_type: addState.mode }),
+            });
+            var data = await r.json().catch(function () { return {}; });
+            if (!r.ok) {
+              err.hidden = false;
+              err.textContent = data.error || "Couldn't add that URL.";
+              return;
+            }
+            closeModal(document.getElementById("kbAddWebsiteModal"));
+            if (addState.refresh) addState.refresh();
+            window.dispatchEvent(new CustomEvent("kb:saved"));
+          } catch (_) {
+            err.hidden = false;
+            err.textContent = "Network hiccup — try again.";
+          } finally {
+            addSubmit.disabled = false;
+          }
+        });
+      }
+
+      // ── Detail / edit modal ──────────────────────────────────
+      var detailState = { row: null, mode: "client", refresh: null };
+      window.__kbOpenDetailModal = function (row, mode, refresh) {
+        detailState.row = row;
+        detailState.mode = mode === "internal" ? "internal" : "client";
+        detailState.refresh = typeof refresh === "function" ? refresh : null;
+        var modal = document.getElementById("kbDetailModal");
+        var typeLabel = row.type === "website" ? "Website" : row.type === "faq" ? "Quick Q&A" : "Article";
+        document.getElementById("kbDetailTypeLabel").textContent = typeLabel;
+        document.getElementById("kbDetailHeading").textContent = row.title || typeLabel;
+        var meta = [];
+        if (row.added)  meta.push("Added " + new Date(row.added).toLocaleString());
+        if (row.edited && row.edited !== row.added) meta.push("Edited " + new Date(row.edited).toLocaleString());
+        document.getElementById("kbDetailMeta").textContent = meta.join(" · ");
+        var err = document.getElementById("kbDetailError");
+        if (err) { err.hidden = true; err.textContent = ""; }
+        // Hide all field groups, then show the right one.
+        modal.querySelectorAll("[data-kb-detail-fields]").forEach(function (g) { g.hidden = true; });
+        var groupSelector = '[data-kb-detail-fields="' + row.type + '"]';
+        var group = modal.querySelector(groupSelector);
+        if (group) group.hidden = false;
+
+        if (row.type === "website") {
+          document.getElementById("kbDetailUrl").value = (row.raw && row.raw.url) || "";
+          var statusLabel = (row.raw && row.raw.status === "ready") ? "✓ Ready"
+                           : (row.raw && (row.raw.status === "failed" || row.raw.status === "error")) ? "Failed"
+                           : "Training";
+          document.getElementById("kbDetailStatusLine").textContent = "Status: " + statusLabel;
+        } else if (row.type === "article") {
+          document.getElementById("kbDetailArticleTitle").value = row.raw.title || "";
+          document.getElementById("kbDetailArticleBody").value =
+            typeof row.raw.content === "string" ? row.raw.content : "";
+        } else if (row.type === "faq") {
+          document.getElementById("kbDetailFaqTitle").value = row.raw.title || "";
+          renderFaqPairs(Array.isArray(row.raw.content) ? row.raw.content : []);
+        }
+        openModal(modal);
+      };
+
+      function renderFaqPairs(pairs) {
+        var host = document.getElementById("kbDetailFaqPairs");
+        host.innerHTML = "";
+        pairs.forEach(function (p) { host.appendChild(makeFaqPairEl(p.question, p.answer)); });
+        if (!pairs.length) host.appendChild(makeFaqPairEl("", ""));
+      }
+      function makeFaqPairEl(q, a) {
+        var wrap = document.createElement("div");
+        wrap.className = "kb-faq-pair";
+        wrap.innerHTML =
+          '<button type="button" class="kb-faq-remove" aria-label="Remove">×</button>' +
+          '<input type="text" class="kb-detail-input" data-q placeholder="Question" />' +
+          '<textarea class="kb-detail-input" data-a placeholder="Answer" rows="2" style="font-family:inherit;"></textarea>';
+        wrap.querySelector("[data-q]").value = q || "";
+        wrap.querySelector("[data-a]").value = a || "";
+        wrap.querySelector(".kb-faq-remove").addEventListener("click", function () { wrap.remove(); });
+        return wrap;
+      }
+      var addPairBtn = document.getElementById("kbDetailFaqAddPair");
+      if (addPairBtn) addPairBtn.addEventListener("click", function () {
+        document.getElementById("kbDetailFaqPairs").appendChild(makeFaqPairEl("", ""));
+      });
+
+      // Retrain (website only).
+      var retrainBtn = document.getElementById("kbDetailRetrain");
+      if (retrainBtn) retrainBtn.addEventListener("click", async function () {
+        if (!detailState.row || detailState.row.type !== "website") return;
+        retrainBtn.disabled = true;
+        try {
+          await fetch("/kb/sources/" + encodeURIComponent(detailState.row.id) + "/retrain", {
+            method: "POST", credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ accountid: getAid() }),
+          });
+          closeModal(document.getElementById("kbDetailModal"));
+          if (detailState.refresh) detailState.refresh();
+        } catch (_) { /* silent */ }
+        finally { retrainBtn.disabled = false; }
+      });
+
+      // Save (varies by type).
+      var saveBtn = document.getElementById("kbDetailSave");
+      if (saveBtn) saveBtn.addEventListener("click", async function () {
+        var row = detailState.row;
+        if (!row) return;
+        var err = document.getElementById("kbDetailError");
+        if (err) { err.hidden = true; err.textContent = ""; }
+        saveBtn.disabled = true;
+        try {
+          if (row.type === "website") {
+            // For websites we only support retrain (URL is identity).
+            // Save here is a no-op — user uses Retrain button instead.
+            closeModal(document.getElementById("kbDetailModal"));
+            return;
+          }
+          var body;
+          if (row.type === "article") {
+            body = {
+              id: row.id,
+              accountid: getAid(),
+              kb_type: detailState.mode,
+              entry_type: "article",
+              title: (document.getElementById("kbDetailArticleTitle").value || "").trim(),
+              notes: row.raw.notes || "",
+              content: document.getElementById("kbDetailArticleBody").value || "",
+            };
+            if (!body.title) { err.hidden = false; err.textContent = "Title is required."; return; }
+          } else {
+            // faq
+            var pairs = [];
+            document.querySelectorAll("#kbDetailFaqPairs .kb-faq-pair").forEach(function (p) {
+              var q = (p.querySelector("[data-q]").value || "").trim();
+              var a = (p.querySelector("[data-a]").value || "").trim();
+              if (q && a) pairs.push({ question: q, answer: a });
+            });
+            if (!pairs.length) { err.hidden = false; err.textContent = "Add at least one Q&A pair."; return; }
+            body = {
+              id: row.id,
+              accountid: getAid(),
+              kb_type: detailState.mode,
+              entry_type: "faq",
+              title: (document.getElementById("kbDetailFaqTitle").value || "").trim() || (pairs[0].question || "Q&A"),
+              notes: row.raw.notes || "",
+              content: pairs,
+            };
+          }
+          var r = await fetch("/knowledege", {
+            method: "POST", credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          if (!r.ok) {
+            var data = await r.json().catch(function () { return {}; });
+            err.hidden = false;
+            err.textContent = data.error || "Couldn't save.";
+            return;
+          }
+          // Trigger embed rebuild so the bot picks up the change.
+          try {
+            await fetch("/knowledege-embed", {
+              method: "POST", credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ accountid: getAid(), kb_type: detailState.mode }),
+            });
+          } catch (_) {}
+          closeModal(document.getElementById("kbDetailModal"));
+          if (detailState.refresh) detailState.refresh();
+          window.dispatchEvent(new CustomEvent("kb:saved"));
+        } catch (_) {
+          err.hidden = false;
+          err.textContent = "Network hiccup — try again.";
+        } finally {
+          saveBtn.disabled = false;
+        }
+      });
+
+      // Delete (with confirm).
+      var deleteBtn = document.getElementById("kbDetailDelete");
+      if (deleteBtn) deleteBtn.addEventListener("click", async function () {
+        var row = detailState.row;
+        if (!row) return;
+        var label = row.title || (row.type === "website" ? "this website" : row.type === "faq" ? "this Q&A" : "this article");
+        if (!window.confirm('Delete "' + label + '"? Your bot will forget this content.')) return;
+        deleteBtn.disabled = true;
+        try {
+          if (row.type === "website") {
+            await fetch("/kb/sources/" + encodeURIComponent(row.id) +
+                        "?accountid=" + encodeURIComponent(getAid()),
+                        { method: "DELETE", credentials: "same-origin" });
+          } else {
+            await fetch("/knowledege", {
+              method: "DELETE", credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: row.id, accountid: getAid(), kb_type: detailState.mode }),
+            });
+          }
+          closeModal(document.getElementById("kbDetailModal"));
+          if (detailState.refresh) detailState.refresh();
+          window.dispatchEvent(new CustomEvent("kb:saved"));
+        } catch (_) { /* silent */ }
+        finally { deleteBtn.disabled = false; }
+      });
+
+      // ── Row actions menu (⋯) ─────────────────────────────────
+      var menuEl = document.getElementById("kbRowMenu");
+      var menuState = { row: null, mode: "client", refresh: null };
+      window.__kbOpenRowMenu = function (anchor, row, mode, refresh) {
+        menuState.row = row;
+        menuState.mode = mode === "internal" ? "internal" : "client";
+        menuState.refresh = typeof refresh === "function" ? refresh : null;
+        var rect = anchor.getBoundingClientRect();
+        menuEl.style.top = (rect.bottom + 4) + "px";
+        menuEl.style.left = Math.max(8, rect.right - 160) + "px";
+        menuEl.hidden = false;
+        // Close on next outside-click.
+        setTimeout(function () {
+          document.addEventListener("click", closeMenuOnce, { once: true });
+        }, 10);
+      };
+      function closeMenuOnce(e) {
+        if (menuEl.contains(e.target)) {
+          // Re-arm — keep open until a menu item fires.
+          document.addEventListener("click", closeMenuOnce, { once: true });
+          return;
+        }
+        menuEl.hidden = true;
+      }
+      menuEl && menuEl.querySelectorAll("[data-kb-row-action]").forEach(function (btn) {
+        btn.addEventListener("click", async function () {
+          menuEl.hidden = true;
+          var action = btn.dataset.kbRowAction;
+          var row = menuState.row;
+          if (!row) return;
+          if (action === "edit" || action === "preview") {
+            window.__kbOpenDetailModal(row, menuState.mode, menuState.refresh);
+            return;
+          }
+          if (action === "duplicate") {
+            // Only article/faq can duplicate via /knowledege POST.
+            if (row.type === "website") { alert("Websites can't be duplicated."); return; }
+            var body = {
+              accountid: getAid(),
+              kb_type: menuState.mode,
+              entry_type: row.type === "faq" ? "faq" : "article",
+              title: (row.raw.title || "Untitled") + " (copy)",
+              notes: row.raw.notes || "",
+              content: row.raw.content || (row.type === "faq" ? [] : ""),
+            };
+            try {
+              await fetch("/knowledege", {
+                method: "POST", credentials: "same-origin",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body),
+              });
+              if (menuState.refresh) menuState.refresh();
+              window.dispatchEvent(new CustomEvent("kb:saved"));
+            } catch (_) { /* silent */ }
+            return;
+          }
+          if (action === "delete") {
+            var label = row.title || "this entry";
+            if (!window.confirm('Delete "' + label + '"? Your bot will forget this content.')) return;
+            try {
+              if (row.type === "website") {
+                await fetch("/kb/sources/" + encodeURIComponent(row.id) +
+                            "?accountid=" + encodeURIComponent(getAid()),
+                            { method: "DELETE", credentials: "same-origin" });
+              } else {
+                await fetch("/knowledege", {
+                  method: "DELETE", credentials: "same-origin",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ id: row.id, accountid: getAid(), kb_type: menuState.mode }),
+                });
+              }
+              if (menuState.refresh) menuState.refresh();
+              window.dispatchEvent(new CustomEvent("kb:saved"));
+            } catch (_) {}
+          }
+        });
+      });
+    })();
 
     // ─────── Teach card (home pane) ───────
     // Hits the same /kb/sources endpoints the full KB page uses — adding
@@ -38775,7 +39178,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-kb-table"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-kb-table-p2"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
@@ -38832,6 +39235,88 @@ window.openRunFlowPicker = async function (leadIds, opts) {
     <button type="button" class="team-share-save" id="shareModalDone">Done</button>
   </div>
 </dialog>
+
+<!-- KB detail / edit modal. Shows the full record (Website / Article /
+     Q&A) with editable fields. Centered, escape-closable, backdrop-
+     dismissable. Same .modal/.modal-card scaffolding the legacy
+     article + faq modals use, so it inherits centered positioning. -->
+<div class="modal" id="kbDetailModal" aria-hidden="true">
+  <div class="modal-card" style="max-width: 640px; gap: 14px;">
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+      <div style="min-width:0; flex:1;">
+        <p id="kbDetailTypeLabel" style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:#6366f1; margin:0 0 4px;">Website</p>
+        <h3 id="kbDetailHeading" style="font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:800; letter-spacing:-0.02em; margin:0; color:#0a0a0a;">Entry</h3>
+        <p id="kbDetailMeta" style="font-size:12px; color:#64748b; margin:6px 0 0;">Added 1d ago · Edited 1h ago</p>
+      </div>
+      <button type="button" class="modal-close" data-kb-detail-close style="background:transparent; border:0; width:32px; height:32px; border-radius:8px; cursor:pointer; color:#64748b; font-size:18px;">×</button>
+    </div>
+
+    <!-- Website fields -->
+    <div data-kb-detail-fields="website" hidden>
+      <label style="display:block; font-size:11px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:#64748b; margin-bottom:6px;">URL</label>
+      <input type="url" id="kbDetailUrl" class="kb-detail-input" />
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:14px;">
+        <span id="kbDetailStatusLine" style="font-size:12.5px; color:#475569;">Status: Ready</span>
+        <button type="button" class="kb-add-btn is-secondary" id="kbDetailRetrain">Retrain now</button>
+      </div>
+    </div>
+
+    <!-- Article fields -->
+    <div data-kb-detail-fields="article" hidden>
+      <label style="display:block; font-size:11px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:#64748b; margin-bottom:6px;">Title</label>
+      <input type="text" id="kbDetailArticleTitle" class="kb-detail-input" />
+      <label style="display:block; font-size:11px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:#64748b; margin:14px 0 6px;">Body</label>
+      <textarea id="kbDetailArticleBody" class="kb-detail-input" style="min-height: 220px; resize: vertical; font-family: inherit; line-height:1.5;"></textarea>
+    </div>
+
+    <!-- Q&A fields -->
+    <div data-kb-detail-fields="faq" hidden>
+      <label style="display:block; font-size:11px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:#64748b; margin-bottom:6px;">Group title</label>
+      <input type="text" id="kbDetailFaqTitle" class="kb-detail-input" />
+      <div id="kbDetailFaqPairs" style="margin-top:12px; display:flex; flex-direction:column; gap:10px;"></div>
+      <button type="button" class="kb-add-btn is-secondary" id="kbDetailFaqAddPair" style="margin-top:10px;">+ Add another Q&amp;A</button>
+    </div>
+
+    <p id="kbDetailError" style="color:#b91c1c; font-size:13px; margin:0;" hidden></p>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; border-top:1px solid #f1f5f9; padding-top:14px;">
+      <button type="button" class="kb-add-btn is-secondary" id="kbDetailDelete" style="color:#b91c1c; border-color:#fecaca;">Delete</button>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="kb-add-btn is-secondary" data-kb-detail-close>Cancel</button>
+        <button type="button" class="kb-add-btn is-primary" id="kbDetailSave">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add website modal — replaces the window.prompt placeholder. -->
+<div class="modal" id="kbAddWebsiteModal" aria-hidden="true">
+  <div class="modal-card" style="max-width: 480px;">
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+      <div>
+        <p style="font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:#6366f1; margin:0 0 4px;">Add website</p>
+        <h3 style="font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:800; letter-spacing:-0.02em; margin:0; color:#0a0a0a;">Train your bot on a webpage</h3>
+        <p style="font-size:13px; color:#64748b; margin:6px 0 0;">We'll read the content of this page so your bot can answer questions about it.</p>
+      </div>
+      <button type="button" class="modal-close" data-kb-add-website-close style="background:transparent; border:0; width:32px; height:32px; border-radius:8px; cursor:pointer; color:#64748b; font-size:18px;">×</button>
+    </div>
+    <label style="display:block; font-size:11px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:#64748b; margin:4px 0 6px;">Website URL</label>
+    <input type="url" id="kbAddWebsiteUrl" class="kb-detail-input" placeholder="https://yoursite.com/services" />
+    <p id="kbAddWebsiteError" style="color:#b91c1c; font-size:13px; margin:0;" hidden></p>
+    <div style="display:flex; justify-content:flex-end; gap:8px;">
+      <button type="button" class="kb-add-btn is-secondary" data-kb-add-website-close>Cancel</button>
+      <button type="button" class="kb-add-btn is-primary" id="kbAddWebsiteSubmit">Add →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Row actions menu — small popover with Edit / Duplicate / Delete. -->
+<div id="kbRowMenu" class="kb-row-menu-pop" hidden role="menu">
+  <button type="button" data-kb-row-action="edit" role="menuitem">Edit</button>
+  <button type="button" data-kb-row-action="preview" role="menuitem">Preview</button>
+  <button type="button" data-kb-row-action="duplicate" role="menuitem">Duplicate</button>
+  <button type="button" data-kb-row-action="delete" role="menuitem" style="color:#b91c1c;">Delete</button>
+</div>
 
 <!-- Google Drive file picker. Lives at body level (not inside the
      Knowledge route) so the home page can open it directly after the
