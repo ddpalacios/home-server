@@ -847,33 +847,17 @@
               return;
             }
 
-            document.getElementById("modalEmailEcho").textContent = email;
-
-            if (result.data.training_only || !result.data.phone_display) {
-              // No phone assigned — hide the spinner, show the static
-              // training success card instead.
-              ui.progress.hidden = true;
-              trialSuccess.hidden = false;
-              document.getElementById("modalPhoneDisplay").hidden = true;
-              document.getElementById("modalSuccessEmoji").textContent = "🛠️";
-              document.getElementById("modalSuccessTitle").textContent = "We're training your bot";
-              document.getElementById("modalSuccessBody").textContent =
-                "We started training your bot on your site. Check your inbox — a magic link is on its way so you can open your dashboard while the build finishes.";
-              return;
-            }
-
-            // 3) Phone assigned — start polling. The progress UI is already
-            //    visible from step 1; this just feeds the status updates into it.
-            startBuildPolling({
-              phoneId:        result.data.phone_id,
-              phoneDisplay:   result.data.phone_display,
-              statusUrl:      result.data.status_url,
-              magicLinkToken: result.data.magic_link_token || "",
-              labelEl:        ui.labelEl,
-              phoneLabelEl:   ui.phoneLabelEl,
-              phoneEl:        ui.phoneEl,
-              stepsEl:        ui.stepsEl,
-            });
+            // Don't wait for the build to finish — navigate to the dashboard
+            // right away. The dashboard's activity pane will pick up the
+            // in-flight build and render the progress + phone-reveal there.
+            // This gives the visitor immediate "I'm in" feedback (they see
+            // their dashboard) instead of watching a modal spinner.
+            ui.labelEl.textContent = "Opening your dashboard…";
+            var token = result.data.magic_link_token || "";
+            var dest = token
+              ? ("/auth/email/verify?token=" + encodeURIComponent(token))
+              : "/dashboard";
+            setTimeout(function () { window.location.href = dest; }, 300);
           });
         }
 
@@ -938,30 +922,15 @@
             return;
           }
 
-          document.getElementById("modalEmailEcho").textContent = email;
-
-          if (result.data.training_only || !result.data.phone_display) {
-            // Training only, no phone → swap modal to the static success card.
-            ui.progress.hidden = true;
-            trialSuccess.hidden = false;
-            document.getElementById("modalPhoneDisplay").hidden = true;
-            document.getElementById("modalSuccessEmoji").textContent = "🛠️";
-            document.getElementById("modalSuccessTitle").textContent = "We're training your bot";
-            document.getElementById("modalSuccessBody").textContent =
-              "We started training your bot on your site. Check your inbox for a magic link to your dashboard while the build finishes.";
-            return;
-          }
-
-          // Phone assigned → start polling. Modal is already in progress mode.
-          startBuildPolling({
-            phoneId:      result.data.phone_id,
-            phoneDisplay: result.data.phone_display,
-            statusUrl:    result.data.status_url,
-            labelEl:      ui.labelEl,
-            phoneLabelEl: ui.phoneLabelEl,
-            phoneEl:      ui.phoneEl,
-            stepsEl:      ui.stepsEl,
-          });
+          // Bounce to the dashboard immediately. The activity pane there
+          // picks up the in-flight build and renders the progress + phone
+          // reveal inline.
+          ui.labelEl.textContent = "Opening your dashboard…";
+          var token = result.data.magic_link_token || "";
+          var dest = token
+            ? ("/auth/email/verify?token=" + encodeURIComponent(token))
+            : "/dashboard";
+          setTimeout(function () { window.location.href = dest; }, 300);
         });
       })();
     </script>
