@@ -2771,10 +2771,224 @@
       box-shadow: 0 8px 24px rgba(79, 70, 229, 0.06);
     }
 
-    /* Section header inside the manage view. Each labeled section
-       (Trained from websites / Hand-written answers / Quick Q&A) gets
-       its own visible header so the user can scan and find what
-       they're managing. Bigger and more prominent than a kicker. */
+    /* ── Unified KB table (Manage knowledge) — Phase 1 ─────────────
+       Replaces the old stacked-sections layout with a single
+       flexible SaaS-style table that shows every KB entry (website,
+       article, Q&A) as a row. Add buttons, filters, search, and
+       sort all live in the toolbar above the rows. */
+    .kb-table-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 18px;
+      align-items: center;
+      justify-content: space-between;
+      margin: 0 0 14px;
+    }
+    .kb-table-actions { display: inline-flex; gap: 8px; flex-wrap: wrap; }
+    .kb-add-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+      white-space: nowrap;
+    }
+    .kb-add-btn.is-primary {
+      background: #0a0a0a; color: #fff; border: 1px solid #0a0a0a;
+    }
+    .kb-add-btn.is-primary:hover { background: #262626; }
+    .kb-add-btn.is-secondary {
+      background: #fff; color: #0a0a0a; border: 1px solid #e2e8f0;
+    }
+    .kb-add-btn.is-secondary:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+    .kb-table-filters {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .kb-table-filters select,
+    .kb-table-filters input[type="search"] {
+      padding: 7px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-family: inherit;
+      background: #fff;
+      color: #0a0a0a;
+      outline: none;
+      transition: border-color 140ms ease, box-shadow 140ms ease;
+    }
+    .kb-table-filters select:focus,
+    .kb-table-filters input[type="search"]:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    }
+    .kb-table-filters input[type="search"] { min-width: 220px; }
+
+    .kb-table-meta {
+      display: inline-flex;
+      gap: 14px;
+      align-items: center;
+      font-size: 12px;
+      color: #64748b;
+      margin-left: auto;
+    }
+    .kb-export-btn {
+      padding: 7px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #fff;
+      color: #0a0a0a;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .kb-export-btn:hover { border-color: #cbd5e1; background: #f8fafc; }
+
+    .kb-table-wrap {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .kb-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .kb-table thead { background: #f8fafc; }
+    .kb-table th {
+      text-align: left;
+      padding: 10px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #64748b;
+      border-bottom: 1px solid #e5e7eb;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .kb-table th[data-sort] { cursor: pointer; }
+    .kb-table th[data-sort]:hover { color: #0a0a0a; }
+    .kb-table th[data-sort] .sort-ind {
+      display: inline-block; margin-left: 4px;
+      opacity: 0;
+      transition: opacity 140ms ease;
+    }
+    .kb-table th[data-sort].is-asc .sort-ind,
+    .kb-table th[data-sort].is-desc .sort-ind { opacity: 1; }
+    .kb-table th[data-sort].is-asc .sort-ind::before { content: "↑"; }
+    .kb-table th[data-sort].is-desc .sort-ind::before { content: "↓"; }
+
+    .kb-table td {
+      padding: 12px;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: middle;
+      color: #0a0a0a;
+    }
+    .kb-table tbody tr {
+      transition: background 100ms ease;
+      cursor: pointer;
+    }
+    .kb-table tbody tr:hover { background: #f8fafc; }
+    .kb-table tbody tr:last-child td { border-bottom: 0; }
+
+    .kb-row-title {
+      font-weight: 600;
+      color: #0a0a0a;
+      max-width: 300px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .kb-row-desc {
+      color: #64748b;
+      font-size: 12.5px;
+      max-width: 360px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .kb-type-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .kb-type-pill.t-website { background: rgba(37, 99, 235, 0.10); color: #1d4ed8; }
+    .kb-type-pill.t-article { background: rgba(124, 58, 237, 0.10); color: #6d28d9; }
+    .kb-type-pill.t-faq     { background: rgba(16, 185, 129, 0.10); color: #047857; }
+
+    .kb-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .kb-status-pill.s-ready    { background: #d1fae5; color: #065f46; }
+    .kb-status-pill.s-pending  { background: #fef3c7; color: #92400e; }
+    .kb-status-pill.s-failed   { background: #fee2e2; color: #991b1b; }
+    .kb-status-pill.s-pending::before {
+      content: "";
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: kbPulse 1.4s ease-in-out infinite;
+    }
+    @keyframes kbPulse { 50% { opacity: 0.35; } }
+
+    .kb-time { color: #64748b; font-size: 12.5px; white-space: nowrap; }
+    .kb-actions-cell { text-align: right; white-space: nowrap; }
+    .kb-row-menu {
+      background: transparent; border: 0;
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      color: #64748b;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 140ms ease, color 140ms ease;
+    }
+    .kb-row-menu:hover { background: #f1f5f9; color: #0a0a0a; }
+
+    .kb-table-empty {
+      padding: 36px 18px;
+      text-align: center;
+      color: #64748b;
+      font-size: 13px;
+    }
+    .kb-table-empty strong { color: #0a0a0a; display: block; margin-bottom: 8px; font-size: 14px; }
+    .kb-table-empty .kb-add-btn { margin: 12px 4px 0; }
+
+    /* Responsive — hide secondary columns on narrow viewports. */
+    @media (max-width: 1100px) {
+      .kb-table th.col-desc, .kb-table td.col-desc { display: none; }
+    }
+    @media (max-width: 880px) {
+      .kb-table th.col-edited, .kb-table td.col-edited { display: none; }
+    }
+
+    /* Hide legacy stacked-section layout (merged-teach + answers-section)
+       once the new table is mounted. We keep the elements in DOM so the
+       existing modal handlers (kbCardClient / openArticleModalClient /
+       openFaqModalClient / kbListClient) still find their targets, but
+       the user only sees the new table. */
+    .answers-card .answers-section,
+    .answers-card .merged-teach { display: none !important; }
+
+    /* Section header inside the manage view (legacy — kept for now). */
     .answers-sub-label {
       font-size: 12px;
       font-weight: 800;
@@ -8128,13 +8342,74 @@
              trained websites, hand-written answers, quick Q&A. -->
         <div class="home-pane" data-home-pane="manage" style="grid-column: span 12;">
 
-        <!-- Customer-facing knowledge — three labeled sections:
-             Trained from websites → Hand-written answers + Q&A. -->
+        <!-- Customer-facing knowledge — unified table of every entry
+             (websites + articles + Q&A) with sort, filter, search. -->
         <div class="answers-card" id="answersCardClient" data-kbs-pane="client" data-mode-card="client">
           <div class="answers-head">
             <h2 class="answers-title">Customer bot's knowledge</h2>
             <p class="answers-sub">What it knows when answering customers. Train it from website links, write your own answers, or add quick Q&amp;As.</p>
           </div>
+
+          <!-- Unified KB table for this mode. The table loads its
+               own data via /kb/sources + /knowledege and renders rows
+               for every type. -->
+          <div class="kb-table-host" data-kb-table-mode="client">
+            <div class="kb-table-toolbar">
+              <div class="kb-table-actions">
+                <button type="button" class="kb-add-btn is-primary" data-kb-add="website">+ Add website</button>
+                <button type="button" class="kb-add-btn is-secondary" data-kb-add="article">+ Add article</button>
+                <button type="button" class="kb-add-btn is-secondary" data-kb-add="faq">+ Add Q&amp;A</button>
+              </div>
+              <div class="kb-table-filters">
+                <select data-kb-filter="type" aria-label="Filter by type">
+                  <option value="">All types</option>
+                  <option value="website">Website</option>
+                  <option value="article">Article</option>
+                  <option value="faq">Q&amp;A</option>
+                </select>
+                <select data-kb-filter="status" aria-label="Filter by status">
+                  <option value="">All status</option>
+                  <option value="ready">Ready</option>
+                  <option value="pending">Training</option>
+                  <option value="failed">Failed</option>
+                </select>
+                <input type="search" data-kb-search placeholder="Search title or content…" aria-label="Search knowledge" />
+              </div>
+              <div class="kb-table-meta">
+                <button type="button" class="kb-export-btn" data-kb-export>⇩ Export ▾</button>
+                <span data-kb-count>0 entries</span>
+              </div>
+            </div>
+            <div class="kb-table-wrap">
+              <table class="kb-table" aria-label="Customer bot knowledge">
+                <thead>
+                  <tr>
+                    <th data-sort="title">Title <span class="sort-ind"></span></th>
+                    <th class="col-desc">Description</th>
+                    <th data-sort="type">Type <span class="sort-ind"></span></th>
+                    <th data-sort="added">Added <span class="sort-ind"></span></th>
+                    <th class="col-edited" data-sort="edited">Edited <span class="sort-ind"></span></th>
+                    <th data-sort="status">Status <span class="sort-ind"></span></th>
+                    <th aria-label="Actions"></th>
+                  </tr>
+                </thead>
+                <tbody data-kb-body></tbody>
+              </table>
+              <div class="kb-table-empty" data-kb-empty hidden>
+                <strong>Your bot's knowledge starts empty.</strong>
+                Train it from a website, write an answer, or add a quick Q&amp;A.
+                <div>
+                  <button type="button" class="kb-add-btn is-primary" data-kb-add="website">+ Add website</button>
+                  <button type="button" class="kb-add-btn is-secondary" data-kb-add="article">+ Add article</button>
+                  <button type="button" class="kb-add-btn is-secondary" data-kb-add="faq">+ Add Q&amp;A</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Legacy stacked layout kept hidden so existing modal
+               handlers (kbCardClient / kbListClient / openArticleModalClient /
+               openFaqModalClient) still find their target elements. -->
+
 
           <!-- Section 1: Trained from websites (URLs). -->
           <div class="merged-teach" data-teach-mode="client">
@@ -8201,6 +8476,61 @@
             <h2 class="answers-title">Team brain knowledge</h2>
             <p class="answers-sub">What your team can look up. Train it from internal pages, write your own notes, or add Q&amp;As. Customers never see this.</p>
           </div>
+
+          <div class="kb-table-host" data-kb-table-mode="internal">
+            <div class="kb-table-toolbar">
+              <div class="kb-table-actions">
+                <button type="button" class="kb-add-btn is-primary" data-kb-add="website">+ Add link</button>
+                <button type="button" class="kb-add-btn is-secondary" data-kb-add="article">+ Add note</button>
+                <button type="button" class="kb-add-btn is-secondary" data-kb-add="faq">+ Add Q&amp;A</button>
+              </div>
+              <div class="kb-table-filters">
+                <select data-kb-filter="type" aria-label="Filter by type">
+                  <option value="">All types</option>
+                  <option value="website">Link</option>
+                  <option value="article">Note</option>
+                  <option value="faq">Q&amp;A</option>
+                </select>
+                <select data-kb-filter="status" aria-label="Filter by status">
+                  <option value="">All status</option>
+                  <option value="ready">Ready</option>
+                  <option value="pending">Training</option>
+                  <option value="failed">Failed</option>
+                </select>
+                <input type="search" data-kb-search placeholder="Search title or content…" aria-label="Search knowledge" />
+              </div>
+              <div class="kb-table-meta">
+                <button type="button" class="kb-export-btn" data-kb-export>⇩ Export ▾</button>
+                <span data-kb-count>0 entries</span>
+              </div>
+            </div>
+            <div class="kb-table-wrap">
+              <table class="kb-table" aria-label="Team brain knowledge">
+                <thead>
+                  <tr>
+                    <th data-sort="title">Title <span class="sort-ind"></span></th>
+                    <th class="col-desc">Description</th>
+                    <th data-sort="type">Type <span class="sort-ind"></span></th>
+                    <th data-sort="added">Added <span class="sort-ind"></span></th>
+                    <th class="col-edited" data-sort="edited">Edited <span class="sort-ind"></span></th>
+                    <th data-sort="status">Status <span class="sort-ind"></span></th>
+                    <th aria-label="Actions"></th>
+                  </tr>
+                </thead>
+                <tbody data-kb-body></tbody>
+              </table>
+              <div class="kb-table-empty" data-kb-empty hidden>
+                <strong>Your team brain starts empty.</strong>
+                Train it from internal pages, write a note, or add a quick Q&amp;A.
+                <div>
+                  <button type="button" class="kb-add-btn is-primary" data-kb-add="website">+ Add link</button>
+                  <button type="button" class="kb-add-btn is-secondary" data-kb-add="article">+ Add note</button>
+                  <button type="button" class="kb-add-btn is-secondary" data-kb-add="faq">+ Add Q&amp;A</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
 
           <!-- Section 1: Trained from links (URLs). -->
           <div class="merged-teach" data-teach-mode="internal">
@@ -22423,6 +22753,330 @@
       }
     }
 
+    // ─────── Unified KB table (Manage knowledge tab) ───────
+    // Fetches /kb/sources + /knowledege in parallel, unifies into a
+    // single row schema, and renders a sortable / filterable table.
+    // One host per mode (data-kb-table-mode="client" / "internal").
+    function initKbTables() {
+      document.querySelectorAll("[data-kb-table-mode]").forEach(wireKbTableHost);
+      // Refresh whenever URL training, Drive imports, or KB edits land.
+      window.addEventListener("kb:saved", function () {
+        document.querySelectorAll("[data-kb-table-mode]").forEach(function (host) {
+          if (host.__kbRefresh) host.__kbRefresh();
+        });
+      });
+    }
+
+    function wireKbTableHost(host) {
+      var mode = host.dataset.kbTableMode === "internal" ? "internal" : "client";
+      var body = host.querySelector("[data-kb-body]");
+      var emptyEl = host.querySelector("[data-kb-empty]");
+      var countEl = host.querySelector("[data-kb-count]");
+      var searchEl = host.querySelector("[data-kb-search]");
+      var typeSel = host.querySelector('[data-kb-filter="type"]');
+      var statusSel = host.querySelector('[data-kb-filter="status"]');
+      var headers = host.querySelectorAll(".kb-table th[data-sort]");
+      if (!body) return;
+
+      var rows = [];      // unified row list
+      var sortKey = "edited";
+      var sortDir = "desc";
+      var pollTimer = null;
+
+      function getAid() { return window.__accountId || ""; }
+
+      function fmtAgo(iso) {
+        if (!iso) return "—";
+        try {
+          var d = new Date(iso);
+          if (isNaN(d.getTime())) return "—";
+          var sec = Math.max(1, Math.floor((Date.now() - d.getTime()) / 1000));
+          if (sec < 60) return sec + "s";
+          var min = Math.floor(sec / 60);
+          if (min < 60) return min + "m";
+          var hr = Math.floor(min / 60);
+          if (hr < 24) return hr + "h";
+          var days = Math.floor(hr / 24);
+          if (days < 30) return days + "d";
+          var mo = Math.floor(days / 30);
+          if (mo < 12) return mo + "mo";
+          return Math.floor(mo / 12) + "y";
+        } catch (_) { return "—"; }
+      }
+      function fmtAbs(iso) {
+        if (!iso) return "";
+        try { return new Date(iso).toLocaleString(); } catch (_) { return iso; }
+      }
+      function prettyHost(u) {
+        try {
+          var url = new URL(u);
+          return (url.hostname.replace(/^www\./, "") + (url.pathname === "/" ? "" : url.pathname));
+        } catch (_) { return u || ""; }
+      }
+      function escapeHtml(s) {
+        return String(s == null ? "" : s)
+          .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+      }
+      function statusBucket(s) {
+        s = (s || "").toLowerCase();
+        if (s === "ready") return "ready";
+        if (s === "failed" || s === "error") return "failed";
+        return "pending";
+      }
+
+      // Build a unified row from a kb_sources entry.
+      function rowFromSource(s) {
+        var url = s.url || "";
+        var t = (s.title || "").trim();
+        var prettyTitle = t || prettyHost(url);
+        var phaseDesc = (s.status === "ready")
+          ? ("Site training · " + prettyHost(url))
+          : (s.phase ? ("Training · " + s.phase) : "Training…");
+        return {
+          id: s.id,
+          type: "website",
+          title: prettyTitle,
+          description: s.status === "ready" ? ("Site training · " + prettyHost(url)) : phaseDesc,
+          status: statusBucket(s.status),
+          rawStatus: s.status || "pending",
+          added: s.created_at || "",
+          edited: s.updated_at || s.last_trained_at || s.created_at || "",
+          raw: s,
+        };
+      }
+      // Build a unified row from a /knowledege entry.
+      function rowFromEntry(e) {
+        var et = (e.entry_type || "").toLowerCase();
+        var type = et === "faq" ? "faq" : "article";
+        var title = e.title || "";
+        var desc = "";
+        if (type === "faq") {
+          var content = e.content;
+          var pairs = Array.isArray(content) ? content : [];
+          if (pairs.length) {
+            title = title || (pairs[0].question || "Q&A");
+            desc = pairs[0].answer || "";
+            if (pairs.length > 1) desc += " · " + (pairs.length - 1) + " more";
+          } else {
+            desc = "Q&A";
+          }
+        } else {
+          var body = typeof e.content === "string" ? e.content : "";
+          desc = body.replace(/\s+/g, " ").trim().slice(0, 120);
+          if (!desc && e.notes) desc = String(e.notes).slice(0, 120);
+        }
+        return {
+          id: e.id || "",
+          type: type,
+          title: title || (type === "faq" ? "Q&A" : "Article"),
+          description: desc || (type === "faq" ? "Q&A" : "Article"),
+          status: "ready",
+          rawStatus: "ready",
+          added: e.created_at || "",
+          edited: e.updated_at || e.created_at || "",
+          raw: e,
+        };
+      }
+
+      function applyFiltersSort(list) {
+        var typeF = typeSel ? typeSel.value : "";
+        var statusF = statusSel ? statusSel.value : "";
+        var q = ((searchEl && searchEl.value) || "").trim().toLowerCase();
+        var filtered = list.filter(function (r) {
+          if (typeF && r.type !== typeF) return false;
+          if (statusF && r.status !== statusF) return false;
+          if (q) {
+            var hay = (r.title + " " + r.description).toLowerCase();
+            if (hay.indexOf(q) === -1) return false;
+          }
+          return true;
+        });
+        var dir = sortDir === "asc" ? 1 : -1;
+        filtered.sort(function (a, b) {
+          var av = (a[sortKey] || ""); var bv = (b[sortKey] || "");
+          if (sortKey === "added" || sortKey === "edited") {
+            av = av || ""; bv = bv || "";
+          }
+          if (av < bv) return -1 * dir;
+          if (av > bv) return 1 * dir;
+          return 0;
+        });
+        return filtered;
+      }
+
+      function renderRows() {
+        var visible = applyFiltersSort(rows);
+        body.innerHTML = "";
+        if (countEl) {
+          countEl.textContent = visible.length + (visible.length === 1 ? " entry" : " entries");
+        }
+        if (!visible.length) {
+          if (rows.length === 0 && emptyEl) emptyEl.hidden = false;
+          else if (emptyEl) emptyEl.hidden = true;
+          // No-results-after-filter row
+          if (rows.length > 0) {
+            var tr = document.createElement("tr");
+            tr.innerHTML = '<td colspan="7" style="text-align:center;color:#64748b;padding:24px;">No entries match those filters. ' +
+              '<button type="button" class="kb-add-btn is-secondary" data-kb-clear-filters style="margin-left:8px;">Clear filters</button></td>';
+            body.appendChild(tr);
+          }
+          return;
+        }
+        if (emptyEl) emptyEl.hidden = true;
+        visible.forEach(function (r) {
+          var tr = document.createElement("tr");
+          tr.dataset.id = r.id;
+          tr.dataset.type = r.type;
+          var typeLabel = r.type === "website" ? "Website" : r.type === "faq" ? "Q&A" : "Article";
+          var statusLabel = r.status === "ready" ? "Ready" : r.status === "failed" ? "Failed" : "Training";
+          tr.innerHTML =
+            '<td><div class="kb-row-title" title="' + escapeHtml(r.title) + '">' + escapeHtml(r.title) + '</div></td>' +
+            '<td class="col-desc"><div class="kb-row-desc" title="' + escapeHtml(r.description) + '">' + escapeHtml(r.description) + '</div></td>' +
+            '<td><span class="kb-type-pill t-' + r.type + '">' + typeLabel + '</span></td>' +
+            '<td class="kb-time" title="' + escapeHtml(fmtAbs(r.added)) + '">' + fmtAgo(r.added) + '</td>' +
+            '<td class="col-edited kb-time" title="' + escapeHtml(fmtAbs(r.edited)) + '">' + fmtAgo(r.edited) + '</td>' +
+            '<td><span class="kb-status-pill s-' + r.status + '">' + statusLabel + '</span></td>' +
+            '<td class="kb-actions-cell"><button type="button" class="kb-row-menu" aria-label="Actions">⋯</button></td>';
+          body.appendChild(tr);
+        });
+      }
+
+      async function loadRows() {
+        var aid = getAid();
+        if (!aid) return;
+        try {
+          var srcUrl = "/kb/sources?accountid=" + encodeURIComponent(aid) +
+                       "&kb_type=" + encodeURIComponent(mode) +
+                       "&ts=" + Date.now();
+          var entUrl = "/knowledege?accountid=" + encodeURIComponent(aid) +
+                       "&kb_type=" + encodeURIComponent(mode) +
+                       "&ts=" + Date.now();
+          var results = await Promise.all([
+            fetch(srcUrl, { credentials: "same-origin", cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+            fetch(entUrl, { credentials: "same-origin", cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+          ]);
+          var sources = (results[0] && results[0].sources) || [];
+          var entries = (results[1] && results[1].entries) || [];
+          rows = []
+            .concat(sources.map(rowFromSource))
+            .concat(entries.map(rowFromEntry));
+          renderRows();
+          // Poll while anything is training.
+          if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+          var anyPending = rows.some(function (r) { return r.status === "pending"; });
+          if (anyPending) pollTimer = setTimeout(loadRows, 2500);
+        } catch (_) { /* silent */ }
+      }
+
+      // Wire sort headers.
+      headers.forEach(function (th) {
+        th.addEventListener("click", function () {
+          var key = th.dataset.sort;
+          if (!key) return;
+          if (sortKey === key) {
+            sortDir = sortDir === "asc" ? "desc" : "asc";
+          } else {
+            sortKey = key;
+            sortDir = (key === "title" || key === "type") ? "asc" : "desc";
+          }
+          headers.forEach(function (h) { h.classList.remove("is-asc", "is-desc"); });
+          th.classList.add(sortDir === "asc" ? "is-asc" : "is-desc");
+          renderRows();
+        });
+      });
+      // Initial sort indicator
+      headers.forEach(function (h) {
+        if (h.dataset.sort === sortKey) h.classList.add(sortDir === "asc" ? "is-asc" : "is-desc");
+      });
+
+      // Wire filters + search.
+      if (typeSel)   typeSel.addEventListener("change", renderRows);
+      if (statusSel) statusSel.addEventListener("change", renderRows);
+      if (searchEl) {
+        var searchTimer = null;
+        searchEl.addEventListener("input", function () {
+          clearTimeout(searchTimer);
+          searchTimer = setTimeout(renderRows, 200);
+        });
+      }
+
+      // Clear filters button (rendered in the no-results row).
+      body.addEventListener("click", function (e) {
+        var clr = e.target.closest("[data-kb-clear-filters]");
+        if (clr) {
+          if (typeSel) typeSel.value = "";
+          if (statusSel) statusSel.value = "";
+          if (searchEl) searchEl.value = "";
+          renderRows();
+        }
+      });
+
+      // Wire add buttons — Phase 2 will replace these with proper
+      // modals; for Phase 1 they fire the existing legacy handlers.
+      host.querySelectorAll("[data-kb-add]").forEach(function (btn) {
+        btn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          var kind = btn.dataset.kbAdd;
+          if (kind === "article") {
+            var legacy = document.getElementById(mode === "internal" ? "openArticleModalInternal" : "openArticleModalClient");
+            if (legacy) legacy.click();
+          } else if (kind === "faq") {
+            var legacyFaq = document.getElementById(mode === "internal" ? "openFaqModalInternal" : "openFaqModalClient");
+            if (legacyFaq) legacyFaq.click();
+          } else if (kind === "website") {
+            // Quick prompt for now — Phase 2 swaps in a proper modal.
+            var url = window.prompt("Paste a website link to train your bot on:");
+            if (!url) return;
+            fetch("/kb/sources", {
+              method: "POST",
+              credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ accountid: getAid(), url: url.trim(), kb_type: mode }),
+            }).then(function (r) { return r.ok ? r.json() : r.json().then(function (b) { throw b; }); })
+              .then(function () { loadRows(); })
+              .catch(function (err) { alert((err && err.error) || "Couldn't add that URL."); });
+          }
+        });
+      });
+
+      // Export button — Phase 3 will wire CSV/JSON; Phase 1 stub.
+      var exportBtn = host.querySelector("[data-kb-export]");
+      if (exportBtn) {
+        exportBtn.addEventListener("click", function () {
+          alert("Export ships in Phase 3.");
+        });
+      }
+
+      // Row click → Phase 2 will open detail modal. For Phase 1 we
+      // route to the legacy KB row preview as a placeholder.
+      body.addEventListener("click", function (e) {
+        if (e.target.closest("[data-kb-clear-filters]")) return;
+        if (e.target.closest(".kb-row-menu")) {
+          // Phase 2: open per-row actions menu.
+          e.stopPropagation();
+          return;
+        }
+        var tr = e.target.closest("tr[data-id]");
+        if (!tr) return;
+        var id = tr.dataset.id;
+        var row = rows.find(function (r) { return r.id === id; });
+        if (!row) return;
+        // Placeholder: surface the entry summary so the user gets
+        // feedback that the row is interactive. Phase 2 replaces
+        // this with the full detail/edit modal.
+        var preview = row.title + "\n\n" + (row.description || "");
+        if (row.raw && row.raw.url) preview += "\n\n" + row.raw.url;
+        alert(preview.slice(0, 600));
+      });
+
+      host.__kbRefresh = loadRows;
+
+      // Kick off the first load.
+      if (getAid()) loadRows();
+      else window.addEventListener("accountIdReady", loadRows, { once: true });
+    }
+
     // ─────── Teach card (home pane) ───────
     // Hits the same /kb/sources endpoints the full KB page uses — adding
     // a URL here trains the bot, and the page list reflects whatever the
@@ -22747,6 +23401,11 @@
       // endpoints as the full KB page, so the two stay in sync. Wired
       // here so users can train the bot without changing routes.
       defer(function () { initTeachCard(); });
+
+      // Unified KB table for the Manage tab — replaces the stacked
+      // sections layout with a single sortable/filterable table
+      // showing every entry (website, article, Q&A) per mode.
+      defer(function () { initKbTables(); });
 
       // Footer year — purely cosmetic, populated once.
       defer(function () {
@@ -38116,7 +38775,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-drive-noloop"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-kb-table"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
