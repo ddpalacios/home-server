@@ -5446,6 +5446,13 @@
           <span class="nav-tooltip"><span data-replies-tooltip>Replies</span></span>
           <span class="app-nav-badge" id="appRepliesBadge" hidden>0</span>
         </button>
+        <button class="app-nav-btn" type="button" data-route="inbox" aria-label="Inbox" id="appInboxNavBtn">
+          <!-- Two overlapping speech bubbles — universal "multi-channel
+               conversations" mark (Intercom/Drift). Distinct from
+               Replies' single bubble and Lead Intake's tray. -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9a2 2 0 0 1-2 2H6l-4 4V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z"/><path d="M18 9h2a2 2 0 0 1 2 2v10l-4-4h-6a2 2 0 0 1-2-2v-1"/></svg>
+          <span class="nav-tooltip">Inbox</span>
+        </button>
         <button class="app-nav-btn" type="button" data-route="calendar" aria-label="Schedule">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <span class="nav-tooltip">Schedule</span>
@@ -6815,15 +6822,20 @@
           <p id="tbbHint" style="color:#475569;font-size:0.85rem;margin:14px 0 0;line-height:1.5;">
             You can poke around the dashboard while we train. Try the chat below — answers will sharpen as the bot reads your site.
           </p>
+          <div id="tbbSourceWrap" style="display:none;margin-top:12px;padding:10px 12px;background:#fff;border:1px solid #c7d2fe;border-radius:10px;font-size:0.82rem;color:#475569;">
+            <span style="color:#64748b;">📚 Trained on</span>
+            <a id="tbbSourceLink" href="" target="_blank" rel="noopener" style="color:#1e3a8a;font-weight:700;text-decoration:none;margin-left:6px;"></a>
+          </div>
         </div>
         <style>@keyframes tbbSpin { to { transform: rotate(360deg); } }</style>
 
         <script>
           (function(){
-            // Trial build banner controller. Polls /me every 2s while a
-            // trial is mid-build, paints the current phase on the step bar,
-            // and reloads the dashboard when training flips to "ready" so
-            // all panes pick up the freshly trained data.
+            // Trial build banner controller.
+            // Polls /me every 2s while a trial is mid-build, paints the
+            // current phase on the step bar, and auto-reloads the dashboard
+            // when training flips to "ready" so all panes pick up the
+            // freshly trained data.
             var banner   = document.getElementById("trialBuildBanner");
             var titleEl  = document.getElementById("tbbTitle");
             var phaseEl  = document.getElementById("tbbPhase");
@@ -6849,9 +6861,9 @@
               var idx = PHASE_ORDER.indexOf(phase);
               stepsEl.querySelectorAll("span").forEach(function(el, i){
                 if (idx < 0)            el.style.background = "#cbd5e1";
-                else if (i < idx)       el.style.background = "#1e3a8a";
-                else if (i === idx)     el.style.background = "#2563eb";
-                else                    el.style.background = "#cbd5e1";
+                else if (i < idx)       el.style.background = "#1e3a8a"; // done
+                else if (i === idx)     el.style.background = "#2563eb"; // active
+                else                    el.style.background = "#cbd5e1"; // pending
               });
             }
 
@@ -6870,6 +6882,16 @@
                 phoneEl.textContent = trial.phone_display;
                 phoneWrap.style.display = "block";
               }
+              // Reveal the source URL the bot was trained on so the user
+              // can see (and click through to) what content the KB ingested.
+              var srcWrap = document.getElementById("tbbSourceWrap");
+              var srcLink = document.getElementById("tbbSourceLink");
+              var src = (trial && (trial.source_url || trial.trained_on)) || "";
+              if (src && srcWrap && srcLink) {
+                srcLink.href = src;
+                srcLink.textContent = src.replace(/^https?:\/\//i, "").replace(/\/$/, "");
+                srcWrap.style.display = "block";
+              }
               hintEl.textContent = "Call the number above to test your bot. Click any pane in the sidebar to explore your dashboard.";
             }
             async function pollOnce() {
@@ -6885,7 +6907,7 @@
 
                 if (status === "ready") {
                   renderReady(trial);
-                  return; // STOP polling. No reload. Banner stays visible permanently.
+                  return; // STOP polling. No reload. Banner stays visible.
                 }
                 if (status === "failed") {
                   if (banner.style.display === "none") banner.style.display = "block";
@@ -6895,6 +6917,7 @@
                   hintEl.textContent = "";
                   return;
                 }
+                // Still building (or idle). Show the banner + keep polling.
                 if (banner.style.display === "none") banner.style.display = "block";
                 if (status === "building") sawBuilding = true;
                 phaseEl.textContent = PHASE_LABELS[phase] || PHASE_LABELS[""];
@@ -6906,6 +6929,7 @@
               clearTimeout(pollTimer);
               pollTimer = setTimeout(pollOnce, 2000);
             }
+            // Kick the first poll right after page load.
             pollOnce();
           })();
         </script>
@@ -14608,6 +14632,339 @@
           .wgt-domain-row .wgt-btn-secondary { width: 100%; }
         }
 
+        /* ── Internal brain pane (Phase 1) ───────────────────────── */
+        .brain-page {
+          max-width: 1120px; margin: 0 auto;
+          font: 14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+        }
+        .brain-page-h {
+          display: flex; justify-content: space-between; align-items: flex-start;
+          gap: 16px; margin-bottom: 18px;
+        }
+        .brain-page-title {
+          margin: 0 0 4px; font-size: 20px; font-weight: 700; color: #111827;
+        }
+        .brain-page-sub {
+          margin: 0; font-size: 13.5px; color: #6b7280; max-width: 700px;
+          line-height: 1.5;
+        }
+        .brain-head-r {
+          display: flex; align-items: center; gap: 10px;
+        }
+        .brain-head-iconbtn {
+          background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
+          padding: 7px; color: #475569; cursor: pointer;
+          display: inline-flex; align-items: center; justify-content: center;
+          transition: background-color .12s, border-color .12s, color .12s;
+        }
+        .brain-head-iconbtn:hover {
+          background: #f0fdf4; border-color: #86efac; color: #166534;
+        }
+        /* Brain prefs modal — pill groups */
+        .brain-pref-group { margin-bottom: 14px; }
+        .brain-pref-l {
+          display: block; font: 600 12px inherit; color: #111827;
+          margin-bottom: 6px;
+        }
+        .brain-pref-pills {
+          display: inline-flex; gap: 4px; padding: 3px;
+          background: #f3f4f6; border-radius: 999px;
+        }
+        .brain-pref-pill {
+          background: transparent; border: 0; cursor: pointer;
+          padding: 6px 14px; border-radius: 999px;
+          font: 500 13px inherit; color: #6b7280;
+        }
+        .brain-pref-pill:hover { color: #111827; }
+        .brain-pref-pill.is-active {
+          background: #fff; color: #111827; font-weight: 700;
+          box-shadow: 0 1px 2px rgba(15,23,42,.08);
+        }
+        .brain-pref-help {
+          margin-top: 4px; font: 12px/1.45 inherit; color: #94a3b8;
+        }
+        #brainPrefCustom,
+        #brainDriveUrl {
+          width: 100%; box-sizing: border-box;
+          border: 1px solid #e5e7eb; border-radius: 8px;
+          padding: 8px 10px; font: 14px/1.45 inherit; outline: none;
+        }
+        #brainPrefCustom:focus,
+        #brainDriveUrl:focus {
+          border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,.10);
+        }
+        .brain-budget {
+          flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end;
+          padding: 8px 12px; border-radius: 8px; background: #f8fafc;
+          border: 1px solid #e2e8f0;
+        }
+        .brain-budget-label {
+          font-size: 11px; color: #94a3b8; font-weight: 500; letter-spacing: 0.04em;
+          text-transform: uppercase;
+        }
+        .brain-budget-val {
+          font-size: 13px; color: #475569; font-variant-numeric: tabular-nums;
+          font-weight: 600;
+        }
+        .brain-layout {
+          display: grid; grid-template-columns: 320px 1fr; gap: 18px;
+          height: calc(100vh - 240px); min-height: 480px;
+        }
+        @media (max-width: 900px) {
+          .brain-layout { grid-template-columns: 1fr; height: auto; }
+        }
+        /* Left rail */
+        .brain-rail {
+          display: flex; flex-direction: column;
+          background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+          padding: 14px; min-height: 0;
+        }
+        /* Three full-width stacked buttons, like the KB Sources tab.
+           Bigger touch targets, clearer hierarchy than a cramped 3-in-
+           a-row layout in a 320px sidebar. */
+        .brain-rail-actions {
+          display: flex; flex-direction: column; gap: 8px;
+          margin-bottom: 10px;
+        }
+        .brain-rail-actions .brain-action-btn {
+          width: 100%; justify-content: flex-start;
+        }
+        .brain-rail-shareopt {
+          padding: 6px 4px 10px; font-size: 12px; color: #6b7280;
+        }
+        .brain-rail-shareopt input { margin-right: 4px; vertical-align: -2px; }
+        /* Brain action buttons — mirrors the KB tab's .kbs-train-btn
+           styling so the two surfaces feel like one product. Larger
+           hit target, bolder weight, subtle lift on hover. */
+        .brain-action-btn {
+          display: inline-flex; align-items: center; gap: 8px;
+          padding: 11px 18px; border-radius: 8px;
+          background: #fff; border: 1px solid #e5e7eb; color: #0a0a0a;
+          font: 600 14px inherit; cursor: pointer;
+          transition: background 150ms ease, border-color 150ms ease,
+                      box-shadow 150ms ease, transform 80ms ease;
+          white-space: nowrap;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
+        .brain-action-btn:hover {
+          background: #fafafa; border-color: #d4d4d8;
+          box-shadow: 0 4px 12px rgba(10, 10, 10, 0.08);
+        }
+        .brain-action-btn:active { transform: scale(0.98); }
+        .brain-action-btn svg { width: 16px; height: 16px; color: #525252; }
+        .brain-action-btn--primary {
+          background: #0a0a0a; border-color: #0a0a0a; color: #fff;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+        }
+        .brain-action-btn--primary:hover {
+          background: #262626; border-color: #262626;
+          box-shadow: 0 4px 12px rgba(10,10,10,0.15);
+        }
+        .brain-action-btn--primary svg { color: #fff; }
+        .brain-action-btn:disabled {
+          background: #d4d4d8; border-color: #d4d4d8; color: #fff;
+          cursor: not-allowed; box-shadow: none;
+        }
+        .brain-rail-h {
+          margin: 12px 0 8px; font-size: 11px; font-weight: 600;
+          letter-spacing: 0.06em; text-transform: uppercase; color: #6b7280;
+        }
+        .brain-sources-list {
+          flex: 1 1 auto; overflow-y: auto; min-height: 0;
+          display: flex; flex-direction: column; gap: 6px;
+        }
+        .brain-empty {
+          padding: 24px 12px; text-align: center; color: #94a3b8;
+          font-size: 12.5px; line-height: 1.5;
+        }
+        .brain-source {
+          display: grid; grid-template-columns: 22px 1fr auto;
+          align-items: center; gap: 8px;
+          padding: 8px 10px; border-radius: 8px;
+          background: #fafafa; border: 1px solid #f1f5f9;
+        }
+        .brain-source:hover { background: #f8fafc; }
+        .brain-source-ico { font-size: 16px; line-height: 1; }
+        .brain-source-meta { min-width: 0; }
+        .brain-source-title {
+          font: 500 13px inherit; color: #111827;
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .brain-source-sub {
+          font: 400 11.5px inherit; color: #94a3b8; margin-top: 1px;
+        }
+        .brain-source-shared {
+          margin-left: 4px; font-size: 11px;
+        }
+        .brain-source-del {
+          background: transparent; border: 0; cursor: pointer;
+          color: #9ca3af; font-size: 18px; line-height: 1;
+          width: 24px; height: 24px; border-radius: 4px;
+        }
+        .brain-source-del:hover { background: #fee2e2; color: #b91c1c; }
+        /* Right pane (chat) */
+        .brain-chat {
+          display: flex; flex-direction: column; min-height: 0;
+          background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+          overflow: hidden;
+        }
+        .brain-messages {
+          flex: 1 1 auto; overflow-y: auto; min-height: 0;
+          padding: 16px; display: flex; flex-direction: column; gap: 10px;
+        }
+        .brain-msg {
+          max-width: 78%; padding: 9px 12px; border-radius: 12px;
+          font: 14px/1.5 inherit; word-wrap: break-word;
+        }
+        .brain-msg--bot {
+          align-self: flex-start; background: #f3f4f6; color: #111827;
+          border-bottom-left-radius: 4px;
+        }
+        .brain-msg--me {
+          align-self: flex-end; background: #16a34a; color: #fff;
+          border-bottom-right-radius: 4px;
+        }
+        .brain-msg--intro {
+          background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534;
+          font-size: 13px;
+        }
+        .brain-msg--thinking { color: #94a3b8; font-style: italic; }
+        /* Markdown rendering inside bot messages */
+        .brain-msg--bot strong { font-weight: 700; color: #111827; }
+        .brain-msg--bot em     { font-style: italic; }
+        .brain-msg--bot code   {
+          background: #f1f5f9; border-radius: 4px; padding: 1px 5px;
+          font: 13px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;
+        }
+        .brain-msg--bot ul {
+          margin: 6px 0 6px 0; padding-left: 22px;
+        }
+        .brain-msg--bot li { margin: 2px 0; }
+        /* Inline media carousel — small thumbnails of IG posts the
+           brain referenced. Horizontal scroll, fixed-height tiles, no
+           visual dominance over the answer text. */
+        .brain-msg-media {
+          display: flex; gap: 8px; overflow-x: auto;
+          margin: 10px 0 4px; padding: 4px 0 6px;
+          scrollbar-width: thin;
+        }
+        .brain-msg-media-tile {
+          flex: 0 0 auto; display: block; position: relative;
+          width: 92px; height: 92px;
+          border-radius: 10px; overflow: hidden;
+          background: #f3f4f6; border: 1px solid #e5e7eb;
+          text-decoration: none; color: inherit;
+          transition: transform .12s, box-shadow .12s;
+        }
+        .brain-msg-media-tile:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(15,23,42,.12);
+        }
+        .brain-msg-media-tile img {
+          width: 100%; height: 100%; object-fit: cover; display: block;
+        }
+        .brain-msg-media-tile--noimg {
+          display: flex; align-items: center; justify-content: center;
+          font-size: 10.5px; font-weight: 600; color: #6b7280;
+          background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        }
+        .brain-msg-media-stats {
+          position: absolute; left: 0; right: 0; bottom: 0;
+          background: linear-gradient(to top, rgba(0,0,0,.75), rgba(0,0,0,0));
+          color: #fff; font: 600 10px inherit;
+          padding: 14px 6px 4px; text-align: center;
+          letter-spacing: 0.01em;
+        }
+        /* "Try asking next" — replaces the old "From: …" sources block */
+        .brain-msg-next {
+          margin-top: 10px; padding-top: 10px;
+          border-top: 1px solid #e5e7eb;
+        }
+        .brain-msg-next-l {
+          font: 600 11px inherit; color: #6b7280;
+          letter-spacing: 0.04em; text-transform: uppercase;
+          margin-bottom: 6px;
+        }
+        .brain-msg-next-chips {
+          display: flex; flex-wrap: wrap; gap: 6px;
+        }
+        .brain-msg-next-chip {
+          background: #fff; border: 1px solid #cbd5e1;
+          color: #334155; font: 500 12.5px inherit;
+          padding: 6px 12px; border-radius: 999px; cursor: pointer;
+          text-align: left;
+          transition: background-color .12s, border-color .12s;
+        }
+        .brain-msg-next-chip:hover {
+          background: #f0fdf4; border-color: #86efac; color: #166534;
+        }
+        /* Composer */
+        .brain-composer {
+          display: flex; gap: 8px; align-items: flex-end;
+          padding: 10px 12px; border-top: 1px solid #f1f5f9; background: #fafafa;
+        }
+        .brain-composer textarea {
+          flex: 1 1 auto; resize: none;
+          border: 1px solid #e5e7eb; border-radius: 10px;
+          padding: 10px 12px; font: 14px/1.45 inherit;
+          background: #fff; outline: none;
+        }
+        .brain-composer textarea:focus {
+          border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,.1);
+        }
+        .brain-ask-btn {
+          display: inline-flex; align-items: center; gap: 6px;
+          padding: 9px 18px; border-radius: 10px; cursor: pointer;
+          background: #16a34a; border: 0; color: #fff;
+          font: 600 13px inherit;
+        }
+        .brain-ask-btn:hover { background: #15803d; }
+        .brain-ask-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+        /* Quick-note modal */
+        .brain-modal-bg {
+          position: fixed; inset: 0; z-index: 80;
+          background: rgba(15,23,42,.5); display: flex; align-items: center; justify-content: center;
+        }
+        .brain-modal {
+          background: #fff; border-radius: 14px; width: min(480px, 92vw);
+          box-shadow: 0 20px 50px rgba(15,23,42,.2);
+          display: flex; flex-direction: column;
+        }
+        .brain-modal-h {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 14px 18px; border-bottom: 1px solid #f1f5f9;
+        }
+        .brain-modal-h h3 { margin: 0; font: 600 15px inherit; color: #111827; }
+        .brain-modal-x {
+          background: transparent; border: 0; cursor: pointer;
+          color: #9ca3af; font-size: 22px; line-height: 1; padding: 4px 8px;
+        }
+        .brain-modal-x:hover { color: #111827; }
+        .brain-modal-body {
+          padding: 16px 18px; display: flex; flex-direction: column; gap: 10px;
+        }
+        .brain-modal-body label {
+          font: 500 12px inherit; color: #475569;
+        }
+        .brain-modal-body input[type="text"],
+        .brain-modal-body textarea {
+          width: 100%; box-sizing: border-box;
+          border: 1px solid #e5e7eb; border-radius: 8px;
+          padding: 8px 10px; font: 14px/1.45 inherit; outline: none;
+        }
+        .brain-modal-body input[type="text"]:focus,
+        .brain-modal-body textarea:focus {
+          border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,.1);
+        }
+        .brain-modal-checkbox {
+          font-size: 12px; color: #6b7280;
+        }
+        .brain-modal-checkbox input { margin-right: 4px; vertical-align: -2px; }
+        .brain-modal-foot {
+          display: flex; justify-content: flex-end; gap: 8px;
+          padding: 12px 18px; border-top: 1px solid #f1f5f9;
+        }
+
         /* Settings top-level tabs (General / Phone) */
         .stg-tabs-wrap { margin-bottom: 0; }
         .stg-top-tabs {
@@ -14958,6 +15315,7 @@
             <button type="button" class="stg-top-tab is-active" data-settings-top-tab="general" role="tab" aria-selected="true">General</button>
             <button type="button" class="stg-top-tab" data-settings-top-tab="phone" role="tab">Phone</button>
             <button type="button" class="stg-top-tab" data-settings-top-tab="kb" role="tab">Knowledge base</button>
+            <button type="button" class="stg-top-tab" data-settings-top-tab="brain" role="tab">Internal brain</button>
           </nav>
         </div>
 
@@ -15238,6 +15596,176 @@
             <!-- #kbSources section content is moved here by initSettingsTopTabs() JS below. -->
           </div>
         </div><!-- /stg-top-pane kb -->
+
+        <!-- ─────────── Internal Brain pane (Phase 1) ─────────────────
+             Owner-only KB + chat. Strictly separate from the public
+             chatbot's KB above. Sources here NEVER leak via the widget
+             unless the owner explicitly ticks "Also share with chatbot"
+             on a doc. Phases 2-4 add auto-ingest of app data + tool-use
+             over /me/* endpoints + write-actions with confirmation. -->
+        <div class="stg-top-pane" data-settings-top-pane="brain" style="grid-column: span 12;" hidden>
+          <div class="brain-page">
+            <header class="brain-page-h">
+              <div>
+                <h2 class="brain-page-title">Internal brain</h2>
+                <p class="brain-page-sub">Your private knowledge base. Upload SOPs, contracts, or jot quick notes — then ask questions. Only you can see this. The chatbot on your website never reads from here unless you explicitly share a doc.</p>
+              </div>
+              <div class="brain-head-r">
+                <button type="button" id="brainPrefsBtn" class="brain-head-iconbtn"
+                        title="Brain settings (length, style, custom note)" aria-label="Brain settings">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                       stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                  </svg>
+                </button>
+                <div class="brain-budget" id="brainBudget" hidden>
+                  <span class="brain-budget-label">Today</span>
+                  <span class="brain-budget-val" id="brainBudgetVal">—</span>
+                </div>
+              </div>
+            </header>
+
+            <!-- Brain settings modal — opens from the gear icon. Three
+                 high-leverage knobs + one optional custom note. Saves
+                 to /me/internal-kb/prefs; injected into the system
+                 prompt on every /ask automatically. -->
+            <div class="brain-modal-bg" id="brainPrefsModal" hidden>
+              <div class="brain-modal" style="width: min(520px, 92vw)">
+                <header class="brain-modal-h">
+                  <h3>How should the brain talk to you?</h3>
+                  <button type="button" class="brain-modal-x" id="brainPrefsClose" aria-label="Close">×</button>
+                </header>
+                <div class="brain-modal-body">
+                  <div class="brain-pref-group">
+                    <label class="brain-pref-l">Response length</label>
+                    <div class="brain-pref-pills" data-pref="length">
+                      <button type="button" class="brain-pref-pill" data-val="brief">Brief</button>
+                      <button type="button" class="brain-pref-pill" data-val="standard">Standard</button>
+                      <button type="button" class="brain-pref-pill" data-val="detailed">Detailed</button>
+                    </div>
+                    <div class="brain-pref-help">Brief = 1–3 sentences. Detailed = full depth with sub-headings.</div>
+                  </div>
+                  <div class="brain-pref-group">
+                    <label class="brain-pref-l">Style</label>
+                    <div class="brain-pref-pills" data-pref="style">
+                      <button type="button" class="brain-pref-pill" data-val="formal">Formal</button>
+                      <button type="button" class="brain-pref-pill" data-val="friendly">Friendly</button>
+                      <button type="button" class="brain-pref-pill" data-val="bold">Bold</button>
+                    </div>
+                    <div class="brain-pref-help">Bold = direct, opinionated, will push back. Formal = measured, professional.</div>
+                  </div>
+                  <div class="brain-pref-group">
+                    <label class="brain-pref-l" for="brainPrefCustom">Custom note (optional)</label>
+                    <input id="brainPrefCustom" type="text" maxlength="240"
+                           placeholder='e.g., "always sign off as Doug" or "we are a Chicago roofer"' />
+                    <div class="brain-pref-help">One thing the brain should always remember about you. Up to 240 characters.</div>
+                  </div>
+                </div>
+                <footer class="brain-modal-foot">
+                  <button type="button" class="brain-action-btn" id="brainPrefsCancel">Cancel</button>
+                  <button type="button" class="brain-action-btn brain-action-btn--primary" id="brainPrefsSave">Save</button>
+                </footer>
+              </div>
+            </div>
+
+            <div class="brain-layout">
+              <!-- Left rail: sources + add controls -->
+              <aside class="brain-rail">
+                <div class="brain-rail-actions">
+                  <label for="brainUpload" class="brain-action-btn brain-action-btn--primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    Upload file
+                  </label>
+                  <input type="file" id="brainUpload" accept=".pdf,.docx,.txt,.md" hidden>
+                  <button type="button" class="brain-action-btn" id="brainAddNoteBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                    Quick note
+                  </button>
+                  <button type="button" class="brain-action-btn" id="brainImportDriveBtn"
+                          title="Import a Google Doc, Sheet, Slides, or any Drive file">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polygon points="12 2 22 20 2 20 12 2"/>
+                    </svg>
+                    From Drive
+                  </button>
+                </div>
+
+                <!-- Drive-import modal -->
+                <div class="brain-modal-bg" id="brainDriveModal" hidden>
+                  <div class="brain-modal" style="width: min(520px, 92vw)">
+                    <header class="brain-modal-h">
+                      <h3>Import from Google Drive</h3>
+                      <button type="button" class="brain-modal-x" id="brainDriveClose" aria-label="Close">×</button>
+                    </header>
+                    <div class="brain-modal-body">
+                      <label for="brainDriveUrl" class="brain-pref-l">Paste a Google Drive URL</label>
+                      <input id="brainDriveUrl" type="text"
+                             placeholder="https://docs.google.com/document/d/…  or  spreadsheets/d/…  or  drive.google.com/file/d/…" />
+                      <div class="brain-pref-help">
+                        Works with Google Docs, Sheets, Slides, and any file in your Drive (PDF, docx, txt, md). Uses your existing Google connection.
+                      </div>
+                      <label class="brain-modal-checkbox" style="margin-top:8px">
+                        <input type="checkbox" id="brainDriveShare">
+                        Also share with the public chatbot
+                      </label>
+                      <div id="brainDriveStatus" class="brain-pref-help" style="color:#b45309;display:none"></div>
+                    </div>
+                    <footer class="brain-modal-foot">
+                      <button type="button" class="brain-action-btn" id="brainDriveCancel">Cancel</button>
+                      <button type="button" class="brain-action-btn brain-action-btn--primary" id="brainDriveImport">Import</button>
+                    </footer>
+                  </div>
+                </div>
+                <div class="brain-rail-shareopt" hidden id="brainShareOpt">
+                  <label><input type="checkbox" id="brainShareWithClient"> Also share with the public chatbot</label>
+                </div>
+                <h3 class="brain-rail-h">Sources</h3>
+                <div id="brainSources" class="brain-sources-list">
+                  <div class="brain-empty">Nothing in your brain yet. Upload a doc or add a note above.</div>
+                </div>
+              </aside>
+
+              <!-- Right pane: chat -->
+              <section class="brain-chat">
+                <div id="brainMessages" class="brain-messages">
+                  <div class="brain-msg brain-msg--bot brain-msg--intro">
+                    Hey — I'm your Co-CEO. I know your business inside and out: leads, chats, posts, docs, all of it. Ask me to look something up, brainstorm a strategy, draft a social post, or text a lead. Try: <em>"What should I focus on this week?"</em> or <em>"Draft an Instagram post about our Tuesday no-install rule."</em>
+                  </div>
+                </div>
+                <form class="brain-composer" id="brainAskForm">
+                  <textarea id="brainQuestion" rows="2" placeholder="Ask, brainstorm, or tell me to do something…"></textarea>
+                  <button type="submit" class="brain-ask-btn" id="brainAskBtn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    Ask
+                  </button>
+                </form>
+              </section>
+            </div>
+          </div>
+
+          <!-- Quick-note modal (lightweight, custom DOM — no react/shadcn) -->
+          <div class="brain-modal-bg" id="brainNoteModal" hidden>
+            <div class="brain-modal">
+              <header class="brain-modal-h">
+                <h3>Add a quick note</h3>
+                <button type="button" class="brain-modal-x" id="brainNoteClose" aria-label="Close">×</button>
+              </header>
+              <div class="brain-modal-body">
+                <label for="brainNoteTitle">Title</label>
+                <input type="text" id="brainNoteTitle" placeholder="e.g. Tuesday supplier rule" maxlength="200">
+                <label for="brainNoteBody">Note</label>
+                <textarea id="brainNoteBody" rows="6" placeholder="Type whatever you want the brain to remember…"></textarea>
+                <label class="brain-modal-checkbox"><input type="checkbox" id="brainNoteShare"> Also share with the public chatbot</label>
+              </div>
+              <footer class="brain-modal-foot">
+                <button type="button" class="brain-action-btn" id="brainNoteCancel">Cancel</button>
+                <button type="button" class="brain-action-btn brain-action-btn--primary" id="brainNoteSave">Save note</button>
+              </footer>
+            </div>
+          </div>
+        </div><!-- /stg-top-pane brain -->
 
       </section>
 
@@ -15522,9 +16050,15 @@
       <section class="grid" id="inbox" data-route-section="inbox" hidden>
         <div class="ibx-page" style="grid-column: span 12;">
 
+          <!-- Instagram DMs panel hidden from this surface. The Inbox is
+               Web-Chat only now; Instagram has its own dedicated page
+               at /dashboard/instagram. We keep the Instagram markup
+               in the DOM (hidden) so the existing inbox.js bundle that
+               reads #inboxList / #inboxLayout etc. doesn't crash. -->
+          <div class="ibx-channel-panel" data-ibx-channel="instagram" hidden>
+
           <!-- Page header -->
           <div class="ibx-page-header">
-            <!-- Page title removed — top bar already says "Inbox". -->
             <p class="ibx-page-sub" style="margin-top:0">Customer DMs from your connected Instagram accounts.</p>
           </div>
 
@@ -15571,9 +16105,41 @@
 
           </div><!-- /ibx-layout -->
 
+          </div><!-- /ibx-channel-panel: instagram -->
+
+          <!-- ───────── Web Chat channel panel (NEW) ───────────────────
+               Lists every visitor who chatted with the embedded widget.
+               Mirrors the Instagram pane's two-column layout: list left,
+               transcript right. Sessions auto-promote to real Leads when
+               the bot detects shared contact info (those rows get a
+               ✓ Lead badge that links to the lead detail). -->
+          <div class="ibx-channel-panel" data-ibx-channel="webchat">
+            <div class="ibx-page-header">
+              <p class="ibx-page-sub" style="margin-top:0">
+                Visitors who chatted with your embedded chatbot. Sessions
+                with contact info auto-promote to Leads.
+              </p>
+            </div>
+
+            <div id="webchatLayout" class="ibx-layout">
+              <div class="ibx-rail">
+                <div id="webchatList" class="ibx-conv-list">
+                  <div class="ibx-thread-placeholder" style="padding:24px;text-align:center;color:#6b7280;font-size:13px">
+                    Loading…
+                  </div>
+                </div>
+              </div>
+              <div class="ibx-thread-pane">
+                <div id="webchatThread" class="ibx-thread-content">
+                  <div class="ibx-thread-placeholder">Select a chat to read it.</div>
+                </div>
+              </div>
+            </div>
+          </div><!-- /ibx-channel-panel: webchat -->
+
         </div>
       </section>
-      <!-- ─── /Instagram DMs Inbox ────────────────────────────────────────── -->
+      <!-- ─── /Inbox (Instagram + Web Chat) ───────────────────────────── -->
 
       <!-- ─────────── Social Pipeline (Bronze / Silver / Gold) ─────────────
            Generate hook+meat+CTA candidates for LinkedIn + Instagram, score
@@ -19938,21 +20504,34 @@
     async function maybeOpenWelcomeModal() {
       // Welcome modal auto-trigger is disabled. The trial flow (the only
       // signup path right now) collects all the same fields on /try and
-      // then trains the KB automatically — there is no scenario where we
-      // need to interrupt the dashboard with this modal. The HTML is
-      // retained (lines ~5169-5198) in case a future onboarding flow
-      // wants to surface it manually.
+      // trains the KB automatically — there is no scenario where we need
+      // to interrupt the dashboard with this modal.
       return;
-      // Legacy path retained below but unreachable. Restore by removing
-      // the `return;` above if you need this back.
+      // ─── legacy guard ladder retained below as documentation ───
+      // Delete the `return;` above to restore the prior behavior.
       try {
         const res = await fetch("/me", { credentials: "same-origin" });
         if (!res.ok) return;
         const me = await res.json();
-        if (!me || !me.authenticated || me.is_admin) return;
-        if (me.is_trial_session || me.trial) return;
-        if (me.customer_id && /^demo_trial_/.test(me.customer_id)) return;
+        try { console.log("[welcome-modal] /me response:", JSON.stringify(me)); } catch (_) {}
+        if (!me || !me.authenticated) { console.log("[welcome-modal] skip: not authenticated"); return; }
+        if (me.is_admin)               { console.log("[welcome-modal] skip: admin"); return; }
+
+        // Trial users never see the welcome modal — they already provided
+        // business URL + email during /try, and the KB has been (or is being)
+        // trained for them. The trial banner on the activity pane is the
+        // first-run surface for them, not this modal.
+        if (me.is_trial_session)       { console.log("[welcome-modal] skip: is_trial_session"); return; }
+        if (me.trial)                  { console.log("[welcome-modal] skip: me.trial present"); return; }
+        if (me.customer_id && /^demo_trial_/.test(me.customer_id)) {
+          console.log("[welcome-modal] skip: customer_id starts with demo_trial_");
+          return;
+        }
+
+        // Path A: brand-new (no onboarded_at) → existing welcome modal
+        // (collects business + URL + spawns KB build).
         if (!me.onboarded) {
+          console.log("[welcome-modal] FIRING — onboarded is false. me:", JSON.stringify(me));
           const dlg = document.getElementById("welcomeModal");
           if (dlg && typeof dlg.showModal === "function") dlg.showModal();
           return;
@@ -20467,11 +21046,106 @@
       // Instagram DMs Inbox bundle: lazy-loads web/src/routes/inbox.js
       // then calls window.loadInboxSection to fetch conversations.
       SECTION_ON_ENTER.inbox = async function loadInboxSection() {
-        await window.__dashboardLoadRouteModule("inbox");
-        if (typeof window.loadInboxSection === "function") {
-          return window.loadInboxSection();
-        }
+        // Inbox surface is now Web-Chat only. The legacy Instagram inbox
+        // module is left registered for back-compat (the markup is still
+        // present hidden), but we don't bother loading it here — the IG
+        // page has its own dedicated route at /dashboard/instagram.
+        try { await __webchatLoad(); } catch (_) {}
       };
+
+      // ── Web Chat panel ─────────────────────────────────────────────
+      // Single-file implementation rather than a route module — the
+      // surface is small (list + transcript). Re-fetches on every entry
+      // to keep the list current.
+      let __webchatLoaded = false;
+      let __webchatActiveSid = "";
+      async function __webchatLoad() {
+        const list = document.getElementById("webchatList");
+        if (!list) return;
+        list.innerHTML = '<div class="ibx-thread-placeholder" style="padding:24px;text-align:center;color:#6b7280;font-size:13px">Loading…</div>';
+        try {
+          const r = await fetch("/me/chat-sessions",
+            { credentials: "same-origin", cache: "no-store" });
+          if (!r.ok) {
+            list.innerHTML = `<div class="ibx-thread-placeholder" style="padding:24px;text-align:center;color:#b45309">Couldn't load (${r.status}).</div>`;
+            return;
+          }
+          const d = await r.json();
+          const sessions = (d && d.sessions) || [];
+          __webchatLoaded = true;
+          if (sessions.length === 0) {
+            list.innerHTML = `<div class="ibx-thread-placeholder" style="padding:24px;text-align:center;color:#6b7280;font-size:13px;line-height:1.5">No web chats yet.<br><br>Conversations from your embedded chatbot widget will appear here. When a visitor shares contact info, the chat auto-promotes to a Lead.</div>`;
+            return;
+          }
+          list.innerHTML = sessions.map(s => {
+            const when = new Date((s.last_seen_at || 0) * 1000);
+            const ago = (function(){
+              const m = Math.floor((Date.now()/1000 - (s.last_seen_at||0))/60);
+              if (m < 1) return "just now";
+              if (m < 60) return m + "m ago";
+              if (m < 1440) return Math.floor(m/60) + "h ago";
+              return Math.floor(m/1440) + "d ago";
+            })();
+            const badge = s.promoted_to_lead_id
+              ? `<span style="background:#dcfce7;color:#166534;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600;margin-left:6px">✓ Lead</span>`
+              : "";
+            const snippet = (s.snippet || "(no message)")
+              .replace(/&/g,"&amp;").replace(/</g,"&lt;");
+            return `
+              <button type="button" class="ibx-conv-row" data-webchat-sid="${s.session_id}"
+                      style="display:block;width:100%;text-align:left;padding:10px 12px;border:0;background:transparent;border-bottom:1px solid #f1f5f9;cursor:pointer">
+                <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+                  <strong style="font-size:13px;color:#111827">Web visitor${badge}</strong>
+                  <span style="font-size:11px;color:#9ca3af">${ago}</span>
+                </div>
+                <div style="font-size:12.5px;color:#475569;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${snippet}</div>
+                <div style="font-size:11px;color:#94a3b8;margin-top:2px">${s.message_count||0} messages${s.domain ? " · " + s.domain : ""}</div>
+              </button>`;
+          }).join("");
+          list.querySelectorAll("[data-webchat-sid]").forEach(btn => {
+            btn.addEventListener("click", () => __webchatOpen(btn.dataset.webchatSid));
+          });
+        } catch (exc) {
+          list.innerHTML = `<div class="ibx-thread-placeholder" style="padding:24px;text-align:center;color:#b45309">Couldn't load: ${String(exc)}</div>`;
+        }
+      }
+      async function __webchatOpen(sid) {
+        if (!sid) return;
+        __webchatActiveSid = sid;
+        const pane = document.getElementById("webchatThread");
+        if (!pane) return;
+        pane.innerHTML = '<div class="ibx-thread-placeholder">Loading…</div>';
+        try {
+          const r = await fetch("/me/chat-sessions/" + encodeURIComponent(sid),
+            { credentials: "same-origin", cache: "no-store" });
+          const d = await r.json();
+          const rec = (d && d.session) || {};
+          const msgs = rec.messages || [];
+          const ext = rec.extracted || {};
+          const promoted = rec.promoted_to_lead_id || "";
+          const meta = `
+            <div style="padding:12px 16px;border-bottom:1px solid #f1f5f9;background:#fafafa;font-size:12.5px;color:#475569">
+              <div><strong style="color:#111827">${rec.message_count || msgs.length} messages</strong>${rec.domain ? " · from " + rec.domain : ""}</div>
+              ${(ext.email || ext.phone || ext.name) ? `<div style="margin-top:4px;color:#475569">Shared: ${[ext.name, ext.email, ext.phone].filter(Boolean).join(" · ")}</div>` : ""}
+              ${promoted ? `<div style="margin-top:6px"><a href="#leads" style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:6px;font-weight:600;text-decoration:none">✓ View Lead → ${promoted}</a></div>` : ""}
+            </div>`;
+          const bubbles = msgs.map(m => {
+            const isUser = m.role === "user";
+            const txt = (m.content || "").replace(/&/g,"&amp;").replace(/</g,"&lt;");
+            return `<div style="display:flex;justify-content:${isUser?"flex-start":"flex-end"};margin:8px 16px">
+              <div style="max-width:78%;padding:8px 12px;border-radius:14px;font-size:13.5px;line-height:1.4;
+                          ${isUser
+                            ? "background:#f3f4f6;color:#111827;border-bottom-left-radius:4px"
+                            : "background:#16a34a;color:#fff;border-bottom-right-radius:4px"}">
+                ${txt}
+              </div>
+            </div>`;
+          }).join("");
+          pane.innerHTML = meta + `<div style="padding:8px 0">${bubbles || '<div class="ibx-thread-placeholder">No messages.</div>'}</div>`;
+        } catch (exc) {
+          pane.innerHTML = `<div class="ibx-thread-placeholder" style="color:#b45309">Couldn't load: ${String(exc)}</div>`;
+        }
+      }
       // activity / home share the same loader. initAppRouter calls
       // appShowRoute(initial) → _runSectionLoader("activity") at boot,
       // which fires this on the landing page automatically.
@@ -22076,6 +22750,558 @@
         }
       }
 
+      // ── Internal brain pane controller (Phase 1) ───────────────
+      // Vanilla — no module to lazy-load. Wires upload, quick-note,
+      // sources list, and chat. Refetches sources on every tab entry
+      // so the list is always current.
+      let brainInited = false;
+      let brainSessionId = "default";   // single session per dashboard load
+
+      async function brainRefreshSources() {
+        const list = document.getElementById("brainSources");
+        if (!list) return;
+        try {
+          const r = await fetch("/me/internal-kb/sources",
+            { credentials: "same-origin", cache: "no-store" });
+          if (!r.ok) {
+            list.innerHTML = `<div class="brain-empty">Couldn't load (${r.status}).</div>`;
+            return;
+          }
+          const d = await r.json();
+          const sources = d.sources || [];
+          // Update budget badge
+          if (d.budget) {
+            const badge = document.getElementById("brainBudget");
+            const val = document.getElementById("brainBudgetVal");
+            if (badge && val) {
+              badge.hidden = false;
+              val.textContent = "$" + Number(d.budget.today_spend_usd || 0).toFixed(3)
+                + " / $" + Number(d.budget.daily_budget_usd || 0).toFixed(2);
+            }
+          }
+          if (sources.length === 0) {
+            list.innerHTML = '<div class="brain-empty">Nothing in your brain yet. Upload a doc or add a note above.</div>';
+            return;
+          }
+          list.innerHTML = sources.map(s => {
+            const dt = s.added_at ? new Date(s.added_at * 1000).toLocaleDateString() : "";
+            const kindIcon = s.kind === "file" ? "📄" : "📝";
+            const safeTitle = (s.title || "").replace(/&/g,"&amp;").replace(/</g,"&lt;");
+            const sharedTag = s.shared_with_client_kb
+              ? '<span class="brain-source-shared" title="Shared with the public chatbot">🌐</span>'
+              : '';
+            const kb = Math.max(1, Math.round((s.char_count || 0)/1024));
+            return `
+              <div class="brain-source" data-sid="${s.source_id}">
+                <span class="brain-source-ico">${kindIcon}</span>
+                <div class="brain-source-meta">
+                  <div class="brain-source-title">${safeTitle}${sharedTag}</div>
+                  <div class="brain-source-sub">${kb} KB · added ${dt}</div>
+                </div>
+                <button type="button" class="brain-source-del" data-sid="${s.source_id}" title="Remove">&times;</button>
+              </div>`;
+          }).join("");
+          list.querySelectorAll(".brain-source-del").forEach(btn => {
+            btn.addEventListener("click", async () => {
+              const sid = btn.dataset.sid;
+              if (!sid || !confirm("Remove this from your brain? It'll forget what's in it.")) return;
+              btn.disabled = true;
+              try {
+                await fetch("/me/internal-kb/sources/" + encodeURIComponent(sid),
+                  { method:"DELETE", credentials:"same-origin" });
+              } catch(_) {}
+              brainRefreshSources();
+            });
+          });
+        } catch (exc) {
+          list.innerHTML = `<div class="brain-empty">Couldn't load: ${String(exc)}</div>`;
+        }
+      }
+
+      // Light markdown — handles **bold**, *italic*, bullets, code,
+      // and line/paragraph breaks. No external lib. Always escape HTML
+      // first so user-controlled content can't inject markup.
+      function brainRenderMarkdown(raw) {
+        let s = (raw || "").replace(/&/g, "&amp;")
+                            .replace(/</g, "&lt;")
+                            .replace(/>/g, "&gt;");
+        s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+        s = s.replace(/\*\*([^*\n]+?)\*\*/g, "<strong>$1</strong>");
+        s = s.replace(/(^|[^*])\*([^*\n]+?)\*(?!\*)/g, "$1<em>$2</em>");
+        const lines = s.split(/\n/);
+        const out = [];
+        let inList = false;
+        for (let line of lines) {
+          const m = line.match(/^\s*[-*•]\s+(.+)$/);
+          if (m) {
+            if (!inList) { out.push("<ul>"); inList = true; }
+            out.push(`<li>${m[1]}</li>`);
+          } else {
+            if (inList) { out.push("</ul>"); inList = false; }
+            out.push(line.trim() ? `${line}<br>` : "<br>");
+          }
+        }
+        if (inList) out.push("</ul>");
+        return out.join("");
+      }
+
+      function brainAppendMessage(role, content, nextQuestions, mediaPreviews) {
+        const stream = document.getElementById("brainMessages");
+        if (!stream) return;
+        const cls = role === "user" ? "brain-msg brain-msg--me"
+                                     : "brain-msg brain-msg--bot";
+        const div = document.createElement("div");
+        div.className = cls;
+        if (role === "user") {
+          div.innerHTML = (content || "")
+            .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/\n/g,"<br>");
+        } else {
+          div.innerHTML = brainRenderMarkdown(content || "");
+
+          // Inline media carousel — small thumbnails of any IG posts
+          // the brain referenced. Sits between the answer body and
+          // the "Try asking next" chips so the visual previews feel
+          // like part of the answer, not a footer.
+          if (mediaPreviews && mediaPreviews.length) {
+            const car = document.createElement("div");
+            car.className = "brain-msg-media";
+            for (const p of mediaPreviews) {
+              const a = document.createElement("a");
+              a.className = "brain-msg-media-tile";
+              a.href = p.permalink || "#";
+              a.target = "_blank";
+              a.rel = "noopener";
+              a.title = (p.caption || "Open on Instagram");
+              if (p.thumbnail_url) {
+                const img = document.createElement("img");
+                img.src = p.thumbnail_url;
+                img.alt = "";
+                img.loading = "lazy";
+                a.appendChild(img);
+              } else {
+                a.classList.add("brain-msg-media-tile--noimg");
+                a.textContent = (p.media_type || "POST");
+              }
+              if (p.like_count != null || p.comments_count != null) {
+                const stats = document.createElement("div");
+                stats.className = "brain-msg-media-stats";
+                stats.textContent =
+                  `♥ ${p.like_count ?? 0} · 💬 ${p.comments_count ?? 0}`;
+                a.appendChild(stats);
+              }
+              car.appendChild(a);
+            }
+            div.appendChild(car);
+          }
+
+          if (nextQuestions && nextQuestions.length) {
+            const block = document.createElement("div");
+            block.className = "brain-msg-next";
+            const lbl = document.createElement("div");
+            lbl.className = "brain-msg-next-l";
+            lbl.textContent = "Try asking next:";
+            block.appendChild(lbl);
+            const wrap = document.createElement("div");
+            wrap.className = "brain-msg-next-chips";
+            for (const q of nextQuestions) {
+              const btn = document.createElement("button");
+              btn.type = "button";
+              btn.className = "brain-msg-next-chip";
+              btn.textContent = q;
+              btn.addEventListener("click", () => brainAsk(q));
+              wrap.appendChild(btn);
+            }
+            block.appendChild(wrap);
+            div.appendChild(block);
+          }
+        }
+        stream.appendChild(div);
+        stream.scrollTop = stream.scrollHeight;
+      }
+
+      async function brainAsk(question) {
+        if (!question.trim()) return;
+        brainAppendMessage("user", question);
+        const askBtn = document.getElementById("brainAskBtn");
+        if (askBtn) { askBtn.disabled = true; askBtn.textContent = "Thinking…"; }
+        // Insert a "thinking" placeholder
+        const stream = document.getElementById("brainMessages");
+        const thinking = document.createElement("div");
+        thinking.className = "brain-msg brain-msg--bot brain-msg--thinking";
+        thinking.textContent = "Thinking…";
+        stream.appendChild(thinking);
+        stream.scrollTop = stream.scrollHeight;
+        try {
+          const r = await fetch("/me/internal-kb/ask", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question, session_id: brainSessionId }),
+          });
+          const d = await r.json().catch(() => ({}));
+          thinking.remove();
+          if (!r.ok) {
+            brainAppendMessage("bot",
+              d.message || d.error || "Something went wrong. Try again.");
+          } else if (d.pending_action) {
+            // Brain wants to act — render confirmation modal verbatim.
+            brainShowConfirm(d.pending_action);
+          } else {
+            brainAppendMessage("bot", d.answer || "(no answer)",
+                                 d.next_questions || [],
+                                 d.media_previews || []);
+            if (d.budget) {
+              const val = document.getElementById("brainBudgetVal");
+              if (val) val.textContent = "$" + Number(d.budget.today_spend_usd || 0).toFixed(3)
+                + " / $" + Number(d.budget.daily_budget_usd || 0).toFixed(2);
+            }
+          }
+        } catch (exc) {
+          thinking.remove();
+          brainAppendMessage("bot", "Network error: " + String(exc));
+        } finally {
+          if (askBtn) { askBtn.disabled = false; askBtn.textContent = "Ask"; }
+        }
+      }
+
+      function brainShowConfirm(pending) {
+        // pending = {tool, params, preview}
+        // Render a modal asking the owner to approve or cancel.
+        const safe = (s) => (s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;");
+        let modal = document.getElementById("brainConfirmModal");
+        if (!modal) {
+          modal = document.createElement("div");
+          modal.id = "brainConfirmModal";
+          modal.className = "brain-modal-bg";
+          modal.innerHTML = `
+            <div class="brain-modal">
+              <header class="brain-modal-h">
+                <h3>Confirm action</h3>
+                <button type="button" class="brain-modal-x" id="brainConfirmX" aria-label="Close">×</button>
+              </header>
+              <div class="brain-modal-body">
+                <p style="margin:0;font-size:12px;color:#6b7280">The brain wants to take this action on your behalf:</p>
+                <pre id="brainConfirmPreview" style="margin:6px 0 0;padding:12px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;font:13px/1.5 monospace;white-space:pre-wrap"></pre>
+              </div>
+              <footer class="brain-modal-foot">
+                <button type="button" class="brain-action-btn" id="brainConfirmCancel">Cancel</button>
+                <button type="button" class="brain-action-btn brain-action-btn--primary" id="brainConfirmOk">Approve &amp; run</button>
+              </footer>
+            </div>`;
+          document.body.appendChild(modal);
+        }
+        document.getElementById("brainConfirmPreview").textContent = pending.preview || `${pending.tool}(${JSON.stringify(pending.params)})`;
+        modal.hidden = false;
+        function cleanup() { modal.hidden = true; }
+        const okBtn     = document.getElementById("brainConfirmOk");
+        const cancelBtn = document.getElementById("brainConfirmCancel");
+        const xBtn      = document.getElementById("brainConfirmX");
+        function postDecision(decision) {
+          okBtn.disabled = true; cancelBtn.disabled = true;
+          okBtn.textContent = decision === "approve" ? "Running…" : "Cancelling…";
+          fetch("/me/internal-kb/confirm", {
+            method: "POST", credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              tool:        pending.tool,
+              params:      pending.params,
+              decision,
+              session_id:  brainSessionId,
+            }),
+          }).then(r => r.json().catch(() => ({}))).then(d => {
+            cleanup();
+            okBtn.disabled = false; cancelBtn.disabled = false;
+            okBtn.textContent = "Approve & run";
+            if (decision === "approve") {
+              brainAppendMessage("bot",
+                d.answer || (d.ok ? "Done." : "Failed: " + (d.error || "unknown")),
+                []);
+            } else {
+              brainAppendMessage("bot", "Got it — canceled. Anything else?");
+            }
+            if (d.budget) {
+              const val = document.getElementById("brainBudgetVal");
+              if (val) val.textContent = "$" + Number(d.budget.today_spend_usd || 0).toFixed(3)
+                + " / $" + Number(d.budget.daily_budget_usd || 0).toFixed(2);
+            }
+          }).catch(exc => {
+            cleanup();
+            okBtn.disabled = false; cancelBtn.disabled = false;
+            okBtn.textContent = "Approve & run";
+            brainAppendMessage("bot", "Confirm error: " + String(exc));
+          });
+        }
+        okBtn.onclick     = () => postDecision("approve");
+        cancelBtn.onclick = () => postDecision("cancel");
+        xBtn.onclick      = () => { cleanup(); brainAppendMessage("bot", "Got it — canceled."); };
+      }
+
+      // Brain settings modal — open / load / save. Three knobs +
+      // optional custom note. Persists to /me/internal-kb/prefs.
+      async function brainPrefsOpen() {
+        const modal = document.getElementById("brainPrefsModal");
+        if (!modal) return;
+        // Reset visual state
+        document.querySelectorAll("#brainPrefsModal .brain-pref-pill")
+          .forEach(b => b.classList.remove("is-active"));
+        const customInput = document.getElementById("brainPrefCustom");
+        if (customInput) customInput.value = "";
+        modal.hidden = false;
+        try {
+          const r = await fetch("/me/internal-kb/prefs",
+            { credentials: "same-origin", cache: "no-store" });
+          const d = await r.json();
+          const p = (d && d.prefs) || {length:"standard", style:"friendly", custom:""};
+          document.querySelectorAll(
+            `#brainPrefsModal .brain-pref-pills[data-pref="length"] [data-val="${p.length}"]`
+          ).forEach(b => b.classList.add("is-active"));
+          document.querySelectorAll(
+            `#brainPrefsModal .brain-pref-pills[data-pref="style"] [data-val="${p.style}"]`
+          ).forEach(b => b.classList.add("is-active"));
+          if (customInput) customInput.value = p.custom || "";
+        } catch (_) {}
+      }
+      function brainPrefsClose() {
+        const m = document.getElementById("brainPrefsModal");
+        if (m) m.hidden = true;
+      }
+      async function brainPrefsSave() {
+        const length = document.querySelector(
+          '#brainPrefsModal .brain-pref-pills[data-pref="length"] .is-active'
+        )?.dataset?.val || "standard";
+        const style = document.querySelector(
+          '#brainPrefsModal .brain-pref-pills[data-pref="style"] .is-active'
+        )?.dataset?.val || "friendly";
+        const custom = (document.getElementById("brainPrefCustom")?.value || "").trim();
+        const btn = document.getElementById("brainPrefsSave");
+        if (btn) { btn.disabled = true; btn.textContent = "Saving…"; }
+        try {
+          await fetch("/me/internal-kb/prefs", {
+            method: "POST", credentials: "same-origin",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ length, style, custom }),
+          });
+          brainPrefsClose();
+          // Inline confirmation in the chat stream so the owner sees
+          // the change took effect (next /ask will use the new prefs).
+          brainAppendMessage("bot",
+            `Got it — using **${style}** tone and **${length}** length from now on.`
+            + (custom ? ` I'll also remember: *"${custom}"*.` : ""),
+            []);
+        } catch (exc) {
+          alert("Couldn't save: " + String(exc));
+        } finally {
+          if (btn) { btn.disabled = false; btn.textContent = "Save"; }
+        }
+      }
+
+      function ensureBrainInit() {
+        if (brainInited) {
+          brainRefreshSources();   // refetch on every tab entry
+          return;
+        }
+        brainInited = true;
+        // Wire prefs modal once
+        const prefsBtn    = document.getElementById("brainPrefsBtn");
+        const prefsClose  = document.getElementById("brainPrefsClose");
+        const prefsCancel = document.getElementById("brainPrefsCancel");
+        const prefsSave   = document.getElementById("brainPrefsSave");
+        if (prefsBtn)    prefsBtn.addEventListener("click",    brainPrefsOpen);
+        if (prefsClose)  prefsClose.addEventListener("click",  brainPrefsClose);
+        if (prefsCancel) prefsCancel.addEventListener("click", brainPrefsClose);
+        if (prefsSave)   prefsSave.addEventListener("click",   brainPrefsSave);
+        // Pill toggle within each group (single-select)
+        document.querySelectorAll("#brainPrefsModal .brain-pref-pills").forEach(grp => {
+          grp.addEventListener("click", (e) => {
+            const btn = e.target.closest(".brain-pref-pill");
+            if (!btn) return;
+            grp.querySelectorAll(".brain-pref-pill").forEach(b => b.classList.remove("is-active"));
+            btn.classList.add("is-active");
+          });
+        });
+
+        // File upload
+        const upInput = document.getElementById("brainUpload");
+        const shareOpt = document.getElementById("brainShareOpt");
+        const shareCb  = document.getElementById("brainShareWithClient");
+        if (upInput) {
+          upInput.addEventListener("change", async () => {
+            const file = upInput.files && upInput.files[0];
+            if (!file) return;
+            if (file.size > 10 * 1024 * 1024) {
+              alert("File is too big (10 MB max).");
+              upInput.value = "";
+              return;
+            }
+            const fd = new FormData();
+            fd.append("file", file);
+            if (shareCb && shareCb.checked) fd.append("share_with_client_kb", "1");
+            const lbl = upInput.previousElementSibling;
+            const orig = lbl ? lbl.innerHTML : "";
+            if (lbl) lbl.innerHTML = "Uploading…";
+            try {
+              const r = await fetch("/me/internal-kb/upload", {
+                method: "POST",
+                credentials: "same-origin",
+                body: fd,
+              });
+              const d = await r.json().catch(() => ({}));
+              if (!r.ok) {
+                alert("Upload failed: " + (d.message || d.error || r.status));
+              }
+            } catch (exc) {
+              alert("Upload error: " + String(exc));
+            } finally {
+              if (lbl) lbl.innerHTML = orig;
+              upInput.value = "";
+              if (shareCb) shareCb.checked = false;
+              if (shareOpt) shareOpt.hidden = true;
+              brainRefreshSources();
+            }
+          });
+        }
+
+        // Show share-with-chatbot opt when user clicks Upload (so they
+        // see it BEFORE picking the file).
+        const upLabel = document.querySelector('label[for="brainUpload"]');
+        if (upLabel && shareOpt) {
+          upLabel.addEventListener("click", () => {
+            shareOpt.hidden = false;
+          });
+        }
+
+        // Quick-note modal
+        const noteBtn   = document.getElementById("brainAddNoteBtn");
+        const noteModal = document.getElementById("brainNoteModal");
+        const noteClose = document.getElementById("brainNoteClose");
+        const noteCancel = document.getElementById("brainNoteCancel");
+        const noteSave  = document.getElementById("brainNoteSave");
+        const noteTitle = document.getElementById("brainNoteTitle");
+        const noteBody  = document.getElementById("brainNoteBody");
+        const noteShare = document.getElementById("brainNoteShare");
+        function openNote() {
+          if (noteTitle) noteTitle.value = "";
+          if (noteBody)  noteBody.value = "";
+          if (noteShare) noteShare.checked = false;
+          if (noteModal) noteModal.hidden = false;
+          if (noteTitle) setTimeout(() => noteTitle.focus(), 30);
+        }
+        function closeNote() { if (noteModal) noteModal.hidden = true; }
+        if (noteBtn) noteBtn.addEventListener("click", openNote);
+
+        // ── Drive-import modal wiring ──
+        const driveBtn    = document.getElementById("brainImportDriveBtn");
+        const driveModal  = document.getElementById("brainDriveModal");
+        const driveClose  = document.getElementById("brainDriveClose");
+        const driveCancel = document.getElementById("brainDriveCancel");
+        const driveImport = document.getElementById("brainDriveImport");
+        const driveUrl    = document.getElementById("brainDriveUrl");
+        const driveShare  = document.getElementById("brainDriveShare");
+        const driveStatus = document.getElementById("brainDriveStatus");
+        function openDrive() {
+          if (!driveModal) return;
+          if (driveUrl)    driveUrl.value = "";
+          if (driveShare)  driveShare.checked = false;
+          if (driveStatus) { driveStatus.style.display = "none"; driveStatus.textContent = ""; }
+          driveModal.hidden = false;
+          setTimeout(() => driveUrl && driveUrl.focus(), 30);
+        }
+        function closeDrive() { if (driveModal) driveModal.hidden = true; }
+        if (driveBtn)    driveBtn.addEventListener("click", openDrive);
+        if (driveClose)  driveClose.addEventListener("click", closeDrive);
+        if (driveCancel) driveCancel.addEventListener("click", closeDrive);
+        if (driveImport) driveImport.addEventListener("click", async () => {
+          const url = (driveUrl && driveUrl.value || "").trim();
+          if (!url) {
+            if (driveStatus) {
+              driveStatus.textContent = "Paste a Google Drive URL first.";
+              driveStatus.style.display = "block";
+            }
+            return;
+          }
+          driveImport.disabled = true; driveImport.textContent = "Importing…";
+          if (driveStatus) { driveStatus.style.display = "none"; driveStatus.textContent = ""; }
+          try {
+            const r = await fetch("/me/internal-kb/import-drive", {
+              method: "POST", credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                url,
+                share_with_client_kb: !!(driveShare && driveShare.checked),
+              }),
+            });
+            const d = await r.json().catch(() => ({}));
+            if (!r.ok) {
+              if (driveStatus) {
+                driveStatus.textContent = d.message || d.error || `Failed (${r.status})`;
+                driveStatus.style.display = "block";
+              }
+            } else {
+              closeDrive();
+              brainRefreshSources();
+            }
+          } catch (exc) {
+            if (driveStatus) {
+              driveStatus.textContent = "Import error: " + String(exc);
+              driveStatus.style.display = "block";
+            }
+          } finally {
+            driveImport.disabled = false; driveImport.textContent = "Import";
+          }
+        });
+        if (noteClose) noteClose.addEventListener("click", closeNote);
+        if (noteCancel) noteCancel.addEventListener("click", closeNote);
+        if (noteSave) noteSave.addEventListener("click", async () => {
+          const title = (noteTitle && noteTitle.value || "").trim();
+          const body  = (noteBody  && noteBody.value  || "").trim();
+          if (!body) { alert("Note body can't be empty."); return; }
+          noteSave.disabled = true; noteSave.textContent = "Saving…";
+          try {
+            const r = await fetch("/me/internal-kb/note", {
+              method: "POST", credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                title, body,
+                share_with_client_kb: !!(noteShare && noteShare.checked),
+              }),
+            });
+            const d = await r.json().catch(() => ({}));
+            if (!r.ok) {
+              alert("Save failed: " + (d.message || d.error || r.status));
+            } else {
+              closeNote();
+              brainRefreshSources();
+            }
+          } catch (exc) {
+            alert("Save error: " + String(exc));
+          } finally {
+            noteSave.disabled = false; noteSave.textContent = "Save note";
+          }
+        });
+
+        // Chat composer
+        const askForm = document.getElementById("brainAskForm");
+        const qInput  = document.getElementById("brainQuestion");
+        if (askForm && qInput) {
+          askForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const q = qInput.value.trim();
+            if (!q) return;
+            qInput.value = "";
+            brainAsk(q);
+          });
+          // Enter sends, shift+Enter newlines
+          qInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              askForm.requestSubmit();
+            }
+          });
+        }
+
+        brainRefreshSources();
+      }
+
       function activateTopTab(name) {
         tabs.forEach(t => {
           t.classList.toggle("is-active", t.dataset.settingsTopTab === name);
@@ -22088,6 +23314,7 @@
         if (name === "phone")   ensurePhoneMounted();
         if (name === "general") ensureWidgetInstallMounted();
         if (name === "kb")      ensureKbMounted();
+        if (name === "brain")   ensureBrainInit();
       }
 
       // Default tab is General — mount the install block immediately so
@@ -32073,6 +33300,22 @@
     .ibx-page-header { padding: 8px 0 18px; }
     .ibx-page-title  { margin: 0 0 4px; font-size: 20px; font-weight: 700; color: #1e293b; }
     .ibx-page-sub    { margin: 0; font-size: 13px; color: #6b7280; }
+    /* Channel tab strip — Instagram | Web Chat. Sits at the top of
+       the inbox, swaps the panel below on click. */
+    .ibx-channel-tabs {
+      display: flex; gap: 4px; padding: 6px 0 14px;
+      border-bottom: 1px solid #f1f5f9; margin-bottom: 14px;
+    }
+    .ibx-channel-tab {
+      background: transparent; border: 0; cursor: pointer;
+      padding: 8px 14px; border-radius: 8px;
+      font: 500 13.5px inherit; color: #6b7280;
+    }
+    .ibx-channel-tab:hover { background: #f9fafb; color: #111827; }
+    .ibx-channel-tab.is-active {
+      background: #f0fdf4; color: #166534; font-weight: 600;
+    }
+    .ibx-channel-panel { width: 100%; }
 
     /* Zero / empty state */
     .ibx-zero-state {
@@ -35073,7 +36316,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-08-runs-fast"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-brain-buttons"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
