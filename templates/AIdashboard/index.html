@@ -19937,6 +19937,12 @@
         const me = await res.json();
         if (!me || !me.authenticated || me.is_admin) return;
 
+        // Trial users never see the welcome modal — they already provided
+        // business URL + email during /try and the KB is being trained for
+        // them automatically. The trial banner on the activity pane is the
+        // first-run surface for them, not this modal.
+        if (me.is_trial_session || me.trial) return;
+
         // Path A: brand-new (no onboarded_at) → existing welcome modal
         // (collects business + URL + spawns KB build).
         if (!me.onboarded) {
