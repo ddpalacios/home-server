@@ -735,8 +735,8 @@
         }
 
         function startBuildPolling(opts) {
-          // opts: { phoneId, phoneDisplay, statusUrl, container,
-          //         labelEl, phoneLabelEl, phoneEl, stepsEl, onDone }
+          // opts: { phoneId, phoneDisplay, statusUrl, magicLinkToken,
+          //         container, labelEl, phoneLabelEl, phoneEl, stepsEl, onDone }
           var attempts = 0;
           var MAX_ATTEMPTS = 90; // ~3 minutes at 2s
           opts.labelEl.textContent = PHASE_LABELS[""];
@@ -745,6 +745,13 @@
           if (opts.phoneEl) opts.phoneEl.hidden = true;
           if (opts.phoneLabelEl) opts.phoneLabelEl.hidden = true;
           paintPhaseSteps(opts.stepsEl, "");
+
+          // Use the magic-link verify endpoint as the destination so we
+          // don't rely on the in-flight session cookie surviving navigation.
+          // Falls back to /dashboard if the token wasn't issued.
+          var nextUrl = opts.magicLinkToken
+            ? ("/auth/email/verify?token=" + encodeURIComponent(opts.magicLinkToken))
+            : "/dashboard";
 
           async function tick() {
             attempts++;
@@ -767,7 +774,7 @@
                   }
                   if (opts.phoneLabelEl) opts.phoneLabelEl.hidden = false;
                   setTimeout(function () {
-                    window.location.href = "/dashboard";
+                    window.location.href = nextUrl;
                   }, 4500);
                   opts.onDone && opts.onDone("ready");
                   return;
@@ -858,13 +865,14 @@
             // 3) Phone assigned — start polling. The progress UI is already
             //    visible from step 1; this just feeds the status updates into it.
             startBuildPolling({
-              phoneId:      result.data.phone_id,
-              phoneDisplay: result.data.phone_display,
-              statusUrl:    result.data.status_url,
-              labelEl:      ui.labelEl,
-              phoneLabelEl: ui.phoneLabelEl,
-              phoneEl:      ui.phoneEl,
-              stepsEl:      ui.stepsEl,
+              phoneId:        result.data.phone_id,
+              phoneDisplay:   result.data.phone_display,
+              statusUrl:      result.data.status_url,
+              magicLinkToken: result.data.magic_link_token || "",
+              labelEl:        ui.labelEl,
+              phoneLabelEl:   ui.phoneLabelEl,
+              phoneEl:        ui.phoneEl,
+              stepsEl:        ui.stepsEl,
             });
           });
         }
