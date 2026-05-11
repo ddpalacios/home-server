@@ -32587,8 +32587,10 @@
       padding: 24px;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 180ms ease;
+      visibility: hidden;
+      transition: opacity 180ms ease, visibility 0s linear 180ms;
     }
+    .pubmod-overlay.is-open { visibility: visible; transition-delay: 0s; }
     .pubmod-overlay.is-open { opacity: 1; pointer-events: auto; }
     .pubmod-card {
       width: 100%;
@@ -34070,9 +34072,10 @@
       position: fixed; inset: 0; z-index: 10200;
       pointer-events: none;
       opacity: 0;
-      transition: opacity 200ms ease;
+      visibility: hidden;
+      transition: opacity 200ms ease, visibility 0s linear 200ms;
     }
-    .tour-overlay.is-open { opacity: 1; pointer-events: auto; }
+    .tour-overlay.is-open { opacity: 1; pointer-events: auto; visibility: visible; transition-delay: 0s; }
     /* The .tour-dim element is intentionally a NO-OP — the heavy lift
        of dimming everything around the target is done by the spotlight's
        gigantic 9999px box-shadow below. Keeping a backdrop-filter blur
@@ -34169,8 +34172,10 @@
       display: flex; align-items: center; justify-content: center;
       padding: 24px;
       opacity: 0; pointer-events: none;
-      transition: opacity 200ms ease;
+      visibility: hidden;
+      transition: opacity 200ms ease, visibility 0s linear 200ms;
     }
+    .tour-welcome-overlay.is-open { visibility: visible; transition-delay: 0s; }
     .tour-welcome-overlay.is-open { opacity: 1; pointer-events: auto; }
     .tour-welcome-card {
       width: 100%; max-width: 480px;
@@ -34752,11 +34757,14 @@
       padding: 24px;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 180ms ease;
+      visibility: hidden;
+      transition: opacity 180ms ease, visibility 0s linear 180ms;
     }
     .cd-overlay.is-open {
       opacity: 1;
       pointer-events: auto;
+      visibility: visible;
+      transition-delay: 0s;
     }
     .cd-card {
       width: 100%;
