@@ -139,6 +139,46 @@
       .trial-success p { color: var(--text-soft); font-size: 0.88rem; line-height: 1.5; }
       .trial-success p.muted { color: var(--text-muted); font-size: 0.78rem; margin-top: 10px; }
 
+      /* Build progress view (between form and success) */
+      .trial-progress { text-align: center; padding: 12px 0 6px; }
+      .trial-spinner {
+        width: 56px; height: 56px;
+        border: 4px solid #e0e7ff;
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: trialSpin 1s linear infinite;
+        margin: 0 auto 16px;
+      }
+      @keyframes trialSpin { to { transform: rotate(360deg); } }
+      .trial-progress h4 { font-size: 1.1rem; font-weight: 800; margin-bottom: 6px; }
+      .trial-progress .phase-label {
+        color: var(--accent-deep); font-size: 0.95rem; font-weight: 700;
+        margin-top: 4px; min-height: 1.4em;
+        transition: opacity 0.2s ease;
+      }
+      .trial-progress .phone-number {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.25rem; font-weight: 800;
+        color: var(--accent-deep);
+        background: #eef2ff; border: 1px solid #c7d2fe;
+        border-radius: var(--radius-sm); padding: 10px;
+        margin: 14px 0 6px;
+        letter-spacing: 0.5px;
+      }
+      .trial-progress .phone-label { color: var(--text-muted); font-size: 0.74rem; }
+      .trial-progress .small-note { color: var(--text-muted); font-size: 0.78rem; margin-top: 14px; line-height: 1.5; }
+      .phase-steps {
+        display: flex; justify-content: center; gap: 6px;
+        margin-top: 14px;
+      }
+      .phase-step {
+        width: 22px; height: 4px; border-radius: 2px;
+        background: #e2e8f0;
+        transition: background 0.3s ease;
+      }
+      .phase-step.is-active { background: var(--accent); }
+      .phase-step.is-done { background: var(--accent-deep); }
+
       /* ─── HERO ────────────────────────────────────────── */
       .hero {
         text-align: center;
@@ -576,6 +616,22 @@
           <button type="submit" id="trialSubmit">Get my free phone number →</button>
           <p class="trust">✓ No credit card · ✓ Real phone number · ✓ 14-day trial · ✓ Cancel anytime</p>
         </form>
+        <div class="trial-progress" id="trialProgress" hidden>
+          <div class="trial-spinner" aria-hidden="true"></div>
+          <h4>Setting up your bot</h4>
+          <div class="phase-label" id="phaseLabel">Starting up…</div>
+          <div class="phase-steps" aria-hidden="true">
+            <span class="phase-step" data-phase="reading"></span>
+            <span class="phase-step" data-phase="identifying"></span>
+            <span class="phase-step" data-phase="training"></span>
+            <span class="phase-step" data-phase="wiring"></span>
+            <span class="phase-step" data-phase="ready"></span>
+          </div>
+          <div class="phone-label" id="progressPhoneLabel" hidden>Your trial phone number</div>
+          <div class="phone-number" id="progressPhoneDisplay" hidden>+1 (555) 000-0000</div>
+          <p class="small-note">We'll send you to your dashboard the moment it's ready.</p>
+        </div>
+
         <div class="trial-success" id="trialSuccess" hidden>
           <div class="success-emoji" id="modalSuccessEmoji" aria-hidden="true">📞</div>
           <h4 id="modalSuccessTitle">Your trial number is ready</h4>
@@ -610,6 +666,9 @@
           trialError.textContent = "";
           trialForm.hidden = false;
           trialSuccess.hidden = true;
+          // Also reset the progress view in case the visitor reopened the modal
+          var progressReset = document.getElementById("trialProgress");
+          if (progressReset) progressReset.hidden = true;
           trialSubmit.disabled = false;
           trialSubmit.textContent = "Get my free phone number →";
           var display = trialUrl.replace(/^https?:\/\//i, "").replace(/\/.*$/, "");
@@ -653,6 +712,78 @@
           return { ok: res.ok, status: res.status, data: data };
         }
 
+        // ─── Build-progress polling helpers (modal + bottom form share) ───
+        var PHASE_LABELS = {
+          "":           "Starting up…",
+          "reading":    "Reading your website…",
+          "identifying":"Understanding your business…",
+          "training":   "Training the bot on your content…",
+          "wiring":     "Wiring up your phone number…",
+          "ready":      "Ready! Opening your dashboard…",
+        };
+        var PHASE_ORDER = ["reading","identifying","training","wiring","ready"];
+
+        function paintPhaseSteps(container, currentPhase) {
+          if (!container) return;
+          var idx = PHASE_ORDER.indexOf(currentPhase);
+          container.querySelectorAll(".phase-step").forEach(function (el, i) {
+            el.classList.remove("is-active","is-done");
+            if (idx < 0) return;
+            if (i < idx) el.classList.add("is-done");
+            else if (i === idx) el.classList.add("is-active");
+          });
+        }
+
+        function startBuildPolling(opts) {
+          // opts: { phoneId, phoneDisplay, statusUrl, container,
+          //         labelEl, phoneLabelEl, phoneEl, stepsEl, onDone }
+          var attempts = 0;
+          var MAX_ATTEMPTS = 90; // ~3 minutes at 2s
+          opts.labelEl.textContent = PHASE_LABELS[""];
+          if (opts.phoneDisplay && opts.phoneEl && opts.phoneLabelEl) {
+            opts.phoneEl.textContent = opts.phoneDisplay;
+            opts.phoneEl.hidden = false;
+            opts.phoneLabelEl.hidden = false;
+          }
+          paintPhaseSteps(opts.stepsEl, "");
+
+          async function tick() {
+            attempts++;
+            try {
+              var res = await fetch(opts.statusUrl, { credentials: "same-origin" });
+              if (res.ok) {
+                var data = await res.json();
+                var phase = data.build_phase || "";
+                var status = data.build_status || "";
+                opts.labelEl.textContent = PHASE_LABELS[phase] || PHASE_LABELS[""];
+                paintPhaseSteps(opts.stepsEl, phase || "reading");
+                if (status === "ready") {
+                  // Mark all steps done and bounce to dashboard.
+                  paintPhaseSteps(opts.stepsEl, "ready");
+                  opts.labelEl.textContent = PHASE_LABELS["ready"];
+                  setTimeout(function () {
+                    window.location.href = "/dashboard";
+                  }, 800);
+                  opts.onDone && opts.onDone("ready");
+                  return;
+                }
+                if (status === "failed") {
+                  opts.labelEl.textContent = "Build failed. We sent you a magic link — log in and retry.";
+                  opts.onDone && opts.onDone("failed");
+                  return;
+                }
+              }
+            } catch (_) { /* transient — keep polling */ }
+            if (attempts >= MAX_ATTEMPTS) {
+              opts.labelEl.textContent = "Still training — check your email for a magic link.";
+              opts.onDone && opts.onDone("timeout");
+              return;
+            }
+            setTimeout(tick, 2000);
+          }
+          tick();
+        }
+
         if (trialForm) {
           trialForm.addEventListener("submit", async function (e) {
             e.preventDefault();
@@ -669,28 +800,36 @@
               trialSubmit.textContent = "Get my free phone number →";
               return;
             }
+
+            // Hide the form. Branch on whether a phone was assigned.
             trialForm.hidden = true;
-            trialSuccess.hidden = false;
             document.getElementById("modalEmailEcho").textContent = email;
 
-            var phoneEl = document.getElementById("modalPhoneDisplay");
-            var emojiEl = document.getElementById("modalSuccessEmoji");
-            var titleEl = document.getElementById("modalSuccessTitle");
-            var bodyEl  = document.getElementById("modalSuccessBody");
-
             if (result.data.training_only || !result.data.phone_display) {
-              // Pool was empty — training started but no number assigned yet.
+              // No phone assigned — show static "training" success card,
+              // no polling (there's no phone_id to poll).
+              trialSuccess.hidden = false;
+              var phoneEl = document.getElementById("modalPhoneDisplay");
               phoneEl.hidden = true;
-              emojiEl.textContent = "🛠️";
-              titleEl.textContent = "We're training your bot";
-              bodyEl.textContent  = "All trial phone numbers are in use right now, so we started training your bot on your site. Watch your inbox — we'll send a trial number the moment one frees up.";
-            } else {
-              phoneEl.hidden = false;
-              phoneEl.textContent = result.data.phone_display;
-              emojiEl.textContent = "📞";
-              titleEl.textContent = "Your trial number is ready";
-              bodyEl.textContent  = "Call it now. We're training your bot — first call may have lighter answers for the first 60–90 seconds.";
+              document.getElementById("modalSuccessEmoji").textContent = "🛠️";
+              document.getElementById("modalSuccessTitle").textContent = "We're training your bot";
+              document.getElementById("modalSuccessBody").textContent =
+                "We started training your bot on your site. Check your inbox — a magic link is on its way so you can open your dashboard while the build finishes.";
+              return;
             }
+
+            // Phone assigned — show progress + poll + redirect to dashboard.
+            var progress = document.getElementById("trialProgress");
+            progress.hidden = false;
+            startBuildPolling({
+              phoneId:      result.data.phone_id,
+              phoneDisplay: result.data.phone_display,
+              statusUrl:    result.data.status_url,
+              labelEl:      document.getElementById("phaseLabel"),
+              phoneLabelEl: document.getElementById("progressPhoneLabel"),
+              phoneEl:      document.getElementById("progressPhoneDisplay"),
+              stepsEl:      progress.querySelector(".phase-steps"),
+            });
           });
         }
 
@@ -739,22 +878,46 @@
             tryBtn.textContent = originalLabel;
             return;
           }
-          tryForm.hidden = true;
-          var success = document.getElementById("trySuccess");
-          success.hidden = false;
-          document.getElementById("trialEmail").textContent = email;
-          var phoneDisplayEl = document.getElementById("trialPhoneDisplay");
+
+          // Hand off to the same modal-based progress UI as the hero pill.
+          // This unifies "what success looks like" no matter which surface
+          // the visitor submitted from.
+          document.getElementById("modalEmailEcho").textContent = email;
+
           if (result.data.training_only || !result.data.phone_display) {
-            document.getElementById("startTitle").textContent = "We're training your bot";
-            document.getElementById("startSub").textContent = "All trial phone numbers are in use right now — we'll text you when one frees up.";
-            phoneDisplayEl.hidden = true;
-          } else {
-            document.getElementById("startTitle").textContent = "You're in.";
-            document.getElementById("startSub").textContent = "Save this number and call it from your phone.";
-            phoneDisplayEl.hidden = false;
-            phoneDisplayEl.textContent = result.data.phone_display;
+            // Training only, no phone → use the static modal success card.
+            trialUrl = url;
+            var display = trialUrl.replace(/^https?:\/\//i, "").replace(/\/.*$/, "");
+            trialUrlEcho.textContent = display || trialUrl;
+            trialForm.hidden = true;
+            trialSuccess.hidden = false;
+            document.getElementById("modalPhoneDisplay").hidden = true;
+            document.getElementById("modalSuccessEmoji").textContent = "🛠️";
+            document.getElementById("modalSuccessTitle").textContent = "We're training your bot";
+            document.getElementById("modalSuccessBody").textContent =
+              "We started training your bot on your site. Check your inbox for a magic link to your dashboard while the build finishes.";
+            trialDlg.showModal();
+            return;
           }
-          success.scrollIntoView({ behavior: "smooth", block: "center" });
+
+          // Phone assigned → open modal in progress mode and poll.
+          trialUrl = url;
+          var display = trialUrl.replace(/^https?:\/\//i, "").replace(/\/.*$/, "");
+          trialUrlEcho.textContent = display || trialUrl;
+          trialForm.hidden = true;
+          trialSuccess.hidden = true;
+          var progress = document.getElementById("trialProgress");
+          progress.hidden = false;
+          trialDlg.showModal();
+          startBuildPolling({
+            phoneId:      result.data.phone_id,
+            phoneDisplay: result.data.phone_display,
+            statusUrl:    result.data.status_url,
+            labelEl:      document.getElementById("phaseLabel"),
+            phoneLabelEl: document.getElementById("progressPhoneLabel"),
+            phoneEl:      document.getElementById("progressPhoneDisplay"),
+            stepsEl:      progress.querySelector(".phase-steps"),
+          });
         });
       })();
     </script>
