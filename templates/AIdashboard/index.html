@@ -6776,6 +6776,129 @@
                   id="onboardingResumeDismiss"
                   aria-label="Dismiss for a week">×</button>
         </div>
+
+        <!-- ───── Trial build banner ─────
+             Visible only when /me.trial exists and build_status != "ready".
+             Polls /me every 2s and renders a spinner + current phase + a
+             5-step pill bar. When build flips to "ready", celebrates and
+             auto-reloads the page so the rest of the dashboard reflects
+             the freshly trained KB. -->
+        <div id="trialBuildBanner"
+             style="grid-column:span 12;display:none;background:linear-gradient(135deg,#eef2ff,#e0e7ff);border:1px solid #c7d2fe;border-radius:14px;padding:20px 22px;color:#0f172a;box-shadow:0 12px 32px rgba(30,58,138,0.08);"
+             role="status" aria-live="polite">
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+            <div id="tbbSpinner" aria-hidden="true"
+                 style="width:42px;height:42px;border:4px solid #e0e7ff;border-top-color:#2563eb;border-radius:50%;animation:tbbSpin 1s linear infinite;flex-shrink:0;"></div>
+            <div id="tbbCheck" aria-hidden="true"
+                 style="display:none;width:42px;height:42px;background:#16a34a;border-radius:50%;color:#fff;font-size:24px;line-height:42px;text-align:center;flex-shrink:0;font-weight:700;">✓</div>
+            <div style="flex:1;min-width:240px;">
+              <div id="tbbTitle" style="font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:1.05rem;">Training your bot on your website</div>
+              <div id="tbbPhase" style="color:#1e3a8a;font-weight:600;font-size:0.92rem;margin-top:2px;">Starting up…</div>
+              <div id="tbbSteps" style="display:flex;gap:6px;margin-top:10px;">
+                <span data-phase="reading"     style="width:28px;height:5px;border-radius:3px;background:#cbd5e1;transition:background .3s;"></span>
+                <span data-phase="identifying" style="width:28px;height:5px;border-radius:3px;background:#cbd5e1;transition:background .3s;"></span>
+                <span data-phase="training"    style="width:28px;height:5px;border-radius:3px;background:#cbd5e1;transition:background .3s;"></span>
+                <span data-phase="wiring"      style="width:28px;height:5px;border-radius:3px;background:#cbd5e1;transition:background .3s;"></span>
+                <span data-phase="ready"       style="width:28px;height:5px;border-radius:3px;background:#cbd5e1;transition:background .3s;"></span>
+              </div>
+            </div>
+            <div id="tbbPhoneWrap" style="display:none;text-align:right;flex-shrink:0;min-width:160px;">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#64748b;">Your trial number</div>
+              <div id="tbbPhone" style="font-family:'Space Grotesk',sans-serif;font-size:1.25rem;font-weight:800;color:#1e3a8a;letter-spacing:.5px;user-select:all;margin-top:2px;">+1 (555) 000-0000</div>
+            </div>
+          </div>
+          <p id="tbbHint" style="color:#475569;font-size:0.85rem;margin:14px 0 0;line-height:1.5;">
+            You can poke around the dashboard while we train. Try the chat below — answers will sharpen as the bot reads your site.
+          </p>
+        </div>
+        <style>@keyframes tbbSpin { to { transform: rotate(360deg); } }</style>
+
+        <script>
+          (function(){
+            // Trial build banner controller. Polls /me every 2s while a
+            // trial is mid-build, paints the current phase on the step bar,
+            // and reloads the dashboard when training flips to "ready" so
+            // all panes pick up the freshly trained data.
+            var banner   = document.getElementById("trialBuildBanner");
+            var titleEl  = document.getElementById("tbbTitle");
+            var phaseEl  = document.getElementById("tbbPhase");
+            var stepsEl  = document.getElementById("tbbSteps");
+            var spinner  = document.getElementById("tbbSpinner");
+            var checkEl  = document.getElementById("tbbCheck");
+            var phoneWrap= document.getElementById("tbbPhoneWrap");
+            var phoneEl  = document.getElementById("tbbPhone");
+            var hintEl   = document.getElementById("tbbHint");
+            if (!banner) return;
+
+            var PHASE_LABELS = {
+              "":            "Starting up…",
+              "reading":     "Reading your website…",
+              "identifying": "Understanding your business…",
+              "training":    "Training the bot on your content…",
+              "wiring":      "Wiring up your phone number…",
+              "ready":       "Ready!",
+            };
+            var PHASE_ORDER = ["reading","identifying","training","wiring","ready"];
+
+            function paintSteps(phase) {
+              var idx = PHASE_ORDER.indexOf(phase);
+              stepsEl.querySelectorAll("span").forEach(function(el, i){
+                if (idx < 0)            el.style.background = "#cbd5e1";
+                else if (i < idx)       el.style.background = "#1e3a8a";
+                else if (i === idx)     el.style.background = "#2563eb";
+                else                    el.style.background = "#cbd5e1";
+              });
+            }
+
+            var pollTimer = null;
+            var celebrated = false;
+            async function pollOnce() {
+              try {
+                var r = await fetch("/me", { credentials: "same-origin" });
+                if (!r.ok) return scheduleNext();
+                var d = await r.json();
+                var trial = d && d.trial;
+                if (!trial) { banner.style.display = "none"; return; }
+                var status = trial.build_status || "idle";
+                var phase  = trial.build_phase  || "";
+                if (banner.style.display === "none") banner.style.display = "block";
+
+                if (status === "ready") {
+                  if (celebrated) return;
+                  celebrated = true;
+                  spinner.style.display = "none";
+                  checkEl.style.display = "block";
+                  titleEl.textContent = "Your bot is ready";
+                  phaseEl.textContent = "Trained on your website. Click any pane to explore.";
+                  paintSteps("ready");
+                  if (trial.phone_display) {
+                    phoneEl.textContent = trial.phone_display;
+                    phoneWrap.style.display = "block";
+                  }
+                  hintEl.textContent = "Refreshing in 4 seconds so the rest of your dashboard picks up the new content…";
+                  setTimeout(function () { window.location.reload(); }, 4000);
+                  return;
+                }
+                if (status === "failed") {
+                  spinner.style.display = "none";
+                  titleEl.textContent = "Training hit a snag";
+                  phaseEl.textContent = trial.build_error || "We'll retry — check your email for next steps.";
+                  hintEl.textContent = "";
+                  return;
+                }
+                phaseEl.textContent = PHASE_LABELS[phase] || PHASE_LABELS[""];
+                paintSteps(phase);
+                scheduleNext();
+              } catch (_) { scheduleNext(); }
+            }
+            function scheduleNext() {
+              clearTimeout(pollTimer);
+              pollTimer = setTimeout(pollOnce, 2000);
+            }
+            pollOnce();
+          })();
+        </script>
+
         <script>
           (function(){
             // Resume-setup banner controller. Three short-circuits:
