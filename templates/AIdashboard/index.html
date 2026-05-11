@@ -3080,18 +3080,39 @@
     .teach-item-status.is-ready { background: #d1fae5; color: #065f46; }
     .teach-item-status.is-pending { background: #fef3c7; color: #92400e; }
     .teach-item-status.is-error { background: #fee2e2; color: #991b1b; }
+    /* Spinning dot for training status — keeps the user aware
+       something is in motion server-side. */
+    .teach-item-status.is-spinning::before {
+      content: "";
+      display: inline-block;
+      width: 8px; height: 8px;
+      margin-right: 6px;
+      border: 1.5px solid rgba(146, 64, 14, 0.3);
+      border-top-color: #92400e;
+      border-radius: 50%;
+      animation: teachSpin 0.7s linear infinite;
+      vertical-align: -1px;
+    }
+    @keyframes teachSpin { to { transform: rotate(360deg); } }
     .teach-item-remove {
       background: transparent;
-      border: 0;
-      color: #94a3b8;
-      font-size: 18px;
+      border: 1px solid transparent;
+      color: #475569;
+      font-size: 20px;
       line-height: 1;
       cursor: pointer;
-      padding: 4px 8px;
-      border-radius: 6px;
+      padding: 4px 10px;
+      border-radius: 8px;
       flex-shrink: 0;
+      font-weight: 700;
+      transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
     }
-    .teach-item-remove:hover { color: #b91c1c; background: #fef2f2; }
+    .teach-item-remove:hover {
+      color: #b91c1c;
+      background: #fef2f2;
+      border-color: #fecaca;
+    }
+    .teach-item-remove:active { transform: scale(0.94); }
     .teach-empty {
       margin: 6px 0 0;
       font-size: 13px;
@@ -22473,6 +22494,20 @@
           errEl.textContent = msg;
         }
 
+        // Human-readable progress text per backend phase. Lets the
+        // user always know what's happening during training instead
+        // of staring at a static "Training…" pill for 30 seconds.
+        const phaseLabels = {
+          pending:      "Queued…",
+          crawling:     "Reading the page…",
+          downloading:  "Downloading…",
+          summarizing:  "Pulling out answers…",
+          saving:       "Saving to your KB…",
+          embedding:    "Indexing…",
+          ready:        "Ready",
+          failed:       "Couldn't read",
+        };
+
         function renderList(sources) {
           listEl.innerHTML = "";
           if (!sources.length) {
@@ -22482,9 +22517,10 @@
           if (emptyEl) emptyEl.hidden = true;
           for (const src of sources) {
             const status = (src.status || "pending").toLowerCase();
+            const phase = (src.phase || status).toLowerCase();
             const isReady = status === "ready";
             const isError = status === "error" || status === "failed";
-            const statusLabel = isReady ? "Ready" : isError ? "Couldn't read" : "Training…";
+            const label = phaseLabels[phase] || (isReady ? "Ready" : isError ? "Couldn't read" : "Training…");
             const statusClass = isReady ? "is-ready" : isError ? "is-error" : "is-pending";
 
             const row = document.createElement("div");
@@ -22498,7 +22534,10 @@
 
             const statusSpan = document.createElement("span");
             statusSpan.className = "teach-item-status " + statusClass;
-            statusSpan.textContent = statusLabel;
+            statusSpan.textContent = label;
+            // Spin a small dot on pending items so the user sees
+            // motion — passive progress beats a static label.
+            if (!isReady && !isError) statusSpan.classList.add("is-spinning");
 
             const remove = document.createElement("button");
             remove.type = "button";
@@ -22527,15 +22566,18 @@
           try {
             const res = await fetch(
               "/kb/sources?accountid=" + encodeURIComponent(aid) +
-              "&kb_type=" + encodeURIComponent(mode),
-              { credentials: "same-origin" }
+              "&kb_type=" + encodeURIComponent(mode) +
+              "&ts=" + Date.now(),
+              { credentials: "same-origin", cache: "no-store" }
             );
             if (!res.ok) return;
             const data = await res.json();
             const sources = data.sources || [];
             renderList(sources);
             if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
-            if (hasPending(sources)) pollTimer = setTimeout(refresh, 4000);
+            // 2s while training so the user sees the phase tick over
+            // in near-real time.
+            if (hasPending(sources)) pollTimer = setTimeout(refresh, 2000);
           } catch (_) {}
         }
 
@@ -22548,7 +22590,7 @@
           addBtn.disabled = true;
           const labelSpan = addBtn.querySelector("span");
           const prevLabel = labelSpan ? labelSpan.textContent : "Train";
-          if (labelSpan) labelSpan.textContent = "Training…";
+          if (labelSpan) labelSpan.textContent = "Adding…";
           try {
             const res = await fetch("/kb/sources", {
               method: "POST",
@@ -22559,6 +22601,21 @@
             const data = await res.json().catch(() => ({}));
             if (!res.ok) { showErr(data.error || "Couldn't add that link."); return; }
             if (input) input.value = "";
+            // Optimistic prepend — show the new row instantly with
+            // "Queued…" state so the user gets immediate feedback
+            // instead of waiting for the next poll cycle.
+            if (data.source) {
+              renderList([data.source].concat(
+                Array.from(listEl.querySelectorAll(".teach-item")).map((r) => ({
+                  id: r.dataset.sourceId,
+                  url: r.querySelector(".teach-item-url")?.title || "",
+                  status: r.querySelector(".teach-item-status")?.classList.contains("is-ready") ? "ready"
+                        : r.querySelector(".teach-item-status")?.classList.contains("is-error") ? "failed"
+                        : "pending",
+                  phase: "pending",
+                }))
+              ));
+            }
             refresh();
           } catch (_) {
             showErr("Network hiccup — try again.");
@@ -22572,14 +22629,25 @@
           if (!sourceId) return;
           const aid = getAid();
           if (!aid) return;
+          // Optimistic remove — strip the row from the DOM immediately
+          // so the user gets instant feedback. The server-side delete
+          // happens in the background; on failure refresh() pulls the
+          // real state back.
+          const row = listEl.querySelector(`[data-source-id="${sourceId}"]`);
+          if (row) row.remove();
+          if (listEl.children.length === 0 && emptyEl) emptyEl.hidden = false;
           try {
-            await fetch("/kb/sources/" + encodeURIComponent(sourceId) +
+            const res = await fetch("/kb/sources/" + encodeURIComponent(sourceId) +
               "?accountid=" + encodeURIComponent(aid), {
                 method: "DELETE",
                 credentials: "same-origin",
               });
-            refresh();
-          } catch (_) {}
+            if (!res.ok) showErr("Couldn't remove that — try again.");
+          } catch (_) {
+            showErr("Network hiccup — try again.");
+          }
+          // Always refresh so server truth wins if optimistic was wrong.
+          refresh();
         }
 
         form.addEventListener("submit", (e) => {
