@@ -678,6 +678,9 @@ function _initKb() {
       try { sessionStorage.removeItem("kbsAutoOpenDrive"); } catch (_) {}
       closeDriveModal();
       await loadSources();
+      // Tell the home page (or any other surface that lists KB sources)
+      // that something changed, so they refresh their own lists.
+      window.dispatchEvent(new CustomEvent("kb:saved"));
     } catch (_) {
       alert("Network error.");
       driveImportBtn.disabled = false;
