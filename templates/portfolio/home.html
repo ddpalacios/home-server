@@ -789,6 +789,36 @@
           tick();
         }
 
+        // Show the progress view RIGHT NOW (no waiting for the POST), so the
+        // spinner appears the instant the visitor clicks "Get my free phone
+        // number →". Returns the progress element + handles for later wiring.
+        function showProgressImmediately() {
+          var progress = document.getElementById("trialProgress");
+          var labelEl  = document.getElementById("phaseLabel");
+          var phoneEl  = document.getElementById("progressPhoneDisplay");
+          var phoneLb  = document.getElementById("progressPhoneLabel");
+          var stepsEl  = progress.querySelector(".phase-steps");
+          trialForm.hidden = true;
+          trialSuccess.hidden = true;
+          progress.hidden = false;
+          phoneEl.hidden = true;
+          phoneLb.hidden = true;
+          labelEl.textContent = "Starting up…";
+          paintPhaseSteps(stepsEl, "");
+          return { progress: progress, labelEl: labelEl, phoneEl: phoneEl, phoneLabelEl: phoneLb, stepsEl: stepsEl };
+        }
+
+        // Bring the form back when the POST fails — visitor isn't stranded
+        // staring at a spinner that's secretly dead.
+        function revertProgressToForm(errorMessage) {
+          document.getElementById("trialProgress").hidden = true;
+          trialForm.hidden = false;
+          trialSuccess.hidden = true;
+          trialError.textContent = errorMessage || "Couldn't set up your trial right now. Please try again.";
+          trialSubmit.disabled = false;
+          trialSubmit.textContent = "Get my free phone number →";
+        }
+
         if (trialForm) {
           trialForm.addEventListener("submit", async function (e) {
             e.preventDefault();
@@ -797,25 +827,27 @@
             if (!email) { trialError.textContent = "Please enter your email."; trialEmailIn.focus(); return; }
             trialSubmit.disabled = true;
             trialSubmit.textContent = "Setting up your bot…";
+
+            // 1) Flip to the progress view IMMEDIATELY so the spinner shows
+            //    while we wait on /try. No more "click and stare at nothing."
+            var ui = showProgressImmediately();
+
+            // 2) Kick off the POST in the background.
             var result = await postTrial(trialUrl, email, "other").catch(function () { return { ok: false, data: {} }; });
+
             if (!result.ok) {
-              trialError.textContent = (result.data && result.data.error)
-                || ("Couldn't set up your trial right now. Please try again.");
-              trialSubmit.disabled = false;
-              trialSubmit.textContent = "Get my free phone number →";
+              revertProgressToForm((result.data && result.data.error) || null);
               return;
             }
 
-            // Hide the form. Branch on whether a phone was assigned.
-            trialForm.hidden = true;
             document.getElementById("modalEmailEcho").textContent = email;
 
             if (result.data.training_only || !result.data.phone_display) {
-              // No phone assigned — show static "training" success card,
-              // no polling (there's no phone_id to poll).
+              // No phone assigned — hide the spinner, show the static
+              // training success card instead.
+              ui.progress.hidden = true;
               trialSuccess.hidden = false;
-              var phoneEl = document.getElementById("modalPhoneDisplay");
-              phoneEl.hidden = true;
+              document.getElementById("modalPhoneDisplay").hidden = true;
               document.getElementById("modalSuccessEmoji").textContent = "🛠️";
               document.getElementById("modalSuccessTitle").textContent = "We're training your bot";
               document.getElementById("modalSuccessBody").textContent =
@@ -823,17 +855,16 @@
               return;
             }
 
-            // Phone assigned — show progress + poll + redirect to dashboard.
-            var progress = document.getElementById("trialProgress");
-            progress.hidden = false;
+            // 3) Phone assigned — start polling. The progress UI is already
+            //    visible from step 1; this just feeds the status updates into it.
             startBuildPolling({
               phoneId:      result.data.phone_id,
               phoneDisplay: result.data.phone_display,
               statusUrl:    result.data.status_url,
-              labelEl:      document.getElementById("phaseLabel"),
-              phoneLabelEl: document.getElementById("progressPhoneLabel"),
-              phoneEl:      document.getElementById("progressPhoneDisplay"),
-              stepsEl:      progress.querySelector(".phase-steps"),
+              labelEl:      ui.labelEl,
+              phoneLabelEl: ui.phoneLabelEl,
+              phoneEl:      ui.phoneEl,
+              stepsEl:      ui.stepsEl,
             });
           });
         }
@@ -875,8 +906,23 @@
           var originalLabel = tryBtn.textContent;
           tryBtn.textContent = "Setting up your bot…";
 
+          // Open the modal with the progress view RIGHT NOW so the visitor
+          // sees the spinner the moment they click submit — instead of
+          // sitting on a disabled button while the network round-trips.
+          trialUrl = url;
+          var display = trialUrl.replace(/^https?:\/\//i, "").replace(/\/.*$/, "");
+          trialUrlEcho.textContent = display || trialUrl;
+          var ui = showProgressImmediately();
+          trialDlg.showModal();
+
           var result = await postTrial(url, email, industry).catch(function () { return { ok: false, data: {} }; });
           if (!result.ok) {
+            // Close the modal and surface the error inline on the section
+            // form so the visitor isn't stuck inside a failed modal.
+            trialDlg.close();
+            ui.progress.hidden = true;
+            trialForm.hidden = false;
+            trialSuccess.hidden = true;
             tryError.textContent = (result.data && result.data.error)
               || ("Couldn't set up your trial right now. Please try again.");
             tryBtn.disabled = false;
@@ -884,44 +930,29 @@
             return;
           }
 
-          // Hand off to the same modal-based progress UI as the hero pill.
-          // This unifies "what success looks like" no matter which surface
-          // the visitor submitted from.
           document.getElementById("modalEmailEcho").textContent = email;
 
           if (result.data.training_only || !result.data.phone_display) {
-            // Training only, no phone → use the static modal success card.
-            trialUrl = url;
-            var display = trialUrl.replace(/^https?:\/\//i, "").replace(/\/.*$/, "");
-            trialUrlEcho.textContent = display || trialUrl;
-            trialForm.hidden = true;
+            // Training only, no phone → swap modal to the static success card.
+            ui.progress.hidden = true;
             trialSuccess.hidden = false;
             document.getElementById("modalPhoneDisplay").hidden = true;
             document.getElementById("modalSuccessEmoji").textContent = "🛠️";
             document.getElementById("modalSuccessTitle").textContent = "We're training your bot";
             document.getElementById("modalSuccessBody").textContent =
               "We started training your bot on your site. Check your inbox for a magic link to your dashboard while the build finishes.";
-            trialDlg.showModal();
             return;
           }
 
-          // Phone assigned → open modal in progress mode and poll.
-          trialUrl = url;
-          var display = trialUrl.replace(/^https?:\/\//i, "").replace(/\/.*$/, "");
-          trialUrlEcho.textContent = display || trialUrl;
-          trialForm.hidden = true;
-          trialSuccess.hidden = true;
-          var progress = document.getElementById("trialProgress");
-          progress.hidden = false;
-          trialDlg.showModal();
+          // Phone assigned → start polling. Modal is already in progress mode.
           startBuildPolling({
             phoneId:      result.data.phone_id,
             phoneDisplay: result.data.phone_display,
             statusUrl:    result.data.status_url,
-            labelEl:      document.getElementById("phaseLabel"),
-            phoneLabelEl: document.getElementById("progressPhoneLabel"),
-            phoneEl:      document.getElementById("progressPhoneDisplay"),
-            stepsEl:      progress.querySelector(".phase-steps"),
+            labelEl:      ui.labelEl,
+            phoneLabelEl: ui.phoneLabelEl,
+            phoneEl:      ui.phoneEl,
+            stepsEl:      ui.stepsEl,
           });
         });
       })();
