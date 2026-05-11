@@ -22655,18 +22655,39 @@
           addUrl(input ? input.value : "");
         });
 
-        // "Import from Google Drive or Sheets" — opens the existing
-        // Drive picker that lives in the Knowledge route. Jumping
-        // there ensures the OAuth handshake, file list, and import
-        // flow are fully wired without duplicating the modal on home.
-        // The modal POSTs to /me/drive/import which now accepts
-        // kb_type, so trial users still land their imports in the
-        // correct list.
+        // "Import from Google Drive or Sheets" — direct path:
+        //   * Drive NOT connected → straight to /auth/google/connect-drive
+        //   * Drive connected     → into the Knowledge route where the
+        //                           picker auto-opens
+        // Either way the kb_type is stashed in sessionStorage so the
+        // eventual import lands in the right list.
         const driveBtn = panel.querySelector("[data-teach-google]");
         if (driveBtn) {
-          driveBtn.addEventListener("click", () => {
+          driveBtn.addEventListener("click", async () => {
             try { sessionStorage.setItem("kbsAutoOpenDrive", mode); } catch (_) {}
-            if (typeof appShowRoute === "function") appShowRoute("knowledge");
+            driveBtn.disabled = true;
+            try {
+              const r = await fetch("/me/drive/status", {
+                credentials: "same-origin",
+                cache: "no-store",
+              });
+              const d = r.ok ? await r.json() : null;
+              if (!d || !d.connected) {
+                // Not connected — kick straight into Google OAuth. The
+                // sessionStorage flag survives the round-trip; when the
+                // user lands back on the Knowledge route, the picker
+                // auto-opens.
+                window.location.href = "/auth/google/connect-drive";
+                return;
+              }
+              if (typeof appShowRoute === "function") appShowRoute("knowledge");
+            } catch (_) {
+              // Fail-open: assume not connected, jump to OAuth so the
+              // user still gets somewhere useful instead of stuck.
+              window.location.href = "/auth/google/connect-drive";
+            } finally {
+              driveBtn.disabled = false;
+            }
           });
         }
 
