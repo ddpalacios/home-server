@@ -6784,8 +6784,10 @@
              auto-reloads the page so the rest of the dashboard reflects
              the freshly trained KB. -->
         <div id="trialBuildBanner"
-             style="grid-column:span 12;display:none;background:linear-gradient(135deg,#eef2ff,#e0e7ff);border:1px solid #c7d2fe;border-radius:14px;padding:20px 22px;color:#0f172a;box-shadow:0 12px 32px rgba(30,58,138,0.08);"
+             style="grid-column:span 12;display:none;background:linear-gradient(135deg,#eef2ff,#e0e7ff);border:1px solid #c7d2fe;border-radius:14px;padding:20px 22px;color:#0f172a;box-shadow:0 12px 32px rgba(30,58,138,0.08);position:relative;"
              role="status" aria-live="polite">
+          <button type="button" id="tbbDismiss" aria-label="Hide"
+                  style="display:none;position:absolute;top:8px;right:10px;background:transparent;border:none;color:#64748b;font-size:1.4rem;line-height:1;cursor:pointer;padding:4px 8px;border-radius:6px;">×</button>
           <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
             <div id="tbbSpinner" aria-hidden="true"
                  style="width:42px;height:42px;border:4px solid #e0e7ff;border-top-color:#2563eb;border-radius:50%;animation:tbbSpin 1s linear infinite;flex-shrink:0;"></div>
@@ -6851,13 +6853,51 @@
             }
 
             var pollTimer  = null;
-            // Reload happens ONLY when we observe a building → ready
-            // transition. If the first poll already returns "ready",
-            // training finished before this page loaded — hide silently.
-            // (Without this guard the reload fires, the new page sees
-            // "ready" on its first poll, fires again, ad infinitum.)
-            var sawBuilding = false;
-            var celebrated  = false;
+            var renderedReady = false;
+            // Persist a per-trial dismiss flag (keyed by account_id) so
+            // clicking × hides the ready banner across refreshes for THIS
+            // specific trial. A new trial (new account_id) gets a fresh
+            // banner because its account_id isn't in the dismiss list.
+            var DISMISS_KEY = "trialReadyDismissed_v1";
+            function isDismissed(accountId) {
+              if (!accountId) return false;
+              try {
+                var raw = localStorage.getItem(DISMISS_KEY) || "";
+                return raw.split(",").indexOf(accountId) >= 0;
+              } catch (_) { return false; }
+            }
+            function dismiss(accountId) {
+              if (!accountId) return;
+              try {
+                var raw = localStorage.getItem(DISMISS_KEY) || "";
+                var ids = raw ? raw.split(",") : [];
+                if (ids.indexOf(accountId) < 0) ids.push(accountId);
+                localStorage.setItem(DISMISS_KEY, ids.join(","));
+              } catch (_) {}
+            }
+            var dismissBtn = document.getElementById("tbbDismiss");
+            function renderReady(trial) {
+              if (renderedReady) return;
+              renderedReady = true;
+              if (banner.style.display === "none") banner.style.display = "block";
+              spinner.style.display = "none";
+              checkEl.style.display = "block";
+              titleEl.textContent = "Your bot is ready";
+              phaseEl.textContent = "Trained on your website. Click any pane to explore.";
+              paintSteps("ready");
+              if (trial.phone_display) {
+                phoneEl.textContent = trial.phone_display;
+                phoneWrap.style.display = "block";
+              }
+              hintEl.textContent = "Call the number above to test your bot. Click any pane in the sidebar to explore your dashboard.";
+              if (dismissBtn) {
+                dismissBtn.style.display = "block";
+                dismissBtn.onclick = function () {
+                  dismiss(trial.account_id || "");
+                  banner.style.display = "none";
+                };
+              }
+            }
             async function pollOnce() {
               try {
                 var r = await fetch("/me", { credentials: "same-origin" });
@@ -6867,26 +6907,15 @@
                 if (!trial) { banner.style.display = "none"; return; }
                 var status = trial.build_status || "idle";
                 var phase  = trial.build_phase  || "";
+                var aid    = trial.account_id  || "";
 
                 if (status === "ready") {
-                  if (celebrated) return;
-                  celebrated = true;
-                  if (!sawBuilding) {
+                  if (isDismissed(aid)) {
                     banner.style.display = "none";
-                    return;
+                    return; // user hid this trial's banner — respect it
                   }
-                  if (banner.style.display === "none") banner.style.display = "block";
-                  spinner.style.display = "none";
-                  checkEl.style.display = "block";
-                  titleEl.textContent = "Your bot is ready";
-                  phaseEl.textContent = "Trained on your website. Click any pane to explore.";
-                  paintSteps("ready");
-                  if (trial.phone_display) {
-                    phoneEl.textContent = trial.phone_display;
-                    phoneWrap.style.display = "block";
-                  }
-                  hintEl.textContent = "Call the number above to test your bot. Click any pane in the sidebar to explore your dashboard.";
-                  return;
+                  renderReady(trial);
+                  return; // STOP polling. NO reload.
                 }
                 if (status === "failed") {
                   if (banner.style.display === "none") banner.style.display = "block";
