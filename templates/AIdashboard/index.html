@@ -6813,36 +6813,33 @@
              auto-reloads the page so the rest of the dashboard reflects
              the freshly trained KB. -->
         <div id="trialBuildBanner"
-             style="grid-column:span 12;display:none;background:linear-gradient(135deg,#eef2ff,#e0e7ff);border:1px solid #c7d2fe;border-radius:14px;padding:20px 22px;color:#0f172a;box-shadow:0 12px 32px rgba(30,58,138,0.08);position:relative;"
+             style="grid-column:span 12;display:none;background:linear-gradient(135deg,#eef2ff,#e0e7ff);border:1px solid #c7d2fe;border-radius:12px;padding:10px 16px;color:#0f172a;box-shadow:0 4px 12px rgba(30,58,138,0.05);"
              role="status" aria-live="polite">
-          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
             <div id="tbbSpinner" aria-hidden="true"
-                 style="width:42px;height:42px;border:4px solid #e0e7ff;border-top-color:#2563eb;border-radius:50%;animation:tbbSpin 1s linear infinite;flex-shrink:0;"></div>
+                 style="width:24px;height:24px;border:3px solid #e0e7ff;border-top-color:#2563eb;border-radius:50%;animation:tbbSpin 1s linear infinite;flex-shrink:0;"></div>
             <div id="tbbCheck" aria-hidden="true"
-                 style="display:none;width:42px;height:42px;background:#16a34a;border-radius:50%;color:#fff;font-size:24px;line-height:42px;text-align:center;flex-shrink:0;font-weight:700;">✓</div>
-            <div style="flex:1;min-width:240px;">
-              <div id="tbbTitle" style="font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:1.05rem;">Training your bot on your website</div>
-              <div id="tbbPhase" style="color:#1e3a8a;font-weight:600;font-size:0.92rem;margin-top:2px;">Starting up…</div>
-              <div id="tbbSteps" style="display:flex;gap:6px;margin-top:10px;">
-                <span data-phase="reading"     style="width:28px;height:5px;border-radius:3px;background:#cbd5e1;transition:background .3s;"></span>
-                <span data-phase="identifying" style="width:28px;height:5px;border-radius:3px;background:#cbd5e1;transition:background .3s;"></span>
-                <span data-phase="training"    style="width:28px;height:5px;border-radius:3px;background:#cbd5e1;transition:background .3s;"></span>
-                <span data-phase="wiring"      style="width:28px;height:5px;border-radius:3px;background:#cbd5e1;transition:background .3s;"></span>
-                <span data-phase="ready"       style="width:28px;height:5px;border-radius:3px;background:#cbd5e1;transition:background .3s;"></span>
-              </div>
+                 style="display:none;width:24px;height:24px;background:#16a34a;border-radius:50%;color:#fff;font-size:14px;line-height:24px;text-align:center;flex-shrink:0;font-weight:700;">✓</div>
+            <div style="flex:1;min-width:0;">
+              <span id="tbbTitle" style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:0.95rem;">Training your bot</span>
+              <span style="color:#94a3b8;margin:0 6px;">·</span>
+              <span id="tbbPhase" style="color:#1e3a8a;font-weight:500;font-size:0.88rem;">Starting up…</span>
+              <a id="tbbSourceLink" href="" target="_blank" rel="noopener" style="display:none;color:#64748b;font-size:0.78rem;text-decoration:none;margin-left:8px;"></a>
             </div>
-            <div id="tbbPhoneWrap" style="display:none;text-align:right;flex-shrink:0;min-width:160px;">
-              <div style="font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#64748b;">Your trial number</div>
-              <div id="tbbPhone" style="font-family:'Space Grotesk',sans-serif;font-size:1.25rem;font-weight:800;color:#1e3a8a;letter-spacing:.5px;user-select:all;margin-top:2px;">+1 (555) 000-0000</div>
+            <div id="tbbSteps" style="display:flex;gap:4px;flex-shrink:0;">
+              <span data-phase="reading"     style="width:18px;height:4px;border-radius:2px;background:#cbd5e1;transition:background .3s;"></span>
+              <span data-phase="identifying" style="width:18px;height:4px;border-radius:2px;background:#cbd5e1;transition:background .3s;"></span>
+              <span data-phase="training"    style="width:18px;height:4px;border-radius:2px;background:#cbd5e1;transition:background .3s;"></span>
+              <span data-phase="wiring"      style="width:18px;height:4px;border-radius:2px;background:#cbd5e1;transition:background .3s;"></span>
+              <span data-phase="ready"       style="width:18px;height:4px;border-radius:2px;background:#cbd5e1;transition:background .3s;"></span>
+            </div>
+            <div id="tbbPhoneWrap" style="display:none;flex-shrink:0;">
+              <span style="font-size:0.78rem;color:#64748b;margin-right:6px;">📞</span>
+              <span id="tbbPhone" style="font-family:'Space Grotesk',sans-serif;font-size:0.95rem;font-weight:800;color:#1e3a8a;letter-spacing:.3px;user-select:all;">+1 (555) 000-0000</span>
             </div>
           </div>
-          <p id="tbbHint" style="color:#475569;font-size:0.85rem;margin:14px 0 0;line-height:1.5;">
-            You can poke around the dashboard while we train. Try the chat below — answers will sharpen as the bot reads your site.
-          </p>
-          <div id="tbbSourceWrap" style="display:none;margin-top:12px;padding:10px 12px;background:#fff;border:1px solid #c7d2fe;border-radius:10px;font-size:0.82rem;color:#475569;">
-            <span style="color:#64748b;">📚 Trained on</span>
-            <a id="tbbSourceLink" href="" target="_blank" rel="noopener" style="color:#1e3a8a;font-weight:700;text-decoration:none;margin-left:6px;"></a>
-          </div>
+          <!-- Hidden source-URL element kept so the existing JS that references it still runs without errors -->
+          <span id="tbbSourceWrap" hidden></span>
         </div>
         <style>@keyframes tbbSpin { to { transform: rotate(360deg); } }</style>
 
@@ -6861,7 +6858,10 @@
             var checkEl  = document.getElementById("tbbCheck");
             var phoneWrap= document.getElementById("tbbPhoneWrap");
             var phoneEl  = document.getElementById("tbbPhone");
-            var hintEl   = document.getElementById("tbbHint");
+            // Hint text was removed when the banner became compact — point
+            // hintEl at a throwaway element so existing textContent writes
+            // are harmless no-ops instead of TypeErrors.
+            var hintEl   = document.createElement("span");
             if (!banner) return;
 
             var PHASE_LABELS = {
@@ -6897,19 +6897,17 @@
               paintSteps("ready");
               if (trial.phone_display) {
                 phoneEl.textContent = trial.phone_display;
-                phoneWrap.style.display = "block";
+                phoneWrap.style.display = "inline-flex";
               }
-              // Reveal the source URL the bot was trained on so the user
-              // can see (and click through to) what content the KB ingested.
-              var srcWrap = document.getElementById("tbbSourceWrap");
+              // Reveal the source URL inline as a "→ yoursite.com" link
+              // next to the phase text. Hidden during build.
               var srcLink = document.getElementById("tbbSourceLink");
               var src = (trial && (trial.source_url || trial.trained_on)) || "";
-              if (src && srcWrap && srcLink) {
+              if (src && srcLink) {
                 srcLink.href = src;
-                srcLink.textContent = src.replace(/^https?:\/\//i, "").replace(/\/$/, "");
-                srcWrap.style.display = "block";
+                srcLink.textContent = "→ " + src.replace(/^https?:\/\//i, "").replace(/\/$/, "");
+                srcLink.style.display = "inline";
               }
-              hintEl.textContent = "Call the number above to test your bot. Click any pane in the sidebar to explore your dashboard.";
             }
             async function pollOnce() {
               try {
