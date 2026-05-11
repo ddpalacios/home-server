@@ -60,36 +60,6 @@
       .nav-links { display: flex; align-items: center; gap: 18px; font-size: 0.92rem; color: var(--text-soft); font-weight: 500; }
       .nav-links a:hover { color: var(--text); }
 
-      /* Nav URL input — the "just one text field" entry point */
-      .nav-try {
-        display: inline-flex; align-items: center; gap: 0;
-        background: #f1f5f9;
-        border: 1px solid var(--border);
-        border-radius: 999px;
-        padding: 3px 3px 3px 14px;
-        transition: border-color 0.12s, background 0.12s, box-shadow 0.12s;
-      }
-      .nav-try:focus-within {
-        border-color: var(--accent);
-        background: #fff;
-        box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
-      }
-      .nav-try input {
-        border: none; background: transparent; outline: none;
-        font-family: inherit; font-size: 0.85rem;
-        color: var(--text);
-        width: 170px;
-        padding: 4px 0;
-      }
-      .nav-try input::placeholder { color: var(--text-muted); }
-      .nav-try button {
-        background: var(--dark); color: #fff;
-        border: none; border-radius: 999px;
-        padding: 8px 14px; font-weight: 700; font-size: 0.82rem;
-        cursor: pointer; transition: background 0.12s;
-        flex-shrink: 0; white-space: nowrap;
-      }
-      .nav-try button:hover { background: #1e293b; }
       .nav-cta {
         background: var(--dark); color: #fff !important;
         padding: 8px 16px; border-radius: var(--radius-sm);
@@ -189,20 +159,43 @@
         max-width: 580px; margin: 0 auto 28px;
         line-height: 1.55;
       }
-      .hero-ctas { display: inline-flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-      .btn {
-        display: inline-flex; align-items: center; gap: 8px;
-        padding: 13px 22px; border-radius: var(--radius-sm);
-        font-weight: 700; font-size: 0.95rem;
-        border: 1px solid transparent; cursor: pointer;
-        transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+      /* Hero URL field — the entry point. Replaces the old two-button CTA row. */
+      .hero-try {
+        display: inline-flex; align-items: center;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 5px 5px 5px 20px;
+        gap: 8px;
+        box-shadow: 0 14px 40px rgba(15,23,42,0.10);
+        max-width: 520px; width: 100%;
+        transition: border-color 0.12s, box-shadow 0.12s;
       }
-      .btn:hover { transform: translateY(-1px); }
-      .btn-primary { background: var(--dark); color: #fff; box-shadow: 0 8px 24px rgba(15,23,42,0.18); }
-      .btn-primary:hover { background: #1e293b; }
-      .btn-secondary { background: #fff; color: var(--text); border-color: #cbd5e1; }
-      .btn-secondary:hover { border-color: #94a3b8; }
-      .hero .fine { color: var(--text-muted); font-size: 0.78rem; margin-top: 16px; }
+      .hero-try:focus-within {
+        border-color: var(--accent);
+        box-shadow: 0 18px 50px rgba(37,99,235,0.22);
+      }
+      .hero-try-prefix { color: var(--text-muted); font-size: 1.05rem; line-height: 1; flex-shrink: 0; }
+      .hero-try input {
+        border: none; background: transparent; outline: none;
+        font-family: inherit; font-size: 1rem;
+        color: var(--text);
+        flex: 1; min-width: 0;
+        padding: 13px 0;
+        font-weight: 500;
+      }
+      .hero-try input::placeholder { color: var(--text-muted); }
+      .hero-try button {
+        background: var(--dark); color: #fff;
+        border: none; border-radius: 999px;
+        padding: 13px 24px; font-weight: 700; font-size: 0.95rem;
+        cursor: pointer; transition: background 0.12s, transform 0.12s;
+        flex-shrink: 0; white-space: nowrap;
+        font-family: inherit;
+      }
+      .hero-try button:hover { background: #1e293b; transform: translateY(-1px); }
+      .hero-try button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+      .hero .fine { color: var(--text-muted); font-size: 0.82rem; margin-top: 14px; max-width: 480px; margin-left: auto; margin-right: auto; }
 
       /* ─── THREE THINGS STRIP ──────────────────────────── */
       .three {
@@ -340,42 +333,19 @@
       footer a:hover { color: #fff; }
       .footer-sep { margin: 0 8px; color: #475569; }
 
-      /* ─── DEMO MODAL ──────────────────────────────────── */
-      dialog#demoModal {
-        border: none; border-radius: 18px; padding: 0;
-        background: var(--dark); color: #fff;
-        max-width: 720px; width: 92%;
-        box-shadow: 0 30px 90px rgba(0,0,0,0.5);
-      }
-      dialog#demoModal::backdrop {
-        background: rgba(15,23,42,0.6);
-        backdrop-filter: blur(6px);
-      }
-      .demo-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #1e293b; }
-      .demo-head h3 { font-size: 1rem; font-weight: 700; }
-      .demo-close { background: transparent; border: none; color: #94a3b8; font-size: 1.4rem; cursor: pointer; line-height: 1; }
-      .demo-close:hover { color: #fff; }
-      .demo-body { padding: 20px; }
-      .demo-placeholder {
-        background: #1e293b; border-radius: 12px;
-        aspect-ratio: 16 / 9;
-        display: flex; align-items: center; justify-content: center;
-        color: #cbd5e1; font-size: 0.95rem; text-align: center; padding: 20px;
-      }
-
       /* ─── MOBILE ──────────────────────────────────────── */
-      @media (max-width: 760px) {
-        .nav-try { display: none; } /* fall back to the bottom form on small screens */
-      }
       @media (max-width: 640px) {
         .nav-links { gap: 12px; font-size: 0.85rem; }
-        .nav-links a:not(.nav-cta):not(.nav-try) { display: none; }
+        .nav-links a:not(.nav-cta) { display: none; }
         .three-grid { grid-template-columns: 1fr; }
         .three-item + .three-item { border-left: none; border-top: 1px solid var(--border); }
         .jobs-grid { grid-template-columns: 1fr 1fr; }
         .jobs-grid .job-tile.accent { grid-column: 1 / -1; }
         .hero { padding: 56px 0 48px; }
         .start { padding: 48px 0; }
+        .hero-try { flex-direction: column; border-radius: 18px; padding: 8px; gap: 6px; width: 100%; max-width: 360px; margin: 0 auto; }
+        .hero-try input { width: 100%; padding: 13px 16px; text-align: center; font-size: 1rem; }
+        .hero-try button { width: 100%; border-radius: 12px; padding: 13px; }
       }
       @media (max-width: 380px) {
         .jobs-grid { grid-template-columns: 1fr; }
@@ -451,10 +421,6 @@
         </a>
         <nav class="nav-links" aria-label="Primary">
           <a href="#three-things">How it works</a>
-          <form class="nav-try" id="navTryForm" novalidate>
-            <input id="navTryUrl" type="url" placeholder="yoursite.com" aria-label="Your website" autocomplete="url" />
-            <button type="submit">Try free →</button>
-          </form>
           <a class="nav-cta" href="#start-free">Start free</a>
         </nav>
       </div>
@@ -465,11 +431,12 @@
         <span class="eyebrow">⚡ Built for home-service owners</span>
         <h1>Get every lead. Answer every customer.<br />Stay in the field.</h1>
         <p class="sub">Calls, texts, web forms — captured and answered like you wrote them yourself. Estimates booked. Follow-ups sent. Without you at a desk.</p>
-        <div class="hero-ctas">
-          <a class="btn btn-primary" href="#start-free">Start free →</a>
-          <button class="btn btn-secondary" type="button" id="openDemo">Watch 90-sec demo</button>
-        </div>
-        <p class="fine">No credit card · 14-day trial · Cancel anytime</p>
+        <form class="hero-try" id="heroTryForm" novalidate aria-label="Start your free trial">
+          <span class="hero-try-prefix" aria-hidden="true">🌐</span>
+          <input id="heroTryUrl" type="url" placeholder="yoursite.com" aria-label="Your website" autocomplete="url" required spellcheck="false" autocapitalize="off" />
+          <button type="submit">Try free →</button>
+        </form>
+        <p class="fine">Paste your site. We'll train a bot on it and call back with a free phone number. No credit card.</p>
       </div>
     </section>
 
@@ -587,16 +554,6 @@
       </div>
     </footer>
 
-    <dialog id="demoModal" aria-labelledby="demoTitle">
-      <div class="demo-head">
-        <h3 id="demoTitle">90-second demo</h3>
-        <button class="demo-close" type="button" aria-label="Close" id="closeDemo">×</button>
-      </div>
-      <div class="demo-body">
-        <div class="demo-placeholder">Demo video coming soon. Email <a style="color:#bfdbfe;text-decoration:underline;" href="mailto:hello@justgotalead.com">hello@justgotalead.com</a> for an invite.</div>
-      </div>
-    </dialog>
-
     <dialog id="trialModal" aria-labelledby="trialTitle">
       <div class="trial-head">
         <div>
@@ -627,38 +584,25 @@
 
     <script>
       (function () {
-        // ─── Demo modal ─────────────────────────────────────
-        var dlg = document.getElementById("demoModal");
-        var openBtn = document.getElementById("openDemo");
-        var closeBtn = document.getElementById("closeDemo");
-        if (openBtn && dlg) openBtn.addEventListener("click", function () { dlg.showModal(); });
-        if (closeBtn && dlg) closeBtn.addEventListener("click", function () { dlg.close(); });
-        if (dlg) dlg.addEventListener("click", function (e) {
-          // close on backdrop click
-          var r = dlg.getBoundingClientRect();
-          if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) dlg.close();
-        });
-
-        // ─── Nav URL → trial modal ──────────────────────────
-        // Single source of truth for kicking off the trial. The nav URL
-        // input feeds the modal; the modal collects email and POSTs to
-        // /try. The bottom #start-free section also calls openTrialModal
-        // when the visitor scrolls and submits there.
-        var trialDlg    = document.getElementById("trialModal");
-        var trialUrl    = ""; // captured between nav-form and modal
+        // ─── Trial modal (opened by the hero URL field) ─────
+        // The hero is a single URL input. Submitting it opens this modal,
+        // which captures email and POSTs to /try. The bottom #start-free
+        // section is the alternate, longer surface (URL + industry + email)
+        // and posts directly to /try.
+        var trialDlg     = document.getElementById("trialModal");
+        var trialUrl     = "";
         var trialUrlEcho = document.getElementById("trialUrlEcho");
-        var trialForm   = document.getElementById("trialForm");
-        var trialError  = document.getElementById("trialError");
-        var trialSubmit = document.getElementById("trialSubmit");
+        var trialForm    = document.getElementById("trialForm");
+        var trialError   = document.getElementById("trialError");
+        var trialSubmit  = document.getElementById("trialSubmit");
         var trialEmailIn = document.getElementById("trialEmailInput");
         var trialSuccess = document.getElementById("trialSuccess");
-        var closeTrial  = document.getElementById("closeTrial");
+        var closeTrial   = document.getElementById("closeTrial");
 
         function openTrialModal(url) {
           if (!trialDlg) return;
           trialUrl = (url || "").trim();
           if (!trialUrl) return;
-          // Reset visible state so re-opens are clean
           trialError.textContent = "";
           trialForm.hidden = false;
           trialSuccess.hidden = true;
@@ -670,12 +614,15 @@
           setTimeout(function () { trialEmailIn && trialEmailIn.focus(); }, 80);
         }
 
-        var navTryForm = document.getElementById("navTryForm");
-        if (navTryForm) {
-          navTryForm.addEventListener("submit", function (e) {
+        var heroTryForm = document.getElementById("heroTryForm");
+        if (heroTryForm) {
+          heroTryForm.addEventListener("submit", function (e) {
             e.preventDefault();
-            var v = document.getElementById("navTryUrl").value.trim();
-            if (!v) return;
+            var v = document.getElementById("heroTryUrl").value.trim();
+            if (!v) {
+              document.getElementById("heroTryUrl").focus();
+              return;
+            }
             openTrialModal(v);
           });
         }
