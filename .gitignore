@@ -11,3 +11,4 @@ web/dist/
 templates/AIdashboard/dist/
 .vite/
 prod.env.sh
+templates/portfolio/home.legacy.html
