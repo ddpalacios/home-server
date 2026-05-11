@@ -2755,6 +2755,26 @@
     .merged-teach { margin-top: 16px; padding-top: 16px; border-top: 1px dashed #e2e8f0; }
     .merged-teach .teach-form { margin-top: 4px; }
 
+    /* Inline Google Drive button — same visual weight as the URL
+       form so users can pick URL vs Drive in the same panel. */
+    .teach-google-inline {
+      margin-top: 8px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 13px;
+      color: #0a0a0a;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: border-color 140ms ease, background 140ms ease;
+    }
+    .teach-google-inline:hover { border-color: #94a3b8; background: #f8fafc; }
+
     /* Manage-pane subsection layout — three labeled sections stacked
        (Trained from websites → Hand-written answers → Quick Q&A).
        The visual treatment is consistent across both customer and
@@ -8075,6 +8095,17 @@
               </button>
             </form>
             <p class="teach-error" data-teach-error hidden></p>
+            <button type="button" class="teach-google-inline" data-teach-google>
+              <svg viewBox="0 0 87.3 78" width="14" height="14" aria-hidden="true">
+                <path fill="#0066da" d="M6.6 66.85 10.45 73.5c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0c0 1.55.4 3.1 1.2 4.5z"/>
+                <path fill="#00ac47" d="M43.65 25 29.9 1.2c-1.35.8-2.5 1.9-3.3 3.3L1.2 48.6c-.8 1.4-1.2 2.95-1.2 4.5h27.5z"/>
+                <path fill="#ea4335" d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5H59.7l5.85 11.5z"/>
+                <path fill="#00832d" d="M43.65 25 57.4 1.2C56.05.4 54.5 0 52.9 0H34.4c-1.6 0-3.15.4-4.5 1.2z"/>
+                <path fill="#2684fc" d="M59.7 53.1H27.6L13.85 76.8c1.35.8 2.9 1.2 4.5 1.2H68.85c1.6 0 3.15-.4 4.5-1.2z"/>
+                <path fill="#ffba00" d="M73.4 26.5 60.55 4.5c-.8-1.4-1.95-2.5-3.3-3.3L43.5 25l16.2 28.1h27.45c0-1.55-.4-3.1-1.2-4.5z"/>
+              </svg>
+              <span>Import from Google Drive or Sheets</span>
+            </button>
             <div data-teach-list class="teach-list" style="margin-top:8px;"></div>
             <p class="teach-empty" data-teach-empty hidden>No website links yet. Paste one above to get started.</p>
           </div>
@@ -8130,6 +8161,17 @@
               </button>
             </form>
             <p class="teach-error" data-teach-error hidden></p>
+            <button type="button" class="teach-google-inline" data-teach-google>
+              <svg viewBox="0 0 87.3 78" width="14" height="14" aria-hidden="true">
+                <path fill="#0066da" d="M6.6 66.85 10.45 73.5c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0c0 1.55.4 3.1 1.2 4.5z"/>
+                <path fill="#00ac47" d="M43.65 25 29.9 1.2c-1.35.8-2.5 1.9-3.3 3.3L1.2 48.6c-.8 1.4-1.2 2.95-1.2 4.5h27.5z"/>
+                <path fill="#ea4335" d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5H59.7l5.85 11.5z"/>
+                <path fill="#00832d" d="M43.65 25 57.4 1.2C56.05.4 54.5 0 52.9 0H34.4c-1.6 0-3.15.4-4.5 1.2z"/>
+                <path fill="#2684fc" d="M59.7 53.1H27.6L13.85 76.8c1.35.8 2.9 1.2 4.5 1.2H68.85c1.6 0 3.15-.4 4.5-1.2z"/>
+                <path fill="#ffba00" d="M73.4 26.5 60.55 4.5c-.8-1.4-1.95-2.5-3.3-3.3L43.5 25l16.2 28.1h27.45c0-1.55-.4-3.1-1.2-4.5z"/>
+              </svg>
+              <span>Import from Google Drive or Sheets</span>
+            </button>
             <div data-teach-list class="teach-list" style="margin-top:8px;"></div>
             <p class="teach-empty" data-teach-empty hidden>No links yet. Paste one above to get started.</p>
           </div>
@@ -22544,6 +22586,21 @@
           e.preventDefault();
           addUrl(input ? input.value : "");
         });
+
+        // "Import from Google Drive or Sheets" — opens the existing
+        // Drive picker that lives in the Knowledge route. Jumping
+        // there ensures the OAuth handshake, file list, and import
+        // flow are fully wired without duplicating the modal on home.
+        // The modal POSTs to /me/drive/import which now accepts
+        // kb_type, so trial users still land their imports in the
+        // correct list.
+        const driveBtn = panel.querySelector("[data-teach-google]");
+        if (driveBtn) {
+          driveBtn.addEventListener("click", () => {
+            try { sessionStorage.setItem("kbsAutoOpenDrive", mode); } catch (_) {}
+            if (typeof appShowRoute === "function") appShowRoute("knowledge");
+          });
+        }
 
         if (getAid()) refresh();
         else window.addEventListener("accountIdReady", refresh, { once: true });

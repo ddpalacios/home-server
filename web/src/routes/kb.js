@@ -653,12 +653,21 @@ function _initKb() {
       .filter((f) => driveSelected.has(f.id))
       .map((f) => ({ id: f.id, name: f.name, mime_type: f.mimeType }));
     driveImportBtn.disabled = true;
+    // If the home page handed us off ("import to internal team brain"),
+    // forward that intent so the source lands in the right dashboard
+    // list. _train_drive_source writes the extracted content to BOTH
+    // KBs regardless — kb_type just controls the home-page section.
+    let driveKbType = "client";
+    try {
+      const saved = sessionStorage.getItem("kbsAutoOpenDrive");
+      if (saved === "internal" || saved === "client") driveKbType = saved;
+    } catch (_) {}
     try {
       const res = await fetch("/me/drive/import", {
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ files: picked }),
+        body: JSON.stringify({ files: picked, kb_type: driveKbType }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -666,6 +675,7 @@ function _initKb() {
         driveImportBtn.disabled = false;
         return;
       }
+      try { sessionStorage.removeItem("kbsAutoOpenDrive"); } catch (_) {}
       closeDriveModal();
       await loadSources();
     } catch (_) {
@@ -674,7 +684,25 @@ function _initKb() {
     }
   });
 
-  checkDriveStatus();
+  // Auto-open the Drive picker when the home page jumped us here via
+  // its "Import from Google Drive or Sheets" button. The flag is set
+  // in sessionStorage as "client" or "internal"; we still open the
+  // same picker but the eventual /me/drive/import call honors the mode.
+  function maybeAutoOpenDrive() {
+    let pending = null;
+    try { pending = sessionStorage.getItem("kbsAutoOpenDrive"); } catch (_) {}
+    if (!pending) return;
+    if (driveConnected) {
+      driveActiveTab = "docs";
+      openDriveModal();
+    } else {
+      // Defer: kick off OAuth — sessionStorage flag survives the
+      // round-trip so we'll auto-open once they come back connected.
+      window.location.href = "/auth/google/connect-drive";
+    }
+  }
+
+  checkDriveStatus().then(maybeAutoOpenDrive);
   window.addEventListener("accountIdReady", checkDriveStatus);
 
   // Re-arm so the loader re-runs with the resolved accountId if the
