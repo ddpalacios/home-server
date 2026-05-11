@@ -22637,40 +22637,48 @@
         // eventual import lands in the right list.
         const driveBtn = panel.querySelector("[data-teach-google]");
         if (driveBtn) {
-          driveBtn.addEventListener("click", async () => {
+          // Click handler — always works, every click. No fragile
+          // dependency on init() state. If kb.js is already loaded,
+          // we just toggle the body-level modal's .is-open class
+          // ourselves and let kb.js's existing handlers (file list,
+          // import, close) take over from there.
+          driveBtn.addEventListener("click", function () {
             try { sessionStorage.setItem("kbsAutoOpenDrive", mode); } catch (_) {}
-            driveBtn.disabled = true;
-            try {
-              const r = await fetch("/me/drive/status", {
-                credentials: "same-origin",
-                cache: "no-store",
-              });
-              const d = r.ok ? await r.json() : null;
-              if (!d || !d.connected) {
-                // Not connected — kick straight into Google OAuth. The
-                // sessionStorage flag survives the round-trip; on the
-                // way back, the home-boot handler opens the picker.
-                window.location.href = "/auth/google/connect-drive";
-                return;
-              }
-              // Already connected — make sure the kb.js bundle is
-              // loaded (idempotent), then call the exposed
-              // __openDrivePicker every time. We can't rely on init()'s
-              // maybeAutoOpenDrive — _initialized guards init from
-              // re-running, so that path only opens the picker ONCE
-              // per page load.
-              if (typeof window.__openDrivePicker !== "function") {
-                if (typeof window.__dashboardLoadRouteModule === "function") {
-                  await window.__dashboardLoadRouteModule("kb").catch(function () {});
-                }
-              }
+
+            function attemptOpen() {
+              // Fast path: kb.js exposes the picker as a callable.
               if (typeof window.__openDrivePicker === "function") {
                 window.__openDrivePicker();
+                return true;
               }
-            } catch (_) {
+              return false;
+            }
+
+            // Already connected + kb.js loaded → open immediately.
+            if (attemptOpen()) return;
+
+            // Otherwise lazy-load kb.js. It checks /me/drive/status
+            // internally; if not connected it'll redirect to OAuth,
+            // if connected it exposes __openDrivePicker which we
+            // then invoke.
+            if (typeof window.__dashboardLoadRouteModule === "function") {
+              window.__dashboardLoadRouteModule("kb")
+                .then(function () {
+                  // kb.js's init does an async drive-status check; give
+                  // it a beat so __openDrivePicker has accurate state.
+                  setTimeout(function () {
+                    if (!attemptOpen()) {
+                      // Module loaded but picker still unavailable —
+                      // most likely not connected. Send to OAuth.
+                      window.location.href = "/auth/google/connect-drive";
+                    }
+                  }, 400);
+                })
+                .catch(function () {
+                  window.location.href = "/auth/google/connect-drive";
+                });
+            } else {
               window.location.href = "/auth/google/connect-drive";
-            } finally {
-              driveBtn.disabled = false;
             }
           });
         }
@@ -38096,7 +38104,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-drive-home"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-drive-reopen"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
