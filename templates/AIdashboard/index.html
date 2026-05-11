@@ -2408,7 +2408,9 @@
     .app-share-btn:hover { border-color: #cbd5e1; background: #f8fafc; }
     .app-share-btn svg { width: 14px; height: 14px; }
 
-    /* Share modal */
+    /* Share modal — explicitly center in the viewport. Some browsers
+       fail to auto-center <dialog> when its parent has transforms or
+       position contexts. inset:0 + margin:auto pins it center reliably. */
     .share-modal {
       border: 0;
       padding: 0;
@@ -2417,6 +2419,11 @@
       width: calc(100% - 32px);
       box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
       background: #ffffff;
+      position: fixed;
+      inset: 0;
+      margin: auto;
+      max-height: calc(100vh - 48px);
+      overflow-y: auto;
     }
     .share-modal::backdrop { background: rgba(15, 23, 42, 0.45); }
     .share-modal-header {

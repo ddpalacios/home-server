@@ -369,6 +369,13 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, size_t bo
 		size_t res_body_len = total - (size_t)(res_body - response);
 
 		char *up_content_type = NULL;
+		/* Forward Set-Cookie headers (Flask uses them to set the session
+		 * cookie on /me/profile, /auth/*, /team/<aid>/auth, etc.). Without
+		 * this, sessions set in any POST-handler endpoint never reach the
+		 * browser and the user appears to "fail" auth even when the
+		 * server accepted the password. */
+		char **cookies = NULL;
+		size_t cookie_count = 0;
 		char *header_block = malloc(header_len + 1);
 		if (header_block) {
 			memcpy(header_block, response, header_len);
@@ -376,10 +383,19 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, size_t bo
 			char *line = strtok(header_block, "\r\n");
 			while (line) {
 				if (strncasecmp(line, "Content-Type:", 13) == 0) {
-					char *val = line + 13;
+					if (!up_content_type) {
+						char *val = line + 13;
+						while (*val == ' ') val++;
+						up_content_type = strdup(val);
+					}
+				} else if (strncasecmp(line, "Set-Cookie:", 11) == 0) {
+					char *val = line + 11;
 					while (*val == ' ') val++;
-					up_content_type = strdup(val);
-					break;
+					char **tmp = realloc(cookies, sizeof(char*) * (cookie_count + 1));
+					if (tmp) {
+						cookies = tmp;
+						cookies[cookie_count++] = strdup(val);
+					}
 				}
 				line = strtok(NULL, "\r\n");
 			}
@@ -388,7 +404,7 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, size_t bo
 
 		const char *ctype = up_content_type ? up_content_type : "application/json";
 		const char *status_text = (up_status == 200) ? "OK" : get_code_message(up_status);
-		char header_out[2048];
+		char header_out[4096];
 		int header_n = snprintf(header_out, sizeof(header_out),
 			"HTTP/1.1 %d %s\r\n"
 			"Content-Type: %s\r\n"
@@ -396,10 +412,19 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, size_t bo
 			"Access-Control-Allow-Origin: *\r\n"
 			"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
 			"Access-Control-Allow-Headers: Content-Type\r\n"
-			"Connection: close\r\n"
-			"Content-Length: %zu\r\n"
-			"\r\n",
-			up_status, status_text, ctype, res_body_len);
+			"Connection: close\r\n",
+			up_status, status_text, ctype);
+		for (size_t i = 0; i < cookie_count; i++) {
+			if (header_n < 0 || (size_t)header_n >= sizeof(header_out)) break;
+			header_n += snprintf(header_out + header_n, sizeof(header_out) - header_n,
+				"Set-Cookie: %s\r\n", cookies[i]);
+			free(cookies[i]);
+		}
+		if (cookies) free(cookies);
+		if (header_n > 0 && (size_t)header_n < sizeof(header_out)) {
+			header_n += snprintf(header_out + header_n, sizeof(header_out) - header_n,
+				"Content-Length: %zu\r\n\r\n", res_body_len);
+		}
 		SSL_write(socket->cSSL, header_out, header_n);
 		if (res_body_len > 0) {
 			SSL_write(socket->cSSL, res_body, res_body_len);
