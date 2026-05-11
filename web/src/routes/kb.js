@@ -698,12 +698,32 @@ function _initKb() {
     if (driveConnected) {
       driveActiveTab = "docs";
       openDriveModal();
+      // Consume the flag — otherwise a refresh while the modal is
+      // open (or after close-without-import) would re-pop it forever.
+      // Import-success path also clears it, but this catches the
+      // close-without-import case.
+      try { sessionStorage.removeItem("kbsAutoOpenDrive"); } catch (_) {}
     } else {
       // Defer: kick off OAuth — sessionStorage flag survives the
       // round-trip so we'll auto-open once they come back connected.
       window.location.href = "/auth/google/connect-drive";
     }
   }
+
+  // Exposed so the home-page "Import from Google Drive or Sheets"
+  // button can re-open the picker on every click. The _initialized
+  // guard inside _initKb() means re-running init() is a no-op; the
+  // home handler used to rely on maybeAutoOpenDrive firing inside
+  // init, which only fired ONCE per page load. Now the home handler
+  // calls this directly.
+  window.__openDrivePicker = function () {
+    if (!driveConnected) {
+      window.location.href = "/auth/google/connect-drive";
+      return;
+    }
+    driveActiveTab = "docs";
+    openDriveModal();
+  };
 
   checkDriveStatus().then(maybeAutoOpenDrive);
   window.addEventListener("accountIdReady", checkDriveStatus);

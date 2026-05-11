@@ -2314,6 +2314,7 @@
       gap: 14px;
       padding: 6px 0;
       margin-bottom: 14px;
+      flex-wrap: wrap;
     }
     .home-mode-label {
       font-size: 12px;
@@ -2504,14 +2505,55 @@
       line-height: 1.4;
     }
 
-    .home-kpis {
+    /* Inline KPI chips — used when the metrics sit next to the mode
+       switch instead of as their own row of cards. Compact: icon +
+       value + label on one line, separator dots between. */
+    .home-kpis.is-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 0;
+      margin-left: auto;  /* pushes to the right of the mode switch */
+      flex-wrap: wrap;
+    }
+    .home-kpi-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
+      color: #475569;
+      white-space: nowrap;
+    }
+    .home-kpi-chip + .home-kpi-chip { position: relative; padding-left: 14px; }
+    .home-kpi-chip + .home-kpi-chip::before {
+      content: "";
+      position: absolute; left: 0; top: 50%;
+      width: 3px; height: 3px;
+      border-radius: 50%;
+      background: #cbd5e1;
+      transform: translateY(-50%);
+    }
+    .home-kpi-chip svg { width: 13px; height: 13px; color: #94a3b8; }
+    .home-kpi-chip strong {
+      font-weight: 800;
+      color: #0a0a0a;
+      font-feature-settings: "tnum";
+    }
+    .home-kpi-chip span { color: #64748b; }
+    @media (max-width: 760px) {
+      .home-kpis.is-inline { margin-left: 0; width: 100%; }
+    }
+
+    /* Legacy stat-card grid layout — left here unused for now in case
+       we want to bring it back, but no longer rendered. */
+    .home-kpis:not(.is-inline) {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 14px;
       margin-bottom: 18px;
     }
     @media (max-width: 820px) {
-      .home-kpis { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+      .home-kpis:not(.is-inline) { grid-template-columns: repeat(1, minmax(0, 1fr)); }
     }
     .home-kpi {
       background: #ffffff;
@@ -7990,9 +8032,11 @@
           </div>
         </div>
 
-        <!-- Top-level mode switch. This drives EVERYTHING below it:
-             metrics, test prompts/suggestions, and which knowledge
-             base is shown in the Manage tab. -->
+        <!-- Top-level mode switch + inline KPIs on a single row.
+             The metric chips sit to the right of the switch so the
+             page header is one tight line instead of three stacked
+             rows — leaves more vertical room for the working content
+             below. -->
         <div class="home-mode-row" style="grid-column: span 12;">
           <span class="home-mode-label">Managing</span>
           <div class="home-mode-switch" role="tablist" aria-label="Which bot to manage">
@@ -8005,33 +8049,22 @@
               <span>Internal team bot</span>
             </button>
           </div>
-        </div>
-
-        <!-- Metrics row — 3 stat cards. -->
-        <div class="home-kpis" style="grid-column: span 12;">
-          <div class="home-kpi">
-            <span class="home-kpi-label">
+          <div class="home-kpis is-inline" id="homeKpis">
+            <span class="home-kpi-chip">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.86 19.86 0 0 1 2.08 4.18 2 2 0 0 1 4.07 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2z"/></svg>
-              Calls today
+              <strong id="kpiCallsToday">—</strong>
+              <span><span id="kpiCallsCap">calls today</span></span>
             </span>
-            <span class="home-kpi-value" id="kpiCallsToday">—</span>
-            <span class="home-kpi-delta" id="kpiCallsCap">of today's cap</span>
-          </div>
-          <div class="home-kpi">
-            <span class="home-kpi-label">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              Leads
+            <span class="home-kpi-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              <strong id="kpiLeads">—</strong>
+              <span>leads</span>
             </span>
-            <span class="home-kpi-value" id="kpiLeads">—</span>
-            <span class="home-kpi-delta">total contacted</span>
-          </div>
-          <div class="home-kpi">
-            <span class="home-kpi-label">
+            <span class="home-kpi-chip">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-              Pages learned
+              <strong id="kpiPages">—</strong>
+              <span>pages</span>
             </span>
-            <span class="home-kpi-value" id="kpiPages">—</span>
-            <span class="home-kpi-delta" id="kpiPagesSub">from your website</span>
           </div>
         </div>
 
@@ -22595,8 +22628,11 @@
 
         // "Import from Google Drive or Sheets" — direct path:
         //   * Drive NOT connected → straight to /auth/google/connect-drive
-        //   * Drive connected     → into the Knowledge route where the
-        //                           picker auto-opens
+        //   * Drive connected     → lazy-load kb.js so the picker opens
+        //                           IN PLACE on home. Do NOT call
+        //                           appShowRoute("knowledge") — the
+        //                           router rewrites "knowledge" → "settings"
+        //                           and would bounce the user to #settings.
         // Either way the kb_type is stashed in sessionStorage so the
         // eventual import lands in the right list.
         const driveBtn = panel.querySelector("[data-teach-google]");
@@ -22612,16 +22648,26 @@
               const d = r.ok ? await r.json() : null;
               if (!d || !d.connected) {
                 // Not connected — kick straight into Google OAuth. The
-                // sessionStorage flag survives the round-trip; when the
-                // user lands back on the Knowledge route, the picker
-                // auto-opens.
+                // sessionStorage flag survives the round-trip; on the
+                // way back, the home-boot handler opens the picker.
                 window.location.href = "/auth/google/connect-drive";
                 return;
               }
-              if (typeof appShowRoute === "function") appShowRoute("knowledge");
+              // Already connected — make sure the kb.js bundle is
+              // loaded (idempotent), then call the exposed
+              // __openDrivePicker every time. We can't rely on init()'s
+              // maybeAutoOpenDrive — _initialized guards init from
+              // re-running, so that path only opens the picker ONCE
+              // per page load.
+              if (typeof window.__openDrivePicker !== "function") {
+                if (typeof window.__dashboardLoadRouteModule === "function") {
+                  await window.__dashboardLoadRouteModule("kb").catch(function () {});
+                }
+              }
+              if (typeof window.__openDrivePicker === "function") {
+                window.__openDrivePicker();
+              }
             } catch (_) {
-              // Fail-open: assume not connected, jump to OAuth so the
-              // user still gets somewhere useful instead of stuck.
               window.location.href = "/auth/google/connect-drive";
             } finally {
               driveBtn.disabled = false;
@@ -38050,7 +38096,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-brain-buttons"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-drive-home"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
