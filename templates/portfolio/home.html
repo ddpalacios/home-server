@@ -629,7 +629,7 @@
           </div>
           <div class="phone-label" id="progressPhoneLabel" hidden>Your trial phone number</div>
           <div class="phone-number" id="progressPhoneDisplay" hidden>+1 (555) 000-0000</div>
-          <p class="small-note">We'll send you to your dashboard the moment it's ready.</p>
+          <p class="small-note">Once your bot is trained we'll show your phone number, then take you to your dashboard.</p>
         </div>
 
         <div class="trial-success" id="trialSuccess" hidden>
@@ -740,11 +740,10 @@
           var attempts = 0;
           var MAX_ATTEMPTS = 90; // ~3 minutes at 2s
           opts.labelEl.textContent = PHASE_LABELS[""];
-          if (opts.phoneDisplay && opts.phoneEl && opts.phoneLabelEl) {
-            opts.phoneEl.textContent = opts.phoneDisplay;
-            opts.phoneEl.hidden = false;
-            opts.phoneLabelEl.hidden = false;
-          }
+          // Keep the phone number hidden during training — it gets revealed
+          // only after build_status flips to "ready".
+          if (opts.phoneEl) opts.phoneEl.hidden = true;
+          if (opts.phoneLabelEl) opts.phoneLabelEl.hidden = true;
           paintPhaseSteps(opts.stepsEl, "");
 
           async function tick() {
@@ -758,12 +757,18 @@
                 opts.labelEl.textContent = PHASE_LABELS[phase] || PHASE_LABELS[""];
                 paintPhaseSteps(opts.stepsEl, phase || "reading");
                 if (status === "ready") {
-                  // Mark all steps done and bounce to dashboard.
+                  // Training complete — reveal the phone number, hold it
+                  // for the visitor to read, THEN navigate to the dashboard.
                   paintPhaseSteps(opts.stepsEl, "ready");
-                  opts.labelEl.textContent = PHASE_LABELS["ready"];
+                  opts.labelEl.textContent = "Your bot is ready. Call your trial number to try it:";
+                  if (opts.phoneEl && opts.phoneDisplay) {
+                    opts.phoneEl.textContent = opts.phoneDisplay;
+                    opts.phoneEl.hidden = false;
+                  }
+                  if (opts.phoneLabelEl) opts.phoneLabelEl.hidden = false;
                   setTimeout(function () {
                     window.location.href = "/dashboard";
-                  }, 800);
+                  }, 4500);
                   opts.onDone && opts.onDone("ready");
                   return;
                 }
