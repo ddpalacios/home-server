@@ -22117,12 +22117,32 @@
         return `${w1}-${w2}-${n}`;
       }
 
+      // Pull the last-saved plaintext password from localStorage —
+      // Flask only stores the hash, so without this the owner has no
+      // way to recall what they set if they didn't copy it. Stored
+      // per-account so multiple accounts don't collide. NOT secure
+      // against another user on the same machine; that's an
+      // acceptable v1 trade-off vs not being able to recall it at all.
+      function localKeyFor(aid) { return `teamPw::${aid}`; }
+      function restoreSavedPassword(aid) {
+        if (!aid || !passEl) return;
+        try {
+          const saved = localStorage.getItem(localKeyFor(aid));
+          if (saved) passEl.value = saved;
+        } catch (_) {}
+      }
+      function rememberPassword(aid, pw) {
+        if (!aid) return;
+        try { localStorage.setItem(localKeyFor(aid), pw || ""); } catch (_) {}
+      }
+
       // Initial load.
       fetch("/me/team-access", { credentials: "same-origin" })
         .then((r) => r.ok ? r.json() : null)
         .then((s) => {
           if (!s) return;
           fillUrl(s.account_id || "");
+          restoreSavedPassword(s.account_id);
           setStatus(!!s.enabled && !!s.has_password);
           showMsg(s.enabled && s.has_password
             ? "Team chat is live — share the URL + password."
@@ -22182,6 +22202,9 @@
                 return;
               }
               setStatus(true);
+              // Persist the plaintext locally so the owner can copy it
+              // later (Flask only keeps the hash).
+              rememberPassword(res.body && res.body.account_id, pw);
               showMsg("Saved. Share the URL + password with your team.", "ok");
             })
             .catch(() => showMsg("Network error — try again.", "err"))
