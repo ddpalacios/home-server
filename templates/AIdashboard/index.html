@@ -19931,20 +19931,22 @@
     }
 
     async function maybeOpenWelcomeModal() {
+      // Welcome modal auto-trigger is disabled. The trial flow (the only
+      // signup path right now) collects all the same fields on /try and
+      // then trains the KB automatically — there is no scenario where we
+      // need to interrupt the dashboard with this modal. The HTML is
+      // retained (lines ~5169-5198) in case a future onboarding flow
+      // wants to surface it manually.
+      return;
+      // Legacy path retained below but unreachable. Restore by removing
+      // the `return;` above if you need this back.
       try {
         const res = await fetch("/me", { credentials: "same-origin" });
         if (!res.ok) return;
         const me = await res.json();
         if (!me || !me.authenticated || me.is_admin) return;
-
-        // Trial users never see the welcome modal — they already provided
-        // business URL + email during /try and the KB is being trained for
-        // them automatically. The trial banner on the activity pane is the
-        // first-run surface for them, not this modal.
         if (me.is_trial_session || me.trial) return;
-
-        // Path A: brand-new (no onboarded_at) → existing welcome modal
-        // (collects business + URL + spawns KB build).
+        if (me.customer_id && /^demo_trial_/.test(me.customer_id)) return;
         if (!me.onboarded) {
           const dlg = document.getElementById("welcomeModal");
           if (dlg && typeof dlg.showModal === "function") dlg.showModal();
