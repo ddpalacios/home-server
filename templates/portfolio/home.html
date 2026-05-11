@@ -279,6 +279,64 @@
         .jobs-grid { grid-template-columns: 1fr; }
         .jobs-grid .job-tile.accent { grid-column: auto; }
       }
+
+      /* ─── CHIPS (industry picker) ─────────────────────── */
+      .chips {
+        display: flex; flex-wrap: wrap; gap: 6px;
+        margin-top: 2px;
+      }
+      .chip {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 7px 12px;
+        font-family: inherit; font-size: 0.82rem;
+        color: var(--text-soft); font-weight: 500;
+        cursor: pointer;
+        display: inline-flex; align-items: center; gap: 5px;
+        transition: background 0.12s, border-color 0.12s, color 0.12s;
+      }
+      .chip:hover { background: #fff; border-color: #94a3b8; color: var(--text); }
+      .chip.is-selected {
+        background: #dbeafe; border-color: var(--accent); color: var(--accent-deep);
+        font-weight: 700;
+      }
+      .chip .emoji { font-size: 1rem; line-height: 1; }
+
+      .form .trust {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        margin-top: 12px;
+        text-align: center;
+        line-height: 1.65;
+      }
+
+      /* ─── SUCCESS CARD ────────────────────────────────── */
+      .success-card {
+        max-width: 420px; margin: 0 auto;
+        background: #fff; border-radius: var(--radius);
+        border: 1px solid #c7d2fe;
+        padding: 32px 24px; text-align: center;
+        box-shadow: 0 18px 50px rgba(30,58,138,0.10);
+      }
+      .success-emoji { font-size: 2.6rem; margin-bottom: 12px; }
+      .success-card h3 {
+        font-size: 1.25rem; font-weight: 800; margin-bottom: 14px;
+        color: var(--text);
+      }
+      .phone-number {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.6rem; font-weight: 800;
+        color: var(--accent-deep);
+        background: #eef2ff; border: 1px solid #c7d2fe;
+        border-radius: var(--radius-sm); padding: 14px;
+        margin: 6px 0 18px;
+        letter-spacing: 0.5px;
+        user-select: all;
+      }
+      .success-card p { color: var(--text-soft); font-size: 0.9rem; line-height: 1.55; }
+      .success-card p.muted { color: var(--text-muted); font-size: 0.82rem; margin-top: 14px; }
+      .success-card .muted strong { color: var(--text); font-weight: 700; }
     </style>
   </head>
   <body>
@@ -367,37 +425,49 @@
     <section class="start" id="start-free">
       <div class="container">
         <div class="start-eyebrow">Start free</div>
-        <h2>Try it on your next lead</h2>
-        <p class="sub">Set it up in 15 minutes. The first lead pays for the year.</p>
+        <h2 id="startTitle">See it on your own site in 5 minutes</h2>
+        <p class="sub" id="startSub">Paste your website. We train a bot on it and hand you a real phone number you can call.</p>
 
-        <form class="form" id="contactForm" novalidate>
+        <form class="form" id="tryForm" novalidate>
           <div class="field">
-            <label for="name">Your name</label>
-            <input id="name" name="name" type="text" required autocomplete="name" />
+            <label for="websiteUrl">Your website</label>
+            <input id="websiteUrl" name="website_url" type="url" placeholder="mikeroofing.com" required autocomplete="url" />
           </div>
+
           <div class="field">
-            <label for="email">Email</label>
-            <input id="email" name="email" type="email" required autocomplete="email" />
+            <label>What kind of business?</label>
+            <div class="chips" role="radiogroup" aria-label="Industry">
+              <button type="button" class="chip" data-value="roofer"><span class="emoji" aria-hidden="true">🏠</span> Roofer</button>
+              <button type="button" class="chip" data-value="plumber"><span class="emoji" aria-hidden="true">🚰</span> Plumber</button>
+              <button type="button" class="chip" data-value="hvac"><span class="emoji" aria-hidden="true">❄️</span> HVAC</button>
+              <button type="button" class="chip" data-value="cleaner"><span class="emoji" aria-hidden="true">🧽</span> Cleaner</button>
+              <button type="button" class="chip" data-value="landscaper"><span class="emoji" aria-hidden="true">🌿</span> Landscaper</button>
+              <button type="button" class="chip" data-value="realtor"><span class="emoji" aria-hidden="true">🏡</span> Realtor</button>
+              <button type="button" class="chip" data-value="mover"><span class="emoji" aria-hidden="true">📦</span> Mover</button>
+              <button type="button" class="chip" data-value="other"><span class="emoji" aria-hidden="true">✨</span> Other</button>
+            </div>
+            <input id="industryValue" name="industry" type="hidden" required />
           </div>
+
           <div class="field">
-            <label for="phone">Phone <span style="color:var(--text-muted);font-weight:500;">(optional)</span></label>
-            <input id="phone" name="phone" type="tel" autocomplete="tel" />
+            <label for="tryEmail">Email</label>
+            <input id="tryEmail" name="email" type="email" placeholder="you@yourshop.com" required autocomplete="email" />
           </div>
-          <div class="field">
-            <label for="message">What do you want help with?</label>
-            <textarea id="message" name="message" required rows="3"></textarea>
-          </div>
-          <label class="consent" for="sms_consent">
-            <input type="checkbox" id="sms_consent" name="sms_consent" />
-            <span id="sms_consent_text">
-              <strong>(Optional)</strong> OK to text me about my inquiry. Reply STOP anytime.
-              See our <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>
-              and <a href="/terms" target="_blank" rel="noopener">SMS Terms</a>.
-            </span>
-          </label>
-          <div class="form-error" id="formError" role="alert" aria-live="polite"></div>
-          <button type="submit" id="submitBtn">Start free →</button>
+
+          <div class="form-error" id="tryError" role="alert" aria-live="polite"></div>
+          <button type="submit" id="tryBtn">Get my free trial number →</button>
+          <p class="trust">✓ No credit card · ✓ Real phone number · ✓ 14-day trial · ✓ Cancel anytime</p>
         </form>
+
+        <div id="trySuccess" hidden>
+          <div class="success-card">
+            <div class="success-emoji" aria-hidden="true">📞</div>
+            <h3>Your trial number is ready</h3>
+            <div class="phone-number" id="trialPhoneDisplay">+1 (555) 000-0000</div>
+            <p>Call it now to hear your bot. It's still training on your site — first call may have lighter answers while training finishes (60–90 seconds).</p>
+            <p class="muted">We also sent a magic link to <strong id="trialEmail">your email</strong> so you can open your dashboard.</p>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -435,56 +505,74 @@
           if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) dlg.close();
         });
 
-        // ─── Contact form ───────────────────────────────────
-        var form = document.getElementById("contactForm");
-        if (!form) return;
-        var errorEl = document.getElementById("formError");
-        var submitBtn = document.getElementById("submitBtn");
-        var consentEl = document.getElementById("sms_consent");
-        var consentTextEl = document.getElementById("sms_consent_text");
+        // ─── /try form (URL + industry chips + email) ──────
+        var tryForm = document.getElementById("tryForm");
+        if (!tryForm) return;
+        var tryError = document.getElementById("tryError");
+        var tryBtn = document.getElementById("tryBtn");
+        var industryValue = document.getElementById("industryValue");
+        var urlEl = document.getElementById("websiteUrl");
+        var emailEl = document.getElementById("tryEmail");
+        var chips = document.querySelectorAll(".chip");
 
-        form.addEventListener("submit", async function (event) {
+        chips.forEach(function (chip) {
+          chip.addEventListener("click", function () {
+            chips.forEach(function (c) { c.classList.remove("is-selected"); });
+            chip.classList.add("is-selected");
+            industryValue.value = chip.getAttribute("data-value");
+            tryError.textContent = "";
+          });
+        });
+
+        tryForm.addEventListener("submit", async function (event) {
           event.preventDefault();
-          errorEl.textContent = "";
+          tryError.textContent = "";
 
-          var fd = new FormData(form);
-          var consentChecked = !!(consentEl && consentEl.checked);
-          var consentText = "";
-          if (consentChecked && consentTextEl) {
-            consentText = (consentTextEl.innerText || consentTextEl.textContent || "")
-              .replace(/\s+/g, " ")
-              .trim();
-          }
+          var url = urlEl.value.trim();
+          var email = emailEl.value.trim();
+          var industry = industryValue.value;
 
-          var entry = {
-            name:    (fd.get("name")    || "").toString().trim(),
-            email:   (fd.get("email")   || "").toString().trim(),
-            phone:   (fd.get("phone")   || "").toString().trim(),
-            message: (fd.get("message") || "").toString().trim(),
-            submit_date: new Date().toISOString(),
-            sms_consent: consentChecked,
-          };
-          if (consentChecked) {
-            entry.sms_consent_text = consentText;
-            entry.sms_consent_at   = entry.submit_date;
-          }
+          if (!url) { tryError.textContent = "Please enter your website."; urlEl.focus(); return; }
+          if (!industry) { tryError.textContent = "Pick what kind of business you run."; return; }
+          if (!email) { tryError.textContent = "Please enter your email."; emailEl.focus(); return; }
 
-          submitBtn.disabled = true;
-          var originalLabel = submitBtn.textContent;
-          submitBtn.textContent = "Sending…";
+          tryBtn.disabled = true;
+          var originalLabel = tryBtn.textContent;
+          tryBtn.textContent = "Setting up your bot…";
+
           try {
-            var res = await fetch("/blob-storage/email", {
+            var res = await fetch("/try", {
               method: "POST",
               headers: { "Content-Type": "application/json", "Accept": "application/json" },
-              body: JSON.stringify({ values: [entry] }),
+              body: JSON.stringify({
+                website_url: url,
+                industry: industry,
+                email: email,
+                mode: "voice"
+              }),
             });
-            if (!res.ok) throw new Error("HTTP " + res.status);
-            submitBtn.textContent = "Sent ✓";
-            form.reset();
+            var data;
+            try { data = await res.json(); } catch (_) { data = {}; }
+            if (!res.ok) {
+              tryError.textContent = (data && data.error)
+                || ("Couldn't set up your trial right now (HTTP " + res.status + "). Please try again.");
+              tryBtn.disabled = false;
+              tryBtn.textContent = originalLabel;
+              return;
+            }
+            // Success — swap form for success card
+            document.getElementById("startTitle").textContent = "You're in.";
+            document.getElementById("startSub").textContent = "Save this number and call it from your phone.";
+            tryForm.hidden = true;
+            var success = document.getElementById("trySuccess");
+            success.hidden = false;
+            document.getElementById("trialPhoneDisplay").textContent = data.phone_display || "Your trial number is ready";
+            document.getElementById("trialEmail").textContent = email;
+            success.scrollIntoView({ behavior: "smooth", block: "center" });
           } catch (err) {
-            errorEl.textContent = "Could not submit right now. Please try again or email hello@justgotalead.com.";
-            submitBtn.disabled = false;
-            submitBtn.textContent = originalLabel;
+            tryError.textContent = "Couldn't reach the server. Please try again.";
+            tryBtn.disabled = false;
+            tryBtn.textContent = originalLabel;
           }
         });
       })();
