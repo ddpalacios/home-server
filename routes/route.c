@@ -788,6 +788,15 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
         post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "DELETE") == 0 && strstr(route, "/me/") != NULL) {
         delete_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/team/", 6) == 0) {
+        /* Team chat surfaces (chat page + whoami) — public-ish, gated
+         * by per-account team password held in session. */
+        get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/team/", 6) == 0) {
+        /* Team chat auth + chat-message endpoints — Flask proxies the
+         * message to the chatbot internally so the team URL never
+         * exposes /chat directly. */
+        post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/unsubscribe/", 13) == 0) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/unsubscribe/", 13) == 0) {

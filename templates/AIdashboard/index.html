@@ -289,6 +289,78 @@
     }
     .app-topbar-btn:hover { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
 
+    /* Compact trial banner that lives inside the topbar (replaces the
+       full-width #trialBanner section that used to push the active
+       route down). Single horizontal row: TRIAL pill, day counter,
+       calls/leads stats, "Sign up" CTA. Hidden until /me/trial-stats
+       resolves with active trial data. */
+    .app-trial-bar {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 6px 6px 10px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(99,102,241,.10), rgba(99,102,241,.04));
+      border: 1px solid rgba(99,102,241,.25);
+      color: #1e1b4b;
+      font-size: 12.5px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .app-trial-bar[hidden] { display: none; }
+    .atb-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(99,102,241,.18);
+      color: #4338ca;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .atb-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: currentColor;
+      animation: app-pulse 1.6s ease-in-out infinite;
+    }
+    .atb-day { color: #1e1b4b; }
+    .atb-day strong { font-weight: 800; }
+    .atb-sep { color: rgba(30,27,75,.35); }
+    .atb-stat { color: #334155; font-weight: 500; }
+    .atb-stat strong { color: #0f172a; font-weight: 800; }
+    .atb-cta {
+      margin-left: 4px;
+      background: #0a0a0a;
+      color: #fff;
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: background 140ms ease;
+    }
+    .atb-cta:hover { background: #262626; color: #fff; }
+    /* Cap states — soft amber when near cap, urgent red when hit. The
+       data lives in the same bar so trial users get a visual nudge
+       without a separate warning row. */
+    .app-trial-bar.is-near-cap {
+      background: linear-gradient(135deg, rgba(245,158,11,.12), rgba(245,158,11,.04));
+      border-color: rgba(245,158,11,.35);
+      color: #78350f;
+    }
+    .app-trial-bar.is-near-cap .atb-pill { background: rgba(245,158,11,.22); color: #92400e; }
+    .app-trial-bar.is-hit-cap {
+      background: linear-gradient(135deg, rgba(220,38,38,.14), rgba(220,38,38,.04));
+      border-color: rgba(220,38,38,.4);
+      color: #7f1d1d;
+    }
+    .app-trial-bar.is-hit-cap .atb-pill { background: rgba(220,38,38,.22); color: #991b1b; }
+    @media (max-width: 860px) {
+      .app-trial-bar .atb-sep,
+      .app-trial-bar .atb-stat[title="Leads contacted"] { display: none; }
+    }
+
     /* Tool-first dashboard layout, applied to EVERY page. The old
        1280px max-width + 28px padding trapped tools (canvas, leads,
        schedule) in a centered column. Now .app-body fills the
@@ -2068,6 +2140,45 @@
       margin-bottom: 16px;
     }
     .ask-canvas-head { margin-bottom: 16px; }
+
+    /* Mode switch — toggles between customer-facing and internal bot
+       on the home ask canvas. Two pills inside a soft track so it
+       reads as "which side am I on right now." */
+    .ask-mode-switch {
+      display: inline-flex;
+      gap: 4px;
+      padding: 4px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+    .ask-mode-pill {
+      background: transparent;
+      border: 0;
+      color: #475569;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 140ms ease, color 140ms ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ask-mode-pill:hover { color: #0a0a0a; }
+    .ask-mode-pill.is-active {
+      background: #0a0a0a;
+      color: #ffffff;
+    }
+    .ask-mode-hint {
+      font-size: 12px;
+      color: #64748b;
+      margin: -4px 0 14px;
+    }
     .ask-canvas-title {
       font-size: 30px;
       font-weight: 800;
@@ -2191,6 +2302,774 @@
     }
     .ask-canvas-stage .insights-chat {
       display: block;
+    }
+
+    /* ── Top-level mode switch + tab strip (Phase 1 restructure) ──
+       Mode switch promotes the customer/internal choice out of the
+       ask card and up to the page level. Tab strip below splits the
+       page into Test (chat) and Manage (KB) — never both at once. */
+    .home-mode-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 6px 0;
+      margin-bottom: 14px;
+    }
+    .home-mode-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+    .home-mode-switch {
+      display: inline-flex;
+      gap: 4px;
+      padding: 4px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+    .home-mode-pill {
+      background: transparent;
+      border: 0;
+      color: #475569;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 140ms ease, color 140ms ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .home-mode-pill:hover { color: #0a0a0a; }
+    .home-mode-pill.is-active {
+      background: #0a0a0a;
+      color: #ffffff;
+    }
+    .home-mode-pill .mp-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: currentColor; opacity: 0.4;
+    }
+    .home-mode-pill.is-active .mp-dot { opacity: 1; }
+
+    /* Tab strip — Test vs Manage. One primary action at a time. */
+    .home-tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid #e2e8f0;
+      margin: 6px 0 16px;
+    }
+    .home-tab {
+      background: transparent;
+      border: 0;
+      padding: 10px 4px;
+      margin-right: 22px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      font-family: inherit;
+      position: relative;
+      transition: color 140ms ease;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+    .home-tab:hover { color: #0a0a0a; }
+    .home-tab.is-active {
+      color: #0a0a0a;
+      border-bottom-color: #0a0a0a;
+    }
+
+    /* Single-pane action area — the active pane fills the full width. */
+    .home-pane { display: none; }
+    .home-pane.is-active { display: block; }
+
+    /* Share access button in topbar */
+    .app-share-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      color: #0a0a0a;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: border-color 140ms ease, background 140ms ease;
+    }
+    .app-share-btn:hover { border-color: #cbd5e1; background: #f8fafc; }
+    .app-share-btn svg { width: 14px; height: 14px; }
+
+    /* Share modal */
+    .share-modal {
+      border: 0;
+      padding: 0;
+      border-radius: 16px;
+      max-width: 560px;
+      width: calc(100% - 32px);
+      box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
+      background: #ffffff;
+    }
+    .share-modal::backdrop { background: rgba(15, 23, 42, 0.45); }
+    .share-modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 22px 14px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .share-modal-title {
+      font-family: "Space Grotesk", "Inter", sans-serif;
+      font-size: 18px; font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #0a0a0a;
+      margin: 0;
+    }
+    .share-modal-close {
+      background: transparent; border: 0;
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #64748b;
+      font-size: 18px;
+    }
+    .share-modal-close:hover { background: #f1f5f9; color: #0a0a0a; }
+    .share-modal-body { padding: 18px 22px 8px; }
+    .share-modal-section { margin-bottom: 18px; }
+    .share-modal-section:last-of-type { margin-bottom: 8px; }
+    .share-modal-section h4 {
+      font-size: 13px; font-weight: 700;
+      color: #0a0a0a;
+      margin: 0 0 4px;
+    }
+    .share-modal-section p.sub {
+      font-size: 12.5px; color: #64748b;
+      margin: 0 0 10px;
+    }
+    .share-modal-footer {
+      display: flex; justify-content: flex-end;
+      padding: 12px 22px 18px;
+      border-top: 1px solid #f1f5f9;
+    }
+
+    /* ── Compact at-a-glance home layout ──────────────────────────
+       Goal: every working surface visible without scrolling. The
+       activity grid is 12 cols; the home page uses an inline hero +
+       KPI strip at the top, then a 2-col main row (Ask 7 wide, right
+       rail 5 wide stacking Answers/Teach), then footer. Section
+       labels collapse to inline kickers above each card so they
+       don't eat a full row. */
+    .home-hero {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .home-hero-meta { min-width: 0; flex: 1 1 200px; }
+    .home-hero-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #6366f1;
+      margin: 0 0 2px;
+    }
+    .home-hero-title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #0a0a0a;
+      margin: 0;
+      line-height: 1.15;
+    }
+    .home-hero-sub {
+      font-size: 13px;
+      color: #64748b;
+      margin: 3px 0 0;
+      line-height: 1.4;
+    }
+
+    .home-kpis {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    @media (max-width: 820px) {
+      .home-kpis { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+    }
+    .home-kpi {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+    .home-kpi:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+    }
+    .home-kpi-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .home-kpi-label svg { width: 14px; height: 14px; }
+    .home-kpi-value {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      color: #0a0a0a;
+      line-height: 1.05;
+      font-feature-settings: "tnum";
+      margin-top: 2px;
+    }
+    .home-kpi-delta {
+      font-size: 12px;
+      color: #94a3b8;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    /* Section labels collapse to small inline kickers — they no
+       longer eat their own grid row. Hidden by default; only the
+       eyebrows inside each card show the current section. */
+    .home-section-label { display: none !important; }
+
+    /* Compact card grid placement — only applies on the activity
+       (home) section so other route grids stay untouched. Layout:
+       Row 1 hero (12); Row 2 Ask (7) + Answers (5); Row 3 Teach (12);
+       Row 4 footer (12). Tight padding keeps the three working
+       surfaces visible without scrolling on 900px-tall viewports. */
+    #activity { gap: 14px; }
+
+    #activity .ask-canvas {
+      grid-column: span 12;
+      padding: 16px 18px 14px;
+      margin-bottom: 0;
+      min-height: 380px;
+      display: flex;
+      flex-direction: column;
+    }
+    #activity .ask-canvas-title { font-size: 18px; }
+    #activity .ask-canvas-sub { font-size: 12.5px; margin-top: 3px; line-height: 1.4; }
+    #activity .ask-canvas-head { margin-bottom: 8px; }
+    #activity .ask-mode-switch { margin-bottom: 6px; padding: 3px; }
+    #activity .ask-mode-pill { padding: 5px 10px; font-size: 12px; }
+    #activity .ask-mode-hint { margin: 0 0 8px; font-size: 11.5px; }
+    #activity .ask-canvas-form { margin-top: 4px; padding: 3px 3px 3px 12px; }
+    #activity .ask-canvas-input { font-size: 13.5px; padding: 7px 0; }
+    #activity .ask-canvas-send { width: 30px; height: 30px; }
+    #activity .ask-canvas-pills { margin-top: 6px; gap: 6px; }
+    #activity .ask-canvas-pill { padding: 5px 10px; font-size: 11.5px; }
+    #activity .insights-chat-wrap,
+    #activity .ask-chat-wrap {
+      flex: 1;
+      min-height: 200px;
+      padding: 10px;
+      margin-top: 8px;
+    }
+
+    #activity .answers-card {
+      grid-column: span 12;
+      padding: 18px 20px 16px;
+      margin-bottom: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    #activity .answers-title { font-size: 16px; line-height: 1.25; }
+    #activity .answers-sub { font-size: 12.5px; margin-top: 3px; line-height: 1.4; }
+    #activity .answers-head { margin-bottom: 8px; }
+    #activity .answers-sub-label { font-size: 10.5px; margin: 8px 0 6px; }
+    #activity .answers-card .kb-list {
+      gap: 6px;
+    }
+    #activity .answers-card .kbs-add-row { gap: 6px; flex-wrap: wrap; }
+    #activity .answers-card .kbs-train-btn { padding: 6px 10px; font-size: 12px; }
+    #activity .answers-card .kbs-edit-btn { padding: 6px 10px; font-size: 12px; }
+    #activity .merged-teach { margin-top: 10px; padding-top: 10px; }
+    #activity .merged-teach .teach-input { padding: 8px 10px; font-size: 12.5px; }
+    #activity .merged-teach .teach-btn { padding: 8px 12px; font-size: 12px; }
+    #activity .merged-teach .teach-list { /* No nested scroll — pane scrolls. */ }
+
+    #activity .teach-card {
+      grid-column: span 12;
+      padding: 14px 16px 12px;
+      margin-bottom: 0;
+    }
+    #activity .teach-head { margin-bottom: 8px; display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap; }
+    #activity .teach-title { font-size: 16px; line-height: 1.2; flex: 0 0 auto; }
+    #activity .teach-sub { font-size: 12.5px; margin: 0; line-height: 1.4; flex: 1 1 240px; }
+    #activity .teach-form { margin-top: 0; gap: 8px; }
+    #activity .teach-input { padding: 9px 12px; font-size: 13px; }
+    #activity .teach-btn { padding: 9px 14px; font-size: 12.5px; }
+    #activity .teach-google { padding: 7px 11px; font-size: 11.5px; margin-top: 8px; }
+    #activity .teach-list-head { margin: 10px 0 6px; }
+    #activity .teach-list-title { font-size: 13px; }
+    #activity .teach-list { max-height: 90px; overflow-y: auto; }
+
+    /* Internal mode — full width (tabbed layout now). */
+    body.home-internal #activity .answers-card-internal {
+      grid-column: span 12;
+    }
+
+    /* Team-share block lives inside the internal answers card and
+       gets compacted in the at-a-glance layout too. */
+    #activity .team-share { margin-top: 12px; padding: 12px 14px 10px; }
+    #activity .team-share-head { margin-bottom: 10px; }
+    #activity .team-share-sub { font-size: 12px; }
+    #activity .team-share-row { margin-bottom: 8px; }
+    #activity .team-share-input { padding: 7px 10px; font-size: 12.5px; }
+    #activity .team-share-copy { padding: 0 10px; font-size: 11.5px; }
+    #activity .team-share-save { padding: 7px 12px; font-size: 12.5px; }
+    #activity .team-share-disable { padding: 7px 10px; font-size: 12px; }
+
+    /* Stack into a single column when there's no room for two. */
+    @media (max-width: 1100px) {
+      #activity .ask-canvas,
+      #activity .answers-card,
+      #activity .teach-card,
+      body.home-internal #activity .answers-card-internal {
+        grid-column: span 12;
+      }
+    }
+
+    /* ── Footer — sits at the bottom of the app body. Quiet chrome
+       so it doesn't compete with the working surfaces above; visible
+       enough that the page feels complete instead of trailing off. */
+    .app-footer {
+      margin-top: 32px;
+      padding: 20px 24px 28px;
+      border-top: 1px solid #e5e7eb;
+      color: #64748b;
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .app-footer-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .app-footer-brand {
+      font-weight: 700;
+      color: #0a0a0a;
+      letter-spacing: -0.01em;
+    }
+    .app-footer-sep { color: #cbd5e1; }
+    .app-footer-link {
+      color: #475569;
+      text-decoration: none;
+      transition: color 140ms ease;
+    }
+    .app-footer-link:hover { color: #0a0a0a; }
+    .app-footer-meta { color: #94a3b8; font-size: 12px; }
+
+    /* ── Answers card — "Tell your bot what to say." Warm peach gradient
+       so the three home cards (Ask blue → Answers peach → Teach green)
+       read as a three-step flow. Same kindergarten-simple posture as
+       the others: big bold heading, friendly subhead, big targets. */
+    .answers-card {
+      display: flex;
+      flex-direction: column;
+      padding: 24px 24px 20px;
+      background: linear-gradient(135deg, #fff7ed 0%, #fff1f2 100%);
+      border: 1px solid #fed7aa;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(154, 52, 18, 0.06);
+      margin-bottom: 16px;
+    }
+    .answers-head { margin-bottom: 16px; }
+    .answers-title {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #0a0a0a;
+      margin: 0;
+      line-height: 1.2;
+    }
+    .answers-sub {
+      font-size: 15px;
+      color: #475569;
+      margin: 8px 0 0;
+      line-height: 1.55;
+      max-width: 640px;
+    }
+    /* Internal variant — purple/indigo tint to signal "company brain"
+       (private to your team) vs the peach client card (public-facing). */
+    .answers-card-internal {
+      background: linear-gradient(135deg, #faf5ff 0%, #eff6ff 100%);
+      border-color: #ddd6fe;
+      box-shadow: 0 8px 24px rgba(79, 70, 229, 0.06);
+    }
+
+    /* Section header inside the manage view. Each labeled section
+       (Trained from websites / Hand-written answers / Quick Q&A) gets
+       its own visible header so the user can scan and find what
+       they're managing. Bigger and more prominent than a kicker. */
+    .answers-sub-label {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #0a0a0a;
+      margin: 16px 0 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .answers-sub-label::before {
+      content: "";
+      width: 18px;
+      height: 2px;
+      background: currentColor;
+      opacity: 0.3;
+      border-radius: 1px;
+    }
+    .merged-teach { margin-top: 16px; padding-top: 16px; border-top: 1px dashed #e2e8f0; }
+    .merged-teach .teach-form { margin-top: 4px; }
+
+    /* Manage-pane subsection layout — three labeled sections stacked
+       (Trained from websites → Hand-written answers → Quick Q&A).
+       The visual treatment is consistent across both customer and
+       team-brain answer cards. */
+    #activity .answers-card .merged-teach,
+    #activity .answers-card .answers-section {
+      background: rgba(255, 255, 255, 0.55);
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 14px 16px 12px;
+      margin-top: 14px;
+      margin-bottom: 0;
+    }
+    #activity .answers-card .merged-teach { padding-top: 14px; border-top: 1px solid #e5e7eb; }
+    #activity .answers-card .merged-teach .answers-sub-label,
+    #activity .answers-card .answers-section .answers-sub-label {
+      margin-top: 0;
+    }
+
+    /* Share-with-team block — nested inside the internal answers card.
+       Owner sets a password + grabs the team URL here. The team chat
+       page (templates/team_chat.html) is the actual surface the URL
+       points to. */
+    .team-share {
+      margin-top: 20px;
+      padding: 18px 18px 16px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+    }
+    .team-share-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .team-share-eyebrow {
+      font-size: 11.5px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #4f46e5;
+      margin: 0 0 4px;
+    }
+    .team-share-sub {
+      font-size: 13.5px;
+      color: #475569;
+      margin: 0;
+      max-width: 560px;
+      line-height: 1.5;
+    }
+    .team-share-status {
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: #64748b;
+      flex-shrink: 0;
+    }
+    .team-share-status.is-on {
+      background: rgba(16, 185, 129, 0.12);
+      color: #047857;
+    }
+    .team-share-row { margin-bottom: 12px; }
+    .team-share-label {
+      display: block;
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #64748b;
+      margin-bottom: 6px;
+    }
+    .team-share-input-wrap {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+    }
+    .team-share-input {
+      flex: 1;
+      min-width: 0;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      background: #fff;
+      font-size: 13.5px;
+      color: #0a0a0a;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 140ms ease, box-shadow 140ms ease;
+    }
+    .team-share-input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+    .team-share-copy {
+      background: #0a0a0a;
+      color: #fff;
+      border: 0;
+      border-radius: 10px;
+      padding: 0 14px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 140ms ease;
+      flex-shrink: 0;
+    }
+    .team-share-copy:hover { background: #262626; }
+    .team-share-copy.is-copied { background: #047857; }
+    .team-share-hint {
+      font-size: 12px;
+      color: #94a3b8;
+      margin: 6px 0 0;
+    }
+    .team-share-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+    .team-share-save {
+      background: #4f46e5;
+      color: #fff;
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 140ms ease;
+    }
+    .team-share-save:hover { background: #4338ca; }
+    .team-share-save:disabled { opacity: 0.55; cursor: default; }
+    .team-share-disable {
+      background: transparent;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .team-share-disable:hover { background: #fef2f2; }
+    .team-share-msg {
+      font-size: 12.5px;
+      color: #475569;
+    }
+    .team-share-msg.is-err { color: #b91c1c; }
+    .team-share-msg.is-ok { color: #047857; font-weight: 600; }
+
+    /* ── Teach card — simplified KB sources surface on the home pane.
+       Same gradient shell as ask-canvas so the two read as a pair, but
+       softer green tint to signal "this is the helpful thing to do
+       next." Built to be readable by someone who has never seen a
+       dashboard — no jargon, big targets, friendly copy. */
+    .teach-card {
+      display: flex;
+      flex-direction: column;
+      padding: 24px 24px 20px;
+      background: linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%);
+      border: 1px solid #a7f3d0;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(6, 95, 70, 0.06);
+      margin-bottom: 16px;
+    }
+    .teach-head { margin-bottom: 16px; }
+    .teach-title {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #0a0a0a;
+      margin: 0;
+      line-height: 1.2;
+    }
+    .teach-sub {
+      font-size: 15px;
+      color: #475569;
+      margin: 8px 0 0;
+      line-height: 1.55;
+      max-width: 640px;
+    }
+    .teach-form {
+      margin-top: 12px;
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+      flex-wrap: wrap;
+    }
+    .teach-input {
+      flex: 1;
+      min-width: 220px;
+      border: 2px solid #a7f3d0;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 15px;
+      color: #0a0a0a;
+      background: #ffffff;
+      outline: none;
+      font-family: inherit;
+      transition: border-color 140ms ease, box-shadow 140ms ease;
+    }
+    .teach-input::placeholder { color: #94a3b8; }
+    .teach-input:focus {
+      border-color: #059669;
+      box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.12);
+    }
+    .teach-btn {
+      background: #059669;
+      color: #ffffff;
+      border: 0;
+      border-radius: 12px;
+      padding: 14px 22px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 140ms ease, opacity 140ms ease;
+      font-family: inherit;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .teach-btn:hover { background: #047857; }
+    .teach-btn:disabled { opacity: 0.6; cursor: default; }
+    .teach-error {
+      margin: 10px 0 0;
+      font-size: 13px;
+      color: #b91c1c;
+    }
+    .teach-google {
+      margin-top: 12px;
+      align-self: flex-start;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #334155;
+      cursor: pointer;
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: border-color 140ms ease, color 140ms ease;
+    }
+    .teach-google:hover { border-color: #94a3b8; color: #0a0a0a; }
+    .teach-list-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 24px 0 10px;
+    }
+    .teach-list-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #0a0a0a;
+      margin: 0;
+    }
+    .teach-list-count {
+      font-size: 12px;
+      color: #64748b;
+    }
+    .teach-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .teach-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .teach-item-url {
+      flex: 1;
+      min-width: 0;
+      font-size: 14px;
+      color: #0a0a0a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .teach-item-status {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .teach-item-status.is-ready { background: #d1fae5; color: #065f46; }
+    .teach-item-status.is-pending { background: #fef3c7; color: #92400e; }
+    .teach-item-status.is-error { background: #fee2e2; color: #991b1b; }
+    .teach-item-remove {
+      background: transparent;
+      border: 0;
+      color: #94a3b8;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+    .teach-item-remove:hover { color: #b91c1c; background: #fef2f2; }
+    .teach-empty {
+      margin: 6px 0 0;
+      font-size: 13px;
+      color: #64748b;
+      font-style: italic;
     }
 
     /* Empty state — sparkle icon next to the headline, naked text. */
@@ -5053,6 +5932,21 @@
     .lead-seq-takeover:hover:not(:disabled) { background: #f3f4f6; }
     .lead-seq-takeover:disabled { opacity: 0.55; cursor: not-allowed; }
   </style>
+  <!-- Shared /me promise — defined early so every inline script (trial
+       banner, welcome modal, router) hits a single in-flight /me
+       request instead of firing its own. Eliminates the duplicate-fetch
+       waterfall that was the biggest source of boot lag. -->
+  <script>
+    (function () {
+      window.__getMe = function getMe() {
+        if (window.__mePromise) return window.__mePromise;
+        window.__mePromise = fetch("/me", { credentials: "same-origin" })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .catch(function () { return null; });
+        return window.__mePromise;
+      };
+    })();
+  </script>
 </head>
 <body>
 
@@ -5630,9 +6524,35 @@
               </div>
             </div>
           </div>
+          <!-- Share access — opens a modal with both customer and
+               internal share configurations. Moved here from inside
+               the home page so it doesn't compete for vertical space. -->
+          <button type="button" class="app-share-btn" id="appShareBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span>Share access</span>
+          </button>
+          <!-- Trial banner moved into the topbar so it doesn't push
+               page content down. The big #trialBanner below is hidden
+               on trial sessions now — loadTrialBanner() writes into
+               this compact widget instead. -->
           <span class="app-trial-pill" id="appTrialPill" hidden>
             <span class="dot"></span> TRIAL
           </span>
+          <div class="app-trial-bar" id="appTrialBar" hidden role="status" aria-live="polite">
+            <span class="atb-pill"><span class="atb-dot"></span> TRIAL</span>
+            <span class="atb-day">Day <strong id="atbDay">—</strong> of 14</span>
+            <span class="atb-sep" aria-hidden="true">·</span>
+            <span class="atb-stat" title="Calls made today">
+              <strong id="atbCallsToday">0</strong>/<span id="atbCallsCap">50</span> calls
+            </span>
+            <span class="atb-sep" aria-hidden="true">·</span>
+            <span class="atb-stat" title="Leads contacted">
+              <strong id="atbLeads">0</strong> leads
+            </span>
+            <a class="atb-cta" id="atbKeepBtn"
+               href="https://buy.stripe.com/28EcMZ7A58qx2501Gd0Jq04"
+               target="_blank" rel="noopener noreferrer">Sign up</a>
+          </div>
         </div>
       </header>
 
@@ -6911,9 +7831,20 @@
             }
             async function pollOnce() {
               try {
-                var r = await fetch("/me", { credentials: "same-origin" });
-                if (!r.ok) return scheduleNext();
-                var d = await r.json();
+                // First poll piggybacks on the shared /me promise so we
+                // don't fire two parallel /me requests on boot. Reset
+                // the cache before subsequent polls so we get fresh
+                // build-status data.
+                var d = null;
+                if (window.__getMe && !window.__pollOncePrimed) {
+                  window.__pollOncePrimed = true;
+                  d = await window.__getMe();
+                } else {
+                  var r = await fetch("/me", { credentials: "same-origin" });
+                  if (!r.ok) return scheduleNext();
+                  d = await r.json();
+                }
+                if (!d) return scheduleNext();
                 var trial = d && d.trial;
                 if (!trial) { banner.style.display = "none"; return; }
                 var status = trial.build_status || "idle";
@@ -7001,40 +7932,248 @@
           <button type="button" class="page-nudge-close" data-nudge-close aria-label="Dismiss">×</button>
         </div>
 
+        <!-- Greeting strip — single line, no KPIs (those moved to
+             their own row below the mode switch). -->
+        <div class="home-hero" style="grid-column: span 12;">
+          <div class="home-hero-meta">
+            <p class="home-hero-eyebrow">Home</p>
+            <h1 class="home-hero-title" id="homeHeroTitle">Welcome back</h1>
+            <p class="home-hero-sub">Talk to your bot, teach it, watch the leads.</p>
+          </div>
+        </div>
+
+        <!-- Top-level mode switch. This drives EVERYTHING below it:
+             metrics, test prompts/suggestions, and which knowledge
+             base is shown in the Manage tab. -->
+        <div class="home-mode-row" style="grid-column: span 12;">
+          <span class="home-mode-label">Managing</span>
+          <div class="home-mode-switch" role="tablist" aria-label="Which bot to manage">
+            <button type="button" class="home-mode-pill is-active" data-ask-mode="client" role="tab" aria-selected="true">
+              <span class="mp-dot" aria-hidden="true"></span>
+              <span>Customer bot</span>
+            </button>
+            <button type="button" class="home-mode-pill" data-ask-mode="internal" role="tab" aria-selected="false">
+              <span class="mp-dot" aria-hidden="true"></span>
+              <span>Internal team bot</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Metrics row — 3 stat cards. -->
+        <div class="home-kpis" style="grid-column: span 12;">
+          <div class="home-kpi">
+            <span class="home-kpi-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.86 19.86 0 0 1 2.08 4.18 2 2 0 0 1 4.07 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2z"/></svg>
+              Calls today
+            </span>
+            <span class="home-kpi-value" id="kpiCallsToday">—</span>
+            <span class="home-kpi-delta" id="kpiCallsCap">of today's cap</span>
+          </div>
+          <div class="home-kpi">
+            <span class="home-kpi-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Leads
+            </span>
+            <span class="home-kpi-value" id="kpiLeads">—</span>
+            <span class="home-kpi-delta">total contacted</span>
+          </div>
+          <div class="home-kpi">
+            <span class="home-kpi-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              Pages learned
+            </span>
+            <span class="home-kpi-value" id="kpiPages">—</span>
+            <span class="home-kpi-delta" id="kpiPagesSub">from your website</span>
+          </div>
+        </div>
+
+        <!-- Tab strip — Test or Manage. Single primary action. -->
+        <nav class="home-tabs" role="tablist" aria-label="Home tabs" style="grid-column: span 12;">
+          <button type="button" class="home-tab is-active" data-home-tab="test" role="tab" aria-selected="true">Test your bot</button>
+          <button type="button" class="home-tab" data-home-tab="manage" role="tab" aria-selected="false">Manage knowledge</button>
+        </nav>
+
+        <!-- Test pane (default) -->
+        <div class="home-pane is-active" data-home-pane="test" style="grid-column: span 12;">
+
         <!-- Ask about your data — open canvas (no card wrapper).
              Sits at the very top so the page reads as a conversational
              surface first, dashboards second. -->
-        <div class="ask-canvas" style="grid-column: span 12;">
+        <div class="ask-canvas">
           <div class="ask-canvas-head">
-            <h1 class="ask-canvas-title">
-              Ask about your business
+            <h1 class="ask-canvas-title" id="askModeTitle">
+              Ask your customer bot anything
               <span data-help-icon="insights_ask"></span>
             </h1>
-            <p class="ask-canvas-sub">Type any question — like "how many calls last week?" or "which campaign worked best?" — and get a real answer pulled from your phone calls, emails, and everything else.</p>
+            <p class="ask-canvas-sub" id="askModeSub">Test what your customers will get when they ask.</p>
           </div>
           <form class="ask-canvas-form" id="insightsForm">
             <input type="text" id="insightsInput"
                    class="ask-canvas-input"
-                   placeholder="Ask anything — e.g. 'How many calls last week?' or 'What did Jane Doe ask about?'"
+                   placeholder="Ask anything a customer would — e.g. 'What services do you offer?'"
                    autocomplete="off" />
             <button class="ask-canvas-send" type="submit" id="insightsAskButton" aria-label="Ask">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </button>
           </form>
-          <div class="ask-canvas-pills" id="insightsSuggestionPills">
-            <button type="button" class="ask-canvas-pill" data-pill>How many bookings this month?</button>
-            <button type="button" class="ask-canvas-pill" data-pill>What are people calling about?</button>
-            <button type="button" class="ask-canvas-pill" data-pill>Which service is bringing in the most leads?</button>
-            <button type="button" class="ask-canvas-pill" data-pill>Anyone waiting on a quote?</button>
-            <button type="button" class="ask-canvas-pill" data-pill>What did the last 5 widget chats want?</button>
+          <div class="ask-canvas-pills" id="insightsSuggestionPills" data-mode-pills="client">
+            <button type="button" class="ask-canvas-pill" data-pill>What services do you offer?</button>
+            <button type="button" class="ask-canvas-pill" data-pill>What are your hours?</button>
+            <button type="button" class="ask-canvas-pill" data-pill>How much does it cost?</button>
+            <button type="button" class="ask-canvas-pill" data-pill>Where are you located?</button>
+            <button type="button" class="ask-canvas-pill" data-pill>Can I get a free estimate?</button>
+          </div>
+          <div class="ask-canvas-pills" id="insightsSuggestionPillsInternal" data-mode-pills="internal" hidden>
+            <button type="button" class="ask-canvas-pill" data-pill>What's our refund policy?</button>
+            <button type="button" class="ask-canvas-pill" data-pill>Who handles billing escalations?</button>
+            <button type="button" class="ask-canvas-pill" data-pill>What's our onboarding checklist?</button>
+            <button type="button" class="ask-canvas-pill" data-pill>How do we handle a tough customer?</button>
           </div>
           <div class="ask-canvas-toolbar" id="insightsToolbar" hidden>
             <button class="ask-canvas-clear" type="button" id="insightsClearButton">Clear conversation</button>
           </div>
-          <div class="ask-canvas-stage" id="insightsResponse">
+          <!-- Messenger-style chat surface, matching Settings → KB →
+               Test it. renderInsightsChat() falls through to the bubble
+               branch because this container no longer has the
+               ask-canvas-stage class — bubbles + avatars + typing dots
+               render instead of naked-text Q&A. -->
+          <div class="insights-chat-wrap ask-chat-wrap" id="insightsResponse">
             <div class="insights-chat" id="insightsChat"></div>
           </div>
         </div>
+        </div><!-- /.home-pane test -->
+
+        <!-- Manage pane — full-width KB editor. Three sections:
+             trained websites, hand-written answers, quick Q&A. -->
+        <div class="home-pane" data-home-pane="manage" style="grid-column: span 12;">
+
+        <!-- Customer-facing knowledge — three labeled sections:
+             Trained from websites → Hand-written answers + Q&A. -->
+        <div class="answers-card" id="answersCardClient" data-kbs-pane="client" data-mode-card="client">
+          <div class="answers-head">
+            <h2 class="answers-title">Customer bot's knowledge</h2>
+            <p class="answers-sub">What it knows when answering customers. Train it from website links, write your own answers, or add quick Q&amp;As.</p>
+          </div>
+
+          <!-- Section 1: Trained from websites (URLs). -->
+          <div class="merged-teach" data-teach-mode="client">
+            <p class="answers-sub-label">Trained from websites</p>
+            <form class="teach-form" data-teach-form autocomplete="off">
+              <input type="text" class="teach-input" data-teach-input
+                     placeholder="Paste a website link (e.g. yoursite.com/services)"
+                     aria-label="Website page to teach your bot" />
+              <button class="teach-btn" type="submit" data-teach-add>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                <span>Add website</span>
+              </button>
+            </form>
+            <p class="teach-error" data-teach-error hidden></p>
+            <div data-teach-list class="teach-list" style="margin-top:8px;"></div>
+            <p class="teach-empty" data-teach-empty hidden>No website links yet. Paste one above to get started.</p>
+          </div>
+
+          <!-- Section 2 + 3: Hand-written answers + Quick Q&A live
+               inside the same list (renderKbItem labels each row by
+               type). Two add buttons let the user choose which kind
+               to create. IDs preserved verbatim. -->
+          <div class="answers-section">
+            <p class="answers-sub-label">Hand-written answers &amp; quick Q&amp;A</p>
+            <div class="wgt-card kb-card" id="kbCardClient" data-kb-type="client" style="background:transparent; border:0; padding:0; box-shadow:none;">
+              <div class="kbs-add-row" style="margin-top:0;">
+                <button class="kbs-train-btn kbs-add-article" type="button" id="openArticleModalClient">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+                  <span class="kbs-train-label">+ Add an answer</span>
+                </button>
+                <button class="kbs-train-btn kbs-add-faq" type="button" id="openFaqModalClient">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  <span class="kbs-train-label">+ Add a Q&amp;A pair</span>
+                </button>
+                <button class="kbs-edit-btn" type="button" id="kbEditToggleClient" style="margin-left:auto;">Edit</button>
+                <button class="kbs-train-btn kbs-save-settings" type="button" id="kbSaveSettingsClient" style="display:none;">
+                  <span class="kbs-train-label">Save changes</span>
+                </button>
+              </div>
+              <div class="kb-edit-banner" id="kbEditBannerClient" style="margin-top:10px;">Edit mode is on. Changes won't apply until you save.</div>
+              <div class="kb-list" id="kbListClient" style="margin-top:10px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Internal company brain — same mechanics as the client card
+             but writes to the internal KB. Visible when the ask toggle
+             is on "Internal team". IDs preserved verbatim so the
+             existing kbCardInternal / kbListInternal handlers still
+             find their targets. -->
+        <div class="answers-card answers-card-internal" id="answersCardInternal" data-kbs-pane="internal" data-mode-card="internal" hidden>
+          <div class="answers-head">
+            <h2 class="answers-title">Team brain knowledge</h2>
+            <p class="answers-sub">What your team can look up. Train it from internal pages, write your own notes, or add Q&amp;As. Customers never see this.</p>
+          </div>
+
+          <!-- Section 1: Trained from links (URLs). -->
+          <div class="merged-teach" data-teach-mode="internal">
+            <p class="answers-sub-label">Trained from links</p>
+            <form class="teach-form" data-teach-form autocomplete="off">
+              <input type="text" class="teach-input" data-teach-input
+                     placeholder="Paste a link (Notion, Docs, intranet…)"
+                     aria-label="Page to train the team brain on" />
+              <button class="teach-btn" type="submit" data-teach-add>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                <span>Add link</span>
+              </button>
+            </form>
+            <p class="teach-error" data-teach-error hidden></p>
+            <div data-teach-list class="teach-list" style="margin-top:8px;"></div>
+            <p class="teach-empty" data-teach-empty hidden>No links yet. Paste one above to get started.</p>
+          </div>
+
+          <!-- Section 2 + 3: Hand-written notes + Quick Q&A. -->
+          <div class="answers-section">
+            <p class="answers-sub-label">Hand-written notes &amp; quick Q&amp;A</p>
+            <div class="card kb-card" id="kbCardInternal" data-kb-type="internal" style="background:transparent; border:0; padding:0; box-shadow:none;">
+              <div class="kbs-add-row" style="margin-top:0;">
+                <button class="kbs-train-btn kbs-add-article" type="button" id="openArticleModalInternal">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+                  <span class="kbs-train-label">+ Add an article</span>
+                </button>
+                <button class="kbs-train-btn kbs-add-faq" type="button" id="openFaqModalInternal">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  <span class="kbs-train-label">+ Add a Q&amp;A pair</span>
+                </button>
+                <button class="btn ghost" type="button" id="kbEditToggleInternal" style="margin-left:auto;">Edit</button>
+                <button class="btn publish" type="button" id="kbSaveSettingsInternal" style="display:none;">Save</button>
+              </div>
+              <div class="kb-edit-banner" id="kbEditBannerInternal" style="margin-top:10px;">Edit mode is on. Changes won't apply until you save.</div>
+              <div class="kb-list" id="kbListInternal" style="margin-top:10px;"></div>
+            </div>
+          </div>
+
+          <!-- Share-with-team moved to the topbar "Share access" modal
+               so the home view doesn't lose vertical space to chrome. -->
+        </div>
+        </div><!-- /.home-pane manage -->
+
+        <!-- Standalone teach-card was removed entirely — its data-mode-only
+             attribute caused setAskMode to re-show the green card when
+             switching back to client mode. URL training now lives inside
+             each answers card (data-teach-mode panels). -->
+
+        <!-- Footer — sits inside the activity section so it scrolls
+             with the home page content. .app-body is fixed-height with
+             overflow:hidden; only the active section scrolls, so any
+             footer outside the section never makes it on-screen. -->
+        <footer class="app-footer" role="contentinfo" style="grid-column: span 12;">
+          <div class="app-footer-row">
+            <span class="app-footer-brand">JustGotALead</span>
+            <span class="app-footer-sep" aria-hidden="true">•</span>
+            <a class="app-footer-link" href="/privacy" target="_blank" rel="noopener">Privacy</a>
+            <a class="app-footer-link" href="/terms" target="_blank" rel="noopener">Terms</a>
+            <a class="app-footer-link" href="mailto:hello@justgotalead.com">Support</a>
+          </div>
+          <div class="app-footer-row app-footer-meta">
+            <span>© <span id="appFooterYear">2026</span> JustGotALead. Made for small businesses that want their phone to ring.</span>
+          </div>
+        </footer>
 
       </section>
 
@@ -12478,24 +13617,10 @@
       <section class="grid" id="knowledge" data-route-section="knowledge" hidden>
         <div id="kbStatusPill" class="kb-pill" hidden style="grid-column: span 12;"></div>
 
-        <div class="card kb-card is-locked kb-hidden" id="kbCardInternal" data-kb-type="internal" style="grid-column: span 12;">
-          <div class="card-header">
-            <h2 class="section-title" style="margin:0;">Internal Knowledge Base</h2>
-          </div>
-          <p class="section-note">Team‑only references used for internal insights and operations.</p>
-          <div class="kb-actions">
-            <div class="kb-actions-left">
-              <button class="btn" type="button" id="openArticleModalInternal">New Article</button>
-              <button class="btn warm" type="button" id="openFaqModalInternal">New FAQ</button>
-              <button class="btn publish" type="button" id="kbSaveSettingsInternal" style="display:none;">Save Settings</button>
-            </div>
-            <div class="kb-actions-right">
-              <button class="btn ghost" type="button" id="kbEditToggleInternal">Edit</button>
-            </div>
-          </div>
-          <div class="kb-edit-banner" id="kbEditBannerInternal">Edit mode is on. Changes won’t apply until you save.</div>
-          <div class="kb-list" id="kbListInternal"></div>
-        </div>
+        <!-- kbCardInternal moved to the home page so the client/internal
+             toggle there switches the whole bottom section, not just
+             the ask box. IDs preserved, so the existing edit/save/load
+             JS still binds to it wherever it lives. -->
 
       </section>
 
@@ -13172,7 +14297,6 @@
           </header>
           <nav class="wgt-tabs" role="tablist" aria-label="Knowledge base sections">
             <button type="button" class="wgt-tab is-active" data-kbs-tab="sources" role="tab" aria-selected="true">Sources</button>
-            <button type="button" class="wgt-tab" data-kbs-tab="client" role="tab">Client knowledge</button>
             <button type="button" class="wgt-tab" data-kbs-tab="test" role="tab">Test it</button>
           </nav>
 
@@ -13282,41 +14406,13 @@
             </div>
           </div>
 
-          <!-- Client knowledge — articles + FAQs the AI can cite. Same
-               functionality as the old "Client Knowledge Base" page,
-               restyled to match the Train-from-URL surface. IDs are
-               preserved verbatim so the existing edit/save/load JS in
+          <!-- Client knowledge section moved to the home page (between
+               "Ask your bot" and "Teach your bot") so users can edit
+               what the bot says without leaving home. IDs preserved
+               verbatim — the existing edit/save/load JS in
                loadKnowledgeBase("client") + the New Article / New FAQ
-               modal handlers all continue to work without changes. -->
-          <div class="wgt-stack" data-kbs-pane="client" hidden>
-            <div class="wgt-card kb-card" id="kbCardClient" data-kb-type="client">
-              <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:6px;">
-                <div>
-                  <h3 class="wgt-card-title">
-                    Things you want your AI to say
-                    <span data-help-icon="kb_client_articles"></span>
-                  </h3>
-                  <p class="wgt-card-sub" style="margin-bottom:0;">Hand-write answers your AI can quote back to customers — pricing rules, hours, what services you offer, common questions you hear all the time. Anything that isn't on your website lives here.</p>
-                </div>
-                <button class="kbs-edit-btn" type="button" id="kbEditToggleClient">Edit</button>
-              </div>
-              <div class="kbs-add-row" style="margin-top:14px;">
-                <button class="kbs-train-btn kbs-add-article" type="button" id="openArticleModalClient">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
-                  <span class="kbs-train-label">New article</span>
-                </button>
-                <button class="kbs-train-btn kbs-add-faq" type="button" id="openFaqModalClient">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                  <span class="kbs-train-label">New FAQ</span>
-                </button>
-                <button class="kbs-train-btn kbs-save-settings" type="button" id="kbSaveSettingsClient" style="display:none;">
-                  <span class="kbs-train-label">Save changes</span>
-                </button>
-              </div>
-              <div class="kb-edit-banner" id="kbEditBannerClient" style="margin-top:12px;">Edit mode is on. Changes won't apply until you save.</div>
-              <div class="kb-list" id="kbListClient" style="margin-top:14px;"></div>
-            </div>
-          </div>
+               modal handlers find the elements by ID wherever they
+               live in the DOM. -->
 
           <div class="wgt-stack" data-kbs-pane="test" hidden>
             <div class="wgt-card">
@@ -19743,7 +20839,7 @@
         return;
       }
 
-      // ── Legacy bubble layout (Knowledge-base "Ask" still uses this) ──
+      // ── Messenger bubble layout (home "Ask your bot" + KB Test it) ──
       if (messages.length === 0) {
         const placeholderRow = document.createElement("div");
         placeholderRow.className = "insights-message bot";
@@ -19752,8 +20848,7 @@
         avatar.innerHTML = '<img src="/robot_icon.png" alt="" />';
         const bubble = document.createElement("div");
         bubble.className = "insights-bubble bot";
-        bubble.textContent =
-          "Insights will appear here. Example: “You received 24 leads this week, with Outdoor Kitchens leading requests.”";
+        bubble.textContent = "Ask anything to test your bot. Try one of the suggestions below.";
         placeholderRow.appendChild(avatar);
         placeholderRow.appendChild(bubble);
         insightsChat.appendChild(placeholderRow);
@@ -20153,15 +21248,19 @@
           // The current question is being asked — drop the trailing
           // "typing" placeholder + the just-pushed user message from history.
           const cleanHistory = history.slice(0, -1);  // drop placeholder
-          // /me/insights/ask is the dashboard endpoint that loads THIS
-          // user's CRM data into the prompt. /chat (used previously) is
-          // the public widget endpoint with no CRM context.
-          const res = await fetch(`${window.location.origin}/me/insights/ask`, {
+          // /chat is the bot's own endpoint — answers come from the
+          // selected KB (client or internal), so this surface IS the
+          // bot the user is testing. The kb_type comes from the
+          // [Customer-facing | Internal team] toggle above.
+          const res = await fetch(`${window.location.origin}/chat`, {
             method: "POST",
             credentials: "same-origin",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              question: question,
+              message: question,
+              accountid: window.__accountId || "",
+              kb_type: requestMode,
+              use_silver: false,
               history: cleanHistory,
             }),
           });
@@ -20227,11 +21326,11 @@
           window.__lastInsightsChips = [];
         });
       }
-      // Seeded suggestion pills below the input. Tapping a pill drops the
-      // text into the input and submits — same path as a typed question.
-      const seedPills = document.getElementById("insightsSuggestionPills");
-      if (seedPills) {
-        seedPills.addEventListener("click", (event) => {
+      // Seeded suggestion pills below the input. Two sets — one per
+      // mode — that swap visibility when the toggle flips. Tapping a
+      // pill drops its text into the input and submits.
+      document.querySelectorAll("[data-mode-pills]").forEach((set) => {
+        set.addEventListener("click", (event) => {
           const btn = event.target.closest("[data-pill]");
           if (!btn) return;
           insightsInput.value = btn.textContent.trim();
@@ -20241,7 +21340,97 @@
             insightsForm.dispatchEvent(new Event("submit", { cancelable: true }));
           }
         });
+      });
+
+      // Mode switch — wires the [Customer-facing | Internal team] pills
+      // to swap activeKbType, suggestion pills, placeholder, and the
+      // visible message thread. Choice persists in localStorage so the
+      // user lands back on the same bot after refresh.
+      const ASK_MODE_KEY = "askBotMode";
+      const modeSub = document.getElementById("askModeSub");
+      const modeTitleEl = document.getElementById("askModeTitle");
+      const modeSubByKb = {
+        client:   "Test what your customers will get when they ask.",
+        internal: "Test what your team will see when they ask.",
+      };
+      const modeTitleByKb = {
+        client:   "Ask your customer bot anything",
+        internal: "Ask your internal team brain",
+      };
+      const placeholderByKb = {
+        client:   "Ask anything a customer would — e.g. 'What services do you offer?'",
+        internal: "Ask your team brain — e.g. 'What's our refund policy?'",
+      };
+      function setAskMode(mode) {
+        const next = mode === "internal" ? "internal" : "client";
+        activeKbType = next;
+        try { localStorage.setItem(ASK_MODE_KEY, next); } catch (_) {}
+        // Sync the top-level home-mode pills (primary mode switch
+        // post-restructure) and any in-card pills that might still
+        // exist for back-compat.
+        document.querySelectorAll(".home-mode-pill[data-ask-mode], .ask-mode-pill[data-ask-mode]").forEach((p) => {
+          const on = p.dataset.askMode === next;
+          p.classList.toggle("is-active", on);
+          p.setAttribute("aria-selected", on ? "true" : "false");
+        });
+        document.querySelectorAll("[data-mode-pills]").forEach((set) => {
+          set.hidden = set.dataset.modePills !== next;
+        });
+        if (modeTitleEl) {
+          // Preserve the help-icon child element when we update text.
+          const help = modeTitleEl.querySelector("[data-help-icon]");
+          modeTitleEl.textContent = modeTitleByKb[next];
+          if (help) modeTitleEl.appendChild(help);
+        }
+        // Render style: client side gets the messenger bubble look
+        // (matches Settings → KB → Test it), internal side keeps the
+        // open-canvas naked-text Q&A look. renderInsightsChat() picks
+        // its branch off `ask-canvas-stage` on #insightsResponse, so
+        // toggling that class is the whole switch.
+        const stage = document.getElementById("insightsResponse");
+        if (stage) {
+          stage.classList.toggle("ask-canvas-stage", next === "internal");
+          stage.classList.toggle("insights-chat-wrap", next === "client");
+          stage.classList.toggle("ask-chat-wrap", next === "client");
+        }
+        if (modeSub) modeSub.textContent = modeSubByKb[next];
+        if (insightsInput) insightsInput.placeholder = placeholderByKb[next];
+        renderInsightsChat(next);
+
+        // Bottom sections follow the toggle too. Client mode shows the
+        // customer-facing answers card AND the URL training surface.
+        // Internal mode shows the company-brain card and hides URL
+        // training (it only feeds the customer-facing KB).
+        document.querySelectorAll("[data-mode-card]").forEach((card) => {
+          card.hidden = card.dataset.modeCard !== next;
+        });
+        document.querySelectorAll("[data-mode-only]").forEach((el) => {
+          el.hidden = el.dataset.modeOnly !== next;
+        });
+        const knowledgeLabel = document.getElementById("knowledgeSectionLabel");
+        if (knowledgeLabel) {
+          knowledgeLabel.textContent = next === "internal"
+            ? "Company brain (internal)"
+            : "Customer-facing knowledge";
+        }
+        // Body class drives compact-layout column spans (internal mode
+        // expands the answers card since teach is hidden).
+        document.body.classList.toggle("home-internal", next === "internal");
       }
+      document.querySelectorAll(".ask-mode-pill").forEach((pill) => {
+        pill.addEventListener("click", () => setAskMode(pill.dataset.askMode || "client"));
+      });
+      // "Edit this bot's knowledge" jumps to the full KB page so the
+      // user can fix what they just heard the bot say.
+      document.querySelectorAll("[data-ask-mode-edit]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          if (typeof appShowRoute === "function") appShowRoute("knowledge");
+        });
+      });
+      try {
+        const saved = localStorage.getItem(ASK_MODE_KEY);
+        if (saved === "internal") setAskMode("internal");
+      } catch (_) {}
     }
 
     if (insightsChat && insightsForm && insightsInput) {
@@ -20660,47 +21849,43 @@
           return;
         }
         if (!s || !s.trial) return;
-        const banner = document.getElementById("trialBanner");
-        if (!banner) return;
-        banner.hidden = false;
-        document.getElementById("tbDay").textContent = s.day_of_trial;
-        document.getElementById("tbCallsToday").textContent = s.calls_today || 0;
-        document.getElementById("tbCallsCap").textContent = s.calls_cap || 50;
-        document.getElementById("tbLeadsTotal").textContent = s.leads_total || 0;
-        // Static "leads contacted" label — industry-specific labels were
-        // confusing ("storm-damage / insurance leads"); plain copy reads
-        // better and matches the other tiles.
-        document.getElementById("tbPipeline").textContent = _fmtMoney(s.estimated_pipeline_usd || 0);
-
-        const upgrade = document.getElementById("tbUpgradeBtn");
-        upgrade.addEventListener("click", async (e) => {
-          e.preventDefault();
-          // Optimistic: try /upgrade/start (Phase 5c). If unavailable, send to /try/setup as a graceful fallback.
-          try {
-            const r = await fetch("/upgrade/start", { method: "POST", credentials: "same-origin" });
-            if (r.ok) {
-              const body = await r.json();
-              window.location.href = body.dashboard_url || "/dashboard";
-            } else {
-              window.location.href = "/try/setup";
-            }
-          } catch (_) {
-            window.location.href = "/try/setup";
-          }
-        });
-
-        banner.classList.toggle("is-near-cap", !!s.near_cap && !s.hit_cap);
-        banner.classList.toggle("is-hit-cap",  !!s.hit_cap);
-        const warn = document.getElementById("tbCapWarn");
-        const msg  = document.getElementById("tbCapMsg");
-        if (s.hit_cap) {
-          warn.hidden = false;
-          msg.innerHTML = `You hit today's <strong>${s.calls_cap}-call cap</strong>. New callers are getting the high-volume message — upgrade for unlimited.`;
-        } else if (s.near_cap) {
-          warn.hidden = false;
-          msg.innerHTML = `You're getting close to today's cap (<strong>${s.calls_today}/${s.calls_cap}</strong>). Upgrade before you start missing calls.`;
-        } else {
-          warn.hidden = true;
+        // Keep the old full-width banner permanently hidden — its data
+        // now lives in the topbar bar so trial users don't lose any
+        // vertical space to chrome.
+        const bigBanner = document.getElementById("trialBanner");
+        if (bigBanner) bigBanner.hidden = true;
+        const bar = document.getElementById("appTrialBar");
+        if (!bar) return;
+        bar.hidden = false;
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+        set("atbDay",        s.day_of_trial);
+        set("atbCallsToday", s.calls_today || 0);
+        set("atbCallsCap",   s.calls_cap || 50);
+        set("atbLeads",      s.leads_total || 0);
+        // Cap state — color the bar so trial users notice without
+        // needing a separate warning row.
+        bar.classList.toggle("is-near-cap", !!s.near_cap && !s.hit_cap);
+        bar.classList.toggle("is-hit-cap",  !!s.hit_cap);
+        // Set the keep-account CTA to go through /upgrade/start when
+        // available (preserves the original Stripe-fallback link as the
+        // href).
+        const cta = document.getElementById("atbKeepBtn");
+        if (cta && !cta.dataset.wired) {
+          cta.dataset.wired = "1";
+          cta.addEventListener("click", async (e) => {
+            // Letting the default Stripe link fire is the safe fallback
+            // — but if /upgrade/start works we route through that first.
+            e.preventDefault();
+            try {
+              const r = await fetch("/upgrade/start", { method: "POST", credentials: "same-origin" });
+              if (r.ok) {
+                const body = await r.json();
+                window.location.href = body.dashboard_url || "/dashboard";
+                return;
+              }
+            } catch (_) {}
+            window.location.href = cta.href;
+          });
         }
       } catch (e) { /* silent */ }
     }
@@ -20855,16 +22040,491 @@
       } catch (e) { /* silent */ }
     }
 
+    // ─────── First-time-user name prompt ───────
+    // When /me reports the signed-in user has no first_name (or it's
+    // blank), open the lightweight profile modal so the home greeting
+    // can render their actual name. Admins and unauthenticated
+    // sessions are skipped. After save, we invalidate the shared /me
+    // promise cache and re-paint the greeting in place.
+    function maybePromptForName() {
+      const getMe = window.__getMe;
+      if (typeof getMe !== "function") return;
+      getMe().then((me) => {
+        if (!me || !me.authenticated) return;
+        if (me.is_admin) return;
+        const first = (me.first_name || "").trim();
+        if (first) return;  // already has a name — nothing to do
+        if (typeof openProfileModal !== "function") return;
+        openProfileModal(/*onSaved=*/() => {
+          // Drop the cached /me so the next read picks up the new name,
+          // then refresh just the greeting line. Avoids a full reload.
+          window.__mePromise = null;
+          if (typeof initHomeHero === "function") {
+            try { initHomeHero(); } catch (_) {}
+          }
+        });
+      }).catch(() => {});
+    }
+
+    // ─────── Team chat share card ───────
+    // Owner enables team chat, picks a password. We surface the shareable
+    // URL + password fields. Everything talks to /me/team-access on
+    // POST/GET and the team page is served from /team/<account_id>/chat.
+    function initTeamShare() {
+      const root = document.getElementById("teamShare");
+      if (!root) return;
+      const urlEl = document.getElementById("teamShareUrl");
+      const urlCopy = document.getElementById("teamShareUrlCopy");
+      const passEl = document.getElementById("teamSharePassword");
+      const genBtn = document.getElementById("teamShareGen");
+      const saveBtn = document.getElementById("teamShareSave");
+      const disableBtn = document.getElementById("teamShareDisable");
+      const statusEl = document.getElementById("teamShareStatus");
+      const msgEl = document.getElementById("teamShareMsg");
+
+      function showMsg(text, tone) {
+        if (!msgEl) return;
+        msgEl.textContent = text || "";
+        msgEl.classList.remove("is-err", "is-ok");
+        if (tone === "err") msgEl.classList.add("is-err");
+        if (tone === "ok") msgEl.classList.add("is-ok");
+      }
+      function setStatus(on) {
+        if (!statusEl) return;
+        statusEl.textContent = on ? "On" : "Off";
+        statusEl.classList.toggle("is-on", !!on);
+        if (saveBtn) saveBtn.textContent = on ? "Update password" : "Save & enable";
+        if (disableBtn) disableBtn.hidden = !on;
+      }
+      function fillUrl(aid) {
+        if (!urlEl) return;
+        const origin = window.location.origin || "";
+        urlEl.value = aid ? `${origin}/team/${aid}/chat` : "";
+      }
+      function gen() {
+        // Friendly enough to type, hard enough to brute-force.
+        const words = ["lion","amber","mint","river","cobalt","ember","willow","quartz","apex","oak"];
+        const w1 = words[Math.floor(Math.random() * words.length)];
+        const w2 = words[Math.floor(Math.random() * words.length)];
+        const n = Math.floor(100 + Math.random() * 900);
+        return `${w1}-${w2}-${n}`;
+      }
+
+      // Initial load.
+      fetch("/me/team-access", { credentials: "same-origin" })
+        .then((r) => r.ok ? r.json() : null)
+        .then((s) => {
+          if (!s) return;
+          fillUrl(s.account_id || "");
+          setStatus(!!s.enabled && !!s.has_password);
+          showMsg(s.enabled && s.has_password
+            ? "Team chat is live — share the URL + password."
+            : "Set a password to enable the team URL.",
+            s.enabled && s.has_password ? "ok" : "");
+        })
+        .catch(() => {});
+
+      // Copy URL.
+      if (urlCopy) {
+        urlCopy.addEventListener("click", () => {
+          const v = urlEl ? urlEl.value : "";
+          if (!v) return;
+          (navigator.clipboard ? navigator.clipboard.writeText(v) : Promise.reject())
+            .then(() => {
+              urlCopy.textContent = "Copied!";
+              urlCopy.classList.add("is-copied");
+              setTimeout(() => {
+                urlCopy.textContent = "Copy";
+                urlCopy.classList.remove("is-copied");
+              }, 1600);
+            })
+            .catch(() => {
+              urlEl.select();
+              try { document.execCommand("copy"); } catch (_) {}
+            });
+        });
+      }
+
+      // Generate password.
+      if (genBtn && passEl) {
+        genBtn.addEventListener("click", () => {
+          passEl.value = gen();
+          passEl.focus();
+          passEl.select();
+        });
+      }
+
+      // Save / enable.
+      if (saveBtn) {
+        saveBtn.addEventListener("click", () => {
+          const pw = (passEl && passEl.value || "").trim();
+          if (!pw) { showMsg("Pick or generate a password first.", "err"); return; }
+          if (pw.length < 6) { showMsg("Password needs at least 6 characters.", "err"); return; }
+          saveBtn.disabled = true;
+          showMsg("Saving…");
+          fetch("/me/team-access", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password: pw, enabled: true }),
+          })
+            .then((r) => r.json().then((b) => ({ ok: r.ok, body: b })))
+            .then((res) => {
+              if (!res.ok) {
+                showMsg((res.body && res.body.error) || "Couldn't save.", "err");
+                return;
+              }
+              setStatus(true);
+              showMsg("Saved. Share the URL + password with your team.", "ok");
+            })
+            .catch(() => showMsg("Network error — try again.", "err"))
+            .finally(() => { saveBtn.disabled = false; });
+        });
+      }
+
+      // Disable.
+      if (disableBtn) {
+        disableBtn.addEventListener("click", () => {
+          disableBtn.disabled = true;
+          showMsg("Disabling…");
+          fetch("/me/team-access", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ enabled: false }),
+          })
+            .then((r) => r.json().then((b) => ({ ok: r.ok, body: b })))
+            .then((res) => {
+              if (!res.ok) {
+                showMsg((res.body && res.body.error) || "Couldn't disable.", "err");
+                return;
+              }
+              setStatus(false);
+              showMsg("Team chat disabled. The old URL no longer works.", "ok");
+            })
+            .catch(() => showMsg("Network error — try again.", "err"))
+            .finally(() => { disableBtn.disabled = false; });
+        });
+      }
+    }
+
+    // ─────── Home shell — top-level mode pills + tab strip ───────
+    // Phase 1 of the restructure: promote the customer/internal toggle
+    // up out of the ask card to the page level, and split the page
+    // into Test/Manage tabs so the user picks one focused workflow at
+    // a time.
+    function initHomeShell() {
+      const pills = document.querySelectorAll(".home-mode-pill[data-ask-mode]");
+      pills.forEach((pill) => {
+        pill.addEventListener("click", () => {
+          // setAskMode (defined in the legacy insights wiring) already
+          // syncs every other dependent surface: chat history, KB
+          // visibility (client vs internal cards), suggestion pills,
+          // placeholder text, body.home-internal class. We just
+          // forward the choice.
+          if (typeof setAskMode === "function") {
+            setAskMode(pill.dataset.askMode || "client");
+          }
+        });
+      });
+
+      // Tab strip — Test vs Manage. Only one pane visible at a time.
+      const tabs = document.querySelectorAll(".home-tab[data-home-tab]");
+      const panes = document.querySelectorAll(".home-pane[data-home-pane]");
+      function showHomeTab(name) {
+        tabs.forEach((t) => {
+          const on = t.dataset.homeTab === name;
+          t.classList.toggle("is-active", on);
+          t.setAttribute("aria-selected", on ? "true" : "false");
+        });
+        panes.forEach((p) => {
+          p.classList.toggle("is-active", p.dataset.homePane === name);
+        });
+      }
+      tabs.forEach((t) => {
+        t.addEventListener("click", () => showHomeTab(t.dataset.homeTab));
+      });
+    }
+
+    // ─────── Share access modal ───────
+    function initShareModal() {
+      const btn = document.getElementById("appShareBtn");
+      const modal = document.getElementById("shareModal");
+      const closeBtn = document.getElementById("shareModalClose");
+      const doneBtn = document.getElementById("shareModalDone");
+      const custUrlEl = document.getElementById("shareCustomerUrl");
+      if (!btn || !modal) return;
+      function open() {
+        // Set customer URL (public widget link) lazily so we always
+        // get the current account ID.
+        const aid = window.__accountId || "";
+        if (custUrlEl) {
+          custUrlEl.value = aid
+            ? `${window.location.origin}/${aid}/widget.html`
+            : "";
+        }
+        if (typeof modal.showModal === "function") modal.showModal();
+        else modal.setAttribute("open", "");
+      }
+      function close() {
+        if (typeof modal.close === "function") modal.close();
+        else modal.removeAttribute("open");
+      }
+      btn.addEventListener("click", open);
+      if (closeBtn) closeBtn.addEventListener("click", close);
+      if (doneBtn) doneBtn.addEventListener("click", close);
+      // Click-outside-to-close (clicking the dialog itself = backdrop).
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) close();
+      });
+      // Copy buttons inside the modal.
+      modal.querySelectorAll("[data-share-copy-target]").forEach((b) => {
+        b.addEventListener("click", () => {
+          const target = document.getElementById(b.dataset.shareCopyTarget);
+          if (!target || !target.value) return;
+          (navigator.clipboard ? navigator.clipboard.writeText(target.value) : Promise.reject())
+            .then(() => {
+              const prev = b.textContent;
+              b.textContent = "Copied!";
+              setTimeout(() => { b.textContent = prev; }, 1400);
+            })
+            .catch(() => {
+              target.select();
+              try { document.execCommand("copy"); } catch (_) {}
+            });
+      });
+      });
+    }
+
+    // ─────── Home hero — welcome line + KPI tiles ───────
+    // Personalizes the home page and shows the four headline metrics.
+    // All fetches are deferred and degrade gracefully (zeros + "—") so
+    // the tiles render before any data comes back.
+    function initHomeHero() {
+      // Greeting line: "Good morning, Daniel" / "Hi Daniel" by hour.
+      function greetFor(name) {
+        const h = new Date().getHours();
+        const part = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+        return name ? `${part}, ${name}` : `${part}`;
+      }
+      if (window.__getMe) {
+        window.__getMe().then((d) => {
+          const name = d && (d.first_name || (d.email || "").split("@")[0]) || "";
+          const title = document.getElementById("homeHeroTitle");
+          if (title) title.textContent = greetFor(name);
+        }).catch(() => {});
+      }
+
+      // Trial stats power the calls + leads tiles. /me/trial-stats is
+      // the same source as the topbar trial bar; paid (non-trial)
+      // accounts can still call it — it just returns trial:false.
+      const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+      fetch("/me/trial-stats", { credentials: "same-origin" })
+        .then((r) => r.ok ? r.json() : null)
+        .then((s) => {
+          if (!s) return;
+          setTxt("kpiCallsToday", String(s.calls_today || 0));
+          if (s.calls_cap) setTxt("kpiCallsCap", `of ${s.calls_cap}/day`);
+          setTxt("kpiLeads", String(s.leads_total || 0));
+        })
+        .catch(() => {});
+
+      // Pages-learned tile comes from /kb/sources. Reuse window.__accountId
+      // when present; otherwise wait for it.
+      function loadKpiPages() {
+        const aid = window.__accountId || "";
+        if (!aid) return;
+        fetch("/kb/sources?accountid=" + encodeURIComponent(aid), { credentials: "same-origin" })
+          .then((r) => r.ok ? r.json() : null)
+          .then((data) => {
+            const n = (data && Array.isArray(data.sources)) ? data.sources.length : 0;
+            setTxt("kpiPages", String(n));
+          })
+          .catch(() => {});
+      }
+      if (window.__accountId) {
+        loadKpiPages();
+      } else {
+        window.addEventListener("accountIdReady", loadKpiPages, { once: true });
+      }
+    }
+
+    // ─────── Teach card (home pane) ───────
+    // Hits the same /kb/sources endpoints the full KB page uses — adding
+    // a URL here trains the bot, and the page list reflects whatever the
+    // KB page would show. Trained pages poll briefly so the user sees
+    // "Training…" flip to "Ready" without a manual refresh.
+    function initTeachCard() {
+      // Two merged-teach panels live on home now (one in each answers
+      // card, scoped by data-teach-mode). Both share /kb/sources but
+      // pass kb_type so the backend routes their URL adds to the
+      // right KB (client vs internal). Each panel polls independently.
+      const panels = document.querySelectorAll("[data-teach-mode]");
+      if (!panels.length) return;
+
+      function getAid() { return window.__accountId || ""; }
+
+      function prettyUrl(u) {
+        try {
+          const url = new URL(u);
+          const path = url.pathname === "/" ? "" : url.pathname;
+          return url.hostname.replace(/^www\./, "") + path;
+        } catch (_) { return u; }
+      }
+
+      function wirePanel(panel) {
+        const mode = panel.dataset.teachMode === "internal" ? "internal" : "client";
+        const form = panel.querySelector("[data-teach-form]");
+        const input = panel.querySelector("[data-teach-input]");
+        const addBtn = panel.querySelector("[data-teach-add]");
+        const errEl = panel.querySelector("[data-teach-error]");
+        const listEl = panel.querySelector("[data-teach-list]");
+        const emptyEl = panel.querySelector("[data-teach-empty]");
+        if (!form || !listEl) return;
+
+        let pollTimer = null;
+
+        function showErr(msg) {
+          if (!errEl) return;
+          if (!msg) { errEl.hidden = true; errEl.textContent = ""; return; }
+          errEl.hidden = false;
+          errEl.textContent = msg;
+        }
+
+        function renderList(sources) {
+          listEl.innerHTML = "";
+          if (!sources.length) {
+            if (emptyEl) emptyEl.hidden = false;
+            return;
+          }
+          if (emptyEl) emptyEl.hidden = true;
+          for (const src of sources) {
+            const status = (src.status || "pending").toLowerCase();
+            const isReady = status === "ready";
+            const isError = status === "error" || status === "failed";
+            const statusLabel = isReady ? "Ready" : isError ? "Couldn't read" : "Training…";
+            const statusClass = isReady ? "is-ready" : isError ? "is-error" : "is-pending";
+
+            const row = document.createElement("div");
+            row.className = "teach-item";
+            row.dataset.sourceId = src.id || "";
+
+            const urlSpan = document.createElement("span");
+            urlSpan.className = "teach-item-url";
+            urlSpan.title = src.url || "";
+            urlSpan.textContent = prettyUrl(src.url || "");
+
+            const statusSpan = document.createElement("span");
+            statusSpan.className = "teach-item-status " + statusClass;
+            statusSpan.textContent = statusLabel;
+
+            const remove = document.createElement("button");
+            remove.type = "button";
+            remove.className = "teach-item-remove";
+            remove.setAttribute("aria-label", "Remove " + (src.url || "this page"));
+            remove.textContent = "×";
+            remove.addEventListener("click", () => removeSource(src.id));
+
+            row.appendChild(urlSpan);
+            row.appendChild(statusSpan);
+            row.appendChild(remove);
+            listEl.appendChild(row);
+          }
+        }
+
+        function hasPending(sources) {
+          return sources.some((s) => {
+            const st = (s.status || "pending").toLowerCase();
+            return st !== "ready" && st !== "error" && st !== "failed";
+          });
+        }
+
+        async function refresh() {
+          const aid = getAid();
+          if (!aid) return;
+          try {
+            const res = await fetch(
+              "/kb/sources?accountid=" + encodeURIComponent(aid) +
+              "&kb_type=" + encodeURIComponent(mode),
+              { credentials: "same-origin" }
+            );
+            if (!res.ok) return;
+            const data = await res.json();
+            const sources = data.sources || [];
+            renderList(sources);
+            if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+            if (hasPending(sources)) pollTimer = setTimeout(refresh, 4000);
+          } catch (_) {}
+        }
+
+        async function addUrl(rawUrl) {
+          const aid = getAid();
+          if (!aid) { showErr("Still loading your account — try again in a sec."); return; }
+          const url = (rawUrl || "").trim();
+          if (!url) { showErr("Paste a link first."); input && input.focus(); return; }
+          showErr("");
+          addBtn.disabled = true;
+          const labelSpan = addBtn.querySelector("span");
+          const prevLabel = labelSpan ? labelSpan.textContent : "Train";
+          if (labelSpan) labelSpan.textContent = "Training…";
+          try {
+            const res = await fetch("/kb/sources", {
+              method: "POST",
+              credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ accountid: aid, url, kb_type: mode }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) { showErr(data.error || "Couldn't add that link."); return; }
+            if (input) input.value = "";
+            refresh();
+          } catch (_) {
+            showErr("Network hiccup — try again.");
+          } finally {
+            addBtn.disabled = false;
+            if (labelSpan) labelSpan.textContent = prevLabel;
+          }
+        }
+
+        async function removeSource(sourceId) {
+          if (!sourceId) return;
+          const aid = getAid();
+          if (!aid) return;
+          try {
+            await fetch("/kb/sources/" + encodeURIComponent(sourceId) +
+              "?accountid=" + encodeURIComponent(aid), {
+                method: "DELETE",
+                credentials: "same-origin",
+              });
+            refresh();
+          } catch (_) {}
+        }
+
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+          addUrl(input ? input.value : "");
+        });
+
+        if (getAid()) refresh();
+        else window.addEventListener("accountIdReady", refresh, { once: true });
+      }
+
+      panels.forEach(wirePanel);
+    }
+
     // loadVoiceSettings() moved to web/src/routes/voice.js
     // window.loadVoiceSettings is set by that bundle; SECTION_ON_ENTER.voice
     // lazy-loads the bundle then delegates to the exposed global.
 
     document.addEventListener("DOMContentLoaded", async () => {
-      // FIRST — gate admin UI before anything else can render it.
-      // Non-admins must never see admin elements, not even for a frame.
-      // CSS hides [data-admin-only] until <body> gets the .app-is-admin
-      // class, which only happens here after /me confirms is_admin.
-      await applyAdminGate();
+      // Admin gate runs in PARALLEL with everything else — we don't
+      // await it. CSS already hides [data-admin-only] by default, so
+      // non-admins see the correct (no-admin-chrome) page from the
+      // first paint. When /me returns, .app-is-admin gets added and
+      // admin UI fades in for admins. Non-blocking means the rest of
+      // boot (trial banner, KB poller, teach card, router) starts
+      // immediately instead of waiting on the /me round-trip.
+      applyAdminGate();
 
       // Defer non-critical boot fetches until AFTER first paint. Each of
       // these fires a /me-family request and contends with the initial
@@ -20890,6 +22550,44 @@
         pollKbStatus();
         initPhoneNumbersPanel();  // wires up UI; data load (loadList) deferred via SECTION_ON_ENTER.phones
       });
+
+      // Teach card — list + add + remove from the home pane. Same
+      // endpoints as the full KB page, so the two stay in sync. Wired
+      // here so users can train the bot without changing routes.
+      defer(function () { initTeachCard(); });
+
+      // Footer year — purely cosmetic, populated once.
+      defer(function () {
+        var y = document.getElementById("appFooterYear");
+        if (y) y.textContent = String(new Date().getFullYear());
+      });
+
+      // Home hero + KPI tiles. Personalizes the welcome line with the
+      // user's first name (from the shared /me promise — no extra
+      // fetch) and fills the four metric tiles from /me/trial-stats
+      // and the KB endpoints we already use.
+      defer(function () { initHomeHero(); });
+
+      // Top-level mode pills + tab strip wiring. Phase 1 of the
+      // restructure: customer/internal lives at the page level, and
+      // test/manage are tabs so the user does one thing at a time.
+      defer(function () { initHomeShell(); });
+
+      // Share access modal — opens from topbar button, contains
+      // both customer and internal share configs.
+      defer(function () { initShareModal(); });
+
+      // First-time-user name prompt — opens the lightweight profile
+      // modal when /me reports no first_name, so the greeting on the
+      // home page reads "Good morning, [Name]" instead of just
+      // "Good morning".
+      defer(function () { maybePromptForName(); });
+
+      // Team-chat share card — owner picks a password, the team gets
+      // a URL they can use without dashboard access. Only rendered
+      // inside the internal answers card so it only matters when the
+      // user is thinking about the internal bot.
+      defer(function () { initTeamShare(); });
 
       // Register section-specific loaders BEFORE initAppRouter() so the
       // loader for the initial route fires immediately on boot.
@@ -25068,12 +26766,13 @@
     // non-admin (or any error): the body class is never set, the admin
     // section + button get yanked from the DOM, and the router refuses
     // any admin-only route.
+    // window.__getMe is defined in <head> so inline scripts that run
+    // earlier (trial banner, welcome modal) hit the same shared promise.
     async function applyAdminGate() {
       window.__appIsAdmin = false;
       try {
-        const res = await fetch("/me", { credentials: "same-origin" });
-        if (res.ok) {
-          const d = await res.json();
+        const d = await window.__getMe();
+        if (d) {
           if (d && d.is_admin) {
             window.__appIsAdmin = true;
             document.body.classList.add("app-is-admin");
@@ -25693,25 +27392,15 @@
           if (legacy && !legacy.disabled) legacy.click();
         });
       }
-      // Trial pill mirrors the existing trial banner state.
-      try {
-        fetch("/me/trial-stats", { credentials: "same-origin" })
-          .then(r => r.ok ? r.json() : null)
-          .then(d => {
-            // Pill is for active trial users only. Admins (d.is_admin=true)
-            // and paid customers (d.trial !== true) never see it.
-            if (d && d.trial === true && !d.is_admin) {
-              const pill = document.getElementById("appTrialPill");
-              if (pill) pill.hidden = false;
-            }
-          })
-          .catch(() => {});
-      } catch (_) {}
+      // Old standalone TRIAL pill — superseded by #appTrialBar in the
+      // topbar (which has its own TRIAL pill baked in). Leave the
+      // legacy element hidden so we don't render the word "TRIAL"
+      // twice in the same topbar.
       // Avatar initial. Admin gating + admin landing already handled by
-      // applyAdminGate() at the very start of DOMContentLoaded.
+      // applyAdminGate() at the very start of DOMContentLoaded. We
+      // reuse the shared /me promise so we don't fire another fetch.
       try {
-        fetch("/me", { credentials: "same-origin" })
-          .then(r => r.ok ? r.json() : null)
+        (window.__getMe ? window.__getMe() : Promise.resolve(null))
           .then(d => {
             const av = document.getElementById("appAvatar");
             if (av && d && d.first_name) {
@@ -25720,11 +27409,14 @@
               av.textContent = d.email[0].toUpperCase();
             }
             if (window.__appIsAdmin) {
-              // Suppress the trial pill / banner for admins (defense in depth).
+              // Suppress the trial pill / banner / topbar bar for admins
+              // (defense in depth).
               const pill = document.getElementById("appTrialPill");
               if (pill) { pill.hidden = true; pill.style.display = "none"; pill.remove(); }
               const banner = document.getElementById("trialBanner");
               if (banner) banner.hidden = true;
+              const topbar = document.getElementById("appTrialBar");
+              if (topbar) { topbar.hidden = true; topbar.remove(); }
               // Land admins on the trial overview unless URL hash chose another route.
               const hash = (location.hash || "").replace(/^#/, "");
               if (!hash && typeof appShowRoute === "function") {
@@ -36204,5 +37896,57 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
 <script src="/dashboard/static/ai-rewrite.js?v=2026-05-07-site-fields" async></script>
+
+<!-- Share access modal. Triggered by the topbar "Share access" button.
+     Contains both customer and internal bot share configs in one
+     place so the home view stays focused. -->
+<dialog class="share-modal" id="shareModal" aria-labelledby="shareModalTitle">
+  <div class="share-modal-header">
+    <h2 class="share-modal-title" id="shareModalTitle">Share access</h2>
+    <button type="button" class="share-modal-close" id="shareModalClose" aria-label="Close">×</button>
+  </div>
+  <div class="share-modal-body">
+    <div class="share-modal-section">
+      <h4>Customer bot</h4>
+      <p class="sub">Anyone with this link can ask your customer-facing bot.</p>
+      <div class="team-share-row">
+        <label class="team-share-label" for="shareCustomerUrl">Public link</label>
+        <div class="team-share-input-wrap">
+          <input type="text" id="shareCustomerUrl" class="team-share-input" readonly />
+          <button type="button" class="team-share-copy" data-share-copy-target="shareCustomerUrl">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="share-modal-section" id="teamShare">
+      <h4>Internal team bot</h4>
+      <p class="sub">Your team can ask your internal bot without signing in.</p>
+      <div class="team-share-row">
+        <label class="team-share-label" for="teamShareUrl">Team chat URL</label>
+        <div class="team-share-input-wrap">
+          <input type="text" id="teamShareUrl" class="team-share-input" readonly />
+          <button type="button" class="team-share-copy" id="teamShareUrlCopy">Copy</button>
+        </div>
+      </div>
+      <div class="team-share-row">
+        <label class="team-share-label" for="teamSharePassword">Password</label>
+        <div class="team-share-input-wrap">
+          <input type="text" id="teamSharePassword" class="team-share-input" placeholder="Set a password" autocomplete="off" />
+          <button type="button" class="team-share-copy" id="teamShareGen" title="Generate strong password">Generate</button>
+        </div>
+        <p class="team-share-hint">6+ characters. Share the URL and password with your team only.</p>
+      </div>
+      <div class="team-share-actions">
+        <button type="button" class="team-share-save" id="teamShareSave">Save &amp; enable</button>
+        <button type="button" class="team-share-disable" id="teamShareDisable" hidden>Disable team chat</button>
+        <span class="team-share-status" id="teamShareStatus" style="margin-left:auto;">Off</span>
+      </div>
+      <p class="team-share-msg" id="teamShareMsg" style="margin-top:6px;"></p>
+    </div>
+  </div>
+  <div class="share-modal-footer">
+    <button type="button" class="team-share-save" id="shareModalDone">Done</button>
+  </div>
+</dialog>
 </body>
 </html>

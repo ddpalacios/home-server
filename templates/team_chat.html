@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Team chat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --ink: #0a0a0a;
+    --muted: #64748b;
+    --border: #e5e7eb;
+    --brand: #4f46e5;
+    --brand-soft: #eef2ff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    font-family: "Inter", system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .tc-shell {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-width: 720px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 24px 20px 0;
+  }
+  .tc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .tc-brand {
+    font-family: "Space Grotesk", "Inter", sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+  }
+  .tc-brand .pill {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--brand-soft);
+    color: var(--brand);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .tc-byline { font-size: 12px; color: var(--muted); }
+
+  /* Login card */
+  .tc-login {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 0;
+  }
+  .tc-login-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 26px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  }
+  .tc-login-eyebrow {
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--brand);
+    margin: 0 0 6px;
+  }
+  .tc-login-title {
+    font-family: "Space Grotesk", "Inter", sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0 0 6px;
+  }
+  .tc-login-sub {
+    font-size: 14px;
+    color: var(--muted);
+    margin: 0 0 18px;
+  }
+  .tc-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 140ms ease, box-shadow 140ms ease;
+  }
+  .tc-input:focus {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  }
+  .tc-btn {
+    width: 100%;
+    margin-top: 12px;
+    padding: 12px 16px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--ink);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 140ms ease;
+  }
+  .tc-btn:hover { background: #262626; }
+  .tc-btn:disabled { opacity: 0.55; cursor: default; }
+  .tc-err {
+    margin-top: 10px;
+    font-size: 13px;
+    color: #b91c1c;
+  }
+
+  /* Chat */
+  .tc-chat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-bottom: 16px;
+  }
+  .tc-chat-stream {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 4px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .tc-msg {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .tc-msg.user { justify-content: flex-end; }
+  .tc-avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--brand-soft);
+    color: var(--brand);
+    font-weight: 800;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .tc-bubble {
+    max-width: 78%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    line-height: 1.55;
+    font-size: 14.5px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .tc-bubble.bot {
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+  }
+  .tc-bubble.user {
+    background: var(--ink);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  .tc-typing {
+    display: inline-flex; gap: 4px; align-items: center;
+    padding: 4px 0;
+  }
+  .tc-typing span {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #94a3b8;
+    animation: tcDot 1.2s ease-in-out infinite;
+  }
+  .tc-typing span:nth-child(2) { animation-delay: 0.15s; }
+  .tc-typing span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes tcDot {
+    0%, 60%, 100% { opacity: 0.35; transform: translateY(0); }
+    30% { opacity: 1; transform: translateY(-2px); }
+  }
+  .tc-empty {
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    padding: 40px 16px;
+  }
+  .tc-empty strong { color: var(--ink); font-weight: 700; }
+  .tc-form {
+    display: flex;
+    gap: 10px;
+    padding: 10px 0 6px;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .tc-form input {
+    flex: 1;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+    background: var(--card);
+    transition: border-color 140ms ease, box-shadow 140ms ease;
+  }
+  .tc-form input:focus {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  }
+  .tc-form button {
+    padding: 12px 22px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--ink);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 140ms ease;
+  }
+  .tc-form button:hover { background: #262626; }
+  .tc-form button:disabled { opacity: 0.55; cursor: default; }
+
+  .tc-foot {
+    text-align: center;
+    font-size: 11.5px;
+    color: var(--muted);
+    padding: 12px 16px 16px;
+  }
+  .tc-foot a { color: var(--muted); text-decoration: underline; }
+</style>
+</head>
+<body>
+  <div class="tc-shell">
+    <div class="tc-header">
+      <div class="tc-brand">
+        Team brain<span class="pill">Internal</span>
+      </div>
+      <div class="tc-byline" id="tcByline">Loading…</div>
+    </div>
+
+    <!-- Login -->
+    <section class="tc-login" id="tcLogin" hidden>
+      <div class="tc-login-card">
+        <p class="tc-login-eyebrow">Team access</p>
+        <h1 class="tc-login-title">Sign in to your team brain</h1>
+        <p class="tc-login-sub">Use the password your team admin shared with you. This bot answers from your team's private knowledge — not the customer-facing bot.</p>
+        <form id="tcLoginForm" autocomplete="off">
+          <input class="tc-input" type="password" id="tcPassword" placeholder="Team password" autocomplete="current-password" required />
+          <button class="tc-btn" type="submit" id="tcLoginBtn">Continue</button>
+          <p class="tc-err" id="tcLoginErr" hidden></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- Chat -->
+    <section class="tc-chat" id="tcChat" hidden>
+      <div class="tc-chat-stream" id="tcStream">
+        <div class="tc-empty" id="tcEmpty">
+          <p><strong>Welcome.</strong> Ask anything from your team's playbook —<br/>SOPs, policies, training notes, contract clauses.</p>
+        </div>
+      </div>
+      <form class="tc-form" id="tcForm" autocomplete="off">
+        <input id="tcInput" type="text" placeholder="Ask your team brain…" autocomplete="off" />
+        <button type="submit" id="tcSend">Send</button>
+      </form>
+    </section>
+  </div>
+
+  <p class="tc-foot">
+    Private to your team. Powered by <a href="https://justgotalead.com" target="_blank" rel="noopener">JustGotALead</a>.
+  </p>
+
+<script>
+(function () {
+  // Pull account_id from the path: /team/<account_id>/chat
+  var m = (location.pathname || "").match(/^\/team\/([^/]+)\/chat\/?$/);
+  var aid = m ? m[1] : "";
+  var byline = document.getElementById("tcByline");
+  var loginSec = document.getElementById("tcLogin");
+  var chatSec = document.getElementById("tcChat");
+  var loginForm = document.getElementById("tcLoginForm");
+  var passEl = document.getElementById("tcPassword");
+  var loginBtn = document.getElementById("tcLoginBtn");
+  var errEl = document.getElementById("tcLoginErr");
+  var form = document.getElementById("tcForm");
+  var input = document.getElementById("tcInput");
+  var sendBtn = document.getElementById("tcSend");
+  var stream = document.getElementById("tcStream");
+  var emptyEl = document.getElementById("tcEmpty");
+  var history = [];
+  var inFlight = false;
+
+  if (!aid) {
+    document.body.innerHTML = "<p style='padding:40px;text-align:center;color:#64748b;'>Bad team URL.</p>";
+    return;
+  }
+
+  function showLogin() {
+    loginSec.hidden = false;
+    chatSec.hidden = true;
+    byline.textContent = "Sign in to continue";
+    setTimeout(function () { passEl && passEl.focus(); }, 80);
+  }
+  function showChat() {
+    loginSec.hidden = true;
+    chatSec.hidden = false;
+    byline.textContent = "Signed in";
+    setTimeout(function () { input && input.focus(); }, 80);
+  }
+  function setErr(msg) {
+    if (!errEl) return;
+    if (!msg) { errEl.hidden = true; errEl.textContent = ""; return; }
+    errEl.hidden = false;
+    errEl.textContent = msg;
+  }
+  function escapeHtml(s) {
+    return String(s || "").replace(/[&<>"']/g, function (c) {
+      return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c];
+    });
+  }
+  function appendMsg(role, text) {
+    if (emptyEl && emptyEl.parentNode) emptyEl.remove();
+    var row = document.createElement("div");
+    row.className = "tc-msg " + role;
+    if (role === "bot") {
+      var av = document.createElement("div");
+      av.className = "tc-avatar";
+      av.textContent = "B";
+      row.appendChild(av);
+    }
+    var bub = document.createElement("div");
+    bub.className = "tc-bubble " + role;
+    bub.textContent = text;
+    row.appendChild(bub);
+    stream.appendChild(row);
+    stream.scrollTop = stream.scrollHeight;
+    return row;
+  }
+  function appendTyping() {
+    if (emptyEl && emptyEl.parentNode) emptyEl.remove();
+    var row = document.createElement("div");
+    row.className = "tc-msg bot";
+    var av = document.createElement("div");
+    av.className = "tc-avatar";
+    av.textContent = "B";
+    var bub = document.createElement("div");
+    bub.className = "tc-bubble bot";
+    bub.innerHTML = "<span class='tc-typing'><span></span><span></span><span></span></span>";
+    row.appendChild(av);
+    row.appendChild(bub);
+    stream.appendChild(row);
+    stream.scrollTop = stream.scrollHeight;
+    return row;
+  }
+
+  function whoami() {
+    return fetch("/team/" + encodeURIComponent(aid) + "/whoami", { credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : { authed: false, enabled: false }; })
+      .catch(function () { return { authed: false, enabled: false }; });
+  }
+
+  loginForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    setErr("");
+    var pw = (passEl.value || "").trim();
+    if (!pw) { setErr("Enter the password."); return; }
+    loginBtn.disabled = true;
+    loginBtn.textContent = "Signing in…";
+    fetch("/team/" + encodeURIComponent(aid) + "/auth", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: pw }),
+    }).then(function (r) {
+      return r.json().then(function (b) { return { ok: r.ok, status: r.status, body: b }; });
+    }).then(function (res) {
+      if (res.ok) {
+        passEl.value = "";
+        showChat();
+      } else if (res.status === 401) {
+        setErr("Wrong password. Ask your team admin to check.");
+      } else if (res.status === 404) {
+        setErr("This team chat isn't enabled.");
+      } else {
+        setErr((res.body && res.body.error) || "Couldn't sign in.");
+      }
+    }).catch(function () {
+      setErr("Network error — try again.");
+    }).finally(function () {
+      loginBtn.disabled = false;
+      loginBtn.textContent = "Continue";
+    });
+  });
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (inFlight) return;
+    var msg = (input.value || "").trim();
+    if (!msg) return;
+    input.value = "";
+    appendMsg("user", msg);
+    history.push({ role: "user", text: msg });
+    var typing = appendTyping();
+    inFlight = true;
+    sendBtn.disabled = true;
+    fetch("/team/" + encodeURIComponent(aid) + "/chat-message", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: msg,
+        history: history.slice(-12, -1).map(function (m) {
+          return { role: m.role === "user" ? "user" : "assistant", text: m.text };
+        }),
+      }),
+    }).then(function (r) {
+      return r.json().then(function (b) { return { ok: r.ok, status: r.status, body: b }; });
+    }).then(function (res) {
+      if (typing && typing.parentNode) typing.remove();
+      if (res.status === 401) {
+        showLogin();
+        return;
+      }
+      var answer = (res.body && (res.body.response || res.body.answer)) || "I couldn't find an answer. Try rephrasing.";
+      appendMsg("bot", String(answer).trim());
+      history.push({ role: "bot", text: String(answer).trim() });
+    }).catch(function () {
+      if (typing && typing.parentNode) typing.remove();
+      appendMsg("bot", "Network error — try again.");
+    }).finally(function () {
+      inFlight = false;
+      sendBtn.disabled = false;
+      input.focus();
+    });
+  });
+
+  // Try a silent owner-bypass first — if the visitor is signed into
+  // the dashboard for this account, the auth endpoint lets them in
+  // without a password. Falls through to the password form otherwise.
+  function tryOwnerBypass() {
+    return fetch("/team/" + encodeURIComponent(aid) + "/auth", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    }).then(function (r) { return r.ok; }).catch(function () { return false; });
+  }
+
+  whoami().then(function (s) {
+    if (!s.enabled) {
+      document.body.innerHTML = "<p style='padding:40px;text-align:center;color:#64748b;'>This team chat link isn't active.</p>";
+      return;
+    }
+    if (s.authed) { showChat(); return; }
+    // Quick owner-bypass attempt — succeeds silently for the dashboard
+    // owner, fails silently otherwise.
+    tryOwnerBypass().then(function (ok) {
+      if (ok) showChat();
+      else showLogin();
+    });
+  });
+})();
+</script>
+</body>
+</html>
