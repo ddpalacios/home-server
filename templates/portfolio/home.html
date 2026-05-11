@@ -573,11 +573,11 @@
           <p class="trust">✓ No credit card · ✓ Real phone number · ✓ 14-day trial · ✓ Cancel anytime</p>
         </form>
         <div class="trial-success" id="trialSuccess" hidden>
-          <div class="success-emoji" aria-hidden="true">📞</div>
-          <h4>Your trial number is ready</h4>
-          <div class="phone-number" id="modalPhoneDisplay">+1 (555) 000-0000</div>
-          <p>Call it now. We're training your bot — first call may have lighter answers for the first 60–90 seconds.</p>
-          <p class="muted">A magic link was sent to <strong id="modalEmailEcho">your email</strong>.</p>
+          <div class="success-emoji" id="modalSuccessEmoji" aria-hidden="true">📞</div>
+          <h4 id="modalSuccessTitle">Your trial number is ready</h4>
+          <div class="phone-number" id="modalPhoneDisplay" hidden>+1 (555) 000-0000</div>
+          <p id="modalSuccessBody">Call it now. We're training your bot — first call may have lighter answers for the first 60–90 seconds.</p>
+          <p class="muted">A magic link was sent to <strong id="modalEmailEcho">your email</strong>. Click it to open your dashboard.</p>
         </div>
       </div>
     </dialog>
@@ -667,8 +667,26 @@
             }
             trialForm.hidden = true;
             trialSuccess.hidden = false;
-            document.getElementById("modalPhoneDisplay").textContent = result.data.phone_display || "Your trial number is ready";
             document.getElementById("modalEmailEcho").textContent = email;
+
+            var phoneEl = document.getElementById("modalPhoneDisplay");
+            var emojiEl = document.getElementById("modalSuccessEmoji");
+            var titleEl = document.getElementById("modalSuccessTitle");
+            var bodyEl  = document.getElementById("modalSuccessBody");
+
+            if (result.data.training_only || !result.data.phone_display) {
+              // Pool was empty — training started but no number assigned yet.
+              phoneEl.hidden = true;
+              emojiEl.textContent = "🛠️";
+              titleEl.textContent = "We're training your bot";
+              bodyEl.textContent  = "All trial phone numbers are in use right now, so we started training your bot on your site. Watch your inbox — we'll send a trial number the moment one frees up.";
+            } else {
+              phoneEl.hidden = false;
+              phoneEl.textContent = result.data.phone_display;
+              emojiEl.textContent = "📞";
+              titleEl.textContent = "Your trial number is ready";
+              bodyEl.textContent  = "Call it now. We're training your bot — first call may have lighter answers for the first 60–90 seconds.";
+            }
           });
         }
 
@@ -717,13 +735,21 @@
             tryBtn.textContent = originalLabel;
             return;
           }
-          document.getElementById("startTitle").textContent = "You're in.";
-          document.getElementById("startSub").textContent = "Save this number and call it from your phone.";
           tryForm.hidden = true;
           var success = document.getElementById("trySuccess");
           success.hidden = false;
-          document.getElementById("trialPhoneDisplay").textContent = result.data.phone_display || "Your trial number is ready";
           document.getElementById("trialEmail").textContent = email;
+          var phoneDisplayEl = document.getElementById("trialPhoneDisplay");
+          if (result.data.training_only || !result.data.phone_display) {
+            document.getElementById("startTitle").textContent = "We're training your bot";
+            document.getElementById("startSub").textContent = "All trial phone numbers are in use right now — we'll text you when one frees up.";
+            phoneDisplayEl.hidden = true;
+          } else {
+            document.getElementById("startTitle").textContent = "You're in.";
+            document.getElementById("startSub").textContent = "Save this number and call it from your phone.";
+            phoneDisplayEl.hidden = false;
+            phoneDisplayEl.textContent = result.data.phone_display;
+          }
           success.scrollIntoView({ behavior: "smooth", block: "center" });
         });
       })();
