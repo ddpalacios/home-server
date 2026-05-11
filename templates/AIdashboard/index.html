@@ -22642,43 +22642,52 @@
           // we just toggle the body-level modal's .is-open class
           // ourselves and let kb.js's existing handlers (file list,
           // import, close) take over from there.
-          driveBtn.addEventListener("click", function () {
+          driveBtn.addEventListener("click", async function () {
             try { sessionStorage.setItem("kbsAutoOpenDrive", mode); } catch (_) {}
 
-            function attemptOpen() {
-              // Fast path: kb.js exposes the picker as a callable.
-              if (typeof window.__openDrivePicker === "function") {
-                window.__openDrivePicker();
-                return true;
-              }
-              return false;
+            // Always ask the server fresh — if the user just came back
+            // from OAuth, /me/drive/status will now return connected.
+            // Stale window-level driveConnected might still be false
+            // from a load before OAuth completed.
+            let connected = false;
+            try {
+              const r = await fetch("/me/drive/status", {
+                credentials: "same-origin", cache: "no-store",
+              });
+              const d = r.ok ? await r.json() : null;
+              connected = !!(d && d.connected);
+            } catch (_) {}
+
+            if (!connected) {
+              // Genuinely not connected — explicit user click is the
+              // only place that should kick off OAuth. Cleared via
+              // session pop so a reload after this doesn't re-redirect.
+              window.location.href = "/auth/google/connect-drive";
+              return;
             }
 
-            // Already connected + kb.js loaded → open immediately.
-            if (attemptOpen()) return;
+            // Make sure kb.js is loaded so __openDrivePicker exists
+            // and the modal handlers (file list, import, close) work.
+            if (typeof window.__openDrivePicker !== "function") {
+              if (typeof window.__dashboardLoadRouteModule === "function") {
+                await window.__dashboardLoadRouteModule("kb").catch(function () {});
+              }
+              // kb.js init does its own async status check on first
+              // load — wait a beat so driveConnected is true inside
+              // __openDrivePicker.
+              await new Promise(function (r) { setTimeout(r, 350); });
+            }
 
-            // Otherwise lazy-load kb.js. It checks /me/drive/status
-            // internally; if not connected it'll redirect to OAuth,
-            // if connected it exposes __openDrivePicker which we
-            // then invoke.
-            if (typeof window.__dashboardLoadRouteModule === "function") {
-              window.__dashboardLoadRouteModule("kb")
-                .then(function () {
-                  // kb.js's init does an async drive-status check; give
-                  // it a beat so __openDrivePicker has accurate state.
-                  setTimeout(function () {
-                    if (!attemptOpen()) {
-                      // Module loaded but picker still unavailable —
-                      // most likely not connected. Send to OAuth.
-                      window.location.href = "/auth/google/connect-drive";
-                    }
-                  }, 400);
-                })
-                .catch(function () {
-                  window.location.href = "/auth/google/connect-drive";
-                });
-            } else {
-              window.location.href = "/auth/google/connect-drive";
+            if (typeof window.__openDrivePicker === "function") {
+              const ok = window.__openDrivePicker();
+              if (!ok) {
+                // Server says connected but kb.js's internal flag
+                // disagrees — refresh status inside kb.js and retry.
+                if (typeof window.__refreshDriveStatus === "function") {
+                  await window.__refreshDriveStatus();
+                  window.__openDrivePicker();
+                }
+              }
             }
           });
         }
@@ -22760,33 +22769,36 @@
       // both customer and internal share configs.
       defer(function () { initShareModal(); });
 
-      // Drive picker lives at body level now and is wired by kb.js.
-      // When the user returns from Google OAuth (URL has ?drive=connected)
-      // OR the home Drive button stashed an intent in sessionStorage,
-      // lazy-load kb.js so its handlers + auto-open kick in on home
-      // without navigating to Settings.
+      // OAuth return — strip ?drive=connected from URL and load kb.js
+      // so its handlers are wired. Picker auto-open happens via the
+      // sessionStorage flag the home button already set before
+      // redirecting to OAuth. We deliberately do NOT trigger any
+      // OAuth redirect here — that's what created the loop. Only
+      // the explicit home button click kicks off OAuth.
       defer(function () {
         var params = new URLSearchParams(window.location.search || "");
         var fromOauth = params.get("drive") === "connected";
+        var hasError = params.get("drive") === "error";
         var queuedMode = null;
         try { queuedMode = sessionStorage.getItem("kbsAutoOpenDrive"); } catch (_) {}
-        if (fromOauth && !queuedMode) {
-          try { sessionStorage.setItem("kbsAutoOpenDrive", "client"); } catch (_) {}
-          queuedMode = "client";
-        }
         if (fromOauth || queuedMode) {
           if (typeof window.__dashboardLoadRouteModule === "function") {
             window.__dashboardLoadRouteModule("kb").catch(function () {});
           }
-          // Clean up the ?drive=connected from the URL so a refresh
-          // doesn't keep popping the picker.
-          if (fromOauth && window.history && window.history.replaceState) {
-            params.delete("drive");
-            params.delete("reason");
-            var qs = params.toString();
-            window.history.replaceState({}, "",
-              window.location.pathname + (qs ? "?" + qs : "") + window.location.hash);
-          }
+        }
+        // Always strip drive query params so refresh doesn't replay.
+        if ((fromOauth || hasError) && window.history && window.history.replaceState) {
+          params.delete("drive");
+          params.delete("reason");
+          var qs = params.toString();
+          window.history.replaceState({}, "",
+            window.location.pathname + (qs ? "?" + qs : "") + window.location.hash);
+        }
+        if (hasError) {
+          // Clear any leftover auto-open flag so we don't try the
+          // picker without a valid connection.
+          try { sessionStorage.removeItem("kbsAutoOpenDrive"); } catch (_) {}
+          console.warn("[drive] OAuth callback returned an error; user can retry from the home button.");
         }
       });
 
@@ -38104,7 +38116,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-drive-reopen"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-drive-noloop"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->

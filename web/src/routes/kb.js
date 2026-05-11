@@ -695,34 +695,43 @@ function _initKb() {
     let pending = null;
     try { pending = sessionStorage.getItem("kbsAutoOpenDrive"); } catch (_) {}
     if (!pending) return;
+    // Always consume the flag — successful open OR failure. Without
+    // this we'd loop: not connected → redirect to OAuth → callback
+    // returns with the flag still set → redirect to OAuth → ...
+    try { sessionStorage.removeItem("kbsAutoOpenDrive"); } catch (_) {}
     if (driveConnected) {
       driveActiveTab = "docs";
       openDriveModal();
-      // Consume the flag — otherwise a refresh while the modal is
-      // open (or after close-without-import) would re-pop it forever.
-      // Import-success path also clears it, but this catches the
-      // close-without-import case.
-      try { sessionStorage.removeItem("kbsAutoOpenDrive"); } catch (_) {}
-    } else {
-      // Defer: kick off OAuth — sessionStorage flag survives the
-      // round-trip so we'll auto-open once they come back connected.
-      window.location.href = "/auth/google/connect-drive";
+      return;
     }
+    // Not connected after the OAuth round-trip — silently no-op
+    // here. The home button's click handler is the only entry point
+    // that should ever initiate OAuth, and it does so explicitly.
+    // Surfacing this as an alert would surprise users mid-page-load.
   }
 
   // Exposed so the home-page "Import from Google Drive or Sheets"
-  // button can re-open the picker on every click. The _initialized
-  // guard inside _initKb() means re-running init() is a no-op; the
-  // home handler used to rely on maybeAutoOpenDrive firing inside
-  // init, which only fired ONCE per page load. Now the home handler
-  // calls this directly.
+  // button can re-open the picker on every click. _initialized
+  // prevents init() from re-running, so without this exposed
+  // callable the picker would only open once per page load.
   window.__openDrivePicker = function () {
     if (!driveConnected) {
-      window.location.href = "/auth/google/connect-drive";
-      return;
+      // ONE-WAY: only the home click handler should kick off OAuth.
+      // This function never redirects on its own — that's how we
+      // ended up in the OAuth→callback→OAuth loop. Caller decides
+      // whether to redirect.
+      return false;
     }
     driveActiveTab = "docs";
     openDriveModal();
+    return true;
+  };
+
+  // Force a fresh /me/drive/status check + re-render. Called by the
+  // home button when the server says connected but kb.js's internal
+  // flag still has the stale "not connected" from page load.
+  window.__refreshDriveStatus = function () {
+    return checkDriveStatus();
   };
 
   checkDriveStatus().then(maybeAutoOpenDrive);
