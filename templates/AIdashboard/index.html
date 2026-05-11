@@ -20866,14 +20866,30 @@
       // class, which only happens here after /me confirms is_admin.
       await applyAdminGate();
 
-      maybeOpenWelcomeModal();
-      wireWelcomeForm();
-      pollKbStatus();
-      loadTrialBanner();
-      // Poll trial status every 30s so the dashboard kicks a user out
-      // immediately when an admin disconnects their trial.
-      setInterval(loadTrialBanner, 30000);
-      initPhoneNumbersPanel();  // wires up UI; data load (loadList) deferred via SECTION_ON_ENTER.phones
+      // Defer non-critical boot fetches until AFTER first paint. Each of
+      // these fires a /me-family request and contends with the initial
+      // render. requestIdleCallback lets the browser paint the dashboard
+      // first, then runs these when the main thread is free. Falls back
+      // to setTimeout 50ms on Safari where rIC isn't supported.
+      var defer = (window.requestIdleCallback || function (cb) { return setTimeout(cb, 50); });
+
+      // Trial banner is the only deferred-but-quick one — needs to show
+      // mid-build progress without a long delay. Give it priority 1.
+      defer(function () {
+        loadTrialBanner();
+        // Poll trial status every 30s so the dashboard kicks a user out
+        // immediately when an admin disconnects their trial.
+        setInterval(loadTrialBanner, 30000);
+      });
+
+      // Welcome modal trigger + KB-status poller + phone-panel wiring +
+      // form wiring — fire in a single idle batch.
+      defer(function () {
+        maybeOpenWelcomeModal();
+        wireWelcomeForm();
+        pollKbStatus();
+        initPhoneNumbersPanel();  // wires up UI; data load (loadList) deferred via SECTION_ON_ENTER.phones
+      });
 
       // Register section-specific loaders BEFORE initAppRouter() so the
       // loader for the initial route fires immediately on boot.
