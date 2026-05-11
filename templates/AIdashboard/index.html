@@ -6850,8 +6850,14 @@
               });
             }
 
-            var pollTimer = null;
-            var celebrated = false;
+            var pollTimer  = null;
+            // Reload happens ONLY when we observe a building → ready
+            // transition. If the first poll already returns "ready",
+            // training finished before this page loaded — hide silently.
+            // (Without this guard the reload fires, the new page sees
+            // "ready" on its first poll, fires again, ad infinitum.)
+            var sawBuilding = false;
+            var celebrated  = false;
             async function pollOnce() {
               try {
                 var r = await fetch("/me", { credentials: "same-origin" });
@@ -6861,11 +6867,15 @@
                 if (!trial) { banner.style.display = "none"; return; }
                 var status = trial.build_status || "idle";
                 var phase  = trial.build_phase  || "";
-                if (banner.style.display === "none") banner.style.display = "block";
 
                 if (status === "ready") {
                   if (celebrated) return;
                   celebrated = true;
+                  if (!sawBuilding) {
+                    banner.style.display = "none";
+                    return;
+                  }
+                  if (banner.style.display === "none") banner.style.display = "block";
                   spinner.style.display = "none";
                   checkEl.style.display = "block";
                   titleEl.textContent = "Your bot is ready";
@@ -6880,12 +6890,15 @@
                   return;
                 }
                 if (status === "failed") {
+                  if (banner.style.display === "none") banner.style.display = "block";
                   spinner.style.display = "none";
                   titleEl.textContent = "Training hit a snag";
                   phaseEl.textContent = trial.build_error || "We'll retry — check your email for next steps.";
                   hintEl.textContent = "";
                   return;
                 }
+                if (banner.style.display === "none") banner.style.display = "block";
+                if (status === "building") sawBuilding = true;
                 phaseEl.textContent = PHASE_LABELS[phase] || PHASE_LABELS[""];
                 paintSteps(phase);
                 scheduleNext();
