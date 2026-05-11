@@ -65,6 +65,12 @@
   }
   .tc-byline { font-size: 12px; color: var(--muted); }
 
+  /* Force-hide rules. Class selectors with display:flex/block would
+     otherwise override the HTML `hidden` attribute (same specificity,
+     class wins because it comes later). */
+  .tc-login[hidden],
+  .tc-chat[hidden] { display: none !important; }
+
   /* Login card */
   .tc-login {
     flex: 1;
