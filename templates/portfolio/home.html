@@ -59,12 +59,111 @@
       }
       .nav-links { display: flex; align-items: center; gap: 18px; font-size: 0.92rem; color: var(--text-soft); font-weight: 500; }
       .nav-links a:hover { color: var(--text); }
+
+      /* Nav URL input — the "just one text field" entry point */
+      .nav-try {
+        display: inline-flex; align-items: center; gap: 0;
+        background: #f1f5f9;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 3px 3px 3px 14px;
+        transition: border-color 0.12s, background 0.12s, box-shadow 0.12s;
+      }
+      .nav-try:focus-within {
+        border-color: var(--accent);
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
+      }
+      .nav-try input {
+        border: none; background: transparent; outline: none;
+        font-family: inherit; font-size: 0.85rem;
+        color: var(--text);
+        width: 170px;
+        padding: 4px 0;
+      }
+      .nav-try input::placeholder { color: var(--text-muted); }
+      .nav-try button {
+        background: var(--dark); color: #fff;
+        border: none; border-radius: 999px;
+        padding: 8px 14px; font-weight: 700; font-size: 0.82rem;
+        cursor: pointer; transition: background 0.12s;
+        flex-shrink: 0; white-space: nowrap;
+      }
+      .nav-try button:hover { background: #1e293b; }
       .nav-cta {
         background: var(--dark); color: #fff !important;
         padding: 8px 16px; border-radius: var(--radius-sm);
         font-weight: 600; font-size: 0.88rem;
       }
       .nav-cta:hover { background: #1e293b; }
+
+      /* Trial modal (opened from nav URL submit) */
+      dialog#trialModal {
+        border: none; border-radius: 18px; padding: 0;
+        background: #fff; color: var(--text);
+        max-width: 440px; width: 92%;
+        box-shadow: 0 30px 90px rgba(0,0,0,0.25);
+      }
+      dialog#trialModal::backdrop {
+        background: rgba(15,23,42,0.45);
+        backdrop-filter: blur(4px);
+      }
+      .trial-head {
+        padding: 22px 24px 14px;
+        border-bottom: 1px solid var(--border);
+        display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+      }
+      .trial-head h3 { font-size: 1.05rem; font-weight: 800; margin: 0; }
+      .trial-head .trial-url-echo {
+        color: var(--text-muted); font-size: 0.82rem; margin-top: 4px;
+      }
+      .trial-head .trial-url-echo strong { color: var(--accent-deep); font-weight: 700; }
+      .trial-close { background: transparent; border: none; color: var(--text-muted); font-size: 1.4rem; cursor: pointer; line-height: 1; padding: 0 4px; }
+      .trial-close:hover { color: var(--text); }
+      .trial-body { padding: 20px 24px 24px; }
+      .trial-body .field { margin-bottom: 12px; }
+      .trial-body label {
+        display: block; font-size: 0.78rem; color: var(--text-soft);
+        font-weight: 600; margin-bottom: 5px;
+      }
+      .trial-body input {
+        width: 100%;
+        background: #f8fafc;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 11px 12px;
+        font-family: inherit; font-size: 0.92rem; color: var(--text);
+        outline: none;
+      }
+      .trial-body input:focus { border-color: var(--accent); background: #fff; box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
+      .trial-body button[type="submit"] {
+        width: 100%; margin-top: 6px;
+        background: var(--dark); color: #fff;
+        border: none; border-radius: var(--radius-sm);
+        padding: 12px; font-weight: 700; font-size: 0.95rem;
+        cursor: pointer; transition: background 0.12s;
+      }
+      .trial-body button[type="submit"]:hover:not(:disabled) { background: #1e293b; }
+      .trial-body button[type="submit"]:disabled { opacity: 0.6; cursor: not-allowed; }
+      .trial-body .trust {
+        font-size: 0.72rem; color: var(--text-muted);
+        margin-top: 12px; text-align: center; line-height: 1.65;
+      }
+      .trial-error { color: #b91c1c; font-size: 0.82rem; min-height: 1.2em; margin-bottom: 4px; }
+      .trial-success { text-align: center; padding: 8px 0 4px; }
+      .trial-success .success-emoji { font-size: 2.4rem; margin-bottom: 10px; }
+      .trial-success h4 { font-size: 1.1rem; font-weight: 800; margin-bottom: 12px; }
+      .trial-success .phone-number {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.5rem; font-weight: 800;
+        color: var(--accent-deep);
+        background: #eef2ff; border: 1px solid #c7d2fe;
+        border-radius: var(--radius-sm); padding: 12px;
+        margin: 4px 0 14px;
+        letter-spacing: 0.5px; user-select: all;
+      }
+      .trial-success p { color: var(--text-soft); font-size: 0.88rem; line-height: 1.5; }
+      .trial-success p.muted { color: var(--text-muted); font-size: 0.78rem; margin-top: 10px; }
 
       /* ─── HERO ────────────────────────────────────────── */
       .hero {
@@ -265,9 +364,12 @@
       }
 
       /* ─── MOBILE ──────────────────────────────────────── */
+      @media (max-width: 760px) {
+        .nav-try { display: none; } /* fall back to the bottom form on small screens */
+      }
       @media (max-width: 640px) {
         .nav-links { gap: 12px; font-size: 0.85rem; }
-        .nav-links a:not(.nav-cta) { display: none; }
+        .nav-links a:not(.nav-cta):not(.nav-try) { display: none; }
         .three-grid { grid-template-columns: 1fr; }
         .three-item + .three-item { border-left: none; border-top: 1px solid var(--border); }
         .jobs-grid { grid-template-columns: 1fr 1fr; }
@@ -349,6 +451,10 @@
         </a>
         <nav class="nav-links" aria-label="Primary">
           <a href="#three-things">How it works</a>
+          <form class="nav-try" id="navTryForm" novalidate>
+            <input id="navTryUrl" type="url" placeholder="yoursite.com" aria-label="Your website" autocomplete="url" />
+            <button type="submit">Try free →</button>
+          </form>
           <a class="nav-cta" href="#start-free">Start free</a>
         </nav>
       </div>
@@ -491,6 +597,34 @@
       </div>
     </dialog>
 
+    <dialog id="trialModal" aria-labelledby="trialTitle">
+      <div class="trial-head">
+        <div>
+          <h3 id="trialTitle">One last thing</h3>
+          <div class="trial-url-echo">We'll train a bot on <strong id="trialUrlEcho">your site</strong></div>
+        </div>
+        <button class="trial-close" type="button" aria-label="Close" id="closeTrial">×</button>
+      </div>
+      <div class="trial-body">
+        <form id="trialForm" novalidate>
+          <div class="field">
+            <label for="trialEmailInput">Where should we send your magic link?</label>
+            <input id="trialEmailInput" name="email" type="email" placeholder="you@yourshop.com" required autocomplete="email" />
+          </div>
+          <div class="trial-error" id="trialError" role="alert" aria-live="polite"></div>
+          <button type="submit" id="trialSubmit">Get my free phone number →</button>
+          <p class="trust">✓ No credit card · ✓ Real phone number · ✓ 14-day trial · ✓ Cancel anytime</p>
+        </form>
+        <div class="trial-success" id="trialSuccess" hidden>
+          <div class="success-emoji" aria-hidden="true">📞</div>
+          <h4>Your trial number is ready</h4>
+          <div class="phone-number" id="modalPhoneDisplay">+1 (555) 000-0000</div>
+          <p>Call it now. We're training your bot — first call may have lighter answers for the first 60–90 seconds.</p>
+          <p class="muted">A magic link was sent to <strong id="modalEmailEcho">your email</strong>.</p>
+        </div>
+      </div>
+    </dialog>
+
     <script>
       (function () {
         // ─── Demo modal ─────────────────────────────────────
@@ -505,7 +639,95 @@
           if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) dlg.close();
         });
 
-        // ─── /try form (URL + industry chips + email) ──────
+        // ─── Nav URL → trial modal ──────────────────────────
+        // Single source of truth for kicking off the trial. The nav URL
+        // input feeds the modal; the modal collects email and POSTs to
+        // /try. The bottom #start-free section also calls openTrialModal
+        // when the visitor scrolls and submits there.
+        var trialDlg    = document.getElementById("trialModal");
+        var trialUrl    = ""; // captured between nav-form and modal
+        var trialUrlEcho = document.getElementById("trialUrlEcho");
+        var trialForm   = document.getElementById("trialForm");
+        var trialError  = document.getElementById("trialError");
+        var trialSubmit = document.getElementById("trialSubmit");
+        var trialEmailIn = document.getElementById("trialEmailInput");
+        var trialSuccess = document.getElementById("trialSuccess");
+        var closeTrial  = document.getElementById("closeTrial");
+
+        function openTrialModal(url) {
+          if (!trialDlg) return;
+          trialUrl = (url || "").trim();
+          if (!trialUrl) return;
+          // Reset visible state so re-opens are clean
+          trialError.textContent = "";
+          trialForm.hidden = false;
+          trialSuccess.hidden = true;
+          trialSubmit.disabled = false;
+          trialSubmit.textContent = "Get my free phone number →";
+          var display = trialUrl.replace(/^https?:\/\//i, "").replace(/\/.*$/, "");
+          trialUrlEcho.textContent = display || trialUrl;
+          trialDlg.showModal();
+          setTimeout(function () { trialEmailIn && trialEmailIn.focus(); }, 80);
+        }
+
+        var navTryForm = document.getElementById("navTryForm");
+        if (navTryForm) {
+          navTryForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+            var v = document.getElementById("navTryUrl").value.trim();
+            if (!v) return;
+            openTrialModal(v);
+          });
+        }
+
+        if (closeTrial && trialDlg) closeTrial.addEventListener("click", function () { trialDlg.close(); });
+        if (trialDlg) trialDlg.addEventListener("click", function (e) {
+          var r = trialDlg.getBoundingClientRect();
+          if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) trialDlg.close();
+        });
+
+        async function postTrial(url, email, industry) {
+          var res = await fetch("/try", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            body: JSON.stringify({
+              website_url: url,
+              industry: industry || "other",
+              email: email,
+              mode: "voice"
+            }),
+          });
+          var data;
+          try { data = await res.json(); } catch (_) { data = {}; }
+          return { ok: res.ok, status: res.status, data: data };
+        }
+
+        if (trialForm) {
+          trialForm.addEventListener("submit", async function (e) {
+            e.preventDefault();
+            trialError.textContent = "";
+            var email = (trialEmailIn.value || "").trim();
+            if (!email) { trialError.textContent = "Please enter your email."; trialEmailIn.focus(); return; }
+            trialSubmit.disabled = true;
+            trialSubmit.textContent = "Setting up your bot…";
+            var result = await postTrial(trialUrl, email, "other").catch(function () { return { ok: false, data: {} }; });
+            if (!result.ok) {
+              trialError.textContent = (result.data && result.data.error)
+                || ("Couldn't set up your trial right now. Please try again.");
+              trialSubmit.disabled = false;
+              trialSubmit.textContent = "Get my free phone number →";
+              return;
+            }
+            trialForm.hidden = true;
+            trialSuccess.hidden = false;
+            document.getElementById("modalPhoneDisplay").textContent = result.data.phone_display || "Your trial number is ready";
+            document.getElementById("modalEmailEcho").textContent = email;
+          });
+        }
+
+        // ─── #start-free section (full form, fallback for mobile + scrollers) ──
+        // Submitting this form posts to /try inline rather than going
+        // through the modal — visitor already provided all three fields.
         var tryForm = document.getElementById("tryForm");
         if (!tryForm) return;
         var tryError = document.getElementById("tryError");
@@ -540,40 +762,22 @@
           var originalLabel = tryBtn.textContent;
           tryBtn.textContent = "Setting up your bot…";
 
-          try {
-            var res = await fetch("/try", {
-              method: "POST",
-              headers: { "Content-Type": "application/json", "Accept": "application/json" },
-              body: JSON.stringify({
-                website_url: url,
-                industry: industry,
-                email: email,
-                mode: "voice"
-              }),
-            });
-            var data;
-            try { data = await res.json(); } catch (_) { data = {}; }
-            if (!res.ok) {
-              tryError.textContent = (data && data.error)
-                || ("Couldn't set up your trial right now (HTTP " + res.status + "). Please try again.");
-              tryBtn.disabled = false;
-              tryBtn.textContent = originalLabel;
-              return;
-            }
-            // Success — swap form for success card
-            document.getElementById("startTitle").textContent = "You're in.";
-            document.getElementById("startSub").textContent = "Save this number and call it from your phone.";
-            tryForm.hidden = true;
-            var success = document.getElementById("trySuccess");
-            success.hidden = false;
-            document.getElementById("trialPhoneDisplay").textContent = data.phone_display || "Your trial number is ready";
-            document.getElementById("trialEmail").textContent = email;
-            success.scrollIntoView({ behavior: "smooth", block: "center" });
-          } catch (err) {
-            tryError.textContent = "Couldn't reach the server. Please try again.";
+          var result = await postTrial(url, email, industry).catch(function () { return { ok: false, data: {} }; });
+          if (!result.ok) {
+            tryError.textContent = (result.data && result.data.error)
+              || ("Couldn't set up your trial right now. Please try again.");
             tryBtn.disabled = false;
             tryBtn.textContent = originalLabel;
+            return;
           }
+          document.getElementById("startTitle").textContent = "You're in.";
+          document.getElementById("startSub").textContent = "Save this number and call it from your phone.";
+          tryForm.hidden = true;
+          var success = document.getElementById("trySuccess");
+          success.hidden = false;
+          document.getElementById("trialPhoneDisplay").textContent = result.data.phone_display || "Your trial number is ready";
+          document.getElementById("trialEmail").textContent = email;
+          success.scrollIntoView({ behavior: "smooth", block: "center" });
         });
       })();
     </script>
