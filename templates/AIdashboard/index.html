@@ -312,9 +312,18 @@
        under the nav bar. */
     .app-body [data-route-section].is-active {
       height: 100%;
-      overflow: auto;
+      overflow-y: auto;
+      overflow-x: hidden;
       padding: 48px 32px 32px;
       box-sizing: border-box;
+      /* Make sure the grid starts at the top of its content area and
+       * lets internal grid rows auto-size to their content (default).
+       * Without `align-content: start`, the grid container can stretch
+       * items in unexpected ways when rows are auto and content varies. */
+      align-content: start;
+      /* iOS/Safari sometimes drops momentum scroll on overflow:auto when
+       * a child has overflow:hidden. Force it on. */
+      -webkit-overflow-scrolling: touch;
     }
     /* Outreach is the one tool page that needs zero padding so the
        flow canvas reaches all four edges. The body class toggled by
