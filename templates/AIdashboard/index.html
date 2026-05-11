@@ -2051,37 +2051,45 @@
     .ask-canvas {
       display: flex;
       flex-direction: column;
-      padding: 8px 4px 4px;
+      padding: 24px 24px 20px;
+      background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+      border: 1px solid #c7d2fe;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(30, 58, 138, 0.06);
+      margin-bottom: 16px;
     }
-    .ask-canvas-head { margin-bottom: 24px; }
+    .ask-canvas-head { margin-bottom: 16px; }
     .ask-canvas-title {
-      font-size: 26px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
       color: #0a0a0a;
       margin: 0;
+      line-height: 1.15;
     }
     .ask-canvas-sub {
-      font-size: 13.5px;
-      color: #71717a;
-      margin: 6px 0 0;
-      line-height: 1.5;
+      font-size: 15px;
+      color: #475569;
+      margin: 8px 0 0;
+      line-height: 1.55;
+      max-width: 720px;
     }
 
     .ask-canvas-form {
-      margin-top: 8px;
+      margin-top: 12px;
       display: flex;
       gap: 8px;
       align-items: center;
       background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 4px 4px 4px 16px;
+      border: 2px solid #c7d2fe;
+      border-radius: 12px;
+      padding: 6px 6px 6px 18px;
       transition: border-color 140ms ease, box-shadow 140ms ease;
+      box-shadow: 0 4px 12px rgba(30, 58, 138, 0.08);
     }
     .ask-canvas-form:focus-within {
-      border-color: #cbd5e1;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+      border-color: #2563eb;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
     }
     .ask-canvas-input {
       flex: 1;
@@ -6967,39 +6975,10 @@
             });
           })();
         </script>
-        <!-- Onboarding nudge: shows when no lead intake channel is set up.
-             Hidden by default; shown by JS only when /me/intake/channels
-             reports nothing ready. -->
-        <a id="intakeOnboardNudge" href="#leadIntake"
-           style="display:none;grid-column:span 12;text-decoration:none;color:inherit;
-                  background:linear-gradient(135deg,#eaf3fc 0%,#f5f7fa 100%);
-                  border:1px solid #cdd7e3;border-radius:14px;padding:20px 22px;
-                  align-items:center;gap:18px;flex-wrap:wrap;
-                  transition:transform .15s ease, box-shadow .15s ease;">
-          <span style="font-size:36px;line-height:1;flex:0 0 auto">📥</span>
-          <div style="flex:1;min-width:0">
-            <div style="font-weight:700;font-size:17px;margin:0 0 2px;color:#0a0a0a;">Get your first lead</div>
-            <div style="color:#5a6470;font-size:13.5px;">Pick how people contact you. Takes 1 minute.</div>
-          </div>
-          <span style="background:#185fa5;color:#fff;font-weight:600;
-                       padding:9px 16px;border-radius:8px;font-size:14px;
-                       white-space:nowrap;flex:0 0 auto">Set it up →</span>
-        </a>
-        <script>
-          (function(){
-            fetch("/me/intake/channels", { credentials:"same-origin" })
-              .then(function(r){ return r.ok ? r.json() : null; })
-              .then(function(d){
-                var ch = (d && d.channels) || {};
-                var anyReady = !!((ch.form  && ch.form.ready)
-                               || (ch.email && ch.email.ready)
-                               || (ch.phone && ch.phone.ready));
-                var nudge = document.getElementById("intakeOnboardNudge");
-                if (nudge && !anyReady) nudge.style.display = "flex";
-              })
-              .catch(function(){});
-          })();
-        </script>
+        <!-- "Get your first lead" intake nudge intentionally removed —
+             trial users already have a working lead-capture (the trial
+             phone + chat widget), so the prompt was misleading them. -->
+
         <!-- First-visit nudge for Insights. -->
         <div class="page-nudge" data-nudge="activity" style="grid-column: span 12;" hidden>
           <span class="page-nudge-icon" aria-hidden="true">
