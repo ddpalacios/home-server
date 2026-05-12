@@ -23097,7 +23097,7 @@
           if (m) {
             var k = m[1].toLowerCase();
             var v = m[2].toLowerCase();
-            if (k === "type" && (v === "website" || v === "article" || v === "faq")) out.type = v;
+            if (k === "type" && (v === "website" || v === "article" || v === "faq" || v === "sheet" || v === "doc")) out.type = v;
             else if (k === "status" && (v === "ready" || v === "pending" || v === "training" || v === "failed")) {
               out.status = (v === "training") ? "pending" : v;
             } else {
@@ -23184,7 +23184,11 @@
           var tr = document.createElement("tr");
           tr.dataset.id = r.id;
           tr.dataset.type = r.type;
-          var typeLabel = r.type === "website" ? "Website" : r.type === "faq" ? "Q&A" : "Article";
+          var typeLabel = r.type === "website" ? "Website"
+                        : r.type === "sheet"   ? "Sheet"
+                        : r.type === "doc"     ? "Doc"
+                        : r.type === "faq"     ? "Q&A"
+                        : "Article";
           var statusLabel = r.status === "ready" ? "Ready" : r.status === "failed" ? "Failed" : "Training";
           var isChecked = selected.has(r.id);
           tr.innerHTML =
@@ -23324,7 +23328,10 @@
             for (var i = 0; i < pickedRows.length; i++) {
               var r = pickedRows[i];
               try {
-                if (r.type === "website") {
+                // Source rows (website / sheet / doc) live in
+                // /kb/sources; article + faq live in /knowledege.
+                var isSrc = r.type === "website" || r.type === "sheet" || r.type === "doc";
+                if (isSrc) {
                   await fetch("/kb/sources/" + encodeURIComponent(r.id) +
                               "?accountid=" + encodeURIComponent(getAid()),
                               { method: "DELETE", credentials: "same-origin" });
@@ -23592,12 +23599,24 @@
 
       // ── Detail / edit modal ──────────────────────────────────
       var detailState = { row: null, mode: "client", refresh: null };
+      // Helper — any row whose data lives in /kb/sources (Drive
+      // imports use synthetic gdrive:// URLs but the storage path is
+      // the same). website / sheet / doc all go through /kb/sources
+      // endpoints; article / faq use /knowledege.
+      function isSourceRow(t) {
+        return t === "website" || t === "sheet" || t === "doc";
+      }
+
       window.__kbOpenDetailModal = function (row, mode, refresh) {
         detailState.row = row;
         detailState.mode = mode === "internal" ? "internal" : "client";
         detailState.refresh = typeof refresh === "function" ? refresh : null;
         var modal = document.getElementById("kbDetailModal");
-        var typeLabel = row.type === "website" ? "Website" : row.type === "faq" ? "Quick Q&A" : "Article";
+        var typeLabel = row.type === "website" ? "Website"
+                      : row.type === "sheet"   ? "Google Sheet"
+                      : row.type === "doc"     ? "Drive document"
+                      : row.type === "faq"     ? "Quick Q&A"
+                      : "Article";
         document.getElementById("kbDetailTypeLabel").textContent = typeLabel;
         document.getElementById("kbDetailHeading").textContent = row.title || typeLabel;
         var meta = [];
@@ -23606,14 +23625,22 @@
         document.getElementById("kbDetailMeta").textContent = meta.join(" · ");
         var err = document.getElementById("kbDetailError");
         if (err) { err.hidden = true; err.textContent = ""; }
-        // Hide all field groups, then show the right one.
+        // Hide all field groups, then show the right one. Sheet/Doc
+        // reuse the Website group — same shape (URL + status + retrain).
         modal.querySelectorAll("[data-kb-detail-fields]").forEach(function (g) { g.hidden = true; });
-        var groupSelector = '[data-kb-detail-fields="' + row.type + '"]';
-        var group = modal.querySelector(groupSelector);
+        var groupKey = isSourceRow(row.type) ? "website" : row.type;
+        var group = modal.querySelector('[data-kb-detail-fields="' + groupKey + '"]');
         if (group) group.hidden = false;
 
-        if (row.type === "website") {
-          document.getElementById("kbDetailUrl").value = (row.raw && row.raw.url) || "";
+        if (isSourceRow(row.type)) {
+          var url = (row.raw && row.raw.url) || "";
+          // For Drive imports the synthetic gdrive:// URL is internal
+          // plumbing — show the file title instead. For real websites
+          // show the URL.
+          var displayUrl = url.indexOf("gdrive://") === 0
+            ? (row.raw.title || row.title || "")
+            : url;
+          document.getElementById("kbDetailUrl").value = displayUrl;
           var statusLabel = (row.raw && row.raw.status === "ready") ? "✓ Ready"
                            : (row.raw && (row.raw.status === "failed" || row.raw.status === "error")) ? "Failed"
                            : "Training";
@@ -23652,10 +23679,11 @@
         document.getElementById("kbDetailFaqPairs").appendChild(makeFaqPairEl("", ""));
       });
 
-      // Retrain (website only).
+      // Retrain — applies to any row whose data is a /kb/sources
+      // record (website crawl OR Drive import).
       var retrainBtn = document.getElementById("kbDetailRetrain");
       if (retrainBtn) retrainBtn.addEventListener("click", async function () {
-        if (!detailState.row || detailState.row.type !== "website") return;
+        if (!detailState.row || !isSourceRow(detailState.row.type)) return;
         retrainBtn.disabled = true;
         try {
           await fetch("/kb/sources/" + encodeURIComponent(detailState.row.id) + "/retrain", {
@@ -23678,9 +23706,10 @@
         if (err) { err.hidden = true; err.textContent = ""; }
         saveBtn.disabled = true;
         try {
-          if (row.type === "website") {
-            // For websites we only support retrain (URL is identity).
-            // Save here is a no-op — user uses Retrain button instead.
+          if (isSourceRow(row.type)) {
+            // For source rows (website / sheet / doc) the URL or
+            // Drive file IS the identity — Save here is a no-op.
+            // Use Retrain to re-fetch the content.
             closeModal(document.getElementById("kbDetailModal"));
             return;
           }
@@ -23750,11 +23779,14 @@
       if (deleteBtn) deleteBtn.addEventListener("click", async function () {
         var row = detailState.row;
         if (!row) return;
-        var label = row.title || (row.type === "website" ? "this website" : row.type === "faq" ? "this Q&A" : "this article");
+        var label = row.title || (row.type === "website" ? "this website"
+                                 : row.type === "sheet"   ? "this sheet"
+                                 : row.type === "doc"     ? "this document"
+                                 : row.type === "faq"     ? "this Q&A" : "this article");
         if (!window.confirm('Delete "' + label + '"? Your bot will forget this content.')) return;
         deleteBtn.disabled = true;
         try {
-          if (row.type === "website") {
+          if (isSourceRow(row.type)) {
             await fetch("/kb/sources/" + encodeURIComponent(row.id) +
                         "?accountid=" + encodeURIComponent(getAid()),
                         { method: "DELETE", credentials: "same-origin" });
@@ -23808,7 +23840,12 @@
           }
           if (action === "duplicate") {
             // Only article/faq can duplicate via /knowledege POST.
-            if (row.type === "website") { alert("Websites can't be duplicated."); return; }
+            if (isSourceRow(row.type)) {
+              alert(row.type === "sheet" ? "Sheets can't be duplicated — re-import the file instead."
+                  : row.type === "doc"   ? "Drive documents can't be duplicated."
+                                         : "Websites can't be duplicated.");
+              return;
+            }
             var body = {
               accountid: getAid(),
               kb_type: menuState.mode,
@@ -23832,7 +23869,7 @@
             var label = row.title || "this entry";
             if (!window.confirm('Delete "' + label + '"? Your bot will forget this content.')) return;
             try {
-              if (row.type === "website") {
+              if (isSourceRow(row.type)) {
                 await fetch("/kb/sources/" + encodeURIComponent(row.id) +
                             "?accountid=" + encodeURIComponent(getAid()),
                             { method: "DELETE", credentials: "same-origin" });
@@ -39563,7 +39600,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-kb-sheet-type"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-kb-sheet-del"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
