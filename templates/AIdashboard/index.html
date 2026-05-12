@@ -23136,7 +23136,12 @@
     // which is already centered (position:fixed inset:0 flex). One
     // detail modal handles Website/Article/Q&A by toggling which
     // field group is visible.
-    (function () {
+    //
+    // Wait for DOMContentLoaded — the modal markup lives at the
+    // very end of body, AFTER this inline script. Without this gate,
+    // querySelectorAll runs while the modals aren't parsed yet,
+    // event listeners attach to nothing, and no button works.
+    function __kbInitModalHandlers() {
       function getAid() { return window.__accountId || ""; }
       function escapeHtml(s) {
         return String(s == null ? "" : s)
@@ -23478,7 +23483,13 @@
           }
         });
       });
-    })();
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", __kbInitModalHandlers);
+    } else {
+      // Body already parsed; safe to wire now.
+      __kbInitModalHandlers();
+    }
 
     // ─────── Teach card (home pane) ───────
     // Hits the same /kb/sources endpoints the full KB page uses — adding
@@ -39178,7 +39189,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-kb-table-p2"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-kb-table-p2b"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
