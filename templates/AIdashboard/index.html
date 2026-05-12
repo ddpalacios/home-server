@@ -22785,6 +22785,14 @@
         panes.forEach((p) => {
           p.classList.toggle("is-active", p.dataset.homePane === name);
         });
+        // On Manage activation, force a fresh /kb/sources +
+        // /knowledege fetch so the table reflects anything trained
+        // on the Test tab (or anywhere else) while we were away.
+        if (name === "manage") {
+          document.querySelectorAll("[data-kb-table-mode]").forEach(function (h) {
+            if (h.__kbRefresh) h.__kbRefresh();
+          });
+        }
       }
       tabs.forEach((t) => {
         t.addEventListener("click", () => showHomeTab(t.dataset.homeTab));
@@ -23917,6 +23925,11 @@
               ));
             }
             refresh();
+            // Tell every other surface that lists KB sources (the
+            // unified Manage table, in particular) so they reload
+            // immediately. Without this, the KB table only picks up
+            // the new URL after a full dashboard refresh.
+            window.dispatchEvent(new CustomEvent("kb:saved"));
           } catch (_) {
             showErr("Network hiccup — try again.");
           } finally {
@@ -23948,6 +23961,9 @@
           }
           // Always refresh so server truth wins if optimistic was wrong.
           refresh();
+          // And let the unified KB table on the Manage tab pick up
+          // the deletion immediately.
+          window.dispatchEvent(new CustomEvent("kb:saved"));
         }
 
         form.addEventListener("submit", (e) => {
@@ -39450,7 +39466,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-no-resume"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-kb-table-sync"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
