@@ -2985,6 +2985,8 @@
     .kb-type-pill.t-website { background: rgba(37, 99, 235, 0.10); color: #1d4ed8; }
     .kb-type-pill.t-article { background: rgba(124, 58, 237, 0.10); color: #6d28d9; }
     .kb-type-pill.t-faq     { background: rgba(16, 185, 129, 0.10); color: #047857; }
+    .kb-type-pill.t-sheet   { background: rgba(15, 157, 88, 0.12);  color: #0f9d58; }
+    .kb-type-pill.t-doc     { background: rgba(66, 133, 244, 0.12); color: #1a73e8; }
 
     .kb-status-pill {
       display: inline-flex;
@@ -8474,6 +8476,8 @@
                 <select data-kb-filter="type" aria-label="Filter by type">
                   <option value="">All types</option>
                   <option value="website">Website</option>
+                  <option value="sheet">Sheet</option>
+                  <option value="doc">Doc</option>
                   <option value="article">Article</option>
                   <option value="faq">Q&amp;A</option>
                 </select>
@@ -8630,6 +8634,8 @@
                 <select data-kb-filter="type" aria-label="Filter by type">
                   <option value="">All types</option>
                   <option value="website">Link</option>
+                  <option value="sheet">Sheet</option>
+                  <option value="doc">Doc</option>
                   <option value="article">Note</option>
                   <option value="faq">Q&amp;A</option>
                 </select>
@@ -23003,19 +23009,42 @@
         return "pending";
       }
 
-      // Build a unified row from a kb_sources entry.
+      // Build a unified row from a kb_sources entry. Drive imports
+      // (kind="drive") get classified by mime type so a Google Sheet
+      // shows as "Sheet" in the Type column, not "Website".
       function rowFromSource(s) {
         var url = s.url || "";
         var t = (s.title || "").trim();
-        var prettyTitle = t || prettyHost(url);
-        var phaseDesc = (s.status === "ready")
-          ? ("Site training · " + prettyHost(url))
-          : (s.phase ? ("Training · " + s.phase) : "Training…");
+        var isDrive = (s.kind === "drive");
+        var mime = (s.drive_mime_type || "").toLowerCase();
+        var rowType = "website";
+        var typeLabel = "imported";
+        if (isDrive) {
+          if (mime === "application/vnd.google-apps.spreadsheet") {
+            rowType = "sheet"; typeLabel = "Google Sheet";
+          } else if (mime === "application/vnd.google-apps.document") {
+            rowType = "doc"; typeLabel = "Google Doc";
+          } else if (mime === "application/pdf") {
+            rowType = "doc"; typeLabel = "PDF";
+          } else {
+            rowType = "doc"; typeLabel = "Drive file";
+          }
+        }
+        var prettyTitle = t || (isDrive ? (s.title || "Drive file") : prettyHost(url));
+        var desc;
+        if (isDrive) {
+          desc = (s.status === "ready") ? typeLabel
+               : ("Importing · " + (s.phase || "queued"));
+        } else {
+          desc = (s.status === "ready")
+            ? ("Site training · " + prettyHost(url))
+            : (s.phase ? ("Training · " + s.phase) : "Training…");
+        }
         return {
           id: s.id,
-          type: "website",
+          type: rowType,
           title: prettyTitle,
-          description: s.status === "ready" ? ("Site training · " + prettyHost(url)) : phaseDesc,
+          description: desc,
           status: statusBucket(s.status),
           rawStatus: s.status || "pending",
           added: s.created_at || "",
@@ -23190,9 +23219,23 @@
           ]);
           var sources = (results[0] && results[0].sources) || [];
           var entries = (results[1] && results[1].entries) || [];
+          // Sources that came from Drive imports already have a row
+          // (typed as Sheet / Doc / etc.) AND produced one or more
+          // /knowledege entries the worker saved (their IDs live on
+          // source.entry_ids). Drop those entries from the entry
+          // list so we don't double-count one upload as two rows.
+          var hideEntryIds = new Set();
+          sources.forEach(function (s) {
+            if (Array.isArray(s.entry_ids)) {
+              s.entry_ids.forEach(function (eid) { if (eid) hideEntryIds.add(eid); });
+            }
+          });
+          var visibleEntries = entries.filter(function (e) {
+            return !(e && e.id && hideEntryIds.has(e.id));
+          });
           rows = []
             .concat(sources.map(rowFromSource))
-            .concat(entries.map(rowFromEntry));
+            .concat(visibleEntries.map(rowFromEntry));
           renderRows();
           // Poll while anything is training.
           if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
