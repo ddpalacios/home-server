@@ -23163,6 +23163,15 @@
 
       function renderRows() {
         var visible = applyFiltersSort(rows);
+        try {
+          console.log("[kb-table:" + mode + "] renderRows →",
+            "totalRows=" + rows.length,
+            "afterFilters=" + visible.length,
+            "filters={type:'" + (typeSel ? typeSel.value : "") +
+            "',status:'" + (statusSel ? statusSel.value : "") +
+            "',added:'" + (addedSel ? addedSel.value : "") +
+            "',q:'" + ((searchEl && searchEl.value) || "") + "'}");
+        } catch (_) {}
         body.innerHTML = "";
         if (countEl) {
           countEl.textContent = visible.length + (visible.length === 1 ? " entry" : " entries");
@@ -23240,6 +23249,18 @@
           rows = []
             .concat(sources.map(rowFromSource))
             .concat(visibleEntries.map(rowFromEntry));
+          // Verbose debug so we can see exactly where a row vanishes.
+          // Surface from DevTools console.
+          try {
+            console.log("[kb-table:" + mode + "] loadRows →",
+              "sources=" + sources.length,
+              "entries=" + entries.length,
+              "hideIds=" + hideEntryIds.size,
+              "visibleEntries=" + visibleEntries.length,
+              "rows=" + rows.length);
+            if (rows.length) console.log("[kb-table:" + mode + "] row types:",
+              rows.map(function (r) { return r.type + ":" + (r.title || "").slice(0, 30); }));
+          } catch (_) {}
           renderRows();
           // Poll while anything is training.
           if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
@@ -39600,7 +39621,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-kb-sheet-del"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-kb-diag"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
