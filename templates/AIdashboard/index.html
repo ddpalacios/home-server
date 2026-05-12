@@ -8458,6 +8458,17 @@
                 <button type="button" class="kb-add-btn is-primary" data-kb-add="website">+ Add website</button>
                 <button type="button" class="kb-add-btn is-secondary" data-kb-add="article">+ Add article</button>
                 <button type="button" class="kb-add-btn is-secondary" data-kb-add="faq">+ Add Q&amp;A</button>
+                <button type="button" class="kb-add-btn is-secondary" data-kb-add="drive">
+                  <svg viewBox="0 0 87.3 78" width="14" height="14" aria-hidden="true" style="margin-right:4px;">
+                    <path fill="#0066da" d="M6.6 66.85 10.45 73.5c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0c0 1.55.4 3.1 1.2 4.5z"/>
+                    <path fill="#00ac47" d="M43.65 25 29.9 1.2c-1.35.8-2.5 1.9-3.3 3.3L1.2 48.6c-.8 1.4-1.2 2.95-1.2 4.5h27.5z"/>
+                    <path fill="#ea4335" d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5H59.7l5.85 11.5z"/>
+                    <path fill="#00832d" d="M43.65 25 57.4 1.2C56.05.4 54.5 0 52.9 0H34.4c-1.6 0-3.15.4-4.5 1.2z"/>
+                    <path fill="#2684fc" d="M59.7 53.1H27.6L13.85 76.8c1.35.8 2.9 1.2 4.5 1.2H68.85c1.6 0 3.15-.4 4.5-1.2z"/>
+                    <path fill="#ffba00" d="M73.4 26.5 60.55 4.5c-.8-1.4-1.95-2.5-3.3-3.3L43.5 25l16.2 28.1h27.45c0-1.55-.4-3.1-1.2-4.5z"/>
+                  </svg>
+                  Import from Drive
+                </button>
               </div>
               <div class="kb-table-filters">
                 <select data-kb-filter="type" aria-label="Filter by type">
@@ -23359,8 +23370,12 @@
       //   * article → legacy openArticleModalClient/Internal (already
       //               renders a centered .modal)
       //   * faq     → legacy openFaqModalClient/Internal
+      //   * drive   → kb.js __openDrivePicker (lazy-loads bundle).
+      //               Stashes the mode in sessionStorage so the eventual
+      //               import lands in the right KB. If Drive isn't
+      //               connected, redirects to OAuth.
       host.querySelectorAll("[data-kb-add]").forEach(function (btn) {
-        btn.addEventListener("click", function (e) {
+        btn.addEventListener("click", async function (e) {
           e.stopPropagation();
           var kind = btn.dataset.kbAdd;
           if (kind === "article") {
@@ -23371,6 +23386,34 @@
             if (legacyFaq) legacyFaq.click();
           } else if (kind === "website") {
             window.__kbOpenAddWebsiteModal(mode, loadRows);
+          } else if (kind === "drive") {
+            try { sessionStorage.setItem("kbsAutoOpenDrive", mode); } catch (_) {}
+            // Fresh status check — local kb.js cache may be stale.
+            var connected = false;
+            try {
+              var r = await fetch("/me/drive/status", {
+                credentials: "same-origin", cache: "no-store",
+              });
+              var d = r.ok ? await r.json() : null;
+              connected = !!(d && d.connected);
+            } catch (_) {}
+            if (!connected) {
+              window.location.href = "/auth/google/connect-drive";
+              return;
+            }
+            if (typeof window.__openDrivePicker !== "function") {
+              if (typeof window.__dashboardLoadRouteModule === "function") {
+                await window.__dashboardLoadRouteModule("kb").catch(function () {});
+              }
+              await new Promise(function (r) { setTimeout(r, 350); });
+            }
+            if (typeof window.__openDrivePicker === "function") {
+              var ok = window.__openDrivePicker();
+              if (!ok && typeof window.__refreshDriveStatus === "function") {
+                await window.__refreshDriveStatus();
+                window.__openDrivePicker();
+              }
+            }
           }
         });
       });
@@ -39466,7 +39509,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-kb-table-sync"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-kb-table-drive"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
