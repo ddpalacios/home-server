@@ -8125,32 +8125,9 @@
       </style>
 
       <section class="grid" id="activity" data-route-section="activity" hidden>
-        <!-- Tier B: Resume-setup banner. Hidden by default; shown by
-             onboardingResumeBanner.js when /me/onboarding/state reports
-             completed_at is unset. ✕ hides for 7 days via localStorage
-             key "onboardingResumeDismissedUntil". Permanently hides
-             after the wizard's final POST to /me/onboarding/complete. -->
-        <div class="page-nudge" id="onboardingResumeBanner"
-             style="grid-column:span 12;display:none;background:linear-gradient(135deg,#eef5ff,#f0fdf4);border-color:#bae6fd;"
-             role="status" aria-live="polite">
-          <span class="page-nudge-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/></svg>
-          </span>
-          <div style="flex:1;min-width:0;">
-            <p class="page-nudge-text">
-              <strong>Finish setting up your business</strong> — takes about 8 minutes.
-              Connect Twilio, Gmail, and pick your industry to turn on AI replies,
-              daily digests, and channel-aware flows.
-            </p>
-            <div class="page-nudge-actions">
-              <a class="page-nudge-dismiss" href="#onboarding"
-                 id="onboardingResumeContinue" style="text-decoration:none;">Continue →</a>
-            </div>
-          </div>
-          <button type="button" class="page-nudge-close"
-                  id="onboardingResumeDismiss"
-                  aria-label="Dismiss for a week">×</button>
-        </div>
+        <!-- Resume-setup banner removed — was too noisy on the home
+             page. The Finish-setup flow is still reachable from the
+             Onboarding nav item. -->
 
         <!-- ───── Trial build banner ─────
              Visible only when /me.trial exists and build_status != "ready".
@@ -39473,7 +39450,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-kb-table-p3"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-no-resume"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
