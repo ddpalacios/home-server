@@ -2853,6 +2853,63 @@
     }
     .kb-export-btn:hover { border-color: #cbd5e1; background: #f8fafc; }
 
+    /* Export dropdown — anchored under the Export button. */
+    .kb-export-wrap { position: relative; }
+    .kb-export-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 0;
+      z-index: 50;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+      padding: 4px;
+      min-width: 160px;
+      display: flex;
+      flex-direction: column;
+    }
+    .kb-export-menu[hidden] { display: none; }
+    .kb-export-menu button {
+      background: transparent; border: 0;
+      text-align: left;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: #0a0a0a;
+      cursor: pointer;
+      border-radius: 6px;
+      font-family: inherit;
+    }
+    .kb-export-menu button:hover { background: #f1f5f9; }
+
+    /* Bulk action bar — shows above the table when 1+ rows checked. */
+    .kb-bulk-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 10px;
+      font-size: 13px;
+      color: #0c4a6e;
+    }
+    .kb-bulk-bar[hidden] { display: none; }
+    .kb-bulk-bar [data-kb-bulk-count] { font-weight: 700; margin-right: auto; }
+    .kb-bulk-bar .kb-add-btn { padding: 6px 12px; font-size: 12.5px; }
+
+    /* Checkbox column styling. */
+    .kb-table th.col-check, .kb-table td.col-check {
+      width: 36px;
+      padding-right: 0;
+    }
+    .kb-table .col-check input[type="checkbox"] {
+      cursor: pointer;
+      width: 16px; height: 16px;
+      accent-color: #4f46e5;
+    }
+
     .kb-table-wrap {
       background: #fff;
       border: 1px solid #e5e7eb;
@@ -8438,17 +8495,38 @@
                   <option value="pending">Training</option>
                   <option value="failed">Failed</option>
                 </select>
-                <input type="search" data-kb-search placeholder="Search title or content…" aria-label="Search knowledge" />
+                <select data-kb-filter="added" aria-label="Filter by date added">
+                  <option value="">Any date</option>
+                  <option value="7">Last 7 days</option>
+                  <option value="30">Last 30 days</option>
+                  <option value="90">Last 90 days</option>
+                </select>
+                <input type="search" data-kb-search placeholder="Search · try type:article or status:failed" aria-label="Search knowledge" />
               </div>
               <div class="kb-table-meta">
-                <button type="button" class="kb-export-btn" data-kb-export>⇩ Export ▾</button>
+                <div class="kb-export-wrap" style="position:relative;">
+                  <button type="button" class="kb-export-btn" data-kb-export>⇩ Export ▾</button>
+                  <div class="kb-export-menu" data-kb-export-menu hidden>
+                    <button type="button" data-kb-export-fmt="csv">Export CSV</button>
+                    <button type="button" data-kb-export-fmt="json">Export JSON</button>
+                  </div>
+                </div>
                 <span data-kb-count>0 entries</span>
               </div>
+            </div>
+            <div class="kb-bulk-bar" data-kb-bulk hidden>
+              <span data-kb-bulk-count>0 selected</span>
+              <button type="button" class="kb-add-btn is-secondary" data-kb-bulk-action="export">Export selected</button>
+              <button type="button" class="kb-add-btn is-secondary" data-kb-bulk-action="delete" style="color:#b91c1c;border-color:#fecaca;">Delete selected</button>
+              <button type="button" class="kb-add-btn is-secondary" data-kb-bulk-action="clear">Clear</button>
             </div>
             <div class="kb-table-wrap">
               <table class="kb-table" aria-label="Customer bot knowledge">
                 <thead>
                   <tr>
+                    <th class="col-check" style="width:36px;padding-right:0;">
+                      <input type="checkbox" data-kb-check-all aria-label="Select all on this page" />
+                    </th>
                     <th data-sort="title">Title <span class="sort-ind"></span></th>
                     <th class="col-desc">Description</th>
                     <th data-sort="type">Type <span class="sort-ind"></span></th>
@@ -8562,17 +8640,38 @@
                   <option value="pending">Training</option>
                   <option value="failed">Failed</option>
                 </select>
-                <input type="search" data-kb-search placeholder="Search title or content…" aria-label="Search knowledge" />
+                <select data-kb-filter="added" aria-label="Filter by date added">
+                  <option value="">Any date</option>
+                  <option value="7">Last 7 days</option>
+                  <option value="30">Last 30 days</option>
+                  <option value="90">Last 90 days</option>
+                </select>
+                <input type="search" data-kb-search placeholder="Search · try type:article or status:failed" aria-label="Search knowledge" />
               </div>
               <div class="kb-table-meta">
-                <button type="button" class="kb-export-btn" data-kb-export>⇩ Export ▾</button>
+                <div class="kb-export-wrap" style="position:relative;">
+                  <button type="button" class="kb-export-btn" data-kb-export>⇩ Export ▾</button>
+                  <div class="kb-export-menu" data-kb-export-menu hidden>
+                    <button type="button" data-kb-export-fmt="csv">Export CSV</button>
+                    <button type="button" data-kb-export-fmt="json">Export JSON</button>
+                  </div>
+                </div>
                 <span data-kb-count>0 entries</span>
               </div>
+            </div>
+            <div class="kb-bulk-bar" data-kb-bulk hidden>
+              <span data-kb-bulk-count>0 selected</span>
+              <button type="button" class="kb-add-btn is-secondary" data-kb-bulk-action="export">Export selected</button>
+              <button type="button" class="kb-add-btn is-secondary" data-kb-bulk-action="delete" style="color:#b91c1c;border-color:#fecaca;">Delete selected</button>
+              <button type="button" class="kb-add-btn is-secondary" data-kb-bulk-action="clear">Clear</button>
             </div>
             <div class="kb-table-wrap">
               <table class="kb-table" aria-label="Team brain knowledge">
                 <thead>
                   <tr>
+                    <th class="col-check" style="width:36px;padding-right:0;">
+                      <input type="checkbox" data-kb-check-all aria-label="Select all on this page" />
+                    </th>
                     <th data-sort="title">Title <span class="sort-ind"></span></th>
                     <th class="col-desc">Description</th>
                     <th data-sort="type">Type <span class="sort-ind"></span></th>
@@ -22840,13 +22939,20 @@
       var searchEl = host.querySelector("[data-kb-search]");
       var typeSel = host.querySelector('[data-kb-filter="type"]');
       var statusSel = host.querySelector('[data-kb-filter="status"]');
+      var addedSel = host.querySelector('[data-kb-filter="added"]');
       var headers = host.querySelectorAll(".kb-table th[data-sort]");
+      var bulkBar = host.querySelector("[data-kb-bulk]");
+      var bulkCountEl = host.querySelector("[data-kb-bulk-count]");
+      var checkAllEl = host.querySelector("[data-kb-check-all]");
+      var exportBtnEl = host.querySelector("[data-kb-export]");
+      var exportMenuEl = host.querySelector("[data-kb-export-menu]");
       if (!body) return;
 
       var rows = [];      // unified row list
       var sortKey = "edited";
       var sortDir = "desc";
       var pollTimer = null;
+      var selected = new Set();
 
       function getAid() { return window.__accountId || ""; }
 
@@ -22944,16 +23050,52 @@
         };
       }
 
+      // Parse `type:X` / `status:X` operators out of the search box.
+      // Whatever remains becomes the plain-text query.
+      function parseSearch(raw) {
+        var out = { q: "", type: "", status: "" };
+        if (!raw) return out;
+        var leftover = [];
+        raw.split(/\s+/).forEach(function (tok) {
+          var m = /^(type|status):(.+)$/i.exec(tok);
+          if (m) {
+            var k = m[1].toLowerCase();
+            var v = m[2].toLowerCase();
+            if (k === "type" && (v === "website" || v === "article" || v === "faq")) out.type = v;
+            else if (k === "status" && (v === "ready" || v === "pending" || v === "training" || v === "failed")) {
+              out.status = (v === "training") ? "pending" : v;
+            } else {
+              leftover.push(tok);
+            }
+          } else {
+            leftover.push(tok);
+          }
+        });
+        out.q = leftover.join(" ").toLowerCase();
+        return out;
+      }
+
       function applyFiltersSort(list) {
         var typeF = typeSel ? typeSel.value : "";
         var statusF = statusSel ? statusSel.value : "";
-        var q = ((searchEl && searchEl.value) || "").trim().toLowerCase();
+        var addedF = addedSel ? parseInt(addedSel.value || "0", 10) : 0;
+        var parsed = parseSearch((searchEl && searchEl.value) || "");
+        // Operator filters override the dropdown when present (caller can
+        // still narrow further by combining both).
+        var effType = parsed.type || typeF;
+        var effStatus = parsed.status || statusF;
+        var nowMs = Date.now();
+        var dayMs = 86400000;
         var filtered = list.filter(function (r) {
-          if (typeF && r.type !== typeF) return false;
-          if (statusF && r.status !== statusF) return false;
-          if (q) {
+          if (effType && r.type !== effType) return false;
+          if (effStatus && r.status !== effStatus) return false;
+          if (addedF > 0 && r.added) {
+            var t = new Date(r.added).getTime();
+            if (!isNaN(t) && (nowMs - t) > addedF * dayMs) return false;
+          }
+          if (parsed.q) {
             var hay = (r.title + " " + r.description).toLowerCase();
-            if (hay.indexOf(q) === -1) return false;
+            if (hay.indexOf(parsed.q) === -1) return false;
           }
           return true;
         });
@@ -22970,6 +23112,19 @@
         return filtered;
       }
 
+      function syncBulkBar() {
+        if (!bulkBar) return;
+        var n = selected.size;
+        bulkBar.hidden = n === 0;
+        if (bulkCountEl) bulkCountEl.textContent = n + (n === 1 ? " selected" : " selected");
+        if (checkAllEl) {
+          var visible = applyFiltersSort(rows);
+          var allChecked = visible.length > 0 && visible.every(function (r) { return selected.has(r.id); });
+          checkAllEl.checked = allChecked;
+          checkAllEl.indeterminate = !allChecked && n > 0 && visible.some(function (r) { return selected.has(r.id); });
+        }
+      }
+
       function renderRows() {
         var visible = applyFiltersSort(rows);
         body.innerHTML = "";
@@ -22979,13 +23134,13 @@
         if (!visible.length) {
           if (rows.length === 0 && emptyEl) emptyEl.hidden = false;
           else if (emptyEl) emptyEl.hidden = true;
-          // No-results-after-filter row
           if (rows.length > 0) {
             var tr = document.createElement("tr");
-            tr.innerHTML = '<td colspan="7" style="text-align:center;color:#64748b;padding:24px;">No entries match those filters. ' +
+            tr.innerHTML = '<td colspan="8" style="text-align:center;color:#64748b;padding:24px;">No entries match those filters. ' +
               '<button type="button" class="kb-add-btn is-secondary" data-kb-clear-filters style="margin-left:8px;">Clear filters</button></td>';
             body.appendChild(tr);
           }
+          syncBulkBar();
           return;
         }
         if (emptyEl) emptyEl.hidden = true;
@@ -22995,7 +23150,11 @@
           tr.dataset.type = r.type;
           var typeLabel = r.type === "website" ? "Website" : r.type === "faq" ? "Q&A" : "Article";
           var statusLabel = r.status === "ready" ? "Ready" : r.status === "failed" ? "Failed" : "Training";
+          var isChecked = selected.has(r.id);
           tr.innerHTML =
+            '<td class="col-check" onclick="event.stopPropagation()">' +
+              '<input type="checkbox" data-kb-row-check' + (isChecked ? " checked" : "") + ' />' +
+            '</td>' +
             '<td><div class="kb-row-title" title="' + escapeHtml(r.title) + '">' + escapeHtml(r.title) + '</div></td>' +
             '<td class="col-desc"><div class="kb-row-desc" title="' + escapeHtml(r.description) + '">' + escapeHtml(r.description) + '</div></td>' +
             '<td><span class="kb-type-pill t-' + r.type + '">' + typeLabel + '</span></td>' +
@@ -23005,6 +23164,7 @@
             '<td class="kb-actions-cell"><button type="button" class="kb-row-menu" aria-label="Actions">⋯</button></td>';
           body.appendChild(tr);
         });
+        syncBulkBar();
       }
 
       async function loadRows() {
@@ -23058,11 +23218,143 @@
       // Wire filters + search.
       if (typeSel)   typeSel.addEventListener("change", renderRows);
       if (statusSel) statusSel.addEventListener("change", renderRows);
+      if (addedSel)  addedSel.addEventListener("change", renderRows);
       if (searchEl) {
         var searchTimer = null;
         searchEl.addEventListener("input", function () {
           clearTimeout(searchTimer);
           searchTimer = setTimeout(renderRows, 200);
+        });
+      }
+
+      // Per-row checkbox + select-all.
+      body.addEventListener("change", function (e) {
+        var cb = e.target.closest("[data-kb-row-check]");
+        if (!cb) return;
+        var tr = cb.closest("tr[data-id]");
+        if (!tr) return;
+        var id = tr.dataset.id;
+        if (cb.checked) selected.add(id); else selected.delete(id);
+        syncBulkBar();
+      });
+      if (checkAllEl) {
+        checkAllEl.addEventListener("change", function () {
+          var visible = applyFiltersSort(rows);
+          if (checkAllEl.checked) {
+            visible.forEach(function (r) { selected.add(r.id); });
+          } else {
+            visible.forEach(function (r) { selected.delete(r.id); });
+          }
+          renderRows();
+        });
+      }
+
+      // Bulk action bar buttons.
+      if (bulkBar) {
+        bulkBar.addEventListener("click", async function (e) {
+          var btn = e.target.closest("[data-kb-bulk-action]");
+          if (!btn) return;
+          var action = btn.dataset.kbBulkAction;
+          if (action === "clear") {
+            selected.clear();
+            renderRows();
+            return;
+          }
+          if (action === "export") {
+            var selectedRows = rows.filter(function (r) { return selected.has(r.id); });
+            downloadExport(selectedRows, "csv");
+            return;
+          }
+          if (action === "delete") {
+            var pickedRows = rows.filter(function (r) { return selected.has(r.id); });
+            if (!pickedRows.length) return;
+            if (!window.confirm("Delete " + pickedRows.length + " " +
+                (pickedRows.length === 1 ? "entry" : "entries") +
+                "? Your bot will forget all of them.")) return;
+            for (var i = 0; i < pickedRows.length; i++) {
+              var r = pickedRows[i];
+              try {
+                if (r.type === "website") {
+                  await fetch("/kb/sources/" + encodeURIComponent(r.id) +
+                              "?accountid=" + encodeURIComponent(getAid()),
+                              { method: "DELETE", credentials: "same-origin" });
+                } else {
+                  await fetch("/knowledege", {
+                    method: "DELETE", credentials: "same-origin",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: r.id, accountid: getAid(), kb_type: mode }),
+                  });
+                }
+              } catch (_) { /* keep going */ }
+            }
+            selected.clear();
+            loadRows();
+            window.dispatchEvent(new CustomEvent("kb:saved"));
+          }
+        });
+      }
+
+      // Export dropdown.
+      function downloadExport(rowsToExport, fmt) {
+        if (!rowsToExport || !rowsToExport.length) {
+          alert("Nothing to export.");
+          return;
+        }
+        var date = new Date().toISOString().slice(0, 10);
+        var filename = "bot_knowledge_" + mode + "_" + date + "." + fmt;
+        var blob;
+        if (fmt === "json") {
+          // Include the full raw payload so re-import is possible.
+          var payload = rowsToExport.map(function (r) {
+            return {
+              id: r.id, type: r.type, title: r.title,
+              description: r.description, status: r.status,
+              added: r.added, edited: r.edited,
+              data: r.raw,
+            };
+          });
+          blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+        } else {
+          var headers = ["Title", "Description", "Type", "Status", "Added", "Edited"];
+          var lines = [headers.map(csvCell).join(",")];
+          rowsToExport.forEach(function (r) {
+            lines.push([r.title, r.description, r.type, r.status, r.added, r.edited]
+              .map(csvCell).join(","));
+          });
+          blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+        }
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 250);
+      }
+      function csvCell(v) {
+        var s = v == null ? "" : String(v);
+        if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+        return s;
+      }
+      if (exportBtnEl && exportMenuEl) {
+        exportBtnEl.addEventListener("click", function (e) {
+          e.stopPropagation();
+          exportMenuEl.hidden = !exportMenuEl.hidden;
+        });
+        exportMenuEl.querySelectorAll("[data-kb-export-fmt]").forEach(function (b) {
+          b.addEventListener("click", function () {
+            exportMenuEl.hidden = true;
+            // Export currently-visible (filtered + sorted) rows.
+            downloadExport(applyFiltersSort(rows), b.dataset.kbExportFmt);
+          });
+        });
+        document.addEventListener("click", function (e) {
+          if (!exportMenuEl.hidden && !exportMenuEl.contains(e.target) && e.target !== exportBtnEl) {
+            exportMenuEl.hidden = true;
+          }
         });
       }
 
@@ -23097,14 +23389,6 @@
           }
         });
       });
-
-      // Export button — Phase 3 will wire CSV/JSON.
-      var exportBtn = host.querySelector("[data-kb-export]");
-      if (exportBtn) {
-        exportBtn.addEventListener("click", function () {
-          alert("Export ships in Phase 3.");
-        });
-      }
 
       // Row click → open the detail modal. ⋯ menu opens the popover.
       body.addEventListener("click", function (e) {
@@ -39189,7 +39473,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-kb-table-p2b"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-11-kb-table-p3"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
