@@ -113,6 +113,17 @@ function ActivityCard({ id, data }) {
       cardSub = "Pick where leads come from →";
     }
   }
+  // AI Agent: surface the picked bot's name (and a one-line hint of
+  // what it does) on the canvas card so the operator can see at a
+  // glance which bot is wired into the step.
+  if (data.activityId === "ai_agent") {
+    if (data.agent_id && data.agent_name) {
+      const job = (data.agent_job || "").trim();
+      cardSub = "🤖 " + data.agent_name + (job ? " · " + job.slice(0, 60) : "");
+    } else {
+      cardSub = "⚙ Click to pick a bot";
+    }
+  }
   const onAddNext = (e) => {
     e.stopPropagation();
     ctx.openChooser({ sourceId: id });
@@ -185,32 +196,81 @@ function ActivityCard({ id, data }) {
           <div className="fb-card-meta">{pill}</div>
         </div>
       </div>
-      {/* Drag knob — right-edge mid. Wraps React Flow's source Handle
-          so the icon IS the connection-port (mousedown starts a
-          drag-to-connect). Click does nothing; click-to-add lives on
-          the separate + button below. */}
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="out"
-        className="fb-handle fb-knob"
-        title="Drag to connect"
-      >
-        <span className="fb-knob-arrow" aria-hidden="true">→</span>
-        <span className="fb-knob-tip" aria-hidden="true">Drag to connect</span>
-      </Handle>
-      {/* + Add button — bottom-right corner, click-only. Adds a new
-          step right after this one via the existing chooser. */}
-      <button
-        type="button"
-        className="fb-add-btn fb-next-btn nodrag nopan"
-        onClick={onAddNext}
-        aria-label="Add a step"
-        title="Add a step"
-      >
-        <span aria-hidden="true">+</span>
-        <span className="fb-add-btn-tip" aria-hidden="true">Add a step</span>
-      </button>
+      {/* If this is a qualifier AI Agent with declared outcomes, render
+          one labeled output handle per outcome (same shape as
+          BranchCard's yes/no rows). The handle ids are
+          "outcome_<key>" — keys are lowercased + underscored versions
+          of the outcome label, matching the engine's branch_key. */}
+      {(() => {
+        const isQualifierAgent =
+          data.activityId === "ai_agent"
+          && data.agent_category === "qualifier"
+          && Array.isArray(data.agent_outcomes)
+          && data.agent_outcomes.length > 0;
+        if (!isQualifierAgent) {
+          return (
+            <>
+              <Handle
+                type="source"
+                position={Position.Right}
+                id="out"
+                className="fb-handle fb-knob"
+                title="Drag to connect"
+              >
+                <span className="fb-knob-arrow" aria-hidden="true">→</span>
+                <span className="fb-knob-tip" aria-hidden="true">Drag to connect</span>
+              </Handle>
+              <button
+                type="button"
+                className="fb-add-btn fb-next-btn nodrag nopan"
+                onClick={onAddNext}
+                aria-label="Add a step"
+                title="Add a step"
+              >
+                <span aria-hidden="true">+</span>
+                <span className="fb-add-btn-tip" aria-hidden="true">Add a step</span>
+              </button>
+            </>
+          );
+        }
+        // Qualifier path: one labeled row + handle per outcome.
+        return (
+          <div className="fb-branch-paths fb-aiagent-paths">
+            {data.agent_outcomes.map((o, i) => {
+              const label = (o.label || "").trim() || ("Outcome " + (i + 1));
+              const key = label.toLowerCase()
+                .replace(/[^a-z0-9]+/g, "_")
+                .replace(/^_+|_+$/g, "");
+              const handleId = "outcome_" + (key || ("o" + i));
+              return (
+                <div className="fb-branch-path is-aiagent" key={handleId}>
+                  <span className="fb-branch-path-ico">{o.emoji || "•"}</span>
+                  <span className="fb-branch-path-l">{label}</span>
+                  <button
+                    type="button"
+                    className="fb-next-btn nodrag nopan"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      ctx.openChooser({ sourceId: id, sourceHandle: handleId });
+                    }}
+                    aria-label={"Add the next step on the " + label + " path"}
+                    title={"Add the step that runs when " + label}
+                  >
+                    <span aria-hidden="true">+</span>
+                    <span className="fb-next-btn-l">Then</span>
+                  </button>
+                  <Handle
+                    type="source"
+                    position={Position.Right}
+                    id={handleId}
+                    className="fb-handle fb-handle-yes"
+                  />
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -387,7 +447,10 @@ function LibraryItem({ activity, disabled, comingSoon }) {
 }
 
 function FlowLibrary({ collapsed, onToggle, onUseTemplate }) {
-  const triggers = ACTIVITY_CATALOG.filter(a => a.kind === "trigger" && !a.hidden);
+  // Lifecycle "trigger" activities are no longer surfaced in the sidebar
+  // — every flow auto-creates the Input node, and the rest collided with
+  // the template entry point. The catalog still defines them so existing
+  // flows + templates resolve correctly.
   const actions  = ACTIVITY_CATALOG.filter(a => a.kind === "action"  && !a.hidden);
   const logic    = ACTIVITY_CATALOG.filter(a => a.kind === "logic"   && !a.hidden);
 
@@ -418,15 +481,11 @@ function FlowLibrary({ collapsed, onToggle, onUseTemplate }) {
       )}
       {!collapsed && (
         <div className="fb-library-body">
-          <section className="fb-library-section">
-            <h3 className="fb-library-section-h">Lifecycle moments</h3>
-            <p className="fb-library-section-sub">
-              Pick what kicks the flow off. One per moment.
-            </p>
-            {triggers.map(a => (
-              <LibraryItem key={a.id} activity={a} />
-            ))}
-          </section>
+          {/* Lifecycle moments section removed — every flow auto-creates
+              an Input node on the canvas, and the rest were redundant
+              with the "Use a template" entry point above. Activities
+              (first_contact, job_onboarding, etc.) remain in the
+              catalog so existing flows + templates still resolve. */}
           <section className="fb-library-section">
             <h3 className="fb-library-section-h">Building blocks</h3>
             <p className="fb-library-section-sub">
@@ -571,9 +630,9 @@ function NextStepChooser({ source, onPick, onClose }) {
 
   // Triggers + actions can both be a "next step." The library shows
   // them grouped — same idea here.
-  // The Input card is the flow's entry point; it's never a "next
-  // step" off another card, so hide it from the chooser entirely.
-  const triggers = ACTIVITY_CATALOG.filter(a => a.kind === "trigger" && a.id !== "input" && !a.hidden);
+  // Lifecycle moments (kind === "trigger") removed from the chooser too
+  // — they only make sense as the flow's entry, which is the auto-added
+  // Input node, never a "next step" off an existing card.
   const actions  = ACTIVITY_CATALOG.filter(a => a.kind === "action"  && !a.hidden);
   const logic    = ACTIVITY_CATALOG.filter(a => a.kind === "logic"   && !a.hidden);
 
@@ -616,10 +675,8 @@ function NextStepChooser({ source, onPick, onClose }) {
                   onClick={onClose} aria-label="Cancel">×</button>
         </header>
         <div className="fb-chooser-body">
-          <section className="fb-chooser-section">
-            <h3 className="fb-chooser-section-h">Lifecycle moments</h3>
-            {triggers.map(a => <ChooseRow key={a.id} a={a} />)}
-          </section>
+          {/* Lifecycle moments removed — same reason as the sidebar:
+              redundant with templates and the auto-Input node. */}
           <section className="fb-chooser-section">
             <h3 className="fb-chooser-section-h">Building blocks</h3>
             {actions.map(a => <ChooseRow key={a.id} a={a} />)}
@@ -1252,6 +1309,245 @@ const FB_BUILTINS = [
   { key: "budget",      label: "Budget",        type: "text" },
   { key: "company",     label: "Company",       type: "text" },
 ];
+
+// ── AI Agent picker panel (Phase 1) ─────────────────────────────────
+// Lives inside the activity drawer when activity.id === "ai_agent".
+// Fetches /me/agents, classifies each by behavior_config.job to give
+// fit guidance ("Great for flows" vs. "Better used as a widget"),
+// and renders a behavior preview tailored to the chosen bot. The
+// picker writes agent_id + a snapshot of the bot's name/job/outcomes
+// onto node.data so the canvas + Phase 2 execution can read them
+// without re-fetching /me/agents on every keystroke.
+//
+// The owner does NOT configure bot behavior here. The "Edit bot"
+// link routes to the agent's workspace where the Prompt tab lives.
+
+// Map a free-text behavior_config.job to a category the flow can
+// route around. The categories drive both fit guidance and the
+// preview shape. Recognized categories:
+//   widget          — Customer-facing widget, awkward in a flow
+//   internal        — Internal team helper, awkward in a flow
+//   qualifier       — Decides what happens next (BRANCHES the flow)
+//   message_writer  — Produces a piece of text for next step
+//   conversationalist — Two-way conversation with the lead
+//   extractor       — Pulls structured fields out of input
+//   custom          — Owner wrote their own job, can't classify
+const _AI_AGENT_JOB_CATEGORIES = {
+  qualifier: {
+    keywords: ["qualif", "screen", "decide", "route", "score", "prioriti"],
+    fit: "good",
+    fitLabel: "Great for flow automation",
+    icon: "🎯",
+    previewVerb: "Look at each lead and decide what happens next based on the rules you set in its Prompt tab.",
+    outcomesHeader: "Possible outcomes (the bot picks ONE per lead):",
+    branchNote: "When you save, your flow gets one branch per outcome.",
+    defaultOutcomes: [
+      { emoji: "🔥", label: "Hot lead" },
+      { emoji: "💬", label: "Warm lead" },
+      { emoji: "📧", label: "Cold lead" },
+      { emoji: "❓", label: "Unsure" },
+    ],
+  },
+  message_writer: {
+    keywords: ["outreach", "message", "write", "personali", "compose", "draft"],
+    fit: "good",
+    fitLabel: "Great for flow automation",
+    icon: "✍️",
+    previewVerb: "Write a tailored message based on the lead's info. The message is available to use in the next step (text, email, or call script).",
+    extraNote: "The next step can pull this in as {ai_message}.",
+  },
+  conversationalist: {
+    keywords: ["conversat", "chat", "interview", "intake", "talk", "book", "appoint"],
+    fit: "good",
+    fitLabel: "Great for flow automation",
+    icon: "💬",
+    previewVerb: "Have a conversation with the lead to collect details. The flow waits for the conversation to finish, then continues with the info.",
+    pauseWarning: "This step waits for the lead to respond. Don't use it in flows that need to run instantly.",
+  },
+  extractor: {
+    keywords: ["pars", "extract", "structur", "fill", "capture details", "pull out"],
+    fit: "good",
+    fitLabel: "Great for flow automation",
+    icon: "📋",
+    previewVerb: "Read the lead's input and pull out structured details. The details are available in the next steps.",
+    extraNote: "The next steps can use {ai_extracted.<field>} (service, urgency, budget, etc.).",
+  },
+  widget: {
+    keywords: ["customer", "website", "general", "service questions", "support"],
+    fit: "warn",
+    fitLabel: "Better used as a website widget",
+    icon: "🌐",
+    previewVerb: "This bot is built to answer questions on a website widget. Running it inside a flow works, but the bot likely wasn't built with a specific in-flow outcome in mind.",
+  },
+  internal: {
+    keywords: ["internal team", "internal", "knowledge", "team chat", "find information"],
+    fit: "warn",
+    fitLabel: "Better used as a team chat URL",
+    icon: "🧑‍💼",
+    previewVerb: "This bot is built for your team to chat with. Using it inside a customer-facing flow works, but the bot likely wasn't built with a specific in-flow outcome in mind.",
+  },
+};
+
+function _aiAgentCategorize(agent) {
+  // Default-bots get classified by their type field (customer / internal)
+  // before we look at the job text. This handles the seed bots even
+  // when the job string is empty.
+  const t = (agent.type || "").toLowerCase();
+  if (t === "customer") return "widget";
+  if (t === "internal") return "internal";
+  const job = ((agent.behavior_config || {}).job || "").toLowerCase().trim();
+  if (!job) return "custom";
+  for (const [cat, def] of Object.entries(_AI_AGENT_JOB_CATEGORIES)) {
+    for (const kw of def.keywords) {
+      if (job.indexOf(kw) >= 0) return cat;
+    }
+  }
+  return "custom";
+}
+
+function AiAgentPanel({ nodeId, data, onChange }) {
+  const [loading, setLoading] = React.useState(true);
+  const [agents, setAgents] = React.useState([]);
+  const [selectedId, setSelectedId] = React.useState(data.agent_id || "");
+
+  React.useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetch("/me/agents", { credentials: "same-origin" })
+      .then(r => r.ok ? r.json() : { agents: [] })
+      .then(d => { if (!cancelled) { setAgents(d.agents || []); setLoading(false); } })
+      .catch(() => { if (!cancelled) { setAgents([]); setLoading(false); } });
+    return () => { cancelled = true; };
+  }, []);
+
+  const pick = (agent) => {
+    setSelectedId(agent.id);
+    const cat = _aiAgentCategorize(agent);
+    const meta = _AI_AGENT_JOB_CATEGORIES[cat] || null;
+    const outcomes = (cat === "qualifier")
+      ? (agent.behavior_config?.outcomes || meta?.defaultOutcomes || [])
+      : [];
+    onChange(nodeId, {
+      agent_id:       agent.id,
+      agent_name:     agent.name || "",
+      agent_job:      (agent.behavior_config || {}).job || "",
+      agent_category: cat,
+      agent_outcomes: outcomes,
+    });
+  };
+
+  const selectedAgent = agents.find(a => a.id === selectedId) || null;
+
+  if (loading) {
+    return <div className="fb-aiagent-loading">Loading your bots…</div>;
+  }
+
+  if (!agents.length) {
+    return (
+      <div className="fb-aiagent-empty">
+        <p>You haven't created any bots yet.</p>
+        <a href="/dashboard#agents" target="_top" className="fb-aiagent-create">
+          + Create a bot
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fb-aiagent">
+      <div className="fb-aiagent-l">Which bot handles this step?</div>
+      <div className="fb-aiagent-list">
+        {agents.map(a => {
+          const cat = _aiAgentCategorize(a);
+          const meta = _AI_AGENT_JOB_CATEGORIES[cat];
+          const isSelected = a.id === selectedId;
+          const fitTag = meta
+            ? (meta.fit === "good"
+                ? <span className="fb-aiagent-fit is-good">✓ {meta.fitLabel}</span>
+                : <span className="fb-aiagent-fit is-warn">⚠ {meta.fitLabel}</span>)
+            : null;
+          const job = (a.behavior_config || {}).job || "";
+          return (
+            <button
+              key={a.id}
+              type="button"
+              className={`fb-aiagent-row ${isSelected ? "is-selected" : ""}`}
+              onClick={() => pick(a)}
+            >
+              <span className="fb-aiagent-radio" aria-hidden="true">
+                {isSelected ? "●" : "○"}
+              </span>
+              <span className="fb-aiagent-text">
+                <span className="fb-aiagent-name">
+                  {meta ? meta.icon + " " : "🤖 "}{a.name || "Untitled bot"}
+                </span>
+                {job ? <span className="fb-aiagent-job">{job}</span> : null}
+                {fitTag}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="fb-aiagent-create-row">
+        Don't have the right bot?
+        {" "}
+        <a href="/dashboard#agents" target="_top">+ Create a new bot</a>
+      </div>
+
+      {selectedAgent && <AiAgentPreview agent={selectedAgent} />}
+    </div>
+  );
+}
+
+function AiAgentPreview({ agent }) {
+  const cat = _aiAgentCategorize(agent);
+  const meta = _AI_AGENT_JOB_CATEGORIES[cat];
+  const name = agent.name || "This bot";
+  const editUrl = `/dashboard#agents/${encodeURIComponent(agent.id)}`;
+  // Compact single-block preview. One sentence about what the bot
+  // will do at this step, a short outcomes list for qualifiers, and
+  // an Edit link. No multi-block tutorial copy.
+  let blurb;
+  if (cat === "qualifier") {
+    const outcomes = (agent.behavior_config?.outcomes
+                       && agent.behavior_config.outcomes.length
+                       ? agent.behavior_config.outcomes
+                       : meta.defaultOutcomes);
+    blurb = (
+      <>
+        <p className="fb-aiagent-preview-p">Decides what happens next, one of:</p>
+        <ul className="fb-aiagent-outcomes">
+          {outcomes.map((o, i) => (
+            <li key={i}>
+              <span className="fb-aiagent-outcome-emoji">{o.emoji || "•"}</span>
+              <span>{o.label}</span>
+            </li>
+          ))}
+        </ul>
+      </>
+    );
+  } else if (cat === "message_writer") {
+    blurb = <p className="fb-aiagent-preview-p">Writes a personalized message. Next step can use it as {"{ai_message}"}.</p>;
+  } else if (cat === "extractor") {
+    blurb = <p className="fb-aiagent-preview-p">Pulls structured details from the lead's input. Next steps can use {"{ai_extracted.<field>}"}.</p>;
+  } else if (cat === "conversationalist") {
+    blurb = <p className="fb-aiagent-preview-p">Chats with the lead. The step waits until the chat ends.</p>;
+  } else if (cat === "widget" || cat === "internal") {
+    blurb = <p className="fb-aiagent-preview-p" style={{color:"#92400e"}}>This bot is built for a {cat === "widget" ? "website widget" : "team chat URL"} and may not produce a clean in-flow outcome.</p>;
+  } else {
+    const job = (agent.behavior_config || {}).job || "";
+    blurb = <p className="fb-aiagent-preview-p">{job ? <>Runs your custom behavior: <em>{job}</em></> : "Runs the bot's prompt as-is."}</p>;
+  }
+  return (
+    <div className="fb-aiagent-preview">
+      {blurb}
+      <a href={editUrl} target="_top" className="fb-aiagent-edit">
+        Edit {name} →
+      </a>
+    </div>
+  );
+}
+
 
 function InputChannelPanel({ nodeId, data, onChange }) {
   const [loading, setLoading] = React.useState(true);
@@ -2577,6 +2873,7 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
   const isCall       = activity.id === "call";
   const isSendEmail  = activity.id === "send_email";
   const isAppendSheet = activity.id === "append_sheet";
+  const isAiAgent    = activity.id === "ai_agent";
 
   // ── Google Sheet drawer state ──────────────────────────────────
   // Editable: spreadsheet URL/ID, worksheet/tab name, ordered column
@@ -3302,10 +3599,16 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
           >×</button>
         </header>
 
-        <div className={`fb-drawer-body ${isInput || isCall ? "is-no-preview" : ""} ${previewCollapsed && !isInput && !isCall ? "is-preview-collapsed" : ""}`}>
+        <div className={`fb-drawer-body ${isInput || isCall || isAiAgent ? "is-no-preview" : ""} ${previewCollapsed && !isInput && !isCall && !isAiAgent ? "is-preview-collapsed" : ""}`}>
           <div className="fb-drawer-edit">
             {isInput ? (
               <InputChannelPanel
+                nodeId={node.id}
+                data={data}
+                onChange={onChange}
+              />
+            ) : isAiAgent ? (
+              <AiAgentPanel
                 nodeId={node.id}
                 data={data}
                 onChange={onChange}
@@ -7086,6 +7389,172 @@ const STYLES = `
     }
   }
   .fb-drawer-edit { min-width: 0; }
+  /* ── AI Agent picker (Phase 1) ────────────────────────────── */
+  .fb-aiagent { display: flex; flex-direction: column; gap: 14px; }
+  .fb-aiagent-loading,
+  .fb-aiagent-empty {
+    padding: 24px 16px; text-align: center;
+    color: #64748b; font-size: 13.5px;
+  }
+  .fb-aiagent-empty p { margin: 0 0 12px; }
+  .fb-aiagent-create {
+    display: inline-block; padding: 8px 14px;
+    background: var(--kind-deep, #185fa5); color: #fff;
+    border-radius: 8px; text-decoration: none; font-weight: 600;
+  }
+  .fb-aiagent-l {
+    font-size: 12px; font-weight: 700; color: #4b5563;
+    letter-spacing: .03em; text-transform: uppercase;
+    margin: 0 0 4px;
+  }
+  .fb-aiagent-list {
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .fb-aiagent-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    width: 100%; text-align: left;
+    background: #fff; border: 1.5px solid #e2e8f0; border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer; font: inherit; color: inherit;
+    transition: border-color .12s ease, background .12s ease;
+  }
+  .fb-aiagent-row:hover {
+    background: #f8fafc; border-color: #94a3b8;
+  }
+  .fb-aiagent-row.is-selected {
+    background: #eef2ff; border-color: var(--kind-deep, #185fa5);
+    box-shadow: 0 0 0 2px rgba(24,95,165,.15);
+  }
+  .fb-aiagent-radio {
+    flex-shrink: 0; font-size: 16px; line-height: 1.25;
+    color: #94a3b8;
+  }
+  .fb-aiagent-row.is-selected .fb-aiagent-radio {
+    color: var(--kind-deep, #185fa5);
+  }
+  .fb-aiagent-text {
+    display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1;
+  }
+  .fb-aiagent-name {
+    font-size: 14px; font-weight: 600; color: #0f172a;
+  }
+  .fb-aiagent-job {
+    font-size: 12.5px; color: #475569; line-height: 1.45;
+  }
+  .fb-aiagent-fit {
+    display: inline-flex; align-items: center;
+    font-size: 11px; font-weight: 600; letter-spacing: .02em;
+    margin-top: 4px; padding: 2px 8px;
+    border-radius: 99px; align-self: flex-start;
+  }
+  .fb-aiagent-fit.is-good { color: #047857; background: #d1fae5; }
+  .fb-aiagent-fit.is-warn { color: #92400e; background: #fef3c7; }
+  .fb-aiagent-create-row {
+    font-size: 12.5px; color: #64748b;
+    text-align: center; padding-top: 4px;
+  }
+  .fb-aiagent-create-row a {
+    color: var(--kind-deep, #185fa5); text-decoration: none; font-weight: 600;
+  }
+  .fb-aiagent-create-row a:hover { text-decoration: underline; }
+
+  .fb-aiagent-preview {
+    margin-top: 4px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1; border-radius: 12px;
+    padding: 14px;
+  }
+  .fb-aiagent-preview-h {
+    font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 6px;
+  }
+  .fb-aiagent-preview-p {
+    margin: 0 0 10px; font-size: 13px; line-height: 1.5; color: #1f2937;
+  }
+  .fb-aiagent-preview-sub {
+    font-size: 12.5px; color: #475569; font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .fb-aiagent-outcomes {
+    list-style: none; padding: 0; margin: 0 0 10px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .fb-aiagent-outcomes li {
+    display: flex; align-items: center; gap: 8px;
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px; color: #0f172a;
+  }
+  .fb-aiagent-outcome-emoji { flex-shrink: 0; font-size: 14px; }
+  .fb-aiagent-preview-meta {
+    font-size: 12.5px;
+  }
+  .fb-aiagent-edit {
+    color: var(--kind-deep, #185fa5); text-decoration: none; font-weight: 600;
+  }
+  .fb-aiagent-edit:hover { text-decoration: underline; }
+  .fb-aiagent-preview-note {
+    margin-top: 10px; padding: 8px 10px;
+    background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px;
+    font-size: 12.5px; color: #1e3a8a;
+  }
+  .fb-aiagent-preview-warn {
+    margin-top: 10px; padding: 8px 10px;
+    background: #fef3c7; border: 1px solid #fde68a; border-radius: 8px;
+    font-size: 12.5px; color: #92400e;
+  }
+  /* Test-with-sample-lead panel */
+  .fb-aiagent-test {
+    margin-top: 16px; padding-top: 14px;
+    border-top: 1px dashed #cbd5e1;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .fb-aiagent-test-h {
+    font-size: 12px; font-weight: 700; color: #4b5563;
+    letter-spacing: .03em; text-transform: uppercase;
+  }
+  .fb-aiagent-test-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  }
+  .fb-aiagent-test-grid textarea,
+  .fb-aiagent-test-grid input { font-size: 13px; padding: 8px 10px; }
+  .fb-aiagent-test-grid textarea { grid-column: 1 / -1; }
+  .fb-aiagent-test-btn {
+    align-self: flex-start;
+    background: #185fa5; color: #fff; border: 0; border-radius: 8px;
+    padding: 8px 14px; font: inherit; font-size: 13px; font-weight: 600;
+    cursor: pointer;
+  }
+  .fb-aiagent-test-btn:disabled { opacity: .6; cursor: not-allowed; }
+  .fb-aiagent-test-err {
+    background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;
+    border-radius: 8px; padding: 8px 10px; font-size: 12.5px;
+  }
+  .fb-aiagent-test-out {
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+    padding: 10px 12px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .fb-aiagent-test-sub {
+    font-size: 10.5px; font-weight: 700; letter-spacing: .08em;
+    color: #475569; text-transform: uppercase;
+  }
+  .fb-aiagent-test-pre {
+    background: #0f172a; color: #e2e8f0;
+    padding: 8px 10px; border-radius: 6px;
+    font-family: ui-monospace,Menlo,Consolas,monospace;
+    font-size: 11.5px; line-height: 1.45;
+    margin: 0; max-height: 180px; overflow: auto; white-space: pre-wrap;
+  }
+  .fb-aiagent-test-routed {
+    background: #ecfdf5; color: #065f46;
+    border: 1px solid #a7f3d0; border-radius: 6px;
+    padding: 6px 10px; font-size: 13px; font-weight: 600;
+  }
+
+  /* Qualifier-mode branch rows on the canvas card */
+  .fb-aiagent-paths { padding-top: 8px; }
+  .fb-aiagent-paths .fb-branch-path { background: #fafbff; }
+  .fb-aiagent-paths .is-aiagent .fb-branch-path-ico { font-size: 16px; }
   .fb-drawer-l {
     display: block;
     font-size: 12px; font-weight: 700; color: #4b5563;
@@ -10983,10 +11452,17 @@ export default function FlowBuilder() {
     saveTimerRef.current = setTimeout(async () => {
       setSaveStatus("saving");
       try {
+        // Coerce to arrays defensively — the server endpoint 400s if
+        // either field arrives as null/undefined, which can happen
+        // briefly during state transitions (Start blank → load,
+        // template apply, etc.). Sending empty lists is safe and
+        // matches what the server expects on first save.
+        const safeNodes = Array.isArray(nodes) ? nodes : [];
+        const safeEdges = Array.isArray(edges) ? edges : [];
         const r = await fetch(flowEndpoint, {
           method: "POST", credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nodes, edges }),
+          body: JSON.stringify({ nodes: safeNodes, edges: safeEdges }),
         });
         if (!r.ok) throw new Error("save_failed");
         setSaveStatus("saved");
@@ -11487,10 +11963,11 @@ export default function FlowBuilder() {
             // Don't let the user delete the demo nodes — they're seeded
             // examples. Real, user-dropped nodes have ids ending with a
             // short hash; demo nodes end with "_demo".
-            // Also lock the Input card — it's the flow's entry point;
-            // every other step is meant to descend from it.
+            // Input cards are now removable too: the user asked for a
+            // "remove this step" affordance on input activities so they
+            // can swap a misconfigured trigger without rebuilding the
+            // whole flow.
             selectedNodeId && !selectedNodeId.endsWith("_demo")
-              && selectedNode?.data?.activityId !== "input"
               ? deleteNode : null
           }
         />
