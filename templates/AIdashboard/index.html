@@ -495,13 +495,101 @@
        can't be shaved from above. */
     body.is-outreach-fullbleed .fb-backpill,
     body.is-outreach-fullbleed .fb-test-btn {
-      top: 24px !important;
+      top: 36px !important;
     }
     body.is-outreach-fullbleed .fb-tour-replay {
-      bottom: 24px !important;
+      bottom: 36px !important;
+    }
+    /* Saved/Saving status pill: was top:64px right:16px which now
+       collides with the pushed-down Test this flow button. Move it to
+       top-center of the canvas — out of the way of both the back-pill
+       (left) and the Test button (right). Sits BELOW the loading
+       label so the two never overlap when both fire at once. */
+    body.is-outreach-fullbleed .fb-save {
+      top: 36px !important;
+      right: auto !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+    }
+    /* Loading: push the indeterminate bar below the topbar so it isn't
+       clipped, and center the label directly under it (above the
+       Saved pill). */
+    body.is-outreach-fullbleed .fb-loading {
+      top: 30px !important;
+    }
+    body.is-outreach-fullbleed .fb-loading-label {
+      align-self: center !important;
+      margin: 6px auto 0 !important;
+    }
+
+    /* ───── Global press animation + progress hooks ─────
+       Every primary button gets a soft press-in (scale 0.97 +
+       slight Y-shift) on :active so clicks feel responsive.
+       Wired on the SaaS-style buttons we ship: .pf-save (Profile),
+       .of-create-btn (Forms), the inline "+ New flow" button.
+       Disabled buttons skip the animation. */
+    .pf-save,
+    .of-create-btn,
+    #mf-start-blank,
+    .of-row-action {
+      transition: background .12s ease, transform .08s ease, box-shadow .12s ease;
+    }
+    .pf-save:not(:disabled):active,
+    .of-create-btn:not(:disabled):active,
+    #mf-start-blank:not(:disabled):active,
+    .of-row-action:not(:disabled):active {
+      transform: translateY(1px) scale(.985);
+      box-shadow: 0 1px 1px rgba(15,23,42,.10) inset;
+    }
+
+    /* Tiny inline spinner used by buttons during in-flight requests
+       (Save, Create form). Pair with the .is-busy class. */
+    @keyframes ux-spin { to { transform: rotate(360deg); } }
+    .ux-spinner {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      border: 2px solid currentColor;
+      border-top-color: transparent;
+      margin-right: 6px;
+      vertical-align: -2px;
+      animation: ux-spin .85s linear infinite;
+    }
+
+    /* Indeterminate progress bar — drop one anywhere with the markup
+       <div class="ux-progress"><div class="ux-progress-bar"></div></div>.
+       Visual style matches the flow-builder's loading bar. */
+    .ux-progress {
+      position: relative; height: 3px;
+      background: rgba(15,23,42,.06);
+      border-radius: 999px; overflow: hidden;
+    }
+    .ux-progress-bar {
+      position: absolute; top: 0; bottom: 0;
+      left: -40%; width: 40%;
+      background: linear-gradient(90deg, transparent 0%, #0f172a 50%, transparent 100%);
+      animation: ux-progress-slide 1.1s ease-in-out infinite;
+    }
+    @keyframes ux-progress-slide {
+      from { left: -40%; }
+      to   { left: 100%; }
     }
     body.is-outreach-fullbleed .fb-library-h {
-      padding-top: 18px !important;
+      padding-top: 32px !important;
+      margin-top: 8px !important;
+    }
+    body.is-outreach-fullbleed .fb-library {
+      padding-top: 8px !important;
+    }
+    /* Activity-settings drawer slides in from the right (position:
+       absolute; top:0 inside .fb-root). Its title + X were landing
+       under the topbar — pad the header so they sit clearly below it. */
+    body.is-outreach-fullbleed .fb-drawer-h {
+      padding-top: 36px !important;
+    }
+    /* Same for the next-step chooser modal header. */
+    body.is-outreach-fullbleed .fb-chooser-h {
+      padding-top: 30px !important;
     }
     /* Lead intake also fullbleeds so the iframe fills the whole main
        area — no padding gutter, no implicit height cap. The iframe
@@ -2542,6 +2630,28 @@
       outline-offset: 2px;
       border-radius: var(--space-1);
     }
+    /* Inline variant — when the tab strip lives inside the
+       workspace header (between the breadcrumb and the action
+       buttons), strip the full-width chrome so it visually nests
+       in the toolbar instead of forming its own row. The content
+       panes below move up because no separate strip row exists. */
+    .home-tabs.is-inline {
+      border-bottom: 0;
+      margin: 0;
+      gap: var(--space-4);
+      flex: 1 1 auto;
+      min-width: 0;
+      justify-content: flex-start;
+    }
+    .home-tabs.is-inline .home-tab {
+      padding: 6px 2px;
+      margin-right: 0;
+      margin-bottom: 0;
+      font-size: 13px;
+    }
+    @media (max-width: 720px) {
+      .home-tabs.is-inline { width: 100%; flex: 1 0 100%; }
+    }
 
     /* Single-pane action area — the active pane fills the full width. */
     .home-pane { display: none; }
@@ -3485,6 +3595,273 @@
     @media (max-width: 720px) {
       .bot-picker { grid-template-columns: 1fr; }
     }
+
+    /* Bots home table — Phase 1 default view. Compact one-row-per-bot
+       layout with name + description in a single cell, secondary
+       columns for type / phone / knowledge / flows / last-used /
+       sharing, and an Actions cell with Open + ⋯ menu. Card layout
+       (.bot-picker / .bot-picker-card) is preserved unchanged; one
+       of the two surfaces is hidden via window.__botsView. */
+    .bot-table-wrap {
+      grid-column: span 12;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      overflow: auto;
+      margin: var(--space-2) 0 var(--space-6);
+    }
+    .bot-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      color: var(--color-text-primary);
+    }
+    .bot-table thead th {
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--color-text-secondary);
+      background: #f8fafc;
+      border-bottom: 1px solid var(--color-border);
+      white-space: nowrap;
+    }
+    .bot-table tbody td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: middle;
+    }
+    .bot-table tbody tr {
+      cursor: pointer;
+      transition: background 120ms ease;
+    }
+    .bot-table tbody tr:hover { background: #f8fafc; }
+    .bot-table tbody tr:last-child td { border-bottom: 0; }
+    .bot-table-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      letter-spacing: -0.005em;
+    }
+    .bot-table-desc {
+      margin-top: 3px;
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      line-height: 1.4;
+      max-width: 380px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+    .bot-table-type {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 600;
+      color: var(--color-text-primary);
+      white-space: nowrap;
+    }
+    .bot-table-type-dot {
+      width: 8px; height: 8px; border-radius: 999px;
+      background: #10b981; flex-shrink: 0;
+    }
+    .bot-table-type.is-internal .bot-table-type-dot {
+      background: #94a3b8;
+    }
+    .bot-table-meta {
+      font-size: 12.5px;
+      color: var(--color-text-secondary);
+      white-space: nowrap;
+    }
+    .bot-table-meta.is-strong { color: var(--color-text-primary); font-weight: 600; }
+    .bot-table-share {
+      display: inline-flex; flex-direction: column; gap: 2px;
+      font-size: 11.5px; color: var(--color-text-secondary);
+    }
+    .bot-table-share-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 10.5px; font-weight: 700;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      padding: 2px 7px; border-radius: 4px;
+      background: #f1f5f9; color: #475569;
+      align-self: flex-start;
+    }
+    .bot-table-share-tag.is-default { background: #eef2ff; color: #4338ca; }
+    .bot-table-actions {
+      display: inline-flex; align-items: center; gap: 6px;
+      white-space: nowrap;
+    }
+    .bot-table-open {
+      padding: 6px 12px; border-radius: 8px;
+      background: var(--color-primary, #2563eb); color: #fff;
+      border: 0; font-size: 12px; font-weight: 600;
+      font-family: inherit; cursor: pointer;
+    }
+    .bot-table-open:hover { background: var(--color-primary-hover, #1d4ed8); }
+    .bot-table-menu {
+      width: 28px; height: 28px;
+      background: transparent; border: 0; border-radius: 6px;
+      color: #64748b; font-size: 16px; cursor: pointer;
+      transition: background 120ms ease, color 120ms ease;
+    }
+    .bot-table-menu:hover { background: #f1f5f9; color: #0a0a0a; }
+    .bot-table-empty {
+      padding: 64px 24px;
+      text-align: center;
+      color: var(--color-text-secondary);
+    }
+    .bot-table-empty strong {
+      display: block;
+      font-size: 16px;
+      color: var(--color-text-primary);
+      margin-bottom: 8px;
+    }
+
+    /* Filter / search bar that sits above the bots table. */
+    .bot-table-controls {
+      grid-column: span 12;
+      display: flex; align-items: center; gap: 10px;
+      flex-wrap: wrap;
+      margin: 0 0 var(--space-3);
+    }
+    .bot-table-filter {
+      position: relative;
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 10px 6px 12px;
+      background: #fff;
+      border: 1px solid var(--color-border);
+      border-radius: 999px;
+      font-size: 12.5px; font-weight: 600;
+      color: var(--color-text-primary);
+      cursor: pointer;
+      font-family: inherit;
+      transition: border-color 120ms ease, background 120ms ease;
+    }
+    .bot-table-filter:hover { border-color: var(--color-primary, #2563eb); }
+    .bot-table-filter.is-active {
+      background: #eef2ff;
+      border-color: #c7d2fe;
+      color: #4338ca;
+    }
+    .bot-table-filter select {
+      appearance: none; -webkit-appearance: none;
+      border: 0; background: transparent;
+      font: inherit; color: inherit;
+      padding: 0 16px 0 0; cursor: pointer;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right center;
+      background-size: 12px 12px;
+    }
+    .bot-table-filter select:focus { outline: none; }
+    .bot-table-search {
+      position: relative;
+      display: inline-flex; align-items: center;
+      flex: 1; min-width: 200px; max-width: 360px;
+      margin-left: auto;
+    }
+    .bot-table-search input {
+      width: 100%;
+      padding: 8px 32px 8px 32px;
+      border: 1px solid var(--color-border);
+      border-radius: 999px;
+      font: inherit; font-size: 13px;
+      background: #fff;
+    }
+    .bot-table-search input:focus {
+      outline: none;
+      border-color: var(--color-primary, #2563eb);
+    }
+    .bot-table-search-icon {
+      position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+      color: #94a3b8; pointer-events: none;
+    }
+    .bot-table-search-clear {
+      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+      width: 18px; height: 18px; border-radius: 999px;
+      background: #e2e8f0; border: 0;
+      color: #475569; font-size: 11px; line-height: 1;
+      cursor: pointer; display: none;
+    }
+    .bot-table-search-clear.is-visible { display: inline-flex; align-items: center; justify-content: center; }
+    .bot-table-summary {
+      grid-column: span 12;
+      font-size: 12px; color: var(--color-text-secondary);
+      margin: -4px 0 4px;
+    }
+    .bot-table-summary a {
+      color: var(--color-primary, #2563eb);
+      cursor: pointer; font-weight: 600;
+      margin-left: 8px;
+    }
+    .bot-table-summary a:hover { text-decoration: underline; }
+
+    /* View toggle — Table ⇄ Cards button group. Lives next to the
+       "+ New agent" CTA in the page header. Active button gets the
+       primary fill; inactive stays outlined. Hidden on narrow
+       viewports where the table doesn't work well — those force
+       cards automatically. */
+    .bot-view-toggle {
+      display: inline-flex; align-items: center;
+      border: 1px solid var(--color-border);
+      border-radius: 999px;
+      background: #fff;
+      padding: 2px;
+    }
+    .bot-view-toggle button {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 11px;
+      background: transparent;
+      border: 0;
+      border-radius: 999px;
+      font: inherit; font-size: 12px; font-weight: 600;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      transition: background 120ms ease, color 120ms ease;
+    }
+    .bot-view-toggle button:hover { color: var(--color-text-primary); }
+    .bot-view-toggle button.is-active {
+      background: var(--color-primary, #2563eb);
+      color: #fff;
+    }
+    .bot-view-toggle button svg { display: block; }
+    @media (max-width: 900px) {
+      .bot-view-toggle { display: none; }
+    }
+
+    /* Sort affordance on column headers. */
+    .bot-table thead th {
+      cursor: pointer; user-select: none;
+    }
+    .bot-table thead th[data-no-sort] { cursor: default; }
+    .bot-table thead th:hover:not([data-no-sort]) {
+      color: var(--color-text-primary);
+    }
+    .bot-table-sort {
+      display: inline-block;
+      margin-left: 6px;
+      opacity: .35;
+      font-size: 10px;
+      transition: opacity 120ms ease;
+    }
+    .bot-table thead th.is-sorted .bot-table-sort {
+      opacity: 1;
+      color: var(--color-primary, #2563eb);
+    }
+
+    @media (max-width: 960px) {
+      .bot-table .col-knowledge,
+      .bot-table .col-flows { display: none; }
+    }
+    @media (max-width: 720px) {
+      .bot-table .col-phone,
+      .bot-table .col-sharing,
+      .bot-table .col-updated { display: none; }
+    }
+
     .bot-picker-card {
       position: relative;
       display: flex;
@@ -8521,31 +8898,39 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9.66 17a2 2 0 0 0 4.68 0"/><path d="M12 3a7 7 0 0 0-5 11.9V17a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2.1A7 7 0 0 0 12 3z"/><line x1="9" y1="13" x2="15" y2="13"/></svg>
           <span class="nav-tooltip">Home</span>
         </button>
+        <button class="app-nav-btn" type="button" data-route="outreach" id="appOutreachNavBtn" aria-label="Outreach">
+          <!-- Send / paper-plane icon — promoted directly under Home. -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <span class="nav-tooltip">Outreach</span>
+          <span class="app-nav-badge" id="appCampaignsBadge" hidden>0</span>
+        </button>
         <button class="app-nav-btn" type="button" data-route="leads" aria-label="Leads">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           <span class="nav-tooltip">Leads</span>
+        </button>
+        <!-- AI reply drafts inbox — surfaces drafts created by Reply
+             steps configured with "Show me the draft first". The badge
+             shows the count of pending drafts; updated by a small
+             poller in the inline JS at the bottom of the section. -->
+        <button class="app-nav-btn" type="button" data-route="drafts" aria-label="AI drafts">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <span class="nav-tooltip">AI drafts</span>
+          <span class="app-nav-badge" id="appDraftsBadge" hidden>0</span>
         </button>
         <button class="app-nav-btn" type="button" data-route="replies" aria-label="Replies" id="appRepliesNavBtn" data-admin-only>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           <span class="nav-tooltip"><span data-replies-tooltip>Replies</span></span>
           <span class="app-nav-badge" id="appRepliesBadge" hidden>0</span>
         </button>
-        <button class="app-nav-btn" type="button" data-route="inbox" aria-label="Inbox" id="appInboxNavBtn">
-          <!-- Two overlapping speech bubbles — universal "multi-channel
-               conversations" mark (Intercom/Drift). Distinct from
-               Replies' single bubble and Lead Intake's tray. -->
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9a2 2 0 0 1-2 2H6l-4 4V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z"/><path d="M18 9h2a2 2 0 0 1 2 2v10l-4-4h-6a2 2 0 0 1-2-2v-1"/></svg>
-          <span class="nav-tooltip">Inbox</span>
-        </button>
+        <!-- Inbox nav removed — chat-bot conversation inbox now lives
+             as a "Chatbot interactions" tab inside the Leads page so
+             everything customer-side sits in one surface. The #inbox
+             section markup is preserved (hidden) and re-parented into
+             the Leads tab pane on first render. -->
+
         <button class="app-nav-btn" type="button" data-route="calendar" aria-label="Schedule">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <span class="nav-tooltip">Schedule</span>
-        </button>
-        <button class="app-nav-btn" type="button" data-route="outreach" id="appOutreachNavBtn" aria-label="Outreach">
-          <!-- Send / paper-plane icon -->
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          <span class="nav-tooltip">Outreach</span>
-          <span class="app-nav-badge" id="appCampaignsBadge" hidden>0</span>
         </button>
         <button class="app-nav-btn" type="button" data-route="socialPipeline" aria-label="Social Pipeline" data-admin-only>
           <!-- Stacked-cards icon — three rectangles, signals "bronze/silver/gold lanes". -->
@@ -8557,16 +8942,11 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a4 4 0 0 0 4 4h1l4 4V7L8 11H7a4 4 0 0 0-4 0z"/><path d="M21 5a8 8 0 0 1 0 14"/><path d="M17 8a4 4 0 0 1 0 8"/></svg>
           <span class="nav-tooltip">Email campaigns</span>
         </button>
-        <button class="app-nav-btn" type="button" data-route="leadIntake" aria-label="Lead intake">
-          <!-- Inbox / arrow-down icon -->
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
-          <span class="nav-tooltip">Lead intake</span>
-        </button>
-        <button class="app-nav-btn" type="button" data-route="knowledge" aria-label="Knowledge base">
-          <!-- Book / book-open icon -->
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-          <span class="nav-tooltip">Knowledge base</span>
-        </button>
+        <!-- Lead intake nav removed — forms now live as a "Forms" view
+             inside the Outreach page, alongside Flows. -->
+
+        <!-- Knowledge base nav removed — KB now lives inside each bot
+             workspace (Knowledge tab). -->
         <button class="app-nav-btn" type="button" data-route="settings" aria-label="Settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           <span class="nav-tooltip">Settings</span>
@@ -8644,45 +9024,35 @@
                 </span>
                 <span class="opt-check" aria-hidden="true">✓</span>
               </button>
-              <div class="ai-mode-divider" role="separator"></div>
-              <div class="ai-mode-cadence">
-                <h4>Nudges</h4>
-                <label class="ai-mode-cadence-row">
-                  <span>First nudge</span>
-                  <select id="amcFirst" data-cadence="first_reminder_minutes">
-                    <option value="15">15 min</option>
-                    <option value="30" selected>30 min</option>
-                    <option value="60">1 hour</option>
-                    <option value="120">2 hours</option>
-                    <option value="360">6 hours</option>
-                  </select>
-                </label>
-                <label class="ai-mode-cadence-row">
-                  <span>Again</span>
-                  <select id="amcSecond" data-cadence="second_reminder_minutes">
-                    <option value="30">30 min</option>
-                    <option value="60">1 hour</option>
-                    <option value="120" selected>2 hours</option>
-                    <option value="360">6 hours</option>
-                    <option value="720">12 hours</option>
-                  </select>
-                </label>
-                <label class="ai-mode-cadence-row">
-                  <span>AI takes over</span>
-                  <select id="amcTakeover" data-cadence="ai_takeover_minutes">
-                    <option value="120">2 hours</option>
-                    <option value="360" selected>6 hours</option>
-                    <option value="720">12 hours</option>
-                    <option value="1440">1 day</option>
-                  </select>
-                </label>
+              <!-- Nudges cadence + Configure AI / Test the AI links
+                   removed at the owner's request — the cadence is now
+                   set per-step inside the Reply block, and Configure /
+                   Test live in each bot's workspace (no global shortcut
+                   needed). The hidden selects below preserve the
+                   element IDs the policy save/load JS still references
+                   so persistence keeps working. -->
+              <div class="ai-mode-cadence" hidden aria-hidden="true">
+                <select id="amcFirst" data-cadence="first_reminder_minutes">
+                  <option value="15">15 min</option>
+                  <option value="30" selected>30 min</option>
+                  <option value="60">1 hour</option>
+                  <option value="120">2 hours</option>
+                  <option value="360">6 hours</option>
+                </select>
+                <select id="amcSecond" data-cadence="second_reminder_minutes">
+                  <option value="30">30 min</option>
+                  <option value="60">1 hour</option>
+                  <option value="120" selected>2 hours</option>
+                  <option value="360">6 hours</option>
+                  <option value="720">12 hours</option>
+                </select>
+                <select id="amcTakeover" data-cadence="ai_takeover_minutes">
+                  <option value="120">2 hours</option>
+                  <option value="360" selected>6 hours</option>
+                  <option value="720">12 hours</option>
+                  <option value="1440">1 day</option>
+                </select>
               </div>
-              <button type="button" id="aiModeConfigLink" class="ai-mode-config-link">
-                Configure AI →
-              </button>
-              <button type="button" id="aiModeTestLink" class="ai-mode-config-link" style="border-top:0;color:#0f172a;">
-                Test the AI →
-              </button>
             </div>
           </div>
           <!-- Phase 1: confirmation modal when escalating to "Always reply" -->
@@ -8697,13 +9067,9 @@
               </div>
             </div>
           </div>
-          <!-- Share access — opens a modal with both customer and
-               internal share configurations. Moved here from inside
-               the home page so it doesn't compete for vertical space. -->
-          <button type="button" class="app-share-btn" id="appShareBtn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-            <span>Share access</span>
-          </button>
+          <!-- Share access topbar button removed — the per-bot
+               workspace still has its own Share access affordance. -->
+
           <!-- Trial banner moved into the topbar so it doesn't push
                page content down. The big #trialBanner below is hidden
                on trial sessions now — loadTrialBanner() writes into
@@ -10120,18 +10486,86 @@
         <!-- Bot picker header + "+ New agent" CTA -->
         <div style="grid-column: span 12; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px;">
           <h2 style="margin:0;font-size:var(--font-size-h3);font-weight:700;color:var(--color-text-primary);letter-spacing:-0.01em;">Your bots</h2>
-          <button type="button" id="botPickerNewBtn"
+          <div style="display:inline-flex;align-items:center;gap:10px;">
+            <div class="bot-view-toggle" role="group" aria-label="Bots view">
+              <button type="button" id="botViewTable" class="is-active" aria-pressed="true" title="Switch to Table view">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
+                Table
+              </button>
+              <button type="button" id="botViewCards" aria-pressed="false" title="Switch to Card view">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                Cards
+              </button>
+            </div>
+            <button type="button" id="botPickerNewBtn"
                   style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--color-primary);color:#fff;border:0;border-radius:var(--radius-md);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             New agent
           </button>
+          </div><!-- /view-toggle + new-agent group -->
         </div>
 
-        <!-- Bot picker. Cards rendered from /me/agents on each
-             open so newly created agents appear without a reload.
-             Falls back to the two default cards if the endpoint
-             hasn't loaded yet. -->
-        <div class="bot-picker" id="botPicker" style="grid-column: span 12;">
+        <!-- Filter / search bar above the bots table. Phase 2:
+             three filter chips (Type, Status, Phone presence) and
+             a search input that targets name + description. Sort
+             is driven by clicking column headers — see thead below. -->
+        <div class="bot-table-controls" id="botTableControls">
+          <label class="bot-table-filter" data-filter="type">
+            <select id="botFilterType" aria-label="Filter by type">
+              <option value="all">All types</option>
+              <option value="customer">Customer-facing only</option>
+              <option value="internal">Internal only</option>
+            </select>
+          </label>
+          <label class="bot-table-filter" data-filter="status">
+            <select id="botFilterStatus" aria-label="Filter by status">
+              <option value="all">All status</option>
+              <option value="active">Active</option>
+              <option value="unused">Unused</option>
+            </select>
+          </label>
+          <label class="bot-table-filter" data-filter="phone">
+            <select id="botFilterPhone" aria-label="Filter by phone">
+              <option value="all">All bots</option>
+              <option value="has">Has phone number</option>
+              <option value="none">No phone number</option>
+            </select>
+          </label>
+          <div class="bot-table-search">
+            <svg class="bot-table-search-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="botTableSearch" autocomplete="off" placeholder="Search bots by name or description…" aria-label="Search bots" />
+            <button type="button" class="bot-table-search-clear" id="botTableSearchClear" aria-label="Clear search">×</button>
+          </div>
+        </div>
+        <div class="bot-table-summary" id="botTableSummary" hidden></div>
+
+        <!-- Bots home table — default view. Column headers sort on
+             click; the row click target still opens the bot's
+             workspace. Card view (#botPicker below) is hidden until
+             Phase 3 adds the toggle. -->
+        <div class="bot-table-wrap" id="botTableWrap" style="grid-column: span 12;">
+          <table class="bot-table" id="botTable">
+            <thead>
+              <tr>
+                <th class="col-name"     data-sort-key="name"><span>Name</span><span class="bot-table-sort">↕</span></th>
+                <th class="col-type"     data-sort-key="type"><span>Type</span><span class="bot-table-sort">↕</span></th>
+                <th class="col-phone"    data-sort-key="phone"><span>Phone</span><span class="bot-table-sort">↕</span></th>
+                <th class="col-knowledge" data-sort-key="knowledge"><span>Knowledge</span><span class="bot-table-sort">↕</span></th>
+                <th class="col-flows"    data-sort-key="flows"><span>Used in flows</span><span class="bot-table-sort">↕</span></th>
+                <th class="col-updated"  data-sort-key="updated"><span>Last edited</span><span class="bot-table-sort">↕</span></th>
+                <th class="col-sharing"  data-sort-key="sharing"><span>Sharing</span><span class="bot-table-sort">↕</span></th>
+                <th class="col-actions"  data-no-sort style="text-align:right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="botTableBody"></tbody>
+          </table>
+        </div>
+
+        <!-- Bot picker (card view). Hidden in Phase 1; preserved so
+             Phase 3 can re-enable it via a view toggle. Cards rendered
+             from /me/agents on each open so newly created agents
+             appear without a reload. -->
+        <div class="bot-picker" id="botPicker" style="grid-column: span 12; display: none;">
           <button type="button" class="bot-picker-card" data-bot-pick="client" data-bot-agent-id="agent_default_customer" data-bot-agent-type="customer">
             <span class="bot-picker-card-eyebrow"><span class="bpc-dot"></span>Customer bot</span>
             <h2 class="bot-picker-card-title">Customer bot</h2>
@@ -10165,6 +10599,15 @@
               <span class="bot-workspace-divider">/</span>
               <span class="bot-workspace-name" id="botWorkspaceName">Customer bot</span>
             </div>
+            <!-- Tab strip — Prompt (primary edit surface), Knowledge,
+                 Widget. Lives inline in the workspace header so the
+                 pane content below moves up — no separate full-width
+                 strip row. -->
+            <nav class="home-tabs is-inline" role="tablist" aria-label="Workspace tabs">
+              <button type="button" class="home-tab is-active" data-home-tab="prompt" role="tab" aria-selected="true">Prompt</button>
+              <button type="button" class="home-tab" data-home-tab="manage" role="tab" aria-selected="false">Knowledge</button>
+              <button type="button" class="home-tab" data-home-tab="widget" role="tab" aria-selected="false">Widget</button>
+            </nav>
             <div class="bot-workspace-actions">
               <!-- Publish chip — lives in the nav bar so the message
                    ("N unpublished changes — won't affect bot until
@@ -10227,12 +10670,9 @@
           </div>
         </div>
 
-        <!-- Tab strip — Prompt (primary edit surface), Knowledge, Widget. -->
-        <nav class="home-tabs" role="tablist" aria-label="Home tabs" style="grid-column: span 12;">
-          <button type="button" class="home-tab is-active" data-home-tab="prompt" role="tab" aria-selected="true">Prompt</button>
-          <button type="button" class="home-tab" data-home-tab="manage" role="tab" aria-selected="false">Knowledge</button>
-          <button type="button" class="home-tab" data-home-tab="widget" role="tab" aria-selected="false">Widget</button>
-        </nav>
+        <!-- Tab strip relocated into the workspace header above so
+             the pane content below moves up. -->
+
 
         <!-- Legacy Test pane — no tab activates this anymore; kept in
              the DOM (hidden) because ~60 JS references still bind to
@@ -10961,7 +11401,12 @@
 
       <section class="grid" id="leads" data-route-section="leads" hidden>
         <div style="grid-column: 1 / -1; width: 100%;">
-          <div class="leads-page">
+          <div class="leads-page" data-leads-page-host>
+            <!-- Top-level tabs added by initLeadsPageTabs() at first
+                 activation: "Leads" (existing content) + "Chatbot
+                 interactions" (re-parented from the legacy #inbox
+                 section so the chatbot inbox lives inside Leads now,
+                 not as its own nav route). -->
             <header class="leads-page-head">
               <!-- Page title removed — top bar already says "Leads". -->
               <div class="pl-views" role="tablist" id="leadsViewSwitcher" aria-label="Switch view">
@@ -11087,6 +11532,95 @@
           </div>
         </div>
       </section>
+
+      <style>
+        /* Leads top-level tabs (Leads / Chatbot interactions) — same
+           visual language as the schedule + settings tabbars below so
+           the page reads as a peer surface. */
+        .lp-tabs-wrap { padding: 0 4px 8px; }
+        .lp-tabs {
+          display: flex; gap: 0; border-bottom: 1px solid #e5e7eb;
+        }
+        .lp-tab {
+          padding: 10px 20px; font-size: 14px; font-weight: 500;
+          color: #6b7280; background: none; border: none;
+          border-bottom: 2px solid transparent;
+          cursor: pointer; transition: color .15s, border-color .15s;
+          margin-bottom: -1px;
+        }
+        .lp-tab:hover { color: #0a0a0a; }
+        .lp-tab.is-active { color: #0a0a0a; border-bottom-color: #0a0a0a; font-weight: 600; }
+        [data-leads-page-tab][hidden] { display: none !important; }
+      </style>
+      <script>
+        (function () {
+          if (window.__leadsPageTabsMounted) return;
+          function tryMount() {
+            var host = document.querySelector('.leads-page[data-leads-page-host]');
+            if (!host) return false;
+            // Build the tab strip + wrap existing content in a Leads pane.
+            var tabbar = document.createElement('div');
+            tabbar.className = 'lp-tabs-wrap';
+            tabbar.innerHTML =
+              '<nav class="lp-tabs" role="tablist" aria-label="Leads sections">' +
+                '<button type="button" class="lp-tab is-active" data-lp-tab="leads" role="tab" aria-selected="true">Leads</button>' +
+                '<button type="button" class="lp-tab" data-lp-tab="chatbot" role="tab" aria-selected="false">Chatbot interactions</button>' +
+              '</nav>';
+            // Move every existing child of host into a "leads" pane wrapper.
+            var leadsPane = document.createElement('div');
+            leadsPane.setAttribute('data-leads-page-tab', 'leads');
+            while (host.firstChild) leadsPane.appendChild(host.firstChild);
+            // The chatbot pane is empty until first activation, then we
+            // re-parent every child of the legacy #inbox section.
+            var chatbotPane = document.createElement('div');
+            chatbotPane.setAttribute('data-leads-page-tab', 'chatbot');
+            chatbotPane.hidden = true;
+            host.appendChild(tabbar);
+            host.appendChild(leadsPane);
+            host.appendChild(chatbotPane);
+            var chatbotMounted = false;
+            function show(name) {
+              host.querySelectorAll('.lp-tab').forEach(function (t) {
+                var on = t.dataset.lpTab === name;
+                t.classList.toggle('is-active', on);
+                t.setAttribute('aria-selected', on ? 'true' : 'false');
+              });
+              host.querySelectorAll('[data-leads-page-tab]').forEach(function (p) {
+                p.hidden = p.getAttribute('data-leads-page-tab') !== name;
+              });
+              if (name === 'chatbot' && !chatbotMounted) {
+                chatbotMounted = true;
+                var inbox = document.getElementById('inbox');
+                if (inbox) {
+                  inbox.removeAttribute('data-route-section');
+                  inbox.removeAttribute('hidden');
+                  inbox.classList.remove('grid');
+                  while (inbox.firstChild) chatbotPane.appendChild(inbox.firstChild);
+                  // Lazy-load the inbox bundle so its IDs become live.
+                  if (typeof window.__dashboardLoadRouteModule === 'function') {
+                    window.__dashboardLoadRouteModule('inbox').catch(function () {});
+                  }
+                }
+              }
+            }
+            host.querySelectorAll('.lp-tab').forEach(function (t) {
+              t.addEventListener('click', function () { show(t.dataset.lpTab); });
+            });
+            window.__leadsPageTabsMounted = true;
+            return true;
+          }
+          if (!tryMount()) {
+            document.addEventListener('DOMContentLoaded', function () {
+              if (!tryMount()) {
+                var n = 0, iv = setInterval(function () {
+                  n++;
+                  if (tryMount() || n > 30) clearInterval(iv);
+                }, 150);
+              }
+            });
+          }
+        })();
+      </script>
 
       <style>
         /* ─────────── Schedule top-level tabs (Calendar / Instagram) ────── */
@@ -17039,35 +17573,17 @@
       <!-- ─────────── Knowledge Base · Train from URL ─────────── -->
       <section class="grid" id="kbSources" data-route-section="kb" hidden>
         <div class="wgt-page" style="grid-column: span 12;">
-          <!-- First-visit nudge for the Knowledge base. -->
-          <div class="page-nudge" data-nudge="kb" hidden>
-            <span class="page-nudge-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-            </span>
-            <div style="flex:1;min-width:0;">
-              <p class="page-nudge-text"><strong>Teach your AI about your business.</strong> Paste pages from your website, write articles and FAQs by hand, and try the answers in the Test it tab. Hit Publish when it sounds right — that's when your AI starts using the new info on real calls and chats.</p>
-              <div class="page-nudge-actions">
-                <button type="button" class="page-nudge-dismiss" data-nudge-close>Got it</button>
-                <button type="button" class="page-nudge-tour" data-nudge-tour="kb">Show me around</button>
-              </div>
-            </div>
-            <button type="button" class="page-nudge-close" data-nudge-close aria-label="Dismiss">×</button>
-          </div>
+          <!-- "Teach your AI about your business" nudge + title removed
+               at the owner's request — the page still has the search /
+               filters / table below, which is enough surface to act
+               on without the marketing-style preamble. -->
 
-          <header class="wgt-head wgt-head-with-action">
-            <div>
-              <h2 class="wgt-title">
-                Teach your AI about your business
-                <span data-help-icon="kb_sources"></span>
-              </h2>
-              <p class="wgt-sub">Add pages from your website, write articles and FAQs by hand, then try out the answers in the Test it tab. Hit Publish when you're happy — that's when calls and chats start using the new info.</p>
-            </div>
-            <!-- Publish button: state-aware. Reads /me/publish/status to
-                 decide whether to show "Up to date" (disabled) or
-                 "Publish changes" (primary, pulsing). Click → confirm
-                 modal explaining what goes live. Bottom subtitle shows
-                 "Last published Apr 28 at 10:23 AM" or "X changes since
-                 last publish." -->
+          <header class="wgt-head wgt-head-with-action" hidden>
+            <!-- Title + subtitle stripped at the owner's request. The
+                 publish cluster stays so any code referencing the
+                 #kbPublishBtn / #kbPublishMeta IDs continues to work
+                 (the surrounding header is hidden, so this is purely
+                 a non-rendering safety net). -->
             <div class="pub-cluster">
               <button type="button" class="pub-btn pub-btn--idle" id="kbPublishBtn">
                 <span class="pub-btn-dot" aria-hidden="true"></span>
@@ -17340,6 +17856,20 @@
         /* Quiet cluster — used after the prominent button was removed. Just
            hosts the small "Publish history" link in the header corner. */
         .pub-cluster--quiet { gap: 0; }
+        /* Publish UI removed at the owner's request. Every legacy
+           publish surface — the .pub-cluster pill (Widget + KB
+           headers), the .ws-publish-bar amber chip in the bot
+           workspace topbar, and the green "Publish App" buttons —
+           is hidden via CSS so the elements stay in the DOM (so
+           any code that reads / toggles their IDs keeps working)
+           but render zero pixels. */
+        .pub-cluster,
+        .pub-btn,
+        .pub-pill,
+        #globalPublishPill,
+        .ws-publish-bar,
+        #publishAppButton,
+        #publishAppButtonMobile { display: none !important; }
         .pub-btn {
           display: inline-flex;
           align-items: center;
@@ -18982,8 +19512,215 @@
           .eng-row-edit { width:100%; }
         }
       </style>
-      <!-- ─────────── Widget · Settings ─────────── -->
+      <!-- ─────────── Profile ───────────
+           The legacy Settings page (General/Phone/KB/Brain top-tabs)
+           is collapsed into a single Profile card. The other panes
+           still live in the DOM (the Profile JS hides them) so any
+           feature that still needs them (Phone numbers, KB, Brain)
+           keeps working — they just no longer appear here. -->
       <section class="grid" id="settings" data-route-section="settings" hidden>
+        <style>
+          .pf-page {
+            max-width: 720px; margin: 0 auto;
+            padding: 32px 28px 80px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                         Roboto, Helvetica, Arial, sans-serif;
+          }
+          .pf-head { margin-bottom: 28px; }
+          .pf-eyebrow {
+            font-size: 12px; font-weight: 600; color: #6366f1;
+            letter-spacing: .08em; text-transform: uppercase;
+            margin: 0 0 8px;
+          }
+          .pf-title {
+            font: 700 28px/1.2 inherit; color: #0a0a0a;
+            margin: 0; letter-spacing: -0.01em;
+          }
+          .pf-sub {
+            font-size: 14.5px; color: #64748b;
+            margin: 6px 0 0; line-height: 1.55;
+          }
+          .pf-card {
+            background: #fff; border: 1px solid #e5e7eb;
+            border-radius: 14px; padding: 28px;
+            box-shadow: 0 1px 2px rgba(15,23,42,.04);
+          }
+          .pf-card + .pf-card { margin-top: 18px; }
+          .pf-section-h {
+            font: 700 13px/1.2 inherit; color: #0a0a0a;
+            margin: 0 0 4px;
+          }
+          .pf-section-sub {
+            font-size: 13px; color: #64748b; margin: 0 0 16px;
+          }
+          .pf-row { margin-bottom: 16px; }
+          .pf-row:last-child { margin-bottom: 0; }
+          .pf-row-2 {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 12px; margin-bottom: 16px;
+          }
+          .pf-label {
+            display: block; font: 600 12.5px/1 inherit;
+            color: #374151; margin-bottom: 6px;
+            letter-spacing: .01em;
+          }
+          .pf-input {
+            display: block; width: 100%; box-sizing: border-box;
+            padding: 10px 12px; font: 14px inherit; color: #0f172a;
+            background: #fff; border: 1px solid #d1d5db;
+            border-radius: 8px; transition: border-color .12s, box-shadow .12s;
+          }
+          .pf-input:focus {
+            outline: 0; border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+          }
+          .pf-input[readonly] {
+            background: #f8fafc; color: #6b7280; cursor: not-allowed;
+          }
+          .pf-hint {
+            font-size: 11.5px; color: #9ca3af; margin: 4px 0 0;
+          }
+          .pf-actions {
+            display: flex; align-items: center; justify-content: flex-end;
+            gap: 12px; margin-top: 20px;
+          }
+          .pf-save {
+            padding: 9px 18px; border-radius: 8px;
+            background: #0f172a; color: #fff; border: 0;
+            font: 600 13.5px inherit; cursor: pointer;
+            transition: background .12s ease;
+          }
+          .pf-save:hover { background: #1f2937; }
+          .pf-save:disabled { background: #94a3b8; cursor: not-allowed; }
+          .pf-saved {
+            display: inline-flex; align-items: center; gap: 6px;
+            color: #047857; font-size: 12.5px; font-weight: 600;
+          }
+        </style>
+        <div style="grid-column: 1 / -1;">
+          <div class="pf-page">
+            <header class="pf-head">
+              <p class="pf-eyebrow">Account</p>
+              <h1 class="pf-title">Your profile</h1>
+              <p class="pf-sub">How you and your business show up across the product. Used for greetings, notifications, and the bot's "from" identity.</p>
+            </header>
+            <div class="pf-card">
+              <h2 class="pf-section-h">Personal details</h2>
+              <p class="pf-section-sub">The name on your account.</p>
+              <div class="pf-row-2">
+                <div>
+                  <label class="pf-label" for="pfFirstName">First name</label>
+                  <input type="text" id="pfFirstName" class="pf-input" placeholder="Sam" maxlength="80" autocomplete="given-name" />
+                </div>
+                <div>
+                  <label class="pf-label" for="pfLastName">Last name</label>
+                  <input type="text" id="pfLastName" class="pf-input" placeholder="Rivera" maxlength="80" autocomplete="family-name" />
+                </div>
+              </div>
+              <div class="pf-row">
+                <label class="pf-label" for="pfEmail">Email</label>
+                <input type="email" id="pfEmail" class="pf-input" readonly />
+                <p class="pf-hint">Your sign-in email. Contact support if you need to change it.</p>
+              </div>
+            </div>
+
+            <div class="pf-card">
+              <h2 class="pf-section-h">Business</h2>
+              <p class="pf-section-sub">The name your bots use when they introduce themselves.</p>
+              <div class="pf-row">
+                <label class="pf-label" for="pfBusinessName">Business name</label>
+                <input type="text" id="pfBusinessName" class="pf-input" placeholder="e.g. McHenry County Landscapers" maxlength="80" />
+                <p class="pf-hint">Optional — leave blank if you'd rather not have one.</p>
+              </div>
+            </div>
+
+            <div class="pf-actions">
+              <span class="pf-saved" id="pfSavedNote" hidden>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Saved
+              </span>
+              <button type="button" class="pf-save" id="pfSaveBtn">Save changes</button>
+            </div>
+          </div>
+        </div>
+        <script>
+          (function () {
+            if (window.__profilePageMounted) return;
+            window.__profilePageMounted = true;
+            // Hide the legacy tab strip + every old top-pane so the
+            // Profile card is the only thing that renders inside #settings.
+            function hideLegacy() {
+              var tabsWrap = document.querySelector('#settings .stg-tabs-wrap');
+              if (tabsWrap) tabsWrap.hidden = true;
+              document.querySelectorAll('#settings .stg-top-pane').forEach(function (p) {
+                p.hidden = true;
+              });
+            }
+            function load() {
+              fetch('/me', { credentials: 'same-origin' })
+                .then(function (r) { return r.ok ? r.json() : {}; })
+                .then(function (j) {
+                  var emailEl = document.getElementById('pfEmail');
+                  if (emailEl) emailEl.value = j.email || j.user_email || '';
+                  var firstEl = document.getElementById('pfFirstName');
+                  if (firstEl) firstEl.value = j.first_name || j.given_name || '';
+                  var lastEl = document.getElementById('pfLastName');
+                  if (lastEl) lastEl.value = j.last_name || j.family_name || '';
+                  var bizEl = document.getElementById('pfBusinessName');
+                  if (bizEl) bizEl.value = j.business_name || (j.business && j.business.name) || '';
+                })
+                .catch(function () {});
+            }
+            function save() {
+              var btn = document.getElementById('pfSaveBtn');
+              var note = document.getElementById('pfSavedNote');
+              if (!btn) return;
+              btn.disabled = true;
+              btn.innerHTML = '<span class="ux-spinner" aria-hidden="true"></span>Saving…';
+              fetch('/me/profile', {
+                method: 'POST', credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  first_name: (document.getElementById('pfFirstName')||{}).value || '',
+                  last_name:  (document.getElementById('pfLastName') ||{}).value || '',
+                  business_name: (document.getElementById('pfBusinessName')||{}).value || '',
+                }),
+              })
+                .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
+                .then(function (res) {
+                  btn.disabled = false;
+                  btn.textContent = 'Save changes';
+                  if (!res.ok) {
+                    alert((res.body && res.body.error) || 'Could not save. Please try again.');
+                    return;
+                  }
+                  if (note) {
+                    note.hidden = false;
+                    setTimeout(function () { note.hidden = true; }, 2400);
+                  }
+                })
+                .catch(function () {
+                  btn.disabled = false;
+                  btn.textContent = 'Save changes';
+                  alert('Network error.');
+                });
+            }
+            function init() {
+              hideLegacy();
+              load();
+              var btn = document.getElementById('pfSaveBtn');
+              if (btn && !btn.__wired) {
+                btn.__wired = true;
+                btn.addEventListener('click', save);
+              }
+            }
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', init);
+            } else {
+              init();
+            }
+          })();
+        </script>
         <!-- Top-level Settings tabs: General (widget) and Phone -->
         <div class="stg-tabs-wrap" style="grid-column: span 12;">
           <nav class="stg-top-tabs" role="tablist" aria-label="Settings sections">
@@ -19504,6 +20241,284 @@
         </div>
       </section>
 
+      <!-- ─── AI Drafts inbox (Reply Block Phase 3) ─────────────────────────
+           Surfaces drafts created by any Reply step where the owner
+           picked "Show me the draft first" instead of auto-send. Each
+           draft shows the customer message + the AI's proposed reply,
+           which the owner can edit, send, or cancel. Cancelled / sent
+           drafts move out of the pending list (history view TBD).  -->
+      <section class="grid" id="drafts" data-route-section="drafts" hidden>
+        <style>
+          .dr-page {
+            max-width: 880px; margin: 0 auto;
+            padding: 24px 28px 60px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                         Roboto, Helvetica, Arial, sans-serif;
+            grid-column: 1 / -1;
+          }
+          .dr-head { margin-bottom: 18px; }
+          .dr-eyebrow {
+            font-size: 11px; font-weight: 600; color: #6366f1;
+            letter-spacing: .08em; text-transform: uppercase;
+            margin: 0 0 6px;
+          }
+          .dr-title { font: 700 24px/1.2 inherit; color: #0a0a0a; margin: 0; }
+          .dr-sub {
+            font-size: 14px; color: #64748b;
+            margin: 4px 0 0; line-height: 1.55;
+          }
+          .dr-card {
+            background: #fff; border: 1px solid #e5e7eb;
+            border-radius: 12px; padding: 16px 18px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 2px rgba(15,23,42,.04);
+          }
+          .dr-card-head {
+            display: flex; align-items: center; gap: 8px;
+            margin-bottom: 8px; font-size: 12.5px; color: #6b7280;
+          }
+          .dr-card-name { font-weight: 700; color: #0f172a; font-size: 13.5px; }
+          .dr-channel-pill {
+            padding: 2px 8px; border-radius: 999px;
+            font-size: 10.5px; font-weight: 600;
+            background: #f1f5f9; color: #475569;
+            text-transform: uppercase; letter-spacing: .04em;
+          }
+          .dr-expires {
+            margin-left: auto; font-size: 11.5px; color: #b45309;
+          }
+          .dr-msg-wrap {
+            background: #f8fafc; border-radius: 8px;
+            padding: 10px 12px; margin-bottom: 10px;
+            font-size: 13px; color: #334155; line-height: 1.5;
+          }
+          .dr-msg-label {
+            font-size: 10.5px; font-weight: 600; color: #6b7280;
+            text-transform: uppercase; letter-spacing: .04em;
+            margin-bottom: 4px;
+          }
+          .dr-reply-edit {
+            width: 100%; min-height: 96px;
+            padding: 10px 12px; border: 1px solid #d1d5db;
+            border-radius: 8px; font: 13.5px/1.5 inherit; color: #0f172a;
+            box-sizing: border-box; resize: vertical;
+          }
+          .dr-reply-edit:focus {
+            outline: 0; border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+          }
+          .dr-actions {
+            display: flex; align-items: center; gap: 8px;
+            margin-top: 12px;
+          }
+          .dr-btn {
+            padding: 7px 14px; border-radius: 8px;
+            font: 600 12.5px inherit; cursor: pointer;
+            transition: background .12s, transform .08s;
+          }
+          .dr-btn:active:not(:disabled) {
+            transform: translateY(1px) scale(.985);
+          }
+          .dr-btn:disabled { opacity: .55; cursor: not-allowed; }
+          .dr-btn-send {
+            background: #0f172a; color: #fff; border: 0;
+          }
+          .dr-btn-send:hover:not(:disabled) { background: #1f2937; }
+          .dr-btn-cancel {
+            background: #fff; color: #b91c1c;
+            border: 1px solid #fecaca;
+          }
+          .dr-btn-cancel:hover:not(:disabled) { background: #fef2f2; }
+          .dr-status {
+            margin-left: auto; font-size: 12px; color: #6b7280;
+          }
+          .dr-empty {
+            background: #fff; border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 40px 20px; text-align: center;
+            color: #6b7280; font-size: 14px;
+          }
+        </style>
+        <div class="dr-page">
+          <header class="dr-head">
+            <p class="dr-eyebrow">Inbox</p>
+            <h1 class="dr-title">AI reply drafts</h1>
+            <p class="dr-sub">Replies your bots wrote that are waiting on your review. Drafts not handled in 24 hours expire and you'll get an alert.</p>
+          </header>
+          <div id="drList">
+            <div class="ux-progress" style="margin-bottom:14px"><div class="ux-progress-bar"></div></div>
+            <div class="dr-empty">Loading drafts…</div>
+          </div>
+        </div>
+        <script>
+          (function () {
+            if (window.__draftsInboxMounted) return;
+            window.__draftsInboxMounted = true;
+
+            function escHtml(s) {
+              return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+                return ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[c];
+              });
+            }
+            function fmtAge(epoch) {
+              if (!epoch) return "";
+              var diff = Date.now() - (epoch * 1000);
+              if (diff < 60000)    return "just now";
+              if (diff < 3600000)  return Math.floor(diff/60000) + "m ago";
+              if (diff < 86400000) return Math.floor(diff/3600000) + "h ago";
+              return Math.floor(diff/86400000) + "d ago";
+            }
+            function fmtExpiresIn(epoch) {
+              if (!epoch) return "";
+              var diff = (epoch * 1000) - Date.now();
+              if (diff <= 0) return "expired";
+              if (diff < 3600000) return "expires in " + Math.floor(diff/60000) + "m";
+              if (diff < 86400000) return "expires in " + Math.floor(diff/3600000) + "h";
+              return "expires in " + Math.floor(diff/86400000) + "d";
+            }
+
+            function renderRow(d) {
+              return '<div class="dr-card" data-draft-id="' + escHtml(d.id) + '">' +
+                '<div class="dr-card-head">' +
+                  '<span class="dr-card-name">' + escHtml(d.lead_name || "Customer") + '</span>' +
+                  '<span class="dr-channel-pill">' + escHtml((d.channel || "?").replace("_", " ")) + '</span>' +
+                  '<span>· ' + escHtml(fmtAge(d.created_at)) + '</span>' +
+                  '<span class="dr-expires">' + escHtml(fmtExpiresIn(d.expires_at)) + '</span>' +
+                '</div>' +
+                '<div class="dr-msg-wrap">' +
+                  '<div class="dr-msg-label">Customer wrote</div>' +
+                  '<div>' + escHtml(d.customer_message || "") + '</div>' +
+                '</div>' +
+                '<div class="dr-msg-label" style="margin-bottom:4px">Bot drafted reply (edit if you like)</div>' +
+                '<textarea class="dr-reply-edit" data-dr-text>' +
+                  escHtml(d.proposed_reply || "") +
+                '</textarea>' +
+                '<div class="dr-actions">' +
+                  '<button type="button" class="dr-btn dr-btn-send" data-dr-act="send">Send</button>' +
+                  '<button type="button" class="dr-btn dr-btn-cancel" data-dr-act="cancel">Cancel</button>' +
+                  '<span class="dr-status" data-dr-status></span>' +
+                '</div>' +
+              '</div>';
+            }
+
+            function setBadge(n) {
+              var b = document.getElementById("appDraftsBadge");
+              if (!b) return;
+              if (n > 0) { b.textContent = String(n); b.hidden = false; }
+              else { b.hidden = true; }
+            }
+
+            function load() {
+              var list = document.getElementById("drList");
+              if (!list) return;
+              fetch("/me/reply-drafts?status=pending", { credentials: "same-origin" })
+                .then(function (r) { return r.ok ? r.json() : { drafts: [] }; })
+                .then(function (j) {
+                  var rows = (j.drafts || []);
+                  setBadge(rows.length);
+                  if (!rows.length) {
+                    list.innerHTML = '<div class="dr-empty">No drafts waiting. When a Reply step is set to "Show me the draft first," AI replies park here for your review.</div>';
+                    return;
+                  }
+                  list.innerHTML = rows.map(renderRow).join("");
+                  wireRow();
+                })
+                .catch(function () {
+                  list.innerHTML = '<div class="dr-empty">Couldn\'t load drafts. Try refreshing.</div>';
+                });
+            }
+
+            function wireRow() {
+              document.querySelectorAll('#drList .dr-card').forEach(function (card) {
+                if (card.__wired) return;
+                card.__wired = true;
+                var did = card.dataset.draftId;
+                var statusEl = card.querySelector('[data-dr-status]');
+                var sendBtn = card.querySelector('[data-dr-act="send"]');
+                var cancelBtn = card.querySelector('[data-dr-act="cancel"]');
+                var ta = card.querySelector('[data-dr-text]');
+                sendBtn.addEventListener('click', function () {
+                  sendBtn.disabled = true;
+                  cancelBtn.disabled = true;
+                  statusEl.textContent = "Sending…";
+                  fetch("/me/reply-drafts/" + encodeURIComponent(did) + "/send", {
+                    method: "POST", credentials: "same-origin",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ text: (ta.value || "").trim() }),
+                  }).then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
+                    .then(function (res) {
+                      if (res.ok && (res.body || {}).ok) {
+                        statusEl.textContent = "Sent ✓";
+                        setTimeout(load, 600);
+                      } else {
+                        sendBtn.disabled = false;
+                        cancelBtn.disabled = false;
+                        var why = (res.body && res.body.reason) || "send_failed";
+                        statusEl.textContent = "Couldn't send: " + why;
+                      }
+                    })
+                    .catch(function () {
+                      sendBtn.disabled = false;
+                      cancelBtn.disabled = false;
+                      statusEl.textContent = "Network error.";
+                    });
+                });
+                cancelBtn.addEventListener('click', function () {
+                  if (!confirm("Cancel this draft? The customer won't get a reply.")) return;
+                  cancelBtn.disabled = true;
+                  sendBtn.disabled = true;
+                  statusEl.textContent = "Cancelling…";
+                  fetch("/me/reply-drafts/" + encodeURIComponent(did) + "/cancel", {
+                    method: "POST", credentials: "same-origin",
+                  }).then(function (r) {
+                    if (r.ok) { statusEl.textContent = "Cancelled"; setTimeout(load, 400); }
+                    else { sendBtn.disabled = false; cancelBtn.disabled = false; statusEl.textContent = "Failed."; }
+                  }).catch(function () {
+                    sendBtn.disabled = false; cancelBtn.disabled = false;
+                    statusEl.textContent = "Network error.";
+                  });
+                });
+              });
+            }
+
+            // Initial load + every-time-they-navigate-here load.
+            // appShowRoute uses history.replaceState (no hashchange
+            // event), so we listen for clicks on the nav button AND
+            // for the section's .is-active class flipping on. Also
+            // poll the pending count every 60s for the sidebar badge.
+            function pollBadge() {
+              fetch("/me/reply-drafts?status=pending", { credentials: "same-origin" })
+                .then(function (r) { return r.ok ? r.json() : { drafts: [] }; })
+                .then(function (j) { setBadge((j.drafts || []).length); })
+                .catch(function () {});
+            }
+            function isActive() {
+              var s = document.getElementById("drafts");
+              return !!(s && s.classList.contains("is-active"));
+            }
+            // Hook nav-button clicks (works even though appShowRoute
+            // uses replaceState which doesn't fire hashchange).
+            document.querySelectorAll('.app-nav-btn[data-route="drafts"]')
+              .forEach(function (btn) {
+                if (btn.__draftsWired) return;
+                btn.__draftsWired = true;
+                btn.addEventListener("click", function () {
+                  setTimeout(load, 30);
+                });
+              });
+            // Belt-and-suspenders: also re-run on hash changes (covers
+            // direct URL paste / back-forward) and once on script
+            // boot if the user already landed on #drafts.
+            window.addEventListener("hashchange", function () {
+              if (location.hash === "#drafts") load();
+            });
+            if (isActive() || location.hash === "#drafts") load();
+            else pollBadge();
+            setInterval(pollBadge, 60000);
+          })();
+        </script>
+      </section>
+
       <!-- ─── AI Settings (Phase 1) ───────────────────────────────────────── -->
       <section class="grid" id="aiSettings" data-route-section="aiSettings" hidden>
         <div class="ais-page" style="grid-column: 1 / -1; max-width: 880px; margin: 0 auto; padding: 24px 28px 80px;">
@@ -19820,34 +20835,303 @@
       <!-- ─────────── Outreach (merged Engagement + Campaigns) ───────────── -->
       <section class="grid" id="outreach" data-route-section="outreach" hidden>
         <div style="grid-column: 1 / -1; width: 100%;">
-          <div class="out-page">
-            <!-- My Flows pane — the only outreach surface now. The
-                 on-demand campaigns moved to their own #campaigns route
-                 in the sidebar; tabs were removed because a single
-                 pane doesn't need a tab strip. -->
-            <div class="out-pane" data-out-pane="myflows">
+          <div class="out-page" data-out-host>
+            <!-- Top-level view switcher: Flows | Forms. Hidden when the
+                 user is inside the canvas pane (auto) so the canvas
+                 still gets every pixel. -->
+            <nav class="op-vtabs" role="tablist" aria-label="Outreach views" data-out-vtabs>
+              <button type="button" class="op-vtab is-active" data-out-view="flows" role="tab" aria-selected="true">Flows</button>
+              <button type="button" class="op-vtab" data-out-view="forms" role="tab" aria-selected="false">Forms</button>
+            </nav>
+
+            <!-- My Flows pane — list of flows. -->
+            <div class="out-pane" data-out-pane="myflows" data-out-view-pane="flows">
               <div id="outreachMyFlowsMount"></div>
             </div>
 
-            <!-- Canvas pane — surfaced when the user clicks a flow card
-                 under My Flows. The flow-builder React island owns its
-                 own back-to-flows pill (top-left of the canvas) and
-                 dispatches `fb-back-to-flows` to return to the list. -->
-            <div class="out-pane" data-out-pane="auto" hidden>
+            <!-- Canvas pane — opened when the user picks a flow card.
+                 Reuses the existing flow-builder island. -->
+            <div class="out-pane" data-out-pane="auto" data-out-view-pane="flows" hidden>
               <div id="outreachAutoMount"></div>
             </div>
-            <!-- Phase 2/3: per-flow run history + per-run audit detail.
-                 Both live in this single mount so the "back" navigation
-                 stays simple. JS swaps innerHTML based on which view
-                 is active. No new React island, no new tools — pure
-                 inline JS hitting /me/flows/<id>/runs and
-                 /me/flows/<id>/runs/<rid>. -->
-            <div class="out-pane" data-out-pane="runs" hidden>
+            <!-- Per-flow run history + per-run audit detail. -->
+            <div class="out-pane" data-out-pane="runs" data-out-view-pane="flows" hidden>
               <div id="outreachRunsMount"></div>
+            </div>
+
+            <!-- Forms pane — table of every form the owner has built,
+                 with a regular-sized "+ Create form" button. Replaces
+                 the standalone Lead intake nav route. -->
+            <div class="out-pane" data-out-pane="forms" data-out-view-pane="forms" hidden>
+              <div id="outreachFormsMount"></div>
             </div>
           </div>
         </div>
       </section>
+
+      <style>
+        .op-vtabs {
+          display: flex; gap: 0; border-bottom: 1px solid #e5e7eb;
+          padding: 0 4px; margin: 0 0 4px; flex-shrink: 0;
+        }
+        body.is-outreach-fullbleed .op-vtabs {
+          padding: 28px 28px 0 !important;
+          background: #fff;
+          margin: 0 !important;
+        }
+        .op-vtab {
+          padding: 10px 20px; font-size: 14px; font-weight: 500;
+          color: #6b7280; background: none; border: none;
+          border-bottom: 2px solid transparent;
+          cursor: pointer; transition: color .15s, border-color .15s;
+          margin-bottom: -1px;
+        }
+        .op-vtab:hover { color: #0a0a0a; }
+        .op-vtab.is-active { color: #0a0a0a; border-bottom-color: #0a0a0a; font-weight: 600; }
+        body.is-outreach-fullbleed .out-page[data-out-host] .op-vtabs { padding: 8px 28px 0; }
+        /* Hide the view switcher on the canvas pane so it doesn't
+           steal vertical space from the React-flow canvas. */
+        body[data-out-view="flows"][data-out-active-pane="auto"] .op-vtabs { display: none; }
+
+        /* Forms table — same visual language as .leads-table. */
+        .of-page { max-width: 1180px; margin: 0 auto; padding: 24px 28px 32px; }
+        .of-head {
+          display: flex; align-items: center; justify-content: space-between;
+          gap: 12px; margin-bottom: 16px;
+        }
+        .of-title { font: 700 22px/1.2 inherit; color: #0a0a0a; margin: 0; }
+        .of-sub { font-size: 13.5px; color: #6b7280; margin: 4px 0 0; }
+        .of-create-btn {
+          display: inline-flex; align-items: center; gap: 6px;
+          padding: 8px 14px; border-radius: 8px;
+          background: #0f172a; color: #fff; border: 0;
+          font: 600 13px inherit; cursor: pointer;
+          transition: background .12s ease, transform .1s ease;
+        }
+        .of-create-btn:hover { background: #1f2937; }
+        .of-table-wrap {
+          background: #fff; border: 1px solid #e5e7eb;
+          border-radius: 12px; overflow: hidden;
+        }
+        .of-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .of-table thead th {
+          font-size: 12px; font-weight: 600; color: #6b7280;
+          text-transform: uppercase; letter-spacing: .04em;
+          background: #f8fafc; border-bottom: 1px solid #e5e7eb;
+          padding: 10px 14px; text-align: left;
+        }
+        .of-table tbody td {
+          padding: 12px 14px; border-bottom: 1px solid #f1f5f9;
+          color: #0f172a; vertical-align: middle;
+        }
+        .of-table tbody tr:last-child td { border-bottom: 0; }
+        .of-table tbody tr:hover { background: #f8fafc; }
+        .of-name { font-weight: 600; color: #0a0a0a; }
+        .of-slug { font-size: 12px; color: #64748b; margin-top: 2px; }
+        .of-status-pill {
+          display: inline-flex; align-items: center; gap: 4px;
+          padding: 2px 9px; border-radius: 999px;
+          font-size: 11px; font-weight: 600;
+        }
+        .of-status-pill.is-published { background: #ecfdf5; color: #047857; }
+        .of-status-pill.is-draft { background: #fef3c7; color: #92400e; }
+        .of-row-action {
+          padding: 6px 10px; border-radius: 6px;
+          background: #fff; border: 1px solid #e5e7eb;
+          font-size: 12.5px; color: #0f172a; cursor: pointer;
+          margin-left: 4px;
+        }
+        .of-row-action:hover { background: #f8fafc; border-color: #cbd5e1; }
+        .of-empty {
+          padding: 40px 20px; text-align: center; color: #6b7280;
+          font-size: 14px;
+        }
+      </style>
+      <script>
+        (function () {
+          if (window.__outreachViewsMounted) return;
+
+          function escHtml(s) {
+            return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+              return ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[c];
+            });
+          }
+          function relTime(ts) {
+            if (!ts) return "—";
+            var ms = (typeof ts === "number" ? ts * 1000 : Date.parse(ts));
+            if (!ms || isNaN(ms)) return "—";
+            var diff = Date.now() - ms;
+            if (diff < 60000) return "just now";
+            if (diff < 3600000) return Math.floor(diff/60000) + "m ago";
+            if (diff < 86400000) return Math.floor(diff/3600000) + "h ago";
+            if (diff < 7*86400000) return Math.floor(diff/86400000) + "d ago";
+            try { return new Date(ms).toLocaleDateString(); } catch (_) { return ""; }
+          }
+
+          function renderForms(list) {
+            var mount = document.getElementById("outreachFormsMount");
+            if (!mount) return;
+            var rows = (list || []).map(function (f) {
+              var status = f.is_draft ? "draft" : "published";
+              var statusLabel = f.is_draft ? "Draft" : "Published";
+              return '<tr data-form-id="' + escHtml(f.id || "") + '">' +
+                '<td>' +
+                  '<div class="of-name">' + escHtml(f.name || "(untitled)") + '</div>' +
+                  '<div class="of-slug">/' + escHtml(f.slug || "") + '</div>' +
+                '</td>' +
+                '<td>' +
+                  '<span class="of-status-pill is-' + status + '">' + statusLabel + '</span>' +
+                '</td>' +
+                '<td>' +
+                  escHtml((f.fields || []).length) + ' field' + ((f.fields||[]).length === 1 ? "" : "s") +
+                '</td>' +
+                '<td>' + escHtml(relTime(f.created_at)) + '</td>' +
+                '<td style="text-align:right;">' +
+                  '<button type="button" class="of-row-action" data-of-edit="' + escHtml(f.id || "") + '">Edit</button>' +
+                  '<button type="button" class="of-row-action" data-of-copy="' + escHtml(f.slug || "") + '">Copy link</button>' +
+                '</td>' +
+              '</tr>';
+            }).join("");
+            var emptyRow = !list || !list.length
+              ? '<tr><td colspan="5" class="of-empty">No forms yet — click <strong>+ Create form</strong> above to make your first one.</td></tr>'
+              : "";
+            mount.innerHTML =
+              '<div class="of-page">' +
+                '<header class="of-head">' +
+                  '<div>' +
+                    '<h2 class="of-title">Forms</h2>' +
+                    '<p class="of-sub">Embed-anywhere lead intake forms. Each form is wired to a flow that runs on submit.</p>' +
+                  '</div>' +
+                  '<button type="button" id="ofCreateBtn" class="of-create-btn">+ Create form</button>' +
+                '</header>' +
+                '<div class="of-table-wrap">' +
+                  '<table class="of-table">' +
+                    '<thead><tr><th>Name</th><th>Status</th><th>Fields</th><th>Created</th><th></th></tr></thead>' +
+                    '<tbody>' + rows + emptyRow + '</tbody>' +
+                  '</table>' +
+                '</div>' +
+              '</div>';
+            wireRowActions();
+          }
+
+          function wireRowActions() {
+            var mount = document.getElementById("outreachFormsMount");
+            if (!mount) return;
+            var createBtn = mount.querySelector("#ofCreateBtn");
+            if (createBtn && !createBtn.__wired) {
+              createBtn.__wired = true;
+              createBtn.addEventListener("click", function () {
+                var name = window.prompt("Name your new form:");
+                if (!name) return;
+                createBtn.disabled = true;
+                createBtn.innerHTML = '<span class="ux-spinner" aria-hidden="true"></span>Creating…';
+                fetch("/me/forms", {
+                  method: "POST", credentials: "same-origin",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    name: name.trim(),
+                    fields: [
+                      { id: "name",  label: "Name",  type: "text",  required: true },
+                      { id: "email", label: "Email", type: "email", required: true },
+                    ],
+                  }),
+                }).then(function (r) {
+                  createBtn.disabled = false;
+                  createBtn.textContent = "+ Create form";
+                  if (!r.ok) { alert("Couldn't create form."); return; }
+                  loadForms();
+                }).catch(function () {
+                  createBtn.disabled = false;
+                  createBtn.textContent = "+ Create form";
+                  alert("Network error creating form.");
+                });
+              });
+            }
+            mount.querySelectorAll("[data-of-edit]").forEach(function (b) {
+              if (b.__wired) return;
+              b.__wired = true;
+              b.addEventListener("click", function () {
+                var id = b.dataset.ofEdit;
+                window.open("/dashboard/lead-intake?form=" + encodeURIComponent(id), "_blank");
+              });
+            });
+            mount.querySelectorAll("[data-of-copy]").forEach(function (b) {
+              if (b.__wired) return;
+              b.__wired = true;
+              b.addEventListener("click", function () {
+                var slug = b.dataset.ofCopy;
+                var url = location.origin + "/f/" + slug;
+                navigator.clipboard && navigator.clipboard.writeText(url);
+                b.textContent = "Copied!";
+                setTimeout(function () { b.textContent = "Copy link"; }, 1500);
+              });
+            });
+          }
+
+          function loadForms() {
+            var mount = document.getElementById("outreachFormsMount");
+            if (!mount) return;
+            mount.innerHTML =
+              '<div class="of-page">' +
+                '<div class="ux-progress" style="margin-bottom:12px;"><div class="ux-progress-bar"></div></div>' +
+                '<div class="of-empty">Loading forms…</div>' +
+              '</div>';
+            fetch("/me/forms", { credentials: "same-origin" })
+              .then(function (r) { return r.ok ? r.json() : { forms: [] }; })
+              .then(function (j) { renderForms(j.forms || []); })
+              .catch(function () { renderForms([]); });
+          }
+
+          function setView(name) {
+            var host = document.querySelector('.out-page[data-out-host]');
+            if (!host) return;
+            host.querySelectorAll('.op-vtab').forEach(function (t) {
+              var on = t.dataset.outView === name;
+              t.classList.toggle('is-active', on);
+              t.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+            host.querySelectorAll('[data-out-view-pane]').forEach(function (p) {
+              var match = p.getAttribute('data-out-view-pane') === name;
+              if (!match) {
+                p.hidden = true;
+              } else {
+                // For "flows" view, only myflows is initially visible; the
+                // flow-builder JS toggles auto/runs as needed.
+                if (name === 'flows') {
+                  if (p.dataset.outPane === 'myflows') p.hidden = false;
+                } else {
+                  p.hidden = false;
+                }
+              }
+            });
+            document.body.dataset.outView = name;
+            if (name === 'forms') loadForms();
+          }
+
+          function tryMount() {
+            var host = document.querySelector('.out-page[data-out-host]');
+            if (!host) return false;
+            host.querySelectorAll('.op-vtab').forEach(function (t) {
+              if (t.__wired) return;
+              t.__wired = true;
+              t.addEventListener('click', function () { setView(t.dataset.outView); });
+            });
+            window.__outreachViewsMounted = true;
+            document.body.dataset.outView = 'flows';
+            return true;
+          }
+          if (!tryMount()) {
+            document.addEventListener('DOMContentLoaded', function () {
+              if (!tryMount()) {
+                var n = 0, iv = setInterval(function () {
+                  n++;
+                  if (tryMount() || n > 30) clearInterval(iv);
+                }, 150);
+              }
+            });
+          }
+        })();
+      </script>
       <!-- ─── /Outreach ──────────────────────────────────────────────────── -->
 
       <section class="grid" id="engagement" data-route-section="engagement" hidden>
@@ -25671,11 +26955,41 @@
       }
       function returnToBotPicker() {
         if (workspace) workspace.classList.remove("is-active");
-        if (picker) picker.style.display = "";
+        // Re-show whichever bots view is active. Effective view
+        // honors the user's preference unless the viewport forces
+        // cards (mobile fallback).
+        const tableWrap = document.getElementById("botTableWrap");
+        const controlsBar = document.getElementById("botTableControls");
+        const view = window.__botsView;
+        if (view === "table") {
+          if (tableWrap) tableWrap.style.display = "";
+          if (picker) picker.style.display = "none";
+        } else {
+          if (picker) picker.style.display = "";
+          if (tableWrap) tableWrap.style.display = "none";
+        }
+        if (controlsBar) controlsBar.style.display = "";
         if (homeHero) homeHero.style.display = "";
         refreshBotPickerMeta();
-        // Workspace just closed — the bar should hide, the floating
-        // pill should re-appear.
+        // Repaint from the latest cache so any edits made inside
+        // the workspace (rename, behavior change, voice settings)
+        // reflect on return without waiting for the next /me/agents
+        // reload. Cards path also flows through state filters.
+        if (Array.isArray(window.__agentsCache)) {
+          if (view === "table") {
+            try { paintBotsTable(); } catch (_) {}
+          } else {
+            try {
+              const filtered = filterAgentsForTable(window.__agentsCache);
+              const sorted   = sortAgentsForTable(filtered);
+              renderAgentCards(sorted);
+              paintBotsTableControlState();
+            } catch (_) {}
+          }
+        }
+        if (typeof window.paintViewToggleState === "function") {
+          window.paintViewToggleState();
+        }
         try { window.publishStatus && window.publishStatus.refresh && window.publishStatus.refresh(); } catch (_) {}
       }
       function refreshBotPickerMeta() {
@@ -25734,6 +27048,101 @@
       reloadAgentsIntoPicker();
       window.addEventListener("agents:changed", reloadAgentsIntoPicker);
 
+      // Phase 2 wiring — filter chip selects, search input (debounced),
+      // search clear button, column-header sort. Each mutator updates
+      // window.__botsTableState, persists to localStorage (except
+      // search), then repaints.
+      ["botFilterType", "botFilterStatus", "botFilterPhone"].forEach(function (id) {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        sel.addEventListener("change", function () {
+          const key = id.replace("botFilter", "").toLowerCase();
+          window.__botsTableState.filters[key] = sel.value || "all";
+          saveBotsTableState();
+          paintBotsTable();
+        });
+      });
+      const searchEl = document.getElementById("botTableSearch");
+      const clearEl  = document.getElementById("botTableSearchClear");
+      let __searchDebounce = null;
+      if (searchEl) {
+        searchEl.addEventListener("input", function () {
+          clearTimeout(__searchDebounce);
+          const value = searchEl.value || "";
+          __searchDebounce = setTimeout(function () {
+            window.__botsTableState.search = value;
+            paintBotsTable();
+          }, 200);
+        });
+      }
+      if (clearEl) clearEl.addEventListener("click", function () {
+        window.__botsTableState.search = "";
+        if (searchEl) searchEl.value = "";
+        paintBotsTable();
+        if (searchEl) searchEl.focus();
+      });
+      // Column-header sort. Click toggles asc/desc on the current
+      // key, or switches to a new key (default direction: desc for
+      // numeric/date columns, asc for text).
+      document.querySelectorAll(".bot-table thead th[data-sort-key]").forEach(function (th) {
+        th.addEventListener("click", function () {
+          const key = th.dataset.sortKey;
+          if (!key) return;
+          const s = window.__botsTableState.sort;
+          if (s.key === key) {
+            s.dir = s.dir === "asc" ? "desc" : "asc";
+          } else {
+            s.key = key;
+            s.dir = (key === "name" || key === "type" || key === "phone" || key === "sharing") ? "asc" : "desc";
+          }
+          saveBotsTableState();
+          paintBotsTable();
+        });
+      });
+
+      // Phase 3 — view toggle (Table ⇄ Cards). Click flips the
+      // preference, persists to localStorage, and reloads the
+      // active view. The card path runs through the same filter
+      // /sort/search pipeline, so switching views never loses the
+      // user's working set.
+      const viewTableBtn = document.getElementById("botViewTable");
+      const viewCardsBtn = document.getElementById("botViewCards");
+      function paintViewToggleState() {
+        const v = window.__botsView;
+        if (viewTableBtn) {
+          viewTableBtn.classList.toggle("is-active", v === "table");
+          viewTableBtn.setAttribute("aria-pressed", v === "table" ? "true" : "false");
+        }
+        if (viewCardsBtn) {
+          viewCardsBtn.classList.toggle("is-active", v === "cards");
+          viewCardsBtn.setAttribute("aria-pressed", v === "cards" ? "true" : "false");
+        }
+      }
+      window.paintViewToggleState = paintViewToggleState;
+      if (viewTableBtn) viewTableBtn.addEventListener("click", function () {
+        if (window.__botsViewPref === "table") return;
+        window.__botsView = "table"; // setter persists to LS
+        reloadAgentsIntoPicker();
+      });
+      if (viewCardsBtn) viewCardsBtn.addEventListener("click", function () {
+        if (window.__botsViewPref === "cards") return;
+        window.__botsView = "cards";
+        reloadAgentsIntoPicker();
+      });
+      // Viewport resize → if we drop below the narrow threshold,
+      // force cards (handled by the __botsView getter); when we
+      // widen back, the user's preference restores automatically.
+      // Repaint on every transition so the right view renders.
+      let __lastNarrow = isNarrowViewport();
+      window.addEventListener("resize", function () {
+        const now = isNarrowViewport();
+        if (now !== __lastNarrow) {
+          __lastNarrow = now;
+          reloadAgentsIntoPicker();
+        }
+      });
+      paintViewToggleState();
+
       // Workspace delete-bot button — only visible for non-default
       // agents. Server also refuses to delete defaults (belt + braces).
       const wsDelete = document.getElementById("botWorkspaceDelete");
@@ -25774,15 +27183,72 @@
     window.__agentsCache = [];
     window.__activeAgent = null;
 
+    // View state — Phase 3 wires a UI toggle + localStorage so the
+    // user's choice persists. Narrow viewports (<900px) force cards
+    // because tables don't work well on phones; the toggle is hidden
+    // on those viewports via media query. The previously-chosen
+    // view is restored when the viewport widens back.
+    const BOT_VIEW_LS_KEY = "botsView.v1";
+    function isNarrowViewport() {
+      return (typeof window !== "undefined") && window.innerWidth < 900;
+    }
+    function loadPreferredBotsView() {
+      try {
+        const v = localStorage.getItem(BOT_VIEW_LS_KEY);
+        if (v === "cards" || v === "table") return v;
+      } catch (_) {}
+      return "table";
+    }
+    function savePreferredBotsView(v) {
+      try { localStorage.setItem(BOT_VIEW_LS_KEY, v); } catch (_) {}
+    }
+    // Effective view = user preference unless the viewport forces
+    // cards. Mutators set the *preference* and rely on this getter
+    // to apply the override.
+    window.__botsViewPref = loadPreferredBotsView();
+    Object.defineProperty(window, "__botsView", {
+      configurable: true,
+      get: function () {
+        return isNarrowViewport() ? "cards" : (window.__botsViewPref || "table");
+      },
+      set: function (v) {
+        window.__botsViewPref = (v === "cards") ? "cards" : "table";
+        savePreferredBotsView(window.__botsViewPref);
+      },
+    });
     function reloadAgentsIntoPicker() {
       const picker = document.getElementById("botPicker");
-      if (!picker) return;
+      const tableWrap = document.getElementById("botTableWrap");
+      if (!picker && !tableWrap) return;
       fetch("/me/agents", { credentials: "same-origin", cache: "no-store" })
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (j) {
           if (!j || !Array.isArray(j.agents)) return;
           window.__agentsCache = j.agents.slice();
-          renderAgentCards(j.agents);
+          const view = window.__botsView === "cards" ? "cards" : "table";
+          // Controls bar (filter chips + search) applies to BOTH
+          // views — filter to "Customer-facing only" in table view,
+          // switch to cards, only customer cards show. Stays
+          // visible in both modes.
+          const controlsBar = document.getElementById("botTableControls");
+          if (view === "table") {
+            if (tableWrap) tableWrap.style.display = "";
+            if (picker) picker.style.display = "none";
+            if (controlsBar) controlsBar.style.display = "";
+            paintBotsTable();
+          } else {
+            if (tableWrap) tableWrap.style.display = "none";
+            if (picker) picker.style.display = "";
+            if (controlsBar) controlsBar.style.display = "";
+            // Card path now respects filters + search + sort using
+            // the same derived list paintBotsTable computes.
+            const filtered = filterAgentsForTable(j.agents);
+            const sorted   = sortAgentsForTable(filtered);
+            renderAgentCards(sorted);
+            paintBotsTableControlState();
+          }
+          // Reflect the active view in the toggle button group.
+          paintViewToggleState();
         })
         .catch(function () {});
     }
@@ -25913,6 +27379,363 @@
       return await res.json();
     }
 
+    // Phase 2 — table state: column sort + filter chips + search.
+    // Sort and filters persist in localStorage (per-user-via-account);
+    // search clears on navigation by design — it's a transient lens,
+    // not a saved preference. The state is the source of truth for
+    // what renderAgentTable paints; mutators call paintBotsTable.
+    const BOT_TABLE_LS_KEY = "botsTableState.v1";
+    const BOT_TABLE_FLOWS = {};   // agent_id → flow count (from /used-in)
+    function defaultBotsTableState() {
+      return {
+        sort:    { key: "updated", dir: "desc" },
+        filters: { type: "all", status: "all", phone: "all" },
+        // search is transient — never written to LS.
+      };
+    }
+    function loadBotsTableState() {
+      try {
+        const raw = localStorage.getItem(BOT_TABLE_LS_KEY);
+        if (!raw) return defaultBotsTableState();
+        const parsed = JSON.parse(raw);
+        const def = defaultBotsTableState();
+        return {
+          sort:    Object.assign({}, def.sort,    parsed.sort    || {}),
+          filters: Object.assign({}, def.filters, parsed.filters || {}),
+        };
+      } catch (_) { return defaultBotsTableState(); }
+    }
+    function saveBotsTableState() {
+      try {
+        const s = window.__botsTableState || defaultBotsTableState();
+        localStorage.setItem(BOT_TABLE_LS_KEY, JSON.stringify({
+          sort: s.sort, filters: s.filters,
+        }));
+      } catch (_) {}
+    }
+    window.__botsTableState = window.__botsTableState || loadBotsTableState();
+    window.__botsTableState.search = ""; // transient on every load
+
+    // Apply filters + search, return the working list.
+    function filterAgentsForTable(agents) {
+      const s = window.__botsTableState;
+      const phones = Array.isArray(window.__phonesCache) ? window.__phonesCache : [];
+      const phoneByAgent = new Map();
+      phones.forEach(function (p) {
+        const aid = p.agent_id || "agent_default_customer";
+        if (!phoneByAgent.has(aid)) phoneByAgent.set(aid, p);
+      });
+      const search = (s.search || "").trim().toLowerCase();
+      return (agents || []).filter(function (a) {
+        if (!a) return false;
+        const isInternal = (a.type === "internal");
+        // Type filter.
+        if (s.filters.type === "customer" && isInternal) return false;
+        if (s.filters.type === "internal" && !isInternal) return false;
+        // Phone filter.
+        const hasPhone = phoneByAgent.has(a.id);
+        if (s.filters.phone === "has"  && !hasPhone) return false;
+        if (s.filters.phone === "none" &&  hasPhone) return false;
+        // Status filter — Active = has a phone OR used in 1+ flows;
+        // Unused = neither. Flow count comes from BOT_TABLE_FLOWS,
+        // populated lazily after first paint, so on initial render
+        // the "Active" filter treats has-phone-only as active and
+        // becomes more accurate as flow counts arrive.
+        if (s.filters.status !== "all") {
+          const flows = Number(BOT_TABLE_FLOWS[a.id] || 0);
+          const active = hasPhone || flows > 0;
+          if (s.filters.status === "active" && !active) return false;
+          if (s.filters.status === "unused" &&  active) return false;
+        }
+        // Search across name + description.
+        if (search) {
+          const desc = (a.behavior_config && a.behavior_config.job) || "";
+          const hay = ((a.name || "") + " " + desc).toLowerCase();
+          if (hay.indexOf(search) === -1) return false;
+        }
+        return true;
+      });
+    }
+    function sortAgentsForTable(agents) {
+      const s = window.__botsTableState;
+      const phones = Array.isArray(window.__phonesCache) ? window.__phonesCache : [];
+      const phoneByAgent = new Map();
+      phones.forEach(function (p) {
+        const aid = p.agent_id || "agent_default_customer";
+        if (!phoneByAgent.has(aid)) phoneByAgent.set(aid, p);
+      });
+      const dir = s.sort.dir === "asc" ? 1 : -1;
+      const key = s.sort.key;
+      return (agents || []).slice().sort(function (a, b) {
+        let av, bv;
+        switch (key) {
+          case "name":     av = (a.name || "").toLowerCase(); bv = (b.name || "").toLowerCase(); break;
+          case "type":     av = a.type === "internal" ? 1 : 0; bv = b.type === "internal" ? 1 : 0; break;
+          case "phone":    av = (phoneByAgent.get(a.id) || {}).phone_number || ""; bv = (phoneByAgent.get(b.id) || {}).phone_number || ""; break;
+          case "knowledge":av = 0; bv = 0; break; // no per-agent counts in Phase 2
+          case "flows":    av = Number(BOT_TABLE_FLOWS[a.id] || 0); bv = Number(BOT_TABLE_FLOWS[b.id] || 0); break;
+          case "sharing":  av = (a.is_default ? 0 : 1) * 10 + (a.type === "internal" ? 1 : 0); bv = (b.is_default ? 0 : 1) * 10 + (b.type === "internal" ? 1 : 0); break;
+          case "updated":
+          default:
+            av = a.updated_at || ""; bv = b.updated_at || "";
+        }
+        if (av < bv) return -1 * dir;
+        if (av > bv) return  1 * dir;
+        return 0;
+      });
+    }
+    // The single entry point that mutators call after touching state.
+    function paintBotsTable() {
+      const cache = Array.isArray(window.__agentsCache) ? window.__agentsCache : [];
+      const filtered = filterAgentsForTable(cache);
+      const sorted   = sortAgentsForTable(filtered);
+      renderAgentTable(sorted, { total: cache.length, shown: sorted.length });
+      paintBotsTableControlState();
+    }
+    function paintBotsTableControlState() {
+      const s = window.__botsTableState;
+      // Filter chip "active" styling.
+      const fmap = { type: "botFilterType", status: "botFilterStatus", phone: "botFilterPhone" };
+      Object.keys(fmap).forEach(function (k) {
+        const sel = document.getElementById(fmap[k]);
+        if (!sel) return;
+        sel.value = s.filters[k];
+        const chip = sel.closest(".bot-table-filter");
+        if (chip) chip.classList.toggle("is-active", s.filters[k] !== "all");
+      });
+      // Column header sort indicator.
+      document.querySelectorAll(".bot-table thead th[data-sort-key]").forEach(function (th) {
+        const on = th.dataset.sortKey === s.sort.key;
+        th.classList.toggle("is-sorted", on);
+        const arrow = th.querySelector(".bot-table-sort");
+        if (arrow) arrow.textContent = on ? (s.sort.dir === "asc" ? "↑" : "↓") : "↕";
+      });
+      // Search input + clear button visibility.
+      const searchEl = document.getElementById("botTableSearch");
+      const clearEl  = document.getElementById("botTableSearchClear");
+      if (searchEl && document.activeElement !== searchEl) searchEl.value = s.search || "";
+      if (clearEl) clearEl.classList.toggle("is-visible", !!(s.search || ""));
+    }
+    // Phase 1 renderer — now driven by paintBotsTable. Signature
+    // expanded with a summary payload so the controls bar can show
+    // "Showing N of M bots" without recomputing.
+    function renderAgentTable(agents, summary) {
+      const body = document.getElementById("botTableBody");
+      if (!body) return;
+      body.innerHTML = "";
+      const list = Array.isArray(agents) ? agents : [];
+      // Summary line above the table — "Showing X of Y bots" when
+      // a filter / search is narrowing the list, otherwise hidden.
+      // Includes a "Clear all" link to reset filter + search state.
+      const summaryEl = document.getElementById("botTableSummary");
+      const total = (summary && summary.total) != null ? summary.total : list.length;
+      const shown = (summary && summary.shown) != null ? summary.shown : list.length;
+      const s = window.__botsTableState || {};
+      const filtersActive = (s.filters && (s.filters.type !== "all" || s.filters.status !== "all" || s.filters.phone !== "all"))
+                          || (s.search || "").length > 0;
+      if (summaryEl) {
+        if (filtersActive) {
+          summaryEl.hidden = false;
+          summaryEl.innerHTML =
+            "Showing <strong>" + shown + "</strong> of " + total + " bot" + (total === 1 ? "" : "s") +
+            ' <a href="#" id="botTableSummaryClear">Clear all</a>';
+          const clearLink = document.getElementById("botTableSummaryClear");
+          if (clearLink) clearLink.addEventListener("click", function (e) {
+            e.preventDefault();
+            window.__botsTableState.filters = { type: "all", status: "all", phone: "all" };
+            window.__botsTableState.search = "";
+            saveBotsTableState();
+            paintBotsTable();
+          });
+        } else {
+          summaryEl.hidden = true;
+          summaryEl.innerHTML = "";
+        }
+      }
+      if (!list.length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 8;
+        td.className = "bot-table-empty";
+        if (total > 0 && filtersActive) {
+          td.innerHTML =
+            "<strong>No bots match your search.</strong>" +
+            "Try a different filter or clear your search.";
+        } else {
+          td.innerHTML =
+            "<strong>No bots yet.</strong>" +
+            "Create one to handle customer questions, qualify leads, or help your team find info.";
+        }
+        tr.appendChild(td);
+        body.appendChild(tr);
+        return;
+      }
+      // `agents` is already sorted by paintBotsTable; do NOT re-sort
+      // here or we'd undo the user's column-header choice. The
+      // previous Phase 1 implementation sorted internally; that
+      // behavior moves up the stack.
+      const sorted = list;
+      // Refresh the phones cache once so the Phone column + the
+      // phone-filter both see real data. Guarded against fetch
+      // loops: the cache prime only runs on the first paint per
+      // page load.
+      if (typeof fetchPhonesForTiles === "function" && !window.__botsTablePhonesPrimed) {
+        window.__botsTablePhonesPrimed = true;
+        fetchPhonesForTiles().then(function () {
+          paintBotsTable();
+        });
+      }
+      const phones = Array.isArray(window.__phonesCache) ? window.__phonesCache : [];
+      sorted.forEach(function (a) {
+        const tr = document.createElement("tr");
+        tr.dataset.agentId = a.id || "";
+        // Open on row click (anywhere except the explicit action
+        // buttons, which stopPropagation in their own handlers).
+        tr.addEventListener("click", function () {
+          const fresh = (window.__agentsCache || []).find(function (x) { return x && x.id === a.id; }) || a;
+          window.__activeAgent = fresh;
+          window.dispatchEvent(new CustomEvent("agent:opened", { detail: fresh }));
+          if (typeof setAskMode === "function") setAskMode(a.type === "internal" ? "internal" : "client");
+          const hh = document.getElementById("homeHero");
+          const pk = document.getElementById("botPicker");
+          const tw = document.getElementById("botTableWrap");
+          const wsp = document.getElementById("botWorkspace");
+          const wsName = document.getElementById("botWorkspaceName");
+          const ctrl = document.getElementById("botTableControls");
+          const sumEl = document.getElementById("botTableSummary");
+          if (wsName) wsName.textContent = a.name;
+          if (hh) hh.style.display = "none";
+          if (pk) pk.style.display = "none";
+          if (tw) tw.style.display = "none";
+          // Hide the bots-home controls bar + summary while a
+          // workspace is open so they don't bleed into the bot's
+          // own toolbar. returnToBotPicker re-shows them on Home.
+          if (ctrl) ctrl.style.display = "none";
+          if (sumEl) sumEl.hidden = true;
+          if (wsp) wsp.classList.add("is-active");
+          // Default to the Prompt tab on open, matching the existing
+          // picker-card click path.
+          document.querySelectorAll(".home-tab[data-home-tab]").forEach(function (t) {
+            const on = t.dataset.homeTab === "prompt";
+            t.classList.toggle("is-active", on);
+            t.setAttribute("aria-selected", on ? "true" : "false");
+          });
+          document.querySelectorAll(".home-pane[data-home-pane]").forEach(function (p) {
+            p.classList.toggle("is-active", p.dataset.homePane === "prompt");
+          });
+          try { window.publishStatus && window.publishStatus.refresh && window.publishStatus.refresh(); } catch (_) {}
+        });
+        const isInternal = (a.type === "internal");
+        const desc = (a.behavior_config && a.behavior_config.job)
+          || (isInternal ? "Internal info for your team." : "Customer-facing assistant.");
+        // Phone: look up by agent_id in the cache.
+        const tiedPhone = phones.find(function (p) {
+          return (p.agent_id || "agent_default_customer") === a.id;
+        });
+        const phoneText = tiedPhone
+          ? (tiedPhone.phone_display || tiedPhone.phone_number || "—")
+          : "—";
+        const updated = (function fmtAgo() {
+          const iso = a.updated_at || a.created_at || "";
+          if (!iso) return "—";
+          const t = new Date(iso).getTime();
+          if (isNaN(t)) return "—";
+          const diff = (Date.now() - t) / 1000;
+          if (diff < 60)    return "just now";
+          if (diff < 3600)  return Math.floor(diff / 60) + "m ago";
+          if (diff < 86400) return Math.floor(diff / 3600) + "h ago";
+          if (diff < 86400 * 7)  return Math.floor(diff / 86400) + "d ago";
+          if (diff < 86400 * 30) return Math.floor(diff / 86400 / 7) + "w ago";
+          return Math.floor(diff / 86400 / 30) + "mo ago";
+        })();
+        // Build cells.
+        function esc(s) {
+          return String(s == null ? "" : s).replace(/[<>&"']/g, function (c) {
+            return { "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#39;" }[c];
+          });
+        }
+        tr.innerHTML =
+          '<td class="col-name">' +
+            '<div class="bot-table-name">' + esc(a.name || "Untitled") + '</div>' +
+            '<div class="bot-table-desc">' + esc(desc) + '</div>' +
+          '</td>' +
+          '<td class="col-type">' +
+            '<span class="bot-table-type' + (isInternal ? ' is-internal' : '') + '">' +
+              '<span class="bot-table-type-dot"></span>' +
+              (isInternal ? 'Internal' : 'Customer-facing') +
+            '</span>' +
+          '</td>' +
+          '<td class="col-phone">' +
+            '<span class="bot-table-meta' + (tiedPhone ? ' is-strong' : '') + '">' + esc(phoneText) + '</span>' +
+          '</td>' +
+          '<td class="col-knowledge">' +
+            '<span class="bot-table-meta" data-bot-row-kb="' + esc(a.id) + '">—</span>' +
+          '</td>' +
+          '<td class="col-flows">' +
+            '<span class="bot-table-meta" data-bot-row-flows="' + esc(a.id) + '">—</span>' +
+          '</td>' +
+          '<td class="col-updated">' +
+            '<span class="bot-table-meta">' + esc(updated) + '</span>' +
+          '</td>' +
+          '<td class="col-sharing">' +
+            '<span class="bot-table-share">' +
+              '<span class="bot-table-share-tag' + (a.is_default ? ' is-default' : '') + '">' +
+                (a.is_default ? 'Default' : 'Custom') +
+              '</span>' +
+              '<span>' + (isInternal ? 'Private' : 'Public') + '</span>' +
+            '</span>' +
+          '</td>' +
+          '<td class="col-actions" style="text-align:right;">' +
+            '<span class="bot-table-actions">' +
+              '<button type="button" class="bot-table-open" data-bot-row-open>Open</button>' +
+              '<button type="button" class="bot-table-menu" data-bot-row-share aria-label="Share access" title="Share access">⤴</button>' +
+            '</span>' +
+          '</td>';
+        // Action buttons stop propagation so they don't double-fire
+        // the row click. Open is redundant with the row click but
+        // matches the spec; Share opens the existing share modal.
+        const openBtn = tr.querySelector("[data-bot-row-open]");
+        if (openBtn) openBtn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          tr.click();
+        });
+        const shareBtn = tr.querySelector("[data-bot-row-share]");
+        if (shareBtn) shareBtn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          if (typeof window.__openShareModal === "function") {
+            window.__openShareModal(a);
+          }
+        });
+        body.appendChild(tr);
+      });
+      // Lazy-load the per-agent flow count after first paint, same
+      // pattern the card view used. Cached in BOT_TABLE_FLOWS so
+      // the sort + status filter can use the value on next paint
+      // without re-fetching. Tiny payload per agent; doesn't block.
+      sorted.forEach(function (a) {
+        if (BOT_TABLE_FLOWS[a.id] != null) {
+          // Already cached — repaint the cell from the cache.
+          const cell0 = document.querySelector(
+            '[data-bot-row-flows="' + CSS.escape(a.id) + '"]');
+          const c0 = Number(BOT_TABLE_FLOWS[a.id]) || 0;
+          if (cell0 && c0 > 0) cell0.textContent = c0 + (c0 === 1 ? " flow" : " flows");
+          return;
+        }
+        fetch("/me/agents/" + encodeURIComponent(a.id) + "/used-in", {
+          credentials: "same-origin",
+        }).then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (d) {
+            const n = (d && d.count) || 0;
+            BOT_TABLE_FLOWS[a.id] = n;
+            if (!n) return;
+            const cell = document.querySelector(
+              '[data-bot-row-flows="' + CSS.escape(a.id) + '"]');
+            if (cell) cell.textContent = n + (n === 1 ? " flow" : " flows");
+          })
+          .catch(function () {});
+      });
+    }
+
     function renderAgentCards(agents) {
       const picker = document.getElementById("botPicker");
       if (!picker) return;
@@ -25990,9 +27813,15 @@
           const wsp = document.getElementById("botWorkspace");
           const hh = document.getElementById("homeHero");
           const pk = document.getElementById("botPicker");
+          const tw = document.getElementById("botTableWrap");
+          const ctrl = document.getElementById("botTableControls");
+          const sumEl = document.getElementById("botTableSummary");
           if (typeof setAskMode === "function") setAskMode(a.type === "internal" ? "internal" : "client");
           if (hh) hh.style.display = "none";
           if (pk) pk.style.display = "none";
+          if (tw) tw.style.display = "none";
+          if (ctrl) ctrl.style.display = "none";
+          if (sumEl) sumEl.hidden = true;
           if (wsp) wsp.classList.add("is-active");
           // Default to Behavior tab so users see the bot's settings
           // immediately. Test is permanent in the right rail.
@@ -27109,19 +28938,42 @@
         if (!active) return;
         const cfg = active.behavior_config || {};
         paintObjective(cfg);
-        personalityEl.value = (cfg.personality || "").trim() || DEFAULTS.personality;
-        intentEl.value      = (cfg.intent || "").trim() || DEFAULTS.intent;
-        // dont_do persists either as a string (new key) or as the
-        // legacy never_do array. Prefer the string when present.
-        const dontDoStr = (cfg.dont_do || "").trim();
-        if (dontDoStr) {
-          dontDoEl.value = dontDoStr;
+        // For each section, the cfg field is the source of truth.
+        // If it's missing (brand-new agent that's never been edited)
+        // we seed with DEFAULTS so the user has a starting point.
+        // If it's present — even as an empty string — we use the
+        // stored value verbatim. Falling back to DEFAULTS on a
+        // saved empty value re-populated the seed text every time
+        // the user cleared a field, which was the bug that made
+        // "remove + leave page" look like it didn't save. The
+        // placeholder attribute on each textarea provides the
+        // empty-state hint instead.
+        personalityEl.value = (typeof cfg.personality === "string")
+          ? cfg.personality
+          : DEFAULTS.personality;
+        intentEl.value = (typeof cfg.intent === "string")
+          ? cfg.intent
+          : DEFAULTS.intent;
+        // dont_do prefers the new string key. Only fall back to the
+        // legacy never_do array when dont_do has NEVER been written
+        // (key absent). An explicitly-cleared dont_do = "" wins.
+        if (typeof cfg.dont_do === "string") {
+          dontDoEl.value = cfg.dont_do;
         } else if (Array.isArray(cfg.never_do) && cfg.never_do.length) {
           dontDoEl.value = cfg.never_do.map(function (r) { return String(r).trim(); }).filter(Boolean).join("\n");
         } else {
           dontDoEl.value = DEFAULTS.dont_do;
         }
-        additionalEl.value = (cfg.additional || cfg.additional_context || "").trim() || DEFAULTS.additional;
+        // additional has two legacy key spellings (additional /
+        // additional_context). Either present (even if empty) wins
+        // over DEFAULTS.
+        if (typeof cfg.additional === "string") {
+          additionalEl.value = cfg.additional;
+        } else if (typeof cfg.additional_context === "string") {
+          additionalEl.value = cfg.additional_context;
+        } else {
+          additionalEl.value = DEFAULTS.additional;
+        }
       }
       function saveField(field, value) {
         if (!active) return;
@@ -31234,11 +33086,23 @@
               +            'cursor:pointer;font:700 14px inherit">×</button>'
               : '')
           + '</div>';
+        // Check cell only for deletable flows (built-ins skip the
+        // checkbox so the bulk-select bar can't try to delete them).
+        var checkCell = canDelete
+          ? ('<td style="width:30px;padding:0 0 0 14px;text-align:center;'
+             + 'border-bottom:1px solid #f1f5f9;background:transparent">'
+             + '<input type="checkbox" class="mf-row-check" '
+             +   'data-flow-id="' + (f.id || "") + '" '
+             +   'aria-label="Select this flow" '
+             +   'style="cursor:pointer">'
+             + '</td>')
+          : '<td style="width:30px;border-bottom:1px solid #f1f5f9"></td>';
         return ''
           + '<tr class="mf-row" data-flow-id="' + (f.id || "") + '"'
           +   ' style="cursor:pointer;border-bottom:1px solid #f1f5f9"'
           +   ' onmouseover="this.style.background=\'#f8fafc\'"'
           +   ' onmouseout="this.style.background=\'#fff\'">'
+          +   checkCell
           +   '<td style="padding:12px 14px;font-size:14px;font-weight:600;color:#0a0a0a">'
           +     '<span style="margin-right:8px">' + icon + '</span>'
           +     ((f.name || "Untitled") + "").replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -31364,6 +33228,12 @@
           url = "/me/flows/user/" + encodeURIComponent(flowId.slice(5));
         } else if (flowId.indexOf("pack:") === 0) {
           url = "/me/flows/user/" + encodeURIComponent(flowId);
+        } else if (flowId.indexOf("flow_") === 0) {
+          // Bare user-flow id (the listing emitted before the server
+          // started prefixing with "user:"). Treat it as a user flow
+          // so the X works on rows the SWR cache still holds with
+          // the old shape.
+          url = "/me/flows/user/" + encodeURIComponent(flowId);
         } else {
           alert("This flow can't be deleted.");
           btn.disabled = false; return;
@@ -31374,14 +33244,35 @@
           row.style.opacity = "0";
           row.style.pointerEvents = "none";
         }
-        try { sessionStorage.removeItem(_MY_FLOWS_CACHE_KEY); } catch(_){}
         fetch(url, {
           method: "POST", credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ op: "delete" }),
         }).then(function(r){
           if (!r.ok) throw new Error("delete_failed");
-          if (host) renderMyFlowsList(host);
+          // Drop the deleted row from BOTH the SWR cache and the
+          // local arrays the renderer reads, then re-render in place.
+          // Without this, renderMyFlowsList saw an empty cache,
+          // painted the "No flows yet" empty state, then refetched —
+          // the user perceived the table "disappearing" mid-delete.
+          try {
+            var cached = _myFlowsReadSwr() || [];
+            cached = cached.filter(function(f){ return f.id !== flowId; });
+            _myFlowsWriteSwr(cached);
+          } catch(_){}
+          try {
+            _myFlowsAll = (_myFlowsAll || [])
+              .filter(function(f){ return f.id !== flowId; });
+            _myFlowsAllDisplayed = (_myFlowsAllDisplayed || [])
+              .filter(function(f){ return f.id !== flowId; });
+          } catch(_){}
+          // Repaint the table from local state (instant, no flicker)
+          // then fire renderMyFlowsList so /me/flows re-validates in
+          // the background.
+          if (host) {
+            try { _myFlowsRenderInto(host); } catch(_){}
+            renderMyFlowsList(host);
+          }
         }).catch(function(){
           if (row) {
             row.style.opacity = prevOpacity || "1";
@@ -31439,11 +33330,38 @@
                + (sortable ? 'cursor:pointer;user-select:none;' : '')
                + '">' + label + (sortable ? headArrow(key) : '') + '</th>';
         }
-        grid.innerHTML =
-            '<table style="width:100%;border-collapse:collapse;font-family:inherit">'
+        // Bulk-select bar above the table — visible only when at
+        // least one row is checked. Hidden by default; the row /
+        // header-checkbox change handlers toggle it.
+        var bulkBar =
+            '<div id="mf-bulk-bar" hidden '
+          +   ' style="display:flex;align-items:center;justify-content:space-between;'
+          +          'gap:10px;padding:10px 14px;margin:0 0 8px;'
+          +          'background:#0f172a;color:#fff;border-radius:8px;'
+          +          'font-size:13px">'
+          +   '<span><strong id="mf-bulk-count">0</strong> selected</span>'
+          +   '<div style="display:flex;gap:8px">'
+          +     '<button type="button" id="mf-bulk-clear" '
+          +            'style="padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.25);'
+          +                  'background:transparent;color:#fff;font:600 12px inherit;cursor:pointer">Clear</button>'
+          +     '<button type="button" id="mf-bulk-delete" '
+          +            'style="padding:6px 12px;border-radius:6px;border:0;'
+          +                  'background:#dc2626;color:#fff;font:600 12px inherit;cursor:pointer">Delete selected</button>'
+          +   '</div>'
+          + '</div>';
+        var checkColHead =
+            '<th style="width:30px;padding:11px 0 11px 14px;text-align:center;'
+          +          'background:#f8fafc;border-bottom:1px solid #e6e9ef">'
+          +   '<input type="checkbox" id="mf-check-all" '
+          +     ' aria-label="Select all flows" '
+          +     ' style="cursor:pointer">'
+          + '</th>';
+        grid.innerHTML = bulkBar
+          + '<table style="width:100%;border-collapse:collapse;font-family:inherit">'
           +   '<thead><tr>'
-          +     colHead("name",       "Name",       {width:"28%"})
-          +     colHead("source",     "Source",     {width:"14%"})
+          +     checkColHead
+          +     colHead("name",       "Name",       {width:"26%"})
+          +     colHead("source",     "Source",     {width:"13%"})
           +     colHead("status",     "Status",     {width:"10%"})
           +     colHead("steps",      "Steps",      {width:"7%",  center:true})
           +     colHead("total_runs", "Total runs", {width:"9%",  center:true})
@@ -31453,6 +33371,99 @@
           +   '</tr></thead>'
           +   '<tbody>' + list.map(_myFlowsRowHtml).join("") + '</tbody>'
           + '</table>';
+
+        // Bulk-select wiring: row checkbox + header check-all + bar.
+        // Counts in real time; delete fires per-flow in parallel and
+        // then re-renders the table from local state (instant).
+        function _mfBulkRefresh() {
+          var checks = grid.querySelectorAll('input.mf-row-check:checked');
+          var bar = grid.querySelector('#mf-bulk-bar');
+          var counter = grid.querySelector('#mf-bulk-count');
+          if (!bar || !counter) return;
+          if (checks.length) {
+            bar.hidden = false;
+            counter.textContent = String(checks.length);
+          } else {
+            bar.hidden = true;
+          }
+          var all = grid.querySelectorAll('input.mf-row-check');
+          var head = grid.querySelector('#mf-check-all');
+          if (head) {
+            head.checked = (all.length > 0 && checks.length === all.length);
+            head.indeterminate = (checks.length > 0 && checks.length < all.length);
+          }
+        }
+        grid.querySelectorAll('input.mf-row-check').forEach(function(cb){
+          cb.addEventListener('click', function(ev){ ev.stopPropagation(); });
+          cb.addEventListener('change', _mfBulkRefresh);
+        });
+        var _checkAll = grid.querySelector('#mf-check-all');
+        if (_checkAll) {
+          _checkAll.addEventListener('click', function(ev){ ev.stopPropagation(); });
+          _checkAll.addEventListener('change', function(){
+            grid.querySelectorAll('input.mf-row-check').forEach(function(cb){
+              cb.checked = _checkAll.checked;
+            });
+            _mfBulkRefresh();
+          });
+        }
+        var _clearBtn = grid.querySelector('#mf-bulk-clear');
+        if (_clearBtn) _clearBtn.addEventListener('click', function(){
+          grid.querySelectorAll('input.mf-row-check').forEach(function(cb){
+            cb.checked = false;
+          });
+          _mfBulkRefresh();
+        });
+        var _bulkDel = grid.querySelector('#mf-bulk-delete');
+        if (_bulkDel) _bulkDel.addEventListener('click', function(){
+          var ids = Array.from(grid.querySelectorAll('input.mf-row-check:checked'))
+            .map(function(cb){ return cb.getAttribute('data-flow-id') || ''; })
+            .filter(Boolean);
+          if (!ids.length) return;
+          if (!confirm('Delete ' + ids.length + ' flow' +
+                        (ids.length === 1 ? '' : 's') + '? This can\'t be undone.')) return;
+          _bulkDel.disabled = true;
+          _bulkDel.textContent = 'Deleting…';
+          function urlFor(fid) {
+            if (fid === 'default')           return '/me/flows/default';
+            if (fid.indexOf('form:') === 0)  return '/me/forms/' + encodeURIComponent(fid.slice(5)) + '/flow';
+            if (fid.indexOf('user:') === 0)  return '/me/flows/user/' + encodeURIComponent(fid.slice(5));
+            if (fid.indexOf('pack:') === 0)  return '/me/flows/user/' + encodeURIComponent(fid);
+            if (fid.indexOf('flow_') === 0)  return '/me/flows/user/' + encodeURIComponent(fid);
+            return '';
+          }
+          var calls = ids.map(function(fid){
+            var url = urlFor(fid);
+            if (!url) return Promise.resolve({ ok: false, fid: fid });
+            return fetch(url, {
+              method: 'POST', credentials: 'same-origin',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ op: 'delete' }),
+            }).then(function(r){ return { ok: r.ok, fid: fid }; })
+              .catch(function(){ return { ok: false, fid: fid }; });
+          });
+          Promise.all(calls).then(function(results){
+            var deletedIds = results.filter(function(x){ return x.ok; })
+                                    .map(function(x){ return x.fid; });
+            var failed = results.length - deletedIds.length;
+            try {
+              var cached = _myFlowsReadSwr() || [];
+              cached = cached.filter(function(f){ return deletedIds.indexOf(f.id) < 0; });
+              _myFlowsWriteSwr(cached);
+              _myFlowsAll = (_myFlowsAll || [])
+                .filter(function(f){ return deletedIds.indexOf(f.id) < 0; });
+              _myFlowsAllDisplayed = (_myFlowsAllDisplayed || [])
+                .filter(function(f){ return deletedIds.indexOf(f.id) < 0; });
+            } catch(_){}
+            _myFlowsRenderInto(host);
+            renderMyFlowsList(host);  // background revalidate
+            if (failed) {
+              alert("Couldn't delete " + failed + " flow" +
+                     (failed === 1 ? "" : "s") + ". Try again.");
+            }
+          });
+        });
+        _mfBulkRefresh();
         // Sort header clicks toggle direction or switch column.
         grid.querySelectorAll("th[data-sort-key]").forEach(function(th){
           var key = th.getAttribute("data-sort-key");
@@ -31532,6 +33543,14 @@
                 localStorage.removeItem("outreach_active_user_flow_id");
               } else if (fid.indexOf("user:") === 0) {
                 localStorage.setItem("outreach_active_user_flow_id", fid.slice(5));
+                localStorage.removeItem("intake_return_form_id");
+                localStorage.removeItem("intake_return_form_ts");
+                sessionStorage.removeItem("outreach_came_from_form");
+              } else if (fid.indexOf("flow_") === 0) {
+                // Bare user-flow id (cached SWR rows from before the
+                // server started prefixing with "user:"). Open the
+                // user-named flow path.
+                localStorage.setItem("outreach_active_user_flow_id", fid);
                 localStorage.removeItem("intake_return_form_id");
                 localStorage.removeItem("intake_return_form_ts");
                 sessionStorage.removeItem("outreach_came_from_form");
@@ -31655,6 +33674,17 @@
         document.querySelectorAll("[data-out-pane]").forEach(function(p){
           p.hidden = (p.dataset.outPane !== "myflows");
         });
+        // Re-render so a flow the user just created on the canvas shows
+        // up immediately on back-nav. Without this, the list keeps the
+        // pre-create snapshot until the user manually reloads.
+        var host = document.getElementById("outreachMyFlowsMount");
+        if (host && typeof renderMyFlowsList === "function") {
+          // Drop the SWR cache so the next render is definitely fresh
+          // (covers the case where the new flow was created so quickly
+          // that the cache hadn't been invalidated yet).
+          try { sessionStorage.removeItem("my_flows_cache_v1"); } catch (_) {}
+          renderMyFlowsList(host);
+        }
       }
       function _outShowRuns(){
         document.querySelectorAll("[data-out-pane]").forEach(function(p){
@@ -32098,36 +34128,70 @@
       function _wireStartCards(){
         var blank = document.getElementById("mf-start-blank");
         if (blank) blank.onclick = function(){
-          // "Start blank" mints a brand-new user-named flow on the
-          // server so each click produces a separate flow with its
-          // own canvas (instead of all sharing the singleton default).
-          // FlowBuilder's STATE C path seeds an Input node and saves
-          // it as soon as the canvas mounts.
+          // Reverted from optimistic open — that path raced FlowBuilder
+          // mount against the POST return and intermittently rendered
+          // a blank canvas. Now: show "Creating new flow…" on the
+          // button, wait for the real flow_id, THEN open canvas. The
+          // canvas hydrates ONCE against the right path — no race.
+          //
+          // Hard guard against double-click duplicates. The button's
+          // own `disabled` state isn't enough because _wireStartCards
+          // re-runs on every list render — a fresh handler can land
+          // on an enabled clone before the prior request resolves.
+          // window.__mfCreatingFlow flags the in-flight create so a
+          // second click is a no-op until the first finishes.
+          if (window.__mfCreatingFlow) return;
+          window.__mfCreatingFlow = true;
+          var prevText = blank.textContent;
           blank.disabled = true;
+          blank.textContent = "Creating new flow…";
           fetch("/me/flows/user", {
             method: "POST", credentials: "same-origin",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name: "Untitled flow" }),
           }).then(function(r){ return r.ok ? r.json() : null; })
             .then(function(d){
+              window.__mfCreatingFlow = false;
               blank.disabled = false;
+              blank.textContent = prevText || "+ New flow";
               if (d && d.flow_id) {
                 try {
                   localStorage.setItem("outreach_active_user_flow_id", d.flow_id);
                   localStorage.removeItem("intake_return_form_id");
                   localStorage.removeItem("intake_return_form_ts");
                   sessionStorage.removeItem("outreach_came_from_form");
-                  // Invalidate cached My Flows list so the new entry
-                  // shows on next back-nav without waiting for the
-                  // revalidate round-trip.
-                  sessionStorage.removeItem(_MY_FLOWS_CACHE_KEY);
+                  // Optimistic prepend: drop the new flow into the SWR
+                  // cache RIGHT NOW so back-nav shows it instantly,
+                  // before the next /me/flows fetch resolves. The
+                  // canonical record from the server replaces this
+                  // stub on the next revalidate (timestamps + steps
+                  // get filled in then).
+                  var cached = _myFlowsReadSwr() || [];
+                  var optimistic = {
+                    id:          "user:" + d.flow_id,
+                    name:        d.name || "Untitled flow",
+                    description: "Just created.",
+                    icon:        "🛠️",
+                    builtin:     false,
+                    step_count:  0,
+                    last_edited: Math.floor(Date.now() / 1000),
+                    status:      "active",
+                    stats:       { total_runs: 0, last_triggered_at: 0,
+                                   in_flight_count: 0 },
+                  };
+                  // Skip if it's somehow already there.
+                  if (!cached.some(function(f){ return f.id === optimistic.id; })) {
+                    _myFlowsWriteSwr([optimistic].concat(cached));
+                  }
                   window.dispatchEvent(new CustomEvent("fb-outreach-nav-reset"));
                 } catch(_) {}
               }
               _outShowCanvas();
             })
             .catch(function(){
+              window.__mfCreatingFlow = false;
               blank.disabled = false;
+              blank.textContent = prevText || "+ New flow";
               _outShowCanvas();
             });
         };
@@ -32167,25 +34231,42 @@
         var userFlows = (allFlows || []).filter(function(f){ return !f.builtin; });
         _myFlowsAll = allFlows || [];
         _myFlowsAllDisplayed = userFlows;
+        // Header row: title + small "+ New flow" button. The big "Start
+        // blank" / "Use a template" bars were removed at the owner's
+        // request — a normal-sized button + the table is the whole
+        // surface now. The table renders an empty-state row when the
+        // owner has no flows yet.
         host.innerHTML = ''
-          + '<p class="mf-subline" style="color:#5a6470;font-size:14px;margin:0 0 16px">Pick a flow or start a new one.</p>'
-          + _myFlowsStartCardsHtml()
+          + '<div style="display:flex;align-items:center;justify-content:space-between;'
+          +      'gap:12px;margin:0 0 16px;flex-wrap:wrap">'
+          +   '<div>'
+          +     '<h2 style="margin:0;font:700 22px/1.2 inherit;color:#0a0a0a">Flows</h2>'
+          +     '<p style="margin:4px 0 0;color:#64748b;font-size:13.5px">Automated sequences that fire when a lead enters them.</p>'
+          +   '</div>'
+          +   '<button type="button" id="mf-start-blank"'
+          +     ' style="display:inline-flex;align-items:center;gap:6px;'
+          +            'padding:8px 14px;border-radius:8px;background:#0f172a;'
+          +            'color:#fff;border:0;font:600 13px inherit;cursor:pointer;'
+          +            'transition:background .12s ease">'
+          +     '+ New flow'
+          +   '</button>'
+          + '</div>'
           + (userFlows.length === 0
               ? ''
               : (
-                  '<div style="display:flex;gap:10px;align-items:center;margin:32px 0 16px;flex-wrap:wrap">'
+                  '<div style="display:flex;gap:10px;align-items:center;margin:0 0 12px;flex-wrap:wrap">'
                 +   '<div style="position:relative;flex:1;min-width:220px">'
                 +     '<span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;color:#9aa4b2;pointer-events:none">🔍</span>'
                 +     '<input id="mf-search" type="text" placeholder="Search flows…" '
-                +          'style="width:100%;padding:11px 14px 11px 38px;border:1px solid #e6e9ef;border-radius:10px;font:inherit;font-size:13.5px;background:#fff;box-sizing:border-box"/>'
+                +          'style="width:100%;padding:9px 12px 9px 36px;border:1px solid #e5e7eb;border-radius:8px;font:inherit;font-size:13px;background:#fff;box-sizing:border-box"/>'
                 +   '</div>'
-                +   '<select id="mf-status-filter" style="padding:11px 14px;border:1px solid #e6e9ef;border-radius:10px;font:inherit;font-size:13.5px;background:#fff;cursor:pointer;min-width:140px">'
+                +   '<select id="mf-status-filter" style="padding:9px 12px;border:1px solid #e5e7eb;border-radius:8px;font:inherit;font-size:13px;background:#fff;cursor:pointer;min-width:130px">'
                 +     '<option value="all">All status</option>'
                 +     '<option value="active">Active</option>'
                 +     '<option value="paused">Paused</option>'
                 +     '<option value="draft">Draft</option>'
                 +   '</select>'
-                +   '<select id="mf-source-filter" style="padding:11px 14px;border:1px solid #e6e9ef;border-radius:10px;font:inherit;font-size:13.5px;background:#fff;cursor:pointer;min-width:140px">'
+                +   '<select id="mf-source-filter" style="padding:9px 12px;border:1px solid #e5e7eb;border-radius:8px;font:inherit;font-size:13px;background:#fff;cursor:pointer;min-width:130px">'
                 +     '<option value="all">All sources</option>'
                 +     '<option value="form">📝 Form</option>'
                 +     '<option value="email">📧 Email</option>'
@@ -32193,7 +34274,7 @@
                 +     '<option value="standalone">⚡ Standalone</option>'
                 +     '<option value="other">Other</option>'
                 +   '</select>'
-                +   '<select id="mf-sort" style="padding:11px 14px;border:1px solid #e6e9ef;border-radius:10px;font:inherit;font-size:13.5px;background:#fff;cursor:pointer;min-width:180px">'
+                +   '<select id="mf-sort" style="padding:9px 12px;border:1px solid #e5e7eb;border-radius:8px;font:inherit;font-size:13px;background:#fff;cursor:pointer;min-width:170px">'
                 +     '<option value="edited">Recently edited</option>'
                 +     '<option value="last_run">Most recent run</option>'
                 +     '<option value="total_runs">Most runs</option>'
@@ -32203,8 +34284,14 @@
                 +     '<option value="steps">Most steps</option>'
                 +   '</select>'
                 + '</div>'
-                + '<div id="my-flows-grid" class="mf-list" style="background:#fff;border:1px solid #e6e9ef;border-radius:10px;overflow:hidden"></div>'
-              ));
+                + '<div id="my-flows-grid" class="mf-list" style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden"></div>'
+              ))
+          + (userFlows.length === 0
+              ? '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;'
+              + 'padding:48px 20px;text-align:center;color:#6b7280;font-size:14px">'
+              + 'No flows yet — click <strong>+ New flow</strong> above to build your first one.'
+              + '</div>'
+              : '');
         _wireStartCards();
         var sortEl = host.querySelector("#mf-sort");
         if (sortEl) {
@@ -32257,15 +34344,32 @@
       }
 
       async function renderMyFlowsList(host) {
-        // Stage 1: paint cached list synchronously. The user sees real
-        // rows in <50ms on every revisit.
+        // Stage 1: paint instantly. Use cache if we have it, otherwise
+        // paint the empty-state shell (header + button + "no flows yet"
+        // card) immediately. We then re-render with fresh data when
+        // /me/flows resolves. Showing "Loading your flows…" alone made
+        // accounts with zero flows feel sluggish — they'd see a spinner
+        // for 200-500ms before the empty state appeared. Now they see
+        // the actual page chrome with a quiet progress bar in the
+        // empty card while we revalidate in the background.
         var cached = _myFlowsReadSwr();
         if (cached) {
           _renderMyFlowsBody(host, cached);
         } else {
-          host.innerHTML = '<div style="padding:48px 16px;text-align:center;color:#9aa4b2">Loading your flows…</div>';
+          // Optimistic render: paint as if there are zero flows. Layout
+          // and CTA appear instantly. Drop a tiny ux-progress bar into
+          // the empty card so the user knows we're checking.
+          _renderMyFlowsBody(host, []);
+          var emptyCard = host.querySelector('div[style*="No flows yet"]');
+          if (emptyCard) {
+            var bar = document.createElement('div');
+            bar.className = 'ux-progress';
+            bar.style.cssText = 'margin:0 0 14px;';
+            bar.innerHTML = '<div class="ux-progress-bar"></div>';
+            emptyCard.parentNode.insertBefore(bar, emptyCard);
+          }
         }
-        // Stage 2: revalidate.
+        // Stage 2: revalidate against the server.
         var fresh = null;
         try {
           var r = await fetch("/me/flows", { credentials: "same-origin" });
@@ -32277,8 +34381,6 @@
         if (fresh) {
           _myFlowsWriteSwr(fresh);
           _renderMyFlowsBody(host, fresh);
-        } else if (!cached) {
-          _renderMyFlowsBody(host, []);
         }
         return;
       }
@@ -35275,9 +37377,11 @@
       sequenceEdit: { title: "Sequence",   section: "sequenceEdit" },
       engagement: { title: "Engagement",   section: "engagement" },
       aiSettings: { title: "AI Settings",  section: "aiSettings" },
-      leadIntake: { title: "Lead intake",  section: "leadIntake" },
+      // leadIntake route retired — Forms now live as a tab inside
+      // the Outreach page. Old #leadIntake hashes redirect there.
       onboarding: { title: "Set up your business", section: "onboarding" },
       socialPipeline: { title: "Social Pipeline", section: "socialPipeline" },
+      drafts:    { title: "AI drafts",     section: "drafts" },
     };
 
     // ─────────── Section-data loaders (lazy, memoized) ───────────
@@ -35341,6 +37445,15 @@
       // Old hashes resolve to Settings.
       if (route === "embed") {
         route = "settings";
+      }
+      // leadIntake route retired — its UI moved to Outreach → Forms tab.
+      // Old #leadIntake hashes redirect to outreach + the forms view.
+      if (route === "leadIntake") {
+        route = "outreach";
+        requestAnimationFrame(() => {
+          var formsTab = document.querySelector('[data-out-view="forms"]');
+          if (formsTab) formsTab.click();
+        });
       }
       // kb / knowledge (Knowledge base) is now a Settings tab — old hashes
       // jump to Settings and activate the KB tab.
@@ -46133,7 +48246,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-12-dontdo-persist"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-13-phase3-view-toggle"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->

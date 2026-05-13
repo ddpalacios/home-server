@@ -102,8 +102,11 @@ export const ACTIVITY_CATALOG = [
   },
 
   // ── Actions ──────────────────────────────────────────────────────────
+  // Wait is `hidden: true` — pulled from the sidebar/chooser at the
+  // owner's request. Definition stays so existing flows that already
+  // contain a Wait step + the "hustle" template still resolve.
   {
-    id: "wait", kind: "action",
+    id: "wait", kind: "action", hidden: true,
     icon: "⏱️", title: "Wait",
     cardSub: "Pause",
     description: "Pause for a bit before the next step.",
@@ -321,9 +324,26 @@ export const ACTIVITY_CATALOG = [
     ],
   },
 
-  // ── Logic ────────────────────────────────────────────────────────────
+  // ── AI Agent (Phase 1 of the AI Agent flow block spec) ──────────────
+  // `hidden: true` per owner — pulled from the sidebar/chooser while we
+  // figure out the right UX for routing AI output through downstream
+  // activities. Definition stays so any flows that already contain an
+  // AI Agent step still resolve.
   {
-    id: "branch", kind: "logic",
+    id: "ai_agent", kind: "action", hidden: true,
+    icon: "🤖", title: "AI Agent",
+    cardSub: "Pick a bot",
+    description: "Hand this step to one of your AI bots. The bot decides what happens, writes a message, has a chat, or pulls structured details from the lead — based on how you built it.",
+    trigger: "AI AGENT",
+    defaultMode: "ai_agent",
+  },
+
+  // ── Logic ────────────────────────────────────────────────────────────
+  // If/then `hidden: true` for the same reason — no branching surface
+  // in the sidebar until we land on a clearer branching design. Existing
+  // flows with a branch node still render and execute.
+  {
+    id: "branch", kind: "logic", hidden: true,
     icon: "🔀", title: "If / then",
     cardSub: "Pick a path",
     description: "Take different paths based on what the customer does.",
