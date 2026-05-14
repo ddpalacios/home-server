@@ -4544,6 +4544,58 @@
     .pr-chat-msg.is-bot  .pr-chat-bubble { background: #f1f5f9; border: 1px solid #e5e7eb; border-bottom-left-radius: 4px; }
     .pr-chat-msg.is-user .pr-chat-bubble { background: #0f172a; color: #fff; border-bottom-right-radius: 4px; }
 
+    /* Animated loading indicator (rotating phrases + shimmer bar) for
+       the Try-it-out tester. Drops the static three-dot bubble in
+       favor of the same active feel as the team-chat experience. */
+    @keyframes prLoadingSpin { to { transform: rotate(360deg); } }
+    @keyframes prLoadingShimmer {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    @keyframes prLoadingHalo {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(79,70,229,0.16); }
+      50%      { box-shadow: 0 0 0 6px transparent; }
+    }
+
+    /* Rendered-markdown styling inside the test-bot bubble — matches
+       the team-chat rules so analysis-mode synthesis (## headers,
+       **bold**, bullet/numbered lists, inline code) actually formats
+       in the dashboard tester instead of showing as plain text. */
+    .pr-chat-bubble .pr-md-h {
+      margin: 12px 0 6px; font-weight: 700; color: #0a0a0a;
+      letter-spacing: -0.005em;
+    }
+    .pr-chat-bubble .pr-md-h:first-child { margin-top: 0; }
+    .pr-chat-bubble h2.pr-md-h { font-size: 15px; }
+    .pr-chat-bubble h3.pr-md-h { font-size: 14px; }
+    .pr-chat-bubble h4.pr-md-h {
+      font-size: 12px; color: #475569;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .pr-chat-bubble .pr-md-p { margin: 0 0 7px; line-height: 1.55; }
+    .pr-chat-bubble .pr-md-p:last-child { margin-bottom: 0; }
+    .pr-chat-bubble .pr-md-ul,
+    .pr-chat-bubble .pr-md-ol {
+      margin: 4px 0 9px; padding-left: 22px; line-height: 1.55;
+    }
+    .pr-chat-bubble .pr-md-ul li,
+    .pr-chat-bubble .pr-md-ol li { margin: 3px 0; }
+    .pr-chat-bubble strong { font-weight: 700; color: #0a0a0a; }
+    .pr-chat-bubble em { font-style: italic; }
+    .pr-chat-bubble .pr-md-code {
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 0.9em; background: #e2e8f0; color: #4338ca;
+      padding: 1px 5px; border-radius: 4px;
+    }
+    .pr-chat-bubble .pr-md-pre {
+      background: #0f172a; color: #e2e8f0;
+      border-radius: 8px; padding: 10px 12px;
+      margin: 8px 0; overflow-x: auto; font-size: 12px;
+    }
+    .pr-chat-bubble .pr-md-pre code {
+      background: transparent; padding: 0; color: inherit;
+    }
+
     /* Typing indicator — three dots that breathe while waiting for
        the bot's response. Same bubble shape as a normal bot reply
        so it slots into the conversation visually. */
@@ -30992,13 +31044,85 @@
         // Track the last user message so we can attach it as the
         // "question" when the user improves a bot reply.
         let lastUserMessage = "";
+        // Lightweight markdown renderer — matches the team-chat one
+        // so analysis-mode synthesis (## headers, **bold**, bullet
+        // lists, numbered lists, inline `code`) actually formats in
+        // the Try-it-out tester. Escapes HTML first for XSS safety.
+        function renderMarkdown(text) {
+          if (text == null) return "";
+          let s = String(text)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+          // fenced code
+          s = s.replace(/```([\s\S]*?)```/g, function (_m, code) {
+            return '<pre class="pr-md-pre"><code>' +
+                   code.replace(/^\n/, "") + "</code></pre>";
+          });
+          // inline code
+          s = s.replace(/`([^`\n]+)`/g, '<code class="pr-md-code">$1</code>');
+          // headers (longer first)
+          s = s.replace(/^### (.*)$/gm, '<h4 class="pr-md-h">$1</h4>');
+          s = s.replace(/^## (.*)$/gm,  '<h3 class="pr-md-h">$1</h3>');
+          s = s.replace(/^# (.*)$/gm,   '<h2 class="pr-md-h">$1</h2>');
+          // bold + italic (bold first to win the **x** consume)
+          s = s.replace(/\*\*([^*\n]+?)\*\*/g, "<strong>$1</strong>");
+          s = s.replace(/(^|[\s(])\*([^*\n]+?)\*(?=[\s.,;:!?)]|$)/g,
+                        "$1<em>$2</em>");
+          // group consecutive list lines into ul/ol
+          const lines = s.split("\n");
+          const out = [];
+          let i = 0;
+          while (i < lines.length) {
+            if (/^\s*[-*]\s+/.test(lines[i])) {
+              out.push('<ul class="pr-md-ul">');
+              while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) {
+                out.push("<li>" + lines[i].replace(/^\s*[-*]\s+/, "") + "</li>");
+                i++;
+              }
+              out.push("</ul>");
+              continue;
+            }
+            if (/^\s*\d+\.\s+/.test(lines[i])) {
+              out.push('<ol class="pr-md-ol">');
+              while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) {
+                out.push("<li>" + lines[i].replace(/^\s*\d+\.\s+/, "") + "</li>");
+                i++;
+              }
+              out.push("</ol>");
+              continue;
+            }
+            out.push(lines[i]);
+            i++;
+          }
+          s = out.join("\n");
+          // wrap remaining prose in <p>
+          const parts = s.split(/\n{2,}/);
+          s = parts.map(function (p) {
+            p = p.trim();
+            if (!p) return "";
+            if (/^<(h[1-6]|ul|ol|pre|blockquote|table)/.test(p)) return p;
+            return '<p class="pr-md-p">' + p.replace(/\n/g, "<br>") + "</p>";
+          }).join("\n");
+          return s;
+        }
+
         function addMsg(role, text) {
           if (chatEmpty) chatEmpty.style.display = "none";
           const wrap = document.createElement("div");
           wrap.className = "pr-chat-msg is-" + role;
           const bub = document.createElement("div");
           bub.className = "pr-chat-bubble";
-          bub.textContent = text;
+          // Bot messages can include markdown (analysis-mode synthesis,
+          // bullet lists from list-style answers). User messages stay
+          // plaintext via textContent — no markdown injection from
+          // the visitor side.
+          if (role === "bot") {
+            bub.style.whiteSpace = "normal";
+            bub.innerHTML = renderMarkdown(text);
+          } else {
+            bub.textContent = text;
+          }
           wrap.appendChild(bub);
           if (role === "user") lastUserMessage = text;
           if (role === "bot") {
@@ -31135,22 +31259,81 @@
             if (chatEmpty) { chatBody.appendChild(chatEmpty); chatEmpty.style.display = ""; }
           }
         });
+        // Animated progress bar with rotating phrases — same vibe as
+        // Claude Code's status strip and the team-chat loading note.
+        // Replaces the earlier three-dot indicator so the user feels
+        // the bot is actively working instead of staring at static dots.
+        const PR_LOADING_PHRASES = [
+          "Pondering", "Cogitating", "Brewing", "Marinating", "Percolating",
+          "Spelunking", "Sleuthing", "Investigating", "Excavating",
+          "Synthesizing", "Crunching numbers", "Connecting dots",
+          "Distilling insights", "Cross-referencing", "Reading between lines",
+          "Untangling", "Sifting through rows", "Drawing conclusions",
+          "Wrangling data", "Hatching ideas", "Triangulating",
+          "Gathering evidence", "Snooping around", "Plotting angles",
+          "Surveying the field", "Mulling it over", "Scrutinizing",
+          "Reasoning", "Cooking up answers", "Conjuring patterns",
+        ];
+        let prLoadingTimer = 0;
+        function _prPickPhrase(prev) {
+          const p = PR_LOADING_PHRASES[Math.floor(
+            Math.random() * PR_LOADING_PHRASES.length)];
+          return (p === prev && PR_LOADING_PHRASES.length > 1)
+            ? _prPickPhrase(prev) : p;
+        }
         function addTypingIndicator() {
-          // Animated three-dot bubble shown between the user's message
-          // and the bot's response. Removed when the reply lands.
           if (chatEmpty) chatEmpty.style.display = "none";
           const wrap = document.createElement("div");
           wrap.className = "pr-chat-msg is-bot pr-chat-typing";
           wrap.dataset.typing = "1";
-          const bub = document.createElement("div");
-          bub.className = "pr-chat-bubble pr-chat-typing-bubble";
-          bub.innerHTML = '<span class="pr-typing-dot"></span><span class="pr-typing-dot"></span><span class="pr-typing-dot"></span>';
-          wrap.appendChild(bub);
+          wrap.style.cssText = "display:flex;align-items:center;gap:10px;padding:6px 0;";
+          const first = _prPickPhrase("");
+          wrap.innerHTML =
+            '<div class="pr-loading-halo" style="' +
+                'width:26px;height:26px;border-radius:50%;' +
+                'background:#eef2ff;display:inline-flex;' +
+                'align-items:center;justify-content:center;flex-shrink:0;' +
+                'animation:prLoadingHalo 2.2s ease-in-out infinite;">' +
+              '<span style="display:inline-block;width:13px;height:13px;' +
+                'border:2px solid transparent;border-top-color:#4f46e5;' +
+                'border-right-color:#4f46e5;border-radius:50%;' +
+                'animation:prLoadingSpin 0.7s linear infinite;"></span>' +
+            '</div>' +
+            '<div style="display:flex;flex-direction:column;gap:5px;flex:1;max-width:480px;">' +
+              '<div style="display:flex;align-items:baseline;gap:5px;font-size:12.5px;color:#0f172a;">' +
+                '<span class="pr-loading-text" style="font-weight:600;transition:opacity 220ms ease;">' +
+                  first + '</span>' +
+                '<span style="color:#94a3b8;">…</span>' +
+              '</div>' +
+              '<div style="position:relative;height:3px;border-radius:2px;background:#e2e8f0;overflow:hidden;">' +
+                '<div style="position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,#4f46e5 50%,transparent 100%);animation:prLoadingShimmer 1.4s ease-in-out infinite;"></div>' +
+              '</div>' +
+            '</div>';
           chatBody.appendChild(wrap);
           chatBody.scrollTop = chatBody.scrollHeight;
+          // Rotate the phrase every ~2.4s with a soft fade.
+          let prev = first;
+          prLoadingTimer = setInterval(function () {
+            if (!wrap.parentNode) {
+              clearInterval(prLoadingTimer); prLoadingTimer = 0; return;
+            }
+            const span = wrap.querySelector(".pr-loading-text");
+            if (!span) return;
+            span.style.opacity = "0";
+            setTimeout(function () {
+              if (!span.isConnected) return;
+              const next = _prPickPhrase(prev);
+              prev = next;
+              span.textContent = next;
+              span.style.opacity = "1";
+            }, 220);
+          }, 2400);
           return wrap;
         }
         function removeTypingIndicator() {
+          if (prLoadingTimer) {
+            clearInterval(prLoadingTimer); prLoadingTimer = 0;
+          }
           const el = chatBody.querySelector('[data-typing="1"]');
           if (el) el.remove();
         }
@@ -31265,6 +31448,75 @@
                 (lastBot || chatBody).appendChild(tbl);
                 chatBody.scrollTop = chatBody.scrollHeight;
               } catch (_) { /* render is best-effort */ }
+            }
+            // Analysis-mode proof tables: when intent="analysis", the
+            // backend returns `data.analysis.tables` — one entry per
+            // exploratory query with rows + columns + the SQL the
+            // model wrote. Render as collapsible panels under the
+            // synthesis (matches the team-chat experience).
+            const analysisTables = (data && data.analysis &&
+                                     Array.isArray(data.analysis.tables))
+              ? data.analysis.tables : null;
+            if (analysisTables && analysisTables.length &&
+                typeof buildSqlResultTable === "function") {
+              try {
+                const wrap = document.createElement("div");
+                wrap.className = "pr-chat-analysis";
+                wrap.style.cssText =
+                  "margin-top:10px;display:flex;flex-direction:column;gap:6px;";
+                const hdr = document.createElement("div");
+                hdr.style.cssText =
+                  "font-size:11px;color:#6b7280;text-transform:uppercase;" +
+                  "letter-spacing:0.05em;font-weight:700;margin-bottom:2px;";
+                hdr.textContent = "Data behind this analysis (" +
+                  analysisTables.length + ")";
+                wrap.appendChild(hdr);
+                analysisTables.forEach(function (t, idx) {
+                  const det = document.createElement("details");
+                  det.style.cssText =
+                    "border:1px solid #e5e7eb;border-radius:8px;" +
+                    "background:#fafbfc;overflow:hidden;";
+                  if (idx === 0) det.open = true;
+                  const sum = document.createElement("summary");
+                  sum.style.cssText =
+                    "padding:8px 12px;cursor:pointer;font-size:12.5px;" +
+                    "font-weight:600;color:#0f172a;display:flex;" +
+                    "align-items:center;gap:6px;list-style:none;";
+                  sum.innerHTML =
+                    '<span style="flex:1;">' +
+                      String(t.purpose || "Query #" + (idx + 1))
+                        .replace(/[<>&]/g, function (c) {
+                          return ({"<":"&lt;",">":"&gt;","&":"&amp;"})[c];
+                        }) +
+                    '</span>' +
+                    '<span style="font-weight:500;color:#94a3b8;font-size:11px;">' +
+                      (t.row_count || (t.rows ? t.rows.length : 0)) +
+                      ' rows</span>';
+                  det.appendChild(sum);
+                  // Lazy-build the table widget on first open so we
+                  // don't paint 5 grids upfront.
+                  let built = false;
+                  det.addEventListener("toggle", function () {
+                    if (!det.open || built) return;
+                    built = true;
+                    try {
+                      const inner = buildSqlResultTable({
+                        sql:      String(t.sql || ""),
+                        columns:  Array.isArray(t.columns) ? t.columns : [],
+                        rows:     Array.isArray(t.rows) ? t.rows : [],
+                        rowCount: Number(t.row_count || (t.rows || []).length),
+                      });
+                      inner.style.margin = "0";
+                      inner.style.borderTop = "1px solid #e5e7eb";
+                      det.appendChild(inner);
+                    } catch (_) { /* best-effort */ }
+                  });
+                  if (det.open) det.dispatchEvent(new Event("toggle"));
+                  wrap.appendChild(det);
+                });
+                (lastBot || chatBody).appendChild(wrap);
+                chatBody.scrollTop = chatBody.scrollHeight;
+              } catch (_) { /* best-effort */ }
             }
           } catch (_) {
             removeTypingIndicator();
