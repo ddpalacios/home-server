@@ -347,6 +347,40 @@
     padding: 10px;
     text-align: center;
   }
+  /* "Clear all chats" footer — pinned at the bottom of the sidebar
+     above the lower edge. Subtle styling so it doesn't compete with
+     the conversation list, but obvious on hover that it's destructive. */
+  .tc-sb-foot {
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+    margin-top: 8px;
+  }
+  .tc-sb-clear {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 10px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: var(--text-2);
+    font: 500 12px/1 inherit;
+    cursor: pointer;
+    transition: background 120ms ease, color 120ms ease,
+                border-color 120ms ease;
+  }
+  .tc-sb-clear:hover {
+    background: var(--error-bg);
+    color: var(--error);
+    border-color: var(--error);
+  }
+  .tc-sb-clear svg { display: block; }
+  /* Skinny / collapsed sidebar — hide the "Clear all chats" label so
+     the button doesn't overflow; the icon-only state still works. */
+  .tc-sidebar.is-collapsed .tc-sb-clear span { display: none; }
+  .tc-sidebar.is-collapsed .tc-sb-clear { padding: 8px 4px; }
   .tc-shell {
     flex: 1;
     display: flex;
@@ -794,6 +828,18 @@
     <div class="tc-sb-list" id="tcSbList">
       <div class="tc-sb-empty">No chats yet.</div>
     </div>
+    <div class="tc-sb-foot" id="tcSbFoot">
+      <button type="button" class="tc-sb-clear" id="tcSbClear"
+              title="Delete every chat in this sidebar">
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6l-1.5 14a2 2 0 0 1-2 1.8H8.5A2 2 0 0 1 6.5 20L5 6"/>
+          <path d="M10 11v6"/><path d="M14 11v6"/>
+          <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
+        </svg>
+        <span>Clear all chats</span>
+      </button>
+    </div>
   </aside>
   <div class="tc-shell">
     <div class="tc-header">
@@ -1219,6 +1265,57 @@
     clearChatStream();
     refreshSidebar();
     input && input.focus();
+  });
+
+  // ─── Clear all chats ────────────────────────────────────────────
+  // Optimistic delete: confirm → wipe sidebar UI immediately +
+  // clear the active conversation pane → fire DELETE in background.
+  // If the network call fails, surface an alert and refetch the
+  // list so the UI matches reality. Same pattern as per-conversation
+  // delete, just bulk.
+  var sbClear = document.getElementById("tcSbClear");
+  if (sbClear) sbClear.addEventListener("click", function () {
+    var ok = window.confirm(
+      "Delete every chat in this sidebar? This can't be undone.");
+    if (!ok) return;
+    // Optimistic UI: empty the list, fade-collapse all rows, reset
+    // the chat pane. Network request runs in the background.
+    var rows = sbList
+      ? Array.prototype.slice.call(sbList.querySelectorAll(".tc-sb-row"))
+      : [];
+    rows.forEach(function (r) {
+      r.style.transition = "opacity 120ms ease, height 160ms ease, "
+                            + "margin 160ms ease, padding 160ms ease";
+      r.style.overflow = "hidden";
+      r.style.opacity = "0";
+      r.style.height = r.offsetHeight + "px";
+      // Force layout, then collapse
+      // eslint-disable-next-line no-unused-expressions
+      r.offsetHeight;
+      r.style.height = "0";
+      r.style.margin = "0";
+      r.style.padding = "0";
+    });
+    setTimeout(function () {
+      rows.forEach(function (r) { if (r.parentNode) r.remove(); });
+      // Re-render the empty state.
+      if (sbList) {
+        sbList.innerHTML =
+          '<div class="tc-sb-empty">No chats yet.</div>';
+      }
+    }, 200);
+    currentConversationId = "";
+    clearChatStream();
+    fetch(urlBase + "/conversations", {
+      method: "DELETE", credentials: "same-origin",
+    })
+      .then(function (r) {
+        if (!r.ok) throw new Error("clear_failed");
+      })
+      .catch(function () {
+        window.alert("Couldn't clear on the server — restoring.");
+        refreshSidebar();
+      });
   });
 
   // ─── Sidebar collapse toggle ────────────────────────────────────

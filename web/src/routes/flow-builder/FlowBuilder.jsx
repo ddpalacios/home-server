@@ -101,8 +101,12 @@ function ActivityCard({ id, data }) {
   // Show the picked channel on the canvas so the user reads "Form:
   // Contact form" without opening the drawer. cardSub falls back to
   // the catalog default when nothing's been picked yet.
-  let cardSub = data.cardSub || "";
-  if (isInputNode) {
+  // User-authored descriptions (set in the activity's Settings panel
+  // in the drawer) win over every auto-computed subtitle below.
+  let cardSub = (data.description && data.description.trim())
+                 || data.cardSub || "";
+  const userDescribed = !!(data.description && data.description.trim());
+  if (isInputNode && !userDescribed) {
     if (data.channel === "form" && data.channelRef) {
       cardSub = "📝 Form: " + (data.channelLabel || "your form");
     } else if (data.channel === "instagram" && data.channelRef) {
@@ -115,8 +119,9 @@ function ActivityCard({ id, data }) {
   }
   // AI Agent: surface the picked bot's name (and a one-line hint of
   // what it does) on the canvas card so the operator can see at a
-  // glance which bot is wired into the step.
-  if (data.activityId === "ai_agent") {
+  // glance which bot is wired into the step. User description still
+  // wins if they wrote one in Settings.
+  if (data.activityId === "ai_agent" && !userDescribed) {
     if (data.agent_id && data.agent_name) {
       const job = (data.agent_job || "").trim();
       cardSub = "🤖 " + data.agent_name + (job ? " · " + job.slice(0, 60) : "");
@@ -1042,7 +1047,14 @@ function _fmtMinutes(m) {
   return m + " min";
 }
 
-function ReplyPhonePreview({
+function ReplyPhonePreview() {
+  // "How this plays out" timeline + nudge editor + channel pills
+  // + "Live preview" panel — all removed at owner's request. The
+  // Reply block now configures purely via the left-side drawer.
+  return null;
+}
+
+function _ReplyPhonePreview_LEGACY_UNUSED({
   fallback, customBody, globalAiMode, globalCadence,
   nudgeChannel, setNudgeChannel,
   firstNudgeBody, setFirstNudgeBody,
@@ -1355,7 +1367,7 @@ function ReplyPhonePreview({
 // make on the Lead Intake page; both surfaces hit /me/forms/<id> with
 // identical payloads.
 //
-// Field shape (matches dashboard_lead_intake.html):
+// Field shape (matches dashboard_form_editor.html):
 //   { key, label, type, required, options?, builtin? }
 // where type ∈ {text, email, phone, address, textarea, select, date, number}
 const FB_FIELD_ICON = {
@@ -1618,68 +1630,91 @@ function AiAgentPreview({ agent }) {
 }
 
 
-// Multi-channel input scaffold. The backend trigger plumbing for
-// phone (Twilio) and email (Gmail) lands in a separate push — this
-// surface lets owners pre-configure their preferred channel and
-// persists everything on node data so nothing has to change here
-// when the runtime catches up. Phone/Email pickers are clearly
-// flagged "Coming soon" so nobody thinks an unwired flow is live.
+// Multi-channel input chooser. Dropdown of trigger types — phone is
+// SPLIT into two virtual options ("sms" + "call_ended") so the user
+// picks the specific event up front instead of choosing "phone" then
+// configuring sub-flags. Backend matcher still sees trigger_channel=
+// "phone" with on_sms / on_call_ended on channel_settings — we just
+// map the virtual pick down to that shape on save and back up to the
+// virtual id on load. "Multiple of these" was removed; the dropdown
+// is one event per Input node (multiple Inputs in a flow handle the
+// "mix and match" use case cleanly).
+const _INPUT_CHANNEL_OPTIONS = [
+  { id: "form",       label: "📝  A form submission",
+    sub: "When someone fills out one of your forms" },
+  { id: "sms",        label: "💬  An SMS to my Twilio number",
+    sub: "When someone texts your Twilio business number" },
+  { id: "call_ended", label: "📞  After a phone call ends",
+    sub: "Notification fires when the Twilio number's call hangs up — "
+         + "either a forwarded call or a direct call to your Twilio line" },
+  { id: "email",      label: "✉️  An email I receive",
+    sub: "When a matching email lands in your connected Gmail" },
+];
+
+// Map a virtual-channel id to a {trigger_channel, channel_settings_patch}.
+// Used on save so the backend matcher sees its existing shape.
+function _virtualToBackend(virtualId, currentSettings) {
+  const cs = { ...(currentSettings || {}) };
+  if (virtualId === "sms") {
+    return {
+      trigger_channel: "phone",
+      channel_settings: { ...cs, on_sms: true, on_call_ended: false },
+    };
+  }
+  if (virtualId === "call_ended") {
+    return {
+      trigger_channel: "phone",
+      channel_settings: { ...cs, on_call_ended: true, on_sms: false },
+    };
+  }
+  return { trigger_channel: virtualId, channel_settings: cs };
+}
+
+// Reverse mapping for hydration: read the persisted (trigger_channel +
+// channel_settings) and figure out which virtual option to show.
+function _backendToVirtual(triggerChannel, channelSettings) {
+  if (triggerChannel === "phone") {
+    const cs = channelSettings || {};
+    if (cs.on_sms && !cs.on_call_ended) return "sms";
+    if (cs.on_call_ended && !cs.on_sms) return "call_ended";
+    if (cs.on_sms && cs.on_call_ended)  return "sms";    // legacy both-on
+    return "call_ended";  // empty phone state defaults to call_ended
+  }
+  // "form" / "email" / unset
+  return triggerChannel || "form";
+}
+
 function _InputChannelChooser({ value, onPick }) {
-  const opts = [
-    { id: "form",     icon: "📝", label: "A form submission",
-      sub: "When someone fills out one of your forms" },
-    { id: "phone",    icon: "📞", label: "A call or text to my phone number",
-      sub: "When someone calls or texts your business number" },
-    { id: "email",    icon: "✉️", label: "An email I receive",
-      sub: "When a matching email lands in your inbox" },
-    { id: "multiple", icon: "🔀", label: "Multiple of these",
-      sub: "Mix and match the triggers above" },
-  ];
+  const current = _INPUT_CHANNEL_OPTIONS.find(o => o.id === value)
+                  || _INPUT_CHANNEL_OPTIONS[0];
   return (
-    <div style={{
-      display: "grid", gridTemplateColumns: "1fr 1fr",
-      gap: 6, marginBottom: 12,
-    }}>
-      {opts.map(o => {
-        const isOn = value === o.id;
-        return (
-          <button
-            key={o.id}
-            type="button"
-            onClick={() => onPick(o.id)}
-            style={{
-              textAlign: "left", padding: "10px 12px",
-              border: "1px solid " + (isOn ? "#0f172a" : "#e5e7eb"),
-              borderRadius: 10, background: isOn ? "#f8fafc" : "#fff",
-              cursor: "pointer", font: "inherit", color: "#0f172a",
-              display: "flex", gap: 10, alignItems: "flex-start",
-            }}
-          >
-            <span aria-hidden="true" style={{ fontSize: 18, marginTop: 1 }}>
-              {o.icon}
-            </span>
-            <span style={{ flex: 1, minWidth: 0 }}>
-              <div style={{
-                display: "flex", gap: 6, alignItems: "center",
-                fontWeight: 600, fontSize: 13.5,
-              }}>
-                <span>{o.label}</span>
-                {o.tag && (
-                  <span style={{
-                    padding: "1px 7px", borderRadius: 999,
-                    background: "#fef3c7", color: "#92400e",
-                    fontSize: 10.5, fontWeight: 700,
-                    letterSpacing: ".02em",
-                  }}>{o.tag}</span>
-                )}
-              </div>
-              <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
-                {o.sub}
-              </div>
-            </span>
-          </button>
-        );
-      })}
+    <div style={{ marginBottom: 12 }}>
+      <label style={{
+        display: "block", fontSize: 12, fontWeight: 700,
+        color: "#475569", textTransform: "uppercase",
+        letterSpacing: ".04em", marginBottom: 6,
+      }}>
+        Trigger
+      </label>
+      <select
+        value={value || "form"}
+        onChange={(e) => onPick(e.target.value)}
+        style={{
+          width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1",
+          borderRadius: 8, background: "#fff", color: "#0f172a",
+          fontSize: 13.5, fontWeight: 500, font: "inherit", cursor: "pointer",
+          outline: "none",
+        }}
+      >
+        {_INPUT_CHANNEL_OPTIONS.map(o => (
+          <option key={o.id} value={o.id}>{o.label}</option>
+        ))}
+      </select>
+      <div style={{
+        fontSize: 12, color: "#64748b", marginTop: 6, lineHeight: 1.45,
+      }}>
+        {current.sub}
+      </div>
     </div>
   );
 }
@@ -1766,19 +1801,57 @@ function _EmailTriggerConfig({ settings, onChange }) {
         </div>
       )}
 
-      {/* Manual filters (sender/subject/to) removed — the email
-          trigger is a connected Gmail that reads incoming mail.
-          Nothing else. The 3 skip toggles below stay so newsletters
-          and own-team threads can't accidentally trigger flows. */}
-      {/* Skip-spam + Skip-promotional toggles removed — both are
-          baked-in defaults now (the matcher in
-          sequences/multi_channel_input.py defaults those flags to
-          True when undefined). Only Skip-own-domain stays as a user-
-          toggleable option since that's the team-internal carve-out
-          most owners actively reason about. */}
+      {/* Restrictions — optional filters that narrow which emails
+          trigger this flow. Comma-separated, case-insensitive
+          substring match. Leaving any field blank means "match
+          anything for this field" (i.e. the field is ignored).
+          Backed by from_match / subject_match / to_match in
+          sequences/multi_channel_input.py. */}
+      <div style={{
+        marginTop: 4, marginBottom: 8, padding: 10,
+        background: "#f8fafc", border: "1px solid #e5e7eb",
+        borderRadius: 8,
+      }}>
+        <div style={{ fontSize: 12, fontWeight: 700,
+                       color: "#0f172a", marginBottom: 2 }}>
+          Restrict which emails trigger this flow
+        </div>
+        <div style={{ fontSize: 11.5, color: "#64748b",
+                       marginBottom: 8, lineHeight: 1.4 }}>
+          Without restrictions, every email to this inbox triggers
+          the flow. Add at least one filter below to narrow it down.
+        </div>
+        {[
+          { key: "from_match",
+            label: "From (sender contains)",
+            ph:    "jane@acme.com, @vendor.com" },
+          { key: "subject_match",
+            label: "Subject contains",
+            ph:    "invoice, order, support" },
+          { key: "to_match",
+            label: "Sent to address",
+            ph:    "sales@yourco.com" },
+        ].map(f => (
+          <label key={f.key} style={{ display: "block", marginBottom: 6 }}>
+            <span style={{ display: "block", fontSize: 11.5, fontWeight: 600,
+                           color: "#374151", marginBottom: 2 }}>{f.label}</span>
+            <input type="text"
+              value={settings[f.key] || ""}
+              placeholder={f.ph}
+              onChange={(e) => onChange({ ...settings, [f.key]: e.target.value })}
+              style={{ width: "100%", padding: "6px 8px",
+                       border: "1px solid #d1d5db", borderRadius: 6,
+                       fontSize: 12.5, boxSizing: "border-box" }}
+            />
+          </label>
+        ))}
+      </div>
+
       <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 6 }}>
         {[
-          { id: "skip_own_domain", label: "Skip emails from your own team's domain", defaultOn: true },
+          { id: "skip_spam",        label: "Skip spam emails",                       defaultOn: true },
+          { id: "skip_promotional", label: "Skip promotional emails (newsletters)",  defaultOn: true },
+          { id: "skip_own_domain",  label: "Skip emails from your own team's domain", defaultOn: true },
         ].map(opt => {
           const checked = settings[opt.id] === undefined ? opt.defaultOn : !!settings[opt.id];
           return (
@@ -1797,7 +1870,7 @@ function _EmailTriggerConfig({ settings, onChange }) {
   );
 }
 
-function _PhoneTriggerConfig({ settings, onChange }) {
+function _PhoneTriggerConfig({ settings, onChange, hideEventToggles }) {
   // Pulls /me/phones once per mount to populate a number dropdown
   // and surface the voice-agent conflict warning when the picked
   // number already routes answered calls to a voice bot.
@@ -1887,21 +1960,23 @@ function _PhoneTriggerConfig({ settings, onChange }) {
         </div>
       )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        {[
-          { id: "on_sms",        label: "When a text message comes in" },
-          { id: "on_call_ended", label: "When a phone call ends (answered, missed, voicemail)" },
-        ].map(opt => (
-          <label key={opt.id} style={{ fontSize: 12.5, color: "#0f172a",
-                                        display: "flex", alignItems: "center", gap: 6 }}>
-            <input type="checkbox"
-              checked={!!settings[opt.id]}
-              onChange={(e) => onChange({ ...settings, [opt.id]: e.target.checked })}
-            />
-            {opt.label}
-          </label>
-        ))}
-      </div>
+      {!hideEventToggles && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          {[
+            { id: "on_sms",        label: "When a text message comes in" },
+            { id: "on_call_ended", label: "When a phone call ends (answered, missed, voicemail)" },
+          ].map(opt => (
+            <label key={opt.id} style={{ fontSize: 12.5, color: "#0f172a",
+                                          display: "flex", alignItems: "center", gap: 6 }}>
+              <input type="checkbox"
+                checked={!!settings[opt.id]}
+                onChange={(e) => onChange({ ...settings, [opt.id]: e.target.checked })}
+              />
+              {opt.label}
+            </label>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -1909,8 +1984,12 @@ function _PhoneTriggerConfig({ settings, onChange }) {
 function _InputChannelComingSoon({ kind, settings, onChange }) {
   // Per-channel trigger config. Phone + Email are runtime-wired:
   // configuring here means inbound events actually fire the flow.
-  if (kind === "phone") {
-    return <_PhoneTriggerConfig settings={settings} onChange={onChange} />;
+  // Virtual phone ids ("sms" / "call_ended") share the same phone
+  // config — we just hide the per-event checkboxes since the
+  // dropdown already picked the event.
+  if (kind === "phone" || kind === "sms" || kind === "call_ended") {
+    return <_PhoneTriggerConfig settings={settings} onChange={onChange}
+                                 hideEventToggles={kind === "sms" || kind === "call_ended"} />;
   }
   if (kind === "email") {
     return <_EmailTriggerConfig settings={settings} onChange={onChange} />;
@@ -2182,20 +2261,52 @@ function _TestTriggerButton({ triggerChannel, channelSettings }) {
 }
 
 function InputChannelPanel({ nodeId, data, onChange }) {
-  const [triggerChannel, setTriggerChannel] = React.useState(
-    data.trigger_channel || "form");
-  const [channelSettings, setChannelSettings] = React.useState(
+  // Virtual channel id (one of the dropdown options:
+  // form / sms / call_ended / email). Mapped down to the backend's
+  // existing trigger_channel + channel_settings shape on save.
+  const [triggerChannel, setTriggerChannelState] = React.useState(
+    _backendToVirtual(data.trigger_channel, data.channel_settings));
+  const [channelSettings, setChannelSettingsState] = React.useState(
     data.channel_settings || {});
-  // Persist channel + settings to node data whenever they change. The
-  // form panel's own onChange below still runs verbatim so existing
-  // form flows are unaffected.
-  React.useEffect(() => {
+  // Persist channel + settings to node data SYNCHRONOUSLY when the
+  // owner picks a channel. The old effect-based persist only fired on
+  // re-render — if the user picked Email and immediately backed out,
+  // the patch never lands on the saved flow blob and the matcher sees
+  // trigger_channel='' forever. Wrapping the setters lets us mirror
+  // the new value into node.data in the same call as setState so the
+  // autosave catches it on its next tick guaranteed.
+  //
+  // Virtual-to-backend mapping happens here too: picking "sms" or
+  // "call_ended" both write trigger_channel="phone" with the right
+  // event flag set on channel_settings. The matcher sees the same
+  // shape it always has.
+  const setTriggerChannel = (virtualId) => {
+    setTriggerChannelState(virtualId);
+    const mapped = _virtualToBackend(virtualId, channelSettings);
+    setChannelSettingsState(mapped.channel_settings);
     onChange(nodeId, {
-      trigger_channel:  triggerChannel,
-      channel_settings: channelSettings,
+      trigger_channel:  mapped.trigger_channel,
+      channel_settings: mapped.channel_settings,
     });
+  };
+  const setChannelSettings = (v) => {
+    setChannelSettingsState(v);
+    onChange(nodeId, { channel_settings: v });
+  };
+  // Mount-time stamp: if the seeded Input node has no trigger_channel
+  // yet (every freshly-created flow), write the current virtual default
+  // to node.data now so the autosave persists "form" even if the user
+  // never opens the channel chooser.
+  React.useEffect(() => {
+    if (!data.trigger_channel) {
+      const mapped = _virtualToBackend(triggerChannel, channelSettings);
+      onChange(nodeId, {
+        trigger_channel:  mapped.trigger_channel,
+        channel_settings: mapped.channel_settings,
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [triggerChannel, channelSettings]);
+  }, []);
 
   const [loading, setLoading] = React.useState(true);
   const [forms, setForms] = React.useState([]);
@@ -2467,7 +2578,30 @@ function InputChannelPanel({ nodeId, data, onChange }) {
               <a
                 className="fb-ich-setup-btn"
                 href="#outreach"
-                onClick={dropReturnBreadcrumb}
+                onClick={(e) => {
+                  // Navigate to #outreach AND switch to the Forms
+                  // tab — without this, the user landed on the
+                  // Flows view and the button "did nothing".
+                  // setTimeout so the hash navigation completes
+                  // before we hunt for the tab in the DOM.
+                  dropReturnBreadcrumb && dropReturnBreadcrumb(e);
+                  setTimeout(() => {
+                    const tab = document.querySelector(
+                      '[data-out-view="forms"]');
+                    if (tab && typeof tab.click === "function") {
+                      tab.click();
+                    }
+                    // Then click the "+ Create form" button so the
+                    // user lands in the create flow immediately.
+                    setTimeout(() => {
+                      const createBtn = document.getElementById(
+                        "ofCreateBtn");
+                      if (createBtn && typeof createBtn.click === "function") {
+                        createBtn.click();
+                      }
+                    }, 150);
+                  }, 80);
+                }}
               >+ Make a form</a>
             </div>
           ) : (
@@ -2650,8 +2784,18 @@ function InputChannelPanel({ nodeId, data, onChange }) {
 
                   <a
                     className="fb-ich-make-another"
-                    href="#leadIntake"
-                    onClick={dropReturnBreadcrumb}
+                    href="#outreach"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      dropReturnBreadcrumb && dropReturnBreadcrumb(e);
+                      try {
+                        if (typeof window.openFormEditorModal === "function") {
+                          window.openFormEditorModal("");
+                        } else {
+                          window.location.hash = "#outreach";
+                        }
+                      } catch (_) {}
+                    }}
                     style={{ display: "inline-block", marginTop: 14 }}
                   >+ Make a new form</a>
                 </>
@@ -3142,7 +3286,7 @@ function SiteFieldsPane({ siteFields, formFieldKeys, webhookUrl, onUpdate, onRem
   );
 }
 
-// Live preview — mirrors renderPreview() in dashboard_lead_intake.html
+// Live preview — mirrors renderPreview() in dashboard_form_editor.html
 // pixel-for-pixel. Same input style, same submit button color, same
 // "After they submit" thank-you note when present.
 function FormPreview({ activeForm, name, fields }) {
@@ -3552,6 +3696,11 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
   // touched since the redesign.
   const [replyApproval, setReplyApproval] = React.useState(
     data.reply_approval || "auto");
+  // Reply channel — "auto" matches the lead's last inbound channel
+  // (legacy behavior); "email" or "sms" forces that channel regardless.
+  // Read by the engine via step.reply_channel in execute_send_custom_reply.
+  const [replyChannel, setReplyChannel] = React.useState(
+    data.reply_channel || "auto");
   // Notify-only state: extra recipients + include-customer toggle +
   // preview source. Stored on node.data with snake_case keys so the
   // server-side execute_notify reads them verbatim — no canvas-to-engine
@@ -4131,6 +4280,7 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
       reply_agent_name: replyAgentName,
       reply_agent_job:  replyAgentJob,
       reply_approval:   replyApproval,
+      reply_channel:    replyChannel,
       // Notify-only fields. Always emitted (no-op for non-notify steps,
       // ignored by the engine for those types). snake_case so the
       // server reads node.data verbatim — no shape translation needed.
@@ -4160,7 +4310,7 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, modes, subject, body, waitDays, conditionId, fallback,
-      replyAgentId, replyAgentName, replyAgentJob, replyApproval,
+      replyAgentId, replyAgentName, replyAgentJob, replyApproval, replyChannel,
       includeCustomer, extraPhones, extraEmails, defaultDismissed,
       callPhone, callMessage, callVoiceTone, callTarget, respectBusinessHours,
       emailRecipientSource, emailRecipientValue,
@@ -4296,6 +4446,77 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
 
         <div className={`fb-drawer-body ${isInput || isCall || isAiAgent ? "is-no-preview" : ""} ${previewCollapsed && !isInput && !isCall && !isAiAgent ? "is-preview-collapsed" : ""}`}>
           <div className="fb-drawer-edit">
+            {/* Per-activity settings: rename + describe. Override the
+                default title (shown in the drawer header + on the
+                canvas node) and add a custom description that
+                replaces the default subtitle. Collapsed by default
+                so the activity-specific config still owns the surface. */}
+            <details className="fb-activity-settings"
+                     style={{ marginBottom: 14, border: "1px solid #e5e7eb",
+                              borderRadius: 8, background: "#fafbfc" }}>
+              <summary style={{ padding: "9px 12px", cursor: "pointer",
+                                fontSize: 12, fontWeight: 700, color: "#475569",
+                                textTransform: "uppercase", letterSpacing: ".04em",
+                                listStyle: "none", display: "flex",
+                                alignItems: "center", gap: 6 }}>
+                <span aria-hidden="true">⚙</span>
+                <span>Settings</span>
+                <span style={{ marginLeft: "auto", color: "#94a3b8",
+                               textTransform: "none", fontWeight: 500,
+                               fontSize: 11, letterSpacing: 0 }}>
+                  Rename · Describe
+                </span>
+              </summary>
+              <div style={{ padding: "0 12px 12px",
+                            display: "flex", flexDirection: "column", gap: 10 }}>
+                <label style={{ display: "block" }}>
+                  <span style={{ display: "block", fontSize: 11.5, fontWeight: 600,
+                                  color: "#64748b", marginBottom: 4 }}>
+                    Activity name
+                  </span>
+                  <input type="text"
+                    value={data.title || ""}
+                    placeholder={activity.title || "Activity"}
+                    maxLength={120}
+                    onChange={(e) => onChange(node.id, { title: e.target.value })}
+                    style={{ width: "100%", padding: "8px 10px",
+                              border: "1px solid #cbd5e1", borderRadius: 6,
+                              fontSize: 13, fontFamily: "inherit",
+                              background: "#fff", outline: "none",
+                              boxSizing: "border-box" }}
+                  />
+                  <span style={{ fontSize: 11, color: "#94a3b8", marginTop: 4,
+                                  display: "block" }}>
+                    Shows in the canvas node and the drawer header. Leave
+                    blank to use the default ({activity.title}).
+                  </span>
+                </label>
+                <label style={{ display: "block" }}>
+                  <span style={{ display: "block", fontSize: 11.5, fontWeight: 600,
+                                  color: "#64748b", marginBottom: 4 }}>
+                    Description
+                  </span>
+                  <textarea
+                    value={data.description || ""}
+                    placeholder={activity.subtitle || activity.description || "What this activity does in this flow…"}
+                    maxLength={500}
+                    rows={3}
+                    onChange={(e) => onChange(node.id, { description: e.target.value })}
+                    style={{ width: "100%", padding: "8px 10px",
+                              border: "1px solid #cbd5e1", borderRadius: 6,
+                              fontSize: 13, fontFamily: "inherit",
+                              background: "#fff", outline: "none",
+                              resize: "vertical", lineHeight: 1.45,
+                              boxSizing: "border-box" }}
+                  />
+                  <span style={{ fontSize: 11, color: "#94a3b8", marginTop: 4,
+                                  display: "block" }}>
+                    Replaces the default subtitle on the canvas node.
+                  </span>
+                </label>
+              </div>
+            </details>
+
             {isInput ? (
               <InputChannelPanel
                 nodeId={node.id}
@@ -4383,6 +4604,8 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
                 }}
                 replyApproval={replyApproval}
                 setReplyApproval={setReplyApproval}
+                replyChannel={replyChannel}
+                setReplyChannel={setReplyChannel}
               />
             ) : isCall ? (
               <div className="fb-call-panel">
@@ -5538,7 +5761,7 @@ function MessageEditorDrawer({ node, activity, onChange, onClose, onDelete }) {
             )}
           </div>
 
-          {!isInput && !isCall && !isAppendSheet && (
+          {!isInput && !isCall && !isAppendSheet && !isReply && (
           <div className={`fb-drawer-preview ${previewCollapsed ? "is-collapsed" : ""}`}>
             <button
               type="button"
@@ -6543,14 +6766,170 @@ const _REPLY_FIT = {
   custom:            { fit: "ok",   label: "Custom bot — review before relying on it" },
 };
 
+// Bot picker for the Reply drawer. Native <select> dropdown for
+// "Which bot replies?" + a description block for the picked bot's
+// fit, plus a stacked approval-mode picker below ("Send
+// automatically" / "Show me the draft first"). Replaces an earlier
+// carousel that the user found heavier than necessary — dropdown
+// is faster to scan when you have more than 2-3 bots.
+function BotReplyCarousel({
+  bots, botsLoading, replyAgentId, replyApproval,
+  onPickAgent, setReplyApproval,
+}) {
+  if (botsLoading) {
+    return (
+      <div className="fb-replywidget-section">
+        <label className="fb-drawer-l">Which bot replies?</label>
+        <div style={{ color: "#6b7280", fontSize: 12.5, padding: "4px 0" }}>
+          Loading your bots…
+        </div>
+      </div>
+    );
+  }
+  if (!bots || !bots.length) {
+    return (
+      <div className="fb-replywidget-section">
+        <label className="fb-drawer-l" style={{
+          display: "flex", alignItems: "baseline",
+          justifyContent: "space-between", gap: 8,
+        }}>
+          <span>Which bot replies?</span>
+          <a href="/dashboard#agents" target="_top"
+             style={{ color: "#185fa5", fontWeight: 600, fontSize: 11.5 }}>
+            + Create a new bot
+          </a>
+        </label>
+        <div style={{
+          padding: 10, border: "1px solid #e5e7eb", borderRadius: 8,
+          background: "#fff", fontSize: 12.5, color: "#374151",
+        }}>
+          You haven't created any bots yet.{" "}
+          <a href="/dashboard#agents" target="_top"
+             style={{ color: "#185fa5", fontWeight: 600 }}>+ Create a bot</a>
+        </div>
+      </div>
+    );
+  }
+
+  const pickedBot = bots.find(b => b.id === replyAgentId) || null;
+  const pickedFit = pickedBot
+    ? (_REPLY_FIT[_aiAgentCategorize(pickedBot)] || _REPLY_FIT.custom)
+    : null;
+  const pickedFitDot = pickedFit
+    ? (pickedFit.fit === "good" ? "#16a34a"
+       : pickedFit.fit === "warn" ? "#f59e0b" : "#94a3b8")
+    : "#94a3b8";
+
+  const handleSelectChange = (e) => {
+    const next = bots.find(b => b.id === e.target.value);
+    if (next && onPickAgent) onPickAgent(next);
+  };
+
+  return (
+    <div className="fb-replywidget-section">
+      <label className="fb-drawer-l" style={{
+        display: "flex", alignItems: "baseline",
+        justifyContent: "space-between", gap: 8,
+      }}>
+        <span>Which bot replies?</span>
+        <a href="/dashboard#agents" target="_top"
+           style={{ color: "#185fa5", fontWeight: 600, fontSize: 11.5 }}>
+          + Create a new bot
+        </a>
+      </label>
+
+      {/* Native <select> dropdown. Easier to scan than the carousel
+          once a user has more than 2-3 bots. We use the native
+          element so the OS dropdown handles keyboard nav,
+          accessibility, mobile interaction, etc., for free. */}
+      <div style={{ position: "relative" }}>
+        <select
+          value={replyAgentId || ""}
+          onChange={handleSelectChange}
+          style={{
+            width: "100%",
+            padding: "10px 36px 10px 12px",
+            border: "1px solid #cbd5e1",
+            borderRadius: 8,
+            background: "#fff",
+            font: "600 13px inherit",
+            color: "#0f172a",
+            cursor: "pointer",
+            appearance: "none",
+            WebkitAppearance: "none",
+          }}
+        >
+          {!replyAgentId && (
+            <option value="" disabled>Pick a bot…</option>
+          )}
+          {bots.map(b => (
+            <option key={b.id} value={b.id}>{b.name || "Untitled bot"}</option>
+          ))}
+        </select>
+        {/* Chevron — pure decoration, native select handles the click. */}
+        <span aria-hidden="true" style={{
+          position: "absolute", right: 12, top: "50%",
+          transform: "translateY(-50%)",
+          pointerEvents: "none",
+          color: "#64748b", fontSize: 11,
+        }}>▾</span>
+      </div>
+
+      {pickedBot && pickedFit && (
+        <div style={{
+          marginTop: 8,
+          padding: "8px 10px",
+          background: "#f8fafc",
+          border: "1px solid #e5e7eb",
+          borderRadius: 8,
+          fontSize: 12.5, color: "#475569",
+          display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
+        }}>
+          <span aria-hidden="true" style={{
+            width: 8, height: 8, borderRadius: 999, background: pickedFitDot,
+            flexShrink: 0,
+          }} />
+          <span>
+            <strong style={{ color: "#0f172a" }}>{pickedBot.name}</strong>
+            {" — "}{pickedFit.label.toLowerCase()}.
+          </span>
+          <a href={`/dashboard#agents/${encodeURIComponent(pickedBot.id)}`}
+             target="_top"
+             style={{ color: "#185fa5", fontWeight: 600, marginLeft: "auto" }}>
+            View setup →
+          </a>
+        </div>
+      )}
+
+      {/* Approval mode picker — only shown once a bot is selected,
+          since the approval question only makes sense in that
+          context. */}
+      {/* "Send automatically vs Show me the draft first" picker
+          removed — AI Drafts feature has been retired. Every AI
+          reply now auto-sends. */}
+    </div>
+  );
+}
+
 function ReplyWidgetEditor({
   fallback, setFallback,
   body, setBody, taRef, onActiveField,
   globalAiMode, globalCadence,
   replyAgentId, replyAgentName, replyAgentJob, onPickAgent,
   replyApproval, setReplyApproval,
+  replyChannel, setReplyChannel,
 }) {
   const aiOff = globalAiMode === "i_respond";
+
+  // Migrate legacy saved replyChannel values ("auto" / "sms") to
+  // "email" so the picker UI we removed doesn't leave behind a
+  // stale value that the runtime would still try to honor.
+  React.useEffect(() => {
+    if (replyChannel !== "email" && setReplyChannel) {
+      setReplyChannel("email");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [replyChannel]);
 
   // Owner's bots — same /me/agents endpoint the AI Agent flow-block
   // picker uses, so the two surfaces stay in sync.
@@ -6686,10 +7065,41 @@ function ReplyWidgetEditor({
     );
   };
 
+  const channelTabBtn = (val, label) => {
+    const active = (replyChannel || "auto") === val;
+    return (
+      <button
+        type="button"
+        onClick={() => setReplyChannel && setReplyChannel(val)}
+        style={{
+          padding: "6px 12px", fontSize: 12.5, fontWeight: 600,
+          border: "1px solid " + (active ? "#0f172a" : "#e5e7eb"),
+          borderRadius: 6, background: active ? "#0f172a" : "#fff",
+          color: active ? "#fff" : "#334155", cursor: "pointer",
+          font: "inherit",
+        }}
+      >{label}</button>
+    );
+  };
+
   return (
     <div>
-      {/* "If I don't reply" — compact tab strip across the top. */}
+      {/* Reply channel is locked to email — the SMS/Auto options
+          were removed because the runtime only fully supports the
+          email path today. Migration to "email" happens via the
+          useEffect at the top of ReplyWidgetEditor. */}
       <div className="fb-replywidget-section" style={{ marginTop: 0 }}>
+        <label className="fb-drawer-l">Reply on</label>
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: 6,
+          padding: "5px 12px", borderRadius: 999,
+          background: "#eef2ff", color: "#3730a3",
+          fontSize: 12, fontWeight: 600,
+        }}>✉️ Email</div>
+      </div>
+
+      {/* "If I don't reply" — compact tab strip across the top. */}
+      <div className="fb-replywidget-section">
         <label className="fb-drawer-l">If I don't reply</label>
         <div style={{
           display: "flex", gap: 4, borderBottom: "1px solid #e5e7eb",
@@ -6708,261 +7118,20 @@ function ReplyWidgetEditor({
           toggle. Tuned to fit the whole picker block in <300px so the
           drawer doesn't need to scroll on a typical 768-tall viewport. */}
       {fallback === "ai" && !aiOff && (
-        <div className="fb-replywidget-section">
-          <label className="fb-drawer-l" style={{
-            display: "flex", alignItems: "baseline",
-            justifyContent: "space-between", gap: 8,
-          }}>
-            <span>Which bot replies?</span>
-            <a href="/dashboard#agents" target="_top"
-               style={{ color: "#185fa5", fontWeight: 600, fontSize: 11.5 }}>
-              + Create a new bot
-            </a>
-          </label>
-          {botsLoading ? (
-            <div style={{ color: "#6b7280", fontSize: 12.5, padding: "4px 0" }}>
-              Loading your bots…
-            </div>
-          ) : !bots.length ? (
-            <div style={{
-              padding: 10, border: "1px solid #e5e7eb", borderRadius: 8,
-              background: "#fff", fontSize: 12.5, color: "#374151",
-            }}>
-              You haven't created any bots yet.
-              {" "}
-              <a href="/dashboard#agents" target="_top"
-                 style={{ color: "#185fa5", fontWeight: 600 }}>
-                + Create a bot
-              </a>
-            </div>
-          ) : (
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-              gap: 6,
-            }}>
-              {bots.map(b => {
-                const cat = _aiAgentCategorize(b);
-                const fit = _REPLY_FIT[cat] || _REPLY_FIT.custom;
-                const isPicked = b.id === replyAgentId;
-                const fitDot =
-                  fit.fit === "good" ? "#16a34a"
-                  : fit.fit === "warn" ? "#f59e0b"
-                  : "#94a3b8";
-                return (
-                  <button
-                    key={b.id}
-                    type="button"
-                    onClick={() => onPickAgent && onPickAgent(b)}
-                    title={fit.label}
-                    style={{
-                      textAlign: "left", padding: "7px 10px",
-                      border: "1px solid " + (isPicked ? "#0f172a" : "#e5e7eb"),
-                      borderRadius: 8, background: isPicked ? "#f8fafc" : "#fff",
-                      cursor: "pointer", font: "inherit", color: "#0f172a",
-                      display: "flex", alignItems: "center", gap: 8,
-                      minWidth: 0,
-                    }}
-                  >
-                    <span aria-hidden="true" style={{
-                      width: 8, height: 8, borderRadius: 999,
-                      background: fitDot, flexShrink: 0,
-                    }} />
-                    <span style={{
-                      fontWeight: 600, fontSize: 12.5,
-                      whiteSpace: "nowrap", overflow: "hidden",
-                      textOverflow: "ellipsis", flex: 1, minWidth: 0,
-                    }}>
-                      {b.name || "Untitled bot"}
-                    </span>
-                    {isPicked && <span style={{ color: "#0f172a", fontSize: 12 }}>✓</span>}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-          {pickedBot && (
-            <div style={{
-              marginTop: 8, fontSize: 12, color: "#475569",
-              display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
-            }}>
-              <span><strong style={{ color: "#0f172a" }}>{pickedBot.name}</strong>{" "}
-                — {(_REPLY_FIT[_aiAgentCategorize(pickedBot)] || _REPLY_FIT.custom).label.toLowerCase()}.
-              </span>
-              <a href={`/dashboard#agents/${encodeURIComponent(pickedBot.id)}`}
-                 target="_top"
-                 style={{ color: "#185fa5", fontWeight: 600, marginLeft: "auto" }}>
-                View setup →
-              </a>
-            </div>
-          )}
-        </div>
+        <BotReplyCarousel
+          bots={bots}
+          botsLoading={botsLoading}
+          replyAgentId={replyAgentId}
+          replyApproval={replyApproval}
+          onPickAgent={onPickAgent}
+          setReplyApproval={setReplyApproval}
+        />
       )}
 
-      {/* Approval mode — two pills, single row. Compact replacement
-          for the previous stacked radio cards. */}
-      {fallback === "ai" && !aiOff && replyAgentId && (
-        <div className="fb-replywidget-section">
-          <label className="fb-drawer-l">When the bot is ready to reply</label>
-          <div style={{ display: "flex", gap: 6 }}>
-            {[
-              { id: "auto",  emoji: "⚡", title: "Send automatically",  sub: "Sends when takeover hits" },
-              { id: "draft", emoji: "👀", title: "Show me the draft first", sub: "Review before send · 24h" },
-            ].map(opt => {
-              const isOn = replyApproval === opt.id;
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => setReplyApproval && setReplyApproval(opt.id)}
-                  style={{
-                    flex: 1, textAlign: "left", padding: "8px 10px",
-                    border: "1px solid " + (isOn ? "#0f172a" : "#e5e7eb"),
-                    borderRadius: 8, background: isOn ? "#f8fafc" : "#fff",
-                    cursor: "pointer", font: "inherit", color: "#0f172a",
-                  }}
-                >
-                  <div style={{ fontSize: 12.5, fontWeight: 600 }}>
-                    {opt.emoji} {opt.title}
-                  </div>
-                  <div style={{ fontSize: 11, color: "#6b7280", marginTop: 1 }}>
-                    {opt.sub}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* AI test panel — Phase 3: synthetic vs real-message source,
-          channel chips that drive channel-specific reply formatting,
-          and a recent-message picker. */}
-      {fallback === "ai" && (
-        <div className="fb-replywidget-section">
-          <label className="fb-drawer-l" style={{
-            display: "flex", alignItems: "center",
-            justifyContent: "space-between", gap: 8,
-          }}>
-            <span>Try it</span>
-            <span style={{ display: "inline-flex", gap: 4, fontSize: 11 }}>
-              {[
-                { id: "synthetic", label: "Sample" },
-                { id: "real",      label: "Real message" },
-              ].map(opt => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => setTestSource(opt.id)}
-                  style={{
-                    padding: "3px 8px", borderRadius: 999,
-                    border: "1px solid " + (testSource === opt.id ? "#0f172a" : "#e5e7eb"),
-                    background: testSource === opt.id ? "#0f172a" : "#fff",
-                    color: testSource === opt.id ? "#fff" : "#374151",
-                    cursor: "pointer", font: "600 11px inherit",
-                  }}
-                >{opt.label}</button>
-              ))}
-            </span>
-          </label>
-
-          {/* Channel chips — drives channel-specific instructions on
-              the server (sms = short, email = longer, missed_call =
-              text+VM acknowledgment). */}
-          <div style={{
-            display: "flex", gap: 4, marginBottom: 6,
-            fontSize: 11, color: "#6b7280",
-          }}>
-            <span style={{ alignSelf: "center", marginRight: 4 }}>Channel:</span>
-            {[
-              { id: "email",       label: "Email" },
-              { id: "sms",         label: "SMS" },
-              { id: "missed_call", label: "Missed call" },
-            ].map(c => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => setTestChannel(c.id)}
-                style={{
-                  padding: "2px 8px", borderRadius: 999,
-                  border: "1px solid " + (testChannel === c.id ? "#0f172a" : "#e5e7eb"),
-                  background: testChannel === c.id ? "#f8fafc" : "#fff",
-                  color: "#0f172a", cursor: "pointer", font: "600 11px inherit",
-                }}
-              >{c.label}</button>
-            ))}
-          </div>
-
-          {/* Real-message picker — when "Real message" is selected,
-              show recent customer messages as quick-pick buttons. */}
-          {testSource === "real" && (
-            <div style={{
-              border: "1px solid #e5e7eb", borderRadius: 8,
-              maxHeight: 160, overflow: "auto", marginBottom: 6,
-              background: "#fff",
-            }}>
-              {pastLoading ? (
-                <div style={{ padding: 10, fontSize: 12, color: "#6b7280" }}>
-                  Loading recent messages…
-                </div>
-              ) : !pastMsgs.length ? (
-                <div style={{ padding: 10, fontSize: 12, color: "#6b7280" }}>
-                  No recent customer messages yet. Try a sample instead.
-                </div>
-              ) : pastMsgs.map(m => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => {
-                    setTestInput(m.message);
-                    setTestChannel(m.channel);
-                  }}
-                  style={{
-                    display: "block", width: "100%", textAlign: "left",
-                    padding: "7px 10px", borderTop: "1px solid #f1f5f9",
-                    borderLeft: 0, borderRight: 0, borderBottom: 0,
-                    background: "transparent", cursor: "pointer", font: "inherit",
-                  }}
-                >
-                  <div style={{ fontSize: 11.5, color: "#6b7280" }}>
-                    {m.name} · {m.channel.replace("_", " ")}
-                  </div>
-                  <div style={{ fontSize: 12.5, color: "#0f172a", marginTop: 1 }}>
-                    {m.message.length > 110 ? m.message.slice(0, 110) + "…" : m.message}
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-
-          <div className="fb-rwtest-row">
-            <input
-              type="text"
-              className="fb-rwtest-input"
-              data-ai-editable="true"
-              data-ai-field-type="general"
-              placeholder={testSource === "real"
-                ? "Pick a real message above, or type to override…"
-                : "What might a customer message say?"}
-              value={testInput}
-              onChange={(e) => setTestInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") { e.preventDefault(); runTest(); }
-              }}
-            />
-            <button
-              type="button"
-              className="fb-rwtest-btn"
-              onClick={runTest}
-              disabled={testing}
-            >{testing ? "…" : "Try →"}</button>
-          </div>
-          <div
-            className="fb-rwtest-preview"
-            data-state={testReply.state}
-          >{testReply.text}</div>
-        </div>
-      )}
+      {/* Inline "Try it" AI tester removed (Sample/Real toggle,
+          channel chips, message input, preview). The dashboard's
+          Try-it-out widget at /dashboard is the canonical place to
+          test agent replies — duplicating it inline added noise. */}
 
       {/* Custom body + live preview side-by-side. The two columns
           collapse to stacked on narrow widths via @media. */}
@@ -7033,43 +7202,10 @@ function ReplyWidgetEditor({
           Click the ✏️ icon next to Nudge 1 / Nudge 2 to open a small
           inline editor. The channel pill sits below the timeline. */}
 
-      {/* Read-only summary of the global AI mode. Only relevant when
-          the fallback is AI — for "Send this" the user has chosen
-          their own message and the AI cadence is irrelevant. */}
-      {fallback === "ai" && (
-        <div className={`fb-replywidget-cadinfo is-${globalAiMode || "hybrid"}`}>
-          <div className="fb-replywidget-cadinfo-head">
-            <span className="fb-replywidget-cadinfo-h">
-              {globalAiMode === "ai_always" ? "AI mode"
-                : globalAiMode === "i_respond" ? "AI mode"
-                : "Reminders before takeover"}
-            </span>
-            <span className="fb-replywidget-cadinfo-dot" aria-hidden="true" />
-          </div>
-          <div className="fb-replywidget-cadinfo-times">
-            {globalAiMode === "ai_always" ? (
-              <span className="fb-replywidget-cadinfo-mode">
-                Always reply — <strong>AI replies right away</strong>
-              </span>
-            ) : globalAiMode === "i_respond" ? (
-              <span className="fb-replywidget-cadinfo-mode">
-                Off — <strong>you'll handle replies</strong>
-              </span>
-            ) : globalCadence ? (
-              <>
-                <span>{_fmtMinutes(globalCadence.first_reminder_minutes)}</span>
-                <span className="fb-replywidget-cadinfo-sep">·</span>
-                <span>{_fmtMinutes(globalCadence.second_reminder_minutes)}</span>
-                <span className="fb-replywidget-cadinfo-sep">·</span>
-                <span>{_fmtMinutes(globalCadence.ai_takeover_minutes)} (takeover)</span>
-              </>
-            ) : <span style={{ color: "#94a3b8" }}>Loading…</span>}
-          </div>
-          <div className="fb-replywidget-cadinfo-link">
-            Change in top-right ↗
-          </div>
-        </div>
-      )}
+      {/* "AI mode / Always reply right away / Change in top-right ↗"
+          read-only summary removed — the global AI-mode toggle is the
+          source of truth and shouldn't be restated inside every Reply
+          drawer. */}
     </div>
   );
 }
@@ -12375,16 +12511,41 @@ export default function FlowBuilder() {
   //   STATE C (form-attached): formId set and no saved flow yet →
   //     seed first_contact AND persist immediately so a refresh
   //     returns the saved flow (idempotent — never duplicates).
+  //
+  // Stale-while-revalidate: when we have a sessionStorage cache for
+  // this exact flow_id, paint from cache INSTANTLY (no blank-canvas
+  // flash, no GCS round-trip on the critical path) and revalidate
+  // in the background. The cache key is the same `flowEndpoint` URL
+  // we'd otherwise GET, so switching forms/flows automatically uses
+  // the right cache slot. Cache writes happen here on fresh load
+  // AND in the autosave path so edits propagate without invalidation.
   React.useEffect(() => {
     let cancelled = false;
-    // Clear the canvas BEFORE the fetch resolves so the user doesn't
-    // see the previous flow flashing under the new one. Also drop
-    // hydrated so the empty state doesn't briefly render the picker
-    // (it gates on hydrated && nodes.length === 0). Re-set on success.
-    setNodes([]);
-    setEdges([]);
-    setHydrated(false);
-    setSelectedNodeId(null);
+    const cacheKey = "fbflow:" + flowEndpoint;
+    let paintedFromCache = false;
+    try {
+      const raw = window.sessionStorage.getItem(cacheKey);
+      if (raw) {
+        const cached = JSON.parse(raw);
+        const cflow = cached && cached.flow;
+        if (cflow && Array.isArray(cflow.nodes) && cflow.nodes.length > 0) {
+          setNodes(cflow.nodes);
+          setEdges(Array.isArray(cflow.edges) ? cflow.edges : []);
+          setPickerDismissed(true);
+          setHydrated(true);
+          paintedFromCache = true;
+        }
+      }
+    } catch (_) { /* ignore corrupt cache */ }
+    // No cache hit → blank the canvas first so the previous flow
+    // doesn't flash. With a cache hit, we keep the cached paint
+    // visible while revalidating in the background.
+    if (!paintedFromCache) {
+      setNodes([]);
+      setEdges([]);
+      setHydrated(false);
+      setSelectedNodeId(null);
+    }
     (async () => {
       let hasSavedFlow = false;
       try {
@@ -12399,6 +12560,13 @@ export default function FlowBuilder() {
             setEdges(Array.isArray(d.flow.edges) ? d.flow.edges : []);
             setPickerDismissed(true);
             hasSavedFlow = true;
+            // Refresh the cache with the freshly-fetched flow so the
+            // next nav paints from up-to-date data instantly.
+            try {
+              window.sessionStorage.setItem(
+                cacheKey,
+                JSON.stringify({ flow: d.flow, ts: Date.now() }));
+            } catch (_) {}
           }
         }
       } catch (_) { /* swallow — work offline */ }
@@ -12490,6 +12658,18 @@ export default function FlowBuilder() {
         });
         if (!r.ok) throw new Error("save_failed");
         setSaveStatus("saved");
+        // Keep the SWR cache in sync with the just-saved state so
+        // the next time the user opens this flow, the cached paint
+        // matches reality (no flashing of stale content while
+        // revalidate runs).
+        try {
+          window.sessionStorage.setItem(
+            "fbflow:" + flowEndpoint,
+            JSON.stringify({
+              flow: { nodes: safeNodes, edges: safeEdges },
+              ts: Date.now(),
+            }));
+        } catch (_) {}
       } catch (_) {
         setSaveStatus("error");
       }
@@ -13007,3 +13187,4 @@ export default function FlowBuilder() {
     </FlowContext.Provider>
   );
 }
+

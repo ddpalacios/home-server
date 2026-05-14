@@ -341,6 +341,19 @@
     /* My Flows compact list rows — single container, hairline
        separators, no per-row borders. */
     .mf-list .my-flow-card + .my-flow-card { border-top: 1px solid #eef0f3; }
+    /* Inline rename button on each flow row — hidden until the row
+       is hovered, so the table reads clean at rest. */
+    .mf-row:hover .mf-rename-btn { opacity: 1; }
+    .mf-rename-btn:hover {
+      background: #eef2ff !important;
+      color: #4f46e5 !important;
+    }
+    .mf-name-cell input.mf-name-input {
+      font: inherit; font-size: 14px; font-weight: 600; color: #0a0a0a;
+      padding: 4px 8px; border: 1px solid #818cf8; border-radius: 6px;
+      background: #fff; outline: none; min-width: 220px;
+      box-shadow: 0 0 0 3px rgba(129,140,248,0.18);
+    }
     [data-theme="dark"] .mf-list .my-flow-card + .my-flow-card { border-top-color: var(--border-subtle); }
     .app-shell {
       display: grid;
@@ -35371,9 +35384,19 @@
           +   ' onmouseover="this.style.background=\'#f8fafc\'"'
           +   ' onmouseout="this.style.background=\'#fff\'">'
           +   checkCell
-          +   '<td style="padding:12px 14px;font-size:14px;font-weight:600;color:#0a0a0a">'
+          +   '<td class="mf-name-cell" data-flow-id="' + (f.id || "") + '" '
+          +       'style="padding:12px 14px;font-size:14px;font-weight:600;color:#0a0a0a">'
           +     '<span style="margin-right:8px">' + icon + '</span>'
-          +     ((f.name || "Untitled") + "").replace(/</g,'&lt;').replace(/>/g,'&gt;')
+          +     '<span class="mf-name-text">'
+          +       ((f.name || "Untitled") + "").replace(/</g,'&lt;').replace(/>/g,'&gt;')
+          +     '</span>'
+          +     ' <button type="button" class="mf-rename-btn" '
+          +       'data-flow-id="' + (f.id || "") + '" '
+          +       'title="Rename flow" aria-label="Rename flow" '
+          +       'style="margin-left:6px;padding:2px 6px;background:transparent;border:0;'
+          +              'color:#94a3b8;cursor:pointer;font-size:13px;border-radius:4px;'
+          +              'opacity:0;transition:opacity .12s ease,background .12s ease,color .12s ease;">'
+          +       '✎</button>'
           +     inFlightChip
           +   '</td>'
           +   '<td style="padding:12px 14px;font-size:13px">' + sourcePill + '</td>'
@@ -35794,6 +35817,105 @@
             _myFlowsDeleteFromBtn(btn, host);
           });
         });
+        // Inline rename — pencil button on each row swaps the name
+        // text for an input, saves on Enter / blur, restores on Esc.
+        // Stops propagation so the row-click → open-canvas doesn't
+        // also fire. Bulk-acts via a delegated listener so we don't
+        // bind once per row.
+        grid.querySelectorAll(".mf-rename-btn").forEach(function (btn) {
+          btn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            var cell = btn.closest(".mf-name-cell");
+            if (!cell || cell.querySelector(".mf-name-input")) return;
+            var fid = btn.getAttribute("data-flow-id") || "";
+            // Only user-named flows can be renamed via the lightweight
+            // op=rename endpoint. Built-ins / pack flows / form flows
+            // would need different code paths and aren't supported here.
+            if (fid.indexOf("user:") !== 0 && fid.indexOf("flow_") !== 0
+                && fid.indexOf("pack:") !== 0) {
+              alert("This flow type can't be renamed inline.");
+              return;
+            }
+            var nameSpan = cell.querySelector(".mf-name-text");
+            var current  = nameSpan ? nameSpan.textContent.trim() : "";
+            var input = document.createElement("input");
+            input.type = "text";
+            input.className = "mf-name-input";
+            input.value = current;
+            input.maxLength = 200;
+            // Hide the static name + pencil while editing.
+            if (nameSpan) nameSpan.style.display = "none";
+            btn.style.display = "none";
+            cell.insertBefore(input, btn);
+            input.focus();
+            input.select();
+            var done = false;
+            function restore(label) {
+              if (done) return;
+              done = true;
+              if (input.parentNode) input.parentNode.removeChild(input);
+              if (nameSpan) {
+                nameSpan.textContent = label;
+                nameSpan.style.display = "";
+              }
+              btn.style.display = "";
+            }
+            function commit() {
+              if (done) return;
+              var next = (input.value || "").trim();
+              if (!next || next === current) {
+                restore(current);
+                return;
+              }
+              // Optimistic UI: swap the label to the new name
+              // immediately, fire the PATCH in the background. If
+              // the server rejects, snap back to the old name.
+              restore(next);
+              // Send only the rename — we don't ship the canvas
+              // payload from here, the server's op="rename" branch
+              // handles persistence in-place.
+              var rawId = (fid.indexOf("user:") === 0)
+                ? fid.slice(5)
+                : (fid.indexOf("pack:") === 0 ? fid : fid);
+              fetch("/me/flows/user/" + encodeURIComponent(rawId), {
+                method: "POST", credentials: "same-origin",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ op: "rename", name: next }),
+              })
+                .then(function (r) {
+                  if (!r.ok) throw new Error("rename_failed");
+                  return r.json();
+                })
+                .then(function () {
+                  // Update the in-memory cache so subsequent paints
+                  // use the new name without a full /me/flows refetch.
+                  try {
+                    (_myFlowsAll || []).forEach(function (x) {
+                      if (x && x.id === fid) x.name = next;
+                    });
+                  } catch (_) {}
+                })
+                .catch(function () {
+                  // Roll back on failure.
+                  if (nameSpan) nameSpan.textContent = current;
+                  alert("Couldn't rename — restored.");
+                });
+            }
+            input.addEventListener("keydown", function (ev) {
+              if (ev.key === "Enter") {
+                ev.preventDefault();
+                commit();
+              } else if (ev.key === "Escape") {
+                ev.preventDefault();
+                restore(current);
+              }
+            });
+            input.addEventListener("blur", function () {
+              setTimeout(function () { if (!done) commit(); }, 50);
+            });
+          });
+        });
+
         // Row click → open the canvas for this flow.
         grid.querySelectorAll(".mf-row").forEach(function(card){
           card.addEventListener("click", function(){
@@ -36613,29 +36735,58 @@
 
       async function renderMyFlowsList(host) {
         // Stage 1: paint instantly. Use cache if we have it, otherwise
-        // paint the empty-state shell (header + button + "no flows yet"
-        // card) immediately. We then re-render with fresh data when
-        // /me/flows resolves. Showing "Loading your flows…" alone made
-        // accounts with zero flows feel sluggish — they'd see a spinner
-        // for 200-500ms before the empty state appeared. Now they see
-        // the actual page chrome with a quiet progress bar in the
-        // empty card while we revalidate in the background.
+        // paint a clear LOADING state (header + button + skeleton rows
+        // + animated progress bar) so the user knows the table is
+        // populating instead of seeing a misleading "no flows yet"
+        // empty card while /me/flows hasn't returned. Once the fetch
+        // resolves we re-render with the real data.
         var cached = _myFlowsReadSwr();
         if (cached) {
           _renderMyFlowsBody(host, cached);
         } else {
-          // Optimistic render: paint as if there are zero flows. Layout
-          // and CTA appear instantly. Drop a tiny ux-progress bar into
-          // the empty card so the user knows we're checking.
-          _renderMyFlowsBody(host, []);
-          var emptyCard = host.querySelector('div[style*="No flows yet"]');
-          if (emptyCard) {
-            var bar = document.createElement('div');
-            bar.className = 'ux-progress';
-            bar.style.cssText = 'margin:0 0 14px;';
-            bar.innerHTML = '<div class="ux-progress-bar"></div>';
-            emptyCard.parentNode.insertBefore(bar, emptyCard);
-          }
+          // No cache → paint a loading skeleton. Looks like a real
+          // table with shimmer rows so the user reads it as "the
+          // table is loading," not "you have no flows".
+          host.innerHTML = ''
+            + '<div style="display:flex;align-items:center;justify-content:space-between;'
+            +      'gap:12px;margin:0 0 16px;flex-wrap:wrap">'
+            +   '<div>'
+            +     '<h2 style="margin:0;font:700 22px/1.2 inherit;color:#0a0a0a">Flows</h2>'
+            +     '<p style="margin:4px 0 0;color:#64748b;font-size:13.5px">Automated sequences that fire when a lead enters them.</p>'
+            +   '</div>'
+            +   '<button type="button" id="mf-start-blank" disabled'
+            +     ' style="display:inline-flex;align-items:center;gap:6px;'
+            +            'padding:8px 14px;border-radius:8px;background:#cbd5e1;'
+            +            'color:#fff;border:0;font:600 13px inherit;cursor:wait;">'
+            +     '+ New flow'
+            +   '</button>'
+            + '</div>'
+            + '<div class="mf-loading" style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">'
+            +   '<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #f1f5f9;">'
+            +     '<div style="width:24px;height:24px;border-radius:50%;background:#eef2ff;display:inline-flex;align-items:center;justify-content:center;animation:prLoadingHalo 2.2s ease-in-out infinite;flex-shrink:0;">'
+            +       '<span style="display:inline-block;width:12px;height:12px;border:2px solid transparent;border-top-color:#4f46e5;border-right-color:#4f46e5;border-radius:50%;animation:prLoadingSpin 0.7s linear infinite;"></span>'
+            +     '</div>'
+            +     '<div style="flex:1;display:flex;flex-direction:column;gap:5px;">'
+            +       '<div style="font-size:12.5px;font-weight:600;color:#0f172a;" id="mf-loading-text">Loading your flows<span style="color:#94a3b8;">…</span></div>'
+            +       '<div style="position:relative;height:3px;border-radius:2px;background:#e2e8f0;overflow:hidden;">'
+            +         '<div style="position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,#4f46e5 50%,transparent 100%);animation:prLoadingShimmer 1.4s ease-in-out infinite;"></div>'
+            +       '</div>'
+            +     '</div>'
+            +   '</div>'
+            +   (function () {
+                  var skel = "";
+                  for (var i = 0; i < 4; i++) {
+                    skel +=
+                      '<div style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid #f1f5f9;">'
+                      + '<div style="flex:0 0 18px;height:14px;background:linear-gradient(90deg,#f1f5f9,#e2e8f0,#f1f5f9);background-size:200% 100%;animation:prLoadingShimmer 1.6s ease-in-out infinite;border-radius:4px;"></div>'
+                      + '<div style="flex:2;height:14px;background:linear-gradient(90deg,#f1f5f9,#e2e8f0,#f1f5f9);background-size:200% 100%;animation:prLoadingShimmer 1.6s ease-in-out infinite;border-radius:4px;"></div>'
+                      + '<div style="flex:1;height:14px;background:linear-gradient(90deg,#f1f5f9,#e2e8f0,#f1f5f9);background-size:200% 100%;animation:prLoadingShimmer 1.6s ease-in-out infinite;border-radius:4px;"></div>'
+                      + '<div style="flex:0 0 80px;height:14px;background:linear-gradient(90deg,#f1f5f9,#e2e8f0,#f1f5f9);background-size:200% 100%;animation:prLoadingShimmer 1.6s ease-in-out infinite;border-radius:4px;"></div>'
+                      + '</div>';
+                  }
+                  return skel;
+                })()
+            + '</div>';
         }
         // Stage 2: revalidate against the server.
         var fresh = null;
