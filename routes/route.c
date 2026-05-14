@@ -679,9 +679,6 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
     } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/dashboard/social-pipeline/", 27) == 0) {
         /* Social Pipeline — generate, approve, reject endpoints. */
         post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
-    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/dashboard/lead-intake") == 0) {
-        /* Lead-intake settings page (Phase 1: web form). */
-        get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/dashboard/onboarding", 21) == 0) {
         /* SMS-first onboarding wizard. Direct hits redirect to
          * /dashboard#onboarding; ?embed=1 hits serve the wizard for
@@ -795,8 +792,35 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
     } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/team/", 6) == 0) {
         /* Team chat auth + chat-message endpoints — Flask proxies the
          * message to the chatbot internally so the team URL never
-         * exposes /chat directly. */
+         * exposes /chat directly.
+         *
+         * /chat-stream is an SSE endpoint: the upstream response is
+         * Content-Type: text/event-stream and stays open while tokens
+         * are emitted one at a time. The default post_to_local would
+         * buffer the entire response into memory before forwarding,
+         * collapsing the stream into a single batched payload. We
+         * route it through the streaming-passthrough variant so each
+         * token reaches the browser the instant Flask writes it. */
+        if (strstr(route, "/chat-stream") != NULL) {
+            post_to_local_stream(socket, http_header, body, body_len, route_with_query, "5000");
+        } else {
+            post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
+        }
+    } else if (strcmp(request_type, "PATCH") == 0 && strncmp(route, "/team/", 6) == 0) {
+        /* Team chat — conversation rename uses PATCH on
+         * /team/<aid>/<agent_id>/conversations/<conv_id>. Flask
+         * supports both PATCH and POST on that route, so the cleanest
+         * proxy path is to forward as POST since post_to_local already
+         * carries the body intact. Without this branch the C router
+         * 404s every PATCH and the rename silently fails. */
         post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
+    } else if (strcmp(request_type, "DELETE") == 0 && strncmp(route, "/team/", 6) == 0) {
+        /* Team chat — conversation delete from the sidebar's three-dot
+         * menu sends DELETE to /team/<aid>/<agent_id>/conversations/<id>.
+         * No DELETE handler existed for /team/ previously, so the C
+         * router fell through to a 404 and the user saw "Couldn't
+         * delete — try again." */
+        delete_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/unsubscribe/", 13) == 0) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/unsubscribe/", 13) == 0) {
@@ -833,6 +857,13 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
         get_to_local(socket, http_header, body, route, "9000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/robot_icon.png") != NULL) {
         get_to_local(socket, http_header, body, route, "9000");
+    } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/bot/") != NULL) {
+        /* Public chat page: /<account_id>/bot/<agent_id>. The Flask
+         * handler renders an HTML page that loads the widget and
+         * auto-opens it for the visitor. The substring "/bot/"
+         * (with leading + trailing slash) avoids collision with
+         * /bot-config since that route has no trailing slash. */
+        get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/bot-config") != NULL) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strstr(route, "/knowledege") != NULL) {

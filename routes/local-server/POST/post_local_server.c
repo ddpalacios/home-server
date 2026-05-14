@@ -761,3 +761,236 @@ void post_run_activity(struct Socket* socket,char* http_header, char*body, char*
     close(sfd);
 
  }
+
+
+
+/* ─── Streaming passthrough variant ──────────────────────────────────
+ * For SSE / chunked endpoints (e.g. /team/.../chat-stream). The
+ * regular post_to_local buffers the entire upstream response into
+ * memory before writing anything to the client — that collapses
+ * SSE token streams into a single batched response, defeating the
+ * whole point of streaming.
+ *
+ * This variant: build the upstream request the same way, then on
+ * the response side read until we have the full HTTP header block
+ * (`\r\n\r\n`), forward those headers verbatim to the client, and
+ * after that loop recv->SSL_write so each upstream byte reaches the
+ * browser immediately. */
+void post_to_local_stream(struct Socket* socket, char* http_header,
+                           char* body, size_t body_len,
+                           char* route, const char* port){
+	int sfd  = connect_to_local_server("127.0.0.1", port);
+	if (sfd < 0) {
+		send_response_code(socket->cSSL, 502);
+		return;
+	}
+	struct timeval tv_recv = { .tv_sec = LOCAL_RECV_TIMEOUT_SEC, .tv_usec = 0 };
+	struct timeval tv_send = { .tv_sec = LOCAL_SEND_TIMEOUT_SEC, .tv_usec = 0 };
+	setsockopt(sfd, SOL_SOCKET, SO_RCVTIMEO, &tv_recv, sizeof(tv_recv));
+	setsockopt(sfd, SOL_SOCKET, SO_SNDTIMEO, &tv_send, sizeof(tv_send));
+
+	const char *safe_body = body ? body : "";
+	if (!body) body_len = 0;
+
+	char *cookie_value = NULL;
+	char *content_type_value = NULL;
+	char *fwd_host_value = NULL;
+	if (http_header) {
+		const char *cookie_start = strstr(http_header, "\r\nCookie:");
+		if (!cookie_start && strncmp(http_header, "Cookie:", 7) == 0) {
+			cookie_start = http_header;
+		}
+		if (cookie_start) {
+			cookie_start += (cookie_start == http_header) ? 7 : 9;
+			while (*cookie_start == ' ') cookie_start++;
+			const char *cookie_end = strstr(cookie_start, "\r\n");
+			if (cookie_end && cookie_end > cookie_start) {
+				size_t len = (size_t)(cookie_end - cookie_start);
+				cookie_value = malloc(len + 1);
+				if (cookie_value) {
+					memcpy(cookie_value, cookie_start, len);
+					cookie_value[len] = '\0';
+				}
+			}
+		}
+		const char *ct_start = strstr(http_header, "\r\nContent-Type:");
+		if (!ct_start && strncmp(http_header, "Content-Type:", 13) == 0) {
+			ct_start = http_header;
+		}
+		if (ct_start) {
+			ct_start += (ct_start == http_header) ? 13 : 15;
+			while (*ct_start == ' ') ct_start++;
+			const char *ct_end = strstr(ct_start, "\r\n");
+			if (ct_end && ct_end > ct_start) {
+				size_t len = (size_t)(ct_end - ct_start);
+				content_type_value = malloc(len + 1);
+				if (content_type_value) {
+					memcpy(content_type_value, ct_start, len);
+					content_type_value[len] = '\0';
+				}
+			}
+		}
+		const char *xfh_start = strstr(http_header, "\r\nX-Forwarded-Host:");
+		if (!xfh_start && strncasecmp(http_header, "X-Forwarded-Host:", 17) == 0) {
+			xfh_start = http_header;
+		}
+		if (xfh_start) {
+			xfh_start += (xfh_start == http_header) ? 17 : 19;
+			while (*xfh_start == ' ') xfh_start++;
+			const char *xfh_end = strstr(xfh_start, "\r\n");
+			if (xfh_end && xfh_end > xfh_start) {
+				size_t len = (size_t)(xfh_end - xfh_start);
+				fwd_host_value = malloc(len + 1);
+				if (fwd_host_value) {
+					memcpy(fwd_host_value, xfh_start, len);
+					fwd_host_value[len] = '\0';
+				}
+			}
+		}
+		if (!fwd_host_value) {
+			const char *host_start = strstr(http_header, "\r\nHost:");
+			if (!host_start && strncmp(http_header, "Host:", 5) == 0) {
+				host_start = http_header;
+			}
+			if (host_start) {
+				host_start += (host_start == http_header) ? 5 : 7;
+				while (*host_start == ' ') host_start++;
+				const char *host_end = strstr(host_start, "\r\n");
+				if (host_end && host_end > host_start) {
+					size_t len = (size_t)(host_end - host_start);
+					fwd_host_value = malloc(len + 1);
+					if (fwd_host_value) {
+						memcpy(fwd_host_value, host_start, len);
+						fwd_host_value[len] = '\0';
+					}
+				}
+			}
+		}
+	}
+
+	const char *content_type = content_type_value ? content_type_value : "application/json";
+	char fwd_host_line[512];
+	fwd_host_line[0] = '\0';
+	if (fwd_host_value) {
+		snprintf(fwd_host_line, sizeof(fwd_host_line),
+			"X-Forwarded-Host: %s\r\nX-Forwarded-Proto: https\r\n",
+			fwd_host_value);
+	}
+
+	size_t header_size = 2048
+		+ (cookie_value ? strlen(cookie_value) : 0)
+		+ strlen(content_type)
+		+ strlen(fwd_host_line)
+		+ strlen(route);
+	char *header_buf = malloc(header_size);
+	if (!header_buf) {
+		if (cookie_value) free(cookie_value);
+		if (content_type_value) free(content_type_value);
+		if (fwd_host_value) free(fwd_host_value);
+		close(sfd);
+		send_response_code(socket->cSSL, 500);
+		return;
+	}
+	int header_written;
+	if (cookie_value) {
+		header_written = snprintf(header_buf, header_size,
+			"POST %s HTTP/1.1\r\n"
+			"Host: %s:%s\r\n"
+			"%s"
+			"Content-Type: %s\r\n"
+			"Content-Length: %zu\r\n"
+			"Cookie: %s\r\n"
+			"Connection: close\r\n"
+			"\r\n",
+			route, "127.0.0.1", port, fwd_host_line,
+			content_type, body_len, cookie_value);
+		free(cookie_value);
+	} else {
+		header_written = snprintf(header_buf, header_size,
+			"POST %s HTTP/1.1\r\n"
+			"Host: %s:%s\r\n"
+			"%s"
+			"Content-Type: %s\r\n"
+			"Content-Length: %zu\r\n"
+			"Connection: close\r\n"
+			"\r\n",
+			route, "127.0.0.1", port, fwd_host_line,
+			content_type, body_len);
+	}
+	if (content_type_value) free(content_type_value);
+	if (fwd_host_value) free(fwd_host_value);
+
+	if (header_written < 0 || (size_t)header_written >= header_size) {
+		free(header_buf);
+		close(sfd);
+		send_response_code(socket->cSSL, 500);
+		return;
+	}
+	send(sfd, header_buf, (size_t)header_written, 0);
+	free(header_buf);
+	if (body_len > 0) {
+		size_t sent = 0;
+		while (sent < body_len) {
+			ssize_t n = send(sfd, safe_body + sent, body_len - sent, 0);
+			if (n <= 0) break;
+			sent += (size_t)n;
+		}
+	}
+
+	/* Streaming response forwarding. Read until we have the full
+	 * upstream header block, forward it verbatim to the client, then
+	 * loop recv->SSL_write so every chunk reaches the browser the
+	 * instant it arrives. */
+	#define HDR_MAX 16384
+	char hdr_buf[HDR_MAX];
+	size_t hdr_total = 0;
+	char *header_terminator = NULL;
+	while (hdr_total < HDR_MAX - 1) {
+		ssize_t n = recv(sfd, hdr_buf + hdr_total, HDR_MAX - 1 - hdr_total, 0);
+		if (n <= 0) break;
+		hdr_total += (size_t)n;
+		hdr_buf[hdr_total] = '\0';
+		header_terminator = strstr(hdr_buf, "\r\n\r\n");
+		if (header_terminator) break;
+	}
+	if (!header_terminator) {
+		printf("post_to_local_stream: upstream gave no complete headers (got %zu bytes)\n", hdr_total);
+		close(sfd);
+		send_response_code(socket->cSSL, 502);
+		return;
+	}
+	size_t hdr_len = (size_t)(header_terminator - hdr_buf) + 4;
+	{
+		size_t written = 0;
+		while (written < hdr_len) {
+			int n = SSL_write(socket->cSSL, hdr_buf + written,
+			                  (int)(hdr_len - written));
+			if (n <= 0) { close(sfd); return; }
+			written += (size_t)n;
+		}
+	}
+	if (hdr_total > hdr_len) {
+		size_t leftover = hdr_total - hdr_len;
+		size_t written = 0;
+		while (written < leftover) {
+			int n = SSL_write(socket->cSSL,
+			                  hdr_buf + hdr_len + written,
+			                  (int)(leftover - written));
+			if (n <= 0) { close(sfd); return; }
+			written += (size_t)n;
+		}
+	}
+	char chunk_buf[4096];
+	for (;;) {
+		ssize_t n = recv(sfd, chunk_buf, sizeof(chunk_buf), 0);
+		if (n <= 0) break;
+		size_t written = 0;
+		while (written < (size_t)n) {
+			int w = SSL_write(socket->cSSL, chunk_buf + written,
+			                  (int)((size_t)n - written));
+			if (w <= 0) { close(sfd); return; }
+			written += (size_t)w;
+		}
+	}
+	close(sfd);
+}
