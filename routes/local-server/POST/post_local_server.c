@@ -118,6 +118,7 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, size_t bo
 	char *content_type_value = NULL;
 	char *fwd_host_value = NULL;
 	char *hub_sig_value = NULL;  /* X-Hub-Signature-256 — Meta webhook HMAC */
+	char *auth_value = NULL;     /* Authorization — warehouse API token */
 	if (http_header) {
 		const char *cookie_start = strstr(http_header, "\r\nCookie:");
 		if (!cookie_start && strncmp(http_header, "Cookie:", 7) == 0) {
@@ -154,6 +155,28 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, size_t bo
 				if (hub_sig_value) {
 					memcpy(hub_sig_value, sig_start, len);
 					hub_sig_value[len] = '\0';
+				}
+			}
+		}
+
+		/* Forward the Authorization header so warehouse API-token
+		 * Bearer auth survives the proxy hop. Without this, a
+		 * programmatic POST to /api/warehouse/* loses its credential
+		 * and Flask 401s. */
+		const char *auth_start = strstr(http_header, "\r\nAuthorization:");
+		if (!auth_start && strncasecmp(http_header, "Authorization:", 14) == 0) {
+			auth_start = http_header;
+		}
+		if (auth_start) {
+			auth_start += (auth_start == http_header) ? 14 : 16;
+			while (*auth_start == ' ') auth_start++;
+			const char *auth_end = strstr(auth_start, "\r\n");
+			if (auth_end && auth_end > auth_start) {
+				size_t len = (size_t)(auth_end - auth_start);
+				auth_value = malloc(len + 1);
+				if (auth_value) {
+					memcpy(auth_value, auth_start, len);
+					auth_value[len] = '\0';
 				}
 			}
 		}
@@ -244,6 +267,13 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, size_t bo
 			"X-Hub-Signature-256: %s\r\n", hub_sig_value);
 	}
 
+	char auth_line[2048];
+	auth_line[0] = '\0';
+	if (auth_value) {
+		snprintf(auth_line, sizeof(auth_line),
+			"Authorization: %s\r\n", auth_value);
+	}
+
 	/* Build the request HEADER as a string and send it, then send the
 	 * body bytes via a separate send(). The body may contain null bytes
 	 * (multipart binary uploads), so we cannot inline it via snprintf +
@@ -254,6 +284,7 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, size_t bo
 		+ strlen(content_type)
 		+ strlen(fwd_host_line)
 		+ strlen(hub_sig_line)
+		+ strlen(auth_line)
 		+ strlen(route);
 	char *header_buf = malloc(header_size);
 	if (!header_buf) {
@@ -262,6 +293,7 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, size_t bo
 		if (content_type_value) free(content_type_value);
 		if (fwd_host_value) free(fwd_host_value);
 		if (hub_sig_value) free(hub_sig_value);
+		if (auth_value) free(auth_value);
 		close(sfd);
 		return;
 	}
@@ -273,6 +305,7 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, size_t bo
 			"Host: %s:%s\r\n"
 			"%s"
 			"%s"
+			"%s"
 			"Content-Type: %s\r\n"
 			"Content-Length: %zu\r\n"
 			"Cookie: %s\r\n"
@@ -280,12 +313,13 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, size_t bo
 			"\r\n",
 			route,
 			"127.0.0.1", port, fwd_host_line, hub_sig_line,
-			content_type, body_len, cookie_value);
+			auth_line, content_type, body_len, cookie_value);
 		free(cookie_value);
 	} else {
 		header_written = snprintf(header_buf, header_size,
 			"POST %s HTTP/1.1\r\n"
 			"Host: %s:%s\r\n"
+			"%s"
 			"%s"
 			"%s"
 			"Content-Type: %s\r\n"
@@ -294,11 +328,12 @@ void post_to_local(struct Socket* socket,char* http_header, char*body, size_t bo
 			"\r\n",
 			route,
 			"127.0.0.1", port, fwd_host_line, hub_sig_line,
-			content_type, body_len);
+			auth_line, content_type, body_len);
 	}
 	if (content_type_value) free(content_type_value);
 	if (fwd_host_value) free(fwd_host_value);
 	if (hub_sig_value) free(hub_sig_value);
+	if (auth_value) free(auth_value);
 
 	if (header_written < 0 || (size_t)header_written >= header_size) {
 		free(header_buf);
