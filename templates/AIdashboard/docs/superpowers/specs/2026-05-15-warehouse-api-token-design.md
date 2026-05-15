@@ -125,14 +125,18 @@ honcho.
 
 ## Management Endpoints
 
-All three under `/api/warehouse/api-token`, **session-gated only**
+`/api/warehouse/api-token`, **session-gated only**
 (`_dbig_require_session()`) — a token can never mint or rotate itself.
 
 | Method | Behavior |
 |---|---|
 | `GET` | Return `{token, created_at, last_used_at}` or `{token: null}`. |
-| `POST` | Generate if none, else regenerate. Return the new token. |
-| `DELETE` | Revoke — delete both blobs. |
+| `POST` | Body `{"op":"generate"}` (default) generates or regenerates and returns the new token. Body `{"op":"revoke"}` deletes both blobs. |
+
+Revoke rides on `POST` rather than `DELETE`: the `:9030` C proxy
+rewrites every non-`POST` `/api/warehouse/*` request as a `GET`, so a
+`DELETE` would never reach Flask as a delete. This mirrors the existing
+doc-delete route, which uses `POST {op:"delete"}` for the same reason.
 
 ## UI — `#warehouse` Page
 
