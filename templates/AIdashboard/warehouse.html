@@ -1,0 +1,2615 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Warehouse</title>
+<!-- Chart.js for the SQL-result Chart tab — mirrors the team brain. -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+<style>
+  :root {
+    --fg:#0a0a0a; --sub:#5a6470; --line:#e6e9ef; --accent:#185fa5;
+    --err:#c0392b; --ok:#0a8a3a; --warn:#a86200; --soft:#f4f7fb;
+    /* Aliases for the ported team-brain SQL-result widget. */
+    --border:#e6e9ef; --border-subtle:#f1f5f9; --bg-elevated:#ffffff;
+    --bg-overlay:#f4f7fb; --ink:#0a0a0a; --text-2:#5a6470;
+    --text-3:#8a93a0; --brand:#185fa5;
+  }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; font:14.5px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;
+    color:var(--fg); background:#fff;
+  }
+  .wrap { max-width:1100px; margin:0 auto; padding:48px 32px 80px; }
+  /* Ask-the-warehouse mode: go full-width like the team brain chat. */
+  body.ask-mode .wrap { max-width:none; padding:48px 28px 24px; }
+  body.ask-mode .ask-thread { max-height:calc(100vh - 300px); }
+  .page-h h1 { font-size:26px; font-weight:700; margin:0 0 4px; letter-spacing:-.01em; }
+  .page-h p  { margin:0; color:var(--sub); font-size:14.5px; }
+  .quota-row { margin:18px 0 8px; font-size:13px; color:var(--sub); }
+  .api-access { margin:16px 0 4px; border:1px solid var(--border,#e5e7eb);
+    border-radius:10px; padding:0 14px; }
+  .api-access > summary { cursor:pointer; padding:12px 0; font-size:13.5px;
+    font-weight:600; list-style:none; }
+  .api-access > summary::-webkit-details-marker { display:none; }
+  .api-access-body { padding:0 0 14px; }
+  .api-access-intro { margin:0 0 12px; font-size:12.5px; color:var(--sub);
+    line-height:1.5; }
+  .api-token-row { display:flex; gap:8px; margin-bottom:8px; }
+  .api-token-input { flex:1; font-family:monospace; font-size:12px;
+    padding:8px 10px; border:1px solid var(--border,#e5e7eb);
+    border-radius:8px; background:var(--bg,#fff); color:var(--fg,#111); }
+  .api-token-meta { font-size:11.5px; color:var(--sub); margin-bottom:10px; }
+  .api-token-actions { display:flex; gap:8px; margin-bottom:10px; }
+  .api-token-curl { font-family:monospace; font-size:11.5px;
+    background:var(--code-bg,#f4f4f5); border-radius:8px; padding:10px 12px;
+    white-space:pre-wrap; word-break:break-all; margin:0; color:var(--fg,#111); }
+  .quota-bar {
+    height:7px; background:#eef0f3; border-radius:99px; overflow:hidden;
+    margin-top:5px; max-width:340px;
+  }
+  .quota-fill { height:100%; background:var(--accent); border-radius:99px; transition:width .3s ease; }
+  .quota-fill.is-warn { background:var(--warn); }
+  .quota-fill.is-full { background:var(--err); }
+
+  /* Drop zone */
+  .drop {
+    margin:20px 0 22px; border:2px dashed #c3cdda; border-radius:14px;
+    padding:34px 24px; text-align:center; cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+    background:var(--soft);
+  }
+  .drop:hover, .drop.is-over { border-color:var(--accent); background:#eaf2fb; }
+  .drop-icon { font-size:34px; line-height:1; margin-bottom:8px; }
+  .drop-main { font-size:15px; font-weight:600; }
+  .drop-sub  { font-size:12.5px; color:var(--sub); margin-top:4px; }
+
+  /* Toolbar */
+  .toolbar { display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
+  .tb-search {
+    flex:1; min-width:200px; padding:8px 12px; border:1px solid var(--line);
+    border-radius:9px; font:inherit; font-size:13.5px;
+  }
+  .tb-search:focus { outline:none; border-color:var(--accent); }
+  .tb-sel {
+    padding:8px 10px; border:1px solid var(--line); border-radius:9px;
+    font:inherit; font-size:13px; background:#fff; cursor:pointer;
+  }
+
+  /* Table */
+  .doc-table-wrap { border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  table { width:100%; border-collapse:collapse; font-size:13.5px; }
+  thead th {
+    text-align:left; padding:11px 14px; font-size:11px; font-weight:700;
+    letter-spacing:.05em; text-transform:uppercase; color:var(--sub);
+    background:#f8fafc; border-bottom:1px solid var(--line); white-space:nowrap;
+  }
+  tbody td { padding:13px 14px; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
+  tbody tr:last-child td { border-bottom:0; }
+  tbody tr.doc-row { cursor:pointer; transition:background .12s ease; }
+  tbody tr.doc-row:hover { background:#f8fafc; }
+  .doc-name { font-weight:600; color:var(--fg); }
+  .doc-fmt {
+    display:inline-block; font-size:10.5px; font-weight:700; letter-spacing:.04em;
+    text-transform:uppercase; padding:2px 7px; border-radius:5px;
+    background:#eef2ff; color:#3730a3;
+  }
+  .doc-status {
+    display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600;
+    padding:3px 9px; border-radius:99px;
+  }
+  .st-uploaded { background:#eef0f3; color:var(--sub); }
+  .st-ready    { background:#e6f6ec; color:var(--ok); }
+  .st-failed   { background:#fdecec; color:var(--err); }
+  .st-proc     { background:#fff6e5; color:var(--warn); }
+  .muted { color:var(--sub); }
+  .empty { padding:48px 24px; text-align:center; color:var(--sub); font-size:14px; }
+
+  /* Detail */
+  .detail-back {
+    background:transparent; border:0; color:var(--accent); font:inherit;
+    font-size:13px; font-weight:600; cursor:pointer; padding:0; margin-bottom:14px;
+  }
+  .detail-h { font-size:22px; font-weight:700; margin:0 0 3px; }
+  .detail-meta { font-size:12.5px; color:var(--sub); }
+  .detail-actions { display:flex; gap:8px; margin:16px 0; }
+  .d-card {
+    border:1px solid var(--line); border-radius:12px; padding:16px 18px;
+    margin-top:14px;
+  }
+  .d-card-h {
+    font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+    color:var(--sub); margin:0 0 8px;
+  }
+
+  /* Buttons */
+  .btn {
+    border:1px solid var(--line); background:#fff; border-radius:9px;
+    padding:8px 14px; font:inherit; font-size:13px; font-weight:600;
+    color:var(--fg); cursor:pointer;
+  }
+  .btn:hover { border-color:#bcc7d4; }
+  .btn-primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .btn-primary:hover { background:#0e4d8a; }
+  .btn-danger { color:var(--err); border-color:#f0c4c0; }
+  .btn-danger:hover { background:#fdf2f1; }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+
+  /* Modal */
+  .modal-bg {
+    position:fixed; inset:0; background:rgba(15,23,42,.5);
+    display:none; align-items:center; justify-content:center; padding:24px; z-index:900;
+  }
+  .modal-bg.is-open { display:flex; }
+  .modal {
+    background:#fff; border-radius:14px; max-width:440px; width:100%;
+    padding:22px; box-shadow:0 24px 60px rgba(15,23,42,.25);
+  }
+  .modal h3 { margin:0 0 8px; font-size:17px; }
+  .modal p  { margin:0 0 14px; font-size:13.5px; color:var(--sub); line-height:1.5; }
+  .modal input[type=text] {
+    width:100%; padding:9px 12px; border:1px solid var(--line); border-radius:9px;
+    font:inherit; font-size:14px; margin-bottom:14px;
+  }
+  .modal-foot { display:flex; justify-content:flex-end; gap:8px; }
+  .modal-opts label {
+    display:flex; gap:9px; align-items:flex-start; padding:9px 11px;
+    border:1px solid var(--line); border-radius:9px; margin-bottom:7px; cursor:pointer;
+    font-size:13.5px;
+  }
+  .modal-opts label:hover { background:#f8fafc; }
+
+  .toast {
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%);
+    background:#222; color:#fff; padding:10px 16px; border-radius:8px;
+    font-size:13px; opacity:0; transition:opacity .2s ease; z-index:1000;
+    pointer-events:none;
+  }
+  .toast.show { opacity:1; }
+
+  /* Upload progress — inline strip sitting directly above the
+     document table, tracking each file through the full pipeline. */
+  .uploads { display:none; margin:0 0 14px; }
+  .uploads.is-active { display:block; }
+  .up-row {
+    display:flex; align-items:center; gap:14px; padding:11px 14px;
+    border:1px solid var(--line); border-radius:10px; margin-bottom:8px;
+    font-size:13px; background:var(--soft);
+  }
+  .up-name {
+    flex:0 0 190px; min-width:0; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap; font-weight:600;
+  }
+  .up-bar {
+    flex:1; height:9px; background:#e3e7ee; border-radius:99px;
+    overflow:hidden; min-width:80px;
+  }
+  .up-fill {
+    height:100%; width:0%; background:var(--accent); border-radius:99px;
+    transition:width .3s ease;
+  }
+  .up-fill.is-done { background:var(--ok); }
+  .up-fill.is-err  { background:var(--err); }
+  .up-fill.is-indet { animation:up-indet 1.15s ease-in-out infinite; }
+  @keyframes up-indet {
+    0%   { opacity:.55; }
+    50%  { opacity:1; }
+    100% { opacity:.55; }
+  }
+  .up-stage {
+    flex:0 0 158px; font-size:12px; color:var(--sub); text-align:right;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .up-stage.is-done { color:var(--ok); font-weight:600; }
+  .up-stage.is-err  { color:var(--err); font-weight:600; }
+  /* Stepper dots — the "beginning / middle / end" markers. */
+  .up-steps { display:flex; gap:4px; flex:0 0 auto; }
+  .up-dot {
+    width:8px; height:8px; border-radius:99px; background:#d4d9e2;
+  }
+  .up-dot.is-active { background:var(--accent); }
+  .up-dot.is-done   { background:var(--ok); }
+  .up-dot.is-err    { background:var(--err); }
+  /* Document content preview */
+  .wh-prev-pre {
+    margin:0; white-space:pre-wrap; word-break:break-word;
+    font:12px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
+    max-height:340px; overflow:auto; background:var(--soft);
+    border:1px solid var(--line); border-radius:8px; padding:10px 12px;
+    color:var(--fg);
+  }
+  .wh-prev-cols {
+    display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;
+  }
+  .wh-prev-col {
+    font-size:11.5px; padding:2px 8px; border-radius:99px;
+    background:#eef0f3; color:#3a4150; white-space:nowrap;
+  }
+  .wh-prev-note { font-size:12px; color:var(--sub); margin-top:8px; }
+  /* Row eye / preview action */
+  .th-act { width:78px; text-align:center !important; }
+  .td-act { text-align:center; }
+  .eye-btn {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:30px; height:30px; padding:0; border:1px solid var(--line);
+    border-radius:8px; background:#fff; color:var(--sub); cursor:pointer;
+  }
+  .eye-btn:hover:not([disabled]) {
+    border-color:var(--accent); color:var(--accent);
+  }
+  .eye-btn[disabled] { opacity:.35; cursor:not-allowed; }
+  .eye-btn svg { width:17px; height:17px; display:block; }
+  /* Preview modal — wider than the standard confirm modals */
+  #previewModal .modal { max-width:920px; width:94vw; }
+  #previewModal .modal h3 { margin-bottom:4px; }
+  .pv-sub { font-size:12.5px; color:var(--sub); margin:0 0 14px; }
+  /* Visibility options */
+  .vis-opts { display:flex; flex-direction:column; gap:8px; }
+  .vis-opt {
+    display:flex; align-items:flex-start; gap:10px; font-size:13px;
+    padding:11px 13px; border:1px solid var(--line); border-radius:9px;
+    cursor:pointer; line-height:1.45;
+  }
+  .vis-opt:hover { border-color:var(--accent); }
+  .vis-opt input { margin:2px 0 0; flex:0 0 auto; }
+  .vis-opt b { font-weight:600; }
+  .vis-adv { margin-top:12px; }
+  .vis-adv summary {
+    cursor:pointer; font-size:12.5px; color:var(--accent);
+    font-weight:600;
+  }
+  /* Visibility badge in the document table */
+  .vis-badge {
+    display:inline-flex; align-items:center; gap:4px; font-size:11.5px;
+    padding:2px 8px; border-radius:99px; white-space:nowrap;
+  }
+  .vis-badge.is-internal { background:#fdecea; color:#b23b2e; }
+  .vis-badge.is-customer { background:#e7f4ec; color:#0a7a38; }
+  /* New-upload visibility selector */
+  .up-vis-row {
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    margin:0 0 16px; font-size:13px;
+  }
+  .up-vis-row > span:first-child { font-weight:600; }
+  .up-vis-row label {
+    display:inline-flex; align-items:center; gap:6px; cursor:pointer;
+  }
+  .up-vis-note { font-size:11.5px; color:var(--sub); flex:1 1 240px; }
+  /* Agent access list */
+  .agent-list { display:flex; flex-direction:column; gap:6px; }
+  .agent-list label {
+    display:flex; align-items:center; gap:9px; font-size:13px;
+    padding:7px 10px; border:1px solid var(--line); border-radius:8px;
+    cursor:pointer;
+  }
+  .agent-list label:hover { border-color:var(--accent); }
+  .agent-list input { margin:0; }
+  .agent-list .ag-type {
+    margin-left:auto; font-size:11px; color:var(--sub);
+    text-transform:uppercase; letter-spacing:.04em;
+  }
+  #pvBody { max-height:72vh; overflow:auto; }
+  .pv-pdf {
+    width:100%; height:72vh; border:1px solid var(--line);
+    border-radius:8px; background:#fff;
+  }
+  .pv-img-wrap { text-align:center; }
+  .pv-img {
+    max-width:100%; max-height:70vh; border:1px solid var(--line);
+    border-radius:8px;
+  }
+  .pv-table-wrap {
+    border:1px solid var(--line); border-radius:8px; overflow:auto;
+    max-height:62vh;
+  }
+  .pv-table { border-collapse:collapse; width:100%; font-size:12.5px; }
+  .pv-table th, .pv-table td {
+    border:1px solid var(--line); padding:5px 9px; text-align:left;
+    white-space:nowrap; vertical-align:top;
+  }
+  .pv-table th {
+    background:#f8fafc; position:sticky; top:0; font-weight:600;
+    color:var(--fg);
+  }
+  .pv-table tbody tr:nth-child(even) td { background:var(--soft); }
+  /* Page header with action button */
+  .page-h {
+    display:flex; align-items:flex-start; justify-content:space-between;
+    gap:16px;
+  }
+  .page-h #askOpen { flex:0 0 auto; white-space:nowrap; }
+  /* Warehouse agent — chat view with conversation sidebar */
+  .ask-layout { display:flex; gap:18px; align-items:flex-start; }
+  .ask-sidebar {
+    flex:0 0 240px; display:flex; flex-direction:column; gap:10px;
+  }
+  .ask-new { width:100%; }
+  .ask-conv-list {
+    display:flex; flex-direction:column; gap:3px; max-height:64vh;
+    overflow-y:auto;
+  }
+  .ask-conv-item {
+    display:flex; align-items:center; gap:6px; padding:8px 10px;
+    border-radius:8px; cursor:pointer; font-size:13px;
+    color:var(--fg); border:1px solid transparent;
+  }
+  .ask-conv-item:hover { background:var(--soft); }
+  .ask-conv-item.active {
+    background:#eaf2fb; border-color:#cfe0f3;
+  }
+  .ask-conv-title {
+    flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .ask-conv-dots {
+    flex:0 0 auto; border:0; background:transparent; cursor:pointer;
+    color:var(--sub); font-size:16px; line-height:1; padding:2px 4px;
+    border-radius:5px; opacity:0;
+  }
+  .ask-conv-item:hover .ask-conv-dots,
+  .ask-conv-item.active .ask-conv-dots { opacity:.8; }
+  .ask-conv-dots:hover { opacity:1 !important; background:var(--soft); }
+  .ask-conv-empty { font-size:12.5px; color:var(--sub); padding:8px 10px; }
+  .ask-conv-menu {
+    position:fixed; z-index:1100; min-width:150px; padding:5px;
+    background:var(--bg-elevated); border:1px solid var(--line);
+    border-radius:9px; box-shadow:0 8px 24px rgba(0,0,0,.18);
+    display:flex; flex-direction:column;
+  }
+  .ask-conv-menu button {
+    text-align:left; border:0; background:transparent; cursor:pointer;
+    font:inherit; font-size:13px; color:var(--fg); padding:8px 10px;
+    border-radius:6px;
+  }
+  .ask-conv-menu button:hover { background:var(--soft); }
+  .ask-conv-menu button[data-act="delete"]:hover { color:var(--err); }
+  .ask-clear-all {
+    margin-top:6px; border:0; background:transparent; cursor:pointer;
+    font:inherit; font-size:12px; color:var(--sub); padding:7px 10px;
+    border-radius:7px; text-align:left;
+  }
+  .ask-clear-all:hover { background:var(--soft); color:var(--err); }
+  .ask-main { flex:1; min-width:0; }
+  .ask-main .detail-h { margin-top:0; }
+  .ask-thread {
+    border:1px solid var(--line); border-radius:12px; padding:16px;
+    min-height:300px; max-height:60vh; overflow-y:auto; margin:16px 0 12px;
+    display:flex; flex-direction:column; gap:14px;
+  }
+  .ask-empty {
+    color:var(--sub); font-size:13.5px; text-align:center;
+    margin:auto; max-width:420px; line-height:1.55;
+  }
+  .ask-msg { display:flex; flex-direction:column; gap:4px; max-width:88%; }
+  .ask-msg.user { align-self:flex-end; align-items:flex-end; }
+  .ask-msg.bot  { align-self:flex-start; }
+  .ask-bubble {
+    padding:10px 13px; border-radius:12px; font-size:13.5px;
+    line-height:1.55; white-space:pre-wrap; word-break:break-word;
+  }
+  /* Markdown-rendered bot answers — headings, lists, bold, code. */
+  .ask-bubble.md { white-space:normal; }
+  .ask-bubble.md > :first-child { margin-top:0; }
+  .ask-bubble.md > :last-child { margin-bottom:0; }
+  .ask-bubble.md h2 { font-size:14.5px; font-weight:700; margin:14px 0 6px; }
+  .ask-bubble.md h3,
+  .ask-bubble.md h4, .ask-bubble.md h5 {
+    font-size:13.5px; font-weight:700; margin:12px 0 5px;
+  }
+  .ask-bubble.md p { margin:6px 0; }
+  .ask-bubble.md ul, .ask-bubble.md ol { margin:6px 0; padding-left:20px; }
+  .ask-bubble.md li { margin:3px 0; }
+  .ask-bubble.md code {
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:12px; background:rgba(127,127,127,0.16);
+    padding:1px 5px; border-radius:4px;
+  }
+  .ask-table-cap {
+    font-size:12px; font-weight:600; color:var(--sub);
+    margin:12px 0 2px;
+  }
+  .ask-msg.user .ask-bubble { background:var(--accent); color:#fff; }
+  .ask-msg.bot  .ask-bubble { background:var(--soft); color:var(--fg); }
+  .ask-msg.bot.is-err .ask-bubble { background:#fdecec; color:var(--err); }
+  .ask-msg.bot.has-table { max-width:100%; width:100%; }
+  .ask-table-wrap {
+    margin-top:8px; border:1px solid var(--line); border-radius:8px;
+    overflow:auto; max-height:340px;
+  }
+  .ask-table { border-collapse:collapse; width:100%; font-size:12.5px; }
+  .ask-table th, .ask-table td {
+    border:1px solid var(--line); padding:5px 9px; text-align:left;
+    white-space:nowrap; vertical-align:top;
+  }
+  .ask-table th {
+    background:#f8fafc; position:sticky; top:0; font-weight:600;
+  }
+  .ask-table tbody tr:nth-child(even) td { background:var(--soft); }
+  .ask-table-note { font-size:11.5px; color:var(--sub); margin-top:5px; }
+  .ask-srcs { display:flex; flex-wrap:wrap; gap:6px; }
+  .ask-src-chip {
+    font-size:11.5px; padding:3px 9px; border-radius:99px;
+    background:#eef2ff; color:#3730a3; cursor:pointer;
+    border:1px solid transparent;
+  }
+  .ask-src-chip:hover { border-color:#3730a3; }
+  .ask-input-row { display:flex; gap:10px; align-items:flex-end; }
+  .ask-input-row textarea {
+    flex:1; resize:vertical; min-height:46px; font:inherit;
+    font-size:13.5px; padding:10px 12px; border:1px solid var(--line);
+    border-radius:10px;
+  }
+  .ask-input-row textarea:focus { outline:none; border-color:var(--accent); }
+  .ask-input-row .btn { flex:0 0 auto; }
+  .ask-typing { font-size:13px; color:var(--sub); font-style:italic; }
+  /* Add-source buttons + Drive picker */
+  .add-sources { display:flex; gap:10px; flex-wrap:wrap; margin:0 0 16px; }
+  .drive-files {
+    max-height:300px; overflow-y:auto; border:1px solid var(--line);
+    border-radius:9px; margin:4px 0 14px;
+  }
+  .drive-file {
+    display:flex; align-items:center; gap:9px; padding:8px 11px;
+    font-size:13px; border-bottom:1px solid #f1f5f9; cursor:pointer;
+  }
+  .drive-file:last-child { border-bottom:0; }
+  .drive-file:hover { background:#f8fafc; }
+  .drive-file .df-type {
+    margin-left:auto; font-size:10.5px; color:var(--sub);
+    text-transform:uppercase; letter-spacing:.04em;
+  }
+  .drive-note { font-size:13px; color:var(--sub); line-height:1.5; }
+
+  /* Hide the "Ask the warehouse" button while inside the ask view. */
+  body.ask-mode #askOpen { display:none; }
+
+  /* ─── Dark mode — mirrors the dashboard's [data-theme="dark"] ─── */
+  [data-theme="dark"] {
+    --fg:#e6e9ef; --sub:#95a1b1; --line:#3a3a40; --accent:#5aa3ee;
+    --err:#ef8b82; --ok:#5cc98d; --warn:#e3b45f; --soft:#27272b;
+    --border:#3a3a40; --border-subtle:#3a3a40; --bg-elevated:#27272b;
+    --bg-overlay:#2e2e33; --ink:#e6e9ef; --text-2:#95a1b1;
+    --text-3:#7c8694; --brand:#5aa3ee;
+  }
+  [data-theme="dark"] body { background:#1a1a1d; }
+  [data-theme="dark"] .quota-bar { background:#3a3a40; }
+  [data-theme="dark"] .drop { border-color:#3a4452; }
+  [data-theme="dark"] .drop:hover,
+  [data-theme="dark"] .drop.is-over { background:#1d2733; border-color:var(--accent); }
+  [data-theme="dark"] .tb-search,
+  [data-theme="dark"] .tb-sel,
+  [data-theme="dark"] .modal input[type=text],
+  [data-theme="dark"] .ask-input-row textarea,
+  [data-theme="dark"] #editDesc {
+    background:#27272b; color:var(--fg);
+  }
+  [data-theme="dark"] thead th { background:#27272b; }
+  [data-theme="dark"] tbody td { border-bottom-color:#3a3a40; }
+  [data-theme="dark"] tbody tr.doc-row:hover { background:#27272b; }
+  [data-theme="dark"] .doc-fmt { background:#26313f; color:#a9c7ee; }
+  [data-theme="dark"] .st-uploaded { background:#262d38; }
+  [data-theme="dark"] .st-ready    { background:#16331f; }
+  [data-theme="dark"] .st-failed   { background:#3a1f1f; }
+  [data-theme="dark"] .st-proc     { background:#352b16; }
+  [data-theme="dark"] .btn { background:#27272b; color:var(--fg); }
+  [data-theme="dark"] .btn:hover { border-color:#46566a; }
+  [data-theme="dark"] .btn-primary { background:var(--accent); color:#0a0f15; }
+  [data-theme="dark"] .btn-danger { background:#27272b; border-color:#5a2e2e; }
+  [data-theme="dark"] .btn-danger:hover { background:#2a1c1c; }
+  [data-theme="dark"] .modal { background:#27272b; }
+  [data-theme="dark"] .modal-opts label:hover,
+  [data-theme="dark"] .vis-opt:hover,
+  [data-theme="dark"] .agent-list label:hover,
+  [data-theme="dark"] .drive-file:hover { background:#27272b; }
+  [data-theme="dark"] .up-bar { background:#3a3a40; }
+  [data-theme="dark"] .up-dot { background:#3a4452; }
+  [data-theme="dark"] .wh-prev-col { background:#26313f; color:#c2cdda; }
+  [data-theme="dark"] .eye-btn { background:#27272b; }
+  [data-theme="dark"] .vis-badge.is-internal { background:#3a1f1f; color:#ef9a92; }
+  [data-theme="dark"] .vis-badge.is-customer { background:#16331f; color:#6fcf97; }
+  [data-theme="dark"] .pv-table th,
+  [data-theme="dark"] .ask-table th { background:#27272b; color:var(--fg); }
+  [data-theme="dark"] .ask-src-chip { background:#26313f; color:#a9c7ee; }
+  [data-theme="dark"] .ask-msg.bot.is-err .ask-bubble { background:#3a1f1f; }
+  [data-theme="dark"] .ask-conv-item.active { background:#1d2733; border-color:#33445a; }
+  [data-theme="dark"] .pv-pdf { background:#27272b; }
+  [data-theme="dark"] .ask-bubble.user,
+  [data-theme="dark"] .ask-msg.user .ask-bubble { color:#0a0f15; }
+</style>
+<script>
+/* Mirror the parent dashboard's dark/light theme. Same-origin iframe,
+   so we can read its localStorage + listen for its theme changes. */
+(function () {
+  function readTheme() {
+    var t = "";
+    try { t = localStorage.getItem("app-theme") || ""; } catch (e) {}
+    if (t !== "light" && t !== "dark") {
+      try {
+        var pt = window.parent.document.documentElement
+                   .getAttribute("data-theme");
+        if (pt) t = pt;
+      } catch (e) {}
+    }
+    return t === "dark" ? "dark" : "light";
+  }
+  function applyTheme() {
+    document.documentElement.setAttribute("data-theme", readTheme());
+  }
+  applyTheme();
+  window.addEventListener("storage", function (e) {
+    if (!e || e.key === "app-theme" || e.key === null) applyTheme();
+  });
+  try { window.parent.addEventListener("themechange", applyTheme); }
+  catch (e) {}
+})();
+</script>
+</head>
+<body>
+<div class="wrap">
+  <div class="page-h">
+    <button type="button" class="btn btn-primary" id="askOpen">
+      💬 Ask the warehouse</button>
+  </div>
+
+  <!-- ─── List view ─── -->
+  <div id="listView">
+    <div class="quota-row" id="quotaRow">Loading storage…</div>
+
+    <div class="drop" id="dropZone">
+      <div class="drop-icon" aria-hidden="true">📁</div>
+      <div class="drop-main">Drop files here or click to upload</div>
+      <div class="drop-sub">PDF, images, CSV, TSV, JSON, NDJSON, TXT, MD, XLSX, DOCX · Max 100&nbsp;MB</div>
+    </div>
+    <input type="file" id="fileInput" multiple
+           accept=".pdf,.csv,.tsv,.json,.ndjson,.jsonl,.txt,.md,.markdown,.xlsx,.xls,.docx,.png,.jpg,.jpeg,.gif,.webp,.bmp"
+           style="display:none">
+
+    <div class="add-sources">
+      <button type="button" class="btn" id="trainSiteBtn">🌐 Train a website</button>
+      <button type="button" class="btn" id="driveBtn">📄 Import from Google Drive</button>
+    </div>
+
+    <details class="api-access" id="apiAccessPanel">
+      <summary>🔑 Programmatic API access</summary>
+      <div class="api-access-body">
+        <p class="api-access-intro">
+          Generate a token to upload documents to this warehouse from a
+          script or another app. The token works only for uploads — it
+          cannot read, list, or delete anything.</p>
+        <div id="apiTokenNone">
+          <button type="button" class="btn btn-primary" id="apiTokenGen">
+            Generate token</button>
+        </div>
+        <div id="apiTokenHave" style="display:none;">
+          <div class="api-token-row">
+            <input type="text" id="apiTokenValue" class="api-token-input" readonly>
+            <button type="button" class="btn" id="apiTokenCopy">Copy</button>
+          </div>
+          <div class="api-token-meta" id="apiTokenMeta"></div>
+          <div class="api-token-actions">
+            <button type="button" class="btn" id="apiTokenRegen">Regenerate</button>
+            <button type="button" class="btn btn-danger" id="apiTokenRevoke">Revoke</button>
+          </div>
+          <pre class="api-token-curl" id="apiTokenCurl"></pre>
+        </div>
+      </div>
+    </details>
+
+    <div class="up-vis-row">
+      <span>New uploads:</span>
+      <label><input type="radio" name="upVis" value="internal" checked>
+        🔒 Internal only</label>
+      <label><input type="radio" name="upVis" value="customer_facing">
+        🌐 Customer-facing OK</label>
+      <span class="up-vis-note">Internal is the safe default — customer
+        bots can't read internal files. Change it per document
+        anytime.</span>
+    </div>
+
+    <div class="toolbar">
+      <input type="text" id="searchInput" class="tb-search" placeholder="Search documents…">
+      <select id="formatFilter" class="tb-sel">
+        <option value="">All formats</option>
+      </select>
+      <select id="sortSel" class="tb-sel">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+        <option value="name">Name A–Z</option>
+        <option value="size">Largest first</option>
+      </select>
+    </div>
+
+    <div class="uploads" id="uploads"></div>
+
+    <div class="doc-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th><th>Format</th><th>Size</th><th>Added</th><th>Status</th>
+            <th>Access</th>
+            <th class="th-act">Preview</th>
+          </tr>
+        </thead>
+        <tbody id="docBody">
+          <tr><td colspan="7" class="empty">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ─── Detail view ─── -->
+  <div id="detailView" style="display:none;">
+    <button type="button" class="detail-back" id="detailBack">← Back to warehouse</button>
+    <h2 class="detail-h" id="dName">—</h2>
+    <div class="detail-meta" id="dMeta">—</div>
+    <div class="detail-actions">
+      <button type="button" class="btn" id="dEdit">Edit details</button>
+      <button type="button" class="btn" id="dReplace">Replace file</button>
+      <button type="button" class="btn btn-danger" id="dDelete">Delete</button>
+      <input type="file" id="dReplaceInput" style="display:none;">
+    </div>
+    <div class="d-card" id="dFailBanner" style="display:none;border-color:#f0c4c0;background:#fdf2f1;">
+      <p class="d-card-h" style="color:#c0392b;">Processing failed</p>
+      <p id="dFailMsg" style="margin:0 0 12px;font-size:13.5px;">—</p>
+      <button type="button" class="btn" id="dRetry">Try again</button>
+    </div>
+    <div class="d-card" id="dUpdateBanner" style="display:none;">
+      <p class="d-card-h" id="dUpdateH">Update in progress</p>
+      <p id="dUpdateMsg" style="margin:0 0 12px;font-size:13.5px;">—</p>
+      <button type="button" class="btn" id="dUpdateRetry" style="display:none;">Retry update</button>
+    </div>
+    <div class="d-card">
+      <p class="d-card-h">Details</p>
+      <div id="dFields"></div>
+    </div>
+    <div class="d-card">
+      <p class="d-card-h">Who can use this document</p>
+      <div class="vis-opts">
+        <label class="vis-opt">
+          <input type="radio" name="dVis" value="internal">
+          <span><b>Internal only</b><br>
+            <span class="muted">Only your internal agents (Team bot,
+            etc.) can read this. Customer-facing bots will NOT see
+            it.</span></span>
+        </label>
+        <label class="vis-opt">
+          <input type="radio" name="dVis" value="customer_facing">
+          <span><b>Customer-facing OK</b><br>
+            <span class="muted">Any agent can read this, including
+            customer-facing bots. Use for FAQs, public pricing,
+            service descriptions.</span></span>
+        </label>
+      </div>
+      <details class="vis-adv">
+        <summary>Advanced: limit to specific agents</summary>
+        <p class="muted" style="font-size:12px;margin:8px 0 8px;">
+          Leave all unchecked to use the visibility setting above.
+          Checking agents restricts this document to exactly those
+          agents, overriding the setting above.</p>
+        <div id="dAgentList" class="agent-list"></div>
+      </details>
+      <div id="dAgentScopeHint" class="muted"
+           style="font-size:12px;margin-top:10px;">—</div>
+      <div style="margin-top:12px;">
+        <button type="button" class="btn btn-primary" id="dAgentSave"
+                disabled>Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Ask view (the warehouse agent) ─── -->
+  <div id="askView" style="display:none;">
+    <button type="button" class="detail-back" id="askBack">← Back to warehouse</button>
+    <div class="ask-layout">
+      <aside class="ask-sidebar">
+        <button type="button" class="btn btn-primary ask-new" id="askNew">
+          + New chat</button>
+        <div class="ask-conv-list" id="askConvList"></div>
+        <button type="button" class="ask-clear-all" id="askClearAll">
+          Clear all history</button>
+      </aside>
+      <div class="ask-main">
+        <h2 class="detail-h">Ask the warehouse</h2>
+        <div class="detail-meta">Your internal analyst — searches every
+          document and queries your spreadsheets.</div>
+        <div class="ask-thread" id="askThread"></div>
+        <div class="ask-input-row">
+          <textarea id="askInput" rows="2"
+            placeholder="Ask anything about your documents — e.g. &quot;what does our supplier contract say about late delivery?&quot;"></textarea>
+          <button type="button" class="btn btn-primary" id="askSend">Ask</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Duplicate-content modal -->
+<div class="modal-bg" id="dupModal">
+  <div class="modal">
+    <h3>Already in your warehouse</h3>
+    <p id="dupMsg">A file with identical contents is already here.</p>
+    <div class="modal-opts">
+      <label><input type="radio" name="dupChoice" value="cancel" checked>
+        <span>Skip this upload — use the existing document.</span></label>
+      <label><input type="radio" name="dupChoice" value="copy">
+        <span>Upload anyway as a separate copy.</span></label>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn" id="dupClose">Done</button>
+      <button type="button" class="btn btn-primary" id="dupConfirm">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirm modal -->
+<div class="modal-bg" id="delModal">
+  <div class="modal">
+    <h3>Delete this document?</h3>
+    <p id="delMsg">This removes the document from your warehouse. This can't be undone.</p>
+    <p style="margin-bottom:6px;font-size:12.5px;">Type the document name to confirm:</p>
+    <input type="text" id="delConfirmInput" autocomplete="off" placeholder="">
+    <div class="modal-foot">
+      <button type="button" class="btn" id="delCancel">Cancel</button>
+      <button type="button" class="btn btn-danger" id="delConfirm" disabled>Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit details modal -->
+<div class="modal-bg" id="editModal">
+  <div class="modal">
+    <h3>Edit document details</h3>
+    <p style="margin-bottom:6px;font-size:12.5px;">Name</p>
+    <input type="text" id="editName" autocomplete="off" placeholder="Document name">
+    <p style="margin:12px 0 6px;font-size:12.5px;">Description</p>
+    <textarea id="editDesc" rows="3" placeholder="What's in this document?"
+      style="width:100%;box-sizing:border-box;font:inherit;padding:8px 10px;"></textarea>
+    <p style="margin:12px 0 6px;font-size:12.5px;">Tags (comma-separated)</p>
+    <input type="text" id="editTags" autocomplete="off" placeholder="pricing, 2026, internal">
+    <div class="modal-foot">
+      <button type="button" class="btn" id="editCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="editSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Content preview modal -->
+<div class="modal-bg" id="previewModal">
+  <div class="modal">
+    <h3 id="pvTitle">Preview</h3>
+    <p class="pv-sub" id="pvSub">—</p>
+    <div id="pvBody" class="muted">Loading preview…</div>
+    <div class="modal-foot">
+      <button type="button" class="btn" id="pvClose">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Train-a-website modal -->
+<div class="modal-bg" id="siteModal">
+  <div class="modal">
+    <h3>Train a website</h3>
+    <p>We'll crawl the site and add its content to your warehouse as a
+      document every agent can use.</p>
+    <input type="text" id="siteUrl" autocomplete="off"
+           placeholder="https://example.com">
+    <p style="margin:4px 0 6px;font-size:12.5px;">Who can use it?</p>
+    <div class="vis-opts" style="margin-bottom:4px;">
+      <label class="vis-opt">
+        <input type="radio" name="siteVis" value="customer_facing" checked>
+        <span><b>Customer-facing OK</b><br><span class="muted">Any agent,
+          including customer-facing bots.</span></span>
+      </label>
+      <label class="vis-opt">
+        <input type="radio" name="siteVis" value="internal">
+        <span><b>Internal only</b><br><span class="muted">Internal agents
+          only.</span></span>
+      </label>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn" id="siteCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="siteGo">Train</button>
+    </div>
+  </div>
+</div>
+
+<!-- Google Drive import modal -->
+<div class="modal-bg" id="driveModal">
+  <div class="modal">
+    <h3>Import from Google Drive</h3>
+    <div id="driveBody" class="drive-note">Loading…</div>
+    <div class="vis-opts" id="driveVis" style="margin-bottom:4px;display:none;">
+      <label class="vis-opt">
+        <input type="radio" name="driveVisR" value="customer_facing" checked>
+        <span><b>Customer-facing OK</b></span>
+      </label>
+      <label class="vis-opt">
+        <input type="radio" name="driveVisR" value="internal">
+        <span><b>Internal only</b></span>
+      </label>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn" id="driveCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="driveGo"
+              disabled>Import</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" })[c];
+    });
+  }
+  function toast(msg) {
+    var t = $("toast"); t.textContent = msg; t.classList.add("show");
+    setTimeout(function () { t.classList.remove("show"); }, 2200);
+  }
+  var EYE_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+    'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/>' +
+    '<circle cx="12" cy="12" r="3"/></svg>';
+  function fmtBytes(n) {
+    n = Number(n) || 0;
+    if (n < 1024) return n + " B";
+    if (n < 1024 * 1024) return (n / 1024).toFixed(0) + " KB";
+    if (n < 1024 * 1024 * 1024) return (n / 1024 / 1024).toFixed(1) + " MB";
+    return (n / 1024 / 1024 / 1024).toFixed(2) + " GB";
+  }
+  function ago(iso) {
+    if (!iso) return "—";
+    var ms = Date.parse(iso);
+    if (isNaN(ms)) return "—";
+    var s = Math.max(0, (Date.now() - ms) / 1000);
+    if (s < 60) return "just now";
+    if (s < 3600) return Math.floor(s / 60) + "m ago";
+    if (s < 86400) return Math.floor(s / 3600) + "h ago";
+    if (s < 30 * 86400) return Math.floor(s / 86400) + "d ago";
+    return new Date(ms).toLocaleDateString();
+  }
+  function statusPill(st) {
+    var cls = "st-uploaded", label = "Uploaded";
+    if (st === "ready")    { cls = "st-ready";  label = "Ready"; }
+    else if (st === "failed") { cls = "st-failed"; label = "Failed"; }
+    else if (st && st !== "uploaded") { cls = "st-proc"; label = st.charAt(0).toUpperCase() + st.slice(1); }
+    return '<span class="doc-status ' + cls + '">' + esc(label) + '</span>';
+  }
+  function visBadge(d) {
+    var custom = (d.associated_agent_ids || []).length;
+    if (custom) {
+      return '<span class="vis-badge is-internal" title="Restricted to '
+        + custom + ' specific agent(s)">Custom</span>';
+    }
+    if (d.visibility === "customer_facing") {
+      return '<span class="vis-badge is-customer" ' +
+        'title="Any agent, including customer-facing bots">' +
+        '🌐 Customer-OK</span>';
+    }
+    return '<span class="vis-badge is-internal" ' +
+      'title="Internal agents only">🔒 Internal</span>';
+  }
+
+  var allDocs = [];
+
+  // ─── Quota ───
+  function renderQuota(used, quota) {
+    var pct = quota > 0 ? Math.min(100, (used / quota) * 100) : 0;
+    var fill = pct >= 100 ? "is-full" : pct >= 80 ? "is-warn" : "";
+    $("quotaRow").innerHTML =
+      "Storage: <strong>" + fmtBytes(used) + "</strong> of " + fmtBytes(quota) + " used" +
+      '<div class="quota-bar"><div class="quota-fill ' + fill +
+      '" style="width:' + pct.toFixed(1) + '%"></div></div>';
+  }
+
+  // ─── List ───
+  function renderList() {
+    var q = ($("searchInput").value || "").trim().toLowerCase();
+    var fmtF = $("formatFilter").value;
+    var sort = $("sortSel").value;
+    var rows = allDocs.filter(function (d) {
+      if (fmtF && d.format !== fmtF) return false;
+      if (q && (d.name || "").toLowerCase().indexOf(q) < 0 &&
+               (d.filename || "").toLowerCase().indexOf(q) < 0) return false;
+      return true;
+    });
+    rows.sort(function (a, b) {
+      if (sort === "oldest") return (a.uploaded_at || "").localeCompare(b.uploaded_at || "");
+      if (sort === "name")   return (a.name || "").localeCompare(b.name || "");
+      if (sort === "size")   return (b.size_bytes || 0) - (a.size_bytes || 0);
+      return (b.uploaded_at || "").localeCompare(a.uploaded_at || "");
+    });
+    var body = $("docBody");
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="7" class="empty">' +
+        (allDocs.length ? "No documents match your filters."
+                        : "No documents yet — drop a file above to get started.") +
+        "</td></tr>";
+      return;
+    }
+    body.innerHTML = rows.map(function (d) {
+      var ready = d.status === "ready";
+      var eye = '<button type="button" class="eye-btn" data-eye="' +
+        esc(d.document_id) + '" title="' +
+        (ready ? "Preview contents"
+               : "Preview available once processing finishes") + '"' +
+        (ready ? "" : " disabled") + ">" + EYE_SVG + "</button>";
+      return '<tr class="doc-row" data-id="' + esc(d.document_id) + '">' +
+        '<td><span class="doc-name">' + esc(d.name) + "</span></td>" +
+        '<td><span class="doc-fmt">' + esc(d.format) + "</span></td>" +
+        "<td>" + fmtBytes(d.size_bytes) + "</td>" +
+        '<td class="muted">' + esc(ago(d.uploaded_at)) + "</td>" +
+        "<td>" + statusPill(d.status) + "</td>" +
+        "<td>" + visBadge(d) + "</td>" +
+        '<td class="td-act">' + eye + "</td>" +
+        "</tr>";
+    }).join("");
+    Array.prototype.forEach.call(body.querySelectorAll(".doc-row"), function (tr) {
+      tr.addEventListener("click", function () { openDetail(tr.dataset.id); });
+    });
+    Array.prototype.forEach.call(body.querySelectorAll(".eye-btn"), function (b) {
+      b.addEventListener("click", function (e) {
+        e.stopPropagation();  // don't also open the detail view
+        if (!b.disabled) openPreviewModal(b.dataset.eye);
+      });
+    });
+  }
+
+  function refreshFormatFilter() {
+    var seen = {}, sel = $("formatFilter"), cur = sel.value;
+    allDocs.forEach(function (d) { if (d.format) seen[d.format] = 1; });
+    var opts = ['<option value="">All formats</option>'];
+    Object.keys(seen).sort().forEach(function (f) {
+      opts.push('<option value="' + esc(f) + '">' + esc(f.toUpperCase()) + "</option>");
+    });
+    sel.innerHTML = opts.join("");
+    sel.value = cur in seen ? cur : "";
+  }
+
+  var pollTimer = null;
+  function schedulePoll() {
+    if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+    // Poll while any doc is still being processed.
+    var pending = allDocs.some(function (d) {
+      var u = d.pending_update || null;
+      return d.status === "uploaded" || d.status === "extracting" ||
+             d.status === "indexing" || d.status === "verifying" ||
+             (u && u.status === "processing");
+    });
+    if (pending) pollTimer = setTimeout(loadList, 3000);
+  }
+  function loadList() {
+    fetch("/api/warehouse/documents", { credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d) { $("docBody").innerHTML =
+          '<tr><td colspan="7" class="empty">Couldn\'t load documents.</td></tr>'; return; }
+        allDocs = d.documents || [];
+        if (d.visibility_migrated_count > 0) {
+          toast(d.visibility_migrated_count + " existing document" +
+            (d.visibility_migrated_count > 1 ? "s were" : " was") +
+            " set to internal-only for safety. Open a document to " +
+            "mark it customer-facing.");
+        }
+        renderQuota(d.used_bytes || 0, d.quota_bytes || 0);
+        refreshFormatFilter();
+        renderList();
+        syncTrackedUploads();  // advance upload rows through processing
+        // If the detail view is open, refresh it with fresh data.
+        if ($("detailView").style.display !== "none" && openDetailId) {
+          openDetail(openDetailId);
+        }
+        schedulePoll();
+      })
+      .catch(function () {
+        $("docBody").innerHTML =
+          '<tr><td colspan="7" class="empty">Network error.</td></tr>';
+      });
+  }
+
+  // ─── Detail ───
+  var openDetailId = null;
+  function openDetail(id) {
+    var d = allDocs.filter(function (x) { return x.document_id === id; })[0];
+    if (!d) return;
+    openDetailId = id;
+    $("listView").style.display = "none";
+    $("detailView").style.display = "";
+    $("dName").textContent = d.name || "—";
+    $("dMeta").textContent = (d.filename || "") + " · " + fmtBytes(d.size_bytes) +
+      " · added " + ago(d.uploaded_at) + " · v" + (d.version || 1);
+    var proc = d.processing || {};
+    var sch = proc.schema || null;
+    var fields = [
+      ["Format", (d.format || "").toUpperCase()],
+      ["Status", (d.status || "uploaded")],
+      ["Size", fmtBytes(d.size_bytes)],
+      ["Uploaded", d.uploaded_at || "—"],
+      ["Uploaded by", d.uploaded_by || "—"],
+    ];
+    if (proc.extracted_text_length) {
+      fields.push(["Extracted text",
+        proc.extracted_text_length.toLocaleString() + " characters"]);
+    }
+    if (proc.chunk_count) {
+      fields.push(["Search index",
+        proc.chunk_count.toLocaleString() + " chunks · " +
+        (proc.vector_count || proc.chunk_count).toLocaleString() +
+        " vectors"]);
+    }
+    if (d.description) fields.push(["Description", d.description]);
+    if (d.tags && d.tags.length) fields.push(["Tags", d.tags.join(", ")]);
+    if (d.version && d.version > 1) {
+      fields.push(["Version", "v" + d.version +
+        (d.previous_version ? " (was v" + d.previous_version + ")" : "")]);
+    }
+    if (sch && sch.columns) {
+      fields.push(["Table", (sch.row_count || 0) + " rows × " +
+        sch.columns.length + " columns"]);
+      fields.push(["Columns", sch.columns.join(", ")]);
+    }
+    if (sch && sch.sheets) {
+      fields.push(["Sheets", sch.sheets.map(function (s) {
+        return s.sheet + " (" + (s.row_count || 0) + "×" +
+          (s.columns ? s.columns.length : 0) + ")";
+      }).join(", ")]);
+    }
+    $("dFields").innerHTML = fields.map(function (f) {
+      return '<div style="display:flex;gap:12px;padding:4px 0;font-size:13px;">' +
+        '<span style="width:120px;color:#5a6470;flex:0 0 120px;">' + esc(f[0]) + "</span>" +
+        "<span>" + esc(f[1]) + "</span></div>";
+    }).join("");
+    // Failed-state banner with Try again.
+    var fb = $("dFailBanner");
+    if (d.status === "failed") {
+      fb.style.display = "";
+      $("dFailMsg").textContent = d.failure_reason ||
+        "Processing failed. Try uploading again.";
+    } else {
+      fb.style.display = "none";
+    }
+    // Phase 4: atomic-update banner. The live version stays usable
+    // throughout; this just surfaces the background update's state.
+    var ub = $("dUpdateBanner");
+    var upd = d.pending_update || null;
+    if (upd && upd.status === "processing") {
+      ub.style.display = "";
+      ub.style.borderColor = ""; ub.style.background = "";
+      $("dUpdateH").style.color = "";
+      $("dUpdateH").textContent = "Update in progress";
+      $("dUpdateMsg").textContent = "A new version of this file is being " +
+        "processed. The current version stays available until it's ready.";
+      $("dUpdateRetry").style.display = "none";
+    } else if (upd && upd.status === "failed") {
+      ub.style.display = "";
+      ub.style.borderColor = "#f0c4c0"; ub.style.background = "#fdf2f1";
+      $("dUpdateH").style.color = "#c0392b";
+      $("dUpdateH").textContent = "Update failed";
+      $("dUpdateMsg").textContent = upd.failure_reason ||
+        "The update couldn't be processed. The previous version is still active.";
+      $("dUpdateRetry").style.display = "";
+    } else {
+      ub.style.display = "none";
+    }
+
+    renderAgentScope(d);
+    $("dDelete").onclick = function () { askDelete(d); };
+    $("dRetry").onclick = function () {
+      fetch("/api/warehouse/documents/" + encodeURIComponent(id) + "/reprocess", {
+        method: "POST", credentials: "same-origin",
+      }).then(function (r) {
+        if (r.ok) { toast("Re-processing…"); loadList(); }
+        else toast("Couldn't re-process.");
+      }).catch(function () { toast("Network error."); });
+    };
+    $("dEdit").onclick = function () { openEdit(d); };
+    var busy = !!(upd && upd.status === "processing");
+    $("dReplace").disabled = busy;
+    $("dReplace").onclick = function () {
+      if (busy) return;
+      $("dReplaceInput").value = "";
+      $("dReplaceInput").click();
+    };
+    $("dUpdateRetry").onclick = function () {
+      $("dReplaceInput").value = "";
+      $("dReplaceInput").click();
+    };
+  }
+
+  // ─── Agent access (which agents can search this document) ───
+  var allAgents = [];
+  function loadAgents() {
+    fetch("/me/agents", { credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { allAgents = (d && d.agents) || []; })
+      .catch(function () { allAgents = []; });
+  }
+  function selectedVis() {
+    var r = document.querySelector('input[name="dVis"]:checked');
+    return r ? r.value : "internal";
+  }
+  function agentScopeHint() {
+    var checked = $("dAgentList").querySelectorAll("input:checked").length;
+    if (checked) {
+      $("dAgentScopeHint").textContent = "Restricted to " + checked +
+        " specific agent" + (checked > 1 ? "s" : "") +
+        " — this overrides the visibility setting above.";
+      return;
+    }
+    $("dAgentScopeHint").textContent = selectedVis() === "customer_facing"
+      ? "Every agent can use this, including customer-facing bots."
+      : "Only internal agents can use this — customer-facing bots are "
+        + "blocked from reading it.";
+  }
+  var agentScopeFor = null;
+  function renderAgentScope(d) {
+    var box = $("dAgentList");
+    var assoc = d.associated_agent_ids || [];
+    if (!allAgents.length) {
+      box.innerHTML = '<p class="muted" style="font-size:12.5px;">' +
+        "Loading agents…" + "</p>";
+      $("dAgentScopeHint").textContent = "";
+      $("dAgentSave").disabled = true;
+      agentScopeFor = null;  // re-render once agents arrive
+      return;
+    }
+    // openDetail re-runs on every poll tick — don't wipe the user's
+    // in-progress edits by re-rendering the same document.
+    if (agentScopeFor === d.document_id) return;
+    agentScopeFor = d.document_id;
+    var vis = d.visibility === "customer_facing"
+      ? "customer_facing" : "internal";
+    Array.prototype.forEach.call(
+      document.querySelectorAll('input[name="dVis"]'), function (r) {
+        r.checked = (r.value === vis);
+        r.onchange = agentScopeHint;
+      });
+    box.innerHTML = allAgents.map(function (a) {
+      var on = assoc.indexOf(a.id) !== -1;
+      return '<label><input type="checkbox" value="' + esc(a.id) + '"' +
+        (on ? " checked" : "") + ">" +
+        '<span>' + esc(a.name || a.id) + "</span>" +
+        '<span class="ag-type">' +
+        (a.type === "customer" ? "customer-facing" : esc(a.type || "")) +
+        "</span></label>";
+    }).join("");
+    agentScopeHint();
+    Array.prototype.forEach.call(box.querySelectorAll("input"),
+      function (inp) { inp.addEventListener("change", agentScopeHint); });
+    $("dAgentSave").disabled = false;
+    $("dAgentSave").onclick = function () {
+      var ids = Array.prototype.map.call(
+        box.querySelectorAll("input:checked"),
+        function (i) { return i.value; });
+      $("dAgentSave").disabled = true;
+      fetch("/api/warehouse/documents/" + encodeURIComponent(d.document_id), {
+        method: "POST", credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ op: "update_meta",
+                               visibility: selectedVis(),
+                               associated_agent_ids: ids }),
+      }).then(function (r) {
+        $("dAgentSave").disabled = false;
+        if (r.ok) {
+          toast("Access saved.");
+          agentScopeFor = null;  // allow re-render with fresh data
+          loadList();
+        } else toast("Couldn't save access.");
+      }).catch(function () {
+        $("dAgentSave").disabled = false; toast("Network error.");
+      });
+    };
+  }
+
+  // ─── Content preview (eye icon → modal) ───
+  var previewReqId = 0;
+  function openPreviewModal(id) {
+    var d = allDocs.filter(function (x) { return x.document_id === id; })[0];
+    $("pvTitle").textContent = d ? (d.name || "Preview") : "Preview";
+    $("pvSub").textContent = d
+      ? ((d.filename || "") + " · " + (d.format || "").toUpperCase())
+      : "";
+    var body = $("pvBody");
+    body.className = "muted";
+    body.textContent = "Loading preview…";
+    $("previewModal").classList.add("is-open");
+    var req = ++previewReqId;
+    fetch("/api/warehouse/documents/" + encodeURIComponent(id) +
+          "/preview", { credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (p) {
+        if (req !== previewReqId) return;  // a newer preview opened
+        if (!p) { body.className = "muted";
+          body.textContent = "Couldn't load the preview."; return; }
+        renderPreview(p);
+      })
+      .catch(function () {
+        if (req !== previewReqId) return;
+        body.className = "muted";
+        body.textContent = "Network error loading preview.";
+      });
+  }
+  function renderPreview(p) {
+    var body = $("pvBody");
+    body.className = "";
+    if (p.status && p.status !== "ready") {
+      body.className = "muted";
+      body.textContent = p.status === "failed"
+        ? "No preview — this file failed to process."
+        : "Preview will be available once processing finishes.";
+      return;
+    }
+    var fmt = p.format || "";
+    var rawUrl = "/api/warehouse/documents/" +
+      encodeURIComponent(p.document_id) + "/raw";
+
+    // PDF → render the actual file inline.
+    if (fmt === "pdf") {
+      body.innerHTML = '<iframe class="pv-pdf" src="' + esc(rawUrl) +
+        '" title="PDF preview"></iframe>';
+      return;
+    }
+    // Image → show the actual image.
+    if (fmt === "image") {
+      body.innerHTML = '<div class="pv-img-wrap"><img class="pv-img" src="' +
+        esc(rawUrl) + '" alt="Image preview"></div>';
+      return;
+    }
+    // CSV / TSV / XLSX → render a real table.
+    if ((fmt === "csv" || fmt === "tsv" || fmt === "xlsx") &&
+        p.rows && p.rows.length) {
+      var rows = p.rows;
+      var head = rows[0] || [];
+      var thtml = "<thead><tr>" +
+        head.map(function (c) { return "<th>" + esc(c) + "</th>"; }).join("") +
+        "</tr></thead>";
+      var bhtml = "<tbody>" + rows.slice(1).map(function (r) {
+        return "<tr>" + head.map(function (_, i) {
+          return "<td>" + esc(r[i] == null ? "" : r[i]) + "</td>";
+        }).join("") + "</tr>";
+      }).join("") + "</tbody>";
+      var note = "";
+      if (p.rows_truncated) {
+        note = '<p class="wh-prev-note">Showing the first ' +
+          (rows.length - 1).toLocaleString() + " of " +
+          (p.row_count || 0).toLocaleString() + " rows.</p>";
+      }
+      body.innerHTML = '<div class="pv-table-wrap"><table class="pv-table">' +
+        thtml + bhtml + "</table></div>" + note;
+      return;
+    }
+    // JSON / NDJSON → pretty-print.
+    if (fmt === "json" || fmt === "ndjson") {
+      var raw = p.text || "";
+      var pretty = raw;
+      try {
+        if (fmt === "json") {
+          pretty = JSON.stringify(JSON.parse(raw), null, 2);
+        } else {
+          pretty = raw.split("\n").map(function (ln) {
+            ln = ln.trim();
+            if (!ln) return "";
+            try { return JSON.stringify(JSON.parse(ln), null, 2); }
+            catch (_) { return ln; }
+          }).filter(Boolean).join("\n");
+        }
+      } catch (_) { pretty = raw; }
+      body.innerHTML = '<pre class="wh-prev-pre">' + esc(pretty) + "</pre>" +
+        (p.truncated ? '<p class="wh-prev-note">Preview truncated — ' +
+          'large file.</p>' : "");
+      return;
+    }
+    // Everything else (txt, md, docx) → extracted text.
+    var text = (p.text || "").trim();
+    if (text) {
+      body.innerHTML = '<pre class="wh-prev-pre">' + esc(text) + "</pre>" +
+        (p.truncated ? '<p class="wh-prev-note">Showing the first ' +
+          p.text.length.toLocaleString() + " of " +
+          (p.text_length || 0).toLocaleString() + " characters.</p>" : "");
+      return;
+    }
+    body.className = "muted";
+    body.textContent = "This file has no previewable content.";
+  }
+  $("pvClose").addEventListener("click", function () {
+    $("previewModal").classList.remove("is-open");
+    previewReqId++;  // invalidate any in-flight fetch
+  });
+  $("previewModal").addEventListener("click", function (e) {
+    if (e.target === this) {
+      this.classList.remove("is-open"); previewReqId++;
+    }
+  });
+
+  // ─── Edit details ───
+  var editingId = null;
+  function openEdit(d) {
+    editingId = d.document_id;
+    $("editName").value = d.name || "";
+    $("editDesc").value = d.description || "";
+    $("editTags").value = (d.tags || []).join(", ");
+    $("editModal").classList.add("is-open");
+    setTimeout(function () { $("editName").focus(); }, 30);
+  }
+  $("editCancel").addEventListener("click", function () {
+    $("editModal").classList.remove("is-open"); editingId = null;
+  });
+  $("editSave").addEventListener("click", function () {
+    if (!editingId) return;
+    var name = $("editName").value.trim();
+    if (!name) { toast("Name can't be empty."); return; }
+    var tags = $("editTags").value.split(",")
+      .map(function (t) { return t.trim(); })
+      .filter(function (t) { return t; });
+    $("editSave").disabled = true;
+    fetch("/api/warehouse/documents/" + encodeURIComponent(editingId), {
+      method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ op: "update_meta", name: name,
+        description: $("editDesc").value, tags: tags }),
+    }).then(function (r) {
+      $("editSave").disabled = false;
+      if (r.ok) {
+        $("editModal").classList.remove("is-open");
+        editingId = null;
+        toast("Details saved.");
+        loadList();
+      } else {
+        toast("Couldn't save details.");
+      }
+    }).catch(function () {
+      $("editSave").disabled = false; toast("Network error.");
+    });
+  });
+
+  // ─── Replace file (Phase 4 atomic update) ───
+  $("dReplaceInput").addEventListener("change", function () {
+    var file = this.files && this.files[0];
+    if (!file || !openDetailId) return;
+    var id = openDetailId;
+    var row = upAddRow(file);
+    upStage(row, "uploading", 0);
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/warehouse/documents/" +
+      encodeURIComponent(id) + "/replace", true);
+    xhr.withCredentials = true;
+    xhr.upload.onprogress = function (e) {
+      if (e.lengthComputable) {
+        upStage(row, "uploading", (e.loaded / e.total) * 100);
+      }
+    };
+    xhr.upload.onload = function () { upStage(row, "saving"); };
+    xhr.onload = function () {
+      var res = {};
+      try { res = JSON.parse(xhr.responseText || "{}"); } catch (_) {}
+      if (xhr.status === 202) {
+        upFinishRow(row, true, "Update started");
+        toast("Update started — processing the new version…");
+        loadList();
+      } else {
+        upFinishRow(row, false, "Failed");
+        if (res.message) row.title = res.message;
+        toast(res.message || "Couldn't replace the file.");
+      }
+    };
+    xhr.onerror = function () {
+      upFinishRow(row, false, "Network error");
+      toast("Network error during upload.");
+    };
+    var fd = new FormData();
+    fd.append("file", file);
+    xhr.send(fd);
+  });
+  $("detailBack").addEventListener("click", function () {
+    $("detailView").style.display = "none";
+    $("listView").style.display = "";
+  });
+
+  // ─── Delete ───
+  var pendingDelete = null;
+  function askDelete(d) {
+    pendingDelete = d;
+    $("delMsg").textContent = "This removes “" + (d.name || "this document") +
+      "” from your warehouse. This can't be undone.";
+    var input = $("delConfirmInput");
+    input.value = ""; input.placeholder = d.name || "";
+    $("delConfirm").disabled = true;
+    $("delModal").classList.add("is-open");
+    setTimeout(function () { input.focus(); }, 30);
+  }
+  $("delConfirmInput").addEventListener("input", function () {
+    $("delConfirm").disabled =
+      !pendingDelete || this.value.trim() !== (pendingDelete.name || "");
+  });
+  $("delCancel").addEventListener("click", function () {
+    $("delModal").classList.remove("is-open"); pendingDelete = null;
+  });
+  $("delConfirm").addEventListener("click", function () {
+    if (!pendingDelete) return;
+    var id = pendingDelete.document_id;
+    $("delConfirm").disabled = true;
+    fetch("/api/warehouse/documents/" + encodeURIComponent(id), {
+      method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ op: "delete" }),
+    }).then(function (r) {
+      $("delModal").classList.remove("is-open");
+      pendingDelete = null;
+      if (r.ok) {
+        toast("Document deleted.");
+        $("detailView").style.display = "none";
+        $("listView").style.display = "";
+        loadList();
+      } else {
+        toast("Couldn't delete that document.");
+      }
+    }).catch(function () { toast("Network error."); });
+  });
+
+  // ─── Upload ───
+  var dropZone = $("dropZone"), fileInput = $("fileInput");
+  dropZone.addEventListener("click", function () { fileInput.click(); });
+  dropZone.addEventListener("dragover", function (e) {
+    e.preventDefault(); dropZone.classList.add("is-over");
+  });
+  dropZone.addEventListener("dragleave", function () {
+    dropZone.classList.remove("is-over");
+  });
+  dropZone.addEventListener("drop", function (e) {
+    e.preventDefault(); dropZone.classList.remove("is-over");
+    if (e.dataTransfer && e.dataTransfer.files) uploadFiles(e.dataTransfer.files);
+  });
+  fileInput.addEventListener("change", function () {
+    uploadFiles(fileInput.files);
+    fileInput.value = "";
+  });
+
+  var pendingDup = null;  // { file }
+
+  // ─── Upload progress with a 4-step pipeline ───
+  // Each row tracks a file through Upload → Extract → Index → Done,
+  // with stepper dots so the beginning / middle / end are visible.
+  var UP_STEPS = ["Upload", "Extract", "Index", "Done"];
+  var UP_STAGE = {
+    uploaded:   { step: 1, bar: 58,  label: "Reading file…",        indet: true },
+    extracting: { step: 1, bar: 58,  label: "Reading file…",        indet: true },
+    indexing:   { step: 2, bar: 86,  label: "Indexing for search…", indet: true },
+    verifying:  { step: 2, bar: 92,  label: "Verifying…",           indet: true },
+    ready:      { step: 3, bar: 100, label: "Ready",                done: true },
+    failed:     { step: 3, bar: 100, label: "Failed",               err: true },
+  };
+  function upAddRow(file) {
+    var box = $("uploads");
+    box.classList.add("is-active");
+    var row = document.createElement("div");
+    row.className = "up-row";
+    row.innerHTML =
+      '<span class="up-name">' + esc(file.name) + "</span>" +
+      '<span class="up-steps">' +
+        UP_STEPS.map(function (s) {
+          return '<span class="up-dot" title="' + esc(s) + '"></span>';
+        }).join("") +
+      "</span>" +
+      '<span class="up-bar"><span class="up-fill"></span></span>' +
+      '<span class="up-stage">Waiting…</span>';
+    box.appendChild(row);
+    return row;
+  }
+  function upDots(row, idx, state) {
+    var dots = row.querySelectorAll(".up-dot");
+    for (var i = 0; i < dots.length; i++) {
+      dots[i].className = "up-dot";
+      if (i < idx) dots[i].classList.add("is-done");
+      else if (i === idx) {
+        dots[i].classList.add(
+          state === "err" ? "is-err" : state === "done" ? "is-done" : "is-active");
+      }
+    }
+  }
+  function upStage(row, stage, pct) {
+    if (!row) return;
+    var fill = row.querySelector(".up-fill");
+    var lbl  = row.querySelector(".up-stage");
+    fill.classList.remove("is-indet", "is-done", "is-err");
+    lbl.classList.remove("is-done", "is-err");
+    if (stage === "uploading") {
+      var p = Math.max(0, Math.min(100, pct || 0));
+      fill.style.width = (p * 0.28) + "%";
+      lbl.textContent = "Uploading " + Math.round(p) + "%";
+      upDots(row, 0, "active");
+      return;
+    }
+    if (stage === "saving") {
+      fill.style.width = "28%";
+      fill.classList.add("is-indet");
+      lbl.textContent = "Saving…";
+      upDots(row, 0, "active");
+      return;
+    }
+    var info = UP_STAGE[stage] || UP_STAGE.extracting;
+    fill.style.width = info.bar + "%";
+    if (info.indet) fill.classList.add("is-indet");
+    if (info.done) { fill.classList.add("is-done"); lbl.classList.add("is-done"); }
+    if (info.err)  { fill.classList.add("is-err");  lbl.classList.add("is-err"); }
+    lbl.textContent = info.label;
+    upDots(row, info.step, info.err ? "err" : info.done ? "done" : "active");
+  }
+  function upRemove(row, delay) {
+    setTimeout(function () {
+      if (row && row.parentNode) row.parentNode.removeChild(row);
+      var box = $("uploads");
+      if (box && !box.querySelector(".up-row")) box.classList.remove("is-active");
+    }, delay || 0);
+  }
+  function upFinishRow(row, ok, labelText) {
+    if (!row) return;
+    var fill = row.querySelector(".up-fill");
+    var lbl  = row.querySelector(".up-stage");
+    fill.classList.remove("is-indet");
+    fill.style.width = "100%";
+    fill.classList.add(ok ? "is-done" : "is-err");
+    lbl.classList.remove("is-done", "is-err");
+    lbl.classList.add(ok ? "is-done" : "is-err");
+    lbl.textContent = labelText || (ok ? "Done" : "Failed");
+    upDots(row, 3, ok ? "done" : "err");
+    upRemove(row, ok ? 2500 : 6000);
+  }
+
+  // Uploads stay on screen through server-side processing. Each row
+  // is keyed by its document_id and advanced by the poll loop.
+  var trackedUploads = {};  // document_id -> rowEl
+  function syncTrackedUploads() {
+    Object.keys(trackedUploads).forEach(function (docId) {
+      var row = trackedUploads[docId];
+      var doc = allDocs.filter(function (d) {
+        return d.document_id === docId;
+      })[0];
+      if (!doc) { delete trackedUploads[docId]; upRemove(row, 0); return; }
+      if (doc.status === "ready") {
+        upStage(row, "ready");
+        delete trackedUploads[docId];
+        upRemove(row, 2500);
+      } else if (doc.status === "failed") {
+        upStage(row, "failed");
+        if (doc.failure_reason) row.title = doc.failure_reason;
+        delete trackedUploads[docId];
+        upRemove(row, 6000);
+      } else {
+        upStage(row, doc.status);  // uploaded / extracting / indexing
+      }
+    });
+  }
+
+  function uploadFiles(fileList) {
+    var files = Array.prototype.slice.call(fileList || []);
+    if (!files.length) return;
+    // Upload sequentially so the dup-modal can interrupt cleanly.
+    var i = 0;
+    function next() {
+      if (i >= files.length) { loadList(); return; }
+      var f = files[i++];
+      uploadOne(f, false, next);
+    }
+    next();
+  }
+  function uploadOne(file, overwrite, done) {
+    var row = upAddRow(file);
+    upStage(row, "uploading", 0);
+    var fd = new FormData();
+    fd.append("file", file);
+    if (overwrite) fd.append("overwrite", "true");
+    var upVis = document.querySelector('input[name="upVis"]:checked');
+    fd.append("visibility", upVis ? upVis.value : "internal");
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/warehouse/upload", true);
+    xhr.withCredentials = true;
+    // Live upload progress — bytes sent / total.
+    xhr.upload.onprogress = function (e) {
+      if (e.lengthComputable) {
+        upStage(row, "uploading", (e.loaded / e.total) * 100);
+      }
+    };
+    // Body fully sent — server is saving until the response lands.
+    xhr.upload.onload = function () { upStage(row, "saving"); };
+    xhr.onload = function () {
+      var res = {};
+      try { res = JSON.parse(xhr.responseText || "{}"); } catch (_) {}
+      if (xhr.status === 202) {
+        // Hand the row off to the poll loop, which advances it
+        // through Extract → Index → Done.
+        if (res.document_id) {
+          trackedUploads[res.document_id] = row;
+          upStage(row, "uploaded");
+        } else {
+          upFinishRow(row, true, "Uploaded");
+        }
+        done();
+      } else if (xhr.status === 409 && res.error === "duplicate_content") {
+        upRemove(row, 0);  // the dup modal takes over
+        pendingDup = { file: file, done: done };
+        $("dupMsg").textContent = "“" + (res.existing_name || "A file") +
+          "” already has identical contents.";
+        $("dupModal").classList.add("is-open");
+      } else {
+        upFinishRow(row, false, "Failed");
+        if (res.message) row.title = res.message;
+        toast(res.message || "Upload failed.");
+        done();
+      }
+    };
+    xhr.onerror = function () {
+      upFinishRow(row, false, "Network error");
+      toast("Network error during upload.");
+      done();
+    };
+    xhr.send(fd);
+  }
+  $("dupConfirm").addEventListener("click", function () {
+    var choice = (document.querySelector('input[name="dupChoice"]:checked') || {}).value;
+    $("dupModal").classList.remove("is-open");
+    var pd = pendingDup; pendingDup = null;
+    if (!pd) return;
+    if (choice === "copy") {
+      uploadOne(pd.file, true, pd.done);
+    } else {
+      pd.done();  // skip
+    }
+  });
+  $("dupClose").addEventListener("click", function () {
+    $("dupModal").classList.remove("is-open");
+    var pd = pendingDup; pendingDup = null;
+    if (pd) pd.done();
+  });
+
+  // ─── Warehouse agent — chat with conversation sidebar ───
+  var askBusy = false;
+  var askConvId = null;        // current conversation id (null = new)
+  var askConvs = [];           // sidebar conversation summaries
+  function showAsk() {
+    $("listView").style.display = "none";
+    $("detailView").style.display = "none";
+    $("askView").style.display = "";
+    document.body.classList.add("ask-mode");
+    loadAskConvs();
+    if (!askConvId) renderAskEmpty();
+    setTimeout(function () { $("askInput").focus(); }, 30);
+  }
+  function renderAskEmpty() {
+    $("askThread").innerHTML =
+      '<div class="ask-empty">Ask a question and I\'ll search every ' +
+      'document in your warehouse — spreadsheets, PDFs, images, notes — ' +
+      'and answer with citations. I can query your spreadsheets and ' +
+      'render the results as a table too.</div>';
+  }
+  function askScroll() {
+    var t = $("askThread");
+    t.scrollTop = t.scrollHeight;
+  }
+  // ── Conversation sidebar ──
+  function loadAskConvs() {
+    fetch("/api/warehouse/conversations", { credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        askConvs = (d && d.conversations) || [];
+        renderConvList();
+      })
+      .catch(function () { askConvs = []; renderConvList(); });
+  }
+  function renderConvList() {
+    var box = $("askConvList");
+    if (!askConvs.length) {
+      box.innerHTML = '<div class="ask-conv-empty">No conversations ' +
+        "yet.</div>";
+      return;
+    }
+    box.innerHTML = askConvs.map(function (c) {
+      return '<div class="ask-conv-item' +
+        (c.conversation_id === askConvId ? " active" : "") +
+        '" data-id="' + esc(c.conversation_id) + '">' +
+        '<span class="ask-conv-title">' +
+        esc(c.title || "New conversation") + "</span>" +
+        '<button type="button" class="ask-conv-dots" ' +
+        'data-conv="' + esc(c.conversation_id) + '" ' +
+        'title="Options">⋯</button></div>';
+    }).join("");
+    Array.prototype.forEach.call(box.querySelectorAll(".ask-conv-item"),
+      function (el) {
+        el.addEventListener("click", function (e) {
+          if (e.target.classList.contains("ask-conv-dots")) return;
+          openConversation(el.dataset.id);
+        });
+      });
+    Array.prototype.forEach.call(box.querySelectorAll(".ask-conv-dots"),
+      function (b) {
+        b.addEventListener("click", function (e) {
+          e.stopPropagation();
+          openConvMenu(b.dataset.conv, b);
+        });
+      });
+  }
+  function closeConvMenu() {
+    var m = document.getElementById("askConvMenu");
+    if (m && m.parentNode) m.parentNode.removeChild(m);
+  }
+  function openConvMenu(convId, anchor) {
+    closeConvMenu();
+    var conv = askConvs.filter(function (c) {
+      return c.conversation_id === convId; })[0];
+    var menu = document.createElement("div");
+    menu.id = "askConvMenu";
+    menu.className = "ask-conv-menu";
+    menu.innerHTML =
+      '<button type="button" data-act="rename">Rename</button>' +
+      '<button type="button" data-act="delete">Delete</button>';
+    document.body.appendChild(menu);
+    var r = anchor.getBoundingClientRect();
+    menu.style.top = (r.bottom + 4) + "px";
+    menu.style.left = Math.max(8, r.right - 150) + "px";
+    menu.querySelector('[data-act="rename"]').addEventListener("click",
+      function () {
+        closeConvMenu();
+        var nt = window.prompt("Rename conversation:",
+                               (conv && conv.title) || "");
+        if (nt && nt.trim()) renameConversation(convId, nt.trim());
+      });
+    menu.querySelector('[data-act="delete"]').addEventListener("click",
+      function () { closeConvMenu(); deleteConversation(convId); });
+    setTimeout(function () {
+      document.addEventListener("click", closeConvMenu, { once: true });
+    }, 0);
+  }
+  function renameConversation(convId, title) {
+    fetch("/api/warehouse/conversations/" + encodeURIComponent(convId), {
+      method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ op: "rename", title: title }),
+    }).then(function (r) {
+      if (r.ok) { toast("Renamed."); loadAskConvs(); }
+      else toast("Couldn't rename.");
+    }).catch(function () { toast("Network error."); });
+  }
+  function clearAllConvs() {
+    if (!window.confirm("Delete ALL chat history? This can't be " +
+        "undone.")) return;
+    fetch("/api/warehouse/conversations", {
+      method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ op: "clear_all" }),
+    }).then(function (r) {
+      if (r.ok) { toast("Chat history cleared."); newChat(); loadAskConvs(); }
+      else toast("Couldn't clear history.");
+    }).catch(function () { toast("Network error."); });
+  }
+  function newChat() {
+    if (askBusy) return;
+    askConvId = null;
+    renderAskEmpty();
+    renderConvList();
+    setTimeout(function () { $("askInput").focus(); }, 30);
+  }
+  function openConversation(convId) {
+    if (askBusy) return;
+    askConvId = convId;
+    renderConvList();
+    $("askThread").innerHTML =
+      '<div class="ask-empty">Loading…</div>';
+    fetch("/api/warehouse/conversations/" + encodeURIComponent(convId),
+          { credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (conv) {
+        if (!conv || conv.conversation_id !== askConvId) return;
+        $("askThread").innerHTML = "";
+        (conv.messages || []).forEach(function (m) {
+          if (m.role === "user") {
+            addAskMsg("user", m.content || "");
+          } else {
+            addAskMsg("bot", m.content || "", m.sources || [],
+                      false, m.table, m.tables);
+          }
+        });
+        if (!(conv.messages || []).length) renderAskEmpty();
+        askScroll();
+      })
+      .catch(function () {
+        $("askThread").innerHTML =
+          '<div class="ask-empty">Couldn\'t load that conversation.</div>';
+      });
+  }
+  function deleteConversation(convId) {
+    fetch("/api/warehouse/conversations/" + encodeURIComponent(convId), {
+      method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ op: "delete" }),
+    }).then(function (r) {
+      if (!r.ok) { toast("Couldn't delete."); return; }
+      if (askConvId === convId) newChat();
+      loadAskConvs();
+    }).catch(function () { toast("Network error."); });
+  }
+  // Rich SQL-result widget — Table / SQL / Chart tabs, sortable
+  // headers, live row filter, Copy SQL, Download CSV. Ported from the
+  // team brain chat so the warehouse agent renders results the same.
+  function whseSqlWidget(t) {
+    var cols = (t.columns && t.columns.length) ? t.columns
+               : (t.rows && t.rows[0] ? Object.keys(t.rows[0]) : []);
+    var rows = t.rows || [];
+    var wrap = document.createElement("div");
+    wrap.style.cssText = "display:block;margin-top:10px;width:100%;";
+
+    var sqlText = (t.sql || "").trim();
+    var m = /from\s+([a-zA-Z0-9_:.]+)/i.exec(sqlText);
+    var firstTable = m ? m[1] : "";
+    if (firstTable) {
+      var prov = document.createElement("div");
+      prov.style.cssText =
+        "font-size:11.5px;color:var(--text-2);margin-bottom:6px;" +
+        "display:flex;align-items:center;gap:6px;";
+      prov.innerHTML =
+        '<span style="display:inline-flex;align-items:center;' +
+        'justify-content:center;width:14px;height:14px;border-radius:50%;' +
+        'background:var(--border);color:var(--text-2);font-size:10px;' +
+        'font-weight:700;">i</span>' +
+        '<span>Used data from: <code style="background:var(--bg-overlay);' +
+        'padding:1px 5px;border-radius:4px;font-family:monospace;' +
+        'font-size:11px;">' + esc(firstTable) + '</code></span>';
+      wrap.appendChild(prov);
+    }
+
+    var head = document.createElement("div");
+    head.style.cssText =
+      "display:flex;align-items:center;gap:6px;font-size:11.5px;" +
+      "color:var(--text-2);flex-wrap:wrap;padding:6px 8px;" +
+      "background:var(--bg-overlay);border:1px solid var(--border);" +
+      "border-radius:8px 8px 0 0;border-bottom:0;";
+    function tabBtn(id, label, active) {
+      return '<button type="button" data-tab="' + id + '" ' +
+        'class="wh-sql-tab" style="padding:4px 12px;border-radius:6px;' +
+        'border:1px solid ' + (active ? "var(--brand)" : "var(--border)") +
+        ';background:' + (active ? "var(--brand)" : "var(--bg-elevated)") +
+        ';color:' + (active ? "#fff" : "var(--ink)") +
+        ';cursor:pointer;font:600 11.5px inherit;">' + label + "</button>";
+    }
+    head.innerHTML =
+      tabBtn("table", "Table", true) + tabBtn("sql", "SQL", false) +
+      tabBtn("chart", "Chart", false) +
+      '<span style="color:var(--text-3);margin-left:8px;">' +
+        rows.length + " row" + (rows.length === 1 ? "" : "s") + "</span>" +
+      '<input type="text" data-filter placeholder="Filter rows…" ' +
+        'style="margin-left:auto;flex:0 1 180px;padding:5px 10px;' +
+        'border:1px solid var(--border);border-radius:6px;font:inherit;' +
+        'font-size:11.5px;background:var(--bg-elevated);color:var(--ink);" />' +
+      '<button type="button" data-copy-sql style="padding:4px 10px;' +
+        'border:1px solid var(--border);border-radius:6px;' +
+        'background:var(--bg-elevated);color:var(--ink);cursor:pointer;' +
+        'font:600 11px inherit;">Copy SQL</button>' +
+      '<button type="button" data-csv style="padding:4px 10px;' +
+        'border:1px solid var(--border);border-radius:6px;' +
+        'background:var(--bg-elevated);color:var(--ink);cursor:pointer;' +
+        'font:600 11px inherit;">Download CSV</button>';
+    wrap.appendChild(head);
+
+    // ── Table panel ──
+    var paneTable = document.createElement("div");
+    paneTable.style.cssText =
+      "border:1px solid var(--border);border-top:0;" +
+      "border-radius:0 0 10px 10px;overflow:auto;max-height:460px;" +
+      "background:var(--bg-elevated);";
+    var tbl = document.createElement("table");
+    tbl.style.cssText =
+      "width:100%;border-collapse:collapse;font-size:12.5px;";
+    var thead = document.createElement("thead");
+    var trh = document.createElement("tr");
+    var tbody = document.createElement("tbody");
+    function renderBody(list) {
+      tbody.innerHTML = "";
+      list.forEach(function (r, i) {
+        var tr = document.createElement("tr");
+        if (i % 2 === 1) tr.style.background = "rgba(127,127,127,0.07)";
+        cols.forEach(function (c) {
+          var td = document.createElement("td");
+          var v = r[c];
+          td.textContent = (v == null) ? "" : String(v);
+          td.style.cssText = "padding:7px 12px;border-bottom:1px solid " +
+            "var(--border-subtle);color:var(--ink);vertical-align:top;";
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+    }
+    cols.forEach(function (c) {
+      var th = document.createElement("th");
+      th.textContent = c;
+      th.style.cssText = "position:sticky;top:0;" +
+        "background:var(--bg-overlay);color:var(--ink);font-weight:600;" +
+        "text-align:left;padding:8px 12px;border-bottom:1px solid " +
+        "var(--border);cursor:pointer;user-select:none;";
+      th.addEventListener("click", function () {
+        var dir = th.dataset.dir === "asc" ? "desc" : "asc";
+        Array.prototype.forEach.call(thead.querySelectorAll("th"),
+          function (x) { x.dataset.dir = ""; });
+        th.dataset.dir = dir;
+        var sorted = rows.slice().sort(function (a, b) {
+          var av = a[c], bv = b[c];
+          var an = parseFloat(av), bn = parseFloat(bv);
+          if (!isNaN(an) && !isNaN(bn)) { av = an; bv = bn; }
+          if (av == null) av = "";
+          if (bv == null) bv = "";
+          return (av > bv ? 1 : av < bv ? -1 : 0) * (dir === "asc" ? 1 : -1);
+        });
+        renderBody(sorted);
+      });
+      trh.appendChild(th);
+    });
+    thead.appendChild(trh);
+    tbl.appendChild(thead);
+    renderBody(rows);
+    tbl.appendChild(tbody);
+    paneTable.appendChild(tbl);
+    wrap.appendChild(paneTable);
+
+    // ── SQL panel ──
+    var paneSql = document.createElement("div");
+    paneSql.style.cssText =
+      "border:1px solid var(--border);border-top:0;" +
+      "border-radius:0 0 10px 10px;background:var(--bg-elevated);" +
+      "padding:14px;display:none;";
+    var sqlPre = document.createElement("pre");
+    sqlPre.style.cssText = "margin:0;font:12.5px/1.6 ui-monospace," +
+      "SFMono-Regular,Menlo,Consolas,monospace;color:var(--ink);" +
+      "background:var(--bg-overlay);border:1px solid var(--border);" +
+      "border-radius:6px;padding:12px;white-space:pre-wrap;" +
+      "word-wrap:break-word;";
+    sqlPre.textContent = sqlText || "(no SQL — answered from documents)";
+    paneSql.appendChild(sqlPre);
+    wrap.appendChild(paneSql);
+
+    // ── Chart panel ──
+    var paneChart = document.createElement("div");
+    paneChart.style.cssText =
+      "border:1px solid var(--border);border-top:0;" +
+      "border-radius:0 0 10px 10px;background:var(--bg-elevated);" +
+      "padding:12px;display:none;";
+    function detectNumericCol() {
+      for (var i = 0; i < cols.length; i++) {
+        var nNum = 0;
+        for (var j = 0; j < Math.min(rows.length, 20); j++) {
+          if (!isNaN(parseFloat(rows[j][cols[i]]))) nNum++;
+        }
+        if (nNum >= Math.min(rows.length, 20) * 0.6) return cols[i];
+      }
+      return cols[cols.length > 1 ? 1 : 0];
+    }
+    var xCol = cols[0];
+    var yCol = detectNumericCol();
+    var chartType = "bar";
+    var aggMode = "sum";
+    var chartCanvas = document.createElement("canvas");
+    chartCanvas.style.cssText = "width:100%;max-height:340px;";
+    var chartCtl = document.createElement("div");
+    chartCtl.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;" +
+      "align-items:center;margin-bottom:10px;font-size:11.5px;" +
+      "color:var(--ink);";
+    function ctlSelect(label, value, options, onChange) {
+      var w = document.createElement("label");
+      w.style.cssText = "display:flex;align-items:center;gap:4px;";
+      w.innerHTML = '<span style="color:var(--text-2);">' + label + ":</span>";
+      var s = document.createElement("select");
+      s.style.cssText = "padding:3px 6px;border:1px solid var(--border);" +
+        "border-radius:4px;font:inherit;font-size:11.5px;" +
+        "background:var(--bg-elevated);color:var(--ink);";
+      options.forEach(function (o) {
+        var opt = document.createElement("option");
+        opt.value = o; opt.textContent = o;
+        if (o === value) opt.selected = true;
+        s.appendChild(opt);
+      });
+      s.addEventListener("change", function () { onChange(s.value); });
+      w.appendChild(s);
+      return w;
+    }
+    chartCtl.appendChild(ctlSelect("X", xCol, cols, function (v) {
+      xCol = v; renderChart(); }));
+    chartCtl.appendChild(ctlSelect("Y", yCol, cols, function (v) {
+      yCol = v; renderChart(); }));
+    chartCtl.appendChild(ctlSelect("Agg", aggMode,
+      ["sum", "avg", "count", "min", "max"], function (v) {
+        aggMode = v; renderChart(); }));
+    chartCtl.appendChild(ctlSelect("Type", chartType,
+      ["bar", "line", "pie", "doughnut"], function (v) {
+        chartType = v; renderChart(); }));
+    paneChart.appendChild(chartCtl);
+    paneChart.appendChild(chartCanvas);
+    var chartInst = null;
+    function renderChart() {
+      if (typeof Chart === "undefined") return;
+      if (chartInst) { chartInst.destroy(); chartInst = null; }
+      var groups = {}, labels = [];
+      rows.forEach(function (r) {
+        var lbl = r[xCol]; lbl = (lbl == null) ? "" : String(lbl);
+        var raw = parseFloat(r[yCol]);
+        var num = isNaN(raw) ? null : raw;
+        if (!Object.prototype.hasOwnProperty.call(groups, lbl)) {
+          groups[lbl] = { sum: 0, count: 0, min: null, max: null,
+                          numCount: 0 };
+          labels.push(lbl);
+        }
+        var g = groups[lbl];
+        g.count += 1;
+        if (num !== null) {
+          g.sum += num; g.numCount += 1;
+          if (g.min === null || num < g.min) g.min = num;
+          if (g.max === null || num > g.max) g.max = num;
+        }
+      });
+      var data = labels.map(function (lbl) {
+        var g = groups[lbl];
+        switch (aggMode) {
+          case "count": return g.count;
+          case "avg":   return g.numCount ? g.sum / g.numCount : 0;
+          case "min":   return g.min === null ? 0 : g.min;
+          case "max":   return g.max === null ? 0 : g.max;
+          default:      return g.sum;
+        }
+      });
+      var dark = document.documentElement.getAttribute("data-theme")
+                 === "dark";
+      var palette = ["#185fa5", "#16a34a", "#f59e0b", "#dc2626",
+        "#7c3aed", "#0891b2", "#db2777", "#84cc16", "#ea580c", "#6366f1"];
+      var barColor = dark ? "#5aa3ee" : "#185fa5";
+      var axisText = dark ? "#a1a1aa" : "#5a6470";
+      var gridLine = dark ? "rgba(255,255,255,0.07)"
+                          : "rgba(0,0,0,0.08)";
+      var bgs = (chartType === "pie" || chartType === "doughnut")
+        ? palette.slice(0, Math.max(data.length, 1)) : barColor;
+      var dsLabel = (aggMode === "count")
+        ? "count of " + xCol : aggMode + "(" + yCol + ")";
+      chartInst = new Chart(chartCanvas, {
+        type: chartType,
+        data: { labels: labels, datasets: [{
+          label: dsLabel, data: data, backgroundColor: bgs,
+          borderColor: chartType === "line" ? barColor : "transparent",
+          borderWidth: chartType === "line" ? 2 : 1,
+          tension: 0.25, fill: chartType !== "line" }] },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: chartType === "pie" || chartType === "doughnut",
+              position: "right", labels: { color: axisText } },
+          },
+          scales: (chartType === "pie" || chartType === "doughnut") ? {} : {
+            x: { ticks: { color: axisText }, grid: { color: gridLine } },
+            y: { ticks: { color: axisText }, grid: { color: gridLine } },
+          },
+        },
+      });
+    }
+    wrap.appendChild(paneChart);
+
+    // Live filter.
+    var filterInput = head.querySelector("[data-filter]");
+    filterInput.addEventListener("input", function () {
+      var q = (filterInput.value || "").trim().toLowerCase();
+      if (!q) { renderBody(rows); return; }
+      renderBody(rows.filter(function (r) {
+        for (var i = 0; i < cols.length; i++) {
+          var v = r[cols[i]];
+          if (v != null && String(v).toLowerCase().indexOf(q) >= 0)
+            return true;
+        }
+        return false;
+      }));
+    });
+    // Tab switching.
+    var tabBtns = head.querySelectorAll(".wh-sql-tab");
+    Array.prototype.forEach.call(tabBtns, function (b) {
+      b.addEventListener("click", function () {
+        var which = b.getAttribute("data-tab");
+        Array.prototype.forEach.call(tabBtns, function (x) {
+          var on = (x === b);
+          x.style.background = on ? "var(--brand)" : "var(--bg-elevated)";
+          x.style.color = on ? "#fff" : "var(--ink)";
+          x.style.borderColor = on ? "var(--brand)" : "var(--border)";
+        });
+        paneTable.style.display = (which === "table") ? "" : "none";
+        paneSql.style.display = (which === "sql") ? "block" : "none";
+        paneChart.style.display = (which === "chart") ? "block" : "none";
+        if (which === "chart") renderChart();
+      });
+    });
+    // Copy SQL.
+    var copyBtn = head.querySelector("[data-copy-sql]");
+    copyBtn.addEventListener("click", function () {
+      if (!sqlText) return;
+      (navigator.clipboard ? navigator.clipboard.writeText(sqlText)
+                           : Promise.reject()).then(function () {
+        copyBtn.textContent = "Copied ✓";
+        setTimeout(function () { copyBtn.textContent = "Copy SQL"; }, 1500);
+      }).catch(function () {});
+    });
+    // Download CSV.
+    head.querySelector("[data-csv]").addEventListener("click", function () {
+      var lines = [cols.join(",")];
+      rows.forEach(function (r) {
+        lines.push(cols.map(function (c) {
+          var v = r[c];
+          if (v == null) return "";
+          v = String(v);
+          if (v.indexOf(",") >= 0 || v.indexOf('"') >= 0 ||
+              v.indexOf("\n") >= 0) {
+            v = '"' + v.replace(/"/g, '""') + '"';
+          }
+          return v;
+        }).join(","));
+      });
+      var blob = new Blob([lines.join("\n")],
+        { type: "text/csv;charset=utf-8" });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url; a.download = "results.csv";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 800);
+    });
+    return wrap;
+  }
+  function askSrcsHtml(sources) {
+    if (!sources || !sources.length) return "";
+    return '<div class="ask-srcs">' + sources.map(function (s) {
+      return '<span class="ask-src-chip" data-src="' +
+        esc(s.document_id) + '">' + esc(s.name) + "</span>";
+    }).join("") + "</div>";
+  }
+  function wireAskSrcs(msg) {
+    Array.prototype.forEach.call(msg.querySelectorAll(".ask-src-chip"),
+      function (chip) {
+        chip.addEventListener("click", function () {
+          openPreviewModal(chip.dataset.src);
+        });
+      });
+  }
+  // Minimal, safe Markdown → HTML — headings, bold/italic/code,
+  // bullet + numbered lists, paragraphs. Input is HTML-escaped first
+  // so only the tags this function emits ever reach innerHTML.
+  function mdToHtml(src) {
+    var s = String(src == null ? "" : src)
+      .replace(/[&<>]/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c];
+      });
+    function inline(x) {
+      return x
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+        .replace(/(^|[^*])\*([^*]+)\*/g, "$1<em>$2</em>")
+        .replace(/`([^`]+)`/g, "<code>$1</code>");
+    }
+    var lines = s.split("\n"), out = [], ul = false, ol = false;
+    function closeLists() {
+      if (ul) { out.push("</ul>"); ul = false; }
+      if (ol) { out.push("</ol>"); ol = false; }
+    }
+    for (var i = 0; i < lines.length; i++) {
+      var ln = lines[i];
+      var h = /^(#{1,4})\s+(.*)$/.exec(ln);
+      if (h) {
+        closeLists();
+        var lvl = Math.min(h[1].length + 1, 5);
+        out.push("<h" + lvl + ">" + inline(h[2]) + "</h" + lvl + ">");
+        continue;
+      }
+      var b = /^\s*[-*]\s+(.*)$/.exec(ln);
+      if (b) {
+        if (ol) { out.push("</ol>"); ol = false; }
+        if (!ul) { out.push("<ul>"); ul = true; }
+        out.push("<li>" + inline(b[1]) + "</li>");
+        continue;
+      }
+      var n = /^\s*\d+[.)]\s+(.*)$/.exec(ln);
+      if (n) {
+        if (ul) { out.push("</ul>"); ul = false; }
+        if (!ol) { out.push("<ol>"); ol = true; }
+        out.push("<li>" + inline(n[1]) + "</li>");
+        continue;
+      }
+      if (!ln.trim()) { closeLists(); continue; }
+      closeLists();
+      out.push("<p>" + inline(ln) + "</p>");
+    }
+    closeLists();
+    return out.join("");
+  }
+  function addAskMsg(role, text, sources, isErr, table, tables) {
+    var t = $("askThread");
+    var empty = t.querySelector(".ask-empty");
+    if (empty) t.innerHTML = "";
+    var msg = document.createElement("div");
+    var tblList = [];
+    if (table && table.columns && table.columns.length) {
+      tblList.push({ t: table, purpose: "" });
+    }
+    if (tables && tables.length) {
+      tables.forEach(function (x) {
+        if (x && x.columns && x.columns.length) {
+          tblList.push({ t: x, purpose: x.purpose || "" });
+        }
+      });
+    }
+    msg.className = "ask-msg " + (role === "user" ? "user" : "bot") +
+      (isErr ? " is-err" : "") + (tblList.length ? " has-table" : "");
+    var bub = document.createElement("div");
+    bub.className = "ask-bubble";
+    if (role === "user" || isErr) {
+      bub.textContent = text || "";
+    } else {
+      // Bot answers render Markdown (headings, bold, lists).
+      bub.classList.add("md");
+      bub.innerHTML = mdToHtml(text || "");
+    }
+    msg.appendChild(bub);
+    tblList.forEach(function (entry) {
+      if (entry.purpose) {
+        var cap = document.createElement("div");
+        cap.className = "ask-table-cap";
+        cap.textContent = entry.purpose;
+        msg.appendChild(cap);
+      }
+      try { msg.appendChild(whseSqlWidget(entry.t)); } catch (e) {}
+    });
+    if (sources && sources.length) {
+      var sd = document.createElement("div");
+      sd.innerHTML = askSrcsHtml(sources);
+      if (sd.firstChild) msg.appendChild(sd.firstChild);
+    }
+    t.appendChild(msg);
+    wireAskSrcs(msg);
+    askScroll();
+    return msg;
+  }
+  // Streaming send: a quick GPT opener streams in char-by-char, then
+  // the real answer + any table arrive in a final `result` event.
+  function sendAsk() {
+    if (askBusy) return;
+    var q = $("askInput").value.trim();
+    if (!q) return;
+    askBusy = true;
+    $("askSend").disabled = true;
+    $("askInput").value = "";
+    addAskMsg("user", q);
+
+    var t = $("askThread");
+    var empty = t.querySelector(".ask-empty");
+    if (empty) t.innerHTML = "";
+    var msg = document.createElement("div");
+    msg.className = "ask-msg bot";
+    msg.innerHTML = '<div class="ask-bubble"></div>' +
+      '<div class="ask-typing" id="askWait" style="display:none;">' +
+      "Analyzing…</div>";
+    t.appendChild(msg);
+    var bubble = msg.querySelector(".ask-bubble");
+    var wait = msg.querySelector("#askWait");
+    askScroll();
+
+    var opener = "";
+    var done = false;
+    function finishUp() {
+      if (done) return;
+      done = true;
+      askBusy = false;
+      $("askSend").disabled = false;
+      $("askInput").focus();
+    }
+    function fail(text) {
+      // Keep the streamed preview bubble; add the error as its own.
+      if (wait && wait.parentNode) wait.parentNode.removeChild(wait);
+      addAskMsg("bot", text, null, true);
+      finishUp();
+    }
+    function applyResult(d) {
+      // The streamed preview stays as its own bubble — the full,
+      // precise answer (+ any table) arrives as a SEPARATE bubble
+      // below it.
+      if (wait && wait.parentNode) wait.parentNode.removeChild(wait);
+      addAskMsg("bot", (d.answer || "").trim() || "Done.",
+                d.sources || [], false, d.table, d.tables);
+      finishUp();
+      loadAskConvs();  // refresh sidebar (title / ordering)
+    }
+    function onEvent(ev, dataStr) {
+      var d = {};
+      try { d = JSON.parse(dataStr || "{}"); } catch (_) {}
+      if (ev === "meta") {
+        // A new conversation just got its id — adopt it.
+        if (d.conversation_id) {
+          askConvId = d.conversation_id;
+        }
+      } else if (ev === "token") {
+        opener += (d.text || "");
+        bubble.textContent = opener;
+        askScroll();
+      } else if (ev === "opener_done") {
+        if (wait) wait.style.display = "";
+        askScroll();
+      } else if (ev === "result") {
+        applyResult(d);
+      } else if (ev === "error") {
+        fail(d.message || "Something went wrong. Try again.");
+      }
+    }
+
+    fetch("/api/warehouse/ask", {
+      method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: q,
+                             conversation_id: askConvId }),
+    }).then(function (resp) {
+      if (!resp.ok || !resp.body) {
+        fail("Something went wrong. Try again.");
+        return;
+      }
+      var reader = resp.body.getReader();
+      var dec = new TextDecoder();
+      var buf = "";
+      function pump() {
+        return reader.read().then(function (res) {
+          if (res.done) { if (!done) finishUp(); return; }
+          buf += dec.decode(res.value, { stream: true });
+          var frames = buf.split("\n\n");
+          buf = frames.pop();
+          frames.forEach(function (frame) {
+            var ev = "", data = "";
+            frame.split("\n").forEach(function (line) {
+              if (line.indexOf("event:") === 0)
+                ev = line.slice(6).trim();
+              else if (line.indexOf("data:") === 0)
+                data = line.slice(5).trim();
+            });
+            if (ev) onEvent(ev, data);
+          });
+          return pump();
+        });
+      }
+      return pump();
+    }).catch(function () {
+      fail("Network error. Try again.");
+    });
+  }
+  $("askOpen").addEventListener("click", showAsk);
+  $("askBack").addEventListener("click", function () {
+    $("askView").style.display = "none";
+    $("listView").style.display = "";
+    document.body.classList.remove("ask-mode");
+  });
+  $("askSend").addEventListener("click", sendAsk);
+  $("askNew").addEventListener("click", newChat);
+  $("askClearAll").addEventListener("click", clearAllConvs);
+  $("askInput").addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendAsk();
+    }
+  });
+
+  // ─── Add sources: train a website ───
+  function refreshSoon() {
+    setTimeout(loadList, 3000);
+    setTimeout(loadList, 9000);
+  }
+  $("trainSiteBtn").addEventListener("click", function () {
+    $("siteUrl").value = "";
+    $("siteModal").classList.add("is-open");
+    setTimeout(function () { $("siteUrl").focus(); }, 30);
+  });
+  $("siteCancel").addEventListener("click", function () {
+    $("siteModal").classList.remove("is-open");
+  });
+  $("siteGo").addEventListener("click", function () {
+    var url = $("siteUrl").value.trim();
+    if (!url) { toast("Enter a website URL."); return; }
+    var vr = document.querySelector('input[name="siteVis"]:checked');
+    $("siteGo").disabled = true;
+    fetch("/api/warehouse/train-website", {
+      method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: url,
+                             visibility: vr ? vr.value : "customer_facing" }),
+    }).then(function (r) {
+      return r.json().then(function (b) { return { ok: r.ok, body: b }; });
+    }).then(function (res) {
+      $("siteGo").disabled = false;
+      if (res.ok) {
+        $("siteModal").classList.remove("is-open");
+        toast("Crawling the website — it'll appear here shortly.");
+        refreshSoon();
+      } else {
+        toast((res.body && res.body.message) || "Couldn't train that site.");
+      }
+    }).catch(function () {
+      $("siteGo").disabled = false; toast("Network error.");
+    });
+  });
+
+  // ─── Add sources: import from Google Drive ───
+  var driveSelected = {};
+  $("driveBtn").addEventListener("click", openDriveModal);
+  $("driveCancel").addEventListener("click", function () {
+    $("driveModal").classList.remove("is-open");
+  });
+  function openDriveModal() {
+    driveSelected = {};
+    $("driveGo").disabled = true;
+    $("driveVis").style.display = "none";
+    $("driveBody").className = "drive-note";
+    $("driveBody").textContent = "Loading…";
+    $("driveModal").classList.add("is-open");
+    fetch("/me/drive/status", { credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (s) {
+        if (s && s.connected) loadDriveFiles();
+        else renderDriveConnect();
+      })
+      .catch(renderDriveConnect);
+  }
+  function renderDriveConnect() {
+    $("driveBody").className = "drive-note";
+    $("driveBody").innerHTML =
+      "Google Drive isn't connected yet. " +
+      '<a href="/auth/google/connect-drive" target="_blank" ' +
+      'style="color:var(--accent);font-weight:600;">Connect Google Drive</a>' +
+      ", then reopen this window.";
+  }
+  function loadDriveFiles() {
+    $("driveBody").className = "drive-note";
+    $("driveBody").textContent = "Loading your Google Docs and Sheets…";
+    fetch("/me/drive/files?type=all&limit=100", { credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        var files = ((d && d.files) || []).filter(function (f) {
+          return f.mimeType === "application/vnd.google-apps.document" ||
+                 f.mimeType === "application/vnd.google-apps.spreadsheet";
+        });
+        if (!files.length) {
+          $("driveBody").className = "drive-note";
+          $("driveBody").textContent =
+            "No Google Docs or Sheets found in your Drive.";
+          return;
+        }
+        $("driveBody").className = "";
+        $("driveBody").innerHTML = '<div class="drive-files">' +
+          files.map(function (f) {
+            var isSheet = f.mimeType.indexOf("spreadsheet") >= 0;
+            return '<label class="drive-file"><input type="checkbox" ' +
+              'data-id="' + esc(f.id) + '" data-name="' + esc(f.name) +
+              '" data-mime="' + esc(f.mimeType) + '">' +
+              '<span>' + esc(f.name) + '</span>' +
+              '<span class="df-type">' + (isSheet ? "Sheet" : "Doc") +
+              '</span></label>';
+          }).join("") + "</div>";
+        $("driveVis").style.display = "";
+        Array.prototype.forEach.call(
+          $("driveBody").querySelectorAll("input"), function (inp) {
+            inp.addEventListener("change", function () {
+              if (inp.checked) {
+                driveSelected[inp.dataset.id] = {
+                  id: inp.dataset.id, name: inp.dataset.name,
+                  mime_type: inp.dataset.mime };
+              } else {
+                delete driveSelected[inp.dataset.id];
+              }
+              $("driveGo").disabled =
+                !Object.keys(driveSelected).length;
+            });
+          });
+      })
+      .catch(function () {
+        $("driveBody").className = "drive-note";
+        $("driveBody").textContent = "Couldn't load your Drive files.";
+      });
+  }
+  $("driveGo").addEventListener("click", function () {
+    var files = Object.keys(driveSelected).map(function (k) {
+      return driveSelected[k]; });
+    if (!files.length) return;
+    var vr = document.querySelector('input[name="driveVisR"]:checked');
+    $("driveGo").disabled = true;
+    fetch("/api/warehouse/import-drive", {
+      method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ files: files,
+                             visibility: vr ? vr.value : "customer_facing" }),
+    }).then(function (r) {
+      return r.json().then(function (b) { return { ok: r.ok, body: b }; });
+    }).then(function (res) {
+      $("driveGo").disabled = false;
+      if (res.ok) {
+        $("driveModal").classList.remove("is-open");
+        toast("Importing " + files.length + " file" +
+          (files.length > 1 ? "s" : "") + " from Drive…");
+        refreshSoon();
+      } else {
+        toast((res.body && res.body.message) || "Couldn't import.");
+      }
+    }).catch(function () {
+      $("driveGo").disabled = false; toast("Network error.");
+    });
+  });
+
+  // ─── Wire toolbar ───
+  $("searchInput").addEventListener("input", renderList);
+  $("formatFilter").addEventListener("change", renderList);
+  $("sortSel").addEventListener("change", renderList);
+
+  // ─── API access panel ───
+  function fmtTokenDate(iso) {
+    if (!iso) return "—";
+    try { return new Date(iso).toLocaleDateString(); }
+    catch (e) { return iso; }
+  }
+  function renderApiToken(d) {
+    var have = !!(d && d.token);
+    $("apiTokenNone").style.display = have ? "none" : "";
+    $("apiTokenHave").style.display = have ? "" : "none";
+    if (!have) return;
+    $("apiTokenValue").value = d.token;
+    $("apiTokenMeta").textContent =
+      "Created " + fmtTokenDate(d.created_at) + " · " +
+      (d.last_used_at ? "last used " + fmtTokenDate(d.last_used_at)
+                      : "never used");
+    $("apiTokenCurl").textContent =
+      "curl -X POST https://" + location.host + "/api/warehouse/upload \\\n" +
+      "  -H \"Authorization: Bearer " + d.token + "\" \\\n" +
+      "  -F \"file=@data.csv\"";
+  }
+  function loadApiToken() {
+    fetch("/api/warehouse/api-token", { credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { if (d) renderApiToken(d); })
+      .catch(function () {});
+  }
+  function postApiToken(op, okMsg) {
+    fetch("/api/warehouse/api-token", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ op: op }),
+    })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d) { toast("Couldn't update token."); return; }
+        renderApiToken(op === "revoke" ? { token: null } : d);
+        toast(okMsg);
+      })
+      .catch(function () { toast("Network error."); });
+  }
+  $("apiTokenGen").addEventListener("click", function () {
+    postApiToken("generate", "Token generated.");
+  });
+  $("apiTokenRegen").addEventListener("click", function () {
+    if (!confirm("Regenerate the token? The current token stops " +
+                 "working immediately.")) return;
+    postApiToken("generate", "Token regenerated.");
+  });
+  $("apiTokenRevoke").addEventListener("click", function () {
+    if (!confirm("Revoke the token? Programmatic uploads will stop " +
+                 "working until you generate a new one.")) return;
+    postApiToken("revoke", "Token revoked.");
+  });
+  $("apiTokenCopy").addEventListener("click", function () {
+    var inp = $("apiTokenValue");
+    inp.select();
+    try { navigator.clipboard.writeText(inp.value); }
+    catch (e) { try { document.execCommand("copy"); } catch (e2) {} }
+    toast("Token copied.");
+  });
+
+  loadAgents();
+  loadList();
+  loadApiToken();
+})();
+</script>
+</body>
+</html>
