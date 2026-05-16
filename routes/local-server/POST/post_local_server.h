@@ -26,3 +26,7 @@ void post_to_local_stream(struct Socket* socket, char* http_header,
                            char* body, size_t body_len,
                            char* route, const char* port);
 void delete_to_local(struct Socket* socket,char* http_header, char*body, char* route, const char* port);
+/* PUT proxy — mirrors delete_to_local exactly (cookie + X-Forwarded-Host
+ * passthrough, JSON body forwarding) but emits a PUT request line. Needed
+ * for /me/agents/<id>/memory/facts/<fact_id> which is updated via PUT. */
+void put_to_local(struct Socket* socket,char* http_header, char*body, char* route, const char* port);

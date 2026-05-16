@@ -661,6 +661,34 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/dashboard") == 0) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/dashboard/warehouse") == 0) {
+        /* Warehouse page — business document storage. */
+        get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strncmp(route, "/api/warehouse/", 15) == 0) {
+        /* Warehouse API — upload (POST), list/detail (GET), delete.
+         * /api/warehouse/ask is an SSE endpoint: the warehouse agent
+         * streams a quick opener token-by-token while retrieval/SQL
+         * run, so it must use the streaming-passthrough variant or
+         * post_to_local would buffer the whole stream. */
+        if (strcmp(request_type, "POST") == 0) {
+            if (strstr(route, "/api/warehouse/ask") != NULL) {
+                post_to_local_stream(socket, http_header, body, body_len, route_with_query, "5000");
+            } else {
+                post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
+            }
+        } else {
+            get_to_local(socket, http_header, body, route_with_query, "5000");
+        }
+    } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/dashboard/approvals") == 0) {
+        /* Pending Approvals page — AI draft review queue. */
+        get_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strncmp(route, "/api/approvals", 14) == 0) {
+        /* Approval queue API — list (GET), send / edit-send / skip (POST). */
+        if (strcmp(request_type, "POST") == 0) {
+            post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
+        } else {
+            get_to_local(socket, http_header, body, route_with_query, "5000");
+        }
     } else if (strcmp(request_type, "GET") == 0 && strcmp(route, "/social") == 0) {
         get_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "POST") == 0 && strncmp(route, "/social/", 8) == 0) {
@@ -785,6 +813,11 @@ void process_route(struct Socket *socket, char *http_header, char *body, size_t 
         post_to_local(socket, http_header, body, body_len, route_with_query, "5000");
     } else if (strcmp(request_type, "DELETE") == 0 && strstr(route, "/me/") != NULL) {
         delete_to_local(socket, http_header, body, route_with_query, "5000");
+    } else if (strcmp(request_type, "PUT") == 0 && strstr(route, "/me/") != NULL) {
+        /* Per-agent memory fact edits hit PUT /me/agents/<id>/memory/facts/
+         * <fact_id>. Without this branch the if/else-if chain falls through
+         * to the 404 catch-all. Mirrors the GET/POST/DELETE /me/ rules. */
+        put_to_local(socket, http_header, body, route_with_query, "5000");
     } else if (strcmp(request_type, "GET") == 0 && strncmp(route, "/team/", 6) == 0) {
         /* Team chat surfaces (chat page + whoami) — public-ish, gated
          * by per-account team password held in session. */
