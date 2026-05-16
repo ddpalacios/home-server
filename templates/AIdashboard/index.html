@@ -20187,7 +20187,10 @@
           display: none;
           align-items: center;
           justify-content: center;
-          z-index: 100;
+          /* High z-index so the picker sits above the agent workspace
+             — at the old z-index:100 it rendered behind workspace
+             content and the modal card was invisible. */
+          z-index: 9999;
           padding: 16px;
         }
         .kbs-modal.is-open { display: flex; }
