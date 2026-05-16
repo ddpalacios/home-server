@@ -20243,6 +20243,29 @@
           justify-content: flex-end;
           gap: 8px;
         }
+
+        /* Drive / extracted-content modal — dark mode. The modal
+           markup is hardcoded light; without these the card renders
+           white on the dark dashboard and the backdrop goes opaque
+           (an earlier rule forced .kbs-modal to a solid surface).
+           These mirror the warehouse picker so the two modals match. */
+        [data-theme="dark"] .kbs-modal {
+          background: rgba(0, 0, 0, 0.6) !important;
+          border-color: transparent !important;
+        }
+        [data-theme="dark"] .kbs-modal-card { background: #111113; }
+        [data-theme="dark"] .kbs-modal-header,
+        [data-theme="dark"] .kbs-drive-tabs { border-bottom-color: #27272a; }
+        [data-theme="dark"] .kbs-modal-foot { border-top-color: #27272a; }
+        [data-theme="dark"] .kbs-modal-title,
+        [data-theme="dark"] .kbs-drive-item-name { color: #fafafa; }
+        [data-theme="dark"] .kbs-modal-body { color: #d4d4d8; }
+        [data-theme="dark"] .kbs-modal-close:hover {
+          background: #27272a; color: #fafafa;
+        }
+        [data-theme="dark"] .kbs-drive-tab:hover,
+        [data-theme="dark"] .kbs-drive-tab.is-active { color: #fafafa; }
+        [data-theme="dark"] .kbs-drive-item.is-selected { background: #1e293b; }
       </style>
 
       <!-- ─────────── Knowledge Base · Train from URL ─────────── -->
