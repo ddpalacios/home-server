@@ -96,6 +96,16 @@
 
   /* Table */
   .doc-table-wrap { border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  /* Multi-select + bulk delete for warehouse records. */
+  .th-check { width:38px; text-align:center !important; }
+  .td-check { width:38px; text-align:center; }
+  .doc-check, #docCheckAll { width:15px; height:15px; cursor:pointer; accent-color:var(--accent); }
+  .doc-bulk-bar {
+    display:flex; align-items:center; gap:12px;
+    margin:0 0 12px; padding:9px 14px; border-radius:10px;
+    background:var(--soft); border:1px solid var(--line);
+  }
+  .doc-bulk-bar #docBulkCount { font-size:13px; font-weight:600; flex:1; }
   table { width:100%; border-collapse:collapse; font-size:13.5px; }
   thead th {
     text-align:left; padding:11px 14px; font-size:11px; font-weight:700;
@@ -657,17 +667,23 @@
 
     <div class="uploads" id="uploads"></div>
 
+    <div class="doc-bulk-bar" id="docBulkBar" hidden>
+      <span id="docBulkCount">0 selected</span>
+      <button type="button" class="btn btn-danger" id="docBulkDelete">Delete selected</button>
+      <button type="button" class="btn" id="docBulkClear">Clear</button>
+    </div>
     <div class="doc-table-wrap">
       <table>
         <thead>
           <tr>
+            <th class="th-check"><input type="checkbox" id="docCheckAll" aria-label="Select all documents"></th>
             <th>Name</th><th>Format</th><th>Size</th><th>Added</th><th>Status</th>
             <th>Access</th>
             <th class="th-act">Preview</th>
           </tr>
         </thead>
         <tbody id="docBody">
-          <tr><td colspan="7" class="empty">Loading…</td></tr>
+          <tr><td colspan="8" class="empty">Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -933,6 +949,7 @@
   }
 
   var allDocs = [];
+  var selectedDocs = new Set();   // document_ids ticked for bulk delete
 
   // ─── Quota ───
   function renderQuota(used, quota) {
@@ -963,7 +980,7 @@
     });
     var body = $("docBody");
     if (!rows.length) {
-      body.innerHTML = '<tr><td colspan="7" class="empty">' +
+      body.innerHTML = '<tr><td colspan="8" class="empty">' +
         (allDocs.length ? "No documents match your filters."
                         : "No documents yet — drop a file above to get started.") +
         "</td></tr>";
@@ -976,6 +993,7 @@
       if (d.is_live_source) {
         return '<tr class="doc-row doc-row-live" data-id="' +
           esc(d.document_id) + '" data-live="1">' +
+          '<td class="td-check"></td>' +
           '<td><span class="doc-name">📅 ' + esc(d.name) +
             ' <span class="live-badge">Live</span></span></td>' +
           '<td><span class="doc-fmt">Live source</span></td>' +
@@ -993,6 +1011,9 @@
                : "Preview available once processing finishes") + '"' +
         (ready ? "" : " disabled") + ">" + EYE_SVG + "</button>";
       return '<tr class="doc-row" data-id="' + esc(d.document_id) + '">' +
+        '<td class="td-check"><input type="checkbox" class="doc-check" data-check="' +
+          esc(d.document_id) + '"' +
+          (selectedDocs.has(d.document_id) ? " checked" : "") + "></td>" +
         '<td><span class="doc-name">' + esc(d.name) + "</span></td>" +
         '<td><span class="doc-fmt">' + esc(d.format) + "</span></td>" +
         "<td>" + fmtBytes(d.size_bytes) + "</td>" +
@@ -1013,6 +1034,38 @@
         if (!b.disabled) openPreviewModal(b.dataset.eye);
       });
     });
+    // Row checkboxes — a click toggles selection without opening the
+    // document detail view.
+    Array.prototype.forEach.call(body.querySelectorAll(".doc-check"), function (c) {
+      c.addEventListener("click", function (e) { e.stopPropagation(); });
+      c.addEventListener("change", function () {
+        if (c.checked) selectedDocs.add(c.dataset.check);
+        else selectedDocs.delete(c.dataset.check);
+        syncDocBulkBar();
+      });
+    });
+    syncDocBulkBar();
+  }
+  // Reflect the selection count in the bulk bar; also keep the
+  // header "select all" checkbox in sync with the visible rows.
+  function syncDocBulkBar() {
+    var bar = $("docBulkBar");
+    var n = selectedDocs.size;
+    if (n) {
+      bar.hidden = false;
+      $("docBulkCount").textContent = n + (n === 1 ? " document selected"
+                                                   : " documents selected");
+      $("docBulkDelete").textContent = "Delete " + n;
+    } else {
+      bar.hidden = true;
+    }
+    var boxes = document.querySelectorAll(".doc-check");
+    var checked = document.querySelectorAll(".doc-check:checked");
+    var all = $("docCheckAll");
+    if (all) {
+      all.checked = boxes.length > 0 && checked.length === boxes.length;
+      all.indeterminate = checked.length > 0 && checked.length < boxes.length;
+    }
   }
 
   function refreshFormatFilter() {
@@ -1043,7 +1096,7 @@
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
         if (!d) { $("docBody").innerHTML =
-          '<tr><td colspan="7" class="empty">Couldn\'t load documents.</td></tr>'; return; }
+          '<tr><td colspan="8" class="empty">Couldn\'t load documents.</td></tr>'; return; }
         allDocs = d.documents || [];
         if (d.visibility_migrated_count > 0) {
           toast(d.visibility_migrated_count + " existing document" +
@@ -1063,7 +1116,7 @@
       })
       .catch(function () {
         $("docBody").innerHTML =
-          '<tr><td colspan="7" class="empty">Network error.</td></tr>';
+          '<tr><td colspan="8" class="empty">Network error.</td></tr>';
       });
   }
 
@@ -2604,6 +2657,54 @@
   $("searchInput").addEventListener("input", renderList);
   $("formatFilter").addEventListener("change", renderList);
   $("sortSel").addEventListener("change", renderList);
+
+  // ─── Multi-select + bulk delete ───
+  $("docCheckAll").addEventListener("change", function () {
+    var on = this.checked;
+    Array.prototype.forEach.call(document.querySelectorAll(".doc-check"),
+      function (c) {
+        c.checked = on;
+        if (on) selectedDocs.add(c.dataset.check);
+        else selectedDocs.delete(c.dataset.check);
+      });
+    syncDocBulkBar();
+  });
+  $("docBulkClear").addEventListener("click", function () {
+    selectedDocs.clear();
+    Array.prototype.forEach.call(document.querySelectorAll(".doc-check"),
+      function (c) { c.checked = false; });
+    syncDocBulkBar();
+  });
+  $("docBulkDelete").addEventListener("click", function () {
+    var ids = Array.from(selectedDocs);
+    if (!ids.length) return;
+    if (!confirm("Permanently delete " + ids.length + " document" +
+        (ids.length === 1 ? "" : "s") + " from your warehouse?\n\n" +
+        "This can't be undone.")) return;
+    var btn = $("docBulkDelete");
+    btn.disabled = true;
+    var done = 0, failed = 0;
+    function step(i) {
+      if (i >= ids.length) {
+        btn.disabled = false;
+        selectedDocs.clear();
+        toast(failed
+          ? (done + " deleted, " + failed + " failed.")
+          : (done + " document" + (done === 1 ? "" : "s") + " deleted."));
+        loadList();
+        return;
+      }
+      btn.textContent = "Deleting " + (i + 1) + "/" + ids.length + "…";
+      fetch("/api/warehouse/documents/" + encodeURIComponent(ids[i]), {
+        method: "POST", credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ op: "delete" }),
+      }).then(function (r) { if (r.ok) done++; else failed++; })
+        .catch(function () { failed++; })
+        .then(function () { step(i + 1); });
+    }
+    step(0);
+  });
 
   // ─── API access panel ───
   function fmtTokenDate(iso) {
