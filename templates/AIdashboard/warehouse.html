@@ -752,6 +752,7 @@
     <div class="detail-actions">
       <button type="button" class="btn" id="dEdit">Edit details</button>
       <button type="button" class="btn" id="dReplace">Replace file</button>
+      <button type="button" class="btn" id="dMove">Move to folder</button>
       <button type="button" class="btn btn-danger" id="dDelete">Delete</button>
       <input type="file" id="dReplaceInput" style="display:none;">
     </div>
@@ -1075,7 +1076,8 @@
         (ready ? "Preview contents"
                : "Preview available once processing finishes") + '"' +
         (ready ? "" : " disabled") + ">" + EYE_SVG + "</button>";
-      return '<tr class="doc-row" data-id="' + esc(d.document_id) + '">' +
+      return '<tr class="doc-row" draggable="true" data-id="' +
+        esc(d.document_id) + '">' +
         '<td class="td-check"><input type="checkbox" class="doc-check" data-check="' +
           esc(d.document_id) + '"' +
           (selectedDocs.has(d.document_id) ? " checked" : "") + "></td>" +
@@ -1095,6 +1097,10 @@
       // The live-source (calendar) row has no document detail view.
       if (tr.dataset.live) return;
       tr.addEventListener("click", function () { openDetail(tr.dataset.id); });
+      tr.addEventListener("dragstart", function (e) {
+        e.dataTransfer.setData("text/document-id", tr.dataset.id);
+        e.dataTransfer.effectAllowed = "move";
+      });
     });
     Array.prototype.forEach.call(body.querySelectorAll(".eye-btn"), function (b) {
       b.addEventListener("click", function (e) {
@@ -1246,10 +1252,77 @@
     pane.appendChild(newBtn);
   }
   // Stubs replaced in Task 4. Defined now so Task 3 is testable.
-  window.__whFolderMenu = window.__whFolderMenu || function () {
-    alert("Folder actions arrive in the next update.");
+  window.__whFolderMenu = function (anchor, path) {
+    var leaf = path.split("/").pop();
+    var choice = prompt(
+      'Folder "' + path + '"\n\n' +
+      'Type "rename" to rename it, or "delete" to delete it ' +
+      "(documents move to root):");
+    choice = (choice || "").trim().toLowerCase();
+    if (choice === "rename") {
+      var nn = (prompt("New name for this folder:", leaf) || "").trim();
+      if (!nn) return;
+      var parts = path.split("/"); parts[parts.length - 1] = nn;
+      fetch("/api/warehouse/folders", {
+        method: "POST", credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ op: "rename", path: path,
+                               new_path: parts.join("/") }),
+      }).then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          if (j) {
+            toast("Folder renamed (" + (j.affected || 0) + " documents).");
+            if (activeFolder === path || activeFolder.indexOf(path + "/") === 0)
+              activeFolder = "";
+            loadList();
+          } else { alert("Couldn't rename the folder."); }
+        })
+        .catch(function () { alert("Network error."); });
+    } else if (choice === "delete") {
+      var alsoDel = confirm(
+        'Delete folder "' + path + '".\n\n' +
+        "OK = also DELETE the documents in it (permanent).\n" +
+        "Cancel = keep the documents (they move to root).");
+      fetch("/api/warehouse/folders", {
+        method: "POST", credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ op: "delete", path: path,
+                               delete_documents: alsoDel }),
+      }).then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          if (j) {
+            toast(alsoDel
+              ? ((j.affected || 0) + " documents deleted.")
+              : "Folder removed; documents moved to root.");
+            if (activeFolder === path || activeFolder.indexOf(path + "/") === 0)
+              activeFolder = "";
+            loadList();
+          } else { alert("Couldn't delete the folder."); }
+        })
+        .catch(function () { alert("Network error."); });
+    }
   };
-  window.__whMoveDoc = window.__whMoveDoc || function () {};
+  window.__whMoveDoc = function (docId, folderPath) {
+    fetch("/api/warehouse/documents/" + encodeURIComponent(docId), {
+      method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ op: "update_meta",
+                             folder_path: folderPath || "" }),
+    }).then(function (r) {
+        return r.json().catch(function () { return {}; })
+          .then(function (j) { return { ok: r.ok, j: j }; });
+      })
+      .then(function (res) {
+        if (res.ok) {
+          toast("Moved to " + (folderPath || "root") + ".");
+          loadList();
+        } else {
+          alert("Couldn't move: " + ((res.j && res.j.message) ||
+            (res.j && res.j.error) || "error"));
+        }
+      })
+      .catch(function () { alert("Network error."); });
+  };
   window.__whNewFolder = function () {
     var name = (prompt("New folder name (use / for nesting):") || "").trim();
     if (!name) return;
@@ -1385,6 +1458,11 @@
 
     renderAgentScope(d);
     $("dDelete").onclick = function () { askDelete(d); };
+    $("dMove").onclick = function () {
+      var dest = (prompt("Move to folder (blank = root, / to nest):",
+                          d.folder_path || "") || "").trim();
+      window.__whMoveDoc(d.document_id, dest);
+    };
     $("dRetry").onclick = function () {
       fetch("/api/warehouse/documents/" + encodeURIComponent(id) + "/reprocess", {
         method: "POST", credentials: "same-origin",
