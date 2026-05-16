@@ -36581,12 +36581,17 @@
         // duplicate, move, delete) are hidden for them; conversely
         // "Remove from agent" is hidden for every non-warehouse row.
         var isWhseRow = !!(row && row.type === "warehouse");
+        // "Copy to warehouse" applies to per-agent Drive-backed rows
+        // (sheets / docs) — re-fetched from Drive into the warehouse.
+        var canCopyToWhse = !!(row && (row.type === "sheet" || row.type === "doc"));
         menuEl.querySelectorAll("[data-kb-row-action]").forEach(function (b) {
           var act = b.dataset.kbRowAction;
           if (isWhseRow) {
             b.hidden = !(act === "preview" || act === "remove_from_agent");
           } else if (act === "remove_from_agent") {
             b.hidden = true;
+          } else if (act === "copy_to_warehouse") {
+            b.hidden = !canCopyToWhse;
           } else {
             b.hidden = false;
           }
@@ -36627,6 +36632,31 @@
           var action = btn.dataset.kbRowAction;
           var row = menuState.row;
           if (!row) return;
+          if (action === "copy_to_warehouse") {
+            if (!confirm('Copy "' + (row.title || row.id) +
+                '" to the warehouse?\n\nIt stays in this agent’s KB. ' +
+                'A shared copy is added to the warehouse so other ' +
+                'agents can reference it.')) return;
+            fetch("/api/warehouse/copy-from-kb", {
+              method: "POST", credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ source_id: row.id }),
+            }).then(function (r) {
+                return r.json().catch(function () { return {}; })
+                  .then(function (j) { return { ok: r.ok, j: j }; });
+              })
+              .then(function (res) {
+                if (res.ok) {
+                  if (typeof toast === "function") toast("Copied to the warehouse.");
+                  else alert("Copied to the warehouse.");
+                } else {
+                  alert("Couldn't copy: " + ((res.j && res.j.message) ||
+                    (res.j && res.j.error) || "error"));
+                }
+              })
+              .catch(function () { alert("Network error."); });
+            return;
+          }
           if (action === "remove_from_agent") {
             var rfaAgent = window.__activeAgent;
             if (!rfaAgent || !rfaAgent.id || !row.id) return;
@@ -53169,7 +53199,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-15-followup-steps"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-15-calendar-detect"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
@@ -53492,6 +53522,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
   <button type="button" data-kb-row-action="preview" role="menuitem">Preview</button>
   <button type="button" data-kb-row-action="duplicate" role="menuitem">Duplicate</button>
   <button type="button" data-kb-row-action="move" role="menuitem" data-kb-move-target="">Move to other KB</button>
+  <button type="button" data-kb-row-action="copy_to_warehouse" role="menuitem" hidden>📦 Copy to warehouse</button>
   <button type="button" data-kb-row-action="delete" role="menuitem" style="color:#b91c1c;">Delete</button>
   <button type="button" data-kb-row-action="remove_from_agent" role="menuitem" hidden style="color:#b91c1c;">Remove from agent</button>
 </div>
