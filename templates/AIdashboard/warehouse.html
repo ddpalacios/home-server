@@ -93,6 +93,20 @@
     padding:8px 10px; border:1px solid var(--line); border-radius:9px;
     font:inherit; font-size:13px; background:#fff; cursor:pointer;
   }
+  .tb-refresh {
+    margin-left:auto; padding:8px 12px; border:1px solid var(--line);
+    border-radius:9px; font:inherit; font-size:13px; font-weight:600;
+    background:#fff; cursor:pointer; display:inline-flex; align-items:center;
+    gap:6px; color:var(--fg);
+  }
+  .tb-refresh:hover { border-color:var(--accent); color:var(--accent); }
+  .tb-refresh:disabled { opacity:.6; cursor:default; }
+  .tb-refresh-icon { display:inline-block; font-size:15px; line-height:1; }
+  .tb-refresh.is-spinning .tb-refresh-icon {
+    animation:wh-refresh-spin 0.7s linear infinite;
+  }
+  @keyframes wh-refresh-spin { to { transform:rotate(360deg); } }
+  [data-theme="dark"] .tb-refresh { background:#161a22; }
 
   /* Table */
   .wh-list-layout { display:flex; gap:16px; align-items:flex-start; }
@@ -710,6 +724,10 @@
         <option value="name">Name A–Z</option>
         <option value="size">Largest first</option>
       </select>
+      <button type="button" id="whRefreshBtn" class="tb-refresh"
+              title="Refresh — pull new and updated documents">
+        <span class="tb-refresh-icon" aria-hidden="true">↻</span> Refresh
+      </button>
     </div>
 
     <div class="uploads" id="uploads"></div>
@@ -1009,6 +1027,52 @@
 
   var allDocs = [];
   var selectedDocs = new Set();   // document_ids ticked for bulk delete
+  var whLastSync = "";            // server_time of the last successful load
+
+  // Refresh — incremental: keeps the cached allDocs visible, asks the
+  // server only for documents changed since the last sync, merges
+  // them in, and prunes any that were deleted. Fast and non-blanking.
+  function refreshWarehouse() {
+    var btn = document.getElementById("whRefreshBtn");
+    if (btn) { btn.disabled = true; btn.classList.add("is-spinning"); }
+    var url = "/api/warehouse/documents";
+    if (whLastSync) url += "?since=" + encodeURIComponent(whLastSync);
+    fetch(url, { credentials: "same-origin", cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d) return;
+        if (d.incremental) {
+          // Merge changed docs into the cache, keyed by document_id.
+          var byId = {};
+          allDocs.forEach(function (x) { byId[x.document_id] = x; });
+          (d.documents || []).forEach(function (x) {
+            byId[x.document_id] = x;
+          });
+          // Prune anything no longer in the warehouse.
+          var live = {};
+          (d.all_document_ids || []).forEach(function (id) { live[id] = 1; });
+          allDocs = Object.keys(byId)
+            .filter(function (id) {
+              return live[id] || (byId[id] && byId[id].is_live_source);
+            })
+            .map(function (id) { return byId[id]; });
+          allDocs.sort(function (a, b) {
+            return (b.uploaded_at || "").localeCompare(a.uploaded_at || "");
+          });
+        } else {
+          allDocs = d.documents || [];
+        }
+        if (d.server_time) whLastSync = d.server_time;
+        if (d.used_bytes != null) renderQuota(d.used_bytes, d.quota_bytes || 0);
+        refreshFormatFilter();
+        renderList();
+        loadFolders();
+      })
+      .catch(function () { toast("Couldn't refresh — try again."); })
+      .then(function () {
+        if (btn) { btn.disabled = false; btn.classList.remove("is-spinning"); }
+      });
+  }
   var activeFolder = "";          // "" = All docs
   var folderPaths = [];           // every folder path, from /folders
 
@@ -1414,6 +1478,7 @@
         if (!d) { $("docBody").innerHTML =
           '<tr><td colspan="9" class="empty">Couldn\'t load documents.</td></tr>'; return; }
         allDocs = d.documents || [];
+        if (d.server_time) whLastSync = d.server_time;
         if (d.visibility_migrated_count > 0) {
           toast(d.visibility_migrated_count + " existing document" +
             (d.visibility_migrated_count > 1 ? "s were" : " was") +
@@ -2978,6 +3043,7 @@
   });
 
   // ─── Wire toolbar ───
+  $("whRefreshBtn").addEventListener("click", refreshWarehouse);
   $("searchInput").addEventListener("input", renderList);
   $("formatFilter").addEventListener("change", renderList);
   $("sortSel").addEventListener("change", renderList);
