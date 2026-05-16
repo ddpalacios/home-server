@@ -21,9 +21,27 @@
     color:var(--fg); background:#fff;
   }
   .wrap { max-width:1100px; margin:0 auto; padding:48px 32px 80px; }
-  /* Ask-the-warehouse mode: go full-width like the team brain chat. */
-  body.ask-mode .wrap { max-width:none; padding:48px 28px 24px; }
-  body.ask-mode .ask-thread { max-height:calc(100vh - 300px); }
+  /* Ask-the-warehouse mode: full-height chat — the messages fill the
+     space and the input row is pinned to the bottom, like the team
+     brain chat. The .wrap becomes a flex column filling the viewport;
+     #askView → .ask-layout → .ask-main flex down to it; .ask-thread
+     grows, .ask-input-row stays at the bottom. */
+  body.ask-mode .wrap {
+    max-width:none; padding:24px 28px 20px; box-sizing:border-box;
+    min-height:100vh; display:flex; flex-direction:column;
+  }
+  body.ask-mode #askView {
+    flex:1; min-height:0; display:flex; flex-direction:column;
+  }
+  body.ask-mode .ask-layout {
+    flex:1; min-height:0; align-items:stretch;
+  }
+  body.ask-mode .ask-main {
+    display:flex; flex-direction:column; min-height:0;
+  }
+  body.ask-mode .ask-thread {
+    flex:1; min-height:0; max-height:none;
+  }
   .page-h h1 { font-size:26px; font-weight:700; margin:0 0 4px; letter-spacing:-.01em; }
   .page-h p  { margin:0; color:var(--sub); font-size:14.5px; }
   .quota-row { margin:18px 0 8px; font-size:13px; color:var(--sub); }
@@ -89,6 +107,13 @@
   tbody tr.doc-row { cursor:pointer; transition:background .12s ease; }
   tbody tr.doc-row:hover { background:#f8fafc; }
   .doc-name { font-weight:600; color:var(--fg); }
+  .live-badge {
+    display:inline-block; font-size:9.5px; font-weight:700; letter-spacing:.05em;
+    text-transform:uppercase; padding:1px 6px; border-radius:999px;
+    background:#e7f4ec; color:#0a7a38; vertical-align:middle; margin-left:4px;
+  }
+  [data-theme="dark"] .live-badge { background:#16331f; color:#6fcf97; }
+  .doc-row-live { cursor:default; }
   .doc-fmt {
     display:inline-block; font-size:10.5px; font-weight:700; letter-spacing:.04em;
     text-transform:uppercase; padding:2px 7px; border-radius:5px;
@@ -934,6 +959,22 @@
       return;
     }
     body.innerHTML = rows.map(function (d) {
+      // Live source (the connected Google Calendar) — a special row:
+      // no preview, no size, no version. Shows the calendar it's
+      // wired to. Not clickable into a document detail view.
+      if (d.is_live_source) {
+        return '<tr class="doc-row doc-row-live" data-id="' +
+          esc(d.document_id) + '" data-live="1">' +
+          '<td><span class="doc-name">📅 ' + esc(d.name) +
+            ' <span class="live-badge">Live</span></span></td>' +
+          '<td><span class="doc-fmt">Live source</span></td>' +
+          '<td class="muted">—</td>' +
+          '<td class="muted">' + esc(d.calendar_id || "") + "</td>" +
+          '<td><span class="doc-fmt">Always current</span></td>' +
+          "<td>" + visBadge(d) + "</td>" +
+          '<td class="td-act"></td>' +
+          "</tr>";
+      }
       var ready = d.status === "ready";
       var eye = '<button type="button" class="eye-btn" data-eye="' +
         esc(d.document_id) + '" title="' +
@@ -951,6 +992,8 @@
         "</tr>";
     }).join("");
     Array.prototype.forEach.call(body.querySelectorAll(".doc-row"), function (tr) {
+      // The live-source (calendar) row has no document detail view.
+      if (tr.dataset.live) return;
       tr.addEventListener("click", function () { openDetail(tr.dataset.id); });
     });
     Array.prototype.forEach.call(body.querySelectorAll(".eye-btn"), function (b) {
