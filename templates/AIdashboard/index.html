@@ -2551,6 +2551,28 @@
 
     /* ─── KB table (in #activity workspace + #knowledge route) ─── */
     [data-theme="dark"] .kb-table-wrap,
+    .whse-pick-bg { position:fixed; inset:0; background:rgba(0,0,0,.45);
+      display:none; align-items:center; justify-content:center; z-index:9999; }
+    .whse-pick-bg.is-open { display:flex; }
+    .whse-pick { background:var(--bg,#fff); color:var(--fg,#111);
+      border-radius:12px; width:min(560px,92vw); max-height:82vh;
+      display:flex; flex-direction:column; overflow:hidden; }
+    .whse-pick-h { padding:16px 18px 8px; font-size:15px; font-weight:600; }
+    .whse-pick-sub { padding:0 18px 10px; font-size:12px; color:var(--sub,#6b7280); }
+    .whse-pick-list { overflow-y:auto; padding:4px 18px; flex:1; }
+    .whse-pick-item { display:flex; align-items:center; gap:10px;
+      padding:9px 0; border-bottom:1px solid var(--border,#eee); }
+    .whse-pick-item.is-disabled { opacity:.5; }
+    .whse-pick-item-main { flex:1; min-width:0; }
+    .whse-pick-item-name { font-size:13px; }
+    .whse-pick-item-meta { font-size:11px; color:var(--sub,#6b7280); }
+    .whse-pick-foot { padding:12px 18px; display:flex; justify-content:flex-end;
+      gap:8px; border-top:1px solid var(--border,#eee); }
+    .whse-pick-btn { padding:8px 14px; font-size:13px; border-radius:8px;
+      border:1px solid var(--border,#e5e7eb); background:transparent;
+      color:var(--fg,#111); cursor:pointer; }
+    .whse-pick-btn.is-primary { background:var(--accent,#2563eb); color:#fff;
+      border-color:var(--accent,#2563eb); }
     .whse-kb-host { margin: 8px 0 4px; }
     .whse-kb-head { display:flex; align-items:center; justify-content:space-between;
       gap:12px; margin-bottom:10px; flex-wrap:wrap; }
@@ -34812,13 +34834,126 @@
     // ─────── Unified KB table (Manage knowledge tab) ───────
     // Fetches /kb/sources + /knowledege in parallel, unifies into a
     // single row schema, and renders a sortable / filterable table.
-    // Picker is implemented in Task 6. Temporary stub so the panel's
-    // Add button does not throw before that task lands.
-    if (typeof window.__openWhseKbPicker !== "function") {
-      window.__openWhseKbPicker = function () {
-        alert("The warehouse picker is not wired yet.");
+    // ─── Add-from-warehouse picker ───
+    // window.__openWhseKbPicker(agent, onAdded) — lists warehouse docs
+    // the agent can still add (eligible by visibility, not already
+    // referenced) and POSTs the selection to /me/agents/<id>/kb-documents.
+    (function () {
+      var bg = document.getElementById("whsePickBg");
+      if (!bg) return;
+      var listEl = document.getElementById("whsePickList");
+      var subEl = document.getElementById("whsePickSub");
+      var addBtn = document.getElementById("whsePickAdd");
+      var cancelBtn = document.getElementById("whsePickCancel");
+      var ctx = { agent: null, onAdded: null, selected: new Set() };
+
+      function close() {
+        bg.classList.remove("is-open");
+        ctx = { agent: null, onAdded: null, selected: new Set() };
+        listEl.innerHTML = "";
+      }
+      cancelBtn.addEventListener("click", close);
+      bg.addEventListener("click", function (e) { if (e.target === bg) close(); });
+
+      function syncAddBtn() {
+        addBtn.textContent = ctx.selected.size
+          ? "Add " + ctx.selected.size : "Add";
+        addBtn.disabled = ctx.selected.size === 0;
+      }
+
+      window.__openWhseKbPicker = async function (agent, onAdded) {
+        ctx.agent = agent;
+        ctx.onAdded = onAdded;
+        ctx.selected = new Set();
+        var isCustomer = (agent.type !== "internal");
+        subEl.textContent = isCustomer
+          ? "This is a customer-facing agent — only customer-facing documents can be added."
+          : "Internal agent — any document can be added.";
+        listEl.innerHTML = '<div class="whse-pick-item-meta">Loading…</div>';
+        bg.classList.add("is-open");
+        syncAddBtn();
+
+        var all = [];
+        var have = [];
+        try {
+          var r1 = await fetch("/api/warehouse/documents",
+                               { credentials: "same-origin" });
+          if (r1.ok) {
+            var d1 = await r1.json();
+            all = (d1 && Array.isArray(d1.documents)) ? d1.documents : [];
+          }
+          var r2 = await fetch("/me/agents/" + encodeURIComponent(agent.id) +
+                               "/kb-documents", { credentials: "same-origin" });
+          if (r2.ok) {
+            var d2 = await r2.json();
+            have = ((d2 && d2.documents) || []).map(function (x) {
+              return x.document_id;
+            });
+          }
+        } catch (_) {}
+
+        var haveSet = new Set(have);
+        listEl.innerHTML = "";
+        var shown = 0;
+        all.forEach(function (doc) {
+          var vis = doc.visibility || "internal";
+          var already = haveSet.has(doc.document_id);
+          var blocked = isCustomer && vis !== "customer_facing";
+          var ready = doc.status === "ready";
+          var item = document.createElement("div");
+          item.className = "whse-pick-item" +
+            ((already || blocked || !ready) ? " is-disabled" : "");
+          var cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.disabled = already || blocked || !ready;
+          cb.addEventListener("change", function () {
+            if (cb.checked) ctx.selected.add(doc.document_id);
+            else ctx.selected.delete(doc.document_id);
+            syncAddBtn();
+          });
+          var main = document.createElement("div");
+          main.className = "whse-pick-item-main";
+          var nm = document.createElement("div");
+          nm.className = "whse-pick-item-name";
+          nm.textContent = doc.name || doc.filename || doc.document_id;
+          var meta = document.createElement("div");
+          meta.className = "whse-pick-item-meta";
+          var note = already ? " · already added"
+            : blocked ? " · not available — internal-only"
+            : !ready ? " · still processing" : "";
+          meta.textContent = (doc.format || "") + " · " +
+            (vis === "customer_facing" ? "Customer-facing" : "Internal") + note;
+          main.appendChild(nm);
+          main.appendChild(meta);
+          item.appendChild(cb);
+          item.appendChild(main);
+          listEl.appendChild(item);
+          shown++;
+        });
+        if (!shown) {
+          listEl.innerHTML =
+            '<div class="whse-pick-item-meta">Your warehouse is empty.</div>';
+        }
       };
-    }
+
+      addBtn.addEventListener("click", function () {
+        if (!ctx.agent || !ctx.selected.size) return;
+        var ids = Array.from(ctx.selected);
+        var ag = ctx.agent;
+        var cb = ctx.onAdded;
+        addBtn.disabled = true;
+        fetch("/me/agents/" + encodeURIComponent(ag.id) + "/kb-documents", {
+          method: "POST", credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ op: "add", document_ids: ids }),
+        }).then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (res) {
+            if (res) { close(); if (cb) cb(); }
+            else { addBtn.disabled = false; alert("Couldn't add documents."); }
+          })
+          .catch(function () { addBtn.disabled = false; alert("Network error."); });
+      });
+    })();
 
     // ─── Agent warehouse-KB panel ───
     // One host per answers-card (client / internal). Each renders the
@@ -52721,7 +52856,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
         // form_editor.js edits without the browser silently serving
         // a stale copy. Tied to a build counter that bumps whenever
         // we ship changes — keep nudging when the editor changes.
-        s.src = "/dashboard/static/form_editor.js?v=20260514l";
+        s.src = "/dashboard/static/form_editor.js?v=20260515darkmode";
         s.onload = resolve;
         s.onerror = function () { reject(new Error("form_editor load failed")); };
         document.head.appendChild(s);
@@ -53979,6 +54114,17 @@ window.openRunFlowPicker = async function (leadIds, opts) {
       <button type="button" class="wgt-btn-secondary" data-kbs-drive-close>Cancel</button>
       <button type="button" class="wgt-btn-primary" id="kbsDriveImport" disabled>Import selected</button>
     </footer>
+  </div>
+</div>
+<div class="whse-pick-bg" id="whsePickBg">
+  <div class="whse-pick" role="dialog" aria-modal="true">
+    <div class="whse-pick-h">Add documents from your warehouse</div>
+    <div class="whse-pick-sub" id="whsePickSub"></div>
+    <div class="whse-pick-list" id="whsePickList"></div>
+    <div class="whse-pick-foot">
+      <button type="button" class="whse-pick-btn" id="whsePickCancel">Cancel</button>
+      <button type="button" class="whse-pick-btn is-primary" id="whsePickAdd">Add</button>
+    </div>
   </div>
 </div>
 </body>
