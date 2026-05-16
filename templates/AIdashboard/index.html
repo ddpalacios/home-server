@@ -818,6 +818,18 @@
       display: block;
       background: #fff;
     }
+    .app-body #approvals.is-active {
+      padding: 0;
+      overflow: hidden;
+      height: calc(100vh - var(--topbar-h));
+    }
+    #approvals > #approvalsFrame {
+      width: 100%;
+      height: calc(100vh - var(--topbar-h));
+      border: 0;
+      display: block;
+      background: var(--bg-base, #f7f9fc);
+    }
     body.is-outreach-fullbleed #outreach.is-active > div,
     body.is-outreach-fullbleed #outreachAutoMount,
     body.is-outreach-fullbleed #flowBuilderRoot {
@@ -2510,6 +2522,32 @@
     [data-theme="dark"] .answers-sub,
     [data-theme="dark"] .answers-sub-label,
     [data-theme="dark"] .answers-section { color: var(--text-secondary); }
+
+    /* Memory tab — dark variant */
+    [data-theme="dark"] .mem-row {
+      background: var(--bg-elevated);
+      border-color: var(--border-default);
+    }
+    [data-theme="dark"] .mem-row-ro { background: var(--bg-surface); }
+    [data-theme="dark"] .mem-fact-input {
+      background: var(--bg-input);
+      color: var(--text-primary);
+      border-color: var(--border-default);
+    }
+    [data-theme="dark"] .mem-sum-text { color: var(--text-primary); }
+    [data-theme="dark"] .mem-btn {
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      border-color: var(--border-default);
+    }
+    [data-theme="dark"] .mem-btn:hover { background: var(--bg-elevated); }
+    [data-theme="dark"] .mem-btn-del {
+      color: #fca5a5;
+      border-color: rgba(248, 113, 113, 0.4);
+    }
+    [data-theme="dark"] .mem-btn-del:hover { background: rgba(248, 113, 113, 0.12); }
+    [data-theme="dark"] .mem-meta { color: var(--text-tertiary); }
+    [data-theme="dark"] .mem-empty { color: var(--text-tertiary); }
 
     /* ─── AAI inline-AI panel ─── */
     [data-theme="dark"] .aai-panel {
@@ -6553,6 +6591,69 @@
       margin: 8px 0 0;
       line-height: 1.55;
       max-width: 640px;
+    }
+
+    /* ── Memory tab (.mem-* family) — internal-agent memory panel ── */
+    .mem-list { display: flex; flex-direction: column; gap: 8px; }
+    .mem-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 10px 12px;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+    }
+    .mem-row-ro { background: #fff; }
+    .mem-fact-input {
+      flex: 1 1 240px;
+      min-width: 160px;
+      padding: 7px 10px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #0a0a0a;
+      background: #fff;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+    }
+    .mem-fact-input:focus {
+      outline: none;
+      border-color: var(--accent-primary, #4f46e5);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, .14);
+    }
+    .mem-sum-text {
+      flex: 1 1 240px;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #1e293b;
+    }
+    .mem-btn {
+      padding: 7px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      color: #1e293b;
+      background: #fff;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .mem-btn:hover { background: #f1f5f9; }
+    .mem-btn-del {
+      color: #b91c1c;
+      border-color: #fecaca;
+    }
+    .mem-btn-del:hover { background: #fef2f2; }
+    .mem-meta {
+      flex: 0 0 auto;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+    .mem-empty {
+      padding: 14px 4px;
+      font-size: 13.5px;
+      color: #94a3b8;
     }
     /* Internal variant — kept as a class hook for any future per-bot
        differentiation, but visually identical to the client variant
@@ -11121,7 +11222,12 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8l9-5 9 5v13"/><path d="M3 21h18"/><path d="M9 21v-6h6v6"/><path d="M3 8l9 5 9-5"/></svg>
           <span class="nav-tooltip">Warehouse</span>
         </button>
-        <!-- AI Drafts nav item removed — every AI reply auto-sends now. -->
+        <!-- Pending approvals — AI drafts awaiting owner review (#approvals). -->
+        <button class="app-nav-btn" type="button" data-route="approvals" aria-label="Pending approvals">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <span class="nav-tooltip">Pending approvals</span>
+          <span class="app-nav-badge" id="appApprovalsBadge" hidden>0</span>
+        </button>
 <button class="app-nav-btn" type="button" data-route="replies" aria-label="Replies" id="appRepliesNavBtn" data-admin-only>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           <span class="nav-tooltip"><span data-replies-tooltip>Replies</span></span>
@@ -12889,6 +12995,7 @@
             <nav class="home-tabs is-inline" role="tablist" aria-label="Workspace tabs">
               <button type="button" class="home-tab is-active" data-home-tab="prompt" role="tab" aria-selected="true">Prompt</button>
               <button type="button" class="home-tab" data-home-tab="manage" role="tab" aria-selected="false">Knowledge</button>
+              <button type="button" class="home-tab" data-home-tab="memory" role="tab" aria-selected="false" data-internal-only hidden>Memory</button>
               <button type="button" class="home-tab" data-home-tab="widget" role="tab" aria-selected="false">Widget</button>
             </nav>
             <div class="bot-workspace-actions">
@@ -13331,6 +13438,27 @@
                so the home view doesn't lose vertical space to chrome. -->
         </div>
         </div><!-- /.home-pane manage -->
+
+        <!-- Memory pane — per-agent memory for internal team bots only.
+             Lists facts the bot learned (editable + deletable) and
+             read-only summaries of past discussions. Populated by
+             loadAgentMemory() when the Memory tab is activated. -->
+        <div class="home-pane" data-home-pane="memory" style="grid-column: span 12;">
+          <div class="answers-card">
+            <div class="answers-head">
+              <h2 class="answers-title">What the bot remembers</h2>
+              <p class="answers-sub">Facts the bot picked up while your team chatted with it. Edit or delete anything that's wrong or out of date.</p>
+            </div>
+            <div id="memFactsList" class="mem-list"></div>
+          </div>
+          <div class="answers-card">
+            <div class="answers-head">
+              <h2 class="answers-title">Past discussions</h2>
+              <p class="answers-sub">Summaries of earlier conversations, kept so the bot has context. These are read-only.</p>
+            </div>
+            <div id="memSummaryList" class="mem-list"></div>
+          </div>
+        </div><!-- /.home-pane memory -->
 
         <!-- Widget pane — bot's website chat-bubble appearance.
              The form (`.wgt-page`) and install snippet (`#stgWidgetInstallMount`)
@@ -16913,6 +17041,18 @@
           src="about:blank"
           data-src="/dashboard/warehouse?embed=1"
           title="Warehouse"
+          loading="lazy"
+        ></iframe>
+      </section>
+
+      <!-- Pending approvals — hash-routed section (#approvals). Mounts
+           the standalone /dashboard/approvals page in an iframe. -->
+      <section id="approvals" data-route-section="approvals" hidden>
+        <iframe
+          id="approvalsFrame"
+          src="about:blank"
+          data-src="/dashboard/approvals?embed=1"
+          title="Pending approvals"
           loading="lazy"
         ></iframe>
       </section>
@@ -30618,10 +30758,101 @@
         if (name === "widget" && typeof window.__dashboardLoadRouteModule === "function") {
           window.__dashboardLoadRouteModule("settings").catch(function () {});
         }
+        // Memory tab — load per-agent memory for the active agent.
+        if (name === "memory") {
+          var memAgent = window.__activeAgent;
+          if (memAgent && memAgent.id && typeof loadAgentMemory === "function") {
+            loadAgentMemory(memAgent.id);
+          }
+        }
       }
       tabs.forEach((t) => {
         t.addEventListener("click", () => showHomeTab(t.dataset.homeTab));
       });
+
+      // Memory tab is internal-only — show it for internal agents,
+      // hide it (and never leave the user stranded on it) otherwise.
+      window.addEventListener("agent:opened", function (e) {
+        var ag = e.detail || null;
+        var memTab = document.querySelector('.home-tab[data-home-tab="memory"]');
+        if (!memTab) return;
+        var isInternal = !!(ag && ag.type === "internal");
+        memTab.hidden = !isInternal;
+        if (!isInternal && memTab.classList.contains("is-active")) {
+          showHomeTab("prompt");
+        }
+      });
+
+      // loadAgentMemory — fetch and render facts (editable/deletable)
+      // and session summaries (read-only) for an internal agent.
+      window.loadAgentMemory = async function loadAgentMemory(agentId) {
+        const factsEl = document.getElementById("memFactsList");
+        const sumsEl  = document.getElementById("memSummaryList");
+        if (!factsEl || !sumsEl) return;
+        factsEl.textContent = "Loading…"; sumsEl.textContent = "";
+        let data = { facts: [], summaries: [] };
+        try {
+          const r = await fetch("/me/agents/" + encodeURIComponent(agentId) +
+                                "/memory", { credentials: "same-origin" });
+          if (r.ok) data = await r.json();
+        } catch (_) { /* best-effort */ }
+        if (!data || !Array.isArray(data.facts)) data.facts = [];
+        if (!data || !Array.isArray(data.summaries)) data.summaries = [];
+
+        factsEl.innerHTML = "";
+        if (!data.facts.length) {
+          factsEl.innerHTML = "<div class='mem-empty'>Nothing yet — the bot " +
+                              "learns as the team chats with it.</div>";
+        }
+        data.facts.forEach(function (f) {
+          const row = document.createElement("div");
+          row.className = "mem-row";
+          const txt = document.createElement("input");
+          txt.type = "text"; txt.value = f.text || ""; txt.className = "mem-fact-input";
+          const save = document.createElement("button");
+          save.textContent = "Save"; save.className = "mem-btn";
+          save.addEventListener("click", async function () {
+            await fetch("/me/agents/" + encodeURIComponent(agentId) +
+                        "/memory/facts/" + encodeURIComponent(f.id), {
+              method: "PUT", credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ text: txt.value }),
+            });
+            loadAgentMemory(agentId);
+          });
+          const del = document.createElement("button");
+          del.textContent = "Delete"; del.className = "mem-btn mem-btn-del";
+          del.addEventListener("click", async function () {
+            if (!confirm("Delete this memory?")) return;
+            await fetch("/me/agents/" + encodeURIComponent(agentId) +
+                        "/memory/facts/" + encodeURIComponent(f.id),
+                        { method: "DELETE", credentials: "same-origin" });
+            loadAgentMemory(agentId);
+          });
+          const meta = document.createElement("span");
+          meta.className = "mem-meta";
+          meta.textContent = (f.contributor || "") + " · " +
+                             (f.updated_at || "").slice(0, 10);
+          row.appendChild(txt); row.appendChild(save);
+          row.appendChild(del); row.appendChild(meta);
+          factsEl.appendChild(row);
+        });
+
+        sumsEl.innerHTML = "";
+        if (!data.summaries.length) {
+          sumsEl.innerHTML = "<div class='mem-empty'>No past discussions yet.</div>";
+        }
+        data.summaries.forEach(function (s) {
+          const row = document.createElement("div");
+          row.className = "mem-row mem-row-ro";
+          row.innerHTML = "<div class='mem-sum-text'></div>" +
+                          "<span class='mem-meta'></span>";
+          row.querySelector(".mem-sum-text").textContent = s.text || "";
+          row.querySelector(".mem-meta").textContent =
+            (s.contributor || "") + " · " + (s.created_at || "").slice(0, 10);
+          sumsEl.appendChild(row);
+        });
+      };
 
       // Bot picker → workspace. The picker is the new landing; the
       // workspace shell only shows after the user picks a bot. Back
@@ -32502,7 +32733,16 @@
       function renderObjectiveDropdown() {
         if (!objSelect) return;
         objSelect.innerHTML = "";
+        // Objectives are scoped by agent type: customer agents get
+        // "Answer questions" / "Book a meeting", internal agents get
+        // "Answer questions" / "Deep analysis". Shared objectives are
+        // tagged agent_type "any".
+        const agent = window.__activeAgent || active;
+        const agentType = (agent && agent.type === "internal")
+          ? "internal" : "customer";
         OBJECTIVES.forEach(function (o) {
+          const at = o.agent_type || "any";
+          if (at !== "any" && at !== agentType) return;
           const opt = document.createElement("option");
           opt.value = o.id; opt.textContent = o.name;
           objSelect.appendChild(opt);
@@ -32680,6 +32920,9 @@
       });
       function paintObjective(cfg) {
         if (!objSelect) return;
+        // Rebuild the dropdown for the agent currently open so the
+        // options match its type before we select the stored value.
+        renderObjectiveDropdown();
         const obj_id = cfg.objective || "answer_only";
         objSelect.value = obj_id;
         const obj = OBJECTIVES.find(function (o) { return o.id === obj_id; });
@@ -32695,7 +32938,11 @@
         CUSTOM_FIELDS = raw.filter(function (f) {
           return f && typeof f.key === "string" && typeof f.label === "string";
         }).map(function (f) { return { key: f.key, label: f.label }; });
-        const showFields = obj_id !== "answer_only";
+        // Capture fields are lead fields — customer agents only. Internal
+        // agents (Answer questions / Deep analysis) never collect them.
+        const agentForFields = window.__activeAgent || active;
+        const isInternalAgent = agentForFields && agentForFields.type === "internal";
+        const showFields = !isInternalAgent && obj_id !== "answer_only";
         fieldsBlock.hidden = !showFields;
         if (showFields) {
           const checked = (cfg.capture_fields && cfg.capture_fields.length)
@@ -32919,6 +33166,14 @@
         // Per-session conversation history. Reset on conversation
         // reset OR when a different agent is opened.
         let chatHistory = [];
+        // Stable id for the current preview conversation so the chat
+        // server can thread multi-turn history. Regenerated whenever the
+        // conversation resets or a different agent is opened.
+        function newTestSession() {
+          return "prtest_" + Math.random().toString(36).slice(2) +
+                 Date.now().toString(36);
+        }
+        let prTestSessionId = newTestSession();
         // Track the last user message so we can attach it as the
         // "question" when the user improves a bot reply.
         let lastUserMessage = "";
@@ -33132,6 +33387,7 @@
         window.addEventListener("agent:opened", function () {
           chatHistory = [];
           lastUserMessage = "";
+          prTestSessionId = newTestSession();
           if (chatBody) {
             chatBody.innerHTML = "";
             if (chatEmpty) { chatBody.appendChild(chatEmpty); chatEmpty.style.display = ""; }
@@ -33232,26 +33488,40 @@
           addMsg("user", q);
           chatInput.value = ""; chatSend.disabled = true;
           addTypingIndicator();
-          // Always route the Prompt-tab tester through /me/kb/ask so
-          // EVERY agent (including the default Customer bot) sees its
-          // own composed_prompt from agents.json — the user's field
-          // edits + the objective playbook + REQUIRED FIELDS — instead
-          // of the legacy SALES_FLOW_PROMPT.
-          // Pass the running conversation so multi-turn flows (the
-          // bot asks for phone → user replies with digits → bot asks
-          // for the next field) actually work.
+          // Customer agents: route the tester through the SAME endpoint
+          // the live website widget uses (/chat) so "Try it out" is
+          // identical to what a real visitor gets — same prompt, same
+          // persona, same objective. `preview: true` keeps it a sandbox:
+          // the test conversation is never saved and never creates a
+          // Lead. Internal agents keep /me/kb/ask — it owns the data-
+          // query/SQL path the team brain needs and has no live widget.
           const kb_type = agent.type === "internal" ? "internal" : "client";
-          const endpoint = "/me/kb/ask";
-          const payload  = {
-            question: q, kb_type: kb_type, agent_id: agent.id,
-            history: chatHistory.slice(-12),
-          };
           try {
-            const r = await fetch(endpoint, {
-              method: "POST", credentials: "same-origin",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-            });
+            let r;
+            if (kb_type === "client") {
+              r = await fetch("/chat", {
+                method: "POST", credentials: "same-origin",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  message: q,
+                  accountid: window.__accountId || "",
+                  agent_id: agent.id,
+                  session_id: prTestSessionId,
+                  kb_type: "client",
+                  use_silver: true,
+                  preview: true,
+                }),
+              });
+            } else {
+              r = await fetch("/me/kb/ask", {
+                method: "POST", credentials: "same-origin",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  question: q, kb_type: kb_type, agent_id: agent.id,
+                  history: chatHistory.slice(-12),
+                }),
+              });
+            }
             const data = await r.json();
             const text = (data && (data.answer || data.response)) || "Sorry, no response.";
             removeTypingIndicator();
@@ -33440,6 +33710,7 @@
         chatReset.addEventListener("click", function () {
           chatHistory = [];
           lastUserMessage = "";
+          prTestSessionId = newTestSession();
           chatBody.innerHTML = "";
           chatBody.appendChild(chatEmpty);
           chatEmpty.style.display = "";
@@ -37453,6 +37724,15 @@
         if (!fr) return;
         var src = fr.getAttribute("data-src");
         if (src && fr.getAttribute("src") !== src) fr.setAttribute("src", src);
+      };
+
+      // Pending approvals — lazy-mount the standalone approvals page.
+      // Re-set src on every entry so the queue is fresh each visit.
+      SECTION_ON_ENTER.approvals = function loadApprovalsSection() {
+        var fr = document.getElementById("approvalsFrame");
+        if (!fr) return;
+        var src = fr.getAttribute("data-src");
+        if (src) fr.setAttribute("src", src);
       };
 
       // Onboarding wizard — same lazy-mount pattern. Hash-routed at
@@ -42275,6 +42555,7 @@
       phones:    { title: "Phone numbers", section: "settings" },   // now a tab inside Settings
       leads:     { title: "Leads",         section: "leads" },
       warehouse: { title: "Warehouse",     section: "warehouse" },
+      approvals: { title: "Pending approvals", section: "approvals" },
       replies:   { title: "Replies",       section: "replies" },
       campaigns: { title: "Campaigns",     section: "campaigns" },
       outreach:  { title: "Outreach",      section: "outreach" },
@@ -53297,7 +53578,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
      port 5173; in prod, served by the C server out of /dashboard/dist/.
      Switching is a manual edit for v1; future enhancement: drive via a
      server-rendered flag. -->
-<script type="module" src="/dashboard/dist/main.js?v=2026-05-15-calendar-detect"></script>
+<script type="module" src="/dashboard/dist/main.js?v=2026-05-16-ai-draft-p1"></script>
 <!-- Ask-AI inline rewrite tool. Auto-mounts on any [data-ai-editable]
      textarea / input / contenteditable on the page. Used by the flow
      builder's message editor drawer (and shared with the LinkedIn page). -->
