@@ -7104,6 +7104,43 @@
       font-family: inherit;
     }
     .kb-row-menu-pop button:hover { background: #f1f5f9; }
+    /* The row menu (#kbRowMenu) is a body-level element, so the
+       #botWorkspace-scoped dark rule never reached it — it stayed
+       white in dark mode. These unscoped rules fix it. */
+    [data-theme="dark"] .kb-row-menu-pop {
+      background: #18181b; border-color: #27272a;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+    }
+    [data-theme="dark"] .kb-row-menu-pop button { color: #fafafa; }
+    [data-theme="dark"] .kb-row-menu-pop button:hover { background: #27272a; }
+
+    /* Table-level loading bar — shown while the KB table fetches its
+       rows. Slides indefinitely; hidden once the fetch resolves. */
+    .kb-table-loadbar {
+      height: 3px; width: 100%;
+      border-radius: 999px;
+      margin-bottom: 8px;
+      overflow: hidden;
+      background: transparent;
+    }
+    .kb-table-loadbar.is-on { background: #e5e7eb; }
+    .kb-table-loadbar.is-on::before {
+      content: ""; display: block; height: 100%; width: 35%;
+      border-radius: 999px; background: #4f46e5;
+      position: relative;
+      animation: kbLoadingSlide 1.1s ease-in-out infinite;
+    }
+    [data-theme="dark"] .kb-table-loadbar.is-on { background: #27272a; }
+
+    /* Warehouse-document text preview inside the sheet-preview modal. */
+    .kbprev-doctext {
+      padding: 14px 16px;
+      white-space: pre-wrap; word-break: break-word;
+      font-size: 12.5px; line-height: 1.6;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: #0f172a;
+    }
+    [data-theme="dark"] .kbprev-doctext { color: #e4e4e7; }
 
     /* Responsive — hide secondary columns on narrow viewports. */
     @media (max-width: 1100px) {
@@ -35287,6 +35324,15 @@
         }
       })();
 
+      // Table-level loading bar — loadRows turns it on while fetching.
+      var loadBar = document.createElement("div");
+      loadBar.className = "kb-table-loadbar";
+      (function () {
+        var tw = host.querySelector(".kb-table-wrap");
+        if (tw && tw.parentNode) tw.parentNode.insertBefore(loadBar, tw);
+        else host.appendChild(loadBar);
+      })();
+
       function getAid() { return window.__accountId || ""; }
 
       function fmtAgo(iso) {
@@ -35553,13 +35599,11 @@
                 : '') +
             '</td>' +
             '<td class="kb-actions-cell">' +
-              // Eye preview on EVERY row, not just sheets.
+              // Eye preview + ⋯ menu on EVERY row (warehouse included).
               '<button type="button" class="kb-row-preview" data-kb-preview-id="' + escapeHtml(r.id) + '" data-kb-preview-title="' + escapeHtml(r.title || "") + '" aria-label="Preview" title="Preview">' +
                 '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
               '</button>' +
-              (r.type === "warehouse"
-                ? '<button type="button" class="kb-row-whse-remove" data-kb-whse-remove="' + escapeHtml(r.id) + '">Remove</button>'
-                : '<button type="button" class="kb-row-menu" aria-label="Actions">⋯</button>') +
+              '<button type="button" class="kb-row-menu" aria-label="Actions">⋯</button>' +
             '</td>';
           body.appendChild(tr);
         });
@@ -35569,6 +35613,7 @@
       async function loadRows() {
         var aid = getAid();
         if (!aid) return;
+        loadBar.classList.add("is-on");
         try {
           var em = effectiveMode();
           var srcUrl = "/kb/sources?accountid=" + encodeURIComponent(aid) +
@@ -35621,6 +35666,7 @@
           var anyPending = rows.some(function (r) { return r.status === "pending"; });
           if (anyPending) pollTimer = setTimeout(loadRows, 2500);
         } catch (_) { /* silent */ }
+        finally { loadBar.classList.remove("is-on"); }
       }
 
       // Wire sort headers.
@@ -35925,37 +35971,22 @@
         var row = rows.find(function (r) { return r.id === id; });
         if (!row) return;
 
-        // Warehouse rows: eye preview opens the document; "Remove"
-        // detaches it from this agent (the doc stays in the
-        // warehouse). No legacy detail modal or row menu.
+        // Warehouse rows: eye → in-modal preview; ⋯ → the row menu
+        // (Preview + Remove from agent). Same controls as other rows.
         if (row.type === "warehouse") {
           var wPrev = e.target.closest(".kb-row-preview");
           if (wPrev) {
             e.stopPropagation();
-            window.open("/api/warehouse/documents/" +
-              encodeURIComponent(row.id) + "/raw", "_blank", "noopener");
+            if (typeof window.__kbOpenWarehousePreview === "function") {
+              window.__kbOpenWarehousePreview(row.id, row.title);
+            }
             return;
           }
-          var wrm = e.target.closest("[data-kb-whse-remove]");
-          if (wrm) {
+          var wMenu = e.target.closest(".kb-row-menu");
+          if (wMenu) {
             e.stopPropagation();
-            var wag = window.__activeAgent;
-            if (!wag || !wag.id) return;
-            if (!confirm('Remove "' + (row.title || row.id) +
-                '" from this agent?\n\nIt stays in your warehouse and ' +
-                'other agents keep it.')) return;
-            wrm.disabled = true;
-            fetch("/me/agents/" + encodeURIComponent(wag.id) +
-                  "/kb-documents", {
-              method: "POST", credentials: "same-origin",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ op: "remove", document_ids: [row.id] }),
-            }).then(function (r) { return r.ok ? r.json() : null; })
-              .then(function (res) {
-                if (res) loadRows();
-                else { wrm.disabled = false; alert("Couldn't remove."); }
-              })
-              .catch(function () { wrm.disabled = false; alert("Network error."); });
+            window.__kbOpenRowMenu(wMenu, row, mode, loadRows);
+            return;
           }
           return;
         }
@@ -36171,6 +36202,95 @@
         if (defaultIdx < 0) defaultIdx = 0;
         var defaultBtn = tabsEl && tabsEl.children[defaultIdx];
         if (defaultBtn) defaultBtn.click();
+      };
+
+      // Warehouse-document preview — reuses the sheet-preview modal
+      // shell so warehouse rows get an in-modal popup (not a new tab),
+      // consistent with sheets and dark-mode styled.
+      window.__kbOpenWarehousePreview = async function (docId, fallbackTitle) {
+        if (!docId) return;
+        var titleEl   = document.getElementById("kbprevTitle");
+        var metaEl    = document.getElementById("kbprevMeta");
+        var tabsEl    = document.getElementById("kbprevTabs");
+        var summaryEl = document.getElementById("kbprevSummary");
+        var wrapEl    = document.getElementById("kbprevGridWrap");
+        if (titleEl) titleEl.textContent = fallbackTitle || "Document preview";
+        if (metaEl) metaEl.textContent = "Loading…";
+        if (tabsEl) tabsEl.innerHTML = "";
+        if (summaryEl) summaryEl.innerHTML = "";
+        if (wrapEl) wrapEl.innerHTML = '<div class="kbprev-empty">Loading…</div>';
+        openModal(prevModal);
+        var data = null;
+        try {
+          var r = await fetch("/api/warehouse/documents/" +
+            encodeURIComponent(docId) + "/preview", { credentials: "same-origin" });
+          if (r.ok) data = await r.json();
+        } catch (_) { data = null; }
+        if (!data || data.error) {
+          if (metaEl) metaEl.textContent = "";
+          if (wrapEl) wrapEl.innerHTML =
+            '<div class="kbprev-empty">Couldn\'t load the preview.</div>';
+          return;
+        }
+        if (titleEl) titleEl.textContent = fallbackTitle || data.filename || "Document preview";
+        var fmt = (data.format || "").toLowerCase();
+        if (data.status && data.status !== "ready") {
+          if (metaEl) metaEl.textContent = "Still processing…";
+          if (wrapEl) wrapEl.innerHTML =
+            '<div class="kbprev-empty">This document is still processing. ' +
+            'Try again in a moment.</div>';
+          return;
+        }
+        if (Array.isArray(data.rows) && data.rows.length) {
+          var rws = data.rows;
+          var header = rws[0] || [];
+          var bodyRows = rws.slice(1);
+          var nRows = data.row_count || bodyRows.length;
+          if (metaEl) {
+            metaEl.textContent = nRows + " row" + (nRows === 1 ? "" : "s") +
+              (data.rows_truncated ? " · preview truncated" : "");
+          }
+          var thtml = "<thead><tr>";
+          header.forEach(function (h) {
+            thtml += "<th>" + escapeHtml(String(h == null ? "" : h)) + "</th>";
+          });
+          thtml += "</tr></thead><tbody>";
+          bodyRows.forEach(function (rw) {
+            thtml += "<tr>";
+            (rw || []).forEach(function (c) {
+              thtml += "<td>" + escapeHtml(String(c == null ? "" : c)) + "</td>";
+            });
+            thtml += "</tr>";
+          });
+          thtml += "</tbody>";
+          if (wrapEl) wrapEl.innerHTML = '<table class="kbprev-grid">' + thtml + "</table>";
+          return;
+        }
+        if (fmt === "pdf" || fmt === "image") {
+          if (metaEl) metaEl.textContent = fmt === "pdf" ? "PDF document" : "Image";
+          var rawUrl = "/api/warehouse/documents/" +
+            encodeURIComponent(docId) + "/raw";
+          if (wrapEl) {
+            wrapEl.innerHTML = fmt === "image"
+              ? '<div style="padding:14px;text-align:center;">' +
+                  '<img src="' + rawUrl + '" alt="" ' +
+                  'style="max-width:100%;border-radius:8px;"></div>'
+              : '<iframe src="' + rawUrl + '" ' +
+                'style="width:100%;height:60vh;border:0;"></iframe>';
+          }
+          return;
+        }
+        var txt = data.text || "";
+        if (metaEl) {
+          var nChars = data.text_length || txt.length;
+          metaEl.textContent = nChars + " character" + (nChars === 1 ? "" : "s") +
+            (data.truncated ? " · preview truncated" : "");
+        }
+        if (wrapEl) {
+          wrapEl.innerHTML = txt
+            ? '<div class="kbprev-doctext">' + escapeHtml(txt) + '</div>'
+            : '<div class="kbprev-empty">No preview content available.</div>';
+        }
       };
       document.addEventListener("keydown", function (e) {
         if (e.key === "Escape") {
@@ -36469,6 +36589,21 @@
         menuState.row = row;
         menuState.mode = mode === "internal" ? "internal" : "client";
         menuState.refresh = typeof refresh === "function" ? refresh : null;
+        // Warehouse rows are shared docs — the only meaningful actions
+        // are Preview and "Remove from agent". Legacy actions (edit,
+        // duplicate, move, delete) are hidden for them; conversely
+        // "Remove from agent" is hidden for every non-warehouse row.
+        var isWhseRow = !!(row && row.type === "warehouse");
+        menuEl.querySelectorAll("[data-kb-row-action]").forEach(function (b) {
+          var act = b.dataset.kbRowAction;
+          if (isWhseRow) {
+            b.hidden = !(act === "preview" || act === "remove_from_agent");
+          } else if (act === "remove_from_agent") {
+            b.hidden = true;
+          } else {
+            b.hidden = false;
+          }
+        });
         // "Move to other KB" is only meaningful for source-backed rows
         // (sheet/doc/website). Hide for legacy article/faq entries — they
         // live in a kb_type-specific bundle and would need re-embedding.
@@ -36505,7 +36640,31 @@
           var action = btn.dataset.kbRowAction;
           var row = menuState.row;
           if (!row) return;
+          if (action === "remove_from_agent") {
+            var rfaAgent = window.__activeAgent;
+            if (!rfaAgent || !rfaAgent.id || !row.id) return;
+            if (!confirm('Remove "' + (row.title || row.id) +
+                '" from this agent?\n\nIt stays in your warehouse and ' +
+                'other agents keep it.')) return;
+            fetch("/me/agents/" + encodeURIComponent(rfaAgent.id) +
+                  "/kb-documents", {
+              method: "POST", credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ op: "remove", document_ids: [row.id] }),
+            }).then(function (r) { return r.ok ? r.json() : null; })
+              .then(function (res) {
+                if (res && menuState.refresh) menuState.refresh();
+                else if (!res) alert("Couldn't remove the document.");
+              })
+              .catch(function () { alert("Network error."); });
+            return;
+          }
           if (action === "edit" || action === "preview") {
+            if (action === "preview" && row.type === "warehouse" &&
+                typeof window.__kbOpenWarehousePreview === "function") {
+              window.__kbOpenWarehousePreview(row.id, row.title);
+              return;
+            }
             window.__kbOpenDetailModal(row, menuState.mode, menuState.refresh);
             return;
           }
@@ -53347,6 +53506,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
   <button type="button" data-kb-row-action="duplicate" role="menuitem">Duplicate</button>
   <button type="button" data-kb-row-action="move" role="menuitem" data-kb-move-target="">Move to other KB</button>
   <button type="button" data-kb-row-action="delete" role="menuitem" style="color:#b91c1c;">Delete</button>
+  <button type="button" data-kb-row-action="remove_from_agent" role="menuitem" hidden style="color:#b91c1c;">Remove from agent</button>
 </div>
 
 <!-- ──────────────── New-agent wizard (4 steps) ──────────────── -->
