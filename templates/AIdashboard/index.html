@@ -2139,6 +2139,26 @@
       background: var(--bg-surface) !important;
       border-color: var(--border-default) !important;
     }
+    /* The visible white area is .wgt-browser-body (the simulated page);
+       the chrome strip is .wgt-browser-bar. Theme both — desktop only,
+       the mobile phone mockup keeps its own gradient screen. */
+    [data-theme="dark"] .wgt-browser:not([data-viewport="mobile"]) .wgt-browser-body {
+      background: var(--bg-surface) !important;
+    }
+    [data-theme="dark"] .wgt-browser-bar {
+      background: var(--bg-elevated) !important;
+      border-bottom-color: var(--border-default) !important;
+    }
+    [data-theme="dark"] .wgt-traffic { background: var(--border-strong) !important; }
+    [data-theme="dark"] .wgt-url { color: var(--text-tertiary) !important; }
+    /* Widget form field labels ("Assistant name", "Greeting message",
+       …) — hardcoded near-black; plus the section titles (BASICS …). */
+    [data-theme="dark"] .wgt-field > label { color: var(--text-primary) !important; }
+    [data-theme="dark"] .wgt-section-title { color: var(--text-secondary) !important; }
+    [data-theme="dark"] .ask-canvas-head {
+      background: var(--bg-surface) !important;
+      border-color: var(--border-default) !important;
+    }
     [data-theme="dark"] .wgt-label,
     [data-theme="dark"] .wgt-help,
     [data-theme="dark"] .wgt-sub { color: var(--text-secondary); }
@@ -2308,6 +2328,12 @@
     [data-theme="dark"] #botWorkspace .kb-table-empty,
     [data-theme="dark"] #botWorkspace .kb-row-desc {
       color: var(--text-secondary) !important;
+    }
+    /* The objective blurb ("No lead capture. Answers questions…") is a
+       tinted callout box — the text was themed above but its #f8fafc
+       background was not, leaving a white box. */
+    [data-theme="dark"] #botWorkspace .pr-objective-blurb {
+      background: var(--bg-elevated) !important;
     }
     /* Headings / labels / primary text */
     [data-theme="dark"] #botWorkspace .answers-title,
@@ -34839,29 +34865,60 @@
     // the agent can still add (eligible by visibility, not already
     // referenced) and POSTs the selection to /me/agents/<id>/kb-documents.
     (function () {
-      var bg = document.getElementById("whsePickBg");
-      if (!bg) return;
-      var listEl = document.getElementById("whsePickList");
-      var subEl = document.getElementById("whsePickSub");
-      var addBtn = document.getElementById("whsePickAdd");
-      var cancelBtn = document.getElementById("whsePickCancel");
+      // The modal markup lives near </body> — parsed AFTER this
+      // script — so the elements do not exist when this IIFE runs.
+      // Resolve them lazily on the first open instead of early-
+      // returning (which would leave __openWhseKbPicker undefined).
+      var ready = false;
+      var bg, listEl, subEl, addBtn, cancelBtn;
       var ctx = { agent: null, onAdded: null, selected: new Set() };
 
       function close() {
-        bg.classList.remove("is-open");
+        if (bg) bg.classList.remove("is-open");
         ctx = { agent: null, onAdded: null, selected: new Set() };
-        listEl.innerHTML = "";
+        if (listEl) listEl.innerHTML = "";
       }
-      cancelBtn.addEventListener("click", close);
-      bg.addEventListener("click", function (e) { if (e.target === bg) close(); });
-
       function syncAddBtn() {
         addBtn.textContent = ctx.selected.size
           ? "Add " + ctx.selected.size : "Add";
         addBtn.disabled = ctx.selected.size === 0;
       }
+      function doAdd() {
+        if (!ctx.agent || !ctx.selected.size) return;
+        var ids = Array.from(ctx.selected);
+        var ag = ctx.agent;
+        var cb = ctx.onAdded;
+        addBtn.disabled = true;
+        fetch("/me/agents/" + encodeURIComponent(ag.id) + "/kb-documents", {
+          method: "POST", credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ op: "add", document_ids: ids }),
+        }).then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (res) {
+            if (res) { close(); if (cb) cb(); }
+            else { addBtn.disabled = false; alert("Couldn't add documents."); }
+          })
+          .catch(function () { addBtn.disabled = false; alert("Network error."); });
+      }
+      function ensureReady() {
+        if (ready) return true;
+        bg = document.getElementById("whsePickBg");
+        if (!bg) return false;
+        listEl = document.getElementById("whsePickList");
+        subEl = document.getElementById("whsePickSub");
+        addBtn = document.getElementById("whsePickAdd");
+        cancelBtn = document.getElementById("whsePickCancel");
+        cancelBtn.addEventListener("click", close);
+        bg.addEventListener("click", function (e) {
+          if (e.target === bg) close();
+        });
+        addBtn.addEventListener("click", doAdd);
+        ready = true;
+        return true;
+      }
 
       window.__openWhseKbPicker = async function (agent, onAdded) {
+        if (!ensureReady()) { alert("Picker is unavailable."); return; }
         ctx.agent = agent;
         ctx.onAdded = onAdded;
         ctx.selected = new Set();
@@ -34935,24 +34992,6 @@
             '<div class="whse-pick-item-meta">Your warehouse is empty.</div>';
         }
       };
-
-      addBtn.addEventListener("click", function () {
-        if (!ctx.agent || !ctx.selected.size) return;
-        var ids = Array.from(ctx.selected);
-        var ag = ctx.agent;
-        var cb = ctx.onAdded;
-        addBtn.disabled = true;
-        fetch("/me/agents/" + encodeURIComponent(ag.id) + "/kb-documents", {
-          method: "POST", credentials: "same-origin",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ op: "add", document_ids: ids }),
-        }).then(function (r) { return r.ok ? r.json() : null; })
-          .then(function (res) {
-            if (res) { close(); if (cb) cb(); }
-            else { addBtn.disabled = false; alert("Couldn't add documents."); }
-          })
-          .catch(function () { addBtn.disabled = false; alert("Network error."); });
-      });
     })();
 
     // ─── Agent warehouse-KB panel ───
