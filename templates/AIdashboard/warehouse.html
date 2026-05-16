@@ -694,6 +694,9 @@
       <span class="up-vis-note">Internal is the safe default — customer
         bots can't read internal files. Change it per document
         anytime.</span>
+      <label class="up-folder-label">Folder:
+        <select id="upFolderSelect"><option value="">Root</option></select>
+      </label>
     </div>
 
     <div class="toolbar">
@@ -1250,6 +1253,21 @@
     newBtn.textContent = "+ New folder";
     newBtn.addEventListener("click", window.__whNewFolder);
     pane.appendChild(newBtn);
+
+    var upSel = document.getElementById("upFolderSelect");
+    if (upSel) {
+      var prev = upSel.value;
+      upSel.innerHTML = '<option value="">Root</option>';
+      folderPaths.forEach(function (p) {
+        var o = document.createElement("option");
+        o.value = p;
+        o.textContent = p.split("/").join(" / ");
+        upSel.appendChild(o);
+      });
+      // Keep the previous choice, else default to the active folder.
+      upSel.value = (folderPaths.indexOf(prev) >= 0) ? prev
+                  : (folderPaths.indexOf(activeFolder) >= 0 ? activeFolder : "");
+    }
   }
   // Stubs replaced in Task 4. Defined now so Task 3 is testable.
   window.__whFolderMenu = function (anchor, path) {
@@ -1969,6 +1987,8 @@
     if (overwrite) fd.append("overwrite", "true");
     var upVis = document.querySelector('input[name="upVis"]:checked');
     fd.append("visibility", upVis ? upVis.value : "internal");
+    var upFolder = document.getElementById("upFolderSelect");
+    if (upFolder && upFolder.value) fd.append("folder", upFolder.value);
 
     var xhr = new XMLHttpRequest();
     xhr.open("POST", "/api/warehouse/upload", true);
