@@ -2713,6 +2713,12 @@
       border-color: var(--border-strong);
     }
     [data-theme="dark"] .pr-chat-empty { color: var(--text-secondary); }
+    /* The footer row around the "Ask your bot…" input in the
+       Try-it-out chat — hardcoded #fafbfc. */
+    [data-theme="dark"] .pr-chat-foot {
+      background: var(--bg-elevated) !important;
+      border-top-color: var(--border-default) !important;
+    }
     [data-theme="dark"] .pr-chat-msg.is-bot .pr-chat-bubble {
       background: var(--bg-elevated);
       color: var(--text-primary);
@@ -12902,15 +12908,14 @@
             <p class="answers-sub">What it knows when answering customers. Train it from website links, write your own answers, or add quick Q&amp;As.</p>
           </div>
 
-          <!-- Warehouse-document KB. The agent answers from exactly
-               the documents listed here. Legacy per-agent articles/
-               websites/Q&As (the kb-table-host below) are hidden. -->
+          <!-- Shared knowledge: warehouse documents this agent
+               references. Managed independently per agent. -->
           <div class="whse-kb-host" data-whse-kb-mode="client"></div>
 
-          <!-- Legacy KB table — hidden; retained in the DOM so the
-               ~700-line wireKbTableHost component and its ID bindings
-               don't error. Retired in a later legacy-KB project. -->
-          <div class="kb-table-host" data-kb-table-mode="client" style="display:none;">
+          <!-- This agent's own knowledge: per-agent websites,
+               articles, Q&As, and Drive imports — private to this
+               agent. Add shared content via the warehouse instead. -->
+          <div class="kb-table-host" data-kb-table-mode="client">
             <div class="kb-table-toolbar">
               <div class="kb-table-actions">
                 <button type="button" class="kb-add-btn is-primary" data-kb-add="website">+ Add website</button>
@@ -13070,7 +13075,7 @@
 
           <div class="whse-kb-host" data-whse-kb-mode="internal"></div>
 
-          <div class="kb-table-host" data-kb-table-mode="internal" style="display:none;">
+          <div class="kb-table-host" data-kb-table-mode="internal">
             <div class="kb-table-toolbar">
               <div class="kb-table-actions">
                 <button type="button" class="kb-add-btn is-primary" data-kb-add="website">+ Add link</button>
