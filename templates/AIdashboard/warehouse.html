@@ -95,6 +95,35 @@
   }
 
   /* Table */
+  .wh-list-layout { display:flex; gap:16px; align-items:flex-start; }
+  .wh-folder-pane {
+    flex:0 0 220px; border:1px solid var(--line); border-radius:12px;
+    padding:8px; background:var(--soft);
+  }
+  .wh-folder-main { flex:1; min-width:0; }
+  .wh-folder-item {
+    display:flex; align-items:center; gap:6px; padding:7px 9px;
+    border-radius:8px; cursor:pointer; font-size:13px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .wh-folder-item:hover { background:var(--line); }
+  .wh-folder-item.active { background:var(--accent); color:#fff; }
+  .wh-folder-item .wh-folder-menu {
+    margin-left:auto; opacity:0; border:0; background:transparent;
+    cursor:pointer; font-size:14px; color:inherit; padding:0 4px;
+  }
+  .wh-folder-item:hover .wh-folder-menu { opacity:.7; }
+  .wh-folder-children { margin-left:14px; }
+  .wh-folder-new {
+    margin-top:8px; width:100%; border:1px dashed var(--line);
+    background:transparent; border-radius:8px; padding:7px;
+    font:inherit; font-size:12.5px; color:var(--sub); cursor:pointer;
+  }
+  .wh-folder-new:hover { color:var(--accent); border-color:var(--accent); }
+  .wh-folder-drop { outline:2px dashed var(--accent); outline-offset:-2px; }
+  .doc-folder-cell { color:var(--sub); font-size:12.5px; }
+  [data-theme="dark"] .wh-folder-pane { background:#161a22; }
+  [data-theme="dark"] .wh-folder-item:hover { background:#26303d; }
   .doc-table-wrap { border:1px solid var(--line); border-radius:12px; overflow:hidden; }
   /* Multi-select + bulk delete for warehouse records. */
   .th-check { width:38px; text-align:center !important; }
@@ -693,21 +722,26 @@
         <div class="doc-del-progress-fill" id="docDelProgressFill"></div>
       </div>
     </div>
+    <div class="wh-list-layout">
+      <div class="wh-folder-pane" id="whFolderPane"></div>
+      <div class="wh-folder-main">
     <div class="doc-table-wrap">
       <table>
         <thead>
           <tr>
             <th class="th-check"><input type="checkbox" id="docCheckAll" aria-label="Select all documents"></th>
-            <th>Name</th><th>Format</th><th>Size</th><th>Added</th><th>Status</th>
+            <th>Name</th><th>Folder</th><th>Format</th><th>Size</th><th>Added</th><th>Status</th>
             <th>Access</th>
             <th class="th-act">Preview</th>
           </tr>
         </thead>
         <tbody id="docBody">
-          <tr><td colspan="8" class="empty">Loading…</td></tr>
+          <tr><td colspan="9" class="empty">Loading…</td></tr>
         </tbody>
       </table>
     </div>
+      </div><!-- /wh-folder-main -->
+    </div><!-- /wh-list-layout -->
   </div>
 
   <!-- ─── Detail view ─── -->
@@ -971,6 +1005,8 @@
 
   var allDocs = [];
   var selectedDocs = new Set();   // document_ids ticked for bulk delete
+  var activeFolder = "";          // "" = All docs
+  var folderPaths = [];           // every folder path, from /folders
 
   // ─── Quota ───
   function renderQuota(used, quota) {
@@ -991,6 +1027,13 @@
       if (fmtF && d.format !== fmtF) return false;
       if (q && (d.name || "").toLowerCase().indexOf(q) < 0 &&
                (d.filename || "").toLowerCase().indexOf(q) < 0) return false;
+      // Folder filter — activeFolder "" means "All docs" (show all);
+      // a folder shows that folder and everything nested under it.
+      if (activeFolder) {
+        var fp = d.folder_path || "";
+        if (fp !== activeFolder && fp.indexOf(activeFolder + "/") !== 0)
+          return false;
+      }
       return true;
     });
     rows.sort(function (a, b) {
@@ -1001,7 +1044,7 @@
     });
     var body = $("docBody");
     if (!rows.length) {
-      body.innerHTML = '<tr><td colspan="8" class="empty">' +
+      body.innerHTML = '<tr><td colspan="9" class="empty">' +
         (allDocs.length ? "No documents match your filters."
                         : "No documents yet — drop a file above to get started.") +
         "</td></tr>";
@@ -1017,6 +1060,7 @@
           '<td class="td-check"></td>' +
           '<td><span class="doc-name">📅 ' + esc(d.name) +
             ' <span class="live-badge">Live</span></span></td>' +
+          '<td class="doc-folder-cell">—</td>' +
           '<td><span class="doc-fmt">Live source</span></td>' +
           '<td class="muted">—</td>' +
           '<td class="muted">' + esc(d.calendar_id || "") + "</td>" +
@@ -1036,6 +1080,9 @@
           esc(d.document_id) + '"' +
           (selectedDocs.has(d.document_id) ? " checked" : "") + "></td>" +
         '<td><span class="doc-name">' + esc(d.name) + "</span></td>" +
+        '<td class="doc-folder-cell">' +
+          esc((d.folder_path || "").split("/").join(" / ") || "(root)") +
+        "</td>" +
         '<td><span class="doc-fmt">' + esc(d.format) + "</span></td>" +
         "<td>" + fmtBytes(d.size_bytes) + "</td>" +
         '<td class="muted">' + esc(ago(d.uploaded_at)) + "</td>" +
@@ -1112,12 +1159,121 @@
     });
     if (pending) pollTimer = setTimeout(loadList, 3000);
   }
+  function loadFolders() {
+    fetch("/api/warehouse/folders", { credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        folderPaths = (d && d.folders) || [];
+        renderFolderPane();
+      })
+      .catch(function () { folderPaths = []; renderFolderPane(); });
+  }
+  function renderFolderPane() {
+    var pane = $("whFolderPane");
+    if (!pane) return;
+    // Build a nested tree from the flat path list.
+    var tree = {};
+    folderPaths.forEach(function (p) {
+      var cur = tree;
+      p.split("/").forEach(function (seg) {
+        cur[seg] = cur[seg] || { __children: {} };
+        cur = cur[seg].__children;
+      });
+    });
+    pane.innerHTML = "";
+    var allItem = document.createElement("div");
+    allItem.className = "wh-folder-item" + (activeFolder ? "" : " active");
+    allItem.textContent = "📁 All docs";
+    allItem.addEventListener("click", function () {
+      activeFolder = ""; renderFolderPane(); renderList();
+    });
+    pane.appendChild(allItem);
+
+    function renderLevel(node, prefix, container) {
+      Object.keys(node).sort().forEach(function (seg) {
+        var path = prefix ? prefix + "/" + seg : seg;
+        var item = document.createElement("div");
+        item.className = "wh-folder-item" +
+          (activeFolder === path ? " active" : "");
+        item.dataset.folder = path;
+        var label = document.createElement("span");
+        label.textContent = "📁 " + seg;
+        label.style.flex = "1";
+        label.style.overflow = "hidden";
+        label.style.textOverflow = "ellipsis";
+        item.appendChild(label);
+        var menu = document.createElement("button");
+        menu.type = "button";
+        menu.className = "wh-folder-menu";
+        menu.textContent = "⋯";
+        menu.addEventListener("click", function (e) {
+          e.stopPropagation();
+          window.__whFolderMenu(menu, path);
+        });
+        item.appendChild(menu);
+        item.addEventListener("click", function () {
+          activeFolder = path; renderFolderPane(); renderList();
+        });
+        // Drag-and-drop target — a document row dropped here moves it.
+        item.addEventListener("dragover", function (e) {
+          e.preventDefault(); item.classList.add("wh-folder-drop");
+        });
+        item.addEventListener("dragleave", function () {
+          item.classList.remove("wh-folder-drop");
+        });
+        item.addEventListener("drop", function (e) {
+          e.preventDefault(); item.classList.remove("wh-folder-drop");
+          var docId = e.dataTransfer.getData("text/document-id");
+          if (docId) window.__whMoveDoc(docId, path);
+        });
+        container.appendChild(item);
+        var kids = node[seg].__children;
+        if (Object.keys(kids).length) {
+          var sub = document.createElement("div");
+          sub.className = "wh-folder-children";
+          container.appendChild(sub);
+          renderLevel(kids, path, sub);
+        }
+      });
+    }
+    renderLevel(tree, "", pane);
+
+    var newBtn = document.createElement("button");
+    newBtn.type = "button";
+    newBtn.className = "wh-folder-new";
+    newBtn.textContent = "+ New folder";
+    newBtn.addEventListener("click", window.__whNewFolder);
+    pane.appendChild(newBtn);
+  }
+  // Stubs replaced in Task 4. Defined now so Task 3 is testable.
+  window.__whFolderMenu = window.__whFolderMenu || function () {
+    alert("Folder actions arrive in the next update.");
+  };
+  window.__whMoveDoc = window.__whMoveDoc || function () {};
+  window.__whNewFolder = function () {
+    var name = (prompt("New folder name (use / for nesting):") || "").trim();
+    if (!name) return;
+    fetch("/api/warehouse/folders", {
+      method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ op: "create", path: name }),
+    }).then(function (r) {
+        return r.json().catch(function () { return {}; })
+          .then(function (j) { return { ok: r.ok, j: j }; });
+      })
+      .then(function (res) {
+        if (res.ok) { loadFolders(); }
+        else { alert("Couldn't create folder: " +
+          ((res.j && res.j.message) || (res.j && res.j.error) || "error")); }
+      })
+      .catch(function () { alert("Network error."); });
+  };
   function loadList() {
     fetch("/api/warehouse/documents", { credentials: "same-origin" })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
         if (!d) { $("docBody").innerHTML =
-          '<tr><td colspan="8" class="empty">Couldn\'t load documents.</td></tr>'; return; }
+          '<tr><td colspan="9" class="empty">Couldn\'t load documents.</td></tr>'; return; }
         allDocs = d.documents || [];
         if (d.visibility_migrated_count > 0) {
           toast(d.visibility_migrated_count + " existing document" +
@@ -1128,6 +1284,7 @@
         renderQuota(d.used_bytes || 0, d.quota_bytes || 0);
         refreshFormatFilter();
         renderList();
+        loadFolders();
         syncTrackedUploads();  // advance upload rows through processing
         // If the detail view is open, refresh it with fresh data.
         if ($("detailView").style.display !== "none" && openDetailId) {
@@ -1137,7 +1294,7 @@
       })
       .catch(function () {
         $("docBody").innerHTML =
-          '<tr><td colspan="8" class="empty">Network error.</td></tr>';
+          '<tr><td colspan="9" class="empty">Network error.</td></tr>';
       });
   }
 
