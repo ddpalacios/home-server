@@ -2079,6 +2079,13 @@
     var analysisBundle = null;
     var sawSidebarRefresh = false;
     var loadingNote = null;
+    // Pending-show timer for the "Pulling the data…" note. On
+    // text_done we don't show the note immediately — a knowledge
+    // answer (no SQL) finishes almost at once, and a sub-second
+    // flash of a progress bar is just visual noise. We arm a short
+    // delay; if `done` lands first the note never appears, and only
+    // a genuinely longer wait (real SQL) ever shows it.
+    var loadingNoteDelay = 0;
     // Typewriter queue + RAF loop. Tokens arrive in bursts (a whole
     // word at a time). Without pacing, a short answer "appears" in
     // one frame because it streams faster than the eye can register.
@@ -2227,7 +2234,22 @@
         }, 220);
       }, 2400);
     }
+    // Arm the loading note to appear only if the response hasn't
+    // finished within `delayMs`. Any removeLoadingNote() call (token,
+    // replace, done, error) cancels a still-pending show — so a fast
+    // knowledge answer never flashes the bar.
+    function scheduleLoadingNote(text, delayMs) {
+      if (loadingNoteDelay) clearTimeout(loadingNoteDelay);
+      loadingNoteDelay = setTimeout(function () {
+        loadingNoteDelay = 0;
+        showLoadingNote(text);
+      }, delayMs || 400);
+    }
     function removeLoadingNote() {
+      if (loadingNoteDelay) {
+        clearTimeout(loadingNoteDelay);
+        loadingNoteDelay = 0;
+      }
       if (loadingTimer) {
         clearInterval(loadingTimer);
         loadingTimer = 0;
@@ -2306,9 +2328,10 @@
         rerenderBotBubbleAsMarkdown(liveBubble, liveText);
       } else if (evt === "text_done") {
         // LLM finished writing prose. SQL or other backend work may
-        // still be in flight — show a small spinner so the user
-        // knows more is coming and the bubble isn't "done".
-        showLoadingNote("Pulling the data…");
+        // still be in flight — but a knowledge answer finishes right
+        // away. Arm the spinner with a short delay so it only shows
+        // for a genuinely longer wait (real SQL), never as a flash.
+        scheduleLoadingNote("Pulling the data…", 400);
       } else if (evt === "done") {
         ensureLiveBubble();
         flushTypewriter();
