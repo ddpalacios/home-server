@@ -7142,6 +7142,32 @@
     }
     [data-theme="dark"] .kbprev-doctext { color: #e4e4e7; }
 
+    /* Staged progress bar shown on a KB row during "Copy to
+       warehouse" — fetch → save → done (start / middle / end). */
+    .kb-copy-cell { padding: 14px 16px !important; }
+    .kb-copy-progress { display: flex; flex-direction: column; gap: 7px; }
+    .kb-copy-progress-label {
+      font-size: 12px; font-weight: 600; color: #475569;
+    }
+    .kb-copy-progress-track {
+      height: 8px; border-radius: 999px; background: #e5e7eb;
+      overflow: hidden;
+    }
+    .kb-copy-progress-fill {
+      height: 100%; width: 0%; border-radius: 999px;
+      background: linear-gradient(90deg, #818cf8, #4f46e5);
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .kb-copy-progress-steps {
+      display: flex; justify-content: space-between;
+      font-size: 10.5px; font-weight: 600; color: #94a3b8;
+    }
+    .kb-copy-progress-steps span.is-done { color: #4f46e5; }
+    [data-theme="dark"] .kb-copy-progress-label { color: #d4d4d8; }
+    [data-theme="dark"] .kb-copy-progress-track { background: #27272a; }
+    [data-theme="dark"] .kb-copy-progress-steps { color: #71717a; }
+    [data-theme="dark"] .kb-copy-progress-steps span.is-done { color: #a5b4fc; }
+
     /* Responsive — hide secondary columns on narrow viewports. */
     @media (max-width: 1100px) {
       .kb-table th.col-desc, .kb-table td.col-desc { display: none; }
@@ -36571,11 +36597,12 @@
 
       // ── Row actions menu (⋯) ─────────────────────────────────
       var menuEl = document.getElementById("kbRowMenu");
-      var menuState = { row: null, mode: "client", refresh: null };
+      var menuState = { row: null, mode: "client", refresh: null, anchor: null };
       window.__kbOpenRowMenu = function (anchor, row, mode, refresh) {
         menuState.row = row;
         menuState.mode = mode === "internal" ? "internal" : "client";
         menuState.refresh = typeof refresh === "function" ? refresh : null;
+        menuState.anchor = anchor || null;
         // Warehouse rows are shared docs — the only meaningful actions
         // are Preview and "Remove from agent". Legacy actions (edit,
         // duplicate, move, delete) are hidden for them; conversely
@@ -36637,6 +36664,46 @@
                 '" to the warehouse?\n\nIt stays in this agent’s KB. ' +
                 'A shared copy is added to the warehouse so other ' +
                 'agents can reference it.')) return;
+            // Staged progress bar shown on this row: fetch → save →
+            // done. The row is restored (via refresh) when complete.
+            var cpTr = menuState.anchor ? menuState.anchor.closest("tr") : null;
+            var cpRefresh = menuState.refresh;
+            var cpSaved = cpTr ? cpTr.innerHTML : null;
+            function cpSet(pct, label, doneIdx) {
+              if (!cpTr) return;
+              var fill = cpTr.querySelector("[data-cp-fill]");
+              var lab = cpTr.querySelector("[data-cp-label]");
+              if (fill) fill.style.width = pct + "%";
+              if (lab) lab.textContent = label;
+              cpTr.querySelectorAll("[data-cp-step]").forEach(function (s) {
+                s.classList.toggle("is-done",
+                  Number(s.dataset.cpStep) <= doneIdx);
+              });
+            }
+            function cpDone() {
+              if (cpRefresh) cpRefresh();
+              else if (cpTr && cpSaved != null) cpTr.innerHTML = cpSaved;
+            }
+            function cpFail(msg) {
+              if (cpTr && cpSaved != null) cpTr.innerHTML = cpSaved;
+              alert(msg);
+            }
+            if (cpTr) {
+              cpTr.innerHTML =
+                '<td colspan="8" class="kb-copy-cell">' +
+                  '<div class="kb-copy-progress">' +
+                    '<div class="kb-copy-progress-label" data-cp-label>Copying…</div>' +
+                    '<div class="kb-copy-progress-track">' +
+                      '<div class="kb-copy-progress-fill" data-cp-fill></div></div>' +
+                    '<div class="kb-copy-progress-steps">' +
+                      '<span data-cp-step="0">Fetching from Drive</span>' +
+                      '<span data-cp-step="1">Saving to warehouse</span>' +
+                      '<span data-cp-step="2">Done</span>' +
+                    '</div>' +
+                  '</div>' +
+                '</td>';
+            }
+            cpSet(18, "Fetching from Drive…", 0);
             fetch("/api/warehouse/copy-from-kb", {
               method: "POST", credentials: "same-origin",
               headers: { "Content-Type": "application/json" },
@@ -36646,15 +36713,46 @@
                   .then(function (j) { return { ok: r.ok, j: j }; });
               })
               .then(function (res) {
-                if (res.ok) {
-                  if (typeof toast === "function") toast("Copied to the warehouse.");
-                  else alert("Copied to the warehouse.");
-                } else {
-                  alert("Couldn't copy: " + ((res.j && res.j.message) ||
+                if (!res.ok) {
+                  cpFail("Couldn't copy: " + ((res.j && res.j.message) ||
                     (res.j && res.j.error) || "error"));
+                  return;
                 }
+                cpSet(62, "Saving to warehouse…", 1);
+                var docId = res.j && res.j.document_id;
+                if (!docId) {
+                  cpSet(100, "Copied to the warehouse ✓", 2);
+                  setTimeout(cpDone, 1000);
+                  return;
+                }
+                var tries = 0;
+                (function poll() {
+                  tries++;
+                  fetch("/api/warehouse/documents/" +
+                        encodeURIComponent(docId),
+                        { credentials: "same-origin", cache: "no-store" })
+                    .then(function (r) { return r.ok ? r.json() : null; })
+                    .then(function (d) {
+                      var st = d && d.status;
+                      if (st === "ready" || st === "failed" || tries > 18) {
+                        cpSet(100, st === "failed"
+                          ? "Copied — processing had an issue"
+                          : "Copied to the warehouse ✓", 2);
+                        setTimeout(cpDone, 1100);
+                      } else {
+                        cpSet(82, "Processing in the warehouse…", 1);
+                        setTimeout(poll, 1500);
+                      }
+                    })
+                    .catch(function () {
+                      if (tries > 18) {
+                        cpSet(100, "Copied to the warehouse ✓", 2);
+                        setTimeout(cpDone, 1100);
+                      } else { setTimeout(poll, 1500); }
+                    });
+                })();
               })
-              .catch(function () { alert("Network error."); });
+              .catch(function () { cpFail("Network error."); });
             return;
           }
           if (action === "remove_from_agent") {
