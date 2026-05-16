@@ -277,20 +277,14 @@ In `app.py`, find this block near the end of `api_warehouse_upload`:
 
 ```python
     _whse_save_doc(cid, doc)
-    idx = _whse_load_index(cid)
-    if document_id not in idx.get("document_ids", []):
-        idx.setdefault("document_ids", []).append(document_id)
-        _whse_save_index(cid, idx)
+    _whse_index_add_document(cid, document_id)
 ```
 
 Replace with:
 
 ```python
     _whse_save_doc(cid, doc)
-    idx = _whse_load_index(cid)
-    if document_id not in idx.get("document_ids", []):
-        idx.setdefault("document_ids", []).append(document_id)
-        _whse_save_index(cid, idx)
+    _whse_index_add_document(cid, document_id)
     if folder_path:
         _whse_drop_empty_folder(cid, folder_path)
 ```
