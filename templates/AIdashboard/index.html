@@ -6807,6 +6807,31 @@
     }
     @keyframes kbPulse { 50% { opacity: 0.35; } }
 
+    /* Indeterminate loading bar shown under a row's status pill while
+       the document is still processing in the background. The table
+       already re-polls every 2.5s, so the bar disappears on its own
+       once processing finishes. */
+    .kb-loading-bar {
+      margin-top: 5px;
+      height: 4px; width: 96px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      overflow: hidden;
+      position: relative;
+    }
+    .kb-loading-bar::before {
+      content: "";
+      position: absolute; top: 0; height: 100%;
+      width: 38%; border-radius: 999px;
+      background: #4f46e5;
+      animation: kbLoadingSlide 1.15s ease-in-out infinite;
+    }
+    @keyframes kbLoadingSlide {
+      0%   { left: -40%; }
+      100% { left: 100%; }
+    }
+    [data-theme="dark"] .kb-loading-bar { background: #27272a; }
+
     .kb-time { color: #64748b; font-size: 12.5px; white-space: nowrap; }
     .kb-actions-cell { text-align: right; white-space: nowrap; }
     .kb-row-menu {
@@ -35484,7 +35509,12 @@
             '<td><span class="kb-type-pill t-' + r.type + '">' + typeLabel + '</span></td>' +
             '<td class="kb-time" title="' + escapeHtml(fmtAbs(r.added)) + '">' + fmtAgo(r.added) + '</td>' +
             '<td class="col-edited kb-time" title="' + escapeHtml(fmtAbs(r.edited)) + '">' + fmtAgo(r.edited) + '</td>' +
-            '<td><span class="kb-status-pill s-' + r.status + '">' + statusLabel + '</span></td>' +
+            '<td>' +
+              '<span class="kb-status-pill s-' + r.status + '">' + statusLabel + '</span>' +
+              (r.status === "pending"
+                ? '<div class="kb-loading-bar" aria-hidden="true" title="Still processing in the background"></div>'
+                : '') +
+            '</td>' +
             '<td class="kb-actions-cell">' +
               (r.type === "sheet"
                 ? '<button type="button" class="kb-row-preview" data-kb-preview-id="' + escapeHtml(r.id) + '" data-kb-preview-title="' + escapeHtml(r.title || "") + '" aria-label="Preview rows" title="Preview rows">' +
