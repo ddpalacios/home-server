@@ -26322,7 +26322,7 @@
           return fetch(`${apiBase}/knowledege`, {
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: entryId, accountid: accountId, kb_type: currentSaveContext }),
+            body: JSON.stringify({ document_id: entryId, accountid: accountId }),
           })
             .then((res) => {
               if (!res.ok) {
@@ -26338,30 +26338,35 @@
             });
         });
         const upserts = Array.from(ctx.pendingUpserts.entries());
-        const upsertPromises = upserts.map(([row, item]) =>
-          fetch(`${apiBase}/knowledege`, {
+        const upsertPromises = upserts.map(([row, item]) => {
+          // Warehouse Article/FAQ doc — an item.id updates in place.
+          const isFaq = item.type === "FAQ";
+          const docBody = {
+            accountid: accountId,
+            origin: isFaq ? "faq" : "article",
+            document_id: item.id || "",
+            title: item.title,
+          };
+          if (isFaq) {
+            docBody.faq_pairs = Array.isArray(item.content) ? item.content : [];
+          } else {
+            docBody.body = typeof item.content === "string" ? item.content : "";
+          }
+          return fetch(`${apiBase}/knowledege`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              accountid: accountId,
-              title: item.title,
-              notes: item.notes,
-              content: item.content,
-              id: item.id || "",
-              kb_type: currentSaveContext,
-              entry_type: item.type === "FAQ" ? "faq" : "article",
-            }),
+            body: JSON.stringify(docBody),
           }).then(async (res) => {
             const payload = await res.json().catch(() => ({}));
             if (!res.ok) {
               const message = (payload && payload.error) || "Failed to save entry.";
               throw new Error(message);
             }
-            if (payload && payload.path && row) {
-              row.dataset.id = payload.path;
+            if (payload && payload.document_id && row) {
+              row.dataset.id = payload.document_id;
             }
-          })
-        );
+          });
+        });
         Promise.allSettled([...deletePromises, ...upsertPromises]).then(async (results) => {
           if (kbSaveLoading) {
             kbSaveLoading.classList.remove("is-visible");
@@ -26802,27 +26807,23 @@
             return;
           }
           try {
+            // Create a warehouse Article document — no document_id.
             const res = await fetch("/knowledege", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 accountid: accountId,
+                origin: "article",
                 title: item.title,
-                notes: item.notes,
-                content: item.content,
-                kb_type: currentKbType,
-                entry_type: "article",
+                body: item.content,
               }),
             });
             const data = await res.json();
-            if (data && data.path) {
-              row.dataset.id = data.path;
+            if (data && data.document_id) {
+              row.dataset.id = data.document_id;
             }
-            fetch("/knowledege-embed", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ accountid: accountId, kb_type: currentKbType }),
-            }).catch((err) => console.error("Embed build failed", err));
+            // The unified KB table re-reads /knowledege on kb:saved.
+            window.dispatchEvent(new CustomEvent("kb:saved"));
           } catch (err) {
             console.error("Knowledge save failed", err);
           }
@@ -26882,27 +26883,23 @@
             return;
           }
           try {
+            // Create a warehouse FAQ document — no document_id.
             const res = await fetch("/knowledege", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 accountid: accountId,
+                origin: "faq",
                 title: item.title,
-                notes: item.notes,
-                content: mode === "manual" ? faqPairs : "",
-                kb_type: currentKbType,
-                entry_type: "faq",
+                faq_pairs: mode === "manual" ? faqPairs : [],
               }),
             });
             const data = await res.json();
-            if (data && data.path) {
-              row.dataset.id = data.path;
+            if (data && data.document_id) {
+              row.dataset.id = data.document_id;
             }
-            fetch("/knowledege-embed", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ accountid: accountId, kb_type: currentKbType }),
-            }).catch((err) => console.error("Embed build failed", err));
+            // The unified KB table re-reads /knowledege on kb:saved.
+            window.dispatchEvent(new CustomEvent("kb:saved"));
           } catch (err) {
             console.error("Knowledge save failed", err);
           }
@@ -29985,20 +29982,26 @@
         return;
       }
       try {
+        // /knowledege now returns warehouse Article/FAQ documents
+        // under `docs` (the old `entries` key is gone). Map each doc
+        // into the legacy item shape renderKbItem expects.
         const res = await fetch(`/knowledege?accountid=${encodeURIComponent(accountId)}&kb_type=${type}`);
         const data = await res.json();
-        if (!data.entries) return;
+        if (!Array.isArray(data.docs)) return;
         ctx.list.innerHTML = "";
-        data.entries.forEach((entry) => {
+        data.docs.forEach((doc) => {
+          const isFaq = (doc.origin || "").toLowerCase() === "faq";
           const item = {
-            id: entry.id || "",
+            id: doc.document_id || "",
             kbType: type,
-            type: entry.entry_type === "faq" ? "FAQ" : "Article",
-            title: entry.title || "Untitled",
-            notes: entry.notes || "",
-            mode: entry.entry_type === "faq" ? "manual" : "manual",
-            content: entry.content || "",
-            file: entry.file || "",
+            type: isFaq ? "FAQ" : "Article",
+            title: doc.title || "Untitled",
+            notes: doc.source_url ? ("from " + doc.source_url) : "",
+            mode: "manual",
+            content: isFaq
+              ? (Array.isArray(doc.faq_pairs) ? doc.faq_pairs : [])
+              : (typeof doc.body === "string" ? doc.body : ""),
+            file: "",
           };
           ctx.list.appendChild(renderKbItem(item));
         });
@@ -33347,11 +33350,9 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   accountid: window.__accountId || "",
-                  kb_type: kb_type,
-                  entry_type: "faq",
+                  origin: "faq",
                   title: (question || "").slice(0, 80) || "Improved answer",
-                  notes: "Saved from chat tester — improved bot answer",
-                  content: [{ question: question, answer: newAnswer }],
+                  faq_pairs: [{ question: question, answer: newAnswer }],
                   edit_key: editKey,
                 }),
               });
@@ -35753,15 +35754,18 @@
           raw: s,
         };
       }
-      // Build a unified row from a /knowledege entry.
-      function rowFromEntry(e) {
-        var et = (e.entry_type || "").toLowerCase();
-        var type = et === "faq" ? "faq" : "article";
-        var title = e.title || "";
+      // Build a unified row from a warehouse Article/FAQ document
+      // (the /knowledege {docs} contract). Article docs carry `body`
+      // text; FAQ docs carry a `faq_pairs` list. `source_url` is set
+      // for website-auto-generated docs — surfaced as a "from <host>"
+      // hint so hand-created vs. crawled docs are distinguishable.
+      function rowFromDoc(d) {
+        var origin = (d.origin || "").toLowerCase();
+        var type = origin === "faq" ? "faq" : "article";
+        var title = d.title || "";
         var desc = "";
         if (type === "faq") {
-          var content = e.content;
-          var pairs = Array.isArray(content) ? content : [];
+          var pairs = Array.isArray(d.faq_pairs) ? d.faq_pairs : [];
           if (pairs.length) {
             title = title || (pairs[0].question || "Q&A");
             desc = pairs[0].answer || "";
@@ -35770,20 +35774,23 @@
             desc = "Q&A";
           }
         } else {
-          var body = typeof e.content === "string" ? e.content : "";
+          var body = typeof d.body === "string" ? d.body : "";
           desc = body.replace(/\s+/g, " ").trim().slice(0, 120);
-          if (!desc && e.notes) desc = String(e.notes).slice(0, 120);
+        }
+        if (d.source_url) {
+          var hint = "from " + prettyHost(d.source_url);
+          desc = desc ? (desc + " · " + hint) : hint;
         }
         return {
-          id: e.id || "",
+          id: d.document_id || "",
           type: type,
           title: title || (type === "faq" ? "Q&A" : "Article"),
           description: desc || (type === "faq" ? "Q&A" : "Article"),
           status: "ready",
           rawStatus: "ready",
-          added: e.created_at || "",
-          edited: e.updated_at || e.created_at || "",
-          raw: e,
+          added: d.created_at || "",
+          edited: d.updated_at || d.created_at || "",
+          raw: d,
         };
       }
 
@@ -35963,20 +35970,22 @@
             fetch(entUrl, { credentials: "same-origin", cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
           ]);
           var sources = (results[0] && results[0].sources) || [];
-          var entries = (results[1] && results[1].entries) || [];
+          // /knowledege now returns warehouse Article/FAQ documents
+          // under `docs` (the old `entries` key is gone).
+          var docs = (results[1] && results[1].docs) || [];
           // Sources that came from Drive imports already have a row
           // (typed as Sheet / Doc / etc.) AND produced one or more
-          // /knowledege entries the worker saved (their IDs live on
-          // source.entry_ids). Drop those entries from the entry
-          // list so we don't double-count one upload as two rows.
+          // warehouse docs the worker saved (their IDs live on
+          // source.entry_ids). Drop those docs from the list so we
+          // don't double-count one upload as two rows.
           var hideEntryIds = new Set();
           sources.forEach(function (s) {
             if (Array.isArray(s.entry_ids)) {
               s.entry_ids.forEach(function (eid) { if (eid) hideEntryIds.add(eid); });
             }
           });
-          var visibleEntries = entries.filter(function (e) {
-            return !(e && e.id && hideEntryIds.has(e.id));
+          var visibleDocs = docs.filter(function (d) {
+            return !(d && d.document_id && hideEntryIds.has(d.document_id));
           });
           // Warehouse documents this agent references — fetched per
           // active agent and shown in the same table as shared rows.
@@ -35994,7 +36003,7 @@
           }
           rows = []
             .concat(sources.map(rowFromSource))
-            .concat(visibleEntries.map(rowFromEntry))
+            .concat(visibleDocs.map(rowFromDoc))
             .concat(whseDocs.map(rowFromWarehouseDoc));
           renderRows();
           // Poll while anything is training.
@@ -36086,17 +36095,19 @@
               var r = pickedRows[i];
               try {
                 // Source rows (website / sheet / doc) live in
-                // /kb/sources; article + faq live in /knowledege.
+                // /kb/sources; article + faq are warehouse docs in
+                // /knowledege. Warehouse-reference rows are skipped —
+                // they're detached via the row menu, never deleted here.
                 var isSrc = r.type === "website" || r.type === "sheet" || r.type === "doc";
                 if (isSrc) {
                   await fetch("/kb/sources/" + encodeURIComponent(r.id) +
                               "?accountid=" + encodeURIComponent(getAid()),
                               { method: "DELETE", credentials: "same-origin" });
-                } else {
+                } else if (r.type === "article" || r.type === "faq") {
                   await fetch("/knowledege", {
                     method: "DELETE", credentials: "same-origin",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ id: r.id, accountid: getAid(), kb_type: effectiveMode() }),
+                    body: JSON.stringify({ accountid: getAid(), document_id: r.id }),
                   });
                 }
               } catch (_) { /* keep going */ }
@@ -36750,10 +36761,10 @@
         } else if (row.type === "article") {
           document.getElementById("kbDetailArticleTitle").value = row.raw.title || "";
           document.getElementById("kbDetailArticleBody").value =
-            typeof row.raw.content === "string" ? row.raw.content : "";
+            typeof row.raw.body === "string" ? row.raw.body : "";
         } else if (row.type === "faq") {
           document.getElementById("kbDetailFaqTitle").value = row.raw.title || "";
-          renderFaqPairs(Array.isArray(row.raw.content) ? row.raw.content : []);
+          renderFaqPairs(Array.isArray(row.raw.faq_pairs) ? row.raw.faq_pairs : []);
         }
         openModal(modal);
       };
@@ -36815,16 +36826,17 @@
             closeModal(document.getElementById("kbDetailModal"));
             return;
           }
+          // Warehouse Article/FAQ docs: POST {accountid, origin,
+          // document_id, title, body|faq_pairs}. An existing row keeps
+          // its document_id so the doc updates in place.
           var body;
           if (row.type === "article") {
             body = {
-              id: row.id,
               accountid: getAid(),
-              kb_type: detailState.mode,
-              entry_type: "article",
+              origin: "article",
+              document_id: row.id || "",
               title: (document.getElementById("kbDetailArticleTitle").value || "").trim(),
-              notes: row.raw.notes || "",
-              content: document.getElementById("kbDetailArticleBody").value || "",
+              body: document.getElementById("kbDetailArticleBody").value || "",
             };
             if (!body.title) { err.hidden = false; err.textContent = "Title is required."; return; }
           } else {
@@ -36837,13 +36849,11 @@
             });
             if (!pairs.length) { err.hidden = false; err.textContent = "Add at least one Q&A pair."; return; }
             body = {
-              id: row.id,
               accountid: getAid(),
-              kb_type: detailState.mode,
-              entry_type: "faq",
+              origin: "faq",
+              document_id: row.id || "",
               title: (document.getElementById("kbDetailFaqTitle").value || "").trim() || (pairs[0].question || "Q&A"),
-              notes: row.raw.notes || "",
-              content: pairs,
+              faq_pairs: pairs,
             };
           }
           var r = await fetch("/knowledege", {
@@ -36857,14 +36867,6 @@
             err.textContent = data.error || "Couldn't save.";
             return;
           }
-          // Trigger embed rebuild so the bot picks up the change.
-          try {
-            await fetch("/knowledege-embed", {
-              method: "POST", credentials: "same-origin",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ accountid: getAid(), kb_type: detailState.mode }),
-            });
-          } catch (_) {}
           closeModal(document.getElementById("kbDetailModal"));
           if (detailState.refresh) detailState.refresh();
           window.dispatchEvent(new CustomEvent("kb:saved"));
@@ -36900,10 +36902,11 @@
                         "?accountid=" + encodeURIComponent(getAid()),
                         { method: "DELETE", credentials: "same-origin" });
           } else {
+            // Warehouse Article/FAQ doc — delete by document_id.
             await fetch("/knowledege", {
               method: "DELETE", credentials: "same-origin",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ id: row.id, accountid: getAid(), kb_type: detailState.mode }),
+              body: JSON.stringify({ accountid: getAid(), document_id: row.id }),
             });
           }
           closeModal(document.getElementById("kbDetailModal"));
@@ -37107,7 +37110,8 @@
             return;
           }
           if (action === "duplicate") {
-            // Only article/faq can duplicate via /knowledege POST.
+            // Only article/faq can duplicate via /knowledege POST —
+            // omit document_id so the server creates a new doc.
             if (isSourceRow(row.type)) {
               alert(row.type === "sheet" ? "Sheets can't be duplicated — re-import the file instead."
                   : row.type === "doc"   ? "Drive documents can't be duplicated."
@@ -37116,12 +37120,14 @@
             }
             var body = {
               accountid: getAid(),
-              kb_type: menuState.mode,
-              entry_type: row.type === "faq" ? "faq" : "article",
+              origin: row.type === "faq" ? "faq" : "article",
               title: (row.raw.title || "Untitled") + " (copy)",
-              notes: row.raw.notes || "",
-              content: row.raw.content || (row.type === "faq" ? [] : ""),
             };
+            if (row.type === "faq") {
+              body.faq_pairs = Array.isArray(row.raw.faq_pairs) ? row.raw.faq_pairs : [];
+            } else {
+              body.body = typeof row.raw.body === "string" ? row.raw.body : "";
+            }
             try {
               await fetch("/knowledege", {
                 method: "POST", credentials: "same-origin",
@@ -37180,10 +37186,11 @@
                             "?accountid=" + encodeURIComponent(getAid()),
                             { method: "DELETE", credentials: "same-origin" });
               } else {
+                // Warehouse Article/FAQ doc — delete by document_id.
                 await fetch("/knowledege", {
                   method: "DELETE", credentials: "same-origin",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ id: row.id, accountid: getAid(), kb_type: menuState.mode }),
+                  body: JSON.stringify({ accountid: getAid(), document_id: row.id }),
                 });
               }
               if (menuState.refresh) menuState.refresh();
