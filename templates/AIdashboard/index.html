@@ -6780,6 +6780,11 @@
     .kb-type-pill.t-faq     { background: rgba(16, 185, 129, 0.10); color: #047857; }
     .kb-type-pill.t-sheet   { background: rgba(15, 157, 88, 0.12);  color: #0f9d58; }
     .kb-type-pill.t-doc     { background: rgba(66, 133, 244, 0.12); color: #1a73e8; }
+    .kb-type-pill.t-warehouse { background: rgba(217, 119, 6, 0.12); color: #b45309; }
+    .kb-row-whse-remove { padding: 4px 10px; font-size: 12px; border-radius: 7px;
+      border: 1px solid #e5e7eb; background: transparent; color: #dc2626;
+      cursor: pointer; }
+    [data-theme="dark"] .kb-row-whse-remove { border-color: #3f3f46; }
 
     .kb-status-pill {
       display: inline-flex;
@@ -12908,13 +12913,9 @@
             <p class="answers-sub">What it knows when answering customers. Train it from website links, write your own answers, or add quick Q&amp;As.</p>
           </div>
 
-          <!-- Shared knowledge: warehouse documents this agent
-               references. Managed independently per agent. -->
-          <div class="whse-kb-host" data-whse-kb-mode="client"></div>
-
-          <!-- This agent's own knowledge: per-agent websites,
-               articles, Q&As, and Drive imports — private to this
-               agent. Add shared content via the warehouse instead. -->
+          <!-- This agent's knowledge — per-agent content (websites,
+               articles, Q&As, Drive imports) plus the warehouse
+               documents it references, unified in one table. -->
           <div class="kb-table-host" data-kb-table-mode="client">
             <div class="kb-table-toolbar">
               <div class="kb-table-actions">
@@ -13072,8 +13073,6 @@
             <h2 class="answers-title">Team brain knowledge</h2>
             <p class="answers-sub">What your team can look up. Train it from internal pages, write your own notes, or add Q&amp;As. Customers never see this.</p>
           </div>
-
-          <div class="whse-kb-host" data-whse-kb-mode="internal"></div>
 
           <div class="kb-table-host" data-kb-table-mode="internal">
             <div class="kb-table-toolbar">
@@ -35185,6 +35184,21 @@
       var pollTimer = null;
       var selected = new Set();
 
+      // "+ Add from warehouse" — inserted into the toolbar at runtime.
+      // Opens the shared-document picker; the data-kb-add handler below
+      // wires the click (warehouse branch).
+      (function () {
+        var actions = host.querySelector(".kb-table-actions");
+        if (actions && !actions.querySelector('[data-kb-add="warehouse"]')) {
+          var wbtn = document.createElement("button");
+          wbtn.type = "button";
+          wbtn.className = "kb-add-btn is-secondary";
+          wbtn.setAttribute("data-kb-add", "warehouse");
+          wbtn.textContent = "📦 Add from warehouse";
+          actions.appendChild(wbtn);
+        }
+      })();
+
       function getAid() { return window.__accountId || ""; }
 
       function fmtAgo(iso) {
@@ -35304,6 +35318,31 @@
         };
       }
 
+      // A warehouse-document reference rendered as a table row. These
+      // are SHARED docs (managed in the warehouse); the row's only
+      // action is "Remove" — which detaches it from this agent, never
+      // deletes it from the warehouse.
+      function rowFromWarehouseDoc(d) {
+        var st = (d.status || "").toLowerCase();
+        var status = st === "ready" ? "ready"
+                   : (st === "failed" || st === "error") ? "failed"
+                   : "pending";
+        var vis = d.visibility === "customer_facing"
+          ? "Customer-facing" : "Internal";
+        return {
+          id: d.document_id || "",
+          type: "warehouse",
+          title: d.name || d.document_id || "Document",
+          description: (d.format || "file").toUpperCase() + " · " + vis +
+            " · " + (d.chunk_count || 0) + " chunks · shared",
+          status: status,
+          rawStatus: st,
+          added: d.uploaded_at || "",
+          edited: d.updated_at || d.uploaded_at || "",
+          raw: d,
+        };
+      }
+
       // Parse `type:X` / `status:X` operators out of the search box.
       // Whatever remains becomes the plain-text query.
       function parseSearch(raw) {
@@ -35406,6 +35445,7 @@
                         : r.type === "sheet"   ? "Sheet"
                         : r.type === "doc"     ? "Doc"
                         : r.type === "faq"     ? "Q&A"
+                        : r.type === "warehouse" ? "Warehouse"
                         : "Article";
           var statusLabel = r.status === "ready" ? "Ready" : r.status === "failed" ? "Failed" : "Training";
           var isChecked = selected.has(r.id);
@@ -35425,7 +35465,9 @@
                     '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
                   '</button>'
                 : '') +
-              '<button type="button" class="kb-row-menu" aria-label="Actions">⋯</button>' +
+              (r.type === "warehouse"
+                ? '<button type="button" class="kb-row-whse-remove" data-kb-whse-remove="' + escapeHtml(r.id) + '">Remove</button>'
+                : '<button type="button" class="kb-row-menu" aria-label="Actions">⋯</button>') +
             '</td>';
           body.appendChild(tr);
         });
@@ -35463,9 +35505,24 @@
           var visibleEntries = entries.filter(function (e) {
             return !(e && e.id && hideEntryIds.has(e.id));
           });
+          // Warehouse documents this agent references — fetched per
+          // active agent and shown in the same table as shared rows.
+          var ag = window.__activeAgent || null;
+          var whseDocs = [];
+          if (ag && ag.id) {
+            try {
+              var wr = await fetch("/me/agents/" + encodeURIComponent(ag.id) +
+                "/kb-documents", { credentials: "same-origin", cache: "no-store" });
+              if (wr.ok) {
+                var wd = await wr.json();
+                whseDocs = (wd && Array.isArray(wd.documents)) ? wd.documents : [];
+              }
+            } catch (_) { whseDocs = []; }
+          }
           rows = []
             .concat(sources.map(rowFromSource))
-            .concat(visibleEntries.map(rowFromEntry));
+            .concat(visibleEntries.map(rowFromEntry))
+            .concat(whseDocs.map(rowFromWarehouseDoc));
           renderRows();
           // Poll while anything is training.
           if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
@@ -35665,7 +35722,14 @@
         btn.addEventListener("click", async function (e) {
           e.stopPropagation();
           var kind = btn.dataset.kbAdd;
-          if (kind === "article") {
+          if (kind === "warehouse") {
+            var wag = window.__activeAgent;
+            if (wag && wag.id && typeof window.__openWhseKbPicker === "function") {
+              window.__openWhseKbPicker(wag, loadRows);
+            } else {
+              alert("Open an agent first to add warehouse documents.");
+            }
+          } else if (kind === "article") {
             var legacy = document.getElementById(mode === "internal" ? "openArticleModalInternal" : "openArticleModalClient");
             if (legacy) legacy.click();
           } else if (kind === "faq") {
@@ -35768,6 +35832,34 @@
         var id = tr.dataset.id;
         var row = rows.find(function (r) { return r.id === id; });
         if (!row) return;
+
+        // Warehouse rows: a direct "Remove from agent" button — no
+        // legacy detail modal or row menu. Removing detaches the doc
+        // from this agent only; it stays in the warehouse.
+        if (row.type === "warehouse") {
+          var wrm = e.target.closest("[data-kb-whse-remove]");
+          if (wrm) {
+            e.stopPropagation();
+            var wag = window.__activeAgent;
+            if (!wag || !wag.id) return;
+            if (!confirm('Remove "' + (row.title || row.id) +
+                '" from this agent?\n\nIt stays in your warehouse and ' +
+                'other agents keep it.')) return;
+            wrm.disabled = true;
+            fetch("/me/agents/" + encodeURIComponent(wag.id) +
+                  "/kb-documents", {
+              method: "POST", credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ op: "remove", document_ids: [row.id] }),
+            }).then(function (r) { return r.ok ? r.json() : null; })
+              .then(function (res) {
+                if (res) loadRows();
+                else { wrm.disabled = false; alert("Couldn't remove."); }
+              })
+              .catch(function () { wrm.disabled = false; alert("Network error."); });
+          }
+          return;
+        }
 
         var menuBtn = e.target.closest(".kb-row-menu");
         if (menuBtn) {
