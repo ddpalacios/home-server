@@ -375,6 +375,17 @@
   .ask-conv-item.active .ask-conv-dots { opacity:.8; }
   .ask-conv-dots:hover { opacity:1 !important; background:var(--soft); }
   .ask-conv-empty { font-size:12.5px; color:var(--sub); padding:8px 10px; }
+  .ask-conv-loading {
+    display:flex; align-items:center; justify-content:center;
+    min-height:160px;
+  }
+  .ask-conv-spinner {
+    width:26px; height:26px; border-radius:50%;
+    border:3px solid var(--line);
+    border-top-color:var(--accent);
+    animation:ask-spin 0.7s linear infinite;
+  }
+  @keyframes ask-spin { to { transform:rotate(360deg); } }
   .ask-conv-menu {
     position:fixed; z-index:1100; min-width:150px; padding:5px;
     background:var(--bg-elevated); border:1px solid var(--line);
@@ -1737,6 +1748,14 @@
   }
   // ── Conversation sidebar ──
   function loadAskConvs() {
+    // Centered spinner while the conversation list loads — replaced by
+    // renderConvList() (rows or the empty state) when the fetch lands.
+    var box = $("askConvList");
+    if (box) {
+      box.innerHTML = '<div class="ask-conv-loading">' +
+        '<div class="ask-conv-spinner" role="status" ' +
+        'aria-label="Loading conversations"></div></div>';
+    }
     fetch("/api/warehouse/conversations", { credentials: "same-origin" })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
