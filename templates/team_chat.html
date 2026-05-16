@@ -993,6 +993,32 @@
   // Conversation state.
   var currentConversationId = "";
 
+  // ─── Idle-distill timer ─────────────────────────────────────────
+  // Re-arm a 5-minute idle timer after every assistant reply; an
+  // immediate flush fires whenever a conversation ends. The distill
+  // endpoint is idempotent, so duplicate fires are harmless.
+  let _memDistillTimer = 0;
+  function armMemoryDistill(agentId, conversationId) {
+    if (!agentId || !conversationId) return;
+    if (_memDistillTimer) clearTimeout(_memDistillTimer);
+    _memDistillTimer = setTimeout(function () {
+      fetch("/me/agents/" + encodeURIComponent(agentId) + "/memory/distill", {
+        method: "POST", credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conversation_id: conversationId }),
+      }).catch(function () { /* best-effort */ });
+    }, 5 * 60 * 1000);   // 5 minutes idle
+  }
+  function flushMemoryDistill(agentId, conversationId) {
+    if (_memDistillTimer) { clearTimeout(_memDistillTimer); _memDistillTimer = 0; }
+    if (!agentId || !conversationId) return;
+    fetch("/me/agents/" + encodeURIComponent(agentId) + "/memory/distill", {
+      method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ conversation_id: conversationId }),
+    }).catch(function () { /* best-effort */ });
+  }
+
   function showLogin() {
     loginSec.hidden = false;
     chatSec.hidden = true;
@@ -1164,6 +1190,7 @@
               if (rowEl && rowEl.parentNode) rowEl.remove();
             }, 180);
           }
+          flushMemoryDistill(agid, convIdGoing);
           if (convIdGoing === currentConversationId) {
             currentConversationId = "";
             clearChatStream();
@@ -1261,6 +1288,7 @@
   }
 
   if (sbNew) sbNew.addEventListener("click", function () {
+    flushMemoryDistill(agid, currentConversationId);
     currentConversationId = "";
     clearChatStream();
     refreshSidebar();
@@ -1304,6 +1332,7 @@
           '<div class="tc-sb-empty">No chats yet.</div>';
       }
     }, 200);
+    flushMemoryDistill(agid, currentConversationId);
     currentConversationId = "";
     clearChatStream();
     fetch(urlBase + "/conversations", {
@@ -2214,6 +2243,7 @@
       if (evt === "meta") {
         if (payload.conversation_id) {
           currentConversationId = payload.conversation_id;
+          armMemoryDistill(agid, currentConversationId);
           if (!sawSidebarRefresh) {
             sawSidebarRefresh = true;
             refreshSidebar();
@@ -2298,6 +2328,7 @@
         }
         if (payload.conversation_id) {
           currentConversationId = payload.conversation_id;
+          armMemoryDistill(agid, currentConversationId);
         }
       } else if (evt === "error") {
         if (typing && typing.parentNode) typing.remove();
