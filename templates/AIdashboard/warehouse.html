@@ -1269,7 +1269,14 @@
                   : (folderPaths.indexOf(activeFolder) >= 0 ? activeFolder : "");
     }
   }
-  // Stubs replaced in Task 4. Defined now so Task 3 is testable.
+  // Folder actions are OPTIMISTIC — the UI mutates local state and
+  // re-renders immediately; the server call runs in the background.
+  // On a background failure we toast and reconcile (loadList re-fetches
+  // documents + folders, undoing the optimistic change).
+  function _whUnder(fp, path) {
+    fp = fp || "";
+    return fp === path || fp.indexOf(path + "/") === 0;
+  }
   window.__whFolderMenu = function (anchor, path) {
     var leaf = path.split("/").pop();
     var choice = prompt(
@@ -1281,26 +1288,52 @@
       var nn = (prompt("New name for this folder:", leaf) || "").trim();
       if (!nn) return;
       var parts = path.split("/"); parts[parts.length - 1] = nn;
+      var newPath = parts.join("/");
+      // Optimistic — rewrite the prefix locally, render now.
+      allDocs.forEach(function (d) {
+        if (_whUnder(d.folder_path, path))
+          d.folder_path = newPath + (d.folder_path || "").slice(path.length);
+      });
+      folderPaths = folderPaths.map(function (p) {
+        return _whUnder(p, path) ? newPath + p.slice(path.length) : p;
+      }).sort();
+      if (_whUnder(activeFolder, path))
+        activeFolder = newPath + activeFolder.slice(path.length);
+      renderList(); renderFolderPane();
+      toast("Folder renamed.");
       fetch("/api/warehouse/folders", {
         method: "POST", credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ op: "rename", path: path,
-                               new_path: parts.join("/") }),
+                               new_path: newPath }),
       }).then(function (r) { return r.ok ? r.json() : null; })
         .then(function (j) {
-          if (j) {
-            toast("Folder renamed (" + (j.affected || 0) + " documents).");
-            if (activeFolder === path || activeFolder.indexOf(path + "/") === 0)
-              activeFolder = "";
-            loadList();
-          } else { alert("Couldn't rename the folder."); }
+          if (!j) { toast("Couldn't rename the folder — reverting."); loadList(); }
         })
-        .catch(function () { alert("Network error."); });
+        .catch(function () {
+          toast("Network error renaming folder — reverting."); loadList();
+        });
     } else if (choice === "delete") {
       var alsoDel = confirm(
         'Delete folder "' + path + '".\n\n' +
         "OK = also DELETE the documents in it (permanent).\n" +
         "Cancel = keep the documents (they move to root).");
+      // Optimistic — drop the folder; move docs to root (or remove).
+      if (alsoDel) {
+        allDocs = allDocs.filter(function (d) {
+          return !_whUnder(d.folder_path, path);
+        });
+      } else {
+        allDocs.forEach(function (d) {
+          if (_whUnder(d.folder_path, path)) d.folder_path = "";
+        });
+      }
+      folderPaths = folderPaths.filter(function (p) {
+        return !_whUnder(p, path);
+      });
+      if (_whUnder(activeFolder, path)) activeFolder = "";
+      renderList(); renderFolderPane();
+      toast(alsoDel ? "Documents deleted." : "Folder removed.");
       fetch("/api/warehouse/folders", {
         method: "POST", credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
@@ -1308,42 +1341,53 @@
                                delete_documents: alsoDel }),
       }).then(function (r) { return r.ok ? r.json() : null; })
         .then(function (j) {
-          if (j) {
-            toast(alsoDel
-              ? ((j.affected || 0) + " documents deleted.")
-              : "Folder removed; documents moved to root.");
-            if (activeFolder === path || activeFolder.indexOf(path + "/") === 0)
-              activeFolder = "";
-            loadList();
-          } else { alert("Couldn't delete the folder."); }
+          if (!j) { toast("Couldn't delete the folder — reverting."); loadList(); }
         })
-        .catch(function () { alert("Network error."); });
+        .catch(function () {
+          toast("Network error deleting folder — reverting."); loadList();
+        });
     }
   };
   window.__whMoveDoc = function (docId, folderPath) {
+    folderPath = (folderPath || "").replace(/^\/+|\/+$/g, "");
+    // Optimistic — update the document's folder locally, render now.
+    var moved = false;
+    allDocs.forEach(function (d) {
+      if (d.document_id === docId) { d.folder_path = folderPath; moved = true; }
+    });
+    if (folderPath && folderPaths.indexOf(folderPath) < 0) {
+      folderPaths = folderPaths.concat([folderPath]).sort();
+    }
+    if (moved) { renderList(); renderFolderPane(); }
+    toast("Moved to " + (folderPath || "root") + ".");
     fetch("/api/warehouse/documents/" + encodeURIComponent(docId), {
       method: "POST", credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ op: "update_meta",
-                             folder_path: folderPath || "" }),
+      body: JSON.stringify({ op: "update_meta", folder_path: folderPath }),
     }).then(function (r) {
         return r.json().catch(function () { return {}; })
           .then(function (j) { return { ok: r.ok, j: j }; });
       })
       .then(function (res) {
-        if (res.ok) {
-          toast("Moved to " + (folderPath || "root") + ".");
+        if (!res.ok) {
+          toast("Couldn't move: " + ((res.j && res.j.message) ||
+            (res.j && res.j.error) || "error") + " — reverting.");
           loadList();
-        } else {
-          alert("Couldn't move: " + ((res.j && res.j.message) ||
-            (res.j && res.j.error) || "error"));
         }
       })
-      .catch(function () { alert("Network error."); });
+      .catch(function () {
+        toast("Network error moving document — reverting."); loadList();
+      });
   };
   window.__whNewFolder = function () {
-    var name = (prompt("New folder name (use / for nesting):") || "").trim();
+    var name = (prompt("New folder name (use / for nesting):") || "")
+      .trim().replace(/^\/+|\/+$/g, "");
     if (!name) return;
+    // Optimistic — show the folder in the sidebar immediately.
+    if (folderPaths.indexOf(name) < 0) {
+      folderPaths = folderPaths.concat([name]).sort();
+      renderFolderPane();
+    }
     fetch("/api/warehouse/folders", {
       method: "POST", credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
@@ -1353,11 +1397,15 @@
           .then(function (j) { return { ok: r.ok, j: j }; });
       })
       .then(function (res) {
-        if (res.ok) { loadFolders(); }
-        else { alert("Couldn't create folder: " +
-          ((res.j && res.j.message) || (res.j && res.j.error) || "error")); }
+        if (!res.ok) {
+          toast("Couldn't create folder: " + ((res.j && res.j.message) ||
+            (res.j && res.j.error) || "error") + " — reverting.");
+          loadFolders();
+        }
       })
-      .catch(function () { alert("Network error."); });
+      .catch(function () {
+        toast("Network error creating folder — reverting."); loadFolders();
+      });
   };
   function loadList() {
     fetch("/api/warehouse/documents", { credentials: "same-origin" })
