@@ -6994,6 +6994,43 @@
       color: #78350f; font-size: 13px; line-height: 1.55;
     }
 
+    /* Sheet-preview modal — dark mode. The .modal-card shell already
+       has a dark rule; these cover the kbprev-* content inside it so
+       text/grid aren't black-on-dark. */
+    [data-theme="dark"] .kbprev-title { color: #fafafa; }
+    [data-theme="dark"] .kbprev-meta,
+    [data-theme="dark"] .kbprev-summary { color: #a1a1aa; }
+    [data-theme="dark"] .kbprev-tabs { border-bottom-color: #27272a; }
+    [data-theme="dark"] .kbprev-tab { color: #d4d4d8; }
+    [data-theme="dark"] .kbprev-tab:hover {
+      background: #27272a; color: #fafafa;
+    }
+    [data-theme="dark"] .kbprev-tab.is-active {
+      background: #1e293b; color: #c7d2fe; border-color: #3f3f46;
+    }
+    [data-theme="dark"] .kbprev-tab-count {
+      background: #27272a; color: #a1a1aa;
+    }
+    [data-theme="dark"] .kbprev-tab.is-active .kbprev-tab-count {
+      background: #0a0a0b; color: #c7d2fe;
+    }
+    [data-theme="dark"] .kbprev-grid-wrap {
+      background: #111113; border-color: #27272a;
+    }
+    [data-theme="dark"] .kbprev-grid { color: #e4e4e7; }
+    [data-theme="dark"] .kbprev-grid thead th {
+      background: #18181b; color: #a1a1aa; border-bottom-color: #27272a;
+    }
+    [data-theme="dark"] .kbprev-grid tbody td { border-bottom-color: #1f1f23; }
+    [data-theme="dark"] .kbprev-grid tbody tr:nth-child(even) td {
+      background: #161619;
+    }
+    [data-theme="dark"] .kbprev-grid tbody tr:hover td { background: #1e293b; }
+    [data-theme="dark"] .kbprev-empty { color: #a1a1aa; }
+    [data-theme="dark"] .kbprev-text {
+      background: #2a2010; color: #fcd9a8;
+    }
+
     .kb-table-empty {
       padding: 36px 18px;
       text-align: center;
@@ -35516,11 +35553,10 @@
                 : '') +
             '</td>' +
             '<td class="kb-actions-cell">' +
-              (r.type === "sheet"
-                ? '<button type="button" class="kb-row-preview" data-kb-preview-id="' + escapeHtml(r.id) + '" data-kb-preview-title="' + escapeHtml(r.title || "") + '" aria-label="Preview rows" title="Preview rows">' +
-                    '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
-                  '</button>'
-                : '') +
+              // Eye preview on EVERY row, not just sheets.
+              '<button type="button" class="kb-row-preview" data-kb-preview-id="' + escapeHtml(r.id) + '" data-kb-preview-title="' + escapeHtml(r.title || "") + '" aria-label="Preview" title="Preview">' +
+                '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
+              '</button>' +
               (r.type === "warehouse"
                 ? '<button type="button" class="kb-row-whse-remove" data-kb-whse-remove="' + escapeHtml(r.id) + '">Remove</button>'
                 : '<button type="button" class="kb-row-menu" aria-label="Actions">⋯</button>') +
@@ -35889,10 +35925,17 @@
         var row = rows.find(function (r) { return r.id === id; });
         if (!row) return;
 
-        // Warehouse rows: a direct "Remove from agent" button — no
-        // legacy detail modal or row menu. Removing detaches the doc
-        // from this agent only; it stays in the warehouse.
+        // Warehouse rows: eye preview opens the document; "Remove"
+        // detaches it from this agent (the doc stays in the
+        // warehouse). No legacy detail modal or row menu.
         if (row.type === "warehouse") {
+          var wPrev = e.target.closest(".kb-row-preview");
+          if (wPrev) {
+            e.stopPropagation();
+            window.open("/api/warehouse/documents/" +
+              encodeURIComponent(row.id) + "/raw", "_blank", "noopener");
+            return;
+          }
           var wrm = e.target.closest("[data-kb-whse-remove]");
           if (wrm) {
             e.stopPropagation();
@@ -35926,8 +35969,13 @@
         var prevBtn = e.target.closest(".kb-row-preview");
         if (prevBtn) {
           e.stopPropagation();
-          if (typeof window.__kbOpenSheetPreview === "function") {
+          // Sheets get the structured grid preview; every other row
+          // type previews its content through the detail modal.
+          if (row.type === "sheet" &&
+              typeof window.__kbOpenSheetPreview === "function") {
             window.__kbOpenSheetPreview(prevBtn.dataset.kbPreviewId, prevBtn.dataset.kbPreviewTitle);
+          } else {
+            window.__kbOpenDetailModal(row, mode, loadRows);
           }
           return;
         }
