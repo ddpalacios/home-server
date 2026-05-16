@@ -106,6 +106,21 @@
     background:var(--soft); border:1px solid var(--line);
   }
   .doc-bulk-bar #docBulkCount { font-size:13px; font-weight:600; flex:1; }
+  /* Red progress bar for a bulk delete running in the background —
+     the rows are already gone from the UI; this tracks the actual
+     server-side deletions. */
+  .doc-del-progress { margin:0 0 12px; }
+  .doc-del-progress-label {
+    font-size:12.5px; font-weight:600; color:var(--err); margin-bottom:5px;
+  }
+  .doc-del-progress-track {
+    height:6px; border-radius:999px; background:#fde2e2; overflow:hidden;
+  }
+  .doc-del-progress-fill {
+    height:100%; width:0%; background:var(--err); border-radius:999px;
+    transition:width .3s ease;
+  }
+  [data-theme="dark"] .doc-del-progress-track { background:#3a1d1d; }
   table { width:100%; border-collapse:collapse; font-size:13.5px; }
   thead th {
     text-align:left; padding:11px 14px; font-size:11px; font-weight:700;
@@ -671,6 +686,12 @@
       <span id="docBulkCount">0 selected</span>
       <button type="button" class="btn btn-danger" id="docBulkDelete">Delete selected</button>
       <button type="button" class="btn" id="docBulkClear">Clear</button>
+    </div>
+    <div class="doc-del-progress" id="docDelProgress" hidden>
+      <div class="doc-del-progress-label" id="docDelProgressLabel">Deleting…</div>
+      <div class="doc-del-progress-track">
+        <div class="doc-del-progress-fill" id="docDelProgressFill"></div>
+      </div>
     </div>
     <div class="doc-table-wrap">
       <table>
@@ -2681,27 +2702,47 @@
     if (!confirm("Permanently delete " + ids.length + " document" +
         (ids.length === 1 ? "" : "s") + " from your warehouse?\n\n" +
         "This can't be undone.")) return;
-    var btn = $("docBulkDelete");
-    btn.disabled = true;
-    var done = 0, failed = 0;
+
+    // Optimistic: drop the rows from the UI immediately. The actual
+    // server-side deletes run in the background, tracked by the red
+    // progress bar below. loadList() at the end reconciles — any
+    // delete that failed reappears.
+    var idSet = {};
+    ids.forEach(function (x) { idSet[x] = true; });
+    allDocs = allDocs.filter(function (d) { return !idSet[d.document_id]; });
+    selectedDocs.clear();
+    renderList();
+    syncDocBulkBar();
+
+    var prog = $("docDelProgress");
+    var fill = $("docDelProgressFill");
+    var label = $("docDelProgressLabel");
+    prog.hidden = false;
+    fill.style.width = "0%";
+    var total = ids.length, done = 0, failed = 0;
+    function paint() {
+      var n = done + failed;
+      fill.style.width = Math.round((n / total) * 100) + "%";
+      label.textContent = "Deleting " + n + " of " + total + " document" +
+        (total === 1 ? "" : "s") + "…";
+    }
+    paint();
     function step(i) {
       if (i >= ids.length) {
-        btn.disabled = false;
-        selectedDocs.clear();
+        prog.hidden = true;
         toast(failed
-          ? (done + " deleted, " + failed + " failed.")
+          ? (done + " deleted, " + failed + " failed — refreshing.")
           : (done + " document" + (done === 1 ? "" : "s") + " deleted."));
         loadList();
         return;
       }
-      btn.textContent = "Deleting " + (i + 1) + "/" + ids.length + "…";
       fetch("/api/warehouse/documents/" + encodeURIComponent(ids[i]), {
         method: "POST", credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ op: "delete" }),
       }).then(function (r) { if (r.ok) done++; else failed++; })
         .catch(function () { failed++; })
-        .then(function () { step(i + 1); });
+        .then(function () { paint(); step(i + 1); });
     }
     step(0);
   });
