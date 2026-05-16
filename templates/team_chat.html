@@ -1253,6 +1253,7 @@
         // Guard against a stale response landing after the user
         // clicked into a different conversation in the meantime.
         if (currentConversationId !== convId) { hideConvLoading(); return; }
+        var convHadData = false;
         (d.conversation.messages || []).forEach(function (m) {
           var msgText = String(m.content || "").trim();
           var isBot = (m.role === "assistant");
@@ -1277,7 +1278,14 @@
               meta.analysis.tables.length) {
             appendAnalysisTables(meta.analysis.tables);
           }
+          if (isBot && ((meta.table && (meta.table.rows || []).length) ||
+              (meta.analysis && (meta.analysis.tables || []).length))) {
+            convHadData = true;
+          }
         });
+        // A loaded conversation with any SQL answer gets the export
+        // button too — it always exports the latest analysis answer.
+        if (convHadData) showExportButton();
         // No refreshSidebar() here — the active row was already
         // toggled synchronously on click. Re-fetching the list on
         // every nav would just churn the DOM.
@@ -2258,6 +2266,76 @@
       loadingNote = null;
     }
 
+    // ── PDF report export ──────────────────────────────────────────
+    // One button, shown under an analysis answer. It exports the
+    // latest analysis answer in this conversation as a polished PDF.
+    var exportBtnRow = null;
+    function showExportButton() {
+      // Exactly one button — drop any prior one, append a fresh one
+      // at the bottom of the stream.
+      if (exportBtnRow && exportBtnRow.parentNode) exportBtnRow.remove();
+      exportBtnRow = document.createElement("div");
+      exportBtnRow.className = "tc-export-row";
+      exportBtnRow.style.cssText = "margin:4px 0 16px 0;";
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = "📄 Export as PDF report";
+      btn.style.cssText =
+        "font:600 13px/1.2 inherit;cursor:pointer;padding:10px 15px;" +
+        "border-radius:8px;border:1px solid var(--brand);" +
+        "background:var(--brand-soft);color:var(--brand);";
+      btn.addEventListener("click", function () { runExport(btn); });
+      exportBtnRow.appendChild(btn);
+      stream.appendChild(exportBtnRow);
+      stream.scrollTop = stream.scrollHeight;
+    }
+    function runExport(btn) {
+      if (!currentConversationId) return;
+      var orig = btn.textContent;
+      btn.disabled = true;
+      btn.style.opacity = "0.6";
+      btn.style.cursor = "default";
+      btn.textContent = "Building your PDF report… (about 20 seconds)";
+      var fname = "analysis_report.pdf";
+      fetch(urlBase + "/conversations/" +
+            encodeURIComponent(currentConversationId) + "/export-pdf",
+            { method: "POST", credentials: "same-origin" })
+        .then(function (resp) {
+          if (!resp.ok) {
+            return resp.json().catch(function () { return {}; })
+              .then(function (j) {
+                throw new Error(j.message || j.error || "Export failed.");
+              });
+          }
+          var cd = resp.headers.get("Content-Disposition") || "";
+          var m = cd.match(/filename="?([^"]+)"?/);
+          if (m) fname = m[1];
+          return resp.blob();
+        })
+        .then(function (blob) {
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement("a");
+          a.href = url;
+          a.download = fname;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(function () { URL.revokeObjectURL(url); }, 5000);
+          btn.disabled = false;
+          btn.style.opacity = "1";
+          btn.style.cursor = "pointer";
+          btn.textContent = "📄 Exported — export again";
+        })
+        .catch(function (err) {
+          btn.disabled = false;
+          btn.style.opacity = "1";
+          btn.style.cursor = "pointer";
+          btn.textContent = orig;
+          appendMsg("bot", "Couldn't export the PDF — " +
+            (err && err.message ? err.message : "please try again."));
+        });
+    }
+
     function handleEvent(evt, payload) {
       try { payload = payload ? JSON.parse(payload) : {}; }
       catch (_e) { payload = {}; }
@@ -2342,17 +2420,22 @@
         // bullets actually display.
         rerenderBotBubbleAsMarkdown(liveBubble, liveText);
         history.push({ role: "bot", text: liveText.trim() });
+        var doneHadData = false;
         if (sqlTable && Array.isArray(sqlTable.rows) && sqlTable.rows.length) {
           appendSqlTable(sqlTable);
+          doneHadData = true;
         }
         if (analysisBundle && Array.isArray(analysisBundle.tables)
             && analysisBundle.tables.length) {
           appendAnalysisTables(analysisBundle.tables);
+          doneHadData = true;
         }
         if (payload.conversation_id) {
           currentConversationId = payload.conversation_id;
           armMemoryDistill(agid, currentConversationId);
         }
+        // This answer has SQL data — offer a one-click PDF export.
+        if (doneHadData && currentConversationId) showExportButton();
       } else if (evt === "error") {
         if (typing && typing.parentNode) typing.remove();
         removeLoadingNote();
