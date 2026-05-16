@@ -35347,6 +35347,8 @@
         subEl.textContent = isCustomer
           ? "This is a customer-facing agent — only customer-facing documents can be added."
           : "Internal agent — any document can be added.";
+        // Folder filter row — built once the documents load (below).
+        ctx.folderFilter = "";
         listEl.innerHTML = '<div class="whse-pick-item-meta">Loading…</div>';
         bg.classList.add("is-open");
         syncAddBtn();
@@ -35373,10 +35375,59 @@
         var haveSet = new Set(have);
         listEl.innerHTML = "";
         var shown = 0;
+        // Folder filter dropdown — distinct folders among the docs.
+        var folderSet = {};
+        all.forEach(function (dd) {
+          var fp = dd.folder_path || "";
+          if (fp) folderSet[fp] = true;
+        });
+        var folderList = Object.keys(folderSet).sort();
+        if (folderList.length) {
+          var fbar = document.createElement("div");
+          fbar.className = "whse-pick-item-meta";
+          fbar.style.padding = "6px 0";
+          var fsel = document.createElement("select");
+          fsel.innerHTML = '<option value="">All folders</option>';
+          folderList.forEach(function (fp) {
+            var o = document.createElement("option");
+            o.value = fp; o.textContent = fp.split("/").join(" / ");
+            fsel.appendChild(o);
+          });
+          fsel.value = ctx.folderFilter || "";
+          fsel.addEventListener("change", function () {
+            ctx.folderFilter = fsel.value;
+            window.__openWhseKbPicker(agent, onAdded);  // re-render
+          });
+          fbar.appendChild(document.createTextNode("Folder: "));
+          fbar.appendChild(fsel);
+          // "Add entire folder" — ticks every eligible, not-already-
+          // added document currently shown, then the normal Add N
+          // button commits them.
+          var addAllBtn = document.createElement("button");
+          addAllBtn.type = "button";
+          addAllBtn.className = "whse-pick-btn";
+          addAllBtn.style.marginLeft = "8px";
+          addAllBtn.textContent = "Add entire folder";
+          addAllBtn.addEventListener("click", function () {
+            listEl.querySelectorAll(
+              ".whse-pick-item:not(.is-disabled) input[type=checkbox]"
+            ).forEach(function (cb) {
+              if (!cb.checked) { cb.checked = true;
+                cb.dispatchEvent(new Event("change")); }
+            });
+          });
+          fbar.appendChild(addAllBtn);
+          listEl.appendChild(fbar);
+        }
         all.forEach(function (doc) {
           var vis = doc.visibility || "internal";
           var already = haveSet.has(doc.document_id);
           var blocked = isCustomer && vis !== "customer_facing";
+          if (ctx.folderFilter) {
+            var dfp = doc.folder_path || "";
+            if (dfp !== ctx.folderFilter &&
+                dfp.indexOf(ctx.folderFilter + "/") !== 0) return;
+          }
           var ready = doc.status === "ready";
           var item = document.createElement("div");
           item.className = "whse-pick-item" +
@@ -35752,7 +35803,8 @@
           type: "warehouse",
           title: d.name || d.document_id || "Document",
           description: (d.format || "file").toUpperCase() + " · " + vis +
-            " · " + (d.chunk_count || 0) + " chunks · shared",
+            " · " + (d.chunk_count || 0) + " chunks · 📁 " +
+            ((d.folder_path || "").split("/").join(" / ") || "root"),
           status: status,
           rawStatus: st,
           added: d.uploaded_at || "",
