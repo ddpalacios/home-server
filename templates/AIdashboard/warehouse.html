@@ -3514,6 +3514,12 @@
         bubble.textContent = opener;
         askScroll();
       } else if (ev === "opener_done") {
+        // The preview finished streaming — re-render it as Markdown
+        // so its summary + bullet list display formatted, not raw.
+        if (opener.trim()) {
+          bubble.classList.add("md");
+          bubble.innerHTML = mdToHtml(opener);
+        }
         if (wait) wait.style.display = "";
         askScroll();
       } else if (ev === "answer_start") {
