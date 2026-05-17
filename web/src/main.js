@@ -32,6 +32,7 @@ const ROUTE_MODULE_LOADERS = {
   "inbox":      () => import("./routes/inbox.js"),
   "engagement": () => import("./routes/engagement.js"),
   "flow-builder": () => import("./routes/flow-builder.js"),
+  "dashboard":    () => import("./routes/dashboard.js"),
 };
 
 window.__dashboardLoadRouteModule = async function (route) {

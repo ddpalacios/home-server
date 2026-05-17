@@ -981,6 +981,8 @@
         💬 Ask the warehouse</button>
       <button type="button" class="btn" id="libraryOpen">
         📌 Pinned library</button>
+      <button type="button" class="btn" id="dashboardsOpen">
+        📊 Dashboards</button>
       <div class="wh-menu-wrap">
         <button type="button" class="btn wh-icon-btn" id="settingsBtn"
                 title="Settings" aria-label="Settings">⚙️</button>
@@ -3954,6 +3956,10 @@
   }
   $("askOpen").addEventListener("click", showAsk);
   $("libraryOpen").addEventListener("click", showLibrary);
+  $("dashboardsOpen").addEventListener("click", function () {
+    // Dashboards live in the main dashboard SPA as a React route.
+    window.location.href = "/dashboard#dashboard";
+  });
   $("libBack").addEventListener("click", hideLibrary);
   $("libSearch").addEventListener("input", renderLibrary);
   $("libSort").addEventListener("change", renderLibrary);

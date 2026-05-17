@@ -24640,6 +24640,11 @@
       </script>
       <!-- ─── /Outreach ──────────────────────────────────────────────────── -->
 
+      <!-- Dashboard editor — React island (web/src/routes/dashboard.js) -->
+      <section class="grid" id="dashboard" data-route-section="dashboard" hidden>
+        <div id="dashboardRoot" style="grid-column:span 12;width:100%;"></div>
+      </section>
+
       <section class="grid" id="engagement" data-route-section="engagement" hidden>
         <div style="grid-column: 1 / -1; width: 100%;">
           <div class="eng-page">
@@ -38183,6 +38188,12 @@
           return window.loadUnifiedLeads();
         }
       };
+      // Dashboard editor: lazy-loads web/src/routes/dashboard.js, whose
+      // init() mounts the React editor (react-grid-layout canvas) into
+      // the #dashboardRoot div in this section.
+      SECTION_ON_ENTER.dashboard = async function loadDashboardSection() {
+        await window.__dashboardLoadRouteModule("dashboard");
+      };
       // KB bundle: lazy-loads web/src/routes/kb.js then calls window.loadKbSection.
       // Both "knowledge" and "kb" route names map to the same bundle.
       SECTION_ON_ENTER.knowledge = async function loadKbSection() {
@@ -43028,6 +43039,7 @@
       phones:    { title: "Phone numbers", section: "settings" },   // now a tab inside Settings
       leads:     { title: "Leads",         section: "leads" },
       warehouse: { title: "Warehouse",     section: "warehouse" },
+      dashboard: { title: "Dashboards",    section: "dashboard" },
       approvals: { title: "Pending approvals", section: "approvals" },
       replies:   { title: "Replies",       section: "replies" },
       campaigns: { title: "Campaigns",     section: "campaigns" },
