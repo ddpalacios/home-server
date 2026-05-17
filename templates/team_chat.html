@@ -1533,10 +1533,10 @@
       det.className = "tc-analysis-block";
       det.style.cssText =
         "margin-bottom:8px;border:1px solid var(--border);" +
-        "border-radius:10px;background:var(--bg-elevated);overflow:hidden;";
-      // First panel expanded by default — gives the user a glance
-      // without forcing all 5 to render upfront.
-      if (idx === 0) det.open = true;
+        "border-radius:10px;background:var(--bg-elevated);" +
+        "overflow:hidden;opacity:0;transition:opacity 320ms ease;";
+      // Every panel starts CLOSED — the user clicks a title to
+      // expand its table. They fade in one by one (staggered below).
       var sum = document.createElement("summary");
       sum.style.cssText =
         "padding:10px 14px;cursor:pointer;font-size:13px;" +
@@ -1606,7 +1606,17 @@
       hostRow.appendChild(det);
     });
     stream.appendChild(hostRow);
-    stream.scrollTop = stream.scrollHeight;
+    // Reveal the panels one at a time with a soft fade. They are all
+    // already mounted (collapsed = compact), so only opacity animates
+    // — smooth, and the layout never jumps under the user. No
+    // scroll-to-bottom here either: the synthesis above is what the
+    // user is reading; the proof tables wait quietly below for them.
+    Array.prototype.forEach.call(
+      hostRow.querySelectorAll(".tc-analysis-block"),
+      function (el, i) {
+        setTimeout(function () { el.style.opacity = "1"; },
+                   90 + i * 120);
+      });
   }
 
   function appendSqlTable(t) {
