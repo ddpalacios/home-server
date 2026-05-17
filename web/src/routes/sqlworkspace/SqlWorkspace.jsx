@@ -12,7 +12,11 @@ const STRUCTURED = new Set([
   "csv", "tsv", "json", "ndjson", "jsonl", "xlsx", "xls",
 ]);
 
-function isQueryable(doc) {
+// A file is queryable when it is a registered Spark table (qset). The
+// format heuristic is only a fallback for before the table list loads
+// (or if that endpoint is unavailable).
+function isQueryable(doc, qset) {
+  if (qset) return qset.has(doc.document_id);
   return STRUCTURED.has((doc.format || "").toLowerCase())
     && (doc.status || "").toLowerCase() === "ready";
 }
@@ -35,7 +39,7 @@ function buildTree(docs) {
   return root;
 }
 
-function TreeNode({ node, depth, activeId, onPick }) {
+function TreeNode({ node, depth, activeId, onPick, qset }) {
   const [open, setOpen] = useState(depth < 2);
   const folderNames = Object.keys(node.folders).sort();
   const files = node.files.slice().sort(
@@ -61,10 +65,11 @@ function TreeNode({ node, depth, activeId, onPick }) {
               depth={depth + 1}
               activeId={activeId}
               onPick={onPick}
+              qset={qset}
             />
           ))}
           {files.map((f) => {
-            const q = isQueryable(f);
+            const q = isQueryable(f, qset);
             const cls = "sqlw-tree-file"
               + (q ? "" : " disabled")
               + (f.document_id === activeId ? " active" : "");
@@ -90,6 +95,7 @@ function TreeNode({ node, depth, activeId, onPick }) {
 export default function SqlWorkspace() {
   const [mode, setMode] = useState("builder");
   const [docs, setDocs] = useState(null);
+  const [queryableIds, setQueryableIds] = useState(null);
   const [treeCollapsed, setTreeCollapsed] = useState(false);
   const [activeFile, setActiveFile] = useState(null);
   const [builderSql, setBuilderSql] = useState("");
@@ -99,6 +105,13 @@ export default function SqlWorkspace() {
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => setDocs((d && d.documents) || []))
       .catch(() => setDocs([]));
+    // Authoritative queryable set — only registered tables are
+    // clickable. If this endpoint isn't available the tree falls back
+    // to the format heuristic (see isQueryable).
+    fetch("/api/warehouse/sql-workspace/tables", { credentials: "same-origin" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setQueryableIds(d ? new Set(d.queryable || []) : null))
+      .catch(() => setQueryableIds(null));
   }, []);
 
   const goBack = () => { window.location.hash = "#warehouse"; };
@@ -162,6 +175,7 @@ export default function SqlWorkspace() {
                 depth={0}
                 activeId={activeFile && activeFile.document_id}
                 onPick={setActiveFile}
+                qset={queryableIds}
               />
             )}
           </aside>
