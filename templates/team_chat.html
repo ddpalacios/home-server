@@ -1828,9 +1828,23 @@
       ["bar", "line", "pie", "doughnut"], function (v) {
         chartType = v; renderChart();
       }));
+    // Export-this-chart button — sits on the chart controls row, so
+    // it exports whatever X / Y / agg / type the user has selected.
+    var chartPdfBtn = document.createElement("button");
+    chartPdfBtn.type = "button";
+    chartPdfBtn.textContent = "📄 Export chart (PDF)";
+    chartPdfBtn.style.cssText =
+      "margin-left:auto;padding:4px 11px;border-radius:6px;" +
+      "border:1px solid var(--brand);background:var(--brand-soft);" +
+      "color:var(--brand);cursor:pointer;font:600 11.5px inherit;";
+    chartPdfBtn.addEventListener("click", function () {
+      exportChartPdf(chartPdfBtn);
+    });
+    chartCtl.appendChild(chartPdfBtn);
     paneChart.appendChild(chartCtl);
     paneChart.appendChild(chartCanvas);
     var chartInst = null;
+    var lastChart = null;
     function renderChart() {
       if (typeof Chart === "undefined") {
         chartCanvas.parentNode.replaceChild(
@@ -1941,6 +1955,57 @@
           },
         },
       });
+      // Remember the rendered selection so the Export button can
+      // send it to the server as a clean one-page chart PDF.
+      lastChart = {
+        labels: labels.slice(), values: data.slice(),
+        x: xCol, y: yCol, type: chartType, datasetLabel: datasetLabel,
+      };
+    }
+    function exportChartPdf(btn) {
+      if (!lastChart || !lastChart.labels.length) {
+        appendMsg("bot", "Pick the chart values first, then export.");
+        return;
+      }
+      var orig = btn.textContent;
+      btn.disabled = true;
+      btn.style.opacity = "0.6";
+      btn.textContent = "Exporting…";
+      fetch(urlBase + "/export-chart-pdf", {
+        method: "POST", credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: lastChart.datasetLabel + " by " + lastChart.x,
+          x_label: lastChart.x,
+          y_label: lastChart.datasetLabel,
+          chart_type: lastChart.type,
+          labels: lastChart.labels,
+          values: lastChart.values,
+        }),
+      })
+        .then(function (resp) {
+          if (!resp.ok) throw new Error("Export failed.");
+          return resp.blob();
+        })
+        .then(function (blob) {
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement("a");
+          a.href = url;
+          a.download = "chart.pdf";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(function () { URL.revokeObjectURL(url); }, 5000);
+          btn.disabled = false;
+          btn.style.opacity = "1";
+          btn.textContent = orig;
+        })
+        .catch(function () {
+          btn.disabled = false;
+          btn.style.opacity = "1";
+          btn.textContent = orig;
+          appendMsg("bot", "Couldn't export the chart — please try again.");
+        });
     }
     wrap.appendChild(paneSql);
     wrap.appendChild(paneChart);
