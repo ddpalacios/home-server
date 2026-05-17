@@ -33,6 +33,7 @@ const ROUTE_MODULE_LOADERS = {
   "engagement": () => import("./routes/engagement.js"),
   "flow-builder": () => import("./routes/flow-builder.js"),
   "dashboard":    () => import("./routes/dashboard.js"),
+  "sqlworkspace": () => import("./routes/sqlworkspace.js"),
 };
 
 window.__dashboardLoadRouteModule = async function (route) {

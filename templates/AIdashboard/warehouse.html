@@ -983,6 +983,8 @@
         📌 Pinned library</button>
       <button type="button" class="btn" id="dashboardsOpen">
         📊 Dashboards</button>
+      <button type="button" class="btn" id="sqlWorkspaceOpen">
+        ⚡ SQL workspace</button>
       <div class="wh-menu-wrap">
         <button type="button" class="btn wh-icon-btn" id="settingsBtn"
                 title="Settings" aria-label="Settings">⚙️</button>
@@ -3968,6 +3970,17 @@
       }
     } catch (e) { /* cross-origin top — fall through */ }
     window.location.href = "/dashboard#dashboard";
+  });
+  $("sqlWorkspaceOpen").addEventListener("click", function () {
+    // SQL workspace is a React route in the main SPA — route the top
+    // window, same as Dashboards.
+    try {
+      if (window.top && window.top !== window) {
+        window.top.location.hash = "#sqlworkspace";
+        return;
+      }
+    } catch (e) { /* cross-origin top — fall through */ }
+    window.location.href = "/dashboard#sqlworkspace";
   });
   $("libBack").addEventListener("click", hideLibrary);
   $("libSearch").addEventListener("input", renderLibrary);

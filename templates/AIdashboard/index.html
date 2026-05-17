@@ -24645,6 +24645,11 @@
         <div id="dashboardRoot" style="grid-column:span 12;width:100%;"></div>
       </section>
 
+      <!-- SQL workspace — React island (web/src/routes/sqlworkspace.js) -->
+      <section class="grid" id="sqlworkspace" data-route-section="sqlworkspace" hidden>
+        <div id="sqlWorkspaceRoot" style="grid-column:span 12;width:100%;"></div>
+      </section>
+
       <section class="grid" id="engagement" data-route-section="engagement" hidden>
         <div style="grid-column: 1 / -1; width: 100%;">
           <div class="eng-page">
@@ -38194,6 +38199,11 @@
       SECTION_ON_ENTER.dashboard = async function loadDashboardSection() {
         await window.__dashboardLoadRouteModule("dashboard");
       };
+      // SQL workspace: lazy-loads web/src/routes/sqlworkspace.js, whose
+      // init() mounts the React workspace into #sqlWorkspaceRoot.
+      SECTION_ON_ENTER.sqlworkspace = async function loadSqlWorkspace() {
+        await window.__dashboardLoadRouteModule("sqlworkspace");
+      };
       // KB bundle: lazy-loads web/src/routes/kb.js then calls window.loadKbSection.
       // Both "knowledge" and "kb" route names map to the same bundle.
       SECTION_ON_ENTER.knowledge = async function loadKbSection() {
@@ -43040,6 +43050,7 @@
       leads:     { title: "Leads",         section: "leads" },
       warehouse: { title: "Warehouse",     section: "warehouse" },
       dashboard: { title: "Dashboards",    section: "dashboard" },
+      sqlworkspace: { title: "SQL workspace", section: "sqlworkspace" },
       approvals: { title: "Pending approvals", section: "approvals" },
       replies:   { title: "Replies",       section: "replies" },
       campaigns: { title: "Campaigns",     section: "campaigns" },

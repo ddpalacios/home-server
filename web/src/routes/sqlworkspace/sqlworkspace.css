@@ -1,0 +1,181 @@
+/* SQL Workspace — shell, tree, panes. Uses the SPA theme tokens. */
+
+.sqlw {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 150px);
+  min-height: 480px;
+}
+
+/* ── Top bar ───────────────────────────────────────────────────── */
+.sqlw-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 4px 12px;
+}
+.sqlw-title { font-size: 16px; font-weight: 700; }
+.sqlw-top-spacer { flex: 1; }
+.sqlw-btn {
+  padding: 7px 13px;
+  border: 1px solid var(--border-default, #e5e7eb);
+  border-radius: 8px;
+  background: var(--bg-surface, #fff);
+  color: var(--text-primary, #0f172a);
+  cursor: pointer;
+  font: 600 13px inherit;
+}
+.sqlw-btn:hover { border-color: var(--accent-primary, #2563eb); }
+
+.sqlw-modes {
+  display: flex;
+  border: 1px solid var(--border-default, #e5e7eb);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.sqlw-mode {
+  padding: 7px 14px;
+  border: 0;
+  background: var(--bg-surface, #fff);
+  color: var(--text-secondary, #64748b);
+  cursor: pointer;
+  font: 600 13px inherit;
+}
+.sqlw-mode.active {
+  background: var(--accent-primary, #2563eb);
+  color: #fff;
+}
+
+.sqlw-icon {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-default, #e5e7eb);
+  border-radius: 8px;
+  background: var(--bg-surface, #fff);
+  cursor: pointer;
+  font-size: 14px;
+}
+.sqlw-icon:disabled { opacity: 0.5; cursor: default; }
+.sqlw-run {
+  padding: 7px 16px;
+  border: 1px solid var(--accent-primary, #2563eb);
+  border-radius: 8px;
+  background: var(--accent-primary, #2563eb);
+  color: #fff;
+  cursor: pointer;
+  font: 700 13px inherit;
+}
+.sqlw-run:disabled { opacity: 0.5; cursor: default; }
+
+/* ── Body: tree + main ─────────────────────────────────────────── */
+.sqlw-body {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+.sqlw-tree {
+  width: 220px;
+  flex-shrink: 0;
+  border: 1px solid var(--border-default, #e5e7eb);
+  border-radius: 12px;
+  background: var(--bg-surface, #fff);
+  overflow: auto;
+  padding-bottom: 8px;
+}
+.sqlw-tree-h {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border-default, #e5e7eb);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #64748b);
+}
+.sqlw-tree-collapse, .sqlw-tree-expand {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-secondary, #64748b);
+  font-size: 13px;
+}
+.sqlw-tree-expand {
+  align-self: flex-start;
+  width: 26px;
+  height: 32px;
+  border: 1px solid var(--border-default, #e5e7eb);
+  border-radius: 8px;
+  background: var(--bg-surface, #fff);
+}
+.sqlw-tree-msg {
+  padding: 14px 12px;
+  font-size: 12.5px;
+  color: var(--text-secondary, #64748b);
+}
+.sqlw-tree-folder {
+  padding: 5px 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sqlw-tree-folder:hover { background: var(--bg-elevated, #f4f4f5); }
+.sqlw-tree-caret {
+  display: inline-block;
+  width: 12px;
+  color: var(--text-tertiary, #94a3b8);
+}
+.sqlw-tree-file {
+  padding: 5px 8px;
+  font-size: 12.5px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-primary, #0f172a);
+}
+.sqlw-tree-file:hover { background: var(--bg-elevated, #f4f4f5); }
+.sqlw-tree-file.active {
+  background: var(--accent-muted, #eef2ff);
+  color: var(--accent-primary, #2563eb);
+  font-weight: 600;
+}
+.sqlw-tree-file.disabled {
+  color: var(--text-disabled, #a1a1aa);
+  cursor: default;
+}
+.sqlw-tree-file.disabled:hover { background: transparent; }
+.sqlw-nq { font-size: 11px; font-style: italic; }
+
+/* ── Main pane ─────────────────────────────────────────────────── */
+.sqlw-main {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--border-default, #e5e7eb);
+  border-radius: 12px;
+  background: var(--bg-surface, #fff);
+  overflow: auto;
+}
+.sqlw-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 8px;
+  color: var(--text-secondary, #64748b);
+  text-align: center;
+  padding: 30px;
+}
+.sqlw-empty-icon { font-size: 40px; }
+.sqlw-empty-h { font-size: 15px; font-weight: 700; }
+.sqlw-empty-sub { font-size: 13px; }
+
+/* ── Results panel ─────────────────────────────────────────────── */
+.sqlw-results { margin-top: 12px; }
