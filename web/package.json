@@ -16,7 +16,8 @@
     "@xyflow/react": "^12.10.2",
     "puppeteer": "^23.11.1",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "react-dom": "^19.2.5",
+    "react-grid-layout": "^2.2.3"
   },
   "optionalDependencies": {
     "@rolldown/binding-linux-x64-gnu": "^1.0.0"
