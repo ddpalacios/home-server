@@ -554,6 +554,31 @@
     background:#eef0f3; color:#3a4150; white-space:nowrap;
   }
   .wh-prev-note { font-size:12px; color:var(--sub); margin-top:8px; }
+  /* Rendered Markdown — the website-trained Article preview. */
+  .wh-prev-md {
+    max-height:62vh; overflow:auto; font-size:13.5px; line-height:1.65;
+    color:var(--fg); padding:2px 2px 8px;
+  }
+  .wh-prev-md h1, .wh-prev-md h2, .wh-prev-md h3 {
+    margin:18px 0 7px; font-weight:700; line-height:1.3;
+  }
+  .wh-prev-md h1 { font-size:19px; }
+  .wh-prev-md h2 {
+    font-size:16px; padding-bottom:4px;
+    border-bottom:1px solid var(--line);
+  }
+  .wh-prev-md h3 { font-size:14px; }
+  .wh-prev-md h1:first-child, .wh-prev-md h2:first-child { margin-top:2px; }
+  .wh-prev-md p { margin:0 0 10px; }
+  .wh-prev-md ul, .wh-prev-md ol { margin:0 0 12px; padding-left:22px; }
+  .wh-prev-md li { margin:2px 0; }
+  .wh-prev-md code {
+    font-family:ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size:12px; background:var(--soft); padding:1px 5px;
+    border-radius:5px;
+  }
+  .wh-prev-md a { color:var(--accent); }
+  [data-theme="dark"] .wh-prev-md h2 { border-color:#2a313c; }
   /* Row eye / preview action */
   .th-act { text-align:center !important; }
   .td-act { text-align:center; }
@@ -2140,6 +2165,60 @@
         body.textContent = "Network error loading preview.";
       });
   }
+  // Lightweight Markdown → HTML for the website-trained Article
+  // preview: headings, bold/italic/code, bullet + numbered lists,
+  // links, and paragraphs. Everything is HTML-escaped first.
+  function mdToHtml(src) {
+    function esc2(s) {
+      return s.replace(/&/g, "&amp;").replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;");
+    }
+    function inline(s) {
+      s = esc2(s);
+      s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+      s = s.replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
+      s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+      s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
+        '<a href="$2" target="_blank" rel="noopener">$1</a>');
+      return s;
+    }
+    var lines = (src || "").split(/\r?\n/), out = [], i = 0;
+    while (i < lines.length) {
+      var ln = lines[i];
+      var h = /^(#{1,6})\s+(.*)$/.exec(ln);
+      if (h) {
+        var lvl = Math.min(h[1].length, 6);
+        out.push("<h" + lvl + ">" + inline(h[2]) + "</h" + lvl + ">");
+        i++; continue;
+      }
+      if (/^\s*[-*]\s+/.test(ln)) {
+        out.push("<ul>");
+        while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) {
+          out.push("<li>" + inline(lines[i].replace(/^\s*[-*]\s+/, "")) + "</li>");
+          i++;
+        }
+        out.push("</ul>"); continue;
+      }
+      if (/^\s*\d+\.\s+/.test(ln)) {
+        out.push("<ol>");
+        while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) {
+          out.push("<li>" + inline(lines[i].replace(/^\s*\d+\.\s+/, "")) + "</li>");
+          i++;
+        }
+        out.push("</ol>"); continue;
+      }
+      if (!ln.trim()) { i++; continue; }
+      var para = [];
+      while (i < lines.length && lines[i].trim() &&
+             !/^#{1,6}\s/.test(lines[i]) && !/^\s*[-*]\s/.test(lines[i]) &&
+             !/^\s*\d+\.\s/.test(lines[i])) {
+        para.push(lines[i]); i++;
+      }
+      out.push("<p>" + inline(para.join(" ")) + "</p>");
+    }
+    return out.join("");
+  }
+
   function renderPreview(p) {
     var body = $("pvBody");
     body.className = "";
@@ -2210,7 +2289,15 @@
           'large file.</p>' : "");
       return;
     }
-    // Everything else (txt, md, docx) → extracted text.
+    // Markdown (the website-trained Article) → rendered, not raw.
+    if (fmt === "md") {
+      var mdtext = (p.text || "").trim();
+      if (mdtext) {
+        body.innerHTML = '<div class="wh-prev-md">' + mdToHtml(mdtext) + "</div>";
+        return;
+      }
+    }
+    // Everything else (txt, docx) → extracted text.
     var text = (p.text || "").trim();
     if (text) {
       body.innerHTML = '<pre class="wh-prev-pre">' + esc(text) + "</pre>" +

@@ -7267,6 +7267,33 @@
       color: #0f172a;
     }
     [data-theme="dark"] .kbprev-doctext { color: #e4e4e7; }
+    /* Rendered Markdown — the website-trained Article preview. */
+    .kbprev-md {
+      padding: 16px 18px; font-size: 13.5px; line-height: 1.65;
+      color: #0f172a;
+    }
+    .kbprev-md h1, .kbprev-md h2, .kbprev-md h3 {
+      margin: 18px 0 7px; font-weight: 700; line-height: 1.3;
+    }
+    .kbprev-md h1 { font-size: 19px; }
+    .kbprev-md h2 {
+      font-size: 16px; padding-bottom: 4px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .kbprev-md h3 { font-size: 14px; }
+    .kbprev-md h1:first-child, .kbprev-md h2:first-child { margin-top: 2px; }
+    .kbprev-md p { margin: 0 0 10px; }
+    .kbprev-md ul, .kbprev-md ol { margin: 0 0 12px; padding-left: 22px; }
+    .kbprev-md li { margin: 2px 0; }
+    .kbprev-md code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px; background: #f1f5f9; padding: 1px 5px;
+      border-radius: 5px;
+    }
+    .kbprev-md a { color: #4f46e5; }
+    [data-theme="dark"] .kbprev-md { color: #e4e4e7; }
+    [data-theme="dark"] .kbprev-md h2 { border-color: #27272a; }
+    [data-theme="dark"] .kbprev-md code { background: #27272a; }
 
     /* Staged progress bar shown on a KB row during "Copy to
        warehouse" — fetch → save → done (start / middle / end). */
@@ -36666,6 +36693,53 @@
         if (defaultBtn) defaultBtn.click();
       };
 
+      // Lightweight Markdown → HTML for the website-trained Article.
+      function kbMdToHtml(src) {
+        function e2(s) {
+          return s.replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                  .replace(/>/g, "&gt;");
+        }
+        function inl(s) {
+          s = e2(s);
+          s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+          s = s.replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
+          s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+          s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
+            '<a href="$2" target="_blank" rel="noopener">$1</a>');
+          return s;
+        }
+        var L = (src || "").split(/\r?\n/), o = [], i = 0;
+        while (i < L.length) {
+          var h = /^(#{1,6})\s+(.*)$/.exec(L[i]);
+          if (h) {
+            var lv = Math.min(h[1].length, 6);
+            o.push("<h" + lv + ">" + inl(h[2]) + "</h" + lv + ">"); i++; continue;
+          }
+          if (/^\s*[-*]\s+/.test(L[i])) {
+            o.push("<ul>");
+            while (i < L.length && /^\s*[-*]\s+/.test(L[i])) {
+              o.push("<li>" + inl(L[i].replace(/^\s*[-*]\s+/, "")) + "</li>"); i++;
+            }
+            o.push("</ul>"); continue;
+          }
+          if (/^\s*\d+\.\s+/.test(L[i])) {
+            o.push("<ol>");
+            while (i < L.length && /^\s*\d+\.\s+/.test(L[i])) {
+              o.push("<li>" + inl(L[i].replace(/^\s*\d+\.\s+/, "")) + "</li>"); i++;
+            }
+            o.push("</ol>"); continue;
+          }
+          if (!L[i].trim()) { i++; continue; }
+          var pr = [];
+          while (i < L.length && L[i].trim() && !/^#{1,6}\s/.test(L[i]) &&
+                 !/^\s*[-*]\s/.test(L[i]) && !/^\s*\d+\.\s/.test(L[i])) {
+            pr.push(L[i]); i++;
+          }
+          o.push("<p>" + inl(pr.join(" ")) + "</p>");
+        }
+        return o.join("");
+      }
+
       // Warehouse-document preview — reuses the sheet-preview modal
       // shell so warehouse rows get an in-modal popup (not a new tab),
       // consistent with sheets and dark-mode styled.
@@ -36743,6 +36817,16 @@
           return;
         }
         var txt = data.text || "";
+        // Markdown (the website-trained Article) → rendered, not raw.
+        if (fmt === "md") {
+          if (metaEl) metaEl.textContent = "Article";
+          if (wrapEl) {
+            wrapEl.innerHTML = txt
+              ? '<div class="kbprev-md">' + kbMdToHtml(txt) + '</div>'
+              : '<div class="kbprev-empty">No preview content available.</div>';
+          }
+          return;
+        }
         if (metaEl) {
           var nChars = data.text_length || txt.length;
           metaEl.textContent = nChars + " character" + (nChars === 1 ? "" : "s") +
