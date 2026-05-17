@@ -5,6 +5,7 @@
 // later phases.
 import React, { useState, useEffect } from "react";
 import "./sqlworkspace.css";
+import Builder from "./Builder.jsx";
 
 // Formats the warehouse registers as queryable Spark tables.
 const STRUCTURED = new Set([
@@ -91,6 +92,7 @@ export default function SqlWorkspace() {
   const [docs, setDocs] = useState(null);
   const [treeCollapsed, setTreeCollapsed] = useState(false);
   const [activeFile, setActiveFile] = useState(null);
+  const [builderSql, setBuilderSql] = useState("");
 
   useEffect(() => {
     fetch("/api/warehouse/documents", { credentials: "same-origin" })
@@ -167,17 +169,23 @@ export default function SqlWorkspace() {
 
         <main className="sqlw-main">
           {mode === "builder" ? (
-            <div className="sqlw-empty">
-              <div className="sqlw-empty-icon">🗂</div>
-              <div className="sqlw-empty-h">
-                {activeFile
-                  ? activeFile.name
-                  : "Click a file in the warehouse to start"}
+            activeFile ? (
+              <Builder
+                key={activeFile.document_id}
+                file={activeFile}
+                onSqlChange={setBuilderSql}
+              />
+            ) : (
+              <div className="sqlw-empty">
+                <div className="sqlw-empty-icon">🗂</div>
+                <div className="sqlw-empty-h">
+                  Click a file in the warehouse to start
+                </div>
+                <div className="sqlw-empty-sub">
+                  The table preview will appear here.
+                </div>
               </div>
-              <div className="sqlw-empty-sub">
-                The table preview will appear here.
-              </div>
-            </div>
+            )
           ) : (
             <div className="sqlw-empty">
               <div className="sqlw-empty-icon">⌨️</div>
