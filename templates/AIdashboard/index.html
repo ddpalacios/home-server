@@ -53824,7 +53824,7 @@ window.openRunFlowPicker = async function (leadIds, opts) {
         // form_editor.js edits without the browser silently serving
         // a stale copy. Tied to a build counter that bumps whenever
         // we ship changes — keep nudging when the editor changes.
-        s.src = "/dashboard/static/form_editor.js?v=20260515darkmode";
+        s.src = "/dashboard/static/form_editor.js?v=20260516twocol";
         s.onload = resolve;
         s.onerror = function () { reject(new Error("form_editor load failed")); };
         document.head.appendChild(s);
