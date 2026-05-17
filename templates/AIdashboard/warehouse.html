@@ -2951,7 +2951,11 @@
       '<button type="button" data-csv style="padding:4px 10px;' +
         'border:1px solid var(--border);border-radius:6px;' +
         'background:var(--bg-elevated);color:var(--ink);cursor:pointer;' +
-        'font:600 11px inherit;">Download CSV</button>';
+        'font:600 11px inherit;">Download CSV</button>' +
+      '<button type="button" data-pin style="padding:4px 10px;' +
+        'border:1px solid var(--brand);border-radius:6px;' +
+        'background:var(--brand);color:#fff;cursor:pointer;' +
+        'font:600 11px inherit;">📌 Pin</button>';
     wrap.appendChild(head);
 
     // ── Table panel ──
@@ -3216,7 +3220,118 @@
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(function () { URL.revokeObjectURL(url); }, 800);
     });
+    // Pin to library — saves the query + refresh preference (no chart
+    // type; the visualization is chosen later, per dashboard tile).
+    head.querySelector("[data-pin]").addEventListener("click", function () {
+      whsePinDialog({ sql: sqlText, columns: cols, rows: rows });
+    });
     return wrap;
+  }
+
+  // Pin dialog — title + refresh preference only. Deliberately NO chart
+  // type picker: the same pinned query becomes a bar on one dashboard,
+  // a pie on another. The viz is a per-tile decision made later.
+  function whsePinDialog(t) {
+    var sql = (t.sql || "").trim();
+    if (!sql) { toast("This result has no query to pin."); return; }
+    function refreshOpt(mode, secs, label, checked) {
+      return '<label style="display:flex;align-items:center;gap:8px;' +
+        'cursor:pointer;"><input type="radio" name="whPinR" value="' +
+        mode + ":" + secs + '"' + (checked ? " checked" : "") +
+        ' /> <span>' + label + "</span></label>";
+    }
+    var back = document.createElement("div");
+    back.style.cssText = "position:fixed;inset:0;z-index:9000;" +
+      "background:rgba(0,0,0,0.45);display:flex;align-items:center;" +
+      "justify-content:center;";
+    var card = document.createElement("div");
+    card.style.cssText = "background:var(--bg-elevated);color:var(--ink);" +
+      "border:1px solid var(--border);border-radius:14px;" +
+      "padding:22px 24px;width:min(480px,92vw);font:14px inherit;" +
+      "box-shadow:0 20px 60px rgba(0,0,0,0.3);";
+    card.innerHTML =
+      '<div style="font-size:16px;font-weight:700;margin-bottom:4px;">' +
+        "Pin this query to your library</div>" +
+      '<div style="font-size:12.5px;color:var(--text-2);' +
+        'margin-bottom:16px;">Saves the query so you can use it in any ' +
+        "dashboard.</div>" +
+      '<label style="font-size:12px;font-weight:600;">Title</label>' +
+      '<input id="whPinTitle" type="text" maxlength="200" ' +
+        'value="Query result" style="width:100%;margin:5px 0 16px;' +
+        'padding:8px 10px;border:1px solid var(--border);border-radius:8px;' +
+        'font:inherit;background:var(--bg-overlay);color:var(--ink);' +
+        'box-sizing:border-box;" />' +
+      '<label style="font-size:12px;font-weight:600;">Refresh how ' +
+        "often</label>" +
+      '<div style="margin:6px 0 14px;display:flex;flex-direction:column;' +
+        'gap:6px;font-size:13px;">' +
+        refreshOpt("live", "60", "Live · every 1 minute", false) +
+        refreshOpt("live", "300", "Live · every 5 minutes", true) +
+        refreshOpt("live", "900", "Live · every 15 minutes", false) +
+        refreshOpt("live", "3600", "Live · every hour", false) +
+        refreshOpt("live", "86400", "Live · daily", false) +
+        refreshOpt("manual", "0", "Manual only (no auto-refresh)", false) +
+        refreshOpt("snapshot", "0", "Snapshot (freeze current data)",
+                   false) +
+      "</div>" +
+      '<div style="font-size:11.5px;color:var(--text-2);' +
+        'background:var(--bg-overlay);border-radius:8px;padding:8px 10px;' +
+        'margin-bottom:16px;">ℹ You\'ll pick how to display this ' +
+        "(bar, line, pie, table, KPI) when you add it to a dashboard." +
+        "</div>" +
+      '<div style="display:flex;justify-content:flex-end;gap:8px;">' +
+        '<button id="whPinCancel" type="button" style="padding:8px 14px;' +
+          'border:1px solid var(--border);border-radius:8px;' +
+          'background:var(--bg-overlay);color:var(--ink);cursor:pointer;' +
+          'font:600 13px inherit;">Cancel</button>' +
+        '<button id="whPinSave" type="button" style="padding:8px 16px;' +
+          'border:1px solid var(--brand);border-radius:8px;' +
+          'background:var(--brand);color:#fff;cursor:pointer;' +
+          'font:600 13px inherit;">Save query</button>' +
+      "</div>";
+    back.appendChild(card);
+    document.body.appendChild(back);
+    function close() { back.remove(); }
+    back.addEventListener("click", function (e) {
+      if (e.target === back) close();
+    });
+    card.querySelector("#whPinCancel").addEventListener("click", close);
+    card.querySelector("#whPinTitle").focus();
+    card.querySelector("#whPinTitle").select();
+    card.querySelector("#whPinSave").addEventListener("click", function () {
+      var title = card.querySelector("#whPinTitle").value.trim();
+      if (!title) { toast("Give the pin a title."); return; }
+      var sel = card.querySelector('input[name="whPinR"]:checked');
+      var parts = (sel ? sel.value : "live:300").split(":");
+      var mode = parts[0];
+      var secs = parseInt(parts[1] || "0", 10);
+      var btn = this;
+      btn.disabled = true;
+      btn.textContent = "Saving…";
+      fetch("/api/warehouse/pins", {
+        method: "POST", credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: title,
+          sql_query: sql,
+          refresh_mode: mode,
+          refresh_interval_seconds: secs || 300,
+          columns: t.columns || [],
+          rows: t.rows || [],
+          source_conversation_id: askConvId || "",
+        }),
+      }).then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (d && d.ok) { toast("Pinned to library ✓"); close(); }
+          else {
+            toast("Couldn't pin that.");
+            btn.disabled = false; btn.textContent = "Save query";
+          }
+        }).catch(function () {
+          toast("Network error.");
+          btn.disabled = false; btn.textContent = "Save query";
+        });
+    });
   }
   function askSrcsHtml(sources) {
     if (!sources || !sources.length) return "";
