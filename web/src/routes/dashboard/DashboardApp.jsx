@@ -127,6 +127,7 @@ function DashboardEditor({ dashboardId, onBack }) {
   const [saveState, setSaveState] = useState("saved");
   const [paused, setPaused] = useState(false);
   const [refreshNonce, setRefreshNonce] = useState(0);
+  const [exportOpen, setExportOpen] = useState(false);
   const saveTimer = useRef(null);
   const tilesRef = useRef([]);
   tilesRef.current = tiles;
@@ -258,8 +259,20 @@ function DashboardEditor({ dashboardId, onBack }) {
           onClick={() => setRefreshNonce((n) => n + 1)}
           title="Refresh every live and manual tile now"
         >Refresh all</button>
+        <button
+          className="dash-btn"
+          onClick={() => setExportOpen(true)}
+          title="Export this dashboard as PDF or PNG"
+        >Export ↓</button>
         <span className={"dash-save dash-save-" + saveState}>{saveLabel}</span>
       </div>
+      {exportOpen && (
+        <ExportDialog
+          dashboardId={dashboardId}
+          dashName={dash.name}
+          onClose={() => setExportOpen(false)}
+        />
+      )}
       <div className="dash-editor-body">
         <aside className="dash-lib">
           <div className="dash-lib-h">Library</div>
@@ -321,6 +334,100 @@ function DashboardEditor({ dashboardId, onBack }) {
               Drag a pin from the library onto the canvas.
             </div>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Export dialog ────────────────────────────────────────────────
+function ExportDialog({ dashboardId, dashName, onClose }) {
+  const [format, setFormat] = useState("pdf");
+  const [freshness, setFreshness] = useState("current");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+
+  const doExport = async () => {
+    setBusy(true);
+    setErr("");
+    try {
+      const r = await fetch(
+        "/api/warehouse/dashboards/" + encodeURIComponent(dashboardId)
+          + "/export",
+        {
+          method: "POST", credentials: "same-origin", headers: JSON_HDR,
+          body: JSON.stringify({ format, data_freshness: freshness }),
+        });
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        setErr(d.detail || d.error || "Export failed.");
+        setBusy(false);
+        return;
+      }
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = (dashName || "dashboard")
+        .replace(/[^A-Za-z0-9_-]+/g, "_") + "." + format;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      onClose();
+    } catch (e) {
+      setErr("Network error.");
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="dash-picker-back" onClick={busy ? undefined : onClose}>
+      <div
+        className="dash-picker"
+        style={{ width: "min(420px, 92vw)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="dash-picker-h">Export dashboard</div>
+        <div className="dash-mode-list">
+          <strong style={{ fontSize: 12 }}>Format</strong>
+          <label className="dash-mode-opt">
+            <input type="radio" checked={format === "pdf"}
+              onChange={() => setFormat("pdf")} />
+            <span>PDF — best for reports</span>
+          </label>
+          <label className="dash-mode-opt">
+            <input type="radio" checked={format === "png"}
+              onChange={() => setFormat("png")} />
+            <span>PNG — best for emails or embedding</span>
+          </label>
+          <strong style={{ fontSize: 12, marginTop: 8 }}>Data</strong>
+          <label className="dash-mode-opt">
+            <input type="radio" checked={freshness === "current"}
+              onChange={() => setFreshness("current")} />
+            <span>Use current data (fetched at export)</span>
+          </label>
+          <label className="dash-mode-opt">
+            <input type="radio" checked={freshness === "cached"}
+              onChange={() => setFreshness("cached")} />
+            <span>Use cached data (faster, may be stale)</span>
+          </label>
+        </div>
+        {err && (
+          <div style={{ color: "#dc2626", fontSize: 12, marginTop: 8 }}>
+            {err}
+          </div>
+        )}
+        <div style={{
+          display: "flex", justifyContent: "flex-end", gap: 8,
+          marginTop: 14,
+        }}>
+          <button className="dash-btn" onClick={onClose} disabled={busy}>
+            Cancel
+          </button>
+          <button className="dash-btn" onClick={doExport} disabled={busy}>
+            {busy ? "Exporting…" : "Export"}
+          </button>
         </div>
       </div>
     </div>
