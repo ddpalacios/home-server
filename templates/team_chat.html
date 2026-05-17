@@ -1959,13 +1959,34 @@
       // send it to the server as a clean one-page chart PDF.
       lastChart = {
         labels: labels.slice(), values: data.slice(),
-        x: xCol, y: yCol, type: chartType, datasetLabel: datasetLabel,
+        x: xCol, y: yCol, type: chartType, agg: aggMode,
+        datasetLabel: datasetLabel,
       };
     }
     function exportChartPdf(btn) {
       if (!lastChart || !lastChart.labels.length) {
         appendMsg("bot", "Pick the chart values first, then export.");
         return;
+      }
+      // Build a readable title — "Total User Count by Email Domain"
+      // rather than the raw "sum(user_count) by email_domain".
+      function titleCase(s) {
+        return String(s || "").replace(/_/g, " ").replace(/\s+/g, " ")
+          .trim().replace(/\b\w/g, function (c) {
+            return c.toUpperCase();
+          });
+      }
+      var AGG_WORDS = { sum: "Total", avg: "Average",
+        count: "Number of", min: "Lowest", max: "Highest" };
+      var prettyX = titleCase(lastChart.x) || "Category";
+      var title, yLabel;
+      if (lastChart.agg === "count") {
+        yLabel = "Number of Records";
+        title = "Number of Records by " + prettyX;
+      } else {
+        yLabel = (AGG_WORDS[lastChart.agg] || "Total") + " "
+                 + titleCase(lastChart.y);
+        title = yLabel + " by " + prettyX;
       }
       var orig = btn.textContent;
       btn.disabled = true;
@@ -1975,9 +1996,9 @@
         method: "POST", credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: lastChart.datasetLabel + " by " + lastChart.x,
-          x_label: lastChart.x,
-          y_label: lastChart.datasetLabel,
+          title: title,
+          x_label: prettyX,
+          y_label: yLabel,
           chart_type: lastChart.type,
           labels: lastChart.labels,
           values: lastChart.values,
