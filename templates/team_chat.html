@@ -2271,34 +2271,46 @@
     // latest analysis answer in this conversation as a polished PDF.
     var exportBtnRow = null;
     function showExportButton() {
-      // Exactly one button — drop any prior one, append a fresh one
-      // at the bottom of the stream.
+      // Exactly one button row — drop any prior one, append fresh at
+      // the bottom of the stream. Two formats are offered.
       if (exportBtnRow && exportBtnRow.parentNode) exportBtnRow.remove();
       exportBtnRow = document.createElement("div");
       exportBtnRow.className = "tc-export-row";
-      exportBtnRow.style.cssText = "margin:4px 0 16px 0;";
+      exportBtnRow.style.cssText =
+        "margin:4px 0 16px 0;display:flex;gap:8px;flex-wrap:wrap;";
+      exportBtnRow.appendChild(
+        makeExportBtn("📄 Export report (PDF)", "report"));
+      exportBtnRow.appendChild(
+        makeExportBtn("📊 Export dashboard (PDF)", "dashboard"));
+      stream.appendChild(exportBtnRow);
+      stream.scrollTop = stream.scrollHeight;
+    }
+    function makeExportBtn(label, fmt) {
       var btn = document.createElement("button");
       btn.type = "button";
-      btn.textContent = "📄 Export as PDF report";
+      btn.textContent = label;
       btn.style.cssText =
         "font:600 13px/1.2 inherit;cursor:pointer;padding:10px 15px;" +
         "border-radius:8px;border:1px solid var(--brand);" +
         "background:var(--brand-soft);color:var(--brand);";
-      btn.addEventListener("click", function () { runExport(btn); });
-      exportBtnRow.appendChild(btn);
-      stream.appendChild(exportBtnRow);
-      stream.scrollTop = stream.scrollHeight;
+      btn.addEventListener("click", function () {
+        runExport(btn, fmt, label);
+      });
+      return btn;
     }
-    function runExport(btn) {
+    function runExport(btn, fmt, label) {
       if (!currentConversationId) return;
-      var orig = btn.textContent;
       btn.disabled = true;
       btn.style.opacity = "0.6";
       btn.style.cursor = "default";
-      btn.textContent = "Building your PDF report… (about 20 seconds)";
-      var fname = "analysis_report.pdf";
+      btn.textContent = (fmt === "dashboard"
+        ? "Building your dashboard… (about 20 seconds)"
+        : "Building your report… (about 20 seconds)");
+      var fname = (fmt === "dashboard" ? "analysis_dashboard.pdf"
+                                       : "analysis_report.pdf");
       fetch(urlBase + "/conversations/" +
-            encodeURIComponent(currentConversationId) + "/export-pdf",
+            encodeURIComponent(currentConversationId) +
+            "/export-pdf?format=" + encodeURIComponent(fmt),
             { method: "POST", credentials: "same-origin" })
         .then(function (resp) {
           if (!resp.ok) {
@@ -2324,13 +2336,13 @@
           btn.disabled = false;
           btn.style.opacity = "1";
           btn.style.cursor = "pointer";
-          btn.textContent = "📄 Exported — export again";
+          btn.textContent = label;
         })
         .catch(function (err) {
           btn.disabled = false;
           btn.style.opacity = "1";
           btn.style.cursor = "pointer";
-          btn.textContent = orig;
+          btn.textContent = label;
           appendMsg("bot", "Couldn't export the PDF — " +
             (err && err.message ? err.message : "please try again."));
         });
