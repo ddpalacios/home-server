@@ -3138,24 +3138,75 @@
     closeLists();
     return out.join("");
   }
+  // Render each SQL query result as a collapsed, titled panel under
+  // a message. Every panel starts CLOSED — the user clicks a title
+  // to expand its table. They fade in one by one; all mount at once
+  // (collapsed = compact) so only opacity animates and the layout
+  // never jumps. The table widget is built lazily on first expand.
+  function appendAskTables(msg, table, tables) {
+    var list = [];
+    if (table && table.columns && table.columns.length) {
+      list.push({ t: table, purpose: table.purpose || "" });
+    }
+    (tables || []).forEach(function (x) {
+      if (x && x.columns && x.columns.length) {
+        list.push({ t: x, purpose: x.purpose || "" });
+      }
+    });
+    if (!list.length) return;
+    msg.classList.add("has-table");
+    var dets = [];
+    list.forEach(function (entry, i) {
+      var rc = (entry.t.row_count != null) ? entry.t.row_count
+               : (entry.t.rows ? entry.t.rows.length : 0);
+      var det = document.createElement("details");
+      det.className = "ask-table-det";
+      det.style.cssText =
+        "margin-top:8px;border:1px solid var(--border);" +
+        "border-radius:10px;overflow:hidden;" +
+        "background:var(--bg-elevated);opacity:0;" +
+        "transition:opacity 320ms ease;";
+      var sm = document.createElement("summary");
+      sm.style.cssText =
+        "padding:9px 13px;cursor:pointer;font-size:12.5px;" +
+        "font-weight:600;list-style:none;display:flex;gap:8px;" +
+        "align-items:center;";
+      var label = (entry.purpose || ("Query " + (i + 1)))
+        .replace(/[<>&]/g, function (c) {
+          return ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c];
+        });
+      sm.innerHTML =
+        '<span style="flex:1;">' + label + '</span>' +
+        '<span style="font-weight:500;opacity:0.55;">' + rc +
+        ' rows</span>';
+      det.appendChild(sm);
+      var inner = document.createElement("div");
+      inner.style.cssText =
+        "border-top:1px solid var(--border);padding:6px;";
+      det.appendChild(inner);
+      var built = false;
+      det.addEventListener("toggle", function () {
+        if (!det.open || built) return;
+        built = true;
+        try { inner.appendChild(whseSqlWidget(entry.t)); } catch (e) {}
+      });
+      msg.appendChild(det);
+      dets.push(det);
+    });
+    // One-by-one soft fade — opacity only, so nothing shifts.
+    dets.forEach(function (det, i) {
+      setTimeout(function () { det.style.opacity = "1"; },
+                 90 + i * 120);
+    });
+  }
+
   function addAskMsg(role, text, sources, isErr, table, tables) {
     var t = $("askThread");
     var empty = t.querySelector(".ask-empty");
     if (empty) t.innerHTML = "";
     var msg = document.createElement("div");
-    var tblList = [];
-    if (table && table.columns && table.columns.length) {
-      tblList.push({ t: table, purpose: "" });
-    }
-    if (tables && tables.length) {
-      tables.forEach(function (x) {
-        if (x && x.columns && x.columns.length) {
-          tblList.push({ t: x, purpose: x.purpose || "" });
-        }
-      });
-    }
     msg.className = "ask-msg " + (role === "user" ? "user" : "bot") +
-      (isErr ? " is-err" : "") + (tblList.length ? " has-table" : "");
+      (isErr ? " is-err" : "");
     var bub = document.createElement("div");
     bub.className = "ask-bubble";
     if (role === "user" || isErr) {
@@ -3166,15 +3217,7 @@
       bub.innerHTML = mdToHtml(text || "");
     }
     msg.appendChild(bub);
-    tblList.forEach(function (entry) {
-      if (entry.purpose) {
-        var cap = document.createElement("div");
-        cap.className = "ask-table-cap";
-        cap.textContent = entry.purpose;
-        msg.appendChild(cap);
-      }
-      try { msg.appendChild(whseSqlWidget(entry.t)); } catch (e) {}
-    });
+    appendAskTables(msg, table, tables);
     if (sources && sources.length) {
       var sd = document.createElement("div");
       sd.innerHTML = askSrcsHtml(sources);
@@ -3211,6 +3254,7 @@
 
     var opener = "";
     var done = false;
+    var answerMsg = null, answerBubble = null, answerText = "";
     function finishUp() {
       if (done) return;
       done = true;
@@ -3224,13 +3268,32 @@
       addAskMsg("bot", text, null, true);
       finishUp();
     }
-    function applyResult(d) {
-      // The streamed preview stays as its own bubble — the full,
-      // precise answer (+ any table) arrives as a SEPARATE bubble
-      // below it.
+    function startAnswer() {
+      // The real answer streams into its OWN fresh bubble, below the
+      // quick preview. Created once, on the first answer event.
+      if (answerMsg) return;
       if (wait && wait.parentNode) wait.parentNode.removeChild(wait);
-      addAskMsg("bot", (d.answer || "").trim() || "Done.",
-                d.sources || [], false, d.table, d.tables);
+      answerMsg = document.createElement("div");
+      answerMsg.className = "ask-msg bot";
+      answerBubble = document.createElement("div");
+      answerBubble.className = "ask-bubble md";
+      answerMsg.appendChild(answerBubble);
+      $("askThread").appendChild(answerMsg);
+      askScroll();
+    }
+    function applyResult(d) {
+      // The real answer has finished streaming — re-render it as
+      // Markdown and attach the query tables (collapsed, fading in).
+      startAnswer();
+      answerText = ((d.answer || answerText) || "").trim() || "Done.";
+      answerBubble.innerHTML = mdToHtml(answerText);
+      appendAskTables(answerMsg, d.table, d.tables);
+      if (d.sources && d.sources.length) {
+        var sd = document.createElement("div");
+        sd.innerHTML = askSrcsHtml(d.sources);
+        if (sd.firstChild) answerMsg.appendChild(sd.firstChild);
+        wireAskSrcs(answerMsg);
+      }
       finishUp();
       loadAskConvs();  // refresh sidebar (title / ordering)
     }
@@ -3248,6 +3311,14 @@
         askScroll();
       } else if (ev === "opener_done") {
         if (wait) wait.style.display = "";
+        askScroll();
+      } else if (ev === "answer_start") {
+        startAnswer();
+      } else if (ev === "answer_token") {
+        // Real answer streaming in char-by-char.
+        startAnswer();
+        answerText += (d.text || "");
+        answerBubble.textContent = answerText;
         askScroll();
       } else if (ev === "result") {
         applyResult(d);
