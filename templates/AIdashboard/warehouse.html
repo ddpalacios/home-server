@@ -806,6 +806,23 @@
   .ask-input-row textarea:focus { outline:none; border-color:var(--accent); }
   .ask-input-row .btn { flex:0 0 auto; }
   .ask-typing { font-size:13px; color:var(--sub); font-style:italic; }
+  /* Thinking progress bar shown in the bot bubble while the request
+     is being processed (before the first token streams in). */
+  .ask-thinking { display:flex; flex-direction:column; gap:7px; min-width:170px; }
+  .ask-thinking-label { font-size:12.5px; color:var(--sub); }
+  .ask-thinking-bar {
+    display:block; height:5px; border-radius:99px;
+    background:var(--line); overflow:hidden; position:relative;
+  }
+  .ask-thinking-bar > span {
+    position:absolute; top:0; bottom:0; width:38%;
+    background:var(--accent); border-radius:99px;
+    animation:ask-think-slide 1.1s ease-in-out infinite;
+  }
+  @keyframes ask-think-slide {
+    0% { left:-40%; } 100% { left:100%; }
+  }
+  [data-theme="dark"] .ask-thinking-bar { background:#2a313c; }
   /* Add-source buttons + Drive picker */
   .add-sources { display:flex; gap:10px; flex-wrap:wrap; margin:0 0 16px; }
   .drive-files {
@@ -3331,7 +3348,14 @@
     if (empty) t.innerHTML = "";
     var msg = document.createElement("div");
     msg.className = "ask-msg bot";
-    msg.innerHTML = '<div class="ask-bubble"></div>' +
+    // The bubble shows a thinking progress bar until the first token
+    // streams in (then `bubble.textContent = …` replaces it).
+    msg.innerHTML = '<div class="ask-bubble">' +
+        '<div class="ask-thinking">' +
+          '<span class="ask-thinking-label">Analyzing your data…</span>' +
+          '<span class="ask-thinking-bar"><span></span></span>' +
+        '</div>' +
+      '</div>' +
       '<div class="ask-typing" id="askWait" style="display:none;">' +
       "Analyzing…</div>";
     t.appendChild(msg);
@@ -3352,6 +3376,10 @@
     function fail(text) {
       // Keep the streamed preview bubble; add the error as its own.
       if (wait && wait.parentNode) wait.parentNode.removeChild(wait);
+      // No opener text ever came → drop the thinking-bar bubble.
+      if (!opener.trim() && msg && msg.parentNode) {
+        msg.parentNode.removeChild(msg);
+      }
       addAskMsg("bot", text, null, true);
       finishUp();
     }
@@ -3360,6 +3388,11 @@
       // quick preview. Created once, on the first answer event.
       if (answerMsg) return;
       if (wait && wait.parentNode) wait.parentNode.removeChild(wait);
+      // If the opener produced no text, remove its thinking-bar bubble
+      // so there's no dangling empty block above the real answer.
+      if (!opener.trim() && msg && msg.parentNode) {
+        msg.parentNode.removeChild(msg);
+      }
       answerMsg = document.createElement("div");
       answerMsg.className = "ask-msg bot";
       answerBubble = document.createElement("div");
