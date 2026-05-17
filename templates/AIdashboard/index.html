@@ -3906,6 +3906,10 @@
     .insights-chat {
       display: grid;
       gap: 12px;
+      /* minmax(0,1fr): the column floors at 0 instead of min-content,
+         so a wide result table scrolls inside its own box instead of
+         widening the whole messenger and clipping the send button. */
+      grid-template-columns: minmax(0, 1fr);
     }
 
     .insights-message {
@@ -6792,6 +6796,23 @@
     .kb-bulk-bar[hidden] { display: none; }
     .kb-bulk-bar [data-kb-bulk-count] { font-weight: 700; margin-right: auto; }
     .kb-bulk-bar .kb-add-btn { padding: 6px 12px; font-size: 12.5px; }
+    /* Background-removal progress bar — the rows are already gone from
+       the UI; this tracks the actual server-side deletions. */
+    .kb-bulk-progress { margin-bottom: 8px; }
+    .kb-bulk-progress[hidden] { display: none; }
+    .kb-bulk-progress-label {
+      font-size: 12.5px; font-weight: 600; color: #b91c1c;
+      margin-bottom: 5px;
+    }
+    .kb-bulk-progress-track {
+      height: 6px; border-radius: 999px; background: #fde2e2;
+      overflow: hidden;
+    }
+    .kb-bulk-progress-fill {
+      height: 100%; width: 0%; background: #dc2626;
+      border-radius: 999px; transition: width .25s ease;
+    }
+    [data-theme="dark"] .kb-bulk-progress-track { background: #3a1d1d; }
 
     /* Checkbox column styling. */
     .kb-table th.col-check, .kb-table td.col-check {
@@ -7740,7 +7761,7 @@
 
     /* Q&A pair — wraps a single question and its answer. Hairline
        divider above every pair except the first. */
-    .ask-qa { padding: 0; }
+    .ask-qa { padding: 0; min-width: 0; max-width: 100%; }
     .ask-qa + .ask-qa {
       border-top: 1px solid #f1f5f9;
       margin-top: 32px;
@@ -28910,7 +28931,12 @@
         "overflow:hidden",
         "font-family:ui-sans-serif,system-ui,-apple-system,sans-serif",
         "box-shadow:0 1px 2px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.04)",
-        "max-width:100%",
+        // Compact in the message: the result widget is capped at ~35%
+        // of the message width (floored so its tabs stay usable); the
+        // table inside scrolls horizontally rather than stretching.
+        "max-width:35%",
+        "min-width:300px",
+        "width:max-content",
       ].join(";") + ";";
 
       // ── Tab strip ──────────────────────────────────────────────
@@ -28995,9 +29021,12 @@
       paneTable.appendChild(tableToolbar);
 
       var scroller = document.createElement("div");
+      // overflow:auto on the scroller gives a horizontal scrollbar when
+      // the table is wider than the chat message — the table is NOT
+      // stretched to 100%, it sizes to its content.
       scroller.style.cssText = "max-height:420px;overflow:auto;";
       var tbl = document.createElement("table");
-      tbl.style.cssText = "width:100%;border-collapse:collapse;font-size:13px;";
+      tbl.style.cssText = "width:max-content;max-width:none;border-collapse:collapse;font-size:13px;";
       var thead = document.createElement("thead");
       var tbody = document.createElement("tbody");
       tbl.appendChild(thead); tbl.appendChild(tbody);
@@ -35634,6 +35663,23 @@
       var headers = host.querySelectorAll(".kb-table th[data-sort]");
       var bulkBar = host.querySelector("[data-kb-bulk]");
       var bulkCountEl = host.querySelector("[data-kb-bulk-count]");
+      // Background-removal progress bar — created lazily, inserted
+      // right after the bulk bar.
+      var bulkProgress = null;
+      function ensureBulkProgress() {
+        if (bulkProgress) return bulkProgress;
+        bulkProgress = document.createElement("div");
+        bulkProgress.className = "kb-bulk-progress";
+        bulkProgress.hidden = true;
+        bulkProgress.innerHTML =
+          '<div class="kb-bulk-progress-label"></div>' +
+          '<div class="kb-bulk-progress-track">' +
+            '<div class="kb-bulk-progress-fill"></div></div>';
+        if (bulkBar && bulkBar.parentNode) {
+          bulkBar.parentNode.insertBefore(bulkProgress, bulkBar.nextSibling);
+        }
+        return bulkProgress;
+      }
       var checkAllEl = host.querySelector("[data-kb-check-all]");
       var exportBtnEl = host.querySelector("[data-kb-export]");
       var exportMenuEl = host.querySelector("[data-kb-export-menu]");
@@ -36091,30 +36137,90 @@
             if (!window.confirm("Delete " + pickedRows.length + " " +
                 (pickedRows.length === 1 ? "entry" : "entries") +
                 "? Your bot will forget all of them.")) return;
-            for (var i = 0; i < pickedRows.length; i++) {
-              var r = pickedRows[i];
-              try {
-                // Source rows (website / sheet / doc) live in
-                // /kb/sources; article + faq are warehouse docs in
-                // /knowledege. Warehouse-reference rows are skipped —
-                // they're detached via the row menu, never deleted here.
-                var isSrc = r.type === "website" || r.type === "sheet" || r.type === "doc";
-                if (isSrc) {
-                  await fetch("/kb/sources/" + encodeURIComponent(r.id) +
-                              "?accountid=" + encodeURIComponent(getAid()),
-                              { method: "DELETE", credentials: "same-origin" });
-                } else if (r.type === "article" || r.type === "faq") {
-                  await fetch("/knowledege", {
-                    method: "DELETE", credentials: "same-origin",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ accountid: getAid(), document_id: r.id }),
-                  });
-                }
-              } catch (_) { /* keep going */ }
-            }
+            var total = pickedRows.length;
+            // Optimistic: drop the selected rows from the UI right
+            // away — the user never waits on the network.
+            var pickedIds = {};
+            pickedRows.forEach(function (r) { pickedIds[r.id] = true; });
+            rows = rows.filter(function (r) { return !pickedIds[r.id]; });
             selected.clear();
-            loadRows();
-            window.dispatchEvent(new CustomEvent("kb:saved"));
+            renderRows();
+            // The actual server-side removals run in the background,
+            // tracked by a progress bar.
+            var prog = ensureBulkProgress();
+            var labelEl = prog.querySelector(".kb-bulk-progress-label");
+            var fillEl = prog.querySelector(".kb-bulk-progress-fill");
+            labelEl.style.color = "";
+            prog.hidden = false;
+            var doneCount = 0;
+            var failedRows = [];
+            function paintProgress() {
+              labelEl.textContent = "Removing " + total + " " +
+                (total === 1 ? "entry" : "entries") + "… (" +
+                doneCount + "/" + total + ")";
+              fillEl.style.background = "#dc2626";
+              fillEl.style.width =
+                Math.round((doneCount / total) * 100) + "%";
+            }
+            paintProgress();
+            (async function () {
+              for (var i = 0; i < pickedRows.length; i++) {
+                var r = pickedRows[i];
+                try {
+                  // Source rows (website / sheet / doc) live in
+                  // /kb/sources; article + faq are warehouse docs in
+                  // /knowledege; a warehouse-reference row is detached
+                  // from this agent (it stays in the warehouse).
+                  var isSrc = r.type === "website" || r.type === "sheet" || r.type === "doc";
+                  var resp = null;
+                  if (isSrc) {
+                    resp = await fetch("/kb/sources/" + encodeURIComponent(r.id) +
+                                "?accountid=" + encodeURIComponent(getAid()),
+                                { method: "DELETE", credentials: "same-origin" });
+                  } else if (r.type === "article" || r.type === "faq") {
+                    resp = await fetch("/knowledege", {
+                      method: "DELETE", credentials: "same-origin",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ accountid: getAid(), document_id: r.id }),
+                    });
+                  } else if (r.type === "warehouse") {
+                    var ag = window.__activeAgent || null;
+                    if (ag && ag.id) {
+                      resp = await fetch("/me/agents/" +
+                        encodeURIComponent(ag.id) + "/kb-documents", {
+                        method: "POST", credentials: "same-origin",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ op: "remove",
+                                               document_ids: [r.id] }),
+                      });
+                    }
+                  }
+                  if (!resp || !resp.ok) failedRows.push(r);
+                } catch (_) { failedRows.push(r); }
+                doneCount++;
+                paintProgress();
+              }
+              window.dispatchEvent(new CustomEvent("kb:saved"));
+              if (failedRows.length) {
+                labelEl.textContent = "Couldn't remove " +
+                  failedRows.length + " of " + total +
+                  " — restoring those rows.";
+                // Reconcile from the server: failed rows reappear.
+                setTimeout(function () {
+                  prog.hidden = true;
+                  loadRows();
+                }, 2200);
+              } else {
+                fillEl.style.background = "#16a34a";
+                labelEl.style.color = "#15803d";
+                labelEl.textContent = "Removed " + total +
+                  (total === 1 ? " entry." : " entries.");
+                setTimeout(function () {
+                  prog.hidden = true;
+                  labelEl.style.color = "";
+                }, 1400);
+              }
+            })();
           }
         });
       }

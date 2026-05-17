@@ -42,6 +42,10 @@
   body.ask-mode .ask-thread {
     flex:1; min-height:0; max-height:none;
   }
+  /* Ask mode reflows .wrap into a full-height chat — the redesigned
+     header would fight that layout, so hide it (the ask view has its
+     own back button). */
+  body.ask-mode #whHeader { display:none; }
   .page-h h1 { font-size:26px; font-weight:700; margin:0 0 4px; letter-spacing:-.01em; }
   .page-h p  { margin:0; color:var(--sub); font-size:14.5px; }
   .quota-row { margin:18px 0 8px; font-size:13px; color:var(--sub); }
@@ -108,13 +112,107 @@
   @keyframes wh-refresh-spin { to { transform:rotate(360deg); } }
   [data-theme="dark"] .tb-refresh { background:#161a22; }
 
-  /* Table */
-  .wh-list-layout { display:flex; gap:16px; align-items:flex-start; }
+  /* ─── Redesign: header ─── */
+  .wh-header {
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px; padding-bottom:18px; margin-bottom:20px;
+    border-bottom:1px solid var(--line);
+  }
+  .wh-header-title { font-size:20px; font-weight:700; letter-spacing:-.01em; }
+  .wh-header-actions { display:flex; align-items:center; gap:10px; }
+  .wh-menu-wrap { position:relative; }
+  .wh-add-btn { display:inline-flex; align-items:center; gap:6px; }
+  .wh-caret { font-size:10px; }
+  .wh-icon-btn { padding:8px 11px; font-size:15px; line-height:1; }
+  .wh-menu {
+    position:absolute; top:calc(100% + 6px); right:0; z-index:200;
+    background:#fff; border:1px solid var(--line); border-radius:12px;
+    box-shadow:0 12px 32px rgba(15,23,42,.16); padding:6px;
+    min-width:210px;
+  }
+  .wh-menu[hidden] { display:none; }
+  .wh-menu-wide { min-width:340px; max-width:380px; padding:14px; }
+  .wh-menu-item {
+    display:block; width:100%; text-align:left; border:0; background:none;
+    font:inherit; font-size:13.5px; padding:9px 10px; border-radius:8px;
+    cursor:pointer; color:var(--fg);
+  }
+  .wh-menu-item:hover { background:var(--soft); }
+  .wh-settings-h { font-size:13.5px; font-weight:700; margin-bottom:10px; }
+
+  /* ─── Redesign: layout ─── */
+  .wh-list-layout { display:flex; gap:20px; align-items:flex-start; }
+  .wh-sidebar {
+    flex:0 0 240px; display:flex; flex-direction:column; gap:10px;
+    position:sticky; top:20px;
+  }
   .wh-folder-pane {
-    flex:0 0 220px; border:1px solid var(--line); border-radius:12px;
+    border:1px solid var(--line); border-radius:12px;
     padding:8px; background:var(--soft);
   }
   .wh-folder-main { flex:1; min-width:0; }
+
+  /* ─── Redesign: breadcrumb ─── */
+  .wh-breadcrumb {
+    display:flex; align-items:center; flex-wrap:wrap; gap:4px;
+    font-size:14px; font-weight:600; margin-bottom:14px;
+  }
+  .wh-crumb {
+    border:0; background:none; font:inherit; font-weight:600;
+    color:var(--accent); cursor:pointer; padding:2px 4px; border-radius:6px;
+  }
+  .wh-crumb:hover { background:var(--soft); }
+  .wh-crumb.is-current { color:var(--fg); cursor:default; }
+  .wh-crumb.is-current:hover { background:none; }
+  .wh-crumb-sep { color:var(--sub); font-weight:400; }
+
+  /* ─── Redesign: upload modal ─── */
+  .wh-modal-backdrop {
+    position:fixed; inset:0; z-index:1000; background:rgba(15,23,42,.45);
+    display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .wh-modal-backdrop[hidden] { display:none; }
+  .wh-modal {
+    background:#fff; border-radius:16px; width:100%; max-width:540px;
+    box-shadow:0 24px 60px rgba(15,23,42,.3); overflow:hidden;
+  }
+  .wh-modal-head {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 18px; border-bottom:1px solid var(--line);
+    font-size:15px; font-weight:700;
+  }
+  .wh-modal-x {
+    border:0; background:none; font-size:16px; cursor:pointer;
+    color:var(--sub); padding:4px 8px; border-radius:8px;
+  }
+  .wh-modal-x:hover { background:var(--soft); color:var(--fg); }
+  .wh-modal-body { padding:18px; }
+  .up-modal-row {
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    margin-top:14px; font-size:13px;
+  }
+  .up-vis-label, .up-folder-label { font-weight:600; }
+  .wh-info {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:17px; height:17px; border-radius:50%; font-size:11px;
+    background:var(--soft); color:var(--sub); cursor:help;
+  }
+
+  /* ─── Redesign: dark mode ─── */
+  [data-theme="dark"] .wh-header { border-color:#2a313c; }
+  [data-theme="dark"] .wh-menu {
+    background:#161a22; border-color:#2a313c;
+    box-shadow:0 12px 32px rgba(0,0,0,.5);
+  }
+  [data-theme="dark"] .wh-menu-item { color:#e8eaed; }
+  [data-theme="dark"] .wh-menu-item:hover { background:#26303d; }
+  [data-theme="dark"] .wh-crumb:hover { background:#26303d; }
+  [data-theme="dark"] .wh-modal { background:#161a22; }
+  [data-theme="dark"] .wh-modal-head { border-color:#2a313c; }
+  [data-theme="dark"] .wh-modal-x:hover { background:#26303d; }
+  [data-theme="dark"] .wh-info { background:#26303d; }
+
+  /* Table */
   .wh-folder-item {
     display:flex; align-items:center; gap:6px; padding:7px 9px;
     border-radius:8px; cursor:pointer; font-size:13px;
@@ -128,6 +226,32 @@
   }
   .wh-folder-item:hover .wh-folder-menu { opacity:.7; }
   .wh-folder-children { margin-left:14px; }
+  .wh-folder-toggle {
+    flex:0 0 15px; width:15px; border:0; background:transparent;
+    cursor:pointer; font-size:10px; color:inherit; padding:0;
+    line-height:1; display:inline-flex; align-items:center;
+    justify-content:center; transition:transform .12s ease;
+  }
+  .wh-folder-toggle:hover { color:var(--accent); }
+  .wh-folder-toggle.collapsed { transform:rotate(-90deg); }
+  .wh-folder-spacer { flex:0 0 15px; width:15px; }
+  .wh-folder-count {
+    flex:0 0 auto; font-size:10.5px; font-weight:700; color:var(--sub);
+    background:var(--line); border-radius:999px; padding:1px 7px;
+    margin-left:4px;
+  }
+  .wh-folder-item.active .wh-folder-count {
+    background:rgba(255,255,255,.25); color:#fff;
+  }
+  .wh-file-item {
+    display:flex; align-items:center; gap:6px; padding:5px 9px;
+    border-radius:8px; cursor:pointer; font-size:12.5px; color:var(--sub);
+  }
+  .wh-file-item:hover { background:var(--line); color:var(--fg); }
+  .wh-file-label {
+    flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  [data-theme="dark"] .wh-file-item:hover { background:#26303d; }
   .wh-folder-new {
     margin-top:8px; width:100%; border:1px dashed var(--line);
     background:transparent; border-radius:8px; padding:7px;
@@ -138,10 +262,24 @@
   .doc-folder-cell { color:var(--sub); font-size:12.5px; }
   [data-theme="dark"] .wh-folder-pane { background:#161a22; }
   [data-theme="dark"] .wh-folder-item:hover { background:#26303d; }
-  .doc-table-wrap { border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  /* table-layout:fixed makes the table exactly the pane width — every
+     column fits, cell content ellipsizes, no horizontal scrollbar. */
+  .doc-table-wrap {
+    border:1px solid var(--line); border-radius:12px; overflow:hidden;
+  }
+  .doc-table-wrap table { table-layout:fixed; }
+  .col-check  { width:4%;  }
+  .col-name   { width:20%; }
+  .col-folder { width:13%; }
+  .col-fmt    { width:10%; }
+  .col-size   { width:9%;  }
+  .col-added  { width:13%; }
+  .col-status { width:12%; }
+  .col-access { width:11%; }
+  .col-act    { width:8%;  }
   /* Multi-select + bulk delete for warehouse records. */
-  .th-check { width:38px; text-align:center !important; }
-  .td-check { width:38px; text-align:center; }
+  .th-check { text-align:center !important; }
+  .td-check { text-align:center; }
   .doc-check, #docCheckAll { width:15px; height:15px; cursor:pointer; accent-color:var(--accent); }
   .doc-bulk-bar {
     display:flex; align-items:center; gap:12px;
@@ -166,15 +304,23 @@
   [data-theme="dark"] .doc-del-progress-track { background:#3a1d1d; }
   table { width:100%; border-collapse:collapse; font-size:13.5px; }
   thead th {
-    text-align:left; padding:11px 14px; font-size:11px; font-weight:700;
-    letter-spacing:.05em; text-transform:uppercase; color:var(--sub);
-    background:#f8fafc; border-bottom:1px solid var(--line); white-space:nowrap;
+    text-align:left; padding:10px 9px; font-size:11px; font-weight:700;
+    letter-spacing:.04em; text-transform:uppercase; color:var(--sub);
+    background:#f8fafc; border-bottom:1px solid var(--line);
   }
-  tbody td { padding:13px 14px; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
+  tbody td {
+    padding:11px 9px; border-bottom:1px solid #f1f5f9;
+    vertical-align:middle; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap;
+  }
   tbody tr:last-child td { border-bottom:0; }
   tbody tr.doc-row { cursor:pointer; transition:background .12s ease; }
   tbody tr.doc-row:hover { background:#f8fafc; }
-  .doc-name { font-weight:600; color:var(--fg); }
+  .doc-name {
+    font-weight:600; color:var(--fg); display:block;
+    max-width:100%; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap;
+  }
   .live-badge {
     display:inline-block; font-size:9.5px; font-weight:700; letter-spacing:.05em;
     text-transform:uppercase; padding:1px 6px; border-radius:999px;
@@ -196,7 +342,10 @@
   .st-failed   { background:#fdecec; color:var(--err); }
   .st-proc     { background:#fff6e5; color:var(--warn); }
   .muted { color:var(--sub); }
-  .empty { padding:48px 24px; text-align:center; color:var(--sub); font-size:14px; }
+  .empty {
+    padding:48px 24px; text-align:center; color:var(--sub);
+    font-size:14px; white-space:normal;
+  }
 
   /* Detail */
   .detail-back {
@@ -320,7 +469,7 @@
   }
   .wh-prev-note { font-size:12px; color:var(--sub); margin-top:8px; }
   /* Row eye / preview action */
-  .th-act { width:78px; text-align:center !important; }
+  .th-act { text-align:center !important; }
   .td-act { text-align:center; }
   .eye-btn {
     display:inline-flex; align-items:center; justify-content:center;
@@ -650,119 +799,150 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="page-h">
-    <button type="button" class="btn btn-primary" id="askOpen">
-      💬 Ask the warehouse</button>
-  </div>
+  <!-- ─── Header ─── -->
+  <header class="wh-header" id="whHeader">
+    <div class="wh-header-title">📦 Warehouse</div>
+    <div class="wh-header-actions">
+      <div class="wh-menu-wrap">
+        <button type="button" class="btn wh-add-btn" id="addContentBtn">
+          + Add content <span class="wh-caret" aria-hidden="true">▾</span></button>
+        <div class="wh-menu" id="addContentMenu" hidden>
+          <button type="button" class="wh-menu-item" id="addUploadBtn">⬆️ Upload files</button>
+          <button type="button" class="wh-menu-item" id="trainSiteBtn">🌐 Train a website</button>
+          <button type="button" class="wh-menu-item" id="driveBtn">📄 Import from Google Drive</button>
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary" id="askOpen">
+        💬 Ask the warehouse</button>
+      <div class="wh-menu-wrap">
+        <button type="button" class="btn wh-icon-btn" id="settingsBtn"
+                title="Settings" aria-label="Settings">⚙️</button>
+        <div class="wh-menu wh-menu-wide" id="settingsMenu" hidden>
+          <div class="api-access" id="apiAccessPanel">
+            <div class="wh-settings-h">🔑 Programmatic API access</div>
+            <div class="api-access-body">
+              <p class="api-access-intro">
+                Generate a token to upload documents to this warehouse from a
+                script or another app. The token works only for uploads — it
+                cannot read, list, or delete anything.</p>
+              <div id="apiTokenNone">
+                <button type="button" class="btn btn-primary" id="apiTokenGen">
+                  Generate token</button>
+              </div>
+              <div id="apiTokenHave" style="display:none;">
+                <div class="api-token-row">
+                  <input type="text" id="apiTokenValue" class="api-token-input" readonly>
+                  <button type="button" class="btn" id="apiTokenCopy">Copy</button>
+                </div>
+                <div class="api-token-meta" id="apiTokenMeta"></div>
+                <div class="api-token-actions">
+                  <button type="button" class="btn" id="apiTokenRegen">Regenerate</button>
+                  <button type="button" class="btn btn-danger" id="apiTokenRevoke">Revoke</button>
+                </div>
+                <pre class="api-token-curl" id="apiTokenCurl"></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
 
   <!-- ─── List view ─── -->
   <div id="listView">
-    <div class="quota-row" id="quotaRow">Loading storage…</div>
-
-    <div class="drop" id="dropZone">
-      <div class="drop-icon" aria-hidden="true">📁</div>
-      <div class="drop-main">Drop files here or click to upload</div>
-      <div class="drop-sub">PDF, images, CSV, TSV, JSON, NDJSON, TXT, MD, XLSX, DOCX · Max 100&nbsp;MB</div>
-    </div>
-    <input type="file" id="fileInput" multiple
-           accept=".pdf,.csv,.tsv,.json,.ndjson,.jsonl,.txt,.md,.markdown,.xlsx,.xls,.docx,.png,.jpg,.jpeg,.gif,.webp,.bmp"
-           style="display:none">
-
-    <div class="add-sources">
-      <button type="button" class="btn" id="trainSiteBtn">🌐 Train a website</button>
-      <button type="button" class="btn" id="driveBtn">📄 Import from Google Drive</button>
-    </div>
-
-    <details class="api-access" id="apiAccessPanel">
-      <summary>🔑 Programmatic API access</summary>
-      <div class="api-access-body">
-        <p class="api-access-intro">
-          Generate a token to upload documents to this warehouse from a
-          script or another app. The token works only for uploads — it
-          cannot read, list, or delete anything.</p>
-        <div id="apiTokenNone">
-          <button type="button" class="btn btn-primary" id="apiTokenGen">
-            Generate token</button>
-        </div>
-        <div id="apiTokenHave" style="display:none;">
-          <div class="api-token-row">
-            <input type="text" id="apiTokenValue" class="api-token-input" readonly>
-            <button type="button" class="btn" id="apiTokenCopy">Copy</button>
-          </div>
-          <div class="api-token-meta" id="apiTokenMeta"></div>
-          <div class="api-token-actions">
-            <button type="button" class="btn" id="apiTokenRegen">Regenerate</button>
-            <button type="button" class="btn btn-danger" id="apiTokenRevoke">Revoke</button>
-          </div>
-          <pre class="api-token-curl" id="apiTokenCurl"></pre>
-        </div>
-      </div>
-    </details>
-
-    <div class="up-vis-row">
-      <span>New uploads:</span>
-      <label><input type="radio" name="upVis" value="internal" checked>
-        🔒 Internal only</label>
-      <label><input type="radio" name="upVis" value="customer_facing">
-        🌐 Customer-facing OK</label>
-      <span class="up-vis-note">Internal is the safe default — customer
-        bots can't read internal files. Change it per document
-        anytime.</span>
-      <label class="up-folder-label">Folder:
-        <select id="upFolderSelect"><option value="">Root</option></select>
-      </label>
-    </div>
-
-    <div class="toolbar">
-      <input type="text" id="searchInput" class="tb-search" placeholder="Search documents…">
-      <select id="formatFilter" class="tb-sel">
-        <option value="">All formats</option>
-      </select>
-      <select id="sortSel" class="tb-sel">
-        <option value="newest">Newest first</option>
-        <option value="oldest">Oldest first</option>
-        <option value="name">Name A–Z</option>
-        <option value="size">Largest first</option>
-      </select>
-      <button type="button" id="whRefreshBtn" class="tb-refresh"
-              title="Refresh — pull new and updated documents">
-        <span class="tb-refresh-icon" aria-hidden="true">↻</span> Refresh
-      </button>
-    </div>
-
-    <div class="uploads" id="uploads"></div>
-
-    <div class="doc-bulk-bar" id="docBulkBar" hidden>
-      <span id="docBulkCount">0 selected</span>
-      <button type="button" class="btn btn-danger" id="docBulkDelete">Delete selected</button>
-      <button type="button" class="btn" id="docBulkClear">Clear</button>
-    </div>
-    <div class="doc-del-progress" id="docDelProgress" hidden>
-      <div class="doc-del-progress-label" id="docDelProgressLabel">Deleting…</div>
-      <div class="doc-del-progress-track">
-        <div class="doc-del-progress-fill" id="docDelProgressFill"></div>
-      </div>
-    </div>
     <div class="wh-list-layout">
-      <div class="wh-folder-pane" id="whFolderPane"></div>
+      <!-- Sidebar — folder tree + storage -->
+      <aside class="wh-sidebar">
+        <div class="wh-folder-pane" id="whFolderPane"></div>
+        <div class="quota-row" id="quotaRow">Loading storage…</div>
+      </aside>
+      <!-- Main workspace -->
       <div class="wh-folder-main">
-    <div class="doc-table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th class="th-check"><input type="checkbox" id="docCheckAll" aria-label="Select all documents"></th>
-            <th>Name</th><th>Folder</th><th>Format</th><th>Size</th><th>Added</th><th>Status</th>
-            <th>Access</th>
-            <th class="th-act">Preview</th>
-          </tr>
-        </thead>
-        <tbody id="docBody">
-          <tr><td colspan="9" class="empty">Loading…</td></tr>
-        </tbody>
-      </table>
-    </div>
+        <nav class="wh-breadcrumb" id="whBreadcrumb"></nav>
+        <div class="toolbar">
+          <input type="text" id="searchInput" class="tb-search" placeholder="Search documents…">
+          <select id="formatFilter" class="tb-sel">
+            <option value="">All formats</option>
+          </select>
+          <select id="sortSel" class="tb-sel">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="name">Name A–Z</option>
+            <option value="size">Largest first</option>
+          </select>
+          <button type="button" id="whRefreshBtn" class="tb-refresh"
+                  title="Refresh — pull new and updated documents">
+            <span class="tb-refresh-icon" aria-hidden="true">↻</span> Refresh
+          </button>
+        </div>
+        <div class="uploads" id="uploads"></div>
+        <div class="doc-bulk-bar" id="docBulkBar" hidden>
+          <span id="docBulkCount">0 selected</span>
+          <button type="button" class="btn btn-danger" id="docBulkDelete">Delete selected</button>
+          <button type="button" class="btn" id="docBulkClear">Clear</button>
+        </div>
+        <div class="doc-del-progress" id="docDelProgress" hidden>
+          <div class="doc-del-progress-label" id="docDelProgressLabel">Deleting…</div>
+          <div class="doc-del-progress-track">
+            <div class="doc-del-progress-fill" id="docDelProgressFill"></div>
+          </div>
+        </div>
+        <div class="doc-table-wrap">
+          <table>
+            <colgroup>
+              <col class="col-check"><col class="col-name"><col class="col-folder">
+              <col class="col-fmt"><col class="col-size"><col class="col-added">
+              <col class="col-status"><col class="col-access"><col class="col-act">
+            </colgroup>
+            <thead>
+              <tr>
+                <th class="th-check"><input type="checkbox" id="docCheckAll" aria-label="Select all documents"></th>
+                <th>Name</th><th>Folder</th><th>Format</th><th>Size</th><th>Updated</th><th>Status</th>
+                <th>Access</th>
+                <th class="th-act">Preview</th>
+              </tr>
+            </thead>
+            <tbody id="docBody">
+              <tr><td colspan="9" class="empty">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div><!-- /wh-folder-main -->
     </div><!-- /wh-list-layout -->
+  </div>
+
+  <!-- ─── Upload modal ─── -->
+  <div class="wh-modal-backdrop" id="uploadModal" hidden>
+    <div class="wh-modal" role="dialog" aria-label="Upload files">
+      <div class="wh-modal-head">
+        <span>Upload files</span>
+        <button type="button" class="wh-modal-x" id="uploadModalClose" aria-label="Close">✕</button>
+      </div>
+      <div class="wh-modal-body">
+        <div class="drop" id="dropZone">
+          <div class="drop-icon" aria-hidden="true">📁</div>
+          <div class="drop-main">Drop files here or click to upload</div>
+          <div class="drop-sub">PDF, images, CSV, TSV, JSON, NDJSON, TXT, MD, XLSX, DOCX · Max 100&nbsp;MB</div>
+        </div>
+        <input type="file" id="fileInput" multiple
+               accept=".pdf,.csv,.tsv,.json,.ndjson,.jsonl,.txt,.md,.markdown,.xlsx,.xls,.docx,.png,.jpg,.jpeg,.gif,.webp,.bmp"
+               style="display:none">
+        <div class="up-modal-row">
+          <label class="up-folder-label">Folder
+            <select id="upFolderSelect"><option value="">Root</option></select>
+          </label>
+        </div>
+        <div class="up-modal-row up-vis-row">
+          <span class="up-vis-label">Visibility</span>
+          <label><input type="radio" name="upVis" value="internal" checked>
+            🔒 Internal only</label>
+          <label><input type="radio" name="upVis" value="customer_facing">
+            🌐 Customer-facing OK</label>
+          <span class="wh-info" tabindex="0" role="img" aria-label="About visibility"
+                title="Internal is the safe default — customer bots can't read internal files. Change it per document anytime.">ⓘ</span>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ─── Detail view ─── -->
@@ -1075,6 +1255,7 @@
   }
   var activeFolder = "";          // "" = All docs
   var folderPaths = [];           // every folder path, from /folders
+  var folderExpanded = {};        // folder paths the user has expanded (default: collapsed)
 
   // ─── Quota ───
   function renderQuota(used, quota) {
@@ -1105,10 +1286,12 @@
       return true;
     });
     rows.sort(function (a, b) {
-      if (sort === "oldest") return (a.uploaded_at || "").localeCompare(b.uploaded_at || "");
+      var au = a.updated_at || a.uploaded_at || "";
+      var bu = b.updated_at || b.uploaded_at || "";
+      if (sort === "oldest") return au.localeCompare(bu);
       if (sort === "name")   return (a.name || "").localeCompare(b.name || "");
       if (sort === "size")   return (b.size_bytes || 0) - (a.size_bytes || 0);
-      return (b.uploaded_at || "").localeCompare(a.uploaded_at || "");
+      return bu.localeCompare(au);
     });
     var body = $("docBody");
     if (!rows.length) {
@@ -1154,7 +1337,7 @@
         "</td>" +
         '<td><span class="doc-fmt">' + esc(d.format) + "</span></td>" +
         "<td>" + fmtBytes(d.size_bytes) + "</td>" +
-        '<td class="muted">' + esc(ago(d.uploaded_at)) + "</td>" +
+        '<td class="muted">' + esc(ago(d.updated_at || d.uploaded_at)) + "</td>" +
         "<td>" + statusPill(d.status) + "</td>" +
         "<td>" + visBadge(d) + "</td>" +
         '<td class="td-act">' + eye + "</td>" +
@@ -1253,6 +1436,16 @@
         cur = cur[seg].__children;
       });
     });
+    // Index documents by the folder they live in, so each folder node
+    // can list the files directly inside it (root files stay in the
+    // main table, not the tree).
+    var docsByFolder = {};
+    allDocs.forEach(function (d) {
+      if (d.is_live_source) return;
+      var fp = (d.folder_path || "").replace(/^\/+|\/+$/g, "");
+      if (!fp) return;
+      (docsByFolder[fp] = docsByFolder[fp] || []).push(d);
+    });
     pane.innerHTML = "";
     var allItem = document.createElement("div");
     allItem.className = "wh-folder-item" + (activeFolder ? "" : " active");
@@ -1265,16 +1458,47 @@
     function renderLevel(node, prefix, container) {
       Object.keys(node).sort().forEach(function (seg) {
         var path = prefix ? prefix + "/" + seg : seg;
+        var kids = node[seg].__children;
+        var files = docsByFolder[path] || [];
+        // A folder can be expanded when it holds anything at all —
+        // sub-folders OR files.
+        var hasContents = Object.keys(kids).length > 0 || files.length > 0;
+        var expanded = !!folderExpanded[path];
+
         var item = document.createElement("div");
         item.className = "wh-folder-item" +
           (activeFolder === path ? " active" : "");
         item.dataset.folder = path;
+        if (hasContents) {
+          var toggle = document.createElement("button");
+          toggle.type = "button";
+          toggle.className = "wh-folder-toggle" +
+            (expanded ? "" : " collapsed");
+          toggle.textContent = "▾";
+          toggle.title = expanded ? "Collapse folder" : "Expand folder";
+          toggle.addEventListener("click", function (e) {
+            e.stopPropagation();  // chevron toggles; row click expands
+            folderExpanded[path] = !folderExpanded[path];
+            renderFolderPane();
+          });
+          item.appendChild(toggle);
+        } else {
+          var spacer = document.createElement("span");
+          spacer.className = "wh-folder-spacer";
+          item.appendChild(spacer);
+        }
         var label = document.createElement("span");
-        label.textContent = "📁 " + seg;
+        label.textContent = (expanded ? "📂 " : "📁 ") + seg;
         label.style.flex = "1";
         label.style.overflow = "hidden";
         label.style.textOverflow = "ellipsis";
         item.appendChild(label);
+        if (files.length) {
+          var cnt = document.createElement("span");
+          cnt.className = "wh-folder-count";
+          cnt.textContent = files.length;
+          item.appendChild(cnt);
+        }
         var menu = document.createElement("button");
         menu.type = "button";
         menu.className = "wh-folder-menu";
@@ -1284,8 +1508,13 @@
           window.__whFolderMenu(menu, path);
         });
         item.appendChild(menu);
+        // Clicking the folder REVEALS its contents (this one level)
+        // and filters the table to it. Collapse via the chevron.
         item.addEventListener("click", function () {
-          activeFolder = path; renderFolderPane(); renderList();
+          activeFolder = path;
+          if (hasContents) folderExpanded[path] = true;
+          renderFolderPane();
+          renderList();
         });
         // Drag-and-drop target — a document row dropped here moves it.
         item.addEventListener("dragover", function (e) {
@@ -1300,12 +1529,35 @@
           if (docId) window.__whMoveDoc(docId, path);
         });
         container.appendChild(item);
-        var kids = node[seg].__children;
-        if (Object.keys(kids).length) {
+
+        // Expanded → reveal exactly ONE level: the immediate
+        // sub-folders (still collapsed), then the files that live
+        // directly in this folder. Clicking a file opens it.
+        if (hasContents && expanded) {
           var sub = document.createElement("div");
           sub.className = "wh-folder-children";
           container.appendChild(sub);
           renderLevel(kids, path, sub);
+          files.slice().sort(function (a, b) {
+            return (a.name || a.filename || "").localeCompare(
+                    b.name || b.filename || "");
+          }).forEach(function (d) {
+            var f = document.createElement("div");
+            f.className = "wh-file-item";
+            f.title = d.name || d.filename || "";
+            var fsp = document.createElement("span");
+            fsp.className = "wh-folder-spacer";
+            var flbl = document.createElement("span");
+            flbl.className = "wh-file-label";
+            flbl.textContent = "📄 " + (d.name || d.filename || "Document");
+            f.appendChild(fsp);
+            f.appendChild(flbl);
+            f.addEventListener("click", function (e) {
+              e.stopPropagation();
+              openDetail(d.document_id);
+            });
+            sub.appendChild(f);
+          });
         }
       });
     }
@@ -1332,6 +1584,7 @@
       upSel.value = (folderPaths.indexOf(prev) >= 0) ? prev
                   : (folderPaths.indexOf(activeFolder) >= 0 ? activeFolder : "");
     }
+    renderBreadcrumb();
   }
   // Folder actions are OPTIMISTIC — the UI mutates local state and
   // re-renders immediately; the server call runs in the background.
@@ -3047,6 +3300,84 @@
   $("searchInput").addEventListener("input", renderList);
   $("formatFilter").addEventListener("change", renderList);
   $("sortSel").addEventListener("change", renderList);
+
+  // ─── Header menus (Add content, Settings) + Upload modal ───
+  function whCloseMenus() {
+    $("addContentMenu").hidden = true;
+    $("settingsMenu").hidden = true;
+  }
+  function whToggleMenu(menu) {
+    var willOpen = menu.hidden;
+    whCloseMenus();
+    menu.hidden = !willOpen;
+  }
+  $("addContentBtn").addEventListener("click", function (e) {
+    e.stopPropagation(); whToggleMenu($("addContentMenu"));
+  });
+  $("settingsBtn").addEventListener("click", function (e) {
+    e.stopPropagation(); whToggleMenu($("settingsMenu"));
+  });
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest(".wh-menu-wrap")) whCloseMenus();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { whCloseMenus(); whCloseUploadModal(); }
+  });
+
+  function whOpenUploadModal() {
+    whCloseMenus();
+    // Default the folder picker to the folder the user is viewing.
+    var sel = $("upFolderSelect");
+    if (sel) {
+      var ok = false;
+      for (var i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value === activeFolder) { ok = true; break; }
+      }
+      sel.value = ok ? activeFolder : "";
+    }
+    $("uploadModal").hidden = false;
+  }
+  function whCloseUploadModal() { $("uploadModal").hidden = true; }
+  $("addUploadBtn").addEventListener("click", whOpenUploadModal);
+  $("uploadModalClose").addEventListener("click", whCloseUploadModal);
+  $("uploadModal").addEventListener("click", function (e) {
+    if (e.target === $("uploadModal")) whCloseUploadModal();  // backdrop
+  });
+
+  // The Add-content menu items that open existing flows should also
+  // close the menu after firing their own handlers.
+  $("trainSiteBtn").addEventListener("click", whCloseMenus);
+  $("driveBtn").addEventListener("click", whCloseMenus);
+
+  // ─── Breadcrumb — single source of truth for the active folder ───
+  function renderBreadcrumb() {
+    var bc = $("whBreadcrumb");
+    if (!bc) return;
+    bc.innerHTML = "";
+    function crumb(label, path, isCurrent) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "wh-crumb" + (isCurrent ? " is-current" : "");
+      b.textContent = label;
+      if (!isCurrent) {
+        b.addEventListener("click", function () {
+          activeFolder = path;
+          renderFolderPane(); renderList();
+        });
+      }
+      bc.appendChild(b);
+    }
+    var parts = activeFolder ? activeFolder.split("/") : [];
+    crumb("All docs", "", parts.length === 0);
+    var acc = "";
+    parts.forEach(function (seg, i) {
+      var sep = document.createElement("span");
+      sep.className = "wh-crumb-sep"; sep.textContent = "/";
+      bc.appendChild(sep);
+      acc = acc ? acc + "/" + seg : seg;
+      crumb(seg, acc, i === parts.length - 1);
+    });
+  }
 
   // ─── Multi-select + bulk delete ───
   $("docCheckAll").addEventListener("change", function () {
