@@ -16968,6 +16968,62 @@
         .lm-empty { padding: 18px 14px; text-align: center; color: #94a3b8; font-size: 13px; }
         .lm-skel-row { height: 14px; background: #f1f5f9; border-radius: 4px; margin-bottom: 6px; animation: lm-skel 1.2s ease-in-out infinite; }
         @keyframes lm-skel { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+        /* ── Lead modal — dark mode (the whole popup was light) ──── */
+        [data-theme="dark"] #leadModal .lm-card {
+          background: var(--bg-surface);
+          box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+        }
+        [data-theme="dark"] .lm-close { color: var(--text-secondary); }
+        [data-theme="dark"] .lm-close:hover {
+          background: var(--bg-elevated); color: var(--text-primary);
+        }
+        [data-theme="dark"] .lm-header { border-bottom-color: var(--border-default); }
+        [data-theme="dark"] .lm-name { color: var(--text-primary); }
+        [data-theme="dark"] .lm-contact { color: var(--text-secondary); }
+        [data-theme="dark"] .lm-source { color: var(--text-tertiary); }
+        [data-theme="dark"] .lm-btn {
+          color: var(--text-primary); background: var(--bg-elevated);
+          border-color: var(--border-default);
+        }
+        [data-theme="dark"] .lm-btn:hover { background: var(--bg-surface); }
+        [data-theme="dark"] .lm-btn.is-primary {
+          background: var(--accent); color: #fff; border-color: var(--accent);
+        }
+        [data-theme="dark"] .lm-section h3 { color: var(--text-primary); }
+        [data-theme="dark"] .lm-capture-card {
+          background: var(--bg-elevated); border-color: var(--border-default);
+          color: var(--text-primary);
+        }
+        [data-theme="dark"] .lm-capture-fields dt { color: var(--text-tertiary); }
+        [data-theme="dark"] .lm-capture-fields dd { color: var(--text-primary); }
+        [data-theme="dark"] .lm-timeline::before { background: var(--border-default); }
+        [data-theme="dark"] .lm-event::before { background: var(--bg-surface); }
+        [data-theme="dark"] .lm-event[data-kind="capture"]::before { background: #185FA5; }
+        [data-theme="dark"] .lm-event-head { color: var(--text-primary); }
+        [data-theme="dark"] .lm-event-head:hover { color: var(--accent-hover); }
+        [data-theme="dark"] .lm-event-time { color: var(--text-tertiary); }
+        [data-theme="dark"] .lm-event-body {
+          background: var(--bg-elevated); border-color: var(--border-default);
+          color: var(--text-secondary);
+        }
+        [data-theme="dark"] .lm-event-snippet { color: var(--text-tertiary); }
+        [data-theme="dark"] .lm-bub.is-cust {
+          background: var(--bg-elevated); color: var(--text-primary);
+        }
+        [data-theme="dark"] .lm-suggestion {
+          background: var(--bg-elevated); border-color: var(--border-default);
+        }
+        [data-theme="dark"] .lm-suggestion .lm-sugg-text { color: var(--text-primary); }
+        [data-theme="dark"] .lm-note-form {
+          background: var(--bg-elevated); border-color: var(--border-default);
+        }
+        [data-theme="dark"] .lm-note-form textarea {
+          background: var(--bg-surface); color: var(--text-primary);
+          border-color: var(--border-default);
+        }
+        [data-theme="dark"] .lm-empty { color: var(--text-tertiary); }
+        [data-theme="dark"] .lm-skel-row { background: var(--bg-elevated); }
       </style>
       <div id="leadModal" role="dialog" aria-modal="true" aria-labelledby="lmName">
         <div class="lm-backdrop" data-lm-close></div>
@@ -19741,6 +19797,10 @@
            #0a0a0a / #e5e7eb above gets a dark counterpart here so
            the entire page surface, not just the chrome, flips. */
         [data-theme="dark"] .leads-page-title { color: var(--text-primary); }
+        /* Lead name + secondary line in each row were hardcoded near
+           black (#0a0a0a) — invisible on the dark table. */
+        [data-theme="dark"] .leads-name { color: var(--text-primary); }
+        [data-theme="dark"] .leads-name-secondary { color: var(--text-secondary); }
         [data-theme="dark"] .leads-page-sub   { color: var(--text-secondary); }
         [data-theme="dark"] .leads-search-input {
           background: var(--bg-input); color: var(--text-primary);
