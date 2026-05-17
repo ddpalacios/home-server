@@ -50882,6 +50882,9 @@
       overflow: hidden; background: white;
       box-shadow: var(--shadow, 0 12px 30px rgba(15,23,42,0.08));
       min-height: 560px;
+      /* Bound the height so a long transcript scrolls inside the thread
+         pane instead of stretching the whole dashboard page. */
+      max-height: calc(100vh - 210px);
     }
 
     /* Left rail */
@@ -50943,7 +50946,26 @@
       border-bottom: 1px solid var(--border, #e5e7eb); cursor: pointer; text-align: left;
       color: #374151; font-weight: 500;
     }
-    .ibx-thread-content { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+    .ibx-thread-content { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }
+
+    /* Thin, app-styled scrollbars for the inbox list + transcript — themed
+       tokens keep them legible in light and dark mode. */
+    .ibx-conv-list, .ibx-thread-content {
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-strong, #cbd5e1) transparent;
+    }
+    .ibx-conv-list::-webkit-scrollbar,
+    .ibx-thread-content::-webkit-scrollbar { width: 7px; height: 7px; }
+    .ibx-conv-list::-webkit-scrollbar-track,
+    .ibx-thread-content::-webkit-scrollbar-track { background: transparent; }
+    .ibx-conv-list::-webkit-scrollbar-thumb,
+    .ibx-thread-content::-webkit-scrollbar-thumb {
+      background: var(--border-strong, #cbd5e1); border-radius: 4px;
+    }
+    .ibx-conv-list::-webkit-scrollbar-thumb:hover,
+    .ibx-thread-content::-webkit-scrollbar-thumb:hover {
+      background: var(--text-tertiary, #9ca3af);
+    }
     .ibx-thread-placeholder {
       flex: 1; display: flex; align-items: center; justify-content: center;
       color: #9ca3af; font-size: 14px;
