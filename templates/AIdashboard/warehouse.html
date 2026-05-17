@@ -934,6 +934,19 @@
   [data-theme="dark"] .pv-pdf { background:#27272b; }
   [data-theme="dark"] .ask-bubble.user,
   [data-theme="dark"] .ask-msg.user .ask-bubble { color:#0a0f15; }
+  /* ─── Mutation preview card ─── */
+  .mut-card { margin-top:10px; border:1px solid var(--border);
+    border-radius:10px; padding:12px 14px; background:var(--bg-elevated); }
+  .mut-title { font-weight:600; margin-bottom:6px; }
+  .mut-line { font-size:13px; color:var(--sub); padding:1px 0; }
+  .mut-btns { margin-top:10px; display:flex; gap:8px; }
+  .mut-btns button { padding:6px 14px; border-radius:7px;
+    border:1px solid var(--border); cursor:pointer; font-size:13px; }
+  .mut-apply { background:#2563eb; color:#fff; border-color:#2563eb; }
+  .mut-done { margin-top:8px; font-size:13px; color:#15803d; }
+  .mut-err { margin-top:8px; font-size:13px; color:#b91c1c; }
+  [data-theme="dark"] .mut-done { color:#6fcf97; }
+  [data-theme="dark"] .mut-err { color:#ef8b82; }
 </style>
 <script>
 /* Mirror the parent dashboard's dark/light theme. Same-origin iframe,
@@ -3701,6 +3714,74 @@
     });
   }
 
+  function escapeHtml(s) {
+    var d = document.createElement("div");
+    d.textContent = (s == null ? "" : String(s));
+    return d.innerHTML;
+  }
+
+  function renderMutationCard(mut) {
+    var card = document.createElement("div");
+    card.className = "mut-card";
+    var pv = mut.preview || {};
+    var lines = (pv.lines || []).map(function (l) {
+      return '<div class="mut-line">' + escapeHtml(l) + '</div>';
+    }).join("");
+    function paint() {
+      var head = '<div class="mut-title">📋 ' +
+        escapeHtml(pv.title || mut.summary || "Proposed change") +
+        '</div>' + lines;
+      if (mut.status === "applied") {
+        card.innerHTML = head +
+          '<div class="mut-done">✅ ' +
+          escapeHtml(mut.result || "Applied") + '</div>';
+      } else if (mut.status === "cancelled") {
+        card.innerHTML = head + '<div class="mut-done">✕ Cancelled</div>';
+      } else if (mut.status === "failed") {
+        card.innerHTML = head +
+          '<div class="mut-err">⚠️ ' + escapeHtml(mut.error || "Failed") +
+          '</div><div class="mut-btns">' +
+          '<button class="mut-apply">Retry</button>' +
+          '<button class="mut-cancel">Cancel</button></div>';
+        wire();
+      } else {
+        card.innerHTML = head + '<div class="mut-btns">' +
+          '<button class="mut-apply">Apply</button>' +
+          '<button class="mut-cancel">Cancel</button></div>';
+        wire();
+      }
+    }
+    function wire() {
+      var ap = card.querySelector(".mut-apply");
+      var cn = card.querySelector(".mut-cancel");
+      if (ap) ap.addEventListener("click", function () {
+        ap.disabled = true; ap.textContent = "Applying…";
+        post("apply");
+      });
+      if (cn) cn.addEventListener("click", function () { post("cancel"); });
+    }
+    function post(action) {
+      fetch("/api/warehouse/conversations/" +
+            encodeURIComponent(askConvId) + "/mutations/" +
+            encodeURIComponent(mut.id) + "/" + action,
+            { method: "POST", credentials: "same-origin" })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+          mut.status = res.status || mut.status;
+          mut.result = res.message || mut.result;
+          mut.error = res.error || mut.error;
+          paint();
+        })
+        .catch(function () {
+          mut.status = "failed";
+          mut.error = "Request failed — try again.";
+          paint();
+        });
+    }
+    paint();
+    return card;
+  }
+
   function addAskMsg(role, text, sources, isErr, table, tables) {
     var t = $("askThread");
     var empty = t.querySelector(".ask-empty");
@@ -3836,6 +3917,9 @@
             });
           });
         answerMsg.appendChild(ex);
+      }
+      if (d.mutation && askConvId) {
+        answerMsg.appendChild(renderMutationCard(d.mutation));
       }
       finishUp();
       loadAskConvs();  // refresh sidebar (title / ordering)
