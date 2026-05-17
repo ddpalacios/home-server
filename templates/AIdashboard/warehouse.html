@@ -3892,14 +3892,15 @@
           bubble.classList.add("md");
           bubble.innerHTML = mdToHtml(opener);
         }
-        // Keep the "Analyzing…" indicator visible while the SQL
-        // result is computed. The answer bubble — and this
-        // indicator's removal — waits for the first real token, so
-        // the user always sees progress, never an empty bubble.
-        if (wait) wait.style.display = "";
+        // Mount the answer bubble NOW with its animated "Computing
+        // the exact results…" progress bar — so there is a visible,
+        // moving thinking indicator the whole time the query runs,
+        // not a tiny static "Analyzing…" line the user can miss.
+        startAnswer();
         askScroll();
       } else if (ev === "answer_start") {
-        // no-op — keep "Analyzing…" showing until tokens stream in.
+        // The progress bar is already up (mounted at opener_done).
+        startAnswer();
       } else if (ev === "answer_token") {
         // First real token: startAnswer() hides "Analyzing…" and
         // mounts the bubble; then stream char-by-char.
