@@ -1618,6 +1618,14 @@
     var cols = (t.columns && t.columns.length) ? t.columns
                : (t.rows && t.rows[0] ? Object.keys(t.rows[0]) : []);
     var rows = t.rows || [];
+    // Wide tables: a 100%-width table squashes columns and clips
+    // content. Instead we let the table grow to its natural width
+    // and scroll the pane; with many columns we also compact the
+    // padding / font and cap each column so one value can't blow it
+    // out. >6 columns = compact mode.
+    var manyCols = cols.length > 6;
+    var colCap = manyCols ? "150px" : "260px";
+    var cellPad = manyCols ? "5px 8px" : "7px 12px";
     var wrap = document.createElement("div");
     wrap.className = "tc-msg bot";
     wrap.style.cssText =
@@ -1683,17 +1691,21 @@
       "overflow:auto;max-height:480px;background:var(--bg-elevated);";
     var tbl = document.createElement("table");
     tbl.style.cssText =
-      "width:100%;border-collapse:collapse;font-size:12.5px;" +
+      "min-width:100%;width:max-content;border-collapse:collapse;" +
+      "font-size:" + (manyCols ? "11px" : "12.5px") + ";" +
       "font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;";
     var thead = document.createElement("thead");
     var trh = document.createElement("tr");
     cols.forEach(function (c) {
       var th = document.createElement("th");
       th.textContent = c;
+      th.title = String(c);
       th.style.cssText =
         "position:sticky;top:0;background:var(--bg-overlay);color:var(--ink);" +
-        "font-weight:600;text-align:left;padding:8px 12px;" +
-        "border-bottom:1px solid var(--border);cursor:pointer;user-select:none;";
+        "font-weight:600;text-align:left;cursor:pointer;user-select:none;" +
+        "white-space:nowrap;border-bottom:1px solid var(--border);" +
+        "padding:" + cellPad + ";max-width:" + colCap + ";" +
+        "overflow:hidden;text-overflow:ellipsis;";
       th.addEventListener("click", function () {
         var dir = th.dataset.dir === "asc" ? "desc" : "asc";
         Array.prototype.forEach.call(thead.querySelectorAll("th"),
@@ -1723,9 +1735,12 @@
           var td = document.createElement("td");
           var v = r[c];
           td.textContent = (v === null || v === undefined) ? "" : String(v);
+          td.title = td.textContent;
           td.style.cssText =
-            "padding:7px 12px;border-bottom:1px solid var(--border-subtle);" +
-            "color:var(--ink);vertical-align:top;";
+            "border-bottom:1px solid var(--border-subtle);" +
+            "color:var(--ink);vertical-align:top;white-space:nowrap;" +
+            "overflow:hidden;text-overflow:ellipsis;" +
+            "padding:" + cellPad + ";max-width:" + colCap + ";";
           tr.appendChild(td);
         });
         tbody.appendChild(tr);
