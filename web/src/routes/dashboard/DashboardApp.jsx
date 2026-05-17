@@ -128,6 +128,7 @@ function DashboardEditor({ dashboardId, onBack }) {
   const [paused, setPaused] = useState(false);
   const [refreshNonce, setRefreshNonce] = useState(0);
   const [exportOpen, setExportOpen] = useState(false);
+  const [exportState, setExportState] = useState("");
   const saveTimer = useRef(null);
   const savingRef = useRef(false);
   const dirtyRef = useRef(null);
@@ -252,6 +253,38 @@ function DashboardEditor({ dashboardId, onBack }) {
     commitTiles(tilesRef.current.filter((t) => t.tile_id !== tileId));
   }, [commitTiles]);
 
+  // Export runs in the background: the dialog closes immediately and a
+  // progress indicator shows in the header until the file downloads.
+  const doExport = useCallback((opts) => {
+    setExportState("running");
+    fetch("/api/warehouse/dashboards/" + encodeURIComponent(dashboardId)
+          + "/export", {
+      method: "POST", credentials: "same-origin", headers: JSON_HDR,
+      body: JSON.stringify({
+        format: opts.format, data_freshness: opts.freshness,
+      }),
+    })
+      .then(async (r) => {
+        if (!r.ok) throw new Error("export_failed");
+        const blob = await r.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = ((dash && dash.name) || "dashboard")
+          .replace(/[^A-Za-z0-9_-]+/g, "_") + "." + opts.format;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setExportState("done");
+        setTimeout(() => setExportState(""), 4000);
+      })
+      .catch(() => {
+        setExportState("error");
+        setTimeout(() => setExportState(""), 6000);
+      });
+  }, [dashboardId, dash]);
+
   if (!dash) return <div className="dash-loading">Loading…</div>;
 
   const layout = tiles.map((t) => ({
@@ -294,13 +327,23 @@ function DashboardEditor({ dashboardId, onBack }) {
           className="dash-btn"
           onClick={() => setExportOpen(true)}
           title="Export this dashboard as PDF or PNG"
+          disabled={exportState === "running"}
         >Export ↓</button>
+        {exportState && (
+          <span className={"dash-export-status dash-export-" + exportState}>
+            {exportState === "running" && (
+              <span className="dash-export-bar"><span /></span>
+            )}
+            {exportState === "running" ? "Exporting…"
+              : exportState === "done" ? "Export ready ✓"
+              : "Export failed"}
+          </span>
+        )}
         <span className={"dash-save dash-save-" + saveState}>{saveLabel}</span>
       </div>
       {exportOpen && (
         <ExportDialog
-          dashboardId={dashboardId}
-          dashName={dash.name}
+          onExport={doExport}
           onClose={() => setExportOpen(false)}
         />
       )}
@@ -373,48 +416,12 @@ function DashboardEditor({ dashboardId, onBack }) {
 }
 
 // ── Export dialog ────────────────────────────────────────────────
-function ExportDialog({ dashboardId, dashName, onClose }) {
+function ExportDialog({ onExport, onClose }) {
   const [format, setFormat] = useState("pdf");
   const [freshness, setFreshness] = useState("current");
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState("");
-
-  const doExport = async () => {
-    setBusy(true);
-    setErr("");
-    try {
-      const r = await fetch(
-        "/api/warehouse/dashboards/" + encodeURIComponent(dashboardId)
-          + "/export",
-        {
-          method: "POST", credentials: "same-origin", headers: JSON_HDR,
-          body: JSON.stringify({ format, data_freshness: freshness }),
-        });
-      if (!r.ok) {
-        const d = await r.json().catch(() => ({}));
-        setErr(d.detail || d.error || "Export failed.");
-        setBusy(false);
-        return;
-      }
-      const blob = await r.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = (dashName || "dashboard")
-        .replace(/[^A-Za-z0-9_-]+/g, "_") + "." + format;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      onClose();
-    } catch (e) {
-      setErr("Network error.");
-      setBusy(false);
-    }
-  };
 
   return (
-    <div className="dash-picker-back" onClick={busy ? undefined : onClose}>
+    <div className="dash-picker-back" onClick={onClose}>
       <div
         className="dash-picker"
         style={{ width: "min(420px, 92vw)" }}
@@ -445,21 +452,15 @@ function ExportDialog({ dashboardId, dashName, onClose }) {
             <span>Use cached data (faster, may be stale)</span>
           </label>
         </div>
-        {err && (
-          <div style={{ color: "#dc2626", fontSize: 12, marginTop: 8 }}>
-            {err}
-          </div>
-        )}
         <div style={{
           display: "flex", justifyContent: "flex-end", gap: 8,
           marginTop: 14,
         }}>
-          <button className="dash-btn" onClick={onClose} disabled={busy}>
-            Cancel
-          </button>
-          <button className="dash-btn" onClick={doExport} disabled={busy}>
-            {busy ? "Exporting…" : "Export"}
-          </button>
+          <button className="dash-btn" onClick={onClose}>Cancel</button>
+          <button
+            className="dash-btn"
+            onClick={() => { onExport({ format, freshness }); onClose(); }}
+          >Export</button>
         </div>
       </div>
     </div>

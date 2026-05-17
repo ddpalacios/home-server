@@ -366,3 +366,37 @@
   cursor: pointer;
   padding: 3px 0;
 }
+
+/* ── Export progress (header) ──────────────────────────────────── */
+.dash-export-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.dash-export-running { color: var(--accent-primary, #2563eb); }
+.dash-export-done { color: #16a34a; }
+.dash-export-error { color: #dc2626; }
+.dash-export-bar {
+  display: inline-block;
+  width: 70px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-default, #e5e7eb);
+  overflow: hidden;
+  position: relative;
+}
+.dash-export-bar > span {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 40%;
+  background: var(--accent-primary, #2563eb);
+  border-radius: 2px;
+  animation: dash-exp-slide 1s linear infinite;
+}
+@keyframes dash-exp-slide {
+  0% { left: -40%; }
+  100% { left: 100%; }
+}

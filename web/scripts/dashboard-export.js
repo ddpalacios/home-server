@@ -21,7 +21,7 @@ import puppeteer from "puppeteer";
   });
   try {
     const page = await browser.newPage();
-    await page.setViewport({ width: 1280, height: 900, deviceScaleFactor: 2 });
+    await page.setViewport({ width: 1200, height: 900, deviceScaleFactor: 2 });
     await page.goto("file://" + htmlPath, { waitUntil: "networkidle0" });
     // Wait for the export HTML to confirm every tile/chart has painted.
     await page
@@ -30,13 +30,20 @@ import puppeteer from "puppeteer";
     if (format === "png") {
       await page.screenshot({ path: outPath, fullPage: true });
     } else {
+      // Size the PDF page to the actual content so nothing is scaled to
+      // fit a fixed Letter page — tiles keep their on-canvas aspect
+      // ratio (no squish) and render at full resolution (no down-scale).
+      const dims = await page.evaluate(() => ({
+        w: Math.ceil(document.documentElement.scrollWidth),
+        h: Math.ceil(document.documentElement.scrollHeight),
+      }));
       await page.pdf({
         path: outPath,
-        format: "Letter",
-        landscape: true,
+        width: dims.w + "px",
+        height: dims.h + "px",
         printBackground: true,
-        scale: 0.95,
-        margin: { top: "0.4in", bottom: "0.4in", left: "0.4in", right: "0.4in" },
+        scale: 1,
+        pageRanges: "1",
       });
     }
   } finally {
