@@ -10672,6 +10672,73 @@
     }
     .lead-seq-takeover:hover:not(:disabled) { background: #f3f4f6; }
     .lead-seq-takeover:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    /* Sequence panel — a few backgrounds/borders were hardcoded white
+       and stayed white in dark mode. */
+    [data-theme="dark"] .lead-seq-enr-row { background: var(--seq-card-bg); }
+    [data-theme="dark"] .lead-seq-takeover {
+      background: var(--seq-card-bg);
+      border-color: var(--border-strong);
+    }
+    [data-theme="dark"] .lead-seq-takeover:hover:not(:disabled) {
+      background: var(--bg-elevated);
+    }
+
+    /* Lead-modal Tier B/D/E panels (Recurring service, Quote options,
+       Change orders). These render with hardcoded light inline styles,
+       so dark mode is forced via [style] substring hooks. */
+    [data-theme="dark"] :is(#lmRecurringPlanSection,#lmQuoteOptionsSection,#lmChangeOrdersSection) :is([style*="background:#fff"],[style*="background:#fcfdff"],[style*="background:#fafafa"],[style*="background:#fefce8"]) {
+      background: var(--bg-elevated) !important;
+    }
+    [data-theme="dark"] :is(#lmRecurringPlanSection,#lmQuoteOptionsSection,#lmChangeOrdersSection) [style*="#cbd5e1"] {
+      border-color: var(--border-strong) !important;
+    }
+    [data-theme="dark"] :is(#lmRecurringPlanSection,#lmQuoteOptionsSection,#lmChangeOrdersSection) [style*="#e2e8f0"] {
+      border-color: var(--border-default) !important;
+    }
+    [data-theme="dark"] :is(#lmRecurringPlanSection,#lmQuoteOptionsSection,#lmChangeOrdersSection) :is([style*="color:#475569"],[style*="color:#64748b"]) {
+      color: var(--text-secondary) !important;
+    }
+    [data-theme="dark"] :is(#lmRecurringPlanSection,#lmQuoteOptionsSection,#lmChangeOrdersSection) [style*="color:#94a3b8"] {
+      color: var(--text-tertiary) !important;
+    }
+    [data-theme="dark"] :is(#lmRecurringPlanSection,#lmQuoteOptionsSection,#lmChangeOrdersSection) [style*="color:#1e293b"] {
+      color: var(--text-primary) !important;
+    }
+    [data-theme="dark"] :is(#lmRecurringPlanSection,#lmQuoteOptionsSection,#lmChangeOrdersSection) [style*="color:#2563eb"] {
+      color: var(--accent-primary) !important;
+    }
+    [data-theme="dark"] :is(#lmRecurringPlanSection,#lmQuoteOptionsSection,#lmChangeOrdersSection) [style*="color:#ca8a04"] {
+      color: #fbbf24 !important;
+    }
+    [data-theme="dark"] :is(#lmRecurringPlanSection,#lmQuoteOptionsSection,#lmChangeOrdersSection) :is(input,select,textarea) {
+      background: var(--bg-input) !important;
+      color: var(--text-primary) !important;
+      border-color: var(--border-strong) !important;
+    }
+    [data-theme="dark"] :is(#lmRecurringPlanSection,#lmQuoteOptionsSection,#lmChangeOrdersSection) h3 {
+      color: var(--text-primary) !important;
+    }
+
+    /* Chatbot-interactions web-chat list + transcript. Rows and message
+       bubbles render with hardcoded light inline styles — force dark via
+       [style] substring hooks. The green assistant bubble (#16a34a) and
+       the "Lead" chip (#dcfce7) are intentionally left untouched. */
+    [data-theme="dark"] :is(#webchatList,#webchatThread) :is([style*="background:#fafafa"],[style*="background:#f3f4f6"]) {
+      background: var(--bg-elevated) !important;
+    }
+    [data-theme="dark"] :is(#webchatList,#webchatThread) [style*="#f1f5f9"] {
+      border-color: var(--border-subtle) !important;
+    }
+    [data-theme="dark"] :is(#webchatList,#webchatThread) [style*="color:#111827"] {
+      color: var(--text-primary) !important;
+    }
+    [data-theme="dark"] :is(#webchatList,#webchatThread) [style*="color:#475569"] {
+      color: var(--text-secondary) !important;
+    }
+    [data-theme="dark"] :is(#webchatList,#webchatThread) :is([style*="color:#9ca3af"],[style*="color:#94a3b8"],[style*="color:#6b7280"]) {
+      color: var(--text-tertiary) !important;
+    }
   </style>
   <!-- Shared /me promise — defined early so every inline script (trial
        banner, welcome modal, router) hits a single in-flight /me
@@ -14058,18 +14125,28 @@
               host.querySelectorAll('[data-leads-page-tab]').forEach(function (p) {
                 p.hidden = p.getAttribute('data-leads-page-tab') !== name;
               });
-              if (name === 'chatbot' && !chatbotMounted) {
-                chatbotMounted = true;
-                var inbox = document.getElementById('inbox');
-                if (inbox) {
-                  inbox.removeAttribute('data-route-section');
-                  inbox.removeAttribute('hidden');
-                  inbox.classList.remove('grid');
-                  while (inbox.firstChild) chatbotPane.appendChild(inbox.firstChild);
-                  // Lazy-load the inbox bundle so its IDs become live.
-                  if (typeof window.__dashboardLoadRouteModule === 'function') {
-                    window.__dashboardLoadRouteModule('inbox').catch(function () {});
+              if (name === 'chatbot') {
+                if (!chatbotMounted) {
+                  chatbotMounted = true;
+                  var inbox = document.getElementById('inbox');
+                  if (inbox) {
+                    inbox.removeAttribute('data-route-section');
+                    inbox.removeAttribute('hidden');
+                    inbox.classList.remove('grid');
+                    while (inbox.firstChild) chatbotPane.appendChild(inbox.firstChild);
+                    // Lazy-load the inbox bundle so its IDs become live.
+                    if (typeof window.__dashboardLoadRouteModule === 'function') {
+                      window.__dashboardLoadRouteModule('inbox').catch(function () {});
+                    }
                   }
+                }
+                // Fetch / refresh the web-chat list every time the tab is
+                // opened. This tab is not a router section, so the normal
+                // SECTION_ON_ENTER.inbox loader never runs — without this
+                // call the list stays empty even though widget chats are
+                // being persisted.
+                if (typeof window.__webchatReload === 'function') {
+                  window.__webchatReload();
                 }
               }
             }
@@ -38047,6 +38124,10 @@
           list.innerHTML = `<div class="ibx-thread-placeholder" style="padding:24px;text-align:center;color:#b45309">Couldn't load: ${String(exc)}</div>`;
         }
       }
+      // The leads-page "Chatbot interactions" tab is not a router section,
+      // so SECTION_ON_ENTER.inbox never fires for it — expose the loader
+      // so that tab can fetch the web-chat list itself.
+      window.__webchatReload = __webchatLoad;
       async function __webchatOpen(sid) {
         if (!sid) return;
         __webchatActiveSid = sid;
