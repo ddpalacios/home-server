@@ -114,11 +114,10 @@
 
   /* ─── Redesign: header ─── */
   .wh-header {
-    display:flex; align-items:center; justify-content:space-between;
+    display:flex; align-items:center; justify-content:flex-end;
     gap:16px; padding-bottom:18px; margin-bottom:20px;
     border-bottom:1px solid var(--line);
   }
-  .wh-header-title { font-size:20px; font-weight:700; letter-spacing:-.01em; }
   .wh-header-actions { display:flex; align-items:center; gap:10px; }
   .wh-menu-wrap { position:relative; }
   .wh-add-btn { display:inline-flex; align-items:center; gap:6px; }
@@ -211,6 +210,74 @@
   [data-theme="dark"] .wh-modal-head { border-color:#2a313c; }
   [data-theme="dark"] .wh-modal-x:hover { background:#26303d; }
   [data-theme="dark"] .wh-info { background:#26303d; }
+
+  /* ─── Redesign: file-explorer tile grid ─── */
+  .wh-grid {
+    display:grid; gap:16px;
+    grid-template-columns:repeat(auto-fill, minmax(168px, 1fr));
+  }
+  .wh-grid-empty {
+    grid-column:1/-1; padding:56px 24px; text-align:center;
+    color:var(--sub); font-size:14px;
+  }
+  .wh-tile {
+    position:relative; border:1px solid var(--line); border-radius:14px;
+    background:#fff; padding:22px 14px 16px; text-align:center;
+    cursor:pointer; animation:wh-tile-in .22s ease both;
+    transition:border-color .15s ease, box-shadow .15s ease,
+      transform .12s ease, background .15s ease;
+  }
+  @keyframes wh-tile-in {
+    from { opacity:0; transform:translateY(7px); }
+    to   { opacity:1; transform:none; }
+  }
+  .wh-tile:hover {
+    border-color:var(--accent);
+    box-shadow:0 6px 18px rgba(15,23,42,.10); transform:translateY(-2px);
+  }
+  .wh-tile-icon { font-size:42px; line-height:1; }
+  .wh-tile-folder .wh-tile-icon { color:var(--accent); }
+  .wh-tile-name {
+    margin-top:10px; font-size:13.5px; font-weight:600; color:var(--fg);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .wh-tile-meta {
+    margin-top:4px; font-size:11.5px; color:var(--sub);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .wh-tile-pills {
+    margin-top:9px; display:flex; gap:5px; justify-content:center;
+    flex-wrap:wrap;
+  }
+  .wh-tile-actions {
+    position:absolute; top:7px; right:7px; display:flex; gap:3px;
+    opacity:0; transition:opacity .12s ease;
+  }
+  .wh-tile:hover .wh-tile-actions { opacity:1; }
+  .wh-tile-menu, .wh-tile-actions .eye-btn {
+    border:0; background:rgba(255,255,255,.92); border-radius:7px;
+    cursor:pointer; padding:3px 6px; font-size:13px; color:var(--sub);
+    line-height:1; display:inline-flex; align-items:center;
+  }
+  .wh-tile-menu:hover, .wh-tile-actions .eye-btn:hover { color:var(--accent); }
+  .wh-tile-check {
+    position:absolute; top:7px; left:7px; width:19px; height:19px;
+    border-radius:50%; background:var(--accent); color:#fff;
+    font-size:11px; font-weight:700; display:flex; align-items:center;
+    justify-content:center; opacity:0; transition:opacity .12s ease;
+  }
+  .wh-tile-file.is-selected { border-color:var(--accent); background:#eef4fb; }
+  .wh-tile-file.is-selected .wh-tile-check { opacity:1; }
+  .wh-tile-drop { outline:2px dashed var(--accent); outline-offset:-3px; }
+  .wh-tile-file.is-live { cursor:default; }
+  .wh-tile-file.is-live:hover {
+    transform:none; box-shadow:none; border-color:var(--line);
+  }
+  [data-theme="dark"] .wh-tile { background:#161a22; border-color:#2a313c; }
+  [data-theme="dark"] .wh-tile:hover { border-color:var(--accent); }
+  [data-theme="dark"] .wh-tile-menu,
+  [data-theme="dark"] .wh-tile-actions .eye-btn { background:rgba(38,48,61,.95); }
+  [data-theme="dark"] .wh-tile-file.is-selected { background:#1d2a3a; }
 
   /* Table */
   .wh-folder-item {
@@ -801,7 +868,6 @@
 <div class="wrap">
   <!-- ─── Header ─── -->
   <header class="wh-header" id="whHeader">
-    <div class="wh-header-title">📦 Warehouse</div>
     <div class="wh-header-actions">
       <div class="wh-menu-wrap">
         <button type="button" class="btn wh-add-btn" id="addContentBtn">
@@ -887,25 +953,8 @@
             <div class="doc-del-progress-fill" id="docDelProgressFill"></div>
           </div>
         </div>
-        <div class="doc-table-wrap">
-          <table>
-            <colgroup>
-              <col class="col-check"><col class="col-name"><col class="col-folder">
-              <col class="col-fmt"><col class="col-size"><col class="col-added">
-              <col class="col-status"><col class="col-access"><col class="col-act">
-            </colgroup>
-            <thead>
-              <tr>
-                <th class="th-check"><input type="checkbox" id="docCheckAll" aria-label="Select all documents"></th>
-                <th>Name</th><th>Folder</th><th>Format</th><th>Size</th><th>Updated</th><th>Status</th>
-                <th>Access</th>
-                <th class="th-act">Preview</th>
-              </tr>
-            </thead>
-            <tbody id="docBody">
-              <tr><td colspan="9" class="empty">Loading…</td></tr>
-            </tbody>
-          </table>
+        <div class="wh-grid" id="docBody">
+          <div class="wh-grid-empty">Loading…</div>
         </div>
       </div><!-- /wh-folder-main -->
     </div><!-- /wh-list-layout -->
@@ -1268,110 +1317,193 @@
   }
 
   // ─── List ───
+  // An emoji icon per document format.
+  function fileEmoji(fmt) {
+    fmt = (fmt || "").toLowerCase();
+    if (fmt === "pdf") return "📕";
+    if (fmt === "csv" || fmt === "tsv" || fmt === "xlsx") return "📊";
+    if (fmt === "json" || fmt === "ndjson") return "🧾";
+    if (fmt === "docx") return "📘";
+    if (fmt === "image") return "🖼️";
+    return "📄";
+  }
+
+  // Doc ids currently shown as file tiles — drives bulk selection.
+  var visibleFileIds = [];
+
+  // The main view is a one-level file explorer: it shows the active
+  // folder's immediate sub-folders (as folder tiles) and the files
+  // directly inside it (as file tiles). A search escapes the folder
+  // view and matches files across the whole warehouse.
   function renderList() {
     var q = ($("searchInput").value || "").trim().toLowerCase();
     var fmtF = $("formatFilter").value;
     var sort = $("sortSel").value;
-    var rows = allDocs.filter(function (d) {
+    var body = $("docBody");
+
+    function fileMatches(d) {
       if (fmtF && d.format !== fmtF) return false;
       if (q && (d.name || "").toLowerCase().indexOf(q) < 0 &&
                (d.filename || "").toLowerCase().indexOf(q) < 0) return false;
-      // Folder filter — activeFolder "" means "All docs" (show all);
-      // a folder shows that folder and everything nested under it.
-      if (activeFolder) {
-        var fp = d.folder_path || "";
-        if (fp !== activeFolder && fp.indexOf(activeFolder + "/") !== 0)
-          return false;
-      }
       return true;
+    }
+    function sortFiles(arr) {
+      return arr.sort(function (a, b) {
+        var au = a.updated_at || a.uploaded_at || "";
+        var bu = b.updated_at || b.uploaded_at || "";
+        if (sort === "oldest") return au.localeCompare(bu);
+        if (sort === "name")   return (a.name || "").localeCompare(b.name || "");
+        if (sort === "size")   return (b.size_bytes || 0) - (a.size_bytes || 0);
+        return bu.localeCompare(au);
+      });
+    }
+    function normFp(d) {
+      return (d.folder_path || "").replace(/^\/+|\/+$/g, "");
+    }
+
+    var searching = !!q;
+    var childFolders = [];
+    var files;
+    if (searching) {
+      files = sortFiles(allDocs.filter(fileMatches));
+    } else {
+      var prefix = activeFolder ? activeFolder + "/" : "";
+      var seen = {};
+      folderPaths.forEach(function (p) {
+        var rest = activeFolder
+          ? (p.indexOf(prefix) === 0 ? p.slice(prefix.length) : null)
+          : p;
+        if (!rest) return;
+        var full = prefix + rest.split("/")[0];
+        if (!seen[full]) { seen[full] = 1; childFolders.push(full); }
+      });
+      childFolders.sort(function (a, b) {
+        return a.split("/").pop().localeCompare(b.split("/").pop());
+      });
+      files = sortFiles(allDocs.filter(function (d) {
+        return normFp(d) === activeFolder && fileMatches(d);
+      }));
+    }
+
+    visibleFileIds = files.filter(function (d) { return !d.is_live_source; })
+                          .map(function (d) { return d.document_id; });
+    // Keep the selection scoped to what's actually on screen.
+    selectedDocs.forEach(function (id) {
+      if (visibleFileIds.indexOf(id) < 0) selectedDocs.delete(id);
     });
-    rows.sort(function (a, b) {
-      var au = a.updated_at || a.uploaded_at || "";
-      var bu = b.updated_at || b.uploaded_at || "";
-      if (sort === "oldest") return au.localeCompare(bu);
-      if (sort === "name")   return (a.name || "").localeCompare(b.name || "");
-      if (sort === "size")   return (b.size_bytes || 0) - (a.size_bytes || 0);
-      return bu.localeCompare(au);
-    });
-    var body = $("docBody");
-    if (!rows.length) {
-      body.innerHTML = '<tr><td colspan="9" class="empty">' +
-        (allDocs.length ? "No documents match your filters."
-                        : "No documents yet — drop a file above to get started.") +
-        "</td></tr>";
+
+    if (!childFolders.length && !files.length) {
+      body.innerHTML = '<div class="wh-grid-empty">' +
+        (allDocs.length
+          ? (searching ? "No documents match your search."
+                       : "This folder is empty.")
+          : "No documents yet — use “+ Add content” to upload.") +
+        "</div>";
+      syncDocBulkBar();
       return;
     }
-    body.innerHTML = rows.map(function (d) {
-      // Live source (the connected Google Calendar) — a special row:
-      // no preview, no size, no version. Shows the calendar it's
-      // wired to. Not clickable into a document detail view.
+
+    var html = "";
+    childFolders.forEach(function (fp) {
+      var nm = fp.split("/").pop();
+      var count = 0;
+      allDocs.forEach(function (d) {
+        var dfp = normFp(d);
+        if (dfp === fp || dfp.indexOf(fp + "/") === 0) count++;
+      });
+      html += '<div class="wh-tile wh-tile-folder" data-folder="' + esc(fp) + '">' +
+        '<div class="wh-tile-actions">' +
+          '<button type="button" class="wh-tile-menu" data-fmenu="' + esc(fp) + '">⋯</button>' +
+        '</div>' +
+        '<div class="wh-tile-icon">📁</div>' +
+        '<div class="wh-tile-name" title="' + esc(nm) + '">' + esc(nm) + '</div>' +
+        '<div class="wh-tile-meta">' + count + (count === 1 ? " item" : " items") + '</div>' +
+        '</div>';
+    });
+    files.forEach(function (d) {
       if (d.is_live_source) {
-        return '<tr class="doc-row doc-row-live" data-id="' +
-          esc(d.document_id) + '" data-live="1">' +
-          '<td class="td-check"></td>' +
-          '<td><span class="doc-name">📅 ' + esc(d.name) +
-            ' <span class="live-badge">Live</span></span></td>' +
-          '<td class="doc-folder-cell">—</td>' +
-          '<td><span class="doc-fmt">Live source</span></td>' +
-          '<td class="muted">—</td>' +
-          '<td class="muted">' + esc(d.calendar_id || "") + "</td>" +
-          '<td><span class="doc-fmt">Always current</span></td>' +
-          "<td>" + visBadge(d) + "</td>" +
-          '<td class="td-act"></td>' +
-          "</tr>";
+        html += '<div class="wh-tile wh-tile-file is-live" data-id="' +
+          esc(d.document_id) + '">' +
+          '<div class="wh-tile-icon">📅</div>' +
+          '<div class="wh-tile-name" title="' + esc(d.name) + '">' + esc(d.name) + '</div>' +
+          '<div class="wh-tile-meta">Live source</div>' +
+          '</div>';
+        return;
       }
       var ready = d.status === "ready";
-      var eye = '<button type="button" class="eye-btn" data-eye="' +
-        esc(d.document_id) + '" title="' +
-        (ready ? "Preview contents"
-               : "Preview available once processing finishes") + '"' +
-        (ready ? "" : " disabled") + ">" + EYE_SVG + "</button>";
-      return '<tr class="doc-row" draggable="true" data-id="' +
-        esc(d.document_id) + '">' +
-        '<td class="td-check"><input type="checkbox" class="doc-check" data-check="' +
-          esc(d.document_id) + '"' +
-          (selectedDocs.has(d.document_id) ? " checked" : "") + "></td>" +
-        '<td><span class="doc-name">' + esc(d.name) + "</span></td>" +
-        '<td class="doc-folder-cell">' +
-          esc((d.folder_path || "").split("/").join(" / ") || "(root)") +
-        "</td>" +
-        '<td><span class="doc-fmt">' + esc(d.format) + "</span></td>" +
-        "<td>" + fmtBytes(d.size_bytes) + "</td>" +
-        '<td class="muted">' + esc(ago(d.updated_at || d.uploaded_at)) + "</td>" +
-        "<td>" + statusPill(d.status) + "</td>" +
-        "<td>" + visBadge(d) + "</td>" +
-        '<td class="td-act">' + eye + "</td>" +
-        "</tr>";
-    }).join("");
-    Array.prototype.forEach.call(body.querySelectorAll(".doc-row"), function (tr) {
-      // The live-source (calendar) row has no document detail view.
-      if (tr.dataset.live) return;
-      tr.addEventListener("click", function () { openDetail(tr.dataset.id); });
-      tr.addEventListener("dragstart", function (e) {
-        e.dataTransfer.setData("text/document-id", tr.dataset.id);
+      var sel = selectedDocs.has(d.document_id);
+      html += '<div class="wh-tile wh-tile-file' + (sel ? " is-selected" : "") +
+        '" data-id="' + esc(d.document_id) + '" draggable="true">' +
+        '<div class="wh-tile-actions">' +
+          '<button type="button" class="eye-btn" data-eye="' + esc(d.document_id) + '"' +
+            (ready ? "" : " disabled") + ' title="' +
+            (ready ? "Preview" : "Preview available once ready") + '">' + EYE_SVG + '</button>' +
+          '<button type="button" class="wh-tile-menu" data-dmenu="' + esc(d.document_id) + '">⋯</button>' +
+        '</div>' +
+        '<span class="wh-tile-check" aria-hidden="true">✓</span>' +
+        '<div class="wh-tile-icon">' + fileEmoji(d.format) + '</div>' +
+        '<div class="wh-tile-name" title="' + esc(d.name) + '">' + esc(d.name) + '</div>' +
+        '<div class="wh-tile-meta">' + esc((d.format || "").toUpperCase()) + ' · ' +
+          fmtBytes(d.size_bytes) + ' · ' + esc(ago(d.updated_at || d.uploaded_at)) + '</div>' +
+        '<div class="wh-tile-pills">' + statusPill(d.status) + visBadge(d) + '</div>' +
+        '</div>';
+    });
+    body.innerHTML = html;
+
+    // Folder tiles — click drills one level in; also a drop target.
+    Array.prototype.forEach.call(body.querySelectorAll(".wh-tile-folder"), function (t) {
+      t.addEventListener("click", function () {
+        activeFolder = t.dataset.folder;
+        folderExpanded[activeFolder] = true;
+        renderFolderPane(); renderList();
+      });
+      t.addEventListener("dragover", function (e) {
+        e.preventDefault(); t.classList.add("wh-tile-drop");
+      });
+      t.addEventListener("dragleave", function () { t.classList.remove("wh-tile-drop"); });
+      t.addEventListener("drop", function (e) {
+        e.preventDefault(); t.classList.remove("wh-tile-drop");
+        var docId = e.dataTransfer.getData("text/document-id");
+        if (docId) window.__whMoveDoc(docId, t.dataset.folder);
+      });
+    });
+    Array.prototype.forEach.call(body.querySelectorAll("[data-fmenu]"), function (b) {
+      b.addEventListener("click", function (e) {
+        e.stopPropagation(); window.__whFolderMenu(b, b.dataset.fmenu);
+      });
+    });
+    // File tiles — a click only selects (no navigation away).
+    Array.prototype.forEach.call(body.querySelectorAll(".wh-tile-file"), function (t) {
+      if (t.classList.contains("is-live")) return;
+      var id = t.dataset.id;
+      t.addEventListener("click", function () {
+        if (selectedDocs.has(id)) {
+          selectedDocs.delete(id); t.classList.remove("is-selected");
+        } else {
+          selectedDocs.add(id); t.classList.add("is-selected");
+        }
+        syncDocBulkBar();
+      });
+      t.addEventListener("dragstart", function (e) {
+        e.dataTransfer.setData("text/document-id", id);
         e.dataTransfer.effectAllowed = "move";
       });
     });
+    // Eye → preview popup. ⋯ → the document's detail/settings view.
     Array.prototype.forEach.call(body.querySelectorAll(".eye-btn"), function (b) {
       b.addEventListener("click", function (e) {
-        e.stopPropagation();  // don't also open the detail view
+        e.stopPropagation();
         if (!b.disabled) openPreviewModal(b.dataset.eye);
       });
     });
-    // Row checkboxes — a click toggles selection without opening the
-    // document detail view.
-    Array.prototype.forEach.call(body.querySelectorAll(".doc-check"), function (c) {
-      c.addEventListener("click", function (e) { e.stopPropagation(); });
-      c.addEventListener("change", function () {
-        if (c.checked) selectedDocs.add(c.dataset.check);
-        else selectedDocs.delete(c.dataset.check);
-        syncDocBulkBar();
+    Array.prototype.forEach.call(body.querySelectorAll("[data-dmenu]"), function (b) {
+      b.addEventListener("click", function (e) {
+        e.stopPropagation(); openDetail(b.dataset.dmenu);
       });
     });
     syncDocBulkBar();
   }
-  // Reflect the selection count in the bulk bar; also keep the
-  // header "select all" checkbox in sync with the visible rows.
+  // Reflect the selection count in the bulk bar.
   function syncDocBulkBar() {
     var bar = $("docBulkBar");
     var n = selectedDocs.size;
@@ -1382,13 +1514,6 @@
       $("docBulkDelete").textContent = "Delete " + n;
     } else {
       bar.hidden = true;
-    }
-    var boxes = document.querySelectorAll(".doc-check");
-    var checked = document.querySelectorAll(".doc-check:checked");
-    var all = $("docCheckAll");
-    if (all) {
-      all.checked = boxes.length > 0 && checked.length === boxes.length;
-      all.indeterminate = checked.length > 0 && checked.length < boxes.length;
     }
   }
 
@@ -3380,20 +3505,10 @@
   }
 
   // ─── Multi-select + bulk delete ───
-  $("docCheckAll").addEventListener("change", function () {
-    var on = this.checked;
-    Array.prototype.forEach.call(document.querySelectorAll(".doc-check"),
-      function (c) {
-        c.checked = on;
-        if (on) selectedDocs.add(c.dataset.check);
-        else selectedDocs.delete(c.dataset.check);
-      });
-    syncDocBulkBar();
-  });
   $("docBulkClear").addEventListener("click", function () {
     selectedDocs.clear();
-    Array.prototype.forEach.call(document.querySelectorAll(".doc-check"),
-      function (c) { c.checked = false; });
+    Array.prototype.forEach.call(document.querySelectorAll(".wh-tile-file.is-selected"),
+      function (t) { t.classList.remove("is-selected"); });
     syncDocBulkBar();
   });
   $("docBulkDelete").addEventListener("click", function () {
