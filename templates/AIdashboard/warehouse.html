@@ -979,6 +979,8 @@
       </div>
       <button type="button" class="btn btn-primary" id="askOpen">
         💬 Ask the warehouse</button>
+      <button type="button" class="btn" id="libraryOpen">
+        📌 Pinned library</button>
       <div class="wh-menu-wrap">
         <button type="button" class="btn wh-icon-btn" id="settingsBtn"
                 title="Settings" aria-label="Settings">⚙️</button>
@@ -1057,6 +1059,33 @@
         </div>
       </div><!-- /wh-folder-main -->
     </div><!-- /wh-list-layout -->
+  </div>
+
+  <!-- ─── Pinned library view ─── -->
+  <div id="libraryView" style="display:none;">
+    <div style="max-width:1100px;margin:0 auto;padding:8px 4px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+        <button type="button" id="libBack" class="btn">← Back</button>
+        <h2 style="margin:0;font-size:18px;">Pinned library</h2>
+      </div>
+      <div id="libCount" style="font-size:12.5px;color:var(--text-2);
+           margin-bottom:14px;">Loading…</div>
+      <div id="libGridPanel">
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+          <input type="text" id="libSearch" class="tb-search"
+                 placeholder="Search pins…" style="flex:0 1 240px;">
+          <select id="libSort" class="tb-sel">
+            <option value="recent">Recently used</option>
+            <option value="created">Newest</option>
+            <option value="title">Title A–Z</option>
+          </select>
+        </div>
+        <div id="libGrid" style="display:grid;gap:12px;
+             grid-template-columns:repeat(auto-fill,minmax(220px,1fr));">
+        </div>
+      </div>
+      <div id="libDetailPanel" style="display:none;"></div>
+    </div>
   </div>
 
   <!-- ─── Upload modal ─── -->
@@ -2726,6 +2755,7 @@
   function showAsk() {
     $("listView").style.display = "none";
     $("detailView").style.display = "none";
+    $("libraryView").style.display = "none";
     $("askView").style.display = "";
     document.body.classList.add("ask-mode");
     loadAskConvs();
@@ -3333,6 +3363,214 @@
         });
     });
   }
+  // ─── Pinned library ───────────────────────────────────────────────
+  var libPins = [];
+  function whseRefreshLabel(mode, secs) {
+    if (mode === "manual") return "Manual refresh";
+    if (mode === "snapshot") return "Snapshot (frozen)";
+    var map = { 60: "Live · 1 min", 300: "Live · 5 min",
+                900: "Live · 15 min", 3600: "Live · hourly",
+                21600: "Live · 6 hr", 86400: "Live · daily" };
+    return map[secs] || ("Live · " + secs + "s");
+  }
+  function whseShapeLabel(pin) {
+    if (pin.data_shape === "single_value") return "1 value";
+    if (pin.data_shape === "single_row") return "1 row";
+    var n = (pin.column_metadata || []).length;
+    return "Multi-row · " + n + " col" + (n === 1 ? "" : "s");
+  }
+  function whseAgo(iso) {
+    if (!iso) return "";
+    var d = new Date(iso);
+    var days = Math.floor((Date.now() - d.getTime()) / 86400000);
+    if (days <= 0) return "today";
+    if (days === 1) return "1 day ago";
+    if (days < 30) return days + " days ago";
+    return d.toLocaleDateString();
+  }
+  function showLibrary() {
+    $("listView").style.display = "none";
+    $("detailView").style.display = "none";
+    $("askView").style.display = "none";
+    document.body.classList.remove("ask-mode");
+    $("libraryView").style.display = "";
+    $("libGridPanel").style.display = "";
+    $("libDetailPanel").style.display = "none";
+    loadLibrary();
+  }
+  function hideLibrary() {
+    $("libraryView").style.display = "none";
+    $("listView").style.display = "";
+  }
+  function loadLibrary() {
+    $("libCount").textContent = "Loading…";
+    $("libGrid").innerHTML = "";
+    fetch("/api/warehouse/pins", { credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        libPins = (d && d.pins) || [];
+        renderLibrary();
+      })
+      .catch(function () {
+        $("libCount").textContent = "Couldn't load the library.";
+      });
+  }
+  function renderLibrary() {
+    var q = ($("libSearch").value || "").toLowerCase();
+    var sort = $("libSort").value;
+    var list = libPins.filter(function (p) {
+      return !q || (p.title || "").toLowerCase().indexOf(q) >= 0;
+    });
+    list.sort(function (a, b) {
+      if (sort === "title") {
+        return (a.title || "").localeCompare(b.title || "");
+      }
+      var ka = sort === "created" ? a.created_at : a.last_used_at;
+      var kb = sort === "created" ? b.created_at : b.last_used_at;
+      return (kb || "").localeCompare(ka || "");
+    });
+    $("libCount").textContent = libPins.length + " pinned quer" +
+      (libPins.length === 1 ? "y" : "ies") +
+      " · Drag onto dashboards to create tiles";
+    var grid = $("libGrid");
+    grid.innerHTML = "";
+    if (!list.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;color:var(--text-2);' +
+        'font-size:13px;padding:30px;text-align:center;">' +
+        (libPins.length ? "No pins match your search."
+          : "No pinned queries yet. Pin a SQL result from " +
+            "Ask the warehouse.") + "</div>";
+      return;
+    }
+    list.forEach(function (p) {
+      var card = document.createElement("button");
+      card.type = "button";
+      card.style.cssText = "text-align:left;border:1px solid var(--border);" +
+        "border-radius:12px;padding:14px;background:var(--bg-elevated);" +
+        "color:var(--ink);cursor:pointer;display:flex;" +
+        "flex-direction:column;gap:6px;font:inherit;";
+      card.innerHTML =
+        '<div style="font-size:22px;">🗄️</div>' +
+        '<div style="font-weight:700;font-size:13.5px;">' +
+          esc(p.title) + "</div>" +
+        '<div style="font-size:11.5px;color:var(--text-2);">' +
+          esc(whseShapeLabel(p)) + "</div>" +
+        '<div style="font-size:11.5px;color:var(--text-2);">' +
+          esc(whseRefreshLabel(p.default_refresh_mode,
+              p.default_refresh_interval_seconds)) + "</div>" +
+        '<div style="font-size:11px;color:var(--text-3);">Created ' +
+          esc(whseAgo(p.created_at)) + "</div>";
+      card.addEventListener("click", function () {
+        openPinDetail(p.pin_id);
+      });
+      grid.appendChild(card);
+    });
+  }
+  function openPinDetail(pinId) {
+    var p = null;
+    for (var i = 0; i < libPins.length; i++) {
+      if (libPins[i].pin_id === pinId) { p = libPins[i]; break; }
+    }
+    if (!p) return;
+    $("libGridPanel").style.display = "none";
+    var panel = $("libDetailPanel");
+    panel.style.display = "";
+    panel.innerHTML =
+      '<button type="button" id="libDetBack" class="btn" ' +
+        'style="margin-bottom:14px;">← All pins</button>' +
+      '<div style="border:1px solid var(--border);border-radius:12px;' +
+        'padding:18px 20px;background:var(--bg-elevated);">' +
+        '<label style="font-size:12px;font-weight:600;">Title</label><br>' +
+        '<input type="text" id="libDetTitle" maxlength="200" value="' +
+          esc(p.title) + '" style="width:100%;max-width:420px;' +
+          'margin:5px 0 16px;padding:8px 10px;border:1px solid ' +
+          'var(--border);border-radius:8px;font:inherit;' +
+          'background:var(--bg-overlay);color:var(--ink);' +
+          'box-sizing:border-box;" />' +
+        '<div style="font-size:12px;font-weight:600;margin-bottom:5px;">' +
+          "Source query</div>" +
+        '<pre style="background:var(--bg-overlay);border:1px solid ' +
+          'var(--border);border-radius:8px;padding:10px;font-size:12px;' +
+          'overflow:auto;white-space:pre-wrap;margin:0 0 16px;">' +
+          esc(p.sql_query || "") + "</pre>" +
+        '<div style="font-size:12px;color:var(--text-2);' +
+          'margin-bottom:16px;">Refresh: ' +
+          esc(whseRefreshLabel(p.default_refresh_mode,
+              p.default_refresh_interval_seconds)) + "</div>" +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+          '<button type="button" id="libDetSave" class="btn btn-primary">' +
+            "Save title</button>" +
+          '<button type="button" id="libDetRun" class="btn">' +
+            "Run query now</button>" +
+          '<button type="button" id="libDetDelete" ' +
+            'class="btn btn-danger">Delete pin</button>' +
+        "</div>" +
+        '<div id="libDetResult" style="margin-top:14px;"></div>' +
+      "</div>";
+    $("libDetBack").addEventListener("click", function () {
+      panel.style.display = "none";
+      $("libGridPanel").style.display = "";
+    });
+    $("libDetSave").addEventListener("click", function () {
+      var t = $("libDetTitle").value.trim();
+      if (!t) { toast("Title can't be empty."); return; }
+      fetch("/api/warehouse/pins/" + encodeURIComponent(pinId), {
+        method: "POST", credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: t }),
+      }).then(function (r) {
+        if (r.ok) { toast("Saved."); p.title = t; }
+        else toast("Couldn't save.");
+      }).catch(function () { toast("Network error."); });
+    });
+    $("libDetRun").addEventListener("click", function () {
+      var btn = this;
+      btn.disabled = true; btn.textContent = "Running…";
+      $("libDetResult").innerHTML =
+        '<div style="font-size:12.5px;color:var(--text-2);">Running…</div>';
+      fetch("/api/warehouse/pins/" + encodeURIComponent(pinId) + "/run", {
+        method: "POST", credentials: "same-origin",
+      }).then(function (r) {
+        return r.json().then(function (d) { return { ok: r.ok, d: d }; });
+      }).then(function (res) {
+        btn.disabled = false; btn.textContent = "Run query now";
+        if (!res.ok) {
+          $("libDetResult").innerHTML =
+            '<div style="font-size:12.5px;color:#c0392b;">' +
+            esc((res.d && (res.d.detail || res.d.error)) ||
+                "Query failed.") + "</div>";
+          return;
+        }
+        $("libDetResult").innerHTML = "";
+        $("libDetResult").appendChild(whseSqlWidget({
+          sql: p.sql_query, columns: res.d.columns, rows: res.d.rows,
+        }));
+      }).catch(function () {
+        btn.disabled = false; btn.textContent = "Run query now";
+        $("libDetResult").innerHTML =
+          '<div style="font-size:12.5px;color:#c0392b;">' +
+          "Network error.</div>";
+      });
+    });
+    $("libDetDelete").addEventListener("click", function () {
+      if (!window.confirm("Delete this pin? Dashboards using it will " +
+          "show a placeholder.")) return;
+      fetch("/api/warehouse/pins/" + encodeURIComponent(pinId), {
+        method: "DELETE", credentials: "same-origin",
+      }).then(function (r) {
+        if (r.ok) {
+          toast("Pin deleted.");
+          libPins = libPins.filter(function (x) {
+            return x.pin_id !== pinId;
+          });
+          panel.style.display = "none";
+          $("libGridPanel").style.display = "";
+          renderLibrary();
+        } else toast("Couldn't delete.");
+      }).catch(function () { toast("Network error."); });
+    });
+  }
+
   function askSrcsHtml(sources) {
     if (!sources || !sources.length) return "";
     return '<div class="ask-srcs">' + sources.map(function (s) {
@@ -3714,6 +3952,10 @@
     });
   }
   $("askOpen").addEventListener("click", showAsk);
+  $("libraryOpen").addEventListener("click", showLibrary);
+  $("libBack").addEventListener("click", hideLibrary);
+  $("libSearch").addEventListener("input", renderLibrary);
+  $("libSort").addEventListener("change", renderLibrary);
   $("askBack").addEventListener("click", function () {
     $("askView").style.display = "none";
     $("listView").style.display = "";
