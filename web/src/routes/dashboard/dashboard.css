@@ -138,7 +138,15 @@
   border-radius: 12px;
   background: var(--bg-base, #f7f9fc);
   overflow: auto;
-  max-height: calc(100vh - 200px);
+  /* Explicit viewport-based height so the canvas always fills the body
+     and is droppable everywhere — not just as tall as its tiles. */
+  height: calc(100vh - 210px);
+  min-height: 360px;
+}
+/* The react-grid-layout element stretches to fill the canvas so the
+   whole area accepts drops, even with one tile or none. */
+.dash-canvas {
+  min-height: 100%;
 }
 .dash-canvas-empty {
   position: absolute;
