@@ -1,10 +1,10 @@
-// SQL Workspace — visual builder. The clicked file's data IS the main
-// body: a large table (or a chart, via the viz switcher). Columns are
-// added through a searchable "+ Column" dropdown and removed with the
-// × on each header. Filters and the generated SQL are tucked into
-// collapsible strips so the data stays the focus.
+// SQL Workspace — visual builder. The file's data is the main body:
+// a clean, flexible table you can rename columns in (type in the
+// header), resize (drag the header edge), and remove columns from.
+// Filters sit on top. A viz switcher renders the data as a chart with
+// flexible multi-series layouts.
 import React, { useState, useEffect, useMemo } from "react";
-import DataViz, { VIZ_ICON } from "./DataViz.jsx";
+import DataViz, { VIZ_ICON, LAYOUTS } from "./DataViz.jsx";
 
 const OPS = [
   ["=", "equals"], ["!=", "not equal"], [">", "greater than"],
@@ -12,6 +12,7 @@ const OPS = [
   ["IS NULL", "is empty"], ["IS NOT NULL", "is not empty"],
 ];
 const BUILDER_VIZ = ["table", "bar", "line", "pie", "area"];
+const DEFAULT_W = 150;
 
 function sqlEsc(v) { return String(v).replace(/'/g, "''"); }
 
@@ -23,10 +24,14 @@ function whereClause(f) {
   return `${f.col} ${f.op} ${num ? f.value : "'" + sqlEsc(f.value) + "'"}`;
 }
 
-export function generateSQL(sample, selected, filters, limit) {
+export function generateSQL(sample, selected, aliases, filters, limit) {
   if (!sample) return "-- Click a file to begin";
   if (!selected.length) return "-- No columns selected";
-  let sql = `SELECT ${selected.join(", ")}\nFROM ${sample.spark_table_name}`;
+  const cols = selected.map((c) => {
+    const a = (aliases[c] || "").trim();
+    return a && a !== c ? `${c} AS ${a}` : c;
+  }).join(", ");
+  let sql = `SELECT ${cols}\nFROM ${sample.spark_table_name}`;
   const active = filters.filter((f) => f.col && (
     f.op === "IS NULL" || f.op === "IS NOT NULL"
     || String(f.value).length > 0));
@@ -65,11 +70,13 @@ function rowMatches(row, filters) {
 export default function Builder({ file, onSqlChange }) {
   const [sample, setSample] = useState(null);
   const [selected, setSelected] = useState([]);
+  const [aliases, setAliases] = useState({});
+  const [widths, setWidths] = useState({});
   const [filters, setFilters] = useState([]);
   const [limit, setLimit] = useState(100);
   const [viz, setViz] = useState("table");
+  const [layout, setLayout] = useState("grouped");
   const [showSql, setShowSql] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [addSearch, setAddSearch] = useState("");
 
@@ -92,8 +99,8 @@ export default function Builder({ file, onSqlChange }) {
 
   const sql = useMemo(
     () => generateSQL(sample && !sample.error ? sample : null,
-                      selected, filters, limit),
-    [sample, selected, filters, limit]);
+                      selected, aliases, filters, limit),
+    [sample, selected, aliases, filters, limit]);
   useEffect(() => { if (onSqlChange) onSqlChange(sql); }, [sql, onSqlChange]);
 
   if (!sample) {
@@ -118,37 +125,51 @@ export default function Builder({ file, onSqlChange }) {
   const searchHits = unselected.filter(
     (c) => c.toLowerCase().includes(addSearch.toLowerCase()));
   const matchingRows = rows.filter((r) => rowMatches(r, filters));
-  const activeFilterCount = filters.filter((f) => f.col).length;
+  const layoutOpts = LAYOUTS[viz];
 
   const removeCol = (c) => setSelected((s) => s.filter((x) => x !== c));
   const addCol = (c) => {
     setSelected((s) => (s.includes(c) ? s : [...s, c]));
     setAddSearch("");
   };
-  const addFilter = (col) => {
-    setFilters((f) => [...f, { col: col || allCols[0], op: "=", value: "" }]);
-    setShowFilters(true);
-  };
+  const addFilter = (col) => setFilters(
+    (f) => [...f, { col: col || allCols[0], op: "=", value: "" }]);
   const updFilter = (i, patch) => setFilters(
     (f) => f.map((x, j) => (j === i ? { ...x, ...patch } : x)));
   const rmFilter = (i) => setFilters((f) => f.filter((_, j) => j !== i));
   const reset = () => {
-    setSelected(allCols.slice()); setFilters([]); setLimit(100);
-    setViz("table");
+    setSelected(allCols.slice()); setAliases({}); setWidths({});
+    setFilters([]); setLimit(100); setViz("table");
+  };
+
+  // Drag the right edge of a header to resize that column.
+  const startResize = (col, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX;
+    const startW = widths[col] || DEFAULT_W;
+    const onMove = (ev) => {
+      const w = Math.max(60, startW + (ev.clientX - startX));
+      setWidths((cw) => ({ ...cw, [col]: w }));
+    };
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
   };
 
   return (
     <div className="sqlw-builder">
-      {/* Compact header + toolbar */}
       <div className="sqlw-b-head">
         <div className="sqlw-b-title">{file.name}</div>
-        <div className="sqlw-b-meta">
-          {sample.total_rows} rows · {sample.spark_table_name}
-        </div>
+        <div className="sqlw-b-meta">{sample.total_rows} rows</div>
         <button className="sqlw-sm-btn sqlw-b-reset" onClick={reset}>
           Reset
         </button>
       </div>
+
       <div className="sqlw-b-toolbar">
         <div className="sqlw-viz-switch">
           {BUILDER_VIZ.map((v) => (
@@ -160,11 +181,20 @@ export default function Builder({ file, onSqlChange }) {
             >{VIZ_ICON[v]}</button>
           ))}
         </div>
+        {layoutOpts && (
+          <select
+            className="sqlw-b-layout"
+            value={layout}
+            onChange={(e) => setLayout(e.target.value)}
+            title="How series sit together"
+          >
+            {layoutOpts.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select>
+        )}
         <div className="sqlw-add-wrap">
-          <button
-            className="sqlw-sm-btn"
-            onClick={() => setAddOpen((o) => !o)}
-          >+ Column</button>
+          <button className="sqlw-sm-btn" onClick={() => setAddOpen((o) => !o)}>
+            + Column
+          </button>
           {addOpen && (
             <>
               <div className="sqlw-add-backdrop"
@@ -181,8 +211,7 @@ export default function Builder({ file, onSqlChange }) {
                   {searchHits.length === 0 && (
                     <div className="sqlw-add-empty">
                       {unselected.length === 0
-                        ? "All columns added."
-                        : "No match."}
+                        ? "All columns added." : "No match."}
                     </div>
                   )}
                   {searchHits.map((c) => (
@@ -200,12 +229,6 @@ export default function Builder({ file, onSqlChange }) {
           )}
         </div>
         <button
-          className={"sqlw-sm-btn" + (showFilters ? " on" : "")}
-          onClick={() => setShowFilters((s) => !s)}
-        >
-          Filters{activeFilterCount ? ` (${activeFilterCount})` : ""}
-        </button>
-        <button
           className={"sqlw-sm-btn" + (showSql ? " on" : "")}
           onClick={() => setShowSql((s) => !s)}
         >&lt;/&gt; SQL</button>
@@ -216,6 +239,35 @@ export default function Builder({ file, onSqlChange }) {
             onChange={(e) => setLimit(Math.max(1, Math.min(1000,
               parseInt(e.target.value, 10) || 1)))} />
         </label>
+      </div>
+
+      {/* Filters — on top, always visible */}
+      <div className="sqlw-b-filters">
+        <span className="sqlw-b-filters-label">Filters</span>
+        {filters.map((f, i) => {
+          const needsValue = f.op !== "IS NULL" && f.op !== "IS NOT NULL";
+          return (
+            <div key={i} className="sqlw-filter">
+              <select value={f.col}
+                onChange={(e) => updFilter(i, { col: e.target.value })}>
+                {allCols.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <select value={f.op}
+                onChange={(e) => updFilter(i, { op: e.target.value })}>
+                {OPS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              </select>
+              {needsValue && (
+                <input value={f.value} placeholder="value"
+                  onChange={(e) => updFilter(i, { value: e.target.value })} />
+              )}
+              <button className="sqlw-th-btn"
+                onClick={() => rmFilter(i)}>×</button>
+            </div>
+          );
+        })}
+        <button className="sqlw-sm-btn" onClick={() => addFilter()}>
+          + Add filter
+        </button>
       </div>
 
       {/* Main body — the data */}
@@ -229,24 +281,29 @@ export default function Builder({ file, onSqlChange }) {
         ) : viz === "table" ? (
           <div className="sqlw-b-table-wrap">
             <table className="sqlw-b-table">
+              <colgroup>
+                <col style={{ width: 40 }} />
+                {selected.map((c) => (
+                  <col key={c}
+                    style={{ width: (widths[c] || DEFAULT_W) + "px" }} />
+                ))}
+              </colgroup>
               <thead>
                 <tr>
                   <th className="sqlw-th-num">#</th>
                   {selected.map((c) => (
                     <th key={c} className="sqlw-b-th">
-                      <div className="sqlw-b-th-row">
-                        <span className="sqlw-b-th-name">{c}</span>
-                        <button className="sqlw-b-th-x"
-                          title="Remove column"
-                          onClick={() => removeCol(c)}>×</button>
-                      </div>
-                      <div className="sqlw-b-th-sub">
-                        <span className="sqlw-b-th-type">
-                          {(sample.column_types[c] || "").toUpperCase()}
-                        </span>
-                        <button className="sqlw-b-th-filter"
-                          onClick={() => addFilter(c)}>filter</button>
-                      </div>
+                      <input
+                        className="sqlw-b-th-input"
+                        value={aliases[c] != null ? aliases[c] : c}
+                        title="Type to rename this column"
+                        onChange={(e) => setAliases(
+                          (a) => ({ ...a, [c]: e.target.value }))}
+                      />
+                      <button className="sqlw-b-th-x" title="Remove column"
+                        onClick={() => removeCol(c)}>×</button>
+                      <span className="sqlw-b-th-grip"
+                        onMouseDown={(e) => startResize(c, e)} />
                     </th>
                   ))}
                 </tr>
@@ -257,7 +314,7 @@ export default function Builder({ file, onSqlChange }) {
                     className={rowMatches(row, filters) ? "" : "sqlw-row-faded"}>
                     <td className="sqlw-td-num">{ri + 1}</td>
                     {selected.map((c) => (
-                      <td key={c}>
+                      <td key={c} className="sqlw-b-td">
                         {row[c] == null ? "" : String(row[c])}
                       </td>
                     ))}
@@ -270,45 +327,11 @@ export default function Builder({ file, onSqlChange }) {
             </div>
           </div>
         ) : (
-          <DataViz vizType={viz} columns={selected} rows={matchingRows} />
+          <DataViz vizType={viz} layout={layout}
+            columns={selected} rows={matchingRows} />
         )}
       </div>
 
-      {/* Filters strip */}
-      {showFilters && (
-        <div className="sqlw-b-strip">
-          {filters.length === 0 && (
-            <span className="sqlw-hint">
-              No filters — add one, or click "filter" on a column.
-            </span>
-          )}
-          {filters.map((f, i) => {
-            const needsValue = f.op !== "IS NULL" && f.op !== "IS NOT NULL";
-            return (
-              <div key={i} className="sqlw-filter">
-                <select value={f.col}
-                  onChange={(e) => updFilter(i, { col: e.target.value })}>
-                  {allCols.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-                <select value={f.op}
-                  onChange={(e) => updFilter(i, { op: e.target.value })}>
-                  {OPS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                </select>
-                {needsValue && (
-                  <input value={f.value} placeholder="value"
-                    onChange={(e) => updFilter(i, { value: e.target.value })} />
-                )}
-                <button className="sqlw-th-btn"
-                  onClick={() => rmFilter(i)}>×</button>
-              </div>
-            );
-          })}
-          <button className="sqlw-sm-btn"
-            onClick={() => addFilter()}>+ Add filter</button>
-        </div>
-      )}
-
-      {/* Generated SQL — collapsed by default */}
       {showSql && (
         <div className="sqlw-b-strip">
           <pre className="sqlw-sql">{sql}</pre>

@@ -1,6 +1,8 @@
 // Shared result renderer for the SQL workspace — table / bar / line /
-// pie / area / KPI. Used by the builder's preview and by Phase-4
-// result blocks so both surfaces render data identically.
+// pie / area / KPI. Charts are multi-series: every numeric column
+// becomes its own series with its own colour and a legend. The
+// `layout` prop flexes how series sit together — grouped, stacked, or
+// overlapping.
 import React, { useRef, useEffect } from "react";
 import Chart from "chart.js/auto";
 
@@ -13,6 +15,13 @@ export const VIZ_TYPES = ["table", "bar", "line", "pie", "area", "kpi"];
 export const VIZ_ICON = {
   table: "⊟", bar: "📊", line: "📈", pie: "🥧", area: "📉", kpi: "🔢",
 };
+// Which viz types support a multi-series layout control, and the
+// layout options each offers.
+export const LAYOUTS = {
+  bar:  [["grouped", "Side by side"], ["stacked", "Stacked"]],
+  line: [["overlap", "Overlap"], ["stacked", "Stacked"]],
+  area: [["overlap", "Overlap"], ["stacked", "Stacked"]],
+};
 
 function colList(columns, rows) {
   return columns && columns.length
@@ -20,24 +29,24 @@ function colList(columns, rows) {
     : (rows[0] ? Object.keys(rows[0]) : []);
 }
 
-// Label column = first non-numeric; value column = last numeric.
-function pickCols(cols, rows) {
-  let label = cols[0];
-  let value = cols[cols.length - 1];
-  for (const c of cols) {
-    const numeric = rows.length > 0 && rows.every(
-      (r) => r[c] == null || r[c] === "" || typeof r[c] === "number");
-    if (numeric) value = c;
-  }
-  for (const c of cols) {
-    const numeric = rows.length > 0 && rows.every(
-      (r) => r[c] == null || r[c] === "" || typeof r[c] === "number");
-    if (!numeric) { label = c; break; }
-  }
-  return { label, value };
+function isNumericCol(rows, c) {
+  return rows.length > 0 && rows.every(
+    (r) => r[c] == null || r[c] === "" || typeof r[c] === "number");
 }
 
-export default function DataViz({ columns, rows, vizType }) {
+// Label = first non-numeric column; series = every numeric column.
+function pickSeries(cols, rows) {
+  const numeric = cols.filter((c) => isNumericCol(rows, c));
+  let label = cols.find((c) => !isNumericCol(rows, c)) || cols[0];
+  let series = numeric.filter((c) => c !== label);
+  if (series.length === 0) {
+    series = cols.filter((c) => c !== label).slice(0, 1);
+    if (series.length === 0) series = [label];
+  }
+  return { label, series };
+}
+
+export default function DataViz({ columns, rows, vizType, layout }) {
   const canvasRef = useRef(null);
   const chartRef = useRef(null);
   const data = rows || [];
@@ -46,38 +55,53 @@ export default function DataViz({ columns, rows, vizType }) {
   useEffect(() => {
     if (vizType === "table" || vizType === "kpi") return undefined;
     if (!canvasRef.current) return undefined;
-    const { label, value } = pickCols(cols, data);
+    const { label, series } = pickSeries(cols, data);
     const labels = data.map((r) => String(r[label]));
-    const values = data.map((r) => Number(r[value]) || 0);
     const isPie = vizType === "pie";
+
+    let datasets;
+    if (isPie) {
+      // Pie is single-series — use the first numeric series.
+      const s = series[0];
+      datasets = [{
+        label: s,
+        data: data.map((r) => Number(r[s]) || 0),
+        backgroundColor: labels.map((_, i) => PALETTE[i % PALETTE.length]),
+      }];
+    } else {
+      datasets = series.map((s, i) => ({
+        label: s,
+        data: data.map((r) => Number(r[s]) || 0),
+        backgroundColor: PALETTE[i % PALETTE.length],
+        borderColor: PALETTE[i % PALETTE.length],
+        borderWidth: vizType === "line" || vizType === "area" ? 2 : 1,
+        fill: vizType === "area",
+        tension: 0.25,
+      }));
+    }
+
+    const stacked = layout === "stacked";
+    const scales = isPie ? {} : {
+      x: { stacked },
+      y: { stacked, beginAtZero: true },
+    };
     if (chartRef.current) chartRef.current.destroy();
     chartRef.current = new Chart(canvasRef.current, {
       type: vizType === "area" ? "line" : vizType,
-      data: {
-        labels,
-        datasets: [{
-          label: value,
-          data: values,
-          backgroundColor: isPie
-            ? labels.map((_, i) => PALETTE[i % PALETTE.length])
-            : PALETTE[0],
-          borderColor: PALETTE[0],
-          borderWidth: vizType === "line" || vizType === "area" ? 2 : 1,
-          fill: vizType === "area",
-          tension: 0.25,
-        }],
-      },
+      data: { labels, datasets },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: isPie } },
-        scales: isPie ? {} : { y: { beginAtZero: true } },
+        plugins: {
+          legend: { display: isPie || datasets.length > 1, position: "bottom" },
+        },
+        scales,
       },
     });
     return () => {
       if (chartRef.current) { chartRef.current.destroy(); chartRef.current = null; }
     };
-  }, [vizType, columns, rows]);
+  }, [vizType, layout, columns, rows]);
 
   if (vizType === "kpi") {
     let v = "—";

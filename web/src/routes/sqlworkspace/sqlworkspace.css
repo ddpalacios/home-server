@@ -294,6 +294,80 @@
   color: #fff;
 }
 
+/* ── Builder table v2 — flexible, resizable, renamable ─────────── */
+.sqlw-b-table { table-layout: fixed; }
+.sqlw-b-table td.sqlw-b-td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sqlw-b-th {
+  position: relative;
+  padding: 0 !important;
+  background: var(--bg-elevated, #f4f4f5);
+}
+.sqlw-b-th-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  background: transparent;
+  padding: 8px 22px 8px 11px;
+  font: 700 12.5px inherit;
+  color: var(--text-primary, #0f172a);
+}
+.sqlw-b-th-input:focus {
+  outline: none;
+  background: var(--bg-surface, #fff);
+  box-shadow: inset 0 0 0 2px var(--accent-primary, #2563eb);
+}
+.sqlw-b-th-x {
+  position: absolute;
+  top: 5px;
+  right: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--text-tertiary, #94a3b8);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  opacity: 0;
+}
+.sqlw-b-th:hover .sqlw-b-th-x { opacity: 1; }
+.sqlw-b-th-x:hover { color: #dc2626; }
+.sqlw-b-th-grip {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+}
+.sqlw-b-th-grip:hover { background: var(--accent-primary, #2563eb); }
+
+/* Filters — on top, always visible */
+.sqlw-b-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 2px 16px 10px;
+}
+.sqlw-b-filters-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #64748b);
+}
+.sqlw-b-layout {
+  padding: 5px 8px;
+  border: 1px solid var(--border-default, #e5e7eb);
+  border-radius: 7px;
+  font: 12px inherit;
+  background: var(--bg-surface, #fff);
+  color: var(--text-primary, #0f172a);
+}
+
 /* ── Builder (Phase 2) ─────────────────────────────────────────── */
 .sqlw-builder { padding: 14px 16px 24px; }
 .sqlw-builder-head {

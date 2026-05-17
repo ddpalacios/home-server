@@ -2,7 +2,7 @@
 // Carries its own viz switcher, a CSV download, and a Pin button.
 // A failed statement renders as a red error block.
 import React, { useState } from "react";
-import DataViz, { VIZ_TYPES, VIZ_ICON } from "./DataViz.jsx";
+import DataViz, { VIZ_TYPES, VIZ_ICON, LAYOUTS } from "./DataViz.jsx";
 
 function csvDownload(result) {
   const cols = result.columns || [];
@@ -34,6 +34,7 @@ function initialViz(result) {
 
 export default function ResultBlock({ result, index, onPin }) {
   const [viz, setViz] = useState(() => initialViz(result));
+  const [layout, setLayout] = useState("grouped");
 
   if (result.error) {
     return (
@@ -70,6 +71,18 @@ export default function ResultBlock({ result, index, onPin }) {
             >{VIZ_ICON[v]}</button>
           ))}
         </div>
+        {LAYOUTS[viz] && (
+          <select
+            className="sqlw-b-layout"
+            value={layout}
+            onChange={(e) => setLayout(e.target.value)}
+            title="How series sit together"
+          >
+            {LAYOUTS[viz].map(([v, l]) => (
+              <option key={v} value={v}>{l}</option>
+            ))}
+          </select>
+        )}
         <button className="sqlw-sm-btn" onClick={() => csvDownload(result)}>
           CSV
         </button>
@@ -78,7 +91,8 @@ export default function ResultBlock({ result, index, onPin }) {
         </button>
       </div>
       <div className="sqlw-rb-body">
-        <DataViz vizType={viz} columns={result.columns} rows={result.rows} />
+        <DataViz vizType={viz} layout={layout}
+          columns={result.columns} rows={result.rows} />
       </div>
     </div>
   );
