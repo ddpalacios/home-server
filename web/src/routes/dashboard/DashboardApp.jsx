@@ -8,7 +8,7 @@ import GridLayout, { WidthProvider } from "react-grid-layout/legacy";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import "./dashboard.css";
-import Tile from "./Tile.jsx";
+import Tile, { effMode } from "./Tile.jsx";
 
 const RGL = WidthProvider(GridLayout);
 const JSON_HDR = { "Content-Type": "application/json" };
@@ -125,6 +125,8 @@ function DashboardEditor({ dashboardId, onBack }) {
   const [pins, setPins] = useState([]);
   const [tiles, setTiles] = useState([]);
   const [saveState, setSaveState] = useState("saved");
+  const [paused, setPaused] = useState(false);
+  const [refreshNonce, setRefreshNonce] = useState(0);
   const saveTimer = useRef(null);
   const tilesRef = useRef([]);
   tilesRef.current = tiles;
@@ -229,11 +231,33 @@ function DashboardEditor({ dashboardId, onBack }) {
     : saveState === "error" ? "Error saving — will retry"
     : "All changes saved";
 
+  // Refresh-mode summary for the header.
+  let nLive = 0, nManual = 0, nSnapshot = 0;
+  tiles.forEach((t) => {
+    const m = effMode(t, pins.find((p) => p.pin_id === t.pin_id));
+    if (m === "manual") nManual += 1;
+    else if (m === "snapshot") nSnapshot += 1;
+    else nLive += 1;
+  });
+
   return (
     <div className="dash-editor">
       <div className="dash-editor-head">
         <button className="dash-btn" onClick={onBack}>← Back</button>
         <span className="dash-editor-name">{dash.name}</span>
+        <span className="dash-mode-summary">
+          {nLive} live · {nManual} manual · {nSnapshot} snapshot
+        </span>
+        <button
+          className="dash-btn"
+          onClick={() => setPaused((p) => !p)}
+          title="Pause / resume live auto-refresh"
+        >{paused ? "Resume" : "Pause"}</button>
+        <button
+          className="dash-btn"
+          onClick={() => setRefreshNonce((n) => n + 1)}
+          title="Refresh every live and manual tile now"
+        >Refresh all</button>
         <span className={"dash-save dash-save-" + saveState}>{saveLabel}</span>
       </div>
       <div className="dash-editor-body">
@@ -278,13 +302,16 @@ function DashboardEditor({ dashboardId, onBack }) {
             compactType="vertical"
             draggableHandle=".dash-tile-head"
           >
-            {tiles.map((t) => (
+            {tiles.map((t, i) => (
               <div key={t.tile_id}>
                 <Tile
                   tile={t}
                   pin={pins.find((p) => p.pin_id === t.pin_id)}
                   onChange={(patch) => updateTile(t.tile_id, patch)}
                   onRemove={() => removeTile(t.tile_id)}
+                  paused={paused}
+                  refreshNonce={refreshNonce}
+                  tileIndex={i}
                 />
               </div>
             ))}

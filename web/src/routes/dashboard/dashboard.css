@@ -304,3 +304,57 @@
   background: var(--accent-muted, #eef2ff);
 }
 .dash-picker-icon { font-size: 20px; }
+
+/* ── Phase 3: refresh modes ────────────────────────────────────── */
+.dash-mode-summary {
+  font-size: 12px;
+  color: var(--text-secondary, #64748b);
+  margin-left: 4px;
+}
+.dash-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #94a3b8;
+}
+.dash-dot-fresh { background: #16a34a; }
+.dash-dot-refreshing {
+  background: #2563eb;
+  animation: dash-pulse 1s infinite;
+}
+.dash-dot-cached { background: #d97706; }
+.dash-dot-snapshot { background: #7c3aed; }
+.dash-dot-error { background: #dc2626; }
+@keyframes dash-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.dash-tile-foot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-top: 1px solid var(--border-subtle, #f1f5f9);
+  font-size: 10.5px;
+  color: var(--text-tertiary, #94a3b8);
+}
+.dash-tile-foot > span { flex: 1; }
+.dash-tile-refresh {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+}
+.dash-tile-refresh:disabled { opacity: 0.4; cursor: default; }
+
+.dash-mode-list { display: flex; flex-direction: column; gap: 4px; }
+.dash-mode-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 3px 0;
+}
