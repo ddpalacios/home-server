@@ -8,6 +8,8 @@ import { format as formatSql } from "sql-formatter";
 import "./sqlworkspace.css";
 import Builder from "./Builder.jsx";
 import Editor from "./Editor.jsx";
+import ResultBlock from "./ResultBlock.jsx";
+import PinDialog from "./PinDialog.jsx";
 
 // Formats the warehouse registers as queryable Spark tables.
 const STRUCTURED = new Set([
@@ -103,6 +105,9 @@ export default function SqlWorkspace() {
   const [activeFileInfo, setActiveFileInfo] = useState(null);
   const [builderSql, setBuilderSql] = useState("");
   const [editorSql, setEditorSql] = useState("");
+  const [results, setResults] = useState(null);
+  const [running, setRunning] = useState(false);
+  const [pinTarget, setPinTarget] = useState(null);
   const editorApiRef = useRef(null);
   const modeRef = useRef("builder");
   modeRef.current = mode;
@@ -191,6 +196,34 @@ export default function SqlWorkspace() {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
+  // Run the current SQL — builder-generated in builder mode, the
+  // editor text in editor mode. Multi-statement results stack below.
+  const runQuery = () => {
+    if (running) return;
+    const sqlText = modeRef.current === "editor"
+      ? (editorApiRef.current ? editorApiRef.current.getText() : "")
+      : builderSql;
+    if (!sqlText || !sqlText.trim()
+        || sqlText.trim().startsWith("--")) return;
+    setRunning(true);
+    setResults(null);
+    fetch("/api/warehouse/sql-workspace/run", {
+      method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sql: sqlText }),
+    })
+      .then((r) => r.json().then((d) => ({ ok: r.ok, d })))
+      .then(({ ok, d }) => {
+        setResults(ok && d.results
+          ? d.results
+          : [{ index: 0, sql: sqlText,
+               error: (d && (d.detail || d.error)) || "Run failed." }]);
+      })
+      .catch(() => setResults(
+        [{ index: 0, sql: sqlText, error: "Network error." }]))
+      .finally(() => setRunning(false));
+  };
+
   const stmtCount = editorSql.split(";").filter((s) => s.trim()).length;
   const hasDdl = /\b(INSERT|UPDATE|DELETE|DROP|TRUNCATE|ALTER|CREATE|MERGE)\b/i
     .test(editorSql);
@@ -217,9 +250,12 @@ export default function SqlWorkspace() {
         <button className="sqlw-icon" title="Scheduled queries" disabled>
           ⏰
         </button>
-        <button className="sqlw-run" disabled title="Coming in a later phase">
-          ▶ Run
-        </button>
+        <button
+          className="sqlw-run"
+          onClick={runQuery}
+          disabled={running}
+          title="Run the query (Cmd/Ctrl-Enter)"
+        >{running ? "Running…" : "▶ Run"}</button>
       </div>
 
       <div className="sqlw-body">
@@ -318,14 +354,37 @@ export default function SqlWorkspace() {
             <Editor
               initialDoc=""
               onChange={setEditorSql}
-              onRun={() => {}}
+              onRun={runQuery}
               apiRef={editorApiRef}
             />
           </div>
         </main>
       </div>
 
-      <div className="sqlw-results" />
+      {(running || results) && (
+        <div className="sqlw-results">
+          <div className="sqlw-results-h">
+            {running ? "Running…"
+              : "Results · " + (results ? results.length : 0)
+                + " statement" + (results && results.length === 1 ? "" : "s")}
+          </div>
+          {results && results.map((r, i) => (
+            <ResultBlock
+              key={i}
+              result={r}
+              index={i}
+              onPin={(res) => setPinTarget(res)}
+            />
+          ))}
+        </div>
+      )}
+
+      {pinTarget && (
+        <PinDialog
+          result={pinTarget}
+          onClose={() => setPinTarget(null)}
+        />
+      )}
     </div>
   );
 }
