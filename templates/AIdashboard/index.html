@@ -36079,7 +36079,12 @@
             } catch (_) { whseDocs = []; }
           }
           rows = []
-            .concat(sources.map(rowFromSource))
+            // Trained-website sources are not shown as their own KB
+            // record — all of a site's knowledge lives in the Article
+            // + FAQ it generates. Only Drive imports remain as source
+            // rows here.
+            .concat(sources.filter(function (s) { return s.kind === "drive"; })
+                           .map(rowFromSource))
             .concat(visibleDocs.map(rowFromDoc))
             .concat(whseDocs.map(rowFromWarehouseDoc));
           renderRows();
