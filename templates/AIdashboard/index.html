@@ -36453,11 +36453,16 @@
         var prevBtn = e.target.closest(".kb-row-preview");
         if (prevBtn) {
           e.stopPropagation();
-          // Sheets get the structured grid preview; every other row
-          // type previews its content through the detail modal.
+          // Sheets get the structured grid preview; article + faq are
+          // warehouse docs, so their eye shows the read-only content
+          // preview (not the editable settings modal); anything else
+          // previews through the detail modal.
           if (row.type === "sheet" &&
               typeof window.__kbOpenSheetPreview === "function") {
             window.__kbOpenSheetPreview(prevBtn.dataset.kbPreviewId, prevBtn.dataset.kbPreviewTitle);
+          } else if ((row.type === "article" || row.type === "faq") &&
+                     typeof window.__kbOpenWarehousePreview === "function") {
+            window.__kbOpenWarehousePreview(row.id, row.title);
           } else {
             window.__kbOpenDetailModal(row, mode, loadRows);
           }
