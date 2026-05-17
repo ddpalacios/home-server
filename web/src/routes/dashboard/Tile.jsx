@@ -234,11 +234,18 @@ export default function Tile({
         } else {
           setData({ error: d.detail || d.error || "Query failed" });
         }
-        const t = Date.now();
-        setLastAt(t); lastAtRef.current = t;
       })
       .catch(() => setData({ error: "Network error" }))
-      .finally(() => { busyRef.current = false; setRefreshing(false); });
+      .finally(() => {
+        busyRef.current = false;
+        setRefreshing(false);
+        // Record the attempt time on EVERY outcome — success or
+        // failure — so a failing query waits the full interval before
+        // the live ticker retries instead of re-firing every second.
+        const t = Date.now();
+        setLastAt(t);
+        lastAtRef.current = t;
+      });
   }, [pin, interval]);
 
   // Snapshot tiles render frozen data; everything else fetches once on

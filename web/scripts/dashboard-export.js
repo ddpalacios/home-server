@@ -7,7 +7,7 @@
 // tiles, real data, and Chart.js. It sets window.__exportReady = true
 // once every chart has painted; this runner waits for that signal so
 // the capture is never of a half-rendered page.
-const puppeteer = require("puppeteer");
+import puppeteer from "puppeteer";
 
 (async () => {
   const [htmlPath, outPath, format] = process.argv.slice(2);

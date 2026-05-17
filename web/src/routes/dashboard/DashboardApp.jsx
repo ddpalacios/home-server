@@ -129,6 +129,8 @@ function DashboardEditor({ dashboardId, onBack }) {
   const [refreshNonce, setRefreshNonce] = useState(0);
   const [exportOpen, setExportOpen] = useState(false);
   const saveTimer = useRef(null);
+  const savingRef = useRef(false);
+  const dirtyRef = useRef(null);
   const tilesRef = useRef([]);
   tilesRef.current = tiles;
 
@@ -142,11 +144,24 @@ function DashboardEditor({ dashboardId, onBack }) {
       .catch(() => setDash({ name: "(could not load)", layout: [] }));
   }, [dashboardId]);
 
+  // Auto-save with an in-flight guard: never more than one POST in
+  // flight. A save requested while one is running is coalesced into a
+  // single follow-up — so rapid edits can't flood the network.
   const flushSave = useCallback((nextTiles) => {
+    if (savingRef.current) { dirtyRef.current = nextTiles; return; }
+    savingRef.current = true;
     setSaveState("saving");
     saveDashboard(dashboardId, { layout: nextTiles })
       .then(() => setSaveState("saved"))
-      .catch(() => setSaveState("error"));
+      .catch(() => setSaveState("error"))
+      .finally(() => {
+        savingRef.current = false;
+        if (dirtyRef.current) {
+          const pending = dirtyRef.current;
+          dirtyRef.current = null;
+          flushSave(pending);
+        }
+      });
   }, [dashboardId]);
 
   const queueSave = useCallback((nextTiles) => {
