@@ -3426,6 +3426,14 @@
       answerMsg.className = "ask-msg bot";
       answerBubble = document.createElement("div");
       answerBubble.className = "ask-bubble md";
+      // Thinking progress bar while the exact SQL results are still
+      // being computed — replaced by the streamed answer / result.
+      answerBubble.innerHTML =
+        '<div class="ask-thinking">' +
+          '<span class="ask-thinking-label">Computing the exact ' +
+            'results…</span>' +
+          '<span class="ask-thinking-bar"><span></span></span>' +
+        '</div>';
       answerMsg.appendChild(answerBubble);
       $("askThread").appendChild(answerMsg);
       askScroll();
@@ -3520,7 +3528,9 @@
           bubble.classList.add("md");
           bubble.innerHTML = mdToHtml(opener);
         }
-        if (wait) wait.style.display = "";
+        // Open the answer bubble now so its thinking progress bar is
+        // visible while the exact SQL results are computed.
+        startAnswer();
         askScroll();
       } else if (ev === "answer_start") {
         startAnswer();
