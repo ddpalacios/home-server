@@ -3,9 +3,11 @@
 // toggle, and a warehouse tree where only structured files are
 // clickable. Builder, editor, Run, and the side drawers are wired in
 // later phases.
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { format as formatSql } from "sql-formatter";
 import "./sqlworkspace.css";
 import Builder from "./Builder.jsx";
+import Editor from "./Editor.jsx";
 
 // Formats the warehouse registers as queryable Spark tables.
 const STRUCTURED = new Set([
@@ -98,16 +100,18 @@ export default function SqlWorkspace() {
   const [queryableIds, setQueryableIds] = useState(null);
   const [treeCollapsed, setTreeCollapsed] = useState(false);
   const [activeFile, setActiveFile] = useState(null);
+  const [activeFileInfo, setActiveFileInfo] = useState(null);
   const [builderSql, setBuilderSql] = useState("");
+  const [editorSql, setEditorSql] = useState("");
+  const editorApiRef = useRef(null);
+  const modeRef = useRef("builder");
+  modeRef.current = mode;
 
   useEffect(() => {
     fetch("/api/warehouse/documents", { credentials: "same-origin" })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => setDocs((d && d.documents) || []))
       .catch(() => setDocs([]));
-    // Authoritative queryable set — only registered tables are
-    // clickable. If this endpoint isn't available the tree falls back
-    // to the format heuristic (see isQueryable).
     fetch("/api/warehouse/sql-workspace/tables", { credentials: "same-origin" })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => setQueryableIds(d ? new Set(d.queryable || []) : null))
@@ -117,6 +121,80 @@ export default function SqlWorkspace() {
   const goBack = () => { window.location.hash = "#warehouse"; };
   const tree = docs ? buildTree(docs) : null;
 
+  // Pick a file from the tree. Always fetches the table info; in
+  // editor mode it also appends a SELECT for that table.
+  const pickFile = (doc) => {
+    setActiveFile(doc);
+    setActiveFileInfo(null);
+    fetch("/api/warehouse/sql-workspace/sample?document_id="
+          + encodeURIComponent(doc.document_id),
+          { credentials: "same-origin" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!d || d.error) return;
+        setActiveFileInfo({
+          spark_table_name: d.spark_table_name, columns: d.columns,
+        });
+        if (modeRef.current === "editor" && editorApiRef.current) {
+          editorApiRef.current.append(
+            "SELECT * FROM " + d.spark_table_name + "\nLIMIT 100;\n\n");
+        }
+      })
+      .catch(() => {});
+  };
+
+  // Mode toggle — Builder→Editor loads the generated SQL; Editor→
+  // Builder warns if the editor text has diverged.
+  const switchMode = (next) => {
+    if (next === mode) return;
+    if (next === "editor") {
+      if (editorApiRef.current) {
+        editorApiRef.current.setText(builderSql || "");
+      }
+      setMode("editor");
+    } else {
+      const txt = editorApiRef.current ? editorApiRef.current.getText() : "";
+      if (txt.trim() && txt.trim() !== (builderSql || "").trim()) {
+        if (!window.confirm(
+          "Switching to Builder will discard your SQL edits. Continue?")) {
+          return;
+        }
+      }
+      setMode("builder");
+    }
+  };
+
+  const fmtSql = () => {
+    if (!editorApiRef.current) return;
+    try {
+      editorApiRef.current.setText(formatSql(editorApiRef.current.getText(), {
+        language: "spark", keywordCase: "upper", linesBetweenQueries: 1,
+      }));
+    } catch (e) { /* leave text as-is on a parse error */ }
+  };
+  const copySql = () => {
+    if (editorApiRef.current && navigator.clipboard) {
+      navigator.clipboard.writeText(editorApiRef.current.getText())
+        .catch(() => {});
+    }
+  };
+  const exportSql = () => {
+    const txt = editorApiRef.current ? editorApiRef.current.getText() : "";
+    const blob = new Blob([txt], { type: "text/sql" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "workspace-query.sql";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  const stmtCount = editorSql.split(";").filter((s) => s.trim()).length;
+  const hasDdl = /\b(INSERT|UPDATE|DELETE|DROP|TRUNCATE|ALTER|CREATE|MERGE)\b/i
+    .test(editorSql);
+
   return (
     <div className="sqlw">
       <div className="sqlw-top">
@@ -125,11 +203,11 @@ export default function SqlWorkspace() {
         <div className="sqlw-modes">
           <button
             className={"sqlw-mode" + (mode === "builder" ? " active" : "")}
-            onClick={() => setMode("builder")}
+            onClick={() => switchMode("builder")}
           >Builder</button>
           <button
             className={"sqlw-mode" + (mode === "editor" ? " active" : "")}
-            onClick={() => setMode("editor")}
+            onClick={() => switchMode("editor")}
           >SQL editor</button>
         </div>
         <div className="sqlw-top-spacer" />
@@ -174,7 +252,7 @@ export default function SqlWorkspace() {
                 node={tree}
                 depth={0}
                 activeId={activeFile && activeFile.document_id}
-                onPick={setActiveFile}
+                onPick={pickFile}
                 qset={queryableIds}
               />
             )}
@@ -182,8 +260,13 @@ export default function SqlWorkspace() {
         )}
 
         <main className="sqlw-main">
-          {mode === "builder" ? (
-            activeFile ? (
+          {/* Builder — kept mounted so its state survives a mode
+              toggle; hidden (not unmounted) in editor mode. */}
+          <div
+            className="sqlw-pane"
+            style={{ display: mode === "builder" ? "block" : "none" }}
+          >
+            {activeFile ? (
               <Builder
                 key={activeFile.document_id}
                 file={activeFile}
@@ -199,16 +282,46 @@ export default function SqlWorkspace() {
                   The table preview will appear here.
                 </div>
               </div>
-            )
-          ) : (
-            <div className="sqlw-empty">
-              <div className="sqlw-empty-icon">⌨️</div>
-              <div className="sqlw-empty-h">SQL editor</div>
-              <div className="sqlw-empty-sub">
-                Write Spark SQL directly. The editor loads here.
-              </div>
+            )}
+          </div>
+
+          {/* SQL editor — always mounted. */}
+          <div
+            className="sqlw-editor-pane"
+            style={{ display: mode === "editor" ? "flex" : "none" }}
+          >
+            <div className="sqlw-editor-bar">
+              <button className="sqlw-sm-btn" onClick={fmtSql}>Format</button>
+              <button className="sqlw-sm-btn" onClick={copySql}>Copy</button>
+              <button className="sqlw-sm-btn" onClick={exportSql}>Export</button>
+              <span className="sqlw-editor-status">
+                Spark SQL · {stmtCount} statement{stmtCount === 1 ? "" : "s"}
+                {hasDdl
+                  ? " · ⚠ only SELECT is allowed"
+                  : " · ✓ no blocked statements"}
+              </span>
             </div>
-          )}
+            {activeFileInfo && activeFileInfo.columns
+              && activeFileInfo.columns.length > 0 && (
+              <div className="sqlw-col-chips">
+                <span className="sqlw-col-chips-label">Insert column:</span>
+                {activeFileInfo.columns.map((c) => (
+                  <button
+                    key={c}
+                    className="sqlw-col-chip"
+                    onClick={() => editorApiRef.current
+                      && editorApiRef.current.insertAtCursor(c)}
+                  >{c}</button>
+                ))}
+              </div>
+            )}
+            <Editor
+              initialDoc=""
+              onChange={setEditorSql}
+              onRun={() => {}}
+              apiRef={editorApiRef}
+            />
+          </div>
         </main>
       </div>
 
