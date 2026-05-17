@@ -192,18 +192,34 @@ function DashboardEditor({ dashboardId, onBack }) {
     });
   }, [queueSave]);
 
-  const onDrop = useCallback((layout, item, e) => {
+  // Drop a library pin onto the canvas. We handle the HTML5 drop
+  // ourselves rather than relying on react-grid-layout's external-drop
+  // (finicky, and unreliable through the v2 /legacy wrapper). The grid
+  // cell is derived from the cursor position over the grid element.
+  const onCanvasDragOver = useCallback((e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+  }, []);
+
+  const onCanvasDrop = useCallback((e) => {
+    e.preventDefault();
     let pinId = "";
     try { pinId = e.dataTransfer.getData("text/plain"); } catch (err) {}
     if (!pinId) return;
     const pin = pins.find((p) => p.pin_id === pinId);
     const size = defaultSize(pin ? pin.data_shape : "multi_row");
+    const gridEl = e.currentTarget.querySelector(".react-grid-layout")
+      || e.currentTarget;
+    const rect = gridEl.getBoundingClientRect();
+    const colW = rect.width / 12 || 1;
+    let gx = Math.floor((e.clientX - rect.left) / colW);
+    gx = Math.max(0, Math.min(12 - size.w, gx));
+    let gy = Math.floor((e.clientY - rect.top) / 68);   // rowHeight 60 + margin 8
+    gy = Math.max(0, gy);
     const newTile = {
       tile_id: "tile_" + Math.random().toString(36).slice(2, 12),
       pin_id: pinId,
-      grid_position: {
-        x: item.x, y: item.y, w: size.w, h: size.h,
-      },
+      grid_position: { x: gx, y: gy, w: size.w, h: size.h },
       viz_type: null,
       viz_config: {},
       refresh_mode_override: null,
@@ -301,16 +317,17 @@ function DashboardEditor({ dashboardId, onBack }) {
             );
           })}
         </aside>
-        <div className="dash-canvas-wrap">
+        <div
+          className="dash-canvas-wrap"
+          onDragOver={onCanvasDragOver}
+          onDrop={onCanvasDrop}
+        >
           <RGL
             className="dash-canvas"
             layout={layout}
             cols={12}
             rowHeight={60}
             margin={[8, 8]}
-            isDroppable
-            droppingItem={{ i: "__dropping-elem__", w: 6, h: 3 }}
-            onDrop={onDrop}
             onLayoutChange={onLayoutChange}
             compactType="vertical"
             draggableHandle=".dash-tile-head"
