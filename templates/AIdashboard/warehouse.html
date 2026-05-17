@@ -269,6 +269,13 @@
   .wh-tile-file.is-selected { border-color:var(--accent); background:#eef4fb; }
   .wh-tile-file.is-selected .wh-tile-check { opacity:1; }
   .wh-tile-drop { outline:2px dashed var(--accent); outline-offset:-3px; }
+  .wh-tile-flash { animation:wh-tile-flash 1.3s ease; }
+  @keyframes wh-tile-flash {
+    0%, 100% { box-shadow:0 0 0 0 rgba(24,95,165,0); }
+    20%, 60% {
+      box-shadow:0 0 0 3px rgba(24,95,165,.35); border-color:var(--accent);
+    }
+  }
   .wh-tile-file.is-live { cursor:default; }
   .wh-tile-file.is-live:hover {
     transform:none; box-shadow:none; border-color:var(--line);
@@ -1679,7 +1686,21 @@
             f.appendChild(flbl);
             f.addEventListener("click", function (e) {
               e.stopPropagation();
-              openDetail(d.document_id);
+              // Show the file in the main view (its folder), the same
+              // way clicking a folder navigates there — never jump to
+              // the file's settings page.
+              activeFolder = (d.folder_path || "").replace(/^\/+|\/+$/g, "");
+              renderFolderPane();
+              renderList();
+              var tile = document.querySelector(
+                '#docBody .wh-tile-file[data-id="' + d.document_id + '"]');
+              if (tile) {
+                tile.scrollIntoView({ block: "nearest", behavior: "smooth" });
+                tile.classList.add("wh-tile-flash");
+                setTimeout(function () {
+                  tile.classList.remove("wh-tile-flash");
+                }, 1300);
+              }
             });
             sub.appendChild(f);
           });
