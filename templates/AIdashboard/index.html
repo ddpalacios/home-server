@@ -29214,6 +29214,13 @@
       chartCtrls.appendChild(xCtl.holder);
       var yCtl = mkSelect("Y axis (value)", []);
       chartCtrls.appendChild(yCtl.holder);
+      var seriesCtl = mkSelect("Split by (series)", [{ value: "", label: "None" }]);
+      chartCtrls.appendChild(seriesCtl.holder);
+      var layoutCtl = mkSelect("Layout", [
+        { value: "grouped", label: "Grouped / overlapping" },
+        { value: "stacked", label: "Stacked" },
+      ]);
+      chartCtrls.appendChild(layoutCtl.holder);
       var aggCtl = mkSelect("Aggregate Y by X", [
         { value: "sum",   label: "Sum" },
         { value: "avg",   label: "Average" },
@@ -29258,6 +29265,19 @@
         }
         fill(xCtl.sel, labelCols, cols[0]);
         fill(yCtl.sel, numericCols.length ? numericCols : ["__count__"], cols[1] || cols[0]);
+        // Series split — any column breaks the data into one colored
+        // series per distinct value; "" keeps a single series.
+        var prevS = seriesCtl.sel.value;
+        seriesCtl.sel.innerHTML = '<option value="">None</option>';
+        labelCols.forEach(function (c) {
+          var o = document.createElement("option");
+          o.value = c; o.textContent = c;
+          seriesCtl.sel.appendChild(o);
+        });
+        if (prevS && Array.prototype.slice.call(seriesCtl.sel.options)
+              .some(function (o) { return o.value === prevS; })) {
+          seriesCtl.sel.value = prevS;
+        }
         if (!numericCols.length) {
           // No numeric column found — only Count aggregation makes sense.
           aggCtl.sel.value = "count";
@@ -29266,57 +29286,66 @@
       function buildChartDataset() {
         var xKey = xCtl.sel.value;
         var yKey = yCtl.sel.value;
+        var sKey = seriesCtl.sel.value;   // "" → a single series
         var agg = aggCtl.sel.value;
-        var labels = [];
-        var values = [];
-        if (agg === "none") {
-          rows.forEach(function (r) {
-            labels.push(r && r[xKey] != null ? String(r[xKey]) : "");
-            values.push(Number(r && r[yKey]) || 0);
-          });
-        } else {
-          var bucket = Object.create(null);
-          var counts = Object.create(null);
-          rows.forEach(function (r) {
-            var k = r && r[xKey] != null ? String(r[xKey]) : "";
-            if (!(k in bucket)) {
-              bucket[k] = (agg === "min" || agg === "max") ? null : 0;
-              counts[k] = 0;
-            }
-            counts[k] += 1;
-            if (agg === "count") return;
-            var v = Number(r && r[yKey]);
-            if (isNaN(v)) return;
-            if (agg === "sum" || agg === "avg") bucket[k] += v;
-            else if (agg === "min") bucket[k] = bucket[k] == null ? v : Math.min(bucket[k], v);
-            else if (agg === "max") bucket[k] = bucket[k] == null ? v : Math.max(bucket[k], v);
-          });
-          Object.keys(bucket).forEach(function (k) {
-            labels.push(k);
-            if (agg === "count") values.push(counts[k]);
-            else if (agg === "avg") values.push(counts[k] ? bucket[k] / counts[k] : 0);
-            else values.push(bucket[k] || 0);
-          });
+        var labels = [], labelIdx = Object.create(null);
+        var sNames = [], sIdx = Object.create(null);
+        function xOf(r) {
+          return r && r[xKey] != null ? String(r[xKey]) : "";
         }
-        // Pie/doughnut look ugly with too many slices — cap to top 20.
+        function sOf(r) {
+          return sKey ? (r && r[sKey] != null ? String(r[sKey]) : "—")
+                      : (yKey || "value");
+        }
+        rows.forEach(function (r) {
+          var x = xOf(r);
+          if (!(x in labelIdx)) { labelIdx[x] = labels.length; labels.push(x); }
+          var s = sOf(r);
+          if (!(s in sIdx)) { sIdx[s] = sNames.length; sNames.push(s); }
+        });
+        // sum[seriesIdx][labelIdx] + cnt — aggregate Y per (series, x).
+        var sum = [], cnt = [];
+        sNames.forEach(function () {
+          sum.push(labels.map(function () { return null; }));
+          cnt.push(labels.map(function () { return 0; }));
+        });
+        rows.forEach(function (r) {
+          var si = sIdx[sOf(r)], li = labelIdx[xOf(r)];
+          cnt[si][li] += 1;
+          if (agg === "count") return;
+          var v = Number(r && r[yKey]);
+          if (isNaN(v)) return;
+          var cur = sum[si][li];
+          if (agg === "min") sum[si][li] = (cur == null) ? v : Math.min(cur, v);
+          else if (agg === "max") sum[si][li] = (cur == null) ? v : Math.max(cur, v);
+          else sum[si][li] = (cur || 0) + v;   // sum / avg / none
+        });
+        var series = sNames.map(function (name, si) {
+          return { name: name, values: labels.map(function (_, li) {
+            if (agg === "count") return cnt[si][li];
+            var c = cnt[si][li], s = sum[si][li];
+            if (agg === "avg") return c ? (s || 0) / c : 0;
+            return s || 0;
+          }) };
+        });
+        // Pie/doughnut: a single ring — cap to the top 20 slices.
         var type = typeCtl.sel.value;
-        if ((type === "pie" || type === "doughnut") && labels.length > 20) {
-          var idx = values
-            .map(function (v, i) { return { v: v, i: i }; })
+        if ((type === "pie" || type === "doughnut")
+            && series[0] && labels.length > 20) {
+          var vals = series[0].values;
+          var keep = vals.map(function (v, i) { return { v: v, i: i }; })
             .sort(function (a, b) { return b.v - a.v; })
-            .slice(0, 19);
-          var otherSum = 0;
-          var keep = {};
-          idx.forEach(function (e) { keep[e.i] = true; });
-          var nl = [], nv = [];
+            .slice(0, 19)
+            .reduce(function (m, e) { m[e.i] = 1; return m; }, {});
+          var nl = [], nv = [], other = 0;
           labels.forEach(function (l, i) {
-            if (keep[i]) { nl.push(l); nv.push(values[i]); }
-            else { otherSum += values[i]; }
+            if (keep[i]) { nl.push(l); nv.push(vals[i]); }
+            else { other += vals[i]; }
           });
-          nl.push("Other"); nv.push(otherSum);
-          labels = nl; values = nv;
+          nl.push("Other"); nv.push(other);
+          labels = nl; series = [{ name: series[0].name, values: nv }];
         }
-        return { labels: labels, values: values };
+        return { labels: labels, series: series };
       }
       function renderChart() {
         if (typeof Chart === "undefined") {
@@ -29336,42 +29365,82 @@
         var requestedType = typeCtl.sel.value;
         var chartType = (requestedType === "area") ? "line" : requestedType;
         var palette = [
-          "#0f172a", "#3b82f6", "#10b981", "#f59e0b", "#ef4444",
-          "#8b5cf6", "#ec4899", "#14b8a6", "#f97316", "#6366f1",
-          "#84cc16", "#06b6d4", "#a855f7", "#eab308", "#22c55e",
+          "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6",
+          "#ec4899", "#14b8a6", "#f97316", "#6366f1", "#84cc16",
+          "#06b6d4", "#a855f7", "#eab308", "#22c55e", "#0f172a",
         ];
+        function _rgba(hex, a) {
+          var n = parseInt(hex.slice(1), 16);
+          return "rgba(" + ((n >> 16) & 255) + "," + ((n >> 8) & 255) +
+                 "," + (n & 255) + "," + a + ")";
+        }
         var isCategorical = (requestedType === "pie" || requestedType === "doughnut");
-        var bgColors = isCategorical
-          ? ds.labels.map(function (_, i) { return palette[i % palette.length]; })
-          : "rgba(59,130,246,0.6)";
-        var borderColors = isCategorical ? bgColors : "#3b82f6";
-        var dataset = {
-          label: yCtl.sel.value + (aggCtl.sel.value === "none" ? "" : " (" + aggCtl.sel.value + ")"),
-          data: ds.values,
-          backgroundColor: bgColors,
-          borderColor: borderColors,
-          borderWidth: chartType === "line" ? 2 : 1,
-        };
-        if (requestedType === "area") { dataset.fill = true; dataset.backgroundColor = "rgba(59,130,246,0.2)"; }
-        if (chartType === "line") { dataset.tension = 0.25; dataset.pointRadius = 3; }
+        // Layout: bar → grouped (side-by-side) vs stacked; line → lines
+        // overlap vs stacked areas.
+        var stacked = layoutCtl.sel.value === "stacked";
+        var datasets;
+        if (isCategorical) {
+          var s0 = ds.series[0] || { name: yCtl.sel.value, values: [] };
+          datasets = [{
+            label: s0.name, data: s0.values,
+            backgroundColor: ds.labels.map(function (_, i) {
+              return palette[i % palette.length];
+            }),
+            borderColor: "#fff", borderWidth: 1,
+          }];
+        } else {
+          // One dataset per series — each its own palette color, which
+          // is also what the legend swatches show.
+          datasets = ds.series.map(function (s, i) {
+            var color = palette[i % palette.length];
+            var d = {
+              label: s.name, data: s.values,
+              borderColor: color,
+              borderWidth: chartType === "line" ? 2 : 1,
+              backgroundColor: chartType === "line"
+                ? ((requestedType === "area" || stacked)
+                    ? _rgba(color, 0.25) : color)
+                : _rgba(color, 0.72),
+            };
+            if (chartType === "line") {
+              d.tension = 0.25; d.pointRadius = 3;
+              d.fill = (requestedType === "area" || stacked);
+            }
+            return d;
+          });
+        }
+        var multi = ds.series.length > 1;
         chartInstance = new Chart(cv, {
           type: chartType,
-          data: { labels: ds.labels, datasets: [dataset] },
+          data: { labels: ds.labels, datasets: datasets },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-              legend: { display: isCategorical, position: "right", labels: { font: { size: 11 } } },
+              // Legend shows every series with its own color swatch.
+              legend: {
+                display: isCategorical || multi,
+                position: "right", labels: { font: { size: 11 } },
+              },
               tooltip: { backgroundColor: "#0f172a", titleFont: { size: 12 }, bodyFont: { size: 12 } },
             },
             scales: isCategorical ? {} : {
-              x: { ticks: { font: { size: 11 }, color: "#64748b", maxRotation: 50, minRotation: 0 }, grid: { display: false } },
-              y: { ticks: { font: { size: 11 }, color: "#64748b" }, grid: { color: "#f1f5f9" }, beginAtZero: true },
+              x: {
+                stacked: stacked && chartType === "bar",
+                ticks: { font: { size: 11 }, color: "#64748b", maxRotation: 50, minRotation: 0 },
+                grid: { display: false },
+              },
+              y: {
+                stacked: stacked,
+                ticks: { font: { size: 11 }, color: "#64748b" },
+                grid: { color: "#f1f5f9" }, beginAtZero: true,
+              },
             },
           },
         });
       }
-      [typeCtl.sel, xCtl.sel, yCtl.sel, aggCtl.sel].forEach(function (s) {
+      [typeCtl.sel, xCtl.sel, yCtl.sel, seriesCtl.sel, layoutCtl.sel,
+       aggCtl.sel].forEach(function (s) {
         s.addEventListener("change", function () { if (state.tab === "chart") renderChart(); });
       });
 
